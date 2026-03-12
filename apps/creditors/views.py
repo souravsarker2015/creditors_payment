@@ -1,43 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
 import django.utils.timezone
-from django.contrib.auth import login, logout, authenticate
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Sum, Q, DecimalField, Value
 from django.db.models.functions import Coalesce
 
 from .models import Creditor, Transaction
-
-
-def signup_view(request):
-    if request.method == "POST":
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)
-            messages.success(request, f"Welcome {user.username}! Your account has been created.")
-            return redirect("dashboard")
-    else:
-        form = UserCreationForm()
-    return render(request, "creditors/signup.html", {"form": form})
-
-
-def login_view(request):
-    if request.method == "POST":
-        form = AuthenticationForm(data=request.POST)
-        if form.is_valid():
-            user = form.get_user()
-            login(request, user)
-            return redirect("dashboard")
-    else:
-        form = AuthenticationForm()
-    return render(request, "creditors/login.html", {"form": form})
-
-
-def logout_view(request):
-    logout(request)
-    return redirect("login")
 
 
 @login_required
