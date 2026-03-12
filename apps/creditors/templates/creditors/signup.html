@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Sign Up | Creditors Tracker{% endblock %}
+
+{% block content %}
+<style>
+    .auth-card {
+        max-width: 400px;
+        margin: 4rem auto;
+        padding: 2.5rem;
+    }
+    .auth-card h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; text-align: center; }
+    .form-group { margin-bottom: 1.25rem; }
+    .form-group label { display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-muted); }
+    .form-group input { 
+        width: 100%; 
+        padding: 0.75rem; 
+        border-radius: 0.5rem; 
+        border: 1px solid var(--border); 
+        font-family: inherit;
+        font-size: 0.95rem;
+    }
+    .form-group input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+    .helptext { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; display: block; }
+    .auth-btn { width: 100%; margin-top: 1rem; }
+    .auth-footer { margin-top: 1.5rem; text-align: center; font-size: 0.875rem; color: var(--text-muted); }
+    .auth-footer a { color: var(--primary); text-decoration: none; font-weight: 600; }
+</style>
+
+<div class="card auth-card">
+    <h1>Create account</h1>
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                    <span class="helptext">{{ field.help_text|safe }}</span>
+                {% endif %}
+                {% if field.errors %}
+                    <p style="color: var(--danger); font-size: 0.8rem; margin-top: 0.25rem;">{{ field.errors.0 }}</p>
+                {% endif %}
+            </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary auth-btn">Sign Up</button>
+    </form>
+    <div class="auth-footer">
+        Already have an account? <a href="{% url 'login' %}">Log in</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | Creditors Tracker{% endblock %}
+
+{% block content %}
+<style>
+    .dashboard-header { margin-bottom: 2rem; }
+    .dashboard-header h1 { font-size: 1.875rem; font-weight: 700; color: var(--text-main); }
+    .dashboard-header p { color: var(--text-muted); margin-top: 0.25rem; }
+
+    .stats-grid { 
+        display: grid; 
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); 
+        gap: 1.5rem; 
+        margin-bottom: 2rem;
+    }
+    .stat-card { border-left: 4px solid var(--border); }
+    .stat-card.borrowed { border-left-color: var(--danger); }
+    .stat-card.paid { border-left-color: var(--success); }
+    .stat-card.remaining { border-left-color: var(--warning); }
+    
+    .stat-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; color: var(--text-muted); margin-bottom: 0.5rem; }
+    .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--text-main); }
+
+    .main-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 1.5rem;
+    }
+
+    .recent-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    .recent-table th { text-align: left; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
+    .recent-table td { padding: 1rem 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+    .type-badge { padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+    .type-badge.BORROW { background: #fee2e2; color: #991b1b; }
+    .type-badge.REPAY { background: #dcfce7; color: #166534; }
+
+    .chart-box { display: flex; align-items: center; justify-content: center; min-height: 300px; }
+
+    @media (max-width: 1024px) {
+        .main-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="dashboard-header">
+    <h1>Welcome, {{ user.username }}</h1>
+    <p>Here is your current financial standing at a glance.</p>
+</div>
+
+<div class="stats-grid">
+    <div class="card stat-card borrowed">
+        <div class="stat-label">Total Borrowed</div>
+        <div class="stat-value">৳{{ total_borrowed|floatformat:2 }}</div>
+    </div>
+    <div class="card stat-card paid">
+        <div class="stat-label">Total Paid</div>
+        <div class="stat-value">৳{{ total_paid|floatformat:2 }}</div>
+    </div>
+    <div class="card stat-card remaining">
+        <div class="stat-label">Remaining Debt</div>
+        <div class="stat-value">৳{{ remaining|floatformat:2 }}</div>
+    </div>
+</div>
+
+<div class="main-grid">
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2 style="font-size: 1.125rem; font-weight: 700;">Recent Activity</h2>
+            <a href="{% url 'creditor_list' %}" style="font-size: 0.875rem; color: var(--primary); text-decoration: none; font-weight: 600;">View All Creditors</a>
+        </div>
+        {% if recent_transactions %}
+            <table class="recent-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Creditor</th>
+                        <th>Type</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tx in recent_transactions %}
+                        <tr>
+                            <td style="color: var(--text-muted);">{{ tx.date|date:"M d, Y" }}</td>
+                            <td style="font-weight: 500;">{{ tx.creditor.name }}</td>
+                            <td><span class="type-badge {{ tx.transaction_type }}">{{ tx.get_transaction_type_display }}</span></td>
+                            <td style="font-weight: 600;">৳{{ tx.amount|floatformat:2 }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div style="text-align: center; padding: 3rem 0; color: var(--text-muted);">
+                No transactions yet. <br>
+                <a href="/admin/creditors/creditor/add/" style="color: var(--primary); font-weight: 600;">Add your first creditor in Admin</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <h2 style="font-size: 1.125rem; font-weight: 700; margin-bottom: 1.5rem;">Payment Progress</h2>
+        <div class="chart-box">
+            <canvas id="dashboardChart"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('dashboardChart').getContext('2d');
+        const paid = {{ chart_paid }};
+        const remaining = {{ chart_remaining }};
+
+        if (paid === 0 && remaining === 0) {
+            ctx.font = '14px Inter';
+            ctx.fillStyle = '#9ca3af';
+            ctx.textAlign = 'center';
+            ctx.fillText('No data to display', ctx.canvas.width / 2, ctx.canvas.height / 2);
+            return;
+        }
+
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Paid', 'Remaining'],
+                datasets: [{
+                    data: [paid, remaining],
+                    backgroundColor: ['#10b981', '#ef4444'],
+                    borderWidth: 0,
+                    hoverOffset: 10,
+                }],
+            },
+            options: {
+                responsive: true,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20,
+                            font: { family: 'Inter', size: 12, weight: '500' }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#1f2937',
+                        padding: 12,
+                        titleFont: { family: 'Inter', weight: '700' },
+                        bodyFont: { family: 'Inter' },
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                return ` ৳${context.raw.toLocaleString()}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

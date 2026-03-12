@@ -11,8 +11,7 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    # Add your app URLs here, e.g.:
-    # path("payments/", include("apps.payments.urls")),
+    path("", include("apps.creditors.urls")),
 ]
 
 # Serve media files in development
