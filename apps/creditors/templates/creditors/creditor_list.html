@@ -71,7 +71,7 @@
 
 <div class="list-header">
     <h1>Your Creditors</h1>
-    <a href="/admin/creditors/creditor/add/" class="btn btn-primary">+ Add New</a>
+    <a href="{% url 'creditor_create' %}" class="btn btn-primary">+ Add New</a>
 </div>
 
 {% if creditors %}
@@ -90,11 +90,11 @@
                 <div class="progress-info">
                     <div class="row">
                         <span class="label">Total Borrowed</span>
-                        <span class="value">৳{{ cr._borrowed|floatformat:2 }}</span>
+                        <span class="value">৳{{ cr.total_borrowed_amt|floatformat:2 }}</span>
                     </div>
                     <div class="row">
                         <span class="label">Total Paid</span>
-                        <span class="value">৳{{ cr._paid|floatformat:2 }}</span>
+                        <span class="value">৳{{ cr.total_paid_amt|floatformat:2 }}</span>
                     </div>
                     
                     <div class="progress-bar">
@@ -109,7 +109,10 @@
                     </div>
                 </div>
 
-                <a href="/admin/creditors/creditor/{{ cr.id }}/change/" class="btn-details">Edit in Admin</a>
+                <div class="row" style="margin-top: 2rem; gap: 0.5rem;">
+                    <a href="{% url 'creditor_detail' cr.pk %}" class="btn btn-primary" style="flex: 1; text-align: center; font-size: 0.8rem;">View History</a>
+                    <a href="{% url 'creditor_edit' cr.pk %}" class="btn" style="background: #f3f4f6; color: var(--text-main); font-size: 0.8rem; text-decoration: none; border-radius: 0.5rem; padding: 0.6rem 1rem;">Edit</a>
+                </div>
             </div>
         {% endfor %}
     </div>
@@ -118,7 +121,7 @@
         <div style="font-size: 3rem; margin-bottom: 1rem;">💸</div>
         <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">No creditors found</h2>
         <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Start tracking your debts by adding your first creditor.</p>
-        <a href="/admin/creditors/creditor/add/" class="btn btn-primary">Add Your First Creditor</a>
+        <a href="{% url 'creditor_create' %}" class="btn btn-primary">Add Your First Creditor</a>
     </div>
 {% endif %}
 {% endblock %}

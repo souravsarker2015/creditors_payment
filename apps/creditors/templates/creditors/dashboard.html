@@ -92,15 +92,22 @@
         {% else %}
             <div style="text-align: center; padding: 3rem 0; color: var(--text-muted);">
                 No transactions yet. <br>
-                <a href="/admin/creditors/creditor/add/" style="color: var(--primary); font-weight: 600;">Add your first creditor in Admin</a>
+                <a href="{% url 'creditor_create' %}" style="color: var(--primary); font-weight: 600;">Add your first creditor</a>
             </div>
         {% endif %}
     </div>
 
     <div class="card">
-        <h2 style="font-size: 1.125rem; font-weight: 700; margin-bottom: 1.5rem;">Payment Progress</h2>
-        <div class="chart-box">
-            <canvas id="dashboardChart"></canvas>
+        <h2 style="font-size: 1.125rem; font-weight: 700; margin-bottom: 1.5rem;">Visual Breakdown</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div>
+                <p style="text-align: center; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 1rem;">DEBT BY CREDITOR (Pabe)</p>
+                <div style="min-height: 250px;"><canvas id="remainingChart"></canvas></div>
+            </div>
+            <div>
+                <p style="text-align: center; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 1rem;">PAID TO CREDITOR (Daoya)</p>
+                <div style="min-height: 250px;"><canvas id="paidChart"></canvas></div>
+            </div>
         </div>
     </div>
 </div>
@@ -110,50 +117,68 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const ctx = document.getElementById('dashboardChart').getContext('2d');
-        const paid = {{ chart_paid }};
-        const remaining = {{ chart_remaining }};
+        const labels = {{ creditor_labels|safe }};
+        const remainingData = {{ creditor_remaining|safe }};
+        const paidData = {{ creditor_paid|safe }};
 
-        if (paid === 0 && remaining === 0) {
-            ctx.font = '14px Inter';
-            ctx.fillStyle = '#9ca3af';
-            ctx.textAlign = 'center';
-            ctx.fillText('No data to display', ctx.canvas.width / 2, ctx.canvas.height / 2);
-            return;
-        }
+        if (labels.length === 0) return;
 
-        new Chart(ctx, {
-            type: 'doughnut',
+        const colors = [
+            '#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', 
+            '#06b6d4', '#ec4899', '#f97316', '#6366f1', '#14b8a6'
+        ];
+
+        // Chart 1: Remaining Debt (Who gets paid)
+        const ctxRem = document.getElementById('remainingChart').getContext('2d');
+        new Chart(ctxRem, {
+            type: 'pie',
             data: {
-                labels: ['Paid', 'Remaining'],
+                labels: labels,
                 datasets: [{
-                    data: [paid, remaining],
-                    backgroundColor: ['#10b981', '#ef4444'],
-                    borderWidth: 0,
-                    hoverOffset: 10,
-                }],
+                    data: remainingData,
+                    backgroundColor: colors,
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
             },
             options: {
                 responsive: true,
-                cutout: '70%',
+                maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            usePointStyle: true,
-                            padding: 20,
-                            font: { family: 'Inter', size: 12, weight: '500' }
-                        }
-                    },
+                    legend: { display: false },
                     tooltip: {
-                        backgroundColor: '#1f2937',
-                        padding: 12,
-                        titleFont: { family: 'Inter', weight: '700' },
-                        bodyFont: { family: 'Inter' },
-                        displayColors: false,
                         callbacks: {
                             label: function(context) {
-                                return ` ৳${context.raw.toLocaleString()}`;
+                                return ` ${context.label}: ৳${context.raw.toLocaleString()}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Chart 2: Total Paid (How much given)
+        const ctxPaid = document.getElementById('paidChart').getContext('2d');
+        new Chart(ctxPaid, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: paidData,
+                    backgroundColor: colors,
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return ` ${context.label}: ৳${context.raw.toLocaleString()}`;
                             }
                         }
                     }

@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}{{ creditor.name }} Details | Creditors Tracker{% endblock %}
+
+{% block content %}
+<style>
+    .detail-grid { display: grid; grid-template-columns: 1fr 350px; gap: 2rem; margin-top: 2rem; }
+    
+    .header-section { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; }
+    .header-info h1 { font-size: 2rem; font-weight: 800; color: var(--text-main); }
+    .header-info p { color: var(--text-muted); font-size: 1rem; margin-top: 0.5rem; }
+
+    .stats-row { display: flex; gap: 1rem; margin-bottom: 2rem; }
+    .mini-stat { flex: 1; padding: 1.25rem; background: var(--card-bg); border: 1px solid var(--border); border-radius: 0.75rem; }
+    .mini-label { font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem; }
+    .mini-value { font-size: 1.25rem; font-weight: 700; }
+
+    .transaction-list h2 { font-size: 1.25rem; font-weight: 700; margin-bottom: 1.5rem; }
+    .tx-table { width: 100%; border-collapse: collapse; }
+    .tx-table th { text-align: left; padding: 0.75rem; border-bottom: 2px solid var(--border); font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
+    .tx-table td { padding: 1rem 0.75rem; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
+
+    .type-pill { padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.7rem; font-weight: 700; }
+    .BORROW { background: #fee2e2; color: #991b1b; }
+    .REPAY { background: #dcfce7; color: #166534; }
+
+    .entry-card h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 1.5rem; }
+    .form-group { margin-bottom: 1.25rem; }
+    .form-group label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.4rem; }
+    .form-input { width: 100%; padding: 0.65rem; border-radius: 0.4rem; border: 1px solid var(--border); font-size: 0.9rem; }
+    .form-input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+
+    @media (max-width: 1024px) {
+        .detail-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="header-section">
+    <div class="header-info">
+        <h1>{{ creditor.name }}</h1>
+        <p>{{ creditor.phone|default:"No phone" }} • {{ creditor.note|default:"No notes" }}</p>
+    </div>
+    <div class="header-actions">
+        <a href="{% url 'creditor_edit' creditor.pk %}" class="btn" style="background: #f3f4f6;">Edit Profile</a>
+        <a href="{% url 'creditor_list' %}" class="btn" style="background: white; border: 1px solid var(--border);">Back to List</a>
+    </div>
+</div>
+
+<div class="stats-row">
+    <div class="mini-stat">
+        <div class="mini-label">Borrowed</div>
+        <div class="mini-value">৳{{ borrowed|floatformat:2 }}</div>
+    </div>
+    <div class="mini-stat">
+        <div class="mini-label">Repaid</div>
+        <div class="mini-value" style="color: var(--success);">৳{{ paid|floatformat:2 }}</div>
+    </div>
+    <div class="mini-stat">
+        <div class="mini-label">Balance</div>
+        <div class="mini-value" style="color: {% if remaining > 0 %}var(--danger){% else %}var(--success){% endif %};">
+            ৳{{ remaining|floatformat:2 }}
+        </div>
+    </div>
+</div>
+
+<div class="detail-grid">
+    <div class="card transaction-list">
+        <h2>Transaction History</h2>
+        {% if transactions %}
+            <table class="tx-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tx in transactions %}
+                        <tr>
+                            <td style="color: var(--text-muted);">{{ tx.date|date:"M d, Y" }}</td>
+                            <td><span class="type-pill {{ tx.transaction_type }}">{{ tx.get_transaction_type_display }}</span></td>
+                            <td style="font-weight: 700;">৳{{ tx.amount|floatformat:2 }}</td>
+                            <td style="color: var(--text-muted); font-size: 0.85rem;">{{ tx.note|default:"-" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div style="text-align: center; padding: 3rem 0; color: var(--text-muted);">
+                No transactions recorded yet.
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="card entry-card" style="height: fit-content;">
+        <h2 style="margin-bottom: 2rem;">Payment Progress</h2>
+        <div style="margin-bottom: 2.5rem; display: flex; align-items: center; justify-content: center; min-height: 250px;">
+            <canvas id="creditorChart"></canvas>
+        </div>
+
+        <h2>Record New Activity</h2>
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                        <p style="color: var(--danger); font-size: 0.75rem;">{{ field.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Post Transaction</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('creditorChart').getContext('2d');
+        const paid = {{ chart_paid }};
+        const remaining = {{ chart_remaining }};
+
+        if (paid === 0 && remaining === 0) {
+            ctx.font = '14px Inter';
+            ctx.fillStyle = '#9ca3af';
+            ctx.textAlign = 'center';
+            ctx.fillText('No data to display', ctx.canvas.width / 2, ctx.canvas.height / 2);
+            return;
+        }
+
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Paid', 'Remaining'],
+                datasets: [{
+                    data: [paid, remaining],
+                    backgroundColor: ['#10b981', '#ef4444'],
+                    borderWidth: 0,
+                    hoverOffset: 10,
+                }],
+            },
+            options: {
+                responsive: true,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20,
+                            font: { family: 'Inter', size: 12, weight: '500' }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#1f2937',
+                        padding: 12,
+                        callbacks: {
+                            label: function(context) {
+                                return ` ৳${context.raw.toLocaleString()}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
