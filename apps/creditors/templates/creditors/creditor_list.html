@@ -1,127 +1,66 @@
 {% extends "base.html" %}
 
-{% block title %}My Creditors | Creditors Tracker{% endblock %}
+{% block title %}My Creditors | FinTrack{% endblock %}
 
 {% block content %}
-<style>
-    .list-header { 
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center; 
-        margin-bottom: 2rem; 
-    }
-    .list-header h1 { font-size: 1.875rem; font-weight: 700; }
+<div class="px-4 sm:px-6 lg:px-8">
+  <div class="sm:flex sm:items-center">
+    <div class="sm:flex-auto">
+      <h1 class="text-2xl font-bold leading-6 text-gray-900">Manage Creditors</h1>
+      <p class="mt-2 text-sm text-gray-700">A complete list of people you have borrowed from and your repayment progress.</p>
+    </div>
+    <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+      <a href="{% url 'creditor_create' %}" class="block rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">+ New Creditor</a>
+    </div>
+  </div>
 
-    .creditor-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-        gap: 1.5rem;
-    }
+  {% if creditors %}
+  <div class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    {% for cr in creditors %}
+    <div class="relative flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-gray-900">{{ cr.name }}</h3>
+        <span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold {% if cr.is_paid %}bg-green-100 text-green-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">
+          {% if cr.is_paid %}Paid Completely{% else %}Owed ৳{{ cr.remaining|floatformat:0 }}{% endif %}
+        </span>
+      </div>
+      <p class="mt-1 text-sm text-gray-500">{{ cr.phone|default:"No contact info" }}</p>
 
-    .creditor-card { position: relative; overflow: hidden; }
-    .creditor-card::before {
-        content: '';
-        position: absolute;
-        top: 0; right: 0; bottom: 0; left: 0;
-        background: linear-gradient(to bottom right, rgba(255,255,255,0), rgba(0,0,0,0.02));
-        pointer-events: none;
-    }
+      <div class="mt-6 flex-1">
+        <div class="flex justify-between text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+            <span>Repayment Progress</span>
+            <span>{{ cr.payment_percent }}%</span>
+        </div>
+        <div class="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+            <div class="h-full bg-indigo-600 rounded-full transition-all duration-500" style="width: {{ cr.payment_percent }}%"></div>
+        </div>
 
-    .status-badge {
-        position: absolute;
-        top: 1rem;
-        right: 1rem;
-        padding: 0.25rem 0.6rem;
-        border-radius: 9999px;
-        font-size: 0.7rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-    .status-badge.paid { background: #dcfce7; color: #166534; }
-    .status-badge.pending { background: #fffbeb; color: #92400e; }
-
-    .creditor-name { font-size: 1.125rem; font-weight: 700; margin-bottom: 0.25rem; color: var(--text-main); }
-    .creditor-phone { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1.25rem; display: block; }
-    
-    .progress-info { display: flex; flex-direction: column; gap: 0.75rem; }
-    .row { display: flex; justify-content: space-between; font-size: 0.875rem; }
-    .label { color: var(--text-muted); }
-    .value { font-weight: 600; color: var(--text-main); }
-    
-    .progress-bar { height: 6px; background: #f3f4f6; border-radius: 999px; overflow: hidden; margin: 0.5rem 0; }
-    .progress-fill { height: 100%; background: var(--primary); border-radius: 999px; transition: width 0.3s ease; }
-
-    .btn-details {
-        display: block;
-        width: 100%;
-        text-align: center;
-        padding: 0.75rem;
-        margin-top: 1.5rem;
-        background: #f3f4f6;
-        color: var(--text-main);
-        text-decoration: none;
-        border-radius: 0.5rem;
-        font-weight: 600;
-        font-size: 0.875rem;
-        transition: background 0.2s;
-    }
-    .btn-details:hover { background: #e5e7eb; }
-</style>
-
-<div class="list-header">
-    <h1>Your Creditors</h1>
-    <a href="{% url 'creditor_create' %}" class="btn btn-primary">+ Add New</a>
-</div>
-
-{% if creditors %}
-    <div class="creditor-grid">
-        {% for cr in creditors %}
-            <div class="card creditor-card">
-                {% if cr.is_paid %}
-                    <span class="status-badge paid">Paid</span>
-                {% else %}
-                    <span class="status-badge pending">Pending</span>
-                {% endif %}
-
-                <span class="creditor-name">{{ cr.name }}</span>
-                <span class="creditor-phone">{{ cr.phone|default:"No phone provided" }}</span>
-
-                <div class="progress-info">
-                    <div class="row">
-                        <span class="label">Total Borrowed</span>
-                        <span class="value">৳{{ cr.total_borrowed_amt|floatformat:2 }}</span>
-                    </div>
-                    <div class="row">
-                        <span class="label">Total Paid</span>
-                        <span class="value">৳{{ cr.total_paid_amt|floatformat:2 }}</span>
-                    </div>
-                    
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: {{ cr.payment_percent }}%"></div>
-                    </div>
-
-                    <div class="row" style="margin-top: 0.25rem;">
-                        <span class="label">Remaining</span>
-                        <span class="value" {% if not cr.is_paid %}style="color: var(--danger);"{% endif %}>
-                            ৳{{ cr.remaining|floatformat:2 }}
-                        </span>
-                    </div>
-                </div>
-
-                <div class="row" style="margin-top: 2rem; gap: 0.5rem;">
-                    <a href="{% url 'creditor_detail' cr.pk %}" class="btn btn-primary" style="flex: 1; text-align: center; font-size: 0.8rem;">View History</a>
-                    <a href="{% url 'creditor_edit' cr.pk %}" class="btn" style="background: #f3f4f6; color: var(--text-main); font-size: 0.8rem; text-decoration: none; border-radius: 0.5rem; padding: 0.6rem 1rem;">Edit</a>
-                </div>
+        <dl class="mt-4 grid grid-cols-2 gap-4">
+            <div>
+                <dt class="text-xs font-medium text-gray-500">Borrowed</dt>
+                <dd class="text-sm font-bold text-gray-900">৳{{ cr.total_borrowed_amt|floatformat:0 }}</dd>
             </div>
-        {% endfor %}
+            <div class="text-right">
+                <dt class="text-xs font-medium text-gray-500">Repaid</dt>
+                <dd class="text-sm font-bold text-green-600">৳{{ cr.total_paid_amt|floatformat:0 }}</dd>
+            </div>
+        </dl>
+      </div>
+
+      <div class="mt-8 pt-4 border-t border-gray-50 flex gap-3">
+        <a href="{% url 'creditor_detail' cr.pk %}" class="flex-1 rounded-lg bg-gray-50 px-3 py-2 text-center text-sm font-bold text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 transition-all">Details</a>
+        <a href="{% url 'creditor_edit' cr.pk %}" class="rounded-lg bg-white border border-gray-200 px-3 py-2 text-center text-sm font-semibold text-gray-600 hover:bg-gray-50 shadow-sm">Edit</a>
+      </div>
     </div>
-{% else %}
-    <div style="text-align: center; padding: 5rem 0; background: white; border-radius: 0.75rem; border: 1px solid var(--border);">
-        <div style="font-size: 3rem; margin-bottom: 1rem;">💸</div>
-        <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">No creditors found</h2>
-        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Start tracking your debts by adding your first creditor.</p>
-        <a href="{% url 'creditor_create' %}" class="btn btn-primary">Add Your First Creditor</a>
-    </div>
-{% endif %}
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="mt-8 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-300 p-12 text-center bg-white">
+      <svg class="h-16 w-16 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+      <h3 class="mt-4 text-lg font-bold text-gray-900">No creditors yet</h3>
+      <p class="mt-2 text-sm text-gray-500 max-w-xs">Start building your financial reputation by adding your first creditor record.</p>
+      <a href="{% url 'creditor_create' %}" class="mt-6 inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-indigo-500 transition-all">+ Add Your First Creditor</a>
+  </div>
+  {% endif %}
+</div>
 {% endblock %}

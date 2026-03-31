@@ -1,48 +1,63 @@
 {% extends "base.html" %}
 
-{% block title %}Login | Creditors Tracker{% endblock %}
+{% block title %}Login | FinTrack{% endblock %}
 
 {% block content %}
-<style>
-    .auth-card {
-        max-width: 400px;
-        margin: 4rem auto;
-        padding: 2.5rem;
-    }
-    .auth-card h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; text-align: center; }
-    .form-group { margin-bottom: 1.25rem; }
-    .form-group label { display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-muted); }
-    .form-group input { 
-        width: 100%; 
-        padding: 0.75rem; 
-        border-radius: 0.5rem; 
-        border: 1px solid var(--border); 
-        font-family: inherit;
-        font-size: 0.95rem;
-    }
-    .form-group input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
-    .auth-btn { width: 100%; margin-top: 1rem; }
-    .auth-footer { margin-top: 1.5rem; text-align: center; font-size: 0.875rem; color: var(--text-muted); }
-    .auth-footer a { color: var(--primary); text-decoration: none; font-weight: 600; }
-</style>
-
-<div class="card auth-card">
-    <h1>Welcome back</h1>
-    <form method="post">
-        {% csrf_token %}
-        {% for field in form %}
-            <div class="form-group">
-                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                {{ field }}
-                {% if field.errors %}
-                    <p style="color: var(--danger); font-size: 0.8rem; margin-top: 0.25rem;">{{ field.errors.0 }}</p>
-                {% endif %}
-            </div>
-        {% endfor %}
-        <button type="submit" class="btn btn-primary auth-btn">Log In</button>
-    </form>
-    <div class="auth-footer">
-        Don't have an account? <a href="{% url 'signup' %}">Sign up for free</a>
+<div class="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
+  <div class="sm:mx-auto sm:w-full sm:max-w-sm">
+    <div class="mx-auto h-12 w-12 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-black text-xl shadow-xl shadow-indigo-100 ring-4 ring-indigo-50">
+        F
     </div>
+    <h2 class="mt-8 text-center text-2xl font-black leading-9 tracking-tight text-gray-900 uppercase">Welcome back</h2>
+    <p class="mt-2 text-center text-sm font-bold text-gray-400 uppercase tracking-widest">Sign in to your account</p>
+  </div>
+
+  <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
+    <div class="bg-white px-8 py-10 shadow-2xl rounded-[2.5rem] border border-gray-100 ring-1 ring-gray-900/5">
+        <form class="space-y-6" method="POST">
+          {% csrf_token %}
+          
+          {% for field in form %}
+          <div class="group">
+            <label for="{{ field.id_for_label }}" class="block text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-2 ml-1 group-focus-within:text-indigo-600 transition-colors">{{ field.label }}</label>
+            <div class="relative bg-gray-50 rounded-2xl transition-all duration-300 ring-2 ring-inset ring-gray-100 focus-within:ring-2 focus-within:ring-indigo-600 focus-within:bg-white shadow-sm hover:ring-gray-200">
+                {{ field }}
+            </div>
+            {% if field.errors %}
+                <p class="mt-2 text-[10px] text-red-500 font-black uppercase tracking-widest flex items-center gap-2 ml-1">{{ field.errors.0 }}</p>
+            {% endif %}
+          </div>
+          {% endfor %}
+
+          <div class="pt-4">
+            <button type="submit" class="flex w-full justify-center rounded-2xl bg-indigo-600 px-3 py-4 text-sm font-black uppercase tracking-[0.2em] leading-6 text-white shadow-2xl shadow-indigo-200 hover:bg-indigo-500 hover:-translate-y-1 transition-all active:translate-y-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Sign in</button>
+          </div>
+        </form>
+
+        <p class="mt-10 text-center text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+          Not a member?
+          <a href="{% url 'signup' %}" class="font-black text-indigo-600 hover:text-indigo-500 transition-colors">Create account</a>
+        </p>
+    </div>
+  </div>
 </div>
+
+<style>
+    /* Styling Django generated fields for Auth Hub */
+    .space-y-6 input {
+        background-color: transparent !important;
+        border: none !important;
+        width: 100% !important;
+        padding: 1.15rem 1.5rem !important;
+        font-size: 0.95rem !important;
+        font-weight: 700 !important;
+        color: #1a1e2e !important;
+        outline: none !important;
+        box-shadow: none !important;
+    }
+    .space-y-6 input::placeholder {
+        color: #94a3b8 !important;
+        font-weight: 500 !important;
+    }
+</style>
 {% endblock %}

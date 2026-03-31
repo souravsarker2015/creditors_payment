@@ -152,4 +152,27 @@ def debtor_list_view(request):
         else:
             dr.received_percent = 0
             
-    return render(request, "debtors/debtor_list.html", {"debtors": debtors_qs})
+
+@login_required
+def transaction_edit_view(request, pk):
+    transaction = get_object_or_404(Transaction, pk=pk, debtor__user=request.user)
+    debtor = transaction.debtor
+    if request.method == "POST":
+        form = TransactionForm(request.POST, instance=transaction)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Transaction updated.")
+            return redirect("debtor_detail", pk=debtor.pk)
+    else:
+        form = TransactionForm(instance=transaction)
+    return render(request, "debtors/debtor_form.html", {"form": form, "title": "Edit Transaction", "back_url": f"/debtors/{debtor.pk}/"})
+
+
+@login_required
+def transaction_delete_view(request, pk):
+    transaction = get_object_or_404(Transaction, pk=pk, debtor__user=request.user)
+    debtor = transaction.debtor
+    amount = transaction.amount
+    transaction.delete()
+    messages.success(request, f"Transaction of ৳{amount} deleted.")
+    return redirect("debtor_detail", pk=debtor.pk)

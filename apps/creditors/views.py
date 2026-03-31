@@ -154,4 +154,27 @@ def creditor_list_view(request):
         else:
             cr.payment_percent = 0
             
-    return render(request, "creditors/creditor_list.html", {"creditors": creditors_qs})
+
+@login_required
+def transaction_edit_view(request, pk):
+    transaction = get_object_or_404(Transaction, pk=pk, creditor__user=request.user)
+    creditor = transaction.creditor
+    if request.method == "POST":
+        form = TransactionForm(request.POST, instance=transaction)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Transaction updated.")
+            return redirect("creditor_detail", pk=creditor.pk)
+    else:
+        form = TransactionForm(instance=transaction)
+    return render(request, "creditors/creditor_form.html", {"form": form, "title": "Edit Transaction", "back_url": f"/creditors/{creditor.pk}/"})
+
+
+@login_required
+def transaction_delete_view(request, pk):
+    transaction = get_object_or_404(Transaction, pk=pk, creditor__user=request.user)
+    creditor = transaction.creditor
+    amount = transaction.amount
+    transaction.delete()
+    messages.success(request, f"Transaction of ৳{amount} deleted.")
+    return redirect("creditor_detail", pk=creditor.pk)

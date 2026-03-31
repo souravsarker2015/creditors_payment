@@ -1,120 +1,95 @@
 {% extends "base.html" %}
 
-{% block title %}Debtors Dashboard | Tracker{% endblock %}
+{% block title %}Debtors Dashboard | FinTrack{% endblock %}
 
 {% block content %}
-<style>
-    .dashboard-header { margin-bottom: 2rem; }
-    .dashboard-header h1 { font-size: 1.875rem; font-weight: 700; color: var(--text-main); }
-    .dashboard-header p { color: var(--text-muted); margin-top: 0.25rem; }
-
-    .stats-grid { 
-        display: grid; 
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); 
-        gap: 1.5rem; 
-        margin-bottom: 2rem;
-    }
-    .stat-card { border-left: 4px solid var(--border); }
-    .stat-card.lent { border-left-color: var(--primary); } /* Blue */
-    .stat-card.received { border-left-color: var(--success); } /* Green */
-    .stat-card.remaining { border-left-color: var(--warning); } /* Orange/Yellow */
-    
-    .stat-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; color: var(--text-muted); margin-bottom: 0.5rem; }
-    .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--text-main); }
-
-    .main-grid {
-        display: grid;
-        grid-template-columns: 2fr 1fr;
-        gap: 1.5rem;
-    }
-
-    .recent-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-    .recent-table th { text-align: left; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
-    .recent-table td { padding: 1rem 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
-    .type-badge { padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
-    .type-badge.LEND { background: #dbeafe; color: #1e40af; } /* Light Blue */
-    .type-badge.RECEIVE { background: #dcfce7; color: #166534; } /* Light Green */
-
-    .chart-box { display: flex; align-items: center; justify-content: center; min-height: 300px; }
-
-    @media (max-width: 1024px) {
-        .main-grid { grid-template-columns: 1fr; }
-    }
-</style>
-
-<div class="dashboard-header">
-    <h1>Debtors Dashboard</h1>
-    <p>Track people who owe you money and manage collections.</p>
-</div>
-
-<div class="stats-grid">
-    <div class="card stat-card lent">
-        <div class="stat-label">Total Lent (Ami diyechi)</div>
-        <div class="stat-value">৳{{ total_lent|floatformat:2 }}</div>
+<div class="px-4 sm:px-6 lg:px-8">
+  <div class="sm:flex sm:items-center text-left">
+    <div class="sm:flex-auto">
+      <h1 class="text-2xl font-bold leading-6 text-gray-900 uppercase tracking-tight">Debtors Overview</h1>
+      <p class="mt-2 text-sm text-gray-700">Detailed overview of people who owe you money and your collection status.</p>
     </div>
-    <div class="card stat-card received">
-        <div class="stat-label">Total Received (Ami peyechi)</div>
-        <div class="stat-value">৳{{ total_received|floatformat:2 }}</div>
+    <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+      <a href="{% url 'debtor_create' %}" class="block rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-all">+ Add New Debtor</a>
     </div>
-    <div class="card stat-card remaining">
-        <div class="stat-label">Total Remaining (Pabo)</div>
-        <div class="stat-value">৳{{ remaining|floatformat:2 }}</div>
-    </div>
-</div>
+  </div>
 
-<div class="main-grid">
-    <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <h2 style="font-size: 1.125rem; font-weight: 700;">Recent Activity</h2>
-            <a href="{% url 'debtor_list' %}" style="font-size: 0.875rem; color: var(--primary); text-decoration: none; font-weight: 600;">View All Debtors</a>
-        </div>
+  <!-- Identifiable Stats Grid -->
+  <dl class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-3">
+    <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow-sm border border-gray-100 sm:p-6 border-l-4 border-indigo-500">
+      <dt class="truncate text-sm font-medium text-gray-500 uppercase tracking-widest">Total Lent</dt>
+      <dd class="mt-1 text-3xl font-bold tracking-tight text-gray-900">৳{{ total_lent|floatformat:2 }}</dd>
+    </div>
+    <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow-sm border border-gray-100 sm:p-6 border-l-4 border-green-500">
+      <dt class="truncate text-sm font-medium text-gray-500 uppercase tracking-widest">Total Received</dt>
+      <dd class="mt-1 text-3xl font-bold tracking-tight text-gray-900">৳{{ total_received|floatformat:2 }}</dd>
+    </div>
+    <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow-sm border border-gray-100 sm:p-6 border-l-4 border-yellow-500">
+      <dt class="truncate text-sm font-medium text-gray-500 uppercase tracking-widest">Remaining to Collect</dt>
+      <dd class="mt-1 text-3xl font-bold tracking-tight text-gray-900">৳{{ remaining|floatformat:2 }}</dd>
+    </div>
+  </dl>
+
+  <div class="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-2 lg:items-start">
+    <!-- Activity Section -->
+    <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div class="border-b border-gray-200 bg-gray-50 px-6 py-4 flex justify-between items-center">
+        <h2 class="text-base font-semibold leading-7 text-gray-900">Recent Collections</h2>
+        <a href="{% url 'debtor_list' %}" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">View All Debtors</a>
+      </div>
+      <div class="px-0 sm:px-0 lg:px-0">
         {% if recent_transactions %}
-            <table class="recent-table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Debtor</th>
-                        <th>Type</th>
-                        <th>Amount</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for tx in recent_transactions %}
-                        <tr>
-                            <td style="color: var(--text-muted);">{{ tx.date|date:"M d, Y" }}</td>
-                            <td style="font-weight: 500;">{{ tx.debtor.name }}</td>
-                            <td><span class="type-badge {{ tx.transaction_type }}">{{ tx.get_transaction_type_display }}</span></td>
-                            <td style="font-weight: 600;">৳{{ tx.amount|floatformat:2 }}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Date</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Debtor</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Type</th>
+                <th scope="col" class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">Amount</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 bg-white">
+              {% for tx in recent_transactions %}
+                <tr class="hover:bg-gray-50 transition-colors">
+                  <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{{ tx.date|date:"M d, Y" }}</td>
+                  <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">{{ tx.debtor.name }}</td>
+                  <td class="whitespace-nowrap px-6 py-4 text-sm">
+                    <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {% if tx.transaction_type == 'LEND' %}bg-blue-100 text-blue-800{% else %}bg-green-100 text-green-800{% endif %}">
+                      {{ tx.get_transaction_type_display }}
+                    </span>
+                  </td>
+                  <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-bold text-gray-900 font-mono">৳{{ tx.amount|floatformat:2 }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
         {% else %}
-            <div style="text-align: center; padding: 3rem 0; color: var(--text-muted);">
-                No transactions yet. <br>
-                <a href="{% url 'debtor_create' %}" style="color: var(--primary); font-weight: 600;">Add your first debtor</a>
-            </div>
+          <div class="px-6 py-12 text-center h-full">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+            <h3 class="mt-2 text-sm font-semibold text-gray-900">No activity yet</h3>
+            <p class="mt-1 text-sm text-gray-500">Record your first loan to a debtor to see progress here.</p>
+          </div>
         {% endif %}
+      </div>
     </div>
 
-    <div class="card">
-        <h2 style="font-size: 1.125rem; font-weight: 700; margin-bottom: 1.5rem;">Visual Breakdown</h2>
-        <div style="display: grid; grid-template-columns: 1fr; gap: 2rem;">
-            <div>
-                <p style="text-align: center; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 1rem;">REMAINING BY DEBTOR (Pabo)</p>
-                <div style="min-height: 250px;"><canvas id="remainingChart"></canvas></div>
-            </div>
-            <div>
-                <p style="text-align: center; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 1rem;">COLLECTED FROM DEBTOR (Peyechi)</p>
-                <div style="min-height: 250px;"><canvas id="receivedChart"></canvas></div>
-            </div>
+    <!-- Analytics Section -->
+    <div class="flex flex-col gap-8">
+        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+            <h3 class="text-sm font-bold text-gray-500 uppercase tracking-widest mb-6 text-center">Outstanding (Remaining to Collect)</h3>
+            <div class="h-64 sm:h-80"><canvas id="remainingChart"></canvas></div>
+        </div>
+        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+            <h3 class="text-sm font-bold text-gray-500 uppercase tracking-widest mb-6 text-center">Collection Status (Total Received)</h3>
+            <div class="h-64 sm:h-80"><canvas id="receivedChart"></canvas></div>
         </div>
     </div>
+  </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const labels = {{ debtor_labels|safe }};
@@ -128,62 +103,25 @@
             '#06b6d4', '#ec4899', '#f97316', '#6366f1', '#14b8a6'
         ];
 
-        // Chart 1: Remaining to Collect
-        const ctxRem = document.getElementById('remainingChart').getContext('2d');
-        new Chart(ctxRem, {
-            type: 'pie',
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: remainingData,
-                    backgroundColor: colors,
-                    borderWidth: 2,
-                    borderColor: '#ffffff'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return ` ${context.label}: ৳${context.raw.toLocaleString()}`;
-                            }
-                        }
-                    }
-                }
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { usePointStyle: true, font: { size: 11 } } },
+                tooltip: { callbacks: { label: (ctx) => ` ৳${ctx.raw.toLocaleString()}` } }
             }
+        };
+
+        new Chart(document.getElementById('remainingChart'), {
+            type: 'pie',
+            data: { labels, datasets: [{ data: remainingData, backgroundColor: colors, borderWidth: 2, borderColor: '#fff' }] },
+            options: chartOptions
         });
 
-        // Chart 2: Total Received
-        const ctxRec = document.getElementById('receivedChart').getContext('2d');
-        new Chart(ctxRec, {
+        new Chart(document.getElementById('receivedChart'), {
             type: 'pie',
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: receivedData,
-                    backgroundColor: colors,
-                    borderWidth: 2,
-                    borderColor: '#ffffff'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return ` ${context.label}: ৳${context.raw.toLocaleString()}`;
-                            }
-                        }
-                    }
-                }
-            }
+            data: { labels, datasets: [{ data: receivedData, backgroundColor: colors, borderWidth: 2, borderColor: '#fff' }] },
+            options: chartOptions
         });
     });
 </script>

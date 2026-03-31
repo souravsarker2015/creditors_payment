@@ -1,120 +1,95 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard | Creditors Tracker{% endblock %}
+{% block title %}Creditors Dashboard | FinTrack{% endblock %}
 
 {% block content %}
-<style>
-    .dashboard-header { margin-bottom: 2rem; }
-    .dashboard-header h1 { font-size: 1.875rem; font-weight: 700; color: var(--text-main); }
-    .dashboard-header p { color: var(--text-muted); margin-top: 0.25rem; }
-
-    .stats-grid { 
-        display: grid; 
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); 
-        gap: 1.5rem; 
-        margin-bottom: 2rem;
-    }
-    .stat-card { border-left: 4px solid var(--border); }
-    .stat-card.borrowed { border-left-color: var(--danger); }
-    .stat-card.paid { border-left-color: var(--success); }
-    .stat-card.remaining { border-left-color: var(--warning); }
-    
-    .stat-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; color: var(--text-muted); margin-bottom: 0.5rem; }
-    .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--text-main); }
-
-    .main-grid {
-        display: grid;
-        grid-template-columns: 2fr 1fr;
-        gap: 1.5rem;
-    }
-
-    .recent-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-    .recent-table th { text-align: left; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
-    .recent-table td { padding: 1rem 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
-    .type-badge { padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
-    .type-badge.BORROW { background: #fee2e2; color: #991b1b; }
-    .type-badge.REPAY { background: #dcfce7; color: #166534; }
-
-    .chart-box { display: flex; align-items: center; justify-content: center; min-height: 300px; }
-
-    @media (max-width: 1024px) {
-        .main-grid { grid-template-columns: 1fr; }
-    }
-</style>
-
-<div class="dashboard-header">
-    <h1>Welcome, {{ user.username }}</h1>
-    <p>Here is your current financial standing at a glance.</p>
-</div>
-
-<div class="stats-grid">
-    <div class="card stat-card borrowed">
-        <div class="stat-label">Total Borrowed</div>
-        <div class="stat-value">৳{{ total_borrowed|floatformat:2 }}</div>
+<div class="px-4 sm:px-6 lg:px-8">
+  <div class="sm:flex sm:items-center">
+    <div class="sm:flex-auto">
+      <h1 class="text-2xl font-bold leading-6 text-gray-900">Creditors Overview</h1>
+      <p class="mt-2 text-sm text-gray-700">A detailed summary of money you have borrowed and need to repay.</p>
     </div>
-    <div class="card stat-card paid">
-        <div class="stat-label">Total Paid</div>
-        <div class="stat-value">৳{{ total_paid|floatformat:2 }}</div>
+    <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+      <a href="{% url 'creditor_create' %}" class="block rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">+ Add Creditor</a>
     </div>
-    <div class="card stat-card remaining">
-        <div class="stat-label">Remaining Debt</div>
-        <div class="stat-value">৳{{ remaining|floatformat:2 }}</div>
-    </div>
-</div>
+  </div>
 
-<div class="main-grid">
-    <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <h2 style="font-size: 1.125rem; font-weight: 700;">Recent Activity</h2>
-            <a href="{% url 'creditor_list' %}" style="font-size: 0.875rem; color: var(--primary); text-decoration: none; font-weight: 600;">View All Creditors</a>
-        </div>
+  <!-- Stats Grid -->
+  <dl class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-3">
+    <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6 border-l-4 border-red-500">
+      <dt class="truncate text-sm font-medium text-gray-500">Total Borrowed</dt>
+      <dd class="mt-1 text-3xl font-bold tracking-tight text-gray-900">৳{{ total_borrowed|floatformat:2 }}</dd>
+    </div>
+    <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6 border-l-4 border-green-500">
+      <dt class="truncate text-sm font-medium text-gray-500">Total Paid</dt>
+      <dd class="mt-1 text-3xl font-bold tracking-tight text-gray-900">৳{{ total_paid|floatformat:2 }}</dd>
+    </div>
+    <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6 border-l-4 border-yellow-500">
+      <dt class="truncate text-sm font-medium text-gray-500">Remaining Debt</dt>
+      <dd class="mt-1 text-3xl font-bold tracking-tight text-gray-900">৳{{ remaining|floatformat:2 }}</dd>
+    </div>
+  </dl>
+
+  <div class="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-2">
+    <!-- Recent Activity Card -->
+    <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div class="border-b border-gray-200 bg-gray-50 px-6 py-4 flex justify-between items-center">
+        <h2 class="text-base font-semibold leading-7 text-gray-900">Recent Transactions</h2>
+        <a href="{% url 'creditor_list' %}" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">View All</a>
+      </div>
+      <div class="px-0 sm:px-0 lg:px-0">
         {% if recent_transactions %}
-            <table class="recent-table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Creditor</th>
-                        <th>Type</th>
-                        <th>Amount</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for tx in recent_transactions %}
-                        <tr>
-                            <td style="color: var(--text-muted);">{{ tx.date|date:"M d, Y" }}</td>
-                            <td style="font-weight: 500;">{{ tx.creditor.name }}</td>
-                            <td><span class="type-badge {{ tx.transaction_type }}">{{ tx.get_transaction_type_display }}</span></td>
-                            <td style="font-weight: 600;">৳{{ tx.amount|floatformat:2 }}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Date</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Creditor</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Type</th>
+                <th scope="col" class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">Amount</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 bg-white">
+              {% for tx in recent_transactions %}
+                <tr class="hover:bg-gray-50 transition-colors">
+                  <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{{ tx.date|date:"M d, Y" }}</td>
+                  <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">{{ tx.creditor.name }}</td>
+                  <td class="whitespace-nowrap px-6 py-4 text-sm">
+                    <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {% if tx.transaction_type == 'BORROW' %}bg-red-100 text-red-800{% else %}bg-green-100 text-green-800{% endif %}">
+                      {{ tx.get_transaction_type_display }}
+                    </span>
+                  </td>
+                  <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-bold text-gray-900 font-mono">৳{{ tx.amount|floatformat:2 }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
         {% else %}
-            <div style="text-align: center; padding: 3rem 0; color: var(--text-muted);">
-                No transactions yet. <br>
-                <a href="{% url 'creditor_create' %}" style="color: var(--primary); font-weight: 600;">Add your first creditor</a>
-            </div>
+          <div class="px-6 py-12 text-center">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+            <h3 class="mt-2 text-sm font-semibold text-gray-900">No transactions</h3>
+            <p class="mt-1 text-sm text-gray-500">Get started by adding your first creditor.</p>
+          </div>
         {% endif %}
+      </div>
     </div>
 
-    <div class="card">
-        <h2 style="font-size: 1.125rem; font-weight: 700; margin-bottom: 1.5rem;">Visual Breakdown</h2>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-            <div>
-                <p style="text-align: center; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 1rem;">DEBT BY CREDITOR (Pabe)</p>
-                <div style="min-height: 250px;"><canvas id="remainingChart"></canvas></div>
-            </div>
-            <div>
-                <p style="text-align: center; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 1rem;">PAID TO CREDITOR (Daoya)</p>
-                <div style="min-height: 250px;"><canvas id="paidChart"></canvas></div>
-            </div>
+    <!-- Charts Card -->
+    <div class="flex flex-col gap-8">
+        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+            <h3 class="text-sm font-bold text-gray-500 uppercase tracking-widest mb-6 text-center">Debt Breakdown (Remaining)</h3>
+            <div class="h-64 sm:h-80"><canvas id="remainingChart"></canvas></div>
+        </div>
+        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+            <h3 class="text-sm font-bold text-gray-500 uppercase tracking-widest mb-6 text-center">Payment History (Total Paid)</h3>
+            <div class="h-64 sm:h-80"><canvas id="paidChart"></canvas></div>
         </div>
     </div>
+  </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const labels = {{ creditor_labels|safe }};
@@ -124,66 +99,29 @@
         if (labels.length === 0) return;
 
         const colors = [
-            '#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', 
+            '#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', 
             '#06b6d4', '#ec4899', '#f97316', '#6366f1', '#14b8a6'
         ];
 
-        // Chart 1: Remaining Debt (Who gets paid)
-        const ctxRem = document.getElementById('remainingChart').getContext('2d');
-        new Chart(ctxRem, {
-            type: 'pie',
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: remainingData,
-                    backgroundColor: colors,
-                    borderWidth: 2,
-                    borderColor: '#ffffff'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return ` ${context.label}: ৳${context.raw.toLocaleString()}`;
-                            }
-                        }
-                    }
-                }
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { usePointStyle: true, font: { size: 11 } } },
+                tooltip: { callbacks: { label: (ctx) => ` ৳${ctx.raw.toLocaleString()}` } }
             }
+        };
+
+        new Chart(document.getElementById('remainingChart'), {
+            type: 'doughnut',
+            data: { labels, datasets: [{ data: remainingData, backgroundColor: colors, borderWidth: 0 }] },
+            options: chartOptions
         });
 
-        // Chart 2: Total Paid (How much given)
-        const ctxPaid = document.getElementById('paidChart').getContext('2d');
-        new Chart(ctxPaid, {
-            type: 'pie',
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: paidData,
-                    backgroundColor: colors,
-                    borderWidth: 2,
-                    borderColor: '#ffffff'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return ` ${context.label}: ৳${context.raw.toLocaleString()}`;
-                            }
-                        }
-                    }
-                }
-            }
+        new Chart(document.getElementById('paidChart'), {
+            type: 'doughnut',
+            data: { labels, datasets: [{ data: paidData, backgroundColor: colors, borderWidth: 0 }] },
+            options: chartOptions
         });
     });
 </script>

@@ -7,4 +7,6 @@ urlpatterns = [
     path("debtors/add/", views.debtor_create_view, name="debtor_create"),
     path("debtors/<int:pk>/", views.debtor_detail_view, name="debtor_detail"),
     path("debtors/<int:pk>/edit/", views.debtor_edit_view, name="debtor_edit"),
+    path("transactions/<int:pk>/edit/", views.transaction_edit_view, name="debtor_transaction_edit"),
+    path("transactions/<int:pk>/delete/", views.transaction_delete_view, name="debtor_transaction_delete"),
 ]

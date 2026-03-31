@@ -1,150 +1,164 @@
 {% extends "base.html" %}
 
-{% block title %}{{ debtor.name }} Details | Tracker{% endblock %}
+{% block title %}{{ debtor.name }} Details | FinTrack{% endblock %}
 
 {% block content %}
-<style>
-    .detail-grid { display: grid; grid-template-columns: 1fr 350px; gap: 2rem; margin-top: 2rem; }
-    
-    .header-section { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; }
-    .header-info h1 { font-size: 2rem; font-weight: 800; color: var(--text-main); }
-    .header-info p { color: var(--text-muted); font-size: 1rem; margin-top: 0.5rem; }
-
-    .stats-row { display: flex; gap: 1rem; margin-bottom: 2rem; }
-    .mini-stat { flex: 1; padding: 1.25rem; background: var(--card-bg); border: 1px solid var(--border); border-radius: 0.75rem; }
-    .mini-label { font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem; }
-    .mini-value { font-size: 1.25rem; font-weight: 700; }
-
-    .transaction-list h2 { font-size: 1.25rem; font-weight: 700; margin-bottom: 1.5rem; }
-    .tx-table { width: 100%; border-collapse: collapse; }
-    .tx-table th { text-align: left; padding: 0.75rem; border-bottom: 2px solid var(--border); font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
-    .tx-table td { padding: 1rem 0.75rem; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
-
-    .type-pill { padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.7rem; font-weight: 700; }
-    .LEND { background: #dbeafe; color: #1e40af; }
-    .RECEIVE { background: #dcfce7; color: #166534; }
-
-    .entry-card h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 1.5rem; }
-    .form-group { margin-bottom: 1.25rem; }
-    .form-group label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.4rem; }
-    
-    .form-control { 
-        width: 100%; 
-        padding: 0.65rem; 
-        border-radius: 0.4rem; 
-        border: 1px solid var(--border); 
-        font-size: 0.9rem; 
-        font-family: inherit;
-    }
-    .form-control:focus { 
-        border-color: var(--primary); 
-        outline: none; 
-        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); 
-    }
-
-    @media (max-width: 1024px) {
-        .detail-grid { grid-template-columns: 1fr; }
-    }
-</style>
-
-<div class="header-section">
-    <div class="header-info">
-        <h1>{{ debtor.name }}</h1>
-        <p>{{ debtor.phone|default:"No phone" }} • {{ debtor.note|default:"No notes" }}</p>
-    </div>
-    <div class="header-actions">
-        <a href="{% url 'debtor_edit' debtor.pk %}" class="btn" style="background: #f3f4f6; color: var(--text-main); text-decoration: none; padding: 0.6rem 1rem; border-radius: 0.5rem; font-weight: 600;">Edit Profile</a>
-        <a href="{% url 'debtor_list' %}" class="btn" style="background: white; border: 1px solid var(--border); color: var(--text-main); text-decoration: none; padding: 0.6rem 1rem; border-radius: 0.5rem; font-weight: 600;">Back to List</a>
-    </div>
-</div>
-
-<div class="stats-row">
-    <div class="mini-stat">
-        <div class="mini-label">Total Lent</div>
-        <div class="mini-value">৳{{ lent|floatformat:2 }}</div>
-    </div>
-    <div class="mini-stat">
-        <div class="mini-label">Total Received</div>
-        <div class="mini-value" style="color: var(--success);">৳{{ received|floatformat:2 }}</div>
-    </div>
-    <div class="mini-stat">
-        <div class="mini-label">Balance to Get</div>
-        <div class="mini-value" style="color: {% if remaining > 0 %}var(--danger){% else %}var(--success){% endif %};">
-            ৳{{ remaining|floatformat:2 }}
-        </div>
-    </div>
-</div>
-
-<div class="detail-grid">
-    <div class="card transaction-list">
-        <h2>Collection History</h2>
-        {% if transactions %}
-            <table class="tx-table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Type</th>
-                        <th>Amount</th>
-                        <th>Note</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for tx in transactions %}
-                        <tr>
-                            <td style="color: var(--text-muted);">{{ tx.date|date:"M d, Y" }}</td>
-                            <td><span class="type-pill {{ tx.transaction_type }}">{{ tx.get_transaction_type_display }}</span></td>
-                            <td style="font-weight: 700;">৳{{ tx.amount|floatformat:2 }}</td>
-                            <td style="color: var(--text-muted); font-size: 0.85rem;">{{ tx.note|default:"-" }}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <div style="text-align: center; padding: 3rem 0; color: var(--text-muted);">
-                No transactions recorded yet.
+<div class="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pb-16">
+  <!-- Header with high-end glassmorphism effect -->
+  <div class="md:flex md:items-end md:justify-between border-b-2 border-gray-100 pb-10">
+    <div class="min-w-0 flex-1">
+      <div class="flex items-center gap-x-4">
+          <div class="h-14 w-14 rounded-2xl bg-indigo-600 flex items-center justify-center text-white font-black text-2xl shadow-indigo-200 shadow-2xl ring-4 ring-indigo-50">
+              {{ debtor.name|first|upper }}
+          </div>
+          <div>
+            <h1 class="text-3xl font-black text-gray-900 tracking-tight sm:text-4xl leading-tight">{{ debtor.name }}</h1>
+            <div class="flex gap-4 mt-1 items-center">
+                <span class="inline-flex items-center text-sm font-bold text-gray-400">
+                    <svg class="mr-1.5 h-4 w-4" fill="currentColor" viewBox="0 0 20 20"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" /></svg>
+                    {{ debtor.phone|default:"No phone" }}
+                </span>
+                <span class="h-1 w-1 rounded-full bg-gray-300"></span>
+                <span class="inline-flex items-center text-sm font-bold text-gray-400">
+                    <svg class="mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                    {{ debtor.note|default:"No notes" }}
+                </span>
             </div>
-        {% endif %}
+          </div>
+      </div>
+    </div>
+    <div class="mt-8 flex md:ml-4 md:mt-0 gap-3">
+      <a href="{% url 'debtor_edit' debtor.pk %}" class="inline-flex items-center rounded-xl bg-white px-4 py-2.5 text-sm font-extrabold text-gray-600 shadow-sm ring-2 ring-inset ring-gray-100 hover:bg-gray-50 transition-all border-none">Edit Debtor Profile</a>
+      <a href="{% url 'debtor_list' %}" class="inline-flex items-center rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-extrabold text-white hover:bg-gray-800 transition-all shadow-xl shadow-gray-200">Back</a>
+    </div>
+  </div>
+
+  <!-- Identifiable Stats with color accents -->
+  <dl class="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-3">
+    <div class="bg-white px-8 py-6 shadow-sm ring-1 ring-gray-200 rounded-3xl group hover:shadow-indigo-50 hover:shadow-xl transition-all">
+      <dt class="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center mb-1">Cumulative Lent</dt>
+      <dd class="text-4xl font-black text-indigo-600 text-center tracking-tighter">৳{{ lent|floatformat:0 }}</dd>
+    </div>
+    <div class="bg-white px-8 py-6 shadow-sm ring-1 ring-gray-200 rounded-3xl group hover:shadow-green-50 hover:shadow-xl transition-all border-l-8 border-green-500">
+      <dt class="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center mb-1">Total Collected</dt>
+      <dd class="text-4xl font-black text-green-600 text-center tracking-tighter">৳{{ received|floatformat:0 }}</dd>
+    </div>
+    <div class="bg-white px-8 py-6 shadow-sm ring-1 ring-gray-200 rounded-3xl group hover:shadow-orange-50 hover:shadow-xl transition-all border-l-8 border-orange-500">
+      <dt class="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center mb-1">Still Owed to You</dt>
+      <dd class="text-4xl font-black text-orange-600 text-center tracking-tighter">৳{{ remaining|floatformat:0 }}</dd>
+    </div>
+  </dl>
+
+  <div class="mt-12 grid grid-cols-1 gap-12 lg:grid-cols-3 items-start">
+    <!-- Transaction History (Left Column) -->
+    <div class="lg:col-span-2 space-y-4">
+        <div class="overflow-hidden bg-white shadow-sm ring-1 ring-gray-200 rounded-3xl">
+            <div class="border-b border-gray-50 px-8 py-6 flex justify-between items-center bg-gray-50/50">
+                <h3 class="text-xs font-black text-gray-500 uppercase tracking-[0.2em]">Full Transaction History</h3>
+            </div>
+            <div class="overflow-x-auto">
+                {% if transactions %}
+                <table class="min-w-full divide-y divide-gray-100">
+                    <thead class="bg-white">
+                        <tr>
+                            <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Date</th>
+                            <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
+                            <th class="px-8 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Amount</th>
+                            <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Memo</th>
+                            <th class="px-8 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50 bg-white">
+                        {% for tx in transactions %}
+                        <tr class="hover:bg-gray-50/50 transition-colors">
+                            <td class="px-8 py-5 text-sm text-gray-500 font-bold whitespace-nowrap">{{ tx.date|date:"d M Y" }}</td>
+                            <td class="px-8 py-5">
+                                <span class="inline-flex items-center rounded-lg px-2.5 py-1 text-[10px] font-black uppercase tracking-widest {% if tx.transaction_type == 'LEND' %}bg-blue-50 text-blue-700{% else %}bg-green-50 text-green-700{% endif %}">
+                                    {{ tx.get_transaction_type_display }}
+                                </span>
+                            </td>
+                            <td class="px-8 py-5 text-right text-sm font-black text-gray-900 tabular-nums">৳{{ tx.amount|floatformat:0 }}</td>
+                            <td class="px-8 py-5 text-xs text-gray-400 font-semibold italic">{{ tx.note|default:"-" }}</td>
+                            <td class="px-8 py-5 text-right text-sm font-medium space-x-2">
+                                <a href="{% url 'debtor_transaction_edit' tx.pk %}" class="text-indigo-600 hover:text-indigo-900 inline-flex items-center" title="Edit">
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                    </svg>
+                                </a>
+                                <a href="{% url 'debtor_transaction_delete' tx.pk %}" class="text-red-600 hover:text-red-900 inline-flex items-center" title="Delete" onclick="return confirm('Silently delete this collection record? This action cannot be undone.')">
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="py-24 text-center">
+                    <div class="h-16 w-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="h-8 w-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </div>
+                    <p class="text-gray-400 text-sm font-bold uppercase tracking-widest">Timeline is empty</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
     </div>
 
-    <div class="card entry-card" style="height: fit-content;">
-        <h2 style="margin-bottom: 2rem;">Collection Progress</h2>
-        <div style="margin-bottom: 2.5rem; display: flex; align-items: center; justify-content: center; min-height: 250px;">
-            <canvas id="debtorChart"></canvas>
+    <!-- Collection Hub (Right Column) -->
+    <div class="space-y-10">
+        <!-- Visual Stats -->
+        <div class="bg-white shadow-sm ring-1 ring-gray-200 rounded-3xl p-10 flex flex-col items-center">
+            <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-10">Collection Progress</h3>
+            <div class="h-56 w-full"><canvas id="debtorChart"></canvas></div>
         </div>
 
-        <h2>Record New Activity</h2>
-        <form method="post">
-            {% csrf_token %}
-            {% for field in form %}
-                <div class="form-group">
-                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    {{ field }}
+        <!-- Add Transaction Form Card -->
+        <div class="bg-[#1e293b] shadow-2xl rounded-[2.5rem] p-10 text-white border-2 border-slate-700">
+            <div class="flex items-center gap-4 mb-8">
+                <div class="h-12 w-12 bg-white/10 rounded-2xl flex items-center justify-center border border-white/20">
+                    <svg class="h-6 w-6 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-black tracking-tight leading-tight">Register Collection</h3>
+                    <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mt-0.5">Quick Transaction Entry</p>
+                </div>
+            </div>
+            
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                {% for field in form %}
+                <div>
+                    <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2 ml-1">{{ field.label }}</label>
+                    <div class="form-wrapper transition-all duration-200">
+                        {{ field }}
+                    </div>
                     {% if field.errors %}
-                        <p style="color: var(--danger); font-size: 0.75rem;">{{ field.errors.0 }}</p>
+                        <p class="mt-2 text-[10px] text-red-400 font-bold uppercase tracking-widest">{{ field.errors.0 }}</p>
                     {% endif %}
                 </div>
-            {% endfor %}
-            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Post Transaction</button>
-        </form>
+                {% endfor %}
+                <button type="submit" class="w-full bg-indigo-600 text-white font-black text-sm uppercase tracking-widest py-5 rounded-[1.25rem] hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-900/40 transform hover:-translate-y-1 active:translate-y-0">Record Entry</button>
+            </form>
+        </div>
     </div>
+  </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const ctx = document.getElementById('debtorChart').getContext('2d');
         const received = {{ chart_received }};
         const remaining = {{ chart_remaining }};
 
-        if (received === 0 && remaining === 0) {
-            ctx.font = '14px Inter';
-            ctx.fillStyle = '#9ca3af';
-            ctx.textAlign = 'center';
-            ctx.fillText('No data to display', ctx.canvas.width / 2, ctx.canvas.height / 2);
-            return;
-        }
+        if (received === 0 && remaining === 0) return;
 
         new Chart(ctx, {
             type: 'doughnut',
@@ -152,35 +166,49 @@
                 labels: ['Received', 'Remaining'],
                 datasets: [{
                     data: [received, remaining],
-                    backgroundColor: ['#10b981', '#ef4444'],
+                    backgroundColor: ['#10b981', '#f97316'],
                     borderWidth: 0,
-                    hoverOffset: 10,
-                }],
+                    spacing: 8,
+                    borderRadius: 10,
+                    weight: 2,
+                    hoverOffset: 15
+                }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                cutout: '80%',
                 plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            usePointStyle: true,
-                            padding: 20,
-                            font: { family: 'Inter', size: 12, weight: '500' }
-                        }
-                    },
-                    tooltip: {
-                        backgroundColor: '#1f2937',
-                        padding: 12,
-                        callbacks: {
-                            label: function(context) {
-                                return ` ৳${context.raw.toLocaleString()}`;
-                            }
-                        }
-                    }
+                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 30, font: { weight: '800', size: 10 } } },
+                    tooltip: { backgroundColor: '#0f172a', padding: 16 }
                 }
             }
         });
     });
 </script>
+<style>
+    /* Premium Transaction Hub Field Styling */
+    .space-y-6 select, .space-y-6 input, .space-y-6 textarea {
+        background-color: rgba(255,255,255,0.03) !important;
+        border: 2px solid rgba(255,255,255,0.08) !important;
+        color: white !important;
+        width: 100%;
+        padding: 1.25rem 1.5rem;
+        border-radius: 1.25rem;
+        font-size: 0.95rem;
+        font-weight: 700;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        backdrop-filter: blur(8px);
+    }
+    .space-y-6 select:focus, .space-y-6 input:focus, .space-y-6 textarea:focus {
+        background-color: rgba(255,255,255,0.06) !important;
+        border-color: #6366f1 !important;
+        outline: none;
+        box-shadow: 0 0 25px rgba(99, 102, 241, 0.15) !important;
+    }
+    .space-y-6 select option {
+        color: #1e293b;
+        background: white;
+    }
+</style>
 {% endblock %}
