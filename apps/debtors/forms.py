@@ -20,6 +20,6 @@ class TransactionForm(forms.ModelForm):
         widgets = {
             "transaction_type": forms.Select(attrs={"class": "form-control"}),
             "amount": forms.NumberInput(attrs={"class": "form-control", "placeholder": "Amount (৳)"}),
-            "date": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
+            "date": forms.DateInput(attrs={"class": "form-control datepicker", "placeholder": "Select Date"}),
             "note": forms.Textarea(attrs={"class": "form-control", "rows": 2, "placeholder": "Transaction details..."}),
         }

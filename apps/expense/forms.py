@@ -13,8 +13,10 @@ class ExpenseForm(forms.ModelForm):
         model = Expense
         fields = ["category", "amount", "date", "note"]
         widgets = {
-            "date": forms.DateInput(attrs={"type": "date"}),
-            "note": forms.Textarea(attrs={"rows": 2}),
+            "category": forms.Select(attrs={"class": "form-input"}),
+            "amount": forms.NumberInput(attrs={"class": "form-input", "placeholder": "0.00"}),
+            "date": forms.DateInput(attrs={"class": "form-input datepicker", "placeholder": "Select Date"}),
+            "note": forms.Textarea(attrs={"class": "form-input", "rows": 2, "placeholder": "Expense details..."}),
         }
 
     def __init__(self, *args, **kwargs):

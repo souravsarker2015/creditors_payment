@@ -28,6 +28,6 @@ class TransactionForm(forms.ModelForm):
         widgets = {
             "transaction_type": forms.Select(attrs={"class": "form-input"}),
             "amount": forms.NumberInput(attrs={"class": "form-input", "placeholder": "0.00"}),
-            "date": forms.DateInput(attrs={"class": "form-input", "type": "date"}),
+            "date": forms.DateInput(attrs={"class": "form-input datepicker", "placeholder": "Select Date"}),
             "note": forms.TextInput(attrs={"class": "form-input", "placeholder": "Quick note..."}),
         }

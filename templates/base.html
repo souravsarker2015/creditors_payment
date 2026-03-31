@@ -13,6 +13,21 @@
         [x-cloak] { display: none !important; }
         body { font-family: 'Inter', sans-serif; }
     </style>
+    <!-- Flatpickr for better date selection -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        /* Modern Flatpickr refinement */
+        .flatpickr-calendar {
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1) !important;
+            border: 1px solid #f1f5f9 !important;
+            border-radius: 1.5rem !important;
+            overflow: hidden !important;
+        }
+        .flatpickr-day.selected {
+            background: #4f46e5 !important;
+            border-color: #4f46e5 !important;
+        }
+    </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body class="h-full" x-data="{ sidebarOpen: false }">
@@ -227,5 +242,18 @@
     </div>
 
     {% block extra_js %}{% endblock %}
+    <!-- Global Date Picker Initialization -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            flatpickr(".datepicker", {
+                dateFormat: "Y-m-d",
+                allowInput: true,
+                monthSelectorType: "dropdown",
+                prevArrow: '<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>',
+                nextArrow: '<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>',
+            });
+        });
+    </script>
 </body>
 </html>

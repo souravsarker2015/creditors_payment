@@ -13,6 +13,6 @@ class IncomeTransactionForm(forms.ModelForm):
         model = IncomeTransaction
         fields = ["amount", "date", "note"]
         widgets = {
-            "date": forms.DateInput(attrs={"type": "date"}),
-            "note": forms.Textarea(attrs={"rows": 2}),
+            "date": forms.DateInput(attrs={"class": "form-input datepicker", "placeholder": "Select Date"}),
+            "note": forms.Textarea(attrs={"class": "form-input", "rows": 2, "placeholder": "Additional details..."}),
         }
