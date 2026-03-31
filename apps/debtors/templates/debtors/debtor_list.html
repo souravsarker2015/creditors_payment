@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}My Debtors | Tracker{% endblock %}
+
+{% block content %}
+<style>
+    .list-header { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        margin-bottom: 2rem; 
+    }
+    .list-header h1 { font-size: 1.875rem; font-weight: 700; }
+
+    .debtor-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .debtor-card { position: relative; overflow: hidden; }
+    .debtor-card::before {
+        content: '';
+        position: absolute;
+        top: 0; right: 0; bottom: 0; left: 0;
+        background: linear-gradient(to bottom right, rgba(255,255,255,0), rgba(0,0,0,0.02));
+        pointer-events: none;
+    }
+
+    .status-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        padding: 0.25rem 0.6rem;
+        border-radius: 9999px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .status-badge.paid { background: #dcfce7; color: #166534; }
+    .status-badge.pending { background: #fee2e2; color: #991b1b; }
+
+    .debtor-name { font-size: 1.125rem; font-weight: 700; margin-bottom: 0.25rem; color: var(--text-main); }
+    .debtor-phone { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1.25rem; display: block; }
+    
+    .progress-info { display: flex; flex-direction: column; gap: 0.75rem; }
+    .row { display: flex; justify-content: space-between; font-size: 0.875rem; }
+    .label { color: var(--text-muted); }
+    .value { font-weight: 600; color: var(--text-main); }
+    
+    .progress-bar { height: 6px; background: #f3f4f6; border-radius: 999px; overflow: hidden; margin: 0.5rem 0; }
+    .progress-fill { height: 100%; background: var(--success); border-radius: 999px; transition: width 0.3s ease; }
+
+    .btn-details {
+        display: block;
+        width: 100%;
+        text-align: center;
+        padding: 0.75rem;
+        margin-top: 1.5rem;
+        background: #f3f4f6;
+        color: var(--text-main);
+        text-decoration: none;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+        transition: background 0.2s;
+    }
+    .btn-details:hover { background: #e5e7eb; }
+</style>
+
+<div class="list-header">
+    <h1>Your Debtors</h1>
+    <a href="{% url 'debtor_create' %}" class="btn btn-primary">+ Add New</a>
+</div>
+
+{% if debtors %}
+    <div class="debtor-grid">
+        {% for dr in debtors %}
+            <div class="card debtor-card">
+                {% if dr.is_paid %}
+                    <span class="status-badge paid">Paid</span>
+                {% else %}
+                    <span class="status-badge pending">Owes You</span>
+                {% endif %}
+
+                <span class="debtor-name">{{ dr.name }}</span>
+                <span class="debtor-phone">{{ dr.phone|default:"No phone provided" }}</span>
+
+                <div class="progress-info">
+                    <div class="row">
+                        <span class="label">Total Lent</span>
+                        <span class="value">৳{{ dr.total_lent_amt|floatformat:2 }}</span>
+                    </div>
+                    <div class="row">
+                        <span class="label">Total Received</span>
+                        <span class="value">৳{{ dr.total_received_amt|floatformat:2 }}</span>
+                    </div>
+                    
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: {{ dr.received_percent }}%"></div>
+                    </div>
+
+                    <div class="row" style="margin-top: 0.25rem;">
+                        <span class="label">Balance to Get</span>
+                        <span class="value" {% if not dr.is_paid %}style="color: var(--danger);"{% endif %}>
+                            ৳{{ dr.remaining|floatformat:2 }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="row" style="margin-top: 2rem; gap: 0.5rem;">
+                    <a href="{% url 'debtor_detail' dr.pk %}" class="btn btn-primary" style="flex: 1; text-align: center; font-size: 0.8rem;">View History</a>
+                    <a href="{% url 'debtor_edit' dr.pk %}" class="btn" style="background: #f3f4f6; color: var(--text-main); font-size: 0.8rem; text-decoration: none; border-radius: 0.5rem; padding: 0.6rem 1rem;">Edit</a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div style="text-align: center; padding: 5rem 0; background: white; border-radius: 0.75rem; border: 1px solid var(--border);">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">🤝</div>
+        <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">No debtors found</h2>
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Start tracking people who owe you money by adding your first debtor.</p>
+        <a href="{% url 'debtor_create' %}" class="btn btn-primary">Add Your First Debtor</a>
+    </div>
+{% endif %}
+{% endblock %}

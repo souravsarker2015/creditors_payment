@@ -41,6 +41,7 @@ THIRD_PARTY_APPS = []
 LOCAL_APPS = [
     "apps.creditors",
     "apps.accounts",
+    "apps.debtors",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS

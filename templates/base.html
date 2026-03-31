@@ -89,8 +89,8 @@
             <a href="{% url 'dashboard' %}" class="logo">CreditorsTracker</a>
             <ul class="nav-links">
                 {% if user.is_authenticated %}
-                    <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
-                    <li><a href="{% url 'creditor_list' %}">My Creditors</a></li>
+                    <li><a href="{% url 'dashboard' %}">Creditors</a></li>
+                    <li><a href="{% url 'debtor_dashboard' %}">Debtors</a></li>
                     <li><a href="/admin/">Admin</a></li>
                     <li><a href="{% url 'logout' %}" class="btn-logout">Logout ({{ user.username }})</a></li>
                 {% else %}

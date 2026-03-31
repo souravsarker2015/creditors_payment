@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}Debtors Dashboard | Tracker{% endblock %}
+
+{% block content %}
+<style>
+    .dashboard-header { margin-bottom: 2rem; }
+    .dashboard-header h1 { font-size: 1.875rem; font-weight: 700; color: var(--text-main); }
+    .dashboard-header p { color: var(--text-muted); margin-top: 0.25rem; }
+
+    .stats-grid { 
+        display: grid; 
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); 
+        gap: 1.5rem; 
+        margin-bottom: 2rem;
+    }
+    .stat-card { border-left: 4px solid var(--border); }
+    .stat-card.lent { border-left-color: var(--primary); } /* Blue */
+    .stat-card.received { border-left-color: var(--success); } /* Green */
+    .stat-card.remaining { border-left-color: var(--warning); } /* Orange/Yellow */
+    
+    .stat-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; color: var(--text-muted); margin-bottom: 0.5rem; }
+    .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--text-main); }
+
+    .main-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 1.5rem;
+    }
+
+    .recent-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    .recent-table th { text-align: left; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
+    .recent-table td { padding: 1rem 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+    .type-badge { padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+    .type-badge.LEND { background: #dbeafe; color: #1e40af; } /* Light Blue */
+    .type-badge.RECEIVE { background: #dcfce7; color: #166534; } /* Light Green */
+
+    .chart-box { display: flex; align-items: center; justify-content: center; min-height: 300px; }
+
+    @media (max-width: 1024px) {
+        .main-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="dashboard-header">
+    <h1>Debtors Dashboard</h1>
+    <p>Track people who owe you money and manage collections.</p>
+</div>
+
+<div class="stats-grid">
+    <div class="card stat-card lent">
+        <div class="stat-label">Total Lent (Ami diyechi)</div>
+        <div class="stat-value">৳{{ total_lent|floatformat:2 }}</div>
+    </div>
+    <div class="card stat-card received">
+        <div class="stat-label">Total Received (Ami peyechi)</div>
+        <div class="stat-value">৳{{ total_received|floatformat:2 }}</div>
+    </div>
+    <div class="card stat-card remaining">
+        <div class="stat-label">Total Remaining (Pabo)</div>
+        <div class="stat-value">৳{{ remaining|floatformat:2 }}</div>
+    </div>
+</div>
+
+<div class="main-grid">
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2 style="font-size: 1.125rem; font-weight: 700;">Recent Activity</h2>
+            <a href="{% url 'debtor_list' %}" style="font-size: 0.875rem; color: var(--primary); text-decoration: none; font-weight: 600;">View All Debtors</a>
+        </div>
+        {% if recent_transactions %}
+            <table class="recent-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Debtor</th>
+                        <th>Type</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tx in recent_transactions %}
+                        <tr>
+                            <td style="color: var(--text-muted);">{{ tx.date|date:"M d, Y" }}</td>
+                            <td style="font-weight: 500;">{{ tx.debtor.name }}</td>
+                            <td><span class="type-badge {{ tx.transaction_type }}">{{ tx.get_transaction_type_display }}</span></td>
+                            <td style="font-weight: 600;">৳{{ tx.amount|floatformat:2 }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div style="text-align: center; padding: 3rem 0; color: var(--text-muted);">
+                No transactions yet. <br>
+                <a href="{% url 'debtor_create' %}" style="color: var(--primary); font-weight: 600;">Add your first debtor</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <h2 style="font-size: 1.125rem; font-weight: 700; margin-bottom: 1.5rem;">Visual Breakdown</h2>
+        <div style="display: grid; grid-template-columns: 1fr; gap: 2rem;">
+            <div>
+                <p style="text-align: center; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 1rem;">REMAINING BY DEBTOR (Pabo)</p>
+                <div style="min-height: 250px;"><canvas id="remainingChart"></canvas></div>
+            </div>
+            <div>
+                <p style="text-align: center; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 1rem;">COLLECTED FROM DEBTOR (Peyechi)</p>
+                <div style="min-height: 250px;"><canvas id="receivedChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const labels = {{ debtor_labels|safe }};
+        const remainingData = {{ debtor_remaining|safe }};
+        const receivedData = {{ debtor_received|safe }};
+
+        if (labels.length === 0) return;
+
+        const colors = [
+            '#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', 
+            '#06b6d4', '#ec4899', '#f97316', '#6366f1', '#14b8a6'
+        ];
+
+        // Chart 1: Remaining to Collect
+        const ctxRem = document.getElementById('remainingChart').getContext('2d');
+        new Chart(ctxRem, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: remainingData,
+                    backgroundColor: colors,
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return ` ${context.label}: ৳${context.raw.toLocaleString()}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Chart 2: Total Received
+        const ctxRec = document.getElementById('receivedChart').getContext('2d');
+        new Chart(ctxRec, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: receivedData,
+                    backgroundColor: colors,
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return ` ${context.label}: ৳${context.raw.toLocaleString()}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
