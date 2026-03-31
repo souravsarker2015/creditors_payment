@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Delete Contributor | Tracker{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto py-24 px-4 sm:px-6 lg:px-8 text-center">
+    <div class="bg-white rounded-[3rem] p-16 shadow-2xl shadow-red-500/5 border border-gray-100">
+        <div class="w-20 h-20 bg-red-50 rounded-3xl flex items-center justify-center mx-auto mb-10 group hover:rotate-12 transition-transform">
+            <svg class="h-10 w-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+        </div>
+        
+        <h1 class="text-4xl font-black text-gray-900 tracking-tighter uppercase tracking-widest mb-4">Delete Profile</h1>
+        <p class="text-sm font-bold text-gray-400 uppercase tracking-widest leading-relaxed mb-12 px-10">
+            Are you sure you want to permanently delete <span class="text-red-500 font-extrabold">{{ contributor.name }}</span> and all their contribution records? This action cannot be undone.
+        </p>
+
+        <form method="POST" class="space-y-6">
+            {% csrf_token %}
+            <button type="submit" class="w-full px-10 py-5 bg-red-600 text-white rounded-2xl text-xs font-black uppercase tracking-[0.3em] shadow-xl shadow-red-100 hover:bg-red-700 hover:shadow-red-200 transition-all active:scale-95 mb-6">
+                Permanently Delete
+            </button>
+            <a href="{% url 'contributor_detail' contributor.pk %}" class="block text-xs font-black text-gray-400 uppercase tracking-tighter hover:text-gray-900 transition-colors">
+                No, Keep it
+            </a>
+        </form>
+    </div>
+</div>
+{% endblock %}

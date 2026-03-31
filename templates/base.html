@@ -103,6 +103,14 @@
                                             Expense (Outflow)
                                         </a>
                                     </li>
+                                    <li>
+                                        <a href="{% url 'contributor_dashboard' %}" class="{% if '/contributors/' in request.path %}bg-indigo-700 text-white{% else %}text-indigo-200 hover:text-white hover:bg-indigo-700{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                                            <svg class="h-6 w-6 shrink-0 text-indigo-200" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                            </svg>
+                                            Contributors
+                                        </a>
+                                    </li>
                                     {% endif %}
                                 </ul>
                             </li>
@@ -164,6 +172,14 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                     Expense (Spending)
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{% url 'contributor_dashboard' %}" class="{% if '/contributors/' in request.path %}bg-indigo-700 text-white{% else %}text-indigo-200 hover:text-white hover:bg-indigo-700{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                                    <svg class="h-6 w-6 shrink-0 text-white font-bold" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                    </svg>
+                                    Contributors
                                 </a>
                             </li>
                             {% endif %}
