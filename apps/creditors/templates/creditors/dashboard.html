@@ -37,7 +37,7 @@
         <h2 class="text-base font-semibold leading-7 text-gray-900">Recent Transactions</h2>
         <a href="{% url 'creditor_list' %}" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">View All</a>
       </div>
-      <div class="px-0 sm:px-0 lg:px-0">
+      <div class="overflow-x-auto">
         {% if recent_transactions %}
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
