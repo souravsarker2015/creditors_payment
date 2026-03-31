@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}{{ source.name }} Details | FinTrack{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pb-16">
+  <!-- Header with high-end border and layout -->
+  <div class="md:flex md:items-end md:justify-between border-b-2 border-gray-100 pb-12 mb-10">
+    <div class="min-w-0 flex-1">
+      <div class="flex items-center gap-x-5">
+          <div class="h-16 w-16 rounded-3xl bg-green-600 flex items-center justify-center text-white font-black text-3xl shadow-green-100 shadow-2xl ring-4 ring-green-50">
+              {{ source.name|first|upper }}
+          </div>
+          <div>
+            <h1 class="text-4xl font-black text-gray-900 tracking-tight sm:text-5xl leading-tight uppercase">{{ source.name }}</h1>
+            <p class="text-xs font-black text-gray-400 uppercase tracking-[0.25em] mt-2">Income Source Ledger</p>
+          </div>
+      </div>
+    </div>
+    <div class="mt-8 flex md:ml-4 md:mt-0 gap-4">
+      <a href="{% url 'income_source_edit' source.pk %}" class="inline-flex items-center rounded-2xl bg-white px-5 py-3 text-xs font-black text-gray-600 shadow-sm ring-2 ring-inset ring-gray-100 hover:bg-gray-50 transition-all border-none uppercase tracking-widest">Settings</a>
+      <a href="{% url 'income_source_list' %}" class="inline-flex items-center rounded-2xl bg-gray-900 px-6 py-3 text-xs font-black text-white hover:bg-gray-800 transition-all shadow-xl shadow-gray-200 uppercase tracking-widest">Source List</a>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 gap-12 lg:grid-cols-3">
+    <!-- Stats & History (2 Col) -->
+    <div class="lg:col-span-2 space-y-10">
+        <!-- Main Stats Card -->
+        <div class="bg-white px-10 py-12 shadow-sm ring-1 ring-gray-100 rounded-[2.5rem] relative overflow-hidden group">
+            <div class="relative z-10">
+                <dt class="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-4">Cumulative Revenue from Source</dt>
+                <dd class="text-6xl font-black text-gray-900 tracking-tighter">৳{{ total_source_income|floatformat:2 }}</dd>
+            </div>
+            <!-- Decorative gradient accent -->
+            <div class="absolute right-0 top-0 h-full w-2 bg-green-500"></div>
+        </div>
+
+        <!-- History Table -->
+        <div class="overflow-hidden bg-white shadow-sm ring-1 ring-gray-100 rounded-[2.5rem]">
+            <div class="px-10 py-8 border-b border-gray-50 bg-gray-50/20">
+                <h3 class="text-xs font-black text-gray-400 uppercase tracking-[0.25em]">Payout Timeline</h3>
+            </div>
+            <div class="overflow-x-auto">
+                {% if transactions %}
+                <table class="min-w-full divide-y divide-gray-50">
+                    <thead>
+                        <tr class="bg-white">
+                            <th class="px-10 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Date</th>
+                            <th class="px-10 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Amount</th>
+                            <th class="px-10 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Reference</th>
+                            <th class="px-10 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Modify</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50 bg-white">
+                        {% for tx in transactions %}
+                        <tr class="hover:bg-gray-50/50 transition-colors group">
+                            <td class="px-10 py-6 text-sm text-gray-500 font-bold tabular-nums">{{ tx.date|date:"d M Y" }}</td>
+                            <td class="px-10 py-6 text-right text-sm font-black text-green-600 tabular-nums">+ ৳{{ tx.amount|floatformat:0 }}</td>
+                            <td class="px-10 py-6 text-xs text-gray-400 font-bold uppercase tracking-tight">{{ tx.note|default:"-" }}</td>
+                            <td class="px-10 py-6 text-right space-x-2">
+                                <a href="{% url 'income_transaction_edit' tx.pk %}" class="p-2 text-gray-500 hover:text-indigo-600 transition-colors inline-block" title="Edit">
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                </a>
+                                <a href="{% url 'income_transaction_delete' tx.pk %}" class="p-2 text-gray-500 hover:text-red-600 transition-colors inline-block" title="Delete" onclick="return confirm('Archive this transaction record permanently?')">
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="py-32 text-center flex flex-col items-center">
+                    <div class="h-20 w-20 bg-gray-50 rounded-full flex items-center justify-center mb-6">
+                        <svg class="h-8 w-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </div>
+                    <p class="text-[10px] font-black text-gray-300 uppercase tracking-[0.3em]">No Payout Record Found</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Sidebar Form -->
+    <div class="space-y-10">
+        <div class="bg-white shadow-sm ring-1 ring-gray-100 rounded-[2.5rem] p-10 group overflow-hidden border-2 border-transparent hover:border-green-100 transition-all">
+            <div class="flex items-center gap-4 mb-10">
+                <div class="h-12 w-12 bg-green-50 rounded-2xl flex items-center justify-center group-hover:bg-green-600 transition-colors duration-500">
+                    <svg class="h-6 w-6 text-green-600 group-hover:text-white transition-colors duration-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-black text-gray-900 tracking-tight uppercase leading-tight">Log Payout</h3>
+                    <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-1">Instant Transaction Entry</p>
+                </div>
+            </div>
+            
+            <form method="post" class="space-y-8">
+                {% csrf_token %}
+                {% for field in form %}
+                <div>
+                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.25em] mb-2.5 ml-1">{{ field.label }}</label>
+                    <div class="transition-all duration-300">
+                        {{ field }}
+                    </div>
+                    {% if field.errors %}
+                        <p class="mt-2 text-[10px] text-red-500 font-bold uppercase tracking-widest">{{ field.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                <button type="submit" class="w-full bg-indigo-600 text-white font-black text-xs uppercase tracking-[0.25em] py-5 rounded-2xl hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-100 transform hover:-translate-y-1 active:translate-y-0 active:shadow-indigo-50">Confirm Entry</button>
+            </form>
+        </div>
+        
+        <div class="p-8 rounded-[2.5rem] bg-gray-50 text-center border border-gray-100">
+             <p class="text-[9px] font-black text-gray-400 uppercase tracking-[0.3em] leading-relaxed">Source Meta: {{ source.description|default:"Generic Source" }}</p>
+        </div>
+    </div>
+  </div>
+</div>
+
+<style>
+    /* Premium Transaction Form Styling for Source Details */
+    .space-y-8 select, .space-y-8 input, .space-y-8 textarea {
+        background-color: #f9fafb !important;
+        border: 2px solid transparent !important;
+        width: 100% !important;
+        padding: 1.25rem 1.5rem !important;
+        border-radius: 1.25rem !important;
+        font-size: 0.95rem !important;
+        font-weight: 700 !important;
+        color: #1a1e2e !important;
+        outline: none !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    .space-y-8 select:focus, .space-y-8 input:focus, .space-y-8 textarea:focus {
+        background-color: #fff !important;
+        border-color: #10b981 !important;
+        box-shadow: 0 0 40px rgba(16, 185, 129, 0.1) !important;
+    }
+</style>
+{% endblock %}

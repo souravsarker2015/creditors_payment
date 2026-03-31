@@ -152,6 +152,7 @@ def debtor_list_view(request):
         else:
             dr.received_percent = 0
             
+    return render(request, "debtors/debtor_list.html", {"debtors": debtors_qs})
 
 @login_required
 def transaction_edit_view(request, pk):

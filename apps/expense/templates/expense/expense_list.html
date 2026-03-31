@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Expense Ledger | FinTrack{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
+  <div class="sm:flex sm:items-center mb-12">
+    <div class="sm:flex-auto">
+      <h1 class="text-3xl font-black leading-6 text-gray-900 uppercase tracking-tighter">Expenditure Log</h1>
+      <p class="mt-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Chronological Spending Record</p>
+    </div>
+    <div class="mt-8 sm:ml-16 sm:mt-0 sm:flex-none">
+      <a href="{% url 'expense_create' %}" class="block rounded-[1.25rem] bg-orange-600 px-6 py-4 text-center text-xs font-black uppercase tracking-widest text-white shadow-2xl shadow-orange-100 hover:bg-orange-500 transition-all hover:-translate-y-1 active:translate-y-0">+ Log New Expense</a>
+    </div>
+  </div>
+
+  {% if expenses %}
+  <div class="overflow-hidden bg-white shadow-sm ring-1 ring-gray-100 rounded-[3rem]">
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-50">
+        <thead class="bg-gray-50/20">
+          <tr>
+            <th class="px-10 py-6 text-left text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Timeline</th>
+            <th class="px-10 py-6 text-left text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Allocation</th>
+            <th class="px-10 py-6 text-right text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Magnitude</th>
+            <th class="px-10 py-6 text-right text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Controls</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50 bg-white">
+          {% for ex in expenses %}
+          <tr class="hover:bg-gray-50/50 transition-colors group">
+            <td class="whitespace-nowrap px-10 py-8">
+                <span class="text-sm font-black text-gray-900 tabular-nums uppercase">{{ ex.date|date:"d M, Y" }}</span>
+            </td>
+            <td class="px-10 py-8">
+                <div class="flex flex-col">
+                  <span class="inline-flex max-w-fit items-center rounded-lg bg-orange-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-orange-600 mb-1 leading-none border border-orange-100">
+                    {{ ex.category.name|default:"General" }}
+                  </span>
+                  <p class="text-xs text-gray-400 font-bold italic truncate max-w-[200px]">{{ ex.note|default:"No description" }}</p>
+                </div>
+            </td>
+            <td class="whitespace-nowrap px-10 py-8 text-right">
+                <span class="text-lg font-black text-gray-900 tabular-nums tracking-tighter">৳{{ ex.amount|floatformat:0 }}</span>
+            </td>
+            <td class="px-10 py-8 text-right whitespace-nowrap space-x-2">
+                <a href="{% url 'expense_edit' ex.pk %}" class="p-2 text-gray-500 hover:text-indigo-600 transition-colors inline-block" title="Edit">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                </a>
+                <a href="{% url 'expense_delete' ex.pk %}" class="p-2 text-gray-500 hover:text-red-500 transition-colors inline-block" title="Delete" onclick="return confirm('Purge this expenditure record from ledger?')">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <div class="flex flex-col items-center justify-center rounded-[4rem] border-2 border-dashed border-gray-100 p-32 text-center bg-white shadow-sm ring-1 ring-gray-50">
+      <div class="h-24 w-24 bg-orange-50 rounded-full flex items-center justify-center mb-10 shadow-inner">
+        <svg class="h-12 w-12 text-orange-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+      </div>
+      <h3 class="text-2xl font-black text-gray-900 uppercase tracking-tighter">Expenditure Ledger Blank</h3>
+      <p class="mt-4 text-sm text-gray-400 font-bold uppercase tracking-[0.25em] max-w-xs mx-auto">Start recording your spending to gain visibility into your financial leakage.</p>
+      <a href="{% url 'expense_create' %}" class="mt-12 inline-flex items-center rounded-[1.5rem] bg-orange-600 px-10 py-5 text-xs font-black uppercase tracking-[0.3em] text-white shadow-2xl shadow-orange-100 hover:bg-orange-700 hover:-translate-y-1 transition-all">+ Register Outflow</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

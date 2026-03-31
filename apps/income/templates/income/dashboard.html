@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Income Dashboard | FinTrack{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-6 lg:px-8">
+  <div class="sm:flex sm:items-center">
+    <div class="sm:flex-auto">
+      <h1 class="text-2xl font-bold leading-6 text-gray-900 uppercase">Income Overview</h1>
+      <p class="mt-2 text-sm text-gray-700">Track all your revenue streams and total earnings performance.</p>
+    </div>
+    <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+      <a href="{% url 'income_source_create' %}" class="block rounded-md bg-green-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 transition-all">+ Add Income Source</a>
+    </div>
+  </div>
+
+  <!-- Big Stat Card -->
+  <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-1">
+    <div class="relative overflow-hidden rounded-2xl bg-green-600 px-8 py-10 shadow-xl shadow-green-100">
+      <div class="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between">
+          <div>
+            <dt class="text-sm font-black text-green-100 uppercase tracking-[0.2em]">Total Lifetime Earnings</dt>
+            <dd class="mt-2 text-5xl font-black tracking-tight text-white">৳{{ total_income|floatformat:2 }}</dd>
+          </div>
+          <div class="mt-6 md:mt-0">
+             <a href="{% url 'income_source_list' %}" class="inline-flex items-center rounded-xl bg-white/10 px-4 py-2 text-sm font-bold text-white hover:bg-white/20 transition-all border border-white/20">Manage Sources</a>
+          </div>
+      </div>
+      <!-- Decorative circle -->
+      <div class="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-green-500/20"></div>
+    </div>
+  </div>
+
+  <div class="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-2">
+    <!-- Chart Section -->
+    <div class="rounded-2xl border border-gray-100 bg-white p-8 shadow-sm">
+        <div class="flex items-center justify-between mb-8">
+            <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest">Earnings by Source</h3>
+        </div>
+        <div class="h-80"><canvas id="incomeChart"></canvas></div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+      <div class="border-b border-gray-100 bg-gray-50/50 px-8 py-5 flex justify-between items-center">
+        <h2 class="text-xs font-black text-gray-500 uppercase tracking-widest">Recent Inflow Activity</h2>
+      </div>
+      <div class="px-0">
+        {% if recent_transactions %}
+          <table class="min-w-full divide-y divide-gray-100">
+            <thead class="bg-gray-50/30">
+              <tr>
+                <th class="px-8 py-4 text-left text-[10px] font-black uppercase text-gray-400 tracking-widest">Date</th>
+                <th class="px-8 py-4 text-left text-[10px] font-black uppercase text-gray-400 tracking-widest">Source</th>
+                <th class="px-8 py-4 text-right text-[10px] font-black uppercase text-gray-400 tracking-widest">Amount</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50 bg-white">
+              {% for tx in recent_transactions %}
+                <tr class="hover:bg-gray-50/50 transition-colors">
+                  <td class="whitespace-nowrap px-8 py-5 text-sm font-bold text-gray-500">{{ tx.date|date:"d M, Y" }}</td>
+                  <td class="whitespace-nowrap px-8 py-5 text-sm font-black text-gray-900 uppercase tracking-tight">{{ tx.source.name }}</td>
+                  <td class="whitespace-nowrap px-8 py-5 text-right text-sm font-black text-green-600 tabular-nums">+ ৳{{ tx.amount|floatformat:2 }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <div class="px-8 py-20 text-center h-full flex flex-col justify-center items-center">
+            <div class="h-16 w-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                <svg class="h-8 w-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </div>
+            <h3 class="text-sm font-bold text-gray-900 uppercase">No income data yet</h3>
+            <p class="mt-2 text-xs text-gray-400 font-medium">Record your first payout or salary check to see progress.</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const labels = {{ source_labels|safe }};
+        const data = {{ source_data|safe }};
+
+        if (labels.length === 0) return;
+
+        const colors = [
+            '#10b981', '#059669', '#34d399', '#6ee7b7', '#a7f3d0', 
+            '#4f46e5', '#818cf8', '#6366f1', '#4338ca', '#3730a3'
+        ];
+
+        const ctx = document.getElementById('incomeChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'polarArea',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: colors,
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: { ticks: { display: false }, grid: { color: '#f3f4f6' } }
+                },
+                plugins: {
+                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 25, font: { weight: '800', size: 10 } } },
+                    tooltip: { backgroundColor: '#064e3b', padding: 12 }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

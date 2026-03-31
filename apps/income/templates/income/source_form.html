@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | FinTrack{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-6 lg:px-8 max-w-2xl mx-auto py-16">
+    <div class="bg-white shadow-2xl rounded-[3rem] overflow-hidden border border-gray-100/50 ring-1 ring-gray-900/5 transition-all hover:shadow-indigo-50/50">
+        <div class="px-8 py-14 sm:px-16">
+            <div class="flex items-center gap-x-5 mb-14">
+                <div class="h-14 w-14 rounded-2xl bg-indigo-600 flex items-center justify-center text-white font-black text-2xl shadow-xl shadow-indigo-100 ring-4 ring-indigo-50">
+                    S
+                </div>
+                <div>
+                    <h1 class="text-3xl font-black text-gray-900 tracking-tight leading-tight uppercase">{{ title }}</h1>
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mt-1.5 flex items-center gap-1.5">
+                        <span class="h-1.5 w-1.5 rounded-full bg-green-500"></span>
+                        Entity Registration Hub
+                    </p>
+                </div>
+            </div>
+
+            <form method="post" class="space-y-10">
+                {% csrf_token %}
+                
+                {% for field in form %}
+                <div class="relative group">
+                    <label for="{{ field.id_for_label }}" class="block text-[10px] font-black text-gray-500 mb-2.5 uppercase tracking-[0.25em] ml-1 group-focus-within:text-indigo-600 transition-colors">{{ field.label }}</label>
+                    
+                    <div class="relative bg-gray-50 rounded-[1.25rem] transition-all duration-300 ring-2 ring-inset ring-gray-100 focus-within:ring-2 focus-within:ring-indigo-600 focus-within:bg-white shadow-sm hover:ring-gray-200">
+                        {{ field }}
+                    </div>
+
+                    {% if field.help_text %}
+                        <p class="mt-3 text-[10px] text-gray-400 font-bold uppercase tracking-widest italic ml-1">{{ field.help_text|safe }}</p>
+                    {% endif %}
+                    
+                    {% if field.errors %}
+                        {% for error in field.errors %}
+                            <p class="mt-3 text-[10px] text-red-500 font-black uppercase tracking-widest flex items-center gap-2 ml-1 animate-pulse">
+                                <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 000 2v3a1 1 0 002 0V7a1 1 0 00-2-0z" clip-rule="evenodd" /></svg>
+                                {{ error }}
+                            </p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+                <div class="flex flex-col sm:flex-row gap-5 pt-10 border-t border-gray-100 mt-12">
+                    <button type="submit" class="flex-[1.5] bg-indigo-600 text-white font-black text-xs uppercase tracking-[0.25em] px-8 py-5 rounded-2xl shadow-2xl shadow-indigo-100 hover:bg-indigo-700 hover:-translate-y-1 transition-all active:translate-y-0 active:shadow-indigo-50">
+                        Confirm & Save
+                    </button>
+                    <a href="{% if back_url %}{{ back_url }}{% else %}{% url 'income_source_list' %}{% endif %}" class="flex-1 text-center bg-gray-50 text-gray-500 font-black text-xs uppercase tracking-[0.25em] px-8 py-5 rounded-2xl border-none hover:bg-white hover:shadow-xl hover:shadow-gray-100 transition-all flex items-center justify-center">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+        <div class="bg-gray-50/50 px-10 py-6 border-t border-gray-50 text-[10px] font-black uppercase tracking-[0.3em] text-center text-gray-300">
+            Source Integrity Encryption Enabled
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Styling Django Form Inputs for Income Module */
+    .space-y-10 select, .space-y-10 input, .space-y-10 textarea {
+        background-color: transparent !important;
+        border: none !important;
+        width: 100% !important;
+        padding: 1.25rem 1.75rem !important;
+        font-size: 1rem !important;
+        font-weight: 700 !important;
+        color: #1a1e2e !important;
+        outline: none !important;
+        box-shadow: none !important;
+        font-family: inherit !important;
+    }
+    .space-y-10 input::placeholder, .space-y-10 textarea::placeholder {
+        color: #cbd5e1 !important;
+        font-weight: 600 !important;
+        text-transform: none !important;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Income Sources | FinTrack{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-6 lg:px-8">
+  <div class="sm:flex sm:items-center mb-10">
+    <div class="sm:flex-auto">
+      <h1 class="text-2xl font-black leading-6 text-gray-900 uppercase tracking-tight">Income Portfolio</h1>
+      <p class="mt-2 text-sm text-gray-700">Manage all entities and sources from where you receive financial inflows.</p>
+    </div>
+    <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+      <a href="{% url 'income_source_create' %}" class="block rounded-xl bg-indigo-600 px-4 py-3 text-center text-sm font-black text-white shadow-xl shadow-indigo-100 hover:bg-indigo-500 transition-all">+ Register New Source</a>
+    </div>
+  </div>
+
+  {% if sources %}
+  <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    {% for s in sources %}
+    <div class="group relative flex flex-col overflow-hidden rounded-3xl border-none bg-white p-8 shadow-sm ring-1 ring-gray-100 hover:shadow-2xl hover:shadow-indigo-50 transition-all">
+      <div class="flex items-center justify-between mb-4">
+        <div class="h-12 w-12 rounded-xl bg-green-50 flex items-center justify-center text-green-600 font-black text-xl group-hover:bg-green-600 group-hover:text-white transition-colors duration-300">
+          {{ s.name|first|upper }}
+        </div>
+        <div class="text-right">
+            <span class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] block mb-1">Total Earned</span>
+            <span class="text-xl font-black text-gray-900 tabular-nums">৳{{ s.total_amt|floatformat:0 }}</span>
+        </div>
+      </div>
+      
+      <h3 class="text-lg font-black text-gray-900 tracking-tight mb-2 uppercase">{{ s.name }}</h3>
+      <p class="text-xs text-gray-400 font-bold italic line-clamp-2 h-8">{{ s.description|default:"No description recorded for this source." }}</p>
+
+      <div class="mt-8 pt-6 border-t border-gray-50 flex gap-3">
+        <a href="{% url 'income_source_detail' s.pk %}" class="flex-1 rounded-xl bg-indigo-600 px-3 py-3 text-center text-[10px] font-black uppercase tracking-widest text-white hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-50">Timeline</a>
+        <a href="{% url 'income_source_edit' s.pk %}" class="rounded-xl bg-gray-50 px-4 py-3 text-center text-[10px] font-black uppercase tracking-widest text-gray-500 hover:bg-white hover:ring-1 hover:ring-gray-200 transition-all">Edit</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="flex flex-col items-center justify-center rounded-[3rem] border-2 border-dashed border-gray-100 p-20 text-center bg-white shadow-sm">
+      <div class="h-20 w-20 bg-green-50 rounded-full flex items-center justify-center mb-6">
+        <svg class="h-10 w-10 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+      </div>
+      <h3 class="text-xl font-black text-gray-900 uppercase tracking-tight">No Income Sources Defined</h3>
+      <p class="mt-2 text-sm text-gray-400 font-bold uppercase tracking-widest max-w-sm mx-auto">Registration of entities (employers, clients, businesses) is required before logging earnings.</p>
+      <a href="{% url 'income_source_create' %}" class="mt-10 inline-flex items-center rounded-2xl bg-indigo-600 px-8 py-4 text-xs font-black uppercase tracking-widest text-white shadow-2xl shadow-indigo-100 hover:bg-indigo-700 hover:-translate-y-1 transition-all">+ Register First Source</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

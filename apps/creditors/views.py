@@ -154,6 +154,7 @@ def creditor_list_view(request):
         else:
             cr.payment_percent = 0
             
+    return render(request, "creditors/creditor_list.html", {"creditors": creditors_qs})
 
 @login_required
 def transaction_edit_view(request, pk):
