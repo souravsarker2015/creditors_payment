@@ -35,7 +35,6 @@
     <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
       <div class="border-b border-gray-200 bg-gray-50 px-6 py-4 flex justify-between items-center">
         <h2 class="text-base font-semibold leading-7 text-gray-900">Recent Collections</h2>
-        <a href="{% url 'debtor_list' %}" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">View All Debtors</a>
       </div>
       <div class="overflow-x-auto">
         {% if recent_transactions %}
@@ -75,6 +74,28 @@
 
     <!-- Analytics Section -->
     <div class="flex flex-col gap-8">
+        <!-- Manage & Explore Card -->
+        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm overflow-hidden">
+            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-[0.2em] mb-6">Manage & Explore</h3>
+            <div class="space-y-4">
+                <a href="{% url 'debtor_list' %}" class="flex items-center justify-between p-4 bg-indigo-50 rounded-2xl border border-indigo-100 group hover:bg-indigo-600 transition-all duration-300">
+                    <span class="text-sm font-bold text-indigo-700 group-hover:text-white">View All Debtors</span>
+                    <svg class="h-5 w-5 text-indigo-400 group-hover:text-indigo-200 group-hover:translate-x-1 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                </a>
+                <div class="grid grid-cols-2 gap-3">
+                    <a href="{% url 'dashboard' %}" class="flex items-center justify-center p-3 bg-gray-50 rounded-xl border border-gray-100 text-xs font-bold text-gray-600 hover:bg-white hover:border-gray-300 transition-all">
+                        View Creditors
+                    </a>
+                    <a href="{% url 'contributor_dashboard' %}" class="flex items-center justify-center p-3 bg-gray-50 rounded-xl border border-gray-100 text-xs font-bold text-gray-600 hover:bg-white hover:border-gray-300 transition-all">
+                        Contributors
+                    </a>
+                </div>
+                <a href="{% url 'debtor_create' %}" class="block w-full text-center py-3 bg-white border-2 border-dashed border-gray-200 rounded-xl text-xs font-bold text-gray-400 hover:border-indigo-400 hover:text-indigo-500 transition-all">
+                    + Add New Debtor
+                </a>
+            </div>
+        </div>
+
         <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
             <h3 class="text-sm font-bold text-gray-500 uppercase tracking-widest mb-6 text-center">Outstanding (Remaining to Collect)</h3>
             <div class="h-64 sm:h-80"><canvas id="remainingChart"></canvas></div>
