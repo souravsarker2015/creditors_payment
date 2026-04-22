@@ -1,22 +1,43 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from django.db.models import Sum
-from .models import Contributor, Contribution
+from django.db.models import Sum, Q, DecimalField, Value
+from django.db.models.functions import Coalesce
+from .models import Contributor, ContributorCategory, Contribution
 from .forms import ContributorForm, ContributionForm
 
 @login_required
 def contributor_dashboard(request):
+    valid_filter_types = {"include", "exclude"}
+    filter_type = request.GET.get("filter_type", "include").strip().lower()
+    if filter_type not in valid_filter_types:
+        filter_type = "include"
+
+    selected_categories = [
+        category
+        for category in request.GET.getlist("category")
+        if category in ContributorCategory.values
+    ]
+
     contributors = Contributor.objects.filter(user=request.user)
+    if selected_categories:
+        if filter_type == "exclude":
+            contributors = contributors.exclude(category__in=selected_categories)
+        else:
+            contributors = contributors.filter(category__in=selected_categories)
+
     total_contributors = contributors.count()
     
     # Total contributions across all contributors
-    total_contribution_amount = Contribution.objects.filter(
-        contributor__user=request.user
-    ).aggregate(total=Sum('amount'))['total'] or 0
+    total_contribution_amount = contributors.aggregate(
+        total=Coalesce(Sum("contributions__amount"), Value(0, output_field=DecimalField()))
+    )["total"]
     
     # Data for the chart: Top contributors
     top_contributors = contributors.annotate(
-        total_amount=Sum('contributions__amount')
+        total_amount=Coalesce(
+            Sum("contributions__amount"),
+            Value(0, output_field=DecimalField()),
+        )
     ).order_by('-total_amount')[:10]
     
     chart_labels = [c.name for c in top_contributors if c.total_amount]
@@ -32,16 +53,64 @@ def contributor_dashboard(request):
         'chart_data': chart_data,
         'recent_contributions': Contribution.objects.filter(
             contributor__user=request.user
-        ).select_related('contributor').order_by('-date')[:10],
+        ).filter(
+            Q() if not selected_categories else (
+                ~Q(contributor__category__in=selected_categories)
+                if filter_type == "exclude"
+                else Q(contributor__category__in=selected_categories)
+            )
+        ).select_related('contributor').order_by('-date', '-created_at')[:10],
+        "selected_categories": selected_categories,
+        "category_choices": ContributorCategory.choices,
+        "filter_type": filter_type,
     }
     return render(request, 'contributors/dashboard.html', context)
 
 @login_required
 def contributor_list(request):
-    contributors = Contributor.objects.filter(user=request.user).annotate(
-        total_amount=Sum('contributions__amount')
+    valid_filter_types = {"include", "exclude"}
+    filter_type = request.GET.get("filter_type", "include").strip().lower()
+    if filter_type not in valid_filter_types:
+        filter_type = "include"
+
+    selected_categories = [
+        category
+        for category in request.GET.getlist("category")
+        if category in ContributorCategory.values
+    ]
+
+    contributors_base_qs = Contributor.objects.filter(user=request.user)
+    if selected_categories:
+        if filter_type == "exclude":
+            contributors_base_qs = contributors_base_qs.exclude(category__in=selected_categories)
+        else:
+            contributors_base_qs = contributors_base_qs.filter(category__in=selected_categories)
+
+    contributors = contributors_base_qs.annotate(
+        total_amount=Coalesce(
+            Sum("contributions__amount"),
+            Value(0, output_field=DecimalField()),
+        )
     )
-    return render(request, 'contributors/contributor_list.html', {'contributors': contributors})
+
+    total_contributors = contributors_base_qs.count()
+    total_contribution_amount = contributors_base_qs.aggregate(
+        total=Coalesce(Sum("contributions__amount"), Value(0, output_field=DecimalField()))
+    )["total"]
+    avg_contribution = (
+        total_contribution_amount / total_contributors if total_contributors > 0 else 0
+    )
+
+    context = {
+        "contributors": contributors,
+        "total_contributors": total_contributors,
+        "total_contribution_amount": total_contribution_amount,
+        "avg_contribution": avg_contribution,
+        "selected_categories": selected_categories,
+        "category_choices": ContributorCategory.choices,
+        "filter_type": filter_type,
+    }
+    return render(request, 'contributors/contributor_list.html', context)
 
 @login_required
 def contributor_create(request):
