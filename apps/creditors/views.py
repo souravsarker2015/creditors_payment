@@ -5,13 +5,31 @@ from django.contrib import messages
 from django.db.models import Sum, Q, DecimalField, Value
 from django.db.models.functions import Coalesce
 
-from .models import Creditor, Transaction
+from .models import Creditor, CreditorCategory, Transaction
 
 
 @login_required
 def dashboard_view(request):
+    valid_filter_types = {"include", "exclude"}
+    filter_type = request.GET.get("filter_type", "include").strip().lower()
+    if filter_type not in valid_filter_types:
+        filter_type = "include"
+
+    selected_categories = [
+        category
+        for category in request.GET.getlist("category")
+        if category in CreditorCategory.values
+    ]
+
+    creditors_base_qs = request.user.creditors.all()
+    if selected_categories:
+        if filter_type == "exclude":
+            creditors_base_qs = creditors_base_qs.exclude(category__in=selected_categories)
+        else:
+            creditors_base_qs = creditors_base_qs.filter(category__in=selected_categories)
+
     # Global summary stats for the current user
-    stats = request.user.creditors.aggregate(
+    stats = creditors_base_qs.aggregate(
         total_borrowed=Coalesce(
             Sum(
                 "transactions__amount",
@@ -33,7 +51,7 @@ def dashboard_view(request):
     remaining = total_borrowed - total_paid
     
     # Creditor-wise breakdown for charts
-    creditors_qs = request.user.creditors.annotate(
+    creditors_qs = creditors_base_qs.annotate(
         c_borrowed=Coalesce(Sum("transactions__amount", filter=Q(transactions__transaction_type=Transaction.BORROW)), Value(0, output_field=DecimalField())),
         c_paid=Coalesce(Sum("transactions__amount", filter=Q(transactions__transaction_type=Transaction.REPAY)), Value(0, output_field=DecimalField())),
     )
@@ -50,9 +68,19 @@ def dashboard_view(request):
             creditor_paid.append(float(c.c_paid))
 
     # Recent activity
-    recent_transactions = Transaction.objects.filter(
-        creditor__user=request.user
-    ).select_related("creditor").order_by("-date", "-created_at")[:10]
+    recent_transactions = Transaction.objects.filter(creditor__user=request.user)
+    if selected_categories:
+        if filter_type == "exclude":
+            recent_transactions = recent_transactions.exclude(
+                creditor__category__in=selected_categories
+            )
+        else:
+            recent_transactions = recent_transactions.filter(
+                creditor__category__in=selected_categories
+            )
+    recent_transactions = recent_transactions.select_related("creditor").order_by(
+        "-date", "-created_at"
+    )[:10]
     
     context = {
         "total_borrowed": total_borrowed,
@@ -62,6 +90,10 @@ def dashboard_view(request):
         "creditor_remaining": creditor_remaining,
         "creditor_paid": creditor_paid,
         "recent_transactions": recent_transactions,
+        "selected_category": selected_categories[0] if len(selected_categories) == 1 else "",
+        "selected_categories": selected_categories,
+        "category_choices": CreditorCategory.choices,
+        "filter_type": filter_type,
     }
     return render(request, "creditors/dashboard.html", context)
 
@@ -135,8 +167,25 @@ def creditor_detail_view(request, pk):
 
 @login_required
 def creditor_list_view(request):
-    import django.utils.timezone
-    creditors_qs = request.user.creditors.annotate(
+    valid_filter_types = {"include", "exclude"}
+    filter_type = request.GET.get("filter_type", "include").strip().lower()
+    if filter_type not in valid_filter_types:
+        filter_type = "include"
+
+    selected_categories = [
+        category
+        for category in request.GET.getlist("category")
+        if category in CreditorCategory.values
+    ]
+
+    creditors_base_qs = request.user.creditors.all()
+    if selected_categories:
+        if filter_type == "exclude":
+            creditors_base_qs = creditors_base_qs.exclude(category__in=selected_categories)
+        else:
+            creditors_base_qs = creditors_base_qs.filter(category__in=selected_categories)
+
+    creditors_qs = creditors_base_qs.annotate(
         total_borrowed_amt=Coalesce(
             Sum("transactions__amount", filter=Q(transactions__transaction_type=Transaction.BORROW)),
             Value(0, output_field=DecimalField()),
@@ -146,6 +195,24 @@ def creditor_list_view(request):
             Value(0, output_field=DecimalField()),
         ),
     ).order_by("name")
+
+    stats = creditors_base_qs.aggregate(
+        total_borrowed=Coalesce(
+            Sum(
+                "transactions__amount",
+                filter=Q(transactions__transaction_type=Transaction.BORROW),
+            ),
+            Value(0, output_field=DecimalField()),
+        ),
+        total_paid=Coalesce(
+            Sum(
+                "transactions__amount",
+                filter=Q(transactions__transaction_type=Transaction.REPAY),
+            ),
+            Value(0, output_field=DecimalField()),
+        ),
+    )
+    remaining = stats["total_borrowed"] - stats["total_paid"]
     
     # Calculate progress percentage manually to avoid complex template logic
     for cr in creditors_qs:
@@ -154,7 +221,16 @@ def creditor_list_view(request):
         else:
             cr.payment_percent = 0
             
-    return render(request, "creditors/creditor_list.html", {"creditors": creditors_qs})
+    context = {
+        "creditors": creditors_qs,
+        "total_borrowed": stats["total_borrowed"],
+        "total_paid": stats["total_paid"],
+        "remaining": remaining,
+        "selected_categories": selected_categories,
+        "category_choices": CreditorCategory.choices,
+        "filter_type": filter_type,
+    }
+    return render(request, "creditors/creditor_list.html", context)
 
 @login_required
 def transaction_edit_view(request, pk):

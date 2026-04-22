@@ -2,17 +2,72 @@
 
 {% block title %}My Creditors | FinTrack{% endblock %}
 
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+{% endblock %}
+
 {% block content %}
 <div class="px-4 sm:px-6 lg:px-8">
-  <div class="sm:flex sm:items-center">
-    <div class="sm:flex-auto">
+  <div class="sm:flex sm:items-start sm:justify-between gap-4">
+    <div class="sm:flex-auto max-w-2xl">
       <h1 class="text-2xl font-bold leading-6 text-gray-900">Manage Creditors</h1>
-      <p class="mt-2 text-sm text-gray-700">A complete list of people you have borrowed from and your repayment progress.</p>
+      <p class="mt-2 text-sm text-gray-700">A complete list of people you have borrowed from and your repayment progress. Use the filters to include or exclude selected categories.</p>
     </div>
-    <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+    <div class="mt-1 sm:mt-0 sm:flex-none">
       <a href="{% url 'creditor_create' %}" class="block rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">+ New Creditor</a>
     </div>
   </div>
+
+  <form method="get" x-data="{ filterType: '{{ filter_type|default:"include" }}' }" class="mt-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+    <input type="hidden" name="filter_type" x-model="filterType">
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:items-end">
+      <div>
+        <p class="block text-xs font-semibold uppercase tracking-wider text-gray-500">Filter mode</p>
+        <div class="mt-1 inline-flex rounded-lg bg-gray-100 p-1 ring-1 ring-inset ring-gray-200">
+          <button type="button" @click="filterType = 'include'" class="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-semibold transition-all"
+            :class="filterType === 'include' ? 'bg-white text-indigo-700 shadow-sm ring-1 ring-indigo-200' : 'text-gray-600 hover:text-gray-800'">
+            <span class="inline-block h-2 w-2 rounded-full bg-indigo-500"></span> Include
+          </button>
+          <button type="button" @click="filterType = 'exclude'" class="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-semibold transition-all"
+            :class="filterType === 'exclude' ? 'bg-white text-rose-700 shadow-sm ring-1 ring-rose-200' : 'text-gray-600 hover:text-gray-800'">
+            <span class="inline-block h-2 w-2 rounded-full bg-rose-500"></span> Exclude
+          </button>
+        </div>
+      </div>
+      <div class="md:col-span-2">
+        <label for="category" class="block text-xs font-semibold uppercase tracking-wider text-gray-500">Categories</label>
+        <select id="category" name="category" multiple class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+          {% for value, label in category_choices %}
+            <option value="{{ value }}"{% if value in selected_categories %} selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <p class="mt-1 text-xs text-gray-500">Leave empty for all categories.</p>
+      </div>
+    </div>
+    <div class="mt-4 flex items-center gap-3">
+      <button type="submit" class="rounded-md bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-200">
+        Apply Filter
+      </button>
+      <a href="{% url 'creditor_list' %}" class="rounded-md border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50">
+        Reset
+      </a>
+    </div>
+  </form>
+
+  <dl class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+    <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6 border-l-4 border-red-500">
+      <dt class="truncate text-sm font-medium text-gray-500">Total Borrowed</dt>
+      <dd class="mt-1 text-4xl font-bold tracking-tight text-gray-900">৳{{ total_borrowed|floatformat:2 }}</dd>
+    </div>
+    <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6 border-l-4 border-green-500">
+      <dt class="truncate text-sm font-medium text-gray-500">Total Paid</dt>
+      <dd class="mt-1 text-4xl font-bold tracking-tight text-gray-900">৳{{ total_paid|floatformat:2 }}</dd>
+    </div>
+    <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6 border-l-4 border-yellow-500">
+      <dt class="truncate text-sm font-medium text-gray-500">Remaining Debt</dt>
+      <dd class="mt-1 text-4xl font-bold tracking-tight text-gray-900">৳{{ remaining|floatformat:2 }}</dd>
+    </div>
+  </dl>
 
   {% if creditors %}
   <div class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -24,7 +79,10 @@
           {% if cr.is_paid %}Paid Completely{% else %}Owed ৳{{ cr.remaining|floatformat:0 }}{% endif %}
         </span>
       </div>
-      <p class="mt-1 text-sm text-gray-500">{{ cr.phone|default:"No contact info" }}</p>
+      <div class="mt-2 flex items-center gap-2">
+        <span class="inline-flex items-center rounded-full bg-indigo-50 px-2 py-1 text-xs font-semibold text-indigo-700">{{ cr.get_category_display }}</span>
+        <p class="text-sm text-gray-500">{{ cr.phone|default:"No contact info" }}</p>
+      </div>
 
       <div class="mt-6 flex-1">
         <div class="flex justify-between text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
@@ -63,4 +121,21 @@
   </div>
   {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const categorySelect = document.getElementById('category');
+    if (categorySelect) {
+      new TomSelect(categorySelect, {
+        plugins: ['remove_button'],
+        placeholder: 'Select categories...',
+        closeAfterSelect: false,
+        hideSelected: true
+      });
+    }
+  });
+</script>
 {% endblock %}

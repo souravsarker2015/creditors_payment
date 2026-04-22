@@ -4,11 +4,14 @@ from .models import Creditor, Transaction
 class CreditorForm(forms.ModelForm):
     class Meta:
         model = Creditor
-        fields = ["name", "phone", "note"]
+        fields = ["name", "category", "phone", "note"]
         widgets = {
             "name": forms.TextInput(attrs={
                 "class": "form-input",
                 "placeholder": "Full Name"
+            }),
+            "category": forms.Select(attrs={
+                "class": "form-input",
             }),
             "phone": forms.TextInput(attrs={
                 "class": "form-input",
