@@ -4,38 +4,193 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Sum, Q, DecimalField, Value
 from django.db.models.functions import Coalesce
+from datetime import date as date_cls
 
 from .models import ExpenseCategory, Expense
 from .forms import ExpenseCategoryForm, ExpenseForm
 
 
+def _parse_iso_date(value):
+    if not value:
+        return None
+    try:
+        return date_cls.fromisoformat(value)
+    except ValueError:
+        return None
+
+
+def _get_expense_filters(request, user):
+    filter_mode = request.GET.get("filter_mode", "include").strip().lower()
+    if filter_mode not in {"include", "exclude"}:
+        filter_mode = "include"
+
+    selected_category_ids = []
+    for raw in request.GET.getlist("category"):
+        try:
+            selected_category_ids.append(int(raw))
+        except (TypeError, ValueError):
+            continue
+    selected_category_ids = list(dict.fromkeys(selected_category_ids))
+
+    selected_year = request.GET.get("year", "").strip()
+    if selected_year.isdigit():
+        selected_year = int(selected_year)
+    else:
+        selected_year = None
+
+    date_from = _parse_iso_date(request.GET.get("date_from", "").strip())
+    date_to = _parse_iso_date(request.GET.get("date_to", "").strip())
+    if date_from and date_to and date_from > date_to:
+        date_from, date_to = date_to, date_from
+
+    all_categories = user.expense_categories.all().order_by("name")
+    valid_category_ids = set(all_categories.values_list("id", flat=True))
+    selected_category_ids = [cid for cid in selected_category_ids if cid in valid_category_ids]
+
+    categories_qs = all_categories
+    if selected_category_ids:
+        if filter_mode == "exclude":
+            categories_qs = categories_qs.exclude(id__in=selected_category_ids)
+        else:
+            categories_qs = categories_qs.filter(id__in=selected_category_ids)
+
+    return {
+        "filter_mode": filter_mode,
+        "selected_category_ids": selected_category_ids,
+        "selected_year": selected_year,
+        "date_from": date_from,
+        "date_to": date_to,
+        "all_categories": all_categories,
+        "filtered_categories": categories_qs,
+    }
+
+
+def _apply_date_filters(qs, selected_year=None, date_from=None, date_to=None):
+    if selected_year:
+        qs = qs.filter(date__year=selected_year)
+    if date_from:
+        qs = qs.filter(date__gte=date_from)
+    if date_to:
+        qs = qs.filter(date__lte=date_to)
+    return qs
+
+
+def _apply_category_filters(qs, selected_category_ids=None, filter_mode="include"):
+    selected_category_ids = selected_category_ids or []
+    if not selected_category_ids:
+        return qs
+    if filter_mode == "exclude":
+        return qs.exclude(category_id__in=selected_category_ids)
+    return qs.filter(category_id__in=selected_category_ids)
+
+
 @login_required
 def dashboard_view(request):
     """Summary of all expenses for the user."""
-    categories_qs = request.user.expense_categories.annotate(
-        total=Coalesce(Sum("expenses__amount"), Value(0, output_field=DecimalField()))
+    filters = _get_expense_filters(request, request.user)
+
+    filtered_expenses = _apply_category_filters(
+        request.user.expenses.all(),
+        selected_category_ids=filters["selected_category_ids"],
+        filter_mode=filters["filter_mode"],
     )
-    
-    total_spent = request.user.expenses.aggregate(total_spent=Coalesce(Sum("amount"), Value(0, output_field=DecimalField())))["total_spent"]
-    
-    category_labels = [c.name for c in categories_qs if c.total > 0]
-    category_data = [float(c.total) for c in categories_qs if c.total > 0]
-    
-    recent_expenses = request.user.expenses.select_related("category").order_by("-date", "-created_at")[:10]
+    filtered_expenses = _apply_date_filters(
+        filtered_expenses,
+        selected_year=filters["selected_year"],
+        date_from=filters["date_from"],
+        date_to=filters["date_to"],
+    )
+
+    total_spent = filtered_expenses.aggregate(
+        total_spent=Coalesce(Sum("amount"), Value(0, output_field=DecimalField()))
+    )["total_spent"]
+
+    category_totals = (
+        filtered_expenses.values("category__name")
+        .annotate(total=Coalesce(Sum("amount"), Value(0, output_field=DecimalField())))
+        .order_by("-total", "category__name")
+    )
+    category_labels = [row["category__name"] or "General" for row in category_totals if row["total"] > 0]
+    category_data = [float(row["total"]) for row in category_totals if row["total"] > 0]
+
+    recent_expenses = filtered_expenses.select_related("category").order_by(
+        "-date", "-created_at"
+    )[:10]
+
+    year_options = (
+        _apply_category_filters(
+            request.user.expenses.all(),
+            selected_category_ids=filters["selected_category_ids"],
+            filter_mode=filters["filter_mode"],
+        )
+        .values_list("date__year", flat=True)
+        .distinct()
+        .order_by("-date__year")
+    )
     
     context = {
         "total_spent": total_spent,
         "category_labels": category_labels,
         "category_data": category_data,
         "recent_expenses": recent_expenses,
+        "available_categories": filters["all_categories"],
+        "selected_category_ids": filters["selected_category_ids"],
+        "filter_mode": filters["filter_mode"],
+        "year_options": year_options,
+        "selected_year": filters["selected_year"],
+        "date_from": filters["date_from"].isoformat() if filters["date_from"] else "",
+        "date_to": filters["date_to"].isoformat() if filters["date_to"] else "",
     }
     return render(request, "expense/dashboard.html", context)
 
 
 @login_required
 def expense_list_view(request):
-    expenses = request.user.expenses.select_related("category").order_by("-date", "-created_at")
-    return render(request, "expense/expense_list.html", {"expenses": expenses})
+    filters = _get_expense_filters(request, request.user)
+
+    expenses = _apply_category_filters(
+        request.user.expenses.all(),
+        selected_category_ids=filters["selected_category_ids"],
+        filter_mode=filters["filter_mode"],
+    )
+    expenses = _apply_date_filters(
+        expenses,
+        selected_year=filters["selected_year"],
+        date_from=filters["date_from"],
+        date_to=filters["date_to"],
+    ).select_related("category").order_by("-date", "-created_at")
+
+    total_spent = expenses.aggregate(
+        total=Coalesce(Sum("amount"), Value(0, output_field=DecimalField()))
+    )["total"]
+    total_entries = expenses.count()
+    avg_expense = total_spent / total_entries if total_entries > 0 else 0
+
+    year_options = (
+        _apply_category_filters(
+            request.user.expenses.all(),
+            selected_category_ids=filters["selected_category_ids"],
+            filter_mode=filters["filter_mode"],
+        )
+        .values_list("date__year", flat=True)
+        .distinct()
+        .order_by("-date__year")
+    )
+
+    context = {
+        "expenses": expenses,
+        "total_spent": total_spent,
+        "total_entries": total_entries,
+        "avg_expense": avg_expense,
+        "available_categories": filters["all_categories"],
+        "selected_category_ids": filters["selected_category_ids"],
+        "filter_mode": filters["filter_mode"],
+        "year_options": year_options,
+        "selected_year": filters["selected_year"],
+        "date_from": filters["date_from"].isoformat() if filters["date_from"] else "",
+        "date_to": filters["date_to"].isoformat() if filters["date_to"] else "",
+    }
+    return render(request, "expense/expense_list.html", context)
 
 
 @login_required
