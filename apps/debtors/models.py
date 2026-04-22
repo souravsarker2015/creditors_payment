@@ -3,12 +3,32 @@ from django.db.models import Sum, Q
 from django.contrib.auth.models import User
 
 
+class DebtorCategory(models.TextChoices):
+    FAMILY = "FAMILY", "Family"
+    FRIEND = "FRIEND", "Friend"
+    BUSINESS_PARTNER = "BUSINESS_PARTNER", "Business Partner"
+    CLIENT = "CLIENT", "Client"
+    EMPLOYEE = "EMPLOYEE", "Employee"
+    TENANT = "TENANT", "Tenant"
+    SHOPKEEPER = "SHOPKEEPER", "Shopkeeper"
+    SUPPLIER = "SUPPLIER", "Supplier"
+    STUDENT = "STUDENT", "Student"
+    MEDICAL = "MEDICAL", "Medical"
+    EDUCATION = "EDUCATION", "Education"
+    OTHER = "OTHER", "Other"
+
+
 class Debtor(models.Model):
     """A person who owes you money."""
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="debtors")
 
     name = models.CharField(max_length=200)
+    category = models.CharField(
+        max_length=32,
+        choices=DebtorCategory.choices,
+        default=DebtorCategory.OTHER,
+    )
     phone = models.CharField(max_length=20, blank=True, default="")
     note = models.TextField(blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)

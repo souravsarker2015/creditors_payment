@@ -5,14 +5,32 @@ from django.contrib import messages
 from django.db.models import Sum, Q, DecimalField, Value
 from django.db.models.functions import Coalesce
 
-from .models import Debtor, Transaction
+from .models import Debtor, DebtorCategory, Transaction
 from .forms import DebtorForm, TransactionForm
 
 
 @login_required
 def dashboard_view(request):
+    valid_filter_types = {"include", "exclude"}
+    filter_type = request.GET.get("filter_type", "include").strip().lower()
+    if filter_type not in valid_filter_types:
+        filter_type = "include"
+
+    selected_categories = [
+        category
+        for category in request.GET.getlist("category")
+        if category in DebtorCategory.values
+    ]
+
+    debtors_base_qs = request.user.debtors.all()
+    if selected_categories:
+        if filter_type == "exclude":
+            debtors_base_qs = debtors_base_qs.exclude(category__in=selected_categories)
+        else:
+            debtors_base_qs = debtors_base_qs.filter(category__in=selected_categories)
+
     # Global summary stats for the current user
-    stats = request.user.debtors.aggregate(
+    stats = debtors_base_qs.aggregate(
         total_lent=Coalesce(
             Sum(
                 "transactions__amount",
@@ -34,7 +52,7 @@ def dashboard_view(request):
     remaining = total_lent - total_received
     
     # Debtor-wise breakdown for charts
-    debtors_qs = request.user.debtors.annotate(
+    debtors_qs = debtors_base_qs.annotate(
         d_lent=Coalesce(Sum("transactions__amount", filter=Q(transactions__transaction_type=Transaction.LEND)), Value(0, output_field=DecimalField())),
         d_received=Coalesce(Sum("transactions__amount", filter=Q(transactions__transaction_type=Transaction.RECEIVE)), Value(0, output_field=DecimalField())),
     )
@@ -51,9 +69,19 @@ def dashboard_view(request):
             debtor_received.append(float(d.d_received))
 
     # Recent activity
-    recent_transactions = Transaction.objects.filter(
-        debtor__user=request.user
-    ).select_related("debtor").order_by("-date", "-created_at")[:10]
+    recent_transactions = Transaction.objects.filter(debtor__user=request.user)
+    if selected_categories:
+        if filter_type == "exclude":
+            recent_transactions = recent_transactions.exclude(
+                debtor__category__in=selected_categories
+            )
+        else:
+            recent_transactions = recent_transactions.filter(
+                debtor__category__in=selected_categories
+            )
+    recent_transactions = recent_transactions.select_related("debtor").order_by(
+        "-date", "-created_at"
+    )[:10]
     
     context = {
         "total_lent": total_lent,
@@ -63,6 +91,9 @@ def dashboard_view(request):
         "debtor_remaining": debtor_remaining,
         "debtor_received": debtor_received,
         "recent_transactions": recent_transactions,
+        "selected_categories": selected_categories,
+        "category_choices": DebtorCategory.choices,
+        "filter_type": filter_type,
     }
     return render(request, "debtors/dashboard.html", context)
 
@@ -134,7 +165,25 @@ def debtor_detail_view(request, pk):
 
 @login_required
 def debtor_list_view(request):
-    debtors_qs = request.user.debtors.annotate(
+    valid_filter_types = {"include", "exclude"}
+    filter_type = request.GET.get("filter_type", "include").strip().lower()
+    if filter_type not in valid_filter_types:
+        filter_type = "include"
+
+    selected_categories = [
+        category
+        for category in request.GET.getlist("category")
+        if category in DebtorCategory.values
+    ]
+
+    debtors_base_qs = request.user.debtors.all()
+    if selected_categories:
+        if filter_type == "exclude":
+            debtors_base_qs = debtors_base_qs.exclude(category__in=selected_categories)
+        else:
+            debtors_base_qs = debtors_base_qs.filter(category__in=selected_categories)
+
+    debtors_qs = debtors_base_qs.annotate(
         total_lent_amt=Coalesce(
             Sum("transactions__amount", filter=Q(transactions__transaction_type=Transaction.LEND)),
             Value(0, output_field=DecimalField()),
@@ -144,6 +193,24 @@ def debtor_list_view(request):
             Value(0, output_field=DecimalField()),
         ),
     ).order_by("name")
+
+    stats = debtors_base_qs.aggregate(
+        total_lent=Coalesce(
+            Sum(
+                "transactions__amount",
+                filter=Q(transactions__transaction_type=Transaction.LEND),
+            ),
+            Value(0, output_field=DecimalField()),
+        ),
+        total_received=Coalesce(
+            Sum(
+                "transactions__amount",
+                filter=Q(transactions__transaction_type=Transaction.RECEIVE),
+            ),
+            Value(0, output_field=DecimalField()),
+        ),
+    )
+    remaining = stats["total_lent"] - stats["total_received"]
     
     # Calculate progress percentage
     for dr in debtors_qs:
@@ -152,7 +219,16 @@ def debtor_list_view(request):
         else:
             dr.received_percent = 0
             
-    return render(request, "debtors/debtor_list.html", {"debtors": debtors_qs})
+    context = {
+        "debtors": debtors_qs,
+        "total_lent": stats["total_lent"],
+        "total_received": stats["total_received"],
+        "remaining": remaining,
+        "selected_categories": selected_categories,
+        "category_choices": DebtorCategory.choices,
+        "filter_type": filter_type,
+    }
+    return render(request, "debtors/debtor_list.html", context)
 
 @login_required
 def transaction_edit_view(request, pk):

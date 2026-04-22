@@ -2,6 +2,10 @@
 
 {% block title %}Debtors Dashboard | FinTrack{% endblock %}
 
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+{% endblock %}
+
 {% block content %}
 <div class="px-4 sm:px-6 lg:px-8">
   <div class="sm:flex sm:items-center text-left">
@@ -13,6 +17,35 @@
       <a href="{% url 'debtor_create' %}" class="block rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-all">+ Add New Debtor</a>
     </div>
   </div>
+
+  <form method="get" x-data="{ filterType: '{{ filter_type|default:"include" }}' }" class="mt-6 grid grid-cols-1 gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:grid-cols-2 sm:items-end lg:grid-cols-[auto,1fr,auto]">
+    <input type="hidden" name="filter_type" x-model="filterType">
+    <div class="w-full">
+      <p class="block text-xs font-semibold uppercase tracking-wider text-gray-500">Filter mode</p>
+      <div class="mt-1 grid w-full grid-cols-2 rounded-lg bg-gray-100 p-1 ring-1 ring-inset ring-gray-200">
+        <button type="button" @click="filterType = 'include'" class="inline-flex w-full items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-semibold transition-all"
+          :class="filterType === 'include' ? 'bg-white text-indigo-700 shadow-sm ring-1 ring-indigo-200' : 'text-gray-600 hover:text-gray-800'">
+          <span class="inline-block h-2 w-2 rounded-full bg-indigo-500"></span> Include
+        </button>
+        <button type="button" @click="filterType = 'exclude'" class="inline-flex w-full items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-semibold transition-all"
+          :class="filterType === 'exclude' ? 'bg-white text-rose-700 shadow-sm ring-1 ring-rose-200' : 'text-gray-600 hover:text-gray-800'">
+          <span class="inline-block h-2 w-2 rounded-full bg-rose-500"></span> Exclude
+        </button>
+      </div>
+    </div>
+    <div class="w-full">
+      <label for="category" class="block text-xs font-semibold uppercase tracking-wider text-gray-500">Filter by category</label>
+      <select id="category" name="category" multiple size="5" class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+        {% for value, label in category_choices %}
+          <option value="{{ value }}"{% if value in selected_categories %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <p class="mt-1 text-xs text-gray-500">Leave unselected for all categories.</p>
+    </div>
+    <button type="submit" class="w-full rounded-md bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-200 sm:w-auto">
+      Apply
+    </button>
+  </form>
 
   <!-- Identifiable Stats Grid -->
   <dl class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-3">
@@ -111,8 +144,19 @@
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const categorySelect = document.getElementById('category');
+        if (categorySelect) {
+            new TomSelect(categorySelect, {
+                plugins: ['remove_button'],
+                placeholder: 'Select categories...',
+                closeAfterSelect: false,
+                hideSelected: true
+            });
+        }
+
         const labels = {{ debtor_labels|safe }};
         const remainingData = {{ debtor_remaining|safe }};
         const receivedData = {{ debtor_received|safe }};

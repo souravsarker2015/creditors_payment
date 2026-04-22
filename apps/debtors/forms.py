@@ -5,9 +5,10 @@ from .models import Debtor, Transaction
 class DebtorForm(forms.ModelForm):
     class Meta:
         model = Debtor
-        fields = ["name", "phone", "note"]
+        fields = ["name", "category", "phone", "note"]
         widgets = {
             "name": forms.TextInput(attrs={"class": "form-control", "placeholder": "Debtor's Name"}),
+            "category": forms.Select(attrs={"class": "form-control"}),
             "phone": forms.TextInput(attrs={"class": "form-control", "placeholder": "Phone Number"}),
             "note": forms.Textarea(attrs={"class": "form-control", "rows": 3, "placeholder": "Notes..."}),
         }
