@@ -79,7 +79,7 @@
     </div>
   </dl>
 
-  {% if expenses %}
+  {% if page_obj.object_list %}
   <div class="overflow-hidden bg-white shadow-sm ring-1 ring-gray-100 rounded-[3rem]">
     <div class="overflow-x-auto">
       <table class="min-w-full divide-y divide-gray-50">
@@ -92,7 +92,7 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-50 bg-white">
-          {% for ex in expenses %}
+          {% for ex in page_obj %}
           <tr class="hover:bg-gray-50/50 transition-colors group">
             <td class="whitespace-nowrap px-10 py-8">
                 <span class="text-sm font-black text-gray-900 tabular-nums uppercase">{{ ex.date|date:"d M, Y" }}</span>
@@ -122,6 +122,84 @@
       </table>
     </div>
   </div>
+
+  {% if page_obj.paginator.num_pages > 1 %}
+  <div class="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
+    <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">
+      Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+    </p>
+
+    <div class="flex flex-col items-center gap-3 sm:flex-row">
+    <nav class="inline-flex items-center gap-1 rounded-xl border border-gray-200 bg-white p-1 shadow-sm">
+      {% if page_obj.has_previous %}
+        <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page=1" class="rounded-lg px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100">
+          First
+        </a>
+      {% else %}
+        <span class="rounded-lg px-3 py-2 text-sm font-semibold text-gray-300">First</span>
+      {% endif %}
+
+      {% if page_obj.has_previous %}
+        <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ page_obj.previous_page_number }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100">
+          Prev
+        </a>
+      {% else %}
+        <span class="rounded-lg px-3 py-2 text-sm font-semibold text-gray-300">Prev</span>
+      {% endif %}
+
+      {% for num in pagination_window %}
+        {% if num is None %}
+          <span class="px-2 py-2 text-sm font-bold text-gray-400">…</span>
+        {% elif num == page_obj.number %}
+          <span class="rounded-lg bg-orange-600 px-3 py-2 text-sm font-bold text-white">{{ num }}</span>
+        {% else %}
+          <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ num }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100">{{ num }}</a>
+        {% endif %}
+      {% endfor %}
+
+      {% if page_obj.has_next %}
+        <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ page_obj.next_page_number }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100">
+          Next
+        </a>
+      {% else %}
+        <span class="rounded-lg px-3 py-2 text-sm font-semibold text-gray-300">Next</span>
+      {% endif %}
+
+      {% if page_obj.has_next %}
+        <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ page_obj.paginator.num_pages }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100">
+          Last
+        </a>
+      {% else %}
+        <span class="rounded-lg px-3 py-2 text-sm font-semibold text-gray-300">Last</span>
+      {% endif %}
+    </nav>
+
+    <form method="get" class="flex flex-col items-start gap-1" x-data="{ pageInput: '{{ page_obj.number }}', maxPage: {{ page_obj.paginator.num_pages }}, showError: false }" @submit="const p = parseInt(pageInput, 10); showError = !(p >= 1 && p <= maxPage); if (showError) { $event.preventDefault(); }">
+      <div class="flex items-center gap-2">
+        <input type="hidden" name="filter_mode" value="{{ filter_mode }}">
+        {% for category_id in selected_category_ids %}
+          <input type="hidden" name="category" value="{{ category_id }}">
+        {% endfor %}
+        {% if selected_year %}
+          <input type="hidden" name="year" value="{{ selected_year }}">
+        {% endif %}
+        {% if date_from %}
+          <input type="hidden" name="date_from" value="{{ date_from }}">
+        {% endif %}
+        {% if date_to %}
+          <input type="hidden" name="date_to" value="{{ date_to }}">
+        {% endif %}
+        <input type="number" name="page" x-model="pageInput" inputmode="numeric" value="{{ page_obj.number }}" class="w-20 rounded-lg border border-gray-300 px-2 py-2 text-center text-sm font-semibold text-gray-700 focus:border-orange-500 focus:ring-orange-500">
+        <button type="submit" class="rounded-lg bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-200">
+          Go
+        </button>
+      </div>
+      <p class="text-xs font-medium text-gray-400">Range: 1-{{ page_obj.paginator.num_pages }}</p>
+      <p x-show="showError" x-cloak class="text-xs font-semibold text-red-600">Please enter a page between 1 and {{ page_obj.paginator.num_pages }}.</p>
+    </form>
+    </div>
+  </div>
+  {% endif %}
   {% else %}
   <div class="flex flex-col items-center justify-center rounded-[4rem] border-2 border-dashed border-gray-100 p-32 text-center bg-white shadow-sm ring-1 ring-gray-50">
       <div class="h-24 w-24 bg-orange-50 rounded-full flex items-center justify-center mb-10 shadow-inner">

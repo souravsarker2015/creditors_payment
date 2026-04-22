@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Sum, Q, DecimalField, Value
 from django.db.models.functions import Coalesce
+from django.core.paginator import Paginator
 from datetime import date as date_cls
 
 from .models import ExpenseCategory, Expense
@@ -84,6 +85,28 @@ def _apply_category_filters(qs, selected_category_ids=None, filter_mode="include
     return qs.filter(category_id__in=selected_category_ids)
 
 
+def _build_pagination_window(page_obj, window=2):
+    total_pages = page_obj.paginator.num_pages
+    current = page_obj.number
+    pages = {1, total_pages}
+
+    for page_number in range(current - window, current + window + 1):
+        if 1 <= page_number <= total_pages:
+            pages.add(page_number)
+
+    ordered_pages = sorted(pages)
+    compact_pages = []
+    previous = None
+
+    for page_number in ordered_pages:
+        if previous is not None and page_number - previous > 1:
+            compact_pages.append(None)
+        compact_pages.append(page_number)
+        previous = page_number
+
+    return compact_pages
+
+
 @login_required
 def dashboard_view(request):
     """Summary of all expenses for the user."""
@@ -148,23 +171,27 @@ def dashboard_view(request):
 def expense_list_view(request):
     filters = _get_expense_filters(request, request.user)
 
-    expenses = _apply_category_filters(
+    filtered_expenses = _apply_category_filters(
         request.user.expenses.all(),
         selected_category_ids=filters["selected_category_ids"],
         filter_mode=filters["filter_mode"],
     )
-    expenses = _apply_date_filters(
-        expenses,
+    filtered_expenses = _apply_date_filters(
+        filtered_expenses,
         selected_year=filters["selected_year"],
         date_from=filters["date_from"],
         date_to=filters["date_to"],
     ).select_related("category").order_by("-date", "-created_at")
 
-    total_spent = expenses.aggregate(
+    total_spent = filtered_expenses.aggregate(
         total=Coalesce(Sum("amount"), Value(0, output_field=DecimalField()))
     )["total"]
-    total_entries = expenses.count()
+    total_entries = filtered_expenses.count()
     avg_expense = total_spent / total_entries if total_entries > 0 else 0
+
+    paginator = Paginator(filtered_expenses, 15)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
 
     year_options = (
         _apply_category_filters(
@@ -178,10 +205,12 @@ def expense_list_view(request):
     )
 
     context = {
-        "expenses": expenses,
+        "expenses": page_obj.object_list,
         "total_spent": total_spent,
         "total_entries": total_entries,
         "avg_expense": avg_expense,
+        "page_obj": page_obj,
+        "pagination_window": _build_pagination_window(page_obj),
         "available_categories": filters["all_categories"],
         "selected_category_ids": filters["selected_category_ids"],
         "filter_mode": filters["filter_mode"],
@@ -189,7 +218,10 @@ def expense_list_view(request):
         "selected_year": filters["selected_year"],
         "date_from": filters["date_from"].isoformat() if filters["date_from"] else "",
         "date_to": filters["date_to"].isoformat() if filters["date_to"] else "",
+        "base_query": request.GET.copy(),
     }
+    context["base_query"].pop("page", None)
+    context["base_query_string"] = context["base_query"].urlencode()
     return render(request, "expense/expense_list.html", context)
 
 
