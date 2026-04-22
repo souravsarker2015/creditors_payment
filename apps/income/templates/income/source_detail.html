@@ -2,6 +2,10 @@
 
 {% block title %}{{ source.name }} Details | FinTrack{% endblock %}
 
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+{% endblock %}
+
 {% block content %}
 <div class="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pb-16">
   <!-- Header with high-end border and layout -->
@@ -40,6 +44,27 @@
         <div class="overflow-hidden bg-white shadow-sm ring-1 ring-gray-100 rounded-[2.5rem]">
             <div class="px-10 py-8 border-b border-gray-50 bg-gray-50/20">
                 <h3 class="text-xs font-black text-gray-400 uppercase tracking-[0.25em]">Payout Timeline</h3>
+                <form method="get" class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-4">
+                    <div>
+                        <label for="year-filter" class="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Year</label>
+                        <select id="year-filter" name="year" class="mt-1 block w-full rounded-xl border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-700 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                            <option value="">All Years</option>
+                            {% for yr in year_options %}
+                                <option value="{{ yr }}"{% if selected_year == yr %} selected{% endif %}>{{ yr }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="date-range-filter" class="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Date Range</label>
+                        <input id="date-range-filter" type="text" placeholder="Select range..." class="mt-1 block w-full rounded-xl border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-700 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                        <input id="date-from-hidden" type="hidden" name="date_from" value="{{ date_from }}">
+                        <input id="date-to-hidden" type="hidden" name="date_to" value="{{ date_to }}">
+                    </div>
+                    <div class="flex items-end gap-2">
+                        <button type="submit" class="w-full rounded-xl bg-gray-900 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-white hover:bg-gray-800 transition-all">Apply</button>
+                        <a href="{% url 'income_source_detail' source.pk %}" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-center text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-50 transition-all">Reset</a>
+                    </div>
+                </form>
             </div>
             <div class="overflow-x-auto">
                 {% if transactions %}
@@ -139,4 +164,45 @@
         box-shadow: 0 0 40px rgba(16, 185, 129, 0.1) !important;
     }
 </style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const yearFilter = document.getElementById('year-filter');
+    if (yearFilter) {
+      new TomSelect(yearFilter, {
+        create: false,
+        maxItems: 1,
+        allowEmptyOption: true
+      });
+    }
+
+    const dateRangeInput = document.getElementById('date-range-filter');
+    const dateFromHidden = document.getElementById('date-from-hidden');
+    const dateToHidden = document.getElementById('date-to-hidden');
+    if (dateRangeInput && dateFromHidden && dateToHidden) {
+      const initialDates = [];
+      if (dateFromHidden.value) initialDates.push(dateFromHidden.value);
+      if (dateToHidden.value) initialDates.push(dateToHidden.value);
+
+      flatpickr(dateRangeInput, {
+        mode: "range",
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "M j, Y",
+        defaultDate: initialDates.length ? initialDates : null,
+        onChange: function(selectedDates) {
+          dateFromHidden.value = selectedDates[0]
+            ? flatpickr.formatDate(selectedDates[0], "Y-m-d")
+            : "";
+          dateToHidden.value = selectedDates[1]
+            ? flatpickr.formatDate(selectedDates[1], "Y-m-d")
+            : "";
+        }
+      });
+    }
+  });
+</script>
 {% endblock %}
