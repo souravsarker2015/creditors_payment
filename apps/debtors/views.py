@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 import django.utils.timezone
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Sum, Q, DecimalField, Value
+from django.db.models import Sum, Q, F, DecimalField, Value
 from django.db.models.functions import Coalesce
 
 from .models import Debtor, DebtorCategory, Transaction
@@ -176,12 +176,22 @@ def debtor_list_view(request):
         if category in DebtorCategory.values
     ]
 
+    valid_payment_statuses = {"ALL", "PAID", "UNPAID"}
+    payment_status = request.GET.get("payment_status", "ALL").strip().upper()
+    if payment_status not in valid_payment_statuses:
+        payment_status = "ALL"
+
+    search_query = request.GET.get("q", "").strip()
+
     debtors_base_qs = request.user.debtors.all()
     if selected_categories:
         if filter_type == "exclude":
             debtors_base_qs = debtors_base_qs.exclude(category__in=selected_categories)
         else:
             debtors_base_qs = debtors_base_qs.filter(category__in=selected_categories)
+
+    if search_query:
+        debtors_base_qs = debtors_base_qs.filter(name__icontains=search_query)
 
     debtors_qs = debtors_base_qs.annotate(
         total_lent_amt=Coalesce(
@@ -192,33 +202,28 @@ def debtor_list_view(request):
             Sum("transactions__amount", filter=Q(transactions__transaction_type=Transaction.RECEIVE)),
             Value(0, output_field=DecimalField()),
         ),
-    ).order_by("name")
+    )
 
-    stats = debtors_base_qs.aggregate(
-        total_lent=Coalesce(
-            Sum(
-                "transactions__amount",
-                filter=Q(transactions__transaction_type=Transaction.LEND),
-            ),
-            Value(0, output_field=DecimalField()),
-        ),
-        total_received=Coalesce(
-            Sum(
-                "transactions__amount",
-                filter=Q(transactions__transaction_type=Transaction.RECEIVE),
-            ),
-            Value(0, output_field=DecimalField()),
-        ),
+    if payment_status == "PAID":
+        debtors_qs = debtors_qs.filter(total_lent_amt__lte=F("total_received_amt"))
+    elif payment_status == "UNPAID":
+        debtors_qs = debtors_qs.filter(total_lent_amt__gt=F("total_received_amt"))
+
+    debtors_qs = debtors_qs.order_by("name")
+
+    stats = debtors_qs.aggregate(
+        total_lent=Coalesce(Sum("total_lent_amt"), Value(0, output_field=DecimalField())),
+        total_received=Coalesce(Sum("total_received_amt"), Value(0, output_field=DecimalField())),
     )
     remaining = stats["total_lent"] - stats["total_received"]
-    
+
     # Calculate progress percentage
     for dr in debtors_qs:
         if dr.total_lent_amt > 0:
             dr.received_percent = min(100, int((dr.total_received_amt / dr.total_lent_amt) * 100))
         else:
             dr.received_percent = 0
-            
+
     context = {
         "debtors": debtors_qs,
         "total_lent": stats["total_lent"],
@@ -227,6 +232,8 @@ def debtor_list_view(request):
         "selected_categories": selected_categories,
         "category_choices": DebtorCategory.choices,
         "filter_type": filter_type,
+        "payment_status": payment_status,
+        "search_query": search_query,
     }
     return render(request, "debtors/debtor_list.html", context)
 

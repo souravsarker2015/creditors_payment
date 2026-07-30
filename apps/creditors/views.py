@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 import django.utils.timezone
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Sum, Q, DecimalField, Value
+from django.db.models import Sum, Q, F, DecimalField, Value
 from django.db.models.functions import Coalesce
 
 from .models import Creditor, CreditorCategory, Transaction
@@ -178,12 +178,22 @@ def creditor_list_view(request):
         if category in CreditorCategory.values
     ]
 
+    valid_payment_statuses = {"ALL", "PAID", "UNPAID"}
+    payment_status = request.GET.get("payment_status", "ALL").strip().upper()
+    if payment_status not in valid_payment_statuses:
+        payment_status = "ALL"
+
+    search_query = request.GET.get("q", "").strip()
+
     creditors_base_qs = request.user.creditors.all()
     if selected_categories:
         if filter_type == "exclude":
             creditors_base_qs = creditors_base_qs.exclude(category__in=selected_categories)
         else:
             creditors_base_qs = creditors_base_qs.filter(category__in=selected_categories)
+
+    if search_query:
+        creditors_base_qs = creditors_base_qs.filter(name__icontains=search_query)
 
     creditors_qs = creditors_base_qs.annotate(
         total_borrowed_amt=Coalesce(
@@ -194,33 +204,28 @@ def creditor_list_view(request):
             Sum("transactions__amount", filter=Q(transactions__transaction_type=Transaction.REPAY)),
             Value(0, output_field=DecimalField()),
         ),
-    ).order_by("name")
+    )
 
-    stats = creditors_base_qs.aggregate(
-        total_borrowed=Coalesce(
-            Sum(
-                "transactions__amount",
-                filter=Q(transactions__transaction_type=Transaction.BORROW),
-            ),
-            Value(0, output_field=DecimalField()),
-        ),
-        total_paid=Coalesce(
-            Sum(
-                "transactions__amount",
-                filter=Q(transactions__transaction_type=Transaction.REPAY),
-            ),
-            Value(0, output_field=DecimalField()),
-        ),
+    if payment_status == "PAID":
+        creditors_qs = creditors_qs.filter(total_borrowed_amt__lte=F("total_paid_amt"))
+    elif payment_status == "UNPAID":
+        creditors_qs = creditors_qs.filter(total_borrowed_amt__gt=F("total_paid_amt"))
+
+    creditors_qs = creditors_qs.order_by("name")
+
+    stats = creditors_qs.aggregate(
+        total_borrowed=Coalesce(Sum("total_borrowed_amt"), Value(0, output_field=DecimalField())),
+        total_paid=Coalesce(Sum("total_paid_amt"), Value(0, output_field=DecimalField())),
     )
     remaining = stats["total_borrowed"] - stats["total_paid"]
-    
+
     # Calculate progress percentage manually to avoid complex template logic
     for cr in creditors_qs:
         if cr.total_borrowed_amt > 0:
             cr.payment_percent = min(100, int((cr.total_paid_amt / cr.total_borrowed_amt) * 100))
         else:
             cr.payment_percent = 0
-            
+
     context = {
         "creditors": creditors_qs,
         "total_borrowed": stats["total_borrowed"],
@@ -229,6 +234,8 @@ def creditor_list_view(request):
         "selected_categories": selected_categories,
         "category_choices": CreditorCategory.choices,
         "filter_type": filter_type,
+        "payment_status": payment_status,
+        "search_query": search_query,
     }
     return render(request, "creditors/creditor_list.html", context)
 

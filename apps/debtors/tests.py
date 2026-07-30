@@ -126,3 +126,87 @@ class DebtorCategoryTests(TestCase):
         self.assertEqual(response.context["total_lent"], Decimal("1000.00"))
         self.assertEqual(response.context["total_received"], Decimal("300.00"))
         self.assertEqual(response.context["remaining"], Decimal("700.00"))
+
+    def test_list_search_by_name_is_case_insensitive(self):
+        response = self.client.get(reverse("debtor_list"), {"q": "CLIENT"})
+        self.assertEqual(response.status_code, 200)
+
+        debtors = list(response.context["debtors"])
+        self.assertEqual(len(debtors), 1)
+        self.assertEqual(debtors[0].name, "Client Debtor")
+        self.assertEqual(response.context["search_query"], "CLIENT")
+
+    def test_list_payment_status_paid_filter(self):
+        paid_debtor = Debtor.objects.create(
+            user=self.user, name="Fully Repaid Friend", category=DebtorCategory.FRIEND
+        )
+        Transaction.objects.create(
+            debtor=paid_debtor,
+            transaction_type=Transaction.LEND,
+            amount=Decimal("250.00"),
+            date=date(2026, 4, 5),
+        )
+        Transaction.objects.create(
+            debtor=paid_debtor,
+            transaction_type=Transaction.RECEIVE,
+            amount=Decimal("250.00"),
+            date=date(2026, 4, 6),
+        )
+
+        response = self.client.get(reverse("debtor_list"), {"payment_status": "PAID"})
+        self.assertEqual(response.status_code, 200)
+        debtors = list(response.context["debtors"])
+        self.assertEqual([d.name for d in debtors], ["Fully Repaid Friend"])
+
+    def test_list_payment_status_unpaid_filter(self):
+        paid_debtor = Debtor.objects.create(
+            user=self.user, name="Fully Repaid Friend", category=DebtorCategory.FRIEND
+        )
+        Transaction.objects.create(
+            debtor=paid_debtor,
+            transaction_type=Transaction.LEND,
+            amount=Decimal("250.00"),
+            date=date(2026, 4, 5),
+        )
+        Transaction.objects.create(
+            debtor=paid_debtor,
+            transaction_type=Transaction.RECEIVE,
+            amount=Decimal("250.00"),
+            date=date(2026, 4, 6),
+        )
+
+        response = self.client.get(reverse("debtor_list"), {"payment_status": "UNPAID"})
+        self.assertEqual(response.status_code, 200)
+        debtors = list(response.context["debtors"])
+        self.assertCountEqual([d.name for d in debtors], ["Family Debtor", "Client Debtor"])
+
+    def test_list_payment_status_is_independent_of_category_filter_type(self):
+        """Regression test: payment_status must not be silently flipped by the
+        category include/exclude toggle (`filter_type`)."""
+        paid_debtor = Debtor.objects.create(
+            user=self.user, name="Fully Repaid Friend", category=DebtorCategory.FRIEND
+        )
+        Transaction.objects.create(
+            debtor=paid_debtor,
+            transaction_type=Transaction.LEND,
+            amount=Decimal("250.00"),
+            date=date(2026, 4, 5),
+        )
+        Transaction.objects.create(
+            debtor=paid_debtor,
+            transaction_type=Transaction.RECEIVE,
+            amount=Decimal("250.00"),
+            date=date(2026, 4, 6),
+        )
+
+        response = self.client.get(
+            reverse("debtor_list"),
+            {
+                "payment_status": "PAID",
+                "category": DebtorCategory.CLIENT,
+                "filter_type": "exclude",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        debtors = list(response.context["debtors"])
+        self.assertEqual([d.name for d in debtors], ["Fully Repaid Friend"])

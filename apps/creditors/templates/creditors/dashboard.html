@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Creditors Dashboard | FinTrack{% endblock %}
 
@@ -131,11 +132,11 @@
 
         <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
             <h3 class="text-sm font-bold text-gray-500 uppercase tracking-widest mb-6 text-center">Debt Breakdown (Remaining)</h3>
-            <div class="h-64 sm:h-80"><canvas id="remainingChart"></canvas></div>
+            <div class="h-72 sm:h-96"><canvas id="remainingChart"></canvas></div>
         </div>
         <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
             <h3 class="text-sm font-bold text-gray-500 uppercase tracking-widest mb-6 text-center">Payment History (Total Paid)</h3>
-            <div class="h-64 sm:h-80"><canvas id="paidChart"></canvas></div>
+            <div class="h-72 sm:h-96"><canvas id="paidChart"></canvas></div>
         </div>
     </div>
   </div>
@@ -144,6 +145,8 @@
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+<script src="{% static 'js/charts.js' %}"></script>
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -161,32 +164,18 @@
         const remainingData = {{ creditor_remaining|safe }};
         const paidData = {{ creditor_paid|safe }};
 
-        if (labels.length === 0) return;
-
-        const colors = [
-            '#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', 
-            '#06b6d4', '#ec4899', '#f97316', '#6366f1', '#14b8a6'
-        ];
-
-        const chartOptions = {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'bottom', labels: { usePointStyle: true, font: { size: 11 } } },
-                tooltip: { callbacks: { label: (ctx) => ` ৳${ctx.raw.toLocaleString()}` } }
-            }
-        };
-
-        new Chart(document.getElementById('remainingChart'), {
-            type: 'doughnut',
-            data: { labels, datasets: [{ data: remainingData, backgroundColor: colors, borderWidth: 0 }] },
-            options: chartOptions
+        renderDistributionChart({
+            canvasId: 'remainingChart',
+            labels: labels,
+            data: remainingData,
+            centerLabel: 'Remaining',
         });
 
-        new Chart(document.getElementById('paidChart'), {
-            type: 'doughnut',
-            data: { labels, datasets: [{ data: paidData, backgroundColor: colors, borderWidth: 0 }] },
-            options: chartOptions
+        renderDistributionChart({
+            canvasId: 'paidChart',
+            labels: labels,
+            data: paidData,
+            centerLabel: 'Total Paid',
         });
     });
 </script>

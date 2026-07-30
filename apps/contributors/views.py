@@ -79,12 +79,17 @@ def contributor_list(request):
         if category in ContributorCategory.values
     ]
 
+    search_query = request.GET.get("q", "").strip()
+
     contributors_base_qs = Contributor.objects.filter(user=request.user)
     if selected_categories:
         if filter_type == "exclude":
             contributors_base_qs = contributors_base_qs.exclude(category__in=selected_categories)
         else:
             contributors_base_qs = contributors_base_qs.filter(category__in=selected_categories)
+
+    if search_query:
+        contributors_base_qs = contributors_base_qs.filter(name__icontains=search_query)
 
     contributors = contributors_base_qs.annotate(
         total_amount=Coalesce(
@@ -109,6 +114,7 @@ def contributor_list(request):
         "selected_categories": selected_categories,
         "category_choices": ContributorCategory.choices,
         "filter_type": filter_type,
+        "search_query": search_query,
     }
     return render(request, 'contributors/contributor_list.html', context)
 

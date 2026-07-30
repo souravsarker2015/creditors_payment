@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Expense Dashboard | FinTrack{% endblock %}
 
@@ -89,7 +90,7 @@
             <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Spending by Category</h3>
             <a href="{% url 'category_list' %}" class="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:text-indigo-400 transition-colors">Manage Categories</a>
         </div>
-        <div class="h-80"><canvas id="expenseChart"></canvas></div>
+        <div class="h-72 sm:h-96"><canvas id="expenseChart"></canvas></div>
     </div>
 
     <!-- Recent Expenses -->
@@ -137,6 +138,8 @@
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+<script src="{% static 'js/charts.js' %}"></script>
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -184,36 +187,11 @@
         const labels = {{ category_labels|safe }};
         const data = {{ category_data|safe }};
 
-        if (labels.length === 0) return;
-
-        const colors = [
-            '#f97316', '#fb923c', '#fdba74', '#fed7aa', '#ffedd5',
-            '#ef4444', '#f87171', '#fca5a5', '#fecaca', '#fee2e2'
-        ];
-
-        const ctx = document.getElementById('expenseChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: data,
-                    backgroundColor: colors,
-                    borderWidth: 0,
-                    spacing: 5,
-                    borderRadius: 15,
-                    hoverOffset: 15
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '75%',
-                plugins: {
-                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 30, font: { weight: '800', size: 10 } } },
-                    tooltip: { backgroundColor: '#431407', padding: 12 }
-                }
-            }
+        renderDistributionChart({
+            canvasId: 'expenseChart',
+            labels: labels,
+            data: data,
+            centerLabel: 'Total Spent',
         });
     });
 </script>

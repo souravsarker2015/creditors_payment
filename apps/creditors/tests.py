@@ -206,3 +206,97 @@ class CreditorCategoryTests(TestCase):
         self.assertEqual(response.context["total_borrowed"], Decimal("500.00"))
         self.assertEqual(response.context["total_paid"], Decimal("100.00"))
         self.assertEqual(response.context["remaining"], Decimal("400.00"))
+
+    def test_creditor_list_search_by_name_is_case_insensitive(self):
+        response = self.client.get(reverse("creditor_list"), {"q": "family"})
+        self.assertEqual(response.status_code, 200)
+
+        creditors = list(response.context["creditors"])
+        self.assertEqual(len(creditors), 1)
+        self.assertEqual(creditors[0].name, "Family Lender")
+        self.assertEqual(response.context["search_query"], "family")
+
+    def test_creditor_list_search_combines_with_category_filter(self):
+        response = self.client.get(
+            reverse("creditor_list"),
+            {"q": "bank", "category": CreditorCategory.FAMILY},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(list(response.context["creditors"]), [])
+
+    def test_creditor_list_payment_status_paid_filter(self):
+        paid_creditor = Creditor.objects.create(
+            user=self.user, name="Paid Off Uncle", category=CreditorCategory.FAMILY
+        )
+        Transaction.objects.create(
+            creditor=paid_creditor,
+            transaction_type=Transaction.BORROW,
+            amount=Decimal("400.00"),
+            date=date(2026, 4, 5),
+        )
+        Transaction.objects.create(
+            creditor=paid_creditor,
+            transaction_type=Transaction.REPAY,
+            amount=Decimal("400.00"),
+            date=date(2026, 4, 6),
+        )
+
+        response = self.client.get(reverse("creditor_list"), {"payment_status": "PAID"})
+        self.assertEqual(response.status_code, 200)
+        creditors = list(response.context["creditors"])
+        self.assertEqual([c.name for c in creditors], ["Paid Off Uncle"])
+
+    def test_creditor_list_payment_status_unpaid_filter(self):
+        paid_creditor = Creditor.objects.create(
+            user=self.user, name="Paid Off Uncle", category=CreditorCategory.FAMILY
+        )
+        Transaction.objects.create(
+            creditor=paid_creditor,
+            transaction_type=Transaction.BORROW,
+            amount=Decimal("400.00"),
+            date=date(2026, 4, 5),
+        )
+        Transaction.objects.create(
+            creditor=paid_creditor,
+            transaction_type=Transaction.REPAY,
+            amount=Decimal("400.00"),
+            date=date(2026, 4, 6),
+        )
+
+        response = self.client.get(reverse("creditor_list"), {"payment_status": "UNPAID"})
+        self.assertEqual(response.status_code, 200)
+        creditors = list(response.context["creditors"])
+        self.assertCountEqual([c.name for c in creditors], ["Family Lender", "City Bank"])
+
+    def test_creditor_list_payment_status_is_independent_of_category_filter_type(self):
+        """Regression test: payment_status must not be silently flipped by the
+        category include/exclude toggle (`filter_type`)."""
+        paid_creditor = Creditor.objects.create(
+            user=self.user, name="Paid Off Uncle", category=CreditorCategory.FAMILY
+        )
+        Transaction.objects.create(
+            creditor=paid_creditor,
+            transaction_type=Transaction.BORROW,
+            amount=Decimal("400.00"),
+            date=date(2026, 4, 5),
+        )
+        Transaction.objects.create(
+            creditor=paid_creditor,
+            transaction_type=Transaction.REPAY,
+            amount=Decimal("400.00"),
+            date=date(2026, 4, 6),
+        )
+
+        response = self.client.get(
+            reverse("creditor_list"),
+            {
+                "payment_status": "PAID",
+                "category": CreditorCategory.BANK,
+                "filter_type": "exclude",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        creditors = list(response.context["creditors"])
+        # City Bank is excluded by category; of the remaining creditors, only
+        # the fully-repaid one should show up for payment_status=PAID.
+        self.assertEqual([c.name for c in creditors], ["Paid Off Uncle"])
