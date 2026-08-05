@@ -1,0 +1,297 @@
+from django.shortcuts import render, redirect, get_object_or_404
+import django.utils.timezone
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.db.models import Sum, Q, F, DecimalField, Value
+from django.db.models.functions import Coalesce
+from django.core.paginator import Paginator
+
+from .models import Shop, ShopCategory, Transaction
+from .forms import ShopForm, TransactionForm
+
+
+def _build_pagination_window(page_obj, window=2):
+    """Compact list of page numbers around the current page, with None as a '…' gap."""
+    total_pages = page_obj.paginator.num_pages
+    current = page_obj.number
+    pages = {1, total_pages}
+
+    for page_number in range(current - window, current + window + 1):
+        if 1 <= page_number <= total_pages:
+            pages.add(page_number)
+
+    ordered_pages = sorted(pages)
+    compact_pages = []
+    previous = None
+
+    for page_number in ordered_pages:
+        if previous is not None and page_number - previous > 1:
+            compact_pages.append(None)
+        compact_pages.append(page_number)
+        previous = page_number
+
+    return compact_pages
+
+
+@login_required
+def dashboard_view(request):
+    valid_filter_types = {"include", "exclude"}
+    filter_type = request.GET.get("filter_type", "include").strip().lower()
+    if filter_type not in valid_filter_types:
+        filter_type = "include"
+
+    selected_categories = [
+        category
+        for category in request.GET.getlist("category")
+        if category in ShopCategory.values
+    ]
+
+    shops_base_qs = request.user.shops.all()
+    if selected_categories:
+        if filter_type == "exclude":
+            shops_base_qs = shops_base_qs.exclude(category__in=selected_categories)
+        else:
+            shops_base_qs = shops_base_qs.filter(category__in=selected_categories)
+
+    # Global summary stats for the current user
+    stats = shops_base_qs.aggregate(
+        total_due=Coalesce(
+            Sum(
+                "transactions__amount",
+                filter=Q(transactions__transaction_type=Transaction.PURCHASE),
+            ),
+            Value(0, output_field=DecimalField()),
+        ),
+        total_paid=Coalesce(
+            Sum(
+                "transactions__amount",
+                filter=Q(transactions__transaction_type=Transaction.PAYMENT),
+            ),
+            Value(0, output_field=DecimalField()),
+        ),
+    )
+
+    total_due = stats["total_due"]
+    total_paid = stats["total_paid"]
+    remaining = total_due - total_paid
+
+    # Shop-wise breakdown for charts
+    shops_qs = shops_base_qs.annotate(
+        s_due=Coalesce(Sum("transactions__amount", filter=Q(transactions__transaction_type=Transaction.PURCHASE)), Value(0, output_field=DecimalField())),
+        s_paid=Coalesce(Sum("transactions__amount", filter=Q(transactions__transaction_type=Transaction.PAYMENT)), Value(0, output_field=DecimalField())),
+    )
+
+    shop_labels = []
+    shop_remaining = []
+    shop_paid = []
+
+    for s in shops_qs:
+        rem = s.s_due - s.s_paid
+        if s.s_due > 0 or s.s_paid > 0:
+            shop_labels.append(s.name)
+            shop_remaining.append(float(rem) if rem > 0 else 0)
+            shop_paid.append(float(s.s_paid))
+
+    # Recent activity
+    recent_transactions = Transaction.objects.filter(shop__user=request.user)
+    if selected_categories:
+        if filter_type == "exclude":
+            recent_transactions = recent_transactions.exclude(
+                shop__category__in=selected_categories
+            )
+        else:
+            recent_transactions = recent_transactions.filter(
+                shop__category__in=selected_categories
+            )
+    recent_transactions = recent_transactions.select_related("shop").order_by(
+        "-date", "-created_at"
+    )[:10]
+
+    context = {
+        "total_due": total_due,
+        "total_paid": total_paid,
+        "remaining": remaining,
+        "shop_labels": shop_labels,
+        "shop_remaining": shop_remaining,
+        "shop_paid": shop_paid,
+        "recent_transactions": recent_transactions,
+        "selected_categories": selected_categories,
+        "category_choices": ShopCategory.choices,
+        "filter_type": filter_type,
+    }
+    return render(request, "shops/dashboard.html", context)
+
+
+@login_required
+def shop_create_view(request):
+    if request.method == "POST":
+        form = ShopForm(request.POST)
+        if form.is_valid():
+            shop = form.save(commit=False)
+            shop.user = request.user
+            shop.save()
+            messages.success(request, f"Shop '{shop.name}' added successfully.")
+            return redirect("shop_list")
+    else:
+        form = ShopForm()
+    return render(request, "shops/shop_form.html", {"form": form, "title": "Add New Shop"})
+
+
+@login_required
+def shop_edit_view(request, pk):
+    shop = get_object_or_404(Shop, pk=pk, user=request.user)
+    if request.method == "POST":
+        form = ShopForm(request.POST, instance=shop)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Shop '{shop.name}' updated successfully.")
+            return redirect("shop_list")
+    else:
+        form = ShopForm(instance=shop)
+    return render(request, "shops/shop_form.html", {"form": form, "title": f"Edit {shop.name}"})
+
+
+@login_required
+def shop_detail_view(request, pk):
+    shop = get_object_or_404(Shop, pk=pk, user=request.user)
+    transactions = shop.transactions.all().order_by("-date", "-created_at")
+
+    if request.method == "POST":
+        form = TransactionForm(request.POST)
+        if form.is_valid():
+            transaction = form.save(commit=False)
+            transaction.shop = shop
+            transaction.save()
+            messages.success(request, f"Transaction of ৳{transaction.amount} added.")
+            return redirect("shop_detail", pk=pk)
+    else:
+        form = TransactionForm(initial={"date": django.utils.timezone.now().date()})
+
+    # Calculate totals for this specific shop
+    stats = shop.transactions.aggregate(
+        due=Coalesce(Sum("amount", filter=Q(transaction_type=Transaction.PURCHASE)), Value(0, output_field=DecimalField())),
+        paid=Coalesce(Sum("amount", filter=Q(transaction_type=Transaction.PAYMENT)), Value(0, output_field=DecimalField())),
+    )
+    remaining = stats["due"] - stats["paid"]
+
+    context = {
+        "shop": shop,
+        "transactions": transactions,
+        "form": form,
+        "due": stats["due"],
+        "paid": stats["paid"],
+        "remaining": remaining,
+        "chart_paid": float(stats["paid"]),
+        "chart_remaining": float(remaining) if remaining > 0 else 0,
+    }
+    return render(request, "shops/shop_detail.html", context)
+
+
+@login_required
+def shop_list_view(request):
+    valid_filter_types = {"include", "exclude"}
+    filter_type = request.GET.get("filter_type", "include").strip().lower()
+    if filter_type not in valid_filter_types:
+        filter_type = "include"
+
+    selected_categories = [
+        category
+        for category in request.GET.getlist("category")
+        if category in ShopCategory.values
+    ]
+
+    valid_payment_statuses = {"ALL", "PAID", "UNPAID"}
+    payment_status = request.GET.get("payment_status", "ALL").strip().upper()
+    if payment_status not in valid_payment_statuses:
+        payment_status = "ALL"
+
+    search_query = request.GET.get("q", "").strip()
+
+    shops_base_qs = request.user.shops.all()
+    if selected_categories:
+        if filter_type == "exclude":
+            shops_base_qs = shops_base_qs.exclude(category__in=selected_categories)
+        else:
+            shops_base_qs = shops_base_qs.filter(category__in=selected_categories)
+
+    if search_query:
+        shops_base_qs = shops_base_qs.filter(name__icontains=search_query)
+
+    shops_qs = shops_base_qs.annotate(
+        total_due_amt=Coalesce(
+            Sum("transactions__amount", filter=Q(transactions__transaction_type=Transaction.PURCHASE)),
+            Value(0, output_field=DecimalField()),
+        ),
+        total_paid_amt=Coalesce(
+            Sum("transactions__amount", filter=Q(transactions__transaction_type=Transaction.PAYMENT)),
+            Value(0, output_field=DecimalField()),
+        ),
+    )
+
+    if payment_status == "PAID":
+        shops_qs = shops_qs.filter(total_due_amt__lte=F("total_paid_amt"))
+    elif payment_status == "UNPAID":
+        shops_qs = shops_qs.filter(total_due_amt__gt=F("total_paid_amt"))
+
+    shops_qs = shops_qs.order_by("name")
+
+    stats = shops_qs.aggregate(
+        total_due=Coalesce(Sum("total_due_amt"), Value(0, output_field=DecimalField())),
+        total_paid=Coalesce(Sum("total_paid_amt"), Value(0, output_field=DecimalField())),
+    )
+    remaining = stats["total_due"] - stats["total_paid"]
+
+    paginator = Paginator(shops_qs, 9)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    # Calculate progress percentage manually to avoid complex template logic
+    for sh in page_obj:
+        if sh.total_due_amt > 0:
+            sh.payment_percent = min(100, int((sh.total_paid_amt / sh.total_due_amt) * 100))
+        else:
+            sh.payment_percent = 0
+
+    base_query = request.GET.copy()
+    base_query.pop("page", None)
+    base_query_string = base_query.urlencode()
+
+    context = {
+        "page_obj": page_obj,
+        "pagination_window": _build_pagination_window(page_obj),
+        "total_due": stats["total_due"],
+        "total_paid": stats["total_paid"],
+        "remaining": remaining,
+        "selected_categories": selected_categories,
+        "category_choices": ShopCategory.choices,
+        "filter_type": filter_type,
+        "payment_status": payment_status,
+        "search_query": search_query,
+        "base_query_string": base_query_string,
+    }
+    return render(request, "shops/shop_list.html", context)
+
+
+@login_required
+def transaction_edit_view(request, pk):
+    transaction = get_object_or_404(Transaction, pk=pk, shop__user=request.user)
+    shop = transaction.shop
+    if request.method == "POST":
+        form = TransactionForm(request.POST, instance=transaction)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Transaction updated.")
+            return redirect("shop_detail", pk=shop.pk)
+    else:
+        form = TransactionForm(instance=transaction)
+    return render(request, "shops/shop_form.html", {"form": form, "title": "Edit Transaction", "back_url": f"/shops/{shop.pk}/"})
+
+
+@login_required
+def transaction_delete_view(request, pk):
+    transaction = get_object_or_404(Transaction, pk=pk, shop__user=request.user)
+    shop = transaction.shop
+    amount = transaction.amount
+    transaction.delete()
+    messages.success(request, f"Transaction of ৳{amount} deleted.")
+    return redirect("shop_detail", pk=shop.pk)

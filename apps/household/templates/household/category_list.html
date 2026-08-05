@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Bazar Categories | FinTrack{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
+  <div class="sm:flex sm:items-start sm:justify-between gap-4">
+    <div class="sm:flex-auto max-w-2xl">
+      <h1 class="text-2xl font-bold leading-6 text-gray-900">Bazar Categories</h1>
+      <p class="mt-2 text-sm text-gray-700">Optional groupings for household purchases, e.g. Vegetables, Fish, Groceries. Purchases don't need a category at all.</p>
+    </div>
+    <div class="mt-1 sm:mt-0 sm:flex-none">
+      <a href="{% url 'household_category_create' %}" class="block rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">+ New Category</a>
+    </div>
+  </div>
+
+  {% if categories %}
+  <div class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
+    {% for c in categories %}
+    <div class="relative flex items-center justify-between overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="h-10 w-10 shrink-0 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600 font-bold text-lg">
+          {{ c.name|first|upper }}
+        </div>
+        <h3 class="truncate text-lg font-bold text-gray-900">{{ c.name }}</h3>
+      </div>
+      <div class="shrink-0 text-right">
+          <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Total Spent</span>
+          <span class="text-lg font-bold text-gray-900">৳{{ c.total_amt|floatformat:0 }}</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="mt-8 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-300 p-12 text-center bg-white">
+      <svg class="h-16 w-16 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
+      <h3 class="mt-4 text-lg font-bold text-gray-900">No categories yet</h3>
+      <p class="mt-2 text-sm text-gray-500 max-w-xs">Categories are entirely optional — add one only if you want to break down bazar spending further.</p>
+      <a href="{% url 'household_category_create' %}" class="mt-6 inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-indigo-500 transition-all">+ Add Your First Category</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
