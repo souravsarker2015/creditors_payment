@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-07 00:58+0600\n"
+"POT-Creation-Date: 2026-08-07 01:54+0600\n"
 "PO-Revision-Date: 2026-08-06 23:49+0600\n"
 "Last-Translator: FinTrack\n"
 "Language-Team: Bengali\n"
@@ -196,6 +196,9 @@ msgstr "প্রয়োগ করুন"
 msgid "Reset"
 msgstr "রিসেট"
 
+msgid "Export CSV"
+msgstr "সিএসভি এক্সপোর্ট করুন"
+
 msgid "All Time"
 msgstr "সর্বমোট সময়"
 
@@ -382,6 +385,9 @@ msgstr "নতুন অবদানকারী যোগ করুন"
 
 msgid "Contribution Breakdown"
 msgstr "অনুদানের বিভাজন"
+
+msgid "Category"
+msgstr "ক্যাটাগরি"
 
 msgid "Edit Contributor"
 msgstr "অবদানকারী সম্পাদনা"
@@ -595,6 +601,9 @@ msgstr "%(name)s সম্পাদনা"
 msgid "Transaction of ৳%(amount)s added."
 msgstr "৳%(amount)s এর লেনদেন যোগ করা হয়েছে।"
 
+msgid "Status"
+msgstr "অবস্থা"
+
 msgid "Transaction updated."
 msgstr "লেনদেন আপডেট করা হয়েছে।"
 
@@ -704,9 +713,6 @@ msgstr "এখনও আপনার পাওনা"
 
 msgid "Full Transaction History"
 msgstr "সম্পূর্ণ লেনদেনের ইতিহাস"
-
-msgid "Status"
-msgstr "অবস্থা"
 
 msgid "Memo"
 msgstr "স্মারক"
@@ -1055,9 +1061,6 @@ msgstr "সদস্যদের কাছে বকেয়া"
 
 msgid "Recent Purchases"
 msgstr "সাম্প্রতিক কেনাকাটা"
-
-msgid "Category"
-msgstr "ক্যাটাগরি"
 
 msgid "Buyer"
 msgstr "ক্রেতা"

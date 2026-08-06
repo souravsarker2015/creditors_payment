@@ -69,9 +69,13 @@
                         <input id="date-from-hidden" type="hidden" name="date_from" value="{{ date_from }}">
                         <input id="date-to-hidden" type="hidden" name="date_to" value="{{ date_to }}">
                     </div>
-                    <div class="col-span-2 flex items-end gap-2 md:col-span-1">
+                    <div class="col-span-2 flex flex-wrap items-end gap-2 md:col-span-1">
                         <button type="submit" class="w-full rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition-all" style="background: var(--surface-ink); color: var(--text-on-ink);">{% translate "Apply" %}</button>
                         <a href="{% url 'income_source_detail' source.pk %}" class="w-full rounded-xl border px-3 py-2 text-center text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] hover:bg-[var(--surface-raised)] transition-all" style="border-color: var(--border);">{% translate "Reset" %}</a>
+                        <button type="submit" name="export" value="csv" class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-[var(--surface-raised)] transition-all" style="border-color: var(--accent); color: var(--accent);">
+                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>
+                            {% translate "Export CSV" %}
+                        </button>
                     </div>
                 </form>
                 <p class="mt-4 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">

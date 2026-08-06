@@ -1,4 +1,6 @@
+import csv
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponse
 import django.utils.timezone
 from datetime import date as date_cls
 from django.contrib.auth.decorators import login_required
@@ -8,6 +10,16 @@ from django.db.models.functions import Coalesce
 from django.utils.translation import gettext as _
 
 from .models import Debtor, DebtorCategory, Transaction
+
+
+def _csv_response(filename, header, rows):
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    response.write("\ufeff")  # UTF-8 BOM so Excel renders Bangla text correctly
+    writer = csv.writer(response)
+    writer.writerow(header)
+    writer.writerows(rows)
+    return response
 from .forms import DebtorForm, TransactionForm
 
 MONTH_CHOICES = [(i, date_cls(2000, i, 1)) for i in range(1, 13)]
@@ -178,6 +190,17 @@ def debtor_detail_view(request, pk):
 
     year_options = list(all_transactions.values_list("date__year", flat=True).distinct().order_by("-date__year"))
 
+    if request.GET.get("export") == "csv":
+        rows = [
+            (tx.date.isoformat(), tx.get_transaction_type_display(), tx.amount, tx.note)
+            for tx in transactions
+        ]
+        return _csv_response(
+            f"{debtor.name}_transactions.csv",
+            [_("Date"), _("Type"), _("Amount"), _("Note")],
+            rows,
+        )
+
     context = {
         "debtor": debtor,
         "transactions": transactions,
@@ -258,6 +281,24 @@ def debtor_list_view(request):
             dr.received_percent = min(100, int((dr.total_received_amt / dr.total_lent_amt) * 100))
         else:
             dr.received_percent = 0
+
+    if request.GET.get("export") == "csv":
+        rows = [
+            (
+                dr.name,
+                dr.get_category_display(),
+                dr.total_lent_amt,
+                dr.total_received_amt,
+                dr.total_lent_amt - dr.total_received_amt,
+                _("Fully Collected") if dr.total_lent_amt <= dr.total_received_amt else _("Unpaid"),
+            )
+            for dr in debtors_qs
+        ]
+        return _csv_response(
+            "debtors.csv",
+            [_("Debtor"), _("Category"), _("Total Lent"), _("Total Received"), _("Remaining to Collect"), _("Status")],
+            rows,
+        )
 
     context = {
         "debtors": debtors_qs,

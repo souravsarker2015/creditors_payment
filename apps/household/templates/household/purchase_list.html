@@ -12,6 +12,10 @@
     </div>
     <div class="mt-1 flex flex-col gap-2 sm:mt-0 sm:flex-none sm:flex-row">
       <a href="{% url 'household_member_list' %}" class="block rounded-md border border-[var(--border)] bg-[var(--surface-raised)] px-3 py-2 text-center text-sm font-semibold text-[var(--text-secondary)] shadow-sm hover:bg-[var(--surface-sunken)]">{% translate "Members" %}</a>
+      <a href="?export=csv" class="inline-flex items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-sm font-semibold hover:brightness-95" style="border-color: var(--accent); color: var(--accent);">
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>
+        {% translate "Export CSV" %}
+      </a>
       <a href="{% url 'household_month_detail' current_year current_month %}" class="block rounded-md bg-[var(--accent)] px-3 py-2 text-center text-sm font-semibold text-[var(--accent-on)] shadow-sm hover:bg-[var(--accent-strong)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]">+ {% translate "Add Purchase" %}</a>
     </div>
   </div>

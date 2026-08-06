@@ -1,4 +1,6 @@
+import csv
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponse
 import django.utils.timezone
 from datetime import date as date_cls
 from django.contrib.auth.decorators import login_required
@@ -7,6 +9,16 @@ from django.db.models import Sum, Q, F, DecimalField, Value
 from django.db.models.functions import Coalesce
 from django.core.paginator import Paginator
 from django.utils.translation import gettext as _
+
+
+def _csv_response(filename, header, rows):
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    response.write("\ufeff")  # UTF-8 BOM so Excel renders Bangla text correctly
+    writer = csv.writer(response)
+    writer.writerow(header)
+    writer.writerows(rows)
+    return response
 
 from .models import Shop, ShopCategory, Transaction
 
@@ -202,6 +214,17 @@ def shop_detail_view(request, pk):
 
     year_options = list(all_transactions.values_list("date__year", flat=True).distinct().order_by("-date__year"))
 
+    if request.GET.get("export") == "csv":
+        rows = [
+            (tx.date.isoformat(), tx.get_transaction_type_display(), tx.amount, tx.note)
+            for tx in transactions
+        ]
+        return _csv_response(
+            f"{shop.name}_transactions.csv",
+            [_("Date"), _("Type"), _("Amount"), _("Note")],
+            rows,
+        )
+
     context = {
         "shop": shop,
         "transactions": transactions,
@@ -275,6 +298,24 @@ def shop_list_view(request):
         total_paid=Coalesce(Sum("total_paid_amt"), Value(0, output_field=DecimalField())),
     )
     remaining = stats["total_due"] - stats["total_paid"]
+
+    if request.GET.get("export") == "csv":
+        rows = [
+            (
+                sh.name,
+                sh.get_category_display(),
+                sh.total_due_amt,
+                sh.total_paid_amt,
+                sh.total_due_amt - sh.total_paid_amt,
+                _("Paid Completely") if sh.total_due_amt <= sh.total_paid_amt else _("Unpaid"),
+            )
+            for sh in shops_qs
+        ]
+        return _csv_response(
+            "shops.csv",
+            [_("Shop"), _("Category"), _("Total Due"), _("Total Paid"), _("Remaining Due"), _("Status")],
+            rows,
+        )
 
     paginator = Paginator(shops_qs, 9)
     page_number = request.GET.get("page")

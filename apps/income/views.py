@@ -1,4 +1,6 @@
+import csv
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponse
 import django.utils.timezone
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -9,6 +11,16 @@ from datetime import date as date_cls
 
 from .models import IncomeSource, IncomeTransaction
 from .forms import IncomeSourceForm, IncomeTransactionForm
+
+
+def _csv_response(filename, header, rows):
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    response.write("\ufeff")  # UTF-8 BOM so Excel renders Bangla text correctly
+    writer = csv.writer(response)
+    writer.writerow(header)
+    writer.writerows(rows)
+    return response
 
 
 def _parse_iso_date(value):
@@ -175,6 +187,14 @@ def income_source_list_view(request):
         .order_by("-date__year")
     )
 
+    if request.GET.get("export") == "csv":
+        rows = [(src.name, src.total_amt) for src in sources]
+        return _csv_response(
+            "income_sources.csv",
+            [_("Source"), _("Total Earned")],
+            rows,
+        )
+
     context = {
         "sources": sources,
         "total_sources": total_sources,
@@ -267,6 +287,14 @@ def income_source_detail_view(request, pk):
         .distinct()
         .order_by("-date__year")
     )
+
+    if request.GET.get("export") == "csv":
+        rows = [(tx.date.isoformat(), tx.amount, tx.note) for tx in transactions]
+        return _csv_response(
+            f"{source.name}_transactions.csv",
+            [_("Date"), _("Amount"), _("Note")],
+            rows,
+        )
 
     context = {
         "source": source,

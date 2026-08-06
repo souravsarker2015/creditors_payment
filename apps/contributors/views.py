@@ -1,5 +1,7 @@
+import csv
 from datetime import date as date_cls
 from django.shortcuts import render, get_object_or_404, redirect
+from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum, Q, DecimalField, Value
 from django.db.models.functions import Coalesce
@@ -8,6 +10,16 @@ from .models import Contributor, ContributorCategory, Contribution
 from .forms import ContributorForm, ContributionForm
 
 MONTH_CHOICES = [(i, date_cls(2000, i, 1)) for i in range(1, 13)]
+
+
+def _csv_response(filename, header, rows):
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    response.write("\ufeff")  # UTF-8 BOM so Excel renders Bangla text correctly
+    writer = csv.writer(response)
+    writer.writerow(header)
+    writer.writerows(rows)
+    return response
 
 
 def _parse_year_month(request):
@@ -118,6 +130,14 @@ def contributor_list(request):
         total_contribution_amount / total_contributors if total_contributors > 0 else 0
     )
 
+    if request.GET.get("export") == "csv":
+        rows = [(c.name, c.get_category_display(), c.total_amount) for c in contributors]
+        return _csv_response(
+            "contributors.csv",
+            [_("Contributor"), _("Category"), _("Total Given")],
+            rows,
+        )
+
     context = {
         "contributors": contributors,
         "total_contributors": total_contributors,
@@ -193,6 +213,14 @@ def contributor_detail(request, pk):
 
     period_amount = contributions.aggregate(Sum('amount'))['amount__sum'] or 0
     year_options = list(all_contributions.values_list('date__year', flat=True).distinct().order_by('-date__year'))
+
+    if request.GET.get('export') == 'csv':
+        rows = [(c.date.isoformat(), c.note or '', c.amount) for c in contributions]
+        return _csv_response(
+            f"{contributor.name}_contributions.csv",
+            [_("Date"), _("Note"), _("Amount")],
+            rows,
+        )
 
     context = {
         'contributor': contributor,

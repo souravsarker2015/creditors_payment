@@ -1,8 +1,9 @@
 import calendar
+import csv
 from datetime import date
 
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -13,6 +14,16 @@ from django.utils.translation import gettext as _
 
 from .models import HouseholdCategory, HouseholdMember, Purchase, Settlement
 from .forms import HouseholdCategoryForm, HouseholdMemberForm, PurchaseForm, SettlementForm
+
+
+def _csv_response(filename, header, rows):
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    response.write("\ufeff")  # UTF-8 BOM so Excel renders Bangla text correctly
+    writer = csv.writer(response)
+    writer.writerow(header)
+    writer.writerows(rows)
+    return response
 
 MONTH_CHOICES = [(i, date(2000, i, 1)) for i in range(1, 13)]
 
@@ -105,6 +116,14 @@ def purchase_list_view(request):
         )
         .order_by("-month")
     )
+
+    if request.GET.get("export") == "csv":
+        rows = [(row["month"].strftime("%Y-%m"), row["count"], row["total"]) for row in monthly]
+        return _csv_response(
+            "bazar_log.csv",
+            [_("Bazar"), _("Purchases Logged"), _("Total Spent")],
+            rows,
+        )
 
     paginator = Paginator(monthly, 9)
     page_number = request.GET.get("page")
@@ -224,6 +243,24 @@ def member_list_view(request):
         spent = m.total_spent
         m.settle_percent = min(100, int((m.total_settled / spent) * 100)) if spent > 0 else 0
 
+    if request.GET.get("export") == "csv":
+        rows = [
+            (
+                m.name,
+                m.phone,
+                m.total_spent,
+                m.total_settled,
+                m.balance_due,
+                _("Settled Up") if m.is_settled else _("Unpaid"),
+            )
+            for m in members
+        ]
+        return _csv_response(
+            "household_members.csv",
+            [_("Members"), _("Phone Number"), _("Fronted"), _("Given Back"), _("Balance Due"), _("Status")],
+            rows,
+        )
+
     context = {
         "members": members,
         "total_owed": sum((m.balance_due for m in members if m.balance_due > 0), 0),
@@ -317,6 +354,22 @@ def member_detail_view(request, pk):
         reverse=True,
     )
 
+    if request.GET.get("export") == "csv":
+        rows = [
+            (
+                item.date.isoformat(),
+                _("Fronted (Bazar)") if item.kind == "purchase" else _("Given Back"),
+                item.amount,
+                (item.category.name if item.kind == "purchase" and item.category else item.note or ""),
+            )
+            for item in activity
+        ]
+        return _csv_response(
+            f"{member.name}_activity.csv",
+            [_("Date"), _("Type"), _("Amount"), _("Note")],
+            rows,
+        )
+
     context = {
         "member": member,
         "activity": activity,
@@ -405,6 +458,14 @@ def category_list_view(request):
     category_data = [float(c["total_amt"]) for c in categories]
 
     year_options = list(all_purchases.values_list("date__year", flat=True).distinct().order_by("-date__year"))
+
+    if request.GET.get("export") == "csv":
+        rows = [(c["name"], c["total_amt"], c["percent"]) for c in categories]
+        return _csv_response(
+            "bazar_categories.csv",
+            [_("Category"), _("Total Spent"), "%"],
+            rows,
+        )
 
     context = {
         "categories": categories,

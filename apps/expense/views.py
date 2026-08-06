@@ -1,4 +1,6 @@
+import csv
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponse
 import django.utils.timezone
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -10,6 +12,16 @@ from datetime import date as date_cls
 
 from .models import ExpenseCategory, Expense
 from .forms import ExpenseCategoryForm, ExpenseForm
+
+
+def _csv_response(filename, header, rows):
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    response.write("\ufeff")  # UTF-8 BOM so Excel renders Bangla text correctly
+    writer = csv.writer(response)
+    writer.writerow(header)
+    writer.writerows(rows)
+    return response
 
 
 def _parse_iso_date(value):
@@ -189,6 +201,17 @@ def expense_list_view(request):
     )["total"]
     total_entries = filtered_expenses.count()
     avg_expense = total_spent / total_entries if total_entries > 0 else 0
+
+    if request.GET.get("export") == "csv":
+        rows = [
+            (ex.date.isoformat(), ex.category.name if ex.category else _("General"), ex.amount, ex.note)
+            for ex in filtered_expenses
+        ]
+        return _csv_response(
+            "expenses.csv",
+            [_("Date"), _("Category"), _("Amount"), _("Note")],
+            rows,
+        )
 
     paginator = Paginator(filtered_expenses, 15)
     page_number = request.GET.get("page")
