@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 import django.utils.timezone
+from datetime import date as date_cls
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Sum, Q, F, DecimalField, Value
@@ -7,6 +8,17 @@ from django.db.models.functions import Coalesce
 from django.utils.translation import gettext as _
 
 from .models import Creditor, CreditorCategory, Transaction
+
+MONTH_CHOICES = [(i, date_cls(2000, i, 1)) for i in range(1, 13)]
+
+
+def _parse_year_month(request):
+    """Reads `year`/`month` GET params. Returns (year_or_None, month_or_None)."""
+    raw_year = request.GET.get("year", "").strip()
+    year = int(raw_year) if raw_year.isdigit() else None
+    raw_month = request.GET.get("month", "").strip()
+    month = int(raw_month) if raw_month.isdigit() and 1 <= int(raw_month) <= 12 else None
+    return year, month
 
 
 @login_required
@@ -133,8 +145,8 @@ def creditor_edit_view(request, pk):
 @login_required
 def creditor_detail_view(request, pk):
     creditor = get_object_or_404(Creditor, pk=pk, user=request.user)
-    transactions = creditor.transactions.all().order_by("-date", "-created_at")
-    
+    all_transactions = creditor.transactions.all()
+
     if request.method == "POST":
         form = TransactionForm(request.POST)
         if form.is_valid():
@@ -145,14 +157,31 @@ def creditor_detail_view(request, pk):
             return redirect("creditor_detail", pk=pk)
     else:
         form = TransactionForm(initial={"date": django.utils.timezone.now().date()})
-    
-    # Calculate totals for this specific creditor
-    stats = creditor.transactions.aggregate(
+
+    # Calculate all-time totals for this specific creditor (never period-filtered —
+    # outstanding balance only makes sense as a current, running snapshot).
+    stats = all_transactions.aggregate(
         borrowed=Coalesce(Sum("amount", filter=Q(transaction_type=Transaction.BORROW)), Value(0, output_field=DecimalField())),
         paid=Coalesce(Sum("amount", filter=Q(transaction_type=Transaction.REPAY)), Value(0, output_field=DecimalField())),
     )
     remaining = stats["borrowed"] - stats["paid"]
-    
+
+    # Year/month filter narrows the transaction list and the "this period" figures below.
+    selected_year, selected_month = _parse_year_month(request)
+    transactions = all_transactions
+    if selected_year:
+        transactions = transactions.filter(date__year=selected_year)
+    if selected_month:
+        transactions = transactions.filter(date__month=selected_month)
+    transactions = transactions.order_by("-date", "-created_at")
+
+    period_stats = transactions.aggregate(
+        borrowed=Coalesce(Sum("amount", filter=Q(transaction_type=Transaction.BORROW)), Value(0, output_field=DecimalField())),
+        paid=Coalesce(Sum("amount", filter=Q(transaction_type=Transaction.REPAY)), Value(0, output_field=DecimalField())),
+    )
+
+    year_options = list(all_transactions.values_list("date__year", flat=True).distinct().order_by("-date__year"))
+
     context = {
         "creditor": creditor,
         "transactions": transactions,
@@ -160,6 +189,13 @@ def creditor_detail_view(request, pk):
         "borrowed": stats["borrowed"],
         "paid": stats["paid"],
         "remaining": remaining,
+        "period_borrowed": period_stats["borrowed"],
+        "period_paid": period_stats["paid"],
+        "year_options": year_options,
+        "month_choices": MONTH_CHOICES,
+        "selected_year": selected_year,
+        "selected_month": selected_month,
+        "selected_month_date": date_cls(2000, selected_month, 1) if selected_month else None,
         "chart_paid": float(stats["paid"]),
         "chart_remaining": float(remaining) if remaining > 0 else 0,
     }

@@ -66,14 +66,19 @@ def _get_income_filters(request, user):
     }
 
 
-def _apply_transaction_filters(qs, selected_year=None, date_from=None, date_to=None):
+def _apply_transaction_filters(qs, selected_year=None, selected_month=None, date_from=None, date_to=None):
     if selected_year:
         qs = qs.filter(date__year=selected_year)
+    if selected_month:
+        qs = qs.filter(date__month=selected_month)
     if date_from:
         qs = qs.filter(date__gte=date_from)
     if date_to:
         qs = qs.filter(date__lte=date_to)
     return qs
+
+
+MONTH_CHOICES = [(i, date_cls(2000, i, 1)) for i in range(1, 13)]
 
 
 @login_required
@@ -218,23 +223,25 @@ def income_source_edit_view(request, pk):
 @login_required
 def income_source_detail_view(request, pk):
     source = get_object_or_404(IncomeSource, pk=pk, user=request.user)
+    all_transactions = source.transactions.all()
+
     selected_year = request.GET.get("year", "").strip()
-    if selected_year.isdigit():
-        selected_year = int(selected_year)
-    else:
-        selected_year = None
+    selected_year = int(selected_year) if selected_year.isdigit() else None
+    raw_month = request.GET.get("month", "").strip()
+    selected_month = int(raw_month) if raw_month.isdigit() and 1 <= int(raw_month) <= 12 else None
     date_from = _parse_iso_date(request.GET.get("date_from", "").strip())
     date_to = _parse_iso_date(request.GET.get("date_to", "").strip())
     if date_from and date_to and date_from > date_to:
         date_from, date_to = date_to, date_from
 
     transactions = _apply_transaction_filters(
-        source.transactions.all(),
+        all_transactions,
         selected_year=selected_year,
+        selected_month=selected_month,
         date_from=date_from,
         date_to=date_to,
     ).order_by("-date", "-created_at")
-    
+
     if request.method == "POST":
         form = IncomeTransactionForm(request.POST)
         if form.is_valid():
@@ -245,23 +252,32 @@ def income_source_detail_view(request, pk):
             return redirect("income_source_detail", pk=pk)
     else:
         form = IncomeTransactionForm(initial={"date": django.utils.timezone.now().date()})
-        
-    total_source_income = transactions.aggregate(
+
+    # All-time cumulative revenue (never period-filtered, a true running total).
+    total_source_income = all_transactions.aggregate(
         total=Coalesce(Sum("amount"), Value(0, output_field=DecimalField()))
     )["total"]
 
-    year_options = (
-        source.transactions.values_list("date__year", flat=True)
+    period_income = transactions.aggregate(
+        total=Coalesce(Sum("amount"), Value(0, output_field=DecimalField()))
+    )["total"]
+
+    year_options = list(
+        all_transactions.values_list("date__year", flat=True)
         .distinct()
         .order_by("-date__year")
     )
-    
+
     context = {
         "source": source,
         "transactions": transactions,
         "form": form,
         "total_source_income": total_source_income,
+        "period_income": period_income,
         "year_options": year_options,
+        "month_choices": MONTH_CHOICES,
+        "selected_month": selected_month,
+        "selected_month_date": date_cls(2000, selected_month, 1) if selected_month else None,
         "selected_year": selected_year,
         "date_from": date_from.isoformat() if date_from else "",
         "date_to": date_to.isoformat() if date_to else "",

@@ -14,6 +14,16 @@ from django.utils.translation import gettext as _
 from .models import HouseholdCategory, HouseholdMember, Purchase, Settlement
 from .forms import HouseholdCategoryForm, HouseholdMemberForm, PurchaseForm, SettlementForm
 
+MONTH_CHOICES = [(i, date(2000, i, 1)) for i in range(1, 13)]
+
+
+def _parse_year_month(request):
+    raw_year = request.GET.get("year", "").strip()
+    year = int(raw_year) if raw_year.isdigit() else None
+    raw_month = request.GET.get("month", "").strip()
+    month = int(raw_month) if raw_month.isdigit() and 1 <= int(raw_month) <= 12 else None
+    return year, month
+
 
 def _build_pagination_window(page_obj, window=2):
     """Compact list of page numbers around the current page, with None as a '…' gap."""
@@ -273,8 +283,21 @@ def member_detail_view(request, pk):
     else:
         form = SettlementForm(initial={"date": timezone.now().date()})
 
-    purchase_items = list(member.purchases.select_related("category"))
-    settlement_items = list(member.settlements.all())
+    all_purchases = member.purchases.select_related("category")
+    all_settlements = member.settlements.all()
+
+    selected_year, selected_month = _parse_year_month(request)
+    purchases_qs = all_purchases
+    settlements_qs = all_settlements
+    if selected_year:
+        purchases_qs = purchases_qs.filter(date__year=selected_year)
+        settlements_qs = settlements_qs.filter(date__year=selected_year)
+    if selected_month:
+        purchases_qs = purchases_qs.filter(date__month=selected_month)
+        settlements_qs = settlements_qs.filter(date__month=selected_month)
+
+    purchase_items = list(purchases_qs)
+    settlement_items = list(settlements_qs)
     for p in purchase_items:
         p.kind = "purchase"
     for s in settlement_items:
@@ -286,12 +309,28 @@ def member_detail_view(request, pk):
         reverse=True,
     )
 
+    period_fronted = purchases_qs.aggregate(total=Coalesce(Sum("amount"), Value(0, output_field=DecimalField())))["total"]
+    period_given_back = settlements_qs.aggregate(total=Coalesce(Sum("amount"), Value(0, output_field=DecimalField())))["total"]
+
+    year_options = sorted(
+        set(all_purchases.values_list("date__year", flat=True)) | set(all_settlements.values_list("date__year", flat=True)),
+        reverse=True,
+    )
+
     context = {
         "member": member,
         "activity": activity,
+        # All-time totals (never period-filtered — balance due is a running snapshot).
         "spent": member.total_spent,
         "settled": member.total_settled,
         "balance_due": member.balance_due,
+        "period_fronted": period_fronted,
+        "period_given_back": period_given_back,
+        "year_options": year_options,
+        "month_choices": MONTH_CHOICES,
+        "selected_year": selected_year,
+        "selected_month": selected_month,
+        "selected_month_date": date(2000, selected_month, 1) if selected_month else None,
         "form": form,
         "chart_settled": float(member.total_settled),
         "chart_due": float(member.balance_due) if member.balance_due > 0 else 0,
@@ -330,10 +369,56 @@ def settlement_delete_view(request, pk):
 
 @login_required
 def category_list_view(request):
-    categories = request.user.household_categories.annotate(
-        total_amt=Coalesce(Sum("purchases__amount"), Value(0, output_field=DecimalField()))
-    ).order_by("-total_amt")
-    return render(request, "household/category_list.html", {"categories": categories})
+    all_purchases = request.user.household_purchases.all()
+    has_categories = request.user.household_categories.exists()
+
+    selected_year, selected_month = _parse_year_month(request)
+    purchases = all_purchases
+    if selected_year:
+        purchases = purchases.filter(date__year=selected_year)
+    if selected_month:
+        purchases = purchases.filter(date__month=selected_month)
+
+    total_spent = purchases.aggregate(
+        total=Coalesce(Sum("amount"), Value(0, output_field=DecimalField()))
+    )["total"]
+
+    category_rows = (
+        purchases.values("category_id", "category__name")
+        .annotate(total=Coalesce(Sum("amount"), Value(0, output_field=DecimalField())))
+        .order_by("-total")
+    )
+
+    categories = []
+    for row in category_rows:
+        if row["total"] <= 0:
+            continue
+        percent = round((row["total"] / total_spent) * 100, 1) if total_spent > 0 else 0
+        categories.append({
+            "id": row["category_id"],
+            "name": row["category__name"] or _("Uncategorized"),
+            "total_amt": row["total"],
+            "percent": percent,
+        })
+
+    category_labels = [c["name"] for c in categories]
+    category_data = [float(c["total_amt"]) for c in categories]
+
+    year_options = list(all_purchases.values_list("date__year", flat=True).distinct().order_by("-date__year"))
+
+    context = {
+        "categories": categories,
+        "has_categories": has_categories,
+        "total_spent": total_spent,
+        "category_labels": category_labels,
+        "category_data": category_data,
+        "year_options": year_options,
+        "month_choices": MONTH_CHOICES,
+        "selected_year": selected_year,
+        "selected_month": selected_month,
+        "selected_month_date": date(2000, selected_month, 1) if selected_month else None,
+    }
+    return render(request, "household/category_list.html", context)
 
 
 @login_required

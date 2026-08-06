@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-07 00:06+0600\n"
+"POT-Creation-Date: 2026-08-07 00:58+0600\n"
 "PO-Revision-Date: 2026-08-06 23:49+0600\n"
 "Last-Translator: FinTrack\n"
 "Language-Team: Bengali\n"
@@ -178,6 +178,30 @@ msgstr "গড় পরিমাণ"
 msgid "Funding History"
 msgstr "অর্থায়ন ইতিহাস"
 
+msgid "Year"
+msgstr "বছর"
+
+msgid "All Years"
+msgstr "সব বছর"
+
+msgid "Month"
+msgstr "মাস"
+
+msgid "All Months"
+msgstr "সব মাস"
+
+msgid "Apply"
+msgstr "প্রয়োগ করুন"
+
+msgid "Reset"
+msgstr "রিসেট"
+
+msgid "All Time"
+msgstr "সর্বমোট সময়"
+
+msgid "Total Given"
+msgstr "মোট প্রদত্ত"
+
 msgid "Date"
 msgstr "তারিখ"
 
@@ -195,6 +219,12 @@ msgstr "সাধারণ অনুদান"
 
 msgid "Delete this record?"
 msgstr "এই রেকর্ডটি মুছবেন?"
+
+msgid "Nothing recorded for this period."
+msgstr "এই সময়ের জন্য কিছু রেকর্ড করা হয়নি।"
+
+msgid "Reset Filters"
+msgstr "ফিল্টার রিসেট করুন"
 
 msgid "No funding recorded yet."
 msgstr "এখনো কোনো অর্থায়ন রেকর্ড করা হয়নি।"
@@ -264,9 +294,6 @@ msgstr "সব ক্যাটাগরির জন্য খালি রা�
 msgid "Apply Filter"
 msgstr "ফিল্টার প্রয়োগ করুন"
 
-msgid "Reset"
-msgstr "রিসেট"
-
 msgid "Total Contributors"
 msgstr "মোট অবদানকারী"
 
@@ -293,9 +320,6 @@ msgstr "আপনার ফিল্টারের সাথে মেলে �
 
 msgid "Try a different name, or reset the filters to see everyone."
 msgstr "ভিন্ন নাম চেষ্টা করুন, অথবা সবাইকে দেখতে ফিল্টার রিসেট করুন।"
-
-msgid "Reset Filters"
-msgstr "ফিল্টার রিসেট করুন"
 
 msgid "No contributors yet"
 msgstr "এখনো কোনো অবদানকারী নেই"
@@ -329,9 +353,6 @@ msgstr "ক্যাটাগরি দিয়ে ফিল্টার কর
 msgid "Leave unselected for all categories."
 msgstr "সব ক্যাটাগরির জন্য অনির্বাচিত রাখুন।"
 
-msgid "Apply"
-msgstr "প্রয়োগ করুন"
-
 msgid "Recent Contributions"
 msgstr "সাম্প্রতিক অনুদান"
 
@@ -361,9 +382,6 @@ msgstr "নতুন অবদানকারী যোগ করুন"
 
 msgid "Contribution Breakdown"
 msgstr "অনুদানের বিভাজন"
-
-msgid "Total Given"
-msgstr "মোট প্রদত্ত"
 
 msgid "Edit Contributor"
 msgstr "অবদানকারী সম্পাদনা"
@@ -819,12 +837,6 @@ msgstr "আপনার ব্যয়ের অভ্যাস এবং ক�
 msgid "New Expense"
 msgstr "নতুন খরচ"
 
-msgid "Year"
-msgstr "বছর"
-
-msgid "All Years"
-msgstr "সব বছর"
-
 msgid "Date Range"
 msgstr "তারিখের পরিসীমা"
 
@@ -995,6 +1007,15 @@ msgstr ""
 msgid "New Category"
 msgstr "নতুন ক্যাটাগরি"
 
+msgid "No purchases yet"
+msgstr "এখনো কোনো কেনাকাটা নেই"
+
+msgid "Log your first bazar purchase to see it here."
+msgstr "এখানে দেখতে আপনার প্রথম বাজারের কেনাকাটা লগ করুন।"
+
+msgid "View Bazar Log"
+msgstr "বাজারের লগ দেখুন"
+
 msgid "No categories yet"
 msgstr "এখনো কোনো ক্যাটাগরি নেই"
 
@@ -1044,15 +1065,6 @@ msgstr "ক্রেতা"
 msgid "Uncategorized"
 msgstr "অশ্রেণীবদ্ধ"
 
-msgid "No purchases yet"
-msgstr "এখনো কোনো কেনাকাটা নেই"
-
-msgid "Log your first bazar purchase to see it here."
-msgstr "এখানে দেখতে আপনার প্রথম বাজারের কেনাকাটা লগ করুন।"
-
-msgid "View Bazar Log"
-msgstr "বাজারের লগ দেখুন"
-
 msgid "Members"
 msgstr "সদস্য"
 
@@ -1073,6 +1085,9 @@ msgstr "বকেয়া ব্যালেন্স"
 
 msgid "Activity History"
 msgstr "কার্যক্রমের ইতিহাস"
+
+msgid "Fronted"
+msgstr "অগ্রিম প্রদত্ত"
 
 msgid "Fronted (Bazar)"
 msgstr "অগ্রিম প্রদান (বাজার)"
@@ -1120,9 +1135,6 @@ msgstr "নিষ্পত্তি সম্পন্ন"
 
 msgid "Settled Back"
 msgstr "ফেরত নিষ্পত্তি"
-
-msgid "Fronted"
-msgstr "অগ্রিম প্রদত্ত"
 
 msgid "No members tracked yet"
 msgstr "এখনো কোনো সদস্য ট্র্যাক করা হয়নি"
@@ -1470,6 +1482,9 @@ msgstr "বাকির বিভাজন (অবশিষ্ট)"
 msgid "Edit Shop"
 msgstr "দোকান সম্পাদনা"
 
+msgid "Total Due"
+msgstr "মোট বাকি"
+
 msgid "No activity for this shop yet."
 msgstr "এই দোকানের জন্য এখনো কোনো কার্যক্রম নেই।"
 
@@ -1505,9 +1520,6 @@ msgstr "৳%(amount)s বাকি"
 
 msgid "Payment Progress"
 msgstr "পেমেন্টের অগ্রগতি"
-
-msgid "Total Due"
-msgstr "মোট বাকি"
 
 msgid "No shops match your filters"
 msgstr "আপনার ফিল্টারের সাথে মেলে এমন কোনো দোকান নেই"

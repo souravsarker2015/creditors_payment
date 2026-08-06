@@ -1,3 +1,4 @@
+from datetime import date as date_cls
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum, Q, DecimalField, Value
@@ -5,6 +6,16 @@ from django.db.models.functions import Coalesce
 from django.utils.translation import gettext as _
 from .models import Contributor, ContributorCategory, Contribution
 from .forms import ContributorForm, ContributionForm
+
+MONTH_CHOICES = [(i, date_cls(2000, i, 1)) for i in range(1, 13)]
+
+
+def _parse_year_month(request):
+    raw_year = request.GET.get("year", "").strip()
+    year = int(raw_year) if raw_year.isdigit() else None
+    raw_month = request.GET.get("month", "").strip()
+    month = int(raw_month) if raw_month.isdigit() and 1 <= int(raw_month) <= 12 else None
+    return year, month
 
 @login_required
 def contributor_dashboard(request):
@@ -155,10 +166,11 @@ def contributor_delete(request, pk):
 @login_required
 def contributor_detail(request, pk):
     contributor = get_object_or_404(Contributor, pk=pk, user=request.user)
-    contributions = contributor.contributions.all().order_by('-date')
-    
-    total_amount = contributions.aggregate(Sum('amount'))['amount__sum'] or 0
-    total_count = contributions.count()
+    all_contributions = contributor.contributions.all()
+
+    # All-time totals (never period-filtered).
+    total_amount = all_contributions.aggregate(Sum('amount'))['amount__sum'] or 0
+    total_count = all_contributions.count()
     avg_amount = total_amount / total_count if total_count > 0 else 0
 
     if request.method == 'POST':
@@ -171,12 +183,29 @@ def contributor_detail(request, pk):
     else:
         form = ContributionForm()
 
+    selected_year, selected_month = _parse_year_month(request)
+    contributions = all_contributions
+    if selected_year:
+        contributions = contributions.filter(date__year=selected_year)
+    if selected_month:
+        contributions = contributions.filter(date__month=selected_month)
+    contributions = contributions.order_by('-date')
+
+    period_amount = contributions.aggregate(Sum('amount'))['amount__sum'] or 0
+    year_options = list(all_contributions.values_list('date__year', flat=True).distinct().order_by('-date__year'))
+
     context = {
         'contributor': contributor,
         'contributions': contributions,
         'total_amount': total_amount,
         'total_count': total_count,
         'avg_amount': avg_amount,
+        'period_amount': period_amount,
+        'year_options': year_options,
+        'month_choices': MONTH_CHOICES,
+        'selected_year': selected_year,
+        'selected_month': selected_month,
+        'selected_month_date': date_cls(2000, selected_month, 1) if selected_month else None,
         'form': form,
     }
     return render(request, 'contributors/contributor_detail.html', context)

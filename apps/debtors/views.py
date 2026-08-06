@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 import django.utils.timezone
+from datetime import date as date_cls
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Sum, Q, F, DecimalField, Value
@@ -8,6 +9,16 @@ from django.utils.translation import gettext as _
 
 from .models import Debtor, DebtorCategory, Transaction
 from .forms import DebtorForm, TransactionForm
+
+MONTH_CHOICES = [(i, date_cls(2000, i, 1)) for i in range(1, 13)]
+
+
+def _parse_year_month(request):
+    raw_year = request.GET.get("year", "").strip()
+    year = int(raw_year) if raw_year.isdigit() else None
+    raw_month = request.GET.get("month", "").strip()
+    month = int(raw_month) if raw_month.isdigit() and 1 <= int(raw_month) <= 12 else None
+    return year, month
 
 
 @login_required
@@ -131,8 +142,8 @@ def debtor_edit_view(request, pk):
 @login_required
 def debtor_detail_view(request, pk):
     debtor = get_object_or_404(Debtor, pk=pk, user=request.user)
-    transactions = debtor.transactions.all().order_by("-date", "-created_at")
-    
+    all_transactions = debtor.transactions.all()
+
     if request.method == "POST":
         form = TransactionForm(request.POST)
         if form.is_valid():
@@ -143,14 +154,30 @@ def debtor_detail_view(request, pk):
             return redirect("debtor_detail", pk=pk)
     else:
         form = TransactionForm(initial={"date": django.utils.timezone.now().date()})
-    
-    # Calculate totals for this specific debtor
-    stats = debtor.transactions.aggregate(
+
+    # Calculate all-time totals for this specific debtor (never period-filtered —
+    # outstanding balance only makes sense as a current, running snapshot).
+    stats = all_transactions.aggregate(
         lent=Coalesce(Sum("amount", filter=Q(transaction_type=Transaction.LEND)), Value(0, output_field=DecimalField())),
         received=Coalesce(Sum("amount", filter=Q(transaction_type=Transaction.RECEIVE)), Value(0, output_field=DecimalField())),
     )
     remaining = stats["lent"] - stats["received"]
-    
+
+    selected_year, selected_month = _parse_year_month(request)
+    transactions = all_transactions
+    if selected_year:
+        transactions = transactions.filter(date__year=selected_year)
+    if selected_month:
+        transactions = transactions.filter(date__month=selected_month)
+    transactions = transactions.order_by("-date", "-created_at")
+
+    period_stats = transactions.aggregate(
+        lent=Coalesce(Sum("amount", filter=Q(transaction_type=Transaction.LEND)), Value(0, output_field=DecimalField())),
+        received=Coalesce(Sum("amount", filter=Q(transaction_type=Transaction.RECEIVE)), Value(0, output_field=DecimalField())),
+    )
+
+    year_options = list(all_transactions.values_list("date__year", flat=True).distinct().order_by("-date__year"))
+
     context = {
         "debtor": debtor,
         "transactions": transactions,
@@ -158,6 +185,13 @@ def debtor_detail_view(request, pk):
         "lent": stats["lent"],
         "received": stats["received"],
         "remaining": remaining,
+        "period_lent": period_stats["lent"],
+        "period_received": period_stats["received"],
+        "year_options": year_options,
+        "month_choices": MONTH_CHOICES,
+        "selected_year": selected_year,
+        "selected_month": selected_month,
+        "selected_month_date": date_cls(2000, selected_month, 1) if selected_month else None,
         "chart_received": float(stats["received"]),
         "chart_remaining": float(remaining) if remaining > 0 else 0,
     }
