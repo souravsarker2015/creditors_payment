@@ -81,6 +81,29 @@
                 </ul>
             </li>
             <li class="mt-auto">
+                {% if user.is_authenticated %}
+                <div class="preferences-switcher pref-ink lg:hidden mb-4 rounded-2xl p-4" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);">
+                    <p class="text-[10px] font-bold uppercase tracking-[0.14em] mb-3" style="color: var(--text-on-ink-muted);">{% translate "Appearance" %}</p>
+
+                    <div class="flex items-center gap-3 mb-3">
+                        <button type="button" class="pref-swatch {% if user_accent == 'teal' %}is-active{% endif %}" data-swatch="teal" data-pref-field="accent" aria-label="{% translate 'Ledger Teal accent' %}"></button>
+                        <button type="button" class="pref-swatch {% if user_accent == 'indigo' %}is-active{% endif %}" data-swatch="indigo" data-pref-field="accent" aria-label="{% translate 'Indigo Classic accent' %}"></button>
+                        <button type="button" class="pref-swatch {% if user_accent == 'slate' %}is-active{% endif %}" data-swatch="slate" data-pref-field="accent" aria-label="{% translate 'Slate Mono accent' %}"></button>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 mb-2">
+                        <button type="button" class="pref-mode-btn {% if user_theme_mode == 'light' %}is-active{% endif %}" data-mode="light" data-pref-field="theme_mode">{% translate "Light" %}</button>
+                        <button type="button" class="pref-mode-btn {% if user_theme_mode == 'dark' %}is-active{% endif %}" data-mode="dark" data-pref-field="theme_mode">{% translate "Dark" %}</button>
+                    </div>
+
+                    <form method="post" action="{% url 'update_preferences' %}" class="grid grid-cols-2 gap-2">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.path }}">
+                        <button type="submit" name="language" value="en" class="pref-lang-btn {% if LANGUAGE_CODE == 'en' %}is-active{% endif %}">EN</button>
+                        <button type="submit" name="language" value="bn" class="pref-lang-btn {% if LANGUAGE_CODE == 'bn' %}is-active{% endif %}">বাংলা</button>
+                    </form>
+                </div>
+                {% endif %}
                 {% if user.is_authenticated and user.is_superuser %}
                 <a href="/admin/" target="_blank" class="group -mx-1 flex gap-x-3 rounded-md px-3 py-2 text-sm font-semibold leading-6 mb-1" style="color: var(--text-on-ink-muted);">
                     <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor">
