@@ -1,42 +1,43 @@
 {% extends "base.html" %}
+{% load i18n %}
 
 {% block title %}{{ title }} | FinTrack{% endblock %}
 
 {% block content %}
 <div class="px-4 sm:px-6 lg:px-8 max-w-2xl mx-auto py-16">
-    <div class="bg-white shadow-2xl rounded-[3.5rem] overflow-hidden border border-gray-100/50 ring-1 ring-gray-900/5 transition-all hover:shadow-orange-50/50">
+    <div class="bg-[var(--surface-raised)] shadow-2xl rounded-[3.5rem] overflow-hidden border border-[var(--border-soft)] ring-1 ring-[var(--border-soft)] transition-all">
         <div class="px-8 py-16 sm:px-16">
             <div class="flex items-center gap-x-6 mb-16">
-                <div class="h-16 w-16 rounded-3xl bg-orange-600 flex items-center justify-center text-white font-black text-3xl shadow-xl shadow-orange-100 ring-4 ring-orange-50">
+                <div class="h-16 w-16 rounded-3xl bg-[var(--accent)] flex items-center justify-center text-[var(--accent-on)] font-black text-3xl shadow-xl ring-4" style="--tw-ring-color: var(--accent-soft);">
                     E
                 </div>
                 <div>
-                    <h1 class="text-3xl font-black text-gray-900 tracking-tighter leading-tight uppercase">{{ title }}</h1>
-                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mt-2 flex items-center gap-2">
-                        <span class="h-2 w-2 rounded-full bg-red-500 animate-pulse"></span>
-                        Outflow Registration Hub
+                    <h1 class="text-3xl font-black text-[var(--text-primary)] tracking-tighter leading-tight uppercase">{{ title }}</h1>
+                    <p class="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.3em] mt-2 flex items-center gap-2">
+                        <span class="h-2 w-2 rounded-full" style="background: var(--status-critical);"></span>
+                        {% translate "Outflow Registration Hub" %}
                     </p>
                 </div>
             </div>
 
             <form method="post" class="space-y-12">
                 {% csrf_token %}
-                
+
                 {% for field in form %}
                 <div class="relative group">
-                    <label for="{{ field.id_for_label }}" class="block text-[10px] font-black text-gray-400 mb-3 uppercase tracking-[0.3em] ml-2 group-focus-within:text-orange-600 transition-colors duration-300">{{ field.label }}</label>
-                    
-                    <div class="relative bg-gray-50 rounded-[1.5rem] transition-all duration-500 ring-2 ring-inset ring-gray-50 focus-within:ring-2 focus-within:ring-orange-500 focus-within:bg-white shadow-sm hover:ring-gray-200 overflow-hidden">
+                    <label for="{{ field.id_for_label }}" class="block text-[10px] font-black text-[var(--text-muted)] mb-3 uppercase tracking-[0.3em] ml-2 group-focus-within:text-[var(--accent)] transition-colors duration-300">{{ field.label }}</label>
+
+                    <div class="relative rounded-[1.5rem] transition-all duration-500 ring-2 ring-inset ring-[var(--border-soft)] focus-within:ring-2 focus-within:ring-[var(--accent)] shadow-sm overflow-hidden" style="background: var(--surface-sunken);">
                         {{ field }}
                     </div>
 
                     {% if field.help_text %}
-                        <p class="mt-4 text-[10px] text-gray-400 font-bold uppercase tracking-widest italic ml-2">{{ field.help_text|safe }}</p>
+                        <p class="mt-4 text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest italic ml-2">{{ field.help_text|safe }}</p>
                     {% endif %}
-                    
+
                     {% if field.errors %}
                         {% for error in field.errors %}
-                            <p class="mt-4 text-[10px] text-red-600 font-black uppercase tracking-widest flex items-center gap-2 ml-2">
+                            <p class="mt-4 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 ml-2" style="color: var(--status-critical);">
                                 <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 000 2v3a1 1 0 002 0V7a1 1 0 00-2-0z" clip-rule="evenodd" /></svg>
                                 {{ error }}
                             </p>
@@ -45,18 +46,18 @@
                 </div>
                 {% endfor %}
 
-                <div class="flex flex-col sm:flex-row gap-6 pt-12 border-t border-gray-100 mt-14">
-                    <button type="submit" class="flex-[1.8] bg-orange-600 text-white font-black text-xs uppercase tracking-[0.3em] px-10 py-6 rounded-[1.5rem] shadow-2xl shadow-orange-100 hover:bg-orange-700 hover:-translate-y-1.5 transition-all active:translate-y-0 active:shadow-orange-50">
-                        Commit expenditure
+                <div class="flex flex-col sm:flex-row gap-6 pt-12 border-t mt-14" style="border-color: var(--border-soft);">
+                    <button type="submit" class="flex-[1.8] bg-[var(--accent)] text-[var(--accent-on)] font-black text-xs uppercase tracking-[0.3em] px-10 py-6 rounded-[1.5rem] shadow-2xl hover:bg-[var(--accent-strong)] hover:-translate-y-1.5 transition-all active:translate-y-0">
+                        {% translate "Commit expenditure" %}
                     </button>
-                    <a href="{% url 'expense_list' %}" class="flex-1 text-center bg-gray-50 text-gray-500 font-black text-xs uppercase tracking-[0.3em] px-8 py-6 rounded-[1.5rem] border-none hover:bg-white hover:shadow-2xl hover:shadow-gray-100 transition-all flex items-center justify-center">
-                        Abort
+                    <a href="{% url 'expense_list' %}" class="flex-1 text-center font-black text-xs uppercase tracking-[0.3em] px-8 py-6 rounded-[1.5rem] border-none hover:bg-[var(--surface-raised)] hover:shadow-2xl transition-all flex items-center justify-center" style="background: var(--surface-sunken); color: var(--text-secondary);">
+                        {% translate "Abort" %}
                     </a>
                 </div>
             </form>
         </div>
-        <div class="bg-gray-50/50 px-12 py-8 border-t border-gray-50 text-[10px] font-black uppercase tracking-[0.4em] text-center text-gray-300">
-            Outflow Audit Protocol Active
+        <div class="px-12 py-8 border-t text-[10px] font-black uppercase tracking-[0.4em] text-center text-[var(--text-muted)]" style="background: var(--surface-sunken); border-color: var(--border-soft);">
+            {% translate "Outflow Audit Protocol Active" %}
         </div>
     </div>
 </div>
@@ -70,14 +71,14 @@
         padding: 1.5rem 2rem !important;
         font-size: 1.15rem !important;
         font-weight: 800 !important;
-        color: #0f172a !important;
+        color: var(--text-primary) !important;
         outline: none !important;
         box-shadow: none !important;
         font-family: inherit !important;
         -webkit-appearance: none;
     }
     .space-y-12 input::placeholder, .space-y-12 textarea::placeholder {
-        color: #94a3b8 !important;
+        color: var(--text-muted) !important;
         font-weight: 600 !important;
         text-transform: none !important;
     }

@@ -1,20 +1,21 @@
 from django.db import models
 from django.conf import settings
+from django.utils.translation import gettext_lazy as _
 
 
 class ContributorCategory(models.TextChoices):
-    FAMILY = "FAMILY", "Family"
-    FRIEND = "FRIEND", "Friend"
-    BUSINESS_PARTNER = "BUSINESS_PARTNER", "Business Partner"
-    ORGANIZATION = "ORGANIZATION", "Organization"
-    NGO = "NGO", "NGO"
-    SPONSOR = "SPONSOR", "Sponsor"
-    DONOR = "DONOR", "Donor"
-    INVESTOR = "INVESTOR", "Investor"
-    ALUMNI = "ALUMNI", "Alumni"
-    COMMUNITY = "COMMUNITY", "Community"
-    RELATIVE = "RELATIVE", "Relative"
-    OTHER = "OTHER", "Other"
+    FAMILY = "FAMILY", _("Family")
+    FRIEND = "FRIEND", _("Friend")
+    BUSINESS_PARTNER = "BUSINESS_PARTNER", _("Business Partner")
+    ORGANIZATION = "ORGANIZATION", _("Organization")
+    NGO = "NGO", _("NGO")
+    SPONSOR = "SPONSOR", _("Sponsor")
+    DONOR = "DONOR", _("Donor")
+    INVESTOR = "INVESTOR", _("Investor")
+    ALUMNI = "ALUMNI", _("Alumni")
+    COMMUNITY = "COMMUNITY", _("Community")
+    RELATIVE = "RELATIVE", _("Relative")
+    OTHER = "OTHER", _("Other")
 
 
 class Contributor(models.Model):

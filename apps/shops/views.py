@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.db.models import Sum, Q, F, DecimalField, Value
 from django.db.models.functions import Coalesce
 from django.core.paginator import Paginator
+from django.utils.translation import gettext as _
 
 from .models import Shop, ShopCategory, Transaction
 from .forms import ShopForm, TransactionForm
@@ -130,11 +131,11 @@ def shop_create_view(request):
             shop = form.save(commit=False)
             shop.user = request.user
             shop.save()
-            messages.success(request, f"Shop '{shop.name}' added successfully.")
+            messages.success(request, _("Shop '%(name)s' added successfully.") % {"name": shop.name})
             return redirect("shop_list")
     else:
         form = ShopForm()
-    return render(request, "shops/shop_form.html", {"form": form, "title": "Add New Shop"})
+    return render(request, "shops/shop_form.html", {"form": form, "title": _("Add New Shop")})
 
 
 @login_required
@@ -144,11 +145,11 @@ def shop_edit_view(request, pk):
         form = ShopForm(request.POST, instance=shop)
         if form.is_valid():
             form.save()
-            messages.success(request, f"Shop '{shop.name}' updated successfully.")
+            messages.success(request, _("Shop '%(name)s' updated successfully.") % {"name": shop.name})
             return redirect("shop_list")
     else:
         form = ShopForm(instance=shop)
-    return render(request, "shops/shop_form.html", {"form": form, "title": f"Edit {shop.name}"})
+    return render(request, "shops/shop_form.html", {"form": form, "title": _("Edit %(name)s") % {"name": shop.name}})
 
 
 @login_required
@@ -162,7 +163,7 @@ def shop_detail_view(request, pk):
             transaction = form.save(commit=False)
             transaction.shop = shop
             transaction.save()
-            messages.success(request, f"Transaction of ৳{transaction.amount} added.")
+            messages.success(request, _("Transaction of ৳%(amount)s added.") % {"amount": transaction.amount})
             return redirect("shop_detail", pk=pk)
     else:
         form = TransactionForm(initial={"date": django.utils.timezone.now().date()})
@@ -280,11 +281,11 @@ def transaction_edit_view(request, pk):
         form = TransactionForm(request.POST, instance=transaction)
         if form.is_valid():
             form.save()
-            messages.success(request, "Transaction updated.")
+            messages.success(request, _("Transaction updated."))
             return redirect("shop_detail", pk=shop.pk)
     else:
         form = TransactionForm(instance=transaction)
-    return render(request, "shops/shop_form.html", {"form": form, "title": "Edit Transaction", "back_url": f"/shops/{shop.pk}/"})
+    return render(request, "shops/shop_form.html", {"form": form, "title": _("Edit Transaction"), "back_url": f"/shops/{shop.pk}/"})
 
 
 @login_required
@@ -293,5 +294,5 @@ def transaction_delete_view(request, pk):
     shop = transaction.shop
     amount = transaction.amount
     transaction.delete()
-    messages.success(request, f"Transaction of ৳{amount} deleted.")
+    messages.success(request, _("Transaction of ৳%(amount)s deleted.") % {"amount": amount})
     return redirect("shop_detail", pk=shop.pk)

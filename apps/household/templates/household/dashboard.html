@@ -1,73 +1,73 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Household Dashboard | FinTrack{% endblock %}
+{% block title %}{% translate "Household Dashboard" %} | FinTrack{% endblock %}
 
 {% block content %}
 <div class="px-4 sm:px-6 lg:px-8">
   <div class="sm:flex sm:items-center">
     <div class="sm:flex-auto">
-      <h1 class="text-2xl font-bold leading-6 text-gray-900">Household (Bazar) Overview</h1>
-      <p class="mt-2 text-sm text-gray-700">A summary of your day-to-day household shopping and any reimbursements owed to members.</p>
+      <h1 class="text-2xl font-bold leading-6 text-[var(--text-primary)]">{% translate "Household (Bazar) Overview" %}</h1>
+      <p class="mt-2 text-sm text-[var(--text-secondary)]">{% translate "A summary of your day-to-day household shopping and any reimbursements owed to members." %}</p>
     </div>
     <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-      <a href="{% url 'household_month_detail' current_year current_month %}" class="block rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">+ Add Purchase</a>
+      <a href="{% url 'household_month_detail' current_year current_month %}" class="block rounded-md bg-[var(--accent)] px-3 py-2 text-center text-sm font-semibold text-[var(--accent-on)] shadow-sm hover:bg-[var(--accent-strong)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]">+ {% translate "Add Purchase" %}</a>
     </div>
   </div>
 
   <!-- Stats Grid -->
   <dl class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-    <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6 border-l-4 border-orange-500">
-      <dt class="truncate text-sm font-medium text-gray-500">Total Spent</dt>
-      <dd class="mt-1 text-3xl font-bold tracking-tight text-gray-900">৳{{ total_spent|floatformat:2 }}</dd>
+    <div class="overflow-hidden rounded-lg bg-[var(--surface-raised)] px-4 py-5 shadow sm:p-6 border-l-4" style="border-left-color: var(--accent);">
+      <dt class="truncate text-sm font-medium text-[var(--text-secondary)]">{% translate "Total Spent" %}</dt>
+      <dd class="mt-1 text-3xl font-bold tracking-tight text-[var(--text-primary)]">৳{{ total_spent|floatformat:2 }}</dd>
     </div>
-    <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6 border-l-4 border-indigo-500">
-      <dt class="truncate text-sm font-medium text-gray-500">Spent This Month</dt>
-      <dd class="mt-1 text-3xl font-bold tracking-tight text-gray-900">৳{{ this_month_spent|floatformat:2 }}</dd>
+    <div class="overflow-hidden rounded-lg bg-[var(--surface-raised)] px-4 py-5 shadow sm:p-6 border-l-4" style="border-left-color: var(--gold);">
+      <dt class="truncate text-sm font-medium text-[var(--text-secondary)]">{% translate "Spent This Month" %}</dt>
+      <dd class="mt-1 text-3xl font-bold tracking-tight text-[var(--text-primary)]">৳{{ this_month_spent|floatformat:2 }}</dd>
     </div>
-    <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6 border-l-4 border-green-500">
-      <dt class="truncate text-sm font-medium text-gray-500">Given Back to Members</dt>
-      <dd class="mt-1 text-3xl font-bold tracking-tight text-gray-900">৳{{ total_settled|floatformat:2 }}</dd>
+    <div class="overflow-hidden rounded-lg bg-[var(--surface-raised)] px-4 py-5 shadow sm:p-6 border-l-4" style="border-left-color: var(--status-good);">
+      <dt class="truncate text-sm font-medium text-[var(--text-secondary)]">{% translate "Given Back to Members" %}</dt>
+      <dd class="mt-1 text-3xl font-bold tracking-tight text-[var(--text-primary)]">৳{{ total_settled|floatformat:2 }}</dd>
     </div>
-    <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6 border-l-4 border-yellow-500">
-      <dt class="truncate text-sm font-medium text-gray-500">Outstanding to Members</dt>
-      <dd class="mt-1 text-3xl font-bold tracking-tight text-gray-900">৳{{ outstanding_to_members|floatformat:2 }}</dd>
+    <div class="overflow-hidden rounded-lg bg-[var(--surface-raised)] px-4 py-5 shadow sm:p-6 border-l-4" style="border-left-color: var(--status-warn);">
+      <dt class="truncate text-sm font-medium text-[var(--text-secondary)]">{% translate "Outstanding to Members" %}</dt>
+      <dd class="mt-1 text-3xl font-bold tracking-tight text-[var(--text-primary)]">৳{{ outstanding_to_members|floatformat:2 }}</dd>
     </div>
   </dl>
 
   <div class="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-2">
     <!-- Recent Activity Card -->
-    <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-      <div class="border-b border-gray-200 bg-gray-50 px-6 py-4 flex justify-between items-center">
-        <h2 class="text-base font-semibold leading-7 text-gray-900">Recent Purchases</h2>
+    <div class="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] shadow-sm">
+      <div class="border-b px-6 py-4 flex justify-between items-center" style="border-color: var(--border); background: var(--surface-sunken);">
+        <h2 class="text-base font-semibold leading-7 text-[var(--text-primary)]">{% translate "Recent Purchases" %}</h2>
       </div>
       <div class="overflow-x-auto">
         {% if recent_purchases %}
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
+          <table class="min-w-full divide-y" style="border-color: var(--border);">
+            <thead style="background: var(--surface-sunken);">
               <tr>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Date</th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Category</th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Buyer</th>
-                <th scope="col" class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">Amount</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Date" %}</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Category" %}</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Buyer" %}</th>
+                <th scope="col" class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Amount" %}</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-200 bg-white">
+            <tbody class="divide-y bg-[var(--surface-raised)]" style="border-color: var(--border-soft);">
               {% for p in recent_purchases %}
-                <tr class="hover:bg-gray-50 transition-colors">
-                  <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{{ p.date|date:"M d, Y" }}</td>
-                  <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">{{ p.category.name|default:"Uncategorized" }}</td>
-                  <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{{ p.buyer.name|default:"—" }}</td>
-                  <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-bold text-gray-900 font-mono">৳{{ p.amount|floatformat:2 }}</td>
+                <tr class="hover:bg-[var(--surface-sunken)] transition-colors">
+                  <td class="whitespace-nowrap px-6 py-4 text-sm text-[var(--text-secondary)]">{{ p.date|date:"M d, Y" }}</td>
+                  <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-[var(--text-primary)]">{% if p.category.name %}{{ p.category.name }}{% else %}{% translate "Uncategorized" %}{% endif %}</td>
+                  <td class="whitespace-nowrap px-6 py-4 text-sm text-[var(--text-secondary)]">{{ p.buyer.name|default:"—" }}</td>
+                  <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-bold text-[var(--text-primary)] font-mono">৳{{ p.amount|floatformat:2 }}</td>
                 </tr>
               {% endfor %}
             </tbody>
           </table>
         {% else %}
           <div class="px-6 py-12 text-center">
-            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z" /></svg>
-            <h3 class="mt-2 text-sm font-semibold text-gray-900">No purchases yet</h3>
-            <p class="mt-1 text-sm text-gray-500">Log your first bazar purchase to see it here.</p>
+            <svg class="mx-auto h-12 w-12 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z" /></svg>
+            <h3 class="mt-2 text-sm font-semibold text-[var(--text-primary)]">{% translate "No purchases yet" %}</h3>
+            <p class="mt-1 text-sm text-[var(--text-secondary)]">{% translate "Log your first bazar purchase to see it here." %}</p>
           </div>
         {% endif %}
       </div>
@@ -76,29 +76,29 @@
     <!-- Charts Card -->
     <div class="flex flex-col gap-8">
         <!-- Manage & Explore Card -->
-        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm overflow-hidden">
-            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-[0.2em] mb-6">Manage & Explore</h3>
+        <div class="rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] p-6 shadow-sm overflow-hidden">
+            <h3 class="text-xs font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] mb-6">{% translate "Manage & Explore" %}</h3>
             <div class="space-y-4">
-                <a href="{% url 'household_list' %}" class="flex items-center justify-between p-4 bg-indigo-50 rounded-2xl border border-indigo-100 group hover:bg-indigo-600 transition-all duration-300">
-                    <span class="text-sm font-bold text-indigo-700 group-hover:text-white">View Bazar Log</span>
-                    <svg class="h-5 w-5 text-indigo-400 group-hover:text-indigo-200 group-hover:translate-x-1 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                <a href="{% url 'household_list' %}" class="flex items-center justify-between p-4 rounded-2xl border group transition-all duration-300" style="background: var(--accent-soft); border-color: var(--accent-soft);">
+                    <span class="text-sm font-bold" style="color: var(--accent);">{% translate "View Bazar Log" %}</span>
+                    <svg class="h-5 w-5 group-hover:translate-x-1 transition-all" style="color: var(--accent);" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
                 </a>
                 <div class="grid grid-cols-2 gap-3">
-                    <a href="{% url 'household_member_list' %}" class="flex items-center justify-center p-3 bg-gray-50 rounded-xl border border-gray-100 text-xs font-bold text-gray-600 hover:bg-white hover:border-gray-300 transition-all">
-                        Members
+                    <a href="{% url 'household_member_list' %}" class="flex items-center justify-center p-3 rounded-xl border text-xs font-bold text-[var(--text-secondary)] hover:bg-[var(--surface-raised)] transition-all" style="background: var(--surface-sunken); border-color: var(--border-soft);">
+                        {% translate "Members" %}
                     </a>
-                    <a href="{% url 'household_category_list' %}" class="flex items-center justify-center p-3 bg-gray-50 rounded-xl border border-gray-100 text-xs font-bold text-gray-600 hover:bg-white hover:border-gray-300 transition-all">
-                        Categories
+                    <a href="{% url 'household_category_list' %}" class="flex items-center justify-center p-3 rounded-xl border text-xs font-bold text-[var(--text-secondary)] hover:bg-[var(--surface-raised)] transition-all" style="background: var(--surface-sunken); border-color: var(--border-soft);">
+                        {% translate "Categories" %}
                     </a>
                 </div>
-                <a href="{% url 'household_month_detail' current_year current_month %}" class="block w-full text-center py-3 bg-white border-2 border-dashed border-gray-200 rounded-xl text-xs font-bold text-gray-400 hover:border-indigo-400 hover:text-indigo-500 transition-all">
-                    + Add New Purchase
+                <a href="{% url 'household_month_detail' current_year current_month %}" class="block w-full text-center py-3 border-2 border-dashed rounded-xl text-xs font-bold text-[var(--text-muted)] hover:text-[var(--accent)] transition-all" style="border-color: var(--border);">
+                    + {% translate "Add New Purchase" %}
                 </a>
             </div>
         </div>
 
-        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-            <h3 class="text-sm font-bold text-gray-500 uppercase tracking-widest mb-6 text-center">Spending by Category</h3>
+        <div class="rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] p-6 shadow-sm">
+            <h3 class="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-widest mb-6 text-center">{% translate "Spending by Category" %}</h3>
             <div class="h-72 sm:h-96"><canvas id="categoryChart"></canvas></div>
         </div>
     </div>
@@ -119,7 +119,7 @@
             canvasId: 'categoryChart',
             labels: labels,
             data: data,
-            centerLabel: 'Total Spent',
+            centerLabel: '{% translate "Total Spent" %}',
         });
     });
 </script>

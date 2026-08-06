@@ -1,91 +1,93 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}{{ debtor.name }} Details | FinTrack{% endblock %}
+{% block title %}{{ debtor.name }} {% translate "Details" %} | FinTrack{% endblock %}
 
 {% block content %}
 <div class="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pb-16">
-  <!-- Header with high-end glassmorphism effect -->
-  <div class="md:flex md:items-end md:justify-between border-b-2 border-gray-100 pb-10">
+  <!-- Header -->
+  <div class="md:flex md:items-end md:justify-between border-b-2 pb-10" style="border-color: var(--border-soft);">
     <div class="min-w-0 flex-1">
       <div class="flex items-center gap-x-4">
-          <div class="h-14 w-14 rounded-2xl bg-indigo-600 flex items-center justify-center text-white font-black text-2xl shadow-indigo-200 shadow-2xl ring-4 ring-indigo-50">
+          <div class="h-14 w-14 rounded-2xl bg-[var(--accent)] flex items-center justify-center text-[var(--accent-on)] font-black text-2xl shadow-2xl ring-4" style="--tw-ring-color: var(--accent-soft);">
               {{ debtor.name|first|upper }}
           </div>
           <div>
-            <h1 class="text-3xl font-black text-gray-900 tracking-tight sm:text-4xl leading-tight">{{ debtor.name }}</h1>
+            <h1 class="text-3xl font-black text-[var(--text-primary)] tracking-tight sm:text-4xl leading-tight">{{ debtor.name }}</h1>
             <div class="flex gap-4 mt-1 items-center">
-                <span class="inline-flex items-center text-sm font-bold text-gray-400">
+                <span class="inline-flex items-center text-sm font-bold text-[var(--text-muted)]">
                     <svg class="mr-1.5 h-4 w-4" fill="currentColor" viewBox="0 0 20 20"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" /></svg>
-                    {{ debtor.phone|default:"No phone" }}
+                    {% if debtor.phone %}{{ debtor.phone }}{% else %}{% translate "No phone" %}{% endif %}
                 </span>
-                <span class="h-1 w-1 rounded-full bg-gray-300"></span>
-                <span class="inline-flex items-center text-sm font-bold text-gray-400">
+                <span class="h-1 w-1 rounded-full" style="background: var(--border);"></span>
+                <span class="inline-flex items-center text-sm font-bold text-[var(--text-muted)]">
                     <svg class="mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                    {{ debtor.note|default:"No notes" }}
+                    {% if debtor.note %}{{ debtor.note }}{% else %}{% translate "No notes" %}{% endif %}
                 </span>
             </div>
           </div>
       </div>
     </div>
     <div class="mt-8 flex md:ml-4 md:mt-0 gap-3">
-      <a href="{% url 'debtor_edit' debtor.pk %}" class="inline-flex items-center rounded-xl bg-white px-4 py-2.5 text-sm font-extrabold text-gray-600 shadow-sm ring-2 ring-inset ring-gray-100 hover:bg-gray-50 transition-all border-none">Edit Debtor Profile</a>
-      <a href="{% url 'debtor_list' %}" class="inline-flex items-center rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-extrabold text-white hover:bg-gray-800 transition-all shadow-xl shadow-gray-200">Back</a>
+      <a href="{% url 'debtor_edit' debtor.pk %}" class="inline-flex items-center rounded-xl bg-[var(--surface-raised)] px-4 py-2.5 text-sm font-extrabold text-[var(--text-secondary)] shadow-sm ring-2 ring-inset ring-[var(--border-soft)] hover:bg-[var(--surface-sunken)] transition-all border-none">{% translate "Edit Debtor Profile" %}</a>
+      <a href="{% url 'debtor_list' %}" class="inline-flex items-center rounded-xl px-4 py-2.5 text-sm font-extrabold transition-all shadow-xl" style="background: var(--surface-ink); color: var(--text-on-ink);">{% translate "Back" %}</a>
     </div>
   </div>
 
-  <!-- Identifiable Stats with color accents -->
+  <!-- Stats -->
   <dl class="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-3">
-    <div class="bg-white px-8 py-6 shadow-sm ring-1 ring-gray-200 rounded-3xl group hover:shadow-indigo-50 hover:shadow-xl transition-all">
-      <dt class="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center mb-1">Cumulative Lent</dt>
-      <dd class="text-4xl font-black text-indigo-600 text-center tracking-tighter">৳{{ lent|floatformat:0 }}</dd>
+    <div class="bg-[var(--surface-raised)] px-8 py-6 shadow-sm ring-1 ring-[var(--border)] rounded-3xl hover:shadow-xl transition-all">
+      <dt class="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest text-center mb-1">{% translate "Cumulative Lent" %}</dt>
+      <dd class="text-4xl font-black text-center tracking-tighter" style="color: var(--accent);">৳{{ lent|floatformat:0 }}</dd>
     </div>
-    <div class="bg-white px-8 py-6 shadow-sm ring-1 ring-gray-200 rounded-3xl group hover:shadow-green-50 hover:shadow-xl transition-all border-l-8 border-green-500">
-      <dt class="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center mb-1">Total Collected</dt>
-      <dd class="text-4xl font-black text-green-600 text-center tracking-tighter">৳{{ received|floatformat:0 }}</dd>
+    <div class="bg-[var(--surface-raised)] px-8 py-6 shadow-sm ring-1 ring-[var(--border)] rounded-3xl hover:shadow-xl transition-all border-l-8" style="border-left-color: var(--status-good);">
+      <dt class="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest text-center mb-1">{% translate "Total Collected" %}</dt>
+      <dd class="text-4xl font-black text-center tracking-tighter" style="color: var(--status-good);">৳{{ received|floatformat:0 }}</dd>
     </div>
-    <div class="bg-white px-8 py-6 shadow-sm ring-1 ring-gray-200 rounded-3xl group hover:shadow-orange-50 hover:shadow-xl transition-all border-l-8 border-orange-500">
-      <dt class="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center mb-1">Still Owed to You</dt>
-      <dd class="text-4xl font-black text-orange-600 text-center tracking-tighter">৳{{ remaining|floatformat:0 }}</dd>
+    <div class="bg-[var(--surface-raised)] px-8 py-6 shadow-sm ring-1 ring-[var(--border)] rounded-3xl hover:shadow-xl transition-all border-l-8" style="border-left-color: var(--status-warn);">
+      <dt class="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest text-center mb-1">{% translate "Still Owed to You" %}</dt>
+      <dd class="text-4xl font-black text-center tracking-tighter" style="color: var(--status-warn);">৳{{ remaining|floatformat:0 }}</dd>
     </div>
   </dl>
 
   <div class="mt-12 grid grid-cols-1 gap-12 lg:grid-cols-3 items-start">
-    <!-- Transaction History (Left Column) -->
+    <!-- Transaction History -->
     <div class="lg:col-span-2 space-y-4">
-        <div class="overflow-hidden bg-white shadow-sm ring-1 ring-gray-200 rounded-3xl">
-            <div class="border-b border-gray-50 px-8 py-6 flex justify-between items-center bg-gray-50/50">
-                <h3 class="text-xs font-black text-gray-500 uppercase tracking-[0.2em]">Full Transaction History</h3>
+        <div class="overflow-hidden bg-[var(--surface-raised)] shadow-sm ring-1 ring-[var(--border)] rounded-3xl">
+            <div class="border-b px-8 py-6 flex justify-between items-center" style="border-color: var(--border-soft); background: var(--surface-sunken);">
+                <h3 class="text-xs font-black text-[var(--text-secondary)] uppercase tracking-[0.2em]">{% translate "Full Transaction History" %}</h3>
             </div>
             <div class="overflow-x-auto">
                 {% if transactions %}
-                <table class="min-w-full divide-y divide-gray-100">
-                    <thead class="bg-white">
+                <table class="min-w-full divide-y" style="border-color: var(--border-soft);">
+                    <thead class="bg-[var(--surface-raised)]">
                         <tr>
-                            <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Date</th>
-                            <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
-                            <th class="px-8 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Amount</th>
-                            <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Memo</th>
-                            <th class="px-8 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Actions</th>
+                            <th class="px-8 py-4 text-left text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">{% translate "Date" %}</th>
+                            <th class="px-8 py-4 text-left text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">{% translate "Status" %}</th>
+                            <th class="px-8 py-4 text-right text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">{% translate "Amount" %}</th>
+                            <th class="px-8 py-4 text-left text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">{% translate "Memo" %}</th>
+                            <th class="px-8 py-4 text-right text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">{% translate "Actions" %}</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-50 bg-white">
+                    <tbody class="divide-y bg-[var(--surface-raised)]" style="border-color: var(--border-soft);">
                         {% for tx in transactions %}
-                        <tr class="hover:bg-gray-50/50 transition-colors">
-                            <td class="px-8 py-5 text-sm text-gray-500 font-bold whitespace-nowrap">{{ tx.date|date:"d M Y" }}</td>
+                        <tr class="hover:bg-[var(--surface-sunken)] transition-colors">
+                            <td class="px-8 py-5 text-sm text-[var(--text-secondary)] font-bold whitespace-nowrap">{{ tx.date|date:"d M Y" }}</td>
                             <td class="px-8 py-5">
-                                <span class="inline-flex items-center rounded-lg px-2.5 py-1 text-[10px] font-black uppercase tracking-widest {% if tx.transaction_type == 'LEND' %}bg-blue-50 text-blue-700{% else %}bg-green-50 text-green-700{% endif %}">
+                                <span class="inline-flex items-center rounded-lg px-2.5 py-1 text-[10px] font-black uppercase tracking-widest"
+                                      style="{% if tx.transaction_type == 'LEND' %}background: var(--status-info-bg); color: var(--status-info);{% else %}background: var(--status-good-bg); color: var(--status-good);{% endif %}">
                                     {{ tx.get_transaction_type_display }}
                                 </span>
                             </td>
-                            <td class="px-8 py-5 text-right text-sm font-black text-gray-900 tabular-nums">৳{{ tx.amount|floatformat:0 }}</td>
-                            <td class="px-8 py-5 text-xs text-gray-400 font-semibold italic">{{ tx.note|default:"-" }}</td>
+                            <td class="px-8 py-5 text-right text-sm font-black text-[var(--text-primary)] tabular-nums">৳{{ tx.amount|floatformat:0 }}</td>
+                            <td class="px-8 py-5 text-xs text-[var(--text-muted)] font-semibold italic">{{ tx.note|default:"-" }}</td>
                             <td class="px-8 py-5 text-right text-sm font-medium space-x-2">
-                                <a href="{% url 'debtor_transaction_edit' tx.pk %}" class="text-indigo-600 hover:text-indigo-900 inline-flex items-center" title="Edit">
+                                <a href="{% url 'debtor_transaction_edit' tx.pk %}" class="inline-flex items-center" style="color: var(--accent);" title="{% translate 'Edit' %}">
                                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                     </svg>
                                 </a>
-                                <a href="{% url 'debtor_transaction_delete' tx.pk %}" class="text-red-600 hover:text-red-900 inline-flex items-center" title="Delete" onclick="return confirm('Silently delete this collection record? This action cannot be undone.')">
+                                <a href="{% url 'debtor_transaction_delete' tx.pk %}" class="inline-flex items-center" style="color: var(--status-critical);" title="{% translate 'Delete' %}" onclick="return confirm('{% translate "Delete this collection record? This action cannot be undone." %}')">
                                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                     </svg>
@@ -97,52 +99,52 @@
                 </table>
                 {% else %}
                 <div class="py-24 text-center">
-                    <div class="h-16 w-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg class="h-8 w-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <div class="h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4" style="background: var(--surface-sunken);">
+                        <svg class="h-8 w-8 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     </div>
-                    <p class="text-gray-400 text-sm font-bold uppercase tracking-widest">Timeline is empty</p>
+                    <p class="text-[var(--text-muted)] text-sm font-bold uppercase tracking-widest">{% translate "Timeline is empty" %}</p>
                 </div>
                 {% endif %}
             </div>
         </div>
     </div>
 
-    <!-- Collection Hub (Right Column) -->
+    <!-- Collection Hub -->
     <div class="space-y-10">
         <!-- Visual Stats -->
-        <div class="bg-white shadow-sm ring-1 ring-gray-200 rounded-3xl p-10 flex flex-col items-center">
-            <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-10">Collection Progress</h3>
+        <div class="bg-[var(--surface-raised)] shadow-sm ring-1 ring-[var(--border)] rounded-3xl p-10 flex flex-col items-center">
+            <h3 class="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.2em] mb-10">{% translate "Collection Progress" %}</h3>
             <div class="h-56 w-full"><canvas id="debtorChart"></canvas></div>
         </div>
 
         <!-- Add Transaction Form Card -->
-        <div class="bg-[#1e293b] shadow-2xl rounded-[2.5rem] p-10 text-white border-2 border-slate-700">
+        <div class="shadow-2xl rounded-[2.5rem] p-10 border-2" style="background: var(--surface-ink); color: var(--text-on-ink); border-color: var(--surface-ink-raised);">
             <div class="flex items-center gap-4 mb-8">
                 <div class="h-12 w-12 bg-white/10 rounded-2xl flex items-center justify-center border border-white/20">
-                    <svg class="h-6 w-6 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg class="h-6 w-6" style="color: var(--gold);" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                     </svg>
                 </div>
                 <div>
-                    <h3 class="text-xl font-black tracking-tight leading-tight">Register Collection</h3>
-                    <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mt-0.5">Quick Transaction Entry</p>
+                    <h3 class="text-xl font-black tracking-tight leading-tight">{% translate "Register Collection" %}</h3>
+                    <p class="text-xs font-bold uppercase tracking-widest mt-0.5" style="color: var(--text-on-ink-muted);">{% translate "Quick Transaction Entry" %}</p>
                 </div>
             </div>
-            
+
             <form method="post" class="space-y-6">
                 {% csrf_token %}
                 {% for field in form %}
                 <div>
-                    <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2 ml-1">{{ field.label }}</label>
+                    <label class="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 ml-1" style="color: var(--text-on-ink-muted);">{{ field.label }}</label>
                     <div class="form-wrapper transition-all duration-200">
                         {{ field }}
                     </div>
                     {% if field.errors %}
-                        <p class="mt-2 text-[10px] text-red-400 font-bold uppercase tracking-widest">{{ field.errors.0 }}</p>
+                        <p class="mt-2 text-[10px] font-bold uppercase tracking-widest" style="color: var(--status-critical);">{{ field.errors.0 }}</p>
                     {% endif %}
                 </div>
                 {% endfor %}
-                <button type="submit" class="w-full bg-indigo-600 text-white font-black text-sm uppercase tracking-widest py-5 rounded-[1.25rem] hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-900/40 transform hover:-translate-y-1 active:translate-y-0">Record Entry</button>
+                <button type="submit" class="w-full font-black text-sm uppercase tracking-widest py-5 rounded-[1.25rem] transition-all shadow-xl transform hover:-translate-y-1 active:translate-y-0" style="background: var(--accent); color: var(--accent-on);">{% translate "Record Entry" %}</button>
             </form>
         </div>
     </div>
@@ -154,6 +156,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const style = getComputedStyle(document.documentElement);
         const ctx = document.getElementById('debtorChart').getContext('2d');
         const received = {{ chart_received }};
         const remaining = {{ chart_remaining }};
@@ -163,10 +166,10 @@
         new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: ['Received', 'Remaining'],
+                labels: ['{% translate "Received" %}', '{% translate "Remaining" %}'],
                 datasets: [{
                     data: [received, remaining],
-                    backgroundColor: ['#10b981', '#f97316'],
+                    backgroundColor: [style.getPropertyValue('--status-good').trim(), style.getPropertyValue('--status-warn').trim()],
                     borderWidth: 0,
                     spacing: 8,
                     borderRadius: 10,
@@ -179,7 +182,7 @@
                 maintainAspectRatio: false,
                 cutout: '80%',
                 plugins: {
-                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 30, font: { weight: '800', size: 10 } } },
+                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 30, font: { weight: '800', size: 10 }, color: style.getPropertyValue('--text-secondary').trim() } },
                     tooltip: { backgroundColor: '#0f172a', padding: 16 }
                 }
             }
@@ -187,24 +190,22 @@
     });
 </script>
 <style>
-    /* Premium Transaction Hub Field Styling */
+    /* Transaction Hub field styling */
     .space-y-6 select, .space-y-6 input, .space-y-6 textarea {
         background-color: rgba(255,255,255,0.03) !important;
         border: 2px solid rgba(255,255,255,0.08) !important;
-        color: white !important;
+        color: var(--text-on-ink) !important;
         width: 100%;
         padding: 1.25rem 1.5rem;
         border-radius: 1.25rem;
         font-size: 0.95rem;
         font-weight: 700;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        backdrop-filter: blur(8px);
     }
     .space-y-6 select:focus, .space-y-6 input:focus, .space-y-6 textarea:focus {
         background-color: rgba(255,255,255,0.06) !important;
-        border-color: #6366f1 !important;
+        border-color: var(--accent) !important;
         outline: none;
-        box-shadow: 0 0 25px rgba(99, 102, 241, 0.15) !important;
     }
     .space-y-6 select option {
         color: #1e293b;

@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Sum, Q, DecimalField, Value
 from django.db.models.functions import Coalesce
+from django.utils.translation import gettext as _
 from datetime import date as date_cls
 
 from .models import IncomeSource, IncomeTransaction
@@ -193,11 +194,11 @@ def income_source_create_view(request):
             source = form.save(commit=False)
             source.user = request.user
             source.save()
-            messages.success(request, f"Income source '{source.name}' created.")
+            messages.success(request, _("Income source '%(name)s' created.") % {"name": source.name})
             return redirect("income_source_list")
     else:
         form = IncomeSourceForm()
-    return render(request, "income/source_form.html", {"form": form, "title": "Add Income Source"})
+    return render(request, "income/source_form.html", {"form": form, "title": _("Add Income Source")})
 
 
 @login_required
@@ -207,11 +208,11 @@ def income_source_edit_view(request, pk):
         form = IncomeSourceForm(request.POST, instance=source)
         if form.is_valid():
             form.save()
-            messages.success(request, f"Source '{source.name}' updated.")
+            messages.success(request, _("Source '%(name)s' updated.") % {"name": source.name})
             return redirect("income_source_list")
     else:
         form = IncomeSourceForm(instance=source)
-    return render(request, "income/source_form.html", {"form": form, "title": f"Edit {source.name}"})
+    return render(request, "income/source_form.html", {"form": form, "title": _("Edit %(name)s") % {"name": source.name}})
 
 
 @login_required
@@ -240,7 +241,7 @@ def income_source_detail_view(request, pk):
             tx = form.save(commit=False)
             tx.source = source
             tx.save()
-            messages.success(request, f"Income of ৳{tx.amount} recorded.")
+            messages.success(request, _("Income of ৳%(amount)s recorded.") % {"amount": tx.amount})
             return redirect("income_source_detail", pk=pk)
     else:
         form = IncomeTransactionForm(initial={"date": django.utils.timezone.now().date()})
@@ -276,11 +277,11 @@ def transaction_edit_view(request, pk):
         form = IncomeTransactionForm(request.POST, instance=tx)
         if form.is_valid():
             form.save()
-            messages.success(request, "Income entry updated.")
+            messages.success(request, _("Income entry updated."))
             return redirect("income_source_detail", pk=source.pk)
     else:
         form = IncomeTransactionForm(instance=tx)
-    return render(request, "income/source_form.html", {"form": form, "title": "Edit Income Entry", "back_url": f"/income/sources/{source.pk}/"})
+    return render(request, "income/source_form.html", {"form": form, "title": _("Edit Income Entry"), "back_url": f"/income/sources/{source.pk}/"})
 
 
 @login_required
@@ -289,5 +290,5 @@ def transaction_delete_view(request, pk):
     source = tx.source
     amt = tx.amount
     tx.delete()
-    messages.success(request, f"Income entry of ৳{amt} deleted.")
+    messages.success(request, _("Income entry of ৳%(amount)s deleted.") % {"amount": amt})
     return redirect("income_source_detail", pk=source.pk)

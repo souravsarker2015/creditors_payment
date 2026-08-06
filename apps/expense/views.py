@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.db.models import Sum, Q, DecimalField, Value
 from django.db.models.functions import Coalesce
 from django.core.paginator import Paginator
+from django.utils.translation import gettext as _
 from datetime import date as date_cls
 
 from .models import ExpenseCategory, Expense
@@ -133,7 +134,7 @@ def dashboard_view(request):
         .annotate(total=Coalesce(Sum("amount"), Value(0, output_field=DecimalField())))
         .order_by("-total", "category__name")
     )
-    category_labels = [row["category__name"] or "General" for row in category_totals if row["total"] > 0]
+    category_labels = [row["category__name"] or _("General") for row in category_totals if row["total"] > 0]
     category_data = [float(row["total"]) for row in category_totals if row["total"] > 0]
 
     recent_expenses = filtered_expenses.select_related("category").order_by(
@@ -233,11 +234,11 @@ def expense_create_view(request):
             expense = form.save(commit=False)
             expense.user = request.user
             expense.save()
-            messages.success(request, f"Expense of ৳{expense.amount} recorded.")
+            messages.success(request, _("Expense of ৳%(amount)s recorded.") % {"amount": expense.amount})
             return redirect("expense_list")
     else:
         form = ExpenseForm(user=request.user, initial={"date": django.utils.timezone.now().date()})
-    return render(request, "expense/expense_form.html", {"form": form, "title": "Add New Expense"})
+    return render(request, "expense/expense_form.html", {"form": form, "title": _("Add New Expense")})
 
 
 @login_required
@@ -247,11 +248,11 @@ def expense_edit_view(request, pk):
         form = ExpenseForm(request.POST, instance=expense, user=request.user)
         if form.is_valid():
             form.save()
-            messages.success(request, "Expense updated.")
+            messages.success(request, _("Expense updated."))
             return redirect("expense_list")
     else:
         form = ExpenseForm(instance=expense, user=request.user)
-    return render(request, "expense/expense_form.html", {"form": form, "title": "Edit Expense"})
+    return render(request, "expense/expense_form.html", {"form": form, "title": _("Edit Expense")})
 
 
 @login_required
@@ -259,7 +260,7 @@ def expense_delete_view(request, pk):
     expense = get_object_or_404(Expense, pk=pk, user=request.user)
     amt = expense.amount
     expense.delete()
-    messages.success(request, f"Expense of ৳{amt} deleted.")
+    messages.success(request, _("Expense of ৳%(amount)s deleted.") % {"amount": amt})
     return redirect("expense_list")
 
 
@@ -279,8 +280,8 @@ def category_create_view(request):
             cat = form.save(commit=False)
             cat.user = request.user
             cat.save()
-            messages.success(request, f"Category '{cat.name}' created.")
+            messages.success(request, _("Category '%(name)s' created.") % {"name": cat.name})
             return redirect("category_list")
     else:
         form = ExpenseCategoryForm()
-    return render(request, "expense/expense_form.html", {"form": form, "title": "Add Category"})
+    return render(request, "expense/expense_form.html", {"form": form, "title": _("Add Category")})

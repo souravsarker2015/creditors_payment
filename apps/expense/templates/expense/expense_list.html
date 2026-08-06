@@ -1,6 +1,7 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Expense Ledger | FinTrack{% endblock %}
+{% block title %}{% translate "Expense Ledger" %} | FinTrack{% endblock %}
 
 {% block extra_css %}
 <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
@@ -10,109 +11,109 @@
 <div class="px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
   <div class="sm:flex sm:items-center mb-12">
     <div class="sm:flex-auto">
-      <h1 class="text-3xl font-black leading-6 text-gray-900 uppercase tracking-tighter">Expenditure Log</h1>
-      <p class="mt-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Chronological Spending Record</p>
+      <h1 class="text-3xl font-black leading-6 text-[var(--text-primary)] uppercase tracking-tighter">{% translate "Expenditure Log" %}</h1>
+      <p class="mt-4 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.3em]">{% translate "Chronological Spending Record" %}</p>
     </div>
     <div class="mt-8 sm:ml-16 sm:mt-0 sm:flex-none">
-      <a href="{% url 'expense_create' %}" class="block rounded-[1.25rem] bg-orange-600 px-6 py-4 text-center text-xs font-black uppercase tracking-widest text-white shadow-2xl shadow-orange-100 hover:bg-orange-500 transition-all hover:-translate-y-1 active:translate-y-0">+ Log New Expense</a>
+      <a href="{% url 'expense_create' %}" class="block rounded-[1.25rem] bg-[var(--accent)] px-6 py-4 text-center text-xs font-black uppercase tracking-widest text-[var(--accent-on)] shadow-2xl hover:bg-[var(--accent-strong)] transition-all hover:-translate-y-1 active:translate-y-0">+ {% translate "Log New Expense" %}</a>
     </div>
   </div>
 
-  <form method="get" x-data="{ filterMode: '{{ filter_mode|default:"include" }}' }" class="mb-8 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+  <form method="get" x-data="{ filterMode: '{{ filter_mode|default:"include" }}' }" class="mb-8 rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-4 shadow-sm">
     <input type="hidden" name="filter_mode" x-model="filterMode">
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
       <div>
-        <p class="block text-xs font-semibold uppercase tracking-wider text-gray-500">Filter mode</p>
-        <div class="mt-1 grid w-full grid-cols-2 rounded-lg bg-gray-100 p-1 ring-1 ring-inset ring-gray-200">
+        <p class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Filter mode" %}</p>
+        <div class="mt-1 grid w-full grid-cols-2 rounded-lg bg-[var(--surface-sunken)] p-1 ring-1 ring-inset ring-[var(--border-soft)]">
           <button type="button" @click="filterMode = 'include'" class="inline-flex w-full items-center justify-center rounded-md px-3 py-2 text-sm font-semibold transition-all"
-            :class="filterMode === 'include' ? 'bg-white text-orange-700 shadow-sm ring-1 ring-orange-200' : 'text-gray-600 hover:text-gray-800'">
-            Include
+            :class="filterMode === 'include' ? 'bg-[var(--surface-raised)] text-[var(--accent)] shadow-sm ring-1 ring-[var(--accent-soft)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'">
+            {% translate "Include" %}
           </button>
           <button type="button" @click="filterMode = 'exclude'" class="inline-flex w-full items-center justify-center rounded-md px-3 py-2 text-sm font-semibold transition-all"
-            :class="filterMode === 'exclude' ? 'bg-white text-rose-700 shadow-sm ring-1 ring-rose-200' : 'text-gray-600 hover:text-gray-800'">
-            Exclude
+            :class="filterMode === 'exclude' ? 'bg-[var(--surface-raised)] text-[var(--status-critical)] shadow-sm ring-1 ring-[var(--status-critical-bg)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'">
+            {% translate "Exclude" %}
           </button>
         </div>
       </div>
       <div>
-        <label for="category-filter" class="block text-xs font-semibold uppercase tracking-wider text-gray-500">Categories</label>
-        <select id="category-filter" name="category" multiple class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm">
+        <label for="category-filter" class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Categories" %}</label>
+        <select id="category-filter" name="category" multiple class="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--surface-raised)] text-sm text-[var(--text-primary)] shadow-sm">
           {% for cat in available_categories %}
             <option value="{{ cat.id }}"{% if cat.id in selected_category_ids %} selected{% endif %}>{{ cat.name }}</option>
           {% endfor %}
         </select>
       </div>
       <div>
-        <label for="year-filter" class="block text-xs font-semibold uppercase tracking-wider text-gray-500">Year</label>
-        <select id="year-filter" name="year" class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-orange-500 focus:ring-orange-500">
-          <option value="">All Years</option>
+        <label for="year-filter" class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Year" %}</label>
+        <select id="year-filter" name="year" class="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--surface-raised)] text-sm text-[var(--text-primary)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]">
+          <option value="">{% translate "All Years" %}</option>
           {% for yr in year_options %}
             <option value="{{ yr }}"{% if selected_year == yr %} selected{% endif %}>{{ yr }}</option>
           {% endfor %}
         </select>
       </div>
       <div>
-        <label for="date-range-filter" class="block text-xs font-semibold uppercase tracking-wider text-gray-500">Date Range</label>
-        <input id="date-range-filter" type="text" placeholder="Select range..." class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-orange-500 focus:ring-orange-500">
+        <label for="date-range-filter" class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Date Range" %}</label>
+        <input id="date-range-filter" type="text" placeholder="{% translate 'Select range...' %}" class="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--surface-raised)] text-sm text-[var(--text-primary)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]">
         <input id="date-from-hidden" type="hidden" name="date_from" value="{{ date_from }}">
         <input id="date-to-hidden" type="hidden" name="date_to" value="{{ date_to }}">
       </div>
     </div>
     <div class="mt-4 flex flex-col gap-2 sm:flex-row">
-      <button type="submit" class="w-full rounded-lg bg-gray-100 px-4 py-2 text-sm font-bold text-gray-700 hover:bg-gray-200 sm:w-auto">Apply Filters</button>
-      <a href="{% url 'expense_list' %}" class="w-full rounded-lg border border-gray-200 px-4 py-2 text-center text-sm font-bold text-gray-600 hover:bg-gray-50 sm:w-auto">Reset</a>
+      <button type="submit" class="w-full rounded-lg bg-[var(--surface-sunken)] px-4 py-2 text-sm font-bold text-[var(--text-primary)] hover:brightness-95 sm:w-auto">{% translate "Apply Filters" %}</button>
+      <a href="{% url 'expense_list' %}" class="w-full rounded-lg border border-[var(--border)] px-4 py-2 text-center text-sm font-bold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)] sm:w-auto">{% translate "Reset" %}</a>
     </div>
   </form>
 
   <dl class="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-    <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6 border-l-4 border-orange-500">
-      <dt class="truncate text-sm font-medium text-gray-500">Total Entries</dt>
-      <dd class="mt-1 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{{ total_entries }}</dd>
+    <div class="overflow-hidden rounded-lg bg-[var(--surface-raised)] px-4 py-5 shadow sm:p-6 border-l-4" style="border-left-color: var(--accent);">
+      <dt class="truncate text-sm font-medium text-[var(--text-secondary)]">{% translate "Total Entries" %}</dt>
+      <dd class="mt-1 text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-4xl">{{ total_entries }}</dd>
     </div>
-    <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6 border-l-4 border-red-500">
-      <dt class="truncate text-sm font-medium text-gray-500">Total Spent</dt>
-      <dd class="mt-1 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">৳{{ total_spent|floatformat:2 }}</dd>
+    <div class="overflow-hidden rounded-lg bg-[var(--surface-raised)] px-4 py-5 shadow sm:p-6 border-l-4" style="border-left-color: var(--status-critical);">
+      <dt class="truncate text-sm font-medium text-[var(--text-secondary)]">{% translate "Total Spent" %}</dt>
+      <dd class="mt-1 text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-4xl">৳{{ total_spent|floatformat:2 }}</dd>
     </div>
-    <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6 border-l-4 border-yellow-500">
-      <dt class="truncate text-sm font-medium text-gray-500">Avg Expense</dt>
-      <dd class="mt-1 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">৳{{ avg_expense|floatformat:2 }}</dd>
+    <div class="overflow-hidden rounded-lg bg-[var(--surface-raised)] px-4 py-5 shadow sm:p-6 border-l-4" style="border-left-color: var(--status-warn);">
+      <dt class="truncate text-sm font-medium text-[var(--text-secondary)]">{% translate "Avg Expense" %}</dt>
+      <dd class="mt-1 text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-4xl">৳{{ avg_expense|floatformat:2 }}</dd>
     </div>
   </dl>
 
   {% if page_obj.object_list %}
-  <div class="overflow-hidden bg-white shadow-sm ring-1 ring-gray-100 rounded-[3rem]">
+  <div class="overflow-hidden bg-[var(--surface-raised)] shadow-sm ring-1 ring-[var(--border-soft)] rounded-[3rem]">
     <div class="overflow-x-auto">
-      <table class="min-w-full divide-y divide-gray-50">
-        <thead class="bg-gray-50/20">
+      <table class="min-w-full divide-y" style="border-color: var(--border-soft);">
+        <thead style="background: var(--surface-sunken);">
           <tr>
-            <th class="px-10 py-6 text-left text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Timeline</th>
-            <th class="px-10 py-6 text-left text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Allocation</th>
-            <th class="px-10 py-6 text-right text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Magnitude</th>
-            <th class="px-10 py-6 text-right text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Controls</th>
+            <th class="px-10 py-6 text-left text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)]">{% translate "Timeline" %}</th>
+            <th class="px-10 py-6 text-left text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)]">{% translate "Allocation" %}</th>
+            <th class="px-10 py-6 text-right text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)]">{% translate "Magnitude" %}</th>
+            <th class="px-10 py-6 text-right text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)]">{% translate "Controls" %}</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-50 bg-white">
+        <tbody class="divide-y bg-[var(--surface-raised)]" style="border-color: var(--border-soft);">
           {% for ex in page_obj %}
-          <tr class="hover:bg-gray-50/50 transition-colors group">
+          <tr class="hover:bg-[var(--surface-sunken)] transition-colors group">
             <td class="whitespace-nowrap px-10 py-8">
-                <span class="text-sm font-black text-gray-900 tabular-nums uppercase">{{ ex.date|date:"d M, Y" }}</span>
+                <span class="text-sm font-black text-[var(--text-primary)] tabular-nums uppercase">{{ ex.date|date:"d M, Y" }}</span>
             </td>
             <td class="px-10 py-8">
                 <div class="flex flex-col">
-                  <span class="inline-flex max-w-fit items-center rounded-lg bg-orange-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-orange-600 mb-1 leading-none border border-orange-100">
-                    {{ ex.category.name|default:"General" }}
+                  <span class="inline-flex max-w-fit items-center rounded-lg px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.2em] mb-1 leading-none border" style="background: var(--accent-soft); color: var(--accent); border-color: var(--accent-soft);">
+                    {% if ex.category.name %}{{ ex.category.name }}{% else %}{% translate "General" %}{% endif %}
                   </span>
-                  <p class="text-xs text-gray-400 font-bold italic truncate max-w-[200px]">{{ ex.note|default:"No description" }}</p>
+                  <p class="text-xs text-[var(--text-muted)] font-bold italic truncate max-w-[200px]">{% if ex.note %}{{ ex.note }}{% else %}{% translate "No description" %}{% endif %}</p>
                 </div>
             </td>
             <td class="whitespace-nowrap px-10 py-8 text-right">
-                <span class="text-lg font-black text-gray-900 tabular-nums tracking-tighter">৳{{ ex.amount|floatformat:0 }}</span>
+                <span class="text-lg font-black text-[var(--text-primary)] tabular-nums tracking-tighter">৳{{ ex.amount|floatformat:0 }}</span>
             </td>
             <td class="px-10 py-8 text-right whitespace-nowrap space-x-2">
-                <a href="{% url 'expense_edit' ex.pk %}" class="p-2 text-gray-500 hover:text-indigo-600 transition-colors inline-block" title="Edit">
+                <a href="{% url 'expense_edit' ex.pk %}" class="p-2 inline-block transition-colors" style="color: var(--text-muted);" title="{% translate 'Edit' %}">
                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                 </a>
-                <a href="{% url 'expense_delete' ex.pk %}" class="p-2 text-gray-500 hover:text-red-500 transition-colors inline-block" title="Delete" onclick="return confirm('Purge this expenditure record from ledger?')">
+                <a href="{% url 'expense_delete' ex.pk %}" class="p-2 inline-block transition-colors" style="color: var(--text-muted);" title="{% translate 'Delete' %}" onclick="return confirm('{% translate "Purge this expenditure record from ledger?" %}')">
                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                 </a>
             </td>
@@ -125,52 +126,52 @@
 
   {% if page_obj.paginator.num_pages > 1 %}
   <div class="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
-    <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">
-      Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+    <p class="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+      {% blocktranslate with current=page_obj.number total=page_obj.paginator.num_pages %}Page {{ current }} of {{ total }}{% endblocktranslate %}
     </p>
 
     <div class="flex flex-col items-center gap-3 sm:flex-row">
-    <nav class="inline-flex items-center gap-1 rounded-xl border border-gray-200 bg-white p-1 shadow-sm">
+    <nav class="inline-flex items-center gap-1 rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] p-1 shadow-sm">
       {% if page_obj.has_previous %}
-        <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page=1" class="rounded-lg px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100">
-          First
+        <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page=1" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">
+          {% translate "First" %}
         </a>
       {% else %}
-        <span class="rounded-lg px-3 py-2 text-sm font-semibold text-gray-300">First</span>
+        <span class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-muted)]">{% translate "First" %}</span>
       {% endif %}
 
       {% if page_obj.has_previous %}
-        <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ page_obj.previous_page_number }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100">
-          Prev
+        <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ page_obj.previous_page_number }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">
+          {% translate "Prev" %}
         </a>
       {% else %}
-        <span class="rounded-lg px-3 py-2 text-sm font-semibold text-gray-300">Prev</span>
+        <span class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-muted)]">{% translate "Prev" %}</span>
       {% endif %}
 
       {% for num in pagination_window %}
         {% if num is None %}
-          <span class="px-2 py-2 text-sm font-bold text-gray-400">…</span>
+          <span class="px-2 py-2 text-sm font-bold text-[var(--text-muted)]">…</span>
         {% elif num == page_obj.number %}
-          <span class="rounded-lg bg-orange-600 px-3 py-2 text-sm font-bold text-white">{{ num }}</span>
+          <span class="rounded-lg px-3 py-2 text-sm font-bold" style="background: var(--accent); color: var(--accent-on);">{{ num }}</span>
         {% else %}
-          <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ num }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100">{{ num }}</a>
+          <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ num }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{{ num }}</a>
         {% endif %}
       {% endfor %}
 
       {% if page_obj.has_next %}
-        <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ page_obj.next_page_number }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100">
-          Next
+        <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ page_obj.next_page_number }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">
+          {% translate "Next" %}
         </a>
       {% else %}
-        <span class="rounded-lg px-3 py-2 text-sm font-semibold text-gray-300">Next</span>
+        <span class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-muted)]">{% translate "Next" %}</span>
       {% endif %}
 
       {% if page_obj.has_next %}
-        <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ page_obj.paginator.num_pages }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100">
-          Last
+        <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ page_obj.paginator.num_pages }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">
+          {% translate "Last" %}
         </a>
       {% else %}
-        <span class="rounded-lg px-3 py-2 text-sm font-semibold text-gray-300">Last</span>
+        <span class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-muted)]">{% translate "Last" %}</span>
       {% endif %}
     </nav>
 
@@ -189,25 +190,25 @@
         {% if date_to %}
           <input type="hidden" name="date_to" value="{{ date_to }}">
         {% endif %}
-        <input type="number" name="page" x-model="pageInput" inputmode="numeric" value="{{ page_obj.number }}" class="w-20 rounded-lg border border-gray-300 px-2 py-2 text-center text-sm font-semibold text-gray-700 focus:border-orange-500 focus:ring-orange-500">
-        <button type="submit" class="rounded-lg bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-200">
-          Go
+        <input type="number" name="page" x-model="pageInput" inputmode="numeric" value="{{ page_obj.number }}" class="w-20 rounded-lg border border-[var(--border)] bg-[var(--surface-raised)] px-2 py-2 text-center text-sm font-semibold text-[var(--text-primary)] focus:border-[var(--accent)] focus:ring-[var(--accent)]">
+        <button type="submit" class="rounded-lg bg-[var(--surface-sunken)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] hover:brightness-95">
+          {% translate "Go" %}
         </button>
       </div>
-      <p class="text-xs font-medium text-gray-400">Range: 1-{{ page_obj.paginator.num_pages }}</p>
-      <p x-show="showError" x-cloak class="text-xs font-semibold text-red-600">Please enter a page between 1 and {{ page_obj.paginator.num_pages }}.</p>
+      <p class="text-xs font-medium text-[var(--text-muted)]">{% blocktranslate with total=page_obj.paginator.num_pages %}Range: 1-{{ total }}{% endblocktranslate %}</p>
+      <p x-show="showError" x-cloak class="text-xs font-semibold" style="color: var(--status-critical);">{% blocktranslate with total=page_obj.paginator.num_pages %}Please enter a page between 1 and {{ total }}.{% endblocktranslate %}</p>
     </form>
     </div>
   </div>
   {% endif %}
   {% else %}
-  <div class="flex flex-col items-center justify-center rounded-[4rem] border-2 border-dashed border-gray-100 p-32 text-center bg-white shadow-sm ring-1 ring-gray-50">
-      <div class="h-24 w-24 bg-orange-50 rounded-full flex items-center justify-center mb-10 shadow-inner">
-        <svg class="h-12 w-12 text-orange-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+  <div class="flex flex-col items-center justify-center rounded-[4rem] border-2 border-dashed border-[var(--border)] p-32 text-center bg-[var(--surface-raised)] shadow-sm ring-1 ring-[var(--border-soft)]">
+      <div class="h-24 w-24 rounded-full flex items-center justify-center mb-10 shadow-inner" style="background: var(--accent-soft);">
+        <svg class="h-12 w-12" style="color: var(--accent);" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
       </div>
-      <h3 class="text-2xl font-black text-gray-900 uppercase tracking-tighter">Expenditure Ledger Blank</h3>
-      <p class="mt-4 text-sm text-gray-400 font-bold uppercase tracking-[0.25em] max-w-xs mx-auto">Start recording your spending to gain visibility into your financial leakage.</p>
-      <a href="{% url 'expense_create' %}" class="mt-12 inline-flex items-center rounded-[1.5rem] bg-orange-600 px-10 py-5 text-xs font-black uppercase tracking-[0.3em] text-white shadow-2xl shadow-orange-100 hover:bg-orange-700 hover:-translate-y-1 transition-all">+ Register Outflow</a>
+      <h3 class="text-2xl font-black text-[var(--text-primary)] uppercase tracking-tighter">{% translate "Expenditure Ledger Blank" %}</h3>
+      <p class="mt-4 text-sm text-[var(--text-muted)] font-bold uppercase tracking-[0.25em] max-w-xs mx-auto">{% translate "Start recording your spending to gain visibility into your financial leakage." %}</p>
+      <a href="{% url 'expense_create' %}" class="mt-12 inline-flex items-center rounded-[1.5rem] bg-[var(--accent)] px-10 py-5 text-xs font-black uppercase tracking-[0.3em] text-[var(--accent-on)] shadow-2xl hover:bg-[var(--accent-strong)] hover:-translate-y-1 transition-all">+ {% translate "Register Outflow" %}</a>
   </div>
   {% endif %}
 </div>
@@ -221,7 +222,7 @@
     if (categoryFilter) {
       new TomSelect(categoryFilter, {
         plugins: ['remove_button'],
-        placeholder: 'Select categories...',
+        placeholder: '{% translate "Select categories..." %}',
         closeAfterSelect: false,
         hideSelected: true
       });

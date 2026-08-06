@@ -1,279 +1,280 @@
+{% load i18n %}
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-gray-50">
+<html lang="{{ LANGUAGE_CODE }}" class="h-full" data-theme="{{ user_theme_mode }}" data-accent="{{ user_accent }}"{% if LANGUAGE_CODE == "bn" %} data-lang="bn"{% endif %}>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Tracker{% endblock %}</title>
+    <title>{% block title %}{% translate "Tracker" %}{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Hind+Siliguri:wght@400;500;600;700&family=Tiro+Bangla&display=swap" rel="stylesheet">
     <style>
         [x-cloak] { display: none !important; }
-        body { font-family: 'Inter', sans-serif; }
-    </style>
-    <!-- Flatpickr for better date selection -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <style>
-        /* Modern Flatpickr refinement */
+
+        /* ============================================================
+           Design tokens — ledger ink & paper. See the design proposal
+           for the full palette rationale. Light is the unconditional
+           default; dark overrides the same token names under the OS
+           media query and under an explicit [data-theme="dark"] (the
+           user's saved preference always wins over the OS setting).
+           Accent (teal / indigo / slate) is an independent axis layered
+           on top, also with light+dark variants.
+           ============================================================ */
+        :root {
+            color-scheme: light;
+            --surface: #faf9f4;
+            --surface-raised: #ffffff;
+            --surface-sunken: #f0eee4;
+            --surface-ink: #16241f;
+            --surface-ink-raised: #1c2f28;
+            --border: #e2ded0;
+            --border-soft: #ece9dc;
+            --text-primary: #1b1e1a;
+            --text-secondary: #5b6259;
+            --text-muted: #8a9086;
+            --text-on-ink: #eef1ea;
+            --text-on-ink-muted: #a9b6ac;
+            --status-good: #2e7d4f;
+            --status-good-bg: #e7f2ea;
+            --status-warn: #a8720c;
+            --status-warn-bg: #f6eddb;
+            --status-critical: #b03a2e;
+            --status-critical-bg: #f7e5e1;
+            --status-info: #2f5f8a;
+            --status-info-bg: #e8eff5;
+            --gold: #a9791f;
+            --shadow-sm: 0 1px 2px rgba(27, 30, 26, 0.04);
+            --shadow: 0 1px 2px rgba(27, 30, 26, 0.04), 0 8px 24px -12px rgba(27, 30, 26, 0.14);
+
+            --accent: #0f5c50;
+            --accent-strong: #0b473e;
+            --accent-soft: #e2efe9;
+            --accent-on: #ffffff;
+
+            --font-display: "Source Serif 4", Georgia, "Noto Serif", serif;
+            --font-bengali-display: "Tiro Bangla", "Noto Serif Bengali", Georgia, serif;
+            --font-body: "Inter", -apple-system, "Segoe UI", system-ui, sans-serif;
+            --font-bengali-body: "Hind Siliguri", "Noto Sans Bengali", "Vrinda", -apple-system, sans-serif;
+            --font-heading: var(--font-display);
+            --font-ui: var(--font-body);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root:where(:not([data-theme="light"])) {
+                color-scheme: dark;
+                --surface: #12211d;
+                --surface-raised: #172a24;
+                --surface-sunken: #0d1815;
+                --surface-ink: #0c1613;
+                --surface-ink-raised: #142520;
+                --border: #24382f;
+                --border-soft: #1c2e27;
+                --text-primary: #ecefe8;
+                --text-secondary: #a9b3a5;
+                --text-muted: #728077;
+                --text-on-ink: #eef1ea;
+                --text-on-ink-muted: #9db3a5;
+                --status-good: #57c281;
+                --status-good-bg: rgba(87, 194, 129, 0.14);
+                --status-warn: #dba53a;
+                --status-warn-bg: rgba(219, 165, 58, 0.14);
+                --status-critical: #e08677;
+                --status-critical-bg: rgba(224, 134, 119, 0.14);
+                --status-info: #7ab0e0;
+                --status-info-bg: rgba(122, 176, 224, 0.14);
+                --gold: #d6b04f;
+                --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+                --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 28px -14px rgba(0, 0, 0, 0.6);
+                --accent: #3fbfa8;
+                --accent-strong: #63d0bb;
+                --accent-soft: rgba(63, 191, 168, 0.16);
+                --accent-on: #05201b;
+            }
+        }
+        :root[data-theme="dark"] {
+            color-scheme: dark;
+            --surface: #12211d;
+            --surface-raised: #172a24;
+            --surface-sunken: #0d1815;
+            --surface-ink: #0c1613;
+            --surface-ink-raised: #142520;
+            --border: #24382f;
+            --border-soft: #1c2e27;
+            --text-primary: #ecefe8;
+            --text-secondary: #a9b3a5;
+            --text-muted: #728077;
+            --text-on-ink: #eef1ea;
+            --text-on-ink-muted: #9db3a5;
+            --status-good: #57c281;
+            --status-good-bg: rgba(87, 194, 129, 0.14);
+            --status-warn: #dba53a;
+            --status-warn-bg: rgba(219, 165, 58, 0.14);
+            --status-critical: #e08677;
+            --status-critical-bg: rgba(224, 134, 119, 0.14);
+            --status-info: #7ab0e0;
+            --status-info-bg: rgba(122, 176, 224, 0.14);
+            --gold: #d6b04f;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+            --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 28px -14px rgba(0, 0, 0, 0.6);
+            --accent: #3fbfa8;
+            --accent-strong: #63d0bb;
+            --accent-soft: rgba(63, 191, 168, 0.16);
+            --accent-on: #05201b;
+        }
+        :root[data-theme="light"] {
+            color-scheme: light;
+            --surface: #faf9f4;
+            --surface-raised: #ffffff;
+            --surface-sunken: #f0eee4;
+            --surface-ink: #16241f;
+            --surface-ink-raised: #1c2f28;
+            --border: #e2ded0;
+            --border-soft: #ece9dc;
+            --text-primary: #1b1e1a;
+            --text-secondary: #5b6259;
+            --text-muted: #8a9086;
+            --status-good: #2e7d4f;
+            --status-good-bg: #e7f2ea;
+            --status-warn: #a8720c;
+            --status-warn-bg: #f6eddb;
+            --status-critical: #b03a2e;
+            --status-critical-bg: #f7e5e1;
+            --status-info: #2f5f8a;
+            --status-info-bg: #e8eff5;
+            --shadow-sm: 0 1px 2px rgba(27, 30, 26, 0.04);
+            --shadow: 0 1px 2px rgba(27, 30, 26, 0.04), 0 8px 24px -12px rgba(27, 30, 26, 0.14);
+        }
+
+        /* ---- accent themes ---- */
+        :root[data-accent="indigo"] {
+            --accent: #3c4494; --accent-strong: #2e3576; --accent-soft: #e7e8f6; --accent-on: #ffffff;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root[data-accent="indigo"]:not([data-theme="light"]) {
+                --accent: #949bef; --accent-strong: #aab0f4; --accent-soft: rgba(148, 155, 239, 0.16); --accent-on: #14183a;
+            }
+        }
+        :root[data-theme="dark"][data-accent="indigo"] {
+            --accent: #949bef; --accent-strong: #aab0f4; --accent-soft: rgba(148, 155, 239, 0.16); --accent-on: #14183a;
+        }
+        :root[data-accent="slate"] {
+            --accent: #464e53; --accent-strong: #333a3e; --accent-soft: #e9eaea; --accent-on: #ffffff;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root[data-accent="slate"]:not([data-theme="light"]) {
+                --accent: #c1c9cd; --accent-strong: #d6dcdf; --accent-soft: rgba(193, 201, 205, 0.16); --accent-on: #1c2124;
+            }
+        }
+        :root[data-theme="dark"][data-accent="slate"] {
+            --accent: #c1c9cd; --accent-strong: #d6dcdf; --accent-soft: rgba(193, 201, 205, 0.16); --accent-on: #1c2124;
+        }
+
+        :root[data-lang="bn"] { --font-heading: var(--font-bengali-display); --font-ui: var(--font-bengali-body); }
+
+        body { font-family: var(--font-ui); background: var(--surface); color: var(--text-primary); }
+        .font-heading { font-family: var(--font-heading); }
+        h1, h2, h3 { font-family: var(--font-heading); }
+
+        @media (prefers-reduced-motion: reduce) {
+            * { transition: none !important; animation: none !important; }
+        }
+
+        /* Flatpickr refinement */
         .flatpickr-calendar {
             box-shadow: 0 10px 40px rgba(0,0,0,0.1) !important;
-            border: 1px solid #f1f5f9 !important;
+            border: 1px solid var(--border-soft) !important;
             border-radius: 1.5rem !important;
             overflow: hidden !important;
         }
         .flatpickr-day.selected {
-            background: #4f46e5 !important;
-            border-color: #4f46e5 !important;
+            background: var(--accent) !important;
+            border-color: var(--accent) !important;
+        }
+
+        .pref-swatch {
+            width: 20px; height: 20px; border-radius: 9999px; border: 2px solid transparent; cursor: pointer; padding: 0;
+        }
+        .pref-swatch[data-swatch="teal"] { background: #0f5c50; }
+        .pref-swatch[data-swatch="indigo"] { background: #3c4494; }
+        .pref-swatch[data-swatch="slate"] { background: #464e53; }
+        .pref-swatch.is-active { border-color: var(--text-primary); }
+        .nav-item-active { position: relative; }
+        .nav-item-active::before {
+            content: ""; position: absolute; left: -16px; top: 6px; bottom: 6px; width: 3px;
+            background: var(--gold); border-radius: 0 3px 3px 0;
         }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body class="h-full" x-data="{ sidebarOpen: false }">
-    <!-- Off-canvas menu for mobile, show/hide based on off-canvas menu state. -->
+    <!-- Off-canvas menu for mobile -->
     <div x-cloak x-show="sidebarOpen" class="relative z-50 lg:hidden" role="dialog" aria-modal="true">
-        <div x-show="sidebarOpen" 
-             x-transition:enter="transition-opacity ease-linear duration-300" 
-             x-transition:enter-start="opacity-0" 
-             x-transition:enter-end="opacity-100" 
-             x-transition:leave="transition-opacity ease-linear duration-300" 
-             x-transition:leave-start="opacity-100" 
-             x-transition:leave-end="opacity-0" 
-             class="fixed inset-0 bg-gray-900/80"></div>
+        <div x-show="sidebarOpen"
+             x-transition:enter="transition-opacity ease-linear duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition-opacity ease-linear duration-300"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 bg-black/50"></div>
 
         <div class="fixed inset-0 flex">
-            <div x-show="sidebarOpen" 
-                 x-transition:enter="transition ease-in-out duration-300 transform" 
-                 x-transition:enter-start="-translate-x-full" 
-                 x-transition:enter-end="translate-x-0" 
-                 x-transition:leave="transition ease-in-out duration-300 transform" 
-                 x-transition:leave-start="translate-x-0" 
-                 x-transition:leave-end="-translate-x-full" 
+            <div x-show="sidebarOpen"
+                 x-transition:enter="transition ease-in-out duration-300 transform"
+                 x-transition:enter-start="-translate-x-full"
+                 x-transition:enter-end="translate-x-0"
+                 x-transition:leave="transition ease-in-out duration-300 transform"
+                 x-transition:leave-start="translate-x-0"
+                 x-transition:leave-end="-translate-x-full"
                  class="relative mr-16 flex w-full max-w-xs flex-1" @click.away="sidebarOpen = false">
-                
+
                 <div class="absolute left-full top-0 flex w-16 justify-center pt-5">
                     <button type="button" class="-m-2.5 p-2.5" @click="sidebarOpen = false">
-                        <span class="sr-only">Close sidebar</span>
+                        <span class="sr-only">{% translate "Close sidebar" %}</span>
                         <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                 </div>
 
-                <!-- Sidebar component, swap this element with another sidebar if you like -->
-                <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-indigo-600 px-6 pb-4">
-                    <div class="flex h-16 shrink-0 items-center">
-                        <span class="text-white font-extrabold text-xl tracking-tight">TRACKER</span>
-                    </div>
-                    <nav class="flex flex-1 flex-col">
-                        <ul role="list" class="flex flex-1 flex-col gap-y-7">
-                            <li>
-                                <ul role="list" class="-mx-2 space-y-1">
-                                    {% if user.is_authenticated %}
-                                    <li>
-                                        <a href="{% url 'dashboard' %}" class="{% if request.path == '/' or '/creditors/' in request.path %}bg-indigo-700 text-white{% else %}text-indigo-200 hover:text-white hover:bg-indigo-700{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
-                                            <svg class="h-6 w-6 shrink-0 text-indigo-200" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
-                                            </svg>
-                                            Creditors (I Owe)
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href="{% url 'debtor_dashboard' %}" class="{% if '/debtors/' in request.path %}bg-indigo-700 text-white{% else %}text-indigo-200 hover:text-white hover:bg-indigo-700{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
-                                            <svg class="h-6 w-6 shrink-0 text-indigo-200" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A4.833 4.833 0 0118 14.158V11a6 6 0 00-6-6H12a6 6 0 00-6 6v3.158a4.833 4.833 0 01-4.5-3.826V21h18z" />
-                                            </svg>
-                                            Debtors (Owe Me)
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href="{% url 'income_dashboard' %}" class="{% if '/income/' in request.path %}bg-indigo-700 text-white{% else %}text-indigo-200 hover:text-white hover:bg-indigo-700{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
-                                            <svg class="h-6 w-6 shrink-0 text-indigo-200" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182 1.107-.879 2.903-.879 4.01 0l.893.659m-3-2.182V6" />
-                                            </svg>
-                                            Income (Inflow)
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href="{% url 'expense_dashboard' %}" class="{% if '/expense/' in request.path %}bg-indigo-700 text-white{% else %}text-indigo-200 hover:text-white hover:bg-indigo-700{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
-                                            <svg class="h-6 w-6 shrink-0 text-indigo-200" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                            Expense (Outflow)
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href="{% url 'contributor_dashboard' %}" class="{% if '/contributors/' in request.path %}bg-indigo-700 text-white{% else %}text-indigo-200 hover:text-white hover:bg-indigo-700{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
-                                            <svg class="h-6 w-6 shrink-0 text-indigo-200" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                                            </svg>
-                                            Contributors
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href="{% url 'household_dashboard' %}" class="{% if '/household/' in request.path %}bg-indigo-700 text-white{% else %}text-indigo-200 hover:text-white hover:bg-indigo-700{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
-                                            <svg class="h-6 w-6 shrink-0 text-indigo-200" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z" />
-                                            </svg>
-                                            Household (Bazar)
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href="{% url 'shop_dashboard' %}" class="{% if '/shops/' in request.path %}bg-indigo-700 text-white{% else %}text-indigo-200 hover:text-white hover:bg-indigo-700{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
-                                            <svg class="h-6 w-6 shrink-0 text-indigo-200" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3.75a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72" />
-                                            </svg>
-                                            Shop Dues (বাকি)
-                                        </a>
-                                    </li>
-                                    {% endif %}
-                                </ul>
-                            </li>
-                            <li class="mt-auto">
-                                {% if user.is_authenticated and user.is_superuser %}
-                                <a href="/admin/" target="_blank" class="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-indigo-100 hover:bg-indigo-700 hover:text-white mb-1">
-                                    <svg class="h-6 w-6 shrink-0 text-indigo-200 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
-                                    </svg>
-                                    Django Admin
-                                </a>
-                                {% endif %}
-                                {% if user.is_authenticated %}
-                                <a href="{% url 'logout' %}" class="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-indigo-100 hover:bg-indigo-700 hover:text-white">
-                                    <svg class="h-6 w-6 shrink-0 text-indigo-200 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
-                                    </svg>
-                                    Log Out
-                                </a>
-                                {% endif %}
-                            </li>
-                        </ul>
-                    </nav>
-                </div>
+                {% include "partials/sidebar_nav.html" %}
             </div>
         </div>
     </div>
 
     <!-- Static sidebar for desktop -->
     <div class="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
-        <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-indigo-600 px-6 pb-4">
-            <div class="flex h-16 shrink-0 items-center">
-                <span class="text-white font-extrabold text-2xl tracking-tighter">FINTRACK</span>
-            </div>
-            <nav class="flex flex-1 flex-col">
-                <ul role="list" class="flex flex-1 flex-col gap-y-7">
-                    <li>
-                        <ul role="list" class="-mx-2 space-y-1">
-                            {% if user.is_authenticated %}
-                            <li>
-                                <a href="{% url 'dashboard' %}" class="{% if request.path == '/' or '/creditors/' in request.path %}bg-indigo-700 text-white{% else %}text-indigo-200 hover:text-white hover:bg-indigo-700{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
-                                    <svg class="h-6 w-6 shrink-0 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
-                                    </svg>
-                                    Creditors (They Get)
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{% url 'debtor_dashboard' %}" class="{% if '/debtors/' in request.path %}bg-indigo-700 text-white{% else %}text-indigo-200 hover:text-white hover:bg-indigo-700{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
-                                    <svg class="h-6 w-6 shrink-0 text-white font-bold" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A4.833 4.833 0 0118 14.158V11a6 6 0 00-6-6H12a6 6 0 00-6 6v3.158a4.833 4.833 0 01-4.5-3.826V21h18z" />
-                                    </svg>
-                                    Debtors (I Get)
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{% url 'income_dashboard' %}" class="{% if '/income/' in request.path %}bg-indigo-700 text-white{% else %}text-indigo-200 hover:text-white hover:bg-indigo-700{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
-                                    <svg class="h-6 w-6 shrink-0 text-white font-bold" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182 1.107-.879 2.903-.879 4.01 0l.893.659m-3-2.182V6" />
-                                    </svg>
-                                    Income (Earnings)
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{% url 'expense_dashboard' %}" class="{% if '/expense/' in request.path %}bg-indigo-700 text-white{% else %}text-indigo-200 hover:text-white hover:bg-indigo-700{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
-                                    <svg class="h-6 w-6 shrink-0 text-white font-bold" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    Expense (Spending)
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{% url 'contributor_dashboard' %}" class="{% if '/contributors/' in request.path %}bg-indigo-700 text-white{% else %}text-indigo-200 hover:text-white hover:bg-indigo-700{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
-                                    <svg class="h-6 w-6 shrink-0 text-white font-bold" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                                    </svg>
-                                    Contributors
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{% url 'household_dashboard' %}" class="{% if '/household/' in request.path %}bg-indigo-700 text-white{% else %}text-indigo-200 hover:text-white hover:bg-indigo-700{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
-                                    <svg class="h-6 w-6 shrink-0 text-white font-bold" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                         <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z" />
-                                    </svg>
-                                    Household (Bazar)
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{% url 'shop_dashboard' %}" class="{% if '/shops/' in request.path %}bg-indigo-700 text-white{% else %}text-indigo-200 hover:text-white hover:bg-indigo-700{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
-                                    <svg class="h-6 w-6 shrink-0 text-white font-bold" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                         <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3.75a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72" />
-                                    </svg>
-                                    Shop Dues (বাকি)
-                                </a>
-                            </li>
-                            {% endif %}
-                        </ul>
-                    </li>
-                    <li class="mt-auto">
-                        {% if user.is_authenticated and user.is_superuser %}
-                        <a href="/admin/" target="_blank" class="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-indigo-100 hover:bg-indigo-700 hover:text-white mb-1">
-                            <svg class="h-6 w-6 shrink-0 text-indigo-200 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
-                            </svg>
-                            Django Admin
-                        </a>
-                        {% endif %}
-                        {% if user.is_authenticated %}
-                        <a href="{% url 'logout' %}" class="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-indigo-100 hover:bg-indigo-700 hover:text-white">
-                            <svg class="h-6 w-6 shrink-0 text-indigo-200 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
-                            </svg>
-                            Log Out
-                        </a>
-                        {% endif %}
-                    </li>
-                </ul>
-            </nav>
-        </div>
+        {% include "partials/sidebar_nav.html" %}
     </div>
 
     <div class="lg:pl-72">
-        <div class="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
-            <button type="button" class="-m-2.5 p-2.5 text-gray-700 lg:hidden" @click="sidebarOpen = true">
-                <span class="sr-only">Open sidebar</span>
+        <div class="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8"
+             style="background: var(--surface-raised); border-color: var(--border);">
+            <button type="button" class="-m-2.5 p-2.5 lg:hidden" style="color: var(--text-secondary);" @click="sidebarOpen = true">
+                <span class="sr-only">{% translate "Open sidebar" %}</span>
                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
                 </svg>
             </button>
 
-            <!-- Separator -->
-            <div class="h-6 w-px bg-gray-900/10 lg:hidden" aria-hidden="true"></div>
+            <div class="h-6 w-px lg:hidden" style="background: var(--border);" aria-hidden="true"></div>
 
-            <div class="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
-                <div class="flex-1"></div>
-                <div class="flex items-center gap-x-4 lg:gap-x-6">
-                    {% if user.is_authenticated %}
-                    <div class="flex items-center gap-x-2">
-                        <span class="hidden lg:flex lg:items-center">
-                            <span class="ml-4 text-sm font-semibold leading-6 text-gray-900" aria-hidden="true">{{ user.username }}</span>
-                        </span>
-                        <div class="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs">
-                            {{ user.username|first|upper }}
-                        </div>
+            <div class="flex flex-1 items-center justify-end gap-x-3 self-stretch overflow-x-auto sm:gap-x-4">
+                {% if user.is_authenticated %}
+                {% include "partials/preferences_switcher.html" %}
+
+                <div class="h-6 w-px hidden sm:block" style="background: var(--border);" aria-hidden="true"></div>
+                <div class="flex items-center gap-x-2 shrink-0">
+                    <span class="hidden lg:flex lg:items-center">
+                        <span class="ml-1 text-sm font-semibold leading-6" style="color: var(--text-primary);" aria-hidden="true">{{ user.username }}</span>
+                    </span>
+                    <div class="h-8 w-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0"
+                         style="background: var(--accent-soft); color: var(--accent);">
+                        {{ user.username|first|upper }}
                     </div>
-                    {% endif %}
                 </div>
+                {% endif %}
             </div>
         </div>
 
@@ -282,13 +283,14 @@
                 {% if messages %}
                     <div class="mb-8 space-y-4">
                     {% for message in messages %}
-                        <div class="rounded-md p-4 {% if message.tags == 'success' %}bg-green-50 text-green-800 border border-green-200{% elif message.tags == 'error' %}bg-red-50 text-red-800 border border-red-200{% else %}bg-blue-50 text-blue-800 border border-blue-200{% endif %}">
+                        <div class="rounded-md p-4 border"
+                             style="{% if message.tags == 'success' %}background: var(--status-good-bg); color: var(--status-good); border-color: var(--status-good-bg);{% elif message.tags == 'error' %}background: var(--status-critical-bg); color: var(--status-critical); border-color: var(--status-critical-bg);{% else %}background: var(--status-info-bg); color: var(--status-info); border-color: var(--status-info-bg);{% endif %}">
                             <div class="flex">
                                 <div class="flex-shrink-0">
                                     {% if message.tags == 'success' %}
-                                    <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                                    <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
                                     {% else %}
-                                    <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" /></svg>
+                                    <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" /></svg>
                                     {% endif %}
                                 </div>
                                 <div class="ml-3">
@@ -306,7 +308,6 @@
     </div>
 
     {% block extra_js %}{% endblock %}
-    <!-- Global Date Picker Initialization -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {

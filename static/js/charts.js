@@ -14,8 +14,11 @@
   }
 
   // Validated categorical palette (fixed order, not cycled) — see the
-  // project's dataviz palette reference. Slices beyond CHART_PALETTE.length
-  // are folded into a neutral "Other" bucket rather than reusing a hue.
+  // project's dataviz palette reference. This stays constant regardless of
+  // the user's accent theme (categorical color identifies entities, it
+  // isn't a branding surface) but a couple of neutrals are read live from
+  // the page's design tokens so the chart still reads correctly in dark
+  // mode.
   var CHART_PALETTE = [
     '#2a78d6', // blue
     '#eb6834', // orange
@@ -24,9 +27,12 @@
     '#e87ba4', // magenta
     '#008300', // green
   ];
-  var OTHER_COLOR = '#9ca3af'; // neutral gray — de-emphasized, not a "series"
-  var LABEL_TEXT_COLOR = '#374151'; // legend/tooltip text stays neutral ink
   var MAX_SLICES = CHART_PALETTE.length; // beyond this, extra entries fold into "Other"
+
+  function token(name, fallback) {
+    var value = getComputedStyle(document.documentElement).getPropertyValue(name);
+    return value ? value.trim() : fallback;
+  }
 
   function formatAmount(value, currency) {
     var rounded = Math.round(value);
@@ -67,10 +73,10 @@
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.font = "700 11px 'Inter', sans-serif";
-        ctx.fillStyle = '#9ca3af';
+        ctx.fillStyle = token('--text-muted', '#9ca3af');
         ctx.fillText(centerLabel.toUpperCase(), cx, cy - 12);
         ctx.font = "800 20px 'Inter', sans-serif";
-        ctx.fillStyle = '#111827';
+        ctx.fillStyle = token('--text-primary', '#111827');
         ctx.fillText(formatAmount(total, currency), cx, cy + 12);
         ctx.restore();
       },
@@ -101,9 +107,13 @@
 
     if (labels.length === 0 || total <= 0) return null;
 
+    var otherColor = token('--text-muted', '#9ca3af');
+    var surfaceColor = token('--surface-raised', '#ffffff');
+    var textColor = token('--text-secondary', '#374151');
+
     var slices = buildSlices(labels, data);
     var colors = slices.map(function (slice, i) {
-      return slice.isOther ? OTHER_COLOR : CHART_PALETTE[i % CHART_PALETTE.length];
+      return slice.isOther ? otherColor : CHART_PALETTE[i % CHART_PALETTE.length];
     });
 
     var chart = new Chart(canvas.getContext('2d'), {
@@ -115,7 +125,7 @@
             data: slices.map(function (s) { return s.value; }),
             backgroundColor: colors,
             borderWidth: 2,
-            borderColor: '#fff',
+            borderColor: surfaceColor,
             hoverOffset: 8,
           },
         ],
@@ -132,7 +142,7 @@
             labels: {
               usePointStyle: true,
               padding: 14,
-              color: LABEL_TEXT_COLOR,
+              color: textColor,
               font: { size: 11, weight: '600' },
               generateLabels: function (chart) {
                 var ds = chart.data.datasets[0];
@@ -143,7 +153,7 @@
                     text: label + ' – ' + formatAmount(value, currency) + ' (' + pct + '%)',
                     fillStyle: ds.backgroundColor[i],
                     strokeStyle: ds.backgroundColor[i],
-                    fontColor: LABEL_TEXT_COLOR,
+                    fontColor: textColor,
                     index: i,
                   };
                 });

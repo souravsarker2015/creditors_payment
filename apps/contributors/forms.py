@@ -1,4 +1,5 @@
 from django import forms
+from django.utils.translation import gettext_lazy as _
 from .models import Contributor, Contribution
 
 class ContributorForm(forms.ModelForm):
@@ -6,12 +7,12 @@ class ContributorForm(forms.ModelForm):
         model = Contributor
         fields = ["name", "category", "phone", "note"]
         widgets = {
-            "name": forms.TextInput(attrs={"class": "form-input", "placeholder": "Full Name"}),
+            "name": forms.TextInput(attrs={"class": "form-input", "placeholder": _("Full Name")}),
             "category": forms.Select(attrs={"class": "form-input"}),
-            "phone": forms.TextInput(attrs={"class": "form-input", "placeholder": "Phone Number (optional)"}),
+            "phone": forms.TextInput(attrs={"class": "form-input", "placeholder": _("Phone Number (optional)")}),
             "note": forms.Textarea(attrs={
-                "class": "form-input", 
-                "placeholder": "Add any additional details...",
+                "class": "form-input",
+                "placeholder": _("Add any additional details..."),
                 "rows": 3
             }),
         }
@@ -22,10 +23,10 @@ class ContributionForm(forms.ModelForm):
         fields = ["amount", "date", "note"]
         widgets = {
             "amount": forms.NumberInput(attrs={"class": "form-input", "placeholder": "0.00"}),
-            "date": forms.DateInput(attrs={"class": "form-input datepicker", "placeholder": "Select Date"}),
+            "date": forms.DateInput(attrs={"class": "form-input datepicker", "placeholder": _("Select Date")}),
             "note": forms.Textarea(attrs={
-                "class": "form-input", 
-                "placeholder": "Additional details...",
+                "class": "form-input",
+                "placeholder": _("Additional details..."),
                 "rows": 2
             }),
         }

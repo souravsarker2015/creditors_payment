@@ -1,4 +1,5 @@
 from django import forms
+from django.utils.translation import gettext_lazy as _
 from .models import HouseholdCategory, HouseholdMember, Purchase, Settlement
 
 
@@ -9,7 +10,7 @@ class HouseholdCategoryForm(forms.ModelForm):
         widgets = {
             "name": forms.TextInput(attrs={
                 "class": "form-input",
-                "placeholder": "e.g. Vegetables, Fish, Groceries",
+                "placeholder": _("e.g. Vegetables, Fish, Groceries"),
             }),
         }
 
@@ -21,15 +22,15 @@ class HouseholdMemberForm(forms.ModelForm):
         widgets = {
             "name": forms.TextInput(attrs={
                 "class": "form-input",
-                "placeholder": "Full Name",
+                "placeholder": _("Full Name"),
             }),
             "phone": forms.TextInput(attrs={
                 "class": "form-input",
-                "placeholder": "Phone Number (optional)",
+                "placeholder": _("Phone Number (optional)"),
             }),
             "note": forms.Textarea(attrs={
                 "class": "form-input",
-                "placeholder": "Add any additional details...",
+                "placeholder": _("Add any additional details..."),
                 "rows": 3,
             }),
         }
@@ -41,12 +42,12 @@ class PurchaseForm(forms.ModelForm):
         fields = ["amount", "date", "category", "buyer", "description"]
         widgets = {
             "amount": forms.NumberInput(attrs={"class": "form-input", "placeholder": "0.00"}),
-            "date": forms.DateInput(attrs={"class": "form-input datepicker", "placeholder": "Select Date"}),
+            "date": forms.DateInput(attrs={"class": "form-input datepicker", "placeholder": _("Select Date")}),
             "category": forms.Select(attrs={"class": "form-input"}),
             "buyer": forms.Select(attrs={"class": "form-input"}),
             "description": forms.Textarea(attrs={
                 "class": "form-input",
-                "placeholder": "What was bought (optional)...",
+                "placeholder": _("What was bought (optional)..."),
                 "rows": 2,
             }),
         }
@@ -55,9 +56,9 @@ class PurchaseForm(forms.ModelForm):
         user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
         self.fields["category"].required = False
-        self.fields["category"].empty_label = "No category"
+        self.fields["category"].empty_label = _("No category")
         self.fields["buyer"].required = False
-        self.fields["buyer"].empty_label = "No one in particular"
+        self.fields["buyer"].empty_label = _("No one in particular")
         if user:
             self.fields["category"].queryset = HouseholdCategory.objects.filter(user=user)
             self.fields["buyer"].queryset = HouseholdMember.objects.filter(user=user)
@@ -69,6 +70,6 @@ class SettlementForm(forms.ModelForm):
         fields = ["amount", "date", "note"]
         widgets = {
             "amount": forms.NumberInput(attrs={"class": "form-input", "placeholder": "0.00"}),
-            "date": forms.DateInput(attrs={"class": "form-input datepicker", "placeholder": "Select Date"}),
-            "note": forms.TextInput(attrs={"class": "form-input", "placeholder": "Quick note..."}),
+            "date": forms.DateInput(attrs={"class": "form-input datepicker", "placeholder": _("Select Date")}),
+            "note": forms.TextInput(attrs={"class": "form-input", "placeholder": _("Quick note...")}),
         }

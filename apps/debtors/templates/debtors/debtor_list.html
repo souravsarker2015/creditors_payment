@@ -1,6 +1,7 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}My Debtors | FinTrack{% endblock %}
+{% block title %}{% translate "My Debtors" %} | FinTrack{% endblock %}
 
 {% block extra_css %}
 <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
@@ -10,151 +11,152 @@
 <div class="px-4 sm:px-6 lg:px-8">
   <div class="sm:flex sm:items-start sm:justify-between gap-4">
     <div class="sm:flex-auto max-w-2xl text-left">
-      <h1 class="text-2xl font-bold leading-6 text-gray-900 uppercase tracking-tight">Active Debtors</h1>
-      <p class="mt-2 text-sm text-gray-700">Track all accounts receivable and monitor collection progress. Search by name, filter by payment status, or include/exclude categories.</p>
+      <h1 class="text-2xl font-bold leading-6 text-[var(--text-primary)] uppercase tracking-tight">{% translate "Active Debtors" %}</h1>
+      <p class="mt-2 text-sm text-[var(--text-secondary)]">{% translate "Track all accounts receivable and monitor collection progress. Search by name, filter by payment status, or include/exclude categories." %}</p>
     </div>
     <div class="mt-1 sm:mt-0 sm:flex-none">
-      <a href="{% url 'debtor_create' %}" class="block rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-all">+ New Debtor</a>
+      <a href="{% url 'debtor_create' %}" class="block rounded-md bg-[var(--accent)] px-3 py-2 text-center text-sm font-semibold text-[var(--accent-on)] shadow-sm hover:bg-[var(--accent-strong)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] transition-all">+ {% translate "New Debtor" %}</a>
     </div>
   </div>
 
-  <form method="get" x-data="{ filterType: '{{ filter_type|default:"include" }}', paymentStatus: '{{ payment_status|default:"ALL" }}' }" class="mt-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+  <form method="get" x-data="{ filterType: '{{ filter_type|default:"include" }}', paymentStatus: '{{ payment_status|default:"ALL" }}' }" class="mt-6 rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] p-4 shadow-sm">
     <input type="hidden" name="filter_type" x-model="filterType">
     <input type="hidden" name="payment_status" x-model="paymentStatus">
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <div class="w-full">
-        <label for="q" class="block text-xs font-semibold uppercase tracking-wider text-gray-500">Search by name</label>
+        <label for="q" class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Search by name" %}</label>
         <div class="relative mt-1">
-          <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
-          <input type="text" id="q" name="q" value="{{ search_query }}" placeholder="e.g. Karim" autocomplete="off" class="block w-full rounded-md border-gray-300 pl-9 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+          <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+          <input type="text" id="q" name="q" value="{{ search_query }}" placeholder="{% translate 'e.g. Karim' %}" autocomplete="off" class="block w-full rounded-md border-[var(--border)] bg-[var(--surface-raised)] pl-9 text-sm text-[var(--text-primary)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]">
         </div>
       </div>
       <div class="w-full">
-        <p class="block text-xs font-semibold uppercase tracking-wider text-gray-500">Payment status</p>
-        <div class="mt-1 grid w-full grid-cols-3 rounded-lg bg-gray-100 p-1 ring-1 ring-inset ring-gray-200">
+        <p class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Payment status" %}</p>
+        <div class="mt-1 grid w-full grid-cols-3 rounded-lg bg-[var(--surface-sunken)] p-1 ring-1 ring-inset ring-[var(--border-soft)]">
           <button type="button" @click="paymentStatus = 'ALL'" class="inline-flex w-full items-center justify-center rounded-md px-2 py-2 text-sm font-semibold transition-all"
-            :class="paymentStatus === 'ALL' ? 'bg-white text-gray-800 shadow-sm ring-1 ring-gray-300' : 'text-gray-600 hover:text-gray-800'">
-            All
+            :class="paymentStatus === 'ALL' ? 'bg-[var(--surface-raised)] text-[var(--text-primary)] shadow-sm ring-1 ring-[var(--border)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'">
+            {% translate "All" %}
           </button>
           <button type="button" @click="paymentStatus = 'PAID'" class="inline-flex w-full items-center justify-center gap-1.5 rounded-md px-2 py-2 text-sm font-semibold transition-all"
-            :class="paymentStatus === 'PAID' ? 'bg-white text-green-700 shadow-sm ring-1 ring-green-200' : 'text-gray-600 hover:text-gray-800'">
-            <span class="inline-block h-2 w-2 rounded-full bg-green-500"></span> Paid
+            :class="paymentStatus === 'PAID' ? 'bg-[var(--surface-raised)] text-[var(--status-good)] shadow-sm ring-1 ring-[var(--status-good-bg)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'">
+            <span class="inline-block h-2 w-2 rounded-full" style="background: var(--status-good);"></span> {% translate "Paid" %}
           </button>
           <button type="button" @click="paymentStatus = 'UNPAID'" class="inline-flex w-full items-center justify-center gap-1.5 rounded-md px-2 py-2 text-sm font-semibold transition-all"
-            :class="paymentStatus === 'UNPAID' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-blue-200' : 'text-gray-600 hover:text-gray-800'">
-            <span class="inline-block h-2 w-2 rounded-full bg-blue-500"></span> Unpaid
+            :class="paymentStatus === 'UNPAID' ? 'bg-[var(--surface-raised)] text-[var(--status-info)] shadow-sm ring-1 ring-[var(--status-info-bg)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'">
+            <span class="inline-block h-2 w-2 rounded-full" style="background: var(--status-info);"></span> {% translate "Unpaid" %}
           </button>
         </div>
       </div>
       <div class="w-full">
-        <p class="block text-xs font-semibold uppercase tracking-wider text-gray-500">Category filter mode</p>
-        <div class="mt-1 grid w-full grid-cols-2 rounded-lg bg-gray-100 p-1 ring-1 ring-inset ring-gray-200">
+        <p class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Category filter mode" %}</p>
+        <div class="mt-1 grid w-full grid-cols-2 rounded-lg bg-[var(--surface-sunken)] p-1 ring-1 ring-inset ring-[var(--border-soft)]">
           <button type="button" @click="filterType = 'include'" class="inline-flex w-full items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-semibold transition-all"
-            :class="filterType === 'include' ? 'bg-white text-indigo-700 shadow-sm ring-1 ring-indigo-200' : 'text-gray-600 hover:text-gray-800'">
-            <span class="inline-block h-2 w-2 rounded-full bg-indigo-500"></span> Include
+            :class="filterType === 'include' ? 'bg-[var(--surface-raised)] text-[var(--accent)] shadow-sm ring-1 ring-[var(--accent-soft)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'">
+            <span class="inline-block h-2 w-2 rounded-full" style="background: var(--accent);"></span> {% translate "Include" %}
           </button>
           <button type="button" @click="filterType = 'exclude'" class="inline-flex w-full items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-semibold transition-all"
-            :class="filterType === 'exclude' ? 'bg-white text-rose-700 shadow-sm ring-1 ring-rose-200' : 'text-gray-600 hover:text-gray-800'">
-            <span class="inline-block h-2 w-2 rounded-full bg-rose-500"></span> Exclude
+            :class="filterType === 'exclude' ? 'bg-[var(--surface-raised)] text-[var(--status-critical)] shadow-sm ring-1 ring-[var(--status-critical-bg)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'">
+            <span class="inline-block h-2 w-2 rounded-full" style="background: var(--status-critical);"></span> {% translate "Exclude" %}
           </button>
         </div>
-        <p class="mt-1 text-xs text-gray-500">Applies only to the categories picker.</p>
+        <p class="mt-1 text-xs text-[var(--text-muted)]">{% translate "Applies only to the categories picker." %}</p>
       </div>
       <div class="w-full">
-        <label for="category" class="block text-xs font-semibold uppercase tracking-wider text-gray-500">Categories</label>
-        <select id="category" name="category" multiple class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+        <label for="category" class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Categories" %}</label>
+        <select id="category" name="category" multiple class="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--surface-raised)] text-sm text-[var(--text-primary)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]">
           {% for value, label in category_choices %}
             <option value="{{ value }}"{% if value in selected_categories %} selected{% endif %}>{{ label }}</option>
           {% endfor %}
         </select>
-        <p class="mt-1 text-xs text-gray-500">Leave empty for all categories.</p>
+        <p class="mt-1 text-xs text-[var(--text-muted)]">{% translate "Leave empty for all categories." %}</p>
       </div>
     </div>
     <div class="mt-4 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
-      <button type="submit" class="w-full rounded-md bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-200 sm:w-auto">
-        Apply Filter
+      <button type="submit" class="w-full rounded-md bg-[var(--surface-sunken)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] hover:brightness-95 sm:w-auto">
+        {% translate "Apply Filter" %}
       </button>
-      <a href="{% url 'debtor_list' %}" class="w-full rounded-md border border-gray-200 px-3 py-2 text-center text-sm font-semibold text-gray-600 hover:bg-gray-50 sm:w-auto">
-        Reset
+      <a href="{% url 'debtor_list' %}" class="w-full rounded-md border border-[var(--border)] px-3 py-2 text-center text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)] sm:w-auto">
+        {% translate "Reset" %}
       </a>
     </div>
   </form>
 
   <dl class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-    <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6 border-l-4 border-indigo-500">
-      <dt class="truncate text-sm font-medium text-gray-500">Total Lent</dt>
-      <dd class="mt-1 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">৳{{ total_lent|floatformat:2 }}</dd>
+    <div class="overflow-hidden rounded-lg bg-[var(--surface-raised)] px-4 py-5 shadow sm:p-6 border-l-4" style="border-left-color: var(--accent);">
+      <dt class="truncate text-sm font-medium text-[var(--text-secondary)]">{% translate "Total Lent" %}</dt>
+      <dd class="mt-1 text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-4xl">৳{{ total_lent|floatformat:2 }}</dd>
     </div>
-    <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6 border-l-4 border-green-500">
-      <dt class="truncate text-sm font-medium text-gray-500">Total Received</dt>
-      <dd class="mt-1 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">৳{{ total_received|floatformat:2 }}</dd>
+    <div class="overflow-hidden rounded-lg bg-[var(--surface-raised)] px-4 py-5 shadow sm:p-6 border-l-4" style="border-left-color: var(--status-good);">
+      <dt class="truncate text-sm font-medium text-[var(--text-secondary)]">{% translate "Total Received" %}</dt>
+      <dd class="mt-1 text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-4xl">৳{{ total_received|floatformat:2 }}</dd>
     </div>
-    <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6 border-l-4 border-yellow-500">
-      <dt class="truncate text-sm font-medium text-gray-500">Remaining to Collect</dt>
-      <dd class="mt-1 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">৳{{ remaining|floatformat:2 }}</dd>
+    <div class="overflow-hidden rounded-lg bg-[var(--surface-raised)] px-4 py-5 shadow sm:p-6 border-l-4" style="border-left-color: var(--status-warn);">
+      <dt class="truncate text-sm font-medium text-[var(--text-secondary)]">{% translate "Remaining to Collect" %}</dt>
+      <dd class="mt-1 text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-4xl">৳{{ remaining|floatformat:2 }}</dd>
     </div>
   </dl>
 
   {% if debtors %}
   <div class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
     {% for dr in debtors %}
-    <div class="relative flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
+    <div class="relative flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-6 shadow-sm hover:shadow-md transition-shadow">
       <div class="flex flex-wrap items-start justify-between gap-2">
-        <h3 class="min-w-0 flex-1 truncate text-lg font-bold text-gray-900">{{ dr.name }}</h3>
-        <span class="shrink-0 inline-flex items-center rounded-full px-3 py-1 text-xs font-bold {% if dr.is_paid %}bg-green-100 text-green-800{% else %}bg-blue-100 text-blue-800{% endif %} shadow-sm">
-          {% if dr.is_paid %}Fully Collected{% else %}Remaining ৳{{ dr.remaining|floatformat:0 }}{% endif %}
+        <h3 class="min-w-0 flex-1 truncate text-lg font-bold text-[var(--text-primary)]">{{ dr.name }}</h3>
+        <span class="shrink-0 inline-flex items-center rounded-full px-3 py-1 text-xs font-bold shadow-sm"
+              style="{% if dr.is_paid %}background: var(--status-good-bg); color: var(--status-good);{% else %}background: var(--status-info-bg); color: var(--status-info);{% endif %}">
+          {% if dr.is_paid %}{% translate "Fully Collected" %}{% else %}{% blocktranslate with amount=dr.remaining|floatformat:0 %}Remaining ৳{{ amount }}{% endblocktranslate %}{% endif %}
         </span>
       </div>
       <div class="mt-2 flex items-center gap-2">
-        <span class="inline-flex items-center rounded-full bg-indigo-50 px-2 py-1 text-xs font-semibold text-indigo-700">{{ dr.get_category_display }}</span>
-        <p class="text-sm text-gray-500 font-medium">{{ dr.phone|default:"No contact info" }}</p>
+        <span class="inline-flex items-center rounded-full bg-[var(--accent-soft)] px-2 py-1 text-xs font-semibold text-[var(--accent)]">{{ dr.get_category_display }}</span>
+        <p class="text-sm text-[var(--text-secondary)] font-medium">{% if dr.phone %}{{ dr.phone }}{% else %}{% translate "No contact info" %}{% endif %}</p>
       </div>
 
       <div class="mt-6 flex-1">
-        <div class="flex justify-between text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">
-            <span>Collection Progress</span>
+        <div class="flex justify-between text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest mb-2">
+            <span>{% translate "Collection Progress" %}</span>
             <span>{{ dr.received_percent }}%</span>
         </div>
-        <div class="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
-            <div class="h-full bg-blue-600 rounded-full transition-all duration-700 ease-out shadow-[0_0_8px_rgba(37,99,235,0.4)]" style="width: {{ dr.received_percent }}%"></div>
+        <div class="h-2.5 w-full rounded-full overflow-hidden" style="background: var(--surface-sunken);">
+            <div class="h-full rounded-full transition-all duration-700 ease-out" style="width: {{ dr.received_percent }}%; background: var(--accent);"></div>
         </div>
 
         <dl class="mt-6 grid grid-cols-2 gap-4">
-            <div class="p-3 bg-gray-50 rounded-xl">
-                <dt class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total Lent</dt>
-                <dd class="text-sm font-extrabold text-gray-900">৳{{ dr.total_lent_amt|floatformat:0 }}</dd>
+            <div class="p-3 rounded-xl" style="background: var(--surface-sunken);">
+                <dt class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">{% translate "Total Lent" %}</dt>
+                <dd class="text-sm font-extrabold text-[var(--text-primary)]">৳{{ dr.total_lent_amt|floatformat:0 }}</dd>
             </div>
-            <div class="p-3 bg-green-50 rounded-xl">
-                <dt class="text-[10px] font-bold text-green-400 uppercase tracking-widest">Received</dt>
-                <dd class="text-sm font-extrabold text-green-700">৳{{ dr.total_received_amt|floatformat:0 }}</dd>
+            <div class="p-3 rounded-xl" style="background: var(--status-good-bg);">
+                <dt class="text-[10px] font-bold uppercase tracking-widest" style="color: var(--status-good);">{% translate "Received" %}</dt>
+                <dd class="text-sm font-extrabold" style="color: var(--status-good);">৳{{ dr.total_received_amt|floatformat:0 }}</dd>
             </div>
         </dl>
       </div>
 
-      <div class="mt-8 pt-4 border-t border-gray-100 flex gap-3">
-        <a href="{% url 'debtor_detail' dr.pk %}" class="flex-1 rounded-xl bg-indigo-600 px-3 py-2.5 text-center text-sm font-bold text-white hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">History</a>
-        <a href="{% url 'debtor_edit' dr.pk %}" class="rounded-xl bg-white border border-gray-200 px-3 py-2.5 text-center text-sm font-bold text-gray-600 hover:bg-gray-50 hover:border-gray-300 shadow-sm transition-all">Edit</a>
+      <div class="mt-8 pt-4 border-t border-[var(--border-soft)] flex gap-3">
+        <a href="{% url 'debtor_detail' dr.pk %}" class="flex-1 rounded-xl bg-[var(--accent)] px-3 py-2.5 text-center text-sm font-bold text-[var(--accent-on)] hover:bg-[var(--accent-strong)] transition-all shadow-lg">{% translate "History" %}</a>
+        <a href="{% url 'debtor_edit' dr.pk %}" class="rounded-xl bg-[var(--surface-raised)] border border-[var(--border)] px-3 py-2.5 text-center text-sm font-bold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)] shadow-sm transition-all">{% translate "Edit" %}</a>
       </div>
     </div>
     {% endfor %}
   </div>
   {% elif search_query or selected_categories or payment_status != "ALL" %}
-  <div class="mt-8 flex flex-col items-center justify-center rounded-3xl border-2 border-dashed border-gray-200 p-16 text-center bg-white shadow-sm">
-      <div class="h-20 w-20 bg-indigo-50 rounded-full flex items-center justify-center mb-6">
-        <svg class="h-10 w-10 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+  <div class="mt-8 flex flex-col items-center justify-center rounded-3xl border-2 border-dashed border-[var(--border)] p-16 text-center bg-[var(--surface-raised)] shadow-sm">
+      <div class="h-20 w-20 rounded-full flex items-center justify-center mb-6" style="background: var(--accent-soft);">
+        <svg class="h-10 w-10" style="color: var(--accent);" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
       </div>
-      <h3 class="text-xl font-extrabold text-gray-900">No debtors match your filters</h3>
-      <p class="mt-2 text-sm text-gray-500 max-w-xs mx-auto font-medium">Try a different name, or reset the filters to see everyone.</p>
-      <a href="{% url 'debtor_list' %}" class="mt-8 inline-flex items-center rounded-xl bg-gray-100 px-6 py-3 text-sm font-bold text-gray-700 shadow-sm hover:bg-gray-200 transition-all">Reset Filters</a>
+      <h3 class="text-xl font-extrabold text-[var(--text-primary)]">{% translate "No debtors match your filters" %}</h3>
+      <p class="mt-2 text-sm text-[var(--text-secondary)] max-w-xs mx-auto font-medium">{% translate "Try a different name, or reset the filters to see everyone." %}</p>
+      <a href="{% url 'debtor_list' %}" class="mt-8 inline-flex items-center rounded-xl bg-[var(--surface-sunken)] px-6 py-3 text-sm font-bold text-[var(--text-primary)] shadow-sm hover:brightness-95 transition-all">{% translate "Reset Filters" %}</a>
   </div>
   {% else %}
-  <div class="mt-8 flex flex-col items-center justify-center rounded-3xl border-2 border-dashed border-gray-200 p-16 text-center bg-white shadow-sm">
-      <div class="h-20 w-20 bg-indigo-50 rounded-full flex items-center justify-center mb-6">
-        <svg class="h-10 w-10 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+  <div class="mt-8 flex flex-col items-center justify-center rounded-3xl border-2 border-dashed border-[var(--border)] p-16 text-center bg-[var(--surface-raised)] shadow-sm">
+      <div class="h-20 w-20 rounded-full flex items-center justify-center mb-6" style="background: var(--accent-soft);">
+        <svg class="h-10 w-10" style="color: var(--accent);" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
       </div>
-      <h3 class="text-xl font-extrabold text-gray-900">Your accounts are currently clear</h3>
-      <p class="mt-2 text-sm text-gray-500 max-w-xs mx-auto font-medium">Add people who owe you money to start tracking collections and managing your receivables efficiently.</p>
-      <a href="{% url 'debtor_create' %}" class="mt-8 inline-flex items-center rounded-xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-xl shadow-indigo-200 hover:bg-indigo-700 hover:-translate-y-0.5 transition-all active:translate-y-0">+ Set Up First Debtor Account</a>
+      <h3 class="text-xl font-extrabold text-[var(--text-primary)]">{% translate "Your accounts are currently clear" %}</h3>
+      <p class="mt-2 text-sm text-[var(--text-secondary)] max-w-xs mx-auto font-medium">{% translate "Add people who owe you money to start tracking collections and managing your receivables efficiently." %}</p>
+      <a href="{% url 'debtor_create' %}" class="mt-8 inline-flex items-center rounded-xl bg-[var(--accent)] px-6 py-3 text-sm font-bold text-[var(--accent-on)] shadow-xl hover:bg-[var(--accent-strong)] hover:-translate-y-0.5 transition-all active:translate-y-0">+ {% translate "Set Up First Debtor Account" %}</a>
   </div>
   {% endif %}
 </div>
@@ -168,7 +170,7 @@
     if (categorySelect) {
       new TomSelect(categorySelect, {
         plugins: ['remove_button'],
-        placeholder: 'Select categories...',
+        placeholder: '{% translate "Select categories..." %}',
         closeAfterSelect: false,
         hideSelected: true
       });

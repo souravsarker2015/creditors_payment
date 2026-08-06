@@ -1,21 +1,22 @@
 from django.db import models
 from django.db.models import Sum, Q
 from django.contrib.auth.models import User
+from django.utils.translation import gettext_lazy as _
 
 
 class DebtorCategory(models.TextChoices):
-    FAMILY = "FAMILY", "Family"
-    FRIEND = "FRIEND", "Friend"
-    BUSINESS_PARTNER = "BUSINESS_PARTNER", "Business Partner"
-    CLIENT = "CLIENT", "Client"
-    EMPLOYEE = "EMPLOYEE", "Employee"
-    TENANT = "TENANT", "Tenant"
-    SHOPKEEPER = "SHOPKEEPER", "Shopkeeper"
-    SUPPLIER = "SUPPLIER", "Supplier"
-    STUDENT = "STUDENT", "Student"
-    MEDICAL = "MEDICAL", "Medical"
-    EDUCATION = "EDUCATION", "Education"
-    OTHER = "OTHER", "Other"
+    FAMILY = "FAMILY", _("Family")
+    FRIEND = "FRIEND", _("Friend")
+    BUSINESS_PARTNER = "BUSINESS_PARTNER", _("Business Partner")
+    CLIENT = "CLIENT", _("Client")
+    EMPLOYEE = "EMPLOYEE", _("Employee")
+    TENANT = "TENANT", _("Tenant")
+    SHOPKEEPER = "SHOPKEEPER", _("Shopkeeper")
+    SUPPLIER = "SUPPLIER", _("Supplier")
+    STUDENT = "STUDENT", _("Student")
+    MEDICAL = "MEDICAL", _("Medical")
+    EDUCATION = "EDUCATION", _("Education")
+    OTHER = "OTHER", _("Other")
 
 
 class Debtor(models.Model):
@@ -79,8 +80,8 @@ class Transaction(models.Model):
     LEND = "LEND"
     RECEIVE = "RECEIVE"
     TYPE_CHOICES = [
-        (LEND, "Lent"),
-        (RECEIVE, "Received"),
+        (LEND, _("Lent")),
+        (RECEIVE, _("Received")),
     ]
 
     debtor = models.ForeignKey(

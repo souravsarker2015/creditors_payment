@@ -1,4 +1,5 @@
 from django import forms
+from django.utils.translation import gettext_lazy as _
 from .models import ExpenseCategory, Expense
 
 
@@ -15,8 +16,8 @@ class ExpenseForm(forms.ModelForm):
         widgets = {
             "category": forms.Select(attrs={"class": "form-input"}),
             "amount": forms.NumberInput(attrs={"class": "form-input", "placeholder": "0.00"}),
-            "date": forms.DateInput(attrs={"class": "form-input datepicker", "placeholder": "Select Date"}),
-            "note": forms.Textarea(attrs={"class": "form-input", "rows": 2, "placeholder": "Expense details..."}),
+            "date": forms.DateInput(attrs={"class": "form-input datepicker", "placeholder": _("Select Date")}),
+            "note": forms.Textarea(attrs={"class": "form-input", "rows": 2, "placeholder": _("Expense details...")}),
         }
 
     def __init__(self, *args, **kwargs):

@@ -9,6 +9,7 @@ from django.contrib import messages
 from django.db.models import Sum, Count, DecimalField, Value
 from django.db.models.functions import Coalesce, TruncMonth
 from django.core.paginator import Paginator
+from django.utils.translation import gettext as _
 
 from .models import HouseholdCategory, HouseholdMember, Purchase, Settlement
 from .forms import HouseholdCategoryForm, HouseholdMemberForm, PurchaseForm, SettlementForm
@@ -64,7 +65,7 @@ def dashboard_view(request):
         .annotate(total=Coalesce(Sum("amount"), Value(0, output_field=DecimalField())))
         .order_by("-total")
     )
-    category_labels = [row["category__name"] or "Uncategorized" for row in category_totals if row["total"] > 0]
+    category_labels = [row["category__name"] or _("Uncategorized") for row in category_totals if row["total"] > 0]
     category_data = [float(row["total"]) for row in category_totals if row["total"] > 0]
 
     recent_purchases = purchases.select_related("buyer", "category").order_by("-date", "-created_at")[:10]
@@ -137,7 +138,7 @@ def month_detail_view(request, year, month):
             purchase = form.save(commit=False)
             purchase.user = request.user
             purchase.save()
-            messages.success(request, f"Purchase of ৳{purchase.amount} recorded.")
+            messages.success(request, _("Purchase of ৳%(amount)s recorded.") % {"amount": purchase.amount})
             return redirect("household_month_detail", year=purchase.date.year, month=purchase.date.month)
     else:
         if year == today.year and month == today.month:
@@ -182,7 +183,7 @@ def purchase_edit_view(request, pk):
         form = PurchaseForm(request.POST, instance=purchase, user=request.user)
         if form.is_valid():
             form.save()
-            messages.success(request, "Purchase updated.")
+            messages.success(request, _("Purchase updated."))
             return redirect("household_month_detail", year=purchase.date.year, month=purchase.date.month)
     else:
         form = PurchaseForm(instance=purchase, user=request.user)
@@ -191,7 +192,7 @@ def purchase_edit_view(request, pk):
         "household/household_form.html",
         {
             "form": form,
-            "title": "Edit Purchase",
+            "title": _("Edit Purchase"),
             "back_url": f"/household/purchases/{purchase.date.year}/{purchase.date.month}/",
         },
     )
@@ -202,7 +203,7 @@ def purchase_delete_view(request, pk):
     purchase = get_object_or_404(Purchase, pk=pk, user=request.user)
     year, month, amount = purchase.date.year, purchase.date.month, purchase.amount
     purchase.delete()
-    messages.success(request, f"Purchase of ৳{amount} deleted.")
+    messages.success(request, _("Purchase of ৳%(amount)s deleted.") % {"amount": amount})
     return redirect("household_month_detail", year=year, month=month)
 
 
@@ -228,14 +229,14 @@ def member_create_view(request):
             member = form.save(commit=False)
             member.user = request.user
             member.save()
-            messages.success(request, f"'{member.name}' added.")
+            messages.success(request, _("'%(name)s' added.") % {"name": member.name})
             return redirect("household_member_list")
     else:
         form = HouseholdMemberForm()
     return render(
         request,
         "household/household_form.html",
-        {"form": form, "title": "Add Household Member", "back_url": "/household/members/"},
+        {"form": form, "title": _("Add Household Member"), "back_url": "/household/members/"},
     )
 
 
@@ -246,14 +247,14 @@ def member_edit_view(request, pk):
         form = HouseholdMemberForm(request.POST, instance=member)
         if form.is_valid():
             form.save()
-            messages.success(request, f"'{member.name}' updated.")
+            messages.success(request, _("'%(name)s' updated.") % {"name": member.name})
             return redirect("household_member_list")
     else:
         form = HouseholdMemberForm(instance=member)
     return render(
         request,
         "household/household_form.html",
-        {"form": form, "title": f"Edit {member.name}", "back_url": f"/household/members/{member.pk}/"},
+        {"form": form, "title": _("Edit %(name)s") % {"name": member.name}, "back_url": f"/household/members/{member.pk}/"},
     )
 
 
@@ -267,7 +268,7 @@ def member_detail_view(request, pk):
             settlement = form.save(commit=False)
             settlement.member = member
             settlement.save()
-            messages.success(request, f"Gave back ৳{settlement.amount} to {member.name}.")
+            messages.success(request, _("Gave back ৳%(amount)s to %(name)s.") % {"amount": settlement.amount, "name": member.name})
             return redirect("household_member_detail", pk=pk)
     else:
         form = SettlementForm(initial={"date": timezone.now().date()})
@@ -306,14 +307,14 @@ def settlement_edit_view(request, pk):
         form = SettlementForm(request.POST, instance=settlement)
         if form.is_valid():
             form.save()
-            messages.success(request, "Settlement updated.")
+            messages.success(request, _("Settlement updated."))
             return redirect("household_member_detail", pk=member.pk)
     else:
         form = SettlementForm(instance=settlement)
     return render(
         request,
         "household/household_form.html",
-        {"form": form, "title": "Edit Settlement", "back_url": f"/household/members/{member.pk}/"},
+        {"form": form, "title": _("Edit Settlement"), "back_url": f"/household/members/{member.pk}/"},
     )
 
 
@@ -323,7 +324,7 @@ def settlement_delete_view(request, pk):
     member = settlement.member
     amount = settlement.amount
     settlement.delete()
-    messages.success(request, f"Settlement of ৳{amount} deleted.")
+    messages.success(request, _("Settlement of ৳%(amount)s deleted.") % {"amount": amount})
     return redirect("household_member_detail", pk=member.pk)
 
 
@@ -343,12 +344,12 @@ def category_create_view(request):
             category = form.save(commit=False)
             category.user = request.user
             category.save()
-            messages.success(request, f"Category '{category.name}' created.")
+            messages.success(request, _("Category '%(name)s' created.") % {"name": category.name})
             return redirect("household_category_list")
     else:
         form = HouseholdCategoryForm()
     return render(
         request,
         "household/household_form.html",
-        {"form": form, "title": "Add Bazar Category", "back_url": "/household/categories/"},
+        {"form": form, "title": _("Add Bazar Category"), "back_url": "/household/categories/"},
     )

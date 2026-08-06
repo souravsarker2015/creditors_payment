@@ -1,18 +1,19 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils.translation import gettext_lazy as _
 
 
 class ShopCategory(models.TextChoices):
-    GROCERY = "GROCERY", "Grocery"
-    PHARMACY = "PHARMACY", "Pharmacy"
-    VEGETABLE = "VEGETABLE", "Vegetable & Fruit"
-    BAKERY = "BAKERY", "Bakery"
-    HARDWARE = "HARDWARE", "Hardware Store"
-    CLOTHING = "CLOTHING", "Clothing"
-    ELECTRONICS = "ELECTRONICS", "Electronics"
-    STATIONERY = "STATIONERY", "Stationery"
-    RESTAURANT = "RESTAURANT", "Restaurant"
-    OTHER = "OTHER", "Other"
+    GROCERY = "GROCERY", _("Grocery")
+    PHARMACY = "PHARMACY", _("Pharmacy")
+    VEGETABLE = "VEGETABLE", _("Vegetable & Fruit")
+    BAKERY = "BAKERY", _("Bakery")
+    HARDWARE = "HARDWARE", _("Hardware Store")
+    CLOTHING = "CLOTHING", _("Clothing")
+    ELECTRONICS = "ELECTRONICS", _("Electronics")
+    STATIONERY = "STATIONERY", _("Stationery")
+    RESTAURANT = "RESTAURANT", _("Restaurant")
+    OTHER = "OTHER", _("Other")
 
 
 class Shop(models.Model):
@@ -76,8 +77,8 @@ class Transaction(models.Model):
     PURCHASE = "PURCHASE"
     PAYMENT = "PAYMENT"
     TYPE_CHOICES = [
-        (PURCHASE, "Purchase (বাকি)"),
-        (PAYMENT, "Payment"),
+        (PURCHASE, _("Purchase (বাকি)")),
+        (PAYMENT, _("Payment")),
     ]
 
     shop = models.ForeignKey(

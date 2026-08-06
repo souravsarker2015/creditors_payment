@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Sum, Q, F, DecimalField, Value
 from django.db.models.functions import Coalesce
+from django.utils.translation import gettext as _
 
 from .models import Debtor, DebtorCategory, Transaction
 from .forms import DebtorForm, TransactionForm
@@ -106,11 +107,11 @@ def debtor_create_view(request):
             debtor = form.save(commit=False)
             debtor.user = request.user
             debtor.save()
-            messages.success(request, f"Debtor '{debtor.name}' added successfully.")
+            messages.success(request, _("Debtor '%(name)s' added successfully.") % {"name": debtor.name})
             return redirect("debtor_list")
     else:
         form = DebtorForm()
-    return render(request, "debtors/debtor_form.html", {"form": form, "title": "Add New Debtor"})
+    return render(request, "debtors/debtor_form.html", {"form": form, "title": _("Add New Debtor")})
 
 
 @login_required
@@ -120,11 +121,11 @@ def debtor_edit_view(request, pk):
         form = DebtorForm(request.POST, instance=debtor)
         if form.is_valid():
             form.save()
-            messages.success(request, f"Debtor '{debtor.name}' updated successfully.")
+            messages.success(request, _("Debtor '%(name)s' updated successfully.") % {"name": debtor.name})
             return redirect("debtor_list")
     else:
         form = DebtorForm(instance=debtor)
-    return render(request, "debtors/debtor_form.html", {"form": form, "title": f"Edit {debtor.name}"})
+    return render(request, "debtors/debtor_form.html", {"form": form, "title": _("Edit %(name)s") % {"name": debtor.name}})
 
 
 @login_required
@@ -138,7 +139,7 @@ def debtor_detail_view(request, pk):
             transaction = form.save(commit=False)
             transaction.debtor = debtor
             transaction.save()
-            messages.success(request, f"Transaction of ৳{transaction.amount} added.")
+            messages.success(request, _("Transaction of ৳%(amount)s added.") % {"amount": transaction.amount})
             return redirect("debtor_detail", pk=pk)
     else:
         form = TransactionForm(initial={"date": django.utils.timezone.now().date()})
@@ -245,11 +246,11 @@ def transaction_edit_view(request, pk):
         form = TransactionForm(request.POST, instance=transaction)
         if form.is_valid():
             form.save()
-            messages.success(request, f"Transaction updated.")
+            messages.success(request, _("Transaction updated."))
             return redirect("debtor_detail", pk=debtor.pk)
     else:
         form = TransactionForm(instance=transaction)
-    return render(request, "debtors/debtor_form.html", {"form": form, "title": "Edit Transaction", "back_url": f"/debtors/{debtor.pk}/"})
+    return render(request, "debtors/debtor_form.html", {"form": form, "title": _("Edit Transaction"), "back_url": f"/debtors/{debtor.pk}/"})
 
 
 @login_required
@@ -258,5 +259,5 @@ def transaction_delete_view(request, pk):
     debtor = transaction.debtor
     amount = transaction.amount
     transaction.delete()
-    messages.success(request, f"Transaction of ৳{amount} deleted.")
+    messages.success(request, _("Transaction of ৳%(amount)s deleted.") % {"amount": amount})
     return redirect("debtor_detail", pk=debtor.pk)

@@ -1,42 +1,43 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Login | FinTrack{% endblock %}
+{% block title %}{% translate "Login" %} | FinTrack{% endblock %}
 
 {% block content %}
 <div class="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
   <div class="sm:mx-auto sm:w-full sm:max-w-sm">
-    <div class="mx-auto h-12 w-12 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-black text-xl shadow-xl shadow-indigo-100 ring-4 ring-indigo-50">
+    <div class="mx-auto h-12 w-12 rounded-xl bg-[var(--accent)] flex items-center justify-center text-[var(--accent-on)] font-black text-xl shadow-xl" style="box-shadow: 0 10px 30px -10px var(--accent-soft); ring: 4px solid var(--accent-soft);">
         F
     </div>
-    <h2 class="mt-8 text-center text-2xl font-black leading-9 tracking-tight text-gray-900 uppercase">Welcome back</h2>
-    <p class="mt-2 text-center text-sm font-bold text-gray-400 uppercase tracking-widest">Sign in to your account</p>
+    <h2 class="mt-8 text-center text-2xl font-black leading-9 tracking-tight text-[var(--text-primary)] uppercase">{% translate "Welcome back" %}</h2>
+    <p class="mt-2 text-center text-sm font-bold text-[var(--text-muted)] uppercase tracking-widest">{% translate "Sign in to your account" %}</p>
   </div>
 
   <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-    <div class="bg-white px-8 py-10 shadow-2xl rounded-[2.5rem] border border-gray-100 ring-1 ring-gray-900/5">
+    <div class="bg-[var(--surface-raised)] px-8 py-10 shadow-2xl rounded-[2.5rem] border border-[var(--border-soft)] ring-1 ring-[var(--border-soft)]">
         <form class="space-y-6" method="POST">
           {% csrf_token %}
-          
+
           {% for field in form %}
           <div class="group">
-            <label for="{{ field.id_for_label }}" class="block text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-2 ml-1 group-focus-within:text-indigo-600 transition-colors">{{ field.label }}</label>
-            <div class="relative bg-gray-50 rounded-2xl transition-all duration-300 ring-2 ring-inset ring-gray-100 focus-within:ring-2 focus-within:ring-indigo-600 focus-within:bg-white shadow-sm hover:ring-gray-200">
+            <label for="{{ field.id_for_label }}" class="block text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.2em] mb-2 ml-1 group-focus-within:text-[var(--accent)] transition-colors">{{ field.label }}</label>
+            <div class="relative rounded-2xl transition-all duration-300 ring-2 ring-inset ring-[var(--border-soft)] focus-within:ring-2 focus-within:ring-[var(--accent)] shadow-sm hover:ring-[var(--border)]" style="background: var(--surface-sunken);">
                 {{ field }}
             </div>
             {% if field.errors %}
-                <p class="mt-2 text-[10px] text-red-500 font-black uppercase tracking-widest flex items-center gap-2 ml-1">{{ field.errors.0 }}</p>
+                <p class="mt-2 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 ml-1" style="color: var(--status-critical);">{{ field.errors.0 }}</p>
             {% endif %}
           </div>
           {% endfor %}
 
           <div class="pt-4">
-            <button type="submit" class="flex w-full justify-center rounded-2xl bg-indigo-600 px-3 py-4 text-sm font-black uppercase tracking-[0.2em] leading-6 text-white shadow-2xl shadow-indigo-200 hover:bg-indigo-500 hover:-translate-y-1 transition-all active:translate-y-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Sign in</button>
+            <button type="submit" class="flex w-full justify-center rounded-2xl bg-[var(--accent)] px-3 py-4 text-sm font-black uppercase tracking-[0.2em] leading-6 text-[var(--accent-on)] shadow-2xl hover:bg-[var(--accent-strong)] hover:-translate-y-1 transition-all active:translate-y-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]">{% translate "Sign in" %}</button>
           </div>
         </form>
 
-        <p class="mt-10 text-center text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
-          Not a member?
-          <a href="{% url 'signup' %}" class="font-black text-indigo-600 hover:text-indigo-500 transition-colors">Create account</a>
+        <p class="mt-10 text-center text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)]">
+          {% translate "Not a member?" %}
+          <a href="{% url 'signup' %}" class="font-black text-[var(--accent)] hover:brightness-90 transition-colors">{% translate "Create account" %}</a>
         </p>
     </div>
   </div>
@@ -51,12 +52,12 @@
         padding: 1.15rem 1.5rem !important;
         font-size: 0.95rem !important;
         font-weight: 700 !important;
-        color: #1a1e2e !important;
+        color: var(--text-primary) !important;
         outline: none !important;
         box-shadow: none !important;
     }
     .space-y-6 input::placeholder {
-        color: #94a3b8 !important;
+        color: var(--text-muted) !important;
         font-weight: 500 !important;
     }
 </style>

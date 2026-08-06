@@ -1,0 +1,91 @@
+{% load i18n %}
+<div class="flex items-center gap-2 shrink-0" id="preferences-switcher">
+    <!-- Accent swatches -->
+    <div class="flex items-center gap-1.5 rounded-lg p-1" style="background: var(--surface-sunken); border: 1px solid var(--border-soft);">
+        <button type="button" class="pref-swatch {% if user_accent == 'teal' %}is-active{% endif %}" data-swatch="teal" data-pref-field="accent" title="{% translate 'Ledger Teal' %}" aria-label="{% translate 'Ledger Teal accent' %}"></button>
+        <button type="button" class="pref-swatch {% if user_accent == 'indigo' %}is-active{% endif %}" data-swatch="indigo" data-pref-field="accent" title="{% translate 'Indigo Classic' %}" aria-label="{% translate 'Indigo Classic accent' %}"></button>
+        <button type="button" class="pref-swatch {% if user_accent == 'slate' %}is-active{% endif %}" data-swatch="slate" data-pref-field="accent" title="{% translate 'Slate Mono' %}" aria-label="{% translate 'Slate Mono accent' %}"></button>
+    </div>
+
+    <!-- Light / Dark -->
+    <div class="flex items-center gap-0.5 rounded-lg p-1" style="background: var(--surface-sunken); border: 1px solid var(--border-soft);">
+        <button type="button"
+                class="pref-mode-btn rounded-md px-2 py-1 text-xs font-semibold"
+                data-mode="light" data-pref-field="theme_mode"
+                style="{% if user_theme_mode == 'light' %}background: var(--surface-raised); color: var(--text-primary); box-shadow: var(--shadow-sm);{% else %}color: var(--text-secondary);{% endif %}">
+            {% translate "Light" %}
+        </button>
+        <button type="button"
+                class="pref-mode-btn rounded-md px-2 py-1 text-xs font-semibold"
+                data-mode="dark" data-pref-field="theme_mode"
+                style="{% if user_theme_mode == 'dark' %}background: var(--surface-raised); color: var(--text-primary); box-shadow: var(--shadow-sm);{% else %}color: var(--text-secondary);{% endif %}">
+            {% translate "Dark" %}
+        </button>
+    </div>
+
+    <!-- Language (full request — translations render server-side) -->
+    <form method="post" action="{% url 'update_preferences' %}" class="flex items-center gap-0.5 rounded-lg p-1" style="background: var(--surface-sunken); border: 1px solid var(--border-soft);">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.path }}">
+        <button type="submit" name="language" value="en" class="rounded-md px-2 py-1 text-xs font-semibold"
+                style="{% if LANGUAGE_CODE == 'en' %}background: var(--surface-raised); color: var(--text-primary); box-shadow: var(--shadow-sm);{% else %}color: var(--text-secondary);{% endif %}">
+            EN
+        </button>
+        <button type="submit" name="language" value="bn" class="rounded-md px-2 py-1 text-xs font-semibold"
+                style="{% if LANGUAGE_CODE == 'bn' %}background: var(--surface-raised); color: var(--text-primary); box-shadow: var(--shadow-sm);{% else %}color: var(--text-secondary);{% endif %}">
+            বাংলা
+        </button>
+    </form>
+</div>
+
+<script>
+(function () {
+    var root = document.documentElement;
+    var container = document.getElementById('preferences-switcher');
+    if (!container || container.dataset.wired === '1') return;
+    container.dataset.wired = '1';
+
+    var csrfToken = document.querySelector('#preferences-switcher input[name=csrfmiddlewaretoken]').value;
+    var prefsUrl = "{% url 'update_preferences' %}";
+
+    function save(field, value) {
+        var body = new URLSearchParams();
+        body.set(field, value);
+        fetch(prefsUrl, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'X-Preferences-Fetch': '1',
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: body.toString(),
+            keepalive: true,
+        }).catch(function () { /* preference is already applied client-side; a failed save just won't persist */ });
+    }
+
+    container.querySelectorAll('.pref-swatch').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var accent = btn.dataset.swatch;
+            root.setAttribute('data-accent', accent);
+            container.querySelectorAll('.pref-swatch').forEach(function (b) {
+                b.classList.toggle('is-active', b === btn);
+            });
+            save('accent', accent);
+        });
+    });
+
+    container.querySelectorAll('.pref-mode-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var mode = btn.dataset.mode;
+            root.setAttribute('data-theme', mode);
+            container.querySelectorAll('.pref-mode-btn').forEach(function (b) {
+                var active = b === btn;
+                b.style.background = active ? 'var(--surface-raised)' : 'transparent';
+                b.style.color = active ? 'var(--text-primary)' : 'var(--text-secondary)';
+                b.style.boxShadow = active ? 'var(--shadow-sm)' : 'none';
+            });
+            save('theme_mode', mode);
+        });
+    });
+})();
+</script>

@@ -1,21 +1,22 @@
 from django.db import models
 from django.db.models import Sum, Q
 from django.contrib.auth.models import User
+from django.utils.translation import gettext_lazy as _
 
 
 class CreditorCategory(models.TextChoices):
-    FAMILY = "FAMILY", "Family"
-    FRIEND = "FRIEND", "Friend"
-    BUSINESS_PARTNER = "BUSINESS_PARTNER", "Business Partner"
-    BANK = "BANK", "Bank"
-    MICROFINANCE = "MICROFINANCE", "Microfinance"
-    MONEYLENDER = "MONEYLENDER", "Moneylender"
-    SUPPLIER = "SUPPLIER", "Supplier"
-    LANDLORD = "LANDLORD", "Landlord"
-    UTILITY = "UTILITY", "Utility"
-    MEDICAL = "MEDICAL", "Medical"
-    EDUCATION = "EDUCATION", "Education"
-    OTHER = "OTHER", "Other"
+    FAMILY = "FAMILY", _("Family")
+    FRIEND = "FRIEND", _("Friend")
+    BUSINESS_PARTNER = "BUSINESS_PARTNER", _("Business Partner")
+    BANK = "BANK", _("Bank")
+    MICROFINANCE = "MICROFINANCE", _("Microfinance")
+    MONEYLENDER = "MONEYLENDER", _("Moneylender")
+    SUPPLIER = "SUPPLIER", _("Supplier")
+    LANDLORD = "LANDLORD", _("Landlord")
+    UTILITY = "UTILITY", _("Utility")
+    MEDICAL = "MEDICAL", _("Medical")
+    EDUCATION = "EDUCATION", _("Education")
+    OTHER = "OTHER", _("Other")
 
 
 class Creditor(models.Model):
@@ -79,8 +80,8 @@ class Transaction(models.Model):
     BORROW = "BORROW"
     REPAY = "REPAY"
     TYPE_CHOICES = [
-        (BORROW, "Borrowed"),
-        (REPAY, "Repaid"),
+        (BORROW, _("Borrowed")),
+        (REPAY, _("Repaid")),
     ]
 
     creditor = models.ForeignKey(

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Shop Dues Dashboard | FinTrack{% endblock %}
+{% block title %}{% translate "Shop Dues Dashboard" %} | FinTrack{% endblock %}
 
 {% block extra_css %}
 <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
@@ -11,96 +11,97 @@
 <div class="px-4 sm:px-6 lg:px-8">
   <div class="sm:flex sm:items-center">
     <div class="sm:flex-auto">
-      <h1 class="text-2xl font-bold leading-6 text-gray-900">Shop Dues Overview</h1>
-      <p class="mt-2 text-sm text-gray-700">A detailed summary of what you owe (বাকি) to local shops and how much you've paid off.</p>
+      <h1 class="text-2xl font-bold leading-6 text-[var(--text-primary)]">{% translate "Shop Dues Overview" %}</h1>
+      <p class="mt-2 text-sm text-[var(--text-secondary)]">{% translate "A detailed summary of what you owe (বাকি) to local shops and how much you've paid off." %}</p>
     </div>
     <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-      <a href="{% url 'shop_create' %}" class="block rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">+ Add Shop</a>
+      <a href="{% url 'shop_create' %}" class="block rounded-md bg-[var(--accent)] px-3 py-2 text-center text-sm font-semibold text-[var(--accent-on)] shadow-sm hover:bg-[var(--accent-strong)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]">+ {% translate "Add Shop" %}</a>
     </div>
   </div>
 
-  <form method="get" x-data="{ filterType: '{{ filter_type|default:"include" }}' }" class="mt-6 grid grid-cols-1 gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:grid-cols-2 sm:items-end lg:grid-cols-[auto,1fr,auto]">
+  <form method="get" x-data="{ filterType: '{{ filter_type|default:"include" }}' }" class="mt-6 grid grid-cols-1 gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] p-4 shadow-sm sm:grid-cols-2 sm:items-end lg:grid-cols-[auto,1fr,auto]">
     <input type="hidden" name="filter_type" x-model="filterType">
     <div class="w-full">
-      <p class="block text-xs font-semibold uppercase tracking-wider text-gray-500">Filter mode</p>
-      <div class="mt-1 grid w-full grid-cols-2 rounded-lg bg-gray-100 p-1 ring-1 ring-inset ring-gray-200">
+      <p class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Filter mode" %}</p>
+      <div class="mt-1 grid w-full grid-cols-2 rounded-lg bg-[var(--surface-sunken)] p-1 ring-1 ring-inset ring-[var(--border-soft)]">
         <button type="button" @click="filterType = 'include'" class="inline-flex w-full items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-semibold transition-all"
-          :class="filterType === 'include' ? 'bg-white text-indigo-700 shadow-sm ring-1 ring-indigo-200' : 'text-gray-600 hover:text-gray-800'">
-          <span class="inline-block h-2 w-2 rounded-full bg-indigo-500"></span> Include
+          :class="filterType === 'include' ? 'bg-[var(--surface-raised)] text-[var(--accent)] shadow-sm ring-1 ring-[var(--accent-soft)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'">
+          <span class="inline-block h-2 w-2 rounded-full" style="background: var(--accent);"></span> {% translate "Include" %}
         </button>
         <button type="button" @click="filterType = 'exclude'" class="inline-flex w-full items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-semibold transition-all"
-          :class="filterType === 'exclude' ? 'bg-white text-rose-700 shadow-sm ring-1 ring-rose-200' : 'text-gray-600 hover:text-gray-800'">
-          <span class="inline-block h-2 w-2 rounded-full bg-rose-500"></span> Exclude
+          :class="filterType === 'exclude' ? 'bg-[var(--surface-raised)] text-[var(--status-critical)] shadow-sm ring-1 ring-[var(--status-critical-bg)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'">
+          <span class="inline-block h-2 w-2 rounded-full" style="background: var(--status-critical);"></span> {% translate "Exclude" %}
         </button>
       </div>
     </div>
     <div class="w-full">
-      <label for="category" class="block text-xs font-semibold uppercase tracking-wider text-gray-500">Filter by category</label>
-      <select id="category" name="category" multiple size="5" class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+      <label for="category" class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Filter by category" %}</label>
+      <select id="category" name="category" multiple size="5" class="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--surface-raised)] text-sm text-[var(--text-primary)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]">
         {% for value, label in category_choices %}
           <option value="{{ value }}"{% if value in selected_categories %} selected{% endif %}>{{ label }}</option>
         {% endfor %}
       </select>
-      <p class="mt-1 text-xs text-gray-500">Leave unselected for all categories. Use Ctrl/Cmd to select multiple.</p>
+      <p class="mt-1 text-xs text-[var(--text-muted)]">{% translate "Leave unselected for all categories. Use Ctrl/Cmd to select multiple." %}</p>
     </div>
-    <button type="submit" class="w-full rounded-md bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-200 sm:w-auto">
-      Apply
+    <button type="submit" class="w-full rounded-md bg-[var(--surface-sunken)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] hover:brightness-95 sm:w-auto">
+      {% translate "Apply" %}
     </button>
   </form>
 
   <!-- Stats Grid -->
   <dl class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-3">
-    <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6 border-l-4 border-red-500">
-      <dt class="truncate text-sm font-medium text-gray-500">Total Due (বাকি)</dt>
-      <dd class="mt-1 text-3xl font-bold tracking-tight text-gray-900">৳{{ total_due|floatformat:2 }}</dd>
+    <div class="overflow-hidden rounded-lg bg-[var(--surface-raised)] px-4 py-5 shadow sm:p-6 border-l-4" style="border-left-color: var(--status-critical);">
+      <dt class="truncate text-sm font-medium text-[var(--text-secondary)]">{% translate "Total Due (বাকি)" %}</dt>
+      <dd class="mt-1 text-3xl font-bold tracking-tight text-[var(--text-primary)]">৳{{ total_due|floatformat:2 }}</dd>
     </div>
-    <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6 border-l-4 border-green-500">
-      <dt class="truncate text-sm font-medium text-gray-500">Total Paid</dt>
-      <dd class="mt-1 text-3xl font-bold tracking-tight text-gray-900">৳{{ total_paid|floatformat:2 }}</dd>
+    <div class="overflow-hidden rounded-lg bg-[var(--surface-raised)] px-4 py-5 shadow sm:p-6 border-l-4" style="border-left-color: var(--status-good);">
+      <dt class="truncate text-sm font-medium text-[var(--text-secondary)]">{% translate "Total Paid" %}</dt>
+      <dd class="mt-1 text-3xl font-bold tracking-tight text-[var(--text-primary)]">৳{{ total_paid|floatformat:2 }}</dd>
     </div>
-    <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6 border-l-4 border-yellow-500">
-      <dt class="truncate text-sm font-medium text-gray-500">Remaining Due</dt>
-      <dd class="mt-1 text-3xl font-bold tracking-tight text-gray-900">৳{{ remaining|floatformat:2 }}</dd>
+    <div class="overflow-hidden rounded-lg bg-[var(--surface-raised)] px-4 py-5 shadow sm:p-6 border-l-4" style="border-left-color: var(--status-warn);">
+      <dt class="truncate text-sm font-medium text-[var(--text-secondary)]">{% translate "Remaining Due" %}</dt>
+      <dd class="mt-1 text-3xl font-bold tracking-tight text-[var(--text-primary)]">৳{{ remaining|floatformat:2 }}</dd>
     </div>
   </dl>
 
   <div class="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-2">
     <!-- Recent Activity Card -->
-    <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-      <div class="border-b border-gray-200 bg-gray-50 px-6 py-4 flex justify-between items-center">
-        <h2 class="text-base font-semibold leading-7 text-gray-900">Recent Transactions</h2>
+    <div class="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] shadow-sm">
+      <div class="border-b px-6 py-4 flex justify-between items-center" style="border-color: var(--border); background: var(--surface-sunken);">
+        <h2 class="text-base font-semibold leading-7 text-[var(--text-primary)]">{% translate "Recent Transactions" %}</h2>
       </div>
       <div class="overflow-x-auto">
         {% if recent_transactions %}
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
+          <table class="min-w-full divide-y" style="border-color: var(--border);">
+            <thead style="background: var(--surface-sunken);">
               <tr>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Date</th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Shop</th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Type</th>
-                <th scope="col" class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">Amount</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Date" %}</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Shop" %}</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Type" %}</th>
+                <th scope="col" class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Amount" %}</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-200 bg-white">
+            <tbody class="divide-y bg-[var(--surface-raised)]" style="border-color: var(--border-soft);">
               {% for tx in recent_transactions %}
-                <tr class="hover:bg-gray-50 transition-colors">
-                  <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{{ tx.date|date:"M d, Y" }}</td>
-                  <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">{{ tx.shop.name }}</td>
+                <tr class="hover:bg-[var(--surface-sunken)] transition-colors">
+                  <td class="whitespace-nowrap px-6 py-4 text-sm text-[var(--text-secondary)]">{{ tx.date|date:"M d, Y" }}</td>
+                  <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-[var(--text-primary)]">{{ tx.shop.name }}</td>
                   <td class="whitespace-nowrap px-6 py-4 text-sm">
-                    <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {% if tx.transaction_type == 'PURCHASE' %}bg-red-100 text-red-800{% else %}bg-green-100 text-green-800{% endif %}">
+                    <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+                          style="{% if tx.transaction_type == 'PURCHASE' %}background: var(--status-critical-bg); color: var(--status-critical);{% else %}background: var(--status-good-bg); color: var(--status-good);{% endif %}">
                       {{ tx.get_transaction_type_display }}
                     </span>
                   </td>
-                  <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-bold text-gray-900 font-mono">৳{{ tx.amount|floatformat:2 }}</td>
+                  <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-bold text-[var(--text-primary)] font-mono">৳{{ tx.amount|floatformat:2 }}</td>
                 </tr>
               {% endfor %}
             </tbody>
           </table>
         {% else %}
           <div class="px-6 py-12 text-center">
-            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-            <h3 class="mt-2 text-sm font-semibold text-gray-900">No transactions</h3>
-            <p class="mt-1 text-sm text-gray-500">Get started by adding your first shop.</p>
+            <svg class="mx-auto h-12 w-12 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+            <h3 class="mt-2 text-sm font-semibold text-[var(--text-primary)]">{% translate "No transactions" %}</h3>
+            <p class="mt-1 text-sm text-[var(--text-secondary)]">{% translate "Get started by adding your first shop." %}</p>
           </div>
         {% endif %}
       </div>
@@ -109,25 +110,25 @@
     <!-- Charts Card -->
     <div class="flex flex-col gap-8">
         <!-- Manage & Explore Card -->
-        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm overflow-hidden">
-            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-[0.2em] mb-6">Manage & Explore</h3>
+        <div class="rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] p-6 shadow-sm overflow-hidden">
+            <h3 class="text-xs font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] mb-6">{% translate "Manage & Explore" %}</h3>
             <div class="space-y-4">
-                <a href="{% url 'shop_list' %}" class="flex items-center justify-between p-4 bg-indigo-50 rounded-2xl border border-indigo-100 group hover:bg-indigo-600 transition-all duration-300">
-                    <span class="text-sm font-bold text-indigo-700 group-hover:text-white">View All Shops</span>
-                    <svg class="h-5 w-5 text-indigo-400 group-hover:text-indigo-200 group-hover:translate-x-1 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                <a href="{% url 'shop_list' %}" class="flex items-center justify-between p-4 rounded-2xl border group transition-all duration-300" style="background: var(--accent-soft); border-color: var(--accent-soft);">
+                    <span class="text-sm font-bold" style="color: var(--accent);">{% translate "View All Shops" %}</span>
+                    <svg class="h-5 w-5 group-hover:translate-x-1 transition-all" style="color: var(--accent);" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
                 </a>
-                <a href="{% url 'shop_create' %}" class="block w-full text-center py-3 bg-white border-2 border-dashed border-gray-200 rounded-xl text-xs font-bold text-gray-400 hover:border-indigo-400 hover:text-indigo-500 transition-all">
-                    + Add New Shop
+                <a href="{% url 'shop_create' %}" class="block w-full text-center py-3 border-2 border-dashed rounded-xl text-xs font-bold text-[var(--text-muted)] hover:text-[var(--accent)] transition-all" style="border-color: var(--border);">
+                    + {% translate "Add New Shop" %}
                 </a>
             </div>
         </div>
 
-        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-            <h3 class="text-sm font-bold text-gray-500 uppercase tracking-widest mb-6 text-center">Due Breakdown (Remaining)</h3>
+        <div class="rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] p-6 shadow-sm">
+            <h3 class="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-widest mb-6 text-center">{% translate "Due Breakdown (Remaining)" %}</h3>
             <div class="h-72 sm:h-96"><canvas id="remainingChart"></canvas></div>
         </div>
-        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-            <h3 class="text-sm font-bold text-gray-500 uppercase tracking-widest mb-6 text-center">Payment History (Total Paid)</h3>
+        <div class="rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] p-6 shadow-sm">
+            <h3 class="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-widest mb-6 text-center">{% translate "Payment History (Total Paid)" %}</h3>
             <div class="h-72 sm:h-96"><canvas id="paidChart"></canvas></div>
         </div>
     </div>
@@ -146,7 +147,7 @@
         if (categorySelect) {
             new TomSelect(categorySelect, {
                 plugins: ['remove_button'],
-                placeholder: 'Select categories...',
+                placeholder: '{% translate "Select categories..." %}',
                 closeAfterSelect: false,
                 hideSelected: true
             });
@@ -160,14 +161,14 @@
             canvasId: 'remainingChart',
             labels: labels,
             data: remainingData,
-            centerLabel: 'Remaining',
+            centerLabel: '{% translate "Remaining" %}',
         });
 
         renderDistributionChart({
             canvasId: 'paidChart',
             labels: labels,
             data: paidData,
-            centerLabel: 'Total Paid',
+            centerLabel: '{% translate "Total Paid" %}',
         });
     });
 </script>

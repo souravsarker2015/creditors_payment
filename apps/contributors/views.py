@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum, Q, DecimalField, Value
 from django.db.models.functions import Coalesce
+from django.utils.translation import gettext as _
 from .models import Contributor, ContributorCategory, Contribution
 from .forms import ContributorForm, ContributionForm
 
@@ -129,7 +130,7 @@ def contributor_create(request):
             return redirect('contributor_list')
     else:
         form = ContributorForm()
-    return render(request, 'contributors/contributor_form.html', {'form': form, 'title': 'Add Contributor'})
+    return render(request, 'contributors/contributor_form.html', {'form': form, 'title': _('Add Contributor')})
 
 @login_required
 def contributor_update(request, pk):
@@ -141,7 +142,7 @@ def contributor_update(request, pk):
             return redirect('contributor_list')
     else:
         form = ContributorForm(instance=contributor)
-    return render(request, 'contributors/contributor_form.html', {'form': form, 'title': 'Edit Contributor'})
+    return render(request, 'contributors/contributor_form.html', {'form': form, 'title': _('Edit Contributor')})
 
 @login_required
 def contributor_delete(request, pk):
@@ -192,8 +193,8 @@ def contribution_update(request, pk):
     else:
         form = ContributionForm(instance=contribution)
     return render(request, 'contributors/contribution_form.html', {
-        'form': form, 
-        'title': 'Edit Record', 
+        'form': form,
+        'title': _('Edit Record'),
         'contributor': contributor
     })
 

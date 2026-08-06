@@ -1,0 +1,1606 @@
+# Bangla (Bengali) translations for FinTrack.
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-08-06 23:49+0600\n"
+"PO-Revision-Date: 2026-08-06 23:49+0600\n"
+"Last-Translator: FinTrack\n"
+"Language-Team: Bengali\n"
+"Language: bn\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Login"
+msgstr "লগইন"
+
+msgid "Welcome back"
+msgstr "আবার স্বাগতম"
+
+msgid "Sign in to your account"
+msgstr "আপনার অ্যাকাউন্টে সাইন ইন করুন"
+
+msgid "Sign in"
+msgstr "সাইন ইন"
+
+msgid "Not a member?"
+msgstr "সদস্য নন?"
+
+msgid "Create account"
+msgstr "অ্যাকাউন্ট তৈরি করুন"
+
+msgid "Sign Up"
+msgstr "সাইন আপ"
+
+msgid "Create your account"
+msgstr "আপনার অ্যাকাউন্ট তৈরি করুন"
+
+msgid "Join FinTrack for secure ledger tracking"
+msgstr "নিরাপদ হিসাব ট্র্যাকিংয়ের জন্য ফিনট্র্যাকে যোগ দিন"
+
+msgid "Register account"
+msgstr "অ্যাকাউন্ট নিবন্ধন করুন"
+
+msgid "Already have an account?"
+msgstr "ইতিমধ্যে অ্যাকাউন্ট আছে?"
+
+msgid "Sign in here"
+msgstr "এখানে সাইন ইন করুন"
+
+msgid "Account created successfully!"
+msgstr "অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে!"
+
+#, python-format
+msgid "Welcome back, %(username)s!"
+msgstr "%(username)s, আবার স্বাগতম!"
+
+msgid "You have been logged out."
+msgstr "আপনি লগ আউট হয়েছেন।"
+
+msgid "Full Name"
+msgstr "পূর্ণ নাম"
+
+msgid "Phone Number (optional)"
+msgstr "ফোন নম্বর (ঐচ্ছিক)"
+
+msgid "Add any additional details..."
+msgstr "অতিরিক্ত বিবরণ যোগ করুন..."
+
+msgid "Select Date"
+msgstr "তারিখ নির্বাচন করুন"
+
+msgid "Additional details..."
+msgstr "অতিরিক্ত বিবরণ..."
+
+msgid "Family"
+msgstr "পরিবার"
+
+msgid "Friend"
+msgstr "বন্ধু"
+
+msgid "Business Partner"
+msgstr "ব্যবসায়িক অংশীদার"
+
+msgid "Organization"
+msgstr "প্রতিষ্ঠান"
+
+msgid "NGO"
+msgstr "এনজিও"
+
+msgid "Sponsor"
+msgstr "পৃষ্ঠপোষক"
+
+msgid "Donor"
+msgstr "দাতা"
+
+msgid "Investor"
+msgstr "বিনিয়োগকারী"
+
+msgid "Alumni"
+msgstr "প্রাক্তন শিক্ষার্থী"
+
+msgid "Community"
+msgstr "সম্প্রদায়"
+
+msgid "Relative"
+msgstr "আত্মীয়"
+
+msgid "Other"
+msgstr "অন্যান্য"
+
+msgid "Edit Contribution"
+msgstr "অনুদান সম্পাদনা"
+
+msgid "Update Record"
+msgstr "রেকর্ড আপডেট করুন"
+
+msgid "Cancel"
+msgstr "বাতিল"
+
+#, python-format
+msgid "Updating contribution record for %(name)s."
+msgstr "%(name)s-এর অনুদান রেকর্ড আপডেট হচ্ছে।"
+
+msgid "Delete Contributor"
+msgstr "অবদানকারী মুছুন"
+
+msgid "Delete Profile"
+msgstr "প্রোফাইল মুছুন"
+
+#, python-format
+msgid ""
+"Are you sure you want to permanently delete <span class=\"font-extrabold\" "
+"style=\"color: var(--status-critical);\">%(name)s</span> and all their "
+"contribution records? This action cannot be undone."
+msgstr ""
+"আপনি কি নিশ্চিতভাবে <span class=\"font-extrabold\" style=\"color: var(--"
+"status-critical);\">%(name)s</span>-কে এবং তার সমস্ত অনুদান রেকর্ড "
+"স্থায়ীভাবে মুছে ফেলতে চান? এই কাজটি ফিরিয়ে নেওয়া যাবে না।"
+
+msgid "Permanently Delete"
+msgstr "স্থায়ীভাবে মুছুন"
+
+msgid "No, Keep it"
+msgstr "না, রাখুন"
+
+msgid "Details"
+msgstr "বিস্তারিত"
+
+msgid "No phone"
+msgstr "ফোন নম্বর নেই"
+
+msgid "No notes available"
+msgstr "কোনো নোট নেই"
+
+msgid "Edit Profile"
+msgstr "প্রোফাইল সম্পাদনা"
+
+msgid "Back to List"
+msgstr "তালিকায় ফিরুন"
+
+msgid "Total Contributions"
+msgstr "মোট অনুদান"
+
+msgid "Contribution Count"
+msgstr "অনুদানের সংখ্যা"
+
+#, python-format
+msgid "%(counter)s Entry"
+msgid_plural "%(counter)s Entries"
+msgstr[0] "%(counter)sটি এন্ট্রি"
+msgstr[1] "%(counter)sটি এন্ট্রি"
+
+msgid "Average Amount"
+msgstr "গড় পরিমাণ"
+
+msgid "Funding History"
+msgstr "অর্থায়ন ইতিহাস"
+
+msgid "Date"
+msgstr "তারিখ"
+
+msgid "Note"
+msgstr "নোট"
+
+msgid "Amount"
+msgstr "পরিমাণ"
+
+msgid "Actions"
+msgstr "কার্যক্রম"
+
+msgid "Standard Contribution"
+msgstr "সাধারণ অনুদান"
+
+msgid "Delete this record?"
+msgstr "এই রেকর্ডটি মুছবেন?"
+
+msgid "No funding recorded yet."
+msgstr "এখনো কোনো অর্থায়ন রেকর্ড করা হয়নি।"
+
+msgid "Log Contribution"
+msgstr "অনুদান লগ করুন"
+
+msgid "Record Payment"
+msgstr "পেমেন্ট রেকর্ড করুন"
+
+msgid "Danger Zone"
+msgstr "বিপদ অঞ্চল"
+
+msgid ""
+"Careful! This will remove the contributor and all related history forever."
+msgstr "সতর্ক থাকুন! এটি অবদানকারী এবং তার সমস্ত সম্পর্কিত ইতিহাস চিরতরে মুছে ফেলবে।"
+
+msgid "Delete profile completely?"
+msgstr "প্রোফাইলটি সম্পূর্ণভাবে মুছে ফেলবেন?"
+
+msgid "Delete Contributor Profile"
+msgstr "অবদানকারীর প্রোফাইল মুছুন"
+
+msgid "Save Contributor Information"
+msgstr "অবদানকারীর তথ্য সংরক্ষণ করুন"
+
+msgid "Securely record and manage external funding sources."
+msgstr "বাহ্যিক অর্থায়নের উৎস নিরাপদে রেকর্ড ও পরিচালনা করুন।"
+
+msgid "Contributor List"
+msgstr "অবদানকারীর তালিকা"
+
+msgid "Manage Contributors"
+msgstr "অবদানকারী পরিচালনা করুন"
+
+msgid ""
+"Detailed list of contributors and their total voluntary support entries. "
+"Search by name or use filters to include/exclude selected categories."
+msgstr ""
+"অবদানকারীদের বিস্তারিত তালিকা এবং তাদের মোট স্বেচ্ছা সহায়তার এন্ট্রি। নাম "
+"দিয়ে অনুসন্ধান করুন অথবা নির্বাচিত ক্যাটাগরি অন্তর্ভুক্ত/বাদ দিতে ফিল্টার "
+"ব্যবহার করুন।"
+
+msgid "New Contributor"
+msgstr "নতুন অবদানকারী"
+
+msgid "Search by name"
+msgstr "নাম দিয়ে অনুসন্ধান"
+
+msgid "e.g. Sajal Saha"
+msgstr "যেমন সজল সাহা"
+
+msgid "Filter mode"
+msgstr "ফিল্টার মোড"
+
+msgid "Include"
+msgstr "অন্তর্ভুক্ত"
+
+msgid "Exclude"
+msgstr "বাদ দিন"
+
+msgid "Categories"
+msgstr "ক্যাটাগরি"
+
+msgid "Leave empty for all categories."
+msgstr "সব ক্যাটাগরির জন্য খালি রাখুন।"
+
+msgid "Apply Filter"
+msgstr "ফিল্টার প্রয়োগ করুন"
+
+msgid "Reset"
+msgstr "রিসেট"
+
+msgid "Total Contributors"
+msgstr "মোট অবদানকারী"
+
+msgid "Total Funding"
+msgstr "মোট অর্থায়ন"
+
+msgid "Avg. Contribution"
+msgstr "গড় অনুদান"
+
+msgid "No contact info"
+msgstr "যোগাযোগের তথ্য নেই"
+
+msgid "Contribution Level"
+msgstr "অনুদানের মাত্রা"
+
+msgid "Total Support"
+msgstr "মোট সহায়তা"
+
+msgid "Edit"
+msgstr "সম্পাদনা"
+
+msgid "No contributors match your filters"
+msgstr "আপনার ফিল্টারের সাথে মেলে এমন কোনো অবদানকারী নেই"
+
+msgid "Try a different name, or reset the filters to see everyone."
+msgstr "ভিন্ন নাম চেষ্টা করুন, অথবা সবাইকে দেখতে ফিল্টার রিসেট করুন।"
+
+msgid "Reset Filters"
+msgstr "ফিল্টার রিসেট করুন"
+
+msgid "No contributors yet"
+msgstr "এখনো কোনো অবদানকারী নেই"
+
+msgid ""
+"Start recording support from voluntary contributors to keep your records "
+"complete."
+msgstr ""
+"আপনার রেকর্ড সম্পূর্ণ রাখতে স্বেচ্ছা অবদানকারীদের সহায়তা রেকর্ড করা শুরু "
+"করুন।"
+
+msgid "Add Your First Contributor"
+msgstr "আপনার প্রথম অবদানকারী যোগ করুন"
+
+msgid "Select categories..."
+msgstr "ক্যাটাগরি নির্বাচন করুন..."
+
+msgid "Contributors Dashboard"
+msgstr "অবদানকারী ড্যাশবোর্ড"
+
+msgid "Contributors Overview"
+msgstr "অবদানকারী সংক্ষিপ্ত বিবরণ"
+
+msgid "A detailed summary of voluntary contributions and external funding."
+msgstr "স্বেচ্ছা অনুদান এবং বাহ্যিক অর্থায়নের বিস্তারিত সারাংশ।"
+
+msgid "Add Contributor"
+msgstr "অবদানকারী যোগ করুন"
+
+msgid "Filter by category"
+msgstr "ক্যাটাগরি দিয়ে ফিল্টার করুন"
+
+msgid "Leave unselected for all categories."
+msgstr "সব ক্যাটাগরির জন্য অনির্বাচিত রাখুন।"
+
+msgid "Apply"
+msgstr "প্রয়োগ করুন"
+
+msgid "Recent Contributions"
+msgstr "সাম্প্রতিক অনুদান"
+
+msgid "Contributor"
+msgstr "অবদানকারী"
+
+msgid "No contributions"
+msgstr "কোনো অনুদান নেই"
+
+msgid "Start by adding your first contributor."
+msgstr "আপনার প্রথম অবদানকারী যোগ করে শুরু করুন।"
+
+msgid "Manage & Explore"
+msgstr "পরিচালনা ও অন্বেষণ"
+
+msgid "View All Contributors"
+msgstr "সব অবদানকারী দেখুন"
+
+msgid "View Creditors"
+msgstr "পাওনাদার দেখুন"
+
+msgid "View Debtors"
+msgstr "দেনাদার দেখুন"
+
+msgid "Add New Contributor"
+msgstr "নতুন অবদানকারী যোগ করুন"
+
+msgid "Contribution Breakdown"
+msgstr "অনুদানের বিভাজন"
+
+msgid "Total Given"
+msgstr "মোট প্রদত্ত"
+
+msgid "Edit Contributor"
+msgstr "অবদানকারী সম্পাদনা"
+
+msgid "Edit Record"
+msgstr "রেকর্ড সম্পাদনা"
+
+msgid "Quick note..."
+msgstr "দ্রুত নোট..."
+
+msgid "Bank"
+msgstr "ব্যাংক"
+
+msgid "Microfinance"
+msgstr "মাইক্রোফাইন্যান্স"
+
+msgid "Moneylender"
+msgstr "মহাজন"
+
+msgid "Supplier"
+msgstr "সরবরাহকারী"
+
+msgid "Landlord"
+msgstr "বাড়িওয়ালা"
+
+msgid "Utility"
+msgstr "ইউটিলিটি"
+
+msgid "Medical"
+msgstr "চিকিৎসা"
+
+msgid "Education"
+msgstr "শিক্ষা"
+
+msgid "Borrowed"
+msgstr "ধার নেওয়া"
+
+msgid "Repaid"
+msgstr "পরিশোধিত"
+
+msgid "No notes"
+msgstr "কোনো নোট নেই"
+
+msgid "Total Borrowed"
+msgstr "মোট ধার"
+
+msgid "Total Repaid"
+msgstr "মোট পরিশোধিত"
+
+msgid "Outstanding Balance"
+msgstr "অবশিষ্ট ব্যালেন্স"
+
+msgid "Transaction History"
+msgstr "লেনদেনের ইতিহাস"
+
+msgid "Type"
+msgstr "ধরন"
+
+msgid "Delete"
+msgstr "মুছুন"
+
+msgid "Delete this record? This action cannot be undone."
+msgstr "এই রেকর্ডটি মুছবেন? এই কাজটি ফিরিয়ে নেওয়া যাবে না।"
+
+msgid "No activity for this creditor yet."
+msgstr "এই পাওনাদারের জন্য এখনো কোনো কার্যক্রম নেই।"
+
+msgid "Repayment Percentage"
+msgstr "পরিশোধের শতাংশ"
+
+msgid "Record New Activity"
+msgstr "নতুন কার্যক্রম রেকর্ড করুন"
+
+msgid "Post Transaction"
+msgstr "লেনদেন জমা দিন"
+
+msgid "Paid"
+msgstr "পরিশোধিত"
+
+msgid "Remaining"
+msgstr "অবশিষ্ট"
+
+msgid "Save Creditor Information"
+msgstr "পাওনাদারের তথ্য সংরক্ষণ করুন"
+
+msgid "All your financial data is encrypted and kept secure."
+msgstr "আপনার সমস্ত আর্থিক তথ্য এনক্রিপ্ট করা এবং নিরাপদে সংরক্ষিত।"
+
+msgid "My Creditors"
+msgstr "আমার পাওনাদার"
+
+msgid "Manage Creditors"
+msgstr "পাওনাদার পরিচালনা করুন"
+
+msgid ""
+"A complete list of people you have borrowed from and your repayment "
+"progress. Search by name, filter by payment status, or include/exclude "
+"categories."
+msgstr ""
+"আপনি যাদের কাছ থেকে ধার নিয়েছেন তাদের সম্পূর্ণ তালিকা এবং আপনার পরিশোধের "
+"অগ্রগতি। নাম দিয়ে অনুসন্ধান করুন, পেমেন্ট স্ট্যাটাস দিয়ে ফিল্টার করুন, "
+"অথবা ক্যাটাগরি অন্তর্ভুক্ত/বাদ দিন।"
+
+msgid "New Creditor"
+msgstr "নতুন পাওনাদার"
+
+msgid "e.g. Rahim"
+msgstr "যেমন রহিম"
+
+msgid "Payment status"
+msgstr "পেমেন্ট স্ট্যাটাস"
+
+msgid "All"
+msgstr "সব"
+
+msgid "Unpaid"
+msgstr "অপরিশোধিত"
+
+msgid "Category filter mode"
+msgstr "ক্যাটাগরি ফিল্টার মোড"
+
+msgid "Applies only to the categories picker."
+msgstr "শুধুমাত্র ক্যাটাগরি নির্বাচকের ক্ষেত্রে প্রযোজ্য।"
+
+msgid "Total Paid"
+msgstr "মোট পরিশোধিত"
+
+msgid "Remaining Debt"
+msgstr "অবশিষ্ট ঋণ"
+
+msgid "Paid Completely"
+msgstr "সম্পূর্ণ পরিশোধিত"
+
+#, python-format
+msgid "Owed ৳%(amount)s"
+msgstr "৳%(amount)s বাকি"
+
+msgid "Repayment Progress"
+msgstr "পরিশোধের অগ্রগতি"
+
+msgid "No creditors match your filters"
+msgstr "আপনার ফিল্টারের সাথে মেলে এমন কোনো পাওনাদার নেই"
+
+msgid "No creditors yet"
+msgstr "এখনো কোনো পাওনাদার নেই"
+
+msgid ""
+"Start building your financial reputation by adding your first creditor "
+"record."
+msgstr ""
+"আপনার প্রথম পাওনাদার রেকর্ড যোগ করে আর্থিক সুনাম গড়ে তোলা শুরু করুন।"
+
+msgid "Add Your First Creditor"
+msgstr "আপনার প্রথম পাওনাদার যোগ করুন"
+
+msgid "Creditors Dashboard"
+msgstr "পাওনাদার ড্যাশবোর্ড"
+
+msgid "Creditors Overview"
+msgstr "পাওনাদার সংক্ষিপ্ত বিবরণ"
+
+msgid "A detailed summary of money you have borrowed and need to repay."
+msgstr "আপনি যে অর্থ ধার নিয়েছেন এবং পরিশোধ করতে হবে তার বিস্তারিত সারাংশ।"
+
+msgid "Add Creditor"
+msgstr "পাওনাদার যোগ করুন"
+
+msgid "Leave unselected for all categories. Use Ctrl/Cmd to select multiple."
+msgstr ""
+"সব ক্যাটাগরির জন্য অনির্বাচিত রাখুন। একাধিক নির্বাচনের জন্য Ctrl/Cmd "
+"ব্যবহার করুন।"
+
+msgid "Recent Transactions"
+msgstr "সাম্প্রতিক লেনদেন"
+
+msgid "Creditor"
+msgstr "পাওনাদার"
+
+msgid "No transactions"
+msgstr "কোনো লেনদেন নেই"
+
+msgid "Get started by adding your first creditor."
+msgstr "আপনার প্রথম পাওনাদার যোগ করে শুরু করুন।"
+
+msgid "View All Creditors"
+msgstr "সব পাওনাদার দেখুন"
+
+msgid "Contributors"
+msgstr "অবদানকারী"
+
+msgid "Add New Creditor"
+msgstr "নতুন পাওনাদার যোগ করুন"
+
+msgid "Debt Breakdown (Remaining)"
+msgstr "ঋণের বিভাজন (অবশিষ্ট)"
+
+msgid "Payment History (Total Paid)"
+msgstr "পেমেন্ট ইতিহাস (মোট পরিশোধিত)"
+
+#, python-format
+msgid "Creditor '%(name)s' added successfully."
+msgstr "পাওনাদার '%(name)s' সফলভাবে যোগ করা হয়েছে।"
+
+#, python-format
+msgid "Creditor '%(name)s' updated successfully."
+msgstr "পাওনাদার '%(name)s' সফলভাবে আপডেট করা হয়েছে।"
+
+#, python-format
+msgid "Edit %(name)s"
+msgstr "%(name)s সম্পাদনা"
+
+#, python-format
+msgid "Transaction of ৳%(amount)s added."
+msgstr "৳%(amount)s এর লেনদেন যোগ করা হয়েছে।"
+
+msgid "Transaction updated."
+msgstr "লেনদেন আপডেট করা হয়েছে।"
+
+msgid "Edit Transaction"
+msgstr "লেনদেন সম্পাদনা"
+
+#, python-format
+msgid "Transaction of ৳%(amount)s deleted."
+msgstr "৳%(amount)s এর লেনদেন মুছে ফেলা হয়েছে।"
+
+msgid "Debtor's Name"
+msgstr "দেনাদারের নাম"
+
+msgid "Phone Number"
+msgstr "ফোন নম্বর"
+
+msgid "Notes..."
+msgstr "নোট..."
+
+msgid "Amount (৳)"
+msgstr "পরিমাণ (৳)"
+
+msgid "Transaction details..."
+msgstr "লেনদেনের বিবরণ..."
+
+msgid "Client"
+msgstr "ক্লায়েন্ট"
+
+msgid "Employee"
+msgstr "কর্মচারী"
+
+msgid "Tenant"
+msgstr "ভাড়াটে"
+
+msgid "Shopkeeper"
+msgstr "দোকানদার"
+
+msgid "Student"
+msgstr "শিক্ষার্থী"
+
+msgid "Lent"
+msgstr "ধার দেওয়া"
+
+msgid "Received"
+msgstr "গৃহীত"
+
+msgid "Debtors Dashboard"
+msgstr "দেনাদার ড্যাশবোর্ড"
+
+msgid "Debtors Overview"
+msgstr "দেনাদার সংক্ষিপ্ত বিবরণ"
+
+msgid ""
+"Detailed overview of people who owe you money and your collection status."
+msgstr "যারা আপনার কাছে ঋণী তাদের বিস্তারিত বিবরণ এবং আপনার আদায়ের অবস্থা।"
+
+msgid "Add New Debtor"
+msgstr "নতুন দেনাদার যোগ করুন"
+
+msgid "Total Lent"
+msgstr "মোট ধার দেওয়া"
+
+msgid "Total Received"
+msgstr "মোট গৃহীত"
+
+msgid "Remaining to Collect"
+msgstr "আদায় করতে বাকি"
+
+msgid "Recent Collections"
+msgstr "সাম্প্রতিক আদায়"
+
+msgid "Debtor"
+msgstr "দেনাদার"
+
+msgid "No activity yet"
+msgstr "এখনো কোনো কার্যক্রম নেই"
+
+msgid "Record your first loan to a debtor to see progress here."
+msgstr "অগ্রগতি দেখতে একজন দেনাদারকে আপনার প্রথম ঋণ রেকর্ড করুন।"
+
+msgid "View All Debtors"
+msgstr "সব দেনাদার দেখুন"
+
+msgid "Outstanding (Remaining to Collect)"
+msgstr "অবশিষ্ট (আদায় করতে বাকি)"
+
+msgid "Collection Status (Total Received)"
+msgstr "আদায়ের অবস্থা (মোট গৃহীত)"
+
+msgid "Outstanding"
+msgstr "অবশিষ্ট"
+
+msgid "Edit Debtor Profile"
+msgstr "দেনাদারের প্রোফাইল সম্পাদনা"
+
+msgid "Back"
+msgstr "ফিরে যান"
+
+msgid "Cumulative Lent"
+msgstr "সঞ্চিত ধার"
+
+msgid "Total Collected"
+msgstr "মোট আদায়"
+
+msgid "Still Owed to You"
+msgstr "এখনও আপনার পাওনা"
+
+msgid "Full Transaction History"
+msgstr "সম্পূর্ণ লেনদেনের ইতিহাস"
+
+msgid "Status"
+msgstr "অবস্থা"
+
+msgid "Memo"
+msgstr "স্মারক"
+
+msgid "Delete this collection record? This action cannot be undone."
+msgstr "এই আদায়ের রেকর্ডটি মুছবেন? এই কাজটি ফিরিয়ে নেওয়া যাবে না।"
+
+msgid "Timeline is empty"
+msgstr "টাইমলাইন খালি"
+
+msgid "Collection Progress"
+msgstr "আদায়ের অগ্রগতি"
+
+msgid "Register Collection"
+msgstr "আদায় নিবন্ধন করুন"
+
+msgid "Quick Transaction Entry"
+msgstr "দ্রুত লেনদেন এন্ট্রি"
+
+msgid "Record Entry"
+msgstr "এন্ট্রি রেকর্ড করুন"
+
+msgid "Debtor Profile Setup"
+msgstr "দেনাদারের প্রোফাইল সেটআপ"
+
+msgid "Save Debtor Profile"
+msgstr "দেনাদারের প্রোফাইল সংরক্ষণ করুন"
+
+msgid "Secure Ledger Record • FINTRACK System"
+msgstr "নিরাপদ হিসাব রেকর্ড • ফিনট্র্যাক সিস্টেম"
+
+msgid "My Debtors"
+msgstr "আমার দেনাদার"
+
+msgid "Active Debtors"
+msgstr "সক্রিয় দেনাদার"
+
+msgid ""
+"Track all accounts receivable and monitor collection progress. Search by "
+"name, filter by payment status, or include/exclude categories."
+msgstr ""
+"সব পাওনা হিসাব ট্র্যাক করুন এবং আদায়ের অগ্রগতি পর্যবেক্ষণ করুন। নাম দিয়ে "
+"অনুসন্ধান করুন, পেমেন্ট স্ট্যাটাস দিয়ে ফিল্টার করুন, অথবা ক্যাটাগরি "
+"অন্তর্ভুক্ত/বাদ দিন।"
+
+msgid "New Debtor"
+msgstr "নতুন দেনাদার"
+
+msgid "e.g. Karim"
+msgstr "যেমন করিম"
+
+msgid "Fully Collected"
+msgstr "সম্পূর্ণ আদায়কৃত"
+
+#, python-format
+msgid "Remaining ৳%(amount)s"
+msgstr "৳%(amount)s অবশিষ্ট"
+
+msgid "History"
+msgstr "ইতিহাস"
+
+msgid "No debtors match your filters"
+msgstr "আপনার ফিল্টারের সাথে মেলে এমন কোনো দেনাদার নেই"
+
+msgid "Your accounts are currently clear"
+msgstr "আপনার হিসাব বর্তমানে পরিষ্কার"
+
+msgid ""
+"Add people who owe you money to start tracking collections and managing your "
+"receivables efficiently."
+msgstr ""
+"যারা আপনার কাছে ঋণী তাদের যোগ করুন যাতে আদায় ট্র্যাক করা এবং পাওনা "
+"কার্যকরভাবে পরিচালনা করা শুরু করতে পারেন।"
+
+msgid "Set Up First Debtor Account"
+msgstr "প্রথম দেনাদার অ্যাকাউন্ট সেটআপ করুন"
+
+#, python-format
+msgid "Debtor '%(name)s' added successfully."
+msgstr "দেনাদার '%(name)s' সফলভাবে যোগ করা হয়েছে।"
+
+#, python-format
+msgid "Debtor '%(name)s' updated successfully."
+msgstr "দেনাদার '%(name)s' সফলভাবে আপডেট করা হয়েছে।"
+
+msgid "Expense details..."
+msgstr "খরচের বিবরণ..."
+
+msgid "Expense Categories"
+msgstr "খরচের ক্যাটাগরি"
+
+msgid "Taxonomy Settings"
+msgstr "শ্রেণীবিন্যাস সেটিংস"
+
+msgid "Expense Classification Engine"
+msgstr "খরচ শ্রেণীবিন্যাস ইঞ্জিন"
+
+msgid "Define Category"
+msgstr "ক্যাটাগরি নির্ধারণ করুন"
+
+msgid "Total Allocated"
+msgstr "মোট বরাদ্দ"
+
+msgid "Category Volume"
+msgstr "ক্যাটাগরির পরিমাণ"
+
+msgid "Taxonomy Blank"
+msgstr "শ্রেণীবিন্যাস খালি"
+
+msgid ""
+"Categorization allows for advanced analytical insights into your capital "
+"leakage."
+msgstr ""
+"শ্রেণীবিন্যাস আপনার মূলধন ক্ষয়ের বিষয়ে উন্নত বিশ্লেষণাত্মক অন্তর্দৃষ্টি "
+"প্রদান করে।"
+
+msgid "Add Category"
+msgstr "ক্যাটাগরি যোগ করুন"
+
+msgid "Expense Dashboard"
+msgstr "খরচ ড্যাশবোর্ড"
+
+msgid "Expense Analytics"
+msgstr "খরচ বিশ্লেষণ"
+
+msgid ""
+"Detailed breakdown of your spending habits and category-wise expenditures."
+msgstr "আপনার ব্যয়ের অভ্যাস এবং ক্যাটাগরি অনুযায়ী খরচের বিস্তারিত বিভাজন।"
+
+msgid "New Expense"
+msgstr "নতুন খরচ"
+
+msgid "Year"
+msgstr "বছর"
+
+msgid "All Years"
+msgstr "সব বছর"
+
+msgid "Date Range"
+msgstr "তারিখের পরিসীমা"
+
+msgid "Select range..."
+msgstr "পরিসীমা নির্বাচন করুন..."
+
+msgid "Apply Filters"
+msgstr "ফিল্টার প্রয়োগ করুন"
+
+msgid "Total Monthly Expenditures"
+msgstr "মোট মাসিক খরচ"
+
+msgid "Spending by Category"
+msgstr "ক্যাটাগরি অনুযায়ী ব্যয়"
+
+msgid "Manage Categories"
+msgstr "ক্যাটাগরি পরিচালনা করুন"
+
+msgid "Recent Outflows"
+msgstr "সাম্প্রতিক ব্যয়"
+
+msgid "Item / Category"
+msgstr "আইটেম / ক্যাটাগরি"
+
+msgid "General"
+msgstr "সাধারণ"
+
+msgid "No note"
+msgstr "কোনো নোট নেই"
+
+msgid "No expenditures logged"
+msgstr "কোনো খরচ লগ করা হয়নি"
+
+msgid "Keep your daily ledger detailed for better financial health."
+msgstr "ভালো আর্থিক স্বাস্থ্যের জন্য আপনার দৈনিক হিসাব বিস্তারিত রাখুন।"
+
+msgid "Total Spent"
+msgstr "মোট ব্যয়"
+
+msgid "Outflow Registration Hub"
+msgstr "ব্যয় নিবন্ধন হাব"
+
+msgid "Commit expenditure"
+msgstr "খরচ নিশ্চিত করুন"
+
+msgid "Abort"
+msgstr "বাতিল করুন"
+
+msgid "Outflow Audit Protocol Active"
+msgstr "ব্যয় নিরীক্ষা প্রোটোকল সক্রিয়"
+
+msgid "Expense Ledger"
+msgstr "খরচের হিসাব"
+
+msgid "Expenditure Log"
+msgstr "খরচের লগ"
+
+msgid "Chronological Spending Record"
+msgstr "কালানুক্রমিক ব্যয় রেকর্ড"
+
+msgid "Log New Expense"
+msgstr "নতুন খরচ লগ করুন"
+
+msgid "Total Entries"
+msgstr "মোট এন্ট্রি"
+
+msgid "Avg Expense"
+msgstr "গড় খরচ"
+
+msgid "Timeline"
+msgstr "টাইমলাইন"
+
+msgid "Allocation"
+msgstr "বরাদ্দ"
+
+msgid "Magnitude"
+msgstr "পরিমাণ"
+
+msgid "Controls"
+msgstr "নিয়ন্ত্রণ"
+
+msgid "No description"
+msgstr "কোনো বিবরণ নেই"
+
+msgid "Purge this expenditure record from ledger?"
+msgstr "হিসাব থেকে এই খরচের রেকর্ডটি মুছে ফেলবেন?"
+
+#, python-format
+msgid "Page %(current)s of %(total)s"
+msgstr "পৃষ্ঠা %(current)s এর %(total)s"
+
+msgid "First"
+msgstr "প্রথম"
+
+msgid "Prev"
+msgstr "পূর্ববর্তী"
+
+msgid "Next"
+msgstr "পরবর্তী"
+
+msgid "Last"
+msgstr "শেষ"
+
+msgid "Go"
+msgstr "যান"
+
+#, python-format
+msgid "Range: 1-%(total)s"
+msgstr "পরিসীমা: ১-%(total)s"
+
+#, python-format
+msgid "Please enter a page between 1 and %(total)s."
+msgstr "অনুগ্রহ করে ১ থেকে %(total)s এর মধ্যে একটি পৃষ্ঠা লিখুন।"
+
+msgid "Expenditure Ledger Blank"
+msgstr "খরচের হিসাব খালি"
+
+msgid ""
+"Start recording your spending to gain visibility into your financial leakage."
+msgstr ""
+"আপনার আর্থিক ক্ষয় সম্পর্কে দৃষ্টিভঙ্গি পেতে ব্যয় রেকর্ড করা শুরু করুন।"
+
+msgid "Register Outflow"
+msgstr "ব্যয় নিবন্ধন করুন"
+
+#, python-format
+msgid "Expense of ৳%(amount)s recorded."
+msgstr "৳%(amount)s এর খরচ রেকর্ড করা হয়েছে।"
+
+msgid "Add New Expense"
+msgstr "নতুন খরচ যোগ করুন"
+
+msgid "Expense updated."
+msgstr "খরচ আপডেট করা হয়েছে।"
+
+msgid "Edit Expense"
+msgstr "খরচ সম্পাদনা"
+
+#, python-format
+msgid "Expense of ৳%(amount)s deleted."
+msgstr "৳%(amount)s এর খরচ মুছে ফেলা হয়েছে।"
+
+#, python-format
+msgid "Category '%(name)s' created."
+msgstr "ক্যাটাগরি '%(name)s' তৈরি করা হয়েছে।"
+
+msgid "e.g. Vegetables, Fish, Groceries"
+msgstr "যেমন সবজি, মাছ, মুদি"
+
+msgid "What was bought (optional)..."
+msgstr "কী কেনা হয়েছে (ঐচ্ছিক)..."
+
+msgid "No category"
+msgstr "কোনো ক্যাটাগরি নেই"
+
+msgid "No one in particular"
+msgstr "নির্দিষ্ট কেউ নয়"
+
+msgid "Bazar Categories"
+msgstr "বাজারের ক্যাটাগরি"
+
+msgid ""
+"Optional groupings for household purchases, e.g. Vegetables, Fish, "
+"Groceries. Purchases don't need a category at all."
+msgstr ""
+"গৃহস্থালি কেনাকাটার জন্য ঐচ্ছিক শ্রেণীবিভাগ, যেমন সবজি, মাছ, মুদি। "
+"কেনাকাটার জন্য ক্যাটাগরির প্রয়োজন নেই।"
+
+msgid "New Category"
+msgstr "নতুন ক্যাটাগরি"
+
+msgid "No categories yet"
+msgstr "এখনো কোনো ক্যাটাগরি নেই"
+
+msgid ""
+"Categories are entirely optional — add one only if you want to break down "
+"bazar spending further."
+msgstr ""
+"ক্যাটাগরি সম্পূর্ণভাবে ঐচ্ছিক — শুধুমাত্র বাজারের খরচ আরও বিভক্ত করতে "
+"চাইলে একটি যোগ করুন।"
+
+msgid "Add Your First Category"
+msgstr "আপনার প্রথম ক্যাটাগরি যোগ করুন"
+
+msgid "Household Dashboard"
+msgstr "গৃহস্থালি ড্যাশবোর্ড"
+
+msgid "Household (Bazar) Overview"
+msgstr "গৃহস্থালি (বাজার) সংক্ষিপ্ত বিবরণ"
+
+msgid ""
+"A summary of your day-to-day household shopping and any reimbursements owed "
+"to members."
+msgstr ""
+"আপনার দৈনন্দিন গৃহস্থালি কেনাকাটা এবং সদস্যদের কাছে বকেয়া ফেরত অর্থের "
+"সারাংশ।"
+
+msgid "Add Purchase"
+msgstr "কেনাকাটা যোগ করুন"
+
+msgid "Spent This Month"
+msgstr "এই মাসে ব্যয়িত"
+
+msgid "Given Back to Members"
+msgstr "সদস্যদের ফেরত দেওয়া"
+
+msgid "Outstanding to Members"
+msgstr "সদস্যদের কাছে বকেয়া"
+
+msgid "Recent Purchases"
+msgstr "সাম্প্রতিক কেনাকাটা"
+
+msgid "Category"
+msgstr "ক্যাটাগরি"
+
+msgid "Buyer"
+msgstr "ক্রেতা"
+
+msgid "Uncategorized"
+msgstr "অশ্রেণীবদ্ধ"
+
+msgid "No purchases yet"
+msgstr "এখনো কোনো কেনাকাটা নেই"
+
+msgid "Log your first bazar purchase to see it here."
+msgstr "এখানে দেখতে আপনার প্রথম বাজারের কেনাকাটা লগ করুন।"
+
+msgid "View Bazar Log"
+msgstr "বাজারের লগ দেখুন"
+
+msgid "Members"
+msgstr "সদস্য"
+
+msgid "Add New Purchase"
+msgstr "নতুন কেনাকাটা যোগ করুন"
+
+msgid "Save"
+msgstr "সংরক্ষণ করুন"
+
+msgid "Total Fronted"
+msgstr "মোট অগ্রিম প্রদান"
+
+msgid "Given Back"
+msgstr "ফেরত দেওয়া"
+
+msgid "Balance Due"
+msgstr "বকেয়া ব্যালেন্স"
+
+msgid "Activity History"
+msgstr "কার্যক্রমের ইতিহাস"
+
+msgid "Fronted (Bazar)"
+msgstr "অগ্রিম প্রদান (বাজার)"
+
+msgid "Delete this purchase?"
+msgstr "এই কেনাকাটাটি মুছবেন?"
+
+msgid "Delete this settlement?"
+msgstr "এই নিষ্পত্তিটি মুছবেন?"
+
+msgid "No activity for this member yet."
+msgstr "এই সদস্যের জন্য এখনো কোনো কার্যক্রম নেই।"
+
+msgid "Settled Percentage"
+msgstr "নিষ্পত্তির শতাংশ"
+
+msgid "Give Back Money"
+msgstr "অর্থ ফেরত দিন"
+
+msgid "Record Settlement"
+msgstr "নিষ্পত্তি রেকর্ড করুন"
+
+msgid "Household Members"
+msgstr "গৃহস্থালি সদস্য"
+
+msgid ""
+"People who occasionally front their own money for bazar. Tracking a member "
+"on a purchase is optional — this page is only for the ones you want to "
+"settle up with."
+msgstr ""
+"যারা মাঝে মাঝে বাজারের জন্য নিজের টাকা অগ্রিম দেন। কেনাকাটায় সদস্য ট্র্যাক "
+"করা ঐচ্ছিক — এই পৃষ্ঠাটি শুধুমাত্র তাদের জন্য যাদের সাথে আপনি নিষ্পত্তি "
+"করতে চান।"
+
+msgid "Bazar Log"
+msgstr "বাজারের লগ"
+
+msgid "New Member"
+msgstr "নতুন সদস্য"
+
+msgid "Total Outstanding to Members"
+msgstr "সদস্যদের কাছে মোট বকেয়া"
+
+msgid "Settled Up"
+msgstr "নিষ্পত্তি সম্পন্ন"
+
+msgid "Settled Back"
+msgstr "ফেরত নিষ্পত্তি"
+
+msgid "Fronted"
+msgstr "অগ্রিম প্রদত্ত"
+
+msgid "No members tracked yet"
+msgstr "এখনো কোনো সদস্য ট্র্যাক করা হয়নি"
+
+msgid ""
+"Add a member only if you need to keep track of who to pay back for bazar "
+"they fronted."
+msgstr ""
+"শুধুমাত্র তখনই সদস্য যোগ করুন যদি আপনার ট্র্যাক রাখতে হয় কাকে বাজারের "
+"অগ্রিম টাকা ফেরত দিতে হবে।"
+
+msgid "Add Your First Member"
+msgstr "আপনার প্রথম সদস্য যোগ করুন"
+
+msgid "Bazar"
+msgstr "বাজার"
+
+msgid "Back to Log"
+msgstr "লগে ফিরুন"
+
+msgid "Total Spent This Month"
+msgstr "এই মাসে মোট ব্যয়"
+
+msgid "Purchases Logged"
+msgstr "লগকৃত কেনাকাটা"
+
+msgid "Purchases"
+msgstr "কেনাকাটা"
+
+msgid "Delete this purchase? This action cannot be undone."
+msgstr "এই কেনাকাটাটি মুছবেন? এই কাজটি ফিরিয়ে নেওয়া যাবে না।"
+
+#, python-format
+msgid "No purchases logged for %(month)s yet."
+msgstr "%(month)s-এর জন্য এখনো কোনো কেনাকাটা লগ করা হয়নি।"
+
+msgid "Log a Purchase"
+msgstr "একটি কেনাকাটা লগ করুন"
+
+msgid "Save Purchase"
+msgstr "কেনাকাটা সংরক্ষণ করুন"
+
+msgid "Household (Bazar) Log"
+msgstr "গৃহস্থালি (বাজার) লগ"
+
+msgid ""
+"Every month's household purchases, grouped for a quick overview. Open a "
+"month to see and add individual purchases."
+msgstr ""
+"প্রতি মাসের গৃহস্থালি কেনাকাটা, দ্রুত সংক্ষিপ্ত বিবরণের জন্য গোষ্ঠীবদ্ধ। "
+"পৃথক কেনাকাটা দেখতে এবং যোগ করতে একটি মাস খুলুন।"
+
+#, python-format
+msgid "%(counter)s purchase"
+msgid_plural "%(counter)s purchases"
+msgstr[0] "%(counter)sটি কেনাকাটা"
+msgstr[1] "%(counter)sটি কেনাকাটা"
+
+msgid "View Purchases"
+msgstr "কেনাকাটা দেখুন"
+
+msgid "No bazar purchases yet"
+msgstr "এখনো কোনো বাজারের কেনাকাটা নেই"
+
+msgid ""
+"Start logging your daily household shopping to keep track of spending by "
+"month."
+msgstr ""
+"মাস অনুযায়ী ব্যয় ট্র্যাক রাখতে আপনার দৈনিক গৃহস্থালি কেনাকাটা লগ করা শুরু "
+"করুন।"
+
+msgid "Add Your First Purchase"
+msgstr "আপনার প্রথম কেনাকাটা যোগ করুন"
+
+#, python-format
+msgid "Purchase of ৳%(amount)s recorded."
+msgstr "৳%(amount)s এর কেনাকাটা রেকর্ড করা হয়েছে।"
+
+msgid "Purchase updated."
+msgstr "কেনাকাটা আপডেট করা হয়েছে।"
+
+msgid "Edit Purchase"
+msgstr "কেনাকাটা সম্পাদনা"
+
+#, python-format
+msgid "Purchase of ৳%(amount)s deleted."
+msgstr "৳%(amount)s এর কেনাকাটা মুছে ফেলা হয়েছে।"
+
+#, python-format
+msgid "'%(name)s' added."
+msgstr "'%(name)s' যোগ করা হয়েছে।"
+
+msgid "Add Household Member"
+msgstr "গৃহস্থালি সদস্য যোগ করুন"
+
+#, python-format
+msgid "'%(name)s' updated."
+msgstr "'%(name)s' আপডেট করা হয়েছে।"
+
+#, python-format
+msgid "Gave back ৳%(amount)s to %(name)s."
+msgstr "%(name)s-কে ৳%(amount)s ফেরত দেওয়া হয়েছে।"
+
+msgid "Settlement updated."
+msgstr "নিষ্পত্তি আপডেট করা হয়েছে।"
+
+msgid "Edit Settlement"
+msgstr "নিষ্পত্তি সম্পাদনা"
+
+#, python-format
+msgid "Settlement of ৳%(amount)s deleted."
+msgstr "৳%(amount)s এর নিষ্পত্তি মুছে ফেলা হয়েছে।"
+
+msgid "Add Bazar Category"
+msgstr "বাজারের ক্যাটাগরি যোগ করুন"
+
+msgid "Income Dashboard"
+msgstr "আয় ড্যাশবোর্ড"
+
+msgid "Income Overview"
+msgstr "আয় সংক্ষিপ্ত বিবরণ"
+
+msgid "Track all your revenue streams and total earnings performance."
+msgstr "আপনার সমস্ত আয়ের উৎস এবং মোট আয়ের কর্মক্ষমতা ট্র্যাক করুন।"
+
+msgid "Add Income Source"
+msgstr "আয়ের উৎস যোগ করুন"
+
+msgid "Sources"
+msgstr "উৎস"
+
+msgid "Total Lifetime Earnings"
+msgstr "মোট আজীবন আয়"
+
+msgid "Manage Sources"
+msgstr "উৎস পরিচালনা করুন"
+
+msgid "Earnings by Source"
+msgstr "উৎস অনুযায়ী আয়"
+
+msgid "Recent Inflow Activity"
+msgstr "সাম্প্রতিক আয়ের কার্যক্রম"
+
+msgid "Source"
+msgstr "উৎস"
+
+msgid "No income data yet"
+msgstr "এখনো কোনো আয়ের তথ্য নেই"
+
+msgid "Record your first payout or salary check to see progress."
+msgstr "অগ্রগতি দেখতে আপনার প্রথম পেআউট বা বেতন চেক রেকর্ড করুন।"
+
+msgid "Select sources..."
+msgstr "উৎস নির্বাচন করুন..."
+
+msgid "Total Earned"
+msgstr "মোট অর্জিত"
+
+msgid "Income Source Ledger"
+msgstr "আয়ের উৎসের হিসাব"
+
+msgid "Settings"
+msgstr "সেটিংস"
+
+msgid "Source List"
+msgstr "উৎসের তালিকা"
+
+msgid "Cumulative Revenue from Source"
+msgstr "উৎস থেকে সঞ্চিত আয়"
+
+msgid "Payout Timeline"
+msgstr "পেআউট টাইমলাইন"
+
+msgid "Reference"
+msgstr "রেফারেন্স"
+
+msgid "Modify"
+msgstr "পরিবর্তন করুন"
+
+msgid "Archive this transaction record permanently?"
+msgstr "এই লেনদেন রেকর্ডটি স্থায়ীভাবে সংরক্ষণাগারে রাখবেন?"
+
+msgid "No Payout Record Found"
+msgstr "কোনো পেআউট রেকর্ড পাওয়া যায়নি"
+
+msgid "Log Payout"
+msgstr "পেআউট লগ করুন"
+
+msgid "Instant Transaction Entry"
+msgstr "তাৎক্ষণিক লেনদেন এন্ট্রি"
+
+msgid "Confirm Entry"
+msgstr "এন্ট্রি নিশ্চিত করুন"
+
+#, python-format
+msgid "Source Meta: %(meta)s"
+msgstr "উৎসের বিবরণ: %(meta)s"
+
+msgid "Source Meta: Generic Source"
+msgstr "উৎসের বিবরণ: সাধারণ উৎস"
+
+msgid "Entity Registration Hub"
+msgstr "সত্তা নিবন্ধন হাব"
+
+msgid "Confirm & Save"
+msgstr "নিশ্চিত করুন ও সংরক্ষণ করুন"
+
+msgid "Source Integrity Encryption Enabled"
+msgstr "উৎসের অখণ্ডতা এনক্রিপশন সক্রিয়"
+
+msgid "Income Sources"
+msgstr "আয়ের উৎস"
+
+msgid "Income Portfolio"
+msgstr "আয়ের পোর্টফোলিও"
+
+msgid ""
+"Manage all entities and sources from where you receive financial inflows."
+msgstr ""
+"আপনি যেখান থেকে আর্থিক আয় পান সেই সমস্ত সত্তা এবং উৎস পরিচালনা করুন।"
+
+msgid "Register New Source"
+msgstr "নতুন উৎস নিবন্ধন করুন"
+
+msgid "Total Sources"
+msgstr "মোট উৎস"
+
+msgid "Total Income"
+msgstr "মোট আয়"
+
+msgid "Avg per Source"
+msgstr "প্রতি উৎসে গড়"
+
+msgid "No description recorded for this source."
+msgstr "এই উৎসের জন্য কোনো বিবরণ রেকর্ড করা হয়নি।"
+
+msgid "No Income Sources Defined"
+msgstr "কোনো আয়ের উৎস নির্ধারিত নেই"
+
+msgid ""
+"Registration of entities (employers, clients, businesses) is required before "
+"logging earnings."
+msgstr ""
+"আয় লগ করার আগে সত্তা (নিয়োগকর্তা, ক্লায়েন্ট, ব্যবসা) নিবন্ধন করা প্রয়োজন।"
+
+msgid "Register First Source"
+msgstr "প্রথম উৎস নিবন্ধন করুন"
+
+#, python-format
+msgid "Income source '%(name)s' created."
+msgstr "আয়ের উৎস '%(name)s' তৈরি করা হয়েছে।"
+
+#, python-format
+msgid "Source '%(name)s' updated."
+msgstr "উৎস '%(name)s' আপডেট করা হয়েছে।"
+
+#, python-format
+msgid "Income of ৳%(amount)s recorded."
+msgstr "৳%(amount)s এর আয় রেকর্ড করা হয়েছে।"
+
+msgid "Income entry updated."
+msgstr "আয়ের এন্ট্রি আপডেট করা হয়েছে।"
+
+msgid "Edit Income Entry"
+msgstr "আয়ের এন্ট্রি সম্পাদনা"
+
+#, python-format
+msgid "Income entry of ৳%(amount)s deleted."
+msgstr "৳%(amount)s এর আয়ের এন্ট্রি মুছে ফেলা হয়েছে।"
+
+msgid "Shop Name"
+msgstr "দোকানের নাম"
+
+msgid "Address or any additional details..."
+msgstr "ঠিকানা বা অতিরিক্ত বিবরণ..."
+
+msgid "What did you buy? (optional)"
+msgstr "আপনি কী কিনেছেন? (ঐচ্ছিক)"
+
+msgid "Grocery"
+msgstr "মুদি"
+
+msgid "Pharmacy"
+msgstr "ফার্মেসি"
+
+msgid "Vegetable & Fruit"
+msgstr "সবজি ও ফল"
+
+msgid "Bakery"
+msgstr "বেকারি"
+
+msgid "Hardware Store"
+msgstr "হার্ডওয়্যার দোকান"
+
+msgid "Clothing"
+msgstr "পোশাক"
+
+msgid "Electronics"
+msgstr "ইলেকট্রনিক্স"
+
+msgid "Stationery"
+msgstr "স্টেশনারি"
+
+msgid "Restaurant"
+msgstr "রেস্তোরাঁ"
+
+msgid "Purchase (বাকি)"
+msgstr "কেনাকাটা (বাকি)"
+
+msgid "Payment"
+msgstr "পেমেন্ট"
+
+msgid "Shop Dues Dashboard"
+msgstr "দোকানের বাকি ড্যাশবোর্ড"
+
+msgid "Shop Dues Overview"
+msgstr "দোকানের বাকি সংক্ষিপ্ত বিবরণ"
+
+msgid ""
+"A detailed summary of what you owe (বাকি) to local shops and how much you've "
+"paid off."
+msgstr ""
+"স্থানীয় দোকানে আপনার কত বাকি আছে এবং কত পরিশোধ করেছেন তার বিস্তারিত "
+"সারাংশ।"
+
+msgid "Add Shop"
+msgstr "দোকান যোগ করুন"
+
+msgid "Total Due (বাকি)"
+msgstr "মোট বাকি"
+
+msgid "Remaining Due"
+msgstr "অবশিষ্ট বাকি"
+
+msgid "Shop"
+msgstr "দোকান"
+
+msgid "Get started by adding your first shop."
+msgstr "আপনার প্রথম দোকান যোগ করে শুরু করুন।"
+
+msgid "View All Shops"
+msgstr "সব দোকান দেখুন"
+
+msgid "Add New Shop"
+msgstr "নতুন দোকান যোগ করুন"
+
+msgid "Due Breakdown (Remaining)"
+msgstr "বাকির বিভাজন (অবশিষ্ট)"
+
+msgid "Edit Shop"
+msgstr "দোকান সম্পাদনা"
+
+msgid "No activity for this shop yet."
+msgstr "এই দোকানের জন্য এখনো কোনো কার্যক্রম নেই।"
+
+msgid "Due Settled Percentage"
+msgstr "বাকি নিষ্পত্তির শতাংশ"
+
+msgid "Remaining (বাকি)"
+msgstr "অবশিষ্ট (বাকি)"
+
+msgid "My Shops"
+msgstr "আমার দোকান"
+
+msgid "Shop Dues (বাকি)"
+msgstr "দোকানের বাকি"
+
+msgid ""
+"Local shops you buy from on credit, and how much is still owed to each. "
+"Search by name, filter by payment status, or include/exclude categories."
+msgstr ""
+"স্থানীয় দোকান যেখান থেকে আপনি বাকিতে কেনেন, এবং প্রতিটির কাছে কত বাকি "
+"আছে। নাম দিয়ে অনুসন্ধান করুন, পেমেন্ট স্ট্যাটাস দিয়ে ফিল্টার করুন, অথবা "
+"ক্যাটাগরি অন্তর্ভুক্ত/বাদ দিন।"
+
+msgid "New Shop"
+msgstr "নতুন দোকান"
+
+msgid "e.g. Rahim Store"
+msgstr "যেমন রহিম স্টোর"
+
+#, python-format
+msgid "Due ৳%(amount)s"
+msgstr "৳%(amount)s বাকি"
+
+msgid "Payment Progress"
+msgstr "পেমেন্টের অগ্রগতি"
+
+msgid "Total Due"
+msgstr "মোট বাকি"
+
+msgid "No shops match your filters"
+msgstr "আপনার ফিল্টারের সাথে মেলে এমন কোনো দোকান নেই"
+
+msgid "No shops yet"
+msgstr "এখনো কোনো দোকান নেই"
+
+msgid ""
+"Add the local shops you buy from on credit to start tracking what's owed "
+"(বাকি)."
+msgstr ""
+"বাকি ট্র্যাক করা শুরু করতে আপনি যেসব স্থানীয় দোকান থেকে বাকিতে কেনেন "
+"সেগুলো যোগ করুন।"
+
+msgid "Add Your First Shop"
+msgstr "আপনার প্রথম দোকান যোগ করুন"
+
+#, python-format
+msgid "Shop '%(name)s' added successfully."
+msgstr "দোকান '%(name)s' সফলভাবে যোগ করা হয়েছে।"
+
+#, python-format
+msgid "Shop '%(name)s' updated successfully."
+msgstr "দোকান '%(name)s' সফলভাবে আপডেট করা হয়েছে।"
+
+msgid "Tracker"
+msgstr "ট্র্যাকার"
+
+msgid "Close sidebar"
+msgstr "সাইডবার বন্ধ করুন"
+
+msgid "Open sidebar"
+msgstr "সাইডবার খুলুন"
+
+msgid "Ledger Teal"
+msgstr "লেজার টিল"
+
+msgid "Ledger Teal accent"
+msgstr "লেজার টিল অ্যাকসেন্ট"
+
+msgid "Indigo Classic"
+msgstr "ইন্ডিগো ক্লাসিক"
+
+msgid "Indigo Classic accent"
+msgstr "ইন্ডিগো ক্লাসিক অ্যাকসেন্ট"
+
+msgid "Slate Mono"
+msgstr "স্লেট মনো"
+
+msgid "Slate Mono accent"
+msgstr "স্লেট মনো অ্যাকসেন্ট"
+
+msgid "Light"
+msgstr "হালকা"
+
+msgid "Dark"
+msgstr "গাঢ়"
+
+msgid "Ledger & Household"
+msgstr "হিসাব ও গৃহস্থালি"
+
+msgid "Creditors"
+msgstr "পাওনাদার"
+
+msgid "Debtors"
+msgstr "দেনাদার"
+
+msgid "Income"
+msgstr "আয়"
+
+msgid "Expense"
+msgstr "খরচ"
+
+msgid "Household (Bazar)"
+msgstr "গৃহস্থালি (বাজার)"
+
+msgid "Django Admin"
+msgstr "জ্যাঙ্গো অ্যাডমিন"
+
+msgid "Log Out"
+msgstr "লগ আউট"
