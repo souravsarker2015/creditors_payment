@@ -165,33 +165,46 @@
       {% blocktranslate with current=page_obj.number total=page_obj.paginator.num_pages %}Page {{ current }} of {{ total }}{% endblocktranslate %}
     </p>
 
-    <nav class="inline-flex items-center gap-1 rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] p-1 shadow-sm">
-      {% if page_obj.has_previous %}
-        <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page=1" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{% translate "First" %}</a>
-        <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ page_obj.previous_page_number }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{% translate "Prev" %}</a>
-      {% else %}
-        <span class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-muted)]">{% translate "First" %}</span>
-        <span class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-muted)]">{% translate "Prev" %}</span>
-      {% endif %}
+    <div class="flex flex-col items-center gap-3 sm:flex-row">
+      <div class="max-w-full overflow-x-auto">
+        <nav class="inline-flex items-center gap-1 whitespace-nowrap rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] p-1 shadow-sm">
+          {% if page_obj.has_previous %}
+            <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page=1" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{% translate "First" %}</a>
+            <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ page_obj.previous_page_number }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{% translate "Prev" %}</a>
+          {% else %}
+            <span class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-muted)]">{% translate "First" %}</span>
+            <span class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-muted)]">{% translate "Prev" %}</span>
+          {% endif %}
 
-      {% for num in pagination_window %}
-        {% if num is None %}
-          <span class="px-2 py-2 text-sm font-bold text-[var(--text-muted)]">…</span>
-        {% elif num == page_obj.number %}
-          <span class="rounded-lg px-3 py-2 text-sm font-bold" style="background: var(--accent); color: var(--accent-on);">{{ num }}</span>
-        {% else %}
-          <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ num }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{{ num }}</a>
-        {% endif %}
-      {% endfor %}
+          {% for num in pagination_window %}
+            {% if num is None %}
+              <span class="px-2 py-2 text-sm font-bold text-[var(--text-muted)]">…</span>
+            {% elif num == page_obj.number %}
+              <span class="rounded-lg px-3 py-2 text-sm font-bold" style="background: var(--accent); color: var(--accent-on);">{{ num }}</span>
+            {% else %}
+              <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ num }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{{ num }}</a>
+            {% endif %}
+          {% endfor %}
 
-      {% if page_obj.has_next %}
-        <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ page_obj.next_page_number }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{% translate "Next" %}</a>
-        <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ page_obj.paginator.num_pages }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{% translate "Last" %}</a>
-      {% else %}
-        <span class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-muted)]">{% translate "Next" %}</span>
-        <span class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-muted)]">{% translate "Last" %}</span>
-      {% endif %}
-    </nav>
+          {% if page_obj.has_next %}
+            <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ page_obj.next_page_number }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{% translate "Next" %}</a>
+            <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ page_obj.paginator.num_pages }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{% translate "Last" %}</a>
+          {% else %}
+            <span class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-muted)]">{% translate "Next" %}</span>
+            <span class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-muted)]">{% translate "Last" %}</span>
+          {% endif %}
+        </nav>
+      </div>
+
+      <form class="flex flex-col items-start gap-1" x-data="{ pageInput: '{{ page_obj.number }}', maxPage: {{ page_obj.paginator.num_pages }}, showError: false }" @submit.prevent="const p = parseInt(pageInput, 10); showError = !(p >= 1 && p <= maxPage); if (!showError) { window.location.href = '?{{ base_query_string }}{% if base_query_string %}&{% endif %}page=' + p; }">
+        <div class="flex items-center gap-2">
+          <input type="number" x-model="pageInput" inputmode="numeric" min="1" max="{{ page_obj.paginator.num_pages }}" class="w-20 rounded-lg border border-[var(--border)] bg-[var(--surface-raised)] px-2 py-2 text-center text-sm font-semibold text-[var(--text-primary)] focus:border-[var(--accent)] focus:ring-[var(--accent)]">
+          <button type="submit" class="rounded-lg bg-[var(--surface-sunken)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] hover:brightness-95">{% translate "Go" %}</button>
+        </div>
+        <p class="text-xs font-medium text-[var(--text-muted)]">{% blocktranslate with total=page_obj.paginator.num_pages %}Range: 1-{{ total }}{% endblocktranslate %}</p>
+        <p x-show="showError" x-cloak class="text-xs font-semibold" style="color: var(--status-critical);">{% blocktranslate with total=page_obj.paginator.num_pages %}Please enter a page between 1 and {{ total }}.{% endblocktranslate %}</p>
+      </form>
+    </div>
   </div>
   {% endif %}
 

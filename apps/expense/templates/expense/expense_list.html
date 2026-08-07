@@ -143,7 +143,8 @@
     </p>
 
     <div class="flex flex-col items-center gap-3 sm:flex-row">
-    <nav class="inline-flex items-center gap-1 rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] p-1 shadow-sm">
+    <div class="max-w-full overflow-x-auto">
+    <nav class="inline-flex items-center gap-1 whitespace-nowrap rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] p-1 shadow-sm">
       {% if page_obj.has_previous %}
         <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page=1" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">
           {% translate "First" %}
@@ -186,6 +187,7 @@
         <span class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-muted)]">{% translate "Last" %}</span>
       {% endif %}
     </nav>
+    </div>
 
     <form method="get" class="flex flex-col items-start gap-1" x-data="{ pageInput: '{{ page_obj.number }}', maxPage: {{ page_obj.paginator.num_pages }}, showError: false }" @submit="const p = parseInt(pageInput, 10); showError = !(p >= 1 && p <= maxPage); if (showError) { $event.preventDefault(); }">
       <div class="flex items-center gap-2">
