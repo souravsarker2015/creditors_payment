@@ -14,7 +14,13 @@
       <h1 class="text-2xl font-black leading-6 text-[var(--text-primary)] uppercase tracking-tight">{% translate "Income Portfolio" %}</h1>
       <p class="mt-2 text-sm text-[var(--text-secondary)]">{% translate "Manage all entities and sources from where you receive financial inflows." %}</p>
     </div>
-    <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+    <div class="mt-4 flex flex-col gap-2 sm:ml-16 sm:mt-0 sm:flex-none sm:flex-row">
+      <form method="post" action="{% url 'income_source_import' %}" enctype="multipart/form-data" x-data>
+        {% csrf_token %}
+        <input type="file" id="income-source-import-file" name="csv_file" accept=".csv,text/csv" class="hidden" @change="$el.form.submit()">
+        <label for="income-source-import-file" class="block cursor-pointer rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] px-4 py-3 text-center text-sm font-black text-[var(--text-secondary)] shadow-sm hover:bg-[var(--surface-sunken)]">{% translate "Import CSV" %}</label>
+      </form>
+      <a href="{% url 'income_source_import_template' %}" class="block rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] px-4 py-3 text-center text-sm font-black text-[var(--text-secondary)] shadow-sm hover:bg-[var(--surface-sunken)]">{% translate "Template" %}</a>
       <a href="{% url 'income_source_create' %}" class="block rounded-xl bg-[var(--accent)] px-4 py-3 text-center text-sm font-black text-[var(--accent-on)] shadow-xl hover:bg-[var(--accent-strong)] transition-all">+ {% translate "Register New Source" %}</a>
     </div>
   </div>
@@ -58,6 +64,14 @@
         <input id="date-from-hidden" type="hidden" name="date_from" value="{{ date_from }}">
         <input id="date-to-hidden" type="hidden" name="date_to" value="{{ date_to }}">
       </div>
+      <div>
+        <label for="sort" class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Sort by" %}</label>
+        <select id="sort" name="sort" class="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--surface-raised)] text-sm text-[var(--text-primary)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]">
+          {% for value, label in sort_options %}
+            <option value="{{ value }}"{% if value == sort %} selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
     </div>
     <div class="mt-4 flex flex-col gap-2 sm:flex-row">
       <button type="submit" class="w-full rounded-lg bg-[var(--surface-sunken)] px-4 py-2 text-sm font-bold text-[var(--text-primary)] hover:brightness-95 sm:w-auto">{% translate "Apply Filters" %}</button>
@@ -84,9 +98,9 @@
     </div>
   </dl>
 
-  {% if sources %}
+  {% if page_obj.object_list %}
   <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-    {% for s in sources %}
+    {% for s in page_obj %}
     <div class="group relative flex flex-col overflow-hidden rounded-3xl border-none bg-[var(--surface-raised)] p-8 shadow-sm ring-1 ring-[var(--border-soft)] hover:shadow-2xl transition-all">
       <div class="flex items-center justify-between mb-4">
         <div class="h-12 w-12 rounded-xl flex items-center justify-center font-black text-xl transition-colors duration-300" style="background: var(--status-good-bg); color: var(--status-good);">
@@ -108,6 +122,43 @@
     </div>
     {% endfor %}
   </div>
+
+  {% if page_obj.paginator.num_pages > 1 %}
+  <div class="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
+    <p class="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+      {% blocktranslate with current=page_obj.number total=page_obj.paginator.num_pages %}Page {{ current }} of {{ total }}{% endblocktranslate %}
+    </p>
+
+    <nav class="inline-flex items-center gap-1 rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] p-1 shadow-sm">
+      {% if page_obj.has_previous %}
+        <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page=1" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{% translate "First" %}</a>
+        <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ page_obj.previous_page_number }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{% translate "Prev" %}</a>
+      {% else %}
+        <span class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-muted)]">{% translate "First" %}</span>
+        <span class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-muted)]">{% translate "Prev" %}</span>
+      {% endif %}
+
+      {% for num in pagination_window %}
+        {% if num is None %}
+          <span class="px-2 py-2 text-sm font-bold text-[var(--text-muted)]">…</span>
+        {% elif num == page_obj.number %}
+          <span class="rounded-lg px-3 py-2 text-sm font-bold" style="background: var(--accent); color: var(--accent-on);">{{ num }}</span>
+        {% else %}
+          <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ num }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{{ num }}</a>
+        {% endif %}
+      {% endfor %}
+
+      {% if page_obj.has_next %}
+        <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ page_obj.next_page_number }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{% translate "Next" %}</a>
+        <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ page_obj.paginator.num_pages }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{% translate "Last" %}</a>
+      {% else %}
+        <span class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-muted)]">{% translate "Next" %}</span>
+        <span class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-muted)]">{% translate "Last" %}</span>
+      {% endif %}
+    </nav>
+  </div>
+  {% endif %}
+
   {% else %}
   <div class="flex flex-col items-center justify-center rounded-[3rem] border-2 border-dashed border-[var(--border)] p-20 text-center bg-[var(--surface-raised)] shadow-sm">
       <div class="h-20 w-20 rounded-full flex items-center justify-center mb-6" style="background: var(--status-good-bg);">

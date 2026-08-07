@@ -58,6 +58,14 @@
         <input id="date-from-hidden" type="hidden" name="date_from" value="{{ date_from }}">
         <input id="date-to-hidden" type="hidden" name="date_to" value="{{ date_to }}">
       </div>
+      <div>
+        <label for="sort" class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Sort by" %}</label>
+        <select id="sort" name="sort" class="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--surface-raised)] text-sm text-[var(--text-primary)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]">
+          {% for value, label in sort_options %}
+            <option value="{{ value }}"{% if value == sort %} selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
     </div>
     <div class="mt-4 flex flex-col gap-2 sm:flex-row">
       <button type="submit" class="w-full rounded-lg bg-[var(--surface-sunken)] px-4 py-2 text-sm font-bold text-[var(--text-primary)] hover:brightness-95 sm:w-auto">{% translate "Apply Filters" %}</button>
@@ -193,6 +201,9 @@
         {% endif %}
         {% if date_to %}
           <input type="hidden" name="date_to" value="{{ date_to }}">
+        {% endif %}
+        {% if sort %}
+          <input type="hidden" name="sort" value="{{ sort }}">
         {% endif %}
         <input type="number" name="page" x-model="pageInput" inputmode="numeric" value="{{ page_obj.number }}" class="w-20 rounded-lg border border-[var(--border)] bg-[var(--surface-raised)] px-2 py-2 text-center text-sm font-semibold text-[var(--text-primary)] focus:border-[var(--accent)] focus:ring-[var(--accent)]">
         <button type="submit" class="rounded-lg bg-[var(--surface-sunken)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] hover:brightness-95">

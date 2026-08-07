@@ -10,7 +10,13 @@
       <h1 class="text-3xl font-black leading-6 text-[var(--text-primary)] uppercase tracking-tighter">{% translate "Taxonomy Settings" %}</h1>
       <p class="mt-4 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.3em]">{% translate "Expense Classification Engine" %}</p>
     </div>
-    <div class="mt-8 sm:ml-16 sm:mt-0 sm:flex-none">
+    <div class="mt-8 flex flex-col gap-2 sm:ml-16 sm:mt-0 sm:flex-none sm:flex-row">
+      <form method="post" action="{% url 'category_import' %}" enctype="multipart/form-data" x-data>
+        {% csrf_token %}
+        <input type="file" id="expense-category-import-file" name="csv_file" accept=".csv,text/csv" class="hidden" @change="$el.form.submit()">
+        <label for="expense-category-import-file" class="block cursor-pointer rounded-[1.25rem] border border-[var(--border)] bg-[var(--surface-raised)] px-6 py-4 text-center text-xs font-black uppercase tracking-widest text-[var(--text-secondary)] shadow-sm hover:bg-[var(--surface-sunken)] transition-all">{% translate "Import CSV" %}</label>
+      </form>
+      <a href="{% url 'category_import_template' %}" class="block rounded-[1.25rem] border border-[var(--border)] bg-[var(--surface-raised)] px-6 py-4 text-center text-xs font-black uppercase tracking-widest text-[var(--text-secondary)] shadow-sm hover:bg-[var(--surface-sunken)] transition-all">{% translate "Template" %}</a>
       <a href="{% url 'category_create' %}" class="block rounded-[1.25rem] bg-[var(--accent)] px-6 py-4 text-center text-xs font-black uppercase tracking-widest text-[var(--accent-on)] shadow-2xl hover:bg-[var(--accent-strong)] transition-all hover:-translate-y-1 active:translate-y-0">+ {% translate "Define Category" %}</a>
     </div>
   </div>

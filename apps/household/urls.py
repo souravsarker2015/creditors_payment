@@ -9,6 +9,8 @@ urlpatterns = [
     path("purchases/<int:pk>/delete/", views.purchase_delete_view, name="household_purchase_delete"),
     path("members/", views.member_list_view, name="household_member_list"),
     path("members/add/", views.member_create_view, name="household_member_create"),
+    path("members/import/", views.member_import_view, name="household_member_import"),
+    path("members/import/template/", views.member_import_template_view, name="household_member_import_template"),
     path("members/<int:pk>/", views.member_detail_view, name="household_member_detail"),
     path("members/<int:pk>/edit/", views.member_edit_view, name="household_member_edit"),
     path("members/<int:pk>/statement/", views.member_statement_view, name="household_member_statement"),
@@ -16,4 +18,6 @@ urlpatterns = [
     path("settlements/<int:pk>/delete/", views.settlement_delete_view, name="household_settlement_delete"),
     path("categories/", views.category_list_view, name="household_category_list"),
     path("categories/add/", views.category_create_view, name="household_category_create"),
+    path("categories/import/", views.category_import_view, name="household_category_import"),
+    path("categories/import/template/", views.category_import_template_view, name="household_category_import_template"),
 ]

@@ -1,5 +1,6 @@
 import calendar
 import csv
+import io
 from datetime import date
 
 from django.shortcuts import render, redirect, get_object_or_404
@@ -11,7 +12,7 @@ from django.db.models import Sum, Count, DecimalField, Value
 from django.db.models.functions import Coalesce, TruncMonth
 from django.core.paginator import Paginator
 from django.utils import dateformat
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext as _, ngettext
 
 from .models import HouseholdCategory, HouseholdMember, Purchase, Settlement
 from .forms import HouseholdCategoryForm, HouseholdMemberForm, PurchaseForm, SettlementForm
@@ -25,6 +26,14 @@ def _csv_response(filename, header, rows):
     writer.writerow(header)
     writer.writerows(rows)
     return response
+
+
+def _row_value(row, fieldnames, key):
+    """Reads a value from a csv.DictReader row by lowercased column name."""
+    col = fieldnames.get(key)
+    if col is None:
+        return ""
+    return (row.get(col) or "").strip()
 
 
 def _last_12_month_starts():
@@ -70,6 +79,40 @@ def _parse_year_month(request):
     raw_month = request.GET.get("month", "").strip()
     month = int(raw_month) if raw_month.isdigit() and 1 <= int(raw_month) <= 12 else None
     return year, month
+
+
+PURCHASE_LIST_SORT_OPTIONS = [
+    ("-month", _("Month (Newest First)")),
+    ("month", _("Month (Oldest First)")),
+    ("-total", _("Total Spent (High to Low)")),
+    ("total", _("Total Spent (Low to High)")),
+]
+PURCHASE_LIST_SORT_FIELDS = {
+    "-month": ["-month"],
+    "month": ["month"],
+    "-total": ["-total"],
+    "total": ["total"],
+}
+
+MEMBER_SORT_OPTIONS = [
+    ("name", _("Name (A–Z)")),
+    ("-name", _("Name (Z–A)")),
+    ("-balance", _("Balance Due (High to Low)")),
+    ("balance", _("Balance Due (Low to High)")),
+]
+
+CATEGORY_SORT_OPTIONS = [
+    ("-total", _("Total Spent (High to Low)")),
+    ("total", _("Total Spent (Low to High)")),
+    ("name", _("Name (A–Z)")),
+    ("-name", _("Name (Z–A)")),
+]
+CATEGORY_SORT_FIELDS = {
+    "-total": ["-total"],
+    "total": ["total"],
+    "name": ["category__name"],
+    "-name": ["-category__name"],
+}
 
 
 def _build_pagination_window(page_obj, window=2):
@@ -157,6 +200,10 @@ def dashboard_view(request):
 
 @login_required
 def purchase_list_view(request):
+    sort = request.GET.get("sort", "-month")
+    if sort not in PURCHASE_LIST_SORT_FIELDS:
+        sort = "-month"
+
     monthly = (
         request.user.household_purchases.annotate(month=TruncMonth("date"))
         .values("month")
@@ -164,7 +211,7 @@ def purchase_list_view(request):
             total=Coalesce(Sum("amount"), Value(0, output_field=DecimalField())),
             count=Count("id"),
         )
-        .order_by("-month")
+        .order_by(*PURCHASE_LIST_SORT_FIELDS[sort])
     )
 
     if request.GET.get("export") == "csv":
@@ -192,6 +239,10 @@ def purchase_list_view(request):
 
     today = timezone.now().date()
 
+    base_query = request.GET.copy()
+    base_query.pop("page", None)
+    base_query_string = base_query.urlencode()
+
     context = {
         "page_obj": page_obj,
         "pagination_window": _build_pagination_window(page_obj),
@@ -200,6 +251,9 @@ def purchase_list_view(request):
         "outstanding_to_members": outstanding_to_members,
         "current_year": today.year,
         "current_month": today.month,
+        "sort": sort,
+        "sort_options": PURCHASE_LIST_SORT_OPTIONS,
+        "base_query_string": base_query_string,
     }
     return render(request, "household/purchase_list.html", context)
 
@@ -288,7 +342,7 @@ def purchase_delete_view(request, pk):
 
 @login_required
 def member_list_view(request):
-    members = request.user.household_members.all()
+    members = list(request.user.household_members.all())
     for m in members:
         spent = m.total_spent
         m.settle_percent = min(100, int((m.total_settled / spent) * 100)) if spent > 0 else 0
@@ -311,11 +365,112 @@ def member_list_view(request):
             rows,
         )
 
+    total_owed = sum((m.balance_due for m in members if m.balance_due > 0), 0)
+
+    sort = request.GET.get("sort", "name")
+    valid_sorts = {value for value, _label in MEMBER_SORT_OPTIONS}
+    if sort not in valid_sorts:
+        sort = "name"
+    if sort == "name":
+        members.sort(key=lambda m: m.name.lower())
+    elif sort == "-name":
+        members.sort(key=lambda m: m.name.lower(), reverse=True)
+    elif sort == "-balance":
+        members.sort(key=lambda m: m.balance_due, reverse=True)
+    elif sort == "balance":
+        members.sort(key=lambda m: m.balance_due)
+
+    paginator = Paginator(members, 12)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    base_query = request.GET.copy()
+    base_query.pop("page", None)
+    base_query_string = base_query.urlencode()
+
     context = {
-        "members": members,
-        "total_owed": sum((m.balance_due for m in members if m.balance_due > 0), 0),
+        "page_obj": page_obj,
+        "pagination_window": _build_pagination_window(page_obj),
+        "total_owed": total_owed,
+        "sort": sort,
+        "sort_options": MEMBER_SORT_OPTIONS,
+        "base_query_string": base_query_string,
     }
     return render(request, "household/member_list.html", context)
+
+
+@login_required
+def member_import_template_view(request):
+    rows = [(_("Rahim"), "01711000000", _("Occasionally fronts bazar money"))]
+    return _csv_response(
+        "household_member_import_template.csv",
+        [_("Name"), _("Phone"), _("Note")],
+        rows,
+    )
+
+
+@login_required
+def member_import_view(request):
+    if request.method != "POST":
+        return redirect("household_member_list")
+
+    csv_file = request.FILES.get("csv_file")
+    if not csv_file:
+        messages.error(request, _("Please choose a CSV file to import."))
+        return redirect("household_member_list")
+
+    try:
+        decoded = csv_file.read().decode("utf-8-sig")
+    except UnicodeDecodeError:
+        messages.error(request, _("Could not read that file. Please upload a UTF-8 encoded CSV."))
+        return redirect("household_member_list")
+
+    reader = csv.DictReader(io.StringIO(decoded))
+    if not reader.fieldnames:
+        messages.error(request, _("The CSV file appears to be empty."))
+        return redirect("household_member_list")
+
+    fieldnames = {(f or "").strip().lower(): f for f in reader.fieldnames}
+    if "name" not in fieldnames:
+        messages.error(request, _("The CSV must have a 'Name' column."))
+        return redirect("household_member_list")
+
+    existing_names = {n.lower() for n in request.user.household_members.values_list("name", flat=True)}
+
+    created = 0
+    skipped_duplicate = 0
+    skipped_blank = 0
+
+    for row in reader:
+        name = _row_value(row, fieldnames, "name")
+        if not name:
+            skipped_blank += 1
+            continue
+        if name.lower() in existing_names:
+            skipped_duplicate += 1
+            continue
+
+        phone = _row_value(row, fieldnames, "phone")
+        note = _row_value(row, fieldnames, "note")
+
+        HouseholdMember.objects.create(user=request.user, name=name, phone=phone, note=note)
+
+        existing_names.add(name.lower())
+        created += 1
+
+    if created:
+        messages.success(request, _("Imported %(count)s member(s).") % {"count": created})
+    skipped_total = skipped_duplicate + skipped_blank
+    if skipped_total:
+        messages.warning(
+            request,
+            _("Skipped %(count)s row(s): %(dup)s duplicate name(s), %(blank)s blank name(s).")
+            % {"count": skipped_total, "dup": skipped_duplicate, "blank": skipped_blank},
+        )
+    if not created and not skipped_total:
+        messages.error(request, _("No rows found to import."))
+
+    return redirect("household_member_list")
 
 
 @login_required
@@ -541,10 +696,14 @@ def category_list_view(request):
         total=Coalesce(Sum("amount"), Value(0, output_field=DecimalField()))
     )["total"]
 
+    sort = request.GET.get("sort", "-total")
+    if sort not in CATEGORY_SORT_FIELDS:
+        sort = "-total"
+
     category_rows = (
         purchases.values("category_id", "category__name")
         .annotate(total=Coalesce(Sum("amount"), Value(0, output_field=DecimalField())))
-        .order_by("-total")
+        .order_by(*CATEGORY_SORT_FIELDS[sort])
     )
 
     categories = []
@@ -583,6 +742,8 @@ def category_list_view(request):
         "selected_year": selected_year,
         "selected_month": selected_month,
         "selected_month_date": date(2000, selected_month, 1) if selected_month else None,
+        "sort": sort,
+        "sort_options": CATEGORY_SORT_OPTIONS,
     }
     return render(request, "household/category_list.html", context)
 
@@ -604,3 +765,78 @@ def category_create_view(request):
         "household/household_form.html",
         {"form": form, "title": _("Add Bazar Category"), "back_url": "/household/categories/"},
     )
+
+
+@login_required
+def category_import_template_view(request):
+    rows = [(_("Vegetables"),), (_("Fish"),)]
+    return _csv_response(
+        "bazar_category_import_template.csv",
+        [_("Name")],
+        rows,
+    )
+
+
+@login_required
+def category_import_view(request):
+    if request.method != "POST":
+        return redirect("household_category_list")
+
+    csv_file = request.FILES.get("csv_file")
+    if not csv_file:
+        messages.error(request, _("Please choose a CSV file to import."))
+        return redirect("household_category_list")
+
+    try:
+        decoded = csv_file.read().decode("utf-8-sig")
+    except UnicodeDecodeError:
+        messages.error(request, _("Could not read that file. Please upload a UTF-8 encoded CSV."))
+        return redirect("household_category_list")
+
+    reader = csv.DictReader(io.StringIO(decoded))
+    if not reader.fieldnames:
+        messages.error(request, _("The CSV file appears to be empty."))
+        return redirect("household_category_list")
+
+    fieldnames = {(f or "").strip().lower(): f for f in reader.fieldnames}
+    if "name" not in fieldnames:
+        messages.error(request, _("The CSV must have a 'Name' column."))
+        return redirect("household_category_list")
+
+    existing_names = {n.lower() for n in request.user.household_categories.values_list("name", flat=True)}
+
+    created = 0
+    skipped_duplicate = 0
+    skipped_blank = 0
+
+    for row in reader:
+        name = _row_value(row, fieldnames, "name")
+        if not name:
+            skipped_blank += 1
+            continue
+        if name.lower() in existing_names:
+            skipped_duplicate += 1
+            continue
+
+        HouseholdCategory.objects.create(user=request.user, name=name)
+
+        existing_names.add(name.lower())
+        created += 1
+
+    if created:
+        messages.success(
+            request,
+            ngettext("Imported %(count)s category.", "Imported %(count)s categories.", created)
+            % {"count": created},
+        )
+    skipped_total = skipped_duplicate + skipped_blank
+    if skipped_total:
+        messages.warning(
+            request,
+            _("Skipped %(count)s row(s): %(dup)s duplicate name(s), %(blank)s blank name(s).")
+            % {"count": skipped_total, "dup": skipped_duplicate, "blank": skipped_blank},
+        )
+    if not created and not skipped_total:
+        messages.error(request, _("No rows found to import."))
+
+    return redirect("household_category_list")

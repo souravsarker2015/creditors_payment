@@ -14,7 +14,13 @@
       <h1 class="text-2xl font-bold leading-6 text-[var(--text-primary)]">{% translate "Shop Dues (বাকি)" %}</h1>
       <p class="mt-2 text-sm text-[var(--text-secondary)]">{% translate "Local shops you buy from on credit, and how much is still owed to each. Search by name, filter by payment status, or include/exclude categories." %}</p>
     </div>
-    <div class="mt-1 sm:mt-0 sm:flex-none">
+    <div class="mt-1 flex flex-col gap-2 sm:mt-0 sm:flex-none sm:flex-row">
+      <form method="post" action="{% url 'shop_import' %}" enctype="multipart/form-data" x-data>
+        {% csrf_token %}
+        <input type="file" id="shop-import-file" name="csv_file" accept=".csv,text/csv" class="hidden" @change="$el.form.submit()">
+        <label for="shop-import-file" class="block cursor-pointer rounded-md border border-[var(--border)] bg-[var(--surface-raised)] px-3 py-2 text-center text-sm font-semibold text-[var(--text-secondary)] shadow-sm hover:bg-[var(--surface-sunken)]">{% translate "Import CSV" %}</label>
+      </form>
+      <a href="{% url 'shop_import_template' %}" class="block rounded-md border border-[var(--border)] bg-[var(--surface-raised)] px-3 py-2 text-center text-sm font-semibold text-[var(--text-secondary)] shadow-sm hover:bg-[var(--surface-sunken)]">{% translate "Template" %}</a>
       <a href="{% url 'shop_create' %}" class="block rounded-md bg-[var(--accent)] px-3 py-2 text-center text-sm font-semibold text-[var(--accent-on)] shadow-sm hover:bg-[var(--accent-strong)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]">+ {% translate "New Shop" %}</a>
     </div>
   </div>
@@ -69,6 +75,14 @@
           {% endfor %}
         </select>
         <p class="mt-1 text-xs text-[var(--text-muted)]">{% translate "Leave empty for all categories." %}</p>
+      </div>
+      <div class="w-full">
+        <label for="sort" class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Sort by" %}</label>
+        <select id="sort" name="sort" class="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--surface-raised)] text-sm text-[var(--text-primary)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]">
+          {% for value, label in sort_options %}
+            <option value="{{ value }}"{% if value == sort %} selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
       </div>
     </div>
     <div class="mt-4 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">

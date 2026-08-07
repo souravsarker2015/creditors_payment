@@ -1,4 +1,5 @@
 import csv
+import io
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 import django.utils.timezone
@@ -7,11 +8,24 @@ from django.contrib import messages
 from django.db.models import Sum, Q, DecimalField, Value
 from django.db.models.functions import Coalesce, TruncMonth
 from django.core.paginator import Paginator
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext as _, ngettext
 from datetime import date as date_cls
 
 from .models import ExpenseCategory, Expense
 from .forms import ExpenseCategoryForm, ExpenseForm
+
+SORT_OPTIONS = [
+    ("-date", _("Date (Newest First)")),
+    ("date", _("Date (Oldest First)")),
+    ("-amount", _("Amount (High to Low)")),
+    ("amount", _("Amount (Low to High)")),
+]
+SORT_FIELDS = {
+    "-date": ["-date", "-created_at"],
+    "date": ["date", "created_at"],
+    "-amount": ["-amount"],
+    "amount": ["amount"],
+}
 
 
 def _csv_response(filename, header, rows):
@@ -22,6 +36,14 @@ def _csv_response(filename, header, rows):
     writer.writerow(header)
     writer.writerows(rows)
     return response
+
+
+def _row_value(row, fieldnames, key):
+    """Reads a value from a csv.DictReader row by lowercased column name."""
+    col = fieldnames.get(key)
+    if col is None:
+        return ""
+    return (row.get(col) or "").strip()
 
 
 def _last_12_month_starts():
@@ -225,7 +247,12 @@ def expense_list_view(request):
         selected_year=filters["selected_year"],
         date_from=filters["date_from"],
         date_to=filters["date_to"],
-    ).select_related("category").order_by("-date", "-created_at")
+    )
+
+    sort = request.GET.get("sort", "-date")
+    if sort not in SORT_FIELDS:
+        sort = "-date"
+    filtered_expenses = filtered_expenses.select_related("category").order_by(*SORT_FIELDS[sort])
 
     total_spent = filtered_expenses.aggregate(
         total=Coalesce(Sum("amount"), Value(0, output_field=DecimalField()))
@@ -273,6 +300,8 @@ def expense_list_view(request):
         "selected_year": filters["selected_year"],
         "date_from": filters["date_from"].isoformat() if filters["date_from"] else "",
         "date_to": filters["date_to"].isoformat() if filters["date_to"] else "",
+        "sort": sort,
+        "sort_options": SORT_OPTIONS,
         "base_query": request.GET.copy(),
     }
     context["base_query"].pop("page", None)
@@ -339,3 +368,78 @@ def category_create_view(request):
     else:
         form = ExpenseCategoryForm()
     return render(request, "expense/expense_form.html", {"form": form, "title": _("Add Category")})
+
+
+@login_required
+def category_import_template_view(request):
+    rows = [(_("Groceries"),), (_("Transport"),)]
+    return _csv_response(
+        "expense_category_import_template.csv",
+        [_("Name")],
+        rows,
+    )
+
+
+@login_required
+def category_import_view(request):
+    if request.method != "POST":
+        return redirect("category_list")
+
+    csv_file = request.FILES.get("csv_file")
+    if not csv_file:
+        messages.error(request, _("Please choose a CSV file to import."))
+        return redirect("category_list")
+
+    try:
+        decoded = csv_file.read().decode("utf-8-sig")
+    except UnicodeDecodeError:
+        messages.error(request, _("Could not read that file. Please upload a UTF-8 encoded CSV."))
+        return redirect("category_list")
+
+    reader = csv.DictReader(io.StringIO(decoded))
+    if not reader.fieldnames:
+        messages.error(request, _("The CSV file appears to be empty."))
+        return redirect("category_list")
+
+    fieldnames = {(f or "").strip().lower(): f for f in reader.fieldnames}
+    if "name" not in fieldnames:
+        messages.error(request, _("The CSV must have a 'Name' column."))
+        return redirect("category_list")
+
+    existing_names = {n.lower() for n in request.user.expense_categories.values_list("name", flat=True)}
+
+    created = 0
+    skipped_duplicate = 0
+    skipped_blank = 0
+
+    for row in reader:
+        name = _row_value(row, fieldnames, "name")
+        if not name:
+            skipped_blank += 1
+            continue
+        if name.lower() in existing_names:
+            skipped_duplicate += 1
+            continue
+
+        ExpenseCategory.objects.create(user=request.user, name=name)
+
+        existing_names.add(name.lower())
+        created += 1
+
+    if created:
+        messages.success(
+            request,
+            ngettext("Imported %(count)s category.", "Imported %(count)s categories.", created)
+            % {"count": created},
+        )
+    skipped_total = skipped_duplicate + skipped_blank
+    if skipped_total:
+        messages.warning(
+            request,
+            _("Skipped %(count)s row(s): %(dup)s duplicate name(s), %(blank)s blank name(s).")
+            % {"count": skipped_total, "dup": skipped_duplicate, "blank": skipped_blank},
+        )
+    if not created and not skipped_total:
+        messages.error(request, _("No rows found to import."))
+
+    return redirect("category_list")

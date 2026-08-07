@@ -1,17 +1,65 @@
 import csv
+import io
+from decimal import Decimal, InvalidOperation
 from datetime import date as date_cls
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse
 import django.utils.timezone
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.db.models import Sum, Q, DecimalField, Value
 from django.db.models.functions import Coalesce, TruncMonth
+from django.core.paginator import Paginator
 from django.utils import dateformat
 from django.utils.translation import gettext as _
 from .models import Contributor, ContributorCategory, Contribution
 from .forms import ContributorForm, ContributionForm
 
+
+def _row_value(row, fieldnames, key):
+    """Reads a value from a csv.DictReader row by lowercased column name."""
+    col = fieldnames.get(key)
+    if col is None:
+        return ""
+    return (row.get(col) or "").strip()
+
 MONTH_CHOICES = [(i, date_cls(2000, i, 1)) for i in range(1, 13)]
+
+SORT_OPTIONS = [
+    ("name", _("Name (A–Z)")),
+    ("-name", _("Name (Z–A)")),
+    ("-amount", _("Total Given (High to Low)")),
+    ("amount", _("Total Given (Low to High)")),
+]
+SORT_FIELDS = {
+    "name": ["name"],
+    "-name": ["-name"],
+    "amount": ["total_amount", "name"],
+    "-amount": ["-total_amount", "name"],
+}
+
+
+def _build_pagination_window(page_obj, window=2):
+    """Compact list of page numbers around the current page, with None as a '…' gap."""
+    total_pages = page_obj.paginator.num_pages
+    current = page_obj.number
+    pages = {1, total_pages}
+
+    for page_number in range(current - window, current + window + 1):
+        if 1 <= page_number <= total_pages:
+            pages.add(page_number)
+
+    ordered_pages = sorted(pages)
+    compact_pages = []
+    previous = None
+
+    for page_number in ordered_pages:
+        if previous is not None and page_number - previous > 1:
+            compact_pages.append(None)
+        compact_pages.append(page_number)
+        previous = page_number
+
+    return compact_pages
 
 
 def _csv_response(filename, header, rows):
@@ -166,12 +214,15 @@ def contributor_list(request):
     if search_query:
         contributors_base_qs = contributors_base_qs.filter(name__icontains=search_query)
 
+    sort = request.GET.get("sort", "name")
+    if sort not in SORT_FIELDS:
+        sort = "name"
     contributors = contributors_base_qs.annotate(
         total_amount=Coalesce(
             Sum("contributions__amount"),
             Value(0, output_field=DecimalField()),
         )
-    )
+    ).order_by(*SORT_FIELDS[sort])
 
     total_contributors = contributors_base_qs.count()
     total_contribution_amount = contributors_base_qs.aggregate(
@@ -189,8 +240,17 @@ def contributor_list(request):
             rows,
         )
 
+    paginator = Paginator(contributors, 9)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    base_query = request.GET.copy()
+    base_query.pop("page", None)
+    base_query_string = base_query.urlencode()
+
     context = {
-        "contributors": contributors,
+        "page_obj": page_obj,
+        "pagination_window": _build_pagination_window(page_obj),
         "total_contributors": total_contributors,
         "total_contribution_amount": total_contribution_amount,
         "avg_contribution": avg_contribution,
@@ -198,8 +258,108 @@ def contributor_list(request):
         "category_choices": ContributorCategory.choices,
         "filter_type": filter_type,
         "search_query": search_query,
+        "sort": sort,
+        "sort_options": SORT_OPTIONS,
+        "base_query_string": base_query_string,
     }
     return render(request, 'contributors/contributor_list.html', context)
+
+
+@login_required
+def contributor_import_template_view(request):
+    rows = [(_("Sajal Saha"), "01711000000", _("Sponsor"), _("Monthly sponsor"), "1000")]
+    return _csv_response(
+        "contributor_import_template.csv",
+        [_("Name"), _("Phone"), _("Category"), _("Note"), _("Opening Contribution")],
+        rows,
+    )
+
+
+@login_required
+def contributor_import_view(request):
+    if request.method != "POST":
+        return redirect("contributor_list")
+
+    csv_file = request.FILES.get("csv_file")
+    if not csv_file:
+        messages.error(request, _("Please choose a CSV file to import."))
+        return redirect("contributor_list")
+
+    try:
+        decoded = csv_file.read().decode("utf-8-sig")
+    except UnicodeDecodeError:
+        messages.error(request, _("Could not read that file. Please upload a UTF-8 encoded CSV."))
+        return redirect("contributor_list")
+
+    reader = csv.DictReader(io.StringIO(decoded))
+    if not reader.fieldnames:
+        messages.error(request, _("The CSV file appears to be empty."))
+        return redirect("contributor_list")
+
+    fieldnames = {(f or "").strip().lower(): f for f in reader.fieldnames}
+    if "name" not in fieldnames:
+        messages.error(request, _("The CSV must have a 'Name' column."))
+        return redirect("contributor_list")
+
+    category_lookup = {}
+    for value, label in ContributorCategory.choices:
+        category_lookup[value.lower()] = value
+        category_lookup[str(label).lower()] = value
+
+    existing_names = {n.lower() for n in Contributor.objects.filter(user=request.user).values_list("name", flat=True)}
+    today = django.utils.timezone.now().date()
+
+    created = 0
+    skipped_duplicate = 0
+    skipped_blank = 0
+
+    for row in reader:
+        name = _row_value(row, fieldnames, "name")
+        if not name:
+            skipped_blank += 1
+            continue
+        if name.lower() in existing_names:
+            skipped_duplicate += 1
+            continue
+
+        phone = _row_value(row, fieldnames, "phone")
+        note = _row_value(row, fieldnames, "note")
+        category = category_lookup.get(_row_value(row, fieldnames, "category").lower(), ContributorCategory.OTHER)
+
+        raw_amount = _row_value(row, fieldnames, "opening contribution") or _row_value(row, fieldnames, "opening_contribution")
+        try:
+            opening_amount = Decimal(raw_amount) if raw_amount else Decimal("0")
+        except InvalidOperation:
+            opening_amount = Decimal("0")
+
+        contributor = Contributor.objects.create(
+            user=request.user, name=name, phone=phone, note=note, category=category
+        )
+        if opening_amount > 0:
+            Contribution.objects.create(
+                contributor=contributor,
+                amount=opening_amount,
+                date=today,
+                note=_("Opening balance (imported)"),
+            )
+
+        existing_names.add(name.lower())
+        created += 1
+
+    if created:
+        messages.success(request, _("Imported %(count)s contributor(s).") % {"count": created})
+    skipped_total = skipped_duplicate + skipped_blank
+    if skipped_total:
+        messages.warning(
+            request,
+            _("Skipped %(count)s row(s): %(dup)s duplicate name(s), %(blank)s blank name(s).")
+            % {"count": skipped_total, "dup": skipped_duplicate, "blank": skipped_blank},
+        )
+    if not created and not skipped_total:
+        messages.error(request, _("No rows found to import."))
+
+    return redirect("contributor_list")
+
 
 @login_required
 def contributor_create(request):

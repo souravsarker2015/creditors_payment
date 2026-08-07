@@ -1,4 +1,6 @@
 import csv
+import io
+from decimal import Decimal, InvalidOperation
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 import django.utils.timezone
@@ -6,12 +8,57 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Sum, Q, DecimalField, Value
 from django.db.models.functions import Coalesce, TruncMonth
+from django.core.paginator import Paginator
 from django.utils import dateformat
 from django.utils.translation import gettext as _
 from datetime import date as date_cls
 
 from .models import IncomeSource, IncomeTransaction
 from .forms import IncomeSourceForm, IncomeTransactionForm
+
+
+def _row_value(row, fieldnames, key):
+    """Reads a value from a csv.DictReader row by lowercased column name."""
+    col = fieldnames.get(key)
+    if col is None:
+        return ""
+    return (row.get(col) or "").strip()
+
+SORT_OPTIONS = [
+    ("-amount", _("Total Earned (High to Low)")),
+    ("amount", _("Total Earned (Low to High)")),
+    ("name", _("Name (A–Z)")),
+    ("-name", _("Name (Z–A)")),
+]
+SORT_FIELDS = {
+    "-amount": ["-total_amt", "name"],
+    "amount": ["total_amt", "name"],
+    "name": ["name"],
+    "-name": ["-name"],
+}
+
+
+def _build_pagination_window(page_obj, window=2):
+    """Compact list of page numbers around the current page, with None as a '…' gap."""
+    total_pages = page_obj.paginator.num_pages
+    current = page_obj.number
+    pages = {1, total_pages}
+
+    for page_number in range(current - window, current + window + 1):
+        if 1 <= page_number <= total_pages:
+            pages.add(page_number)
+
+    ordered_pages = sorted(pages)
+    compact_pages = []
+    previous = None
+
+    for page_number in ordered_pages:
+        if previous is not None and page_number - previous > 1:
+            compact_pages.append(None)
+        compact_pages.append(page_number)
+        previous = page_number
+
+    return compact_pages
 
 
 def _last_12_month_starts():
@@ -209,12 +256,16 @@ def income_source_list_view(request):
     if filters["date_to"]:
         tx_filter_q &= Q(transactions__date__lte=filters["date_to"])
 
+    sort = request.GET.get("sort", "-amount")
+    if sort not in SORT_FIELDS:
+        sort = "-amount"
+
     sources = filters["filtered_sources"].annotate(
         total_amt=Coalesce(
             Sum("transactions__amount", filter=tx_filter_q),
             Value(0, output_field=DecimalField()),
         )
-    ).order_by("-total_amt", "name")
+    ).order_by(*SORT_FIELDS[sort])
 
     filtered_transactions = IncomeTransaction.objects.filter(source__in=filters["filtered_sources"])
     filtered_transactions = _apply_transaction_filters(
@@ -245,8 +296,17 @@ def income_source_list_view(request):
             rows,
         )
 
+    paginator = Paginator(sources, 9)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    base_query = request.GET.copy()
+    base_query.pop("page", None)
+    base_query_string = base_query.urlencode()
+
     context = {
-        "sources": sources,
+        "page_obj": page_obj,
+        "pagination_window": _build_pagination_window(page_obj),
         "total_sources": total_sources,
         "total_income": total_income,
         "avg_income": avg_income,
@@ -257,8 +317,98 @@ def income_source_list_view(request):
         "selected_year": filters["selected_year"],
         "date_from": filters["date_from"].isoformat() if filters["date_from"] else "",
         "date_to": filters["date_to"].isoformat() if filters["date_to"] else "",
+        "sort": sort,
+        "sort_options": SORT_OPTIONS,
+        "base_query_string": base_query_string,
     }
     return render(request, "income/source_list.html", context)
+
+
+@login_required
+def income_source_import_template_view(request):
+    rows = [(_("Acme Corp Salary"), _("Monthly salary from Acme Corp"), "50000")]
+    return _csv_response(
+        "income_source_import_template.csv",
+        [_("Name"), _("Description"), _("Opening Income")],
+        rows,
+    )
+
+
+@login_required
+def income_source_import_view(request):
+    if request.method != "POST":
+        return redirect("income_source_list")
+
+    csv_file = request.FILES.get("csv_file")
+    if not csv_file:
+        messages.error(request, _("Please choose a CSV file to import."))
+        return redirect("income_source_list")
+
+    try:
+        decoded = csv_file.read().decode("utf-8-sig")
+    except UnicodeDecodeError:
+        messages.error(request, _("Could not read that file. Please upload a UTF-8 encoded CSV."))
+        return redirect("income_source_list")
+
+    reader = csv.DictReader(io.StringIO(decoded))
+    if not reader.fieldnames:
+        messages.error(request, _("The CSV file appears to be empty."))
+        return redirect("income_source_list")
+
+    fieldnames = {(f or "").strip().lower(): f for f in reader.fieldnames}
+    if "name" not in fieldnames:
+        messages.error(request, _("The CSV must have a 'Name' column."))
+        return redirect("income_source_list")
+
+    existing_names = {n.lower() for n in request.user.income_sources.values_list("name", flat=True)}
+    today = django.utils.timezone.now().date()
+
+    created = 0
+    skipped_duplicate = 0
+    skipped_blank = 0
+
+    for row in reader:
+        name = _row_value(row, fieldnames, "name")
+        if not name:
+            skipped_blank += 1
+            continue
+        if name.lower() in existing_names:
+            skipped_duplicate += 1
+            continue
+
+        description = _row_value(row, fieldnames, "description")
+
+        raw_amount = _row_value(row, fieldnames, "opening income") or _row_value(row, fieldnames, "opening_income")
+        try:
+            opening_amount = Decimal(raw_amount) if raw_amount else Decimal("0")
+        except InvalidOperation:
+            opening_amount = Decimal("0")
+
+        source = IncomeSource.objects.create(user=request.user, name=name, description=description)
+        if opening_amount > 0:
+            IncomeTransaction.objects.create(
+                source=source,
+                amount=opening_amount,
+                date=today,
+                note=_("Opening balance (imported)"),
+            )
+
+        existing_names.add(name.lower())
+        created += 1
+
+    if created:
+        messages.success(request, _("Imported %(count)s income source(s).") % {"count": created})
+    skipped_total = skipped_duplicate + skipped_blank
+    if skipped_total:
+        messages.warning(
+            request,
+            _("Skipped %(count)s row(s): %(dup)s duplicate name(s), %(blank)s blank name(s).")
+            % {"count": skipped_total, "dup": skipped_duplicate, "blank": skipped_blank},
+        )
+    if not created and not skipped_total:
+        messages.error(request, _("No rows found to import."))
+
+    return redirect("income_source_list")
 
 
 @login_required

@@ -9,4 +9,6 @@ urlpatterns = [
     path("expenses/<int:pk>/delete/", views.expense_delete_view, name="expense_delete"),
     path("categories/", views.category_list_view, name="category_list"),
     path("categories/add/", views.category_create_view, name="category_create"),
+    path("categories/import/", views.category_import_view, name="category_import"),
+    path("categories/import/template/", views.category_import_template_view, name="category_import_template"),
 ]

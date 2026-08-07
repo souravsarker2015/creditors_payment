@@ -1,4 +1,6 @@
 import csv
+import io
+from decimal import Decimal, InvalidOperation
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 import django.utils.timezone
@@ -10,6 +12,14 @@ from django.db.models.functions import Coalesce, TruncMonth
 from django.core.paginator import Paginator
 from django.utils import dateformat
 from django.utils.translation import gettext as _
+
+
+def _row_value(row, fieldnames, key):
+    """Reads a value from a csv.DictReader row by lowercased column name."""
+    col = fieldnames.get(key)
+    if col is None:
+        return ""
+    return (row.get(col) or "").strip()
 
 
 def _csv_response(filename, header, rows):
@@ -24,6 +34,19 @@ def _csv_response(filename, header, rows):
 from .models import Shop, ShopCategory, Transaction
 
 MONTH_CHOICES = [(i, date_cls(2000, i, 1)) for i in range(1, 13)]
+
+SORT_OPTIONS = [
+    ("name", _("Name (A–Z)")),
+    ("-name", _("Name (Z–A)")),
+    ("-remaining", _("Remaining (High to Low)")),
+    ("remaining", _("Remaining (Low to High)")),
+]
+SORT_FIELDS = {
+    "name": ["name"],
+    "-name": ["-name"],
+    "remaining": ["remaining_amt", "name"],
+    "-remaining": ["-remaining_amt", "name"],
+}
 
 
 def _parse_year_month(request):
@@ -387,7 +410,12 @@ def shop_list_view(request):
     elif payment_status == "UNPAID":
         shops_qs = shops_qs.filter(total_due_amt__gt=F("total_paid_amt"))
 
-    shops_qs = shops_qs.order_by("name")
+    sort = request.GET.get("sort", "name")
+    if sort not in SORT_FIELDS:
+        sort = "name"
+    shops_qs = shops_qs.annotate(
+        remaining_amt=F("total_due_amt") - F("total_paid_amt")
+    ).order_by(*SORT_FIELDS[sort])
 
     stats = shops_qs.aggregate(
         total_due=Coalesce(Sum("total_due_amt"), Value(0, output_field=DecimalField())),
@@ -439,9 +467,108 @@ def shop_list_view(request):
         "filter_type": filter_type,
         "payment_status": payment_status,
         "search_query": search_query,
+        "sort": sort,
+        "sort_options": SORT_OPTIONS,
         "base_query_string": base_query_string,
     }
     return render(request, "shops/shop_list.html", context)
+
+
+@login_required
+def shop_import_template_view(request):
+    rows = [(_("Rahim Store"), "01711000000", _("Grocery"), _("Monthly groceries on credit"), "3000")]
+    return _csv_response(
+        "shop_import_template.csv",
+        [_("Name"), _("Phone"), _("Category"), _("Note"), _("Opening Balance")],
+        rows,
+    )
+
+
+@login_required
+def shop_import_view(request):
+    if request.method != "POST":
+        return redirect("shop_list")
+
+    csv_file = request.FILES.get("csv_file")
+    if not csv_file:
+        messages.error(request, _("Please choose a CSV file to import."))
+        return redirect("shop_list")
+
+    try:
+        decoded = csv_file.read().decode("utf-8-sig")
+    except UnicodeDecodeError:
+        messages.error(request, _("Could not read that file. Please upload a UTF-8 encoded CSV."))
+        return redirect("shop_list")
+
+    reader = csv.DictReader(io.StringIO(decoded))
+    if not reader.fieldnames:
+        messages.error(request, _("The CSV file appears to be empty."))
+        return redirect("shop_list")
+
+    fieldnames = {(f or "").strip().lower(): f for f in reader.fieldnames}
+    if "name" not in fieldnames:
+        messages.error(request, _("The CSV must have a 'Name' column."))
+        return redirect("shop_list")
+
+    category_lookup = {}
+    for value, label in ShopCategory.choices:
+        category_lookup[value.lower()] = value
+        category_lookup[str(label).lower()] = value
+
+    existing_names = {n.lower() for n in request.user.shops.values_list("name", flat=True)}
+    today = django.utils.timezone.now().date()
+
+    created = 0
+    skipped_duplicate = 0
+    skipped_blank = 0
+
+    for row in reader:
+        name = _row_value(row, fieldnames, "name")
+        if not name:
+            skipped_blank += 1
+            continue
+        if name.lower() in existing_names:
+            skipped_duplicate += 1
+            continue
+
+        phone = _row_value(row, fieldnames, "phone")
+        note = _row_value(row, fieldnames, "note")
+        category = category_lookup.get(_row_value(row, fieldnames, "category").lower(), ShopCategory.OTHER)
+
+        raw_balance = _row_value(row, fieldnames, "opening balance") or _row_value(row, fieldnames, "opening_balance")
+        try:
+            opening_balance = Decimal(raw_balance) if raw_balance else Decimal("0")
+        except InvalidOperation:
+            opening_balance = Decimal("0")
+
+        shop = Shop.objects.create(
+            user=request.user, name=name, phone=phone, note=note, category=category
+        )
+        if opening_balance > 0:
+            Transaction.objects.create(
+                shop=shop,
+                transaction_type=Transaction.PURCHASE,
+                amount=opening_balance,
+                date=today,
+                note=_("Opening balance (imported)"),
+            )
+
+        existing_names.add(name.lower())
+        created += 1
+
+    if created:
+        messages.success(request, _("Imported %(count)s shop(s).") % {"count": created})
+    skipped_total = skipped_duplicate + skipped_blank
+    if skipped_total:
+        messages.warning(
+            request,
+            _("Skipped %(count)s row(s): %(dup)s duplicate name(s), %(blank)s blank name(s).")
+            % {"count": skipped_total, "dup": skipped_duplicate, "blank": skipped_blank},
+        )
+    if not created and not skipped_total:
+        messages.error(request, _("No rows found to import."))
+
+    return redirect("shop_list")
 
 
 @login_required

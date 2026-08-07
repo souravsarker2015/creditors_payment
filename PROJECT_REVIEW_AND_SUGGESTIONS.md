@@ -34,6 +34,32 @@ and shops (বাকি tracking) — household and shops didn't exist at the ti
   shared-variable bug, a missing Flatpickr stylesheet that broke every date picker, and an
   `UnboundLocalError` on household purchase submission caused by a variable named `_` shadowing
   the translation function.
+- **Monthly trend charts** — every dashboard (all seven apps) now has a rolling-12-months bar
+  chart below the existing donut breakdown (grouped bars for two-series apps like
+  Borrowed/Repaid, a single series for one-metric apps like Total Spent), via a shared
+  `renderTrendChart()` helper in `charts.js`.
+- **PDF statements** — every entity with a transaction history (Creditor, Debtor, Income Source,
+  Contributor, Shop, Household Member) has a "Statement" link next to Export CSV, opening a
+  print-optimized page (always light-themed, regardless of the app's dark/light setting) with
+  entity info, all-time summary figures, and the full transaction table. A "Print / Save as PDF"
+  button uses the browser's native print-to-PDF — no new server dependency. Respects the same
+  Year/Month filter as the detail page, so a single-month statement is one click away.
+- **Pagination on every list page** — Creditors, Debtors, Contributors, and Income Sources now
+  paginate like Expense/Household/Shop Dues already did; Household Members picked up pagination
+  too. Bazar Categories stays unpaginated on purpose since that page's donut chart needs every
+  category at once.
+- **Sorting on every list page** — each list (all seven apps) has a "Sort by" control: name A–Z/Z–A
+  plus a domain-relevant amount sort (remaining balance for Creditors/Debtors/Shop Dues, total
+  given/earned/spent for Contributors/Income Sources/Bazar Categories, date/amount for the
+  Expense log, month/total for the Bazar Log). Selection persists across pagination.
+- **Bulk CSV import** — every entity-creation list (Creditors, Debtors, Shop Dues, Contributors,
+  Income Sources, Household Members, Bazar Categories, Expense Categories) has an "Import CSV"
+  button next to "New …" plus a "Template" link that downloads a starter CSV with the right
+  headers. Rows are matched case-insensitively against existing names and duplicates/blanks are
+  skipped rather than erroring the whole file; a summary ("Imported N, skipped N") is shown after
+  upload. For the balance-carrying entities (Creditors, Debtors, Shop Dues, Contributors, Income
+  Sources) an optional "Opening Balance" column seeds one initial transaction, so migrating an
+  existing who-owes-who spreadsheet brings the current balances across, not just the names.
 
 ## Finance / accounting value
 
@@ -53,36 +79,6 @@ and shops (বাকি tracking) — household and shops didn't exist at the ti
   A single summary page (or a card on the main dashboard) would give an at-a-glance financial
   picture across the whole app, not just one ledger at a time.
 
-## Usability / productivity
-
-- **Pagination on Creditors / Debtors / Contributors / Income Sources lists** (Low)
-  Expense, Household (Bazar Log), and Shop Dues already have a solid paginator (`Paginator` +
-  windowed page links via `_build_pagination_window`); these four list views still load
-  everything unbounded. Worth reusing that existing pattern once record counts grow past a page
-  or two.
-
-- **Sorting options** (Low)
-  Lists are hardcoded to sort by name (or, for Shop Dues/Bazar Categories, by amount). Letting
-  users choose the sort — amount owed/remaining, last activity date — would help once someone
-  has more than a handful of entries.
-
-- **Bulk CSV import for creditors/debtors** (Medium)
-  Useful for users migrating an existing spreadsheet of who-owes-who into the app instead of
-  re-entering everyone by hand. Pairs naturally with the CSV export now in place — same column
-  shape, reverse direction.
-
-## Reporting
-
-- **Monthly/yearly trend charts** (Medium)
-  The donut breakdowns and the new Year/Month filter are both point-in-time or single-period
-  snapshots. A line/bar chart of borrowed/repaid or income/expense *over* time (e.g. last 12
-  months trended) would round out the analytics story.
-
-- **PDF statement per creditor/debtor** (Medium)
-  A printable ledger for a specific person is a common real-world need ("send me a statement
-  of what I owe you") and maps naturally onto the existing detail-page transaction history —
-  and now onto its CSV export, which could feed a PDF template directly.
-
 ## Platform
 
 - **Recurring transactions** (Medium)
@@ -95,9 +91,8 @@ and shops (বাকি tracking) — household and shops didn't exist at the ti
 
 ## Suggested priority
 
-With CSV export, theming, full localization, and the year/month filters now shipped, the
-cheapest remaining wins are pagination on the four still-unbounded lists and due-date
-reminders — both small, isolated changes with clear day-to-day payoff. Bulk CSV import is a
-natural next step given export already defines the column shape. The heavier items (interest
-tracking, trend charts, PDF statements, recurring transactions, a REST API) are worth revisiting
-once those are in, roughly in that order.
+With CSV export/import, theming, full localization, year/month filters, trend charts, PDF
+statements, and pagination/sorting across every list all shipped, the cheapest remaining win is
+due-date reminders — a small, isolated change with clear day-to-day payoff. The heavier items
+(interest tracking, net worth overview, recurring transactions, a REST API) are worth revisiting
+once that's in, roughly in that order.
