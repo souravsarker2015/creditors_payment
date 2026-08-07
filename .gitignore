@@ -52,7 +52,10 @@ coverage.xml
 cover/
 
 # Translations
-*.mo
+# NOTE: *.mo (compiled catalogs) are intentionally NOT ignored — this deploys
+# to PythonAnywhere, which has no gettext/msgfmt available and no build step,
+# so the compiled locale/bn/LC_MESSAGES/django.mo must be committed directly
+# or the language toggle silently has nothing to switch to in production.
 *.pot
 
 # Django stuff:
