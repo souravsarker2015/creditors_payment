@@ -10,6 +10,7 @@ from django.contrib import messages
 from django.db.models import Sum, Count, DecimalField, Value
 from django.db.models.functions import Coalesce, TruncMonth
 from django.core.paginator import Paginator
+from django.utils import dateformat
 from django.utils.translation import gettext as _
 
 from .models import HouseholdCategory, HouseholdMember, Purchase, Settlement
@@ -24,6 +25,41 @@ def _csv_response(filename, header, rows):
     writer.writerow(header)
     writer.writerows(rows)
     return response
+
+
+def _last_12_month_starts():
+    today = timezone.now().date()
+    starts = []
+    for i in range(11, -1, -1):
+        month_index = today.month - i
+        year = today.year
+        while month_index <= 0:
+            month_index += 12
+            year -= 1
+        starts.append(date(year, month_index, 1))
+    return starts
+
+
+def _period_label(selected_year, selected_month):
+    if selected_month:
+        return dateformat.format(date(2000, selected_month, 1), "F") + f" {selected_year}"
+    if selected_year:
+        return str(selected_year)
+    return _("All Time")
+
+
+def _render_statement(request, *, entity_label, entity_name, entity_meta, period_label, summary_rows, columns, rows, back_url):
+    return render(request, "statement.html", {
+        "entity_label": entity_label,
+        "entity_name": entity_name,
+        "entity_meta": entity_meta,
+        "period_label": period_label,
+        "summary_rows": summary_rows,
+        "columns": columns,
+        "rows": rows,
+        "back_url": back_url,
+        "generated_at": timezone.now(),
+    })
 
 MONTH_CHOICES = [(i, date(2000, i, 1)) for i in range(1, 13)]
 
@@ -91,6 +127,18 @@ def dashboard_view(request):
 
     recent_purchases = purchases.select_related("buyer", "category").order_by("-date", "-created_at")[:10]
 
+    # Rolling 12-month spending trend.
+    month_starts = _last_12_month_starts()
+    monthly_totals = (
+        purchases.filter(date__gte=month_starts[0])
+        .annotate(month=TruncMonth("date"))
+        .values("month")
+        .annotate(total=Sum("amount"))
+    )
+    total_by_month = {row["month"]: row["total"] for row in monthly_totals}
+    trend_labels = month_starts
+    trend_spent = [float(total_by_month.get(d, 0) or 0) for d in month_starts]
+
     context = {
         "total_spent": total_spent,
         "total_settled": total_settled,
@@ -98,6 +146,8 @@ def dashboard_view(request):
         "this_month_spent": this_month_spent,
         "category_labels": category_labels,
         "category_data": category_data,
+        "trend_labels": trend_labels,
+        "trend_spent": trend_spent,
         "recent_purchases": recent_purchases,
         "current_year": today.year,
         "current_month": today.month,
@@ -389,6 +439,61 @@ def member_detail_view(request, pk):
         "chart_due": float(member.balance_due) if member.balance_due > 0 else 0,
     }
     return render(request, "household/member_detail.html", context)
+
+
+@login_required
+def member_statement_view(request, pk):
+    member = get_object_or_404(HouseholdMember, pk=pk, user=request.user)
+    all_purchases = member.purchases.select_related("category")
+    all_settlements = member.settlements.all()
+
+    selected_year, selected_month = _parse_year_month(request)
+    purchases_qs = all_purchases
+    settlements_qs = all_settlements
+    if selected_year:
+        purchases_qs = purchases_qs.filter(date__year=selected_year)
+        settlements_qs = settlements_qs.filter(date__year=selected_year)
+    if selected_month:
+        purchases_qs = purchases_qs.filter(date__month=selected_month)
+        settlements_qs = settlements_qs.filter(date__month=selected_month)
+
+    purchase_items = list(purchases_qs)
+    settlement_items = list(settlements_qs)
+    for p in purchase_items:
+        p.kind = "purchase"
+    for s in settlement_items:
+        s.kind = "settlement"
+
+    activity = sorted(
+        purchase_items + settlement_items,
+        key=lambda item: (item.date, item.created_at),
+    )
+
+    rows = [
+        (
+            item.date.strftime("%d %b %Y"),
+            _("Fronted (Bazar)") if item.kind == "purchase" else _("Given Back"),
+            (item.category.name if item.kind == "purchase" and item.category else item.note or "-"),
+            f"{item.amount:,.2f}",
+        )
+        for item in activity
+    ]
+
+    return _render_statement(
+        request,
+        entity_label=_("Household Member"),
+        entity_name=member.name,
+        entity_meta=[(_("Phone"), member.phone)],
+        period_label=_period_label(selected_year, selected_month),
+        summary_rows=[
+            (_("Total Fronted"), f"{member.total_spent:,.2f}", ""),
+            (_("Given Back"), f"{member.total_settled:,.2f}", "positive"),
+            (_("Balance Due"), f"{member.balance_due:,.2f}", "negative" if member.balance_due > 0 else "positive"),
+        ],
+        columns=[_("Date"), _("Type"), _("Note"), _("Amount (৳)")],
+        rows=rows,
+        back_url=request.META.get("HTTP_REFERER") or f"/household/members/{member.pk}/",
+    )
 
 
 @login_required

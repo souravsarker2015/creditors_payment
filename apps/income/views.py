@@ -5,12 +5,48 @@ import django.utils.timezone
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Sum, Q, DecimalField, Value
-from django.db.models.functions import Coalesce
+from django.db.models.functions import Coalesce, TruncMonth
+from django.utils import dateformat
 from django.utils.translation import gettext as _
 from datetime import date as date_cls
 
 from .models import IncomeSource, IncomeTransaction
 from .forms import IncomeSourceForm, IncomeTransactionForm
+
+
+def _last_12_month_starts():
+    today = django.utils.timezone.now().date()
+    starts = []
+    for i in range(11, -1, -1):
+        month_index = today.month - i
+        year = today.year
+        while month_index <= 0:
+            month_index += 12
+            year -= 1
+        starts.append(date_cls(year, month_index, 1))
+    return starts
+
+
+def _period_label(selected_year, selected_month):
+    if selected_month:
+        return dateformat.format(date_cls(2000, selected_month, 1), "F") + f" {selected_year}"
+    if selected_year:
+        return str(selected_year)
+    return _("All Time")
+
+
+def _render_statement(request, *, entity_label, entity_name, entity_meta, period_label, summary_rows, columns, rows, back_url):
+    return render(request, "statement.html", {
+        "entity_label": entity_label,
+        "entity_name": entity_name,
+        "entity_meta": entity_meta,
+        "period_label": period_label,
+        "summary_rows": summary_rows,
+        "columns": columns,
+        "rows": rows,
+        "back_url": back_url,
+        "generated_at": django.utils.timezone.now(),
+    })
 
 
 def _csv_response(filename, header, rows):
@@ -130,11 +166,25 @@ def dashboard_view(request):
         .distinct()
         .order_by("-date__year")
     )
-    
+
+    # Rolling 12-month income trend.
+    month_starts = _last_12_month_starts()
+    monthly_totals = (
+        IncomeTransaction.objects.filter(source__user=request.user, date__gte=month_starts[0])
+        .annotate(month=TruncMonth("date"))
+        .values("month")
+        .annotate(total=Sum("amount"))
+    )
+    total_by_month = {row["month"]: row["total"] for row in monthly_totals}
+    trend_labels = month_starts
+    trend_income = [float(total_by_month.get(d, 0) or 0) for d in month_starts]
+
     context = {
         "total_income": total_income,
         "source_labels": source_labels,
         "source_data": source_data,
+        "trend_labels": trend_labels,
+        "trend_income": trend_income,
         "recent_transactions": recent_transactions,
         "available_sources": filters["all_sources"],
         "selected_source_ids": filters["selected_source_ids"],
@@ -311,6 +361,58 @@ def income_source_detail_view(request, pk):
         "date_to": date_to.isoformat() if date_to else "",
     }
     return render(request, "income/source_detail.html", context)
+
+
+@login_required
+def income_source_statement_view(request, pk):
+    source = get_object_or_404(IncomeSource, pk=pk, user=request.user)
+    all_transactions = source.transactions.all()
+
+    selected_year = request.GET.get("year", "").strip()
+    selected_year = int(selected_year) if selected_year.isdigit() else None
+    raw_month = request.GET.get("month", "").strip()
+    selected_month = int(raw_month) if raw_month.isdigit() and 1 <= int(raw_month) <= 12 else None
+    date_from = _parse_iso_date(request.GET.get("date_from", "").strip())
+    date_to = _parse_iso_date(request.GET.get("date_to", "").strip())
+    if date_from and date_to and date_from > date_to:
+        date_from, date_to = date_to, date_from
+
+    transactions = _apply_transaction_filters(
+        all_transactions,
+        selected_year=selected_year,
+        selected_month=selected_month,
+        date_from=date_from,
+        date_to=date_to,
+    ).order_by("date", "created_at")
+
+    total_source_income = all_transactions.aggregate(
+        total=Coalesce(Sum("amount"), Value(0, output_field=DecimalField()))
+    )["total"]
+    period_income = transactions.aggregate(
+        total=Coalesce(Sum("amount"), Value(0, output_field=DecimalField()))
+    )["total"]
+
+    if date_from or date_to:
+        period_label = f"{date_from.isoformat() if date_from else '…'} – {date_to.isoformat() if date_to else '…'}"
+    else:
+        period_label = _period_label(selected_year, selected_month)
+
+    rows = [(tx.date.strftime("%d %b %Y"), tx.note or "-", f"{tx.amount:,.2f}") for tx in transactions]
+
+    return _render_statement(
+        request,
+        entity_label=_("Income Source"),
+        entity_name=source.name,
+        entity_meta=[(_("Description"), source.description)],
+        period_label=period_label,
+        summary_rows=[
+            (_("Total Earned"), f"{total_source_income:,.2f}", "positive"),
+            (_("Earned This Period"), f"{period_income:,.2f}", ""),
+        ],
+        columns=[_("Date"), _("Note"), _("Amount (৳)")],
+        rows=rows,
+        back_url=request.META.get("HTTP_REFERER") or f"/income/sources/{source.pk}/",
+    )
 
 
 @login_required

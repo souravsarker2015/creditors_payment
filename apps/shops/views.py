@@ -6,8 +6,9 @@ from datetime import date as date_cls
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Sum, Q, F, DecimalField, Value
-from django.db.models.functions import Coalesce
+from django.db.models.functions import Coalesce, TruncMonth
 from django.core.paginator import Paginator
+from django.utils import dateformat
 from django.utils.translation import gettext as _
 
 
@@ -31,6 +32,43 @@ def _parse_year_month(request):
     raw_month = request.GET.get("month", "").strip()
     month = int(raw_month) if raw_month.isdigit() and 1 <= int(raw_month) <= 12 else None
     return year, month
+
+
+def _last_12_month_starts():
+    today = django.utils.timezone.now().date()
+    starts = []
+    for i in range(11, -1, -1):
+        month_index = today.month - i
+        year = today.year
+        while month_index <= 0:
+            month_index += 12
+            year -= 1
+        starts.append(date_cls(year, month_index, 1))
+    return starts
+
+
+def _period_label(selected_year, selected_month):
+    if selected_month:
+        return dateformat.format(date_cls(2000, selected_month, 1), "F") + f" {selected_year}"
+    if selected_year:
+        return str(selected_year)
+    return _("All Time")
+
+
+def _render_statement(request, *, entity_label, entity_name, entity_meta, period_label, summary_rows, columns, rows, back_url):
+    return render(request, "statement.html", {
+        "entity_label": entity_label,
+        "entity_name": entity_name,
+        "entity_meta": entity_meta,
+        "period_label": period_label,
+        "summary_rows": summary_rows,
+        "columns": columns,
+        "rows": rows,
+        "back_url": back_url,
+        "generated_at": django.utils.timezone.now(),
+    })
+
+
 from .forms import ShopForm, TransactionForm
 
 
@@ -131,6 +169,20 @@ def dashboard_view(request):
         "-date", "-created_at"
     )[:10]
 
+    # Rolling 12-month Purchased vs Paid trend.
+    month_starts = _last_12_month_starts()
+    monthly_totals = (
+        Transaction.objects.filter(shop__user=request.user, date__gte=month_starts[0])
+        .annotate(month=TruncMonth("date"))
+        .values("month", "transaction_type")
+        .annotate(total=Sum("amount"))
+    )
+    due_by_month = {row["month"]: row["total"] for row in monthly_totals if row["transaction_type"] == Transaction.PURCHASE}
+    paid_by_month = {row["month"]: row["total"] for row in monthly_totals if row["transaction_type"] == Transaction.PAYMENT}
+    trend_labels = month_starts
+    trend_due = [float(due_by_month.get(d, 0) or 0) for d in month_starts]
+    trend_paid = [float(paid_by_month.get(d, 0) or 0) for d in month_starts]
+
     context = {
         "total_due": total_due,
         "total_paid": total_paid,
@@ -138,6 +190,9 @@ def dashboard_view(request):
         "shop_labels": shop_labels,
         "shop_remaining": shop_remaining,
         "shop_paid": shop_paid,
+        "trend_labels": trend_labels,
+        "trend_due": trend_due,
+        "trend_paid": trend_paid,
         "recent_transactions": recent_transactions,
         "selected_categories": selected_categories,
         "category_choices": ShopCategory.choices,
@@ -243,6 +298,47 @@ def shop_detail_view(request, pk):
         "chart_remaining": float(remaining) if remaining > 0 else 0,
     }
     return render(request, "shops/shop_detail.html", context)
+
+
+@login_required
+def shop_statement_view(request, pk):
+    shop = get_object_or_404(Shop, pk=pk, user=request.user)
+    all_transactions = shop.transactions.all()
+
+    selected_year, selected_month = _parse_year_month(request)
+    transactions = all_transactions
+    if selected_year:
+        transactions = transactions.filter(date__year=selected_year)
+    if selected_month:
+        transactions = transactions.filter(date__month=selected_month)
+    transactions = transactions.order_by("date", "created_at")
+
+    stats = all_transactions.aggregate(
+        due=Coalesce(Sum("amount", filter=Q(transaction_type=Transaction.PURCHASE)), Value(0, output_field=DecimalField())),
+        paid=Coalesce(Sum("amount", filter=Q(transaction_type=Transaction.PAYMENT)), Value(0, output_field=DecimalField())),
+    )
+    remaining = stats["due"] - stats["paid"]
+
+    rows = [
+        (tx.date.strftime("%d %b %Y"), tx.get_transaction_type_display(), tx.note or "-", f"{tx.amount:,.2f}")
+        for tx in transactions
+    ]
+
+    return _render_statement(
+        request,
+        entity_label=_("Shop"),
+        entity_name=shop.name,
+        entity_meta=[(_("Phone"), shop.phone), (_("Category"), shop.get_category_display())],
+        period_label=_period_label(selected_year, selected_month),
+        summary_rows=[
+            (_("Total Due"), f"{stats['due']:,.2f}", ""),
+            (_("Total Paid"), f"{stats['paid']:,.2f}", "positive"),
+            (_("Remaining Due"), f"{remaining:,.2f}", "negative" if remaining > 0 else "positive"),
+        ],
+        columns=[_("Date"), _("Type"), _("Note"), _("Amount (৳)")],
+        rows=rows,
+        back_url=request.META.get("HTTP_REFERER") or f"/shops/{shop.pk}/",
+    )
 
 
 @login_required

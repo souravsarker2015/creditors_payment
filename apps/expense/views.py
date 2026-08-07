@@ -5,7 +5,7 @@ import django.utils.timezone
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Sum, Q, DecimalField, Value
-from django.db.models.functions import Coalesce
+from django.db.models.functions import Coalesce, TruncMonth
 from django.core.paginator import Paginator
 from django.utils.translation import gettext as _
 from datetime import date as date_cls
@@ -22,6 +22,19 @@ def _csv_response(filename, header, rows):
     writer.writerow(header)
     writer.writerows(rows)
     return response
+
+
+def _last_12_month_starts():
+    today = django.utils.timezone.now().date()
+    starts = []
+    for i in range(11, -1, -1):
+        month_index = today.month - i
+        year = today.year
+        while month_index <= 0:
+            month_index += 12
+            year -= 1
+        starts.append(date_cls(year, month_index, 1))
+    return starts
 
 
 def _parse_iso_date(value):
@@ -163,11 +176,29 @@ def dashboard_view(request):
         .distinct()
         .order_by("-date__year")
     )
-    
+
+    # Rolling 12-month expense trend (respects the current category filter).
+    month_starts = _last_12_month_starts()
+    trend_base = _apply_category_filters(
+        request.user.expenses.all(),
+        selected_category_ids=filters["selected_category_ids"],
+        filter_mode=filters["filter_mode"],
+    ).filter(date__gte=month_starts[0])
+    monthly_totals = (
+        trend_base.annotate(month=TruncMonth("date"))
+        .values("month")
+        .annotate(total=Sum("amount"))
+    )
+    total_by_month = {row["month"]: row["total"] for row in monthly_totals}
+    trend_labels = month_starts
+    trend_spent = [float(total_by_month.get(d, 0) or 0) for d in month_starts]
+
     context = {
         "total_spent": total_spent,
         "category_labels": category_labels,
         "category_data": category_data,
+        "trend_labels": trend_labels,
+        "trend_spent": trend_spent,
         "recent_expenses": recent_expenses,
         "available_categories": filters["all_categories"],
         "selected_category_ids": filters["selected_category_ids"],

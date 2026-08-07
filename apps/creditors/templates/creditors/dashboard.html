@@ -141,6 +141,11 @@
         </div>
     </div>
   </div>
+
+  <div class="mt-8 rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] p-6 shadow-sm">
+    <h3 class="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-widest mb-6 text-center">{% translate "12-Month Trend" %}</h3>
+    <div class="h-72 sm:h-80"><canvas id="trendChart"></canvas></div>
+  </div>
 </div>
 {% endblock %}
 
@@ -177,6 +182,16 @@
             labels: labels,
             data: paidData,
             centerLabel: '{% translate "Total Paid" %}',
+        });
+
+        const trendLabels = [{% for d in trend_labels %}"{{ d|date:'M Y' }}",{% endfor %}];
+        renderTrendChart({
+            canvasId: 'trendChart',
+            labels: trendLabels,
+            datasets: [
+                { label: '{% translate "Borrowed" %}', data: {{ trend_borrowed|safe }} },
+                { label: '{% translate "Repaid" %}', data: {{ trend_paid|safe }} },
+            ],
         });
     });
 </script>

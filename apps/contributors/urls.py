@@ -8,6 +8,7 @@ urlpatterns = [
     path('<int:pk>/edit/', views.contributor_update, name='contributor_update'),
     path('<int:pk>/delete/', views.contributor_delete, name='contributor_delete'),
     path('<int:pk>/', views.contributor_detail, name='contributor_detail'),
+    path('<int:pk>/statement/', views.contributor_statement_view, name='contributor_statement'),
     path('contribution/<int:pk>/edit/', views.contribution_update, name='contribution_edit'),
     path('contribution/<int:pk>/delete/', views.contribution_delete, name='contribution_delete'),
 ]

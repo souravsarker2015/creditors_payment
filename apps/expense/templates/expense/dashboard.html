@@ -133,6 +133,11 @@
       </div>
     </div>
   </div>
+
+  <div class="mt-8 rounded-[2.5rem] border border-[var(--border-soft)] bg-[var(--surface-raised)] p-10 shadow-sm">
+    <h3 class="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.3em] mb-8">{% translate "12-Month Trend" %}</h3>
+    <div class="h-72 sm:h-80"><canvas id="trendChart"></canvas></div>
+  </div>
 </div>
 {% endblock %}
 
@@ -192,6 +197,15 @@
             labels: labels,
             data: data,
             centerLabel: '{% translate "Total Spent" %}',
+        });
+
+        const trendLabels = [{% for d in trend_labels %}"{{ d|date:'M Y' }}",{% endfor %}];
+        renderTrendChart({
+            canvasId: 'trendChart',
+            labels: trendLabels,
+            datasets: [
+                { label: '{% translate "Total Spent" %}', data: {{ trend_spent|safe }} },
+            ],
         });
     });
 </script>

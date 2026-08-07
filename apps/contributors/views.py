@@ -2,9 +2,11 @@ import csv
 from datetime import date as date_cls
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse
+import django.utils.timezone
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum, Q, DecimalField, Value
-from django.db.models.functions import Coalesce
+from django.db.models.functions import Coalesce, TruncMonth
+from django.utils import dateformat
 from django.utils.translation import gettext as _
 from .models import Contributor, ContributorCategory, Contribution
 from .forms import ContributorForm, ContributionForm
@@ -28,6 +30,41 @@ def _parse_year_month(request):
     raw_month = request.GET.get("month", "").strip()
     month = int(raw_month) if raw_month.isdigit() and 1 <= int(raw_month) <= 12 else None
     return year, month
+
+
+def _last_12_month_starts():
+    today = django.utils.timezone.now().date()
+    starts = []
+    for i in range(11, -1, -1):
+        month_index = today.month - i
+        year = today.year
+        while month_index <= 0:
+            month_index += 12
+            year -= 1
+        starts.append(date_cls(year, month_index, 1))
+    return starts
+
+
+def _period_label(selected_year, selected_month):
+    if selected_month:
+        return dateformat.format(date_cls(2000, selected_month, 1), "F") + f" {selected_year}"
+    if selected_year:
+        return str(selected_year)
+    return _("All Time")
+
+
+def _render_statement(request, *, entity_label, entity_name, entity_meta, period_label, summary_rows, columns, rows, back_url):
+    return render(request, "statement.html", {
+        "entity_label": entity_label,
+        "entity_name": entity_name,
+        "entity_meta": entity_meta,
+        "period_label": period_label,
+        "summary_rows": summary_rows,
+        "columns": columns,
+        "rows": rows,
+        "back_url": back_url,
+        "generated_at": django.utils.timezone.now(),
+    })
 
 @login_required
 def contributor_dashboard(request):
@@ -69,12 +106,26 @@ def contributor_dashboard(request):
 
     avg_contribution = total_contribution_amount / total_contributors if total_contributors > 0 else 0
 
+    # Rolling 12-month contributions trend.
+    month_starts = _last_12_month_starts()
+    monthly_totals = (
+        Contribution.objects.filter(contributor__user=request.user, date__gte=month_starts[0])
+        .annotate(month=TruncMonth("date"))
+        .values("month")
+        .annotate(total=Sum("amount"))
+    )
+    total_by_month = {row["month"]: row["total"] for row in monthly_totals}
+    trend_labels = month_starts
+    trend_amount = [float(total_by_month.get(d, 0) or 0) for d in month_starts]
+
     context = {
         'total_contributors': total_contributors,
         'total_contribution_amount': total_contribution_amount,
         'avg_contribution': avg_contribution,
         'chart_labels': chart_labels,
         'chart_data': chart_data,
+        'trend_labels': trend_labels,
+        'trend_amount': trend_amount,
         'recent_contributions': Contribution.objects.filter(
             contributor__user=request.user
         ).filter(
@@ -237,6 +288,39 @@ def contributor_detail(request, pk):
         'form': form,
     }
     return render(request, 'contributors/contributor_detail.html', context)
+
+@login_required
+def contributor_statement_view(request, pk):
+    contributor = get_object_or_404(Contributor, pk=pk, user=request.user)
+    all_contributions = contributor.contributions.all()
+
+    selected_year, selected_month = _parse_year_month(request)
+    contributions = all_contributions
+    if selected_year:
+        contributions = contributions.filter(date__year=selected_year)
+    if selected_month:
+        contributions = contributions.filter(date__month=selected_month)
+    contributions = contributions.order_by('date')
+
+    total_amount = all_contributions.aggregate(Sum('amount'))['amount__sum'] or 0
+    period_amount = contributions.aggregate(Sum('amount'))['amount__sum'] or 0
+
+    rows = [(c.date.strftime("%d %b %Y"), c.note or "-", f"{c.amount:,.2f}") for c in contributions]
+
+    return _render_statement(
+        request,
+        entity_label=_("Contributor"),
+        entity_name=contributor.name,
+        entity_meta=[(_("Phone"), contributor.phone), (_("Category"), contributor.get_category_display())],
+        period_label=_period_label(selected_year, selected_month),
+        summary_rows=[
+            (_("Total Given"), f"{total_amount:,.2f}", "positive"),
+            (_("Given This Period"), f"{period_amount:,.2f}", ""),
+        ],
+        columns=[_("Date"), _("Note"), _("Amount (৳)")],
+        rows=rows,
+        back_url=request.META.get("HTTP_REFERER") or f"/contributors/{contributor.pk}/",
+    )
 
 @login_required
 def contribution_update(request, pk):

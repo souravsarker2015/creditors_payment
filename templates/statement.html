@@ -1,0 +1,181 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ entity_label }} — {{ entity_name }} | {% translate "Statement" %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Hind+Siliguri:wght@400;500;600;700&family=Tiro+Bangla&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #1b1e1a;
+            --ink-soft: #5b6259;
+            --ink-muted: #8a9086;
+            --line: #d8d4c4;
+            --line-soft: #ece9dc;
+            --paper: #ffffff;
+            --accent: #0f5c50;
+            --good: #2e7d4f;
+            --bad: #b03a2e;
+            --gold: #a9791f;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: #e8e6dc;
+            color: var(--ink);
+            font-family: "Inter", -apple-system, "Segoe UI", system-ui, sans-serif;
+        }
+        {% if LANGUAGE_CODE == "bn" %}
+        body { font-family: "Hind Siliguri", "Noto Sans Bengali", sans-serif; }
+        .font-heading { font-family: "Tiro Bangla", "Noto Serif Bengali", serif; }
+        {% else %}
+        .font-heading { font-family: "Source Serif 4", Georgia, serif; }
+        {% endif %}
+
+        .toolbar {
+            position: sticky; top: 0; z-index: 10;
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 1rem; padding: 0.85rem 1.5rem;
+            background: var(--ink); color: #eef1ea;
+        }
+        .toolbar a, .toolbar button {
+            font: inherit; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.03em;
+            border-radius: 0.5rem; padding: 0.55rem 1.1rem; cursor: pointer;
+            text-decoration: none; border: 1px solid transparent;
+        }
+        .toolbar .btn-print { background: #eef1ea; color: var(--ink); border: none; }
+        .toolbar .btn-back { background: transparent; color: #eef1ea; border-color: rgba(255,255,255,0.3); }
+
+        .sheet {
+            max-width: 780px; margin: 2rem auto 4rem; background: var(--paper);
+            padding: 3rem 3.25rem; box-shadow: 0 10px 40px rgba(0,0,0,0.12);
+            border-radius: 4px;
+        }
+        .sheet-head {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            gap: 1.5rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--ink);
+        }
+        .brand { display: flex; align-items: center; gap: 0.6rem; }
+        .brand-mark {
+            width: 2.1rem; height: 2.1rem; border-radius: 0.5rem; background: var(--gold);
+            color: #221a06; display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 1.05rem;
+        }
+        .brand-name { font-weight: 800; font-size: 1.05rem; letter-spacing: -0.01em; }
+        .doc-title {
+            text-align: right; font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.14em; color: var(--ink-muted);
+        }
+        .doc-title strong { display: block; font-size: 1rem; color: var(--ink); letter-spacing: 0; margin-top: 0.2rem; }
+
+        .entity-block { margin-top: 1.75rem; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem; }
+        .entity-name { font-size: 1.9rem; font-weight: 700; margin: 0; }
+        .entity-meta { margin-top: 0.35rem; font-size: 0.85rem; color: var(--ink-soft); }
+        .entity-meta span:not(:last-child)::after { content: "·"; margin: 0 0.5rem; color: var(--ink-muted); }
+        .period-block { text-align: right; font-size: 0.8rem; color: var(--ink-soft); }
+        .period-block strong { display: block; color: var(--ink); font-size: 0.95rem; }
+
+        .summary {
+            margin-top: 2rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1px; background: var(--line); border: 1px solid var(--line);
+        }
+        .summary-cell { background: var(--paper); padding: 1rem 1.25rem; }
+        .summary-cell dt { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-muted); }
+        .summary-cell dd { margin: 0.3rem 0 0; font-size: 1.3rem; font-weight: 800; }
+        .summary-cell.positive dd { color: var(--good); }
+        .summary-cell.negative dd { color: var(--bad); }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 2.25rem; font-size: 0.85rem; }
+        thead th {
+            text-align: left; font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.08em; color: var(--ink-muted); padding: 0.6rem 0.5rem;
+            border-bottom: 2px solid var(--ink);
+        }
+        thead th:last-child, tbody td:last-child { text-align: right; }
+        tbody td { padding: 0.55rem 0.5rem; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+        tbody tr:nth-child(even) { background: #faf9f4; }
+        .amount-col { font-variant-numeric: tabular-nums; font-weight: 700; }
+        .empty-row td { text-align: center; padding: 2.5rem 0; color: var(--ink-muted); font-style: italic; }
+
+        .sheet-foot {
+            margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--line-soft);
+            display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--ink-muted);
+        }
+
+        @media print {
+            .toolbar { display: none; }
+            body { background: var(--paper); }
+            .sheet { box-shadow: none; margin: 0; max-width: none; border-radius: 0; padding: 0.5rem 0.25rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <a href="{{ back_url }}" class="btn-back">← {% translate "Back" %}</a>
+        <button type="button" class="btn-print" onclick="window.print()">{% translate "Print / Save as PDF" %}</button>
+    </div>
+
+    <div class="sheet">
+        <div class="sheet-head">
+            <div class="brand">
+                <div class="brand-mark">৳</div>
+                <span class="brand-name font-heading">FinTrack</span>
+            </div>
+            <div class="doc-title">
+                {% translate "Statement of Account" %}
+                <strong>{{ generated_at|date:"d M Y" }}</strong>
+            </div>
+        </div>
+
+        <div class="entity-block">
+            <div>
+                <p class="entity-name font-heading">{{ entity_name }}</p>
+                <p class="entity-meta">
+                    <span>{{ entity_label }}</span>
+                    {% for label, value in entity_meta %}{% if value %}<span>{{ value }}</span>{% endif %}{% endfor %}
+                </p>
+            </div>
+            <div class="period-block">
+                {% translate "Period" %}
+                <strong>{{ period_label }}</strong>
+            </div>
+        </div>
+
+        <dl class="summary">
+            {% for label, value, tone in summary_rows %}
+            <div class="summary-cell{% if tone %} {{ tone }}{% endif %}">
+                <dt>{{ label }}</dt>
+                <dd>৳{{ value }}</dd>
+            </div>
+            {% endfor %}
+        </dl>
+
+        <table>
+            <thead>
+                <tr>
+                    {% for col in columns %}<th>{{ col }}</th>{% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                <tr>
+                    {% for cell in row %}
+                        {% if forloop.last %}<td class="amount-col">{{ cell }}</td>{% else %}<td>{{ cell }}</td>{% endif %}
+                    {% endfor %}
+                </tr>
+                {% empty %}
+                <tr class="empty-row"><td colspan="{{ columns|length }}">{% translate "No records for this statement." %}</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="sheet-foot">
+            <span>{% translate "Generated by FinTrack — computer-generated statement, no signature required." %}</span>
+            <span>{{ generated_at|date:"d M Y, H:i" }}</span>
+        </div>
+    </div>
+</body>
+</html>

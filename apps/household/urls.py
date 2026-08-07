@@ -11,6 +11,7 @@ urlpatterns = [
     path("members/add/", views.member_create_view, name="household_member_create"),
     path("members/<int:pk>/", views.member_detail_view, name="household_member_detail"),
     path("members/<int:pk>/edit/", views.member_edit_view, name="household_member_edit"),
+    path("members/<int:pk>/statement/", views.member_statement_view, name="household_member_statement"),
     path("settlements/<int:pk>/edit/", views.settlement_edit_view, name="household_settlement_edit"),
     path("settlements/<int:pk>/delete/", views.settlement_delete_view, name="household_settlement_delete"),
     path("categories/", views.category_list_view, name="household_category_list"),

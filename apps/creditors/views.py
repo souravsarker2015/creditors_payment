@@ -6,7 +6,8 @@ from datetime import date as date_cls
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Sum, Q, F, DecimalField, Value
-from django.db.models.functions import Coalesce
+from django.db.models.functions import Coalesce, TruncMonth
+from django.utils import dateformat
 from django.utils.translation import gettext as _
 
 from .models import Creditor, CreditorCategory, Transaction
@@ -22,6 +23,42 @@ def _csv_response(filename, header, rows):
     writer.writerow(header)
     writer.writerows(rows)
     return response
+
+
+def _last_12_month_starts():
+    """List of 12 date(y, m, 1), oldest first, ending at the first of this month."""
+    today = django.utils.timezone.now().date()
+    starts = []
+    for i in range(11, -1, -1):
+        month_index = today.month - i
+        year = today.year
+        while month_index <= 0:
+            month_index += 12
+            year -= 1
+        starts.append(date_cls(year, month_index, 1))
+    return starts
+
+
+def _period_label(selected_year, selected_month):
+    if selected_month:
+        return dateformat.format(date_cls(2000, selected_month, 1), "F") + f" {selected_year}"
+    if selected_year:
+        return str(selected_year)
+    return _("All Time")
+
+
+def _render_statement(request, *, entity_label, entity_name, entity_meta, period_label, summary_rows, columns, rows, back_url):
+    return render(request, "statement.html", {
+        "entity_label": entity_label,
+        "entity_name": entity_name,
+        "entity_meta": entity_meta,
+        "period_label": period_label,
+        "summary_rows": summary_rows,
+        "columns": columns,
+        "rows": rows,
+        "back_url": back_url,
+        "generated_at": django.utils.timezone.now(),
+    })
 
 
 def _parse_year_month(request):
@@ -106,7 +143,21 @@ def dashboard_view(request):
     recent_transactions = recent_transactions.select_related("creditor").order_by(
         "-date", "-created_at"
     )[:10]
-    
+
+    # Rolling 12-month Borrowed vs Repaid trend.
+    month_starts = _last_12_month_starts()
+    monthly_totals = (
+        Transaction.objects.filter(creditor__user=request.user, date__gte=month_starts[0])
+        .annotate(month=TruncMonth("date"))
+        .values("month", "transaction_type")
+        .annotate(total=Sum("amount"))
+    )
+    borrowed_by_month = {row["month"]: row["total"] for row in monthly_totals if row["transaction_type"] == Transaction.BORROW}
+    paid_by_month = {row["month"]: row["total"] for row in monthly_totals if row["transaction_type"] == Transaction.REPAY}
+    trend_labels = month_starts
+    trend_borrowed = [float(borrowed_by_month.get(d, 0) or 0) for d in month_starts]
+    trend_paid = [float(paid_by_month.get(d, 0) or 0) for d in month_starts]
+
     context = {
         "total_borrowed": total_borrowed,
         "total_paid": total_paid,
@@ -114,6 +165,9 @@ def dashboard_view(request):
         "creditor_labels": creditor_labels,
         "creditor_remaining": creditor_remaining,
         "creditor_paid": creditor_paid,
+        "trend_labels": trend_labels,
+        "trend_borrowed": trend_borrowed,
+        "trend_paid": trend_paid,
         "recent_transactions": recent_transactions,
         "selected_category": selected_categories[0] if len(selected_categories) == 1 else "",
         "selected_categories": selected_categories,
@@ -223,6 +277,49 @@ def creditor_detail_view(request, pk):
         "chart_remaining": float(remaining) if remaining > 0 else 0,
     }
     return render(request, "creditors/creditor_detail.html", context)
+
+
+@login_required
+def creditor_statement_view(request, pk):
+    creditor = get_object_or_404(Creditor, pk=pk, user=request.user)
+    all_transactions = creditor.transactions.all()
+
+    selected_year, selected_month = _parse_year_month(request)
+    transactions = all_transactions
+    if selected_year:
+        transactions = transactions.filter(date__year=selected_year)
+    if selected_month:
+        transactions = transactions.filter(date__month=selected_month)
+    transactions = transactions.order_by("date", "created_at")
+
+    stats = all_transactions.aggregate(
+        borrowed=Coalesce(Sum("amount", filter=Q(transaction_type=Transaction.BORROW)), Value(0, output_field=DecimalField())),
+        paid=Coalesce(Sum("amount", filter=Q(transaction_type=Transaction.REPAY)), Value(0, output_field=DecimalField())),
+    )
+    remaining = stats["borrowed"] - stats["paid"]
+
+    period_label = _period_label(selected_year, selected_month)
+
+    rows = [
+        (tx.date.strftime("%d %b %Y"), tx.get_transaction_type_display(), tx.note or "-", f"{tx.amount:,.2f}")
+        for tx in transactions
+    ]
+
+    return _render_statement(
+        request,
+        entity_label=_("Creditor"),
+        entity_name=creditor.name,
+        entity_meta=[(_("Phone"), creditor.phone), (_("Category"), creditor.get_category_display())],
+        period_label=period_label,
+        summary_rows=[
+            (_("Total Borrowed"), f"{stats['borrowed']:,.2f}", ""),
+            (_("Total Repaid"), f"{stats['paid']:,.2f}", "positive"),
+            (_("Outstanding Balance"), f"{remaining:,.2f}", "negative" if remaining > 0 else "positive"),
+        ],
+        columns=[_("Date"), _("Type"), _("Note"), _("Amount (৳)")],
+        rows=rows,
+        back_url=request.META.get("HTTP_REFERER") or f"/creditors/{creditor.pk}/",
+    )
 
 
 @login_required

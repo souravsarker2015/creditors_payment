@@ -190,5 +190,82 @@
     return chart;
   }
 
+  /**
+   * Render (or re-render) a monthly trend bar chart (e.g. rolling last 12
+   * months). Supports one or more series (grouped bars) sharing the same
+   * month labels — e.g. Borrowed vs Repaid, or a single Total Spent series.
+   * @param {Object} config
+   * @param {string} config.canvasId
+   * @param {string[]} config.labels - month labels, e.g. "Aug 2025"
+   * @param {Array<{label: string, data: number[]}>} config.datasets
+   * @param {string} [config.currency='৳']
+   */
+  function renderTrendChart(config) {
+    var canvas = document.getElementById(config.canvasId);
+    if (!canvas) return null;
+
+    var labels = config.labels || [];
+    var datasets = config.datasets || [];
+    var currency = config.currency || '৳';
+
+    if (labels.length === 0 || datasets.length === 0) return null;
+
+    var gridColor = token('--border-soft', '#e5e7eb');
+    var textColor = token('--text-secondary', '#374151');
+
+    var chartDatasets = datasets.map(function (ds, i) {
+      return {
+        label: ds.label,
+        data: ds.data,
+        backgroundColor: CHART_PALETTE[i % CHART_PALETTE.length],
+        borderRadius: 4,
+        maxBarThickness: 28,
+      };
+    });
+
+    var chart = new Chart(canvas.getContext('2d'), {
+      type: 'bar',
+      data: { labels: labels, datasets: chartDatasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { color: textColor, font: { size: 10 } },
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: gridColor },
+            ticks: {
+              color: textColor,
+              font: { size: 10 },
+              callback: function (value) { return formatAmount(value, currency); },
+            },
+          },
+        },
+        plugins: {
+          legend: {
+            display: datasets.length > 1,
+            position: 'bottom',
+            labels: { color: textColor, usePointStyle: true, font: { size: 11, weight: '600' } },
+          },
+          tooltip: {
+            callbacks: {
+              label: function (ctx) {
+                return ' ' + ctx.dataset.label + ': ' + formatAmount(ctx.raw, currency);
+              },
+            },
+          },
+          datalabels: { display: false },
+        },
+      },
+    });
+
+    return chart;
+  }
+
   global.renderDistributionChart = renderDistributionChart;
+  global.renderTrendChart = renderTrendChart;
 })(window);
