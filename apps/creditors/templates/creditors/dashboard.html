@@ -64,6 +64,35 @@
     </div>
   </dl>
 
+  {% if overdue_creditors or due_soon_creditors %}
+  <div class="mt-8 rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] p-4 shadow-sm sm:p-6">
+    <h3 class="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+      <svg class="h-4 w-4" style="color: var(--status-warn);" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
+      {% translate "Needs Attention" %}
+    </h3>
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {% for cr in overdue_creditors %}
+      <a href="{% url 'creditor_detail' cr.pk %}" class="flex items-center justify-between gap-3 rounded-lg px-4 py-3 hover:brightness-95 transition-all" style="background: var(--status-critical-bg);">
+        <div class="min-w-0">
+          <p class="truncate text-sm font-bold text-[var(--text-primary)]">{{ cr.name }}</p>
+          <p class="text-xs font-semibold" style="color: var(--status-critical);">{% blocktranslate with date=cr.due_date|date:"d M" %}Overdue since {{ date }}{% endblocktranslate %}</p>
+        </div>
+        <span class="shrink-0 text-sm font-bold" style="color: var(--status-critical);">৳{{ cr.remaining_amt|floatformat:0 }}</span>
+      </a>
+      {% endfor %}
+      {% for cr in due_soon_creditors %}
+      <a href="{% url 'creditor_detail' cr.pk %}" class="flex items-center justify-between gap-3 rounded-lg px-4 py-3 hover:brightness-95 transition-all" style="background: var(--status-warn-bg);">
+        <div class="min-w-0">
+          <p class="truncate text-sm font-bold text-[var(--text-primary)]">{{ cr.name }}</p>
+          <p class="text-xs font-semibold" style="color: var(--status-warn);">{% blocktranslate with date=cr.due_date|date:"d M" %}Due {{ date }}{% endblocktranslate %}</p>
+        </div>
+        <span class="shrink-0 text-sm font-bold" style="color: var(--status-warn);">৳{{ cr.remaining_amt|floatformat:0 }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
   <div class="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-2">
     <!-- Recent Activity Card -->
     <div class="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] shadow-sm">

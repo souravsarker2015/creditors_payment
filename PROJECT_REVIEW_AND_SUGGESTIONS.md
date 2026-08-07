@@ -60,13 +60,13 @@ and shops (বাকি tracking) — household and shops didn't exist at the ti
   upload. For the balance-carrying entities (Creditors, Debtors, Shop Dues, Contributors, Income
   Sources) an optional "Opening Balance" column seeds one initial transaction, so migrating an
   existing who-owes-who spreadsheet brings the current balances across, not just the names.
+- **Due dates + reminders** — Creditors and Debtors both have an optional `due_date` field
+  (set from the edit form, with the same flatpickr date picker used elsewhere). Any entity with
+  an unpaid balance and a due date shows an "Overdue" or "Due Soon" (within 7 days) badge on its
+  list card and detail page, and both dashboards surface a "Needs Attention" panel listing
+  everyone overdue or coming due, soonest first.
 
 ## Finance / accounting value
-
-- **Due dates + reminders on debts** (Medium)
-  Creditor/Debtor transactions have no due date today, so nothing tells you a repayment is
-  coming up. Add an optional `due_date` to `Transaction`/`Debtor` and surface a "due soon /
-  overdue" badge on the dashboards and list cards.
 
 - **Interest tracking for loans** (Medium–High)
   Categories like `BANK`, `MICROFINANCE`, and `MONEYLENDER` imply interest-bearing debt, but
@@ -92,7 +92,7 @@ and shops (বাকি tracking) — household and shops didn't exist at the ti
 ## Suggested priority
 
 With CSV export/import, theming, full localization, year/month filters, trend charts, PDF
-statements, and pagination/sorting across every list all shipped, the cheapest remaining win is
-due-date reminders — a small, isolated change with clear day-to-day payoff. The heavier items
-(interest tracking, net worth overview, recurring transactions, a REST API) are worth revisiting
-once that's in, roughly in that order.
+statements, pagination/sorting, and due-date reminders all shipped, what's left is the heavier,
+more speculative items: interest tracking, a net worth overview, recurring transactions, and a
+REST API — worth picking up in roughly that order, each only once there's a concrete need driving
+it.

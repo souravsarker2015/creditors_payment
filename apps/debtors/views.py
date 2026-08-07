@@ -4,7 +4,7 @@ from decimal import Decimal, InvalidOperation
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 import django.utils.timezone
-from datetime import date as date_cls
+from datetime import date as date_cls, timedelta
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Sum, Q, F, DecimalField, Value
@@ -13,7 +13,7 @@ from django.core.paginator import Paginator
 from django.utils import dateformat
 from django.utils.translation import gettext as _
 
-from .models import Debtor, DebtorCategory, Transaction
+from .models import Debtor, DebtorCategory, Transaction, DUE_SOON_DAYS
 
 
 def _row_value(row, fieldnames, key):
@@ -175,6 +175,23 @@ def dashboard_view(request):
             debtor_remaining.append(float(rem) if rem > 0 else 0)
             debtor_received.append(float(d.d_received))
 
+    # Debtors needing attention: an outstanding balance with a due date that
+    # has passed or is coming up within DUE_SOON_DAYS.
+    today = django.utils.timezone.now().date()
+    due_soon_cutoff = today + timedelta(days=DUE_SOON_DAYS)
+    overdue_debtors = []
+    due_soon_debtors = []
+    for d in debtors_qs:
+        rem = d.d_lent - d.d_received
+        if d.due_date and rem > 0:
+            d.remaining_amt = rem
+            if d.due_date < today:
+                overdue_debtors.append(d)
+            elif d.due_date <= due_soon_cutoff:
+                due_soon_debtors.append(d)
+    overdue_debtors.sort(key=lambda d: d.due_date)
+    due_soon_debtors.sort(key=lambda d: d.due_date)
+
     # Recent activity
     recent_transactions = Transaction.objects.filter(debtor__user=request.user)
     if selected_categories:
@@ -215,6 +232,8 @@ def dashboard_view(request):
         "trend_lent": trend_lent,
         "trend_received": trend_received,
         "recent_transactions": recent_transactions,
+        "overdue_debtors": overdue_debtors,
+        "due_soon_debtors": due_soon_debtors,
         "selected_categories": selected_categories,
         "category_choices": DebtorCategory.choices,
         "filter_type": filter_type,
@@ -301,6 +320,14 @@ def debtor_detail_view(request, pk):
             rows,
         )
 
+    due_status = None
+    if debtor.due_date and remaining > 0:
+        today = django.utils.timezone.now().date()
+        if debtor.due_date < today:
+            due_status = "overdue"
+        elif debtor.due_date <= today + timedelta(days=DUE_SOON_DAYS):
+            due_status = "due_soon"
+
     context = {
         "debtor": debtor,
         "transactions": transactions,
@@ -317,6 +344,7 @@ def debtor_detail_view(request, pk):
         "selected_month_date": date_cls(2000, selected_month, 1) if selected_month else None,
         "chart_received": float(stats["received"]),
         "chart_remaining": float(remaining) if remaining > 0 else 0,
+        "due_status": due_status,
     }
     return render(request, "debtors/debtor_detail.html", context)
 
@@ -444,11 +472,20 @@ def debtor_list_view(request):
     page_obj = paginator.get_page(page_number)
 
     # Calculate progress percentage
+    today = django.utils.timezone.now().date()
+    due_soon_cutoff = today + timedelta(days=DUE_SOON_DAYS)
     for dr in page_obj:
         if dr.total_lent_amt > 0:
             dr.received_percent = min(100, int((dr.total_received_amt / dr.total_lent_amt) * 100))
         else:
             dr.received_percent = 0
+
+        dr.due_status = None
+        if dr.due_date and dr.remaining_amt > 0:
+            if dr.due_date < today:
+                dr.due_status = "overdue"
+            elif dr.due_date <= due_soon_cutoff:
+                dr.due_status = "due_soon"
 
     base_query = request.GET.copy()
     base_query.pop("page", None)

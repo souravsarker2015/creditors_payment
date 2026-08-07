@@ -13,6 +13,13 @@
               {{ creditor.name|first|upper }}
           </div>
           <h1 class="text-3xl font-extrabold leading-7 text-[var(--text-primary)] sm:truncate sm:text-4xl sm:tracking-tight">{{ creditor.name }}</h1>
+          {% if due_status %}
+          <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold"
+                style="{% if due_status == 'overdue' %}background: var(--status-critical-bg); color: var(--status-critical);{% else %}background: var(--status-warn-bg); color: var(--status-warn);{% endif %}">
+            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
+            {% if due_status == 'overdue' %}{% translate "Overdue" %}{% else %}{% translate "Due Soon" %}{% endif %}
+          </span>
+          {% endif %}
       </div>
       <div class="mt-4 flex flex-col sm:mt-2 sm:flex-row sm:flex-wrap sm:space-x-6">
         <div class="mt-2 flex items-center text-sm text-[var(--text-secondary)] font-medium">
@@ -27,6 +34,12 @@
           </svg>
           {% if creditor.note %}{{ creditor.note }}{% else %}{% translate "No notes" %}{% endif %}
         </div>
+        {% if creditor.due_date %}
+        <div class="mt-2 flex items-center text-sm font-medium" style="color: {% if due_status == 'overdue' %}var(--status-critical){% elif due_status == 'due_soon' %}var(--status-warn){% else %}var(--text-secondary){% endif %};">
+          <svg class="mr-1.5 h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" /></svg>
+          {% blocktranslate with date=creditor.due_date|date:"d M Y" %}Due {{ date }}{% endblocktranslate %}
+        </div>
+        {% endif %}
       </div>
     </div>
     <div class="mt-5 flex lg:ml-4 lg:mt-0 gap-3">

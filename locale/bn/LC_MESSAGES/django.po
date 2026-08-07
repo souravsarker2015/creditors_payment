@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-07 12:37+0600\n"
+"POT-Creation-Date: 2026-08-07 14:04+0600\n"
 "PO-Revision-Date: 2026-08-06 23:49+0600\n"
 "Last-Translator: FinTrack\n"
 "Language-Team: Bengali\n"
@@ -273,6 +273,12 @@ msgstr ""
 "অবদানকারীদের বিস্তারিত তালিকা এবং তাদের মোট স্বেচ্ছা সহায়তার এন্ট্রি। নাম দিয়ে "
 "অনুসন্ধান করুন অথবা নির্বাচিত ক্যাটাগরি অন্তর্ভুক্ত/বাদ দিতে ফিল্টার ব্যবহার করুন।"
 
+msgid "Import CSV"
+msgstr "সিএসভি আমদানি করুন"
+
+msgid "Template"
+msgstr "টেমপ্লেট"
+
 msgid "New Contributor"
 msgstr "নতুন অবদানকারী"
 
@@ -297,6 +303,9 @@ msgstr "ক্যাটাগরি"
 msgid "Leave empty for all categories."
 msgstr "সব ক্যাটাগরির জন্য খালি রাখুন।"
 
+msgid "Sort by"
+msgstr "সাজান"
+
 msgid "Apply Filter"
 msgstr "ফিল্টার প্রয়োগ করুন"
 
@@ -320,6 +329,33 @@ msgstr "মোট সহায়তা"
 
 msgid "Edit"
 msgstr "সম্পাদনা"
+
+#, python-format
+msgid "Page %(current)s of %(total)s"
+msgstr "পৃষ্ঠা %(current)s এর %(total)s"
+
+msgid "First"
+msgstr "প্রথম"
+
+msgid "Prev"
+msgstr "পূর্ববর্তী"
+
+msgid "Next"
+msgstr "পরবর্তী"
+
+msgid "Last"
+msgstr "শেষ"
+
+msgid "Go"
+msgstr "যান"
+
+#, python-format
+msgid "Range: 1-%(total)s"
+msgstr "পরিসীমা: ১-%(total)s"
+
+#, python-format
+msgid "Please enter a page between 1 and %(total)s."
+msgstr "অনুগ্রহ করে ১ থেকে %(total)s এর মধ্যে একটি পৃষ্ঠা লিখুন।"
 
 msgid "No contributors match your filters"
 msgstr "আপনার ফিল্টারের সাথে মেলে এমন কোনো অবদানকারী নেই"
@@ -392,14 +428,65 @@ msgstr "অনুদানের বিভাজন"
 msgid "12-Month Trend"
 msgstr "১২-মাসের প্রবণতা"
 
+msgid "Name (A–Z)"
+msgstr "নাম (A–Z)"
+
+msgid "Name (Z–A)"
+msgstr "নাম (Z–A)"
+
+msgid "Total Given (High to Low)"
+msgstr "মোট প্রদত্ত (বেশি থেকে কম)"
+
+msgid "Total Given (Low to High)"
+msgstr "মোট প্রদত্ত (কম থেকে বেশি)"
+
 msgid "Category"
 msgstr "ক্যাটাগরি"
 
-msgid "Edit Contributor"
-msgstr "অবদানকারী সম্পাদনা"
+msgid "Sajal Saha"
+msgstr "সজল সাহা"
+
+msgid "Monthly sponsor"
+msgstr "মাসিক পৃষ্ঠপোষক"
+
+msgid "Name"
+msgstr "নাম"
 
 msgid "Phone"
 msgstr "ফোন"
+
+msgid "Opening Contribution"
+msgstr "প্রারম্ভিক অনুদান"
+
+msgid "Please choose a CSV file to import."
+msgstr "অনুগ্রহ করে আমদানি করতে একটি সিএসভি ফাইল নির্বাচন করুন।"
+
+msgid "Could not read that file. Please upload a UTF-8 encoded CSV."
+msgstr "ফাইলটি পড়া যায়নি। অনুগ্রহ করে UTF-8 এনকোডেড সিএসভি আপলোড করুন।"
+
+msgid "The CSV file appears to be empty."
+msgstr "সিএসভি ফাইলটি খালি বলে মনে হচ্ছে।"
+
+msgid "The CSV must have a 'Name' column."
+msgstr "সিএসভি ফাইলে অবশ্যই একটি 'নাম' কলাম থাকতে হবে।"
+
+msgid "Opening balance (imported)"
+msgstr "প্রারম্ভিক ব্যালেন্স (আমদানিকৃত)"
+
+#, python-format
+msgid "Imported %(count)s contributor(s)."
+msgstr "%(count)s জন অবদানকারী আমদানি করা হয়েছে।"
+
+#, python-format
+msgid ""
+"Skipped %(count)s row(s): %(dup)s duplicate name(s), %(blank)s blank name(s)."
+msgstr ""
+
+msgid "No rows found to import."
+msgstr "আমদানি করার মতো কোনো সারি পাওয়া যায়নি।"
+
+msgid "Edit Contributor"
+msgstr "অবদানকারী সম্পাদনা"
 
 msgid "Given This Period"
 msgstr "এই সময়ে প্রদত্ত"
@@ -409,6 +496,9 @@ msgstr "পরিমাণ (৳)"
 
 msgid "Edit Record"
 msgstr "রেকর্ড সম্পাদনা"
+
+msgid "Select a due date (optional)"
+msgstr "বকেয়া তারিখ নির্বাচন করুন (ঐচ্ছিক)"
 
 msgid "Quick note..."
 msgstr "দ্রুত নোট..."
@@ -437,14 +527,27 @@ msgstr "চিকিৎসা"
 msgid "Education"
 msgstr "শিক্ষা"
 
+msgid "Next payment due date (optional)."
+msgstr "পরবর্তী পরিশোধের তারিখ (ঐচ্ছিক)।"
+
 msgid "Borrowed"
 msgstr "ধার নেওয়া"
 
 msgid "Repaid"
 msgstr "পরিশোধিত"
 
+msgid "Overdue"
+msgstr "মেয়াদোত্তীর্ণ"
+
+msgid "Due Soon"
+msgstr "শীঘ্রই বকেয়া"
+
 msgid "No notes"
 msgstr "কোনো নোট নেই"
+
+#, python-format
+msgid "Due %(date)s"
+msgstr "%(date)s তারিখে বকেয়া"
 
 msgid "Total Borrowed"
 msgstr "মোট ধার"
@@ -540,6 +643,10 @@ msgstr "সম্পূর্ণ পরিশোধিত"
 msgid "Owed ৳%(amount)s"
 msgstr "৳%(amount)s বাকি"
 
+#, python-format
+msgid "Overdue since %(date)s"
+msgstr "%(date)s থেকে বকেয়া"
+
 msgid "Repayment Progress"
 msgstr "পরিশোধের অগ্রগতি"
 
@@ -573,6 +680,9 @@ msgid "Leave unselected for all categories. Use Ctrl/Cmd to select multiple."
 msgstr ""
 "সব ক্যাটাগরির জন্য অনির্বাচিত রাখুন। একাধিক নির্বাচনের জন্য Ctrl/Cmd ব্যবহার করুন।"
 
+msgid "Needs Attention"
+msgstr "মনোযোগ প্রয়োজন"
+
 msgid "Recent Transactions"
 msgstr "সাম্প্রতিক লেনদেন"
 
@@ -600,6 +710,12 @@ msgstr "ঋণের বিভাজন (অবশিষ্ট)"
 msgid "Payment History (Total Paid)"
 msgstr "পেমেন্ট ইতিহাস (মোট পরিশোধিত)"
 
+msgid "Remaining (High to Low)"
+msgstr "অবশিষ্ট (বেশি থেকে কম)"
+
+msgid "Remaining (Low to High)"
+msgstr "অবশিষ্ট (কম থেকে বেশি)"
+
 #, python-format
 msgid "Creditor '%(name)s' added successfully."
 msgstr "পাওনাদার '%(name)s' সফলভাবে যোগ করা হয়েছে।"
@@ -618,6 +734,19 @@ msgstr "৳%(amount)s এর লেনদেন যোগ করা হয়ে
 
 msgid "Status"
 msgstr "অবস্থা"
+
+msgid "Karim Uddin"
+msgstr "করিম উদ্দিন"
+
+msgid "Borrowed for shop setup"
+msgstr "দোকান স্থাপনের জন্য ধার করা হয়েছে"
+
+msgid "Opening Balance"
+msgstr "প্রারম্ভিক ব্যালেন্স"
+
+#, python-format
+msgid "Imported %(count)s creditor(s)."
+msgstr "%(count)s জন পাওনাদার আমদানি করা হয়েছে।"
 
 msgid "Transaction updated."
 msgstr "লেনদেন আপডেট করা হয়েছে।"
@@ -655,6 +784,9 @@ msgstr "দোকানদার"
 
 msgid "Student"
 msgstr "শিক্ষার্থী"
+
+msgid "Next expected repayment date (optional)."
+msgstr "পরবর্তী প্রত্যাশিত ফেরতের তারিখ (ঐচ্ছিক)।"
 
 msgid "Lent"
 msgstr "ধার দেওয়া"
@@ -809,6 +941,13 @@ msgstr "দেনাদার '%(name)s' সফলভাবে যোগ কর�
 msgid "Debtor '%(name)s' updated successfully."
 msgstr "দেনাদার '%(name)s' সফলভাবে আপডেট করা হয়েছে।"
 
+msgid "Lent for emergency"
+msgstr "জরুরী প্রয়োজনে ধার দেওয়া হয়েছে"
+
+#, python-format
+msgid "Imported %(count)s debtor(s)."
+msgstr "%(count)s জন দেনাদার আমদানি করা হয়েছে।"
+
 msgid "Expense details..."
 msgstr "খরচের বিবরণ..."
 
@@ -942,33 +1081,6 @@ msgstr "কোনো বিবরণ নেই"
 msgid "Purge this expenditure record from ledger?"
 msgstr "হিসাব থেকে এই খরচের রেকর্ডটি মুছে ফেলবেন?"
 
-#, python-format
-msgid "Page %(current)s of %(total)s"
-msgstr "পৃষ্ঠা %(current)s এর %(total)s"
-
-msgid "First"
-msgstr "প্রথম"
-
-msgid "Prev"
-msgstr "পূর্ববর্তী"
-
-msgid "Next"
-msgstr "পরবর্তী"
-
-msgid "Last"
-msgstr "শেষ"
-
-msgid "Go"
-msgstr "যান"
-
-#, python-format
-msgid "Range: 1-%(total)s"
-msgstr "পরিসীমা: ১-%(total)s"
-
-#, python-format
-msgid "Please enter a page between 1 and %(total)s."
-msgstr "অনুগ্রহ করে ১ থেকে %(total)s এর মধ্যে একটি পৃষ্ঠা লিখুন।"
-
 msgid "Expenditure Ledger Blank"
 msgstr "খরচের হিসাব খালি"
 
@@ -978,6 +1090,18 @@ msgstr "আপনার আর্থিক ক্ষয় সম্পর্ক
 
 msgid "Register Outflow"
 msgstr "ব্যয় নিবন্ধন করুন"
+
+msgid "Date (Newest First)"
+msgstr "তারিখ (নতুন আগে)"
+
+msgid "Date (Oldest First)"
+msgstr "তারিখ (পুরনো আগে)"
+
+msgid "Amount (High to Low)"
+msgstr "পরিমাণ (বেশি থেকে কম)"
+
+msgid "Amount (Low to High)"
+msgstr "পরিমাণ (কম থেকে বেশি)"
 
 #, python-format
 msgid "Expense of ৳%(amount)s recorded."
@@ -999,6 +1123,18 @@ msgstr "৳%(amount)s এর খরচ মুছে ফেলা হয়েছ
 #, python-format
 msgid "Category '%(name)s' created."
 msgstr "ক্যাটাগরি '%(name)s' তৈরি করা হয়েছে।"
+
+msgid "Groceries"
+msgstr "মুদি সামগ্রী"
+
+msgid "Transport"
+msgstr "পরিবহন"
+
+#, python-format
+msgid "Imported %(count)s category."
+msgid_plural "Imported %(count)s categories."
+msgstr[0] "%(count)sটি ক্যাটাগরি আমদানি করা হয়েছে।"
+msgstr[1] "%(count)sটি ক্যাটাগরি আমদানি করা হয়েছে।"
 
 msgid "e.g. Vegetables, Fish, Groceries"
 msgstr "যেমন সবজি, মাছ, মুদি"
@@ -1222,6 +1358,24 @@ msgstr "মাস অনুযায়ী ব্যয় ট্র্যাক
 msgid "Add Your First Purchase"
 msgstr "আপনার প্রথম কেনাকাটা যোগ করুন"
 
+msgid "Month (Newest First)"
+msgstr "মাস (নতুন আগে)"
+
+msgid "Month (Oldest First)"
+msgstr "মাস (পুরনো আগে)"
+
+msgid "Total Spent (High to Low)"
+msgstr "মোট ব্যয় (বেশি থেকে কম)"
+
+msgid "Total Spent (Low to High)"
+msgstr "মোট ব্যয় (কম থেকে বেশি)"
+
+msgid "Balance Due (High to Low)"
+msgstr "বকেয়া ব্যালেন্স (বেশি থেকে কম)"
+
+msgid "Balance Due (Low to High)"
+msgstr "বকেয়া ব্যালেন্স (কম থেকে বেশি)"
+
 #, python-format
 msgid "Purchase of ৳%(amount)s recorded."
 msgstr "৳%(amount)s এর কেনাকাটা রেকর্ড করা হয়েছে।"
@@ -1235,6 +1389,16 @@ msgstr "কেনাকাটা সম্পাদনা"
 #, python-format
 msgid "Purchase of ৳%(amount)s deleted."
 msgstr "৳%(amount)s এর কেনাকাটা মুছে ফেলা হয়েছে।"
+
+msgid "Rahim"
+msgstr "রহিম"
+
+msgid "Occasionally fronts bazar money"
+msgstr "মাঝে মাঝে বাজারের টাকা আগাম দেন"
+
+#, python-format
+msgid "Imported %(count)s member(s)."
+msgstr "%(count)s জন সদস্য আমদানি করা হয়েছে।"
 
 #, python-format
 msgid "'%(name)s' added."
@@ -1266,6 +1430,12 @@ msgstr "৳%(amount)s এর নিষ্পত্তি মুছে ফেল�
 
 msgid "Add Bazar Category"
 msgstr "বাজারের ক্যাটাগরি যোগ করুন"
+
+msgid "Vegetables"
+msgstr "সবজি"
+
+msgid "Fish"
+msgstr "মাছ"
 
 msgid "Income Dashboard"
 msgstr "আয় ড্যাশবোর্ড"
@@ -1397,6 +1567,28 @@ msgstr "আয় লগ করার আগে সত্তা (নিয়ো
 msgid "Register First Source"
 msgstr "প্রথম উৎস নিবন্ধন করুন"
 
+msgid "Total Earned (High to Low)"
+msgstr "মোট অর্জিত (বেশি থেকে কম)"
+
+msgid "Total Earned (Low to High)"
+msgstr "মোট অর্জিত (কম থেকে বেশি)"
+
+msgid "Acme Corp Salary"
+msgstr "একমি কর্পের বেতন"
+
+msgid "Monthly salary from Acme Corp"
+msgstr "একমি কর্প থেকে মাসিক বেতন"
+
+msgid "Description"
+msgstr "বিবরণ"
+
+msgid "Opening Income"
+msgstr "প্রারম্ভিক আয়"
+
+#, python-format
+msgid "Imported %(count)s income source(s)."
+msgstr "%(count)s টি আয়ের উৎস আমদানি করা হয়েছে।"
+
 #, python-format
 msgid "Income source '%(name)s' created."
 msgstr "আয়ের উৎস '%(name)s' তৈরি করা হয়েছে।"
@@ -1411,9 +1603,6 @@ msgstr "৳%(amount)s এর আয় রেকর্ড করা হয়ে
 
 msgid "Income Source"
 msgstr "আয়ের উৎস"
-
-msgid "Description"
-msgstr "বিবরণ"
 
 msgid "Earned This Period"
 msgstr "এই সময়ে অর্জিত"
@@ -1571,6 +1760,16 @@ msgstr "দোকান '%(name)s' সফলভাবে যোগ করা হ
 #, python-format
 msgid "Shop '%(name)s' updated successfully."
 msgstr "দোকান '%(name)s' সফলভাবে আপডেট করা হয়েছে।"
+
+msgid "Rahim Store"
+msgstr "রহিম স্টোর"
+
+msgid "Monthly groceries on credit"
+msgstr "বাকিতে মাসিক মুদি সামগ্রী"
+
+#, python-format
+msgid "Imported %(count)s shop(s)."
+msgstr "%(count)s টি দোকান আমদানি করা হয়েছে।"
 
 msgid "Tracker"
 msgstr "ট্র্যাকার"

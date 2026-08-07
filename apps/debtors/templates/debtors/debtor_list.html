@@ -130,6 +130,16 @@
         <p class="text-sm text-[var(--text-secondary)] font-medium">{% if dr.phone %}{{ dr.phone }}{% else %}{% translate "No contact info" %}{% endif %}</p>
       </div>
 
+      {% if dr.due_status %}
+      <div class="mt-2">
+        <span class="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold"
+              style="{% if dr.due_status == 'overdue' %}background: var(--status-critical-bg); color: var(--status-critical);{% else %}background: var(--status-warn-bg); color: var(--status-warn);{% endif %}">
+          <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
+          {% if dr.due_status == 'overdue' %}{% blocktranslate with date=dr.due_date|date:"d M" %}Overdue since {{ date }}{% endblocktranslate %}{% else %}{% blocktranslate with date=dr.due_date|date:"d M" %}Due {{ date }}{% endblocktranslate %}{% endif %}
+        </span>
+      </div>
+      {% endif %}
+
       <div class="mt-6 flex-1">
         <div class="flex justify-between text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest mb-2">
             <span>{% translate "Collection Progress" %}</span>
