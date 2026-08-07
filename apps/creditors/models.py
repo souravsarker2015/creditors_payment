@@ -11,11 +11,20 @@ DUE_SOON_DAYS = 7
 
 
 class InterestType(models.TextChoices):
-    FIXED = "FIXED", _("Fixed Amount")
+    FIXED = "FIXED", _("Fixed Amount (One-Time)")
     MONTHLY = "MONTHLY", _("Monthly")
     QUARTERLY = "QUARTERLY", _("Every 3 Months")
     SEMI_ANNUAL = "SEMI_ANNUAL", _("Every 6 Months")
     YEARLY = "YEARLY", _("Yearly")
+
+
+class InterestBasis(models.TextChoices):
+    """For the periodic interest types (everything except FIXED), whether
+    the per-period charge is a percentage of the outstanding balance or a
+    flat amount repeated every period."""
+
+    PERCENTAGE = "PERCENTAGE", _("Percentage")
+    FIXED = "FIXED", _("Fixed Amount")
 
 
 # Day-count convention for the period-rate estimate below: actual days
@@ -79,13 +88,20 @@ class Creditor(models.Model):
         blank=True,
         help_text=_("How interest is charged (optional). Leave blank for interest-free debt."),
     )
+    interest_basis = models.CharField(
+        max_length=16,
+        choices=InterestBasis.choices,
+        null=True,
+        blank=True,
+        help_text=_("For Monthly/Every 3 Months/Every 6 Months/Yearly: charge a percentage of the balance, or a flat amount each period."),
+    )
     interest_rate = models.DecimalField(
         max_digits=5,
         decimal_places=2,
         null=True,
         blank=True,
         validators=[MinValueValidator(0)],
-        help_text=_("Interest rate per period, %% — used for Monthly/Every 3 Months/Every 6 Months/Yearly."),
+        help_text=_("Interest rate per period, %% — used when the basis is Percentage."),
     )
     interest_fixed_amount = models.DecimalField(
         max_digits=12,
@@ -93,7 +109,7 @@ class Creditor(models.Model):
         null=True,
         blank=True,
         validators=[MinValueValidator(0)],
-        help_text=_("A flat interest amount (৳) — used only when the type is Fixed Amount."),
+        help_text=_("A flat interest amount (৳) — used for a one-time Fixed Amount type, or a Fixed Amount basis charged every period."),
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -168,14 +184,15 @@ class Creditor(models.Model):
         balance. Returns 0 if there's no interest type set or nothing
         outstanding.
 
-        - Fixed Amount: the configured flat amount, as-is, until it's
-          posted (post_accrued_interest() clears it afterwards so the same
-          fixed charge can't be posted twice).
-        - Monthly / Every 3 Months / Every 6 Months / Yearly: simple
-          interest on the outstanding balance — rate% × (actual days since
-          the last transaction ÷ the period's approximate day count) — so
-          a partial period accrues a proportional amount rather than
-          jumping in whole-period steps.
+        - Fixed Amount (One-Time): the configured flat amount, as-is,
+          until it's posted (post_accrued_interest() clears it afterwards
+          so the same one-off charge can't be posted twice).
+        - Monthly / Every 3 Months / Every 6 Months / Yearly: a per-period
+          charge — either rate% of the outstanding balance, or a flat ৳
+          amount, per `interest_basis` — prorated by actual days since the
+          last transaction ÷ the period's approximate day count, so a
+          partial period accrues a proportional amount rather than jumping
+          in whole-period steps.
 
         This is a live estimate for display only — it is never added to
         the ledger automatically. Use post_accrued_interest() to formalize
@@ -190,8 +207,14 @@ class Creditor(models.Model):
                 return Decimal("0.00")
             return self.interest_fixed_amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
-        if not self.interest_rate:
-            return Decimal("0.00")
+        if self.interest_basis == InterestBasis.FIXED:
+            if not self.interest_fixed_amount:
+                return Decimal("0.00")
+            per_period_amount = self.interest_fixed_amount
+        else:
+            if not self.interest_rate:
+                return Decimal("0.00")
+            per_period_amount = principal * (self.interest_rate / Decimal(100))
 
         last_date = self.last_transaction_date
         if not last_date:
@@ -202,9 +225,8 @@ class Creditor(models.Model):
             return Decimal("0.00")
 
         period_days = INTEREST_PERIOD_DAYS[self.interest_type]
-        rate = self.interest_rate / Decimal(100)
         periods_elapsed = Decimal(days_elapsed) / period_days
-        interest = principal * rate * periods_elapsed
+        interest = per_period_amount * periods_elapsed
         return interest.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
     @property

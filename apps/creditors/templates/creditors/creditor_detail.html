@@ -72,6 +72,8 @@
         <p class="mt-1 max-w-md text-xs text-[var(--text-muted)]">
           {% if creditor.interest_type == 'FIXED' %}
             {% translate "A flat interest amount you've agreed on. It shows here until you post it — nothing is added automatically." %}
+          {% elif creditor.interest_basis == 'FIXED' %}
+            {% blocktranslate with amount=creditor.interest_fixed_amount|floatformat:2 period=creditor.interest_period_noun %}A flat ৳{{ amount }} charged every {{ period }}, accrued proportionally since the last transaction. This is an estimate only — it doesn't affect the balance above until you post it.{% endblocktranslate %}
           {% else %}
             {% blocktranslate with rate=creditor.interest_rate|floatformat:2 period=creditor.interest_period_noun %}Estimated simple interest at {{ rate }}% per {{ period }} on the outstanding balance, accrued since the last transaction. This is an estimate only — it doesn't affect the balance above until you post it.{% endblocktranslate %}
           {% endif %}
@@ -89,11 +91,13 @@
     <dl class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
       <div>
         <dt class="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
-          {% if creditor.interest_type == 'FIXED' %}{% translate "Fixed Amount" %}{% else %}{% translate "Rate" %}{% endif %}
+          {% if creditor.interest_type == 'FIXED' or creditor.interest_basis == 'FIXED' %}{% translate "Fixed Amount" %}{% else %}{% translate "Rate" %}{% endif %}
         </dt>
         <dd class="mt-1 text-lg font-bold text-[var(--text-primary)]">
           {% if creditor.interest_type == 'FIXED' %}
             ৳{{ creditor.interest_fixed_amount|floatformat:2 }}
+          {% elif creditor.interest_basis == 'FIXED' %}
+            ৳{{ creditor.interest_fixed_amount|floatformat:2 }} <span class="text-xs font-normal text-[var(--text-muted)]">/ {{ creditor.interest_period_noun }}</span>
           {% else %}
             {{ creditor.interest_rate|floatformat:2 }}% <span class="text-xs font-normal text-[var(--text-muted)]">/ {{ creditor.interest_period_noun }}</span>
           {% endif %}

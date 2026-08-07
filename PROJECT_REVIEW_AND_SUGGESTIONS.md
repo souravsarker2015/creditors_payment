@@ -65,20 +65,25 @@ and shops (বাকি tracking) — household and shops didn't exist at the ti
   an unpaid balance and a due date shows an "Overdue" or "Due Soon" (within 7 days) badge on its
   list card and detail page, and both dashboards surface a "Needs Attention" panel listing
   everyone overdue or coming due, soonest first.
-- **Interest tracking for loans** — Creditors have an optional `interest_type`: Fixed Amount,
-  Monthly, Every 3 Months, Every 6 Months, or Yearly. The four period types take a rate (%) and
-  accrue simple interest on the outstanding balance proportionally to actual days elapsed since
-  the last transaction (e.g. Monthly uses a ~30-day period, Yearly ~365); Fixed Amount instead
-  takes one flat ৳ figure with no time component. The edit form shows only the one numeric field
-  that matches the selected type (rate % vs flat amount), swapped live via Alpine as the type
-  changes. The detail page shows a clearly-separated "Interest" card — rate/amount, accrued
-  interest, and a "Balance Incl. Interest" total — as a live estimate only; the headline
+- **Interest tracking for loans** — Creditors have an optional `interest_type`: Fixed Amount
+  (One-Time), Monthly, Every 3 Months, Every 6 Months, or Yearly. The one-time Fixed Amount is a
+  single flat ৳ figure with no time component. The four period types additionally take an
+  `interest_basis` — **Percentage** (rate % of the outstanding balance) or **Fixed Amount** (a
+  flat ৳ figure repeated every period, e.g. "৳500 every month" instead of a rate) — so any period
+  can be quoted either way, matching how real lenders phrase terms. Both bases accrue
+  proportionally to actual days elapsed since the last transaction (e.g. Monthly uses a ~30-day
+  period, Yearly ~365) rather than jumping in whole-period steps. The edit form shows only the
+  fields relevant to the current type/basis combination, swapped live via Alpine as they change.
+  The detail page shows a clearly-separated "Interest" card — rate/amount, accrued interest, and
+  a "Balance Incl. Interest" total — as a live estimate only; the headline
   "Outstanding Balance" figure, list cards, dashboard totals, CSV exports, and statements are all
   completely untouched by it. A "Post to Balance" button (shown only when something has actually
   accrued) capitalizes it into the ledger as a real, auditable BORROW transaction on demand — the
   amount is always recomputed server-side at the moment of posting, never trusted from the page,
-  and nothing is ever posted automatically. Posting a Fixed Amount charge clears it afterwards so
-  the same flat fee can't be posted twice by accident. Deliberately scoped to Creditors only,
+  and nothing is ever posted automatically. Posting a one-time Fixed Amount charge clears it
+  afterwards so the same flat fee can't be posted twice by accident; a periodic Fixed Amount
+  basis (e.g. ৳500/month) keeps recurring like a rate does, only resetting its accrual clock.
+  Deliberately scoped to Creditors only,
   since none of the Debtor categories imply interest-bearing debt.
 
 ## Finance / accounting value

@@ -14,13 +14,14 @@
                 <h1 class="text-2xl font-extrabold text-[var(--text-primary)] tracking-tight">{{ title }}</h1>
             </div>
 
-            <form method="post" class="space-y-8" x-data="{ interestType: '{{ form.interest_type.value|default_if_none:"" }}' }">
+            <form method="post" class="space-y-8" x-data="{ interestType: '{{ form.interest_type.value|default_if_none:"" }}', interestBasis: '{{ form.interest_basis.value|default_if_none:"" }}' }">
                 {% csrf_token %}
 
                 {% for field in form %}
                 <div class="relative"
-                  {% if field.name == 'interest_rate' %}x-show="interestType && interestType !== 'FIXED'" x-cloak
-                  {% elif field.name == 'interest_fixed_amount' %}x-show="interestType === 'FIXED'" x-cloak{% endif %}>
+                  {% if field.name == 'interest_basis' %}x-show="interestType && interestType !== 'FIXED'" x-cloak
+                  {% elif field.name == 'interest_rate' %}x-show="interestType && interestType !== 'FIXED' && interestBasis === 'PERCENTAGE'" x-cloak
+                  {% elif field.name == 'interest_fixed_amount' %}x-show="interestType === 'FIXED' || (interestType && interestType !== 'FIXED' && interestBasis === 'FIXED')" x-cloak{% endif %}>
                     <label for="{{ field.id_for_label }}" class="block text-sm font-bold text-[var(--text-secondary)] mb-2 uppercase tracking-widest">{{ field.label }}</label>
 
                     <div class="relative rounded-xl transition-all duration-200 ring-1 ring-inset ring-[var(--border)] focus-within:ring-2 focus-within:ring-[var(--accent)] shadow-sm" style="background: var(--surface-sunken);">
