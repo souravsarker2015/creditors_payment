@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.db.models import Sum
-from .models import IncomeSource, IncomeTransaction
+from .models import IncomeSource, IncomeTransaction, RecurringIncome
 
 
 class IncomeTransactionInline(admin.TabularInline):
@@ -27,6 +27,17 @@ class IncomeTransactionAdmin(admin.ModelAdmin):
     list_display = ("source", "amount", "date", "get_user")
     list_filter = ("date", "source__user")
     search_fields = ("source__name", "note", "source__user__username")
+
+    @admin.display(description="User")
+    def get_user(self, obj):
+        return obj.source.user.username
+
+
+@admin.register(RecurringIncome)
+class RecurringIncomeAdmin(admin.ModelAdmin):
+    list_display = ("source", "amount", "frequency", "next_run_date", "is_active", "get_user")
+    list_filter = ("frequency", "is_active", "source__user")
+    search_fields = ("source__name", "source__user__username")
 
     @admin.display(description="User")
     def get_user(self, obj):

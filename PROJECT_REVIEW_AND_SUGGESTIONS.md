@@ -102,12 +102,33 @@ and shops (বাকি tracking) — household and shops didn't exist at the ti
   other balance in the app. Verified against hand-seeded data across all six ledgers, including a
   purpose-built case for the double-counting trap and a check that two users' figures never leak
   into each other.
+- **Recurring transactions** — Income and Expense each have a "Recurring" schedule list
+  (linked from their dashboards) for things like salary, rent, or a subscription: pick a source
+  (Income) or category (Expense, optional), an amount, a frequency (Weekly, Every 2 Weeks,
+  Monthly, Every 3 Months, or Yearly), and a next-occurrence date. From then on that entry is
+  created automatically — no background worker or server cron involved, since PythonAnywhere's
+  free/standard tiers don't reliably offer one and this deploys there. Instead, every visit to the
+  Income or Expense dashboard or list page opportunistically catches up any schedule that's come
+  due, generating one transaction per missed occurrence (dated on the occurrence, not on today) up
+  to a 60-occurrence cap per visit so a very stale schedule can't block a page load; any remainder
+  finishes on the next visit. Monthly/quarterly/yearly math clamps to the last real day of the
+  target month (e.g. Jan 31 → Feb 28/29), and each generated entry links back to the schedule that
+  created it, visible via a badge, without your ever needing to think about it. A schedule can be
+  paused (stops generating, keeps its history) or resumed, and edited or deleted at any time;
+  deleting a schedule only stops future generation — entries it already created stay exactly as
+  they are, since they're now ordinary transactions like any other. A one-time toast on the
+  dashboard confirms how many entries were just auto-generated, if any were. Each schedule also
+  has an optional "move to the previous working day if this falls on a Friday or Saturday" toggle,
+  off by default, for things like bank-paid salary that skip the weekend (Bangladesh's Fri–Sat) —
+  e.g. a salary anchored to the 24th posts on the 23rd if the 24th is a Friday, or the 22nd if it's
+  a Saturday. The schedule's own anchor date never moves (it stays on the 24th every month); only
+  the generated entry's date shifts, so the rule can't drift the schedule earlier over time.
+  Verified with seeded data covering multi-period catch-up, the generation cap and its
+  continuation on a follow-up visit, pause/resume, month-end date clamping across leap and
+  non-leap years, cross-user isolation, and the weekend-shift rule (Friday and Saturday cases,
+  the no-drift anchor invariant, and the opt-in default staying off).
 
 ## Platform
-
-- **Recurring transactions** (Medium)
-  For recurring income (salary) or recurring expenses (rent, subscriptions), auto-creating
-  entries on a schedule would save repetitive manual entry.
 
 - **Basic REST API** (High)
   Would enable a future mobile client, but only worth the effort if that's actually on the
@@ -116,7 +137,7 @@ and shops (বাকি tracking) — household and shops didn't exist at the ti
 ## Suggested priority
 
 With CSV export/import, theming, full localization, year/month filters, trend charts, PDF
-statements, pagination/sorting, due-date reminders, interest tracking, and the net worth overview
-all shipped, what's left is Platform-level, larger-scope work: recurring transactions and a REST
-API — worth picking up only once there's a concrete need driving them, since both are more about
-enabling future capability than fixing a current gap.
+statements, pagination/sorting, due-date reminders, interest tracking, the net worth overview, and
+recurring transactions all shipped, what's left is a single Platform-level item: a REST API — worth
+picking up only once there's a concrete need driving it (e.g. a mobile client), since it's more
+about enabling future capability than fixing a current gap.

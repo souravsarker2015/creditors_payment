@@ -25,11 +25,18 @@
 
                 {% for field in form %}
                 <div class="relative group">
+                    {% if field.field.widget.input_type == 'checkbox' %}
+                        <label for="{{ field.id_for_label }}" class="flex items-start gap-3 rounded-[1.25rem] p-4 cursor-pointer transition-all duration-300 ring-2 ring-inset ring-[var(--border-soft)] hover:ring-[var(--accent-soft)]" style="background: var(--surface-sunken);">
+                            {{ field }}
+                            <span class="text-xs font-bold text-[var(--text-secondary)] leading-relaxed normal-case tracking-normal">{{ field.label }}</span>
+                        </label>
+                    {% else %}
                     <label for="{{ field.id_for_label }}" class="block text-[10px] font-black text-[var(--text-secondary)] mb-2.5 uppercase tracking-[0.25em] ml-1 group-focus-within:text-[var(--accent)] transition-colors">{{ field.label }}</label>
 
                     <div class="relative rounded-[1.25rem] transition-all duration-300 ring-2 ring-inset ring-[var(--border-soft)] focus-within:ring-2 focus-within:ring-[var(--accent)] shadow-sm" style="background: var(--surface-sunken);">
                         {{ field }}
                     </div>
+                    {% endif %}
 
                     {% if field.help_text %}
                         <p class="mt-3 text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest italic ml-1">{{ field.help_text|safe }}</p>
@@ -64,7 +71,7 @@
 
 <style>
     /* Styling Django Form Inputs for Income Module */
-    .space-y-10 select, .space-y-10 input, .space-y-10 textarea {
+    .space-y-10 select, .space-y-10 input:not([type="checkbox"]), .space-y-10 textarea {
         background-color: transparent !important;
         border: none !important;
         width: 100% !important;
@@ -80,6 +87,14 @@
         color: var(--text-muted) !important;
         font-weight: 600 !important;
         text-transform: none !important;
+    }
+    .space-y-10 input[type="checkbox"] {
+        margin-top: 0.15rem;
+        height: 1.15rem;
+        width: 1.15rem;
+        flex-shrink: 0;
+        accent-color: var(--accent);
+        cursor: pointer;
     }
 </style>
 {% endblock %}

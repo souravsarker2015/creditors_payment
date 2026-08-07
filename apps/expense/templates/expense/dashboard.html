@@ -16,6 +16,7 @@
     </div>
     <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none flex gap-3">
       <a href="{% url 'expense_create' %}" class="block rounded-xl bg-[var(--accent)] px-4 py-3 text-center text-sm font-black text-[var(--accent-on)] shadow-xl hover:bg-[var(--accent-strong)] transition-all">+ {% translate "New Expense" %}</a>
+      <a href="{% url 'recurring_expense_list' %}" class="block rounded-xl bg-[var(--surface-raised)] px-4 py-3 text-center text-sm font-bold text-[var(--text-secondary)] shadow-sm ring-1 ring-[var(--border)] hover:bg-[var(--surface-sunken)] transition-all border-none uppercase tracking-widest">{% translate "Recurring" %}</a>
       <a href="{% url 'category_create' %}" class="block rounded-xl bg-[var(--surface-raised)] px-4 py-3 text-center text-sm font-bold text-[var(--text-secondary)] shadow-sm ring-1 ring-[var(--border)] hover:bg-[var(--surface-sunken)] transition-all border-none uppercase tracking-widest">{% translate "Add Category" %}</a>
     </div>
   </div>

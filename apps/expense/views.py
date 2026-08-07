@@ -11,8 +11,8 @@ from django.core.paginator import Paginator
 from django.utils.translation import gettext as _, ngettext
 from datetime import date as date_cls
 
-from .models import ExpenseCategory, Expense
-from .forms import ExpenseCategoryForm, ExpenseForm
+from .models import ExpenseCategory, Expense, RecurringExpense, generate_due_recurring_expense
+from .forms import ExpenseCategoryForm, ExpenseForm, RecurringExpenseForm
 
 SORT_OPTIONS = [
     ("-date", _("Date (Newest First)")),
@@ -158,6 +158,14 @@ def _build_pagination_window(page_obj, window=2):
 @login_required
 def dashboard_view(request):
     """Summary of all expenses for the user."""
+    generated = generate_due_recurring_expense(request.user)
+    if generated:
+        messages.info(request, ngettext(
+            "%(count)s recurring expense entry was generated automatically.",
+            "%(count)s recurring expense entries were generated automatically.",
+            generated,
+        ) % {"count": generated})
+
     filters = _get_expense_filters(request, request.user)
 
     filtered_expenses = _apply_category_filters(
@@ -235,6 +243,8 @@ def dashboard_view(request):
 
 @login_required
 def expense_list_view(request):
+    generate_due_recurring_expense(request.user)
+
     filters = _get_expense_filters(request, request.user)
 
     filtered_expenses = _apply_category_filters(
@@ -443,3 +453,74 @@ def category_import_view(request):
         messages.error(request, _("No rows found to import."))
 
     return redirect("category_list")
+
+
+@login_required
+def recurring_expense_list_view(request):
+    generated = generate_due_recurring_expense(request.user)
+    if generated:
+        messages.info(request, ngettext(
+            "%(count)s recurring expense entry was generated automatically.",
+            "%(count)s recurring expense entries were generated automatically.",
+            generated,
+        ) % {"count": generated})
+
+    schedules = request.user.recurring_expenses.select_related("category").all()
+    return render(request, "expense/recurring_list.html", {"schedules": schedules})
+
+
+@login_required
+def recurring_expense_create_view(request):
+    if request.method == "POST":
+        form = RecurringExpenseForm(request.POST, user=request.user)
+        if form.is_valid():
+            schedule = form.save(commit=False)
+            schedule.user = request.user
+            schedule.save()
+            messages.success(request, _("Recurring expense scheduled."))
+            return redirect("recurring_expense_list")
+    else:
+        form = RecurringExpenseForm(user=request.user, initial={"next_run_date": django.utils.timezone.now().date()})
+    return render(request, "expense/expense_form.html", {
+        "form": form,
+        "title": _("New Recurring Expense"),
+        "back_url": "/expense/recurring/",
+    })
+
+
+@login_required
+def recurring_expense_edit_view(request, pk):
+    schedule = get_object_or_404(RecurringExpense, pk=pk, user=request.user)
+    if request.method == "POST":
+        form = RecurringExpenseForm(request.POST, instance=schedule, user=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, _("Recurring expense schedule updated."))
+            return redirect("recurring_expense_list")
+    else:
+        form = RecurringExpenseForm(instance=schedule, user=request.user)
+    return render(request, "expense/expense_form.html", {
+        "form": form,
+        "title": _("Edit Recurring Expense"),
+        "back_url": "/expense/recurring/",
+    })
+
+
+@login_required
+def recurring_expense_toggle_view(request, pk):
+    schedule = get_object_or_404(RecurringExpense, pk=pk, user=request.user)
+    schedule.is_active = not schedule.is_active
+    schedule.save(update_fields=["is_active", "updated_at"])
+    if schedule.is_active:
+        messages.success(request, _("Recurring expense resumed."))
+    else:
+        messages.success(request, _("Recurring expense paused."))
+    return redirect("recurring_expense_list")
+
+
+@login_required
+def recurring_expense_delete_view(request, pk):
+    schedule = get_object_or_404(RecurringExpense, pk=pk, user=request.user)
+    schedule.delete()
+    messages.success(request, _("Recurring expense deleted."))
+    return redirect("recurring_expense_list")

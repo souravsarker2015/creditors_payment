@@ -25,11 +25,18 @@
 
                 {% for field in form %}
                 <div class="relative group">
+                    {% if field.field.widget.input_type == 'checkbox' %}
+                        <label for="{{ field.id_for_label }}" class="flex items-start gap-3 rounded-[1.5rem] p-5 cursor-pointer transition-all duration-500 ring-2 ring-inset ring-[var(--border-soft)] hover:ring-[var(--accent-soft)]" style="background: var(--surface-sunken);">
+                            {{ field }}
+                            <span class="text-sm font-bold text-[var(--text-secondary)] leading-relaxed normal-case tracking-normal">{{ field.label }}</span>
+                        </label>
+                    {% else %}
                     <label for="{{ field.id_for_label }}" class="block text-[10px] font-black text-[var(--text-muted)] mb-3 uppercase tracking-[0.3em] ml-2 group-focus-within:text-[var(--accent)] transition-colors duration-300">{{ field.label }}</label>
 
                     <div class="relative rounded-[1.5rem] transition-all duration-500 ring-2 ring-inset ring-[var(--border-soft)] focus-within:ring-2 focus-within:ring-[var(--accent)] shadow-sm overflow-hidden" style="background: var(--surface-sunken);">
                         {{ field }}
                     </div>
+                    {% endif %}
 
                     {% if field.help_text %}
                         <p class="mt-4 text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest italic ml-2">{{ field.help_text|safe }}</p>
@@ -50,7 +57,7 @@
                     <button type="submit" class="flex-[1.8] bg-[var(--accent)] text-[var(--accent-on)] font-black text-xs uppercase tracking-[0.3em] px-10 py-6 rounded-[1.5rem] shadow-2xl hover:bg-[var(--accent-strong)] hover:-translate-y-1.5 transition-all active:translate-y-0">
                         {% translate "Commit expenditure" %}
                     </button>
-                    <a href="{% url 'expense_list' %}" class="flex-1 text-center font-black text-xs uppercase tracking-[0.3em] px-8 py-6 rounded-[1.5rem] border-none hover:bg-[var(--surface-raised)] hover:shadow-2xl transition-all flex items-center justify-center" style="background: var(--surface-sunken); color: var(--text-secondary);">
+                    <a href="{% if back_url %}{{ back_url }}{% else %}{% url 'expense_list' %}{% endif %}" class="flex-1 text-center font-black text-xs uppercase tracking-[0.3em] px-8 py-6 rounded-[1.5rem] border-none hover:bg-[var(--surface-raised)] hover:shadow-2xl transition-all flex items-center justify-center" style="background: var(--surface-sunken); color: var(--text-secondary);">
                         {% translate "Abort" %}
                     </a>
                 </div>
@@ -64,7 +71,7 @@
 
 <style>
     /* Premium Transaction Form Styling for Expense Module */
-    .space-y-12 select, .space-y-12 input, .space-y-12 textarea {
+    .space-y-12 select, .space-y-12 input:not([type="checkbox"]), .space-y-12 textarea {
         background-color: transparent !important;
         border: none !important;
         width: 100% !important;
@@ -83,6 +90,14 @@
         text-transform: none !important;
     }
     .space-y-12 select {
+        cursor: pointer;
+    }
+    .space-y-12 input[type="checkbox"] {
+        margin-top: 0.15rem;
+        height: 1.25rem;
+        width: 1.25rem;
+        flex-shrink: 0;
+        accent-color: var(--accent);
         cursor: pointer;
     }
 </style>

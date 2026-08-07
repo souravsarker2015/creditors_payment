@@ -14,7 +14,8 @@
       <h1 class="text-2xl font-bold leading-6 text-[var(--text-primary)] uppercase">{% translate "Income Overview" %}</h1>
       <p class="mt-2 text-sm text-[var(--text-secondary)]">{% translate "Track all your revenue streams and total earnings performance." %}</p>
     </div>
-    <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+    <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none flex gap-3">
+      <a href="{% url 'recurring_income_list' %}" class="block rounded-md bg-[var(--surface-raised)] px-3 py-2 text-center text-sm font-semibold text-[var(--text-secondary)] shadow-sm ring-1 ring-[var(--border)] hover:bg-[var(--surface-sunken)] transition-all">{% translate "Recurring" %}</a>
       <a href="{% url 'income_source_create' %}" class="block rounded-md bg-[var(--accent)] px-3 py-2 text-center text-sm font-semibold text-[var(--accent-on)] shadow-sm hover:bg-[var(--accent-strong)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] transition-all">+ {% translate "Add Income Source" %}</a>
     </div>
   </div>

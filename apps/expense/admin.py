@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.db.models import Sum
-from .models import ExpenseCategory, Expense
+from .models import ExpenseCategory, Expense, RecurringExpense
 
 
 class ExpenseInline(admin.TabularInline):
@@ -27,3 +27,10 @@ class ExpenseAdmin(admin.ModelAdmin):
     list_display = ("category", "amount", "date", "user")
     list_filter = ("date", "category", "user")
     search_fields = ("category__name", "note", "user__username")
+
+
+@admin.register(RecurringExpense)
+class RecurringExpenseAdmin(admin.ModelAdmin):
+    list_display = ("category", "amount", "frequency", "next_run_date", "is_active", "user")
+    list_filter = ("frequency", "is_active", "user")
+    search_fields = ("category__name", "user__username")

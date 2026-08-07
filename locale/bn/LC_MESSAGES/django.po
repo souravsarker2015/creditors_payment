@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-07 16:58+0600\n"
+"POT-Creation-Date: 2026-08-07 19:13+0600\n"
 "PO-Revision-Date: 2026-08-06 23:49+0600\n"
 "Last-Translator: FinTrack\n"
 "Language-Team: Bengali\n"
@@ -1086,6 +1086,30 @@ msgstr "%(count)s জন দেনাদার আমদানি করা হ�
 msgid "Expense details..."
 msgstr "খরচের বিবরণ..."
 
+msgid "Next Occurrence"
+msgstr "পরবর্তী তারিখ"
+
+msgid ""
+"Move to the previous working day if this date falls on a Friday or Saturday"
+msgstr "এই তারিখটি শুক্র বা শনিবারে পড়লে আগের কার্যদিবসে সরিয়ে নিন"
+
+msgid ""
+"Common for bank auto-debits. Only affects which date the entry is posted on "
+"— the schedule itself stays anchored to the original date."
+msgstr "ব্যাংক অটো-ডেবিটের ক্ষেত্রে সাধারণ ব্যাপার। এটি শুধু এন্ট্রি কোন তারিখে পোস্ট হবে তা প্রভাবিত করে — সময়সূচী নিজে মূল তারিখেই স্থির থাকে।"
+
+msgid "Optional note added to each generated entry..."
+msgstr "প্রতিটি তৈরি হওয়া এন্ট্রিতে যোগ হবে এমন ঐচ্ছিক নোট..."
+
+msgid "Weekly"
+msgstr "সাপ্তাহিক"
+
+msgid "Every 2 Weeks"
+msgstr "প্রতি ২ সপ্তাহে"
+
+msgid "General"
+msgstr "সাধারণ"
+
 msgid "Expense Categories"
 msgstr "খরচের ক্যাটাগরি"
 
@@ -1129,6 +1153,9 @@ msgstr "আপনার ব্যয়ের অভ্যাস এবং ক�
 msgid "New Expense"
 msgstr "নতুন খরচ"
 
+msgid "Recurring"
+msgstr "পুনরাবৃত্ত"
+
 msgid "Date Range"
 msgstr "তারিখের পরিসীমা"
 
@@ -1152,9 +1179,6 @@ msgstr "সাম্প্রতিক ব্যয়"
 
 msgid "Item / Category"
 msgstr "আইটেম / ক্যাটাগরি"
-
-msgid "General"
-msgstr "সাধারণ"
 
 msgid "No note"
 msgstr "কোনো নোট নেই"
@@ -1226,6 +1250,51 @@ msgstr "আপনার আর্থিক ক্ষয় সম্পর্ক
 msgid "Register Outflow"
 msgstr "ব্যয় নিবন্ধন করুন"
 
+msgid "Recurring Expenses"
+msgstr "পুনরাবৃত্ত খরচ"
+
+msgid ""
+"Schedules that auto-log an expense on a cadence — rent, subscriptions, or "
+"any repeating bill — so you don't have to enter it by hand each time."
+msgstr ""
+"একটি নির্দিষ্ট সময়ানুক্রমে স্বয়ংক্রিয়ভাবে খরচ তৈরি করে এমন সময়সূচী — ভাড়া, "
+"সাবস্ক্রিপশন বা যেকোনো পুনরাবৃত্ত বিল — যাতে আপনাকে প্রতিবার হাতে লিখতে না হয়।"
+
+msgid "New Schedule"
+msgstr "নতুন সময়সূচী"
+
+msgid "Active"
+msgstr "সক্রিয়"
+
+msgid "Paused"
+msgstr "স্থগিত"
+
+#, python-format
+msgid "Shifted from %(scheduled)s (weekend)"
+msgstr "%(scheduled)s থেকে সরানো হয়েছে (সাপ্তাহিক ছুটি)"
+
+msgid "Pause"
+msgstr "স্থগিত করুন"
+
+msgid "Resume"
+msgstr "পুনরায় চালু করুন"
+
+msgid ""
+"Delete this recurring schedule? Past entries it already created are kept."
+msgstr ""
+"এই পুনরাবৃত্ত সময়সূচীটি মুছে ফেলবেন? এটি ইতিমধ্যে তৈরি করা পূর্ববর্তী এন্ট্রিগুলো "
+"সংরক্ষিত থাকবে।"
+
+msgid "No recurring expenses yet"
+msgstr "এখনও কোনো পুনরাবৃত্ত খরচ নেই"
+
+msgid ""
+"Set up a schedule for rent or a subscription and it'll be logged "
+"automatically from then on."
+msgstr ""
+"ভাড়া বা সাবস্ক্রিপশনের জন্য একটি সময়সূচী তৈরি করুন, এরপর থেকে এটি স্বয়ংক্রিয়ভাবে "
+"রেকর্ড হবে।"
+
 msgid "Date (Newest First)"
 msgstr "তারিখ (নতুন আগে)"
 
@@ -1237,6 +1306,13 @@ msgstr "পরিমাণ (বেশি থেকে কম)"
 
 msgid "Amount (Low to High)"
 msgstr "পরিমাণ (কম থেকে বেশি)"
+
+#, python-format
+msgid "%(count)s recurring expense entry was generated automatically."
+msgid_plural ""
+"%(count)s recurring expense entries were generated automatically."
+msgstr[0] ""
+msgstr[1] ""
 
 #, python-format
 msgid "Expense of ৳%(amount)s recorded."
@@ -1270,6 +1346,27 @@ msgid "Imported %(count)s category."
 msgid_plural "Imported %(count)s categories."
 msgstr[0] "%(count)sটি ক্যাটাগরি আমদানি করা হয়েছে।"
 msgstr[1] "%(count)sটি ক্যাটাগরি আমদানি করা হয়েছে।"
+
+msgid "Recurring expense scheduled."
+msgstr "পুনরাবৃত্ত খরচ নির্ধারণ করা হয়েছে।"
+
+msgid "New Recurring Expense"
+msgstr "নতুন পুনরাবৃত্ত খরচ"
+
+msgid "Recurring expense schedule updated."
+msgstr "পুনরাবৃত্ত খরচের সময়সূচী আপডেট করা হয়েছে।"
+
+msgid "Edit Recurring Expense"
+msgstr "পুনরাবৃত্ত খরচ সম্পাদনা"
+
+msgid "Recurring expense resumed."
+msgstr "পুনরাবৃত্ত খরচ পুনরায় চালু করা হয়েছে।"
+
+msgid "Recurring expense paused."
+msgstr "পুনরাবৃত্ত খরচ স্থগিত করা হয়েছে।"
+
+msgid "Recurring expense deleted."
+msgstr "পুনরাবৃত্ত খরচ মুছে ফেলা হয়েছে।"
 
 msgid "e.g. Vegetables, Fish, Groceries"
 msgstr "যেমন সবজি, মাছ, মুদি"
@@ -1572,6 +1669,11 @@ msgstr "সবজি"
 msgid "Fish"
 msgstr "মাছ"
 
+msgid ""
+"Common for bank-paid salary. Only affects which date the entry is posted on "
+"— the schedule itself stays anchored to the original date."
+msgstr "ব্যাংকের মাধ্যমে প্রদত্ত বেতনের ক্ষেত্রে সাধারণ ব্যাপার। এটি শুধু এন্ট্রি কোন তারিখে পোস্ট হবে তা প্রভাবিত করে — সময়সূচী নিজে মূল তারিখেই স্থির থাকে।"
+
 msgid "Income Dashboard"
 msgstr "আয় ড্যাশবোর্ড"
 
@@ -1613,6 +1715,27 @@ msgstr "উৎস নির্বাচন করুন..."
 
 msgid "Total Earned"
 msgstr "মোট অর্জিত"
+
+msgid "Recurring Income"
+msgstr "পুনরাবৃত্ত আয়"
+
+msgid ""
+"Schedules that auto-create an income entry on a cadence — salary, rent "
+"received, or any repeating payout — so you don't have to log it by hand each "
+"time."
+msgstr ""
+"একটি নির্দিষ্ট সময়ানুক্রমে স্বয়ংক্রিয়ভাবে আয়ের এন্ট্রি তৈরি করে এমন সময়সূচী — বেতন, "
+"প্রাপ্ত ভাড়া বা যেকোনো পুনরাবৃত্ত প্রাপ্তি — যাতে আপনাকে প্রতিবার হাতে লিখতে না হয়।"
+
+msgid "No recurring income yet"
+msgstr "এখনও কোনো পুনরাবৃত্ত আয় নেই"
+
+msgid ""
+"Set up a schedule for salary or any repeating payout and it'll be logged "
+"automatically from then on."
+msgstr ""
+"বেতন বা যেকোনো পুনরাবৃত্ত প্রাপ্তির জন্য একটি সময়সূচী তৈরি করুন, এরপর থেকে এটি "
+"স্বয়ংক্রিয়ভাবে রেকর্ড হবে।"
 
 msgid "Income Source Ledger"
 msgstr "আয়ের উৎসের হিসাব"
@@ -1708,6 +1831,12 @@ msgstr "মোট অর্জিত (বেশি থেকে কম)"
 msgid "Total Earned (Low to High)"
 msgstr "মোট অর্জিত (কম থেকে বেশি)"
 
+#, python-format
+msgid "%(count)s recurring income entry was generated automatically."
+msgid_plural "%(count)s recurring income entries were generated automatically."
+msgstr[0] ""
+msgstr[1] ""
+
 msgid "Acme Corp Salary"
 msgstr "একমি কর্পের বেতন"
 
@@ -1752,13 +1881,40 @@ msgstr "আয়ের এন্ট্রি সম্পাদনা"
 msgid "Income entry of ৳%(amount)s deleted."
 msgstr "৳%(amount)s এর আয়ের এন্ট্রি মুছে ফেলা হয়েছে।"
 
+#, python-format
+msgid "Recurring income '%(name)s' scheduled."
+msgstr "পুনরাবৃত্ত আয় '%(name)s' নির্ধারণ করা হয়েছে।"
+
+msgid "New Recurring Income"
+msgstr "নতুন পুনরাবৃত্ত আয়"
+
+msgid "Recurring income schedule updated."
+msgstr "পুনরাবৃত্ত আয়ের সময়সূচী আপডেট করা হয়েছে।"
+
+msgid "Edit Recurring Income"
+msgstr "পুনরাবৃত্ত আয় সম্পাদনা"
+
+#, python-format
+msgid "Recurring income for '%(name)s' resumed."
+msgstr "'%(name)s' এর পুনরাবৃত্ত আয় পুনরায় চালু করা হয়েছে।"
+
+#, python-format
+msgid "Recurring income for '%(name)s' paused."
+msgstr "'%(name)s' এর পুনরাবৃত্ত আয় স্থগিত করা হয়েছে।"
+
+#, python-format
+msgid "Recurring income for '%(name)s' deleted."
+msgstr "'%(name)s' এর পুনরাবৃত্ত আয় মুছে ফেলা হয়েছে।"
+
 msgid "Net Worth"
 msgstr "নিট সম্পদ"
 
 msgid ""
 "Your whole financial picture in one place — what you're owed, what you owe, "
 "and what you've earned and spent, across every ledger."
-msgstr "আপনার সম্পূর্ণ আর্থিক চিত্র একই জায়গায় — আপনি কী পাবেন, কী দেবেন, এবং প্রতিটি হিসাব জুড়ে আপনি কী উপার্জন ও ব্যয় করেছেন।"
+msgstr ""
+"আপনার সম্পূর্ণ আর্থিক চিত্র একই জায়গায় — আপনি কী পাবেন, কী দেবেন, এবং প্রতিটি "
+"হিসাব জুড়ে আপনি কী উপার্জন ও ব্যয় করেছেন।"
 
 msgid "Overall Net Position"
 msgstr "সামগ্রিক নিট অবস্থান"
@@ -1794,7 +1950,9 @@ msgstr "সারাজীবনের নগদ প্রবাহ"
 msgid ""
 "Everything ever earned vs. everything ever spent — all-time totals, not a "
 "current balance."
-msgstr "এ পর্যন্ত অর্জিত সবকিছু বনাম ব্যয় করা সবকিছু — সর্বমোট সময়ের হিসাব, বর্তমান ব্যালেন্স নয়।"
+msgstr ""
+"এ পর্যন্ত অর্জিত সবকিছু বনাম ব্যয় করা সবকিছু — সর্বমোট সময়ের হিসাব, বর্তমান ব্যালেন্স "
+"নয়।"
 
 msgid "Earned (Income)"
 msgstr "উপার্জিত (আয়)"
@@ -1819,7 +1977,11 @@ msgid ""
 "balance — not counted again as spending, to avoid double-counting the same "
 "taka. Interest that has accrued but not yet been posted to a creditor's "
 "balance is not included here; check that creditor's page for the estimate."
-msgstr "কোনো সদস্যের আগাম দেওয়া গৃহস্থালি কেনাকাটা শুধুমাত্র একবার, সেই সদস্যের ব্যালেন্স হিসেবে গণনা করা হয় — একই টাকা দ্বিগুণ গণনা এড়াতে এটি আবার ব্যয় হিসেবে গণনা করা হয় না। কোনো পাওনাদারের ব্যালেন্সে এখনও যোগ করা হয়নি এমন সঞ্চিত সুদ এখানে অন্তর্ভুক্ত নয়; আনুমানিক হিসাবের জন্য সেই পাওনাদারের পাতা দেখুন।"
+msgstr ""
+"কোনো সদস্যের আগাম দেওয়া গৃহস্থালি কেনাকাটা শুধুমাত্র একবার, সেই সদস্যের ব্যালেন্স "
+"হিসেবে গণনা করা হয় — একই টাকা দ্বিগুণ গণনা এড়াতে এটি আবার ব্যয় হিসেবে গণনা করা "
+"হয় না। কোনো পাওনাদারের ব্যালেন্সে এখনও যোগ করা হয়নি এমন সঞ্চিত সুদ এখানে অন্তর্ভুক্ত "
+"নয়; আনুমানিক হিসাবের জন্য সেই পাওনাদারের পাতা দেখুন।"
 
 msgid "Creditors"
 msgstr "পাওনাদার"

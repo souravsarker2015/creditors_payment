@@ -11,4 +11,9 @@ urlpatterns = [
     path("categories/add/", views.category_create_view, name="category_create"),
     path("categories/import/", views.category_import_view, name="category_import"),
     path("categories/import/template/", views.category_import_template_view, name="category_import_template"),
+    path("recurring/", views.recurring_expense_list_view, name="recurring_expense_list"),
+    path("recurring/add/", views.recurring_expense_create_view, name="recurring_expense_create"),
+    path("recurring/<int:pk>/edit/", views.recurring_expense_edit_view, name="recurring_expense_edit"),
+    path("recurring/<int:pk>/toggle/", views.recurring_expense_toggle_view, name="recurring_expense_toggle"),
+    path("recurring/<int:pk>/delete/", views.recurring_expense_delete_view, name="recurring_expense_delete"),
 ]

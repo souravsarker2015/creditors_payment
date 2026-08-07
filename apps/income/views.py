@@ -10,11 +10,11 @@ from django.db.models import Sum, Q, DecimalField, Value
 from django.db.models.functions import Coalesce, TruncMonth
 from django.core.paginator import Paginator
 from django.utils import dateformat
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext as _, ngettext
 from datetime import date as date_cls
 
-from .models import IncomeSource, IncomeTransaction
-from .forms import IncomeSourceForm, IncomeTransactionForm
+from .models import IncomeSource, IncomeTransaction, RecurringIncome, generate_due_recurring_income
+from .forms import IncomeSourceForm, IncomeTransactionForm, RecurringIncomeForm
 
 
 def _row_value(row, fieldnames, key):
@@ -179,6 +179,14 @@ MONTH_CHOICES = [(i, date_cls(2000, i, 1)) for i in range(1, 13)]
 @login_required
 def dashboard_view(request):
     """Summary of all income for the user."""
+    generated = generate_due_recurring_income(request.user)
+    if generated:
+        messages.info(request, ngettext(
+            "%(count)s recurring income entry was generated automatically.",
+            "%(count)s recurring income entries were generated automatically.",
+            generated,
+        ) % {"count": generated})
+
     filters = _get_income_filters(request, request.user)
 
     filtered_transactions = IncomeTransaction.objects.filter(
@@ -246,6 +254,8 @@ def dashboard_view(request):
 
 @login_required
 def income_source_list_view(request):
+    generate_due_recurring_income(request.user)
+
     filters = _get_income_filters(request, request.user)
 
     tx_filter_q = Q()
@@ -588,3 +598,73 @@ def transaction_delete_view(request, pk):
     tx.delete()
     messages.success(request, _("Income entry of ৳%(amount)s deleted.") % {"amount": amt})
     return redirect("income_source_detail", pk=source.pk)
+
+
+@login_required
+def recurring_income_list_view(request):
+    generated = generate_due_recurring_income(request.user)
+    if generated:
+        messages.info(request, ngettext(
+            "%(count)s recurring income entry was generated automatically.",
+            "%(count)s recurring income entries were generated automatically.",
+            generated,
+        ) % {"count": generated})
+
+    schedules = RecurringIncome.objects.filter(source__user=request.user).select_related("source")
+    return render(request, "income/recurring_list.html", {"schedules": schedules})
+
+
+@login_required
+def recurring_income_create_view(request):
+    if request.method == "POST":
+        form = RecurringIncomeForm(request.POST, user=request.user)
+        if form.is_valid():
+            schedule = form.save()
+            messages.success(request, _("Recurring income '%(name)s' scheduled.") % {"name": schedule.source.name})
+            return redirect("recurring_income_list")
+    else:
+        form = RecurringIncomeForm(user=request.user, initial={"next_run_date": django.utils.timezone.now().date()})
+    return render(request, "income/source_form.html", {
+        "form": form,
+        "title": _("New Recurring Income"),
+        "back_url": "/income/recurring/",
+    })
+
+
+@login_required
+def recurring_income_edit_view(request, pk):
+    schedule = get_object_or_404(RecurringIncome, pk=pk, source__user=request.user)
+    if request.method == "POST":
+        form = RecurringIncomeForm(request.POST, instance=schedule, user=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, _("Recurring income schedule updated."))
+            return redirect("recurring_income_list")
+    else:
+        form = RecurringIncomeForm(instance=schedule, user=request.user)
+    return render(request, "income/source_form.html", {
+        "form": form,
+        "title": _("Edit Recurring Income"),
+        "back_url": "/income/recurring/",
+    })
+
+
+@login_required
+def recurring_income_toggle_view(request, pk):
+    schedule = get_object_or_404(RecurringIncome, pk=pk, source__user=request.user)
+    schedule.is_active = not schedule.is_active
+    schedule.save(update_fields=["is_active", "updated_at"])
+    if schedule.is_active:
+        messages.success(request, _("Recurring income for '%(name)s' resumed.") % {"name": schedule.source.name})
+    else:
+        messages.success(request, _("Recurring income for '%(name)s' paused.") % {"name": schedule.source.name})
+    return redirect("recurring_income_list")
+
+
+@login_required
+def recurring_income_delete_view(request, pk):
+    schedule = get_object_or_404(RecurringIncome, pk=pk, source__user=request.user)
+    name = schedule.source.name
+    schedule.delete()
+    messages.success(request, _("Recurring income for '%(name)s' deleted.") % {"name": name})
+    return redirect("recurring_income_list")

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Recurring Expenses" %} | FinTrack{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
+  <div class="sm:flex sm:items-center mb-10">
+    <div class="sm:flex-auto">
+      <h1 class="text-2xl font-black leading-6 text-[var(--text-primary)] uppercase tracking-tight">{% translate "Recurring Expenses" %}</h1>
+      <p class="mt-2 text-sm text-[var(--text-secondary)]">{% translate "Schedules that auto-log an expense on a cadence — rent, subscriptions, or any repeating bill — so you don't have to enter it by hand each time." %}</p>
+    </div>
+    <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+      <a href="{% url 'recurring_expense_create' %}" class="block rounded-xl bg-[var(--accent)] px-4 py-3 text-center text-sm font-black text-[var(--accent-on)] shadow-xl hover:bg-[var(--accent-strong)] transition-all">+ {% translate "New Schedule" %}</a>
+    </div>
+  </div>
+
+  {% if schedules %}
+  <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+    {% for s in schedules %}
+    <div class="relative flex flex-col overflow-hidden rounded-[2rem] bg-[var(--surface-raised)] p-7 shadow-sm ring-1 ring-[var(--border-soft)] {% if not s.is_active %}opacity-60{% endif %}">
+      <div class="flex items-start justify-between mb-4">
+        <div class="h-10 w-10 rounded-xl flex items-center justify-center font-black text-lg" style="background: var(--accent-soft); color: var(--accent);">
+          {% if s.category %}{{ s.category.name|first|upper }}{% else %}G{% endif %}
+        </div>
+        {% if s.is_active %}
+          <span class="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full" style="background: var(--status-good-bg); color: var(--status-good);">{% translate "Active" %}</span>
+        {% else %}
+          <span class="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full" style="background: var(--surface-sunken); color: var(--text-muted);">{% translate "Paused" %}</span>
+        {% endif %}
+      </div>
+
+      <h3 class="text-lg font-black text-[var(--text-primary)] tracking-tight">{% if s.category %}{{ s.category.name }}{% else %}{% translate "General" %}{% endif %}</h3>
+      <p class="mt-1 text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest">{{ s.get_frequency_display }}</p>
+
+      <div class="mt-5 flex items-center justify-between text-sm">
+        <span class="font-bold text-[var(--text-secondary)]">{% translate "Amount" %}</span>
+        <span class="font-black text-[var(--text-primary)] tabular-nums" style="color: var(--status-critical);">-৳{{ s.amount|floatformat:2 }}</span>
+      </div>
+      <div class="mt-2 flex items-center justify-between text-sm">
+        <span class="font-bold text-[var(--text-secondary)]">{% translate "Next Occurrence" %}</span>
+        <span class="font-black text-[var(--text-primary)] tabular-nums">{{ s.next_effective_date|date:"d M, Y" }}</span>
+      </div>
+      {% if s.skip_weekend and s.next_effective_date != s.next_run_date %}
+      <p class="mt-1.5 text-right text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">{% blocktranslate with scheduled=s.next_run_date|date:"d M" %}Shifted from {{ scheduled }} (weekend){% endblocktranslate %}</p>
+      {% endif %}
+
+      <div class="mt-6 flex items-center gap-2 border-t pt-5" style="border-color: var(--border-soft);">
+        <a href="{% url 'recurring_expense_edit' s.pk %}" class="flex-1 text-center rounded-lg px-3 py-2 text-xs font-black uppercase tracking-widest hover:bg-[var(--surface-sunken)] transition-all" style="color: var(--text-secondary);">{% translate "Edit" %}</a>
+        <a href="{% url 'recurring_expense_toggle' s.pk %}" class="flex-1 text-center rounded-lg px-3 py-2 text-xs font-black uppercase tracking-widest hover:bg-[var(--surface-sunken)] transition-all" style="color: var(--text-secondary);">{% if s.is_active %}{% translate "Pause" %}{% else %}{% translate "Resume" %}{% endif %}</a>
+        <a href="{% url 'recurring_expense_delete' s.pk %}" onclick="return confirm('{% translate "Delete this recurring schedule? Past entries it already created are kept." %}')" class="flex-1 text-center rounded-lg px-3 py-2 text-xs font-black uppercase tracking-widest hover:bg-[var(--status-critical-bg)] transition-all" style="color: var(--status-critical);">{% translate "Delete" %}</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="flex flex-col items-center justify-center rounded-[3rem] border-2 border-dashed border-[var(--border)] p-20 text-center bg-[var(--surface-raised)] shadow-sm ring-1 ring-[var(--border-soft)]">
+      <div class="h-20 w-20 rounded-full flex items-center justify-center mb-8 shadow-inner" style="background: var(--surface-sunken);">
+        <svg class="h-10 w-10 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
+      </div>
+      <h3 class="text-xl font-black text-[var(--text-primary)] uppercase tracking-tight">{% translate "No recurring expenses yet" %}</h3>
+      <p class="mt-3 text-sm text-[var(--text-muted)] font-medium max-w-xs mx-auto">{% translate "Set up a schedule for rent or a subscription and it'll be logged automatically from then on." %}</p>
+      <a href="{% url 'recurring_expense_create' %}" class="mt-10 inline-flex items-center rounded-xl bg-[var(--accent)] px-8 py-4 text-xs font-black uppercase tracking-widest text-[var(--accent-on)] shadow-xl hover:bg-[var(--accent-strong)] transition-all">+ {% translate "New Schedule" %}</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
