@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-07 16:44+0600\n"
+"POT-Creation-Date: 2026-08-07 16:58+0600\n"
 "PO-Revision-Date: 2026-08-06 23:49+0600\n"
 "Last-Translator: FinTrack\n"
 "Language-Team: Bengali\n"
@@ -589,7 +589,9 @@ msgstr "সুদ কীভাবে ধার্য হবে (ঐচ্ছি�
 msgid ""
 "For Monthly/Every 3 Months/Every 6 Months/Yearly: charge a percentage of the "
 "balance, or a flat amount each period."
-msgstr "মাসিক/প্রতি ৩ মাসে/প্রতি ৬ মাসে/বার্ষিকের জন্য: ব্যালেন্সের একটি শতাংশ, অথবা প্রতি মেয়াদে একটি নির্দিষ্ট পরিমাণ ধার্য করুন।"
+msgstr ""
+"মাসিক/প্রতি ৩ মাসে/প্রতি ৬ মাসে/বার্ষিকের জন্য: ব্যালেন্সের একটি শতাংশ, অথবা প্রতি "
+"মেয়াদে একটি নির্দিষ্ট পরিমাণ ধার্য করুন।"
 
 #, python-format
 msgid "Interest rate per period, %% — used when the basis is Percentage."
@@ -598,7 +600,9 @@ msgstr "প্রতি মেয়াদে সুদের হার, %% — 
 msgid ""
 "A flat interest amount (৳) — used for a one-time Fixed Amount type, or a "
 "Fixed Amount basis charged every period."
-msgstr "একটি নির্দিষ্ট সুদের পরিমাণ (৳) — একবারের 'নির্দিষ্ট পরিমাণ' ধরনের জন্য, অথবা প্রতি মেয়াদে ধার্য 'নির্দিষ্ট পরিমাণ' ভিত্তির জন্য ব্যবহৃত।"
+msgstr ""
+"একটি নির্দিষ্ট সুদের পরিমাণ (৳) — একবারের 'নির্দিষ্ট পরিমাণ' ধরনের জন্য, অথবা প্রতি "
+"মেয়াদে ধার্য 'নির্দিষ্ট পরিমাণ' ভিত্তির জন্য ব্যবহৃত।"
 
 msgid "Accrued interest (posted)"
 msgstr "সঞ্চিত সুদ (যোগ করা হয়েছে)"
@@ -646,7 +650,10 @@ msgid ""
 "A flat ৳%(amount)s charged every %(period)s, accrued proportionally since "
 "the last transaction. This is an estimate only — it doesn't affect the "
 "balance above until you post it."
-msgstr "প্রতি %(period)s একটি নির্দিষ্ট ৳%(amount)s ধার্য করা হয়, সর্বশেষ লেনদেনের পর থেকে আনুপাতিকভাবে সঞ্চিত। এটি শুধুমাত্র একটি আনুমানিক হিসাব — আপনি এটি যোগ না করা পর্যন্ত উপরের ব্যালেন্সে এর কোনো প্রভাব পড়বে না।"
+msgstr ""
+"প্রতি %(period)s একটি নির্দিষ্ট ৳%(amount)s ধার্য করা হয়, সর্বশেষ লেনদেনের পর "
+"থেকে আনুপাতিকভাবে সঞ্চিত। এটি শুধুমাত্র একটি আনুমানিক হিসাব — আপনি এটি যোগ না করা "
+"পর্যন্ত উপরের ব্যালেন্সে এর কোনো প্রভাব পড়বে না।"
 
 #, python-format
 msgid ""
@@ -1745,6 +1752,93 @@ msgstr "আয়ের এন্ট্রি সম্পাদনা"
 msgid "Income entry of ৳%(amount)s deleted."
 msgstr "৳%(amount)s এর আয়ের এন্ট্রি মুছে ফেলা হয়েছে।"
 
+msgid "Net Worth"
+msgstr "নিট সম্পদ"
+
+msgid ""
+"Your whole financial picture in one place — what you're owed, what you owe, "
+"and what you've earned and spent, across every ledger."
+msgstr "আপনার সম্পূর্ণ আর্থিক চিত্র একই জায়গায় — আপনি কী পাবেন, কী দেবেন, এবং প্রতিটি হিসাব জুড়ে আপনি কী উপার্জন ও ব্যয় করেছেন।"
+
+msgid "Overall Net Position"
+msgstr "সামগ্রিক নিট অবস্থান"
+
+#, python-format
+msgid "Net Balance ৳%(balance)s + Lifetime Net Cash Flow ৳%(flow)s"
+msgstr "নিট ব্যালেন্স ৳%(balance)s + সারাজীবনের নিট নগদ প্রবাহ ৳%(flow)s"
+
+msgid "Balances (as of today)"
+msgstr "ব্যালেন্স (আজ পর্যন্ত)"
+
+msgid "What would settle up if everyone paid what they owe, right now."
+msgstr "সবাই এখনই তাদের বকেয়া পরিশোধ করলে যা নিষ্পত্তি হবে।"
+
+msgid "Owed to you (Debtors)"
+msgstr "আপনার পাওনা (দেনাদার)"
+
+msgid "You owe (Creditors)"
+msgstr "আপনার দেনা (পাওনাদার)"
+
+msgid "You owe (Shop Dues)"
+msgstr "আপনার দেনা (দোকানের বাকি)"
+
+msgid "You owe (Household Members)"
+msgstr "আপনার দেনা (গৃহস্থালি সদস্য)"
+
+msgid "Net Balance"
+msgstr "নিট ব্যালেন্স"
+
+msgid "Lifetime Cash Flow"
+msgstr "সারাজীবনের নগদ প্রবাহ"
+
+msgid ""
+"Everything ever earned vs. everything ever spent — all-time totals, not a "
+"current balance."
+msgstr "এ পর্যন্ত অর্জিত সবকিছু বনাম ব্যয় করা সবকিছু — সর্বমোট সময়ের হিসাব, বর্তমান ব্যালেন্স নয়।"
+
+msgid "Earned (Income)"
+msgstr "উপার্জিত (আয়)"
+
+msgid "Received (Contributors)"
+msgstr "প্রাপ্ত (অবদানকারী)"
+
+msgid "Spent (Expense Log)"
+msgstr "ব্যয়িত (খরচের হিসাব)"
+
+msgid "Spent (Household, by you)"
+msgstr "ব্যয়িত (গৃহস্থালি, আপনার দ্বারা)"
+
+msgid "Net Cash Flow"
+msgstr "নিট নগদ প্রবাহ"
+
+msgid "How this is calculated:"
+msgstr "এটি যেভাবে হিসাব করা হয়:"
+
+msgid ""
+"Household purchases fronted by a member are counted once, as that member's "
+"balance — not counted again as spending, to avoid double-counting the same "
+"taka. Interest that has accrued but not yet been posted to a creditor's "
+"balance is not included here; check that creditor's page for the estimate."
+msgstr "কোনো সদস্যের আগাম দেওয়া গৃহস্থালি কেনাকাটা শুধুমাত্র একবার, সেই সদস্যের ব্যালেন্স হিসেবে গণনা করা হয় — একই টাকা দ্বিগুণ গণনা এড়াতে এটি আবার ব্যয় হিসেবে গণনা করা হয় না। কোনো পাওনাদারের ব্যালেন্সে এখনও যোগ করা হয়নি এমন সঞ্চিত সুদ এখানে অন্তর্ভুক্ত নয়; আনুমানিক হিসাবের জন্য সেই পাওনাদারের পাতা দেখুন।"
+
+msgid "Creditors"
+msgstr "পাওনাদার"
+
+msgid "Debtors"
+msgstr "দেনাদার"
+
+msgid "Income"
+msgstr "আয়"
+
+msgid "Expense"
+msgstr "খরচ"
+
+msgid "Household"
+msgstr "গৃহস্থালি"
+
+msgid "Shop Dues"
+msgstr "দোকানের বাকি"
+
 msgid "Shop Name"
 msgstr "দোকানের নাম"
 
@@ -1934,18 +2028,6 @@ msgstr "গাঢ়"
 
 msgid "Ledger & Household"
 msgstr "হিসাব ও গৃহস্থালি"
-
-msgid "Creditors"
-msgstr "পাওনাদার"
-
-msgid "Debtors"
-msgstr "দেনাদার"
-
-msgid "Income"
-msgstr "আয়"
-
-msgid "Expense"
-msgstr "খরচ"
 
 msgid "Household (Bazar)"
 msgstr "গৃহস্থালি (বাজার)"

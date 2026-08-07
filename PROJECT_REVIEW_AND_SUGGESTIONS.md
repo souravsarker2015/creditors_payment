@@ -85,14 +85,23 @@ and shops (বাকি tracking) — household and shops didn't exist at the ti
   basis (e.g. ৳500/month) keeps recurring like a rate does, only resetting its accrual clock.
   Deliberately scoped to Creditors only,
   since none of the Debtor categories imply interest-bearing debt.
+- **Net worth overview** — a new "Net Worth" page (top of the nav, new `apps.overview` app at
+  `/networth/`) rolls up all six ledgers into one picture, split into two halves that are
+  deliberately never blended into a single blind sum:
+  - **Balances** (a point-in-time snapshot): Receivables (Debtors) minus Payables (Creditors +
+    Shop Dues + Household Members' outstanding balance) = **Net Balance**.
+  - **Lifetime Cash Flow** (all-time totals, not a balance): Income + Contributors received,
+    minus Expense + household spending = **Net Cash Flow**.
+  - **Overall Net Position** = Net Balance + Net Cash Flow, shown as the headline figure.
 
-## Finance / accounting value
-
-- **Net worth / consolidated overview** (Low–Medium)
-  Creditors, Debtors, Income, Expense, Household, and Shops are six separate dashboards today;
-  nothing rolls them into one "you owe X, are owed Y, earned Z, spent W → net position" view.
-  A single summary page (or a card on the main dashboard) would give an at-a-glance financial
-  picture across the whole app, not just one ledger at a time.
+  The one real accounting trap here — a household purchase a member fronted would otherwise get
+  counted twice (once as that member's payable, again as "spending") — is avoided by only folding
+  household purchases into the Cash Flow side when nobody fronted them (`buyer` unset); a
+  member-fronted purchase is represented exactly once, via that member's balance. Accrued-but-
+  unposted interest is intentionally excluded, consistent with how it's already kept out of every
+  other balance in the app. Verified against hand-seeded data across all six ledgers, including a
+  purpose-built case for the double-counting trap and a check that two users' figures never leak
+  into each other.
 
 ## Platform
 
@@ -107,7 +116,7 @@ and shops (বাকি tracking) — household and shops didn't exist at the ti
 ## Suggested priority
 
 With CSV export/import, theming, full localization, year/month filters, trend charts, PDF
-statements, pagination/sorting, due-date reminders, and interest tracking all shipped, what's
-left is the more speculative, larger-scope items: a net worth overview, recurring transactions,
-and a REST API — worth picking up in roughly that order, each only once there's a concrete need
-driving it.
+statements, pagination/sorting, due-date reminders, interest tracking, and the net worth overview
+all shipped, what's left is Platform-level, larger-scope work: recurring transactions and a REST
+API — worth picking up only once there's a concrete need driving them, since both are more about
+enabling future capability than fixing a current gap.
