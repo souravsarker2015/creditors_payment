@@ -186,7 +186,7 @@ def month_detail_view(request, year, month):
     )["total"]
 
     month_label = date(year, month, 1)
-    _, last_day = calendar.monthrange(year, month)
+    _first_weekday, last_day = calendar.monthrange(year, month)
     prev_month = date(year, month, 1) - timezone.timedelta(days=1)
     next_month_first = date(year, month, last_day) + timezone.timedelta(days=1)
 
