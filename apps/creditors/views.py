@@ -337,7 +337,7 @@ def creditor_detail_view(request, pk):
     # live estimate — see Creditor.accrued_interest for the day-count
     # assumptions. It's never folded into `remaining` used elsewhere on this
     # page or across the app; it's only surfaced here, clearly labeled.
-    accrued_interest = creditor.accrued_interest if creditor.interest_rate else None
+    accrued_interest = creditor.accrued_interest if creditor.interest_type else None
 
     context = {
         "creditor": creditor,

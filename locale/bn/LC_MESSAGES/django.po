@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-07 14:41+0600\n"
+"POT-Creation-Date: 2026-08-07 15:08+0600\n"
 "PO-Revision-Date: 2026-08-06 23:49+0600\n"
 "Last-Translator: FinTrack\n"
 "Language-Team: Bengali\n"
@@ -480,7 +480,9 @@ msgstr "%(count)s জন অবদানকারী আমদানি কর�
 #, python-format
 msgid ""
 "Skipped %(count)s row(s): %(dup)s duplicate name(s), %(blank)s blank name(s)."
-msgstr "%(count)sটি সারি বাদ দেওয়া হয়েছে: %(dup)sটি নাম পুনরাবৃত্তি, %(blank)sটি নাম খালি।"
+msgstr ""
+"%(count)sটি সারি বাদ দেওয়া হয়েছে: %(dup)sটি নাম পুনরাবৃত্তি, %(blank)sটি নাম "
+"খালি।"
 
 msgid "No rows found to import."
 msgstr "আমদানি করার মতো কোনো সারি পাওয়া যায়নি।"
@@ -500,11 +502,47 @@ msgstr "রেকর্ড সম্পাদনা"
 msgid "Select a due date (optional)"
 msgstr "বকেয়া তারিখ নির্বাচন করুন (ঐচ্ছিক)"
 
-msgid "e.g. 12 (annual %, optional)"
-msgstr "যেমন ১২ (বার্ষিক %, ঐচ্ছিক)"
+msgid "e.g. 2 (% per period, optional)"
+msgstr "যেমন ২ (% প্রতি মেয়াদে, ঐচ্ছিক)"
+
+msgid "e.g. 2000 (flat ৳ amount, optional)"
+msgstr "যেমন ২০০০ (নির্দিষ্ট ৳ পরিমাণ, ঐচ্ছিক)"
+
+msgid "Enter a flat interest amount, or clear the interest type."
+msgstr "একটি নির্দিষ্ট সুদের পরিমাণ লিখুন, অথবা সুদের ধরন খালি করুন।"
+
+msgid "Enter an interest rate, or clear the interest type."
+msgstr "একটি সুদের হার লিখুন, অথবা সুদের ধরন খালি করুন।"
 
 msgid "Quick note..."
 msgstr "দ্রুত নোট..."
+
+msgid "Fixed Amount"
+msgstr "নির্দিষ্ট পরিমাণ"
+
+msgid "Monthly"
+msgstr "মাসিক"
+
+msgid "Every 3 Months"
+msgstr "প্রতি ৩ মাসে"
+
+msgid "Every 6 Months"
+msgstr "প্রতি ৬ মাসে"
+
+msgid "Yearly"
+msgstr "বার্ষিক"
+
+msgid "month"
+msgstr "মাস"
+
+msgid "3 months"
+msgstr "৩ মাস"
+
+msgid "6 months"
+msgstr "৬ মাস"
+
+msgid "year"
+msgstr "বছর"
 
 msgid "Bank"
 msgstr "ব্যাংক"
@@ -533,11 +571,17 @@ msgstr "শিক্ষা"
 msgid "Next payment due date (optional)."
 msgstr "পরবর্তী পরিশোধের তারিখ (ঐচ্ছিক)।"
 
+msgid "How interest is charged (optional). Leave blank for interest-free debt."
+msgstr "সুদ কীভাবে ধার্য হবে (ঐচ্ছিক)। সুদমুক্ত ঋণের জন্য খালি রাখুন।"
+
 #, python-format
 msgid ""
-"Annual simple interest rate, %% (optional). Leave blank for interest-free "
-"debt."
-msgstr "বার্ষিক সরল সুদের হার, %% (ঐচ্ছিক)। সুদমুক্ত ঋণের জন্য খালি রাখুন।"
+"Interest rate per period, %% — used for Monthly/Every 3 Months/Every 6 "
+"Months/Yearly."
+msgstr "প্রতি মেয়াদে সুদের হার, %% — মাসিক/প্রতি ৩ মাসে/প্রতি ৬ মাসে/বার্ষিকের জন্য ব্যবহৃত।"
+
+msgid "A flat interest amount (৳) — used only when the type is Fixed Amount."
+msgstr "একটি নির্দিষ্ট সুদের পরিমাণ (৳) — শুধুমাত্র ধরন 'নির্দিষ্ট পরিমাণ' হলে ব্যবহৃত।"
 
 msgid "Accrued interest (posted)"
 msgstr "সঞ্চিত সুদ (যোগ করা হয়েছে)"
@@ -573,27 +617,32 @@ msgstr "অবশিষ্ট ব্যালেন্স"
 msgid "Interest"
 msgstr "সুদ"
 
+msgid ""
+"A flat interest amount you've agreed on. It shows here until you post it — "
+"nothing is added automatically."
+msgstr "আপনার সম্মত একটি নির্দিষ্ট সুদের পরিমাণ। আপনি এটি যোগ না করা পর্যন্ত এটি এখানে দেখা যাবে — স্বয়ংক্রিয়ভাবে কিছু যোগ হয় না।"
+
 #, python-format
 msgid ""
-"Estimated simple interest at %(rate)s%% per year on the outstanding balance, "
-"accrued since the last transaction. This is an estimate only — it doesn't "
-"affect the balance above until you post it."
-msgstr "অবশিষ্ট ব্যালেন্সের উপর বছরে আনুমানিক %(rate)s%% হারে সরল সুদ, সর্বশেষ লেনদেনের পর থেকে সঞ্চিত। এটি শুধুমাত্র একটি আনুমানিক হিসাব — আপনি এটি যোগ না করা পর্যন্ত উপরের ব্যালেন্সে এর কোনো প্রভাব পড়বে না।"
+"Estimated simple interest at %(rate)s%% per %(period)s on the outstanding "
+"balance, accrued since the last transaction. This is an estimate only — it "
+"doesn't affect the balance above until you post it."
+msgstr "অবশিষ্ট ব্যালেন্সের উপর প্রতি %(period)s আনুমানিক %(rate)s%% হারে সরল সুদ, সর্বশেষ লেনদেনের পর থেকে সঞ্চিত। এটি শুধুমাত্র একটি আনুমানিক হিসাব — আপনি এটি যোগ না করা পর্যন্ত উপরের ব্যালেন্সে এর কোনো প্রভাব পড়বে না।"
 
 msgid ""
 "Add this accrued interest to the outstanding balance as a new transaction? "
 "You can edit or delete that transaction afterwards like any other, but it "
 "will not be reversed automatically."
-msgstr "এই সঞ্চিত সুদটি একটি নতুন লেনদেন হিসেবে অবশিষ্ট ব্যালেন্সে যোগ করবেন? আপনি পরবর্তীতে যেকোনো লেনদেনের মতো এটি সম্পাদনা বা মুছে ফেলতে পারবেন, তবে এটি স্বয়ংক্রিয়ভাবে বাতিল হবে না।"
+msgstr ""
+"এই সঞ্চিত সুদটি একটি নতুন লেনদেন হিসেবে অবশিষ্ট ব্যালেন্সে যোগ করবেন? আপনি "
+"পরবর্তীতে যেকোনো লেনদেনের মতো এটি সম্পাদনা বা মুছে ফেলতে পারবেন, তবে এটি "
+"স্বয়ংক্রিয়ভাবে বাতিল হবে না।"
 
 msgid "Post to Balance"
 msgstr "ব্যালেন্সে যোগ করুন"
 
 msgid "Rate"
 msgstr "হার"
-
-msgid "/ year"
-msgstr "/ বছর"
 
 msgid "Accrued Interest (est.)"
 msgstr "সঞ্চিত সুদ (আনুমানিক)"

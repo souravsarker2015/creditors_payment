@@ -1,11 +1,11 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
-from .models import Creditor, Transaction
+from .models import Creditor, InterestType, Transaction
 
 class CreditorForm(forms.ModelForm):
     class Meta:
         model = Creditor
-        fields = ["name", "category", "phone", "due_date", "interest_rate", "note"]
+        fields = ["name", "category", "phone", "due_date", "interest_type", "interest_rate", "interest_fixed_amount", "note"]
         widgets = {
             "name": forms.TextInput(attrs={
                 "class": "form-input",
@@ -22,9 +22,19 @@ class CreditorForm(forms.ModelForm):
                 "class": "form-input datepicker",
                 "placeholder": _("Select a due date (optional)"),
             }),
+            "interest_type": forms.Select(attrs={
+                "class": "form-input",
+                "x-model": "interestType",
+            }),
             "interest_rate": forms.NumberInput(attrs={
                 "class": "form-input",
-                "placeholder": _("e.g. 12 (annual %, optional)"),
+                "placeholder": _("e.g. 2 (% per period, optional)"),
+                "step": "0.01",
+                "min": "0",
+            }),
+            "interest_fixed_amount": forms.NumberInput(attrs={
+                "class": "form-input",
+                "placeholder": _("e.g. 2000 (flat ৳ amount, optional)"),
                 "step": "0.01",
                 "min": "0",
             }),
@@ -34,6 +44,32 @@ class CreditorForm(forms.ModelForm):
                 "rows": 3
             }),
         }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        interest_type = cleaned_data.get("interest_type")
+        interest_rate = cleaned_data.get("interest_rate")
+        interest_fixed_amount = cleaned_data.get("interest_fixed_amount")
+
+        if interest_type == InterestType.FIXED:
+            if not interest_fixed_amount:
+                self.add_error(
+                    "interest_fixed_amount",
+                    _("Enter a flat interest amount, or clear the interest type."),
+                )
+            cleaned_data["interest_rate"] = None
+        elif interest_type:
+            if not interest_rate:
+                self.add_error(
+                    "interest_rate",
+                    _("Enter an interest rate, or clear the interest type."),
+                )
+            cleaned_data["interest_fixed_amount"] = None
+        else:
+            cleaned_data["interest_rate"] = None
+            cleaned_data["interest_fixed_amount"] = None
+
+        return cleaned_data
 
 class TransactionForm(forms.ModelForm):
     class Meta:

@@ -64,13 +64,17 @@
     </div>
   </dl>
 
-  {% if creditor.interest_rate %}
+  {% if creditor.interest_type %}
   <div class="mt-8 rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-6 shadow-sm">
     <div class="flex flex-wrap items-start justify-between gap-4">
       <div>
         <h3 class="text-sm font-bold uppercase tracking-wider text-[var(--text-secondary)]">{% translate "Interest" %}</h3>
         <p class="mt-1 max-w-md text-xs text-[var(--text-muted)]">
-          {% blocktranslate with rate=creditor.interest_rate|floatformat:2 %}Estimated simple interest at {{ rate }}% per year on the outstanding balance, accrued since the last transaction. This is an estimate only — it doesn't affect the balance above until you post it.{% endblocktranslate %}
+          {% if creditor.interest_type == 'FIXED' %}
+            {% translate "A flat interest amount you've agreed on. It shows here until you post it — nothing is added automatically." %}
+          {% else %}
+            {% blocktranslate with rate=creditor.interest_rate|floatformat:2 period=creditor.interest_period_noun %}Estimated simple interest at {{ rate }}% per {{ period }} on the outstanding balance, accrued since the last transaction. This is an estimate only — it doesn't affect the balance above until you post it.{% endblocktranslate %}
+          {% endif %}
         </p>
       </div>
       {% if accrued_interest > 0 %}
@@ -84,8 +88,16 @@
     </div>
     <dl class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
       <div>
-        <dt class="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Rate" %}</dt>
-        <dd class="mt-1 text-lg font-bold text-[var(--text-primary)]">{{ creditor.interest_rate|floatformat:2 }}% <span class="text-xs font-normal text-[var(--text-muted)]">{% translate "/ year" %}</span></dd>
+        <dt class="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+          {% if creditor.interest_type == 'FIXED' %}{% translate "Fixed Amount" %}{% else %}{% translate "Rate" %}{% endif %}
+        </dt>
+        <dd class="mt-1 text-lg font-bold text-[var(--text-primary)]">
+          {% if creditor.interest_type == 'FIXED' %}
+            ৳{{ creditor.interest_fixed_amount|floatformat:2 }}
+          {% else %}
+            {{ creditor.interest_rate|floatformat:2 }}% <span class="text-xs font-normal text-[var(--text-muted)]">/ {{ creditor.interest_period_noun }}</span>
+          {% endif %}
+        </dd>
       </div>
       <div>
         <dt class="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Accrued Interest (est.)" %}</dt>
