@@ -64,6 +64,41 @@
     </div>
   </dl>
 
+  {% if creditor.interest_rate %}
+  <div class="mt-8 rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-6 shadow-sm">
+    <div class="flex flex-wrap items-start justify-between gap-4">
+      <div>
+        <h3 class="text-sm font-bold uppercase tracking-wider text-[var(--text-secondary)]">{% translate "Interest" %}</h3>
+        <p class="mt-1 max-w-md text-xs text-[var(--text-muted)]">
+          {% blocktranslate with rate=creditor.interest_rate|floatformat:2 %}Estimated simple interest at {{ rate }}% per year on the outstanding balance, accrued since the last transaction. This is an estimate only — it doesn't affect the balance above until you post it.{% endblocktranslate %}
+        </p>
+      </div>
+      {% if accrued_interest > 0 %}
+      <form method="post" action="{% url 'creditor_post_interest' creditor.pk %}" onsubmit="return confirm('{% translate "Add this accrued interest to the outstanding balance as a new transaction? You can edit or delete that transaction afterwards like any other, but it will not be reversed automatically." %}')">
+        {% csrf_token %}
+        <button type="submit" class="rounded-lg border px-3 py-2 text-xs font-bold uppercase tracking-wider transition-all hover:brightness-95" style="border-color: var(--accent); color: var(--accent);">
+          {% translate "Post to Balance" %}
+        </button>
+      </form>
+      {% endif %}
+    </div>
+    <dl class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div>
+        <dt class="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Rate" %}</dt>
+        <dd class="mt-1 text-lg font-bold text-[var(--text-primary)]">{{ creditor.interest_rate|floatformat:2 }}% <span class="text-xs font-normal text-[var(--text-muted)]">{% translate "/ year" %}</span></dd>
+      </div>
+      <div>
+        <dt class="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Accrued Interest (est.)" %}</dt>
+        <dd class="mt-1 text-lg font-bold" style="color: {% if accrued_interest > 0 %}var(--status-warn){% else %}var(--text-primary){% endif %};">৳{{ accrued_interest|floatformat:2 }}</dd>
+      </div>
+      <div>
+        <dt class="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Balance Incl. Interest" %}</dt>
+        <dd class="mt-1 text-lg font-bold text-[var(--text-primary)]">৳{{ remaining|add:accrued_interest|floatformat:2 }}</dd>
+      </div>
+    </dl>
+  </div>
+  {% endif %}
+
   <div class="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-3 items-start">
     <!-- Transactions List (Take 2/3 space) -->
     <div class="lg:col-span-2">

@@ -5,7 +5,7 @@ from .models import Creditor, Transaction
 class CreditorForm(forms.ModelForm):
     class Meta:
         model = Creditor
-        fields = ["name", "category", "phone", "due_date", "note"]
+        fields = ["name", "category", "phone", "due_date", "interest_rate", "note"]
         widgets = {
             "name": forms.TextInput(attrs={
                 "class": "form-input",
@@ -21,6 +21,12 @@ class CreditorForm(forms.ModelForm):
             "due_date": forms.DateInput(attrs={
                 "class": "form-input datepicker",
                 "placeholder": _("Select a due date (optional)"),
+            }),
+            "interest_rate": forms.NumberInput(attrs={
+                "class": "form-input",
+                "placeholder": _("e.g. 12 (annual %, optional)"),
+                "step": "0.01",
+                "min": "0",
             }),
             "note": forms.Textarea(attrs={
                 "class": "form-input",

@@ -65,13 +65,18 @@ and shops (বাকি tracking) — household and shops didn't exist at the ti
   an unpaid balance and a due date shows an "Overdue" or "Due Soon" (within 7 days) badge on its
   list card and detail page, and both dashboards surface a "Needs Attention" panel listing
   everyone overdue or coming due, soonest first.
+- **Interest tracking for loans** — Creditors have an optional annual `interest_rate` (%). When
+  set, the detail page shows a clearly-separated "Interest" card: simple interest on the
+  outstanding balance, accrued since the last transaction (actual days / 365), plus a
+  "Balance Incl. Interest" total. It's a live estimate only — the headline "Outstanding Balance"
+  figure, list cards, dashboard totals, CSV exports, and statements are all completely
+  untouched by it. A "Post to Balance" button (shown only when something has actually accrued)
+  capitalizes it into the ledger as a real, auditable BORROW transaction on demand — the amount
+  is always recomputed server-side at the moment of posting, never trusted from the page, and
+  nothing is ever posted automatically. Deliberately scoped to Creditors only, since none of the
+  Debtor categories imply interest-bearing debt.
 
 ## Finance / accounting value
-
-- **Interest tracking for loans** (Medium–High)
-  Categories like `BANK`, `MICROFINANCE`, and `MONEYLENDER` imply interest-bearing debt, but
-  there's no rate or accrual logic anywhere in the model. Even a simple flat/simple-interest
-  field per creditor would materially improve accuracy for real loans.
 
 - **Net worth / consolidated overview** (Low–Medium)
   Creditors, Debtors, Income, Expense, Household, and Shops are six separate dashboards today;
@@ -92,7 +97,7 @@ and shops (বাকি tracking) — household and shops didn't exist at the ti
 ## Suggested priority
 
 With CSV export/import, theming, full localization, year/month filters, trend charts, PDF
-statements, pagination/sorting, and due-date reminders all shipped, what's left is the heavier,
-more speculative items: interest tracking, a net worth overview, recurring transactions, and a
-REST API — worth picking up in roughly that order, each only once there's a concrete need driving
-it.
+statements, pagination/sorting, due-date reminders, and interest tracking all shipped, what's
+left is the more speculative, larger-scope items: a net worth overview, recurring transactions,
+and a REST API — worth picking up in roughly that order, each only once there's a concrete need
+driving it.

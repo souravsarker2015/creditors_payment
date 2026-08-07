@@ -333,6 +333,12 @@ def creditor_detail_view(request, pk):
         elif creditor.due_date <= today + timedelta(days=DUE_SOON_DAYS):
             due_status = "due_soon"
 
+    # Interest is opt-in per creditor (interest_rate is optional) and is a
+    # live estimate — see Creditor.accrued_interest for the day-count
+    # assumptions. It's never folded into `remaining` used elsewhere on this
+    # page or across the app; it's only surfaced here, clearly labeled.
+    accrued_interest = creditor.accrued_interest if creditor.interest_rate else None
+
     context = {
         "creditor": creditor,
         "transactions": transactions,
@@ -350,8 +356,33 @@ def creditor_detail_view(request, pk):
         "chart_paid": float(stats["paid"]),
         "chart_remaining": float(remaining) if remaining > 0 else 0,
         "due_status": due_status,
+        "accrued_interest": accrued_interest,
     }
     return render(request, "creditors/creditor_detail.html", context)
+
+
+@login_required
+def creditor_post_interest_view(request, pk):
+    """Capitalizes a creditor's currently accrued interest into the ledger
+    as a new BORROW transaction. POST-only, and the amount is recomputed
+    server-side from the ledger at the moment of the request — never taken
+    from the submitted form — so there's nothing for a stale page or a
+    tampered request to get wrong.
+    """
+    if request.method != "POST":
+        return redirect("creditor_detail", pk=pk)
+
+    creditor = get_object_or_404(Creditor, pk=pk, user=request.user)
+    transaction = creditor.post_accrued_interest()
+    if transaction:
+        messages.success(
+            request,
+            _("Posted ৳%(amount)s of accrued interest to %(name)s's balance.")
+            % {"amount": transaction.amount, "name": creditor.name},
+        )
+    else:
+        messages.info(request, _("There's no accrued interest to post right now."))
+    return redirect("creditor_detail", pk=pk)
 
 
 @login_required
