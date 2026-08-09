@@ -7,6 +7,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import Http404, HttpResponse
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.db.models import Sum, Count, DecimalField, Value
 from django.db.models.functions import Coalesce, TruncMonth
@@ -332,6 +333,7 @@ def purchase_edit_view(request, pk):
 
 
 @login_required
+@require_POST
 def purchase_delete_view(request, pk):
     purchase = get_object_or_404(Purchase, pk=pk, user=request.user)
     year, month, amount = purchase.date.year, purchase.date.month, purchase.amount
@@ -342,7 +344,11 @@ def purchase_delete_view(request, pk):
 
 @login_required
 def member_list_view(request):
-    members = list(request.user.household_members.all())
+    search_query = request.GET.get("q", "").strip()
+    members_qs = request.user.household_members.all()
+    if search_query:
+        members_qs = members_qs.filter(name__icontains=search_query)
+    members = list(members_qs)
     for m in members:
         spent = m.total_spent
         m.settle_percent = min(100, int((m.total_settled / spent) * 100)) if spent > 0 else 0
@@ -392,6 +398,7 @@ def member_list_view(request):
         "page_obj": page_obj,
         "pagination_window": _build_pagination_window(page_obj),
         "total_owed": total_owed,
+        "search_query": search_query,
         "sort": sort,
         "sort_options": MEMBER_SORT_OPTIONS,
         "base_query_string": base_query_string,
@@ -671,6 +678,7 @@ def settlement_edit_view(request, pk):
 
 
 @login_required
+@require_POST
 def settlement_delete_view(request, pk):
     settlement = get_object_or_404(Settlement, pk=pk, member__user=request.user)
     member = settlement.member

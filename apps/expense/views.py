@@ -4,6 +4,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 import django.utils.timezone
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.db.models import Sum, Q, DecimalField, Value
 from django.db.models.functions import Coalesce, TruncMonth
@@ -349,6 +350,7 @@ def expense_edit_view(request, pk):
 
 
 @login_required
+@require_POST
 def expense_delete_view(request, pk):
     expense = get_object_or_404(Expense, pk=pk, user=request.user)
     amt = expense.amount
@@ -359,10 +361,14 @@ def expense_delete_view(request, pk):
 
 @login_required
 def category_list_view(request):
-    categories = request.user.expense_categories.annotate(
+    search_query = request.GET.get("q", "").strip()
+    categories = request.user.expense_categories.all()
+    if search_query:
+        categories = categories.filter(name__icontains=search_query)
+    categories = categories.annotate(
         total_amt=Coalesce(Sum("expenses__amount"), Value(0, output_field=DecimalField()))
     ).order_by("-total_amt")
-    return render(request, "expense/category_list.html", {"categories": categories})
+    return render(request, "expense/category_list.html", {"categories": categories, "search_query": search_query})
 
 
 @login_required
@@ -507,6 +513,7 @@ def recurring_expense_edit_view(request, pk):
 
 
 @login_required
+@require_POST
 def recurring_expense_toggle_view(request, pk):
     schedule = get_object_or_404(RecurringExpense, pk=pk, user=request.user)
     schedule.is_active = not schedule.is_active
@@ -519,6 +526,7 @@ def recurring_expense_toggle_view(request, pk):
 
 
 @login_required
+@require_POST
 def recurring_expense_delete_view(request, pk):
     schedule = get_object_or_404(RecurringExpense, pk=pk, user=request.user)
     schedule.delete()

@@ -127,6 +127,59 @@ and shops (বাকি tracking) — household and shops didn't exist at the ti
   continuation on a follow-up visit, pause/resume, month-end date clamping across leap and
   non-leap years, cross-user isolation, and the weekend-shift rule (Friday and Saturday cases,
   the no-drift anchor invariant, and the opt-in default staying off).
+- **Test suite repaired — 16 of 60 tests were silently failing, now 115/115 pass** — a fresh
+  re-inspection (actually running `manage.py test`, not just re-reading old notes) found the
+  checked-in suite had drifted out of sync with two already-shipped features: 13 tests
+  (`CreditorCategoryTests`, `DebtorCategoryTests`, `HouseholdViewTests`) read
+  `response.context["creditors"]`/`["debtors"]`/`["categories"]`/`["members"]` directly, but
+  pagination had already moved list results into `response.context["page_obj"]`, so those keys no
+  longer existed; 1 (`IncomeFilterTests`) asserted the pre-year-filter meaning of
+  `total_source_income`, which year/month filtering had deliberately redefined as an all-time
+  total (with the filtered figure moved to a separate `period_income` field). Neither was a real
+  app bug — the views were correct the whole time — but a 27%-red suite trains everyone to ignore
+  failures, which is exactly when a real regression slips through. Fixed all 16, then added
+  substantial new coverage that hadn't existed for anything shipped since the original review:
+  due-date/overdue/due-soon logic (Creditors, Debtors, and now Shops), interest accrual and
+  proration across every type/basis combination plus posting semantics, the full recurring-
+  transaction engine (catch-up, the generation cap and its continuation, pause/resume, month-end
+  clamping, the weekend-shift rule and its no-drift anchor invariant), and the net worth page's
+  calculations including its double-counting-avoidance case and cross-user isolation. The suite
+  went from 60 tests (16 broken) to 115 tests, all passing.
+- **Every delete/pause/resume action converted from a GET link to a POST-only endpoint** — all
+  11 views that previously ran immediately when their URL was visited
+  (`transaction_delete_view` ×5, `purchase_delete_view`, `settlement_delete_view`,
+  `expense_delete_view`, `recurring_income_toggle_view`, `recurring_income_delete_view`,
+  `recurring_expense_toggle_view`, `recurring_expense_delete_view`) are now decorated
+  `@require_POST` and rejected with 405 on GET, closing off the risk of an email client
+  prefetching a link, a browser link-preview, or a stray `<img src="...">` silently triggering a
+  delete. Every template that linked to one of these now submits a small CSRF-protected `<form>`
+  instead of a bare `<a href>`, styled identically to the link it replaced so nothing changes
+  visually. Verified end-to-end: GET now returns 405 and leaves the record untouched, POST still
+  works, and the rendered pages actually emit `<form method="post">` rather than a plain link.
+- **Shops (বাকি) picked up the same due-date/reminder treatment as Creditors and Debtors** — an
+  optional `due_date` field, Overdue/Due-Soon badges on the shop's detail page and list card, and
+  a "Needs Attention" panel on the Shops dashboard — identical logic and presentation to the
+  Creditors/Debtors version, closing a consistency gap where running shop credit (conceptually the
+  same kind of payable as a Creditor) had no reminder support at all.
+- **Free-text name search added to the three list pages that were missing it** — Income Sources,
+  Expense Categories, and Household Members now have the same `?q=` search-by-name box that
+  Creditors, Debtors, Contributors, and Shops already had, so search is now consistent across
+  every entity list in the app.
+
+## Suggested / not yet implemented
+
+- **No self-service password recovery, and signup is open to anyone** (Low–Medium — reviewed and
+  deliberately deferred)
+  `signup_view` uses Django's stock `UserCreationForm` with no invite code, email verification, or
+  CAPTCHA — anyone who finds the URL can create an account. There's no
+  `password_reset`/`password_reset_confirm` flow at all, and production has no `EMAIL_BACKEND`
+  configured (only `dev.py` does, pointed at the console), so today a locked-out user has exactly
+  one recovery path: asking whoever has Django Admin access to reset their password by hand. This
+  was raised and explicitly deferred rather than left as an unexamined gap — the options remain
+  either adding Django's built-in email-based password-reset flow (needs a real `EMAIL_BACKEND` in
+  `prod.py`, e.g. SMTP or a transactional-email API) or gating signup behind an invite/access code
+  if public self-registration was never actually intended. Worth revisiting once there's an actual
+  email-sending setup decided on.
 
 ## Platform
 
@@ -136,8 +189,8 @@ and shops (বাকি tracking) — household and shops didn't exist at the ti
 
 ## Suggested priority
 
-With CSV export/import, theming, full localization, year/month filters, trend charts, PDF
-statements, pagination/sorting, due-date reminders, interest tracking, the net worth overview, and
-recurring transactions all shipped, what's left is a single Platform-level item: a REST API — worth
-picking up only once there's a concrete need driving it (e.g. a mobile client), since it's more
-about enabling future capability than fixing a current gap.
+With the test suite repaired and substantially expanded, the GET-based delete/toggle views closed
+off, the Shops due-date gap filled, and search made consistent everywhere, what's left is
+password recovery (a deliberate, deferred decision — pick it up once an email-sending setup is
+chosen) and the REST API (speculative scope, worth it only once a concrete need like a mobile
+client is driving it).

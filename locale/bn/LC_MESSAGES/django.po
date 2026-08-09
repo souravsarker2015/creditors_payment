@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-07 19:13+0600\n"
+"POT-Creation-Date: 2026-08-09 21:27+0600\n"
 "PO-Revision-Date: 2026-08-06 23:49+0600\n"
 "Last-Translator: FinTrack\n"
 "Language-Team: Bengali\n"
@@ -692,11 +692,11 @@ msgstr "লেনদেনের ইতিহাস"
 msgid "Type"
 msgstr "ধরন"
 
-msgid "Delete"
-msgstr "মুছুন"
-
 msgid "Delete this record? This action cannot be undone."
 msgstr "এই রেকর্ডটি মুছবেন? এই কাজটি ফিরিয়ে নেওয়া যাবে না।"
+
+msgid "Delete"
+msgstr "মুছুন"
 
 msgid "No activity for this creditor yet."
 msgstr "এই পাওনাদারের জন্য এখনো কোনো কার্যক্রম নেই।"
@@ -1096,7 +1096,9 @@ msgstr "এই তারিখটি শুক্র বা শনিবার�
 msgid ""
 "Common for bank auto-debits. Only affects which date the entry is posted on "
 "— the schedule itself stays anchored to the original date."
-msgstr "ব্যাংক অটো-ডেবিটের ক্ষেত্রে সাধারণ ব্যাপার। এটি শুধু এন্ট্রি কোন তারিখে পোস্ট হবে তা প্রভাবিত করে — সময়সূচী নিজে মূল তারিখেই স্থির থাকে।"
+msgstr ""
+"ব্যাংক অটো-ডেবিটের ক্ষেত্রে সাধারণ ব্যাপার। এটি শুধু এন্ট্রি কোন তারিখে পোস্ট হবে তা "
+"প্রভাবিত করে — সময়সূচী নিজে মূল তারিখেই স্থির থাকে।"
 
 msgid "Optional note added to each generated entry..."
 msgstr "প্রতিটি তৈরি হওয়া এন্ট্রিতে যোগ হবে এমন ঐচ্ছিক নোট..."
@@ -1121,6 +1123,9 @@ msgstr "খরচ শ্রেণীবিন্যাস ইঞ্জিন"
 
 msgid "Define Category"
 msgstr "ক্যাটাগরি নির্ধারণ করুন"
+
+msgid "Search categories..."
+msgstr "বিভাগ অনুসন্ধান করুন..."
 
 msgid "Total Allocated"
 msgstr "মোট বরাদ্দ"
@@ -1513,6 +1518,12 @@ msgstr "নতুন সদস্য"
 msgid "Total Outstanding to Members"
 msgstr "সদস্যদের কাছে মোট বকেয়া"
 
+msgid "e.g. Salma"
+msgstr "যেমন সালমা"
+
+msgid "Search"
+msgstr "অনুসন্ধান"
+
 msgid "Settled Up"
 msgstr "নিষ্পত্তি সম্পন্ন"
 
@@ -1672,7 +1683,9 @@ msgstr "মাছ"
 msgid ""
 "Common for bank-paid salary. Only affects which date the entry is posted on "
 "— the schedule itself stays anchored to the original date."
-msgstr "ব্যাংকের মাধ্যমে প্রদত্ত বেতনের ক্ষেত্রে সাধারণ ব্যাপার। এটি শুধু এন্ট্রি কোন তারিখে পোস্ট হবে তা প্রভাবিত করে — সময়সূচী নিজে মূল তারিখেই স্থির থাকে।"
+msgstr ""
+"ব্যাংকের মাধ্যমে প্রদত্ত বেতনের ক্ষেত্রে সাধারণ ব্যাপার। এটি শুধু এন্ট্রি কোন তারিখে "
+"পোস্ট হবে তা প্রভাবিত করে — সময়সূচী নিজে মূল তারিখেই স্থির থাকে।"
 
 msgid "Income Dashboard"
 msgstr "আয় ড্যাশবোর্ড"
@@ -1801,6 +1814,9 @@ msgstr "আপনি যেখান থেকে আর্থিক আয় �
 
 msgid "Register New Source"
 msgstr "নতুন উৎস নিবন্ধন করুন"
+
+msgid "e.g. Salary"
+msgstr "যেমন বেতন"
 
 msgid "Total Sources"
 msgstr "মোট উৎস"
@@ -2036,6 +2052,9 @@ msgstr "স্টেশনারি"
 
 msgid "Restaurant"
 msgstr "রেস্তোরাঁ"
+
+msgid "Next settlement due date (optional)."
+msgstr "পরবর্তী নিষ্পত্তির তারিখ (ঐচ্ছিক)।"
 
 msgid "Purchase (বাকি)"
 msgstr "কেনাকাটা (বাকি)"

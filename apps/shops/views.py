@@ -4,8 +4,9 @@ from decimal import Decimal, InvalidOperation
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 import django.utils.timezone
-from datetime import date as date_cls
+from datetime import date as date_cls, timedelta
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.db.models import Sum, Q, F, DecimalField, Value
 from django.db.models.functions import Coalesce, TruncMonth
@@ -31,7 +32,7 @@ def _csv_response(filename, header, rows):
     writer.writerows(rows)
     return response
 
-from .models import Shop, ShopCategory, Transaction
+from .models import Shop, ShopCategory, Transaction, DUE_SOON_DAYS
 
 MONTH_CHOICES = [(i, date_cls(2000, i, 1)) for i in range(1, 13)]
 
@@ -177,6 +178,23 @@ def dashboard_view(request):
             shop_remaining.append(float(rem) if rem > 0 else 0)
             shop_paid.append(float(s.s_paid))
 
+    # Shops needing attention: an unpaid balance with a due date that has
+    # passed or is coming up within DUE_SOON_DAYS.
+    today = django.utils.timezone.now().date()
+    due_soon_cutoff = today + timedelta(days=DUE_SOON_DAYS)
+    overdue_shops = []
+    due_soon_shops = []
+    for s in shops_qs:
+        rem = s.s_due - s.s_paid
+        if s.due_date and rem > 0:
+            s.remaining_amt = rem
+            if s.due_date < today:
+                overdue_shops.append(s)
+            elif s.due_date <= due_soon_cutoff:
+                due_soon_shops.append(s)
+    overdue_shops.sort(key=lambda s: s.due_date)
+    due_soon_shops.sort(key=lambda s: s.due_date)
+
     # Recent activity
     recent_transactions = Transaction.objects.filter(shop__user=request.user)
     if selected_categories:
@@ -217,6 +235,8 @@ def dashboard_view(request):
         "trend_due": trend_due,
         "trend_paid": trend_paid,
         "recent_transactions": recent_transactions,
+        "overdue_shops": overdue_shops,
+        "due_soon_shops": due_soon_shops,
         "selected_categories": selected_categories,
         "category_choices": ShopCategory.choices,
         "filter_type": filter_type,
@@ -303,6 +323,14 @@ def shop_detail_view(request, pk):
             rows,
         )
 
+    due_status = None
+    if shop.due_date and remaining > 0:
+        today = django.utils.timezone.now().date()
+        if shop.due_date < today:
+            due_status = "overdue"
+        elif shop.due_date <= today + timedelta(days=DUE_SOON_DAYS):
+            due_status = "due_soon"
+
     context = {
         "shop": shop,
         "transactions": transactions,
@@ -319,6 +347,7 @@ def shop_detail_view(request, pk):
         "selected_month_date": date_cls(2000, selected_month, 1) if selected_month else None,
         "chart_paid": float(stats["paid"]),
         "chart_remaining": float(remaining) if remaining > 0 else 0,
+        "due_status": due_status,
     }
     return render(request, "shops/shop_detail.html", context)
 
@@ -446,11 +475,20 @@ def shop_list_view(request):
     page_obj = paginator.get_page(page_number)
 
     # Calculate progress percentage manually to avoid complex template logic
+    today = django.utils.timezone.now().date()
+    due_soon_cutoff = today + timedelta(days=DUE_SOON_DAYS)
     for sh in page_obj:
         if sh.total_due_amt > 0:
             sh.payment_percent = min(100, int((sh.total_paid_amt / sh.total_due_amt) * 100))
         else:
             sh.payment_percent = 0
+
+        sh.due_status = None
+        if sh.due_date and sh.remaining_amt > 0:
+            if sh.due_date < today:
+                sh.due_status = "overdue"
+            elif sh.due_date <= due_soon_cutoff:
+                sh.due_status = "due_soon"
 
     base_query = request.GET.copy()
     base_query.pop("page", None)
@@ -587,6 +625,7 @@ def transaction_edit_view(request, pk):
 
 
 @login_required
+@require_POST
 def transaction_delete_view(request, pk):
     transaction = get_object_or_404(Transaction, pk=pk, shop__user=request.user)
     shop = transaction.shop

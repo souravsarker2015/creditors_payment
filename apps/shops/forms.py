@@ -6,7 +6,7 @@ from .models import Shop, Transaction
 class ShopForm(forms.ModelForm):
     class Meta:
         model = Shop
-        fields = ["name", "category", "phone", "note"]
+        fields = ["name", "category", "phone", "due_date", "note"]
         widgets = {
             "name": forms.TextInput(attrs={
                 "class": "form-input",
@@ -19,6 +19,7 @@ class ShopForm(forms.ModelForm):
                 "class": "form-input",
                 "placeholder": _("Phone Number (optional)")
             }),
+            "due_date": forms.DateInput(attrs={"class": "form-input datepicker", "placeholder": _("Select Date")}),
             "note": forms.Textarea(attrs={
                 "class": "form-input",
                 "placeholder": _("Address or any additional details..."),

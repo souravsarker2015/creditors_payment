@@ -5,6 +5,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 import django.utils.timezone
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.db.models import Sum, Q, DecimalField, Value
 from django.db.models.functions import Coalesce, TruncMonth
@@ -139,6 +140,8 @@ def _get_income_filters(request, user):
     if date_from and date_to and date_from > date_to:
         date_from, date_to = date_to, date_from
 
+    search_query = request.GET.get("q", "").strip()
+
     all_sources = user.income_sources.all().order_by("name")
     valid_source_ids = set(all_sources.values_list("id", flat=True))
     selected_source_ids = [sid for sid in selected_source_ids if sid in valid_source_ids]
@@ -149,6 +152,8 @@ def _get_income_filters(request, user):
             sources_qs = sources_qs.exclude(id__in=selected_source_ids)
         else:
             sources_qs = sources_qs.filter(id__in=selected_source_ids)
+    if search_query:
+        sources_qs = sources_qs.filter(name__icontains=search_query)
 
     return {
         "filter_mode": filter_mode,
@@ -156,6 +161,7 @@ def _get_income_filters(request, user):
         "selected_year": selected_year,
         "date_from": date_from,
         "date_to": date_to,
+        "search_query": search_query,
         "all_sources": all_sources,
         "filtered_sources": sources_qs,
     }
@@ -327,6 +333,7 @@ def income_source_list_view(request):
         "selected_year": filters["selected_year"],
         "date_from": filters["date_from"].isoformat() if filters["date_from"] else "",
         "date_to": filters["date_to"].isoformat() if filters["date_to"] else "",
+        "search_query": filters["search_query"],
         "sort": sort,
         "sort_options": SORT_OPTIONS,
         "base_query_string": base_query_string,
@@ -591,6 +598,7 @@ def transaction_edit_view(request, pk):
 
 
 @login_required
+@require_POST
 def transaction_delete_view(request, pk):
     tx = get_object_or_404(IncomeTransaction, pk=pk, source__user=request.user)
     source = tx.source
@@ -650,6 +658,7 @@ def recurring_income_edit_view(request, pk):
 
 
 @login_required
+@require_POST
 def recurring_income_toggle_view(request, pk):
     schedule = get_object_or_404(RecurringIncome, pk=pk, source__user=request.user)
     schedule.is_active = not schedule.is_active
@@ -662,6 +671,7 @@ def recurring_income_toggle_view(request, pk):
 
 
 @login_required
+@require_POST
 def recurring_income_delete_view(request, pk):
     schedule = get_object_or_404(RecurringIncome, pk=pk, source__user=request.user)
     name = schedule.source.name

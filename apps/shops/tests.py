@@ -1,9 +1,10 @@
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from .models import Shop, ShopCategory, Transaction
 
@@ -218,3 +219,49 @@ class ShopCategoryTests(TestCase):
         other_shop = Shop.objects.create(user=other_user, name="Someone Else's Shop")
         response = self.client.get(reverse("shop_detail", args=[other_shop.pk]))
         self.assertEqual(response.status_code, 404)
+
+
+class ShopDueDateTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="shop_duedate_user", password="secret123")
+        self.today = timezone.now().date()
+
+    def _shop_with_balance(self, due_date=None, purchased=Decimal("500.00"), paid=Decimal("0.00")):
+        shop = Shop.objects.create(
+            user=self.user, name="Test Shop", category=ShopCategory.GROCERY, due_date=due_date
+        )
+        Transaction.objects.create(
+            shop=shop, transaction_type=Transaction.PURCHASE, amount=purchased, date=self.today - timedelta(days=30)
+        )
+        if paid > 0:
+            Transaction.objects.create(
+                shop=shop, transaction_type=Transaction.PAYMENT, amount=paid, date=self.today - timedelta(days=1)
+            )
+        return shop
+
+    def test_is_overdue_true_when_due_date_passed_and_unpaid(self):
+        shop = self._shop_with_balance(due_date=self.today - timedelta(days=3))
+        self.assertTrue(shop.is_overdue)
+        self.assertFalse(shop.is_due_soon)
+
+    def test_is_due_soon_true_within_window_not_yet_overdue(self):
+        shop = self._shop_with_balance(due_date=self.today + timedelta(days=3))
+        self.assertFalse(shop.is_overdue)
+        self.assertTrue(shop.is_due_soon)
+
+    def test_is_due_soon_false_beyond_window(self):
+        shop = self._shop_with_balance(due_date=self.today + timedelta(days=30))
+        self.assertFalse(shop.is_overdue)
+        self.assertFalse(shop.is_due_soon)
+
+    def test_fully_paid_balance_never_shows_overdue_even_with_past_due_date(self):
+        shop = self._shop_with_balance(
+            due_date=self.today - timedelta(days=10), purchased=Decimal("200.00"), paid=Decimal("200.00")
+        )
+        self.assertFalse(shop.is_overdue)
+        self.assertFalse(shop.is_due_soon)
+
+    def test_no_due_date_never_flagged(self):
+        shop = self._shop_with_balance(due_date=None)
+        self.assertFalse(shop.is_overdue)
+        self.assertFalse(shop.is_due_soon)

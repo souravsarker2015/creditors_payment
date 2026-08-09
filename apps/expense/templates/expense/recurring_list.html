@@ -47,8 +47,14 @@
 
       <div class="mt-6 flex items-center gap-2 border-t pt-5" style="border-color: var(--border-soft);">
         <a href="{% url 'recurring_expense_edit' s.pk %}" class="flex-1 text-center rounded-lg px-3 py-2 text-xs font-black uppercase tracking-widest hover:bg-[var(--surface-sunken)] transition-all" style="color: var(--text-secondary);">{% translate "Edit" %}</a>
-        <a href="{% url 'recurring_expense_toggle' s.pk %}" class="flex-1 text-center rounded-lg px-3 py-2 text-xs font-black uppercase tracking-widest hover:bg-[var(--surface-sunken)] transition-all" style="color: var(--text-secondary);">{% if s.is_active %}{% translate "Pause" %}{% else %}{% translate "Resume" %}{% endif %}</a>
-        <a href="{% url 'recurring_expense_delete' s.pk %}" onclick="return confirm('{% translate "Delete this recurring schedule? Past entries it already created are kept." %}')" class="flex-1 text-center rounded-lg px-3 py-2 text-xs font-black uppercase tracking-widest hover:bg-[var(--status-critical-bg)] transition-all" style="color: var(--status-critical);">{% translate "Delete" %}</a>
+        <form method="post" action="{% url 'recurring_expense_toggle' s.pk %}" class="flex-1">
+          {% csrf_token %}
+          <button type="submit" class="w-full text-center rounded-lg px-3 py-2 text-xs font-black uppercase tracking-widest hover:bg-[var(--surface-sunken)] bg-transparent border-0 cursor-pointer transition-all" style="color: var(--text-secondary);">{% if s.is_active %}{% translate "Pause" %}{% else %}{% translate "Resume" %}{% endif %}</button>
+        </form>
+        <form method="post" action="{% url 'recurring_expense_delete' s.pk %}" class="flex-1" onsubmit="return confirm('{% translate "Delete this recurring schedule? Past entries it already created are kept." %}')">
+          {% csrf_token %}
+          <button type="submit" class="w-full text-center rounded-lg px-3 py-2 text-xs font-black uppercase tracking-widest hover:bg-[var(--status-critical-bg)] bg-transparent border-0 cursor-pointer transition-all" style="color: var(--status-critical);">{% translate "Delete" %}</button>
+        </form>
       </div>
     </div>
     {% endfor %}

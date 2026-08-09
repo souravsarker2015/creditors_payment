@@ -1,6 +1,11 @@
+import datetime
+
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+
+DUE_SOON_DAYS = 7
 
 
 class ShopCategory(models.TextChoices):
@@ -28,6 +33,9 @@ class Shop(models.Model):
         default=ShopCategory.OTHER,
     )
     phone = models.CharField(max_length=20, blank=True, default="")
+    due_date = models.DateField(
+        null=True, blank=True, help_text=_("Next settlement due date (optional).")
+    )
     note = models.TextField(blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -39,6 +47,20 @@ class Shop(models.Model):
         return self.name
 
     # ── Computed properties ──────────────────────────
+
+    @property
+    def is_overdue(self):
+        """True if there's an unpaid balance and the due date has passed."""
+        if not self.due_date or self.remaining <= 0:
+            return False
+        return self.due_date < timezone.now().date()
+
+    @property
+    def is_due_soon(self):
+        """True if there's an unpaid balance due within DUE_SOON_DAYS, but not yet overdue."""
+        if not self.due_date or self.remaining <= 0 or self.is_overdue:
+            return False
+        return self.due_date <= timezone.now().date() + datetime.timedelta(days=DUE_SOON_DAYS)
 
     @property
     def total_due(self):

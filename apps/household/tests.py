@@ -114,7 +114,7 @@ class HouseholdViewTests(TestCase):
         Settlement.objects.create(member=self.member, amount=Decimal("50.00"), date=date(2026, 8, 2))
         response = self.client.get(reverse("household_member_list"))
         self.assertEqual(response.status_code, 200)
-        members = {m.name: m for m in response.context["members"]}
+        members = {m.name: m for m in response.context["page_obj"]}
         self.assertEqual(members["Salma"].balance_due, Decimal("150.00"))
 
     def test_can_settle_member_via_detail_post(self):
@@ -128,5 +128,5 @@ class HouseholdViewTests(TestCase):
     def test_category_list_shows_total_spent(self):
         response = self.client.get(reverse("household_category_list"))
         self.assertEqual(response.status_code, 200)
-        categories = {c.name: c for c in response.context["categories"]}
-        self.assertEqual(categories["Vegetables"].total_amt, Decimal("200.00"))
+        categories = {c["name"]: c for c in response.context["categories"]}
+        self.assertEqual(categories["Vegetables"]["total_amt"], Decimal("200.00"))

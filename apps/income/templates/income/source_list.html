@@ -29,6 +29,13 @@
     <input type="hidden" name="filter_mode" x-model="filterMode">
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
       <div>
+        <label for="q" class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Search by name" %}</label>
+        <div class="relative mt-1">
+          <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+          <input type="text" id="q" name="q" value="{{ search_query }}" placeholder="{% translate 'e.g. Salary' %}" autocomplete="off" class="block w-full rounded-md border-[var(--border)] bg-[var(--surface-raised)] pl-9 text-sm text-[var(--text-primary)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]">
+        </div>
+      </div>
+      <div>
         <p class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Filter mode" %}</p>
         <div class="mt-1 grid w-full grid-cols-2 rounded-lg bg-[var(--surface-sunken)] p-1 ring-1 ring-inset ring-[var(--border-soft)]">
           <button type="button" @click="filterMode = 'include'" class="inline-flex w-full items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-semibold transition-all"

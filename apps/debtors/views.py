@@ -6,6 +6,7 @@ from django.http import HttpResponse
 import django.utils.timezone
 from datetime import date as date_cls, timedelta
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.db.models import Sum, Q, F, DecimalField, Value
 from django.db.models.functions import Coalesce, TruncMonth
@@ -622,6 +623,7 @@ def transaction_edit_view(request, pk):
 
 
 @login_required
+@require_POST
 def transaction_delete_view(request, pk):
     transaction = get_object_or_404(Transaction, pk=pk, debtor__user=request.user)
     debtor = transaction.debtor
