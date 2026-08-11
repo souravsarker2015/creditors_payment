@@ -58,6 +58,57 @@ def _parse_year_month(request):
     return year, month
 
 
+def _parse_iso_date(value):
+    if not value:
+        return None
+    try:
+        return date_cls.fromisoformat(value)
+    except ValueError:
+        return None
+
+
+def _parse_balance_summary_filter(request):
+    """The Balance Summary panel's own Year / Month(s) / Date-range filter — independent
+    of Transaction History's Year/Month controls. When any part of it is set, it takes
+    over what Transaction History (and the Total Due/Total Paid breakdown) shows."""
+    raw_year = request.GET.get("due_year", "").strip()
+    due_year = int(raw_year) if raw_year.isdigit() else None
+
+    due_months = sorted({
+        int(m) for m in request.GET.getlist("due_month")
+        if m.isdigit() and 1 <= int(m) <= 12
+    })
+
+    due_date_from = _parse_iso_date(request.GET.get("due_date_from", "").strip())
+    due_date_to = _parse_iso_date(request.GET.get("due_date_to", "").strip())
+    if due_date_from and due_date_to and due_date_from > due_date_to:
+        due_date_from, due_date_to = due_date_to, due_date_from
+
+    is_active = bool(due_year or due_months or due_date_from or due_date_to)
+
+    description = ""
+    if is_active:
+        parts = []
+        if due_date_from or due_date_to:
+            start = due_date_from.strftime("%d %b %Y") if due_date_from else "…"
+            end = due_date_to.strftime("%d %b %Y") if due_date_to else "…"
+            parts.append(f"{start} – {end}")
+        if due_months:
+            parts.append(", ".join(date_cls(2000, m, 1).strftime("%b") for m in due_months))
+        if due_year:
+            parts.append(str(due_year))
+        description = " · ".join(parts)
+
+    return {
+        "due_year": due_year,
+        "due_months": due_months,
+        "due_date_from": due_date_from,
+        "due_date_to": due_date_to,
+        "is_active": is_active,
+        "description": description,
+    }
+
+
 def _last_12_month_starts():
     today = django.utils.timezone.now().date()
     starts = []
@@ -290,7 +341,8 @@ def shop_detail_view(request, pk):
         form = TransactionForm(initial={"date": django.utils.timezone.now().date()})
 
     # Calculate all-time totals for this specific shop (never period-filtered —
-    # outstanding balance only makes sense as a current, running snapshot).
+    # Current Due / Outstanding Balance are a running snapshot and stay this way
+    # regardless of the Balance Summary filter below).
     stats = all_transactions.aggregate(
         due=Coalesce(Sum("amount", filter=Q(transaction_type=Transaction.PURCHASE)), Value(0, output_field=DecimalField())),
         paid=Coalesce(Sum("amount", filter=Q(transaction_type=Transaction.PAYMENT)), Value(0, output_field=DecimalField())),
@@ -298,17 +350,37 @@ def shop_detail_view(request, pk):
     remaining = stats["due"] - stats["paid"]
 
     selected_year, selected_month = _parse_year_month(request)
+    balance_summary_filter = _parse_balance_summary_filter(request)
+
     transactions = all_transactions
-    if selected_year:
-        transactions = transactions.filter(date__year=selected_year)
-    if selected_month:
-        transactions = transactions.filter(date__month=selected_month)
+    if balance_summary_filter["is_active"]:
+        # The Balance Summary filter takes over: Transaction History (and the Total
+        # Due/Total Paid breakdown) follow it instead of their own Year/Month controls.
+        if balance_summary_filter["due_year"]:
+            transactions = transactions.filter(date__year=balance_summary_filter["due_year"])
+        if balance_summary_filter["due_months"]:
+            transactions = transactions.filter(date__month__in=balance_summary_filter["due_months"])
+        if balance_summary_filter["due_date_from"]:
+            transactions = transactions.filter(date__gte=balance_summary_filter["due_date_from"])
+        if balance_summary_filter["due_date_to"]:
+            transactions = transactions.filter(date__lte=balance_summary_filter["due_date_to"])
+    else:
+        # Otherwise Transaction History stays fully independent, as before.
+        if selected_year:
+            transactions = transactions.filter(date__year=selected_year)
+        if selected_month:
+            transactions = transactions.filter(date__month=selected_month)
     transactions = transactions.order_by("-date", "-created_at")
 
     period_stats = transactions.aggregate(
         due=Coalesce(Sum("amount", filter=Q(transaction_type=Transaction.PURCHASE)), Value(0, output_field=DecimalField())),
         paid=Coalesce(Sum("amount", filter=Q(transaction_type=Transaction.PAYMENT)), Value(0, output_field=DecimalField())),
     )
+    # The breakdown cards show the Balance Summary filter's totals when it's active,
+    # otherwise the true all-time totals (same numbers as period_stats would give
+    # anyway when nothing is filtered, but named separately for template clarity).
+    breakdown_due = period_stats["due"] if balance_summary_filter["is_active"] else stats["due"]
+    breakdown_paid = period_stats["paid"] if balance_summary_filter["is_active"] else stats["paid"]
 
     year_options = list(all_transactions.values_list("date__year", flat=True).distinct().order_by("-date__year"))
 
@@ -338,6 +410,8 @@ def shop_detail_view(request, pk):
         "due": stats["due"],
         "paid": stats["paid"],
         "remaining": remaining,
+        "breakdown_due": breakdown_due,
+        "breakdown_paid": breakdown_paid,
         "period_due": period_stats["due"],
         "period_paid": period_stats["paid"],
         "year_options": year_options,
@@ -348,6 +422,7 @@ def shop_detail_view(request, pk):
         "chart_paid": float(stats["paid"]),
         "chart_remaining": float(remaining) if remaining > 0 else 0,
         "due_status": due_status,
+        "bs_filter": balance_summary_filter,
     }
     return render(request, "shops/shop_detail.html", context)
 

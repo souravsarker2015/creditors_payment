@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-11 20:10+0600\n"
+"POT-Creation-Date: 2026-08-11 20:30+0600\n"
 "PO-Revision-Date: 2026-08-06 23:49+0600\n"
 "Last-Translator: FinTrack\n"
 "Language-Team: Bengali\n"
@@ -2104,14 +2104,41 @@ msgstr "মোট বাকি"
 msgid "Edit Shop"
 msgstr "দোকান সম্পাদনা"
 
+msgid "Balance Summary"
+msgstr "ব্যালেন্স সারসংক্ষেপ"
+
+msgid ""
+"Current Due and Outstanding Balance are always as of today. Filter below to "
+"see totals for a specific period — Transaction History will follow it too."
+msgstr "বর্তমান বাকি এবং বকেয়া ব্যালেন্স সবসময় আজকের হিসাবে দেখানো হয়। নির্দিষ্ট সময়ের মোট দেখতে নিচের ফিল্টার ব্যবহার করুন — লেনদেনের ইতিহাসও এটি অনুসরণ করবে।"
+
+msgid "Months"
+msgstr "মাসসমূহ"
+
+msgid "Clear"
+msgstr "মুছে ফেলুন"
+
+#, python-format
+msgid "Filtered by %(period)s — Transaction History below follows this too."
+msgstr "%(period)s অনুযায়ী ফিল্টার করা হয়েছে — নিচের লেনদেনের ইতিহাসও এটি অনুসরণ করবে।"
+
 msgid "Current Due"
 msgstr "বর্তমান বাকি"
+
+msgid "As of today"
+msgstr "আজকের হিসাবে"
 
 msgid "Hide breakdown"
 msgstr "বিস্তারিত লুকান"
 
 msgid "Show breakdown"
 msgstr "বিস্তারিত দেখুন"
+
+msgid "Following the Balance Summary filter above."
+msgstr "উপরের ব্যালেন্স সারসংক্ষেপ ফিল্টার অনুসরণ করছে।"
+
+msgid "Clear it"
+msgstr "মুছে ফেলুন"
 
 msgid "No activity for this shop yet."
 msgstr "এই দোকানের জন্য এখনো কোনো কার্যক্রম নেই।"
