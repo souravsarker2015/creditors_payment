@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-09 21:27+0600\n"
+"POT-Creation-Date: 2026-08-11 20:10+0600\n"
 "PO-Revision-Date: 2026-08-06 23:49+0600\n"
 "Last-Translator: FinTrack\n"
 "Language-Team: Bengali\n"
@@ -2103,6 +2103,15 @@ msgstr "মোট বাকি"
 
 msgid "Edit Shop"
 msgstr "দোকান সম্পাদনা"
+
+msgid "Current Due"
+msgstr "বর্তমান বাকি"
+
+msgid "Hide breakdown"
+msgstr "বিস্তারিত লুকান"
+
+msgid "Show breakdown"
+msgstr "বিস্তারিত দেখুন"
 
 msgid "No activity for this shop yet."
 msgstr "এই দোকানের জন্য এখনো কোনো কার্যক্রম নেই।"

@@ -51,21 +51,36 @@
     </div>
   </div>
 
-  <!-- Summary Stats -->
-  <dl class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-3">
-    <div class="bg-[var(--surface-raised)] px-6 py-5 shadow-sm ring-1 ring-[var(--border)] rounded-2xl">
-      <dt class="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider">{% translate "Total Due (বাকি)" %}</dt>
-      <dd class="mt-2 text-3xl font-extrabold text-[var(--text-primary)]">৳{{ due|floatformat:2 }}</dd>
+  <!-- Primary Stats: what's owed right now -->
+  <dl class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+    <div class="bg-[var(--surface-raised)] px-6 py-5 shadow-sm ring-1 ring-[var(--border)] rounded-2xl border-l-4" style="border-left-color: {% if remaining > 0 %}var(--status-critical){% else %}var(--status-good){% endif %};">
+      <dt class="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider">{% translate "Current Due" %}</dt>
+      <dd class="mt-2 text-3xl font-extrabold" style="color: {% if remaining > 0 %}var(--status-critical){% else %}var(--status-good){% endif %};">৳{{ remaining|floatformat:2 }}</dd>
     </div>
-    <div class="bg-[var(--surface-raised)] px-6 py-5 shadow-sm ring-1 ring-[var(--border)] rounded-2xl border-l-4" style="border-left-color: var(--status-good);">
-      <dt class="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider">{% translate "Total Paid" %}</dt>
-      <dd class="mt-2 text-3xl font-extrabold" style="color: var(--status-good);">৳{{ paid|floatformat:2 }}</dd>
-    </div>
-    <div class="bg-[var(--surface-raised)] px-6 py-5 shadow-sm ring-1 ring-[var(--border)] rounded-2xl border-l-4" style="border-left-color: var(--status-critical);">
+    <div class="bg-[var(--surface-raised)] px-6 py-5 shadow-sm ring-1 ring-[var(--border)] rounded-2xl border-l-4" style="border-left-color: {% if remaining > 0 %}var(--status-critical){% else %}var(--status-good){% endif %};">
       <dt class="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider">{% translate "Outstanding Balance" %}</dt>
       <dd class="mt-2 text-3xl font-extrabold" style="color: {% if remaining > 0 %}var(--status-critical){% else %}var(--status-good){% endif %};">৳{{ remaining|floatformat:2 }}</dd>
     </div>
   </dl>
+
+  <!-- Breakdown: total ever due vs total ever paid, collapsed by default -->
+  <div class="mt-4" x-data="{ showBreakdown: false }">
+    <button type="button" @click="showBreakdown = !showBreakdown" class="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--accent)] hover:brightness-90 transition-all">
+      <svg class="h-4 w-4 transition-transform duration-200" :class="showBreakdown ? 'rotate-90' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+      <span x-text="showBreakdown ? '{% translate "Hide breakdown" %}' : '{% translate "Show breakdown" %}'"></span>
+    </button>
+    <dl class="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2" x-show="showBreakdown" x-cloak
+        x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0">
+      <div class="bg-[var(--surface-raised)] px-6 py-5 shadow-sm ring-1 ring-[var(--border)] rounded-2xl">
+        <dt class="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider">{% translate "Total Due (বাকি)" %}</dt>
+        <dd class="mt-2 text-3xl font-extrabold text-[var(--text-primary)]">৳{{ due|floatformat:2 }}</dd>
+      </div>
+      <div class="bg-[var(--surface-raised)] px-6 py-5 shadow-sm ring-1 ring-[var(--border)] rounded-2xl border-l-4" style="border-left-color: var(--status-good);">
+        <dt class="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider">{% translate "Total Paid" %}</dt>
+        <dd class="mt-2 text-3xl font-extrabold" style="color: var(--status-good);">৳{{ paid|floatformat:2 }}</dd>
+      </div>
+    </dl>
+  </div>
 
   <div class="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-3 items-start">
     <!-- Transactions List (Take 2/3 space) -->
