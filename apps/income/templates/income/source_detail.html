@@ -1,236 +1,128 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{{ source.name }} {% translate "Details" %} | FinTrack{% endblock %}
-
-{% block extra_css %}
-<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
-{% endblock %}
+{% block title %}{{ source.name }} | FinTrack{% endblock %}
 
 {% block content %}
-<div class="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pb-16">
-  <!-- Header -->
-  <div class="md:flex md:items-end md:justify-between border-b-2 pb-12 mb-10" style="border-color: var(--border-soft);">
-    <div class="min-w-0 flex-1">
-      <div class="flex items-center gap-x-5">
-          <div class="h-16 w-16 rounded-3xl flex items-center justify-center font-black text-3xl shadow-2xl ring-4" style="background: var(--status-good); color: white; --tw-ring-color: var(--status-good-bg);">
-              {{ source.name|first|upper }}
-          </div>
-          <div>
-            <h1 class="text-4xl font-black text-[var(--text-primary)] tracking-tight sm:text-5xl leading-tight uppercase">{{ source.name }}</h1>
-            <p class="text-xs font-black text-[var(--text-muted)] uppercase tracking-[0.25em] mt-2">{% translate "Income Source Ledger" %}</p>
-          </div>
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <a href="{% url 'income_source_list' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Income Sources" %}</a>
+      <div class="flex items-start gap-3">
+        <span class="avatar avatar-lg" data-tone="good">{{ source.name|first }}</span>
+        <div class="min-w-0">
+          <h1 class="page-title">{{ source.name }}</h1>
+          {% if source.description %}<p class="page-subtitle !mt-1">{{ source.description }}</p>{% endif %}
+          {% if not source.is_active %}<span class="badge mt-1.5" data-tone="muted">{% translate "Inactive" %}</span>{% endif %}
+        </div>
       </div>
     </div>
-    <div class="mt-8 flex md:ml-4 md:mt-0 gap-4">
-      <a href="{% url 'income_source_edit' source.pk %}" class="inline-flex items-center rounded-2xl bg-[var(--surface-raised)] px-5 py-3 text-xs font-black text-[var(--text-secondary)] shadow-sm ring-2 ring-inset ring-[var(--border-soft)] hover:bg-[var(--surface-sunken)] transition-all border-none uppercase tracking-widest">{% translate "Settings" %}</a>
-      <a href="{% url 'income_source_list' %}" class="inline-flex items-center rounded-2xl px-6 py-3 text-xs font-black hover:brightness-110 transition-all shadow-xl uppercase tracking-widest" style="background: var(--surface-ink); color: var(--text-on-ink);">{% translate "Source List" %}</a>
+    <div class="page-actions">
+      <a href="{% url 'income_source_edit' source.pk %}" class="btn btn-secondary">{% include "partials/icon.html" with name="edit" %}{% translate "Edit" %}</a>
+      {% url 'income_source_toggle_active' source.pk as toggle_url %}
+      {% include "partials/toggle_active_item.html" with url=toggle_url active=source.is_active as_button=True %}
     </div>
+  </header>
+
+  {% if not source.is_active %}
+  <div class="callout" data-tone="info">
+    {% include "partials/icon.html" with name="archive" %}
+    <p>{% translate "This source is inactive — hidden from your active list and from new recurring schedules. Its payouts still count in every total." %}</p>
   </div>
+  {% endif %}
 
-  <div class="grid grid-cols-1 gap-12 lg:grid-cols-3">
-    <!-- Stats & History -->
-    <div class="lg:col-span-2 space-y-10">
-        <!-- Main Stats Card -->
-        <div class="bg-[var(--surface-raised)] px-10 py-12 shadow-sm ring-1 ring-[var(--border-soft)] rounded-[2.5rem] relative overflow-hidden">
-            <div class="relative z-10">
-                <dt class="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.3em] mb-4">{% translate "Cumulative Revenue from Source" %}</dt>
-                <dd class="text-6xl font-black text-[var(--text-primary)] tracking-tighter">৳{{ total_source_income|floatformat:2 }}</dd>
-            </div>
-            <div class="absolute right-0 top-0 h-full w-2" style="background: var(--status-good);"></div>
-        </div>
-
-        <!-- History Table -->
-        <div class="overflow-hidden bg-[var(--surface-raised)] shadow-sm ring-1 ring-[var(--border-soft)] rounded-[2.5rem]">
-            <div class="px-10 py-8 border-b" style="border-color: var(--border-soft); background: var(--surface-sunken);">
-                <h3 class="text-xs font-black text-[var(--text-muted)] uppercase tracking-[0.25em]">{% translate "Payout Timeline" %}</h3>
-                <form method="get" class="mt-4 grid grid-cols-2 gap-3 md:grid-cols-5">
-                    <div>
-                        <label for="year-filter" class="block text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">{% translate "Year" %}</label>
-                        <select id="year-filter" name="year" class="mt-1 block w-full rounded-xl border-[var(--border)] bg-[var(--surface-raised)] px-3 py-2 text-xs font-bold text-[var(--text-secondary)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]">
-                            <option value="">{% translate "All Years" %}</option>
-                            {% for yr in year_options %}
-                                <option value="{{ yr }}"{% if selected_year == yr %} selected{% endif %}>{{ yr }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div>
-                        <label for="month-filter" class="block text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">{% translate "Month" %}</label>
-                        <select id="month-filter" name="month" class="mt-1 block w-full rounded-xl border-[var(--border)] bg-[var(--surface-raised)] px-3 py-2 text-xs font-bold text-[var(--text-secondary)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]">
-                            <option value="">{% translate "All Months" %}</option>
-                            {% for num, mdate in month_choices %}
-                                <option value="{{ num }}"{% if selected_month == num %} selected{% endif %}>{{ mdate|date:"F" }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="md:col-span-2">
-                        <label for="date-range-filter" class="block text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">{% translate "Date Range" %}</label>
-                        <input id="date-range-filter" type="text" placeholder="{% translate 'Select range...' %}" class="mt-1 block w-full rounded-xl border-[var(--border)] bg-[var(--surface-raised)] px-3 py-2 text-xs font-bold text-[var(--text-secondary)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]">
-                        <input id="date-from-hidden" type="hidden" name="date_from" value="{{ date_from }}">
-                        <input id="date-to-hidden" type="hidden" name="date_to" value="{{ date_to }}">
-                    </div>
-                    <div class="col-span-2 flex flex-wrap items-end gap-2 md:col-span-1">
-                        <button type="submit" class="w-full rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition-all" style="background: var(--surface-ink); color: var(--text-on-ink);">{% translate "Apply" %}</button>
-                        <a href="{% url 'income_source_detail' source.pk %}" class="w-full rounded-xl border px-3 py-2 text-center text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] hover:bg-[var(--surface-raised)] transition-all" style="border-color: var(--border);">{% translate "Reset" %}</a>
-                        <button type="submit" name="export" value="csv" class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-[var(--surface-raised)] transition-all" style="border-color: var(--accent); color: var(--accent);">
-                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>
-                            {% translate "Export CSV" %}
-                        </button>
-                        <a href="{% url 'income_source_statement' source.pk %}?{{ request.GET.urlencode }}" class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-[var(--surface-raised)] transition-all" style="border-color: var(--border); color: var(--text-secondary);">
-                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z" /></svg>
-                            {% translate "Statement" %}
-                        </a>
-                    </div>
-                </form>
-                <p class="mt-4 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">
-                    <span style="color: var(--text-primary);">{% if selected_month %}{{ selected_month_date|date:"F" }} {{ selected_year }}{% elif selected_year %}{{ selected_year }}{% elif date_from or date_to %}{{ date_from }} – {{ date_to }}{% else %}{% translate "All Time" %}{% endif %}</span>
-                    — {% translate "Total Earned" %} ৳{{ period_income|floatformat:2 }}
-                </p>
-            </div>
-            <div class="overflow-x-auto">
-                {% if transactions %}
-                <table class="min-w-full divide-y" style="border-color: var(--border-soft);">
-                    <thead>
-                        <tr class="bg-[var(--surface-raised)]">
-                            <th class="px-10 py-5 text-left text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">{% translate "Date" %}</th>
-                            <th class="px-10 py-5 text-right text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">{% translate "Amount" %}</th>
-                            <th class="px-10 py-5 text-left text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">{% translate "Reference" %}</th>
-                            <th class="px-10 py-5 text-right text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">{% translate "Modify" %}</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y bg-[var(--surface-raised)]" style="border-color: var(--border-soft);">
-                        {% for tx in transactions %}
-                        <tr class="hover:bg-[var(--surface-sunken)] transition-colors">
-                            <td class="px-10 py-6 text-sm text-[var(--text-secondary)] font-bold tabular-nums">{{ tx.date|date:"d M Y" }}</td>
-                            <td class="px-10 py-6 text-right text-sm font-black tabular-nums" style="color: var(--status-good);">+ ৳{{ tx.amount|floatformat:0 }}</td>
-                            <td class="px-10 py-6 text-xs text-[var(--text-muted)] font-bold uppercase tracking-tight">{{ tx.note|default:"-" }}</td>
-                            <td class="px-10 py-6 text-right space-x-2">
-                                <a href="{% url 'income_transaction_edit' tx.pk %}" class="p-2 inline-block transition-colors" style="color: var(--text-muted);" title="{% translate 'Edit' %}">
-                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                                </a>
-                                <form method="post" action="{% url 'income_transaction_delete' tx.pk %}" class="inline-block" onsubmit="return confirm('{% translate "Archive this transaction record permanently?" %}')">
-                                    {% csrf_token %}
-                                    <button type="submit" class="p-2 inline-block bg-transparent border-0 cursor-pointer transition-colors" style="color: var(--text-muted);" title="{% translate 'Delete' %}">
-                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <div class="py-32 text-center flex flex-col items-center">
-                    <div class="h-20 w-20 rounded-full flex items-center justify-center mb-6" style="background: var(--surface-sunken);">
-                        <svg class="h-8 w-8 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    </div>
-                    <p class="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.3em]">
-                        {% if selected_year or selected_month or date_from or date_to %}{% translate "Nothing recorded for this period." %}{% else %}{% translate "No Payout Record Found" %}{% endif %}
-                    </p>
-                    {% if selected_year or selected_month or date_from or date_to %}<a href="{% url 'income_source_detail' source.pk %}" class="mt-3 inline-block text-xs font-black" style="color: var(--accent);">{% translate "Reset Filters" %}</a>{% endif %}
-                </div>
-                {% endif %}
-            </div>
-        </div>
+  <dl class="stat-grid">
+    <div class="stat" data-tone="good">
+      <dt class="stat-label">{% translate "Total earned from this source" %}</dt>
+      <dd class="stat-value is-tone">{{ total_source_income|money }}</dd>
     </div>
-
-    <!-- Right Sidebar Form -->
-    <div class="space-y-10">
-        <div class="bg-[var(--surface-raised)] shadow-sm ring-1 ring-[var(--border-soft)] rounded-[2.5rem] p-10 group overflow-hidden border-2 border-transparent transition-all">
-            <div class="flex items-center gap-4 mb-10">
-                <div class="h-12 w-12 rounded-2xl flex items-center justify-center transition-colors duration-500" style="background: var(--status-good-bg);">
-                    <svg class="h-6 w-6" style="color: var(--status-good);" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
-                </div>
-                <div>
-                    <h3 class="text-xl font-black text-[var(--text-primary)] tracking-tight uppercase leading-tight">{% translate "Log Payout" %}</h3>
-                    <p class="text-[9px] font-black text-[var(--text-muted)] uppercase tracking-widest mt-1">{% translate "Instant Transaction Entry" %}</p>
-                </div>
-            </div>
-
-            <form method="post" class="space-y-8">
-                {% csrf_token %}
-                {% for field in form %}
-                <div>
-                    <label class="block text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.25em] mb-2.5 ml-1">{{ field.label }}</label>
-                    <div class="transition-all duration-300">
-                        {{ field }}
-                    </div>
-                    {% if field.errors %}
-                        <p class="mt-2 text-[10px] font-bold uppercase tracking-widest" style="color: var(--status-critical);">{{ field.errors.0 }}</p>
-                    {% endif %}
-                </div>
-                {% endfor %}
-                <button type="submit" class="w-full font-black text-xs uppercase tracking-[0.25em] py-5 rounded-2xl transition-all shadow-xl transform hover:-translate-y-1 active:translate-y-0" style="background: var(--accent); color: var(--accent-on);">{% translate "Confirm Entry" %}</button>
-            </form>
-        </div>
-
-        <div class="p-8 rounded-[2.5rem] text-center border" style="background: var(--surface-sunken); border-color: var(--border-soft);">
-             <p class="text-[9px] font-black text-[var(--text-muted)] uppercase tracking-[0.3em] leading-relaxed">
-                {% if source.description %}{% blocktranslate with meta=source.description %}Source Meta: {{ meta }}{% endblocktranslate %}{% else %}{% translate "Source Meta: Generic Source" %}{% endif %}
-             </p>
-        </div>
+    <div class="stat">
+      <dt class="stat-label">{% if selected_year or selected_month or date_from or date_to %}{% translate "Earned in selected period" %}{% else %}{% translate "Payouts logged" %}{% endif %}</dt>
+      <dd class="stat-value">{% if selected_year or selected_month or date_from or date_to %}{{ period_income|money }}{% else %}{{ transactions|length }}{% endif %}</dd>
     </div>
+  </dl>
+
+  <div class="detail-grid">
+    <section class="card">
+      <div class="card-header">
+        <h2 class="card-title">{% translate "Payout Timeline" %}</h2>
+        <form method="get" class="flex flex-wrap items-end gap-2" x-data="{ more: {{ date_from|yesno:'true,false' }} }">
+          <select name="year" class="form-input !min-h-[2.375rem] !w-auto !py-1.5 !text-sm" aria-label="{% translate 'Year' %}" onchange="this.form.submit()">
+            <option value="">{% translate "All Years" %}</option>
+            {% for yr in year_options %}<option value="{{ yr }}"{% if selected_year == yr %} selected{% endif %}>{{ yr }}</option>{% endfor %}
+          </select>
+          <select name="month" class="form-input !min-h-[2.375rem] !w-auto !py-1.5 !text-sm" aria-label="{% translate 'Month' %}" onchange="this.form.submit()">
+            <option value="">{% translate "All Months" %}</option>
+            {% for num, mdate in month_choices %}<option value="{{ num }}"{% if selected_month == num %} selected{% endif %}>{{ mdate|date:"F" }}</option>{% endfor %}
+          </select>
+          <div class="flex gap-1">
+            <button type="button" class="icon-btn" @click="more = !more" title="{% translate 'Date Range' %}" aria-label="{% translate 'Date Range' %}">{% include "partials/icon.html" with name="calendar" %}</button>
+            {% if selected_year or selected_month or date_from or date_to %}<a href="{% url 'income_source_detail' source.pk %}" class="btn btn-ghost btn-sm">{% translate "Reset" %}</a>{% endif %}
+            <button type="submit" name="export" value="csv" class="icon-btn" title="{% translate 'Export CSV' %}" aria-label="{% translate 'Export CSV' %}">{% include "partials/icon.html" with name="download" %}</button>
+            <a href="{% url 'income_source_statement' source.pk %}?{{ request.GET.urlencode }}" class="icon-btn" title="{% translate 'Statement' %}" aria-label="{% translate 'Printable statement' %}">{% include "partials/icon.html" with name="printer" %}</a>
+          </div>
+          <div class="flex w-full gap-2" x-show="more" x-cloak>
+            <input id="date-range-filter" type="text" placeholder="{% translate 'Select range...' %}" autocomplete="off" class="form-input !min-h-[2.375rem] !py-1.5 !text-sm">
+            <input id="date-from-hidden" type="hidden" name="date_from" value="{{ date_from }}">
+            <input id="date-to-hidden" type="hidden" name="date_to" value="{{ date_to }}">
+            <button type="submit" class="btn btn-secondary btn-sm">{% translate "Apply" %}</button>
+          </div>
+        </form>
+      </div>
+      <div class="period-summary border-b px-4 py-2.5 sm:px-6" style="border-color: var(--border-soft);">
+        <strong>{% if selected_month %}{{ selected_month_date|date:"F" }} {{ selected_year }}{% elif selected_year %}{{ selected_year }}{% elif date_from or date_to %}{{ date_from }} – {{ date_to }}{% else %}{% translate "All Time" %}{% endif %}</strong>
+        <span>{% translate "Total Earned" %} <strong class="num">{{ period_income|money }}</strong></span>
+      </div>
+      {% if transactions %}
+      <ul class="ledger">
+        {% for tx in transactions %}
+        <li class="ledger-row">
+          <span class="ledger-icon" data-tone="good">{% include "partials/icon.html" with name="arrow-down" %}</span>
+          <div class="ledger-main">
+            <p class="ledger-title">{{ tx.date|date:"j M Y" }}{% if tx.recurring_source_id %} <span class="badge badge-outline ml-1 !text-[0.6875rem]">{% translate "Recurring" %}</span>{% endif %}</p>
+            <p class="ledger-meta">{{ tx.note|default:_("No note") }}</p>
+          </div>
+          <div class="ledger-end">
+            <span class="ledger-amount" data-tone="good">{{ tx.amount|signed_money }}</span>
+            {% url 'income_transaction_edit' tx.pk as edit_url %}{% url 'income_transaction_delete' tx.pk as delete_url %}
+            {% translate "Delete this income record? This cannot be undone." as confirm_text %}
+            {% include "partials/row_menu.html" with edit_url=edit_url delete_url=delete_url confirm=confirm_text up=forloop.last %}
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="empty is-plain">
+        <p class="empty-text">{% if selected_year or selected_month or date_from or date_to %}{% translate "Nothing recorded for this period." %}{% else %}{% translate "No payouts recorded yet." %}{% endif %}</p>
+        {% if selected_year or selected_month or date_from or date_to %}<a href="{% url 'income_source_detail' source.pk %}" class="btn btn-secondary btn-sm">{% translate "Reset Filters" %}</a>{% endif %}
+      </div>
+      {% endif %}
+    </section>
+
+    <aside class="detail-side">
+      <section class="card" x-data="{ open: {{ form.errors|yesno:'true,false' }} }">
+        <button type="button" class="collapse-toggle" @click="open = !open" :aria-expanded="open.toString()">
+          <span class="flex items-center gap-2"><span class="h-5 w-5" style="color: var(--accent);">{% include "partials/icon.html" with name="plus" %}</span>{% translate "Log Payout" %}</span>
+          {% include "partials/icon.html" with name="chevron-down" %}
+        </button>
+        <div class="collapse-body" :class="open && 'is-open'">
+          <div class="card-header hidden lg:flex"><h2 class="card-title">{% translate "Log Payout" %}</h2></div>
+          <form method="post" class="card-body form-stack">
+            {% csrf_token %}
+            {% for field in form %}{% include "partials/field.html" %}{% endfor %}
+            <button type="submit" class="btn btn-primary btn-block">{% translate "Save Payout" %}</button>
+          </form>
+        </div>
+      </section>
+    </aside>
   </div>
 </div>
-
-<style>
-    /* Transaction form styling for source details */
-    .space-y-8 select, .space-y-8 input, .space-y-8 textarea {
-        background-color: var(--surface-sunken) !important;
-        border: 2px solid transparent !important;
-        width: 100% !important;
-        padding: 1.25rem 1.5rem !important;
-        border-radius: 1.25rem !important;
-        font-size: 0.95rem !important;
-        font-weight: 700 !important;
-        color: var(--text-primary) !important;
-        outline: none !important;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    }
-    .space-y-8 select:focus, .space-y-8 input:focus, .space-y-8 textarea:focus {
-        background-color: var(--surface-raised) !important;
-        border-color: var(--status-good) !important;
-    }
-</style>
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const yearFilter = document.getElementById('year-filter');
-    if (yearFilter) {
-      new TomSelect(yearFilter, {
-        create: false,
-        maxItems: 1,
-        allowEmptyOption: true
-      });
-    }
-
-    const dateRangeInput = document.getElementById('date-range-filter');
-    const dateFromHidden = document.getElementById('date-from-hidden');
-    const dateToHidden = document.getElementById('date-to-hidden');
-    if (dateRangeInput && dateFromHidden && dateToHidden) {
-      const initialDates = [];
-      if (dateFromHidden.value) initialDates.push(dateFromHidden.value);
-      if (dateToHidden.value) initialDates.push(dateToHidden.value);
-
-      flatpickr(dateRangeInput, {
-        mode: "range",
-        dateFormat: "Y-m-d",
-        altInput: true,
-        altFormat: "M j, Y",
-        defaultDate: initialDates.length ? initialDates : null,
-        onChange: function(selectedDates) {
-          dateFromHidden.value = selectedDates[0]
-            ? flatpickr.formatDate(selectedDates[0], "Y-m-d")
-            : "";
-          dateToHidden.value = selectedDates[1]
-            ? flatpickr.formatDate(selectedDates[1], "Y-m-d")
-            : "";
-        }
-      });
-    }
+  document.addEventListener('DOMContentLoaded', function () {
+    FT.rangePicker('date-range-filter', 'date-from-hidden', 'date-to-hidden');
   });
 </script>
 {% endblock %}

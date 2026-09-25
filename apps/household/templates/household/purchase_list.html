@@ -4,129 +4,71 @@
 {% block title %}{% translate "Bazar Log" %} | FinTrack{% endblock %}
 
 {% block content %}
-<div class="px-4 sm:px-6 lg:px-8">
-  <div class="sm:flex sm:items-start sm:justify-between gap-4">
-    <div class="sm:flex-auto max-w-2xl">
-      <h1 class="text-2xl font-bold leading-6 text-[var(--text-primary)]">{% translate "Household (Bazar) Log" %}</h1>
-      <p class="mt-2 text-sm text-[var(--text-secondary)]">{% translate "Every month's household purchases, grouped for a quick overview. Open a month to see and add individual purchases." %}</p>
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <a href="{% url 'household_dashboard' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Household" %}</a>
+      <h1 class="page-title">{% translate "Household (Bazar) Log" %}</h1>
+      <p class="page-subtitle">{% translate "Every month's household purchases, grouped for a quick overview. Open a month to see and add individual purchases." %}</p>
     </div>
-    <div class="mt-1 flex flex-col gap-2 sm:mt-0 sm:flex-none sm:flex-row">
-      <a href="{% url 'household_member_list' %}" class="block rounded-md border border-[var(--border)] bg-[var(--surface-raised)] px-3 py-2 text-center text-sm font-semibold text-[var(--text-secondary)] shadow-sm hover:bg-[var(--surface-sunken)]">{% translate "Members" %}</a>
-      <a href="?export=csv" class="inline-flex items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-sm font-semibold hover:brightness-95" style="border-color: var(--accent); color: var(--accent);">
-        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>
-        {% translate "Export CSV" %}
-      </a>
-      <a href="{% url 'household_month_detail' current_year current_month %}" class="block rounded-md bg-[var(--accent)] px-3 py-2 text-center text-sm font-semibold text-[var(--accent-on)] shadow-sm hover:bg-[var(--accent-strong)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]">+ {% translate "Add Purchase" %}</a>
+    <div class="page-actions">
+      <a href="{% url 'household_member_list' %}" class="btn btn-secondary">{% include "partials/icon.html" with name="users" %}{% translate "Members" %}</a>
+      <a href="?export=csv" class="btn btn-secondary">{% include "partials/icon.html" with name="download" %}{% translate "Export CSV" %}</a>
+      <a href="{% url 'household_month_detail' current_year current_month %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add Purchase" %}</a>
     </div>
-  </div>
+  </header>
 
-  <form method="get" class="mt-6 flex items-end justify-end">
-    <div class="w-full sm:w-64">
-      <label for="sort" class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Sort by" %}</label>
-      <select id="sort" name="sort" onchange="this.form.submit()" class="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--surface-raised)] text-sm text-[var(--text-primary)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]">
-        {% for value, label in sort_options %}
-          <option value="{{ value }}"{% if value == sort %} selected{% endif %}>{{ label }}</option>
-        {% endfor %}
-      </select>
+  <dl class="stat-grid">
+    <div class="stat" data-tone="accent">
+      <dt class="stat-label">{% translate "Total Spent" %}</dt>
+      <dd class="stat-value">{{ total_spent|money }}</dd>
     </div>
-  </form>
-
-  <dl class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-    <div class="overflow-hidden rounded-lg bg-[var(--surface-raised)] px-4 py-5 shadow sm:p-6 border-l-4" style="border-left-color: var(--accent);">
-      <dt class="truncate text-sm font-medium text-[var(--text-secondary)]">{% translate "Total Spent" %}</dt>
-      <dd class="mt-1 text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-4xl">৳{{ total_spent|floatformat:2 }}</dd>
+    <div class="stat" data-tone="warn">
+      <dt class="stat-label">{% translate "Outstanding to Members" %}</dt>
+      <dd class="stat-value">{{ outstanding_to_members|money }}</dd>
     </div>
-    <div class="overflow-hidden rounded-lg bg-[var(--surface-raised)] px-4 py-5 shadow sm:p-6 border-l-4" style="border-left-color: var(--status-good);">
-      <dt class="truncate text-sm font-medium text-[var(--text-secondary)]">{% translate "Given Back to Members" %}</dt>
-      <dd class="mt-1 text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-4xl">৳{{ total_settled|floatformat:2 }}</dd>
-    </div>
-    <div class="overflow-hidden rounded-lg bg-[var(--surface-raised)] px-4 py-5 shadow sm:p-6 border-l-4" style="border-left-color: var(--status-warn);">
-      <dt class="truncate text-sm font-medium text-[var(--text-secondary)]">{% translate "Outstanding to Members" %}</dt>
-      <dd class="mt-1 text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-4xl">৳{{ outstanding_to_members|floatformat:2 }}</dd>
+    <div class="stat" data-tone="good">
+      <dt class="stat-label">{% translate "Given Back to Members" %}</dt>
+      <dd class="stat-value">{{ total_settled|money }}</dd>
     </div>
   </dl>
 
   {% if page_obj.object_list %}
-  <div class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-    {% for row in page_obj %}
-    <a href="{% url 'household_month_detail' row.month.year row.month.month %}" class="relative flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-6 shadow-sm hover:shadow-md transition-shadow">
-      <div class="flex items-center justify-between">
-        <h3 class="text-lg font-bold text-[var(--text-primary)]">{{ row.month|date:"F Y" }}</h3>
-        <span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold" style="background: var(--accent-soft); color: var(--accent);">
-          {% blocktranslate count counter=row.count %}{{ counter }} purchase{% plural %}{{ counter }} purchases{% endblocktranslate %}
-        </span>
-      </div>
-
-      <div class="mt-6 flex-1">
-        <dt class="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">{% translate "Total Spent" %}</dt>
-        <dd class="mt-1 text-2xl font-bold text-[var(--text-primary)]">৳{{ row.total|floatformat:2 }}</dd>
-      </div>
-
-      <div class="mt-6 pt-4 border-t" style="border-color: var(--border-soft);">
-        <span class="inline-flex items-center gap-1 text-sm font-bold" style="color: var(--accent);">
-          {% translate "View Purchases" %}
-          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
-        </span>
-      </div>
-    </a>
-    {% endfor %}
-  </div>
-
-  {% if page_obj.paginator.num_pages > 1 %}
-  <div class="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
-    <p class="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
-      {% blocktranslate with current=page_obj.number total=page_obj.paginator.num_pages %}Page {{ current }} of {{ total }}{% endblocktranslate %}
-    </p>
-
-    <div class="flex flex-col items-center gap-3 sm:flex-row">
-      <div class="max-w-full overflow-x-auto">
-        <nav class="inline-flex items-center gap-1 whitespace-nowrap rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] p-1 shadow-sm">
-          {% if page_obj.has_previous %}
-            <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page=1" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{% translate "First" %}</a>
-            <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ page_obj.previous_page_number }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{% translate "Prev" %}</a>
-          {% else %}
-            <span class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-muted)]">{% translate "First" %}</span>
-            <span class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-muted)]">{% translate "Prev" %}</span>
-          {% endif %}
-
-          {% for num in pagination_window %}
-            {% if num is None %}
-              <span class="px-2 py-2 text-sm font-bold text-[var(--text-muted)]">…</span>
-            {% elif num == page_obj.number %}
-              <span class="rounded-lg px-3 py-2 text-sm font-bold" style="background: var(--accent); color: var(--accent-on);">{{ num }}</span>
-            {% else %}
-              <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ num }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{{ num }}</a>
-            {% endif %}
-          {% endfor %}
-
-          {% if page_obj.has_next %}
-            <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ page_obj.next_page_number }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{% translate "Next" %}</a>
-            <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ page_obj.paginator.num_pages }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{% translate "Last" %}</a>
-          {% else %}
-            <span class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-muted)]">{% translate "Next" %}</span>
-            <span class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-muted)]">{% translate "Last" %}</span>
-          {% endif %}
-        </nav>
-      </div>
-
-      <form class="flex flex-col items-start gap-1" x-data="{ pageInput: '{{ page_obj.number }}', maxPage: {{ page_obj.paginator.num_pages }}, showError: false }" @submit.prevent="const p = parseInt(pageInput, 10); showError = !(p >= 1 && p <= maxPage); if (!showError) { window.location.href = '?{{ base_query_string }}{% if base_query_string %}&{% endif %}page=' + p; }">
-        <div class="flex items-center gap-2">
-          <input type="number" x-model="pageInput" inputmode="numeric" min="1" max="{{ page_obj.paginator.num_pages }}" class="w-20 rounded-lg border border-[var(--border)] bg-[var(--surface-raised)] px-2 py-2 text-center text-sm font-semibold text-[var(--text-primary)] focus:border-[var(--accent)] focus:ring-[var(--accent)]">
-          <button type="submit" class="rounded-lg bg-[var(--surface-sunken)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] hover:brightness-95">{% translate "Go" %}</button>
-        </div>
-        <p class="text-xs font-medium text-[var(--text-muted)]">{% blocktranslate with total=page_obj.paginator.num_pages %}Range: 1-{{ total }}{% endblocktranslate %}</p>
-        <p x-show="showError" x-cloak class="text-xs font-semibold" style="color: var(--status-critical);">{% blocktranslate with total=page_obj.paginator.num_pages %}Please enter a page between 1 and {{ total }}.{% endblocktranslate %}</p>
+  <section class="card">
+    <div class="card-header">
+      <h2 class="card-title">{% translate "By month" %}</h2>
+      <form method="get">
+        <label for="sort" class="sr-only">{% translate "Sort by" %}</label>
+        <select id="sort" name="sort" onchange="this.form.submit()" class="form-input !min-h-[2.375rem] !w-auto !py-1.5 !text-sm">
+          {% for value, label in sort_options %}<option value="{{ value }}"{% if value == sort %} selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
       </form>
     </div>
-  </div>
-  {% endif %}
-
+    <ul class="ledger">
+      {% for row in page_obj %}
+      <li>
+        <a href="{% url 'household_month_detail' row.month.year row.month.month %}" class="ledger-row">
+          <span class="ledger-icon" data-tone="gold">{{ row.month|date:"M" }}</span>
+          <div class="ledger-main">
+            <p class="ledger-title">{{ row.month|date:"F Y" }}</p>
+            <p class="ledger-meta">{% blocktranslate count counter=row.count %}{{ counter }} purchase{% plural %}{{ counter }} purchases{% endblocktranslate %}</p>
+          </div>
+          <span class="ledger-end">
+            <span class="ledger-amount">{{ row.total|money }}</span>
+            <span class="h-4 w-4" style="color: var(--text-muted);">{% include "partials/icon.html" with name="chevron-right" %}</span>
+          </span>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% include "partials/pagination.html" %}
   {% else %}
-  <div class="mt-8 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[var(--border)] p-12 text-center bg-[var(--surface-raised)]">
-      <svg class="h-16 w-16 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z" /></svg>
-      <h3 class="mt-4 text-lg font-bold text-[var(--text-primary)]">{% translate "No bazar purchases yet" %}</h3>
-      <p class="mt-2 text-sm text-[var(--text-secondary)] max-w-xs">{% translate "Start logging your daily household shopping to keep track of spending by month." %}</p>
-      <a href="{% url 'household_month_detail' current_year current_month %}" class="mt-6 inline-flex items-center rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-bold text-[var(--accent-on)] shadow-sm hover:bg-[var(--accent-strong)] transition-all">+ {% translate "Add Your First Purchase" %}</a>
+  <div class="empty">
+    <div class="empty-icon">{% include "partials/icon.html" with name="cart" %}</div>
+    <h3 class="empty-title">{% translate "No bazar purchases yet" %}</h3>
+    <p class="empty-text">{% translate "Start logging your daily household shopping to keep track of spending by month." %}</p>
+    <a href="{% url 'household_month_detail' current_year current_month %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add Your First Purchase" %}</a>
   </div>
   {% endif %}
 </div>

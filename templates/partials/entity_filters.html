@@ -1,0 +1,68 @@
+{% load i18n %}
+{% comment %}
+Filter panel for record lists (creditors, debtors, shops, contributors).
+Needs: reset_url, search_placeholder, category_choices, selected_categories, filter_type,
+sort, sort_options, search_query, status. Optional: show_payment (+ payment_status).
+{% endcomment %}
+<form method="get" class="card" x-data="{ open: false, filterType: '{{ filter_type|default:"include" }}', paymentStatus: '{{ payment_status|default:"ALL" }}' }">
+  <input type="hidden" name="filter_type" x-model="filterType">
+  {% if show_payment %}<input type="hidden" name="payment_status" x-model="paymentStatus">{% endif %}
+  <input type="hidden" name="status" value="{{ status }}">
+
+  <div class="flex items-center gap-2 p-3 lg:hidden">
+    <div class="input-icon flex-1">
+      {% include "partials/icon.html" with name="search" %}
+      <input type="search" name="q" value="{{ search_query }}" placeholder="{{ search_placeholder }}" autocomplete="off" class="form-input" aria-label="{% translate 'Search by name' %}" :disabled="open || window.innerWidth >= 1024">
+    </div>
+    <button type="button" class="btn btn-secondary shrink-0" @click="open = !open" :aria-expanded="open.toString()">
+      {% include "partials/icon.html" with name="filter" %}
+      <span class="sr-only sm:not-sr-only">{% translate "Filters" %}</span>
+      {% if selected_categories or show_payment and payment_status != "ALL" %}<span class="h-2 w-2 rounded-full" style="background: var(--accent);"></span>{% endif %}
+    </button>
+  </div>
+
+  <div class="collapse-body border-t border-[var(--border-soft)] lg:border-t-0" :class="open && 'is-open'">
+    <div class="card-body">
+      <div class="form-grid form-grid-4">
+        <div class="field">
+          <label for="q" class="label">{% translate "Search by name" %}</label>
+          <div class="input-icon">
+            {% include "partials/icon.html" with name="search" %}
+            <input type="search" id="q" name="q" value="{{ search_query }}" placeholder="{{ search_placeholder }}" autocomplete="off" class="form-input" :disabled="!open && window.innerWidth < 1024">
+          </div>
+        </div>
+        {% if show_payment %}
+        <div class="field">
+          <span class="label">{% translate "Payment status" %}</span>
+          <div class="seg seg-block">
+            <button type="button" class="seg-item" :class="paymentStatus === 'ALL' && 'is-active'" @click="paymentStatus = 'ALL'">{% translate "All" %}</button>
+            <button type="button" class="seg-item" data-tone="good" :class="paymentStatus === 'PAID' && 'is-active'" @click="paymentStatus = 'PAID'">{% translate "Paid" %}</button>
+            <button type="button" class="seg-item" data-tone="warn" :class="paymentStatus === 'UNPAID' && 'is-active'" @click="paymentStatus = 'UNPAID'">{% translate "Unpaid" %}</button>
+          </div>
+        </div>
+        {% endif %}
+        <div class="field">
+          <label for="category" class="label">{% translate "Categories" %}</label>
+          <select id="category" name="category" multiple class="form-input">
+            {% for value, label in category_choices %}<option value="{{ value }}"{% if value in selected_categories %} selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select>
+          <div class="seg seg-block mt-1">
+            <button type="button" class="seg-item !min-h-[1.875rem] !text-xs" data-tone="accent" :class="filterType === 'include' && 'is-active'" @click="filterType = 'include'">{% translate "Include" %}</button>
+            <button type="button" class="seg-item !min-h-[1.875rem] !text-xs" data-tone="critical" :class="filterType === 'exclude' && 'is-active'" @click="filterType = 'exclude'">{% translate "Exclude" %}</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="sort" class="label">{% translate "Sort by" %}</label>
+          <select id="sort" name="sort" class="form-input">
+            {% for value, label in sort_options %}<option value="{{ value }}"{% if value == sort %} selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="mt-4 flex flex-wrap gap-2">
+        <button type="submit" class="btn btn-primary">{% translate "Apply Filters" %}</button>
+        <a href="{{ reset_url }}" class="btn btn-ghost">{% translate "Reset" %}</a>
+        <button type="submit" name="export" value="csv" class="btn btn-secondary sm:ml-auto">{% include "partials/icon.html" with name="download" %}{% translate "Export CSV" %}</button>
+      </div>
+    </div>
+  </div>
+</form>

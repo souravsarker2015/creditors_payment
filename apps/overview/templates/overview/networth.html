@@ -4,128 +4,94 @@
 {% block title %}{% translate "Net Worth" %} | FinTrack{% endblock %}
 
 {% block content %}
-<div class="px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
-  <div class="sm:flex sm:items-start sm:justify-between gap-4">
-    <div class="sm:flex-auto max-w-2xl">
-      <h1 class="text-2xl font-bold leading-6 text-[var(--text-primary)]">{% translate "Net Worth" %}</h1>
-      <p class="mt-2 text-sm text-[var(--text-secondary)]">{% translate "Your whole financial picture in one place — what you're owed, what you owe, and what you've earned and spent, across every ledger." %}</p>
+<div class="page-medium stack">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "Net Worth" %}</h1>
+      <p class="page-subtitle">{% translate "Your whole financial picture in one place — what you're owed, what you owe, and what you've earned and spent, across every ledger." %}</p>
     </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="min-w-0">
+        <p class="hero-label">{% translate "Overall Net Position" %}</p>
+        <p class="hero-value" style="color: {% if net_position >= 0 %}#8fe0b0{% else %}#f2a597{% endif %};">{{ net_position|money }}</p>
+        <p class="hero-sub">{% translate "Net Balance" %} {{ net_balance|money }} + {% translate "Lifetime Net Cash Flow" %} {{ net_cash_flow|money }}</p>
+      </div>
+      <span class="badge !bg-white/10 {% if net_position >= 0 %}!text-[#8fe0b0]{% else %}!text-[#f2a597]{% endif %}">
+        {% if net_position >= 0 %}{% include "partials/icon.html" with name="arrow-up" %}{% translate "In the green" %}{% else %}{% include "partials/icon.html" with name="arrow-down" %}{% translate "In the red" %}{% endif %}
+      </span>
+    </div>
+  </section>
+
+  <div class="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
+    <section class="card">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">{% translate "Balances (as of today)" %}</h2>
+          <p class="card-subtitle">{% translate "What would settle up if everyone paid what they owe, right now." %}</p>
+        </div>
+      </div>
+      <div class="card-body !pt-2">
+        <dl>
+          <div class="kv"><dt><a href="{% url 'debtor_dashboard' %}" class="kv-label">{% translate "Owed to you (Debtors)" %}</a></dt><dd class="kv-value" data-tone="good">{{ receivables|signed_money }}</dd></div>
+          <div class="kv"><dt><a href="{% url 'dashboard' %}" class="kv-label">{% translate "You owe (Creditors)" %}</a></dt><dd class="kv-value" data-tone="critical">−{{ creditors_payable|money }}</dd></div>
+          <div class="kv"><dt><a href="{% url 'shop_dashboard' %}" class="kv-label">{% translate "You owe (Shop Dues)" %}</a></dt><dd class="kv-value" data-tone="critical">−{{ shops_payable|money }}</dd></div>
+          <div class="kv"><dt><a href="{% url 'household_member_list' %}" class="kv-label">{% translate "You owe (Household Members)" %}</a></dt><dd class="kv-value" data-tone="critical">−{{ household_payable|money }}</dd></div>
+        </dl>
+        <div class="mt-3 space-y-1.5" aria-hidden="true">
+          <div class="meter" data-tone="good"><span style="width: {{ receivables_pct }}%"></span></div>
+          <div class="meter" data-tone="critical"><span style="width: {{ payables_pct }}%"></span></div>
+        </div>
+        <div class="kv kv-total mt-2">
+          <span class="kv-label">{% translate "Net Balance" %}</span>
+          <span class="kv-value" data-tone="{% if net_balance >= 0 %}good{% else %}critical{% endif %}">{{ net_balance|money }}</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">{% translate "Lifetime Cash Flow" %}</h2>
+          <p class="card-subtitle">{% translate "Everything ever earned vs. everything ever spent — all-time totals, not a current balance." %}</p>
+        </div>
+      </div>
+      <div class="card-body !pt-2">
+        <dl>
+          <div class="kv"><dt><a href="{% url 'income_dashboard' %}" class="kv-label">{% translate "Earned (Income)" %}</a></dt><dd class="kv-value" data-tone="good">{{ income_earned|signed_money }}</dd></div>
+          <div class="kv"><dt><a href="{% url 'contributor_dashboard' %}" class="kv-label">{% translate "Received (Contributors)" %}</a></dt><dd class="kv-value" data-tone="good">{{ contributions_received|signed_money }}</dd></div>
+          <div class="kv"><dt><a href="{% url 'expense_dashboard' %}" class="kv-label">{% translate "Spent (Expense Log)" %}</a></dt><dd class="kv-value" data-tone="critical">−{{ expense_spent|money }}</dd></div>
+          <div class="kv"><dt><a href="{% url 'household_dashboard' %}" class="kv-label">{% translate "Spent (Household, by you)" %}</a></dt><dd class="kv-value" data-tone="critical">−{{ household_spent_by_you|money }}</dd></div>
+        </dl>
+        <div class="mt-3 space-y-1.5" aria-hidden="true">
+          <div class="meter" data-tone="good"><span style="width: {{ income_pct }}%"></span></div>
+          <div class="meter" data-tone="critical"><span style="width: {{ expense_pct }}%"></span></div>
+        </div>
+        <div class="kv kv-total mt-2">
+          <span class="kv-label">{% translate "Net Cash Flow" %}</span>
+          <span class="kv-value" data-tone="{% if net_cash_flow >= 0 %}good{% else %}critical{% endif %}">{{ net_cash_flow|money }}</span>
+        </div>
+      </div>
+    </section>
   </div>
 
-  <!-- Hero: overall net position -->
-  <div class="mt-8 rounded-2xl border border-[var(--border)] p-8 text-center shadow-sm" style="background: {% if net_position >= 0 %}var(--status-good-bg){% else %}var(--status-critical-bg){% endif %};">
-    <p class="text-xs font-bold uppercase tracking-[0.2em]" style="color: {% if net_position >= 0 %}var(--status-good){% else %}var(--status-critical){% endif %};">{% translate "Overall Net Position" %}</p>
-    <p class="mt-2 text-5xl font-extrabold tracking-tight" style="color: {% if net_position >= 0 %}var(--status-good){% else %}var(--status-critical){% endif %};">
-      {% if net_position < 0 %}-{% endif %}৳{{ net_position|floatformat:2|cut:"-" }}
-    </p>
-    <p class="mt-3 text-sm" style="color: {% if net_position >= 0 %}var(--status-good){% else %}var(--status-critical){% endif %};">
-      {% blocktranslate with balance=net_balance|floatformat:2 flow=net_cash_flow|floatformat:2 %}Net Balance ৳{{ balance }} + Lifetime Net Cash Flow ৳{{ flow }}{% endblocktranslate %}
-    </p>
-  </div>
-
-  <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2 items-start">
-
-    <!-- Balances -->
-    <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-6 shadow-sm">
-      <h2 class="text-sm font-bold uppercase tracking-wider text-[var(--text-secondary)]">{% translate "Balances (as of today)" %}</h2>
-      <p class="mt-1 text-xs text-[var(--text-muted)]">{% translate "What would settle up if everyone paid what they owe, right now." %}</p>
-
-      <div class="mt-5 space-y-3">
-        <div class="flex items-center justify-between text-sm">
-          <a href="{% url 'debtor_dashboard' %}" class="font-medium text-[var(--text-secondary)] hover:text-[var(--accent)]">{% translate "Owed to you (Debtors)" %}</a>
-          <span class="font-bold" style="color: var(--status-good);">+৳{{ receivables|floatformat:2 }}</span>
-        </div>
-        <div class="flex items-center justify-between text-sm">
-          <a href="{% url 'dashboard' %}" class="font-medium text-[var(--text-secondary)] hover:text-[var(--accent)]">{% translate "You owe (Creditors)" %}</a>
-          <span class="font-bold" style="color: var(--status-critical);">-৳{{ creditors_payable|floatformat:2 }}</span>
-        </div>
-        <div class="flex items-center justify-between text-sm">
-          <a href="{% url 'shop_dashboard' %}" class="font-medium text-[var(--text-secondary)] hover:text-[var(--accent)]">{% translate "You owe (Shop Dues)" %}</a>
-          <span class="font-bold" style="color: var(--status-critical);">-৳{{ shops_payable|floatformat:2 }}</span>
-        </div>
-        <div class="flex items-center justify-between text-sm">
-          <a href="{% url 'household_member_list' %}" class="font-medium text-[var(--text-secondary)] hover:text-[var(--accent)]">{% translate "You owe (Household Members)" %}</a>
-          <span class="font-bold" style="color: var(--status-critical);">-৳{{ household_payable|floatformat:2 }}</span>
-        </div>
-      </div>
-
-      <!-- Receivables vs payables bar -->
-      <div class="mt-5">
-        <div class="flex h-2.5 w-full overflow-hidden rounded-full" style="background: var(--surface-sunken);">
-          <div class="h-full" style="width: {{ receivables_pct }}%; background: var(--status-good);"></div>
-        </div>
-        <div class="mt-1.5 flex h-2.5 w-full overflow-hidden rounded-full" style="background: var(--surface-sunken);">
-          <div class="h-full" style="width: {{ payables_pct }}%; background: var(--status-critical);"></div>
-        </div>
-      </div>
-
-      <div class="mt-5 flex items-center justify-between border-t pt-4" style="border-color: var(--border-soft);">
-        <span class="text-sm font-bold uppercase tracking-wider text-[var(--text-secondary)]">{% translate "Net Balance" %}</span>
-        <span class="text-xl font-extrabold" style="color: {% if net_balance >= 0 %}var(--status-good){% else %}var(--status-critical){% endif %};">
-          {% if net_balance < 0 %}-{% endif %}৳{{ net_balance|floatformat:2|cut:"-" }}
-        </span>
-      </div>
-    </div>
-
-    <!-- Lifetime cash flow -->
-    <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-6 shadow-sm">
-      <h2 class="text-sm font-bold uppercase tracking-wider text-[var(--text-secondary)]">{% translate "Lifetime Cash Flow" %}</h2>
-      <p class="mt-1 text-xs text-[var(--text-muted)]">{% translate "Everything ever earned vs. everything ever spent — all-time totals, not a current balance." %}</p>
-
-      <div class="mt-5 space-y-3">
-        <div class="flex items-center justify-between text-sm">
-          <a href="{% url 'income_dashboard' %}" class="font-medium text-[var(--text-secondary)] hover:text-[var(--accent)]">{% translate "Earned (Income)" %}</a>
-          <span class="font-bold" style="color: var(--status-good);">+৳{{ income_earned|floatformat:2 }}</span>
-        </div>
-        <div class="flex items-center justify-between text-sm">
-          <a href="{% url 'contributor_dashboard' %}" class="font-medium text-[var(--text-secondary)] hover:text-[var(--accent)]">{% translate "Received (Contributors)" %}</a>
-          <span class="font-bold" style="color: var(--status-good);">+৳{{ contributions_received|floatformat:2 }}</span>
-        </div>
-        <div class="flex items-center justify-between text-sm">
-          <a href="{% url 'expense_dashboard' %}" class="font-medium text-[var(--text-secondary)] hover:text-[var(--accent)]">{% translate "Spent (Expense Log)" %}</a>
-          <span class="font-bold" style="color: var(--status-critical);">-৳{{ expense_spent|floatformat:2 }}</span>
-        </div>
-        <div class="flex items-center justify-between text-sm">
-          <a href="{% url 'household_dashboard' %}" class="font-medium text-[var(--text-secondary)] hover:text-[var(--accent)]">{% translate "Spent (Household, by you)" %}</a>
-          <span class="font-bold" style="color: var(--status-critical);">-৳{{ household_spent_by_you|floatformat:2 }}</span>
-        </div>
-      </div>
-
-      <!-- Income vs expense bar -->
-      <div class="mt-5">
-        <div class="flex h-2.5 w-full overflow-hidden rounded-full" style="background: var(--surface-sunken);">
-          <div class="h-full" style="width: {{ income_pct }}%; background: var(--status-good);"></div>
-        </div>
-        <div class="mt-1.5 flex h-2.5 w-full overflow-hidden rounded-full" style="background: var(--surface-sunken);">
-          <div class="h-full" style="width: {{ expense_pct }}%; background: var(--status-critical);"></div>
-        </div>
-      </div>
-
-      <div class="mt-5 flex items-center justify-between border-t pt-4" style="border-color: var(--border-soft);">
-        <span class="text-sm font-bold uppercase tracking-wider text-[var(--text-secondary)]">{% translate "Net Cash Flow" %}</span>
-        <span class="text-xl font-extrabold" style="color: {% if net_cash_flow >= 0 %}var(--status-good){% else %}var(--status-critical){% endif %};">
-          {% if net_cash_flow < 0 %}-{% endif %}৳{{ net_cash_flow|floatformat:2|cut:"-" }}
-        </span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Methodology note -->
-  <div class="mt-6 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-sunken)] p-4">
-    <p class="text-xs leading-relaxed text-[var(--text-muted)]">
-      <span class="font-bold text-[var(--text-secondary)]">{% translate "How this is calculated:" %}</span>
+  <div class="callout">
+    {% include "partials/icon.html" with name="alert" %}
+    <p class="text-xs leading-relaxed" style="color: var(--text-secondary);">
+      <strong style="color: var(--text-primary);">{% translate "How this is calculated:" %}</strong>
       {% translate "Household purchases fronted by a member are counted once, as that member's balance — not counted again as spending, to avoid double-counting the same taka. Interest that has accrued but not yet been posted to a creditor's balance is not included here; check that creditor's page for the estimate." %}
     </p>
   </div>
 
-  <!-- Quick links -->
-  <div class="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-    <a href="{% url 'dashboard' %}" class="rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] px-3 py-3 text-center text-xs font-semibold text-[var(--text-secondary)] shadow-sm hover:bg-[var(--surface-sunken)] transition-all">{% translate "Creditors" %}</a>
-    <a href="{% url 'debtor_dashboard' %}" class="rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] px-3 py-3 text-center text-xs font-semibold text-[var(--text-secondary)] shadow-sm hover:bg-[var(--surface-sunken)] transition-all">{% translate "Debtors" %}</a>
-    <a href="{% url 'income_dashboard' %}" class="rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] px-3 py-3 text-center text-xs font-semibold text-[var(--text-secondary)] shadow-sm hover:bg-[var(--surface-sunken)] transition-all">{% translate "Income" %}</a>
-    <a href="{% url 'expense_dashboard' %}" class="rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] px-3 py-3 text-center text-xs font-semibold text-[var(--text-secondary)] shadow-sm hover:bg-[var(--surface-sunken)] transition-all">{% translate "Expense" %}</a>
-    <a href="{% url 'household_dashboard' %}" class="rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] px-3 py-3 text-center text-xs font-semibold text-[var(--text-secondary)] shadow-sm hover:bg-[var(--surface-sunken)] transition-all">{% translate "Household" %}</a>
-    <a href="{% url 'shop_dashboard' %}" class="rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] px-3 py-3 text-center text-xs font-semibold text-[var(--text-secondary)] shadow-sm hover:bg-[var(--surface-sunken)] transition-all">{% translate "Shop Dues" %}</a>
-  </div>
+  <nav class="tile-grid" aria-label="{% translate 'Ledgers' %}">
+    <a href="{% url 'dashboard' %}" class="tile">{% include "partials/icon.html" with name="arrow-down" %}<span>{% translate "Creditors" %}</span></a>
+    <a href="{% url 'debtor_dashboard' %}" class="tile">{% include "partials/icon.html" with name="arrow-up" %}<span>{% translate "Debtors" %}</span></a>
+    <a href="{% url 'shop_dashboard' %}" class="tile">{% include "partials/icon.html" with name="cart" %}<span>{% translate "Shop Dues" %}</span></a>
+    <a href="{% url 'income_dashboard' %}" class="tile">{% include "partials/icon.html" with name="wallet" %}<span>{% translate "Income" %}</span></a>
+    <a href="{% url 'expense_dashboard' %}" class="tile">{% include "partials/icon.html" with name="list" %}<span>{% translate "Expense" %}</span></a>
+    <a href="{% url 'household_dashboard' %}" class="tile">{% include "partials/icon.html" with name="tag" %}<span>{% translate "Household" %}</span></a>
+  </nav>
 </div>
 {% endblock %}

@@ -1,5 +1,6 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
+from apps.core.status import active_or_current
 from .models import HouseholdCategory, HouseholdMember, Purchase, Settlement
 
 
@@ -60,8 +61,12 @@ class PurchaseForm(forms.ModelForm):
         self.fields["buyer"].required = False
         self.fields["buyer"].empty_label = _("No one in particular")
         if user:
-            self.fields["category"].queryset = HouseholdCategory.objects.filter(user=user)
-            self.fields["buyer"].queryset = HouseholdMember.objects.filter(user=user)
+            self.fields["category"].queryset = active_or_current(
+                HouseholdCategory.objects.filter(user=user), self.instance.category_id
+            )
+            self.fields["buyer"].queryset = active_or_current(
+                HouseholdMember.objects.filter(user=user), self.instance.buyer_id
+            )
 
 
 class SettlementForm(forms.ModelForm):

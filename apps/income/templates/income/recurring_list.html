@@ -4,69 +4,60 @@
 {% block title %}{% translate "Recurring Income" %} | FinTrack{% endblock %}
 
 {% block content %}
-<div class="px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
-  <div class="sm:flex sm:items-center mb-10">
-    <div class="sm:flex-auto">
-      <h1 class="text-2xl font-black leading-6 text-[var(--text-primary)] uppercase tracking-tight">{% translate "Recurring Income" %}</h1>
-      <p class="mt-2 text-sm text-[var(--text-secondary)]">{% translate "Schedules that auto-create an income entry on a cadence — salary, rent received, or any repeating payout — so you don't have to log it by hand each time." %}</p>
+<div class="page-medium stack">
+  <header class="page-header !mb-0">
+    <div>
+      <a href="{% url 'income_dashboard' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Income" %}</a>
+      <h1 class="page-title">{% translate "Recurring Income" %}</h1>
+      <p class="page-subtitle">{% translate "Schedules that auto-create an income entry on a cadence — salary, rent received, or any repeating payout — so you don't have to log it by hand each time." %}</p>
     </div>
-    <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-      <a href="{% url 'recurring_income_create' %}" class="block rounded-xl bg-[var(--accent)] px-4 py-3 text-center text-sm font-black text-[var(--accent-on)] shadow-xl hover:bg-[var(--accent-strong)] transition-all">+ {% translate "New Schedule" %}</a>
+    <div class="page-actions">
+      <a href="{% url 'recurring_income_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "New Schedule" %}</a>
     </div>
-  </div>
+  </header>
 
   {% if schedules %}
-  <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+  <div class="card-grid">
     {% for s in schedules %}
-    <div class="relative flex flex-col overflow-hidden rounded-[2rem] bg-[var(--surface-raised)] p-7 shadow-sm ring-1 ring-[var(--border-soft)] {% if not s.is_active %}opacity-60{% endif %}">
-      <div class="flex items-start justify-between mb-4">
-        <div class="h-10 w-10 rounded-xl flex items-center justify-center font-black text-lg" style="background: var(--accent-soft); color: var(--accent);">
-          {{ s.source.name|first|upper }}
+    <article class="card entity {% if not s.is_active %}is-inactive{% endif %}">
+      <div class="entity-head">
+        <span class="avatar" data-tone="good">{% include "partials/icon.html" with name="repeat" %}</span>
+        <div class="min-w-0 flex-1">
+          <h3 class="entity-name">{{ s.source.name }}</h3>
+          <p class="entity-meta">{{ s.get_frequency_display }}{% if s.note %} · {{ s.note }}{% endif %}</p>
         </div>
-        {% if s.is_active %}
-          <span class="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full" style="background: var(--status-good-bg); color: var(--status-good);">{% translate "Active" %}</span>
-        {% else %}
-          <span class="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full" style="background: var(--surface-sunken); color: var(--text-muted);">{% translate "Paused" %}</span>
-        {% endif %}
+        {% if s.is_active %}<span class="badge badge-dot" data-tone="good">{% translate "Active" %}</span>{% else %}<span class="badge badge-dot" data-tone="muted">{% translate "Paused" %}</span>{% endif %}
       </div>
-
-      <h3 class="text-lg font-black text-[var(--text-primary)] tracking-tight">{{ s.source.name }}</h3>
-      <p class="mt-1 text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest">{{ s.get_frequency_display }}</p>
-
-      <div class="mt-5 flex items-center justify-between text-sm">
-        <span class="font-bold text-[var(--text-secondary)]">{% translate "Amount" %}</span>
-        <span class="font-black text-[var(--text-primary)] tabular-nums" style="color: var(--status-good);">+৳{{ s.amount|floatformat:2 }}</span>
-      </div>
-      <div class="mt-2 flex items-center justify-between text-sm">
-        <span class="font-bold text-[var(--text-secondary)]">{% translate "Next Occurrence" %}</span>
-        <span class="font-black text-[var(--text-primary)] tabular-nums">{{ s.next_effective_date|date:"d M, Y" }}</span>
-      </div>
-      {% if s.skip_weekend and s.next_effective_date != s.next_run_date %}
-      <p class="mt-1.5 text-right text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">{% blocktranslate with scheduled=s.next_run_date|date:"d M" %}Shifted from {{ scheduled }} (weekend){% endblocktranslate %}</p>
+      <dl class="mini-stats">
+        <div><dt>{% translate "Amount" %}</dt><dd style="color: var(--status-good);">{{ s.amount|money }}</dd></div>
+        <div class="text-right">
+          <dt>{% translate "Next Occurrence" %}</dt>
+          <dd>{% if s.is_active %}{{ s.next_effective_date|date:"j M Y" }}{% else %}—{% endif %}</dd>
+        </div>
+      </dl>
+      {% if s.is_active and s.skip_weekend and s.next_effective_date != s.next_run_date %}
+      <p class="help -mt-2 text-right">{% blocktranslate with scheduled=s.next_run_date|date:"j M" %}Shifted from {{ scheduled }} (weekend){% endblocktranslate %}</p>
       {% endif %}
-
-      <div class="mt-6 flex items-center gap-2 border-t pt-5" style="border-color: var(--border-soft);">
-        <a href="{% url 'recurring_income_edit' s.pk %}" class="flex-1 text-center rounded-lg px-3 py-2 text-xs font-black uppercase tracking-widest hover:bg-[var(--surface-sunken)] transition-all" style="color: var(--text-secondary);">{% translate "Edit" %}</a>
-        <form method="post" action="{% url 'recurring_income_toggle' s.pk %}" class="flex-1">
+      <div class="entity-foot">
+        <a href="{% url 'recurring_income_edit' s.pk %}" class="btn btn-secondary btn-sm">{% include "partials/icon.html" with name="edit" %}{% translate "Edit" %}</a>
+        <form method="post" action="{% url 'recurring_income_toggle' s.pk %}">
           {% csrf_token %}
-          <button type="submit" class="w-full text-center rounded-lg px-3 py-2 text-xs font-black uppercase tracking-widest hover:bg-[var(--surface-sunken)] bg-transparent border-0 cursor-pointer transition-all" style="color: var(--text-secondary);">{% if s.is_active %}{% translate "Pause" %}{% else %}{% translate "Resume" %}{% endif %}</button>
+          <button type="submit" class="btn {% if s.is_active %}btn-ghost{% else %}btn-soft{% endif %} btn-sm">{% if s.is_active %}{% include "partials/icon.html" with name="pause" %}{% translate "Pause" %}{% else %}{% include "partials/icon.html" with name="play" %}{% translate "Resume" %}{% endif %}</button>
         </form>
-        <form method="post" action="{% url 'recurring_income_delete' s.pk %}" class="flex-1" onsubmit="return confirm('{% translate "Delete this recurring schedule? Past entries it already created are kept." %}')">
+        <form method="post" action="{% url 'recurring_income_delete' s.pk %}" data-confirm="{% translate 'Delete this recurring schedule? Past entries it already created are kept.' %}">
           {% csrf_token %}
-          <button type="submit" class="w-full text-center rounded-lg px-3 py-2 text-xs font-black uppercase tracking-widest hover:bg-[var(--status-critical-bg)] bg-transparent border-0 cursor-pointer transition-all" style="color: var(--status-critical);">{% translate "Delete" %}</button>
+          <button type="submit" class="icon-btn hover:!text-[var(--status-critical)]" aria-label="{% translate 'Delete' %}" title="{% translate 'Delete' %}">{% include "partials/icon.html" with name="trash" %}</button>
         </form>
       </div>
-    </div>
+    </article>
     {% endfor %}
   </div>
   {% else %}
-  <div class="flex flex-col items-center justify-center rounded-[3rem] border-2 border-dashed border-[var(--border)] p-20 text-center bg-[var(--surface-raised)] shadow-sm ring-1 ring-[var(--border-soft)]">
-      <div class="h-20 w-20 rounded-full flex items-center justify-center mb-8 shadow-inner" style="background: var(--surface-sunken);">
-        <svg class="h-10 w-10 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
-      </div>
-      <h3 class="text-xl font-black text-[var(--text-primary)] uppercase tracking-tight">{% translate "No recurring income yet" %}</h3>
-      <p class="mt-3 text-sm text-[var(--text-muted)] font-medium max-w-xs mx-auto">{% translate "Set up a schedule for salary or any repeating payout and it'll be logged automatically from then on." %}</p>
-      <a href="{% url 'recurring_income_create' %}" class="mt-10 inline-flex items-center rounded-xl bg-[var(--accent)] px-8 py-4 text-xs font-black uppercase tracking-widest text-[var(--accent-on)] shadow-xl hover:bg-[var(--accent-strong)] transition-all">+ {% translate "New Schedule" %}</a>
+  <div class="empty">
+    <div class="empty-icon">{% include "partials/icon.html" with name="repeat" %}</div>
+    <h3 class="empty-title">{% translate "No recurring income yet" %}</h3>
+    <p class="empty-text">{% translate "Set up a schedule for salary or any repeating payout and it'll be logged automatically from then on." %}</p>
+    <a href="{% url 'recurring_income_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "New Schedule" %}</a>
   </div>
   {% endif %}
 </div>

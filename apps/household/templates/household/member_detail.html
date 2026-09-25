@@ -4,256 +4,130 @@
 {% block title %}{{ member.name }} | FinTrack{% endblock %}
 
 {% block content %}
-<div class="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-  <!-- Header -->
-  <div class="md:flex md:items-end md:justify-between border-b pb-8" style="border-color: var(--border);">
-    <div class="min-w-0 flex-1">
-      <div class="flex items-center gap-x-3">
-          <div class="h-12 w-12 rounded-xl bg-[var(--accent)] flex items-center justify-center text-[var(--accent-on)] font-extrabold text-xl">
-              {{ member.name|first|upper }}
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <a href="{% url 'household_member_list' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Members" %}</a>
+      <div class="flex items-start gap-3">
+        <span class="avatar avatar-lg">{{ member.name|first }}</span>
+        <div class="min-w-0">
+          <h1 class="page-title">{{ member.name }}</h1>
+          <div class="mt-1 flex flex-wrap gap-1.5">
+            {% if balance_due <= 0 %}<span class="badge badge-dot" data-tone="good">{% translate "Settled Up" %}</span>{% endif %}
+            {% if not member.is_active %}<span class="badge" data-tone="muted">{% translate "Inactive" %}</span>{% endif %}
           </div>
-          <h1 class="text-3xl font-extrabold leading-7 text-[var(--text-primary)] sm:truncate sm:text-4xl sm:tracking-tight">{{ member.name }}</h1>
-      </div>
-      <div class="mt-4 flex flex-col sm:mt-2 sm:flex-row sm:flex-wrap sm:space-x-6">
-        <div class="mt-2 flex items-center text-sm text-[var(--text-secondary)] font-medium">
-          <svg class="mr-1.5 h-5 w-5 flex-shrink-0 text-[var(--text-muted)]" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-          </svg>
-          {% if member.phone %}{{ member.phone }}{% else %}{% translate "No phone" %}{% endif %}
-        </div>
-        <div class="mt-2 flex items-center text-sm text-[var(--text-secondary)]">
-          <svg class="mr-1.5 h-5 w-5 flex-shrink-0 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-          </svg>
-          {% if member.note %}{{ member.note }}{% else %}{% translate "No notes" %}{% endif %}
         </div>
       </div>
+      <div class="meta-list">
+        {% if member.phone %}<a href="tel:{{ member.phone }}" class="meta-item">{% include "partials/icon.html" with name="phone" %}{{ member.phone }}</a>{% endif %}
+        {% if member.note %}<span class="meta-item">{% include "partials/icon.html" with name="note" %}<span class="truncate">{{ member.note }}</span></span>{% endif %}
+      </div>
     </div>
-    <div class="mt-5 flex lg:ml-4 lg:mt-0 gap-3">
-      <a href="{% url 'household_member_edit' member.pk %}" class="inline-flex items-center rounded-md bg-[var(--surface-raised)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] shadow-sm ring-1 ring-inset ring-[var(--border)] hover:bg-[var(--surface-sunken)] transition-all">{% translate "Edit Profile" %}</a>
-      <a href="{% url 'household_member_list' %}" class="inline-flex items-center rounded-md bg-[var(--surface-sunken)] px-3 py-2 text-sm font-bold text-[var(--text-secondary)] hover:brightness-95 transition-all">{% translate "Back to List" %}</a>
+    <div class="page-actions">
+      <a href="{% url 'household_member_edit' member.pk %}" class="btn btn-secondary">{% include "partials/icon.html" with name="edit" %}{% translate "Edit Profile" %}</a>
+      {% url 'household_member_toggle_active' member.pk as toggle_url %}
+      {% include "partials/toggle_active_item.html" with url=toggle_url active=member.is_active as_button=True %}
     </div>
-  </div>
+  </header>
 
-  <!-- Summary Stats -->
-  <dl class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-3">
-    <div class="bg-[var(--surface-raised)] px-6 py-5 shadow-sm ring-1 ring-[var(--border)] rounded-2xl">
-      <dt class="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider">{% translate "Total Fronted" %}</dt>
-      <dd class="mt-2 text-3xl font-extrabold text-[var(--text-primary)]">৳{{ spent|floatformat:2 }}</dd>
+  {% if not member.is_active %}
+  <div class="callout" data-tone="info">
+    {% include "partials/icon.html" with name="archive" %}
+    <p>{% translate "This member is inactive — hidden from your member list and the purchase form. Their balance still counts in every total." %}</p>
+  </div>
+  {% endif %}
+
+  <dl class="stat-grid">
+    <div class="stat" data-tone="{% if balance_due > 0 %}critical{% else %}good{% endif %}">
+      <dt class="stat-label">{% translate "Balance Due" %}</dt>
+      <dd class="stat-value is-tone">{{ balance_due|money }}</dd>
     </div>
-    <div class="bg-[var(--surface-raised)] px-6 py-5 shadow-sm ring-1 ring-[var(--border)] rounded-2xl border-l-4" style="border-left-color: var(--status-good);">
-      <dt class="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider">{% translate "Given Back" %}</dt>
-      <dd class="mt-2 text-3xl font-extrabold" style="color: var(--status-good);">৳{{ settled|floatformat:2 }}</dd>
+    <div class="stat">
+      <dt class="stat-label">{% translate "Total Fronted" %}</dt>
+      <dd class="stat-value">{{ spent|money }}</dd>
     </div>
-    <div class="bg-[var(--surface-raised)] px-6 py-5 shadow-sm ring-1 ring-[var(--border)] rounded-2xl border-l-4" style="border-left-color: var(--status-critical);">
-      <dt class="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider">{% translate "Balance Due" %}</dt>
-      <dd class="mt-2 text-3xl font-extrabold" style="color: {% if balance_due > 0 %}var(--status-critical){% else %}var(--status-good){% endif %};">৳{{ balance_due|floatformat:2 }}</dd>
+    <div class="stat" data-tone="good">
+      <dt class="stat-label">{% translate "Given Back" %}</dt>
+      <dd class="stat-value">{{ settled|money }}</dd>
     </div>
   </dl>
 
-  <div class="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-3 items-start">
-    <!-- Activity List (Take 2/3 space) -->
-    <div class="lg:col-span-2">
-        <div class="overflow-hidden bg-[var(--surface-raised)] shadow-sm ring-1 ring-[var(--border)] rounded-2xl">
-            <div class="border-b px-6 py-5" style="border-color: var(--border-soft);">
-                <h3 class="text-base font-bold text-[var(--text-primary)] uppercase tracking-wider">{% translate "Activity History" %}</h3>
-                <form method="get" class="mt-4 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end">
-                    <div>
-                        <label for="year-filter" class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Year" %}</label>
-                        <select id="year-filter" name="year" class="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--surface-raised)] text-sm text-[var(--text-primary)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]">
-                            <option value="">{% translate "All Years" %}</option>
-                            {% for yr in year_options %}<option value="{{ yr }}"{% if selected_year == yr %} selected{% endif %}>{{ yr }}</option>{% endfor %}
-                        </select>
-                    </div>
-                    <div>
-                        <label for="month-filter" class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Month" %}</label>
-                        <select id="month-filter" name="month" class="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--surface-raised)] text-sm text-[var(--text-primary)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]">
-                            <option value="">{% translate "All Months" %}</option>
-                            {% for num, mdate in month_choices %}<option value="{{ num }}"{% if selected_month == num %} selected{% endif %}>{{ mdate|date:"F" }}</option>{% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-span-2 flex flex-wrap gap-2 sm:col-span-1">
-                        <button type="submit" class="w-full rounded-md bg-[var(--surface-sunken)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] hover:brightness-95 sm:w-auto">{% translate "Apply" %}</button>
-                        {% if selected_year or selected_month %}<a href="{% url 'household_member_detail' member.pk %}" class="w-full rounded-md border border-[var(--border)] px-3 py-2 text-center text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)] sm:w-auto">{% translate "Reset" %}</a>{% endif %}
-                        <button type="submit" name="export" value="csv" class="w-full inline-flex items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-sm font-semibold hover:brightness-95 sm:w-auto" style="border-color: var(--accent); color: var(--accent);">
-                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>
-                            {% translate "Export CSV" %}
-                        </button>
-                        <a href="{% url 'household_member_statement' member.pk %}?{{ request.GET.urlencode }}" class="w-full inline-flex items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-sm font-semibold hover:brightness-95 sm:w-auto" style="border-color: var(--border); color: var(--text-secondary);">
-                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z" /></svg>
-                            {% translate "Statement" %}
-                        </a>
-                    </div>
-                </form>
-                <p class="mt-3 text-sm text-[var(--text-secondary)]">
-                    <span class="font-bold text-[var(--text-primary)]">{% if selected_month %}{{ selected_month_date|date:"F" }} {{ selected_year }}{% elif selected_year %}{{ selected_year }}{% else %}{% translate "All Time" %}{% endif %}</span>
-                    — {% translate "Fronted" %} ৳{{ period_fronted|floatformat:2 }} · {% translate "Given Back" %} ৳{{ period_given_back|floatformat:2 }}
-                </p>
-            </div>
-            <div class="overflow-x-auto">
-                {% if activity %}
-                <table class="min-w-full divide-y" style="border-color: var(--border);">
-                    <thead style="background: var(--surface-sunken);">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest">{% translate "Date" %}</th>
-                            <th class="px-6 py-3 text-left text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest">{% translate "Type" %}</th>
-                            <th class="px-6 py-3 text-right text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest">{% translate "Amount" %}</th>
-                            <th class="px-6 py-3 text-left text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest">{% translate "Note" %}</th>
-                            <th class="px-6 py-3 text-right text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest">{% translate "Actions" %}</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y bg-[var(--surface-raised)]" style="border-color: var(--border-soft);">
-                        {% for item in activity %}
-                        <tr class="hover:bg-[var(--surface-sunken)] transition-colors">
-                            <td class="px-6 py-4 text-sm text-[var(--text-secondary)] font-medium whitespace-nowrap">{{ item.date|date:"d M Y" }}</td>
-                            <td class="px-6 py-4">
-                                {% if item.kind == "purchase" %}
-                                <span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-bold" style="background: var(--status-warn-bg); color: var(--status-warn);">{% translate "Fronted (Bazar)" %}</span>
-                                {% else %}
-                                <span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-bold" style="background: var(--status-good-bg); color: var(--status-good);">{% translate "Given Back" %}</span>
-                                {% endif %}
-                            </td>
-                            <td class="px-6 py-4 text-right text-sm font-bold text-[var(--text-primary)] font-mono whitespace-nowrap">৳{{ item.amount|floatformat:0 }}</td>
-                            <td class="px-6 py-4 text-sm text-[var(--text-muted)] italic font-light">
-                                {% if item.kind == "purchase" %}
-                                    {{ item.category.name|default:"" }}{% if item.category and item.description %} — {% endif %}{{ item.description|default:"" }}{% if not item.category and not item.description %}-{% endif %}
-                                {% else %}
-                                    {{ item.note|default:"-" }}
-                                {% endif %}
-                            </td>
-                            <td class="px-6 py-4 text-right text-sm font-medium space-x-2 whitespace-nowrap">
-                                {% if item.kind == "purchase" %}
-                                <a href="{% url 'household_purchase_edit' item.pk %}" class="inline-flex items-center" style="color: var(--accent);" title="{% translate 'Edit' %}">
-                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                                </a>
-                                <form method="post" action="{% url 'household_purchase_delete' item.pk %}" class="inline-block" onsubmit="return confirm('{% translate "Delete this purchase?" %}')">
-                                    {% csrf_token %}
-                                    <button type="submit" class="inline-flex items-center bg-transparent border-0 p-0 cursor-pointer" style="color: var(--status-critical);" title="{% translate 'Delete' %}">
-                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                    </button>
-                                </form>
-                                {% else %}
-                                <a href="{% url 'household_settlement_edit' item.pk %}" class="inline-flex items-center" style="color: var(--accent);" title="{% translate 'Edit' %}">
-                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                                </a>
-                                <form method="post" action="{% url 'household_settlement_delete' item.pk %}" class="inline-block" onsubmit="return confirm('{% translate "Delete this settlement?" %}')">
-                                    {% csrf_token %}
-                                    <button type="submit" class="inline-flex items-center bg-transparent border-0 p-0 cursor-pointer" style="color: var(--status-critical);" title="{% translate 'Delete' %}">
-                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                    </button>
-                                </form>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <div class="py-20 text-center">
-                    <p class="text-[var(--text-muted)] text-sm font-medium">
-                        {% if selected_year or selected_month %}{% translate "Nothing recorded for this period." %}{% else %}{% translate "No activity for this member yet." %}{% endif %}
-                    </p>
-                    {% if selected_year or selected_month %}<a href="{% url 'household_member_detail' member.pk %}" class="mt-3 inline-block text-sm font-bold" style="color: var(--accent);">{% translate "Reset Filters" %}</a>{% endif %}
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
+  <div class="detail-grid">
+    <section class="card">
+      <div class="card-header">
+        <h2 class="card-title">{% translate "Activity History" %}</h2>
+        {% url 'household_member_detail' member.pk as reset_url %}{% url 'household_member_statement' member.pk as statement_url %}
+        {% include "partials/period_filter.html" %}
+      </div>
+      <div class="period-summary border-b px-4 py-2.5 sm:px-6" style="border-color: var(--border-soft);">
+        <strong>{% if selected_month %}{{ selected_month_date|date:"F" }} {{ selected_year }}{% elif selected_year %}{{ selected_year }}{% else %}{% translate "All Time" %}{% endif %}</strong>
+        <span>{% translate "Fronted" %} <strong class="num">{{ period_fronted|money }}</strong></span>
+        <span>{% translate "Given Back" %} <strong class="num">{{ period_given_back|money }}</strong></span>
+      </div>
+      {% if activity %}
+      <ul class="ledger">
+        {% for item in activity %}
+        <li class="ledger-row">
+          {% if item.kind == "purchase" %}
+          <span class="ledger-icon" data-tone="warn">{% include "partials/icon.html" with name="cart" %}</span>
+          <div class="ledger-main">
+            <p class="ledger-title">{% translate "Fronted (Bazar)" %}{% if item.category %} · {{ item.category.name }}{% endif %}</p>
+            <p class="ledger-meta">{{ item.date|date:"j M Y" }}{% if item.description %} · {{ item.description }}{% endif %}</p>
+          </div>
+          <div class="ledger-end">
+            <span class="ledger-amount" data-tone="warn">{{ item.amount|money }}</span>
+            {% url 'household_purchase_edit' item.pk as edit_url %}{% url 'household_purchase_delete' item.pk as delete_url %}
+            {% translate "Delete this purchase?" as confirm_text %}
+            {% include "partials/row_menu.html" with edit_url=edit_url delete_url=delete_url confirm=confirm_text up=forloop.last %}
+          </div>
+          {% else %}
+          <span class="ledger-icon" data-tone="good">{% include "partials/icon.html" with name="check" %}</span>
+          <div class="ledger-main">
+            <p class="ledger-title">{% translate "Given Back" %}</p>
+            <p class="ledger-meta">{{ item.date|date:"j M Y" }}{% if item.note %} · {{ item.note }}{% endif %}</p>
+          </div>
+          <div class="ledger-end">
+            <span class="ledger-amount" data-tone="good">{{ item.amount|money }}</span>
+            {% url 'household_settlement_edit' item.pk as edit_url %}{% url 'household_settlement_delete' item.pk as delete_url %}
+            {% translate "Delete this settlement?" as confirm_text %}
+            {% include "partials/row_menu.html" with edit_url=edit_url delete_url=delete_url confirm=confirm_text up=forloop.last %}
+          </div>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="empty is-plain">
+        <p class="empty-text">{% if selected_year or selected_month %}{% translate "Nothing recorded for this period." %}{% else %}{% translate "No activity for this member yet." %}{% endif %}</p>
+        {% if selected_year or selected_month %}<a href="{% url 'household_member_detail' member.pk %}" class="btn btn-secondary btn-sm">{% translate "Reset Filters" %}</a>{% endif %}
+      </div>
+      {% endif %}
+    </section>
 
-    <!-- Action Center (1/3 space) -->
-    <div class="space-y-8">
-        <!-- Visual Stats -->
-        <div class="bg-[var(--surface-raised)] shadow-sm ring-1 ring-[var(--border)] rounded-2xl p-8 flex flex-col items-center">
-            <h3 class="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-widest mb-8">{% translate "Settled Percentage" %}</h3>
-            <div class="h-48 w-full"><canvas id="progressChart"></canvas></div>
+    <aside class="detail-side">
+      <section class="card" x-data="{ open: {{ form.errors|yesno:'true,false' }} }">
+        <button type="button" class="collapse-toggle" @click="open = !open" :aria-expanded="open.toString()">
+          <span class="flex items-center gap-2"><span class="h-5 w-5" style="color: var(--accent);">{% include "partials/icon.html" with name="plus" %}</span>{% translate "Give Back Money" %}</span>
+          {% include "partials/icon.html" with name="chevron-down" %}
+        </button>
+        <div class="collapse-body" :class="open && 'is-open'">
+          <div class="card-header hidden lg:flex"><h2 class="card-title">{% translate "Give Back Money" %}</h2></div>
+          <form method="post" class="card-body form-stack">
+            {% csrf_token %}
+            {% for field in form %}{% include "partials/field.html" %}{% endfor %}
+            <button type="submit" class="btn btn-primary btn-block">{% translate "Record Settlement" %}</button>
+          </form>
         </div>
+      </section>
 
-        <!-- Give Back Money Form -->
-        <div class="shadow-xl rounded-3xl p-8 ring-1" style="background: var(--surface-ink); color: var(--text-on-ink); border-color: var(--surface-ink-raised);">
-            <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
-                <svg class="h-6 w-6" style="color: var(--gold);" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                {% translate "Give Back Money" %}
-            </h3>
-            <form method="post" class="space-y-6">
-                {% csrf_token %}
-                {% for field in form %}
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-widest mb-1.5" style="color: var(--text-on-ink-muted);">{{ field.label }}</label>
-                    {{ field }}
-                    {% if field.errors %}
-                        <p class="mt-1 text-xs" style="color: var(--status-critical);">{{ field.errors.0 }}</p>
-                    {% endif %}
-                </div>
-                {% endfor %}
-                <button type="submit" class="w-full font-extrabold py-3 rounded-xl transition-all shadow-lg transform hover:-translate-y-0.5" style="background: var(--text-on-ink); color: var(--surface-ink);">{% translate "Record Settlement" %}</button>
-            </form>
-        </div>
-    </div>
+      {% if spent > 0 %}
+      <section class="card card-body">
+        {% widthratio settled spent 100 as settled_pct %}
+        <div class="meter-row"><span class="font-semibold" style="color: var(--text-primary);">{% translate "Settled Percentage" %}</span><span class="num">{{ settled_pct }}%</span></div>
+        <div class="meter meter-lg" data-tone="good"><span style="width: {% if settled_pct|add:0 > 100 %}100{% else %}{{ settled_pct }}{% endif %}%"></span></div>
+      </section>
+      {% endif %}
+    </aside>
   </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const style = getComputedStyle(document.documentElement);
-        const goodColor = style.getPropertyValue('--status-good').trim() || '#10b981';
-        const criticalColor = style.getPropertyValue('--status-critical').trim() || '#ef4444';
-        const tooltipBg = style.getPropertyValue('--surface-ink').trim() || '#1e293b';
-        const textColor = style.getPropertyValue('--text-primary').trim() || '#111827';
-
-        const ctx = document.getElementById('progressChart').getContext('2d');
-        const settled = {{ chart_settled }};
-        const due = {{ chart_due }};
-
-        if (settled === 0 && due === 0) return;
-
-        new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['{% translate "Given Back" %}', '{% translate "Balance Due" %}'],
-                datasets: [{
-                    data: [settled, due],
-                    backgroundColor: [goodColor, criticalColor],
-                    borderColor: getComputedStyle(document.documentElement).getPropertyValue('--surface-raised').trim() || '#fff',
-                    borderWidth: 2,
-                    weight: 2,
-                    hoverOffset: 12
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '75%',
-                plugins: {
-                    legend: { position: 'bottom', labels: { usePointStyle: true, font: { weight: '600' }, color: textColor } },
-                    tooltip: { backgroundColor: tooltipBg, padding: 12 }
-                }
-            }
-        });
-    });
-</script>
-<style>
-    .space-y-6 select, .space-y-6 input, .space-y-6 textarea {
-        background-color: rgba(255,255,255,0.05);
-        border: 1px solid rgba(255,255,255,0.2);
-        color: var(--text-on-ink);
-        width: 100%;
-        padding: 0.75rem 1rem;
-        border-radius: 0.75rem;
-        font-size: 0.875rem;
-        transition: all 0.2s;
-    }
-    .space-y-6 select:focus, .space-y-6 input:focus, .space-y-6 textarea:focus {
-        background-color: rgba(255,255,255,0.1);
-        border-color: rgba(255,255,255,0.4);
-        outline: none;
-    }
-    .space-y-6 select option {
-        color: black;
-    }
-</style>
 {% endblock %}

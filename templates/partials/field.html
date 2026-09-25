@@ -1,0 +1,35 @@
+{% load i18n %}
+{% comment %}
+One form field with label, help text and errors. `transaction_type` style
+selects with only a couple of choices render as a segmented toggle.
+{% endcomment %}
+{% if field.is_hidden %}{{ field }}{% else %}
+<div class="field{% if field.errors %} has-error{% endif %}">
+  {% if field.field.widget.input_type == "checkbox" %}
+    <label class="check" for="{{ field.id_for_label }}">
+      {{ field }}
+      <span>
+        <span class="check-label">{{ field.label }}</span>
+        {% if field.help_text %}<span class="help mt-0.5 block">{{ field.help_text|safe }}</span>{% endif %}
+      </span>
+    </label>
+  {% elif field.name == "transaction_type" %}
+    <span class="label" id="{{ field.auto_id }}_label">{{ field.label }}</span>
+    <div class="seg seg-block" role="radiogroup" aria-labelledby="{{ field.auto_id }}_label">
+      {% for value, label in field.field.choices %}{% if value %}
+      <label class="seg-item" {% if forloop.first %}data-tone="critical"{% else %}data-tone="good"{% endif %}>
+        <input type="radio" class="sr-only" name="{{ field.html_name }}" value="{{ value }}" {% if field.value|stringformat:"s" == value|stringformat:"s" %}checked{% endif %}>
+        {{ label }}
+      </label>
+      {% endif %}{% endfor %}
+    </div>
+  {% else %}
+    <label class="label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span class="req" aria-hidden="true">*</span>{% endif %}</label>
+    {{ field }}
+    {% if field.help_text %}<p class="help">{{ field.help_text|safe }}</p>{% endif %}
+  {% endif %}
+  {% for error in field.errors %}
+    <p class="field-error">{% include "partials/icon.html" with name="alert" %}{{ error }}</p>
+  {% endfor %}
+</div>
+{% endif %}

@@ -20,7 +20,7 @@ class SettlementInline(admin.TabularInline):
 @admin.register(HouseholdCategory)
 class HouseholdCategoryAdmin(admin.ModelAdmin):
     list_display = ("name", "user", "get_total_spent", "created_at")
-    list_filter = ("user", "created_at")
+    list_filter = ("is_active", "user", "created_at")
     search_fields = ("name", "user__username")
 
     @admin.display(description="Total Spent")
@@ -32,7 +32,7 @@ class HouseholdCategoryAdmin(admin.ModelAdmin):
 @admin.register(HouseholdMember)
 class HouseholdMemberAdmin(admin.ModelAdmin):
     list_display = ("name", "user", "get_total_spent", "get_total_settled", "get_balance_due", "get_is_settled")
-    list_filter = ("user",)
+    list_filter = ("is_active", "user",)
     search_fields = ("name", "phone", "user__username")
     inlines = [PurchaseInline, SettlementInline]
 

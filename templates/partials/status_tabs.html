@@ -1,0 +1,13 @@
+{% load i18n %}
+{% comment %}Active / Inactive / All tabs. Needs: status, status_counts. Keeps the other query params.{% endcomment %}
+<nav class="seg" aria-label="{% translate 'Filter by status' %}">
+  <a href="{% query_with status='' %}" class="seg-item {% if status == 'active' %}is-active{% endif %}" {% if status == 'active' %}aria-current="page"{% endif %}>
+    {% translate "Active" %} <span class="seg-count">{{ status_counts.active }}</span>
+  </a>
+  <a href="{% query_with status='inactive' %}" class="seg-item {% if status == 'inactive' %}is-active{% endif %}" {% if status == 'inactive' %}aria-current="page"{% endif %}>
+    {% translate "Inactive" %} <span class="seg-count">{{ status_counts.inactive }}</span>
+  </a>
+  <a href="{% query_with status='all' %}" class="seg-item {% if status == 'all' %}is-active{% endif %}" {% if status == 'all' %}aria-current="page"{% endif %}>
+    {% translate "All" %} <span class="seg-count">{{ status_counts.all }}</span>
+  </a>
+</nav>

@@ -15,6 +15,7 @@ from django.utils import dateformat
 from django.utils.translation import gettext as _
 
 from .models import Creditor, CreditorCategory, Transaction, DUE_SOON_DAYS
+from apps.core.status import apply_status_filter, toggle_active
 
 MONTH_CHOICES = [(i, date_cls(2000, i, 1)) for i in range(1, 13)]
 
@@ -459,6 +460,8 @@ def creditor_list_view(request):
     if search_query:
         creditors_base_qs = creditors_base_qs.filter(name__icontains=search_query)
 
+    status, creditors_base_qs, status_counts = apply_status_filter(request, creditors_base_qs)
+
     creditors_qs = creditors_base_qs.annotate(
         total_borrowed_amt=Coalesce(
             Sum("transactions__amount", filter=Q(transactions__transaction_type=Transaction.BORROW)),
@@ -541,6 +544,8 @@ def creditor_list_view(request):
         "filter_type": filter_type,
         "payment_status": payment_status,
         "search_query": search_query,
+        "status": status,
+        "status_counts": status_counts,
         "sort": sort,
         "sort_options": SORT_OPTIONS,
         "base_query_string": base_query_string,
@@ -669,3 +674,10 @@ def transaction_delete_view(request, pk):
     transaction.delete()
     messages.success(request, _("Transaction of ৳%(amount)s deleted.") % {"amount": amount})
     return redirect("creditor_detail", pk=creditor.pk)
+
+
+@login_required
+@require_POST
+def creditor_toggle_active_view(request, pk):
+    obj = get_object_or_404(Creditor, pk=pk, user=request.user)
+    return toggle_active(request, obj, "creditor_list")

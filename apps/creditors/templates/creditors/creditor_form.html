@@ -4,77 +4,44 @@
 {% block title %}{{ title }} | FinTrack{% endblock %}
 
 {% block content %}
-<div class="px-4 sm:px-6 lg:px-8 max-w-2xl mx-auto py-12">
-    <div class="bg-[var(--surface-raised)] shadow-xl rounded-3xl overflow-hidden border border-[var(--border-soft)] ring-1 ring-[var(--border-soft)]">
-        <div class="px-8 py-10 sm:px-12">
-            <div class="flex items-center gap-x-3 mb-8">
-                <div class="h-10 w-10 rounded-xl bg-[var(--accent)] flex items-center justify-center text-[var(--accent-on)] font-extrabold text-lg">
-                    C
-                </div>
-                <h1 class="text-2xl font-extrabold text-[var(--text-primary)] tracking-tight">{{ title }}</h1>
-            </div>
-
-            <form method="post" class="space-y-8" x-data="{ interestType: '{{ form.interest_type.value|default_if_none:"" }}', interestBasis: '{{ form.interest_basis.value|default_if_none:"" }}' }">
-                {% csrf_token %}
-
-                {% for field in form %}
-                <div class="relative"
-                  {% if field.name == 'interest_basis' %}x-show="interestType && interestType !== 'FIXED'" x-cloak
-                  {% elif field.name == 'interest_rate' %}x-show="interestType && interestType !== 'FIXED' && interestBasis === 'PERCENTAGE'" x-cloak
-                  {% elif field.name == 'interest_fixed_amount' %}x-show="interestType === 'FIXED' || (interestType && interestType !== 'FIXED' && interestBasis === 'FIXED')" x-cloak{% endif %}>
-                    <label for="{{ field.id_for_label }}" class="block text-sm font-bold text-[var(--text-secondary)] mb-2 uppercase tracking-widest">{{ field.label }}</label>
-
-                    <div class="relative rounded-xl transition-all duration-200 ring-1 ring-inset ring-[var(--border)] focus-within:ring-2 focus-within:ring-[var(--accent)] shadow-sm" style="background: var(--surface-sunken);">
-                        {{ field }}
-                    </div>
-
-                    {% if field.help_text %}
-                        <p class="mt-2 text-xs text-[var(--text-muted)] font-medium italic">{{ field.help_text|safe }}</p>
-                    {% endif %}
-
-                    {% if field.errors %}
-                        {% for error in field.errors %}
-                            <p class="mt-2 text-sm font-bold flex items-center gap-1" style="color: var(--status-critical);">
-                                <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 000 2v3a1 1 0 002 0V7a1 1 0 00-2-0z" clip-rule="evenodd" /></svg>
-                                {{ error }}
-                            </p>
-                        {% endfor %}
-                    {% endif %}
-                </div>
-                {% endfor %}
-
-                <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-[var(--border-soft)]">
-                    <button type="submit" class="flex-1 bg-[var(--accent)] text-[var(--accent-on)] font-extrabold px-6 py-4 rounded-xl shadow-lg hover:bg-[var(--accent-strong)] hover:-translate-y-0.5 transition-all active:translate-y-0">
-                        {% translate "Save Creditor Information" %}
-                    </button>
-                    <a href="{% url 'creditor_list' %}" class="flex-1 text-center bg-[var(--surface-sunken)] text-[var(--text-secondary)] font-bold px-6 py-4 rounded-xl border border-[var(--border)] hover:bg-[var(--surface-raised)] transition-all">
-                        {% translate "Cancel" %}
-                    </a>
-                </div>
-            </form>
-        </div>
-        <div class="px-8 py-4 border-t border-[var(--border-soft)] italic font-medium text-xs text-center text-[var(--text-muted)]" style="background: var(--surface-sunken);">
-            {% translate "All your financial data is encrypted and kept secure." %}
-        </div>
+{% url 'creditor_list' as default_back %}
+{% with back=back_url|default:default_back %}
+<div class="page-narrow">
+  <header class="page-header">
+    <div>
+      <a href="{{ back }}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Back" %}</a>
+      <h1 class="page-title">{{ title }}</h1>
     </div>
-</div>
+  </header>
 
-<style>
-    /* Styling Django generated fields */
-    .space-y-8 select, .space-y-8 input, .space-y-8 textarea {
-        background-color: transparent;
-        border: none;
-        width: 100%;
-        padding: 0.875rem 1.25rem;
-        font-size: 1rem;
-        font-weight: 500;
-        color: var(--text-primary);
-        outline: none;
-        box-shadow: none !important;
-    }
-    .space-y-8 input::placeholder, .space-y-8 textarea::placeholder {
-        color: var(--text-muted);
-        font-weight: 400;
-    }
-</style>
+  <form method="post" class="card" novalidate
+        x-data="{ interestType: '{{ form.interest_type.value|default_if_none:"" }}', interestBasis: '{{ form.interest_basis.value|default_if_none:"" }}' }">
+    {% csrf_token %}
+    <div class="card-body form-stack">
+      {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+      {% for field in form %}
+        {% if field.name == "interest_type" %}
+          <div class="border-t pt-4" style="border-color: var(--border-soft);">
+            <p class="card-title">{% translate "Interest" %}</p>
+            <p class="help mt-0.5">{% translate "Optional. Leave the type blank for interest-free debt." %}</p>
+          </div>
+          {% include "partials/field.html" %}
+        {% elif field.name == "interest_basis" %}
+          <div x-show="interestType && interestType !== 'FIXED'" x-cloak>{% include "partials/field.html" %}</div>
+        {% elif field.name == "interest_rate" %}
+          <div x-show="interestType && interestType !== 'FIXED' && interestBasis === 'PERCENTAGE'" x-cloak>{% include "partials/field.html" %}</div>
+        {% elif field.name == "interest_fixed_amount" %}
+          <div x-show="interestType === 'FIXED' || (interestType && interestBasis === 'FIXED')" x-cloak>{% include "partials/field.html" %}</div>
+        {% else %}
+          {% include "partials/field.html" %}
+        {% endif %}
+      {% endfor %}
+    </div>
+    <div class="card-footer form-actions">
+      <a href="{{ back }}" class="btn btn-ghost">{% translate "Cancel" %}</a>
+      <button type="submit" class="btn btn-primary">{% include "partials/icon.html" with name="check" %}{% translate "Save" %}</button>
+    </div>
+  </form>
+</div>
+{% endwith %}
 {% endblock %}

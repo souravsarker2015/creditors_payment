@@ -1,5 +1,6 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
+from apps.core.status import active_or_current
 from .models import ExpenseCategory, Expense, RecurringExpense
 
 
@@ -24,7 +25,10 @@ class ExpenseForm(forms.ModelForm):
         user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
         if user:
-            self.fields["category"].queryset = ExpenseCategory.objects.filter(user=user)
+            self.fields["category"].queryset = active_or_current(
+                ExpenseCategory.objects.filter(user=user), self.instance.category_id
+            )
+        self.fields["category"].empty_label = _("General (no category)")
 
 
 class RecurringExpenseForm(forms.ModelForm):
@@ -51,5 +55,8 @@ class RecurringExpenseForm(forms.ModelForm):
         user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
         if user:
-            self.fields["category"].queryset = ExpenseCategory.objects.filter(user=user)
+            self.fields["category"].queryset = active_or_current(
+                ExpenseCategory.objects.filter(user=user), self.instance.category_id
+            )
+        self.fields["category"].empty_label = _("General (no category)")
         self.fields["category"].required = False

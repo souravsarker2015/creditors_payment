@@ -7,6 +7,7 @@ urlpatterns = [
     path('add/', views.contributor_create, name='contributor_create'),
     path('import/', views.contributor_import_view, name='contributor_import'),
     path('import/template/', views.contributor_import_template_view, name='contributor_import_template'),
+    path("<int:pk>/toggle-active/", views.contributor_toggle_active_view, name="contributor_toggle_active"),
     path('<int:pk>/edit/', views.contributor_update, name='contributor_update'),
     path('<int:pk>/delete/', views.contributor_delete, name='contributor_delete'),
     path('<int:pk>/', views.contributor_detail, name='contributor_detail'),

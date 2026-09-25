@@ -20,7 +20,7 @@ class DebtorAdmin(admin.ModelAdmin):
         "get_remaining",
         "get_is_paid",
     )
-    list_filter = ("user", "transactions__transaction_type")
+    list_filter = ("is_active", "user", "transactions__transaction_type")
     search_fields = ("name", "phone", "user__username")
     inlines = [TransactionInline]
 

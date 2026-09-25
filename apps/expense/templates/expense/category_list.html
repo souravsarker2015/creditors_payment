@@ -4,64 +4,72 @@
 {% block title %}{% translate "Expense Categories" %} | FinTrack{% endblock %}
 
 {% block content %}
-<div class="px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto py-10">
-  <div class="sm:flex sm:items-center mb-10">
-    <div class="sm:flex-auto">
-      <h1 class="text-3xl font-black leading-6 text-[var(--text-primary)] uppercase tracking-tighter">{% translate "Taxonomy Settings" %}</h1>
-      <p class="mt-4 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.3em]">{% translate "Expense Classification Engine" %}</p>
+<div class="page-medium stack">
+  <header class="page-header !mb-0">
+    <div>
+      <a href="{% url 'expense_dashboard' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Expenses" %}</a>
+      <h1 class="page-title">{% translate "Expense Categories" %}</h1>
+      <p class="page-subtitle">{% translate "Group your spending. Mark a category inactive to hide it from the expense form without losing its history." %}</p>
     </div>
-    <div class="mt-8 flex flex-col gap-2 sm:ml-16 sm:mt-0 sm:flex-none sm:flex-row">
+    <div class="page-actions">
       <form method="post" action="{% url 'category_import' %}" enctype="multipart/form-data" x-data>
         {% csrf_token %}
         <input type="file" id="expense-category-import-file" name="csv_file" accept=".csv,text/csv" class="hidden" @change="$el.form.submit()">
-        <label for="expense-category-import-file" class="block cursor-pointer rounded-[1.25rem] border border-[var(--border)] bg-[var(--surface-raised)] px-6 py-4 text-center text-xs font-black uppercase tracking-widest text-[var(--text-secondary)] shadow-sm hover:bg-[var(--surface-sunken)] transition-all">{% translate "Import CSV" %}</label>
+        <label for="expense-category-import-file" class="btn btn-secondary cursor-pointer">{% include "partials/icon.html" with name="upload" %}{% translate "Import CSV" %}</label>
       </form>
-      <a href="{% url 'category_import_template' %}" class="block rounded-[1.25rem] border border-[var(--border)] bg-[var(--surface-raised)] px-6 py-4 text-center text-xs font-black uppercase tracking-widest text-[var(--text-secondary)] shadow-sm hover:bg-[var(--surface-sunken)] transition-all">{% translate "Template" %}</a>
-      <a href="{% url 'category_create' %}" class="block rounded-[1.25rem] bg-[var(--accent)] px-6 py-4 text-center text-xs font-black uppercase tracking-widest text-[var(--accent-on)] shadow-2xl hover:bg-[var(--accent-strong)] transition-all hover:-translate-y-1 active:translate-y-0">+ {% translate "Define Category" %}</a>
+      <a href="{% url 'category_import_template' %}" class="btn btn-ghost">{% translate "Template" %}</a>
+      <a href="{% url 'category_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add Category" %}</a>
     </div>
-  </div>
+  </header>
 
-  <form method="get" class="mb-8">
-    <label for="q" class="sr-only">{% translate "Search by name" %}</label>
-    <div class="relative max-w-sm">
-      <svg class="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
-      <input type="text" id="q" name="q" value="{{ search_query }}" placeholder="{% translate 'Search categories...' %}" autocomplete="off" class="block w-full rounded-[1.25rem] border border-[var(--border)] bg-[var(--surface-raised)] pl-11 py-3 text-sm font-bold text-[var(--text-primary)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]">
-    </div>
-  </form>
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <form method="get" class="input-icon w-full sm:max-w-xs">
+      <input type="hidden" name="status" value="{{ status }}">
+      {% include "partials/icon.html" with name="search" %}
+      <label for="q" class="sr-only">{% translate "Search by name" %}</label>
+      <input type="search" id="q" name="q" value="{{ search_query }}" placeholder="{% translate 'Search categories...' %}" autocomplete="off" class="form-input">
+    </form>
+    {% include "partials/status_tabs.html" %}
+  </div>
 
   {% if categories %}
-  <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+  <div class="card-grid">
     {% for c in categories %}
-    <div class="group relative flex flex-col overflow-hidden rounded-[2.5rem] border-none bg-[var(--surface-raised)] p-8 shadow-sm ring-1 ring-[var(--border-soft)] hover:shadow-2xl transition-all">
-      <div class="flex items-center justify-between mb-2">
-        <div class="h-10 w-10 rounded-xl flex items-center justify-center font-black text-lg transition-colors duration-500" style="background: var(--accent-soft); color: var(--accent);">
-          {{ c.name|first|upper }}
+    <article class="card entity {% if not c.is_active %}is-inactive{% endif %}">
+      <div class="entity-head">
+        <span class="avatar" data-tone="critical">{{ c.name|first|upper }}</span>
+        <div class="min-w-0 flex-1">
+          <h3 class="entity-name">{{ c.name }}</h3>
+          <p class="entity-meta">{% blocktranslate count counter=c.entry_count %}{{ counter }} entry{% plural %}{{ counter }} entries{% endblocktranslate %}</p>
         </div>
-        <div class="text-right">
-            <span class="text-[9px] font-black text-[var(--text-muted)] uppercase tracking-[0.2em] block mb-1">{% translate "Total Allocated" %}</span>
-            <span class="text-lg font-black text-[var(--text-primary)] tabular-nums">৳{{ c.total_amt|floatformat:0 }}</span>
-        </div>
+        {% if not c.is_active %}<span class="badge" data-tone="muted">{% translate "Inactive" %}</span>{% endif %}
       </div>
-
-      <h3 class="text-lg font-black text-[var(--text-primary)] tracking-tight uppercase">{{ c.name }}</h3>
-
-      <div class="mt-6 flex items-center gap-3">
-          <div class="h-1.5 flex-1 rounded-full overflow-hidden" style="background: var(--surface-sunken);">
-              <div class="h-full rounded-full" style="width: {% if c.total_amt > 1000 %}100{% else %}30{% endif %}%; background: var(--accent);"></div>
-          </div>
-          <span class="text-[9px] font-black text-[var(--text-muted)] uppercase tracking-widest leading-none">{% translate "Category Volume" %}</span>
+      <div>
+        <p class="entity-figure-label">{% translate "Total spent" %}</p>
+        <p class="entity-figure">{{ c.total_amt|money }}</p>
       </div>
-    </div>
+      <div class="meter" data-tone="critical" title="{% translate 'Relative to your biggest category' %}"><span style="width: {{ c.share_percent }}%"></span></div>
+      <div class="entity-foot">
+        <a href="{% url 'expense_list' %}?category={{ c.pk }}" class="btn btn-secondary btn-sm">{% translate "View expenses" %}</a>
+        {% url 'category_toggle_active' c.pk as toggle_url %}
+        {% include "partials/toggle_active_item.html" with url=toggle_url active=c.is_active as_button=True %}
+      </div>
+    </article>
     {% endfor %}
   </div>
+  {% elif search_query or status != "active" %}
+  <div class="empty">
+    <div class="empty-icon">{% include "partials/icon.html" with name="search" %}</div>
+    <h3 class="empty-title">{% translate "No categories found" %}</h3>
+    <p class="empty-text">{% translate "Try a different name or status." %}</p>
+    <a href="{% url 'category_list' %}" class="btn btn-secondary">{% translate "Reset Filters" %}</a>
+  </div>
   {% else %}
-  <div class="flex flex-col items-center justify-center rounded-[4rem] border-2 border-dashed border-[var(--border)] p-32 text-center bg-[var(--surface-raised)] shadow-sm ring-1 ring-[var(--border-soft)]">
-      <div class="h-24 w-24 rounded-full flex items-center justify-center mb-10 shadow-inner" style="background: var(--surface-sunken);">
-        <svg class="h-12 w-12 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
-      </div>
-      <h3 class="text-2xl font-black text-[var(--text-primary)] uppercase tracking-tighter">{% translate "Taxonomy Blank" %}</h3>
-      <p class="mt-4 text-sm text-[var(--text-muted)] font-bold uppercase tracking-[0.25em] max-w-xs mx-auto">{% translate "Categorization allows for advanced analytical insights into your capital leakage." %}</p>
-      <a href="{% url 'category_create' %}" class="mt-12 inline-flex items-center rounded-[1.5rem] bg-[var(--accent)] px-10 py-5 text-xs font-black uppercase tracking-[0.3em] text-[var(--accent-on)] shadow-2xl hover:bg-[var(--accent-strong)] hover:-translate-y-1 transition-all">+ {% translate "Add Category" %}</a>
+  <div class="empty">
+    <div class="empty-icon">{% include "partials/icon.html" with name="tag" %}</div>
+    <h3 class="empty-title">{% translate "No categories yet" %}</h3>
+    <p class="empty-text">{% translate "Categories let you see where your money goes, e.g. Groceries, Rent, Transport." %}</p>
+    <a href="{% url 'category_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add Category" %}</a>
   </div>
   {% endif %}
 </div>

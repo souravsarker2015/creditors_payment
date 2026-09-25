@@ -111,6 +111,10 @@ class Creditor(models.Model):
         validators=[MinValueValidator(0)],
         help_text=_("A flat interest amount (৳) — used for a one-time Fixed Amount type, or a Fixed Amount basis charged every period."),
     )
+    is_active = models.BooleanField(
+        default=True,
+        help_text=_("Inactive records are hidden from lists and pickers but still count in totals."),
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

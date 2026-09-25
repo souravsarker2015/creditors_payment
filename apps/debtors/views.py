@@ -2,6 +2,7 @@ import csv
 import io
 from decimal import Decimal, InvalidOperation
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.http import HttpResponse
 import django.utils.timezone
 from datetime import date as date_cls, timedelta
@@ -15,6 +16,7 @@ from django.utils import dateformat
 from django.utils.translation import gettext as _
 
 from .models import Debtor, DebtorCategory, Transaction, DUE_SOON_DAYS
+from apps.core.status import apply_status_filter, toggle_active
 
 
 def _row_value(row, fieldnames, key):
@@ -421,6 +423,8 @@ def debtor_list_view(request):
     if search_query:
         debtors_base_qs = debtors_base_qs.filter(name__icontains=search_query)
 
+    status, debtors_base_qs, status_counts = apply_status_filter(request, debtors_base_qs)
+
     debtors_qs = debtors_base_qs.annotate(
         total_lent_amt=Coalesce(
             Sum("transactions__amount", filter=Q(transactions__transaction_type=Transaction.LEND)),
@@ -503,6 +507,8 @@ def debtor_list_view(request):
         "filter_type": filter_type,
         "payment_status": payment_status,
         "search_query": search_query,
+        "status": status,
+        "status_counts": status_counts,
         "sort": sort,
         "sort_options": SORT_OPTIONS,
         "base_query_string": base_query_string,
@@ -619,7 +625,7 @@ def transaction_edit_view(request, pk):
             return redirect("debtor_detail", pk=debtor.pk)
     else:
         form = TransactionForm(instance=transaction)
-    return render(request, "debtors/debtor_form.html", {"form": form, "title": _("Edit Transaction"), "back_url": f"/debtors/{debtor.pk}/"})
+    return render(request, "debtors/debtor_form.html", {"form": form, "title": _("Edit Transaction"), "back_url": reverse("debtor_detail", args=[debtor.pk])})
 
 
 @login_required
@@ -631,3 +637,10 @@ def transaction_delete_view(request, pk):
     transaction.delete()
     messages.success(request, _("Transaction of ৳%(amount)s deleted.") % {"amount": amount})
     return redirect("debtor_detail", pk=debtor.pk)
+
+
+@login_required
+@require_POST
+def debtor_toggle_active_view(request, pk):
+    obj = get_object_or_404(Debtor, pk=pk, user=request.user)
+    return toggle_active(request, obj, "debtor_list")

@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 from django.db.models import Sum
 from django.contrib.auth.models import User
 
@@ -10,6 +11,10 @@ class HouseholdCategory(models.Model):
         User, on_delete=models.CASCADE, related_name="household_categories"
     )
     name = models.CharField(max_length=100)
+    is_active = models.BooleanField(
+        default=True,
+        help_text=_("Inactive records are hidden from lists and pickers but still count in totals."),
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -38,6 +43,10 @@ class HouseholdMember(models.Model):
     name = models.CharField(max_length=200)
     phone = models.CharField(max_length=20, blank=True, default="")
     note = models.TextField(blank=True, default="")
+    is_active = models.BooleanField(
+        default=True,
+        help_text=_("Inactive records are hidden from lists and pickers but still count in totals."),
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

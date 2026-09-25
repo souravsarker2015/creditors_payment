@@ -1,0 +1,11 @@
+{% load i18n %}
+{% comment %}A menu item (or button, with as_button) that flips a record between active and inactive. Needs: url, active.{% endcomment %}
+<form method="post" action="{{ url }}">
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{{ request.get_full_path }}">
+  {% if active %}
+  <button type="submit" class="{% if as_button %}btn btn-ghost btn-sm{% else %}menu-item{% endif %}" role="menuitem">{% include "partials/icon.html" with name="archive" %}{% translate "Mark as inactive" %}</button>
+  {% else %}
+  <button type="submit" class="{% if as_button %}btn btn-soft btn-sm{% else %}menu-item{% endif %}" role="menuitem">{% include "partials/icon.html" with name="restore" %}{% translate "Mark as active" %}</button>
+  {% endif %}
+</form>

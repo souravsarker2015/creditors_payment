@@ -6,13 +6,14 @@ import django.utils.timezone
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.contrib import messages
-from django.db.models import Sum, Q, DecimalField, Value
+from django.db.models import Count, Sum, Q, DecimalField, Value
 from django.db.models.functions import Coalesce, TruncMonth
 from django.core.paginator import Paginator
 from django.utils.translation import gettext as _, ngettext
 from datetime import date as date_cls
 
 from .models import ExpenseCategory, Expense, RecurringExpense, generate_due_recurring_expense
+from apps.core.status import apply_status_filter, active_or_current, toggle_active
 from .forms import ExpenseCategoryForm, ExpenseForm, RecurringExpenseForm
 
 SORT_OPTIONS = [
@@ -365,10 +366,20 @@ def category_list_view(request):
     categories = request.user.expense_categories.all()
     if search_query:
         categories = categories.filter(name__icontains=search_query)
-    categories = categories.annotate(
-        total_amt=Coalesce(Sum("expenses__amount"), Value(0, output_field=DecimalField()))
-    ).order_by("-total_amt")
-    return render(request, "expense/category_list.html", {"categories": categories, "search_query": search_query})
+    status, categories, status_counts = apply_status_filter(request, categories)
+    categories = list(categories.annotate(
+        total_amt=Coalesce(Sum("expenses__amount"), Value(0, output_field=DecimalField())),
+        entry_count=Count("expenses"),
+    ).order_by("-total_amt", "name"))
+    top_total = max((c.total_amt for c in categories), default=0)
+    for c in categories:
+        c.share_percent = int((c.total_amt / top_total) * 100) if top_total else 0
+    return render(request, "expense/category_list.html", {
+        "categories": categories,
+        "search_query": search_query,
+        "status": status,
+        "status_counts": status_counts,
+    })
 
 
 @login_required
@@ -532,3 +543,10 @@ def recurring_expense_delete_view(request, pk):
     schedule.delete()
     messages.success(request, _("Recurring expense deleted."))
     return redirect("recurring_expense_list")
+
+
+@login_required
+@require_POST
+def category_toggle_active_view(request, pk):
+    obj = get_object_or_404(ExpenseCategory, pk=pk, user=request.user)
+    return toggle_active(request, obj, "category_list")

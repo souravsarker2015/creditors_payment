@@ -4,7 +4,7 @@ Compact topbar switcher — hidden on phones; see the touch-sized version in
 partials/sidebar_nav.html for the mobile off-canvas menu. Both share the
 `.preferences-switcher` wiring script in base.html.
 {% endcomment %}
-<div class="preferences-switcher hidden sm:flex items-center gap-2 shrink-0">
+<div class="preferences-switcher hidden md:flex items-center gap-2 shrink-0">
     <!-- Accent swatches -->
     <div class="flex items-center gap-1 rounded-lg p-1" style="background: var(--surface-sunken); border: 1px solid var(--border-soft);">
         <button type="button" class="pref-swatch {% if user_accent == 'teal' %}is-active{% endif %}" data-swatch="teal" data-pref-field="accent" title="{% translate 'Ledger Teal' %}" aria-label="{% translate 'Ledger Teal accent' %}"></button>

@@ -1,0 +1,13 @@
+{% load i18n %}
+{% comment %}Kebab menu on a record card. Needs: edit_url, toggle_url, active. Optional: detail_url.{% endcomment %}
+<div class="menu-wrap -mr-1.5 -mt-1" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
+  <button type="button" class="icon-btn" @click="open = !open" :aria-expanded="open" aria-haspopup="true" aria-label="{% translate 'Actions' %}">
+    <span class="h-[1.125rem] w-[1.125rem]">{% include "partials/icon.html" with name="dots" %}</span>
+  </button>
+  <div class="menu" x-show="open" x-cloak x-transition.opacity.scale.95.duration.100ms role="menu">
+    {% if detail_url %}<a href="{{ detail_url }}" class="menu-item" role="menuitem">{% include "partials/icon.html" with name="list" %}{% translate "View details" %}</a>{% endif %}
+    <a href="{{ edit_url }}" class="menu-item" role="menuitem">{% include "partials/icon.html" with name="edit" %}{% translate "Edit" %}</a>
+    <div class="menu-sep"></div>
+    {% include "partials/toggle_active_item.html" with url=toggle_url active=active %}
+  </div>
+</div>

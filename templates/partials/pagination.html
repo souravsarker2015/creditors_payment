@@ -1,0 +1,42 @@
+{% load i18n %}
+{% comment %}
+Needs: page_obj, pagination_window, base_query_string.
+On phones only Prev / current / Next show; the numbered window and the
+jump-to-page box appear from sm up.
+{% endcomment %}
+{% if page_obj.paginator.num_pages > 1 %}
+{% with q=base_query_string %}
+<nav class="pager mt-6" aria-label="{% translate 'Pagination' %}">
+  <p class="pager-info">{% blocktranslate with current=page_obj.number total=page_obj.paginator.num_pages %}Page {{ current }} of {{ total }}{% endblocktranslate %}</p>
+  <div class="pager-nav">
+    {% if page_obj.has_previous %}
+      <a class="pager-link" href="?{{ q }}{% if q %}&{% endif %}page={{ page_obj.previous_page_number }}" aria-label="{% translate 'Previous page' %}">{% include "partials/icon.html" with name="chevron-left" %}<span class="hidden sm:inline">{% translate "Prev" %}</span></a>
+    {% else %}
+      <span class="pager-link is-disabled">{% include "partials/icon.html" with name="chevron-left" %}<span class="hidden sm:inline">{% translate "Prev" %}</span></span>
+    {% endif %}
+    {% for num in pagination_window %}
+      {% if num is None %}
+        <span class="pager-link pager-num" aria-hidden="true">…</span>
+      {% elif num == page_obj.number %}
+        <span class="pager-link pager-num is-current" aria-current="page">{{ num }}</span>
+      {% else %}
+        <a class="pager-link pager-num" href="?{{ q }}{% if q %}&{% endif %}page={{ num }}">{{ num }}</a>
+      {% endif %}
+    {% endfor %}
+    {% if page_obj.has_next %}
+      <a class="pager-link" href="?{{ q }}{% if q %}&{% endif %}page={{ page_obj.next_page_number }}" aria-label="{% translate 'Next page' %}"><span class="hidden sm:inline">{% translate "Next" %}</span>{% include "partials/icon.html" with name="chevron-right" %}</a>
+    {% else %}
+      <span class="pager-link is-disabled"><span class="hidden sm:inline">{% translate "Next" %}</span>{% include "partials/icon.html" with name="chevron-right" %}</span>
+    {% endif %}
+  </div>
+  {% if page_obj.paginator.num_pages > 7 %}
+  <form class="hidden items-center gap-2 sm:flex" x-data="{ p: '{{ page_obj.number }}', max: {{ page_obj.paginator.num_pages }} }"
+        @submit.prevent="const n = parseInt(p, 10); if (n >= 1 && n <= max) { window.location.href = '?{{ q }}{% if q %}&{% endif %}page=' + n; }">
+    <label class="pager-info" for="jump-page">{% translate "Go to" %}</label>
+    <input id="jump-page" type="number" x-model="p" min="1" max="{{ page_obj.paginator.num_pages }}" inputmode="numeric" class="form-input !min-h-0 !w-20 !py-1.5 text-center">
+    <button type="submit" class="btn btn-secondary btn-sm">{% translate "Go" %}</button>
+  </form>
+  {% endif %}
+</nav>
+{% endwith %}
+{% endif %}

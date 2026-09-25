@@ -1,377 +1,196 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{{ shop.name }} {% translate "Details" %} | FinTrack{% endblock %}
-
-{% block extra_css %}
-<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
-{% endblock %}
+{% block title %}{{ shop.name }} | FinTrack{% endblock %}
 
 {% block content %}
-<div class="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-  <!-- Header -->
-  <div class="md:flex md:items-end md:justify-between border-b pb-8" style="border-color: var(--border);">
-    <div class="min-w-0 flex-1">
-      <div class="flex items-center gap-x-3">
-          <div class="h-12 w-12 rounded-xl bg-[var(--accent)] flex items-center justify-center text-[var(--accent-on)] font-extrabold text-xl">
-              {{ shop.name|first|upper }}
-          </div>
-          <h1 class="text-3xl font-extrabold leading-7 text-[var(--text-primary)] sm:truncate sm:text-4xl sm:tracking-tight">{{ shop.name }}</h1>
-          {% if due_status %}
-          <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold"
-                style="{% if due_status == 'overdue' %}background: var(--status-critical-bg); color: var(--status-critical);{% else %}background: var(--status-warn-bg); color: var(--status-warn);{% endif %}">
-            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
-            {% if due_status == 'overdue' %}{% translate "Overdue" %}{% else %}{% translate "Due Soon" %}{% endif %}
-          </span>
-          {% endif %}
-      </div>
-      <div class="mt-4 flex flex-col sm:mt-2 sm:flex-row sm:flex-wrap sm:space-x-6">
-        <div class="mt-2 flex items-center text-sm text-[var(--text-secondary)] font-medium">
-          <svg class="mr-1.5 h-5 w-5 flex-shrink-0 text-[var(--text-muted)]" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-          </svg>
-          {% if shop.phone %}{{ shop.phone }}{% else %}{% translate "No phone" %}{% endif %}
-        </div>
-        <div class="mt-2 flex items-center text-sm text-[var(--text-secondary)]">
-          <svg class="mr-1.5 h-5 w-5 flex-shrink-0 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-          </svg>
-          {% if shop.note %}{{ shop.note }}{% else %}{% translate "No notes" %}{% endif %}
-        </div>
-        <div class="mt-2 flex items-center text-sm text-[var(--text-secondary)]">
-          <span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold" style="background: var(--accent-soft); color: var(--accent);">{{ shop.get_category_display }}</span>
-        </div>
-        {% if shop.due_date %}
-        <div class="mt-2 flex items-center text-sm font-medium" style="color: {% if due_status == 'overdue' %}var(--status-critical){% elif due_status == 'due_soon' %}var(--status-warn){% else %}var(--text-secondary){% endif %};">
-          <svg class="mr-1.5 h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" /></svg>
-          {% blocktranslate with date=shop.due_date|date:"d M Y" %}Due {{ date }}{% endblocktranslate %}
-        </div>
-        {% endif %}
-      </div>
-    </div>
-    <div class="mt-5 flex lg:ml-4 lg:mt-0 gap-3">
-      <a href="{% url 'shop_edit' shop.pk %}" class="inline-flex items-center rounded-md bg-[var(--surface-raised)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] shadow-sm ring-1 ring-inset ring-[var(--border)] hover:bg-[var(--surface-sunken)] transition-all">{% translate "Edit Shop" %}</a>
-      <a href="{% url 'shop_list' %}" class="inline-flex items-center rounded-md bg-[var(--surface-sunken)] px-3 py-2 text-sm font-bold text-[var(--text-secondary)] hover:brightness-95 transition-all">{% translate "Back to List" %}</a>
-    </div>
-  </div>
-
-  <!-- Balance Summary -->
-  <div class="mt-8 rounded-[2rem] p-6 shadow-sm ring-1 ring-[var(--border)] sm:p-8" style="background: var(--surface-sunken);">
+<div class="page stack">
+  <header class="page-header !mb-0">
     <div>
-      <h2 class="text-sm font-bold uppercase tracking-wider text-[var(--text-secondary)]">{% translate "Balance Summary" %}</h2>
-      <p class="mt-1 text-xs text-[var(--text-muted)]">{% translate "Current Due and Outstanding Balance are always as of today. Filter below to see totals for a specific period — Transaction History will follow it too." %}</p>
+      <a href="{% url 'shop_list' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Shops" %}</a>
+      <div class="flex items-start gap-3">
+        <span class="avatar avatar-lg">{{ shop.name|first }}</span>
+        <div class="min-w-0">
+          <h1 class="page-title">{{ shop.name }}</h1>
+          <div class="mt-1 flex flex-wrap gap-1.5">
+            {% if due_status == 'overdue' %}<span class="badge" data-tone="critical">{% include "partials/icon.html" with name="alert" %}{% translate "Overdue" %}</span>
+            {% elif due_status == 'due_soon' %}<span class="badge" data-tone="warn">{% include "partials/icon.html" with name="clock" %}{% translate "Due Soon" %}</span>{% endif %}
+            {% if remaining <= 0 and due > 0 %}<span class="badge badge-dot" data-tone="good">{% translate "Paid Completely" %}</span>{% endif %}
+            {% if not shop.is_active %}<span class="badge" data-tone="muted">{% translate "Inactive" %}</span>{% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="meta-list">
+        <span class="meta-item">{% include "partials/icon.html" with name="tag" %}{{ shop.get_category_display }}</span>
+        {% if shop.phone %}<a href="tel:{{ shop.phone }}" class="meta-item">{% include "partials/icon.html" with name="phone" %}{{ shop.phone }}</a>{% endif %}
+        {% if shop.due_date %}<span class="meta-item" {% if due_status == 'overdue' %}style="color: var(--status-critical);"{% endif %}>{% include "partials/icon.html" with name="calendar" %}{% blocktranslate with date=shop.due_date|date:"j M Y" %}Due {{ date }}{% endblocktranslate %}</span>{% endif %}
+        {% if shop.note %}<span class="meta-item">{% include "partials/icon.html" with name="note" %}<span class="truncate">{{ shop.note }}</span></span>{% endif %}
+      </div>
+    </div>
+    <div class="page-actions">
+      <a href="{% url 'shop_edit' shop.pk %}" class="btn btn-secondary">{% include "partials/icon.html" with name="edit" %}{% translate "Edit Shop" %}</a>
+      {% url 'shop_toggle_active' shop.pk as toggle_url %}
+      {% include "partials/toggle_active_item.html" with url=toggle_url active=shop.is_active as_button=True %}
+    </div>
+  </header>
+
+  {% if not shop.is_active %}
+  <div class="callout" data-tone="info">
+    {% include "partials/icon.html" with name="archive" %}
+    <p>{% translate "This shop is inactive — hidden from your active list. Its due still counts in every total." %}</p>
+  </div>
+  {% endif %}
+
+  <!-- Balance Summary: Current Due is always as of today; the filter only
+       narrows the breakdown and (when applied) the Transaction History. -->
+  <section class="card" x-data="{ showFilter: {{ bs_filter.is_active|yesno:'true,false' }}, showBreakdown: {{ bs_filter.is_active|yesno:'true,false' }} }">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title">{% translate "Balance Summary" %}</h2>
+        <p class="card-subtitle">{% translate "Current Due is always as of today." %}</p>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm" @click="showFilter = !showFilter" :aria-expanded="showFilter.toString()">
+        {% include "partials/icon.html" with name="filter" %}{% translate "Filter period" %}{% if bs_filter.is_active %}<span class="h-2 w-2 rounded-full" style="background: var(--accent);"></span>{% endif %}
+      </button>
     </div>
 
-    <!-- Balance Summary filter: independent of Transaction History's own filter below.
-         Applying this one takes over Transaction History too; applying Transaction
-         History's own filter (or clearing this one) reverts it back to independent. -->
-    <form method="get" class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:items-end">
-      <div>
-        <label for="due-year-filter" class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Year" %}</label>
-        <select id="due-year-filter" name="due_year" class="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--surface-raised)] text-sm text-[var(--text-primary)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]">
-          <option value="">{% translate "All Years" %}</option>
-          {% for yr in year_options %}<option value="{{ yr }}"{% if bs_filter.due_year == yr %} selected{% endif %}>{{ yr }}</option>{% endfor %}
-        </select>
-      </div>
-      <div>
-        <label for="due-month-filter" class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Months" %}</label>
-        <select id="due-month-filter" name="due_month" multiple class="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--surface-raised)] text-sm text-[var(--text-primary)] shadow-sm">
-          {% for num, mdate in month_choices %}<option value="{{ num }}"{% if num in bs_filter.due_months %} selected{% endif %}>{{ mdate|date:"F" }}</option>{% endfor %}
-        </select>
-      </div>
-      <div>
-        <label for="due-date-range" class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Date Range" %}</label>
-        <input id="due-date-range" type="text" placeholder="{% translate 'Select range...' %}" autocomplete="off" class="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--surface-raised)] text-sm text-[var(--text-primary)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]">
-        <input id="due-date-from-hidden" type="hidden" name="due_date_from" value="{{ bs_filter.due_date_from|date:'Y-m-d'|default:'' }}">
-        <input id="due-date-to-hidden" type="hidden" name="due_date_to" value="{{ bs_filter.due_date_to|date:'Y-m-d'|default:'' }}">
-      </div>
-      <div class="flex gap-2">
-        <button type="submit" class="flex-1 rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-bold text-[var(--accent-on)] hover:bg-[var(--accent-strong)] transition-all">{% translate "Apply" %}</button>
-        {% if bs_filter.is_active %}<a href="{% url 'shop_detail' shop.pk %}" class="flex-1 text-center rounded-md border border-[var(--border)] px-4 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-raised)] transition-all">{% translate "Clear" %}</a>{% endif %}
+    <form method="get" class="border-b px-4 py-4 sm:px-6" style="border-color: var(--border-soft);" x-show="showFilter" x-cloak>
+      <div class="form-grid form-grid-4 lg:items-end">
+        <div class="field">
+          <label for="due-year-filter" class="label">{% translate "Year" %}</label>
+          <select id="due-year-filter" name="due_year" class="form-input">
+            <option value="">{% translate "All Years" %}</option>
+            {% for yr in year_options %}<option value="{{ yr }}"{% if bs_filter.due_year == yr %} selected{% endif %}>{{ yr }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label for="due-month-filter" class="label">{% translate "Months" %}</label>
+          <select id="due-month-filter" name="due_month" multiple class="form-input">
+            {% for num, mdate in month_choices %}<option value="{{ num }}"{% if num in bs_filter.due_months %} selected{% endif %}>{{ mdate|date:"F" }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label for="due-date-range" class="label">{% translate "Date Range" %}</label>
+          <input id="due-date-range" type="text" placeholder="{% translate 'Select range...' %}" autocomplete="off" class="form-input">
+          <input id="due-date-from-hidden" type="hidden" name="due_date_from" value="{{ bs_filter.due_date_from|date:'Y-m-d'|default:'' }}">
+          <input id="due-date-to-hidden" type="hidden" name="due_date_to" value="{{ bs_filter.due_date_to|date:'Y-m-d'|default:'' }}">
+        </div>
+        <div class="flex gap-2">
+          <button type="submit" class="btn btn-primary flex-1">{% translate "Apply" %}</button>
+          {% if bs_filter.is_active %}<a href="{% url 'shop_detail' shop.pk %}" class="btn btn-ghost">{% translate "Clear" %}</a>{% endif %}
+        </div>
       </div>
     </form>
 
-    {% if bs_filter.is_active %}
-    <p class="mt-4 text-xs font-bold" style="color: var(--accent);">
-      {% blocktranslate with period=bs_filter.description %}Filtered by {{ period }} — Transaction History below follows this too.{% endblocktranslate %}
-    </p>
-    {% endif %}
-
-    <!-- Primary Stats: what's owed right now, never affected by the filter above -->
-    <dl class="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2">
-      <div class="bg-[var(--surface-raised)] px-6 py-5 shadow-sm ring-1 ring-[var(--border)] rounded-2xl border-l-4" style="border-left-color: {% if remaining > 0 %}var(--status-critical){% else %}var(--status-good){% endif %};">
-        <dt class="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider">{% translate "Current Due" %}</dt>
-        <dd class="mt-2 text-3xl font-extrabold" style="color: {% if remaining > 0 %}var(--status-critical){% else %}var(--status-good){% endif %};">৳{{ remaining|floatformat:2 }}</dd>
-        <p class="mt-1 text-[11px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "As of today" %}</p>
-      </div>
-      <div class="bg-[var(--surface-raised)] px-6 py-5 shadow-sm ring-1 ring-[var(--border)] rounded-2xl border-l-4" style="border-left-color: {% if remaining > 0 %}var(--status-critical){% else %}var(--status-good){% endif %};">
-        <dt class="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider">{% translate "Outstanding Balance" %}</dt>
-        <dd class="mt-2 text-3xl font-extrabold" style="color: {% if remaining > 0 %}var(--status-critical){% else %}var(--status-good){% endif %};">৳{{ remaining|floatformat:2 }}</dd>
-        <p class="mt-1 text-[11px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "As of today" %}</p>
-      </div>
-    </dl>
-
-    <!-- Breakdown: total due vs total paid — reflects the filter above when active,
-         otherwise all-time. Collapsed by default. -->
-    <div class="mt-4" x-data="{ showBreakdown: false }">
-      <button type="button" @click="showBreakdown = !showBreakdown" class="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--accent)] hover:brightness-90 transition-all">
-        <svg class="h-4 w-4 transition-transform duration-200" :class="showBreakdown ? 'rotate-90' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
-        <span x-text="showBreakdown ? '{% translate "Hide breakdown" %}' : '{% translate "Show breakdown" %}'"></span>
-      </button>
-      <dl class="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2" x-show="showBreakdown" x-cloak
-          x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0">
-        <div class="bg-[var(--surface-raised)] px-6 py-5 shadow-sm ring-1 ring-[var(--border)] rounded-2xl">
-          <dt class="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider">{% translate "Total Due (বাকি)" %}</dt>
-          <dd class="mt-2 text-3xl font-extrabold text-[var(--text-primary)]">৳{{ breakdown_due|floatformat:2 }}</dd>
-          <p class="mt-1 text-[11px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% if bs_filter.is_active %}{{ bs_filter.description }}{% else %}{% translate "All Time" %}{% endif %}</p>
+    <div class="card-body">
+      {% if bs_filter.is_active %}
+      <p class="mb-3 text-xs font-semibold" style="color: var(--accent);">{% blocktranslate with period=bs_filter.description %}Filtered by {{ period }} — Transaction History below follows this too.{% endblocktranslate %}</p>
+      {% endif %}
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+        <div class="min-w-0" style="container-type: inline-size;">
+          <p class="stat-label">{% translate "Current Due" %}</p>
+          <p class="hero-value !mt-1" style="color: {% if remaining > 0 %}var(--status-critical){% else %}var(--status-good){% endif %}; font-size: clamp(1.75rem, 9cqi, 2.5rem);">{{ remaining|money }}</p>
+          <p class="stat-hint">{% translate "Outstanding balance, as of today" %}</p>
         </div>
-        <div class="bg-[var(--surface-raised)] px-6 py-5 shadow-sm ring-1 ring-[var(--border)] rounded-2xl border-l-4" style="border-left-color: var(--status-good);">
-          <dt class="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider">{% translate "Total Paid" %}</dt>
-          <dd class="mt-2 text-3xl font-extrabold" style="color: var(--status-good);">৳{{ breakdown_paid|floatformat:2 }}</dd>
-          <p class="mt-1 text-[11px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% if bs_filter.is_active %}{{ bs_filter.description }}{% else %}{% translate "All Time" %}{% endif %}</p>
+        <button type="button" class="btn btn-secondary btn-sm justify-self-start" @click="showBreakdown = !showBreakdown" :aria-expanded="showBreakdown.toString()">
+          <span x-text="showBreakdown ? '{% translate "Hide breakdown" %}' : '{% translate "Show breakdown" %}'"></span>
+        </button>
+      </div>
+      <dl class="stat-grid mt-4" x-show="showBreakdown" x-cloak x-transition.opacity>
+        <div class="stat">
+          <dt class="stat-label">{% translate "Total Due (বাকি)" %}</dt>
+          <dd class="stat-value">{{ breakdown_due|money }}</dd>
+          <p class="stat-hint">{% if bs_filter.is_active %}{{ bs_filter.description }}{% else %}{% translate "All Time" %}{% endif %}</p>
+        </div>
+        <div class="stat" data-tone="good">
+          <dt class="stat-label">{% translate "Total Paid" %}</dt>
+          <dd class="stat-value is-tone">{{ breakdown_paid|money }}</dd>
+          <p class="stat-hint">{% if bs_filter.is_active %}{{ bs_filter.description }}{% else %}{% translate "All Time" %}{% endif %}</p>
         </div>
       </dl>
     </div>
-  </div>
+  </section>
 
-  <div class="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-3 items-start">
-    <!-- Transactions List (Take 2/3 space) -->
-    <div class="lg:col-span-2">
-        <div class="overflow-hidden bg-[var(--surface-raised)] shadow-sm ring-1 ring-[var(--border)] rounded-2xl">
-            <div class="border-b px-6 py-5" style="border-color: var(--border-soft);">
-                <h3 class="text-base font-bold text-[var(--text-primary)] uppercase tracking-wider">{% translate "Transaction History" %}</h3>
-                <form method="get" class="mt-4 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end">
-                    <div>
-                        <label for="year-filter" class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Year" %}</label>
-                        <select id="year-filter" name="year" class="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--surface-raised)] text-sm text-[var(--text-primary)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]">
-                            <option value="">{% translate "All Years" %}</option>
-                            {% for yr in year_options %}<option value="{{ yr }}"{% if selected_year == yr %} selected{% endif %}>{{ yr }}</option>{% endfor %}
-                        </select>
-                    </div>
-                    <div>
-                        <label for="month-filter" class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Month" %}</label>
-                        <select id="month-filter" name="month" class="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--surface-raised)] text-sm text-[var(--text-primary)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]">
-                            <option value="">{% translate "All Months" %}</option>
-                            {% for num, mdate in month_choices %}<option value="{{ num }}"{% if selected_month == num %} selected{% endif %}>{{ mdate|date:"F" }}</option>{% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-span-2 flex flex-wrap gap-2 sm:col-span-1">
-                        <button type="submit" class="w-full rounded-md bg-[var(--surface-sunken)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] hover:brightness-95 sm:w-auto">{% translate "Apply" %}</button>
-                        {% if selected_year or selected_month %}<a href="{% url 'shop_detail' shop.pk %}" class="w-full rounded-md border border-[var(--border)] px-3 py-2 text-center text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)] sm:w-auto">{% translate "Reset" %}</a>{% endif %}
-                        <button type="submit" name="export" value="csv" class="w-full inline-flex items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-sm font-semibold hover:brightness-95 sm:w-auto" style="border-color: var(--accent); color: var(--accent);">
-                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>
-                            {% translate "Export CSV" %}
-                        </button>
-                        <a href="{% url 'shop_statement' shop.pk %}?{{ request.GET.urlencode }}" class="w-full inline-flex items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-sm font-semibold hover:brightness-95 sm:w-auto" style="border-color: var(--border); color: var(--text-secondary);">
-                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z" /></svg>
-                            {% translate "Statement" %}
-                        </a>
-                    </div>
-                </form>
-                <p class="mt-3 text-sm text-[var(--text-secondary)]">
-                    <span class="font-bold text-[var(--text-primary)]">{% if bs_filter.is_active %}{{ bs_filter.description }}{% elif selected_month %}{{ selected_month_date|date:"F" }} {{ selected_year }}{% elif selected_year %}{{ selected_year }}{% else %}{% translate "All Time" %}{% endif %}</span>
-                    — {% translate "Total Due" %} ৳{{ period_due|floatformat:2 }} · {% translate "Total Paid" %} ৳{{ period_paid|floatformat:2 }}
-                </p>
-                {% if bs_filter.is_active %}
-                <p class="mt-1.5 text-xs font-semibold" style="color: var(--accent);">
-                    {% translate "Following the Balance Summary filter above." %}
-                    <a href="{% url 'shop_detail' shop.pk %}" class="underline hover:no-underline">{% translate "Clear it" %}</a>
-                </p>
-                {% endif %}
-            </div>
-            <div class="overflow-x-auto">
-                {% if transactions %}
-                <table class="min-w-full divide-y" style="border-color: var(--border);">
-                    <thead style="background: var(--surface-sunken);">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest">{% translate "Date" %}</th>
-                            <th class="px-6 py-3 text-left text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest">{% translate "Type" %}</th>
-                            <th class="px-6 py-3 text-right text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest">{% translate "Amount" %}</th>
-                            <th class="px-6 py-3 text-left text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest">{% translate "Note" %}</th>
-                            <th class="px-6 py-3 text-right text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest">{% translate "Actions" %}</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y bg-[var(--surface-raised)]" style="border-color: var(--border-soft);">
-                        {% for tx in transactions %}
-                        <tr class="hover:bg-[var(--surface-sunken)] transition-colors">
-                            <td class="px-6 py-4 text-sm text-[var(--text-secondary)] font-medium">{{ tx.date|date:"d M Y" }}</td>
-                            <td class="px-6 py-4">
-                                <span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-bold" style="{% if tx.transaction_type == 'PURCHASE' %}background: var(--status-critical-bg); color: var(--status-critical);{% else %}background: var(--status-good-bg); color: var(--status-good);{% endif %}">
-                                    {{ tx.get_transaction_type_display }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 text-right text-sm font-bold text-[var(--text-primary)] font-mono">৳{{ tx.amount|floatformat:0 }}</td>
-                            <td class="px-6 py-4 text-sm text-[var(--text-muted)] italic font-light">{{ tx.note|default:"-" }}</td>
-                            <td class="px-6 py-4 text-right text-sm font-medium space-x-2">
-                                <a href="{% url 'shop_transaction_edit' tx.pk %}" class="inline-flex items-center" style="color: var(--accent);" title="{% translate 'Edit' %}">
-                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                    </svg>
-                                </a>
-                                <form method="post" action="{% url 'shop_transaction_delete' tx.pk %}" class="inline-block" onsubmit="return confirm('{% translate "Delete this record? This action cannot be undone." %}')">
-                                    {% csrf_token %}
-                                    <button type="submit" class="inline-flex items-center bg-transparent border-0 p-0 cursor-pointer" style="color: var(--status-critical);" title="{% translate 'Delete' %}">
-                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <div class="py-20 text-center">
-                    <p class="text-[var(--text-muted)] text-sm font-medium">
-                        {% if selected_year or selected_month or bs_filter.is_active %}{% translate "Nothing recorded for this period." %}{% else %}{% translate "No activity for this shop yet." %}{% endif %}
-                    </p>
-                    {% if selected_year or selected_month or bs_filter.is_active %}<a href="{% url 'shop_detail' shop.pk %}" class="mt-3 inline-block text-sm font-bold" style="color: var(--accent);">{% translate "Reset Filters" %}</a>{% endif %}
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
+  <div class="detail-grid">
+    <section class="card">
+      <div class="card-header">
+        <h2 class="card-title">{% translate "Transaction History" %}</h2>
+        {% url 'shop_detail' shop.pk as reset_url %}{% url 'shop_statement' shop.pk as statement_url %}
+        {% include "partials/period_filter.html" %}
+      </div>
+      <div class="period-summary border-b px-4 py-2.5 sm:px-6" style="border-color: var(--border-soft);">
+        <strong>{% if bs_filter.is_active %}{{ bs_filter.description }}{% elif selected_month %}{{ selected_month_date|date:"F" }} {{ selected_year }}{% elif selected_year %}{{ selected_year }}{% else %}{% translate "All Time" %}{% endif %}</strong>
+        <span>{% translate "Total Due" %} <strong class="num">{{ period_due|money }}</strong></span>
+        <span>{% translate "Total Paid" %} <strong class="num">{{ period_paid|money }}</strong></span>
+        {% if bs_filter.is_active %}<span style="color: var(--accent);">{% translate "Following the Balance Summary filter above." %} <a href="{% url 'shop_detail' shop.pk %}" class="font-semibold underline">{% translate "Clear it" %}</a></span>{% endif %}
+      </div>
+      {% if transactions %}
+      <ul class="ledger">
+        {% for tx in transactions %}
+        <li class="ledger-row">
+          {% if tx.transaction_type == 'PURCHASE' %}
+          <span class="ledger-icon" data-tone="critical">{% include "partials/icon.html" with name="cart" %}</span>
+          {% else %}
+          <span class="ledger-icon" data-tone="good">{% include "partials/icon.html" with name="check" %}</span>
+          {% endif %}
+          <div class="ledger-main">
+            <p class="ledger-title">{{ tx.get_transaction_type_display }}</p>
+            <p class="ledger-meta">{{ tx.date|date:"j M Y" }}{% if tx.note %} · {{ tx.note }}{% endif %}</p>
+          </div>
+          <div class="ledger-end">
+            <span class="ledger-amount" data-tone="{% if tx.transaction_type == 'PURCHASE' %}critical{% else %}good{% endif %}">{{ tx.amount|money }}</span>
+            {% url 'shop_transaction_edit' tx.pk as edit_url %}{% url 'shop_transaction_delete' tx.pk as delete_url %}
+            {% translate "Delete this record? This action cannot be undone." as confirm_text %}
+            {% include "partials/row_menu.html" with edit_url=edit_url delete_url=delete_url confirm=confirm_text up=forloop.last %}
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="empty is-plain">
+        <p class="empty-text">{% if selected_year or selected_month or bs_filter.is_active %}{% translate "Nothing recorded for this period." %}{% else %}{% translate "No activity for this shop yet." %}{% endif %}</p>
+        {% if selected_year or selected_month or bs_filter.is_active %}<a href="{% url 'shop_detail' shop.pk %}" class="btn btn-secondary btn-sm">{% translate "Reset Filters" %}</a>{% endif %}
+      </div>
+      {% endif %}
+    </section>
 
-    <!-- Action Center (1/3 space) -->
-    <div class="space-y-8">
-        <!-- Visual Stats -->
-        <div class="bg-[var(--surface-raised)] shadow-sm ring-1 ring-[var(--border)] rounded-2xl p-8 flex flex-col items-center">
-            <h3 class="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-widest mb-8">{% translate "Due Settled Percentage" %}</h3>
-            <div class="h-48 w-full"><canvas id="progressChart"></canvas></div>
+    <aside class="detail-side">
+      <section class="card" x-data="{ open: {{ form.errors|yesno:'true,false' }} }">
+        <button type="button" class="collapse-toggle" @click="open = !open" :aria-expanded="open.toString()">
+          <span class="flex items-center gap-2"><span class="h-5 w-5" style="color: var(--accent);">{% include "partials/icon.html" with name="plus" %}</span>{% translate "Record New Activity" %}</span>
+          {% include "partials/icon.html" with name="chevron-down" %}
+        </button>
+        <div class="collapse-body" :class="open && 'is-open'">
+          <div class="card-header hidden lg:flex"><h2 class="card-title">{% translate "Record New Activity" %}</h2></div>
+          <form method="post" class="card-body form-stack">
+            {% csrf_token %}
+            {% for field in form %}{% include "partials/field.html" %}{% endfor %}
+            <button type="submit" class="btn btn-primary btn-block">{% translate "Post Transaction" %}</button>
+          </form>
         </div>
+      </section>
 
-        <!-- Add Transaction Form -->
-        <div class="shadow-xl rounded-3xl p-8 ring-1" style="background: var(--surface-ink); color: var(--text-on-ink); border-color: var(--surface-ink-raised);">
-            <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
-                <svg class="h-6 w-6" style="color: var(--gold);" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                {% translate "Record New Activity" %}
-            </h3>
-            <form method="post" class="space-y-6">
-                {% csrf_token %}
-                {% for field in form %}
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-widest mb-1.5" style="color: var(--text-on-ink-muted);">{{ field.label }}</label>
-                    {{ field }}
-                    {% if field.errors %}
-                        <p class="mt-1 text-xs" style="color: var(--status-critical);">{{ field.errors.0 }}</p>
-                    {% endif %}
-                </div>
-                {% endfor %}
-                <button type="submit" class="w-full font-extrabold py-3 rounded-xl transition-all shadow-lg transform hover:-translate-y-0.5" style="background: var(--text-on-ink); color: var(--surface-ink);">{% translate "Post Transaction" %}</button>
-            </form>
+      {% if due > 0 %}
+      <section class="card card-body">
+        {% widthratio paid due 100 as paid_pct %}
+        <div class="meter-row"><span class="font-semibold" style="color: var(--text-primary);">{% translate "Due Settled Percentage" %}</span><span class="num">{{ paid_pct }}%</span></div>
+        <div class="meter meter-lg" data-tone="good"><span style="width: {% if paid_pct|add:0 > 100 %}100{% else %}{{ paid_pct }}{% endif %}%"></span></div>
+        <div class="mt-3 flex justify-between gap-2 text-xs" style="color: var(--text-muted);">
+          <span>{% translate "Paid" %} <strong class="num" style="color: var(--status-good);">{{ paid|money }}</strong></span>
+          <span>{% translate "Remaining (বাকি)" %} <strong class="num" style="color: var(--status-critical);">{{ chart_remaining|money }}</strong></span>
         </div>
-    </div>
+      </section>
+      {% endif %}
+    </aside>
   </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const dueYearFilter = document.getElementById('due-year-filter');
-        if (dueYearFilter) {
-          new TomSelect(dueYearFilter, {
-            create: false,
-            maxItems: 1,
-            allowEmptyOption: true
-          });
-        }
-
-        const dueMonthFilter = document.getElementById('due-month-filter');
-        if (dueMonthFilter) {
-          new TomSelect(dueMonthFilter, {
-            plugins: ['remove_button'],
-            placeholder: '{% translate "All Months" %}',
-            closeAfterSelect: false,
-            hideSelected: true
-          });
-        }
-
-        const dueDateRangeInput = document.getElementById('due-date-range');
-        const dueDateFromHidden = document.getElementById('due-date-from-hidden');
-        const dueDateToHidden = document.getElementById('due-date-to-hidden');
-        if (dueDateRangeInput && dueDateFromHidden && dueDateToHidden) {
-          const initialDates = [];
-          if (dueDateFromHidden.value) initialDates.push(dueDateFromHidden.value);
-          if (dueDateToHidden.value) initialDates.push(dueDateToHidden.value);
-
-          flatpickr(dueDateRangeInput, {
-            mode: "range",
-            dateFormat: "Y-m-d",
-            altInput: true,
-            altFormat: "M j, Y",
-            defaultDate: initialDates.length ? initialDates : null,
-            onChange: function(selectedDates) {
-              dueDateFromHidden.value = selectedDates[0]
-                ? flatpickr.formatDate(selectedDates[0], "Y-m-d")
-                : "";
-              dueDateToHidden.value = selectedDates[1]
-                ? flatpickr.formatDate(selectedDates[1], "Y-m-d")
-                : "";
-            }
-          });
-        }
-
-        const style = getComputedStyle(document.documentElement);
-        const goodColor = style.getPropertyValue('--status-good').trim() || '#10b981';
-        const criticalColor = style.getPropertyValue('--status-critical').trim() || '#ef4444';
-        const tooltipBg = style.getPropertyValue('--surface-ink').trim() || '#1e293b';
-        const textColor = style.getPropertyValue('--text-primary').trim() || '#111827';
-
-        const ctx = document.getElementById('progressChart').getContext('2d');
-        const paid = {{ chart_paid }};
-        const remaining = {{ chart_remaining }};
-
-        if (paid === 0 && remaining === 0) return;
-
-        new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['{% translate "Paid" %}', '{% translate "Remaining (বাকি)" %}'],
-                datasets: [{
-                    data: [paid, remaining],
-                    backgroundColor: [goodColor, criticalColor],
-                    borderColor: getComputedStyle(document.documentElement).getPropertyValue('--surface-raised').trim() || '#fff',
-                    borderWidth: 2,
-                    weight: 2,
-                    hoverOffset: 12
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '75%',
-                plugins: {
-                    legend: { position: 'bottom', labels: { usePointStyle: true, font: { weight: '600' }, color: textColor } },
-                    tooltip: { backgroundColor: tooltipBg, padding: 12 }
-                }
-            }
-        });
-    });
+  document.addEventListener('DOMContentLoaded', function () {
+    FT.multiSelect('due-month-filter', '{% translate "All Months" %}');
+    FT.rangePicker('due-date-range', 'due-date-from-hidden', 'due-date-to-hidden');
+  });
 </script>
-<style>
-    .space-y-6 select, .space-y-6 input, .space-y-6 textarea {
-        background-color: rgba(255,255,255,0.05);
-        border: 1px solid rgba(255,255,255,0.2);
-        color: var(--text-on-ink);
-        width: 100%;
-        padding: 0.75rem 1rem;
-        border-radius: 0.75rem;
-        font-size: 0.875rem;
-        transition: all 0.2s;
-    }
-    .space-y-6 select:focus, .space-y-6 input:focus, .space-y-6 textarea:focus {
-        background-color: rgba(255,255,255,0.1);
-        border-color: rgba(255,255,255,0.4);
-        outline: none;
-    }
-    .space-y-6 select option {
-        color: black;
-    }
-</style>
 {% endblock %}

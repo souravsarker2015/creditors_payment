@@ -23,7 +23,7 @@ class ShopAdmin(admin.ModelAdmin):
         "get_remaining",
         "get_is_paid",
     )
-    list_filter = ("user", "category", "transactions__transaction_type")
+    list_filter = ("is_active", "user", "category", "transactions__transaction_type")
     search_fields = ("name", "phone", "user__username")
     inlines = [TransactionInline]
 

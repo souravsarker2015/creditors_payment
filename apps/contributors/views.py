@@ -8,11 +8,13 @@ import django.utils.timezone
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Sum, Q, DecimalField, Value
+from django.views.decorators.http import require_POST
 from django.db.models.functions import Coalesce, TruncMonth
 from django.core.paginator import Paginator
 from django.utils import dateformat
 from django.utils.translation import gettext as _
 from .models import Contributor, ContributorCategory, Contribution
+from apps.core.status import apply_status_filter, toggle_active
 from .forms import ContributorForm, ContributionForm
 
 
@@ -214,6 +216,8 @@ def contributor_list(request):
     if search_query:
         contributors_base_qs = contributors_base_qs.filter(name__icontains=search_query)
 
+    status, contributors_base_qs, status_counts = apply_status_filter(request, contributors_base_qs)
+
     sort = request.GET.get("sort", "name")
     if sort not in SORT_FIELDS:
         sort = "name"
@@ -258,6 +262,8 @@ def contributor_list(request):
         "category_choices": ContributorCategory.choices,
         "filter_type": filter_type,
         "search_query": search_query,
+        "status": status,
+        "status_counts": status_counts,
         "sort": sort,
         "sort_options": SORT_OPTIONS,
         "base_query_string": base_query_string,
@@ -500,8 +506,16 @@ def contribution_update(request, pk):
     })
 
 @login_required
+@require_POST
 def contribution_delete(request, pk):
     contribution = get_object_or_404(Contribution, pk=pk, contributor__user=request.user)
     contributor_pk = contribution.contributor.pk
     contribution.delete()
     return redirect('contributor_detail', pk=contributor_pk)
+
+
+@login_required
+@require_POST
+def contributor_toggle_active_view(request, pk):
+    obj = get_object_or_404(Contributor, pk=pk, user=request.user)
+    return toggle_active(request, obj, "contributor_list")

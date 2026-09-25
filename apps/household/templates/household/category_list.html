@@ -4,113 +4,101 @@
 {% block title %}{% translate "Bazar Categories" %} | FinTrack{% endblock %}
 
 {% block content %}
-<div class="px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
-  <div class="sm:flex sm:items-start sm:justify-between gap-4">
-    <div class="sm:flex-auto max-w-2xl">
-      <h1 class="text-2xl font-bold leading-6 text-[var(--text-primary)]">{% translate "Bazar Categories" %}</h1>
-      <p class="mt-2 text-sm text-[var(--text-secondary)]">{% translate "Optional groupings for household purchases, e.g. Vegetables, Fish, Groceries. Purchases don't need a category at all." %}</p>
+<div class="page-medium stack">
+  <header class="page-header !mb-0">
+    <div>
+      <a href="{% url 'household_dashboard' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Household" %}</a>
+      <h1 class="page-title">{% translate "Bazar Categories" %}</h1>
+      <p class="page-subtitle">{% translate "Optional groupings for household purchases, e.g. Vegetables, Fish, Groceries. Purchases don't need a category at all." %}</p>
     </div>
-    <div class="mt-1 flex flex-col gap-2 sm:mt-0 sm:flex-none sm:flex-row">
+    <div class="page-actions">
       <form method="post" action="{% url 'household_category_import' %}" enctype="multipart/form-data" x-data>
         {% csrf_token %}
         <input type="file" id="category-import-file" name="csv_file" accept=".csv,text/csv" class="hidden" @change="$el.form.submit()">
-        <label for="category-import-file" class="block cursor-pointer rounded-md border border-[var(--border)] bg-[var(--surface-raised)] px-3 py-2 text-center text-sm font-semibold text-[var(--text-secondary)] shadow-sm hover:bg-[var(--surface-sunken)]">{% translate "Import CSV" %}</label>
+        <label for="category-import-file" class="btn btn-secondary cursor-pointer">{% include "partials/icon.html" with name="upload" %}{% translate "Import CSV" %}</label>
       </form>
-      <a href="{% url 'household_category_import_template' %}" class="block rounded-md border border-[var(--border)] bg-[var(--surface-raised)] px-3 py-2 text-center text-sm font-semibold text-[var(--text-secondary)] shadow-sm hover:bg-[var(--surface-sunken)]">{% translate "Template" %}</a>
-      <a href="{% url 'household_category_create' %}" class="block rounded-md bg-[var(--accent)] px-3 py-2 text-center text-sm font-semibold text-[var(--accent-on)] shadow-sm hover:bg-[var(--accent-strong)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]">+ {% translate "New Category" %}</a>
+      <a href="{% url 'household_category_import_template' %}" class="btn btn-ghost">{% translate "Template" %}</a>
+      <a href="{% url 'household_category_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "New Category" %}</a>
     </div>
-  </div>
+  </header>
 
-  <!-- Filter -->
-  <form method="get" class="mt-6 rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] p-4 shadow-sm">
-    <div class="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end">
+  <section class="card">
+    <div class="card-header">
       <div>
-        <label for="year-filter" class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Year" %}</label>
-        <select id="year-filter" name="year" class="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--surface-raised)] text-sm text-[var(--text-primary)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]">
+        <h2 class="card-title">{% translate "Spending by Category" %}</h2>
+        <p class="card-subtitle">{% if selected_month %}{{ selected_month_date|date:"F" }} {{ selected_year }}{% elif selected_year %}{{ selected_year }}{% else %}{% translate "All Time" %}{% endif %} · {% translate "Total Spent" %} <strong class="num" style="color: var(--text-primary);">{{ total_spent|money }}</strong></p>
+      </div>
+      <form method="get" class="flex flex-wrap items-center gap-2">
+        <select name="year" class="form-input !min-h-[2.375rem] !w-auto !py-1.5 !text-sm" aria-label="{% translate 'Year' %}" onchange="this.form.submit()">
           <option value="">{% translate "All Years" %}</option>
           {% for yr in year_options %}<option value="{{ yr }}"{% if selected_year == yr %} selected{% endif %}>{{ yr }}</option>{% endfor %}
         </select>
-      </div>
-      <div>
-        <label for="month-filter" class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Month" %}</label>
-        <select id="month-filter" name="month" class="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--surface-raised)] text-sm text-[var(--text-primary)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]">
+        <select name="month" class="form-input !min-h-[2.375rem] !w-auto !py-1.5 !text-sm" aria-label="{% translate 'Month' %}" onchange="this.form.submit()">
           <option value="">{% translate "All Months" %}</option>
           {% for num, mdate in month_choices %}<option value="{{ num }}"{% if selected_month == num %} selected{% endif %}>{{ mdate|date:"F" }}</option>{% endfor %}
         </select>
-      </div>
-      <div>
-        <label for="sort" class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Sort by" %}</label>
-        <select id="sort" name="sort" class="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--surface-raised)] text-sm text-[var(--text-primary)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]">
-          {% for value, label in sort_options %}
-            <option value="{{ value }}"{% if value == sort %} selected{% endif %}>{{ label }}</option>
-          {% endfor %}
+        <select name="sort" class="form-input !min-h-[2.375rem] !w-auto !py-1.5 !text-sm" aria-label="{% translate 'Sort by' %}" onchange="this.form.submit()">
+          {% for value, label in sort_options %}<option value="{{ value }}"{% if value == sort %} selected{% endif %}>{{ label }}</option>{% endfor %}
         </select>
-      </div>
-      <div class="col-span-2 flex flex-wrap gap-2 sm:col-span-1">
-        <button type="submit" class="w-full rounded-md bg-[var(--surface-sunken)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] hover:brightness-95 sm:w-auto">{% translate "Apply" %}</button>
-        {% if selected_year or selected_month %}<a href="{% url 'household_category_list' %}" class="w-full rounded-md border border-[var(--border)] px-3 py-2 text-center text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)] sm:w-auto">{% translate "Reset" %}</a>{% endif %}
-        <button type="submit" name="export" value="csv" class="w-full inline-flex items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-sm font-semibold hover:brightness-95 sm:w-auto" style="border-color: var(--accent); color: var(--accent);">
-          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>
-          {% translate "Export CSV" %}
-        </button>
+        {% if selected_year or selected_month %}<a href="{% url 'household_category_list' %}" class="btn btn-ghost btn-sm">{% translate "Reset" %}</a>{% endif %}
+        <button type="submit" name="export" value="csv" class="icon-btn" title="{% translate 'Export CSV' %}" aria-label="{% translate 'Export CSV' %}">{% include "partials/icon.html" with name="download" %}</button>
+      </form>
+    </div>
+    {% if categories %}
+    <div class="card-body grid grid-cols-1 gap-6 md:grid-cols-[16rem_minmax(0,1fr)] md:items-center">
+      <div class="chart-box chart-box-sm"><canvas id="categoryChart"></canvas></div>
+      <ul class="space-y-3">
+        {% for c in categories %}
+        <li>
+          <div class="meter-row !text-sm"><span class="truncate font-semibold" style="color: var(--text-primary);">{{ c.name }}</span><span class="num shrink-0"><strong style="color: var(--text-primary);">{{ c.total_amt|money }}</strong> · {{ c.percent }}%</span></div>
+          <div class="meter" data-tone="gold"><span style="width: {{ c.percent }}%"></span></div>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% elif selected_year or selected_month %}
+    <div class="empty is-plain">
+      <p class="empty-text">{% translate "Nothing recorded for this period." %}</p>
+      <a href="{% url 'household_category_list' %}" class="btn btn-secondary btn-sm">{% translate "Reset Filters" %}</a>
+    </div>
+    {% else %}
+    <div class="empty is-plain">
+      <p class="empty-text">{% translate "Log your first bazar purchase to see it here." %}</p>
+      <a href="{% url 'household_list' %}" class="btn btn-secondary btn-sm">{% translate "View Bazar Log" %}</a>
+    </div>
+    {% endif %}
+  </section>
+
+  <section class="card">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title">{% translate "Manage Categories" %}</h2>
+        <p class="card-subtitle">{% translate "Inactive categories disappear from the purchase form but keep their history." %}</p>
       </div>
     </div>
-    <p class="mt-3 text-sm text-[var(--text-secondary)]">
-      <span class="font-bold text-[var(--text-primary)]">{% if selected_month %}{{ selected_month_date|date:"F" }} {{ selected_year }}{% elif selected_year %}{{ selected_year }}{% else %}{% translate "All Time" %}{% endif %}</span>
-      — {% translate "Total Spent" %} ৳{{ total_spent|floatformat:2 }}
-    </p>
-  </form>
-
-  {% if categories %}
-  <!-- Chart -->
-  <div class="mt-8 rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-6 shadow-sm">
-    <h3 class="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-widest mb-6 text-center">{% translate "Spending by Category" %}</h3>
-    <div class="mx-auto h-64 max-w-xs sm:h-80"><canvas id="categoryChart"></canvas></div>
-  </div>
-
-  <div class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
-    {% for c in categories %}
-    <div class="relative flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-6 shadow-sm hover:shadow-md transition-shadow">
-      <div class="flex items-center justify-between gap-3">
-        <div class="flex items-center gap-3 min-w-0">
-          <div class="h-10 w-10 shrink-0 rounded-xl flex items-center justify-center font-bold text-lg" style="background: var(--status-warn-bg); color: var(--status-warn);">
-            {{ c.name|first|upper }}
-          </div>
-          <h3 class="truncate text-lg font-bold text-[var(--text-primary)]">{{ c.name }}</h3>
+    {% if managed_categories %}
+    <ul class="ledger">
+      {% for c in managed_categories %}
+      <li class="ledger-row {% if not c.is_active %}opacity-70{% endif %}">
+        <span class="ledger-icon" data-tone="{% if c.is_active %}gold{% else %}muted{% endif %}">{{ c.name|first|upper }}</span>
+        <div class="ledger-main">
+          <p class="ledger-title">{{ c.name }}{% if not c.is_active %} <span class="badge ml-1" data-tone="muted">{% translate "Inactive" %}</span>{% endif %}</p>
+          <p class="ledger-meta">{% blocktranslate count counter=c.purchase_count %}{{ counter }} purchase{% plural %}{{ counter }} purchases{% endblocktranslate %}</p>
         </div>
-        <div class="shrink-0 text-right">
-            <span class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest block mb-1">{% translate "Total Spent" %}</span>
-            <span class="text-lg font-bold text-[var(--text-primary)]">৳{{ c.total_amt|floatformat:0 }}</span>
-            <span class="block text-xs font-bold" style="color: var(--status-warn);">{{ c.percent }}%</span>
-        </div>
-      </div>
-      <div class="mt-4 h-2 w-full rounded-full overflow-hidden" style="background: var(--surface-sunken);">
-          <div class="h-full rounded-full transition-all duration-500" style="width: {{ c.percent }}%; background: var(--status-warn);"></div>
-      </div>
+        {% url 'household_category_toggle_active' c.pk as toggle_url %}
+        {% include "partials/toggle_active_item.html" with url=toggle_url active=c.is_active as_button=True %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty is-plain">
+      <div class="empty-icon">{% include "partials/icon.html" with name="tag" %}</div>
+      <h3 class="empty-title">{% translate "No categories yet" %}</h3>
+      <p class="empty-text">{% translate "Categories are entirely optional — add one only if you want to break down bazar spending further." %}</p>
+      <a href="{% url 'household_category_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add Your First Category" %}</a>
     </div>
-    {% endfor %}
-  </div>
-  {% elif selected_year or selected_month %}
-  <div class="mt-8 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[var(--border)] p-12 text-center bg-[var(--surface-raised)]">
-      <svg class="h-16 w-16 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
-      <h3 class="mt-4 text-lg font-bold text-[var(--text-primary)]">{% translate "Nothing recorded for this period." %}</h3>
-      <a href="{% url 'household_category_list' %}" class="mt-6 inline-flex items-center rounded-md bg-[var(--surface-sunken)] px-4 py-2 text-sm font-bold text-[var(--text-primary)] shadow-sm hover:brightness-95 transition-all">{% translate "Reset Filters" %}</a>
-  </div>
-  {% elif has_categories %}
-  <div class="mt-8 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[var(--border)] p-12 text-center bg-[var(--surface-raised)]">
-      <svg class="h-16 w-16 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z" /></svg>
-      <h3 class="mt-4 text-lg font-bold text-[var(--text-primary)]">{% translate "No purchases yet" %}</h3>
-      <p class="mt-2 text-sm text-[var(--text-secondary)] max-w-xs">{% translate "Log your first bazar purchase to see it here." %}</p>
-      <a href="{% url 'household_list' %}" class="mt-6 inline-flex items-center rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-bold text-[var(--accent-on)] shadow-sm hover:bg-[var(--accent-strong)] transition-all">{% translate "View Bazar Log" %}</a>
-  </div>
-  {% else %}
-  <div class="mt-8 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[var(--border)] p-12 text-center bg-[var(--surface-raised)]">
-      <svg class="h-16 w-16 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
-      <h3 class="mt-4 text-lg font-bold text-[var(--text-primary)]">{% translate "No categories yet" %}</h3>
-      <p class="mt-2 text-sm text-[var(--text-secondary)] max-w-xs">{% translate "Categories are entirely optional — add one only if you want to break down bazar spending further." %}</p>
-      <a href="{% url 'household_category_create' %}" class="mt-6 inline-flex items-center rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-bold text-[var(--accent-on)] shadow-sm hover:bg-[var(--accent-strong)] transition-all">+ {% translate "Add Your First Category" %}</a>
-  </div>
-  {% endif %}
+    {% endif %}
+  </section>
 </div>
 {% endblock %}
 
@@ -123,11 +111,13 @@
         const labels = {{ category_labels|safe }};
         const data = {{ category_data|safe }};
 
+        if (!document.getElementById('categoryChart')) return;
         renderDistributionChart({
             canvasId: 'categoryChart',
             labels: labels,
             data: data,
             centerLabel: '{% translate "Total Spent" %}',
+            showLegend: false,
         });
     });
 </script>

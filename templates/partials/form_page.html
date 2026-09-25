@@ -1,0 +1,25 @@
+{% load i18n %}
+{% comment %}
+Standard add/edit page: back link, title, one card with every field, and a
+sticky-feeling action row. Needs: form, title, back. Optional: subtitle, submit_label.
+{% endcomment %}
+<div class="page-narrow">
+  <header class="page-header">
+    <div>
+      <a href="{{ back }}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Back" %}</a>
+      <h1 class="page-title">{{ title }}</h1>
+      {% if subtitle %}<p class="page-subtitle">{{ subtitle }}</p>{% endif %}
+    </div>
+  </header>
+  <form method="post" class="card" novalidate>
+    {% csrf_token %}
+    <div class="card-body form-stack">
+      {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+      {% for field in form %}{% include "partials/field.html" %}{% endfor %}
+    </div>
+    <div class="card-footer form-actions">
+      <a href="{{ back }}" class="btn btn-ghost">{% translate "Cancel" %}</a>
+      <button type="submit" class="btn btn-primary">{% include "partials/icon.html" with name="check" %}{{ submit_label|default:_("Save") }}</button>
+    </div>
+  </form>
+</div>

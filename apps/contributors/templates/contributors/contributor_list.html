@@ -3,217 +3,95 @@
 
 {% block title %}{% translate "Contributor List" %} | FinTrack{% endblock %}
 
-{% block extra_css %}
-<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
-{% endblock %}
-
 {% block content %}
-<div class="px-4 sm:px-6 lg:px-8">
-    <!-- Header -->
-    <div class="sm:flex sm:items-start sm:justify-between gap-4">
-        <div class="sm:flex-auto max-w-2xl">
-            <h1 class="text-2xl font-bold leading-6 text-[var(--text-primary)]">{% translate "Manage Contributors" %}</h1>
-            <p class="mt-2 text-sm text-[var(--text-secondary)]">{% translate "Detailed list of contributors and their total voluntary support entries. Search by name or use filters to include/exclude selected categories." %}</p>
-        </div>
-        <div class="mt-1 flex flex-col gap-2 sm:mt-0 sm:flex-none sm:flex-row">
-            <form method="post" action="{% url 'contributor_import' %}" enctype="multipart/form-data" x-data>
-                {% csrf_token %}
-                <input type="file" id="contributor-import-file" name="csv_file" accept=".csv,text/csv" class="hidden" @change="$el.form.submit()">
-                <label for="contributor-import-file" class="block cursor-pointer rounded-md border border-[var(--border)] bg-[var(--surface-raised)] px-3 py-2 text-center text-sm font-semibold text-[var(--text-secondary)] shadow-sm hover:bg-[var(--surface-sunken)]">{% translate "Import CSV" %}</label>
-            </form>
-            <a href="{% url 'contributor_import_template' %}" class="block rounded-md border border-[var(--border)] bg-[var(--surface-raised)] px-3 py-2 text-center text-sm font-semibold text-[var(--text-secondary)] shadow-sm hover:bg-[var(--surface-sunken)]">{% translate "Template" %}</a>
-            <a href="{% url 'contributor_create' %}" class="block rounded-md bg-[var(--accent)] px-3 py-2 text-center text-sm font-semibold text-[var(--accent-on)] shadow-sm hover:bg-[var(--accent-strong)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]">+ {% translate "New Contributor" %}</a>
-        </div>
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <a href="{% url 'contributor_dashboard' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Contributors Overview" %}</a>
+      <h1 class="page-title">{% translate "Manage Contributors" %}</h1>
+      <p class="page-subtitle">{% translate "People and organisations who support you, and how much each has given." %}</p>
     </div>
-
-    <form method="get" x-data="{ filterType: '{{ filter_type|default:"include" }}' }" class="mt-6 rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] p-4 shadow-sm">
-        <input type="hidden" name="filter_type" x-model="filterType">
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div class="w-full">
-                <label for="q" class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Search by name" %}</label>
-                <div class="relative mt-1">
-                  <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
-                  <input type="text" id="q" name="q" value="{{ search_query }}" placeholder="{% translate 'e.g. Sajal Saha' %}" autocomplete="off" class="block w-full rounded-md border-[var(--border)] bg-[var(--surface-raised)] pl-9 text-sm text-[var(--text-primary)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]">
-                </div>
-            </div>
-            <div class="w-full">
-                <p class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Filter mode" %}</p>
-                <div class="mt-1 grid w-full grid-cols-2 rounded-lg bg-[var(--surface-sunken)] p-1 ring-1 ring-inset ring-[var(--border-soft)]">
-                    <button type="button" @click="filterType = 'include'" class="inline-flex w-full items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-semibold transition-all"
-                      :class="filterType === 'include' ? 'bg-[var(--surface-raised)] text-[var(--accent)] shadow-sm ring-1 ring-[var(--accent-soft)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'">
-                      <span class="inline-block h-2 w-2 rounded-full" style="background: var(--accent);"></span> {% translate "Include" %}
-                    </button>
-                    <button type="button" @click="filterType = 'exclude'" class="inline-flex w-full items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-semibold transition-all"
-                      :class="filterType === 'exclude' ? 'bg-[var(--surface-raised)] text-[var(--status-critical)] shadow-sm ring-1 ring-[var(--status-critical-bg)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'">
-                      <span class="inline-block h-2 w-2 rounded-full" style="background: var(--status-critical);"></span> {% translate "Exclude" %}
-                    </button>
-                </div>
-            </div>
-            <div class="w-full">
-                <label for="category" class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Categories" %}</label>
-                <select id="category" name="category" multiple class="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--surface-raised)] text-sm text-[var(--text-primary)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]">
-                    {% for value, label in category_choices %}
-                        <option value="{{ value }}"{% if value in selected_categories %} selected{% endif %}>{{ label }}</option>
-                    {% endfor %}
-                </select>
-                <p class="mt-1 text-xs text-[var(--text-muted)]">{% translate "Leave empty for all categories." %}</p>
-            </div>
-            <div class="w-full">
-                <label for="sort" class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Sort by" %}</label>
-                <select id="sort" name="sort" class="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--surface-raised)] text-sm text-[var(--text-primary)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]">
-                    {% for value, label in sort_options %}
-                        <option value="{{ value }}"{% if value == sort %} selected{% endif %}>{{ label }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-        </div>
-        <div class="mt-4 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
-            <button type="submit" class="w-full rounded-md bg-[var(--surface-sunken)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] hover:brightness-95 sm:w-auto">
-                {% translate "Apply Filter" %}
-            </button>
-            <a href="{% url 'contributor_list' %}" class="w-full rounded-md border border-[var(--border)] px-3 py-2 text-center text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)] sm:w-auto">
-                {% translate "Reset" %}
-            </a>
-            <button type="submit" name="export" value="csv" class="w-full inline-flex items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-sm font-semibold hover:brightness-95 sm:w-auto" style="border-color: var(--accent); color: var(--accent);">
-                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>
-                {% translate "Export CSV" %}
-            </button>
-        </div>
-    </form>
-
-    <dl class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div class="overflow-hidden rounded-lg bg-[var(--surface-raised)] px-4 py-5 shadow sm:p-6 border-l-4" style="border-left-color: var(--accent);">
-          <dt class="truncate text-sm font-medium text-[var(--text-secondary)]">{% translate "Total Contributors" %}</dt>
-          <dd class="mt-1 text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-4xl">{{ total_contributors }}</dd>
-        </div>
-        <div class="overflow-hidden rounded-lg bg-[var(--surface-raised)] px-4 py-5 shadow sm:p-6 border-l-4" style="border-left-color: var(--status-good);">
-          <dt class="truncate text-sm font-medium text-[var(--text-secondary)]">{% translate "Total Funding" %}</dt>
-          <dd class="mt-1 text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-4xl">৳{{ total_contribution_amount|floatformat:2 }}</dd>
-        </div>
-        <div class="overflow-hidden rounded-lg bg-[var(--surface-raised)] px-4 py-5 shadow sm:p-6 border-l-4" style="border-left-color: var(--gold);">
-          <dt class="truncate text-sm font-medium text-[var(--text-secondary)]">{% translate "Avg. Contribution" %}</dt>
-          <dd class="mt-1 text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-4xl">৳{{ avg_contribution|floatformat:2 }}</dd>
-        </div>
-    </dl>
-
-    {% if page_obj.object_list %}
-    <div class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {% for contributor in page_obj %}
-        <div class="relative flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-6 shadow-sm hover:shadow-md transition-shadow">
-            <div class="flex flex-wrap items-start justify-between gap-2">
-                <h3 class="min-w-0 flex-1 truncate text-lg font-bold text-[var(--text-primary)]">{{ contributor.name }}</h3>
-                <span class="shrink-0 inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold bg-[var(--accent-soft)] text-[var(--accent)]">
-                    ৳{{ contributor.total_amount|default:0|floatformat:0 }}
-                </span>
-            </div>
-            <div class="mt-2 flex items-center gap-2">
-                <span class="inline-flex items-center rounded-full bg-[var(--accent-soft)] px-2 py-1 text-xs font-semibold text-[var(--accent)]">{{ contributor.get_category_display }}</span>
-                <p class="text-sm text-[var(--text-secondary)]">{% if contributor.phone %}{{ contributor.phone }}{% else %}{% translate "No contact info" %}{% endif %}</p>
-            </div>
-
-            <div class="mt-6 flex-1">
-                <div class="flex justify-between text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">
-                    <span>{% translate "Contribution Level" %}</span>
-                </div>
-                <div class="rounded-xl p-4 border" style="background: var(--surface-sunken); border-color: var(--border-soft);">
-                    <div class="flex flex-col">
-                        <span class="text-[10px] text-[var(--text-muted)] font-black uppercase tracking-widest mb-1">{% translate "Total Support" %}</span>
-                        <span class="text-2xl font-black tracking-tighter" style="color: var(--accent);">৳{{ contributor.total_amount|default:0|floatformat:2 }}</span>
-                    </div>
-                </div>
-                {% if contributor.note %}
-                <p class="mt-4 text-xs text-[var(--text-muted)] line-clamp-2 leading-relaxed italic">&quot;{{ contributor.note }}&quot;</p>
-                {% endif %}
-            </div>
-
-            <div class="mt-8 pt-4 border-t border-[var(--border-soft)] flex gap-3">
-                <a href="{% url 'contributor_detail' contributor.pk %}" class="flex-1 rounded-lg bg-[var(--surface-sunken)] px-3 py-2 text-center text-sm font-bold text-[var(--accent)] hover:brightness-95 transition-all">{% translate "Details" %}</a>
-                <a href="{% url 'contributor_update' contributor.pk %}" class="rounded-lg bg-[var(--surface-raised)] border border-[var(--border)] px-3 py-2 text-center text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)] shadow-sm">{% translate "Edit" %}</a>
-            </div>
-        </div>
-        {% endfor %}
+    <div class="page-actions">
+      <form method="post" action="{% url 'contributor_import' %}" enctype="multipart/form-data" x-data>
+        {% csrf_token %}
+        <input type="file" id="contributor-import-file" name="csv_file" accept=".csv,text/csv" class="hidden" @change="$el.form.submit()">
+        <label for="contributor-import-file" class="btn btn-secondary cursor-pointer">{% include "partials/icon.html" with name="upload" %}{% translate "Import CSV" %}</label>
+      </form>
+      <a href="{% url 'contributor_import_template' %}" class="btn btn-ghost">{% translate "Template" %}</a>
+      <a href="{% url 'contributor_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "New Contributor" %}</a>
     </div>
+  </header>
 
-    {% if page_obj.paginator.num_pages > 1 %}
-    <div class="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
-        <p class="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
-          {% blocktranslate with current=page_obj.number total=page_obj.paginator.num_pages %}Page {{ current }} of {{ total }}{% endblocktranslate %}
-        </p>
+  {% url 'contributor_list' as reset_url %}
+  {% translate "e.g. Sajal Saha" as search_placeholder %}
+  {% include "partials/entity_filters.html" with reset_url=reset_url search_placeholder=search_placeholder %}
 
-        <div class="flex flex-col items-center gap-3 sm:flex-row">
-          <div class="max-w-full overflow-x-auto">
-            <nav class="inline-flex items-center gap-1 whitespace-nowrap rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] p-1 shadow-sm">
-              {% if page_obj.has_previous %}
-                <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page=1" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{% translate "First" %}</a>
-                <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ page_obj.previous_page_number }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{% translate "Prev" %}</a>
-              {% else %}
-                <span class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-muted)]">{% translate "First" %}</span>
-                <span class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-muted)]">{% translate "Prev" %}</span>
-              {% endif %}
+  <dl class="stat-grid">
+    <div class="stat" data-tone="good">
+      <dt class="stat-label">{% translate "Total Funding" %}</dt>
+      <dd class="stat-value">{{ total_contribution_amount|money }}</dd>
+    </div>
+    <div class="stat" data-tone="accent">
+      <dt class="stat-label">{% translate "Total Contributors" %}</dt>
+      <dd class="stat-value">{{ total_contributors }}</dd>
+    </div>
+    <div class="stat" data-tone="gold">
+      <dt class="stat-label">{% translate "Avg. Contribution" %}</dt>
+      <dd class="stat-value">{{ avg_contribution|money }}</dd>
+    </div>
+  </dl>
 
-              {% for num in pagination_window %}
-                {% if num is None %}
-                  <span class="px-2 py-2 text-sm font-bold text-[var(--text-muted)]">…</span>
-                {% elif num == page_obj.number %}
-                  <span class="rounded-lg px-3 py-2 text-sm font-bold" style="background: var(--accent); color: var(--accent-on);">{{ num }}</span>
-                {% else %}
-                  <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ num }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{{ num }}</a>
-                {% endif %}
-              {% endfor %}
+  {% include "partials/status_tabs.html" %}
 
-              {% if page_obj.has_next %}
-                <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ page_obj.next_page_number }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{% translate "Next" %}</a>
-                <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ page_obj.paginator.num_pages }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{% translate "Last" %}</a>
-              {% else %}
-                <span class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-muted)]">{% translate "Next" %}</span>
-                <span class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-muted)]">{% translate "Last" %}</span>
-              {% endif %}
-            </nav>
-          </div>
-
-          <form class="flex flex-col items-start gap-1" x-data="{ pageInput: '{{ page_obj.number }}', maxPage: {{ page_obj.paginator.num_pages }}, showError: false }" @submit.prevent="const p = parseInt(pageInput, 10); showError = !(p >= 1 && p <= maxPage); if (!showError) { window.location.href = '?{{ base_query_string }}{% if base_query_string %}&{% endif %}page=' + p; }">
-            <div class="flex items-center gap-2">
-              <input type="number" x-model="pageInput" inputmode="numeric" min="1" max="{{ page_obj.paginator.num_pages }}" class="w-20 rounded-lg border border-[var(--border)] bg-[var(--surface-raised)] px-2 py-2 text-center text-sm font-semibold text-[var(--text-primary)] focus:border-[var(--accent)] focus:ring-[var(--accent)]">
-              <button type="submit" class="rounded-lg bg-[var(--surface-sunken)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] hover:brightness-95">{% translate "Go" %}</button>
-            </div>
-            <p class="text-xs font-medium text-[var(--text-muted)]">{% blocktranslate with total=page_obj.paginator.num_pages %}Range: 1-{{ total }}{% endblocktranslate %}</p>
-            <p x-show="showError" x-cloak class="text-xs font-semibold" style="color: var(--status-critical);">{% blocktranslate with total=page_obj.paginator.num_pages %}Please enter a page between 1 and {{ total }}.{% endblocktranslate %}</p>
-          </form>
+  {% if page_obj.object_list %}
+  <div class="card-grid card-grid-3">
+    {% for contributor in page_obj %}
+    {% url 'contributor_detail' contributor.pk as detail_url %}
+    <article class="card entity {% if not contributor.is_active %}is-inactive{% endif %}">
+      <div class="entity-head">
+        <a href="{{ detail_url }}" class="avatar">{{ contributor.name|first }}</a>
+        <div class="min-w-0 flex-1">
+          <h3 class="entity-name"><a href="{{ detail_url }}">{{ contributor.name }}</a></h3>
+          <p class="entity-meta">{{ contributor.get_category_display }}{% if contributor.phone %} · {{ contributor.phone }}{% endif %}</p>
         </div>
-    </div>
-    {% endif %}
-
-    {% elif search_query or selected_categories %}
-    <div class="mt-8 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[var(--border)] p-12 text-center bg-[var(--surface-raised)]">
-        <svg class="h-16 w-16 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
-        <h3 class="mt-4 text-lg font-bold text-[var(--text-primary)]">{% translate "No contributors match your filters" %}</h3>
-        <p class="mt-2 text-sm text-[var(--text-secondary)] max-w-xs">{% translate "Try a different name, or reset the filters to see everyone." %}</p>
-        <a href="{% url 'contributor_list' %}" class="mt-6 inline-flex items-center rounded-md bg-[var(--surface-sunken)] px-4 py-2 text-sm font-bold text-[var(--text-primary)] shadow-sm hover:brightness-95 transition-all">{% translate "Reset Filters" %}</a>
-    </div>
-    {% else %}
-    <div class="mt-8 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[var(--border)] p-12 text-center bg-[var(--surface-raised)]">
-        <svg class="h-16 w-16 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-        <h3 class="mt-4 text-lg font-bold text-[var(--text-primary)]">{% translate "No contributors yet" %}</h3>
-        <p class="mt-2 text-sm text-[var(--text-secondary)] max-w-xs">{% translate "Start recording support from voluntary contributors to keep your records complete." %}</p>
-        <a href="{% url 'contributor_create' %}" class="mt-6 inline-flex items-center rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-bold text-[var(--accent-on)] shadow-sm hover:bg-[var(--accent-strong)] transition-all">+ {% translate "Add Your First Contributor" %}</a>
-    </div>
-    {% endif %}
+        {% url 'contributor_update' contributor.pk as edit_url %}{% url 'contributor_toggle_active' contributor.pk as toggle_url %}
+        {% include "partials/entity_menu.html" with edit_url=edit_url toggle_url=toggle_url active=contributor.is_active %}
+      </div>
+      {% if not contributor.is_active %}<div class="entity-badges"><span class="badge" data-tone="muted">{% translate "Inactive" %}</span></div>{% endif %}
+      <div>
+        <p class="entity-figure-label">{% translate "Total Support" %}</p>
+        <p class="entity-figure" data-tone="good">{{ contributor.total_amount|default:0|money }}</p>
+      </div>
+      {% if contributor.note %}<p class="text-xs leading-relaxed line-clamp-2" style="color: var(--text-muted);">{{ contributor.note }}</p>{% endif %}
+      <div class="entity-foot">
+        <a href="{{ detail_url }}" class="btn btn-secondary btn-sm">{% translate "Details" %}{% include "partials/icon.html" with name="arrow-right" %}</a>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  {% include "partials/pagination.html" %}
+  {% elif search_query or selected_categories or status != "active" %}
+  <div class="empty">
+    <div class="empty-icon">{% include "partials/icon.html" with name="search" %}</div>
+    <h3 class="empty-title">{% translate "No contributors match your filters" %}</h3>
+    <p class="empty-text">{% translate "Try a different name, or reset the filters to see everyone." %}</p>
+    <a href="{% url 'contributor_list' %}" class="btn btn-secondary">{% translate "Reset Filters" %}</a>
+  </div>
+  {% else %}
+  <div class="empty">
+    <div class="empty-icon">{% include "partials/icon.html" with name="users" %}</div>
+    <h3 class="empty-title">{% translate "No contributors yet" %}</h3>
+    <p class="empty-text">{% translate "Start recording support from voluntary contributors to keep your records complete." %}</p>
+    <a href="{% url 'contributor_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add Your First Contributor" %}</a>
+  </div>
+  {% endif %}
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const categorySelect = document.getElementById('category');
-    if (categorySelect) {
-      new TomSelect(categorySelect, {
-        plugins: ['remove_button'],
-        placeholder: '{% translate "Select categories..." %}',
-        closeAfterSelect: false,
-        hideSelected: true
-      });
-    }
+  document.addEventListener('DOMContentLoaded', function () {
+    FT.multiSelect('category', '{% translate "Select categories..." %}');
   });
 </script>
 {% endblock %}

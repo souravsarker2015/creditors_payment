@@ -1,0 +1,36 @@
+{% load i18n %}
+{% comment %}"Needs attention" card: overdue + due-soon records. Needs: overdue, due_soon, detail_urlname.{% endcomment %}
+{% if overdue or due_soon %}
+<section class="card">
+  <div class="card-header">
+    <h2 class="card-title flex items-center gap-2"><span class="h-[1.125rem] w-[1.125rem]" style="color: var(--status-warn);">{% include "partials/icon.html" with name="alert" %}</span>{% translate "Needs Attention" %}</h2>
+    <span class="badge" data-tone="warn">{{ overdue|length|add:due_soon|length }}</span>
+  </div>
+  <ul class="ledger">
+    {% for r in overdue %}
+    <li>
+      <a href="{% url detail_urlname r.pk %}" class="ledger-row">
+        <span class="ledger-icon" data-tone="critical">{{ r.name|first|upper }}</span>
+        <div class="ledger-main">
+          <p class="ledger-title">{{ r.name }}</p>
+          <p class="ledger-meta" style="color: var(--status-critical);">{% blocktranslate with date=r.due_date|date:"j M" %}Overdue since {{ date }}{% endblocktranslate %}</p>
+        </div>
+        <span class="ledger-amount" data-tone="critical">{{ r.remaining_amt|money }}</span>
+      </a>
+    </li>
+    {% endfor %}
+    {% for r in due_soon %}
+    <li>
+      <a href="{% url detail_urlname r.pk %}" class="ledger-row">
+        <span class="ledger-icon" data-tone="warn">{{ r.name|first|upper }}</span>
+        <div class="ledger-main">
+          <p class="ledger-title">{{ r.name }}</p>
+          <p class="ledger-meta" style="color: var(--status-warn);">{% blocktranslate with date=r.due_date|date:"j M" %}Due {{ date }}{% endblocktranslate %}</p>
+        </div>
+        <span class="ledger-amount" data-tone="warn">{{ r.remaining_amt|money }}</span>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}

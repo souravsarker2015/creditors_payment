@@ -16,6 +16,7 @@ from django.utils import dateformat
 from django.utils.translation import gettext as _, ngettext
 
 from .models import HouseholdCategory, HouseholdMember, Purchase, Settlement
+from apps.core.status import apply_status_filter, toggle_active
 from .forms import HouseholdCategoryForm, HouseholdMemberForm, PurchaseForm, SettlementForm
 
 
@@ -348,6 +349,7 @@ def member_list_view(request):
     members_qs = request.user.household_members.all()
     if search_query:
         members_qs = members_qs.filter(name__icontains=search_query)
+    status, members_qs, status_counts = apply_status_filter(request, members_qs)
     members = list(members_qs)
     for m in members:
         spent = m.total_spent
@@ -399,6 +401,8 @@ def member_list_view(request):
         "pagination_window": _build_pagination_window(page_obj),
         "total_owed": total_owed,
         "search_query": search_query,
+        "status": status,
+        "status_counts": status_counts,
         "sort": sort,
         "sort_options": MEMBER_SORT_OPTIONS,
         "base_query_string": base_query_string,
@@ -739,8 +743,13 @@ def category_list_view(request):
             rows,
         )
 
+    managed_categories = request.user.household_categories.annotate(
+        purchase_count=Count("purchases")
+    ).order_by("-is_active", "name")
+
     context = {
         "categories": categories,
+        "managed_categories": managed_categories,
         "has_categories": has_categories,
         "total_spent": total_spent,
         "category_labels": category_labels,
@@ -848,3 +857,17 @@ def category_import_view(request):
         messages.error(request, _("No rows found to import."))
 
     return redirect("household_category_list")
+
+
+@login_required
+@require_POST
+def member_toggle_active_view(request, pk):
+    obj = get_object_or_404(HouseholdMember, pk=pk, user=request.user)
+    return toggle_active(request, obj, "household_member_list")
+
+
+@login_required
+@require_POST
+def category_toggle_active_view(request, pk):
+    obj = get_object_or_404(HouseholdCategory, pk=pk, user=request.user)
+    return toggle_active(request, obj, "household_category_list")

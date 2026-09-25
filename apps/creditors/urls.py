@@ -8,6 +8,7 @@ urlpatterns = [
     path("creditors/import/", views.creditor_import_view, name="creditor_import"),
     path("creditors/import/template/", views.creditor_import_template_view, name="creditor_import_template"),
     path("creditors/<int:pk>/", views.creditor_detail_view, name="creditor_detail"),
+    path("creditors/<int:pk>/toggle-active/", views.creditor_toggle_active_view, name="creditor_toggle_active"),
     path("creditors/<int:pk>/edit/", views.creditor_edit_view, name="creditor_edit"),
     path("creditors/<int:pk>/statement/", views.creditor_statement_view, name="creditor_statement"),
     path("creditors/<int:pk>/post-interest/", views.creditor_post_interest_view, name="creditor_post_interest"),

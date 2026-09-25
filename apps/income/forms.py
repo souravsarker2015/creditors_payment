@@ -1,5 +1,6 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
+from apps.core.status import active_or_current
 from .models import IncomeSource, IncomeTransaction, RecurringIncome
 
 
@@ -43,4 +44,6 @@ class RecurringIncomeForm(forms.ModelForm):
         user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
         if user:
-            self.fields["source"].queryset = IncomeSource.objects.filter(user=user)
+            self.fields["source"].queryset = active_or_current(
+                IncomeSource.objects.filter(user=user), self.instance.source_id
+            )

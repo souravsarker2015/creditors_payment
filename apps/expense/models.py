@@ -15,6 +15,10 @@ class ExpenseCategory(models.Model):
         User, on_delete=models.CASCADE, related_name="expense_categories"
     )
     name = models.CharField(max_length=100)
+    is_active = models.BooleanField(
+        default=True,
+        help_text=_("Inactive records are hidden from lists and pickers but still count in totals."),
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

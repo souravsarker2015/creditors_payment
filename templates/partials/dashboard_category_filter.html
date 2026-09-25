@@ -1,0 +1,34 @@
+{% load i18n %}
+{% comment %}Category include/exclude filter for dashboards. Needs: reset_url, category_choices, selected_categories, filter_type.{% endcomment %}
+<form method="get" class="card" x-data="{ open: {{ selected_categories|yesno:'true,false' }}, filterType: '{{ filter_type|default:"include" }}' }">
+  <input type="hidden" name="filter_type" x-model="filterType">
+  <button type="button" class="collapse-toggle" @click="open = !open" :aria-expanded="open.toString()">
+    <span class="flex items-center gap-2">
+      <span class="h-[1.125rem] w-[1.125rem]" style="color: var(--text-muted);">{% include "partials/icon.html" with name="filter" %}</span>
+      {% translate "Filter by category" %}
+      {% if selected_categories %}<span class="badge" data-tone="accent">{{ selected_categories|length }}</span>{% endif %}
+    </span>
+    {% include "partials/icon.html" with name="chevron-down" %}
+  </button>
+  <div class="collapse-body border-t border-[var(--border-soft)] lg:border-t-0" :class="open && 'is-open'">
+    <div class="card-body flex flex-col gap-3 lg:flex-row lg:items-end">
+      <div class="field lg:w-56">
+        <span class="label">{% translate "Filter mode" %}</span>
+        <div class="seg seg-block">
+          <button type="button" class="seg-item" data-tone="accent" :class="filterType === 'include' && 'is-active'" @click="filterType = 'include'">{% translate "Include" %}</button>
+          <button type="button" class="seg-item" data-tone="critical" :class="filterType === 'exclude' && 'is-active'" @click="filterType = 'exclude'">{% translate "Exclude" %}</button>
+        </div>
+      </div>
+      <div class="field flex-1">
+        <label for="category" class="label">{% translate "Categories" %}</label>
+        <select id="category" name="category" multiple class="form-input">
+          {% for value, label in category_choices %}<option value="{{ value }}"{% if value in selected_categories %} selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="flex gap-2">
+        <button type="submit" class="btn btn-primary flex-1">{% translate "Apply" %}</button>
+        {% if selected_categories %}<a href="{{ reset_url }}" class="btn btn-ghost">{% translate "Reset" %}</a>{% endif %}
+      </div>
+    </div>
+  </div>
+</form>

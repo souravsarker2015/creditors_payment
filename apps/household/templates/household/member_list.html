@@ -4,153 +4,97 @@
 {% block title %}{% translate "Household Members" %} | FinTrack{% endblock %}
 
 {% block content %}
-<div class="px-4 sm:px-6 lg:px-8">
-  <div class="sm:flex sm:items-start sm:justify-between gap-4">
-    <div class="sm:flex-auto max-w-2xl">
-      <h1 class="text-2xl font-bold leading-6 text-[var(--text-primary)]">{% translate "Household Members" %}</h1>
-      <p class="mt-2 text-sm text-[var(--text-secondary)]">{% translate "People who occasionally front their own money for bazar. Tracking a member on a purchase is optional — this page is only for the ones you want to settle up with." %}</p>
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <a href="{% url 'household_dashboard' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Household" %}</a>
+      <h1 class="page-title">{% translate "Household Members" %}</h1>
+      <p class="page-subtitle">{% translate "People who occasionally front their own money for bazar. Tracking a member on a purchase is optional — this page is only for the ones you want to settle up with." %}</p>
     </div>
-    <div class="mt-1 flex flex-col gap-2 sm:mt-0 sm:flex-none sm:flex-row">
-      <a href="{% url 'household_list' %}" class="block rounded-md border border-[var(--border)] bg-[var(--surface-raised)] px-3 py-2 text-center text-sm font-semibold text-[var(--text-secondary)] shadow-sm hover:bg-[var(--surface-sunken)]">{% translate "Bazar Log" %}</a>
-      <a href="?export=csv" class="inline-flex items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-sm font-semibold hover:brightness-95" style="border-color: var(--accent); color: var(--accent);">
-        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>
-        {% translate "Export CSV" %}
-      </a>
+    <div class="page-actions">
       <form method="post" action="{% url 'household_member_import' %}" enctype="multipart/form-data" x-data>
         {% csrf_token %}
         <input type="file" id="member-import-file" name="csv_file" accept=".csv,text/csv" class="hidden" @change="$el.form.submit()">
-        <label for="member-import-file" class="block cursor-pointer rounded-md border border-[var(--border)] bg-[var(--surface-raised)] px-3 py-2 text-center text-sm font-semibold text-[var(--text-secondary)] shadow-sm hover:bg-[var(--surface-sunken)]">{% translate "Import CSV" %}</label>
+        <label for="member-import-file" class="btn btn-secondary cursor-pointer">{% include "partials/icon.html" with name="upload" %}{% translate "Import CSV" %}</label>
       </form>
-      <a href="{% url 'household_member_import_template' %}" class="block rounded-md border border-[var(--border)] bg-[var(--surface-raised)] px-3 py-2 text-center text-sm font-semibold text-[var(--text-secondary)] shadow-sm hover:bg-[var(--surface-sunken)]">{% translate "Template" %}</a>
-      <a href="{% url 'household_member_create' %}" class="block rounded-md bg-[var(--accent)] px-3 py-2 text-center text-sm font-semibold text-[var(--accent-on)] shadow-sm hover:bg-[var(--accent-strong)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]">+ {% translate "New Member" %}</a>
+      <a href="{% url 'household_member_import_template' %}" class="btn btn-ghost">{% translate "Template" %}</a>
+      <a href="{% url 'household_member_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "New Member" %}</a>
     </div>
+  </header>
+
+  <div class="stat" data-tone="warn">
+    <p class="stat-label">{% translate "Total Outstanding to Members" %}</p>
+    <p class="stat-value">{{ total_owed|money }}</p>
   </div>
 
-  <dl class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-1">
-    <div class="overflow-hidden rounded-lg bg-[var(--surface-raised)] px-4 py-5 shadow sm:p-6 border-l-4" style="border-left-color: var(--status-warn);">
-      <dt class="truncate text-sm font-medium text-[var(--text-secondary)]">{% translate "Total Outstanding to Members" %}</dt>
-      <dd class="mt-1 text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-4xl">৳{{ total_owed|floatformat:2 }}</dd>
+  <form method="get" class="card card-body flex flex-col gap-3 sm:flex-row sm:items-center">
+    <input type="hidden" name="status" value="{{ status }}">
+    <div class="input-icon flex-1">
+      {% include "partials/icon.html" with name="search" %}
+      <label for="q" class="sr-only">{% translate "Search by name" %}</label>
+      <input type="search" id="q" name="q" value="{{ search_query }}" placeholder="{% translate 'e.g. Salma' %}" autocomplete="off" class="form-input">
     </div>
-  </dl>
-
-  <form method="get" class="mt-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-    <div class="flex w-full items-end gap-2 sm:max-w-xs">
-      <div class="w-full">
-        <label for="q" class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Search by name" %}</label>
-        <div class="relative mt-1">
-          <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
-          <input type="text" id="q" name="q" value="{{ search_query }}" placeholder="{% translate 'e.g. Salma' %}" autocomplete="off" class="block w-full rounded-md border-[var(--border)] bg-[var(--surface-raised)] pl-9 text-sm text-[var(--text-primary)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]">
-        </div>
-      </div>
-      <button type="submit" class="shrink-0 rounded-md bg-[var(--surface-sunken)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] hover:brightness-95">{% translate "Search" %}</button>
-    </div>
-    <div class="w-full sm:w-64">
-      <label for="sort" class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Sort by" %}</label>
-      <select id="sort" name="sort" onchange="this.form.submit()" class="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--surface-raised)] text-sm text-[var(--text-primary)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]">
-        {% for value, label in sort_options %}
-          <option value="{{ value }}"{% if value == sort %} selected{% endif %}>{{ label }}</option>
-        {% endfor %}
+    <div class="flex gap-2">
+      <label for="sort" class="sr-only">{% translate "Sort by" %}</label>
+      <select id="sort" name="sort" onchange="this.form.submit()" class="form-input flex-1 sm:w-56">
+        {% for value, label in sort_options %}<option value="{{ value }}"{% if value == sort %} selected{% endif %}>{{ label }}</option>{% endfor %}
       </select>
+      <button type="submit" name="export" value="csv" class="btn btn-secondary" title="{% translate 'Export CSV' %}">{% include "partials/icon.html" with name="download" %}<span class="hidden sm:inline">{% translate "Export CSV" %}</span></button>
     </div>
   </form>
 
+  {% include "partials/status_tabs.html" %}
+
   {% if page_obj.object_list %}
-  <div class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+  <div class="card-grid card-grid-3">
     {% for m in page_obj %}
-    <div class="relative flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-6 shadow-sm hover:shadow-md transition-shadow">
-      <div class="flex flex-wrap items-start justify-between gap-2">
-        <h3 class="min-w-0 flex-1 truncate text-lg font-bold text-[var(--text-primary)]">{{ m.name }}</h3>
-        <span class="shrink-0 inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold"
-              style="{% if m.is_settled %}background: var(--status-good-bg); color: var(--status-good);{% else %}background: var(--status-warn-bg); color: var(--status-warn);{% endif %}">
-          {% if m.is_settled %}{% translate "Settled Up" %}{% else %}{% blocktranslate with amount=m.balance_due|floatformat:0 %}Owed ৳{{ amount }}{% endblocktranslate %}{% endif %}
-        </span>
-      </div>
-      <p class="mt-2 text-sm text-[var(--text-secondary)]">{% if m.phone %}{{ m.phone }}{% else %}{% translate "No contact info" %}{% endif %}</p>
-
-      <div class="mt-6 flex-1">
-        <div class="flex justify-between text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">
-            <span>{% translate "Settled Back" %}</span>
-            <span>{{ m.settle_percent }}%</span>
+    {% url 'household_member_detail' m.pk as detail_url %}
+    <article class="card entity {% if not m.is_active %}is-inactive{% endif %}">
+      <div class="entity-head">
+        <a href="{{ detail_url }}" class="avatar">{{ m.name|first }}</a>
+        <div class="min-w-0 flex-1">
+          <h3 class="entity-name"><a href="{{ detail_url }}">{{ m.name }}</a></h3>
+          <p class="entity-meta">{% if m.phone %}{{ m.phone }}{% else %}{% translate "No contact info" %}{% endif %}</p>
         </div>
-        <div class="h-2 w-full rounded-full overflow-hidden" style="background: var(--surface-sunken);">
-            <div class="h-full rounded-full transition-all duration-500" style="width: {{ m.settle_percent }}%; background: var(--accent);"></div>
-        </div>
-
-        <dl class="mt-4 grid grid-cols-2 gap-4">
-            <div>
-                <dt class="text-xs font-medium text-[var(--text-secondary)]">{% translate "Fronted" %}</dt>
-                <dd class="text-sm font-bold text-[var(--text-primary)]">৳{{ m.total_spent|floatformat:0 }}</dd>
-            </div>
-            <div class="text-right">
-                <dt class="text-xs font-medium text-[var(--text-secondary)]">{% translate "Given Back" %}</dt>
-                <dd class="text-sm font-bold" style="color: var(--status-good);">৳{{ m.total_settled|floatformat:0 }}</dd>
-            </div>
-        </dl>
+        {% url 'household_member_edit' m.pk as edit_url %}{% url 'household_member_toggle_active' m.pk as toggle_url %}
+        {% include "partials/entity_menu.html" with edit_url=edit_url toggle_url=toggle_url active=m.is_active %}
       </div>
-
-      <div class="mt-8 pt-4 border-t border-[var(--border-soft)] flex gap-3">
-        <a href="{% url 'household_member_detail' m.pk %}" class="flex-1 rounded-lg bg-[var(--surface-sunken)] px-3 py-2 text-center text-sm font-bold text-[var(--accent)] hover:brightness-95 transition-all">{% translate "Details" %}</a>
-        <a href="{% url 'household_member_edit' m.pk %}" class="rounded-lg bg-[var(--surface-raised)] border border-[var(--border)] px-3 py-2 text-center text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)] shadow-sm">{% translate "Edit" %}</a>
+      <div class="entity-badges">
+        {% if m.is_settled %}<span class="badge badge-dot" data-tone="good">{% translate "Settled Up" %}</span>{% endif %}
+        {% if not m.is_active %}<span class="badge" data-tone="muted">{% translate "Inactive" %}</span>{% endif %}
       </div>
-    </div>
+      <div>
+        <p class="entity-figure-label">{% translate "You owe them" %}</p>
+        <p class="entity-figure" data-tone="{% if m.is_settled %}good{% else %}warn{% endif %}">{% if m.is_settled %}{{ 0|money }}{% else %}{{ m.balance_due|money }}{% endif %}</p>
+      </div>
+      <div>
+        <div class="meter-row"><span>{% translate "Settled Back" %}</span><span class="num">{{ m.settle_percent }}%</span></div>
+        <div class="meter" data-tone="good"><span style="width: {{ m.settle_percent }}%"></span></div>
+      </div>
+      <dl class="mini-stats">
+        <div><dt>{% translate "Fronted" %}</dt><dd>{{ m.total_spent|money }}</dd></div>
+        <div class="text-right"><dt>{% translate "Given Back" %}</dt><dd style="color: var(--status-good);">{{ m.total_settled|money }}</dd></div>
+      </dl>
+      <div class="entity-foot">
+        <a href="{{ detail_url }}" class="btn btn-secondary btn-sm">{% translate "Details" %}{% include "partials/icon.html" with name="arrow-right" %}</a>
+      </div>
+    </article>
     {% endfor %}
   </div>
-
-  {% if page_obj.paginator.num_pages > 1 %}
-  <div class="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
-    <p class="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
-      {% blocktranslate with current=page_obj.number total=page_obj.paginator.num_pages %}Page {{ current }} of {{ total }}{% endblocktranslate %}
-    </p>
-
-    <div class="flex flex-col items-center gap-3 sm:flex-row">
-      <div class="max-w-full overflow-x-auto">
-        <nav class="inline-flex items-center gap-1 whitespace-nowrap rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] p-1 shadow-sm">
-          {% if page_obj.has_previous %}
-            <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page=1" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{% translate "First" %}</a>
-            <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ page_obj.previous_page_number }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{% translate "Prev" %}</a>
-          {% else %}
-            <span class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-muted)]">{% translate "First" %}</span>
-            <span class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-muted)]">{% translate "Prev" %}</span>
-          {% endif %}
-
-          {% for num in pagination_window %}
-            {% if num is None %}
-              <span class="px-2 py-2 text-sm font-bold text-[var(--text-muted)]">…</span>
-            {% elif num == page_obj.number %}
-              <span class="rounded-lg px-3 py-2 text-sm font-bold" style="background: var(--accent); color: var(--accent-on);">{{ num }}</span>
-            {% else %}
-              <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ num }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{{ num }}</a>
-            {% endif %}
-          {% endfor %}
-
-          {% if page_obj.has_next %}
-            <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ page_obj.next_page_number }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{% translate "Next" %}</a>
-            <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ page_obj.paginator.num_pages }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{% translate "Last" %}</a>
-          {% else %}
-            <span class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-muted)]">{% translate "Next" %}</span>
-            <span class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-muted)]">{% translate "Last" %}</span>
-          {% endif %}
-        </nav>
-      </div>
-
-      <form class="flex flex-col items-start gap-1" x-data="{ pageInput: '{{ page_obj.number }}', maxPage: {{ page_obj.paginator.num_pages }}, showError: false }" @submit.prevent="const p = parseInt(pageInput, 10); showError = !(p >= 1 && p <= maxPage); if (!showError) { window.location.href = '?{{ base_query_string }}{% if base_query_string %}&{% endif %}page=' + p; }">
-        <div class="flex items-center gap-2">
-          <input type="number" x-model="pageInput" inputmode="numeric" min="1" max="{{ page_obj.paginator.num_pages }}" class="w-20 rounded-lg border border-[var(--border)] bg-[var(--surface-raised)] px-2 py-2 text-center text-sm font-semibold text-[var(--text-primary)] focus:border-[var(--accent)] focus:ring-[var(--accent)]">
-          <button type="submit" class="rounded-lg bg-[var(--surface-sunken)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] hover:brightness-95">{% translate "Go" %}</button>
-        </div>
-        <p class="text-xs font-medium text-[var(--text-muted)]">{% blocktranslate with total=page_obj.paginator.num_pages %}Range: 1-{{ total }}{% endblocktranslate %}</p>
-        <p x-show="showError" x-cloak class="text-xs font-semibold" style="color: var(--status-critical);">{% blocktranslate with total=page_obj.paginator.num_pages %}Please enter a page between 1 and {{ total }}.{% endblocktranslate %}</p>
-      </form>
-    </div>
+  {% include "partials/pagination.html" %}
+  {% elif search_query or status != "active" %}
+  <div class="empty">
+    <div class="empty-icon">{% include "partials/icon.html" with name="search" %}</div>
+    <h3 class="empty-title">{% translate "No members found" %}</h3>
+    <p class="empty-text">{% translate "Try a different name or status." %}</p>
+    <a href="{% url 'household_member_list' %}" class="btn btn-secondary">{% translate "Reset Filters" %}</a>
   </div>
-  {% endif %}
-
   {% else %}
-  <div class="mt-8 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[var(--border)] p-12 text-center bg-[var(--surface-raised)]">
-      <svg class="h-16 w-16 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-      <h3 class="mt-4 text-lg font-bold text-[var(--text-primary)]">{% translate "No members tracked yet" %}</h3>
-      <p class="mt-2 text-sm text-[var(--text-secondary)] max-w-xs">{% translate "Add a member only if you need to keep track of who to pay back for bazar they fronted." %}</p>
-      <a href="{% url 'household_member_create' %}" class="mt-6 inline-flex items-center rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-bold text-[var(--accent-on)] shadow-sm hover:bg-[var(--accent-strong)] transition-all">+ {% translate "Add Your First Member" %}</a>
+  <div class="empty">
+    <div class="empty-icon">{% include "partials/icon.html" with name="users" %}</div>
+    <h3 class="empty-title">{% translate "No members tracked yet" %}</h3>
+    <p class="empty-text">{% translate "Add a member only if you need to keep track of who to pay back for bazar they fronted." %}</p>
+    <a href="{% url 'household_member_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add Your First Member" %}</a>
   </div>
   {% endif %}
 </div>

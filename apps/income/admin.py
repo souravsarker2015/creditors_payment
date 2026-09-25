@@ -12,7 +12,7 @@ class IncomeTransactionInline(admin.TabularInline):
 @admin.register(IncomeSource)
 class IncomeSourceAdmin(admin.ModelAdmin):
     list_display = ("name", "user", "get_total_income", "created_at")
-    list_filter = ("user", "created_at")
+    list_filter = ("is_active", "user", "created_at")
     search_fields = ("name", "description", "user__username")
     inlines = [IncomeTransactionInline]
 

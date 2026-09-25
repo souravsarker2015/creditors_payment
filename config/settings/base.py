@@ -39,6 +39,7 @@ DJANGO_APPS = [
 THIRD_PARTY_APPS = []
 
 LOCAL_APPS = [
+    "apps.core",
     "apps.creditors",
     "apps.accounts",
     "apps.debtors",
@@ -90,6 +91,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "apps.accounts.context_processors.user_preferences",
             ],
+            "builtins": ["apps.core.templatetags.ui"],
         },
     },
 ]

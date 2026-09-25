@@ -1,135 +1,87 @@
 {% load i18n %}
-<div class="flex grow flex-col gap-y-7 overflow-y-auto px-4 pb-4"
-     style="background: linear-gradient(180deg, var(--surface-ink-raised), var(--surface-ink));">
-    <div class="flex h-16 shrink-0 items-center gap-2.5 px-2">
-        <div class="h-9 w-9 shrink-0 rounded-lg flex items-center justify-center font-bold text-base font-heading"
-             style="background: var(--gold); color: #221a06;">৳</div>
-        <div>
-            <span class="block font-heading font-bold text-lg leading-tight" style="color: var(--text-on-ink);">FinTrack</span>
+{% with p=request.path %}
+<div class="sidebar">
+    <a href="{% url 'networth' %}" class="flex h-16 shrink-0 items-center gap-2.5 px-2">
+        <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg font-heading text-base font-bold" style="background: var(--gold); color: #221a06;">৳</span>
+        <span>
+            <span class="block font-heading text-lg font-bold leading-tight" style="color: var(--text-on-ink);">FinTrack</span>
             <span class="block text-[10px] font-semibold uppercase tracking-[0.14em]" style="color: var(--text-on-ink-muted);">{% translate "Ledger & Household" %}</span>
+        </span>
+    </a>
+
+    <nav class="flex flex-1 flex-col gap-5" aria-label="{% translate 'Main' %}">
+        <div>
+            <p class="nav-section-label">{% translate "Overview" %}</p>
+            <a href="{% url 'networth' %}" class="nav-link {% if '/networth/' in p %}is-active{% endif %}" {% if '/networth/' in p %}aria-current="page"{% endif %}>
+                <svg fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>
+                {% translate "Net Worth" %}
+            </a>
         </div>
-    </div>
-    <nav class="flex flex-1 flex-col">
-        <ul role="list" class="flex flex-1 flex-col gap-y-6">
-            <li>
-                <ul role="list" class="-mx-1 space-y-1">
-                    {% if user.is_authenticated %}
-                    <li>
-                        <a href="{% url 'networth' %}" class="{% if '/networth/' in request.path %}nav-item-active{% endif %} group flex gap-x-3 rounded-md px-3 py-2 text-sm leading-6 font-semibold"
-                           style="{% if '/networth/' in request.path %}background: rgba(255,255,255,0.09); color: var(--text-on-ink);{% else %}color: var(--text-on-ink-muted);{% endif %}">
-                            <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
-                            </svg>
-                            {% translate "Net Worth" %}
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{% url 'dashboard' %}" class="{% if request.path == '/' or '/creditors/' in request.path %}nav-item-active{% endif %} group flex gap-x-3 rounded-md px-3 py-2 text-sm leading-6 font-semibold"
-                           style="{% if request.path == '/' or '/creditors/' in request.path %}background: rgba(255,255,255,0.09); color: var(--text-on-ink);{% else %}color: var(--text-on-ink-muted);{% endif %}">
-                            <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
-                            </svg>
-                            {% translate "Creditors" %}
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{% url 'debtor_dashboard' %}" class="{% if '/debtors/' in request.path %}nav-item-active{% endif %} group flex gap-x-3 rounded-md px-3 py-2 text-sm leading-6 font-semibold"
-                           style="{% if '/debtors/' in request.path %}background: rgba(255,255,255,0.09); color: var(--text-on-ink);{% else %}color: var(--text-on-ink-muted);{% endif %}">
-                            <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A4.833 4.833 0 0118 14.158V11a6 6 0 00-6-6H12a6 6 0 00-6 6v3.158a4.833 4.833 0 01-4.5-3.826V21h18z" />
-                            </svg>
-                            {% translate "Debtors" %}
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{% url 'income_dashboard' %}" class="{% if '/income/' in request.path %}nav-item-active{% endif %} group flex gap-x-3 rounded-md px-3 py-2 text-sm leading-6 font-semibold"
-                           style="{% if '/income/' in request.path %}background: rgba(255,255,255,0.09); color: var(--text-on-ink);{% else %}color: var(--text-on-ink-muted);{% endif %}">
-                            <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182 1.107-.879 2.903-.879 4.01 0l.893.659m-3-2.182V6" />
-                            </svg>
-                            {% translate "Income" %}
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{% url 'expense_dashboard' %}" class="{% if '/expense/' in request.path %}nav-item-active{% endif %} group flex gap-x-3 rounded-md px-3 py-2 text-sm leading-6 font-semibold"
-                           style="{% if '/expense/' in request.path %}background: rgba(255,255,255,0.09); color: var(--text-on-ink);{% else %}color: var(--text-on-ink-muted);{% endif %}">
-                            <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            {% translate "Expense" %}
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{% url 'contributor_dashboard' %}" class="{% if '/contributors/' in request.path %}nav-item-active{% endif %} group flex gap-x-3 rounded-md px-3 py-2 text-sm leading-6 font-semibold"
-                           style="{% if '/contributors/' in request.path %}background: rgba(255,255,255,0.09); color: var(--text-on-ink);{% else %}color: var(--text-on-ink-muted);{% endif %}">
-                            <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                            </svg>
-                            {% translate "Contributors" %}
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{% url 'household_dashboard' %}" class="{% if '/household/' in request.path %}nav-item-active{% endif %} group flex gap-x-3 rounded-md px-3 py-2 text-sm leading-6 font-semibold"
-                           style="{% if '/household/' in request.path %}background: rgba(255,255,255,0.09); color: var(--text-on-ink);{% else %}color: var(--text-on-ink-muted);{% endif %}">
-                            <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z" />
-                            </svg>
-                            {% translate "Household (Bazar)" %}
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{% url 'shop_dashboard' %}" class="{% if '/shops/' in request.path %}nav-item-active{% endif %} group flex gap-x-3 rounded-md px-3 py-2 text-sm leading-6 font-semibold"
-                           style="{% if '/shops/' in request.path %}background: rgba(255,255,255,0.09); color: var(--text-on-ink);{% else %}color: var(--text-on-ink-muted);{% endif %}">
-                            <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3.75a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 003.75-.615 2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016.55.623 1.354 1.016 2.25 1.016.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72" />
-                            </svg>
-                            {% translate "Shop Dues (বাকি)" %}
-                        </a>
-                    </li>
-                    {% endif %}
-                </ul>
-            </li>
-            <li class="mt-auto">
-                {% if user.is_authenticated %}
-                <div class="preferences-switcher pref-ink lg:hidden mb-4 rounded-2xl p-4" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);">
-                    <p class="text-[10px] font-bold uppercase tracking-[0.14em] mb-3" style="color: var(--text-on-ink-muted);">{% translate "Appearance" %}</p>
 
-                    <div class="flex items-center gap-3 mb-3">
-                        <button type="button" class="pref-swatch {% if user_accent == 'teal' %}is-active{% endif %}" data-swatch="teal" data-pref-field="accent" aria-label="{% translate 'Ledger Teal accent' %}"></button>
-                        <button type="button" class="pref-swatch {% if user_accent == 'indigo' %}is-active{% endif %}" data-swatch="indigo" data-pref-field="accent" aria-label="{% translate 'Indigo Classic accent' %}"></button>
-                        <button type="button" class="pref-swatch {% if user_accent == 'slate' %}is-active{% endif %}" data-swatch="slate" data-pref-field="accent" aria-label="{% translate 'Slate Mono accent' %}"></button>
-                    </div>
+        <div class="space-y-0.5">
+            <p class="nav-section-label">{% translate "Borrowing & lending" %}</p>
+            <a href="{% url 'dashboard' %}" class="nav-link {% if p == '/' or '/creditors/' in p or p|slice:':14' == '/transactions/' %}is-active{% endif %}">
+                <svg fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" /></svg>
+                {% translate "Creditors" %}
+            </a>
+            <a href="{% url 'debtor_dashboard' %}" class="nav-link {% if '/debtors/' in p %}is-active{% endif %}">
+                <svg fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>
+                {% translate "Debtors" %}
+            </a>
+            <a href="{% url 'shop_dashboard' %}" class="nav-link {% if '/shops/' in p %}is-active{% endif %}">
+                <svg fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3.75a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 003.75-.615 2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016.55.623 1.354 1.016 2.25 1.016.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72" /></svg>
+                {% translate "Shop Dues (বাকি)" %}
+            </a>
+        </div>
 
-                    <div class="grid grid-cols-2 gap-2 mb-2">
-                        <button type="button" class="pref-mode-btn {% if user_theme_mode == 'light' %}is-active{% endif %}" data-mode="light" data-pref-field="theme_mode">{% translate "Light" %}</button>
-                        <button type="button" class="pref-mode-btn {% if user_theme_mode == 'dark' %}is-active{% endif %}" data-mode="dark" data-pref-field="theme_mode">{% translate "Dark" %}</button>
-                    </div>
+        <div class="space-y-0.5">
+            <p class="nav-section-label">{% translate "Cash flow" %}</p>
+            <a href="{% url 'income_dashboard' %}" class="nav-link {% if '/income/' in p %}is-active{% endif %}">
+                <svg fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" /></svg>
+                {% translate "Income" %}
+            </a>
+            <a href="{% url 'expense_dashboard' %}" class="nav-link {% if '/expense/' in p %}is-active{% endif %}">
+                <svg fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6L9 12.75l4.286-4.286a11.948 11.948 0 014.306 6.43l.776 2.898m0 0l3.182-5.511m-3.182 5.51l-5.511-3.181" /></svg>
+                {% translate "Expense" %}
+            </a>
+            <a href="{% url 'contributor_dashboard' %}" class="nav-link {% if '/contributors/' in p %}is-active{% endif %}">
+                <svg fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>
+                {% translate "Contributors" %}
+            </a>
+        </div>
 
-                    <form method="post" action="{% url 'update_preferences' %}" class="grid grid-cols-2 gap-2">
-                        {% csrf_token %}
-                        <input type="hidden" name="next" value="{{ request.path }}">
-                        <button type="submit" name="language" value="en" class="pref-lang-btn {% if LANGUAGE_CODE == 'en' %}is-active{% endif %}">EN</button>
-                        <button type="submit" name="language" value="bn" class="pref-lang-btn {% if LANGUAGE_CODE == 'bn' %}is-active{% endif %}">বাংলা</button>
-                    </form>
+        <div class="space-y-0.5">
+            <p class="nav-section-label">{% translate "Home" %}</p>
+            <a href="{% url 'household_dashboard' %}" class="nav-link {% if '/household/' in p %}is-active{% endif %}">
+                <svg fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z" /></svg>
+                {% translate "Household (Bazar)" %}
+            </a>
+        </div>
+
+        <div class="mt-auto space-y-3">
+            <div class="preferences-switcher pref-ink md:hidden rounded-2xl p-4" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);">
+                <p class="mb-3 text-[10px] font-bold uppercase tracking-[0.14em]" style="color: var(--text-on-ink-muted);">{% translate "Appearance" %}</p>
+                <div class="mb-3 flex items-center gap-3">
+                    <button type="button" class="pref-swatch {% if user_accent == 'teal' %}is-active{% endif %}" data-swatch="teal" data-pref-field="accent" aria-label="{% translate 'Ledger Teal accent' %}"></button>
+                    <button type="button" class="pref-swatch {% if user_accent == 'indigo' %}is-active{% endif %}" data-swatch="indigo" data-pref-field="accent" aria-label="{% translate 'Indigo Classic accent' %}"></button>
+                    <button type="button" class="pref-swatch {% if user_accent == 'slate' %}is-active{% endif %}" data-swatch="slate" data-pref-field="accent" aria-label="{% translate 'Slate Mono accent' %}"></button>
                 </div>
-                {% endif %}
-                {% if user.is_authenticated and user.is_superuser %}
-                <a href="/admin/" target="_blank" class="group -mx-1 flex gap-x-3 rounded-md px-3 py-2 text-sm font-semibold leading-6 mb-1" style="color: var(--text-on-ink-muted);">
-                    <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
-                    </svg>
-                    {% translate "Django Admin" %}
-                </a>
-                {% endif %}
-                {% if user.is_authenticated %}
-                <a href="{% url 'logout' %}" class="group -mx-1 flex gap-x-3 rounded-md px-3 py-2 text-sm font-semibold leading-6" style="color: var(--text-on-ink-muted);">
-                    <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
-                    </svg>
-                    {% translate "Log Out" %}
-                </a>
-                {% endif %}
-            </li>
-        </ul>
+                <div class="mb-2 grid grid-cols-2 gap-2">
+                    <button type="button" class="pref-mode-btn {% if user_theme_mode == 'light' %}is-active{% endif %}" data-mode="light" data-pref-field="theme_mode">{% translate "Light" %}</button>
+                    <button type="button" class="pref-mode-btn {% if user_theme_mode == 'dark' %}is-active{% endif %}" data-mode="dark" data-pref-field="theme_mode">{% translate "Dark" %}</button>
+                </div>
+                <form method="post" action="{% url 'update_preferences' %}" class="grid grid-cols-2 gap-2">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.path }}">
+                    <button type="submit" name="language" value="en" class="pref-lang-btn {% if LANGUAGE_CODE == 'en' %}is-active{% endif %}">EN</button>
+                    <button type="submit" name="language" value="bn" class="pref-lang-btn {% if LANGUAGE_CODE == 'bn' %}is-active{% endif %}">বাংলা</button>
+                </form>
+            </div>
+            <a href="{% url 'logout' %}" class="nav-link">
+                <svg fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" /></svg>
+                {% translate "Log Out" %}
+            </a>
+        </div>
     </nav>
 </div>
+{% endwith %}

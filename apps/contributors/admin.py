@@ -12,7 +12,7 @@ class ContributionInline(admin.TabularInline):
 @admin.register(Contributor)
 class ContributorAdmin(admin.ModelAdmin):
     list_display = ("name", "user", "phone", "get_total_contributed", "created_at")
-    list_filter = ("user", "created_at")
+    list_filter = ("is_active", "user", "created_at")
     search_fields = ("name", "phone", "user__username")
     inlines = [ContributionInline]
 

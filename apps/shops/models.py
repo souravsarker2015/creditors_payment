@@ -37,6 +37,10 @@ class Shop(models.Model):
         null=True, blank=True, help_text=_("Next settlement due date (optional).")
     )
     note = models.TextField(blank=True, default="")
+    is_active = models.BooleanField(
+        default=True,
+        help_text=_("Inactive records are hidden from lists and pickers but still count in totals."),
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

@@ -60,24 +60,43 @@
     return top;
   }
 
+  // Short form for tight spots (axis ticks, the donut centre): ৳1.2M, ৳850K.
+  function compactAmount(value, currency) {
+    var abs = Math.abs(value);
+    var sign = value < 0 ? '-' : '';
+    if (abs >= 1e6) return sign + currency + (abs / 1e6).toFixed(abs >= 1e7 ? 0 : 1).replace(/\.0$/, '') + 'M';
+    if (abs >= 1e3) return sign + currency + (abs / 1e3).toFixed(abs >= 1e4 ? 0 : 1).replace(/\.0$/, '') + 'K';
+    return sign + currency + Math.round(abs);
+  }
+
   function centerTextPlugin(centerLabel, currency, total) {
     return {
       id: 'centerTotalText',
       afterDraw: function (chart) {
+        var meta = chart.getDatasetMeta(0);
+        var arc = meta && meta.data && meta.data[0];
+        if (!arc) return;
         var ctx = chart.ctx;
-        var area = chart.chartArea;
-        if (!area) return;
-        var cx = (area.left + area.right) / 2;
-        var cy = (area.top + area.bottom) / 2;
+        var cx = arc.x, cy = arc.y;
+        // Keep the text inside the hole: shrink until it fits, and fall
+        // back to the compact form (৳4.0M) when the full figure can't.
+        var maxWidth = arc.innerRadius * 1.6;
+        var text = formatAmount(total, currency);
+        var size = Math.min(22, Math.max(12, arc.innerRadius / 3.2));
         ctx.save();
+        ctx.font = '800 ' + size + "px 'Inter', sans-serif";
+        while (ctx.measureText(text).width > maxWidth && size > 12) {
+          size -= 1;
+          ctx.font = '800 ' + size + "px 'Inter', sans-serif";
+        }
+        if (ctx.measureText(text).width > maxWidth) text = compactAmount(total, currency);
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.font = "700 11px 'Inter', sans-serif";
-        ctx.fillStyle = token('--text-muted', '#9ca3af');
-        ctx.fillText(centerLabel.toUpperCase(), cx, cy - 12);
-        ctx.font = "800 20px 'Inter', sans-serif";
         ctx.fillStyle = token('--text-primary', '#111827');
-        ctx.fillText(formatAmount(total, currency), cx, cy + 12);
+        ctx.fillText(text, cx, cy + size * 0.45);
+        ctx.font = "600 " + Math.max(9, Math.round(size * 0.5)) + "px 'Inter', sans-serif";
+        ctx.fillStyle = token('--text-muted', '#9ca3af');
+        ctx.fillText(centerLabel.toUpperCase(), cx, cy - size * 0.75);
         ctx.restore();
       },
     };
@@ -138,10 +157,12 @@
         layout: { padding: 8 },
         plugins: {
           legend: {
+            display: config.showLegend !== false,
             position: 'bottom',
             labels: {
               usePointStyle: true,
-              padding: 14,
+              padding: window.innerWidth < 640 ? 10 : 14,
+              boxWidth: 8,
               color: textColor,
               font: { size: 11, weight: '600' },
               generateLabels: function (chart) {
@@ -233,7 +254,7 @@
         scales: {
           x: {
             grid: { display: false },
-            ticks: { color: textColor, font: { size: 10 } },
+            ticks: { color: textColor, font: { size: 10 }, maxRotation: 0, autoSkip: true, autoSkipPadding: 8 },
           },
           y: {
             beginAtZero: true,
@@ -241,7 +262,7 @@
             ticks: {
               color: textColor,
               font: { size: 10 },
-              callback: function (value) { return formatAmount(value, currency); },
+              callback: function (value) { return compactAmount(value, currency); },
             },
           },
         },

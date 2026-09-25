@@ -3,252 +3,116 @@
 
 {% block title %}{% translate "My Shops" %} | FinTrack{% endblock %}
 
-{% block extra_css %}
-<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
-{% endblock %}
-
 {% block content %}
-<div class="px-4 sm:px-6 lg:px-8">
-  <div class="sm:flex sm:items-start sm:justify-between gap-4">
-    <div class="sm:flex-auto max-w-2xl">
-      <h1 class="text-2xl font-bold leading-6 text-[var(--text-primary)]">{% translate "Shop Dues (বাকি)" %}</h1>
-      <p class="mt-2 text-sm text-[var(--text-secondary)]">{% translate "Local shops you buy from on credit, and how much is still owed to each. Search by name, filter by payment status, or include/exclude categories." %}</p>
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <a href="{% url 'shop_dashboard' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Shop Dues (বাকি)" %}</a>
+      <h1 class="page-title">{% translate "Manage Shops" %}</h1>
+      <p class="page-subtitle">{% translate "Local shops you buy from on credit (বাকি), and how much you still owe each one." %}</p>
     </div>
-    <div class="mt-1 flex flex-col gap-2 sm:mt-0 sm:flex-none sm:flex-row">
+    <div class="page-actions">
       <form method="post" action="{% url 'shop_import' %}" enctype="multipart/form-data" x-data>
         {% csrf_token %}
         <input type="file" id="shop-import-file" name="csv_file" accept=".csv,text/csv" class="hidden" @change="$el.form.submit()">
-        <label for="shop-import-file" class="block cursor-pointer rounded-md border border-[var(--border)] bg-[var(--surface-raised)] px-3 py-2 text-center text-sm font-semibold text-[var(--text-secondary)] shadow-sm hover:bg-[var(--surface-sunken)]">{% translate "Import CSV" %}</label>
+        <label for="shop-import-file" class="btn btn-secondary cursor-pointer">{% include "partials/icon.html" with name="upload" %}{% translate "Import CSV" %}</label>
       </form>
-      <a href="{% url 'shop_import_template' %}" class="block rounded-md border border-[var(--border)] bg-[var(--surface-raised)] px-3 py-2 text-center text-sm font-semibold text-[var(--text-secondary)] shadow-sm hover:bg-[var(--surface-sunken)]">{% translate "Template" %}</a>
-      <a href="{% url 'shop_create' %}" class="block rounded-md bg-[var(--accent)] px-3 py-2 text-center text-sm font-semibold text-[var(--accent-on)] shadow-sm hover:bg-[var(--accent-strong)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]">+ {% translate "New Shop" %}</a>
+      <a href="{% url 'shop_import_template' %}" class="btn btn-ghost">{% translate "Template" %}</a>
+      <a href="{% url 'shop_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "New Shop" %}</a>
     </div>
-  </div>
+  </header>
 
-  <form method="get" x-data="{ filterType: '{{ filter_type|default:"include" }}', paymentStatus: '{{ payment_status|default:"ALL" }}' }" class="mt-6 rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] p-4 shadow-sm">
-    <input type="hidden" name="filter_type" x-model="filterType">
-    <input type="hidden" name="payment_status" x-model="paymentStatus">
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <div class="w-full">
-        <label for="q" class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Search by name" %}</label>
-        <div class="relative mt-1">
-          <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
-          <input type="text" id="q" name="q" value="{{ search_query }}" placeholder="{% translate 'e.g. Rahim Store' %}" autocomplete="off" class="block w-full rounded-md border-[var(--border)] bg-[var(--surface-raised)] pl-9 text-sm text-[var(--text-primary)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]">
-        </div>
-      </div>
-      <div class="w-full">
-        <p class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Payment status" %}</p>
-        <div class="mt-1 grid w-full grid-cols-3 rounded-lg bg-[var(--surface-sunken)] p-1 ring-1 ring-inset ring-[var(--border-soft)]">
-          <button type="button" @click="paymentStatus = 'ALL'" class="inline-flex w-full items-center justify-center rounded-md px-2 py-2 text-sm font-semibold transition-all"
-            :class="paymentStatus === 'ALL' ? 'bg-[var(--surface-raised)] text-[var(--text-primary)] shadow-sm ring-1 ring-[var(--border)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'">
-            {% translate "All" %}
-          </button>
-          <button type="button" @click="paymentStatus = 'PAID'" class="inline-flex w-full items-center justify-center gap-1.5 rounded-md px-2 py-2 text-sm font-semibold transition-all"
-            :class="paymentStatus === 'PAID' ? 'bg-[var(--surface-raised)] text-[var(--status-good)] shadow-sm ring-1 ring-[var(--status-good-bg)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'">
-            <span class="inline-block h-2 w-2 rounded-full" style="background: var(--status-good);"></span> {% translate "Paid" %}
-          </button>
-          <button type="button" @click="paymentStatus = 'UNPAID'" class="inline-flex w-full items-center justify-center gap-1.5 rounded-md px-2 py-2 text-sm font-semibold transition-all"
-            :class="paymentStatus === 'UNPAID' ? 'bg-[var(--surface-raised)] text-[var(--status-warn)] shadow-sm ring-1 ring-[var(--status-warn-bg)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'">
-            <span class="inline-block h-2 w-2 rounded-full" style="background: var(--status-warn);"></span> {% translate "Unpaid" %}
-          </button>
-        </div>
-      </div>
-      <div class="w-full">
-        <p class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Category filter mode" %}</p>
-        <div class="mt-1 grid w-full grid-cols-2 rounded-lg bg-[var(--surface-sunken)] p-1 ring-1 ring-inset ring-[var(--border-soft)]">
-          <button type="button" @click="filterType = 'include'" class="inline-flex w-full items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-semibold transition-all"
-            :class="filterType === 'include' ? 'bg-[var(--surface-raised)] text-[var(--accent)] shadow-sm ring-1 ring-[var(--accent-soft)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'">
-            <span class="inline-block h-2 w-2 rounded-full" style="background: var(--accent);"></span> {% translate "Include" %}
-          </button>
-          <button type="button" @click="filterType = 'exclude'" class="inline-flex w-full items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-semibold transition-all"
-            :class="filterType === 'exclude' ? 'bg-[var(--surface-raised)] text-[var(--status-critical)] shadow-sm ring-1 ring-[var(--status-critical-bg)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'">
-            <span class="inline-block h-2 w-2 rounded-full" style="background: var(--status-critical);"></span> {% translate "Exclude" %}
-          </button>
-        </div>
-        <p class="mt-1 text-xs text-[var(--text-muted)]">{% translate "Applies only to the categories picker." %}</p>
-      </div>
-      <div class="w-full">
-        <label for="category" class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Categories" %}</label>
-        <select id="category" name="category" multiple class="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--surface-raised)] text-sm text-[var(--text-primary)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]">
-          {% for value, label in category_choices %}
-            <option value="{{ value }}"{% if value in selected_categories %} selected{% endif %}>{{ label }}</option>
-          {% endfor %}
-        </select>
-        <p class="mt-1 text-xs text-[var(--text-muted)]">{% translate "Leave empty for all categories." %}</p>
-      </div>
-      <div class="w-full">
-        <label for="sort" class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Sort by" %}</label>
-        <select id="sort" name="sort" class="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--surface-raised)] text-sm text-[var(--text-primary)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]">
-          {% for value, label in sort_options %}
-            <option value="{{ value }}"{% if value == sort %} selected{% endif %}>{{ label }}</option>
-          {% endfor %}
-        </select>
-      </div>
-    </div>
-    <div class="mt-4 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
-      <button type="submit" class="w-full rounded-md bg-[var(--surface-sunken)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] hover:brightness-95 sm:w-auto">
-        {% translate "Apply Filter" %}
-      </button>
-      <a href="{% url 'shop_list' %}" class="w-full rounded-md border border-[var(--border)] px-3 py-2 text-center text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)] sm:w-auto">
-        {% translate "Reset" %}
-      </a>
-      <button type="submit" name="export" value="csv" class="w-full inline-flex items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-sm font-semibold hover:brightness-95 sm:w-auto" style="border-color: var(--accent); color: var(--accent);">
-        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>
-        {% translate "Export CSV" %}
-      </button>
-    </div>
-  </form>
+  {% url 'shop_list' as reset_url %}
+  {% translate "e.g. Mayer Doa Store" as search_placeholder %}
+  {% include "partials/entity_filters.html" with reset_url=reset_url search_placeholder=search_placeholder show_payment=True %}
 
-  <dl class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-    <div class="overflow-hidden rounded-lg bg-[var(--surface-raised)] px-4 py-5 shadow sm:p-6 border-l-4" style="border-left-color: var(--status-critical);">
-      <dt class="truncate text-sm font-medium text-[var(--text-secondary)]">{% translate "Total Due (বাকি)" %}</dt>
-      <dd class="mt-1 text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-4xl">৳{{ total_due|floatformat:2 }}</dd>
+  <dl class="stat-grid">
+    <div class="stat" data-tone="warn">
+      <dt class="stat-label">{% translate "Current Due" %}</dt>
+      <dd class="stat-value">{{ remaining|money }}</dd>
     </div>
-    <div class="overflow-hidden rounded-lg bg-[var(--surface-raised)] px-4 py-5 shadow sm:p-6 border-l-4" style="border-left-color: var(--status-good);">
-      <dt class="truncate text-sm font-medium text-[var(--text-secondary)]">{% translate "Total Paid" %}</dt>
-      <dd class="mt-1 text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-4xl">৳{{ total_paid|floatformat:2 }}</dd>
+    <div class="stat" data-tone="critical">
+      <dt class="stat-label">{% translate "Total Due (বাকি)" %}</dt>
+      <dd class="stat-value">{{ total_due|money }}</dd>
     </div>
-    <div class="overflow-hidden rounded-lg bg-[var(--surface-raised)] px-4 py-5 shadow sm:p-6 border-l-4" style="border-left-color: var(--status-warn);">
-      <dt class="truncate text-sm font-medium text-[var(--text-secondary)]">{% translate "Remaining Due" %}</dt>
-      <dd class="mt-1 text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-4xl">৳{{ remaining|floatformat:2 }}</dd>
+    <div class="stat" data-tone="good">
+      <dt class="stat-label">{% translate "Total Paid" %}</dt>
+      <dd class="stat-value">{{ total_paid|money }}</dd>
     </div>
   </dl>
 
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    {% include "partials/status_tabs.html" %}
+    <p class="text-xs" style="color: var(--text-muted);">{% blocktranslate count counter=page_obj.paginator.count %}{{ counter }} shop{% plural %}{{ counter }} shops{% endblocktranslate %}</p>
+  </div>
+
   {% if page_obj.object_list %}
-  <div class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-    {% for sh in page_obj %}
-    <div class="relative flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-6 shadow-sm hover:shadow-md transition-shadow">
-      <div class="flex flex-wrap items-start justify-between gap-2">
-        <h3 class="min-w-0 flex-1 truncate text-lg font-bold text-[var(--text-primary)]">{{ sh.name }}</h3>
-        <span class="shrink-0 inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold"
-              style="{% if sh.is_paid %}background: var(--status-good-bg); color: var(--status-good);{% else %}background: var(--status-warn-bg); color: var(--status-warn);{% endif %}">
-          {% if sh.is_paid %}{% translate "Paid Completely" %}{% else %}{% blocktranslate with amount=sh.remaining|floatformat:0 %}Due ৳{{ amount }}{% endblocktranslate %}{% endif %}
-        </span>
-      </div>
-      <div class="mt-2 flex items-center gap-2">
-        <span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold" style="background: var(--accent-soft); color: var(--accent);">{{ sh.get_category_display }}</span>
-        <p class="text-sm text-[var(--text-secondary)]">{% if sh.phone %}{{ sh.phone }}{% else %}{% translate "No contact info" %}{% endif %}</p>
-      </div>
-
-      {% if sh.due_status %}
-      <div class="mt-2">
-        <span class="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold"
-              style="{% if sh.due_status == 'overdue' %}background: var(--status-critical-bg); color: var(--status-critical);{% else %}background: var(--status-warn-bg); color: var(--status-warn);{% endif %}">
-          <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
-          {% if sh.due_status == 'overdue' %}{% blocktranslate with date=sh.due_date|date:"d M" %}Overdue since {{ date }}{% endblocktranslate %}{% else %}{% blocktranslate with date=sh.due_date|date:"d M" %}Due {{ date }}{% endblocktranslate %}{% endif %}
-        </span>
-      </div>
-      {% endif %}
-
-      <div class="mt-6 flex-1">
-        <div class="flex justify-between text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">
-            <span>{% translate "Payment Progress" %}</span>
-            <span>{{ sh.payment_percent }}%</span>
+  <div class="card-grid card-grid-3">
+    {% for cr in page_obj %}
+    {% url 'shop_detail' cr.pk as detail_url %}
+    <article class="card entity {% if not cr.is_active %}is-inactive{% endif %}">
+      <div class="entity-head">
+        <a href="{{ detail_url }}" class="avatar">{{ cr.name|first }}</a>
+        <div class="min-w-0 flex-1">
+          <h3 class="entity-name"><a href="{{ detail_url }}">{{ cr.name }}</a></h3>
+          <p class="entity-meta">{{ cr.get_category_display }}{% if cr.phone %} · {{ cr.phone }}{% endif %}</p>
         </div>
-        <div class="h-2 w-full rounded-full overflow-hidden" style="background: var(--surface-sunken);">
-            <div class="h-full rounded-full transition-all duration-500" style="width: {{ sh.payment_percent }}%; background: var(--accent);"></div>
-        </div>
-
-        <dl class="mt-4 grid grid-cols-2 gap-4">
-            <div>
-                <dt class="text-xs font-medium text-[var(--text-secondary)]">{% translate "Total Due" %}</dt>
-                <dd class="text-sm font-bold text-[var(--text-primary)]">৳{{ sh.total_due_amt|floatformat:0 }}</dd>
-            </div>
-            <div class="text-right">
-                <dt class="text-xs font-medium text-[var(--text-secondary)]">{% translate "Paid" %}</dt>
-                <dd class="text-sm font-bold" style="color: var(--status-good);">৳{{ sh.total_paid_amt|floatformat:0 }}</dd>
-            </div>
-        </dl>
+        {% url 'shop_edit' cr.pk as edit_url %}{% url 'shop_toggle_active' cr.pk as toggle_url %}
+        {% include "partials/entity_menu.html" with edit_url=edit_url toggle_url=toggle_url active=cr.is_active %}
       </div>
 
-      <div class="mt-8 pt-4 border-t border-[var(--border-soft)] flex gap-3">
-        <a href="{% url 'shop_detail' sh.pk %}" class="flex-1 rounded-lg bg-[var(--surface-sunken)] px-3 py-2 text-center text-sm font-bold text-[var(--accent)] hover:brightness-95 transition-all">{% translate "Details" %}</a>
-        <a href="{% url 'shop_edit' sh.pk %}" class="rounded-lg bg-[var(--surface-raised)] border border-[var(--border)] px-3 py-2 text-center text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)] shadow-sm">{% translate "Edit" %}</a>
+      <div class="entity-badges">
+        {% if cr.remaining_amt <= 0 %}<span class="badge badge-dot" data-tone="good">{% translate "Paid Completely" %}</span>{% endif %}
+        {% if cr.due_status == 'overdue' %}<span class="badge" data-tone="critical">{% include "partials/icon.html" with name="alert" %}{% blocktranslate with date=cr.due_date|date:"j M" %}Overdue since {{ date }}{% endblocktranslate %}</span>
+        {% elif cr.due_status == 'due_soon' %}<span class="badge" data-tone="warn">{% include "partials/icon.html" with name="clock" %}{% blocktranslate with date=cr.due_date|date:"j M" %}Due {{ date }}{% endblocktranslate %}</span>{% endif %}
+        {% if not cr.is_active %}<span class="badge" data-tone="muted">{% translate "Inactive" %}</span>{% endif %}
       </div>
-    </div>
+
+      <div>
+        <p class="entity-figure-label">{% translate "Current Due" %}</p>
+        <p class="entity-figure" data-tone="{% if cr.remaining_amt > 0 %}critical{% else %}good{% endif %}">{{ cr.remaining_amt|money }}</p>
+      </div>
+
+      <div>
+        <div class="meter-row"><span>{% translate "Paid Off" %}</span><span class="num">{{ cr.payment_percent }}%</span></div>
+        <div class="meter" data-tone="good"><span style="width: {{ cr.payment_percent }}%"></span></div>
+      </div>
+
+      <dl class="mini-stats">
+        <div><dt>{% translate "Bought on credit" %}</dt><dd>{{ cr.total_due_amt|money }}</dd></div>
+        <div class="text-right"><dt>{% translate "Paid" %}</dt><dd style="color: var(--status-good);">{{ cr.total_paid_amt|money }}</dd></div>
+      </dl>
+
+      <div class="entity-foot">
+        <a href="{{ detail_url }}" class="btn btn-secondary btn-sm">{% translate "Details" %}{% include "partials/icon.html" with name="arrow-right" %}</a>
+      </div>
+    </article>
     {% endfor %}
   </div>
+  {% include "partials/pagination.html" %}
 
-  {% if page_obj.paginator.num_pages > 1 %}
-  <div class="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
-    <p class="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
-      {% blocktranslate with current=page_obj.number total=page_obj.paginator.num_pages %}Page {{ current }} of {{ total }}{% endblocktranslate %}
-    </p>
-
-    <div class="flex flex-col items-center gap-3 sm:flex-row">
-      <div class="max-w-full overflow-x-auto">
-        <nav class="inline-flex items-center gap-1 whitespace-nowrap rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] p-1 shadow-sm">
-          {% if page_obj.has_previous %}
-            <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page=1" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{% translate "First" %}</a>
-            <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ page_obj.previous_page_number }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{% translate "Prev" %}</a>
-          {% else %}
-            <span class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-muted)]">{% translate "First" %}</span>
-            <span class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-muted)]">{% translate "Prev" %}</span>
-          {% endif %}
-
-          {% for num in pagination_window %}
-            {% if num is None %}
-              <span class="px-2 py-2 text-sm font-bold text-[var(--text-muted)]">…</span>
-            {% elif num == page_obj.number %}
-              <span class="rounded-lg px-3 py-2 text-sm font-bold" style="background: var(--accent); color: var(--accent-on);">{{ num }}</span>
-            {% else %}
-              <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ num }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{{ num }}</a>
-            {% endif %}
-          {% endfor %}
-
-          {% if page_obj.has_next %}
-            <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ page_obj.next_page_number }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{% translate "Next" %}</a>
-            <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ page_obj.paginator.num_pages }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)]">{% translate "Last" %}</a>
-          {% else %}
-            <span class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-muted)]">{% translate "Next" %}</span>
-            <span class="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-muted)]">{% translate "Last" %}</span>
-          {% endif %}
-        </nav>
-      </div>
-
-      <form class="flex flex-col items-start gap-1" x-data="{ pageInput: '{{ page_obj.number }}', maxPage: {{ page_obj.paginator.num_pages }}, showError: false }" @submit.prevent="const p = parseInt(pageInput, 10); showError = !(p >= 1 && p <= maxPage); if (!showError) { window.location.href = '?{{ base_query_string }}{% if base_query_string %}&{% endif %}page=' + p; }">
-        <div class="flex items-center gap-2">
-          <input type="number" x-model="pageInput" inputmode="numeric" min="1" max="{{ page_obj.paginator.num_pages }}" class="w-20 rounded-lg border border-[var(--border)] bg-[var(--surface-raised)] px-2 py-2 text-center text-sm font-semibold text-[var(--text-primary)] focus:border-[var(--accent)] focus:ring-[var(--accent)]">
-          <button type="submit" class="rounded-lg bg-[var(--surface-sunken)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] hover:brightness-95">{% translate "Go" %}</button>
-        </div>
-        <p class="text-xs font-medium text-[var(--text-muted)]">{% blocktranslate with total=page_obj.paginator.num_pages %}Range: 1-{{ total }}{% endblocktranslate %}</p>
-        <p x-show="showError" x-cloak class="text-xs font-semibold" style="color: var(--status-critical);">{% blocktranslate with total=page_obj.paginator.num_pages %}Please enter a page between 1 and {{ total }}.{% endblocktranslate %}</p>
-      </form>
-    </div>
-  </div>
-  {% endif %}
-
-  {% elif search_query or selected_categories or payment_status != "ALL" %}
-  <div class="mt-8 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[var(--border)] p-12 text-center bg-[var(--surface-raised)]">
-      <svg class="h-16 w-16 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
-      <h3 class="mt-4 text-lg font-bold text-[var(--text-primary)]">{% translate "No shops match your filters" %}</h3>
-      <p class="mt-2 text-sm text-[var(--text-secondary)] max-w-xs">{% translate "Try a different name, or reset the filters to see everyone." %}</p>
-      <a href="{% url 'shop_list' %}" class="mt-6 inline-flex items-center rounded-md bg-[var(--surface-sunken)] px-4 py-2 text-sm font-bold text-[var(--text-primary)] shadow-sm hover:brightness-95 transition-all">{% translate "Reset Filters" %}</a>
+  {% elif search_query or selected_categories or payment_status != "ALL" or status != "active" %}
+  <div class="empty">
+    <div class="empty-icon">{% include "partials/icon.html" with name="search" %}</div>
+    <h3 class="empty-title">{% translate "No shops match your filters" %}</h3>
+    <p class="empty-text">{% translate "Try a different name, or reset the filters to see everyone." %}</p>
+    <a href="{% url 'shop_list' %}" class="btn btn-secondary">{% translate "Reset Filters" %}</a>
   </div>
   {% else %}
-  <div class="mt-8 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[var(--border)] p-12 text-center bg-[var(--surface-raised)]">
-      <svg class="h-16 w-16 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3.75a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72" /></svg>
-      <h3 class="mt-4 text-lg font-bold text-[var(--text-primary)]">{% translate "No shops yet" %}</h3>
-      <p class="mt-2 text-sm text-[var(--text-secondary)] max-w-xs">{% translate "Add the local shops you buy from on credit to start tracking what's owed (বাকি)." %}</p>
-      <a href="{% url 'shop_create' %}" class="mt-6 inline-flex items-center rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-bold text-[var(--accent-on)] shadow-sm hover:bg-[var(--accent-strong)] transition-all">+ {% translate "Add Your First Shop" %}</a>
+  <div class="empty">
+    <div class="empty-icon">{% include "partials/icon.html" with name="users" %}</div>
+    <h3 class="empty-title">{% translate "No shops yet" %}</h3>
+    <p class="empty-text">{% translate "Add a shop you buy from on credit to keep track of what you owe." %}</p>
+    <a href="{% url 'shop_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add Your First Shop" %}</a>
   </div>
   {% endif %}
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const categorySelect = document.getElementById('category');
-    if (categorySelect) {
-      new TomSelect(categorySelect, {
-        plugins: ['remove_button'],
-        placeholder: '{% translate "Select categories..." %}',
-        closeAfterSelect: false,
-        hideSelected: true
-      });
-    }
+  document.addEventListener('DOMContentLoaded', function () {
+    FT.multiSelect('category', '{% translate "Select categories..." %}');
   });
 </script>
 {% endblock %}

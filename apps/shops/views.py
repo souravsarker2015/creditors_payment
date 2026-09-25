@@ -33,6 +33,7 @@ def _csv_response(filename, header, rows):
     return response
 
 from .models import Shop, ShopCategory, Transaction, DUE_SOON_DAYS
+from apps.core.status import apply_status_filter, toggle_active
 
 MONTH_CHOICES = [(i, date_cls(2000, i, 1)) for i in range(1, 13)]
 
@@ -498,6 +499,8 @@ def shop_list_view(request):
     if search_query:
         shops_base_qs = shops_base_qs.filter(name__icontains=search_query)
 
+    status, shops_base_qs, status_counts = apply_status_filter(request, shops_base_qs)
+
     shops_qs = shops_base_qs.annotate(
         total_due_amt=Coalesce(
             Sum("transactions__amount", filter=Q(transactions__transaction_type=Transaction.PURCHASE)),
@@ -580,6 +583,8 @@ def shop_list_view(request):
         "filter_type": filter_type,
         "payment_status": payment_status,
         "search_query": search_query,
+        "status": status,
+        "status_counts": status_counts,
         "sort": sort,
         "sort_options": SORT_OPTIONS,
         "base_query_string": base_query_string,
@@ -708,3 +713,10 @@ def transaction_delete_view(request, pk):
     transaction.delete()
     messages.success(request, _("Transaction of ৳%(amount)s deleted.") % {"amount": amount})
     return redirect("shop_detail", pk=shop.pk)
+
+
+@login_required
+@require_POST
+def shop_toggle_active_view(request, pk):
+    obj = get_object_or_404(Shop, pk=pk, user=request.user)
+    return toggle_active(request, obj, "shop_list")

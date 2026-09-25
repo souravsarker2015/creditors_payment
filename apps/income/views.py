@@ -15,6 +15,7 @@ from django.utils.translation import gettext as _, ngettext
 from datetime import date as date_cls
 
 from .models import IncomeSource, IncomeTransaction, RecurringIncome, generate_due_recurring_income
+from apps.core.status import apply_status_filter, toggle_active
 from .forms import IncomeSourceForm, IncomeTransactionForm, RecurringIncomeForm
 
 
@@ -263,6 +264,8 @@ def income_source_list_view(request):
     generate_due_recurring_income(request.user)
 
     filters = _get_income_filters(request, request.user)
+    status, filtered_sources, status_counts = apply_status_filter(request, filters["filtered_sources"])
+    filters["filtered_sources"] = filtered_sources
 
     tx_filter_q = Q()
     if filters["selected_year"]:
@@ -334,6 +337,8 @@ def income_source_list_view(request):
         "date_from": filters["date_from"].isoformat() if filters["date_from"] else "",
         "date_to": filters["date_to"].isoformat() if filters["date_to"] else "",
         "search_query": filters["search_query"],
+        "status": status,
+        "status_counts": status_counts,
         "sort": sort,
         "sort_options": SORT_OPTIONS,
         "base_query_string": base_query_string,
@@ -678,3 +683,10 @@ def recurring_income_delete_view(request, pk):
     schedule.delete()
     messages.success(request, _("Recurring income for '%(name)s' deleted.") % {"name": name})
     return redirect("recurring_income_list")
+
+
+@login_required
+@require_POST
+def income_source_toggle_active_view(request, pk):
+    obj = get_object_or_404(IncomeSource, pk=pk, user=request.user)
+    return toggle_active(request, obj, "income_source_list")

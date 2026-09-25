@@ -12,7 +12,7 @@ class ExpenseInline(admin.TabularInline):
 @admin.register(ExpenseCategory)
 class ExpenseCategoryAdmin(admin.ModelAdmin):
     list_display = ("name", "user", "get_total_spent", "created_at")
-    list_filter = ("user", "created_at")
+    list_filter = ("is_active", "user", "created_at")
     search_fields = ("name", "user__username")
     inlines = [ExpenseInline]
 

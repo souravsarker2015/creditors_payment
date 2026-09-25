@@ -1,168 +1,114 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{{ contributor.name }} {% translate "Details" %} | FinTrack{% endblock %}
+{% block title %}{{ contributor.name }} | FinTrack{% endblock %}
 
 {% block content %}
-<div class="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-  <!-- Header -->
-  <div class="md:flex md:items-end md:justify-between border-b pb-8" style="border-color: var(--border);">
-    <div class="min-w-0 flex-1">
-      <div class="flex items-center gap-x-3">
-          <div class="h-12 w-12 rounded-xl bg-[var(--accent)] flex items-center justify-center text-[var(--accent-on)] font-extrabold text-xl">
-              {{ contributor.name|first|upper }}
-          </div>
-          <h1 class="text-3xl font-extrabold leading-7 text-[var(--text-primary)] sm:truncate sm:text-4xl sm:tracking-tight">{{ contributor.name }}</h1>
-      </div>
-      <div class="mt-4 flex flex-col sm:mt-2 sm:flex-row sm:flex-wrap sm:space-x-6">
-        <div class="mt-2 flex items-center text-sm text-[var(--text-secondary)] font-medium">
-          <svg class="mr-1.5 h-5 w-5 flex-shrink-0 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-          </svg>
-          {% if contributor.phone %}{{ contributor.phone }}{% else %}{% translate "No phone" %}{% endif %}
-        </div>
-        <div class="mt-2 flex items-center text-sm text-[var(--text-secondary)]">
-          <svg class="mr-1.5 h-5 w-5 flex-shrink-0 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-          </svg>
-          {% if contributor.note %}{{ contributor.note }}{% else %}{% translate "No notes available" %}{% endif %}
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <a href="{% url 'contributor_list' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Contributors" %}</a>
+      <div class="flex items-start gap-3">
+        <span class="avatar avatar-lg">{{ contributor.name|first }}</span>
+        <div class="min-w-0">
+          <h1 class="page-title">{{ contributor.name }}</h1>
+          {% if not contributor.is_active %}<span class="badge mt-1.5" data-tone="muted">{% translate "Inactive" %}</span>{% endif %}
         </div>
       </div>
+      <div class="meta-list">
+        <span class="meta-item">{% include "partials/icon.html" with name="tag" %}{{ contributor.get_category_display }}</span>
+        {% if contributor.phone %}<a href="tel:{{ contributor.phone }}" class="meta-item">{% include "partials/icon.html" with name="phone" %}{{ contributor.phone }}</a>{% endif %}
+        {% if contributor.note %}<span class="meta-item">{% include "partials/icon.html" with name="note" %}<span class="truncate">{{ contributor.note }}</span></span>{% endif %}
+      </div>
     </div>
-    <div class="mt-5 flex lg:ml-4 lg:mt-0 gap-3">
-      <a href="{% url 'contributor_update' contributor.pk %}" class="inline-flex items-center rounded-md bg-[var(--surface-raised)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] shadow-sm ring-1 ring-inset ring-[var(--border)] hover:bg-[var(--surface-sunken)] transition-all">{% translate "Edit Profile" %}</a>
-      <a href="{% url 'contributor_list' %}" class="inline-flex items-center rounded-md bg-[var(--surface-sunken)] px-3 py-2 text-sm font-bold text-[var(--text-secondary)] hover:brightness-95 transition-all">{% translate "Back to List" %}</a>
+    <div class="page-actions">
+      <a href="{% url 'contributor_update' contributor.pk %}" class="btn btn-secondary">{% include "partials/icon.html" with name="edit" %}{% translate "Edit Profile" %}</a>
+      {% url 'contributor_toggle_active' contributor.pk as toggle_url %}
+      {% include "partials/toggle_active_item.html" with url=toggle_url active=contributor.is_active as_button=True %}
     </div>
-  </div>
+  </header>
 
-  <!-- Summary Stats -->
-  <dl class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-3">
-    <div class="bg-[var(--surface-raised)] px-6 py-5 shadow-sm ring-1 ring-[var(--border)] rounded-2xl">
-      <dt class="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider">{% translate "Total Contributions" %}</dt>
-      <dd class="mt-2 text-3xl font-extrabold text-[var(--text-primary)]">৳{{ total_amount|floatformat:2 }}</dd>
+  {% if not contributor.is_active %}
+  <div class="callout" data-tone="info">
+    {% include "partials/icon.html" with name="archive" %}
+    <p>{% translate "This contributor is inactive — hidden from your active list. Their contributions still count in every total." %}</p>
+  </div>
+  {% endif %}
+
+  <dl class="stat-grid">
+    <div class="stat" data-tone="good">
+      <dt class="stat-label">{% translate "Total Contributions" %}</dt>
+      <dd class="stat-value is-tone">{{ total_amount|money }}</dd>
     </div>
-    <div class="bg-[var(--surface-raised)] px-6 py-5 shadow-sm ring-1 ring-[var(--border)] rounded-2xl border-l-4" style="border-left-color: var(--accent);">
-      <dt class="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider">{% translate "Contribution Count" %}</dt>
-      <dd class="mt-2 text-3xl font-extrabold" style="color: var(--accent);">{% blocktranslate count counter=total_count %}{{ counter }} Entry{% plural %}{{ counter }} Entries{% endblocktranslate %}</dd>
+    <div class="stat" data-tone="accent">
+      <dt class="stat-label">{% translate "Contribution Count" %}</dt>
+      <dd class="stat-value">{{ total_count }}</dd>
     </div>
-    <div class="bg-[var(--surface-raised)] px-6 py-5 shadow-sm ring-1 ring-[var(--border)] rounded-2xl border-l-4" style="border-left-color: var(--status-good);">
-      <dt class="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider">{% translate "Average Amount" %}</dt>
-      <dd class="mt-2 text-3xl font-extrabold" style="color: var(--status-good);">৳{{ avg_amount|floatformat:2 }}</dd>
+    <div class="stat">
+      <dt class="stat-label">{% translate "Average Amount" %}</dt>
+      <dd class="stat-value">{{ avg_amount|money }}</dd>
     </div>
   </dl>
 
-  <div class="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-3 items-start">
-    <!-- Transactions List -->
-    <div class="lg:col-span-2">
-        <div class="overflow-hidden bg-[var(--surface-raised)] shadow-sm ring-1 ring-[var(--border)] rounded-2xl">
-            <div class="border-b px-6 py-5" style="border-color: var(--border-soft);">
-                <h3 class="text-base font-bold text-[var(--text-primary)] uppercase tracking-wider">{% translate "Funding History" %}</h3>
-                <form method="get" class="mt-4 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end">
-                    <div>
-                        <label for="year-filter" class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Year" %}</label>
-                        <select id="year-filter" name="year" class="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--surface-raised)] text-sm text-[var(--text-primary)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]">
-                            <option value="">{% translate "All Years" %}</option>
-                            {% for yr in year_options %}<option value="{{ yr }}"{% if selected_year == yr %} selected{% endif %}>{{ yr }}</option>{% endfor %}
-                        </select>
-                    </div>
-                    <div>
-                        <label for="month-filter" class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Month" %}</label>
-                        <select id="month-filter" name="month" class="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--surface-raised)] text-sm text-[var(--text-primary)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]">
-                            <option value="">{% translate "All Months" %}</option>
-                            {% for num, mdate in month_choices %}<option value="{{ num }}"{% if selected_month == num %} selected{% endif %}>{{ mdate|date:"F" }}</option>{% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-span-2 flex flex-wrap gap-2 sm:col-span-1">
-                        <button type="submit" class="w-full rounded-md bg-[var(--surface-sunken)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] hover:brightness-95 sm:w-auto">{% translate "Apply" %}</button>
-                        {% if selected_year or selected_month %}<a href="{% url 'contributor_detail' contributor.pk %}" class="w-full rounded-md border border-[var(--border)] px-3 py-2 text-center text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-sunken)] sm:w-auto">{% translate "Reset" %}</a>{% endif %}
-                        <button type="submit" name="export" value="csv" class="w-full inline-flex items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-sm font-semibold hover:brightness-95 sm:w-auto" style="border-color: var(--accent); color: var(--accent);">
-                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>
-                            {% translate "Export CSV" %}
-                        </button>
-                        <a href="{% url 'contributor_statement' contributor.pk %}?{{ request.GET.urlencode }}" class="w-full inline-flex items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-sm font-semibold hover:brightness-95 sm:w-auto" style="border-color: var(--border); color: var(--text-secondary);">
-                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z" /></svg>
-                            {% translate "Statement" %}
-                        </a>
-                    </div>
-                </form>
-                <p class="mt-3 text-sm text-[var(--text-secondary)]">
-                    <span class="font-bold text-[var(--text-primary)]">{% if selected_month %}{{ selected_month_date|date:"F" }} {{ selected_year }}{% elif selected_year %}{{ selected_year }}{% else %}{% translate "All Time" %}{% endif %}</span>
-                    — {% translate "Total Given" %} ৳{{ period_amount|floatformat:2 }}
-                </p>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y" style="border-color: var(--border);">
-                    <thead style="background: var(--surface-sunken);">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Date" %}</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Note" %}</th>
-                            <th scope="col" class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Amount" %}</th>
-                            <th scope="col" class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{% translate "Actions" %}</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y bg-[var(--surface-raised)]" style="border-color: var(--border-soft);">
-                        {% for record in contributions %}
-                        <tr class="hover:bg-[var(--surface-sunken)] transition-colors">
-                            <td class="whitespace-nowrap px-6 py-4 text-sm text-[var(--text-secondary)]">{{ record.date|date:"F d, Y" }}</td>
-                            <td class="px-6 py-4 text-sm text-[var(--text-primary)]">{% if record.note %}{{ record.note }}{% else %}{% translate "Standard Contribution" %}{% endif %}</td>
-                            <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-bold font-mono" style="color: var(--accent);">৳{{ record.amount|floatformat:2 }}</td>
-                            <td class="whitespace-nowrap px-6 py-4 text-center text-sm space-x-3">
-                                <a href="{% url 'contribution_edit' record.pk %}" class="transition-colors" style="color: var(--text-muted);">
-                                    <svg class="h-4 w-4 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                                </a>
-                                <form method="POST" action="{% url 'contribution_delete' record.pk %}" class="inline">
-                                    {% csrf_token %}
-                                    <button type="submit" class="transition-colors" style="color: var(--text-muted);" onclick="return confirm('{% translate "Delete this record?" %}')">
-                                        <svg class="h-4 w-4 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="4" class="px-6 py-12 text-center text-sm text-[var(--text-secondary)]">
-                                {% if selected_year or selected_month %}
-                                    {% translate "Nothing recorded for this period." %}
-                                    <a href="{% url 'contributor_detail' contributor.pk %}" class="ml-2 font-bold" style="color: var(--accent);">{% translate "Reset Filters" %}</a>
-                                {% else %}
-                                    {% translate "No funding recorded yet." %}
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+  <div class="detail-grid">
+    <section class="card">
+      <div class="card-header">
+        <h2 class="card-title">{% translate "Funding History" %}</h2>
+        {% url 'contributor_detail' contributor.pk as reset_url %}{% url 'contributor_statement' contributor.pk as statement_url %}
+        {% include "partials/period_filter.html" %}
+      </div>
+      <div class="period-summary border-b px-4 py-2.5 sm:px-6" style="border-color: var(--border-soft);">
+        <strong>{% if selected_month %}{{ selected_month_date|date:"F" }} {{ selected_year }}{% elif selected_year %}{{ selected_year }}{% else %}{% translate "All Time" %}{% endif %}</strong>
+        <span>{% translate "Total Given" %} <strong class="num">{{ period_amount|money }}</strong></span>
+      </div>
+      {% if contributions %}
+      <ul class="ledger">
+        {% for record in contributions %}
+        <li class="ledger-row">
+          <span class="ledger-icon" data-tone="good">{% include "partials/icon.html" with name="arrow-down" %}</span>
+          <div class="ledger-main">
+            <p class="ledger-title">{% if record.note %}{{ record.note }}{% else %}{% translate "Standard Contribution" %}{% endif %}</p>
+            <p class="ledger-meta">{{ record.date|date:"j M Y" }}</p>
+          </div>
+          <div class="ledger-end">
+            <span class="ledger-amount" data-tone="good">{{ record.amount|money }}</span>
+            {% url 'contribution_edit' record.pk as edit_url %}{% url 'contribution_delete' record.pk as delete_url %}
+            {% translate "Delete this record?" as confirm_text %}
+            {% include "partials/row_menu.html" with edit_url=edit_url delete_url=delete_url confirm=confirm_text up=forloop.last %}
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="empty is-plain">
+        <p class="empty-text">{% if selected_year or selected_month %}{% translate "Nothing recorded for this period." %}{% else %}{% translate "No funding recorded yet." %}{% endif %}</p>
+        {% if selected_year or selected_month %}<a href="{% url 'contributor_detail' contributor.pk %}" class="btn btn-secondary btn-sm">{% translate "Reset Filters" %}</a>{% endif %}
+      </div>
+      {% endif %}
+    </section>
 
-    <!-- Sidebar: Log form -->
-    <div class="lg:col-span-1 space-y-6">
-        <div class="overflow-hidden bg-[var(--surface-raised)] shadow-sm ring-1 ring-[var(--border)] rounded-2xl">
-            <div class="px-6 py-5 border-b" style="border-color: var(--border-soft); background: var(--surface-sunken);">
-                <h3 class="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wider">{% translate "Log Contribution" %}</h3>
-            </div>
-            <div class="p-6">
-                <form method="POST" class="space-y-4">
-                    {% csrf_token %}
-                    {% for field in form %}
-                    <div>
-                        <label class="block text-xs font-bold text-[var(--text-secondary)] uppercase tracking-widest mb-1">{{ field.label }}</label>
-                        {{ field }}
-                    </div>
-                    {% endfor %}
-                    <button type="submit" class="w-full rounded-md bg-[var(--accent)] px-3 py-3 text-sm font-bold text-[var(--accent-on)] shadow-sm hover:bg-[var(--accent-strong)] transition-all">{% translate "Record Payment" %}</button>
-                </form>
-            </div>
+    <aside class="detail-side">
+      <section class="card" x-data="{ open: {{ form.errors|yesno:'true,false' }} }">
+        <button type="button" class="collapse-toggle" @click="open = !open" :aria-expanded="open.toString()">
+          <span class="flex items-center gap-2"><span class="h-5 w-5" style="color: var(--accent);">{% include "partials/icon.html" with name="plus" %}</span>{% translate "Log Contribution" %}</span>
+          {% include "partials/icon.html" with name="chevron-down" %}
+        </button>
+        <div class="collapse-body" :class="open && 'is-open'">
+          <div class="card-header hidden lg:flex"><h2 class="card-title">{% translate "Log Contribution" %}</h2></div>
+          <form method="post" class="card-body form-stack">
+            {% csrf_token %}
+            {% for field in form %}{% include "partials/field.html" %}{% endfor %}
+            <button type="submit" class="btn btn-primary btn-block">{% translate "Record Payment" %}</button>
+          </form>
         </div>
+      </section>
 
-        <!-- Danger Zone -->
-        <div class="rounded-2xl border p-6" style="border-color: var(--status-critical-bg); background: var(--status-critical-bg);">
-            <h4 class="text-xs font-bold uppercase tracking-wider mb-2" style="color: var(--status-critical);">{% translate "Danger Zone" %}</h4>
-            <p class="text-xs mb-4 leading-relaxed italic font-bold uppercase tracking-widest" style="color: var(--status-critical); opacity: 0.85;">{% translate "Careful! This will remove the contributor and all related history forever." %}</p>
-            <a href="{% url 'contributor_delete' contributor.pk %}" class="text-xs font-bold underline underline-offset-4" style="color: var(--status-critical);" onclick="return confirm('{% translate "Delete profile completely?" %}')">{% translate "Delete Contributor Profile" %}</a>
-        </div>
-    </div>
+      <section class="card card-body">
+        <h2 class="card-title" style="color: var(--status-critical);">{% translate "Danger Zone" %}</h2>
+        <p class="card-subtitle mt-1">{% translate "Deleting removes the contributor and all related history forever. To just hide them, mark them inactive instead." %}</p>
+        <a href="{% url 'contributor_delete' contributor.pk %}" class="btn btn-danger btn-sm mt-3">{% include "partials/icon.html" with name="trash" %}{% translate "Delete Contributor Profile" %}</a>
+      </section>
+    </aside>
   </div>
 </div>
 {% endblock %}

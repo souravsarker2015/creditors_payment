@@ -1,269 +1,131 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{{ debtor.name }} {% translate "Details" %} | FinTrack{% endblock %}
+{% block title %}{{ debtor.name }} | FinTrack{% endblock %}
 
 {% block content %}
-<div class="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pb-16">
-  <!-- Header -->
-  <div class="md:flex md:items-end md:justify-between border-b-2 pb-10" style="border-color: var(--border-soft);">
-    <div class="min-w-0 flex-1">
-      <div class="flex items-center gap-x-4">
-          <div class="h-14 w-14 rounded-2xl bg-[var(--accent)] flex items-center justify-center text-[var(--accent-on)] font-black text-2xl shadow-2xl ring-4" style="--tw-ring-color: var(--accent-soft);">
-              {{ debtor.name|first|upper }}
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <a href="{% url 'debtor_list' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Debtors" %}</a>
+      <div class="flex items-start gap-3">
+        <span class="avatar avatar-lg">{{ debtor.name|first }}</span>
+        <div class="min-w-0">
+          <h1 class="page-title">{{ debtor.name }}</h1>
+          <div class="mt-1 flex flex-wrap gap-1.5">
+            {% if due_status == 'overdue' %}<span class="badge" data-tone="critical">{% include "partials/icon.html" with name="alert" %}{% translate "Overdue" %}</span>
+            {% elif due_status == 'due_soon' %}<span class="badge" data-tone="warn">{% include "partials/icon.html" with name="clock" %}{% translate "Due Soon" %}</span>{% endif %}
+            {% if remaining <= 0 and lent > 0 %}<span class="badge badge-dot" data-tone="good">{% translate "Fully Collected" %}</span>{% endif %}
+            {% if not debtor.is_active %}<span class="badge" data-tone="muted">{% translate "Inactive" %}</span>{% endif %}
           </div>
-          <div>
-            <div class="flex flex-wrap items-center gap-2">
-              <h1 class="text-3xl font-black text-[var(--text-primary)] tracking-tight sm:text-4xl leading-tight">{{ debtor.name }}</h1>
-              {% if due_status %}
-              <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold"
-                    style="{% if due_status == 'overdue' %}background: var(--status-critical-bg); color: var(--status-critical);{% else %}background: var(--status-warn-bg); color: var(--status-warn);{% endif %}">
-                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
-                {% if due_status == 'overdue' %}{% translate "Overdue" %}{% else %}{% translate "Due Soon" %}{% endif %}
-              </span>
-              {% endif %}
-            </div>
-            <div class="flex flex-wrap gap-4 mt-1 items-center">
-                <span class="inline-flex items-center text-sm font-bold text-[var(--text-muted)]">
-                    <svg class="mr-1.5 h-4 w-4" fill="currentColor" viewBox="0 0 20 20"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" /></svg>
-                    {% if debtor.phone %}{{ debtor.phone }}{% else %}{% translate "No phone" %}{% endif %}
-                </span>
-                <span class="h-1 w-1 rounded-full" style="background: var(--border);"></span>
-                <span class="inline-flex items-center text-sm font-bold text-[var(--text-muted)]">
-                    <svg class="mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                    {% if debtor.note %}{{ debtor.note }}{% else %}{% translate "No notes" %}{% endif %}
-                </span>
-                {% if debtor.due_date %}
-                <span class="h-1 w-1 rounded-full" style="background: var(--border);"></span>
-                <span class="inline-flex items-center text-sm font-bold" style="color: {% if due_status == 'overdue' %}var(--status-critical){% elif due_status == 'due_soon' %}var(--status-warn){% else %}var(--text-muted){% endif %};">
-                    <svg class="mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" /></svg>
-                    {% blocktranslate with date=debtor.due_date|date:"d M Y" %}Due {{ date }}{% endblocktranslate %}
-                </span>
-                {% endif %}
-            </div>
-          </div>
+        </div>
+      </div>
+      <div class="meta-list">
+        <span class="meta-item">{% include "partials/icon.html" with name="tag" %}{{ debtor.get_category_display }}</span>
+        {% if debtor.phone %}<a href="tel:{{ debtor.phone }}" class="meta-item">{% include "partials/icon.html" with name="phone" %}{{ debtor.phone }}</a>{% endif %}
+        {% if debtor.due_date %}<span class="meta-item" {% if due_status == 'overdue' %}style="color: var(--status-critical);"{% endif %}>{% include "partials/icon.html" with name="calendar" %}{% blocktranslate with date=debtor.due_date|date:"j M Y" %}Due {{ date }}{% endblocktranslate %}</span>{% endif %}
+        {% if debtor.note %}<span class="meta-item">{% include "partials/icon.html" with name="note" %}<span class="truncate">{{ debtor.note }}</span></span>{% endif %}
       </div>
     </div>
-    <div class="mt-8 flex md:ml-4 md:mt-0 gap-3">
-      <a href="{% url 'debtor_edit' debtor.pk %}" class="inline-flex items-center rounded-xl bg-[var(--surface-raised)] px-4 py-2.5 text-sm font-extrabold text-[var(--text-secondary)] shadow-sm ring-2 ring-inset ring-[var(--border-soft)] hover:bg-[var(--surface-sunken)] transition-all border-none">{% translate "Edit Debtor Profile" %}</a>
-      <a href="{% url 'debtor_list' %}" class="inline-flex items-center rounded-xl px-4 py-2.5 text-sm font-extrabold transition-all shadow-xl" style="background: var(--surface-ink); color: var(--text-on-ink);">{% translate "Back" %}</a>
+    <div class="page-actions">
+      <a href="{% url 'debtor_edit' debtor.pk %}" class="btn btn-secondary">{% include "partials/icon.html" with name="edit" %}{% translate "Edit Profile" %}</a>
+      {% url 'debtor_toggle_active' debtor.pk as toggle_url %}
+      {% include "partials/toggle_active_item.html" with url=toggle_url active=debtor.is_active as_button=True %}
     </div>
-  </div>
+  </header>
 
-  <!-- Stats -->
-  <dl class="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-3">
-    <div class="bg-[var(--surface-raised)] px-8 py-6 shadow-sm ring-1 ring-[var(--border)] rounded-3xl hover:shadow-xl transition-all">
-      <dt class="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest text-center mb-1">{% translate "Cumulative Lent" %}</dt>
-      <dd class="text-4xl font-black text-center tracking-tighter" style="color: var(--accent);">৳{{ lent|floatformat:0 }}</dd>
+  {% if not debtor.is_active %}
+  <div class="callout" data-tone="info">
+    {% include "partials/icon.html" with name="archive" %}
+    <p>{% translate "This debtor is inactive — hidden from your active list. The balance below still counts in every total." %}</p>
+  </div>
+  {% endif %}
+
+  <dl class="stat-grid">
+    <div class="stat" data-tone="{% if remaining > 0 %}info{% else %}good{% endif %}">
+      <dt class="stat-label">{% translate "Still Owed to You" %}</dt>
+      <dd class="stat-value is-tone">{{ remaining|money }}</dd>
     </div>
-    <div class="bg-[var(--surface-raised)] px-8 py-6 shadow-sm ring-1 ring-[var(--border)] rounded-3xl hover:shadow-xl transition-all border-l-8" style="border-left-color: var(--status-good);">
-      <dt class="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest text-center mb-1">{% translate "Total Collected" %}</dt>
-      <dd class="text-4xl font-black text-center tracking-tighter" style="color: var(--status-good);">৳{{ received|floatformat:0 }}</dd>
+    <div class="stat">
+      <dt class="stat-label">{% translate "Total Lent" %}</dt>
+      <dd class="stat-value">{{ lent|money }}</dd>
     </div>
-    <div class="bg-[var(--surface-raised)] px-8 py-6 shadow-sm ring-1 ring-[var(--border)] rounded-3xl hover:shadow-xl transition-all border-l-8" style="border-left-color: var(--status-warn);">
-      <dt class="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest text-center mb-1">{% translate "Still Owed to You" %}</dt>
-      <dd class="text-4xl font-black text-center tracking-tighter" style="color: var(--status-warn);">৳{{ remaining|floatformat:0 }}</dd>
+    <div class="stat" data-tone="good">
+      <dt class="stat-label">{% translate "Total Collected" %}</dt>
+      <dd class="stat-value">{{ received|money }}</dd>
     </div>
   </dl>
 
-  <div class="mt-12 grid grid-cols-1 gap-12 lg:grid-cols-3 items-start">
-    <!-- Transaction History -->
-    <div class="lg:col-span-2 space-y-4">
-        <div class="overflow-hidden bg-[var(--surface-raised)] shadow-sm ring-1 ring-[var(--border)] rounded-3xl">
-            <div class="border-b px-8 py-6" style="border-color: var(--border-soft); background: var(--surface-sunken);">
-                <h3 class="text-xs font-black text-[var(--text-secondary)] uppercase tracking-[0.2em]">{% translate "Full Transaction History" %}</h3>
-                <form method="get" class="mt-4 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end">
-                    <div>
-                        <label for="year-filter" class="block text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">{% translate "Year" %}</label>
-                        <select id="year-filter" name="year" class="mt-1 block w-full rounded-xl border-[var(--border)] bg-[var(--surface-raised)] text-xs font-bold text-[var(--text-secondary)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]">
-                            <option value="">{% translate "All Years" %}</option>
-                            {% for yr in year_options %}<option value="{{ yr }}"{% if selected_year == yr %} selected{% endif %}>{{ yr }}</option>{% endfor %}
-                        </select>
-                    </div>
-                    <div>
-                        <label for="month-filter" class="block text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">{% translate "Month" %}</label>
-                        <select id="month-filter" name="month" class="mt-1 block w-full rounded-xl border-[var(--border)] bg-[var(--surface-raised)] text-xs font-bold text-[var(--text-secondary)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]">
-                            <option value="">{% translate "All Months" %}</option>
-                            {% for num, mdate in month_choices %}<option value="{{ num }}"{% if selected_month == num %} selected{% endif %}>{{ mdate|date:"F" }}</option>{% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-span-2 flex flex-wrap gap-2 sm:col-span-1">
-                        <button type="submit" class="w-full rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition-all" style="background: var(--surface-ink); color: var(--text-on-ink);">{% translate "Apply" %}</button>
-                        {% if selected_year or selected_month %}<a href="{% url 'debtor_detail' debtor.pk %}" class="w-full rounded-xl border px-3 py-2 text-center text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] hover:bg-[var(--surface-raised)] transition-all" style="border-color: var(--border);">{% translate "Reset" %}</a>{% endif %}
-                        <button type="submit" name="export" value="csv" class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-[var(--surface-raised)] transition-all" style="border-color: var(--accent); color: var(--accent);">
-                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>
-                            {% translate "Export CSV" %}
-                        </button>
-                        <a href="{% url 'debtor_statement' debtor.pk %}?{{ request.GET.urlencode }}" class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-[var(--surface-raised)] transition-all" style="border-color: var(--border); color: var(--text-secondary);">
-                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z" /></svg>
-                            {% translate "Statement" %}
-                        </a>
-                    </div>
-                </form>
-                <p class="mt-3 text-xs font-bold text-[var(--text-muted)]">
-                    <span class="text-[var(--text-primary)]">{% if selected_month %}{{ selected_month_date|date:"F" }} {{ selected_year }}{% elif selected_year %}{{ selected_year }}{% else %}{% translate "All Time" %}{% endif %}</span>
-                    — {% translate "Lent" %} ৳{{ period_lent|floatformat:2 }} · {% translate "Received" %} ৳{{ period_received|floatformat:2 }}
-                </p>
-            </div>
-            <div class="overflow-x-auto">
-                {% if transactions %}
-                <table class="min-w-full divide-y" style="border-color: var(--border-soft);">
-                    <thead class="bg-[var(--surface-raised)]">
-                        <tr>
-                            <th class="px-8 py-4 text-left text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">{% translate "Date" %}</th>
-                            <th class="px-8 py-4 text-left text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">{% translate "Status" %}</th>
-                            <th class="px-8 py-4 text-right text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">{% translate "Amount" %}</th>
-                            <th class="px-8 py-4 text-left text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">{% translate "Memo" %}</th>
-                            <th class="px-8 py-4 text-right text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">{% translate "Actions" %}</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y bg-[var(--surface-raised)]" style="border-color: var(--border-soft);">
-                        {% for tx in transactions %}
-                        <tr class="hover:bg-[var(--surface-sunken)] transition-colors">
-                            <td class="px-8 py-5 text-sm text-[var(--text-secondary)] font-bold whitespace-nowrap">{{ tx.date|date:"d M Y" }}</td>
-                            <td class="px-8 py-5">
-                                <span class="inline-flex items-center rounded-lg px-2.5 py-1 text-[10px] font-black uppercase tracking-widest"
-                                      style="{% if tx.transaction_type == 'LEND' %}background: var(--status-info-bg); color: var(--status-info);{% else %}background: var(--status-good-bg); color: var(--status-good);{% endif %}">
-                                    {{ tx.get_transaction_type_display }}
-                                </span>
-                            </td>
-                            <td class="px-8 py-5 text-right text-sm font-black text-[var(--text-primary)] tabular-nums">৳{{ tx.amount|floatformat:0 }}</td>
-                            <td class="px-8 py-5 text-xs text-[var(--text-muted)] font-semibold italic">{{ tx.note|default:"-" }}</td>
-                            <td class="px-8 py-5 text-right text-sm font-medium space-x-2">
-                                <a href="{% url 'debtor_transaction_edit' tx.pk %}" class="inline-flex items-center" style="color: var(--accent);" title="{% translate 'Edit' %}">
-                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                    </svg>
-                                </a>
-                                <form method="post" action="{% url 'debtor_transaction_delete' tx.pk %}" class="inline-block" onsubmit="return confirm('{% translate "Delete this collection record? This action cannot be undone." %}')">
-                                    {% csrf_token %}
-                                    <button type="submit" class="inline-flex items-center bg-transparent border-0 p-0 cursor-pointer" style="color: var(--status-critical);" title="{% translate 'Delete' %}">
-                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <div class="py-24 text-center">
-                    <div class="h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4" style="background: var(--surface-sunken);">
-                        <svg class="h-8 w-8 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    </div>
-                    <p class="text-[var(--text-muted)] text-sm font-bold uppercase tracking-widest">
-                        {% if selected_year or selected_month %}{% translate "Nothing recorded for this period." %}{% else %}{% translate "Timeline is empty" %}{% endif %}
-                    </p>
-                    {% if selected_year or selected_month %}<a href="{% url 'debtor_detail' debtor.pk %}" class="mt-3 inline-block text-sm font-bold" style="color: var(--accent);">{% translate "Reset Filters" %}</a>{% endif %}
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
+  <div class="detail-grid">
+    <section class="card">
+      <div class="card-header">
+        <h2 class="card-title">{% translate "Transaction History" %}</h2>
+        {% url 'debtor_detail' debtor.pk as reset_url %}{% url 'debtor_statement' debtor.pk as statement_url %}
+        {% include "partials/period_filter.html" %}
+      </div>
+      <div class="period-summary border-b px-4 py-2.5 sm:px-6" style="border-color: var(--border-soft);">
+        <strong>{% if selected_month %}{{ selected_month_date|date:"F" }} {{ selected_year }}{% elif selected_year %}{{ selected_year }}{% else %}{% translate "All Time" %}{% endif %}</strong>
+        <span>{% translate "Lent" %} <strong class="num">{{ period_lent|money }}</strong></span>
+        <span>{% translate "Received" %} <strong class="num">{{ period_received|money }}</strong></span>
+      </div>
+      {% if transactions %}
+      <ul class="ledger">
+        {% for tx in transactions %}
+        <li class="ledger-row">
+          {% if tx.transaction_type == 'LEND' %}
+          <span class="ledger-icon" data-tone="info">{% include "partials/icon.html" with name="arrow-up" %}</span>
+          {% else %}
+          <span class="ledger-icon" data-tone="good">{% include "partials/icon.html" with name="arrow-down" %}</span>
+          {% endif %}
+          <div class="ledger-main">
+            <p class="ledger-title">{{ tx.get_transaction_type_display }}</p>
+            <p class="ledger-meta">{{ tx.date|date:"j M Y" }}{% if tx.note %} · {{ tx.note }}{% endif %}</p>
+          </div>
+          <div class="ledger-end">
+            <span class="ledger-amount" data-tone="{% if tx.transaction_type == 'LEND' %}info{% else %}good{% endif %}">{{ tx.amount|money }}</span>
+            {% url 'debtor_transaction_edit' tx.pk as edit_url %}{% url 'debtor_transaction_delete' tx.pk as delete_url %}
+            {% translate "Delete this record? This action cannot be undone." as confirm_text %}
+            {% include "partials/row_menu.html" with edit_url=edit_url delete_url=delete_url confirm=confirm_text up=forloop.last %}
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="empty is-plain">
+        <p class="empty-text">{% if selected_year or selected_month %}{% translate "Nothing recorded for this period." %}{% else %}{% translate "No activity for this debtor yet." %}{% endif %}</p>
+        {% if selected_year or selected_month %}<a href="{% url 'debtor_detail' debtor.pk %}" class="btn btn-secondary btn-sm">{% translate "Reset Filters" %}</a>{% endif %}
+      </div>
+      {% endif %}
+    </section>
 
-    <!-- Collection Hub -->
-    <div class="space-y-10">
-        <!-- Visual Stats -->
-        <div class="bg-[var(--surface-raised)] shadow-sm ring-1 ring-[var(--border)] rounded-3xl p-10 flex flex-col items-center">
-            <h3 class="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.2em] mb-10">{% translate "Collection Progress" %}</h3>
-            <div class="h-56 w-full"><canvas id="debtorChart"></canvas></div>
+    <aside class="detail-side">
+      <section class="card" x-data="{ open: {{ form.errors|yesno:'true,false' }} }">
+        <button type="button" class="collapse-toggle" @click="open = !open" :aria-expanded="open.toString()">
+          <span class="flex items-center gap-2"><span class="h-5 w-5" style="color: var(--accent);">{% include "partials/icon.html" with name="plus" %}</span>{% translate "Record New Activity" %}</span>
+          {% include "partials/icon.html" with name="chevron-down" %}
+        </button>
+        <div class="collapse-body" :class="open && 'is-open'">
+          <div class="card-header hidden lg:flex"><h2 class="card-title">{% translate "Record New Activity" %}</h2></div>
+          <form method="post" class="card-body form-stack">
+            {% csrf_token %}
+            {% for field in form %}{% include "partials/field.html" %}{% endfor %}
+            <button type="submit" class="btn btn-primary btn-block">{% translate "Post Transaction" %}</button>
+          </form>
         </div>
+      </section>
 
-        <!-- Add Transaction Form Card -->
-        <div class="shadow-2xl rounded-[2.5rem] p-10 border-2" style="background: var(--surface-ink); color: var(--text-on-ink); border-color: var(--surface-ink-raised);">
-            <div class="flex items-center gap-4 mb-8">
-                <div class="h-12 w-12 bg-white/10 rounded-2xl flex items-center justify-center border border-white/20">
-                    <svg class="h-6 w-6" style="color: var(--gold);" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                    </svg>
-                </div>
-                <div>
-                    <h3 class="text-xl font-black tracking-tight leading-tight">{% translate "Register Collection" %}</h3>
-                    <p class="text-xs font-bold uppercase tracking-widest mt-0.5" style="color: var(--text-on-ink-muted);">{% translate "Quick Transaction Entry" %}</p>
-                </div>
-            </div>
-
-            <form method="post" class="space-y-6">
-                {% csrf_token %}
-                {% for field in form %}
-                <div>
-                    <label class="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 ml-1" style="color: var(--text-on-ink-muted);">{{ field.label }}</label>
-                    <div class="form-wrapper transition-all duration-200">
-                        {{ field }}
-                    </div>
-                    {% if field.errors %}
-                        <p class="mt-2 text-[10px] font-bold uppercase tracking-widest" style="color: var(--status-critical);">{{ field.errors.0 }}</p>
-                    {% endif %}
-                </div>
-                {% endfor %}
-                <button type="submit" class="w-full font-black text-sm uppercase tracking-widest py-5 rounded-[1.25rem] transition-all shadow-xl transform hover:-translate-y-1 active:translate-y-0" style="background: var(--accent); color: var(--accent-on);">{% translate "Record Entry" %}</button>
-            </form>
+      {% if lent > 0 %}
+      <section class="card card-body">
+        {% widthratio received lent 100 as repaid_pct %}
+        <div class="meter-row"><span class="font-semibold" style="color: var(--text-primary);">{% translate "Collected So Far" %}</span><span class="num">{{ repaid_pct }}%</span></div>
+        <div class="meter meter-lg" data-tone="good"><span style="width: {% if repaid_pct|add:0 > 100 %}100{% else %}{{ repaid_pct }}{% endif %}%"></span></div>
+        <div class="mt-3 flex justify-between gap-2 text-xs" style="color: var(--text-muted);">
+          <span>{% translate "Received" %} <strong class="num" style="color: var(--status-good);">{{ received|money }}</strong></span>
+          <span>{% translate "Remaining" %} <strong class="num" style="color: var(--status-info);">{{ chart_remaining|money }}</strong></span>
         </div>
-    </div>
+      </section>
+      {% endif %}
+    </aside>
   </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const style = getComputedStyle(document.documentElement);
-        const ctx = document.getElementById('debtorChart').getContext('2d');
-        const received = {{ chart_received }};
-        const remaining = {{ chart_remaining }};
-
-        if (received === 0 && remaining === 0) return;
-
-        new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['{% translate "Received" %}', '{% translate "Remaining" %}'],
-                datasets: [{
-                    data: [received, remaining],
-                    backgroundColor: [style.getPropertyValue('--status-good').trim(), style.getPropertyValue('--status-warn').trim()],
-                    borderWidth: 0,
-                    spacing: 8,
-                    borderRadius: 10,
-                    weight: 2,
-                    hoverOffset: 15
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '80%',
-                plugins: {
-                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 30, font: { weight: '800', size: 10 }, color: style.getPropertyValue('--text-secondary').trim() } },
-                    tooltip: { backgroundColor: '#0f172a', padding: 16 }
-                }
-            }
-        });
-    });
-</script>
-<style>
-    /* Transaction Hub field styling */
-    .space-y-6 select, .space-y-6 input, .space-y-6 textarea {
-        background-color: rgba(255,255,255,0.03) !important;
-        border: 2px solid rgba(255,255,255,0.08) !important;
-        color: var(--text-on-ink) !important;
-        width: 100%;
-        padding: 1.25rem 1.5rem;
-        border-radius: 1.25rem;
-        font-size: 0.95rem;
-        font-weight: 700;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .space-y-6 select:focus, .space-y-6 input:focus, .space-y-6 textarea:focus {
-        background-color: rgba(255,255,255,0.06) !important;
-        border-color: var(--accent) !important;
-        outline: none;
-    }
-    .space-y-6 select option {
-        color: #1e293b;
-        background: white;
-    }
-</style>
 {% endblock %}

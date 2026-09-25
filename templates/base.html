@@ -1,360 +1,160 @@
-{% load i18n %}
+{% load static i18n %}
 <!DOCTYPE html>
 <html lang="{{ LANGUAGE_CODE }}" class="h-full" data-theme="{{ user_theme_mode }}" data-accent="{{ user_accent }}"{% if LANGUAGE_CODE == "bn" %} data-lang="bn"{% endif %}>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#16241f">
     <title>{% block title %}{% translate "Tracker" %}{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Hind+Siliguri:wght@400;500;600;700&family=Tiro+Bangla&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Hind+Siliguri:wght@400;500;600;700&family=Tiro+Bangla&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <style>
-        [x-cloak] { display: none !important; }
-
-        /* ============================================================
-           Design tokens — ledger ink & paper. See the design proposal
-           for the full palette rationale. Light is the unconditional
-           default; dark overrides the same token names under the OS
-           media query and under an explicit [data-theme="dark"] (the
-           user's saved preference always wins over the OS setting).
-           Accent (teal / indigo / slate) is an independent axis layered
-           on top, also with light+dark variants.
-           ============================================================ */
-        :root {
-            color-scheme: light;
-            --surface: #faf9f4;
-            --surface-raised: #ffffff;
-            --surface-sunken: #f0eee4;
-            --surface-ink: #16241f;
-            --surface-ink-raised: #1c2f28;
-            --border: #e2ded0;
-            --border-soft: #ece9dc;
-            --text-primary: #1b1e1a;
-            --text-secondary: #5b6259;
-            --text-muted: #8a9086;
-            --text-on-ink: #eef1ea;
-            --text-on-ink-muted: #a9b6ac;
-            --status-good: #2e7d4f;
-            --status-good-bg: #e7f2ea;
-            --status-warn: #a8720c;
-            --status-warn-bg: #f6eddb;
-            --status-critical: #b03a2e;
-            --status-critical-bg: #f7e5e1;
-            --status-info: #2f5f8a;
-            --status-info-bg: #e8eff5;
-            --gold: #a9791f;
-            --shadow-sm: 0 1px 2px rgba(27, 30, 26, 0.04);
-            --shadow: 0 1px 2px rgba(27, 30, 26, 0.04), 0 8px 24px -12px rgba(27, 30, 26, 0.14);
-
-            --accent: #0f5c50;
-            --accent-strong: #0b473e;
-            --accent-soft: #e2efe9;
-            --accent-on: #ffffff;
-
-            --font-display: "Source Serif 4", Georgia, "Noto Serif", serif;
-            --font-bengali-display: "Tiro Bangla", "Noto Serif Bengali", Georgia, serif;
-            --font-body: "Inter", -apple-system, "Segoe UI", system-ui, sans-serif;
-            --font-bengali-body: "Hind Siliguri", "Noto Sans Bengali", "Vrinda", -apple-system, sans-serif;
-            --font-heading: var(--font-display);
-            --font-ui: var(--font-body);
-        }
-        @media (prefers-color-scheme: dark) {
-            :root:where(:not([data-theme="light"])) {
-                color-scheme: dark;
-                --surface: #12211d;
-                --surface-raised: #172a24;
-                --surface-sunken: #0d1815;
-                --surface-ink: #0c1613;
-                --surface-ink-raised: #142520;
-                --border: #24382f;
-                --border-soft: #1c2e27;
-                --text-primary: #ecefe8;
-                --text-secondary: #a9b3a5;
-                --text-muted: #728077;
-                --text-on-ink: #eef1ea;
-                --text-on-ink-muted: #9db3a5;
-                --status-good: #57c281;
-                --status-good-bg: rgba(87, 194, 129, 0.14);
-                --status-warn: #dba53a;
-                --status-warn-bg: rgba(219, 165, 58, 0.14);
-                --status-critical: #e08677;
-                --status-critical-bg: rgba(224, 134, 119, 0.14);
-                --status-info: #7ab0e0;
-                --status-info-bg: rgba(122, 176, 224, 0.14);
-                --gold: #d6b04f;
-                --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-                --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 28px -14px rgba(0, 0, 0, 0.6);
-                --accent: #3fbfa8;
-                --accent-strong: #63d0bb;
-                --accent-soft: rgba(63, 191, 168, 0.16);
-                --accent-on: #05201b;
-            }
-        }
-        :root[data-theme="dark"] {
-            color-scheme: dark;
-            --surface: #12211d;
-            --surface-raised: #172a24;
-            --surface-sunken: #0d1815;
-            --surface-ink: #0c1613;
-            --surface-ink-raised: #142520;
-            --border: #24382f;
-            --border-soft: #1c2e27;
-            --text-primary: #ecefe8;
-            --text-secondary: #a9b3a5;
-            --text-muted: #728077;
-            --text-on-ink: #eef1ea;
-            --text-on-ink-muted: #9db3a5;
-            --status-good: #57c281;
-            --status-good-bg: rgba(87, 194, 129, 0.14);
-            --status-warn: #dba53a;
-            --status-warn-bg: rgba(219, 165, 58, 0.14);
-            --status-critical: #e08677;
-            --status-critical-bg: rgba(224, 134, 119, 0.14);
-            --status-info: #7ab0e0;
-            --status-info-bg: rgba(122, 176, 224, 0.14);
-            --gold: #d6b04f;
-            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-            --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 28px -14px rgba(0, 0, 0, 0.6);
-            --accent: #3fbfa8;
-            --accent-strong: #63d0bb;
-            --accent-soft: rgba(63, 191, 168, 0.16);
-            --accent-on: #05201b;
-        }
-        :root[data-theme="light"] {
-            color-scheme: light;
-            --surface: #faf9f4;
-            --surface-raised: #ffffff;
-            --surface-sunken: #f0eee4;
-            --surface-ink: #16241f;
-            --surface-ink-raised: #1c2f28;
-            --border: #e2ded0;
-            --border-soft: #ece9dc;
-            --text-primary: #1b1e1a;
-            --text-secondary: #5b6259;
-            --text-muted: #8a9086;
-            --status-good: #2e7d4f;
-            --status-good-bg: #e7f2ea;
-            --status-warn: #a8720c;
-            --status-warn-bg: #f6eddb;
-            --status-critical: #b03a2e;
-            --status-critical-bg: #f7e5e1;
-            --status-info: #2f5f8a;
-            --status-info-bg: #e8eff5;
-            --shadow-sm: 0 1px 2px rgba(27, 30, 26, 0.04);
-            --shadow: 0 1px 2px rgba(27, 30, 26, 0.04), 0 8px 24px -12px rgba(27, 30, 26, 0.14);
-        }
-
-        /* ---- accent themes ---- */
-        :root[data-accent="indigo"] {
-            --accent: #3c4494; --accent-strong: #2e3576; --accent-soft: #e7e8f6; --accent-on: #ffffff;
-        }
-        @media (prefers-color-scheme: dark) {
-            :root[data-accent="indigo"]:not([data-theme="light"]) {
-                --accent: #949bef; --accent-strong: #aab0f4; --accent-soft: rgba(148, 155, 239, 0.16); --accent-on: #14183a;
-            }
-        }
-        :root[data-theme="dark"][data-accent="indigo"] {
-            --accent: #949bef; --accent-strong: #aab0f4; --accent-soft: rgba(148, 155, 239, 0.16); --accent-on: #14183a;
-        }
-        :root[data-accent="slate"] {
-            --accent: #464e53; --accent-strong: #333a3e; --accent-soft: #e9eaea; --accent-on: #ffffff;
-        }
-        @media (prefers-color-scheme: dark) {
-            :root[data-accent="slate"]:not([data-theme="light"]) {
-                --accent: #c1c9cd; --accent-strong: #d6dcdf; --accent-soft: rgba(193, 201, 205, 0.16); --accent-on: #1c2124;
-            }
-        }
-        :root[data-theme="dark"][data-accent="slate"] {
-            --accent: #c1c9cd; --accent-strong: #d6dcdf; --accent-soft: rgba(193, 201, 205, 0.16); --accent-on: #1c2124;
-        }
-
-        :root[data-lang="bn"] { --font-heading: var(--font-bengali-display); --font-ui: var(--font-bengali-body); }
-
-        body { font-family: var(--font-ui); background: var(--surface); color: var(--text-primary); }
-        .font-heading { font-family: var(--font-heading); }
-        h1, h2, h3 { font-family: var(--font-heading); }
-
-        @media (prefers-reduced-motion: reduce) {
-            * { transition: none !important; animation: none !important; }
-        }
-
-        /* Flatpickr refinement */
-        .flatpickr-calendar {
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1) !important;
-            border: 1px solid var(--border-soft) !important;
-            border-radius: 1.5rem !important;
-            overflow: hidden !important;
-        }
-        .flatpickr-day.selected {
-            background: var(--accent) !important;
-            border-color: var(--accent) !important;
-        }
-
-        /* Preference controls (theme/accent/language). Default styling below
-           targets the compact topbar instance (tablet/desktop only — it's
-           hidden on phones, see partials/preferences_switcher.html). The
-           .pref-ink variants restyle the same markup for the mobile
-           off-canvas sidebar, which sits on the dark ink background. Both
-           instances share one wiring script in this file (keyed off the
-           `.preferences-switcher` class), so either can appear any number
-           of times on the page. */
-        .pref-swatch {
-            width: 28px; height: 28px; border-radius: 9999px; border: 2px solid transparent; cursor: pointer; padding: 3px;
-            display: inline-flex; align-items: center; justify-content: center;
-        }
-        .pref-swatch::before { content: ""; display: block; width: 100%; height: 100%; border-radius: 9999px; }
-        .pref-swatch[data-swatch="teal"]::before { background: #0f5c50; }
-        .pref-swatch[data-swatch="indigo"]::before { background: #3c4494; }
-        .pref-swatch[data-swatch="slate"]::before { background: #464e53; }
-        .pref-swatch.is-active { border-color: var(--text-primary); }
-
-        .pref-mode-btn, .pref-lang-btn {
-            border-radius: 0.375rem; padding: 0.375rem 0.625rem; font-size: 0.75rem; font-weight: 600;
-            color: var(--text-secondary); min-height: 28px;
-        }
-        .pref-mode-btn.is-active, .pref-lang-btn.is-active {
-            background: var(--surface-raised); color: var(--text-primary); box-shadow: var(--shadow-sm);
-        }
-
-        .pref-ink .pref-swatch.is-active { border-color: var(--text-on-ink); }
-        .pref-ink .pref-mode-btn, .pref-ink .pref-lang-btn {
-            color: var(--text-on-ink-muted); padding: 0.625rem 0.75rem; font-size: 0.8125rem; border-radius: 0.5rem; min-height: 44px;
-        }
-        .pref-ink .pref-mode-btn.is-active, .pref-ink .pref-lang-btn.is-active {
-            background: rgba(255,255,255,0.14); color: var(--text-on-ink); box-shadow: none;
-        }
-        .pref-ink .pref-swatch { width: 36px; height: 36px; }
-
-        .nav-item-active { position: relative; }
-        .nav-item-active::before {
-            content: ""; position: absolute; left: -16px; top: 6px; bottom: 6px; width: 3px;
-            background: var(--gold); border-radius: 0 3px 3px 0;
-        }
-    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css">
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
-<body class="h-full" x-data="{ sidebarOpen: false }">
-    <!-- Off-canvas menu for mobile -->
-    <div x-cloak x-show="sidebarOpen" class="relative z-50 lg:hidden" role="dialog" aria-modal="true">
-        <div x-show="sidebarOpen"
-             x-transition:enter="transition-opacity ease-linear duration-300"
-             x-transition:enter-start="opacity-0"
-             x-transition:enter-end="opacity-100"
-             x-transition:leave="transition-opacity ease-linear duration-300"
-             x-transition:leave-start="opacity-100"
-             x-transition:leave-end="opacity-0"
-             class="fixed inset-0 bg-black/50"></div>
-
-        <div class="fixed inset-0 flex">
+<body class="h-full" x-data="{ sidebarOpen: false }" @keydown.escape.window="sidebarOpen = false">
+    {% if user.is_authenticated %}
+    <!-- Off-canvas menu for phones & tablets -->
+    <div x-cloak x-show="sidebarOpen" class="relative z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="{% translate 'Navigation' %}">
+        <div x-show="sidebarOpen" x-transition.opacity.duration.200ms class="fixed inset-0 bg-black/50" @click="sidebarOpen = false"></div>
+        <div class="fixed inset-0 flex pointer-events-none">
             <div x-show="sidebarOpen"
-                 x-transition:enter="transition ease-in-out duration-300 transform"
-                 x-transition:enter-start="-translate-x-full"
-                 x-transition:enter-end="translate-x-0"
-                 x-transition:leave="transition ease-in-out duration-300 transform"
-                 x-transition:leave-start="translate-x-0"
-                 x-transition:leave-end="-translate-x-full"
-                 class="relative mr-16 flex w-full max-w-xs flex-1" @click.away="sidebarOpen = false">
-
-                <div class="absolute left-full top-0 flex w-16 justify-center pt-5">
-                    <button type="button" class="-m-2.5 p-2.5" @click="sidebarOpen = false">
-                        <span class="sr-only">{% translate "Close sidebar" %}</span>
-                        <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-
+                 x-transition:enter="transition ease-out duration-200 transform" x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0"
+                 x-transition:leave="transition ease-in duration-150 transform" x-transition:leave-start="translate-x-0" x-transition:leave-end="-translate-x-full"
+                 class="pointer-events-auto relative mr-14 flex w-full max-w-[18rem] flex-1">
+                <button type="button" class="absolute left-full top-3 ml-2 grid h-10 w-10 place-items-center rounded-full text-white" @click="sidebarOpen = false">
+                    <span class="sr-only">{% translate "Close sidebar" %}</span>
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
                 {% include "partials/sidebar_nav.html" %}
             </div>
         </div>
     </div>
 
     <!-- Static sidebar for desktop -->
-    <div class="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
+    <div class="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-64 lg:flex-col">
         {% include "partials/sidebar_nav.html" %}
     </div>
+    {% endif %}
 
-    <div class="lg:pl-72">
-        <div class="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8"
-             style="background: var(--surface-raised); border-color: var(--border);">
-            <button type="button" class="-m-2.5 p-2.5 lg:hidden" style="color: var(--text-secondary);" @click="sidebarOpen = true">
-                <span class="sr-only">{% translate "Open sidebar" %}</span>
-                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                </svg>
+    <div class="{% if user.is_authenticated %}lg:pl-64{% endif %} min-h-full">
+        {% if user.is_authenticated %}
+        <header class="topbar">
+            <button type="button" class="icon-btn -ml-2 lg:hidden" @click="sidebarOpen = true" aria-label="{% translate 'Open sidebar' %}">
+                <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
             </button>
+            <a href="{% url 'networth' %}" class="flex items-center gap-2 lg:hidden">
+                <span class="grid h-8 w-8 place-items-center rounded-lg font-heading text-sm font-bold" style="background: var(--gold); color: #221a06;">৳</span>
+                <span class="font-heading text-base font-bold" style="color: var(--text-primary);">FinTrack</span>
+            </a>
 
-            <div class="h-6 w-px lg:hidden" style="background: var(--border);" aria-hidden="true"></div>
-
-            <div class="flex flex-1 items-center justify-end gap-x-3 self-stretch overflow-x-auto sm:gap-x-4">
-                {% if user.is_authenticated %}
+            <div class="ml-auto flex items-center gap-3">
                 {% include "partials/preferences_switcher.html" %}
 
-                <div class="h-6 w-px hidden sm:block" style="background: var(--border);" aria-hidden="true"></div>
-                <div class="flex items-center gap-x-2 shrink-0">
-                    <span class="hidden lg:flex lg:items-center">
-                        <span class="ml-1 text-sm font-semibold leading-6" style="color: var(--text-primary);" aria-hidden="true">{{ user.username }}</span>
-                    </span>
-                    <div class="h-8 w-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0"
-                         style="background: var(--accent-soft); color: var(--accent);">
-                        {{ user.username|first|upper }}
+                <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
+                    <button type="button" class="flex items-center gap-2 rounded-full p-0.5 pr-1 sm:pr-2 hover:bg-[var(--surface-sunken)]" @click="open = !open" :aria-expanded="open" aria-haspopup="true">
+                        <span class="avatar h-8 w-8 rounded-full text-xs">{{ user.username|first|upper }}</span>
+                        <span class="hidden max-w-[9rem] truncate text-sm font-semibold sm:block" style="color: var(--text-primary);">{{ user.username }}</span>
+                        <svg class="hidden h-4 w-4 sm:block" style="color: var(--text-muted);" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                    </button>
+                    <div class="menu" x-show="open" x-cloak x-transition.opacity.scale.95.duration.100ms role="menu">
+                        <p class="px-3 pb-1.5 pt-1 text-xs" style="color: var(--text-muted);">{% translate "Signed in as" %} <strong style="color: var(--text-primary);">{{ user.username }}</strong></p>
+                        <div class="menu-sep"></div>
+                        {% if user.is_superuser %}
+                        <a href="/admin/" target="_blank" rel="noopener" class="menu-item" role="menuitem">
+                            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" /></svg>
+                            {% translate "Django Admin" %}
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'logout' %}" class="menu-item is-danger" role="menuitem">
+                            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" /></svg>
+                            {% translate "Log Out" %}
+                        </a>
                     </div>
                 </div>
-                {% endif %}
             </div>
-        </div>
+        </header>
+        {% endif %}
 
-        <main class="py-10">
-            <div class="px-4 sm:px-6 lg:px-8">
-                {% if messages %}
-                    <div class="mb-8 space-y-4">
-                    {% for message in messages %}
-                        <div class="rounded-md p-4 border"
-                             style="{% if message.tags == 'success' %}background: var(--status-good-bg); color: var(--status-good); border-color: var(--status-good-bg);{% elif message.tags == 'error' %}background: var(--status-critical-bg); color: var(--status-critical); border-color: var(--status-critical-bg);{% else %}background: var(--status-info-bg); color: var(--status-info); border-color: var(--status-info-bg);{% endif %}">
-                            <div class="flex">
-                                <div class="flex-shrink-0">
-                                    {% if message.tags == 'success' %}
-                                    <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
-                                    {% else %}
-                                    <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" /></svg>
-                                    {% endif %}
-                                </div>
-                                <div class="ml-3">
-                                    <p class="text-sm font-medium">{{ message }}</p>
-                                </div>
-                            </div>
-                        </div>
-                    {% endfor %}
-                    </div>
-                {% endif %}
-
-                {% block content %}{% endblock %}
+        <main class="app-main">
+            {% if messages %}
+            <div class="page mb-5 space-y-2.5" aria-live="polite">
+                {% for message in messages %}
+                <div class="flash" x-data="{ show: true }" x-show="show" x-transition.opacity
+                     data-tone="{% if message.tags == 'success' %}good{% elif message.tags == 'error' %}critical{% elif message.tags == 'warning' %}warn{% else %}info{% endif %}">
+                    {% if message.tags == 'success' %}
+                    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                    {% elif message.tags == 'error' or message.tags == 'warning' %}
+                    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" /></svg>
+                    {% else %}
+                    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" /></svg>
+                    {% endif %}
+                    <p>{{ message }}</p>
+                    <button type="button" class="icon-btn" @click="show = false" aria-label="{% translate 'Dismiss' %}">
+                        <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                {% endfor %}
             </div>
+            {% endif %}
+
+            {% block content %}{% endblock %}
         </main>
     </div>
 
-    {% block extra_js %}{% endblock %}
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            flatpickr(".datepicker", {
-                dateFormat: "Y-m-d",
-                allowInput: true,
-                monthSelectorType: "dropdown",
-                prevArrow: '<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>',
-                nextArrow: '<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>',
+    /* Shared UI helpers — pages call these instead of repeating setup code. */
+    window.FT = {
+        datePicker: function (el) {
+            return flatpickr(el, {
+                dateFormat: "Y-m-d", altInput: true, altFormat: "j M Y", allowInput: false,
+                disableMobile: true, monthSelectorType: "static",
             });
-        });
+        },
+        // A visible range picker writing into two hidden inputs (date_from / date_to).
+        rangePicker: function (inputId, fromId, toId) {
+            var input = document.getElementById(inputId), from = document.getElementById(fromId), to = document.getElementById(toId);
+            if (!input || !from || !to) return;
+            var initial = [from.value, to.value].filter(Boolean);
+            flatpickr(input, {
+                mode: "range", dateFormat: "Y-m-d", altInput: true, altFormat: "j M Y", disableMobile: true,
+                defaultDate: initial.length ? initial : null,
+                onChange: function (dates) {
+                    from.value = dates[0] ? flatpickr.formatDate(dates[0], "Y-m-d") : "";
+                    to.value = dates[1] ? flatpickr.formatDate(dates[1], "Y-m-d") : (dates[0] ? from.value : "");
+                },
+            });
+        },
+        multiSelect: function (id, placeholder) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            new TomSelect(el, { plugins: ["remove_button"], placeholder: placeholder, closeAfterSelect: false, hideSelected: true });
+        },
+    };
+
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".datepicker").forEach(FT.datePicker);
+    });
+
+    // Any form with data-confirm asks before submitting (deletes, irreversible actions).
+    document.addEventListener("submit", function (e) {
+        var msg = e.target.getAttribute && e.target.getAttribute("data-confirm");
+        if (msg && !window.confirm(msg)) e.preventDefault();
+    }, true);
     </script>
+    {% block extra_js %}{% endblock %}
+    {% if user.is_authenticated %}
     <script>
     (function () {
         // Wires every `.preferences-switcher` instance on the page (the
         // compact topbar one on tablet/desktop, the touch-sized one in the
-        // mobile off-canvas sidebar). Safe to run against any number of
-        // instances — each is guarded independently.
+        // off-canvas sidebar).
         var root = document.documentElement;
         var prefsUrl = "{% url 'update_preferences' %}";
 
@@ -362,49 +162,39 @@
             var body = new URLSearchParams();
             body.set(field, value);
             fetch(prefsUrl, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': csrfToken,
-                    'X-Preferences-Fetch': '1',
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
+                method: "POST",
+                headers: { "X-CSRFToken": csrfToken, "X-Preferences-Fetch": "1", "Content-Type": "application/x-www-form-urlencoded" },
                 body: body.toString(),
                 keepalive: true,
-            }).catch(function () { /* preference is already applied client-side; a failed save just won't persist */ });
+            }).catch(function () { /* already applied client-side; a failed save just won't persist */ });
         }
 
         function wire(container) {
-            if (container.dataset.wired === '1') return;
-            container.dataset.wired = '1';
+            if (container.dataset.wired === "1") return;
+            container.dataset.wired = "1";
+            var tokenInput = container.querySelector("input[name=csrfmiddlewaretoken]");
+            var csrfToken = tokenInput ? tokenInput.value : "";
 
-            var tokenInput = container.querySelector('input[name=csrfmiddlewaretoken]');
-            var csrfToken = tokenInput ? tokenInput.value : '';
-
-            container.querySelectorAll('.pref-swatch').forEach(function (btn) {
-                btn.addEventListener('click', function () {
+            container.querySelectorAll(".pref-swatch").forEach(function (btn) {
+                btn.addEventListener("click", function () {
                     var accent = btn.dataset.swatch;
-                    root.setAttribute('data-accent', accent);
-                    document.querySelectorAll('.pref-swatch').forEach(function (b) {
-                        b.classList.toggle('is-active', b.dataset.swatch === accent);
-                    });
-                    save(csrfToken, 'accent', accent);
+                    root.setAttribute("data-accent", accent);
+                    document.querySelectorAll(".pref-swatch").forEach(function (b) { b.classList.toggle("is-active", b.dataset.swatch === accent); });
+                    save(csrfToken, "accent", accent);
                 });
             });
-
-            container.querySelectorAll('.pref-mode-btn').forEach(function (btn) {
-                btn.addEventListener('click', function () {
+            container.querySelectorAll(".pref-mode-btn").forEach(function (btn) {
+                btn.addEventListener("click", function () {
                     var mode = btn.dataset.mode;
-                    root.setAttribute('data-theme', mode);
-                    document.querySelectorAll('.pref-mode-btn').forEach(function (b) {
-                        b.classList.toggle('is-active', b.dataset.mode === mode);
-                    });
-                    save(csrfToken, 'theme_mode', mode);
+                    root.setAttribute("data-theme", mode);
+                    document.querySelectorAll(".pref-mode-btn").forEach(function (b) { b.classList.toggle("is-active", b.dataset.mode === mode); });
+                    save(csrfToken, "theme_mode", mode);
                 });
             });
         }
-
-        document.querySelectorAll('.preferences-switcher').forEach(wire);
+        document.querySelectorAll(".preferences-switcher").forEach(wire);
     })();
     </script>
+    {% endif %}
 </body>
 </html>
