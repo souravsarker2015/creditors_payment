@@ -75,3 +75,40 @@ def asset(path):
     if not found:
         return url
     return f"{url}?v={int(os.path.getmtime(found))}"
+
+
+def whatsapp_number(phone):
+    """Local Bangladeshi numbers (01XXXXXXXXX) → 8801XXXXXXXXX, the
+    international form wa.me needs. Other numbers keep their digits."""
+    digits = "".join(ch for ch in (phone or "") if ch.isdigit())
+    if len(digits) == 11 and digits.startswith("01"):
+        return "88" + digits
+    if digits.startswith("00"):
+        return digits[2:]
+    return digits
+
+
+@register.simple_tag
+def reminder(name, amount, due_date=None, phone=""):
+    """A polite payment reminder plus ready-made WhatsApp / SMS links."""
+    from urllib.parse import quote
+
+    from django.utils.formats import date_format
+    from django.utils.translation import gettext as _
+
+    values = {"name": name, "amount": _format(amount)}
+    if due_date:
+        values["date"] = date_format(due_date, "j F Y")
+        text = _("Hello %(name)s, a friendly reminder that %(amount)s is still due (due date: %(date)s). "
+                 "Please pay when convenient. Thank you!") % values
+    else:
+        text = _("Hello %(name)s, a friendly reminder that %(amount)s is still due. "
+                 "Please pay when convenient. Thank you!") % values
+    number = whatsapp_number(phone)
+    return {
+        "text": text,
+        "whatsapp": f"https://wa.me/{number}?text={quote(text)}",
+        # "?&body=" works on both Android and iOS.
+        "sms": f"sms:{phone}?&body={quote(text)}",
+        "has_phone": bool(number),
+    }

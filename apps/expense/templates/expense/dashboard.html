@@ -54,6 +54,27 @@
     </div>
   </dl>
 
+  <section class="card">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title">{% blocktranslate with month=today|date:"F" %}Budgets for {{ month }}{% endblocktranslate %}</h2>
+        <p class="card-subtitle">{% if budgets %}{% translate "How much of each monthly limit is used so far." %}{% else %}{% translate "Set a monthly limit for a category and get warned before you overspend." %}{% endif %}</p>
+      </div>
+      <a href="{% url 'budget_list' %}" class="btn btn-ghost btn-sm">{% if budgets %}{% translate "Manage" %}{% else %}{% include "partials/icon.html" with name="plus" %}{% translate "Set a budget" %}{% endif %}</a>
+    </div>
+    {% if budgets %}
+    <div class="card-body budget-strip">
+      {% for r in budgets|slice:":6" %}
+      <a href="{% url 'budget_list' %}" class="budget-mini">
+        <div class="meter-row"><span class="truncate font-semibold" style="color: var(--text-primary);">{{ r.budget.label }}</span><span class="num" style="color: var(--status-{% if r.tone == 'good' %}good{% elif r.tone == 'warn' %}warn{% else %}critical{% endif %});">{{ r.pct }}%</span></div>
+        <div class="meter" data-tone="{{ r.tone }}"><span style="width: {{ r.bar }}%"></span></div>
+        <p class="mt-1 text-xs" style="color: var(--text-muted);">{% if r.state == "over" %}{% blocktranslate with amount=r.over_by|money %}Over by {{ amount }}{% endblocktranslate %}{% else %}{% blocktranslate with amount=r.remaining|money %}{{ amount }} left{% endblocktranslate %}{% endif %} · {% blocktranslate with limit=r.limit|money %}of {{ limit }}{% endblocktranslate %}</p>
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </section>
+
   <div class="grid grid-cols-1 gap-5 lg:grid-cols-5 lg:items-start">
     <section class="card lg:col-span-3">
       <div class="card-header">

@@ -23,6 +23,14 @@
         <p class="hero-value">{{ month.this_month|money }}</p>
         <p class="hero-sub">{% blocktranslate count counter=purchases_this_month %}{{ counter }} purchase{% plural %}{{ counter }} purchases{% endblocktranslate %} · {% blocktranslate with amount=month.daily_avg|money %}{{ amount }} a day{% endblocktranslate %} · {% blocktranslate with month=month.last_label|date:"F" amount=month.last_month|money %}{{ month }}: {{ amount }}{% endblocktranslate %}</p>
       </div>
+      {% if bazar_budget %}
+      <a href="{% url 'budget_list' %}" class="hero-progress">
+        <div class="hero-progress-row"><span>{% blocktranslate with limit=bazar_budget.limit|money %}Budget {{ limit }}{% endblocktranslate %}</span><strong>{% if bazar_budget.state == "over" %}{% blocktranslate with amount=bazar_budget.over_by|money %}Over by {{ amount }}{% endblocktranslate %}{% else %}{% blocktranslate with amount=bazar_budget.remaining|money %}{{ amount }} left{% endblocktranslate %}{% endif %}</strong></div>
+        <div class="meter" data-state="{{ bazar_budget.state }}"><span style="width: {{ bazar_budget.bar }}%"></span></div>
+      </a>
+      {% else %}
+      <a href="{% url 'budget_create' %}?scope=bazar" class="btn btn-on-ink btn-sm">{% include "partials/icon.html" with name="plus" %}{% translate "Set a bazar budget" %}</a>
+      {% endif %}
       <a href="{% url 'household_month_detail' current_year current_month %}" class="btn btn-on-ink">{% translate "Open this month" %}{% include "partials/icon.html" with name="arrow-right" %}</a>
     </div>
   </section>

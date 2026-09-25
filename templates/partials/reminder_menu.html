@@ -1,0 +1,30 @@
+{% load i18n %}{% comment %}
+"Send reminder" for money someone owes you. Needs: name, amount; optional due_date, phone.
+WhatsApp and SMS open with the message filled in (you can still edit it);
+"Share…" uses the phone's share sheet where available.
+{% endcomment %}{% reminder name amount due_date phone as r %}
+<div class="menu-wrap" x-data="{ open: false, canShare: !!navigator.share }" @click.outside="open = false" @keydown.escape="open = false">
+  <button type="button" class="btn btn-primary" @click="open = !open" :aria-expanded="open" aria-haspopup="true">
+    {% include "partials/icon.html" with name="bell" %}{% translate "Send reminder" %}{% include "partials/icon.html" with name="chevron-down" %}
+  </button>
+  <div class="menu reminder-menu" x-show="open" x-cloak x-transition.opacity.scale.95.duration.100ms role="menu">
+    <p class="reminder-preview">{{ r.text }}</p>
+    <div class="menu-sep"></div>
+    <a href="{{ r.whatsapp }}" target="_blank" rel="noopener" class="menu-item" role="menuitem" @click="open = false">
+      <span class="reminder-ico" style="--c: #25d366;">{% include "partials/icon.html" with name="chat" %}</span>WhatsApp
+    </a>
+    <a href="{{ r.sms }}" class="menu-item" role="menuitem" @click="open = false">
+      <span class="reminder-ico" style="--c: var(--status-info);">{% include "partials/icon.html" with name="phone" %}</span>{% translate "Text message (SMS)" %}
+    </a>
+    <button type="button" class="menu-item" role="menuitem" x-show="canShare" x-cloak
+            @click="open = false; navigator.share({ text: $el.dataset.text }).catch(() => {})" data-text="{{ r.text }}">
+      <span class="reminder-ico" style="--c: var(--accent);">{% include "partials/icon.html" with name="upload" %}</span>{% translate "Share…" %}
+    </button>
+    <button type="button" class="menu-item" role="menuitem"
+            @click="open = false; navigator.clipboard.writeText($el.dataset.text).then(() => FT.toast($el.dataset.done, 'good'))"
+            data-text="{{ r.text }}" data-done="{% translate 'Reminder copied — paste it anywhere.' %}">
+      <span class="reminder-ico" style="--c: var(--text-muted);">{% include "partials/icon.html" with name="copy" %}</span>{% translate "Copy message" %}
+    </button>
+    {% if not r.has_phone %}<p class="reminder-foot">{% translate "No phone number saved — you'll pick the contact in WhatsApp." %}</p>{% endif %}
+  </div>
+</div>

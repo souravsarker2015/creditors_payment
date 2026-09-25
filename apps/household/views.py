@@ -16,6 +16,8 @@ from django.utils import dateformat
 from django.utils.translation import gettext as _, gettext_lazy, ngettext
 
 from .models import HouseholdCategory, HouseholdMember, Purchase, Settlement
+from apps.budgets.models import Budget, BudgetScope
+from apps.budgets.services import status as budget_status
 from apps.core.stats import month_compare, month_start, ranked, total, trend_summary
 from apps.core.status import apply_status_filter, toggle_active
 from .forms import HouseholdCategoryForm, HouseholdMemberForm, PurchaseForm, SettlementForm
@@ -141,6 +143,17 @@ def _build_pagination_window(page_obj, window=2):
     return compact_pages
 
 
+def _budget_alert(request, purchase):
+    """Warn right away when this purchase pushed the bazar budget near or past its limit."""
+    from apps.budgets.services import alert_message
+
+    if purchase.date.replace(day=1) != timezone.localdate().replace(day=1):
+        return
+    note = alert_message(request.user, bazar=True)
+    if note:
+        messages.warning(request, note)
+
+
 @login_required
 def dashboard_view(request):
     purchases = request.user.household_purchases.all()
@@ -154,7 +167,7 @@ def dashboard_view(request):
     )["total"]
 
     outstanding_to_members = sum(
-        (m.balance_due for m in request.user.household_members.all() if m.balance_due > 0),
+        (m.balance_due for m in request.user.household_members.with_balances() if m.balance_due > 0),
         0,
     )
 
@@ -186,13 +199,16 @@ def dashboard_view(request):
     trend_spent = [float(total_by_month.get(d, 0) or 0) for d in month_starts]
 
     members_owed = sorted(
-        (m for m in request.user.household_members.all() if m.balance_due > 0),
+        (m for m in request.user.household_members.with_balances() if m.balance_due > 0),
         key=lambda m: -m.balance_due,
     )
     this_start = month_start(today)
     this_month_qs = purchases.filter(date__gte=this_start, date__lte=today)
 
+    bazar_budget = Budget.objects.filter(user=request.user, scope=BudgetScope.BAZAR).first()
+
     context = {
+        "bazar_budget": budget_status(bazar_budget) if bazar_budget else None,
         "month": month_compare(purchases),
         "fronted_this_month": total(this_month_qs.filter(buyer__isnull=False)),
         "purchases_this_month": this_month_qs.count(),
@@ -254,7 +270,7 @@ def purchase_list_view(request):
         total=Coalesce(Sum("amount"), Value(0, output_field=DecimalField()))
     )["total"]
     outstanding_to_members = sum(
-        (m.balance_due for m in request.user.household_members.all() if m.balance_due > 0),
+        (m.balance_due for m in request.user.household_members.with_balances() if m.balance_due > 0),
         0,
     )
 
@@ -293,6 +309,7 @@ def month_detail_view(request, year, month):
             purchase.user = request.user
             purchase.save()
             messages.success(request, _("Purchase of ৳%(amount)s recorded.") % {"amount": purchase.amount})
+            _budget_alert(request, purchase)
             return redirect("household_month_detail", year=purchase.date.year, month=purchase.date.month)
     else:
         if year == today.year and month == today.month:
@@ -338,6 +355,7 @@ def purchase_edit_view(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, _("Purchase updated."))
+            _budget_alert(request, form.instance)
             return redirect("household_month_detail", year=purchase.date.year, month=purchase.date.month)
     else:
         form = PurchaseForm(instance=purchase, user=request.user)
@@ -365,7 +383,7 @@ def purchase_delete_view(request, pk):
 @login_required
 def member_list_view(request):
     search_query = request.GET.get("q", "").strip()
-    members_qs = request.user.household_members.all()
+    members_qs = request.user.household_members.with_balances()
     if search_query:
         members_qs = members_qs.filter(name__icontains=search_query)
     status, members_qs, status_counts = apply_status_filter(request, members_qs)

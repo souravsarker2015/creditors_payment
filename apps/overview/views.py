@@ -59,7 +59,7 @@ def networth_view(request):
     )
     shops_payable = shop_totals["due"] - shop_totals["paid"]
 
-    household_members = list(user.household_members.all())
+    household_members = list(user.household_members.with_balances())
     household_payable = sum(
         (m.balance_due for m in household_members if m.balance_due > 0), ZERO
     )

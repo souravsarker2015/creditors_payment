@@ -166,6 +166,20 @@ and shops (বাকি tracking) — household and shops didn't exist at the ti
   Creditors, Debtors, Contributors, and Shops already had, so search is now consistent across
   every entity list in the app.
 
+- **Monthly budgets** — a new `apps.budgets` app. A budget is a monthly limit (resets on the 1st)
+  for one expense category, for all expenses, or for household bazar. The Budgets page shows spent
+  vs. limit, what's left, a per-day allowance for the rest of the month, and a month-end projection
+  from the current pace; any month can be reviewed. "Suggested budgets" proposes limits from the
+  last three months' average. Saving an expense or purchase that crosses a budget's warning level
+  shows a warning straight away, and budgets appear on the Expense and Household dashboards.
+- **Payment reminders** — a "Send reminder" button on any debtor who still owes money opens
+  WhatsApp (local 01… numbers converted to +880) or SMS with a polite, translated message
+  carrying the amount and due date; it can also be shared or copied.
+- **Installable app (PWA)** — manifest, icons and a service worker (`/sw.js`), so FinTrack can be
+  added to a phone's home screen and opens full-screen. Pages always come from the network (no
+  financial data is cached on the device); static files are cached for speed, and an offline page
+  replaces the browser's error screen.
+
 ## Suggested / not yet implemented
 
 - **No self-service password recovery, and signup is open to anyone** (Low–Medium — reviewed and
@@ -180,6 +194,16 @@ and shops (বাকি tracking) — household and shops didn't exist at the ti
   `prod.py`, e.g. SMTP or a transactional-email API) or gating signup behind an invite/access code
   if public self-registration was never actually intended. Worth revisiting once there's an actual
   email-sending setup decided on.
+
+- **Global search / command palette** (Medium) — one search box (Ctrl+K) across creditors, debtors,
+  shops, sources, categories, members and notes.
+- **Receipt photos** (Medium) — attach a picture to an expense or purchase; needs a media storage
+  decision for production.
+- **Savings goals** (Medium) — a target amount and date with progress fed from Net Worth's
+  "Saved this month".
+- **Full backup & restore** (Medium) — one download of everything (JSON/ZIP) and a matching import,
+  beyond today's per-list CSV export.
+- **Login protection** (Low) — lock out or slow down repeated failed logins (e.g. django-axes).
 
 ## Platform
 

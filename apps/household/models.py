@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from django.db.models import Sum
+from django.db.models import DecimalField, OuterRef, Subquery, Sum, Value
+from django.db.models.functions import Coalesce
 from django.contrib.auth.models import User
 
 
@@ -30,6 +31,16 @@ class HouseholdCategory(models.Model):
         return self.purchases.aggregate(total=Sum("amount"))["total"] or 0
 
 
+class HouseholdMemberQuerySet(models.QuerySet):
+    def with_balances(self):
+        """Load each member's fronted and paid-back totals in the same query,
+        so listing members doesn't cost two extra queries per member."""
+        def summed(model, fk):
+            rows = model.objects.filter(**{fk: OuterRef("pk")}).values(fk).annotate(t=Sum("amount")).values("t")
+            return Coalesce(Subquery(rows), Value(0, output_field=DecimalField()))
+        return self.annotate(_spent=summed(Purchase, "buyer"), _settled=summed(Settlement, "member"))
+
+
 class HouseholdMember(models.Model):
     """A person who occasionally fronts their own money for household purchases.
 
@@ -50,6 +61,8 @@ class HouseholdMember(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    objects = HouseholdMemberQuerySet.as_manager()
+
     class Meta:
         ordering = ["name"]
 
@@ -57,15 +70,20 @@ class HouseholdMember(models.Model):
         return self.name
 
     # ── Computed properties ──────────────────────────
+    # Each uses the with_balances() annotation when present, else queries.
 
     @property
     def total_spent(self):
         """Total this member has fronted for household purchases."""
+        if hasattr(self, "_spent"):
+            return self._spent
         return self.purchases.aggregate(total=Sum("amount"))["total"] or 0
 
     @property
     def total_settled(self):
         """Total already given back to this member."""
+        if hasattr(self, "_settled"):
+            return self._settled
         return self.settlements.aggregate(total=Sum("amount"))["total"] or 0
 
     @property

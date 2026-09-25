@@ -16,6 +16,7 @@ from .models import ExpenseCategory, Expense, RecurringExpense, generate_due_rec
 from django.urls import reverse
 from django.utils import timezone
 from datetime import timedelta
+from apps.budgets.services import statuses as budget_statuses
 from apps.core.stats import month_compare, ranked, trend_summary
 from apps.core.status import apply_status_filter, active_or_current, toggle_active
 from .forms import ExpenseCategoryForm, ExpenseForm, RecurringExpenseForm
@@ -257,6 +258,7 @@ def dashboard_view(request):
         "upcoming": request.user.recurring_expenses.filter(
             is_active=True, next_run_date__lte=today + timedelta(days=30)
         ).select_related("category").order_by("next_run_date")[:5],
+        "budgets": [b for b in budget_statuses(request.user) if b["budget"].scope != "bazar"],
         "is_filtered": bool(filters["selected_category_ids"] or filters["selected_year"] or filters["date_from"] or filters["date_to"]),
         "category_labels": category_labels,
         "category_data": category_data,
@@ -352,6 +354,17 @@ def expense_list_view(request):
     return render(request, "expense/expense_list.html", context)
 
 
+def _budget_alert(request, expense):
+    """Warn right away when this expense pushed a budget near or past its limit."""
+    from apps.budgets.services import alert_message
+
+    if expense.date.replace(day=1) != timezone.localdate().replace(day=1):
+        return  # budgets track the current month
+    note = alert_message(request.user, category_id=expense.category_id)
+    if note:
+        messages.warning(request, note)
+
+
 @login_required
 def expense_create_view(request):
     if request.method == "POST":
@@ -361,6 +374,7 @@ def expense_create_view(request):
             expense.user = request.user
             expense.save()
             messages.success(request, _("Expense of ৳%(amount)s recorded.") % {"amount": expense.amount})
+            _budget_alert(request, expense)
             return redirect("expense_list")
     else:
         form = ExpenseForm(user=request.user, initial={"date": django.utils.timezone.now().date()})
@@ -373,8 +387,9 @@ def expense_edit_view(request, pk):
     if request.method == "POST":
         form = ExpenseForm(request.POST, instance=expense, user=request.user)
         if form.is_valid():
-            form.save()
+            expense = form.save()
             messages.success(request, _("Expense updated."))
+            _budget_alert(request, expense)
             return redirect("expense_list")
     else:
         form = ExpenseForm(instance=expense, user=request.user)

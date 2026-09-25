@@ -388,3 +388,69 @@ class AssetTagTests(TestCase):
         self.assertRegex(html, r'/static/css/app\.css\?v=\d+')
         self.assertRegex(html, r'/static/js/charts\.js\?v=\d+')
         self.assertRegex(html, r'/static/js/calculator\.js\?v=\d+')
+
+
+class ReminderTests(TestCase):
+    def test_bangladeshi_numbers_become_international(self):
+        from apps.core.templatetags.ui import whatsapp_number
+        self.assertEqual(whatsapp_number("01712-345678"), "8801712345678")
+        self.assertEqual(whatsapp_number("+880 1712 345678"), "8801712345678")
+        self.assertEqual(whatsapp_number(""), "")
+
+    def test_message_and_links(self):
+        from datetime import date
+        from apps.core.templatetags.ui import reminder
+        r = reminder("Salma", Decimal("1500"), date(2026, 10, 1), "01712345678")
+        self.assertIn("৳1,500", r["text"])
+        self.assertIn("1 October 2026", r["text"])
+        self.assertTrue(r["whatsapp"].startswith("https://wa.me/8801712345678?text=Hello%20Salma"))
+        self.assertTrue(r["sms"].startswith("sms:01712345678?&body="))
+
+    def test_debtor_page_offers_a_reminder_only_while_money_is_owed(self):
+        user = User.objects.create_user("owner", password="pw12345!")
+        self.client.login(username="owner", password="pw12345!")
+        d = Debtor.objects.create(user=user, name="Salma", phone="01712345678")
+        d.transactions.create(transaction_type="LEND", amount=500, date="2026-01-01")
+        self.assertContains(self.client.get(reverse("debtor_detail", args=[d.pk])), "wa.me/8801712345678")
+        d.transactions.create(transaction_type="RECEIVE", amount=500, date="2026-01-02")
+        self.assertNotContains(self.client.get(reverse("debtor_detail", args=[d.pk])), "wa.me/")
+
+
+class PwaTests(TestCase):
+    def test_manifest_service_worker_and_offline_page(self):
+        m = self.client.get(reverse("manifest"))
+        self.assertEqual(m["Content-Type"], "application/manifest+json")
+        data = m.json()
+        self.assertEqual(data["display"], "standalone")
+        self.assertTrue(any(i["purpose"] == "maskable" for i in data["icons"]))
+        sw = self.client.get(reverse("service_worker"))
+        self.assertEqual((sw["Content-Type"], sw["Service-Worker-Allowed"]), ("application/javascript", "/"))
+        self.assertIn('"offline": "/offline/"', sw.content.decode())
+        self.assertIn("req.mode === \"navigate\"", sw.content.decode())
+        self.assertEqual(self.client.get(reverse("offline")).status_code, 200)
+
+    def test_pages_link_the_manifest(self):
+        self.assertContains(self.client.get(reverse("login")), 'rel="manifest"')
+
+
+class HouseholdBalanceQueryTests(TestCase):
+    def test_member_list_query_count_does_not_grow_with_members(self):
+        user = User.objects.create_user("owner", password="pw12345!")
+        self.client.login(username="owner", password="pw12345!")
+        from apps.household.models import Purchase, Settlement
+        def add_member(i):
+            m = HouseholdMember.objects.create(user=user, name=f"M{i}")
+            Purchase.objects.create(user=user, buyer=m, amount=100, date="2026-01-01")
+            Settlement.objects.create(member=m, amount=40, date="2026-01-02")
+        add_member(0)
+        self.client.get(reverse("household_member_list"))
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+        with CaptureQueriesContext(connection) as one:
+            r = self.client.get(reverse("household_member_list"))
+        for i in range(1, 6):
+            add_member(i)
+        with CaptureQueriesContext(connection) as six:
+            self.client.get(reverse("household_member_list"))
+        self.assertEqual(len(one), len(six))
+        self.assertEqual(r.context["page_obj"][0].balance_due, 60)

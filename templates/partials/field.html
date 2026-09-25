@@ -28,7 +28,7 @@ selects with only a couple of choices render as a segmented toggle.
     <label class="label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span class="req" aria-hidden="true">*</span>{% else %}<span class="opt">{% translate "(optional)" %}</span>{% endif %}</label>
     {% if field.name == "amount" or field.name == "interest_fixed_amount" %}
       <div class="input-affix has-start"><span class="affix affix-start" aria-hidden="true">৳</span>{{ field }}</div>
-    {% elif field.name == "interest_rate" %}
+    {% elif field.name == "interest_rate" or field.name == "alert_at" %}
       <div class="input-affix has-end">{{ field }}<span class="affix affix-end" aria-hidden="true">%</span></div>
     {% elif qa %}
       <div class="input-group">

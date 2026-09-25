@@ -28,6 +28,7 @@
       </div>
     </div>
     <div class="page-actions">
+      {% if remaining > 0 %}{% include "partials/reminder_menu.html" with name=debtor.name amount=remaining due_date=debtor.due_date phone=debtor.phone %}{% endif %}
       <a href="{% url 'debtor_edit' debtor.pk %}" class="btn btn-secondary">{% include "partials/icon.html" with name="edit" %}{% translate "Edit Profile" %}</a>
       {% url 'debtor_toggle_active' debtor.pk as toggle_url %}
       {% include "partials/toggle_active_item.html" with url=toggle_url active=debtor.is_active as_button=True %}

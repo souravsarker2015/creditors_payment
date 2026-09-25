@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Budgets" %} | FinTrack{% endblock %}
+
+{% block content %}
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <a href="{% url 'expense_dashboard' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Expense" %}</a>
+      <h1 class="page-title">{% translate "Budgets" %}</h1>
+      <p class="page-subtitle">{% translate "Monthly spending limits. They reset on the 1st, so set them once." %}</p>
+    </div>
+    <div class="page-actions">
+      <a href="{% url 'budget_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "New Budget" %}</a>
+    </div>
+  </header>
+
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <nav class="flex items-center gap-2" aria-label="{% translate 'Month navigation' %}">
+      <a href="?month={{ prev_month|date:'Y-m' }}" class="btn btn-secondary btn-sm" aria-label="{% translate 'Previous month' %}">{% include "partials/icon.html" with name="chevron-left" %}</a>
+      <span class="min-w-[8.5rem] text-center text-sm font-bold" style="color: var(--text-primary);">{{ month|date:"F Y" }}</span>
+      {% if next_month %}<a href="?month={{ next_month|date:'Y-m' }}" class="btn btn-secondary btn-sm" aria-label="{% translate 'Next month' %}">{% include "partials/icon.html" with name="chevron-right" %}</a>
+      {% else %}<span class="btn btn-secondary btn-sm opacity-40 pointer-events-none" aria-hidden="true">{% include "partials/icon.html" with name="chevron-right" %}</span>{% endif %}
+      {% if not is_current %}<a href="{% url 'budget_list' %}" class="btn btn-ghost btn-sm">{% translate "This month" %}</a>{% endif %}
+    </nav>
+    {% if rows %}
+    <div class="chip-row">
+      {% if counts.over %}<span class="badge badge-dot" data-tone="critical">{% blocktranslate count counter=counts.over %}{{ counter }} over budget{% plural %}{{ counter }} over budget{% endblocktranslate %}</span>{% endif %}
+      {% if counts.warn %}<span class="badge badge-dot" data-tone="warn">{% blocktranslate count counter=counts.warn %}{{ counter }} close to the limit{% plural %}{{ counter }} close to the limit{% endblocktranslate %}</span>{% endif %}
+      {% if counts.ok %}<span class="badge badge-dot" data-tone="good">{% blocktranslate count counter=counts.ok %}{{ counter }} on track{% plural %}{{ counter }} on track{% endblocktranslate %}</span>{% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  {% if rows %}
+  <div class="card-grid card-grid-3">
+    {% for r in rows %}
+    {% with b=r.budget %}
+    <article class="card entity budget-card" data-tone="{{ r.tone }}">
+      <div class="entity-head">
+        <span class="avatar" data-tone="{{ r.tone }}">{% if b.scope == "bazar" %}{% include "partials/icon.html" with name="cart" %}{% elif b.scope == "expenses" %}{% include "partials/icon.html" with name="wallet" %}{% else %}{{ b.label|first|upper }}{% endif %}</span>
+        <div class="min-w-0 flex-1">
+          <h3 class="entity-name">{{ b.label }}</h3>
+          <p class="entity-meta">{% if b.scope == "category" %}{% translate "Expense category" %}{% else %}{{ b.get_scope_display }}{% endif %} · {% blocktranslate with pct=b.alert_at %}warn at {{ pct }}%{% endblocktranslate %}</p>
+        </div>
+        {% url 'budget_edit' b.pk as edit_url %}{% url 'budget_delete' b.pk as delete_url %}
+        {% translate "Remove this budget? Your expenses are not affected." as confirm_text %}
+        {% include "partials/row_menu.html" with edit_url=edit_url delete_url=delete_url confirm=confirm_text %}
+      </div>
+
+      <div>
+        <p class="budget-figure"><strong>{{ r.spent|money }}</strong> <span>{% blocktranslate with limit=r.limit|money %}of {{ limit }}{% endblocktranslate %}</span></p>
+        <div class="meter meter-lg budget-meter" data-tone="{{ r.tone }}" role="progressbar" aria-valuenow="{{ r.pct }}" aria-valuemin="0" aria-valuemax="100">
+          <span style="width: {{ r.bar }}%"></span>
+          <i style="left: {{ b.alert_at }}%" title="{% blocktranslate with pct=b.alert_at %}Warning at {{ pct }}%{% endblocktranslate %}"></i>
+        </div>
+        <div class="meter-row mt-1.5"><span>{{ r.pct }}%</span>
+          {% if r.state == "over" %}<span style="color: var(--status-critical); font-weight: 700;">{% blocktranslate with amount=r.over_by|money %}Over by {{ amount }}{% endblocktranslate %}</span>
+          {% else %}<span>{% blocktranslate with amount=r.remaining|money %}{{ amount }} left{% endblocktranslate %}</span>{% endif %}
+        </div>
+      </div>
+
+      {% if r.is_current %}
+      <p class="budget-note" data-tone="{% if r.projected > r.limit %}warn{% else %}muted{% endif %}">
+        {% if r.state != "over" and r.per_day %}
+          {% blocktranslate count counter=r.days_left with amount=r.per_day|money %}You can spend {{ amount }} a day for the last day.{% plural %}You can spend {{ amount }} a day for the next {{ counter }} days.{% endblocktranslate %}
+        {% endif %}
+        {% if r.projected > r.limit %}{% blocktranslate with amount=r.projected|money %}At this pace: {{ amount }} by month end.{% endblocktranslate %}{% endif %}
+      </p>
+      {% endif %}
+
+      <div class="entity-foot">
+        {% if b.scope == "bazar" %}
+        <a href="{% url 'household_month_detail' month.year month.month %}" class="btn btn-secondary btn-sm">{% translate "View purchases" %}{% include "partials/icon.html" with name="arrow-right" %}</a>
+        {% elif b.scope == "category" %}
+        <a href="{% url 'expense_list' %}?category={{ b.category_id }}&date_from={{ month|date:'Y-m-d' }}" class="btn btn-secondary btn-sm">{% translate "View expenses" %}{% include "partials/icon.html" with name="arrow-right" %}</a>
+        {% else %}
+        <a href="{% url 'expense_list' %}?date_from={{ month|date:'Y-m-d' }}" class="btn btn-secondary btn-sm">{% translate "View expenses" %}{% include "partials/icon.html" with name="arrow-right" %}</a>
+        {% endif %}
+      </div>
+    </article>
+    {% endwith %}
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty">
+    <div class="empty-icon">{% include "partials/icon.html" with name="wallet" %}</div>
+    <h3 class="empty-title">{% translate "No budgets yet" %}</h3>
+    <p class="empty-text">{% translate "Give a category a monthly limit and you'll see how much is left, how much you can spend per day, and a warning before you go over." %}</p>
+    <a href="{% url 'budget_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Create your first budget" %}</a>
+  </div>
+  {% endif %}
+
+  {% if suggestions %}
+  <section class="card">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title">{% translate "Suggested budgets" %}</h2>
+        <p class="card-subtitle">{% translate "Based on your average spending over the last 3 months." %}</p>
+      </div>
+    </div>
+    <ul class="ledger">
+      {% for s in suggestions %}
+      <li class="ledger-row">
+        <span class="ledger-icon" data-tone="accent">{{ s.name|first|upper }}</span>
+        <div class="ledger-main">
+          <p class="ledger-title">{{ s.name }}</p>
+          <p class="ledger-meta">{% blocktranslate with amount=s.average|money %}Averages {{ amount }} a month{% endblocktranslate %}</p>
+        </div>
+        <a href="{% url 'budget_create' %}?category={{ s.category_id }}&amount={{ s.amount|floatformat:0 }}" class="btn btn-secondary btn-sm">{% blocktranslate with amount=s.amount|money %}Set {{ amount }}{% endblocktranslate %}</a>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

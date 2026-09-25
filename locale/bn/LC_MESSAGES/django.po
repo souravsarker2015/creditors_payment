@@ -3247,3 +3247,200 @@ msgstr "সবচেয়ে বেশি যে মাসে"
 
 msgid "Last 12 months"
 msgstr "গত ১২ মাস"
+
+msgid "Choose a category…"
+msgstr "একটি ক্যাটাগরি বাছুন…"
+
+msgid "A budget resets every month — set it once."
+msgstr "বাজেট প্রতি মাসে নতুন করে শুরু হয় — একবার সেট করলেই হবে।"
+
+msgid "Pick the category this budget is for."
+msgstr "কোন ক্যাটাগরির জন্য বাজেট তা বাছুন।"
+
+msgid "You already have a budget for this — edit that one instead."
+msgstr "এর জন্য আগে থেকেই একটি বাজেট আছে — সেটিই সম্পাদনা করুন।"
+
+msgid "All expenses"
+msgstr "সব খরচ"
+
+msgid "One expense category"
+msgstr "একটি খরচের ক্যাটাগরি"
+
+msgid "Household bazar"
+msgstr "সংসারের বাজার"
+
+msgid "Budget for"
+msgstr "বাজেট কিসের জন্য"
+
+msgid "Monthly limit"
+msgstr "মাসিক সীমা"
+
+msgid "Warn me at"
+msgstr "সতর্ক করুন যখন"
+
+msgid "Percent of the limit. You'll also be warned if the current pace would overshoot it."
+msgstr "সীমার শতাংশ। বর্তমান গতিতে সীমা ছাড়িয়ে যাওয়ার সম্ভাবনা থাকলেও সতর্ক করা হবে।"
+
+msgid "%(name)s is over budget: %(spent)s of %(limit)s this month."
+msgstr "%(name)s বাজেট ছাড়িয়ে গেছে: এই মাসে %(limit)s-এর মধ্যে %(spent)s।"
+
+#, python-format
+msgid "%(name)s has used %(pct)s%% of its %(limit)s budget."
+msgstr "%(name)s তার %(limit)s বাজেটের %(pct)s%% ব্যবহার করেছে।"
+
+msgid "Set a monthly limit and see how close you are as you spend."
+msgstr "মাসিক সীমা ঠিক করুন, খরচের সাথে সাথে দেখুন কতটা কাছে পৌঁছেছেন।"
+
+msgid "Monthly spending limits. They reset on the 1st, so set them once."
+msgstr "মাসিক খরচের সীমা। প্রতি মাসের ১ তারিখে নতুন করে শুরু হয়, তাই একবার সেট করলেই হবে।"
+
+msgid "%(counter)s over budget"
+msgid_plural "%(counter)s over budget"
+msgstr[0] "%(counter)sটি বাজেট ছাড়িয়েছে"
+msgstr[1] "%(counter)sটি বাজেট ছাড়িয়েছে"
+
+msgid "%(counter)s close to the limit"
+msgid_plural "%(counter)s close to the limit"
+msgstr[0] "%(counter)sটি সীমার কাছাকাছি"
+msgstr[1] "%(counter)sটি সীমার কাছাকাছি"
+
+msgid "%(counter)s on track"
+msgid_plural "%(counter)s on track"
+msgstr[0] "%(counter)sটি ঠিক পথে"
+msgstr[1] "%(counter)sটি ঠিক পথে"
+
+msgid "Expense category"
+msgstr "খরচের ক্যাটাগরি"
+
+#, python-format
+msgid "warn at %(pct)s%%"
+msgstr "%(pct)s%%-এ সতর্কতা"
+
+msgid "Remove this budget? Your expenses are not affected."
+msgstr "এই বাজেট মুছবেন? আপনার খরচের কোনো পরিবর্তন হবে না।"
+
+msgid "of %(limit)s"
+msgstr "%(limit)s-এর মধ্যে"
+
+#, python-format
+msgid "Warning at %(pct)s%%"
+msgstr "%(pct)s%%-এ সতর্কতা"
+
+msgid "Over by %(amount)s"
+msgstr "%(amount)s বেশি"
+
+msgid "%(amount)s left"
+msgstr "%(amount)s বাকি"
+
+msgid "You can spend %(amount)s a day for the last day."
+msgid_plural "You can spend %(amount)s a day for the next %(counter)s days."
+msgstr[0] "বাকি %(counter)s দিন প্রতিদিন %(amount)s খরচ করতে পারবেন।"
+msgstr[1] "বাকি %(counter)s দিন প্রতিদিন %(amount)s খরচ করতে পারবেন।"
+
+msgid "At this pace: %(amount)s by month end."
+msgstr "এই গতিতে মাস শেষে: %(amount)s।"
+
+msgid "View purchases"
+msgstr "কেনাকাটা দেখুন"
+
+msgid "No budgets yet"
+msgstr "এখনও কোনো বাজেট নেই"
+
+msgid "Give a category a monthly limit and you'll see how much is left, how much you can spend per day, and a warning before you go over."
+msgstr "একটি ক্যাটাগরির জন্য মাসিক সীমা দিন — কত বাকি, দিনে কত খরচ করা যাবে তা দেখবেন, আর সীমা ছাড়ানোর আগেই সতর্কতা পাবেন।"
+
+msgid "Create your first budget"
+msgstr "প্রথম বাজেট তৈরি করুন"
+
+msgid "Suggested budgets"
+msgstr "প্রস্তাবিত বাজেট"
+
+msgid "Based on your average spending over the last 3 months."
+msgstr "গত ৩ মাসের গড় খরচের ভিত্তিতে।"
+
+msgid "Averages %(amount)s a month"
+msgstr "মাসে গড়ে %(amount)s"
+
+msgid "Set %(amount)s"
+msgstr "%(amount)s সেট করুন"
+
+msgid "Budget saved: %(name)s."
+msgstr "বাজেট সংরক্ষিত: %(name)s।"
+
+msgid "Edit Budget"
+msgstr "বাজেট সম্পাদনা"
+
+msgid "New Budget"
+msgstr "নতুন বাজেট"
+
+msgid "Budget removed: %(name)s."
+msgstr "বাজেট মুছে ফেলা হয়েছে: %(name)s।"
+
+msgid "Loans, dues, income, spending and household bazar in one place."
+msgstr "ধার, বাকি, আয়, খরচ ও সংসারের বাজার — সব এক জায়গায়।"
+
+msgid "Budgets"
+msgstr "বাজেট"
+
+msgid "Hello %(name)s, a friendly reminder that %(amount)s is still due (due date: %(date)s). Please pay when convenient. Thank you!"
+msgstr "প্রিয় %(name)s, বিনীতভাবে মনে করিয়ে দিচ্ছি যে %(amount)s এখনও বাকি আছে (পরিশোধের তারিখ: %(date)s)। সুবিধামতো সময়ে পরিশোধ করবেন। ধন্যবাদ!"
+
+msgid "Hello %(name)s, a friendly reminder that %(amount)s is still due. Please pay when convenient. Thank you!"
+msgstr "প্রিয় %(name)s, বিনীতভাবে মনে করিয়ে দিচ্ছি যে %(amount)s এখনও বাকি আছে। সুবিধামতো সময়ে পরিশোধ করবেন। ধন্যবাদ!"
+
+msgid "Budgets for %(month)s"
+msgstr "%(month)s মাসের বাজেট"
+
+msgid "How much of each monthly limit is used so far."
+msgstr "প্রতিটি মাসিক সীমার কতটা এ পর্যন্ত ব্যবহার হয়েছে।"
+
+msgid "Set a monthly limit for a category and get warned before you overspend."
+msgstr "একটি ক্যাটাগরির মাসিক সীমা ঠিক করুন, বেশি খরচের আগেই সতর্কতা পাবেন।"
+
+msgid "Set a budget"
+msgstr "বাজেট সেট করুন"
+
+msgid "Budget %(limit)s"
+msgstr "বাজেট %(limit)s"
+
+msgid "Set a bazar budget"
+msgstr "বাজারের বাজেট সেট করুন"
+
+msgid "Install app"
+msgstr "অ্যাপ ইনস্টল করুন"
+
+msgid "You're offline"
+msgstr "আপনি অফলাইনে আছেন"
+
+msgid "FinTrack needs an internet connection to show your latest figures. Nothing you entered is lost — try again once you're back online."
+msgstr "সর্বশেষ হিসাব দেখাতে FinTrack-এর ইন্টারনেট সংযোগ দরকার। আপনার লেখা কিছুই হারায়নি — অনলাইনে ফিরে আবার চেষ্টা করুন।"
+
+msgid "Try again"
+msgstr "আবার চেষ্টা করুন"
+
+msgid "Send reminder"
+msgstr "রিমাইন্ডার পাঠান"
+
+msgid "Text message (SMS)"
+msgstr "এসএমএস"
+
+msgid "Share…"
+msgstr "শেয়ার…"
+
+msgid "Reminder copied — paste it anywhere."
+msgstr "রিমাইন্ডার কপি হয়েছে — যেকোনো জায়গায় পেস্ট করুন।"
+
+msgid "Copy message"
+msgstr "বার্তা কপি করুন"
+
+msgid "No phone number saved — you'll pick the contact in WhatsApp."
+msgstr "কোনো ফোন নম্বর সংরক্ষিত নেই — হোয়াটসঅ্যাপে কনট্যাক্ট বেছে নেবেন।"
+
+msgid "Limit one expense category, e.g. Groceries."
+msgstr "একটি খরচের ক্যাটাগরির সীমা, যেমন: মুদি।"
+
+msgid "Limit everything in the expense log together."
+msgstr "খরচের খাতার সব খরচ মিলিয়ে একটি সীমা।"
+
+msgid "Limit household bazar purchases, whoever paid for them."
+msgstr "সংসারের বাজারের সীমা — যে-ই টাকা দিক না কেন।"
