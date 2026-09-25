@@ -41,7 +41,8 @@
       <div class="stat" data-tone="{% if saved_month >= 0 %}good{% else %}critical{% endif %}">
         <dt class="stat-label">{% if saved_month >= 0 %}{% translate "Saved" %}{% else %}{% translate "Overspent" %}{% endif %}</dt>
         <dd class="stat-value is-tone">{{ saved_month|signed_money }}</dd>
-        <dd class="stat-hint">{% if savings_rate is not None %}{% blocktranslate with rate=savings_rate %}{{ rate }}% of what came in{% endblocktranslate %}{% else %}{% translate "No money in yet this month" %}{% endif %}</dd>
+        <dd class="stat-hint">{% if savings_rate is not None %}{% blocktranslate with rate=savings_rate %}{{ rate }}% of what came in{% endblocktranslate %}{% else %}{% translate "No money in yet this month" %}{% endif %}
+          {% if saved_month > 0 %}<a href="{% url 'goal_list' %}" class="mt-1 block font-semibold" style="color: var(--accent);">{% translate "Put it toward a goal →" %}</a>{% endif %}</dd>
       </div>
     </dl>
   </div>
@@ -94,6 +95,32 @@
       {% endif %}
     </section>
   </div>
+
+  <section class="card">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title">{% translate "Savings Goals" %}</h2>
+        <p class="card-subtitle">{% if goals %}{% blocktranslate with saved=goal_totals.saved|money target=goal_totals.target|money %}{{ saved }} set aside of {{ target }}{% endblocktranslate %}{% else %}{% translate "Set money aside for something specific and get a monthly plan." %}{% endif %}</p>
+      </div>
+      <a href="{% url 'goal_list' %}" class="btn btn-ghost btn-sm">{% if goals %}{% translate "View all" %}{% include "partials/icon.html" with name="arrow-right" %}{% else %}{% include "partials/icon.html" with name="plus" %}{% translate "New Goal" %}{% endif %}</a>
+    </div>
+    {% if goals %}
+    <ul class="ledger">
+      {% for p in goals %}
+      <li>
+        <a href="{% url 'goal_detail' p.goal.pk %}" class="ledger-row">
+          {% include "goals/_ring.html" %}
+          <div class="ledger-main">
+            <p class="ledger-title">{{ p.goal.name }}</p>
+            <p class="ledger-meta">{% include "goals/_plan.html" %}</p>
+          </div>
+          <span class="ledger-amount">{{ p.saved|money }}</span>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </section>
 
   <div class="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
     <section class="card">

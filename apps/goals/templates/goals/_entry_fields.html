@@ -1,0 +1,15 @@
+{% load i18n %}{% comment %}Entry form fields with an Add money / Take out toggle. Needs: form.{% endcomment %}
+{% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+<div class="field">
+  <div class="seg seg-block" role="radiogroup" aria-label="{{ form.kind.label }}">
+    {% for value, label in form.fields.kind.choices %}
+    <label class="seg-item" data-tone="{% if value == 'DEPOSIT' %}good{% else %}warn{% endif %}">
+      <input type="radio" class="sr-only" name="{{ form.kind.html_name }}" value="{{ value }}" {% if form.kind.value|stringformat:"s" == value %}checked{% endif %}>
+      {% if value == 'DEPOSIT' %}{% include "partials/icon.html" with name="plus" %}{% else %}{% include "partials/icon.html" with name="arrow-up" %}{% endif %}{{ label }}
+    </label>
+    {% endfor %}
+  </div>
+</div>
+{% with field=form.amount %}{% include "partials/field.html" %}{% endwith %}
+{% with field=form.date %}{% include "partials/field.html" %}{% endwith %}
+{% with field=form.note %}{% include "partials/field.html" %}{% endwith %}

@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}{{ goal.name }} | FinTrack{% endblock %}
+
+{% block content %}
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <a href="{% url 'goal_list' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Savings Goals" %}</a>
+      <div class="flex items-center gap-3">
+        <h1 class="page-title">{{ goal.name }}</h1>
+        {% include "goals/_status_badge.html" %}
+      </div>
+      <div class="meta-list">
+        <span class="meta-item">{% include "partials/icon.html" with name="calendar" %}{% if goal.target_date %}{% blocktranslate with date=goal.target_date|date:"j M Y" %}Target date {{ date }}{% endblocktranslate %}{% else %}{% translate "No deadline" %}{% endif %}</span>
+        {% if goal.note %}<span class="meta-item">{% include "partials/icon.html" with name="note" %}<span class="truncate">{{ goal.note }}</span></span>{% endif %}
+      </div>
+    </div>
+    <div class="page-actions">
+      <a href="{% url 'goal_edit' goal.pk %}" class="btn btn-secondary">{% include "partials/icon.html" with name="edit" %}{% translate "Edit" %}</a>
+      <form method="post" action="{% url 'goal_toggle_active' goal.pk %}">
+        {% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}">
+        <button type="submit" class="btn btn-ghost">{% if goal.is_active %}{% include "partials/icon.html" with name="archive" %}{% translate "Archive" %}{% else %}{% include "partials/icon.html" with name="restore" %}{% translate "Unarchive" %}{% endif %}</button>
+      </form>
+      <form method="post" action="{% url 'goal_delete' goal.pk %}" data-confirm="{% translate 'Delete this goal and all its entries? This cannot be undone. To keep the history, archive it instead.' %}">
+        {% csrf_token %}
+        <button type="submit" class="icon-btn" aria-label="{% translate 'Delete goal' %}" data-tip="{% translate 'Delete goal' %}">{% include "partials/icon.html" with name="trash" %}</button>
+      </form>
+    </div>
+  </header>
+
+  <section class="card goal-hero" data-goal="{{ goal.color }}">
+    <div class="goal-hero-inner">
+      {% include "goals/_ring.html" with size="lg" %}
+      <div class="min-w-0 flex-1">
+        <p class="budget-figure"><strong>{{ p.saved|money }}</strong> <span>{% blocktranslate with target=p.target|money %}of {{ target }}{% endblocktranslate %}</span></p>
+        <p class="goal-plan !text-sm" data-tone="{{ p.tone }}">{% include "goals/_plan.html" %}</p>
+      </div>
+    </div>
+  </section>
+
+  <dl class="stat-grid">
+    <div class="stat" data-tone="good">
+      <dt class="stat-label">{% translate "Saved" %}</dt>
+      <dd class="stat-value">{{ p.saved|money }}</dd>
+      <dd class="stat-hint">{% blocktranslate with pct=p.pct %}{{ pct }}% of the target{% endblocktranslate %}</dd>
+    </div>
+    <div class="stat" data-tone="info">
+      <dt class="stat-label">{% translate "Still needed" %}</dt>
+      <dd class="stat-value">{{ p.remaining|money }}</dd>
+      <dd class="stat-hint">{% if p.months_left %}{% blocktranslate count counter=p.months_left %}{{ counter }} month left{% plural %}{{ counter }} months left{% endblocktranslate %}{% elif p.state == "reached" %}{% translate "Nothing — well done!" %}{% else %}{% translate "No deadline" %}{% endif %}</dd>
+    </div>
+    <div class="stat" data-tone="accent">
+      <dt class="stat-label inline-flex items-center">{% translate "Monthly plan" %}{% translate "What to put aside each month, from now until the target date, to reach the goal on time." as info_text %}{% include "partials/info.html" with text=info_text %}</dt>
+      <dd class="stat-value">{% if p.needed_per_month %}{{ p.needed_per_month|money }}{% else %}—{% endif %}</dd>
+      <dd class="stat-hint">{% if p.needed_per_month %}{% translate "per month to be on time" %}{% elif p.state == "overdue" %}{% translate "Set a new date to get a plan" %}{% else %}{% translate "Add a target date to get one" %}{% endif %}</dd>
+    </div>
+    <div class="stat" data-tone="{% if p.state == 'behind' %}warn{% else %}muted{% endif %}">
+      <dt class="stat-label inline-flex items-center">{% translate "Your pace" %}{% translate "Average net amount added per month over the last 3 months." as info_text %}{% include "partials/info.html" with text=info_text %}</dt>
+      <dd class="stat-value">{{ p.pace|money }}</dd>
+      <dd class="stat-hint">{% if p.projected_date %}{% blocktranslate with date=p.projected_date|date:"M Y" %}Done by {{ date }} at this pace{% endblocktranslate %}{% else %}{% translate "per month, last 3 months" %}{% endif %}</dd>
+    </div>
+  </dl>
+
+  <div class="detail-grid">
+    <div class="stack min-w-0">
+      <section class="card trend-card">
+        <div class="card-header"><h2 class="card-title">{% translate "Saved each month" %}</h2></div>
+        <div class="card-body"><div class="chart-box"><canvas id="goalChart"></canvas></div></div>
+      </section>
+
+      <section class="card">
+        <div class="card-header"><h2 class="card-title">{% translate "History" %}</h2></div>
+        {% if entries %}
+        <ul class="ledger">
+          {% for e in entries %}
+          <li class="ledger-row">
+            {% if e.kind == 'DEPOSIT' %}<span class="ledger-icon" data-tone="good">{% include "partials/icon.html" with name="plus" %}</span>
+            {% else %}<span class="ledger-icon" data-tone="warn">{% include "partials/icon.html" with name="arrow-up" %}</span>{% endif %}
+            <div class="ledger-main">
+              <p class="ledger-title">{{ e.get_kind_display }}</p>
+              <p class="ledger-meta">{{ e.date|date:"j M Y" }}{% if e.note %} · {{ e.note }}{% endif %}</p>
+            </div>
+            <div class="ledger-end">
+              <span class="ledger-amount" data-tone="{% if e.kind == 'DEPOSIT' %}good{% else %}warn{% endif %}">{{ e.signed_amount|signed_money }}</span>
+              {% url 'goal_entry_edit' e.pk as edit_url %}{% url 'goal_entry_delete' e.pk as delete_url %}
+              {% translate "Delete this entry? The goal's total will change." as confirm_text %}
+              {% include "partials/row_menu.html" with edit_url=edit_url delete_url=delete_url confirm=confirm_text up=forloop.last %}
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="empty is-plain"><p class="empty-text">{% translate "Nothing added yet. Every amount you put aside shows up here." %}</p></div>
+        {% endif %}
+      </section>
+    </div>
+
+    <aside class="detail-side">
+      {% if goal.is_active %}
+      <section class="card" x-data="{ open: {{ form.errors|yesno:'true,false' }} }">
+        <button type="button" class="collapse-toggle" @click="open = !open" :aria-expanded="open.toString()">
+          <span class="flex items-center gap-2"><span class="h-5 w-5" style="color: var(--accent);">{% include "partials/icon.html" with name="plus" %}</span>{% translate "Add or take out money" %}</span>
+          {% include "partials/icon.html" with name="chevron-down" %}
+        </button>
+        <div class="collapse-body" :class="open && 'is-open'">
+          <div class="card-header hidden lg:flex"><h2 class="card-title">{% translate "Add or take out money" %}</h2></div>
+          <form method="post" class="card-body form-stack" novalidate>
+            {% csrf_token %}
+            {% include "goals/_entry_fields.html" %}
+            <button type="submit" class="btn btn-primary btn-lg btn-block">{% include "partials/icon.html" with name="check" %}{% translate "Save" %}</button>
+          </form>
+        </div>
+      </section>
+      {% else %}
+      <div class="callout" data-tone="info">{% include "partials/icon.html" with name="archive" %}<p>{% translate "This goal is archived. Unarchive it to add money again." %}</p></div>
+      {% endif %}
+    </aside>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+<script src="{% asset 'js/charts.js' %}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    renderTrendChart({
+      canvasId: 'goalChart',
+      labels: [{% for d in months %}"{{ d|date:'M Y' }}",{% endfor %}],
+      // same colour as the goal's ring and card
+      datasets: [{ label: '{% translate "Saved" %}', data: {{ monthly|safe }},
+                   color: getComputedStyle(document.querySelector('.goal-hero')).getPropertyValue('--g').trim() }],
+    });
+  });
+</script>
+{% endblock %}

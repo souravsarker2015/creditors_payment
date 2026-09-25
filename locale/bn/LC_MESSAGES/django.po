@@ -3444,3 +3444,279 @@ msgstr "খরচের খাতার সব খরচ মিলিয়ে �
 
 msgid "Limit household bazar purchases, whoever paid for them."
 msgstr "সংসারের বাজারের সীমা — যে-ই টাকা দিক না কেন।"
+
+msgid "Savings Goals"
+msgstr "সঞ্চয়ের লক্ষ্য"
+
+msgid "e.g. Emergency fund, Eid shopping, New laptop"
+msgstr "যেমন: জরুরি তহবিল, ঈদের কেনাকাটা, নতুন ল্যাপটপ"
+
+msgid "No deadline"
+msgstr "কোনো সময়সীমা নেই"
+
+msgid "Why this matters, where the money is kept…"
+msgstr "কেন এটি জরুরি, টাকা কোথায় রাখা আছে…"
+
+msgid "Pick a date in the future."
+msgstr "ভবিষ্যতের একটি তারিখ বাছুন।"
+
+msgid "Optional note"
+msgstr "ঐচ্ছিক নোট"
+
+msgid "Only %(amount)s is in this goal."
+msgstr "এই লক্ষ্যে আছে মাত্র %(amount)s।"
+
+msgid "Blue"
+msgstr "নীল"
+
+msgid "Orange"
+msgstr "কমলা"
+
+msgid "Green"
+msgstr "সবুজ"
+
+msgid "Gold"
+msgstr "সোনালি"
+
+msgid "Pink"
+msgstr "গোলাপি"
+
+msgid "Teal"
+msgstr "টিল"
+
+msgid "Goal"
+msgstr "লক্ষ্য"
+
+msgid "Target amount"
+msgstr "লক্ষ্যের পরিমাণ"
+
+msgid "Target date"
+msgstr "লক্ষ্যের তারিখ"
+
+msgid "Optional. With a date you'll see how much to save each month to make it."
+msgstr "ঐচ্ছিক। তারিখ দিলে দেখবেন সময়মতো পৌঁছাতে প্রতি মাসে কত জমাতে হবে।"
+
+msgid "Colour"
+msgstr "রং"
+
+msgid "Archived goals are hidden from the main list; their history is kept."
+msgstr "আর্কাইভ করা লক্ষ্য মূল তালিকায় দেখা যায় না; ইতিহাস থেকে যায়।"
+
+msgid "Add money"
+msgstr "টাকা জমান"
+
+msgid "Take out"
+msgstr "টাকা তুলুন"
+
+msgid "Reached on %(date)s"
+msgstr "%(date)s-এ পূরণ হয়েছে"
+
+msgid "Target reached"
+msgstr "লক্ষ্য পূরণ হয়েছে"
+
+msgid "On track · save %(amount)s/month until %(date)s"
+msgstr "ঠিক পথে · %(date)s পর্যন্ত মাসে %(amount)s জমান"
+
+msgid "Needs %(need)s/month · you're saving %(pace)s/month"
+msgstr "মাসে দরকার %(need)s · আপনি জমাচ্ছেন মাসে %(pace)s"
+
+msgid "Target date %(date)s passed · %(amount)s to go"
+msgstr "লক্ষ্যের তারিখ %(date)s পেরিয়ে গেছে · আরও %(amount)s বাকি"
+
+msgid "At %(amount)s/month you'll get there by %(date)s"
+msgstr "মাসে %(amount)s হারে %(date)s-এর মধ্যে পৌঁছাবেন"
+
+msgid "Saving %(amount)s/month"
+msgstr "মাসে %(amount)s জমাচ্ছেন"
+
+msgid "Start with %(amount)s/month to reach it by %(date)s"
+msgstr "%(date)s-এর মধ্যে পৌঁছাতে মাসে %(amount)s দিয়ে শুরু করুন"
+
+msgid "Nothing added in the last 3 months"
+msgstr "গত ৩ মাসে কিছু জমা হয়নি"
+
+msgid "Add your first amount to get started"
+msgstr "শুরু করতে প্রথম টাকা জমান"
+
+msgid "Reached"
+msgstr "পূরণ হয়েছে"
+
+msgid "On track"
+msgstr "ঠিক পথে"
+
+msgid "Behind"
+msgstr "পিছিয়ে"
+
+msgid "Saving"
+msgstr "জমানো চলছে"
+
+msgid "Not started"
+msgstr "শুরু হয়নি"
+
+msgid "Target date %(date)s"
+msgstr "লক্ষ্যের তারিখ %(date)s"
+
+msgid "Archive"
+msgstr "আর্কাইভ"
+
+msgid "Unarchive"
+msgstr "আর্কাইভ থেকে ফেরান"
+
+msgid "Delete this goal and all its entries? This cannot be undone. To keep the history, archive it instead."
+msgstr "এই লক্ষ্য ও এর সব এন্ট্রি মুছবেন? এটি আর ফেরানো যাবে না। ইতিহাস রাখতে চাইলে আর্কাইভ করুন।"
+
+msgid "Delete goal"
+msgstr "লক্ষ্য মুছুন"
+
+msgid "of %(target)s"
+msgstr "%(target)s-এর মধ্যে"
+
+#, python-format
+msgid "%(pct)s%% of the target"
+msgstr "লক্ষ্যের %(pct)s%%"
+
+msgid "Still needed"
+msgstr "এখনও দরকার"
+
+msgid "%(counter)s month left"
+msgid_plural "%(counter)s months left"
+msgstr[0] "আর %(counter)s মাস বাকি"
+msgstr[1] "আর %(counter)s মাস বাকি"
+
+msgid "Nothing — well done!"
+msgstr "কিছুই না — দারুণ!"
+
+msgid "Monthly plan"
+msgstr "মাসিক পরিকল্পনা"
+
+msgid "What to put aside each month, from now until the target date, to reach the goal on time."
+msgstr "সময়মতো লক্ষ্যে পৌঁছাতে এখন থেকে লক্ষ্যের তারিখ পর্যন্ত প্রতি মাসে কত জমাতে হবে।"
+
+msgid "per month to be on time"
+msgstr "প্রতি মাসে, সময়মতো পৌঁছাতে"
+
+msgid "Set a new date to get a plan"
+msgstr "পরিকল্পনা পেতে নতুন তারিখ দিন"
+
+msgid "Add a target date to get one"
+msgstr "পরিকল্পনা পেতে লক্ষ্যের তারিখ দিন"
+
+msgid "Your pace"
+msgstr "আপনার গতি"
+
+msgid "Average net amount added per month over the last 3 months."
+msgstr "গত ৩ মাসে প্রতি মাসে গড়ে নিট কত জমেছে।"
+
+msgid "Done by %(date)s at this pace"
+msgstr "এই গতিতে %(date)s-এর মধ্যে শেষ হবে"
+
+msgid "per month, last 3 months"
+msgstr "প্রতি মাসে, গত ৩ মাস"
+
+msgid "Saved each month"
+msgstr "প্রতি মাসের সঞ্চয়"
+
+msgid "Delete this entry? The goal's total will change."
+msgstr "এই এন্ট্রি মুছবেন? লক্ষ্যের মোট পরিমাণ বদলে যাবে।"
+
+msgid "Nothing added yet. Every amount you put aside shows up here."
+msgstr "এখনও কিছু জমা হয়নি। যা জমাবেন সব এখানে দেখা যাবে।"
+
+msgid "Add or take out money"
+msgstr "টাকা জমান বা তুলুন"
+
+msgid "This goal is archived. Unarchive it to add money again."
+msgstr "এই লক্ষ্য আর্কাইভ করা। আবার টাকা জমাতে আর্কাইভ থেকে ফেরান।"
+
+msgid "Name what you're saving for and how much you need. Add a date to get a monthly plan."
+msgstr "কিসের জন্য জমাচ্ছেন ও কত দরকার লিখুন। মাসিক পরিকল্পনা পেতে একটি তারিখ দিন।"
+
+msgid "Save goal"
+msgstr "লক্ষ্য সংরক্ষণ করুন"
+
+msgid "Put money aside for the things that matter, and see exactly how much to save each month."
+msgstr "গুরুত্বপূর্ণ জিনিসের জন্য টাকা আলাদা করে রাখুন, আর দেখুন প্রতি মাসে ঠিক কত জমাতে হবে।"
+
+msgid "Saved in your goals"
+msgstr "লক্ষ্যগুলোতে জমা"
+
+msgid "Money you've set aside in active goals: everything added minus anything taken out. Setting money aside isn't counted as spending."
+msgstr "সক্রিয় লক্ষ্যগুলোতে আলাদা করে রাখা টাকা: যা জমিয়েছেন বাদ যা তুলেছেন। টাকা আলাদা রাখা খরচ হিসেবে ধরা হয় না।"
+
+msgid "of %(target)s across active goals"
+msgstr "সক্রিয় লক্ষ্যগুলোর মোট %(target)s-এর মধ্যে"
+
+msgid "%(amount)s added this month"
+msgstr "এই মাসে %(amount)s জমা"
+
+msgid "Overall progress"
+msgstr "সামগ্রিক অগ্রগতি"
+
+msgid "Archived"
+msgstr "আর্কাইভ করা"
+
+msgid "By %(date)s"
+msgstr "%(date)s-এর মধ্যে"
+
+msgid "All your goals are reached!"
+msgstr "আপনার সব লক্ষ্য পূরণ হয়েছে!"
+
+msgid "Start your first savings goal"
+msgstr "প্রথম সঞ্চয়ের লক্ষ্য শুরু করুন"
+
+msgid "An emergency fund, Eid shopping, school fees, a new phone… Give it a target and a date, and you'll see how much to put aside every month."
+msgstr "জরুরি তহবিল, ঈদের কেনাকাটা, স্কুলের বেতন, নতুন ফোন… একটি লক্ষ্য ও তারিখ দিন, দেখবেন প্রতি মাসে কত জমাতে হবে।"
+
+msgid "No goals reached yet — keep going!"
+msgstr "এখনও কোনো লক্ষ্য পূরণ হয়নি — চালিয়ে যান!"
+
+msgid "No archived goals."
+msgstr "কোনো আর্কাইভ করা লক্ষ্য নেই।"
+
+msgid "e.g. Salary day"
+msgstr "যেমন: বেতনের দিন"
+
+msgid "Goal saved: %(name)s."
+msgstr "লক্ষ্য সংরক্ষিত: %(name)s।"
+
+msgid "Edit Goal"
+msgstr "লক্ষ্য সম্পাদনা"
+
+msgid "New Savings Goal"
+msgstr "নতুন সঞ্চয়ের লক্ষ্য"
+
+msgid "🎉 Goal reached: %(name)s! You saved the full %(amount)s."
+msgstr "🎉 লক্ষ্য পূরণ: %(name)s! আপনি পুরো %(amount)s জমিয়েছেন।"
+
+msgid "৳%(amount)s added to %(name)s."
+msgstr "%(name)s-এ ৳%(amount)s জমা হয়েছে।"
+
+msgid "৳%(amount)s taken out of %(name)s."
+msgstr "%(name)s থেকে ৳%(amount)s তোলা হয়েছে।"
+
+msgid "Entry updated."
+msgstr "এন্ট্রি হালনাগাদ হয়েছে।"
+
+msgid "Edit Entry"
+msgstr "এন্ট্রি সম্পাদনা"
+
+msgid "Entry deleted."
+msgstr "এন্ট্রি মুছে ফেলা হয়েছে।"
+
+msgid "'%(name)s' archived. Its history is kept."
+msgstr "'%(name)s' আর্কাইভ করা হয়েছে। এর ইতিহাস থেকে যাবে।"
+
+msgid "Goal deleted: %(name)s."
+msgstr "লক্ষ্য মুছে ফেলা হয়েছে: %(name)s।"
+
+msgid "Put it toward a goal →"
+msgstr "কোনো লক্ষ্যে জমান →"
+
+msgid "%(saved)s set aside of %(target)s"
+msgstr "%(target)s-এর মধ্যে %(saved)s জমা"
+
+msgid "Set money aside for something specific and get a monthly plan."
+msgstr "নির্দিষ্ট কিছুর জন্য টাকা আলাদা রাখুন, মাসিক পরিকল্পনা পান।"
+
+msgid "New Goal"
+msgstr "নতুন লক্ষ্য"

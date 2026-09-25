@@ -41,6 +41,7 @@ def manifest_view(request):
             {"name": _("New Expense"), "url": reverse("expense_create"), "icons": icons[:1]},
             {"name": _("Household (Bazar)"), "url": reverse("household_dashboard"), "icons": icons[:1]},
             {"name": _("Budgets"), "url": reverse("budget_list"), "icons": icons[:1]},
+            {"name": _("Savings Goals"), "url": reverse("goal_list"), "icons": icons[:1]},
         ],
     }
     return JsonResponse(data, content_type="application/manifest+json", json_dumps_params={"ensure_ascii": False})

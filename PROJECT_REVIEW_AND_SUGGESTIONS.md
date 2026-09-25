@@ -180,6 +180,15 @@ and shops (বাকি tracking) — household and shops didn't exist at the ti
   financial data is cached on the device); static files are cached for speed, and an offline page
   replaces the browser's error screen.
 
+- **Savings goals** — a new `apps.goals` app. Each goal is a pot with a target, an optional date
+  and a colour; money is added or taken out as entries (never more than the pot holds). Each goal
+  shows what's saved, what's still needed, the monthly amount required to finish on time, and the
+  real pace (average of the last 3 months) with a projected finish date, rated On track / Behind /
+  Overdue / Reached. The list has a quick "Add money" popup whose chip fills in the monthly plan;
+  reaching a goal is celebrated and stamped, and withdrawing re-opens it. Goals can be archived.
+  Net Worth shows a goals card, and a "Put it toward a goal" nudge when the month is in surplus.
+  Moving money into a goal is not counted as spending, so Net Worth is unchanged by it.
+
 ## Suggested / not yet implemented
 
 - **No self-service password recovery, and signup is open to anyone** (Low–Medium — reviewed and
@@ -199,8 +208,6 @@ and shops (বাকি tracking) — household and shops didn't exist at the ti
   shops, sources, categories, members and notes.
 - **Receipt photos** (Medium) — attach a picture to an expense or purchase; needs a media storage
   decision for production.
-- **Savings goals** (Medium) — a target amount and date with progress fed from Net Worth's
-  "Saved this month".
 - **Full backup & restore** (Medium) — one download of everything (JSON/ZIP) and a matching import,
   beyond today's per-list CSV export.
 - **Login protection** (Low) — lock out or slow down repeated failed logins (e.g. django-axes).

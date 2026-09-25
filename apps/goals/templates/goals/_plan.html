@@ -1,0 +1,15 @@
+{% load i18n %}{% comment %}One-line plan/status for a goal. Needs: p.{% endcomment %}
+{% if p.state == "reached" %}
+  {% if p.goal.reached_at %}{% blocktranslate with date=p.goal.reached_at|date:"j M Y" %}Reached on {{ date }}{% endblocktranslate %}{% else %}{% translate "Target reached" %}{% endif %}
+{% elif p.state == "on_track" %}
+  {% blocktranslate with amount=p.needed_per_month|money date=p.goal.target_date|date:"M Y" %}On track · save {{ amount }}/month until {{ date }}{% endblocktranslate %}
+{% elif p.state == "behind" %}
+  {% blocktranslate with need=p.needed_per_month|money pace=p.pace|money %}Needs {{ need }}/month · you're saving {{ pace }}/month{% endblocktranslate %}
+{% elif p.state == "overdue" %}
+  {% blocktranslate with date=p.goal.target_date|date:"j M Y" amount=p.remaining|money %}Target date {{ date }} passed · {{ amount }} to go{% endblocktranslate %}
+{% elif p.state == "saving" %}
+  {% if p.projected_date %}{% blocktranslate with date=p.projected_date|date:"M Y" amount=p.pace|money %}At {{ amount }}/month you'll get there by {{ date }}{% endblocktranslate %}{% else %}{% blocktranslate with amount=p.pace|money %}Saving {{ amount }}/month{% endblocktranslate %}{% endif %}
+{% else %}
+  {% if p.needed_per_month %}{% blocktranslate with amount=p.needed_per_month|money date=p.goal.target_date|date:"M Y" %}Start with {{ amount }}/month to reach it by {{ date }}{% endblocktranslate %}
+  {% elif p.saved %}{% translate "Nothing added in the last 3 months" %}{% else %}{% translate "Add your first amount to get started" %}{% endif %}
+{% endif %}

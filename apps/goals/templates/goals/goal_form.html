@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{{ title }} | FinTrack{% endblock %}
+{% block content %}
+<div class="page-narrow">
+  <header class="page-header">
+    <div>
+      <a href="{{ back }}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Back" %}</a>
+      <h1 class="page-title">{{ title }}</h1>
+      <p class="page-subtitle">{% translate "Name what you're saving for and how much you need. Add a date to get a monthly plan." %}</p>
+    </div>
+  </header>
+  <form method="post" class="card" novalidate>
+    {% csrf_token %}
+    <div class="card-body form-stack">
+      {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+      {% with field=form.name %}{% include "partials/field.html" %}{% endwith %}
+      <div class="form-grid-2">
+        {% with field=form.target_amount %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.target_date %}{% include "partials/field.html" %}{% endwith %}
+      </div>
+      <div class="field">
+        <span class="label" id="color_label">{{ form.color.label }}</span>
+        <div class="goal-colors" role="radiogroup" aria-labelledby="color_label">
+          {% for value, label in form.fields.color.choices %}
+          <label class="goal-color" data-goal="{{ value }}" title="{{ label }}">
+            <input type="radio" class="sr-only" name="{{ form.color.html_name }}" value="{{ value }}" {% if form.color.value == value %}checked{% endif %}>
+            <span aria-hidden="true"></span><span class="sr-only">{{ label }}</span>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+      {% with field=form.note %}{% include "partials/field.html" %}{% endwith %}
+    </div>
+    <div class="card-footer form-actions">
+      <a href="{{ back }}" class="btn btn-ghost btn-lg">{% translate "Cancel" %}</a>
+      <button type="submit" class="btn btn-primary btn-lg">{% include "partials/icon.html" with name="check" %}{% translate "Save goal" %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

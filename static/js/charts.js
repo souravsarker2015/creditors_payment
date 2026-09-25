@@ -302,7 +302,7 @@
       return {
         label: ds.label,
         data: ds.data,
-        backgroundColor: CHART_PALETTE[i % CHART_PALETTE.length],
+        backgroundColor: ds.color || CHART_PALETTE[i % CHART_PALETTE.length],
         borderRadius: 4,
         maxBarThickness: 28,
       };

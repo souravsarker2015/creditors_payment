@@ -1,0 +1,4 @@
+{% comment %}Progress ring. Needs: p (services.progress), size ("lg" optional).{% endcomment %}
+<div class="goal-ring{% if size == 'lg' %} is-lg{% endif %}" data-goal="{{ p.goal.color }}" style="--p: {{ p.bar }};" role="img" aria-label="{{ p.pct }}%">
+  <span>{% if p.state == "reached" %}{% include "partials/icon.html" with name="check" %}{% else %}{{ p.pct }}%{% endif %}</span>
+</div>

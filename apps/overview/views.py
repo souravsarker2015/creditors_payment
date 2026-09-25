@@ -15,6 +15,7 @@ from apps.expense.models import Expense
 from apps.household.models import Purchase
 from apps.income.models import IncomeTransaction
 from apps.shops.models import Transaction as ShopTransaction
+from apps.goals.services import goal_rows, totals as goal_totals
 from apps.core.stats import change, last_n_month_starts, month_start, monthly_series, trend_summary
 
 DUE_SOON_DAYS = 7
@@ -129,6 +130,8 @@ def networth_view(request):
         "net_12": sum(net_series, ZERO),
         "positive_months": sum(1 for v in net_series if v > 0),
         "attention": _attention(user, today),
+        "goals": goal_rows(user, "active", today)[:3],
+        "goal_totals": goal_totals(user),
         "receivables": receivables,
         "creditors_payable": creditors_payable,
         "shops_payable": shops_payable,

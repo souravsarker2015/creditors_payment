@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Savings Goals" %} | FinTrack{% endblock %}
+
+{% block content %}
+<div class="page stack" x-data="{ open: false, goal: { name: '', url: '', need: '' }, amount: '',
+       add(g) { this.goal = g; this.amount = ''; this.open = true; this.$nextTick(() => this.$refs.amount.focus()); } }">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "Savings Goals" %}</h1>
+      <p class="page-subtitle">{% translate "Put money aside for the things that matter, and see exactly how much to save each month." %}</p>
+    </div>
+    <div class="page-actions">
+      <a href="{% url 'goal_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "New Goal" %}</a>
+    </div>
+  </header>
+
+  {% if counts.active or counts.reached or counts.archived %}
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="min-w-0">
+        <p class="hero-label inline-flex items-center">{% translate "Saved in your goals" %}{% translate "Money you've set aside in active goals: everything added minus anything taken out. Setting money aside isn't counted as spending." as info_text %}{% include "partials/info.html" with text=info_text %}</p>
+        <p class="hero-value">{{ totals.saved|money }}</p>
+        <p class="hero-sub">{% blocktranslate with target=totals.target|money %}of {{ target }} across active goals{% endblocktranslate %} · {% blocktranslate with amount=totals.this_month|money %}{{ amount }} added this month{% endblocktranslate %}</p>
+      </div>
+      <div class="hero-progress">
+        <div class="hero-progress-row"><span>{% translate "Overall progress" %}</span><strong>{{ totals.pct }}%</strong></div>
+        <div class="meter"><span style="width: {% if totals.pct > 100 %}100{% else %}{{ totals.pct }}{% endif %}%"></span></div>
+      </div>
+    </div>
+  </section>
+
+  <nav class="seg" aria-label="{% translate 'Filter by status' %}">
+    <a href="?status=active" class="seg-item {% if status == 'active' %}is-active{% endif %}">{% translate "Active" %} <span class="seg-count">{{ counts.active }}</span></a>
+    <a href="?status=reached" class="seg-item {% if status == 'reached' %}is-active{% endif %}">{% translate "Reached" %} <span class="seg-count">{{ counts.reached }}</span></a>
+    <a href="?status=archived" class="seg-item {% if status == 'archived' %}is-active{% endif %}">{% translate "Archived" %} <span class="seg-count">{{ counts.archived }}</span></a>
+  </nav>
+  {% endif %}
+
+  {% if rows %}
+  <div class="card-grid card-grid-3">
+    {% for p in rows %}
+    {% with g=p.goal %}
+    <article class="card entity goal-card" data-goal="{{ g.color }}">
+      <div class="entity-head">
+        {% include "goals/_ring.html" %}
+        <div class="min-w-0 flex-1">
+          <h3 class="entity-name"><a href="{% url 'goal_detail' g.pk %}">{{ g.name }}</a></h3>
+          <p class="entity-meta">{% if g.target_date %}{% blocktranslate with date=g.target_date|date:"j M Y" %}By {{ date }}{% endblocktranslate %}{% else %}{% translate "No deadline" %}{% endif %}</p>
+        </div>
+        {% include "goals/_status_badge.html" %}
+      </div>
+
+      <div>
+        <p class="budget-figure"><strong>{{ p.saved|money }}</strong> <span>{% blocktranslate with target=p.target|money %}of {{ target }}{% endblocktranslate %}</span></p>
+        <div class="meter meter-lg goal-meter"><span style="width: {{ p.bar }}%"></span></div>
+        <p class="goal-plan" data-tone="{{ p.tone }}">{% include "goals/_plan.html" %}</p>
+      </div>
+
+      <div class="entity-foot">
+        {% if g.is_active and p.state != "reached" %}
+        <button type="button" class="btn btn-primary btn-sm"
+                @click="add({ name: '{{ g.name|escapejs }}', url: '{% url 'goal_entry_create' g.pk %}', need: '{% if p.needed_per_month %}{{ p.needed_per_month|floatformat:0 }}{% endif %}' })">
+          {% include "partials/icon.html" with name="plus" %}{% translate "Add money" %}</button>
+        {% endif %}
+        <a href="{% url 'goal_detail' g.pk %}" class="btn btn-secondary btn-sm">{% translate "Details" %}{% include "partials/icon.html" with name="arrow-right" %}</a>
+      </div>
+    </article>
+    {% endwith %}
+    {% endfor %}
+  </div>
+  {% elif status == "active" %}
+  <div class="empty">
+    <div class="empty-icon">{% include "partials/icon.html" with name="wallet" %}</div>
+    <h3 class="empty-title">{% if counts.reached %}{% translate "All your goals are reached!" %}{% else %}{% translate "Start your first savings goal" %}{% endif %}</h3>
+    <p class="empty-text">{% translate "An emergency fund, Eid shopping, school fees, a new phone… Give it a target and a date, and you'll see how much to put aside every month." %}</p>
+    <a href="{% url 'goal_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "New Goal" %}</a>
+  </div>
+  {% else %}
+  <div class="empty is-plain"><p class="empty-text">{% if status == "reached" %}{% translate "No goals reached yet — keep going!" %}{% else %}{% translate "No archived goals." %}{% endif %}</p></div>
+  {% endif %}
+
+  <!-- Quick "Add money" popup, shared by every card -->
+  {% translate "Monthly plan" as monthly_plan_label %}
+  <template x-teleport="body">
+    <div class="modal-root" x-show="open" x-cloak @keydown.escape.window="open = false" role="dialog" aria-modal="true" aria-labelledby="add-money-title">
+      <div class="modal-backdrop" x-show="open" x-transition.opacity.duration.200ms @click="open = false"></div>
+      <form method="post" :action="goal.url" class="modal" x-show="open" x-trap.noscroll="open"
+            x-transition:enter="modal-enter" x-transition:enter-start="modal-enter-start" x-transition:enter-end="modal-enter-end"
+            x-transition:leave="modal-leave" x-transition:leave-start="modal-enter-end" x-transition:leave-end="modal-enter-start">
+        {% csrf_token %}
+        <input type="hidden" name="kind" value="DEPOSIT">
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <div class="modal-header">
+          <span class="modal-icon">{% include "partials/icon.html" with name="plus" %}</span>
+          <div class="min-w-0 flex-1">
+            <h2 class="modal-title" id="add-money-title">{% translate "Add money" %}</h2>
+            <p class="modal-subtitle" x-text="goal.name"></p>
+          </div>
+          <button type="button" class="icon-btn" @click="open = false" aria-label="{% translate 'Close' %}">{% include "partials/icon.html" with name="x" %}</button>
+        </div>
+        <div class="modal-body form-stack">
+          <div class="field">
+            <label class="label" for="qa-amount">{% translate "Amount" %}<span class="req" aria-hidden="true">*</span></label>
+            <div class="input-affix has-start"><span class="affix affix-start" aria-hidden="true">৳</span>
+              <input id="qa-amount" x-ref="amount" x-model="amount" name="amount" type="number" inputmode="decimal" min="1" step="any" required class="form-input" placeholder="0"></div>
+            <div class="chip-row mt-2">
+              <button type="button" class="chip" x-show="goal.need" @click="amount = goal.need" x-text="'{{ monthly_plan_label|escapejs }} ৳' + Number(goal.need).toLocaleString('en-US')"></button>
+              <button type="button" class="chip" @click="amount = 500">৳500</button>
+              <button type="button" class="chip" @click="amount = 1000">৳1,000</button>
+              <button type="button" class="chip" @click="amount = 5000">৳5,000</button>
+            </div>
+          </div>
+          <div class="form-grid-2">
+            <div class="field">
+              <label class="label" for="qa-date">{% translate "Date" %}</label>
+              <input id="qa-date" name="date" type="date" class="form-input" value="{% now 'Y-m-d' %}" required>
+            </div>
+            <div class="field">
+              <label class="label" for="qa-note">{% translate "Note" %}<span class="opt">{% translate "(optional)" %}</span></label>
+              <input id="qa-note" name="note" class="form-input" maxlength="200" placeholder="{% translate 'e.g. Salary day' %}">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" @click="open = false">{% translate "Cancel" %}</button>
+          <button type="submit" class="btn btn-primary" :disabled="!amount || amount <= 0">{% include "partials/icon.html" with name="check" %}{% translate "Add money" %}</button>
+        </div>
+      </form>
+    </div>
+  </template>
+</div>
+{% endblock %}
