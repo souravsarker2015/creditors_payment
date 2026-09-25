@@ -39,7 +39,7 @@
       <h2 class="card-title">{% translate "By month" %}</h2>
       <form method="get">
         <label for="sort" class="sr-only">{% translate "Sort by" %}</label>
-        <select id="sort" name="sort" onchange="this.form.submit()" class="form-input !min-h-[2.375rem] !w-auto !py-1.5 !text-sm">
+        <select id="sort" name="sort" onchange="this.form.submit()" class="form-input input-compact !w-auto">
           {% for value, label in sort_options %}<option value="{{ value }}"{% if value == sort %} selected{% endif %}>{{ label }}</option>{% endfor %}
         </select>
       </form>

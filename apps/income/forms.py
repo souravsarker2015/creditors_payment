@@ -1,7 +1,7 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 from apps.core.status import active_or_current
-from .models import IncomeSource, IncomeTransaction, RecurringIncome
+from .models import RecurringFrequency, IncomeSource, IncomeTransaction, RecurringIncome
 
 
 class IncomeSourceForm(forms.ModelForm):
@@ -43,7 +43,9 @@ class RecurringIncomeForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
+        self.fields["frequency"].choices = [("", _("Choose how often…"))] + list(RecurringFrequency.choices)
         if user:
             self.fields["source"].queryset = active_or_current(
                 IncomeSource.objects.filter(user=user), self.instance.source_id
             )
+        self.fields["source"].empty_label = _("Choose a source…")

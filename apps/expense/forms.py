@@ -1,7 +1,7 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 from apps.core.status import active_or_current
-from .models import ExpenseCategory, Expense, RecurringExpense
+from .models import RecurringFrequency, ExpenseCategory, Expense, RecurringExpense
 
 
 class ExpenseCategoryForm(forms.ModelForm):
@@ -54,6 +54,7 @@ class RecurringExpenseForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
+        self.fields["frequency"].choices = [("", _("Choose how often…"))] + list(RecurringFrequency.choices)
         if user:
             self.fields["category"].queryset = active_or_current(
                 ExpenseCategory.objects.filter(user=user), self.instance.category_id

@@ -114,6 +114,7 @@
         datePicker: function (el) {
             return flatpickr(el, {
                 dateFormat: "Y-m-d", altInput: true, altFormat: "j M Y", allowInput: false,
+                altInputClass: el.className.replace("datepicker", "").trim() || "form-input",
                 disableMobile: true, monthSelectorType: "static",
             });
         },
@@ -124,6 +125,7 @@
             var initial = [from.value, to.value].filter(Boolean);
             flatpickr(input, {
                 mode: "range", dateFormat: "Y-m-d", altInput: true, altFormat: "j M Y", disableMobile: true,
+                altInputClass: input.className || "form-input",
                 defaultDate: initial.length ? initial : null,
                 onChange: function (dates) {
                     from.value = dates[0] ? flatpickr.formatDate(dates[0], "Y-m-d") : "";

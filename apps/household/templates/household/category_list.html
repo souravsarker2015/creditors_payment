@@ -29,15 +29,15 @@
         <p class="card-subtitle">{% if selected_month %}{{ selected_month_date|date:"F" }} {{ selected_year }}{% elif selected_year %}{{ selected_year }}{% else %}{% translate "All Time" %}{% endif %} · {% translate "Total Spent" %} <strong class="num" style="color: var(--text-primary);">{{ total_spent|money }}</strong></p>
       </div>
       <form method="get" class="flex flex-wrap items-center gap-2">
-        <select name="year" class="form-input !min-h-[2.375rem] !w-auto !py-1.5 !text-sm" aria-label="{% translate 'Year' %}" onchange="this.form.submit()">
+        <select name="year" class="form-input input-compact !w-auto" aria-label="{% translate 'Year' %}" onchange="this.form.submit()">
           <option value="">{% translate "All Years" %}</option>
           {% for yr in year_options %}<option value="{{ yr }}"{% if selected_year == yr %} selected{% endif %}>{{ yr }}</option>{% endfor %}
         </select>
-        <select name="month" class="form-input !min-h-[2.375rem] !w-auto !py-1.5 !text-sm" aria-label="{% translate 'Month' %}" onchange="this.form.submit()">
+        <select name="month" class="form-input input-compact !w-auto" aria-label="{% translate 'Month' %}" onchange="this.form.submit()">
           <option value="">{% translate "All Months" %}</option>
           {% for num, mdate in month_choices %}<option value="{{ num }}"{% if selected_month == num %} selected{% endif %}>{{ mdate|date:"F" }}</option>{% endfor %}
         </select>
-        <select name="sort" class="form-input !min-h-[2.375rem] !w-auto !py-1.5 !text-sm" aria-label="{% translate 'Sort by' %}" onchange="this.form.submit()">
+        <select name="sort" class="form-input input-compact !w-auto" aria-label="{% translate 'Sort by' %}" onchange="this.form.submit()">
           {% for value, label in sort_options %}<option value="{{ value }}"{% if value == sort %} selected{% endif %}>{{ label }}</option>{% endfor %}
         </select>
         {% if selected_year or selected_month %}<a href="{% url 'household_category_list' %}" class="btn btn-ghost btn-sm">{% translate "Reset" %}</a>{% endif %}

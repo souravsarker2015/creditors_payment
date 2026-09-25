@@ -3,37 +3,42 @@
 Filter panel for record lists (creditors, debtors, shops, contributors).
 Needs: reset_url, search_placeholder, category_choices, selected_categories, filter_type,
 sort, sort_options, search_query, status. Optional: show_payment (+ payment_status).
+Phones get a search bar + Filters button; the full panel is always open from lg up.
 {% endcomment %}
 <form method="get" class="card" x-data="{ open: false, filterType: '{{ filter_type|default:"include" }}', paymentStatus: '{{ payment_status|default:"ALL" }}' }">
   <input type="hidden" name="filter_type" x-model="filterType">
   {% if show_payment %}<input type="hidden" name="payment_status" x-model="paymentStatus">{% endif %}
   <input type="hidden" name="status" value="{{ status }}">
 
-  <div class="flex items-center gap-2 p-3 lg:hidden">
+  <div class="flex items-center gap-2 p-2.5 lg:hidden">
     <div class="input-icon flex-1">
       {% include "partials/icon.html" with name="search" %}
-      <input type="search" name="q" value="{{ search_query }}" placeholder="{{ search_placeholder }}" autocomplete="off" class="form-input" aria-label="{% translate 'Search by name' %}" :disabled="open || window.innerWidth >= 1024">
+      <input type="search" name="q" value="{{ search_query }}" placeholder="{{ search_placeholder }}" autocomplete="off" class="form-input" aria-label="{% translate 'Search by name' %}" :disabled="window.innerWidth >= 1024">
     </div>
-    <button type="button" class="btn btn-secondary shrink-0" @click="open = !open" :aria-expanded="open.toString()">
+    <button type="button" class="btn btn-secondary !min-h-[2.75rem] shrink-0" @click="open = !open" :aria-expanded="open.toString()" :class="open && '!border-[var(--accent)] !text-[var(--accent)]'">
       {% include "partials/icon.html" with name="filter" %}
       <span class="sr-only sm:not-sr-only">{% translate "Filters" %}</span>
-      {% if selected_categories or show_payment and payment_status != "ALL" %}<span class="h-2 w-2 rounded-full" style="background: var(--accent);"></span>{% endif %}
+      {% if selected_categories or show_payment and payment_status != "ALL" %}<span class="btn-dot"></span>{% endif %}
     </button>
+  </div>
+
+  <div class="hidden lg:block">
+    <div class="filter-head"><span class="flex items-center gap-3"><span class="filter-head-icon">{% include "partials/icon.html" with name="filter" %}</span>{% translate "Search & filter" %}</span></div>
   </div>
 
   <div class="collapse-body border-t border-[var(--border-soft)] lg:border-t-0" :class="open && 'is-open'">
     <div class="card-body">
       <div class="form-grid form-grid-4">
-        <div class="field">
-          <label for="q" class="label">{% translate "Search by name" %}</label>
+        <div class="field hidden lg:flex">
+          <div class="field-head"><label for="q" class="label">{% translate "Search by name" %}</label></div>
           <div class="input-icon">
             {% include "partials/icon.html" with name="search" %}
-            <input type="search" id="q" name="q" value="{{ search_query }}" placeholder="{{ search_placeholder }}" autocomplete="off" class="form-input" :disabled="!open && window.innerWidth < 1024">
+            <input type="search" id="q" name="q" value="{{ search_query }}" placeholder="{{ search_placeholder }}" autocomplete="off" class="form-input" :disabled="window.innerWidth < 1024">
           </div>
         </div>
         {% if show_payment %}
         <div class="field">
-          <span class="label">{% translate "Payment status" %}</span>
+          <div class="field-head"><span class="label">{% translate "Payment status" %}</span></div>
           <div class="seg seg-block">
             <button type="button" class="seg-item" :class="paymentStatus === 'ALL' && 'is-active'" @click="paymentStatus = 'ALL'">{% translate "All" %}</button>
             <button type="button" class="seg-item" data-tone="good" :class="paymentStatus === 'PAID' && 'is-active'" @click="paymentStatus = 'PAID'">{% translate "Paid" %}</button>
@@ -42,27 +47,45 @@ sort, sort_options, search_query, status. Optional: show_payment (+ payment_stat
         </div>
         {% endif %}
         <div class="field">
-          <label for="category" class="label">{% translate "Categories" %}</label>
+          <div class="field-head">
+            <label for="category" class="label">{% translate "Categories" %}</label>
+            <div class="seg seg-sm seg-block !w-auto" role="group" aria-label="{% translate 'Filter mode' %}">
+              <button type="button" class="seg-item" data-tone="accent" :class="filterType === 'include' && 'is-active'" @click="filterType = 'include'">{% translate "Include" %}</button>
+              <button type="button" class="seg-item" data-tone="critical" :class="filterType === 'exclude' && 'is-active'" @click="filterType = 'exclude'">{% translate "Exclude" %}</button>
+            </div>
+          </div>
           <select id="category" name="category" multiple class="form-input">
             {% for value, label in category_choices %}<option value="{{ value }}"{% if value in selected_categories %} selected{% endif %}>{{ label }}</option>{% endfor %}
           </select>
-          <div class="seg seg-block mt-1">
-            <button type="button" class="seg-item !min-h-[1.875rem] !text-xs" data-tone="accent" :class="filterType === 'include' && 'is-active'" @click="filterType = 'include'">{% translate "Include" %}</button>
-            <button type="button" class="seg-item !min-h-[1.875rem] !text-xs" data-tone="critical" :class="filterType === 'exclude' && 'is-active'" @click="filterType = 'exclude'">{% translate "Exclude" %}</button>
-          </div>
         </div>
         <div class="field">
-          <label for="sort" class="label">{% translate "Sort by" %}</label>
+          <div class="field-head"><label for="sort" class="label">{% translate "Sort by" %}</label></div>
           <select id="sort" name="sort" class="form-input">
             {% for value, label in sort_options %}<option value="{{ value }}"{% if value == sort %} selected{% endif %}>{{ label }}</option>{% endfor %}
           </select>
         </div>
       </div>
-      <div class="mt-4 flex flex-wrap gap-2">
-        <button type="submit" class="btn btn-primary">{% translate "Apply Filters" %}</button>
-        <a href="{{ reset_url }}" class="btn btn-ghost">{% translate "Reset" %}</a>
-        <button type="submit" name="export" value="csv" class="btn btn-secondary sm:ml-auto">{% include "partials/icon.html" with name="download" %}{% translate "Export CSV" %}</button>
+      <div class="filter-foot">
+        <button type="submit" name="export" value="csv" class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="download" %}{% translate "Export CSV" %}</button>
+        <span class="spacer"></span>
+        <a href="{{ reset_url }}" class="btn btn-secondary btn-sm">{% translate "Reset" %}</a>
+        <button type="submit" class="btn btn-primary btn-sm">{% include "partials/icon.html" with name="check" %}{% translate "Apply Filters" %}</button>
       </div>
     </div>
   </div>
 </form>
+
+{% if search_query or selected_categories or show_payment and payment_status != "ALL" %}
+<div class="chip-row" aria-label="{% translate 'Active filters' %}">
+  {% if search_query %}
+  <a href="{% query_with q='' %}" class="chip" title="{% translate 'Remove filter' %}"><span><b>{% translate "Search" %}:</b> “{{ search_query }}”</span><span class="chip-x">{% include "partials/icon.html" with name="x" %}</span></a>
+  {% endif %}
+  {% if show_payment and payment_status != "ALL" %}
+  <a href="{% query_with payment_status='' %}" class="chip" title="{% translate 'Remove filter' %}"><span><b>{% translate "Status" %}:</b> {% if payment_status == "PAID" %}{% translate "Paid" %}{% else %}{% translate "Unpaid" %}{% endif %}</span><span class="chip-x">{% include "partials/icon.html" with name="x" %}</span></a>
+  {% endif %}
+  {% if selected_categories %}
+  <a href="{% query_with category='' filter_type='' %}" class="chip" title="{% translate 'Remove filter' %}"><span><b>{% if filter_type == "exclude" %}{% translate "Excluding" %}{% else %}{% translate "Categories" %}{% endif %}:</b> {% blocktranslate count counter=selected_categories|length %}{{ counter }} selected{% plural %}{{ counter }} selected{% endblocktranslate %}</span><span class="chip-x">{% include "partials/icon.html" with name="x" %}</span></a>
+  {% endif %}
+  <a href="{{ reset_url }}{% if status != 'active' %}?status={{ status }}{% endif %}" class="chip-clear">{% translate "Clear all" %}</a>
+</div>
+{% endif %}

@@ -7,14 +7,14 @@ Needs: year_options, month_choices, selected_year, selected_month, reset_url, st
   {% for key, value in request.GET.items %}{% if key != "year" and key != "month" and key != "export" %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endif %}{% endfor %}
   <div class="field min-w-[7rem] flex-1 sm:flex-none">
     <label for="year-filter" class="sr-only">{% translate "Year" %}</label>
-    <select id="year-filter" name="year" class="form-input !min-h-[2.375rem] !py-1.5 !text-sm" onchange="this.form.submit()">
+    <select id="year-filter" name="year" class="form-input input-compact" onchange="this.form.submit()">
       <option value="">{% translate "All Years" %}</option>
       {% for yr in year_options %}<option value="{{ yr }}"{% if selected_year == yr %} selected{% endif %}>{{ yr }}</option>{% endfor %}
     </select>
   </div>
   <div class="field min-w-[8rem] flex-1 sm:flex-none">
     <label for="month-filter" class="sr-only">{% translate "Month" %}</label>
-    <select id="month-filter" name="month" class="form-input !min-h-[2.375rem] !py-1.5 !text-sm" onchange="this.form.submit()">
+    <select id="month-filter" name="month" class="form-input input-compact" onchange="this.form.submit()">
       <option value="">{% translate "All Months" %}</option>
       {% for num, mdate in month_choices %}<option value="{{ num }}"{% if selected_month == num %} selected{% endif %}>{{ mdate|date:"F" }}</option>{% endfor %}
     </select>

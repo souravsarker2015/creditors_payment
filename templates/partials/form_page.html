@@ -18,8 +18,8 @@ sticky-feeling action row. Needs: form, title, back. Optional: subtitle, submit_
       {% for field in form %}{% include "partials/field.html" %}{% endfor %}
     </div>
     <div class="card-footer form-actions">
-      <a href="{{ back }}" class="btn btn-ghost">{% translate "Cancel" %}</a>
-      <button type="submit" class="btn btn-primary">{% include "partials/icon.html" with name="check" %}{{ submit_label|default:_("Save") }}</button>
+      <a href="{{ back }}" class="btn btn-ghost btn-lg">{% translate "Cancel" %}</a>
+      <button type="submit" class="btn btn-primary btn-lg">{% include "partials/icon.html" with name="check" %}{{ submit_label|default:_("Save") }}</button>
     </div>
   </form>
 </div>

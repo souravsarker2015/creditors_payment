@@ -242,41 +242,75 @@ h1, h2, h3 { font-family: var(--font-heading); }
 
 /* ==========================================================================
    Buttons
+   --------------------------------------------------------------------------
+   Soft-gradient primary with a tinted glow, crisp bordered secondary,
+   quiet ghost. All share one focus ring and a subtle press effect.
    ========================================================================== */
 .btn {
+    position: relative; isolation: isolate;
     display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
-    min-height: 2.5rem; padding: 0.5rem 1rem; border-radius: 0.625rem;
-    border: 1px solid transparent; font-size: 0.875rem; font-weight: 600; line-height: 1.25;
+    min-height: 2.5rem; padding: 0.5rem 1rem; border-radius: 0.75rem;
+    border: 1px solid transparent; font-size: 0.875rem; font-weight: 600; line-height: 1.25; letter-spacing: -0.005em;
     white-space: nowrap; cursor: pointer; user-select: none; text-decoration: none;
-    transition: background-color .15s, border-color .15s, color .15s, box-shadow .15s, transform .15s;
+    transition: background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, transform .12s ease, filter .18s ease;
+    -webkit-tap-highlight-color: transparent;
 }
-.btn:active { transform: translateY(1px); }
+.btn:active { transform: scale(0.97); }
+.btn:focus-visible, .icon-btn:focus-visible, .chip:focus-visible {
+    outline: none; box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent);
+}
 .btn svg { width: 1rem; height: 1rem; flex-shrink: 0; }
 .btn[disabled], .btn.is-disabled { opacity: .5; pointer-events: none; }
-.btn-primary { background: var(--accent); color: var(--accent-on); box-shadow: var(--shadow-sm); }
-.btn-primary:hover { background: var(--accent-strong); }
-.btn-secondary { background: var(--surface-raised); color: var(--text-primary); border-color: var(--border); box-shadow: var(--shadow-sm); }
-.btn-secondary:hover { background: var(--surface-hover); border-color: color-mix(in srgb, var(--border) 60%, var(--text-muted)); }
+
+.btn-primary {
+    color: var(--accent-on);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 86%, #fff) 0%, var(--accent) 100%);
+    border-color: color-mix(in srgb, var(--accent) 82%, #000);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+        0 1px 2px rgba(0, 0, 0, 0.12),
+        0 6px 16px -8px color-mix(in srgb, var(--accent) 70%, transparent);
+}
+.btn-primary:hover {
+    filter: brightness(1.06) saturate(1.05);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.22),
+        0 2px 4px rgba(0, 0, 0, 0.12),
+        0 10px 22px -10px color-mix(in srgb, var(--accent) 80%, transparent);
+}
+.btn-secondary {
+    background: var(--surface-raised); color: var(--text-primary); border-color: var(--border);
+    box-shadow: 0 1px 2px rgba(16, 24, 20, 0.05), inset 0 -1px 0 rgba(16, 24, 20, 0.04);
+}
+.btn-secondary:hover { background: var(--surface-hover); border-color: color-mix(in srgb, var(--border) 55%, var(--text-muted)); }
 .btn-ghost { background: transparent; color: var(--text-secondary); }
 .btn-ghost:hover { background: var(--surface-sunken); color: var(--text-primary); }
 .btn-soft { background: var(--accent-soft); color: var(--accent); }
-.btn-soft:hover { background: color-mix(in srgb, var(--accent-soft) 70%, var(--accent) 12%); }
-.btn-danger { background: transparent; color: var(--status-critical); border-color: color-mix(in srgb, var(--status-critical) 35%, transparent); }
-.btn-danger:hover { background: var(--status-critical-bg); }
-.btn-sm { min-height: 2.125rem; padding: 0.375rem 0.75rem; font-size: 0.8125rem; border-radius: var(--radius-sm); }
+.btn-soft:hover { background: color-mix(in srgb, var(--accent-soft) 70%, var(--accent) 14%); }
+.btn-danger {
+    background: var(--status-critical-bg); color: var(--status-critical);
+    border-color: color-mix(in srgb, var(--status-critical) 22%, transparent);
+}
+.btn-danger:hover { background: color-mix(in srgb, var(--status-critical-bg) 60%, var(--status-critical) 14%); }
+.btn-sm { min-height: 2.125rem; padding: 0.375rem 0.75rem; font-size: 0.8125rem; border-radius: 0.625rem; gap: 0.375rem; }
+.btn-lg { min-height: 3rem; padding: 0.75rem 1.25rem; font-size: 0.9375rem; border-radius: 0.875rem; }
 .btn-block { width: 100%; }
+.btn-dot { width: 0.4375rem; height: 0.4375rem; border-radius: 9999px; background: var(--accent); box-shadow: 0 0 0 2px var(--surface-raised); }
 
 .icon-btn {
     display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
-    width: 2.25rem; height: 2.25rem; border-radius: var(--radius-sm);
-    color: var(--text-muted); transition: background-color .15s, color .15s;
+    width: 2.25rem; height: 2.25rem; border-radius: 0.625rem;
+    color: var(--text-muted); transition: background-color .15s, color .15s, transform .12s;
+    -webkit-tap-highlight-color: transparent;
 }
 .icon-btn:hover { background: var(--surface-sunken); color: var(--text-primary); }
+.icon-btn:active { transform: scale(0.94); }
 .icon-btn svg { width: 1.125rem; height: 1.125rem; }
 
 @media (pointer: coarse) {
     .btn { min-height: 2.75rem; }
     .btn-sm { min-height: 2.5rem; }
+    .btn-lg { min-height: 3.125rem; }
     .icon-btn { width: 2.5rem; height: 2.5rem; }
 }
 
@@ -398,35 +432,69 @@ h1, h2, h3 { font-family: var(--font-heading); }
 .badge-outline { background: transparent; box-shadow: inset 0 0 0 1px var(--border); color: var(--text-secondary); }
 
 /* ==========================================================================
-   Segmented control / tabs
+   Segmented control / toggle buttons
+   --------------------------------------------------------------------------
+   `.seg-block` gets a sliding thumb: a pseudo-element sized to 1/n of the
+   track that glides to the active option (works for Alpine `.is-active`
+   buttons and for radio inputs alike — no JS needed for the animation).
    ========================================================================== */
 .seg {
-    display: inline-flex; gap: 0.25rem; max-width: 100%; padding: 0.25rem;
-    background: var(--surface-sunken); border: 1px solid var(--border-soft); border-radius: var(--radius);
+    --seg-pad: 0.25rem; --seg-gap: 0.25rem;
+    position: relative; isolation: isolate;
+    display: inline-flex; gap: var(--seg-gap); max-width: 100%; padding: var(--seg-pad);
+    background: var(--surface-sunken); border: 1px solid var(--border-soft); border-radius: 0.875rem;
+    box-shadow: inset 0 1px 2px rgba(16, 24, 20, 0.05);
     overflow-x: auto; scrollbar-width: none;
 }
 .seg::-webkit-scrollbar { display: none; }
-.seg-block { display: flex; width: 100%; }
-.seg-block > .seg-item { flex: 1 1 0; }
 .seg-item {
-    flex: 0 0 auto; position: relative;
+    flex: 0 0 auto; position: relative; z-index: 1;
     display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem;
-    min-height: 2.125rem; padding: 0.375rem 0.75rem; border-radius: var(--radius-sm);
+    min-height: 2.125rem; padding: 0.375rem 0.875rem; border-radius: 0.625rem;
     font-size: 0.8125rem; font-weight: 600; color: var(--text-secondary); white-space: nowrap; cursor: pointer;
-    transition: background-color .15s, color .15s, box-shadow .15s;
+    transition: color .2s ease, background-color .2s ease, box-shadow .2s ease;
+    -webkit-tap-highlight-color: transparent;
 }
 .seg-item:hover { color: var(--text-primary); }
 .seg-item.is-active, .seg-item:has(input:checked) {
-    background: var(--surface-raised); color: var(--tone, var(--text-primary)); box-shadow: var(--shadow-sm), 0 0 0 1px var(--border-soft);
+    background: var(--surface-raised); color: var(--tone, var(--text-primary));
+    box-shadow: 0 1px 2px rgba(16, 24, 20, 0.08), 0 2px 8px -2px rgba(16, 24, 20, 0.08);
 }
-.seg-item:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 1px; }
+.seg-item:has(input:focus-visible), .seg-item:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.seg-item svg { width: 1rem; height: 1rem; }
+
+/* Full-width variant with the sliding thumb */
+.seg-block { display: flex; width: 100%; overflow: hidden; --n: 1; --i: 0; }
+.seg-block > .seg-item { flex: 1 1 0; min-width: 0; }
+.seg-block:has(> .seg-item:nth-child(2):last-child) { --n: 2; }
+.seg-block:has(> .seg-item:nth-child(3):last-child) { --n: 3; }
+.seg-block:has(> .seg-item:nth-child(4):last-child) { --n: 4; }
+/* :has() can't nest, so buttons (.is-active) and radios (> input:checked) get separate selectors. */
+.seg-block:has(> .seg-item:nth-child(2).is-active), .seg-block:has(> .seg-item:nth-child(2) > input:checked) { --i: 1; }
+.seg-block:has(> .seg-item:nth-child(3).is-active), .seg-block:has(> .seg-item:nth-child(3) > input:checked) { --i: 2; }
+.seg-block:has(> .seg-item:nth-child(4).is-active), .seg-block:has(> .seg-item:nth-child(4) > input:checked) { --i: 3; }
+.seg-block::before {
+    content: ""; position: absolute; z-index: 0; top: var(--seg-pad); bottom: var(--seg-pad); left: var(--seg-pad);
+    width: calc((100% - 2 * var(--seg-pad) - (var(--n) - 1) * var(--seg-gap)) / var(--n));
+    transform: translateX(calc(var(--i) * (100% + var(--seg-gap))));
+    border-radius: 0.625rem; background: var(--surface-raised);
+    box-shadow: 0 1px 2px rgba(16, 24, 20, 0.08), 0 2px 8px -2px rgba(16, 24, 20, 0.1);
+    opacity: 0; transition: transform .28s cubic-bezier(.3, .7, .2, 1), opacity .15s;
+}
+.seg-block:has(> .seg-item.is-active)::before, .seg-block:has(> .seg-item > input:checked)::before { opacity: 1; }
+.seg-block > .seg-item.is-active, .seg-block > .seg-item:has(input:checked) { background: transparent; box-shadow: none; }
+
+.seg-sm { --seg-pad: 0.1875rem; --seg-gap: 0.125rem; border-radius: 0.6875rem; }
+.seg-sm .seg-item { min-height: 1.75rem; padding: 0.25rem 0.625rem; font-size: 0.75rem; border-radius: 0.5rem; }
+.seg-sm.seg-block::before { border-radius: 0.5rem; }
+
 .seg-count {
     min-width: 1.25rem; padding: 0 0.375rem; border-radius: 9999px; text-align: center;
     font-size: 0.6875rem; line-height: 1.125rem; font-weight: 600;
     background: var(--border-soft); color: var(--text-muted);
 }
 .seg-item.is-active .seg-count { background: var(--accent-soft); color: var(--accent); }
-@media (pointer: coarse) { .seg-item { min-height: 2.5rem; } }
+@media (pointer: coarse) { .seg-item { min-height: 2.5rem; } .seg-sm .seg-item { min-height: 2rem; } }
 
 /* ==========================================================================
    Forms
@@ -437,89 +505,205 @@ h1, h2, h3 { font-family: var(--font-heading); }
 @media (min-width: 640px) and (max-width: 1023.98px) { .form-grid-4, .form-grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .form-grid .span-full { grid-column: 1 / -1; }
 
-.form-stack > * + * { margin-top: 1rem; }
-.field { display: flex; flex-direction: column; gap: 0.375rem; min-width: 0; }
-.label { font-size: 0.8125rem; font-weight: 600; color: var(--text-secondary); }
-.label .req { color: var(--status-critical); margin-left: 0.125rem; }
-.help { font-size: 0.75rem; line-height: 1.45; color: var(--text-muted); }
-.field-error { display: flex; align-items: flex-start; gap: 0.25rem; font-size: 0.8125rem; font-weight: 500; color: var(--status-critical); }
+.form-stack > * + * { margin-top: 1.125rem; }
+.field { display: flex; flex-direction: column; gap: 0.4375rem; min-width: 0; }
+.field-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; min-height: 2.25rem; }
+.label { font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); letter-spacing: -0.003em; }
+.label .req { color: var(--status-critical); margin-left: 0.1875rem; }
+.label .opt { margin-left: 0.25rem; font-weight: 500; color: var(--text-muted); }
+.help { font-size: 0.75rem; line-height: 1.5; color: var(--text-muted); }
+.field-error { display: flex; align-items: flex-start; gap: 0.375rem; font-size: 0.8125rem; font-weight: 500; color: var(--status-critical); }
+.field-error svg { width: 1rem; height: 1rem; flex-shrink: 0; margin-top: 0.0625rem; }
 .form-errors { padding: 0.75rem 1rem; border-radius: var(--radius); background: var(--status-critical-bg); color: var(--status-critical); font-size: 0.875rem; font-weight: 500; }
 
 .form-input,
 .form-control,
 .form-stack :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]), select, textarea) {
     display: block; width: 100%; min-height: 2.75rem; padding: 0.5625rem 0.875rem;
-    border: 1px solid var(--border); border-radius: 0.625rem; background-color: var(--surface-raised);
+    border: 1px solid var(--border); border-radius: 0.75rem; background-color: var(--surface-raised);
     color: var(--text-primary); font: inherit; font-size: 1rem; line-height: 1.5; /* 16px: no zoom-on-focus on iOS */
-    box-shadow: var(--shadow-sm); transition: border-color .15s, box-shadow .15s;
+    box-shadow: 0 1px 2px rgba(16, 24, 20, 0.04);
+    transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+    -webkit-appearance: none; appearance: none;
 }
 @media (min-width: 640px) {
     .form-input, .form-control,
-    .form-stack :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]), select, textarea) { font-size: 0.9375rem; min-height: 2.625rem; }
+    .form-stack :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]), select, textarea) { font-size: 0.9375rem; }
 }
-.form-input::placeholder, .form-control::placeholder, .form-stack ::placeholder { color: var(--text-muted); opacity: 1; }
+:is(.form-input, .form-control, .form-stack :is(input, select, textarea)):hover:not(:focus):not(:disabled) {
+    border-color: color-mix(in srgb, var(--border) 55%, var(--text-muted));
+}
+.form-input::placeholder, .form-control::placeholder, .form-stack ::placeholder { color: var(--text-muted); opacity: .85; }
 .form-input:focus, .form-control:focus,
 .form-stack :is(input, select, textarea):focus {
-    outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft);
+    outline: none; border-color: var(--accent);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent), 0 1px 2px rgba(16, 24, 20, 0.04);
 }
+:is(.form-input, .form-control):disabled { background: var(--surface-sunken); color: var(--text-muted); cursor: not-allowed; }
 select.form-input, select.form-control, .form-stack select {
-    appearance: none; -webkit-appearance: none; padding-right: 2.5rem; cursor: pointer;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none'%3e%3cpath stroke='%238a9086' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.6' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    padding-right: 2.5rem; cursor: pointer; text-overflow: ellipsis;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none'%3e%3cpath stroke='%238a9086' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.7' d='M6.5 8l3.5 3.5L13.5 8'/%3e%3c/svg%3e");
     background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1.125rem;
 }
 select[multiple].form-input { background-image: none; padding-right: 0.875rem; }
-textarea.form-input, textarea.form-control, .form-stack textarea { min-height: 5.5rem; resize: vertical; }
+textarea.form-input, textarea.form-control, .form-stack textarea { min-height: 5.5rem; resize: vertical; line-height: 1.55; }
 .has-error :is(.form-input, .form-control, input, select, textarea) { border-color: var(--status-critical); }
+.has-error :is(.form-input, .form-control, input, select, textarea):focus { box-shadow: 0 0 0 4px color-mix(in srgb, var(--status-critical) 16%, transparent); }
 input.flatpickr-input[readonly] { cursor: pointer; }
+/* Hide number spinners — amounts are typed, not nudged. */
+input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+input[type="number"] { -moz-appearance: textfield; }
+.input-compact { min-height: 2.375rem !important; padding-top: 0.375rem !important; padding-bottom: 0.375rem !important; font-size: 0.875rem !important; border-radius: 0.625rem !important; }
 
-.input-icon { position: relative; }
-.input-icon > svg { position: absolute; left: 0.8125rem; top: 50%; transform: translateY(-50%); width: 1.0625rem; height: 1.0625rem; color: var(--text-muted); pointer-events: none; }
-.input-icon > .form-input { padding-left: 2.5rem; }
-
-.check {
-    display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.875rem 1rem; cursor: pointer;
-    border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-raised);
+/* Leading icon / ৳ prefix / % suffix */
+.input-icon, .input-affix { position: relative; }
+.input-icon > svg {
+    position: absolute; left: 0.875rem; top: 50%; transform: translateY(-50%); z-index: 1;
+    width: 1.0625rem; height: 1.0625rem; color: var(--text-muted); pointer-events: none; transition: color .15s;
 }
-.check:hover { border-color: color-mix(in srgb, var(--border) 50%, var(--accent)); }
-.check input[type="checkbox"] { margin-top: 0.125rem; width: 1.125rem; height: 1.125rem; flex-shrink: 0; accent-color: var(--accent); cursor: pointer; }
-.check-label { display: block; font-size: 0.875rem; font-weight: 500; line-height: 1.45; color: var(--text-primary); }
+.input-icon:focus-within > svg { color: var(--accent); }
+.input-icon > :is(input, .form-input, .form-control) { padding-left: 2.625rem !important; }
+.input-affix > .affix {
+    position: absolute; top: 50%; transform: translateY(-50%); z-index: 1;
+    font-size: 0.9375rem; font-weight: 600; color: var(--text-muted); pointer-events: none; transition: color .15s;
+}
+.input-affix > .affix-start { left: 0.9375rem; }
+.input-affix > .affix-end { right: 0.9375rem; }
+.input-affix:focus-within > .affix { color: var(--accent); }
+.input-affix.has-start > :is(input, .form-input) { padding-left: 2.125rem !important; font-variant-numeric: tabular-nums; font-weight: 600; }
+.input-affix.has-end > :is(input, .form-input) { padding-right: 2.25rem !important; }
+
+/* Checkbox → toggle switch, laid out as a settings row */
+.check {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.875rem 1rem; cursor: pointer;
+    border: 1px solid var(--border); border-radius: 0.875rem; background: var(--surface-raised);
+    transition: border-color .15s, background-color .15s;
+}
+.check:hover { border-color: color-mix(in srgb, var(--border) 55%, var(--text-muted)); }
+.check:has(input:checked) { border-color: color-mix(in srgb, var(--accent) 35%, var(--border)); background: color-mix(in srgb, var(--accent-soft) 45%, var(--surface-raised)); }
+.check input[type="checkbox"] {
+    order: 2; position: relative; flex-shrink: 0; margin: 0; cursor: pointer;
+    width: 2.75rem; height: 1.625rem; border-radius: 9999px;
+    -webkit-appearance: none; appearance: none;
+    background: color-mix(in srgb, var(--border) 70%, var(--text-muted));
+    transition: background-color .2s ease, box-shadow .2s ease;
+}
+.check input[type="checkbox"]::before {
+    content: ""; position: absolute; top: 0.1875rem; left: 0.1875rem; width: 1.25rem; height: 1.25rem; border-radius: 9999px;
+    background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    transition: transform .22s cubic-bezier(.3, .7, .2, 1.2);
+}
+.check input[type="checkbox"]:checked { background: var(--accent); }
+.check input[type="checkbox"]:checked::before { transform: translateX(1.125rem); }
+.check input[type="checkbox"]:focus-visible { outline: none; box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent); }
+.check-label { display: block; font-size: 0.875rem; font-weight: 600; line-height: 1.45; color: var(--text-primary); }
 
 .form-actions { display: flex; flex-direction: column-reverse; gap: 0.625rem; padding-top: 0.5rem; }
 @media (min-width: 640px) { .form-actions { flex-direction: row; justify-content: flex-end; } }
 
-/* Tom Select, themed to match .form-input */
+/* ==========================================================================
+   Filter panel + active-filter chips
+   ========================================================================== */
+.filter-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; width: 100%;
+    padding: 0.8125rem 1rem; text-align: left; font-size: 0.9375rem; font-weight: 650; color: var(--text-primary);
+    -webkit-tap-highlight-color: transparent;
+}
+@media (min-width: 640px) { .filter-head { padding: 0.9375rem 1.5rem; } }
+.filter-head-icon {
+    display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 0.625rem;
+    background: var(--accent-soft); color: var(--accent);
+}
+.filter-head-icon svg { width: 1.0625rem; height: 1.0625rem; }
+.filter-head .chev { width: 1.125rem; height: 1.125rem; color: var(--text-muted); transition: transform .2s; }
+.filter-head[aria-expanded="true"] .chev { transform: rotate(180deg); }
+@media (min-width: 1024px) {
+    .filter-head { cursor: default; border-bottom: 1px solid var(--border-soft); }
+    .filter-head .chev { display: none; }
+}
+.filter-foot {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;
+    margin: 1.25rem -1rem -1rem; padding: 0.75rem 1rem; border-top: 1px solid var(--border-soft);
+    background: color-mix(in srgb, var(--surface-sunken) 55%, var(--surface-raised));
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+@media (min-width: 640px) { .filter-foot { margin: 1.25rem -1.5rem -1.25rem; padding: 0.875rem 1.5rem; } }
+.filter-foot .spacer { flex: 1; }
+@media (max-width: 639.98px) {
+    .filter-foot > .btn { flex: 1 1 auto; }
+    .filter-foot > .btn-primary { flex: 1 1 100%; order: -1; }
+    .filter-foot .spacer { display: none; }
+}
+
+.chip-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.chip-row-label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); }
+.chip {
+    display: inline-flex; align-items: center; gap: 0.25rem; max-width: 100%;
+    height: 2rem; padding: 0 0.25rem 0 0.75rem; border-radius: 9999px;
+    border: 1px solid var(--border); background: var(--surface-raised); box-shadow: 0 1px 2px rgba(16, 24, 20, 0.04);
+    font-size: 0.8125rem; font-weight: 500; color: var(--text-primary); white-space: nowrap;
+    transition: border-color .15s, background-color .15s;
+}
+.chip > span { overflow: hidden; text-overflow: ellipsis; }
+.chip b { font-weight: 500; color: var(--text-muted); }
+.chip-x { display: grid; place-items: center; flex-shrink: 0; width: 1.5rem; height: 1.5rem; border-radius: 9999px; color: var(--text-muted); transition: background-color .15s, color .15s; }
+.chip-x svg { width: 0.875rem; height: 0.875rem; }
+.chip:hover { border-color: color-mix(in srgb, var(--border) 50%, var(--text-muted)); }
+.chip:hover .chip-x { background: var(--status-critical-bg); color: var(--status-critical); }
+.chip-clear { padding: 0 0.25rem; font-size: 0.8125rem; font-weight: 600; color: var(--accent); }
+.chip-clear:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* ==========================================================================
+   Tom Select (multi-selects), themed to match .form-input
+   ========================================================================== */
 .ts-wrapper.form-input, .ts-wrapper.form-control { padding: 0; border: 0; box-shadow: none; background: none; min-height: 0; }
 .ts-wrapper .ts-control {
-    min-height: 2.75rem; padding: 0.4375rem 0.75rem; border: 1px solid var(--border); border-radius: 0.625rem;
-    background: var(--surface-raised) !important; color: var(--text-primary); box-shadow: var(--shadow-sm);
-    font-size: 0.9375rem; line-height: 1.5;
+    min-height: 2.75rem; padding: 0.375rem 2.25rem 0.375rem 0.625rem; border: 1px solid var(--border); border-radius: 0.75rem;
+    background-color: var(--surface-raised) !important; color: var(--text-primary);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none'%3e%3cpath stroke='%238a9086' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.7' d='M6.5 8l3.5 3.5L13.5 8'/%3e%3c/svg%3e") !important;
+    background-repeat: no-repeat !important; background-position: right 0.75rem center !important; background-size: 1.125rem !important;
+    box-shadow: 0 1px 2px rgba(16, 24, 20, 0.04); font-size: 0.9375rem; line-height: 1.5; cursor: pointer;
+    transition: border-color .15s, box-shadow .15s; gap: 0.25rem;
 }
-.ts-wrapper.single .ts-control { padding-right: 2.25rem; }
-.ts-wrapper.focus .ts-control { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-.ts-wrapper .ts-control input { color: var(--text-primary); font-size: 0.9375rem; }
-.ts-wrapper .ts-control input::placeholder { color: var(--text-muted); }
+.ts-wrapper .ts-control:hover { border-color: color-mix(in srgb, var(--border) 55%, var(--text-muted)); }
+.ts-wrapper.focus .ts-control { border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent); }
+.ts-wrapper .ts-control input { color: var(--text-primary); font-size: 0.9375rem; min-width: 5rem; }
+.ts-wrapper .ts-control input::placeholder { color: var(--text-muted); opacity: .85; }
 .ts-wrapper.multi .ts-control > .item {
-    margin: 0.125rem 0.25rem 0.125rem 0; padding: 0.0625rem 0.25rem 0.0625rem 0.5rem; border: 0; border-radius: 9999px;
-    background: var(--accent-soft); color: var(--accent); font-size: 0.8125rem; font-weight: 600;
+    display: inline-flex; align-items: center; margin: 0.0625rem 0; padding: 0.125rem 0.125rem 0.125rem 0.625rem;
+    border: 0; border-radius: 9999px; background: var(--accent-soft); color: var(--accent);
+    font-size: 0.8125rem; font-weight: 600; line-height: 1.25rem;
 }
-.ts-wrapper.plugin-remove_button .item .remove { border-left: 0 !important; color: inherit; padding: 0 0.3rem; border-radius: 9999px; }
-.ts-wrapper.plugin-remove_button .item .remove:hover { background: rgba(0, 0, 0, 0.06); }
+.ts-wrapper.plugin-remove_button .item .remove {
+    display: grid; place-items: center; width: 1.25rem; height: 1.25rem; margin-left: 0.25rem; padding: 0;
+    border-left: 0 !important; border-radius: 9999px; color: inherit; font-size: 1rem; line-height: 1; opacity: .7;
+}
+.ts-wrapper.plugin-remove_button .item .remove:hover { background: color-mix(in srgb, var(--accent) 18%, transparent); opacity: 1; }
 .ts-dropdown {
-    margin-top: 0.25rem; z-index: 60; overflow: hidden;
-    border: 1px solid var(--border); border-radius: 0.625rem;
+    margin-top: 0.375rem; z-index: 60; overflow: hidden; padding: 0.3125rem;
+    border: 1px solid var(--border); border-radius: 0.875rem;
     background: var(--surface-raised); color: var(--text-primary); box-shadow: var(--shadow-lg);
+    animation: ts-pop .14s ease-out;
 }
-.ts-dropdown .option, .ts-dropdown .no-results { padding: 0.5rem 0.75rem; font-size: 0.875rem; }
-.ts-dropdown .active { background: var(--accent-soft); color: var(--text-primary); }
+@keyframes ts-pop { from { opacity: 0; transform: translateY(-4px) scale(.98); } to { opacity: 1; transform: none; } }
+.ts-dropdown .ts-dropdown-content { max-height: 16rem; }
+.ts-dropdown .option, .ts-dropdown .no-results, .ts-dropdown .create {
+    padding: 0.5rem 0.75rem; border-radius: 0.5625rem; font-size: 0.875rem; cursor: pointer;
+}
+.ts-dropdown .active { background: var(--surface-sunken); color: var(--text-primary); }
 .ts-dropdown .option.selected { color: var(--accent); font-weight: 600; }
+.ts-dropdown .no-results { color: var(--text-muted); }
 
 /* Flatpickr */
 .flatpickr-calendar {
     border: 1px solid var(--border) !important; border-radius: var(--radius-lg) !important;
     box-shadow: var(--shadow-lg) !important; overflow: hidden !important;
 }
+.flatpickr-calendar.arrowTop::before, .flatpickr-calendar.arrowTop::after { display: none !important; }
+.flatpickr-day { border-radius: 0.625rem !important; }
+.flatpickr-day.today { border-color: var(--accent) !important; }
 .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange { background: var(--accent) !important; border-color: var(--accent) !important; color: var(--accent-on) !important; }
-.flatpickr-day.inRange { background: var(--accent-soft) !important; border-color: transparent !important; box-shadow: -5px 0 0 var(--accent-soft), 5px 0 0 var(--accent-soft) !important; }
+.flatpickr-day.inRange { background: var(--accent-soft) !important; border-color: transparent !important; box-shadow: -5px 0 0 var(--accent-soft), 5px 0 0 var(--accent-soft) !important; border-radius: 0 !important; }
 
 /* ==========================================================================
    Ledger rows (transactions, recent activity, …)

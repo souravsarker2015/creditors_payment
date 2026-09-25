@@ -2,11 +2,11 @@
 {% comment %}Shared by the expense dashboard and ledger. Optional: show_sort, show_export. Needs: reset_url.{% endcomment %}
 <form method="get" class="card" x-data="{ open: false, filterMode: '{{ filter_mode|default:"include" }}' }">
   <input type="hidden" name="filter_mode" x-model="filterMode">
-  <button type="button" class="collapse-toggle" @click="open = !open" :aria-expanded="open.toString()">
-    <span class="flex items-center gap-2">
-      <span class="h-[1.125rem] w-[1.125rem]" style="color: var(--text-muted);">{% include "partials/icon.html" with name="filter" %}</span>
-      {% translate "Filters" %}
-      {% if selected_category_ids or selected_year or date_from or date_to %}<span class="badge" data-tone="accent">{% translate "On" %}</span>{% endif %}
+  <button type="button" class="filter-head" @click="open = !open" :aria-expanded="open.toString()">
+    <span class="flex items-center gap-3">
+      <span class="filter-head-icon">{% include "partials/icon.html" with name="filter" %}</span>
+      <span>{% translate "Filters" %}</span>
+      {% if selected_category_ids or selected_year or date_from or date_to %}<span class="btn-dot" aria-label="{% translate 'Filters applied' %}"></span>{% endif %}
     </span>
     {% include "partials/icon.html" with name="chevron-down" %}
   </button>
@@ -14,14 +14,13 @@
     <div class="card-body">
       <div class="form-grid form-grid-4">
         <div class="field">
-          <span class="label">{% translate "Categories" %}</span>
-          <div class="seg seg-block">
-            <button type="button" class="seg-item" data-tone="accent" :class="filterMode === 'include' && 'is-active'" @click="filterMode = 'include'">{% translate "Include" %}</button>
-            <button type="button" class="seg-item" data-tone="critical" :class="filterMode === 'exclude' && 'is-active'" @click="filterMode = 'exclude'">{% translate "Exclude" %}</button>
+          <div class="field-head">
+            <label for="category-filter" class="label">{% translate "Categories" %}</label>
+            <div class="seg seg-sm seg-block !w-auto" role="group" aria-label="{% translate 'Filter mode' %}">
+              <button type="button" class="seg-item" data-tone="accent" :class="filterMode === 'include' && 'is-active'" @click="filterMode = 'include'">{% translate "Include" %}</button>
+              <button type="button" class="seg-item" data-tone="critical" :class="filterMode === 'exclude' && 'is-active'" @click="filterMode = 'exclude'">{% translate "Exclude" %}</button>
+            </div>
           </div>
-        </div>
-        <div class="field">
-          <label for="category-filter" class="label">{% translate "Which categories" %}</label>
           <select id="category-filter" name="category" multiple class="form-input">
             {% for cat in available_categories %}
               <option value="{{ cat.id }}"{% if cat.id in selected_category_ids %} selected{% endif %}>{{ cat.name }}{% if not cat.is_active %} ({% translate "inactive" %}){% endif %}</option>
@@ -29,34 +28,54 @@
           </select>
         </div>
         <div class="field">
-          <label for="year-filter" class="label">{% translate "Year" %}</label>
+          <div class="field-head"><label for="year-filter" class="label">{% translate "Year" %}</label></div>
           <select id="year-filter" name="year" class="form-input">
             <option value="">{% translate "All Years" %}</option>
             {% for yr in year_options %}<option value="{{ yr }}"{% if selected_year == yr %} selected{% endif %}>{{ yr }}</option>{% endfor %}
           </select>
         </div>
         <div class="field">
-          <label for="date-range-filter" class="label">{% translate "Date Range" %}</label>
-          <input id="date-range-filter" type="text" placeholder="{% translate 'Select range...' %}" class="form-input" autocomplete="off">
+          <div class="field-head"><label for="date-range-filter" class="label">{% translate "Date Range" %}</label></div>
+          <div class="input-icon">
+            {% include "partials/icon.html" with name="calendar" %}
+            <input id="date-range-filter" type="text" placeholder="{% translate 'Select range...' %}" class="form-input" autocomplete="off">
+          </div>
           <input id="date-from-hidden" type="hidden" name="date_from" value="{{ date_from }}">
           <input id="date-to-hidden" type="hidden" name="date_to" value="{{ date_to }}">
         </div>
         {% if show_sort %}
         <div class="field">
-          <label for="sort" class="label">{% translate "Sort by" %}</label>
+          <div class="field-head"><label for="sort" class="label">{% translate "Sort by" %}</label></div>
           <select id="sort" name="sort" class="form-input">
             {% for value, label in sort_options %}<option value="{{ value }}"{% if value == sort %} selected{% endif %}>{{ label }}</option>{% endfor %}
           </select>
         </div>
         {% endif %}
       </div>
-      <div class="mt-4 flex flex-wrap gap-2">
-        <button type="submit" class="btn btn-primary">{% translate "Apply Filters" %}</button>
-        <a href="{{ reset_url }}" class="btn btn-ghost">{% translate "Reset" %}</a>
-        {% if show_export %}
-        <button type="submit" name="export" value="csv" class="btn btn-secondary sm:ml-auto">{% include "partials/icon.html" with name="download" %}{% translate "Export CSV" %}</button>
-        {% endif %}
+      <div class="filter-foot">
+        {% if show_export %}<button type="submit" name="export" value="csv" class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="download" %}{% translate "Export CSV" %}</button>{% endif %}
+        <span class="spacer"></span>
+        <a href="{{ reset_url }}" class="btn btn-secondary btn-sm">{% translate "Reset" %}</a>
+        <button type="submit" class="btn btn-primary btn-sm">{% include "partials/icon.html" with name="check" %}{% translate "Apply Filters" %}</button>
       </div>
     </div>
   </div>
 </form>
+
+{% if selected_category_ids or selected_year or date_from or date_to %}
+<div class="chip-row" aria-label="{% translate 'Active filters' %}">
+  {% if selected_category_ids %}
+  <a href="{% query_with category='' filter_mode='' %}" class="chip" title="{% translate 'Remove filter' %}">
+    <span><b>{% if filter_mode == "exclude" %}{% translate "Excluding" %}{% else %}{% translate "Categories" %}{% endif %}:</b> {% blocktranslate count counter=selected_category_ids|length %}{{ counter }} selected{% plural %}{{ counter }} selected{% endblocktranslate %}</span>
+    <span class="chip-x">{% include "partials/icon.html" with name="x" %}</span>
+  </a>
+  {% endif %}
+  {% if selected_year %}
+  <a href="{% query_with year='' %}" class="chip" title="{% translate 'Remove filter' %}"><span><b>{% translate "Year" %}:</b> {{ selected_year }}</span><span class="chip-x">{% include "partials/icon.html" with name="x" %}</span></a>
+  {% endif %}
+  {% if date_from or date_to %}
+  <a href="{% query_with date_from='' date_to='' %}" class="chip" title="{% translate 'Remove filter' %}"><span><b>{% translate "Dates" %}:</b> {{ date_from|default:"…" }} → {{ date_to|default:"…" }}</span><span class="chip-x">{% include "partials/icon.html" with name="x" %}</span></a>
+  {% endif %}
+  <a href="{{ reset_url }}" class="chip-clear">{% translate "Clear all" %}</a>
+</div>
+{% endif %}

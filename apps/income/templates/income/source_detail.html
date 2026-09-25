@@ -47,11 +47,11 @@
       <div class="card-header">
         <h2 class="card-title">{% translate "Payout Timeline" %}</h2>
         <form method="get" class="flex flex-wrap items-end gap-2" x-data="{ more: {{ date_from|yesno:'true,false' }} }">
-          <select name="year" class="form-input !min-h-[2.375rem] !w-auto !py-1.5 !text-sm" aria-label="{% translate 'Year' %}" onchange="this.form.submit()">
+          <select name="year" class="form-input input-compact !w-auto" aria-label="{% translate 'Year' %}" onchange="this.form.submit()">
             <option value="">{% translate "All Years" %}</option>
             {% for yr in year_options %}<option value="{{ yr }}"{% if selected_year == yr %} selected{% endif %}>{{ yr }}</option>{% endfor %}
           </select>
-          <select name="month" class="form-input !min-h-[2.375rem] !w-auto !py-1.5 !text-sm" aria-label="{% translate 'Month' %}" onchange="this.form.submit()">
+          <select name="month" class="form-input input-compact !w-auto" aria-label="{% translate 'Month' %}" onchange="this.form.submit()">
             <option value="">{% translate "All Months" %}</option>
             {% for num, mdate in month_choices %}<option value="{{ num }}"{% if selected_month == num %} selected{% endif %}>{{ mdate|date:"F" }}</option>{% endfor %}
           </select>
@@ -62,7 +62,7 @@
             <a href="{% url 'income_source_statement' source.pk %}?{{ request.GET.urlencode }}" class="icon-btn" title="{% translate 'Statement' %}" aria-label="{% translate 'Printable statement' %}">{% include "partials/icon.html" with name="printer" %}</a>
           </div>
           <div class="flex w-full gap-2" x-show="more" x-cloak>
-            <input id="date-range-filter" type="text" placeholder="{% translate 'Select range...' %}" autocomplete="off" class="form-input !min-h-[2.375rem] !py-1.5 !text-sm">
+            <input id="date-range-filter" type="text" placeholder="{% translate 'Select range...' %}" autocomplete="off" class="form-input input-compact">
             <input id="date-from-hidden" type="hidden" name="date_from" value="{{ date_from }}">
             <input id="date-to-hidden" type="hidden" name="date_to" value="{{ date_to }}">
             <button type="submit" class="btn btn-secondary btn-sm">{% translate "Apply" %}</button>
@@ -110,7 +110,7 @@
           <form method="post" class="card-body form-stack">
             {% csrf_token %}
             {% for field in form %}{% include "partials/field.html" %}{% endfor %}
-            <button type="submit" class="btn btn-primary btn-block">{% translate "Save Payout" %}</button>
+            <button type="submit" class="btn btn-primary btn-lg btn-block">{% translate "Save Payout" %}</button>
           </form>
         </div>
       </section>

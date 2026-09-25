@@ -115,7 +115,7 @@
           <form method="post" class="card-body form-stack">
             {% csrf_token %}
             {% for field in form %}{% include "partials/field.html" %}{% endfor %}
-            <button type="submit" class="btn btn-primary btn-block">{% translate "Record Settlement" %}</button>
+            <button type="submit" class="btn btn-primary btn-lg btn-block">{% translate "Record Settlement" %}</button>
           </form>
         </div>
       </section>
