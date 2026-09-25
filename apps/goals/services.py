@@ -1,7 +1,7 @@
 """Goal progress, pace and plan. Kept apart from views so the goals pages
 and the Net Worth card always agree."""
 import calendar
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal, ROUND_CEILING
 
 from django.db.models import Case, DecimalField, F, Min, Q, Sum, Value, When
@@ -57,9 +57,15 @@ def progress(goal, today=None):
             t=Coalesce(Sum(_signed()), Value(0, output_field=DecimalField())))["t"]
         pace = recent / months_between(since, today)
 
+    # An active auto-save is a commitment: count it even before its first
+    # deposit lands, so a freshly scheduled goal reads "On track".
+    schedule = _autosave(goal)
+    if schedule and schedule.is_active:
+        pace = max(pace, schedule.per_month)
+
     info = {
         "goal": goal, "saved": saved, "target": target, "remaining": remaining,
-        "pct": pct, "bar": max(0, min(pct, 100)), "pace": pace,
+        "pct": pct, "bar": max(0, min(pct, 100)), "pace": pace, "autosave": schedule,
         "needed_per_month": None, "months_left": None, "projected_date": None,
     }
     if saved >= target:
@@ -89,11 +95,20 @@ def progress(goal, today=None):
     return info
 
 
+def _autosave(goal):
+    from .models import AutoSave
+
+    try:
+        return goal.autosave
+    except AutoSave.DoesNotExist:
+        return None
+
+
 TONES = {"reached": "good", "on_track": "good", "saving": "info", "behind": "warn", "overdue": "critical", "idle": "muted"}
 
 
 def goal_rows(user, status="active", today=None):
-    qs = with_saved(SavingsGoal.objects.filter(user=user))
+    qs = with_saved(SavingsGoal.objects.filter(user=user).select_related("autosave"))
     if status == "archived":
         qs = qs.filter(is_active=False)
     else:
@@ -136,3 +151,69 @@ def totals(user):
 
 def last_12():
     return last_n_month_starts(12)
+
+
+# ── Auto-save ──────────────────────────────────────────────────────────
+
+def saved_amount(goal):
+    return goal.entries.aggregate(t=Coalesce(Sum(_signed()), Value(0, output_field=DecimalField())))["t"]
+
+
+def sync_reached(goal, today=None):
+    """Stamp the day a goal is reached (clear it if money is taken back out).
+    Returns True when it has just been reached."""
+    reached = saved_amount(goal) >= goal.target_amount
+    if reached and not goal.reached_at:
+        goal.reached_at = today or timezone.localdate()
+        goal.save(update_fields=["reached_at", "updated_at"])
+        schedule = _autosave(goal)
+        if schedule and schedule.is_active:  # nothing left to save for
+            schedule.is_active = False
+            schedule.save(update_fields=["is_active", "updated_at"])
+        return True
+    if not reached and goal.reached_at:
+        goal.reached_at = None
+        goal.save(update_fields=["reached_at", "updated_at"])
+    return False
+
+
+def run_autosave(schedule, today=None):
+    """Post every deposit that's due. Returns (deposits created, goal just reached)."""
+    from apps.income.models import RECURRING_CATCHUP_LIMIT
+
+    today = today or timezone.localdate()
+    goal = schedule.goal
+    created = 0
+    remaining = goal.target_amount - saved_amount(goal)
+    while schedule.is_active and goal.is_active and created < RECURRING_CATCHUP_LIMIT:
+        when = schedule.effective_date(schedule.next_run_date)
+        if when > today:
+            break
+        if remaining <= 0:
+            break
+        amount = min(schedule.amount, remaining)  # never overfill
+        GoalEntry.objects.create(goal=goal, kind=GoalEntry.DEPOSIT, amount=amount, date=when, is_auto=True)
+        remaining -= amount
+        schedule.next_run_date = schedule.advance(schedule.next_run_date)
+        created += 1
+    if remaining <= 0 and schedule.is_active:
+        schedule.is_active = False  # goal reached: nothing more to save
+    if created or not schedule.is_active:
+        schedule.save(update_fields=["next_run_date", "is_active", "updated_at"])
+    return created, (sync_reached(goal, today) if created else False)
+
+
+def run_due_autosaves(user, today=None):
+    """Catch up every due schedule for this user. Returns (deposits, names of goals just reached)."""
+    from .models import AutoSave
+
+    today = today or timezone.localdate()
+    due = AutoSave.objects.filter(goal__user=user, goal__is_active=True, is_active=True,
+                                  next_run_date__lte=today + timedelta(days=2)).select_related("goal")
+    total, reached = 0, []
+    for schedule in due:
+        n, just_reached = run_autosave(schedule, today)
+        total += n
+        if just_reached:
+            reached.append(schedule.goal.name)
+    return total, reached

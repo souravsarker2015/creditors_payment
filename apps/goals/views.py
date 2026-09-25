@@ -7,9 +7,9 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
-from .forms import EntryForm, GoalForm
-from .models import GoalEntry, SavingsGoal
-from .services import TONES, goal_rows, last_12, monthly_net, progress, totals
+from .forms import AutoSaveForm, EntryForm, GoalForm
+from .models import AutoSave, GoalEntry, SavingsGoal
+from .services import TONES, goal_rows, last_12, monthly_net, progress, run_due_autosaves, sync_reached, totals
 
 STATUSES = ("active", "reached", "archived")
 
@@ -23,6 +23,7 @@ def _next(request, fallback):
 
 @login_required
 def goal_list_view(request):
+    catch_up_autosaves(request)
     status = request.GET.get("status", "active")
     if status not in STATUSES:
         status = "active"
@@ -34,6 +35,16 @@ def goal_list_view(request):
         "totals": totals(request.user),
         "entry_form": EntryForm(),
     })
+
+
+def catch_up_autosaves(request):
+    """Post any auto-save deposits that fell due since the last visit."""
+    created, reached = run_due_autosaves(request.user)
+    if created:
+        from django.utils.translation import ngettext
+        messages.info(request, ngettext("%(count)s auto-save deposit was added.", "%(count)s auto-save deposits were added.", created) % {"count": created})
+    for name in reached:
+        messages.success(request, _("🎉 Goal reached: %(name)s! Its auto-save has stopped.") % {"name": name})
 
 
 def _goal_form(request, goal=None):
@@ -63,6 +74,7 @@ def goal_edit_view(request, pk):
 
 @login_required
 def goal_detail_view(request, pk):
+    catch_up_autosaves(request)
     goal = get_object_or_404(SavingsGoal, pk=pk, user=request.user)
     form = EntryForm(goal=goal)
     if request.method == "POST":
@@ -72,9 +84,11 @@ def goal_detail_view(request, pk):
             return redirect(_next(request, reverse("goal_detail", args=[goal.pk])))
     info = progress(goal)
     info["tone"] = TONES[info["state"]]
+    schedule = info["autosave"]
+    autosave_form = AutoSaveForm(instance=schedule, plan=info["needed_per_month"])
     months = last_12()
     return render(request, "goals/goal_detail.html", {
-        "goal": goal, "p": info, "form": form,
+        "goal": goal, "p": info, "form": form, "autosave_form": autosave_form,
         "entries": goal.entries.all()[:100],
         "months": months, "monthly": monthly_net(goal, months),
     })
@@ -85,7 +99,7 @@ def _save_entry(request, goal, form):
     entry = form.save(commit=False)
     entry.goal = goal
     entry.save()
-    _sync_reached(goal)
+    sync_reached(goal)
     if goal.reached_at and not was_reached:
         messages.success(request, _("🎉 Goal reached: %(name)s! You saved the full %(amount)s.") % {
             "name": goal.name, "amount": f"৳{goal.target_amount:,.0f}"})
@@ -93,17 +107,6 @@ def _save_entry(request, goal, form):
         messages.success(request, _("৳%(amount)s added to %(name)s.") % {"amount": f"{entry.amount:,.0f}", "name": goal.name})
     else:
         messages.success(request, _("৳%(amount)s taken out of %(name)s.") % {"amount": f"{entry.amount:,.0f}", "name": goal.name})
-
-
-def _sync_reached(goal):
-    """Stamp the day a goal is reached; clear it if money is taken back out."""
-    reached = progress(goal)["state"] == "reached"
-    if reached and not goal.reached_at:
-        goal.reached_at = timezone.localdate()
-        goal.save(update_fields=["reached_at", "updated_at"])
-    elif not reached and goal.reached_at:
-        goal.reached_at = None
-        goal.save(update_fields=["reached_at", "updated_at"])
 
 
 @login_required
@@ -128,7 +131,7 @@ def entry_edit_view(request, pk):
     form = EntryForm(request.POST or None, instance=entry, goal=goal)
     if request.method == "POST" and form.is_valid():
         form.save()
-        _sync_reached(goal)
+        sync_reached(goal)
         messages.success(request, _("Entry updated."))
         return redirect("goal_detail", pk=goal.pk)
     return render(request, "goals/entry_form.html", {
@@ -142,7 +145,7 @@ def entry_delete_view(request, pk):
     entry = get_object_or_404(GoalEntry, pk=pk, goal__user=request.user)
     goal = entry.goal
     entry.delete()
-    _sync_reached(goal)
+    sync_reached(goal)
     messages.success(request, _("Entry deleted."))
     return redirect("goal_detail", pk=goal.pk)
 
@@ -165,3 +168,54 @@ def goal_delete_view(request, pk):
     goal.delete()
     messages.success(request, _("Goal deleted: %(name)s.") % {"name": name})
     return redirect("goal_list")
+
+
+@login_required
+@require_POST
+def autosave_save_view(request, pk):
+    """Create or update the goal's auto-save schedule."""
+    goal = get_object_or_404(SavingsGoal, pk=pk, user=request.user)
+    schedule = AutoSave.objects.filter(goal=goal).first()
+    form = AutoSaveForm(request.POST, instance=schedule)
+    if form.is_valid():
+        obj = form.save(commit=False)
+        obj.goal = goal
+        obj.is_active = True
+        obj.save()
+        messages.success(request, _("Auto-save set: ৳%(amount)s %(freq)s, next on %(date)s.") % {
+            "amount": f"{obj.amount:,.0f}", "freq": obj.get_frequency_display().lower(),
+            "date": obj.next_effective_date.strftime("%d %b %Y")})
+        catch_up_autosaves(request)  # a schedule starting today posts right away
+    else:
+        for errors in form.errors.values():
+            for e in errors:
+                messages.error(request, e)
+    return redirect("goal_detail", pk=goal.pk)
+
+
+@login_required
+@require_POST
+def autosave_toggle_view(request, pk):
+    schedule = get_object_or_404(AutoSave, goal__pk=pk, goal__user=request.user)
+    if schedule.is_active:
+        schedule.is_active = False
+        messages.success(request, _("Auto-save paused."))
+    else:
+        # Resume from the next upcoming date — never back-fill the paused weeks.
+        today = timezone.localdate()
+        while schedule.effective_date(schedule.next_run_date) < today:
+            schedule.next_run_date = schedule.advance(schedule.next_run_date)
+        schedule.is_active = True
+        messages.success(request, _("Auto-save resumed. Next deposit on %(date)s.") % {
+            "date": schedule.next_effective_date.strftime("%d %b %Y")})
+    schedule.save(update_fields=["is_active", "next_run_date", "updated_at"])
+    return redirect("goal_detail", pk=pk)
+
+
+@login_required
+@require_POST
+def autosave_delete_view(request, pk):
+    schedule = get_object_or_404(AutoSave, goal__pk=pk, goal__user=request.user)
+    schedule.delete()
+    messages.success(request, _("Auto-save removed. Deposits it already made are kept."))
+    return redirect("goal_detail", pk=pk)

@@ -3720,3 +3720,95 @@ msgstr "নির্দিষ্ট কিছুর জন্য টাকা �
 
 msgid "New Goal"
 msgstr "নতুন লক্ষ্য"
+
+msgid "First deposit on"
+msgstr "প্রথম জমার তারিখ"
+
+msgid "Handy when it matches a salary paid before the weekend."
+msgstr "সাপ্তাহিক ছুটির আগে বেতন পেলে কাজে লাগে।"
+
+msgid "Your monthly plan is %(plan)s."
+msgstr "আপনার মাসিক পরিকল্পনা %(plan)s।"
+
+msgid "Next deposit on"
+msgstr "পরবর্তী জমার তারিখ"
+
+msgid "Pick today or a later date. Past deposits can be added by hand."
+msgstr "আজ বা পরের কোনো তারিখ বাছুন। আগের জমা হাতে যোগ করা যায়।"
+
+msgid "Amount each time"
+msgstr "প্রতিবারের পরিমাণ"
+
+msgid "How often"
+msgstr "কতদিন পরপর"
+
+msgid "Move to the previous working day if it falls on a Friday or Saturday"
+msgstr "শুক্র বা শনিবার পড়লে আগের কর্মদিবসে সরিয়ে নিন"
+
+msgid "Auto-save"
+msgstr "স্বয়ংক্রিয় সঞ্চয়"
+
+msgid "On"
+msgstr "চালু"
+
+msgid "Next deposit: %(date)s"
+msgstr "পরবর্তী জমা: %(date)s"
+
+msgid "Covers your monthly plan of %(plan)s."
+msgstr "আপনার মাসিক পরিকল্পনা %(plan)s পূরণ করে।"
+
+msgid "That's about %(amount)s a month — the plan needs %(plan)s."
+msgstr "এটি মাসে প্রায় %(amount)s — পরিকল্পনায় দরকার %(plan)s।"
+
+msgid "Stopped automatically — this goal is reached."
+msgstr "স্বয়ংক্রিয়ভাবে বন্ধ হয়েছে — লক্ষ্য পূরণ হয়েছে।"
+
+msgid "Paused. Nothing is added until you resume."
+msgstr "বিরতিতে আছে। আবার চালু না করা পর্যন্ত কিছু জমা হবে না।"
+
+msgid "Remove auto-save? Deposits it already made are kept."
+msgstr "স্বয়ংক্রিয় সঞ্চয় সরাবেন? আগে যা জমা হয়েছে তা থেকে যাবে।"
+
+msgid "Put money in automatically on a schedule — for example on every salary day. Deposits are added when due, even if you haven't opened the app."
+msgstr "নির্দিষ্ট সময় পরপর নিজে থেকেই টাকা জমান — যেমন প্রতি বেতনের দিনে। অ্যাপ না খুললেও নির্ধারিত দিনে জমা যোগ হয়ে যাবে।"
+
+msgid "Set up auto-save"
+msgstr "স্বয়ংক্রিয় সঞ্চয় চালু করুন"
+
+msgid "This goal is reached — no auto-save needed."
+msgstr "এই লক্ষ্য পূরণ হয়েছে — স্বয়ংক্রিয় সঞ্চয়ের দরকার নেই।"
+
+msgid "Save changes"
+msgstr "পরিবর্তন সংরক্ষণ করুন"
+
+msgid "Start auto-save"
+msgstr "স্বয়ংক্রিয় সঞ্চয় শুরু করুন"
+
+msgid "Added by auto-save"
+msgstr "স্বয়ংক্রিয় সঞ্চয়ে যোগ হয়েছে"
+
+msgid "Auto"
+msgstr "স্বয়ংক্রিয়"
+
+msgid "Auto-save %(amount)s %(freq)s · next %(date)s"
+msgstr "স্বয়ংক্রিয় %(amount)s %(freq)s · পরবর্তী %(date)s"
+
+msgid "%(count)s auto-save deposit was added."
+msgid_plural "%(count)s auto-save deposits were added."
+msgstr[0] "%(count)sটি স্বয়ংক্রিয় জমা যোগ হয়েছে।"
+msgstr[1] "%(count)sটি স্বয়ংক্রিয় জমা যোগ হয়েছে।"
+
+msgid "🎉 Goal reached: %(name)s! Its auto-save has stopped."
+msgstr "🎉 লক্ষ্য পূরণ: %(name)s! এর স্বয়ংক্রিয় সঞ্চয় বন্ধ হয়েছে।"
+
+msgid "Auto-save set: ৳%(amount)s %(freq)s, next on %(date)s."
+msgstr "স্বয়ংক্রিয় সঞ্চয় সেট হয়েছে: ৳%(amount)s %(freq)s, পরবর্তী %(date)s।"
+
+msgid "Auto-save paused."
+msgstr "স্বয়ংক্রিয় সঞ্চয় বিরতিতে।"
+
+msgid "Auto-save resumed. Next deposit on %(date)s."
+msgstr "স্বয়ংক্রিয় সঞ্চয় আবার চালু। পরবর্তী জমা %(date)s।"
+
+msgid "Auto-save removed. Deposits it already made are kept."
+msgstr "স্বয়ংক্রিয় সঞ্চয় সরানো হয়েছে। আগে যা জমা হয়েছে তা থেকে যাবে।"

@@ -56,6 +56,9 @@
         <p class="budget-figure"><strong>{{ p.saved|money }}</strong> <span>{% blocktranslate with target=p.target|money %}of {{ target }}{% endblocktranslate %}</span></p>
         <div class="meter meter-lg goal-meter"><span style="width: {{ p.bar }}%"></span></div>
         <p class="goal-plan" data-tone="{{ p.tone }}">{% include "goals/_plan.html" %}</p>
+        {% if p.autosave and p.autosave.is_active %}
+        <p class="goal-auto">{% include "partials/icon.html" with name="repeat" %}{% blocktranslate with amount=p.autosave.amount|money freq=p.autosave.get_frequency_display|lower date=p.autosave.next_effective_date|date:"j M" %}Auto-save {{ amount }} {{ freq }} · next {{ date }}{% endblocktranslate %}</p>
+        {% endif %}
       </div>
 
       <div class="entity-foot">

@@ -1,0 +1,63 @@
+{% load i18n %}{% comment %}Auto-save panel on the goal page. Needs: goal, p, autosave_form.{% endcomment %}
+{% with s=p.autosave %}
+<section class="card autosave-card" x-data="{ editing: {% if s %}false{% else %}{{ autosave_form.errors|yesno:'true,false' }}{% endif %} }">
+  <div class="card-header">
+    <h2 class="card-title flex items-center gap-2"><span class="h-[1.125rem] w-[1.125rem]" style="color: var(--accent);">{% include "partials/icon.html" with name="repeat" %}</span>{% translate "Auto-save" %}</h2>
+    {% if s %}<span class="badge badge-dot" data-tone="{% if s.is_active %}good{% else %}muted{% endif %}">{% if s.is_active %}{% translate "On" %}{% else %}{% translate "Paused" %}{% endif %}</span>{% endif %}
+  </div>
+
+  {% if s %}
+  <div class="card-body !pt-3" x-show="!editing">
+    <p class="autosave-amount">{{ s.amount|money }} <span>{{ s.get_frequency_display|lower }}</span></p>
+    {% if s.is_active %}
+      <p class="help">{% blocktranslate with date=s.next_effective_date|date:"l, j M Y" %}Next deposit: {{ date }}{% endblocktranslate %}</p>
+      {% if p.needed_per_month %}
+        {% if s.per_month >= p.needed_per_month %}
+          <p class="autosave-note" data-tone="good">{% include "partials/icon.html" with name="check" %}{% blocktranslate with plan=p.needed_per_month|money %}Covers your monthly plan of {{ plan }}.{% endblocktranslate %}</p>
+        {% else %}
+          <p class="autosave-note" data-tone="warn">{% include "partials/icon.html" with name="alert" %}{% blocktranslate with amount=s.per_month|money plan=p.needed_per_month|money %}That's about {{ amount }} a month — the plan needs {{ plan }}.{% endblocktranslate %}</p>
+        {% endif %}
+      {% endif %}
+    {% elif p.state == "reached" %}
+      <p class="help">{% translate "Stopped automatically — this goal is reached." %}</p>
+    {% else %}
+      <p class="help">{% translate "Paused. Nothing is added until you resume." %}</p>
+    {% endif %}
+    <div class="mt-4 flex flex-wrap gap-2">
+      {% if p.state != "reached" %}
+      <form method="post" action="{% url 'goal_autosave_toggle' goal.pk %}">{% csrf_token %}
+        <button type="submit" class="btn btn-secondary btn-sm">{% if s.is_active %}{% include "partials/icon.html" with name="pause" %}{% translate "Pause" %}{% else %}{% include "partials/icon.html" with name="play" %}{% translate "Resume" %}{% endif %}</button>
+      </form>
+      <button type="button" class="btn btn-ghost btn-sm" @click="editing = true">{% include "partials/icon.html" with name="edit" %}{% translate "Edit" %}</button>
+      {% endif %}
+      <form method="post" action="{% url 'goal_autosave_delete' goal.pk %}" data-confirm="{% translate 'Remove auto-save? Deposits it already made are kept.' %}">{% csrf_token %}
+        <button type="submit" class="btn btn-ghost btn-sm" style="color: var(--status-critical);">{% include "partials/icon.html" with name="trash" %}{% translate "Remove" %}</button>
+      </form>
+    </div>
+  </div>
+  {% elif p.state != "reached" %}
+  <div class="card-body !pt-3" x-show="!editing">
+    <p class="help">{% translate "Put money in automatically on a schedule — for example on every salary day. Deposits are added when due, even if you haven't opened the app." %}</p>
+    <button type="button" class="btn btn-primary btn-sm mt-3" @click="editing = true">{% include "partials/icon.html" with name="repeat" %}{% translate "Set up auto-save" %}</button>
+  </div>
+  {% else %}
+  <div class="card-body !pt-3"><p class="help">{% translate "This goal is reached — no auto-save needed." %}</p></div>
+  {% endif %}
+
+  {% if p.state != "reached" %}
+  <form method="post" action="{% url 'goal_autosave' goal.pk %}" class="card-body form-stack !pt-3" x-show="editing" x-cloak novalidate>
+    {% csrf_token %}
+    {% with field=autosave_form.amount %}{% include "partials/field.html" %}{% endwith %}
+    <div class="form-grid-2">
+      {% with field=autosave_form.frequency %}{% include "partials/field.html" %}{% endwith %}
+      {% with field=autosave_form.next_run_date %}{% include "partials/field.html" %}{% endwith %}
+    </div>
+    {% with field=autosave_form.skip_weekend %}{% include "partials/field.html" %}{% endwith %}
+    <div class="flex gap-2">
+      <button type="submit" class="btn btn-primary flex-1">{% include "partials/icon.html" with name="check" %}{% if s %}{% translate "Save changes" %}{% else %}{% translate "Start auto-save" %}{% endif %}</button>
+      <button type="button" class="btn btn-ghost" @click="editing = false">{% translate "Cancel" %}</button>
+    </div>
+  </form>
+  {% endif %}
+</section>
+{% endwith %}

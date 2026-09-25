@@ -79,7 +79,7 @@
             {% if e.kind == 'DEPOSIT' %}<span class="ledger-icon" data-tone="good">{% include "partials/icon.html" with name="plus" %}</span>
             {% else %}<span class="ledger-icon" data-tone="warn">{% include "partials/icon.html" with name="arrow-up" %}</span>{% endif %}
             <div class="ledger-main">
-              <p class="ledger-title">{{ e.get_kind_display }}</p>
+              <p class="ledger-title">{{ e.get_kind_display }}{% if e.is_auto %} <span class="badge" data-tone="accent" data-tip="{% translate 'Added by auto-save' %}">{% include "partials/icon.html" with name="repeat" %}{% translate "Auto" %}</span>{% endif %}</p>
               <p class="ledger-meta">{{ e.date|date:"j M Y" }}{% if e.note %} · {{ e.note }}{% endif %}</p>
             </div>
             <div class="ledger-end">
@@ -99,6 +99,7 @@
 
     <aside class="detail-side">
       {% if goal.is_active %}
+      {% include "goals/_autosave_card.html" %}
       <section class="card" x-data="{ open: {{ form.errors|yesno:'true,false' }} }">
         <button type="button" class="collapse-toggle" @click="open = !open" :aria-expanded="open.toString()">
           <span class="flex items-center gap-2"><span class="h-5 w-5" style="color: var(--accent);">{% include "partials/icon.html" with name="plus" %}</span>{% translate "Add or take out money" %}</span>

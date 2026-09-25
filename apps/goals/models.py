@@ -1,7 +1,12 @@
+from datetime import timedelta
+from decimal import Decimal
+
 from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+
+from apps.income.models import WEEKEND_WEEKDAYS, RecurringFrequency
 
 
 class GoalColor(models.TextChoices):
@@ -52,6 +57,7 @@ class GoalEntry(models.Model):
     amount = models.DecimalField(_("Amount"), max_digits=12, decimal_places=2, validators=[MinValueValidator(1)])
     date = models.DateField(_("Date"))
     note = models.CharField(_("Note"), max_length=200, blank=True, default="")
+    is_auto = models.BooleanField(default=False, editable=False, help_text="Created by the goal's auto-save schedule.")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -60,3 +66,57 @@ class GoalEntry(models.Model):
     @property
     def signed_amount(self):
         return self.amount if self.kind == self.DEPOSIT else -self.amount
+
+
+class AutoSave(models.Model):
+    """Recurring deposits into one goal (e.g. ৳5,000 on every salary day).
+
+    Works like recurring income: deposits are posted when due, and any missed
+    while the app wasn't opened are filled in next time. The schedule stays
+    anchored to its dates, so a Friday that moves to Thursday doesn't drift
+    the following ones. It never overfills a goal and stops once it's reached.
+    """
+
+    goal = models.OneToOneField(SavingsGoal, on_delete=models.CASCADE, related_name="autosave")
+    amount = models.DecimalField(_("Amount each time"), max_digits=12, decimal_places=2, validators=[MinValueValidator(1)])
+    frequency = models.CharField(_("How often"), max_length=10, choices=RecurringFrequency.choices, default=RecurringFrequency.MONTHLY)
+    next_run_date = models.DateField(_("Next deposit on"))
+    skip_weekend = models.BooleanField(
+        _("Move to the previous working day if it falls on a Friday or Saturday"), default=False,
+    )
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.goal} · {self.get_frequency_display()} · ৳{self.amount}"
+
+    def advance(self, d):
+        from .services import add_months
+
+        return {
+            RecurringFrequency.WEEKLY: lambda: d + timedelta(days=7),
+            RecurringFrequency.BIWEEKLY: lambda: d + timedelta(days=14),
+            RecurringFrequency.MONTHLY: lambda: add_months(d, 1),
+            RecurringFrequency.QUARTERLY: lambda: add_months(d, 3),
+        }.get(self.frequency, lambda: add_months(d, 12))()
+
+    def effective_date(self, d):
+        while self.skip_weekend and d.weekday() in WEEKEND_WEEKDAYS:
+            d -= timedelta(days=1)
+        return d
+
+    @property
+    def next_effective_date(self):
+        return self.effective_date(self.next_run_date)
+
+    @property
+    def per_month(self):
+        """The schedule expressed as a monthly amount, to compare with the plan."""
+        factor = {
+            RecurringFrequency.WEEKLY: Decimal(52) / 12,
+            RecurringFrequency.BIWEEKLY: Decimal(26) / 12,
+            RecurringFrequency.MONTHLY: Decimal(1),
+            RecurringFrequency.QUARTERLY: Decimal(1) / 3,
+        }.get(self.frequency, Decimal(1) / 12)
+        return self.amount * factor

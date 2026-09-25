@@ -2,7 +2,7 @@ from django import forms
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from .models import GoalEntry, SavingsGoal
+from .models import AutoSave, GoalEntry, SavingsGoal
 
 
 class GoalForm(forms.ModelForm):
@@ -57,3 +57,38 @@ class EntryForm(forms.ModelForm):
             if data["amount"] > available:
                 self.add_error("amount", _("Only %(amount)s is in this goal.") % {"amount": f"৳{available:,.0f}"})
         return data
+
+
+class AutoSaveForm(forms.ModelForm):
+    class Meta:
+        model = AutoSave
+        fields = ["amount", "frequency", "next_run_date", "skip_weekend"]
+        labels = {"next_run_date": _("First deposit on")}
+        widgets = {
+            "amount": forms.NumberInput(attrs={"class": "form-input", "placeholder": "0", "min": "1", "step": "1"}),
+            "frequency": forms.Select(attrs={"class": "form-input"}),
+            "next_run_date": forms.DateInput(attrs={"class": "form-input datepicker"}),
+        }
+        help_texts = {"skip_weekend": _("Handy when it matches a salary paid before the weekend.")}
+
+    def __init__(self, *args, plan=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if plan:
+            from apps.core.templatetags.ui import money
+            self.fields["amount"].help_text = _("Your monthly plan is %(plan)s.") % {"plan": money(plan)}
+        if self.instance.pk:
+            self.fields["next_run_date"].label = _("Next deposit on")
+            a = self.instance.amount
+            if not self.is_bound and a == a.to_integral_value():
+                self.initial["amount"] = int(a)  # "18000", not "18000.00"
+        elif not self.is_bound:
+            # Sensible defaults: the goal's monthly plan, starting on the 1st of next month.
+            from .services import month_start
+            self.initial.setdefault("amount", plan)
+            self.initial.setdefault("next_run_date", month_start(timezone.localdate(), 1))
+
+    def clean_next_run_date(self):
+        d = self.cleaned_data["next_run_date"]
+        if d < timezone.localdate():
+            raise forms.ValidationError(_("Pick today or a later date. Past deposits can be added by hand."))
+        return d

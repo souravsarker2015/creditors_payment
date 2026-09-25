@@ -32,6 +32,8 @@ def _sum(queryset):
 @login_required
 def networth_view(request):
     user = request.user
+    from apps.goals.views import catch_up_autosaves
+    catch_up_autosaves(request)
 
     # ── Balances: what would be settled if everyone paid up today ──
     #
