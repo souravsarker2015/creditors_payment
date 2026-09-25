@@ -16,6 +16,7 @@ from django.utils import dateformat
 from django.utils.translation import gettext as _, gettext_lazy
 
 from .models import Debtor, DebtorCategory, Transaction, DUE_SOON_DAYS
+from apps.core.stats import ledger_extras
 from apps.core.status import apply_status_filter, toggle_active
 
 
@@ -213,7 +214,7 @@ def dashboard_view(request):
     # Rolling 12-month Lent vs Received trend.
     month_starts = _last_12_month_starts()
     monthly_totals = (
-        Transaction.objects.filter(debtor__user=request.user, date__gte=month_starts[0])
+        Transaction.objects.filter(debtor__in=debtors_base_qs, date__gte=month_starts[0])
         .annotate(month=TruncMonth("date"))
         .values("month", "transaction_type")
         .annotate(total=Sum("amount"))
@@ -241,6 +242,13 @@ def dashboard_view(request):
         "category_choices": DebtorCategory.choices,
         "filter_type": filter_type,
     }
+    context.update(ledger_extras(
+        entities=debtors_qs,
+        transactions=Transaction.objects.filter(debtor__in=debtors_base_qs),
+        out_type=Transaction.LEND, in_type=Transaction.RECEIVE, out_attr="d_lent", in_attr="d_received",
+        detail_urlname="debtor_detail", overdue=overdue_debtors,
+        trend_out=trend_lent, trend_in=trend_received,
+    ))
     return render(request, "debtors/dashboard.html", context)
 
 

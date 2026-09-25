@@ -13,6 +13,10 @@ from django.utils.translation import gettext as _, gettext_lazy, ngettext
 from datetime import date as date_cls
 
 from .models import ExpenseCategory, Expense, RecurringExpense, generate_due_recurring_expense
+from django.urls import reverse
+from django.utils import timezone
+from datetime import timedelta
+from apps.core.stats import month_compare, ranked, trend_summary
 from apps.core.status import apply_status_filter, active_or_current, toggle_active
 from .forms import ExpenseCategoryForm, ExpenseForm, RecurringExpenseForm
 
@@ -225,8 +229,35 @@ def dashboard_view(request):
     trend_labels = month_starts
     trend_spent = [float(total_by_month.get(d, 0) or 0) for d in month_starts]
 
+    # Category-filtered (but not date-filtered) base for the month figures,
+    # so "this month" always means the calendar month.
+    category_base = _apply_category_filters(
+        request.user.expenses.all(),
+        selected_category_ids=filters["selected_category_ids"],
+        filter_mode=filters["filter_mode"],
+    )
+    list_url = reverse("expense_list")
+    category_rank = ranked([
+        (row["category__name"] or _("General"), row["total"],
+         f"{list_url}?category={row['category__id']}" if row["category__id"] else None)
+        for row in filtered_expenses.values("category__id", "category__name").annotate(total=Sum("amount"))
+    ])
+    entry_count = filtered_expenses.count()
+    today = timezone.localdate()
+
     context = {
         "total_spent": total_spent,
+        "entry_count": entry_count,
+        "avg_entry": total_spent / entry_count if entry_count else 0,
+        "month": month_compare(category_base),
+        "largest": filtered_expenses.select_related("category").order_by("-amount", "-date").first(),
+        "category_rank": category_rank,
+        "trend_summary": trend_summary(trend_spent, month_starts),
+        "today": today,
+        "upcoming": request.user.recurring_expenses.filter(
+            is_active=True, next_run_date__lte=today + timedelta(days=30)
+        ).select_related("category").order_by("next_run_date")[:5],
+        "is_filtered": bool(filters["selected_category_ids"] or filters["selected_year"] or filters["date_from"] or filters["date_to"]),
         "category_labels": category_labels,
         "category_data": category_data,
         "trend_labels": trend_labels,

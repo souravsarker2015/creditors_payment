@@ -1,0 +1,5 @@
+{% load i18n %}{% comment %}
+Month-over-month chip. Needs `change` (apps.core.stats.change) and `good`
+("up" when growth is good, e.g. income; "down" when it's good, e.g.
+spending; "neutral" when neither).
+{% endcomment %}{% if change %}<span class="delta" data-tone="{% if change.direction == 'flat' or good == 'neutral' %}muted{% elif change.direction == good %}good{% else %}critical{% endif %}">{% if change.direction == "up" %}{% include "partials/icon.html" with name="arrow-up" %}{% elif change.direction == "down" %}{% include "partials/icon.html" with name="arrow-down" %}{% endif %}{% if change.times %}×{{ change.times }}{% elif change.pct is not None %}{{ change.pct }}%{% else %}{% translate "New" %}{% endif %}</span>{% endif %}

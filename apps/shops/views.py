@@ -33,6 +33,7 @@ def _csv_response(filename, header, rows):
     return response
 
 from .models import Shop, ShopCategory, Transaction, DUE_SOON_DAYS
+from apps.core.stats import ledger_extras
 from apps.core.status import apply_status_filter, toggle_active
 
 MONTH_CHOICES = [(i, date_cls(2000, i, 1)) for i in range(1, 13)]
@@ -265,7 +266,7 @@ def dashboard_view(request):
     # Rolling 12-month Purchased vs Paid trend.
     month_starts = _last_12_month_starts()
     monthly_totals = (
-        Transaction.objects.filter(shop__user=request.user, date__gte=month_starts[0])
+        Transaction.objects.filter(shop__in=shops_base_qs, date__gte=month_starts[0])
         .annotate(month=TruncMonth("date"))
         .values("month", "transaction_type")
         .annotate(total=Sum("amount"))
@@ -293,6 +294,13 @@ def dashboard_view(request):
         "category_choices": ShopCategory.choices,
         "filter_type": filter_type,
     }
+    context.update(ledger_extras(
+        entities=shops_qs,
+        transactions=Transaction.objects.filter(shop__in=shops_base_qs),
+        out_type=Transaction.PURCHASE, in_type=Transaction.PAYMENT, out_attr="s_due", in_attr="s_paid",
+        detail_urlname="shop_detail", overdue=overdue_shops,
+        trend_out=trend_due, trend_in=trend_paid,
+    ))
     return render(request, "shops/dashboard.html", context)
 
 

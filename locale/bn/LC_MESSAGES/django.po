@@ -2892,3 +2892,358 @@ msgstr "আপনার হিসাবগুলো এখানে দেখা
 
 msgid "Only on this device, for 7 days. Cleared when you log out."
 msgstr "শুধু এই ডিভাইসে, ৭ দিনের জন্য। লগ আউট করলে মুছে যায়।"
+
+msgid "%(counter)s contribution"
+msgid_plural "%(counter)s contributions"
+msgstr[0] "%(counter)sটি অবদান"
+msgstr[1] "%(counter)sটি অবদান"
+
+msgid "from %(counter)s contributor"
+msgid_plural "from %(counter)s contributors"
+msgstr[0] "%(counter)s জন অবদানকারীর কাছ থেকে"
+msgstr[1] "%(counter)s জন অবদানকারীর কাছ থেকে"
+
+msgid "This month"
+msgstr "এই মাস"
+
+msgid "Average contribution"
+msgstr "গড় অবদান"
+
+msgid "Per entry"
+msgstr "প্রতি এন্ট্রিতে"
+
+msgid "Monthly average"
+msgstr "মাসিক গড়"
+
+msgid "Months with funding, last 12"
+msgstr "গত ১২ মাসে যেসব মাসে তহবিল এসেছে"
+
+msgid "%(counter)s has given so far"
+msgid_plural "%(counter)s have given so far"
+msgstr[0] "%(counter)s জন এ পর্যন্ত দিয়েছেন"
+msgstr[1] "%(counter)s জন এ পর্যন্ত দিয়েছেন"
+
+msgid "Tap a contributor to see their history."
+msgstr "ইতিহাস দেখতে একজন অবদানকারীতে চাপুন।"
+
+msgid "Repaid this month"
+msgstr "এই মাসে ফেরত দেওয়া"
+
+msgid "Borrowed this month"
+msgstr "এই মাসে ধার নেওয়া"
+
+msgid "%(counter)s creditor past the due date"
+msgid_plural "%(counter)s creditors past the due date"
+msgstr[0] "%(counter)s জন পাওনাদারের তারিখ পেরিয়ে গেছে"
+msgstr[1] "%(counter)s জন পাওনাদারের তারিখ পেরিয়ে গেছে"
+
+msgid "Still to repay"
+msgstr "এখনও ফেরত দিতে হবে"
+
+msgid "creditor with a balance"
+msgid_plural "creditors with a balance"
+msgstr[0] "জন পাওনাদারের কাছে দেনা আছে"
+msgstr[1] "জন পাওনাদারের কাছে দেনা আছে"
+
+msgid "Who you owe"
+msgstr "কার কাছে দেনা"
+
+msgid "Nothing left to repay. Well done!"
+msgstr "ফেরত দেওয়ার আর কিছু নেই। দারুণ!"
+
+msgid "No repayments yet."
+msgstr "এখনও কিছু ফেরত দেওয়া হয়নি।"
+
+msgid "Money borrowed vs. paid back, month by month."
+msgstr "প্রতি মাসে ধার নেওয়া বনাম ফেরত দেওয়া।"
+
+msgid "Debt change"
+msgstr "দেনার পরিবর্তন"
+
+msgid "Collected so far"
+msgstr "এ পর্যন্ত আদায়"
+
+msgid "Collected this month"
+msgstr "এই মাসে আদায়"
+
+msgid "Lent this month"
+msgstr "এই মাসে ধার দেওয়া"
+
+msgid "%(counter)s debtor past the due date"
+msgid_plural "%(counter)s debtors past the due date"
+msgstr[0] "%(counter)s জন দেনাদারের তারিখ পেরিয়ে গেছে"
+msgstr[1] "%(counter)s জন দেনাদারের তারিখ পেরিয়ে গেছে"
+
+msgid "debtor still owes you"
+msgid_plural "debtors still owe you"
+msgstr[0] "জন দেনাদারের কাছে এখনও পাওনা"
+msgstr[1] "জন দেনাদারের কাছে এখনও পাওনা"
+
+msgid "Who owes you"
+msgstr "কার কাছে পাওনা"
+
+msgid "Everyone has paid you back."
+msgstr "সবাই টাকা ফেরত দিয়েছেন।"
+
+msgid "Nothing received back yet."
+msgstr "এখনও কিছু ফেরত পাওয়া যায়নি।"
+
+msgid "Money lent vs. received back, month by month."
+msgstr "প্রতি মাসে ধার দেওয়া বনাম ফেরত পাওয়া।"
+
+msgid "Owed to you change"
+msgstr "পাওনার পরিবর্তন"
+
+msgid "avg. %(amount)s each"
+msgstr "গড়ে প্রতিটি %(amount)s"
+
+msgid "Spent so far this calendar month, compared with the same days of last month. Follows the category filter."
+msgstr "এই মাসে এ পর্যন্ত খরচ, গত মাসের একই দিনগুলোর সাথে তুলনা করে। ক্যাটাগরি ফিল্টার মেনে চলে।"
+
+msgid "%(amount)s a day on average"
+msgstr "দিনে গড়ে %(amount)s"
+
+msgid "Months with spending, last 12"
+msgstr "গত ১২ মাসে যেসব মাসে খরচ হয়েছে"
+
+msgid "Largest expense"
+msgstr "সবচেয়ে বড় খরচ"
+
+msgid "Tap a category to see its expenses."
+msgstr "খরচ দেখতে একটি ক্যাটাগরিতে চাপুন।"
+
+msgid "Recurring expenses due in the next 30 days."
+msgstr "আগামী ৩০ দিনে আসছে এমন পুনরাবৃত্ত খরচ।"
+
+msgid "No recurring expenses due soon. Set up rent or bills once and they're logged for you."
+msgstr "শীঘ্রই কোনো পুনরাবৃত্ত খরচ নেই। ভাড়া বা বিল একবার সেট করুন, তারপর নিজে থেকেই লেখা হবে।"
+
+msgid "Add recurring expense"
+msgstr "পুনরাবৃত্ত খরচ যোগ করুন"
+
+msgid "Follows the category filter."
+msgstr "ক্যাটাগরি ফিল্টার মেনে চলে।"
+
+msgid "Bazar in %(month)s"
+msgstr "%(month)s মাসের বাজার"
+
+msgid "%(amount)s a day"
+msgstr "দিনে %(amount)s"
+
+msgid "Open this month"
+msgstr "এই মাস খুলুন"
+
+msgid "to %(counter)s member"
+msgid_plural "to %(counter)s members"
+msgstr[0] "%(counter)s জন সদস্যকে"
+msgstr[1] "%(counter)s জন সদস্যকে"
+
+msgid "All settled"
+msgstr "সব মিটে গেছে"
+
+msgid "Fronted by members"
+msgstr "সদস্যরা আগে দিয়েছেন"
+
+msgid "This month, paid from their pocket"
+msgstr "এই মাসে, তাঁদের নিজের টাকায়"
+
+msgid "Months with bazar, last 12"
+msgstr "গত ১২ মাসে যেসব মাসে বাজার হয়েছে"
+
+msgid "%(amount)s given back to members"
+msgstr "সদস্যদের %(amount)s ফেরত দেওয়া হয়েছে"
+
+msgid "Members you owe"
+msgstr "যেসব সদস্যের কাছে দেনা"
+
+msgid "Bazar they paid for that you haven't given back yet."
+msgstr "তাঁরা যে বাজার করেছেন এবং আপনি এখনও ফেরত দেননি।"
+
+msgid "Tap to record a payback"
+msgstr "ফেরত লিখতে চাপুন"
+
+msgid "You don't owe any member right now."
+msgstr "এই মুহূর্তে কোনো সদস্যের কাছে আপনার দেনা নেই।"
+
+msgid "%(counter)s payout"
+msgid_plural "%(counter)s payouts"
+msgstr[0] "%(counter)sটি আয়"
+msgstr[1] "%(counter)sটি আয়"
+
+msgid "Earned so far this calendar month, compared with the same days of last month. Follows the source filter."
+msgstr "এই মাসে এ পর্যন্ত আয়, গত মাসের একই দিনগুলোর সাথে তুলনা করে। উৎস ফিল্টার মেনে চলে।"
+
+msgid "So far this month"
+msgstr "এই মাসে এ পর্যন্ত"
+
+msgid "Last month (%(month)s)"
+msgstr "গত মাস (%(month)s)"
+
+msgid "Whole month"
+msgstr "পুরো মাস"
+
+msgid "Months with income, last 12"
+msgstr "গত ১২ মাসে যেসব মাসে আয় হয়েছে"
+
+msgid "Top source"
+msgstr "প্রধান উৎস"
+
+#, python-format
+msgid "%(amount)s · %(pct)s%% of earnings"
+msgstr "%(amount)s · আয়ের %(pct)s%%"
+
+msgid "Nothing yet"
+msgstr "এখনও কিছু নেই"
+
+msgid "Tap a source to see its payouts."
+msgstr "আয় দেখতে একটি উৎসে চাপুন।"
+
+msgid "Coming up"
+msgstr "সামনে আসছে"
+
+msgid "Recurring income due in the next 30 days."
+msgstr "আগামী ৩০ দিনে আসছে এমন পুনরাবৃত্ত আয়।"
+
+msgid "No recurring income due soon. Set up a salary once and it's logged for you."
+msgstr "শীঘ্রই কোনো পুনরাবৃত্ত আয় নেই। বেতন একবার সেট করুন, তারপর নিজে থেকেই লেখা হবে।"
+
+msgid "Add recurring income"
+msgstr "পুনরাবৃত্ত আয় যোগ করুন"
+
+msgid "Follows the source filter."
+msgstr "উৎস ফিল্টার মেনে চলে।"
+
+msgid "This month · %(month)s"
+msgstr "এই মাস · %(month)s"
+
+msgid "Money in"
+msgstr "আয় এসেছে"
+
+msgid "Income plus contributions received this month, compared with the same days of last month."
+msgstr "এই মাসে পাওয়া আয় ও অবদান, গত মাসের একই দিনগুলোর সাথে তুলনা করে।"
+
+msgid "Income + contributions"
+msgstr "আয় + অবদান"
+
+msgid "Money out"
+msgstr "খরচ হয়েছে"
+
+msgid "Expenses plus household bazar you paid yourself this month, compared with the same days of last month."
+msgstr "এই মাসে খরচ ও নিজে দেওয়া বাজার, গত মাসের একই দিনগুলোর সাথে তুলনা করে।"
+
+msgid "Expenses + bazar paid by you"
+msgstr "খরচ + আপনার দেওয়া বাজার"
+
+msgid "Saved"
+msgstr "সঞ্চয়"
+
+msgid "Overspent"
+msgstr "বেশি খরচ"
+
+#, python-format
+msgid "%(rate)s%% of what came in"
+msgstr "আয়ের %(rate)s%%"
+
+msgid "No money in yet this month"
+msgstr "এই মাসে এখনও কোনো আয় নেই"
+
+msgid "Cash flow, last 12 months"
+msgstr "নগদ প্রবাহ, গত ১২ মাস"
+
+msgid "Money in vs. money out each month."
+msgstr "প্রতি মাসে আয় বনাম খরচ।"
+
+msgid "Net"
+msgstr "নিট"
+
+msgid "%(n)s of 12 months saved"
+msgstr "১২ মাসের মধ্যে %(n)s মাসে সঞ্চয়"
+
+msgid "Overdue or due within 7 days, across creditors, shops and debtors."
+msgstr "পাওনাদার, দোকান ও দেনাদার মিলিয়ে — মেয়াদোত্তীর্ণ বা ৭ দিনের মধ্যে বকেয়া।"
+
+msgid "To collect"
+msgstr "আদায় করতে হবে"
+
+msgid "To pay"
+msgstr "দিতে হবে"
+
+msgid "%(counter)s day overdue"
+msgid_plural "%(counter)s days overdue"
+msgstr[0] "%(counter)s দিন পেরিয়ে গেছে"
+msgstr[1] "%(counter)s দিন পেরিয়ে গেছে"
+
+msgid "due today"
+msgstr "আজ দিতে হবে"
+
+msgid "in %(counter)s day"
+msgid_plural "in %(counter)s days"
+msgstr[0] "%(counter)s দিন পরে"
+msgstr[1] "%(counter)s দিন পরে"
+
+msgid "Nothing overdue or due this week."
+msgstr "মেয়াদোত্তীর্ণ বা এই সপ্তাহে বকেয়া কিছু নেই।"
+
+msgid "You owe"
+msgstr "আপনার দেনা"
+
+msgid "Owed to you"
+msgstr "আপনার পাওনা"
+
+msgid "All time"
+msgstr "সব সময়"
+
+msgid "Owed to members"
+msgstr "সদস্যদের পাওনা"
+
+msgid "Paid back so far"
+msgstr "এ পর্যন্ত ফেরত দেওয়া"
+
+msgid "Paid this month"
+msgstr "এই মাসে পরিশোধ"
+
+msgid "%(month)s: %(amount)s"
+msgstr "%(month)s: %(amount)s"
+
+msgid "Bought on credit this month"
+msgstr "এই মাসে বাকিতে কেনা"
+
+msgid "%(counter)s shop past the due date"
+msgid_plural "%(counter)s shops past the due date"
+msgstr[0] "%(counter)sটি দোকানের তারিখ পেরিয়ে গেছে"
+msgstr[1] "%(counter)sটি দোকানের তারিখ পেরিয়ে গেছে"
+
+msgid "Nothing past its due date"
+msgstr "কোনো কিছুর তারিখ পেরোয়নি"
+
+msgid "Shops with dues"
+msgstr "বাকি আছে এমন দোকান"
+
+msgid "shop you still owe"
+msgid_plural "shops you still owe"
+msgstr[0] "টি দোকানে এখনও বাকি"
+msgstr[1] "টি দোকানে এখনও বাকি"
+
+msgid "Dues by shop"
+msgstr "দোকান অনুযায়ী বাকি"
+
+msgid "No dues left. Well done!"
+msgstr "কোনো বাকি নেই। দারুণ!"
+
+msgid "No payments yet."
+msgstr "এখনও কোনো পরিশোধ নেই।"
+
+msgid "Bought on credit vs. paid, month by month."
+msgstr "প্রতি মাসে বাকিতে কেনা বনাম পরিশোধ।"
+
+msgid "Due change"
+msgstr "বাকির পরিবর্তন"
+
+msgid "New"
+msgstr "নতুন"
+
+msgid "Busiest month"
+msgstr "সবচেয়ে বেশি যে মাসে"
+
+msgid "Last 12 months"
+msgstr "গত ১২ মাস"

@@ -266,3 +266,115 @@ class CalculatorTests(TestCase):
         self.assertContains(response, "ব্যবসার টুল")
         self.assertContains(response, "ছাড় %")  # literal % in a translated label
         self.assertContains(response, "৳{value} বসানো হয়েছে: {field}")
+
+
+class StatsHelperTests(TestCase):
+    def test_month_start_crosses_years(self):
+        from datetime import date
+        from apps.core.stats import last_n_month_starts, month_start
+        self.assertEqual(month_start(date(2026, 1, 15), -1), date(2025, 12, 1))
+        months = last_n_month_starts(12, today=date(2026, 3, 10))
+        self.assertEqual((months[0], months[-1], len(months)), (date(2025, 4, 1), date(2026, 3, 1), 12))
+
+    def test_change_directions_and_multiplier(self):
+        from apps.core.stats import change
+        self.assertIsNone(change(0, 0))
+        self.assertEqual(change(50, 0), {"pct": None, "direction": "up"})
+        self.assertEqual(change(90, 100)["direction"], "down")
+        self.assertEqual(change(100, 100)["direction"], "flat")
+        self.assertEqual(change(4100, 100)["times"], Decimal("41"))
+        self.assertIsNone(change(150, 100)["times"])
+
+    def test_month_compare_uses_same_days_of_last_month(self):
+        from datetime import date
+        from apps.core.stats import month_compare
+        user = User.objects.create_user("owner", password="pw12345!")
+        cat = ExpenseCategory.objects.create(user=user, name="Food")
+        for d, amt in [("2026-08-05", 100), ("2026-08-25", 900), ("2026-09-03", 200), ("2026-09-20", 999)]:
+            Expense.objects.create(user=user, category=cat, amount=amt, date=d)
+        m = month_compare(Expense.objects.filter(user=user), today=date(2026, 9, 10))
+        self.assertEqual(m["this_month"], 200)          # the 20th is still in the future
+        self.assertEqual(m["last_month"], 1000)         # the whole of August
+        self.assertEqual(m["change"]["pct"], 100)       # 200 vs 100 by 10 Aug
+        self.assertEqual(m["daily_avg"], 20)
+
+    def test_ranked_folds_the_tail_into_other(self):
+        from apps.core.stats import ranked
+        rows = ranked([(f"c{i}", 10 * (i + 1), None) for i in range(8)] + [("zero", 0, None)])
+        self.assertEqual(len(rows), 6)
+        self.assertEqual(rows[0]["label"], "c7")
+        self.assertEqual(rows[0]["bar"], 100)
+        self.assertTrue(rows[-1]["label"].endswith("(3)"))
+        self.assertEqual(rows[-1]["value"], 10 + 20 + 30)
+        self.assertAlmostEqual(float(sum(r["pct"] for r in rows)), 100.0)
+
+    def test_trend_summary_ignores_empty_months(self):
+        from datetime import date
+        from apps.core.stats import trend_summary
+        months = [date(2026, m, 1) for m in range(1, 5)]
+        s = trend_summary([0, 100.0, 0, 300.0], months)
+        self.assertEqual((s["average"], s["peak_value"], s["peak_month"], s["total"]), (200, 300, months[3], 400))
+        self.assertIsNone(trend_summary([0, 0], months[:2]))
+
+
+class DashboardTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user("owner", password="pw12345!")
+        self.client.login(username="owner", password="pw12345!")
+
+    def test_every_statistics_page_renders_empty_and_with_data(self):
+        names = ["networth", "dashboard", "debtor_dashboard", "shop_dashboard", "income_dashboard",
+                 "expense_dashboard", "household_dashboard", "contributor_dashboard"]
+        for name in names:
+            with self.subTest(name, data=False):
+                self.assertEqual(self.client.get(reverse(name)).status_code, 200)
+        c = Creditor.objects.create(user=self.user, name="Bank")
+        c.transactions.create(transaction_type="BORROW", amount=1000, date="2026-01-01")
+        c.transactions.create(transaction_type="REPAY", amount=250, date="2026-02-01")
+        Expense.objects.create(user=self.user, amount=40, date="2026-02-01")
+        for name in names:
+            with self.subTest(name, data=True):
+                self.assertEqual(self.client.get(reverse(name)).status_code, 200)
+
+    def test_creditor_dashboard_progress_and_ranked_balances(self):
+        a = Creditor.objects.create(user=self.user, name="Bank")
+        a.transactions.create(transaction_type="BORROW", amount=1000, date="2026-01-01")
+        a.transactions.create(transaction_type="REPAY", amount=250, date="2026-02-01")
+        Creditor.objects.create(user=self.user, name="Paid off").transactions.create(transaction_type="BORROW", amount=0.01, date="2026-01-01")
+        ctx = self.client.get(reverse("dashboard")).context
+        self.assertEqual(ctx["progress_pct"], 24)  # 250 of 1000.01
+        self.assertEqual([r["label"] for r in ctx["rank_remaining"]], ["Bank", "Paid off"])
+        self.assertEqual(ctx["open_count"], 2)
+        self.assertContains(self.client.get(reverse("dashboard")), 'data-i="0"')
+
+    def test_attention_badge_counts_overdue_and_due_soon(self):
+        from datetime import timedelta
+        from django.utils import timezone
+        today = timezone.localdate()
+        for name, due in [("Late", today - timedelta(days=3)), ("Soon", today + timedelta(days=2))]:
+            c = Creditor.objects.create(user=self.user, name=name, due_date=due)
+            c.transactions.create(transaction_type="BORROW", amount=100, date=today)
+        response = self.client.get(reverse("dashboard"))
+        self.assertContains(response, '<span class="badge" data-tone="critical">2</span>', html=False)
+
+    def test_networth_attention_spans_ledgers_and_sorts_by_due_date(self):
+        from datetime import timedelta
+        from django.utils import timezone
+        today = timezone.localdate()
+        d = Debtor.objects.create(user=self.user, name="Owes me", due_date=today - timedelta(days=1))
+        d.transactions.create(transaction_type="LEND", amount=500, date=today)
+        s = Shop.objects.create(user=self.user, name="Store", due_date=today - timedelta(days=4))
+        s.transactions.create(transaction_type="PURCHASE", amount=80, date=today)
+        settled = Creditor.objects.create(user=self.user, name="Settled", due_date=today)
+        settled.transactions.create(transaction_type="BORROW", amount=10, date=today)
+        settled.transactions.create(transaction_type="REPAY", amount=10, date=today)
+        items = self.client.get(reverse("networth")).context["attention"]
+        self.assertEqual([(i["name"], i["kind"], i["late"]) for i in items], [("Store", "pay", 4), ("Owes me", "collect", 1)])
+
+    def test_expense_dashboard_links_categories_to_the_filtered_list(self):
+        cat = ExpenseCategory.objects.create(user=self.user, name="Rent")
+        Expense.objects.create(user=self.user, category=cat, amount=500, date="2026-01-01")
+        Expense.objects.create(user=self.user, amount=50, date="2026-01-02")
+        rows = self.client.get(reverse("expense_dashboard")).context["category_rank"]
+        self.assertEqual(rows[0]["url"], f"{reverse('expense_list')}?category={cat.pk}")
+        self.assertIsNone(rows[1]["url"])  # "General" has no category to filter by

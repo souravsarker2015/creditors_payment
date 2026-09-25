@@ -15,6 +15,7 @@ from django.utils import dateformat
 from django.utils.translation import gettext as _, gettext_lazy
 
 from .models import Creditor, CreditorCategory, Transaction, DUE_SOON_DAYS
+from apps.core.stats import ledger_extras
 from apps.core.status import apply_status_filter, toggle_active
 
 MONTH_CHOICES = [(i, date_cls(2000, i, 1)) for i in range(1, 13)]
@@ -213,7 +214,7 @@ def dashboard_view(request):
     # Rolling 12-month Borrowed vs Repaid trend.
     month_starts = _last_12_month_starts()
     monthly_totals = (
-        Transaction.objects.filter(creditor__user=request.user, date__gte=month_starts[0])
+        Transaction.objects.filter(creditor__in=creditors_base_qs, date__gte=month_starts[0])
         .annotate(month=TruncMonth("date"))
         .values("month", "transaction_type")
         .annotate(total=Sum("amount"))
@@ -242,6 +243,13 @@ def dashboard_view(request):
         "category_choices": CreditorCategory.choices,
         "filter_type": filter_type,
     }
+    context.update(ledger_extras(
+        entities=creditors_qs,
+        transactions=Transaction.objects.filter(creditor__in=creditors_base_qs),
+        out_type=Transaction.BORROW, in_type=Transaction.REPAY, out_attr="c_borrowed", in_attr="c_paid",
+        detail_urlname="creditor_detail", overdue=overdue_creditors,
+        trend_out=trend_borrowed, trend_in=trend_paid,
+    ))
     return render(request, "creditors/dashboard.html", context)
 
 

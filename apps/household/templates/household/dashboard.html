@@ -16,40 +16,96 @@
     </div>
   </header>
 
-  <dl class="stat-grid !grid-cols-2 md:!grid-cols-4">
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="min-w-0">
+        <p class="hero-label inline-flex items-center gap-2">{% blocktranslate with month=today|date:"F" %}Bazar in {{ month }}{% endblocktranslate %}{% include "partials/delta.html" with change=month.change good="down" %}</p>
+        <p class="hero-value">{{ month.this_month|money }}</p>
+        <p class="hero-sub">{% blocktranslate count counter=purchases_this_month %}{{ counter }} purchase{% plural %}{{ counter }} purchases{% endblocktranslate %} · {% blocktranslate with amount=month.daily_avg|money %}{{ amount }} a day{% endblocktranslate %} · {% blocktranslate with month=month.last_label|date:"F" amount=month.last_month|money %}{{ month }}: {{ amount }}{% endblocktranslate %}</p>
+      </div>
+      <a href="{% url 'household_month_detail' current_year current_month %}" class="btn btn-on-ink">{% translate "Open this month" %}{% include "partials/icon.html" with name="arrow-right" %}</a>
+    </div>
+  </section>
+
+  <dl class="stat-grid">
+    <div class="stat" data-tone="warn">
+      <dt class="stat-label inline-flex items-center">{% translate "Outstanding to Members" %}{% translate "Bazar that members paid for with their own money and you still need to give back." as info_text %}{% include "partials/info.html" with text=info_text %}</dt>
+      <dd class="stat-value{% if outstanding_to_members %} is-tone{% endif %}">{{ outstanding_to_members|money }}</dd>
+      <dd class="stat-hint">{% if members_owed_count %}{% blocktranslate count counter=members_owed_count %}to {{ counter }} member{% plural %}to {{ counter }} members{% endblocktranslate %}{% else %}{% translate "All settled" %}{% endif %}</dd>
+    </div>
     <div class="stat" data-tone="gold">
-      <dt class="stat-label">{% translate "Spent This Month" %}</dt>
-      <dd class="stat-value">{{ this_month_spent|money }}</dd>
+      <dt class="stat-label">{% translate "Fronted by members" %}</dt>
+      <dd class="stat-value">{{ fronted_this_month|money }}</dd>
+      <dd class="stat-hint">{% translate "This month, paid from their pocket" %}</dd>
+    </div>
+    <div class="stat" data-tone="info">
+      <dt class="stat-label">{% translate "Monthly average" %}</dt>
+      <dd class="stat-value">{% if trend_summary %}{{ trend_summary.average|money }}{% else %}{{ 0|money }}{% endif %}</dd>
+      <dd class="stat-hint">{% translate "Months with bazar, last 12" %}</dd>
     </div>
     <div class="stat" data-tone="accent">
       <dt class="stat-label">{% translate "Total Spent" %}</dt>
       <dd class="stat-value">{{ total_spent|money }}</dd>
-    </div>
-    <div class="stat" data-tone="warn">
-      <dt class="stat-label inline-flex items-center">{% translate "Outstanding to Members" %}{% translate "Bazar that members paid for with their own money and you still need to give back." as info_text %}{% include "partials/info.html" with text=info_text %}</dt>
-      <dd class="stat-value">{{ outstanding_to_members|money }}</dd>
-    </div>
-    <div class="stat" data-tone="good">
-      <dt class="stat-label">{% translate "Given Back to Members" %}</dt>
-      <dd class="stat-value">{{ total_settled|money }}</dd>
+      <dd class="stat-hint">{% blocktranslate with amount=total_settled|money %}{{ amount }} given back to members{% endblocktranslate %}</dd>
     </div>
   </dl>
 
-  <nav class="tile-grid">
-    <a href="{% url 'household_list' %}" class="tile">{% include "partials/icon.html" with name="calendar" %}<span>{% translate "Monthly Log" %}</span></a>
-    <a href="{% url 'household_member_list' %}" class="tile">{% include "partials/icon.html" with name="users" %}<span>{% translate "Members" %}</span></a>
-    <a href="{% url 'household_category_list' %}" class="tile">{% include "partials/icon.html" with name="tag" %}<span>{% translate "Categories" %}</span></a>
-  </nav>
+  <div class="grid grid-cols-1 gap-5 lg:grid-cols-5 lg:items-start">
+    <section class="card lg:col-span-3">
+      <div class="card-header"><h2 class="card-title">{% translate "Spending by Category" %}</h2>
+        <a href="{% url 'household_category_list' %}" class="btn btn-ghost btn-sm">{% translate "Manage" %}</a></div>
+      <div class="card-body">
+        {% if category_rank %}<div class="breakdown"><div class="chart-box"><canvas id="categoryChart"></canvas></div>{% include "partials/ranked_list.html" with rows=category_rank %}</div>
+        {% else %}<div class="empty is-plain"><p class="empty-text">{% translate "Nothing to chart yet." %}</p></div>{% endif %}
+      </div>
+    </section>
 
-  <div class="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
-    <section class="card">
+    <section class="card lg:col-span-2">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">{% translate "Members you owe" %}</h2>
+          <p class="card-subtitle">{% translate "Bazar they paid for that you haven't given back yet." %}</p>
+        </div>
+        <a href="{% url 'household_member_list' %}" class="btn btn-ghost btn-sm">{% translate "Members" %}</a>
+      </div>
+      {% if members_owed %}
+      <ul class="ledger">
+        {% for m in members_owed %}
+        <li>
+          <a href="{% url 'household_member_detail' m.pk %}" class="ledger-row">
+            <span class="ledger-icon" data-tone="warn">{{ m.name|first|upper }}</span>
+            <div class="ledger-main"><p class="ledger-title">{{ m.name }}</p><p class="ledger-meta">{% translate "Tap to record a payback" %}</p></div>
+            <span class="ledger-amount" data-tone="warn">{{ m.balance_due|money }}</span>
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="empty is-plain">
+        <div class="empty-icon">{% include "partials/icon.html" with name="check" %}</div>
+        <p class="empty-text">{% translate "You don't owe any member right now." %}</p>
+      </div>
+      {% endif %}
+    </section>
+  </div>
+
+  <div class="grid grid-cols-1 gap-5 lg:grid-cols-5 lg:items-start">
+    <section class="card trend-card lg:col-span-3">
+      <div class="card-header"><h2 class="card-title">{% translate "12-Month Trend" %}</h2></div>
+      <div class="card-body">
+        <div class="chart-box"><canvas id="trendChart"></canvas></div>
+        {% include "partials/trend_summary.html" with summary=trend_summary %}
+      </div>
+    </section>
+
+    <section class="card lg:col-span-2">
       <div class="card-header">
         <h2 class="card-title">{% translate "Recent Purchases" %}</h2>
         <a href="{% url 'household_list' %}" class="btn btn-ghost btn-sm">{% translate "View all" %}{% include "partials/icon.html" with name="arrow-right" %}</a>
       </div>
       {% if recent_purchases %}
       <ul class="ledger">
-        {% for p in recent_purchases %}
+        {% for p in recent_purchases|slice:":6" %}
         <li>
           <a href="{% url 'household_month_detail' p.date.year p.date.month %}" class="ledger-row">
             <span class="ledger-icon" data-tone="gold">{% include "partials/icon.html" with name="cart" %}</span>
@@ -71,20 +127,7 @@
       </div>
       {% endif %}
     </section>
-
-    <section class="card">
-      <div class="card-header"><h2 class="card-title">{% translate "Spending by Category" %}</h2></div>
-      <div class="card-body">
-        {% if category_data %}<div class="chart-box"><canvas id="categoryChart"></canvas></div>
-        {% else %}<div class="empty is-plain"><p class="empty-text">{% translate "Nothing to chart yet." %}</p></div>{% endif %}
-      </div>
-    </section>
   </div>
-
-  <section class="card">
-    <div class="card-header"><h2 class="card-title">{% translate "12-Month Trend" %}</h2></div>
-    <div class="card-body"><div class="chart-box"><canvas id="trendChart"></canvas></div></div>
-  </section>
 </div>
 {% endblock %}
 
@@ -94,7 +137,7 @@
 <script src="{% static 'js/charts.js' %}"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
-    renderDistributionChart({ canvasId: 'categoryChart', labels: {{ category_labels|safe }}, data: {{ category_data|safe }}, centerLabel: '{% translate "Total Spent" %}' });
+    renderDistributionChart({ canvasId: 'categoryChart', showLegend: false, labels: [{% for r in category_rank %}"{{ r.label|escapejs }}",{% endfor %}], data: [{% for r in category_rank %}{{ r.value|stringformat:"f" }},{% endfor %}], centerLabel: '{% translate "Total Spent" %}' });
     renderTrendChart({
       canvasId: 'trendChart',
       labels: [{% for d in trend_labels %}"{{ d|date:'M Y' }}",{% endfor %}],

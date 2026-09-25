@@ -15,6 +15,10 @@ from django.utils.translation import gettext as _, gettext_lazy, ngettext
 from datetime import date as date_cls
 
 from .models import IncomeSource, IncomeTransaction, RecurringIncome, generate_due_recurring_income
+from django.urls import reverse
+from django.utils import timezone
+from datetime import timedelta
+from apps.core.stats import month_compare, ranked, trend_summary
 from apps.core.status import apply_status_filter, toggle_active
 from .forms import IncomeSourceForm, IncomeTransactionForm, RecurringIncomeForm
 
@@ -232,7 +236,7 @@ def dashboard_view(request):
     # Rolling 12-month income trend.
     month_starts = _last_12_month_starts()
     monthly_totals = (
-        IncomeTransaction.objects.filter(source__user=request.user, date__gte=month_starts[0])
+        IncomeTransaction.objects.filter(source__in=filters["filtered_sources"], date__gte=month_starts[0])
         .annotate(month=TruncMonth("date"))
         .values("month")
         .annotate(total=Sum("amount"))
@@ -241,8 +245,27 @@ def dashboard_view(request):
     trend_labels = month_starts
     trend_income = [float(total_by_month.get(d, 0) or 0) for d in month_starts]
 
+    # Source-filtered (not date-filtered) base, so "this month" is the calendar month.
+    source_base = IncomeTransaction.objects.filter(source__in=filters["filtered_sources"])
+    source_rank = ranked([
+        (row["source__name"], row["total"], reverse("income_source_detail", args=[row["source__id"]]))
+        for row in filtered_transactions.values("source__id", "source__name").annotate(total=Sum("amount"))
+    ])
+    payout_count = filtered_transactions.count()
+    today = timezone.localdate()
+
     context = {
         "total_income": total_income,
+        "payout_count": payout_count,
+        "month": month_compare(source_base),
+        "top_source": source_rank[0] if source_rank else None,
+        "source_rank": source_rank,
+        "trend_summary": trend_summary(trend_income, month_starts),
+        "today": today,
+        "upcoming": RecurringIncome.objects.filter(
+            source__user=request.user, is_active=True, next_run_date__lte=today + timedelta(days=30)
+        ).select_related("source").order_by("next_run_date")[:5],
+        "is_filtered": bool(filters["selected_source_ids"] or filters["selected_year"] or filters["date_from"] or filters["date_to"]),
         "source_labels": source_labels,
         "source_data": source_data,
         "trend_labels": trend_labels,

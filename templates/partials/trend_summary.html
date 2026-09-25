@@ -1,0 +1,10 @@
+{% load i18n %}{% comment %}
+Three figures under a 12-month chart. Needs `summary` (apps.core.stats.trend_summary).
+{% endcomment %}
+{% if summary %}
+<dl class="trend-sum">
+  <div><dt>{% translate "Monthly average" %}</dt><dd>{{ summary.average|money }}</dd></div>
+  <div><dt>{% translate "Busiest month" %}</dt><dd>{{ summary.peak_value|money }} <span>{{ summary.peak_month|date:"M Y" }}</span></dd></div>
+  <div><dt>{% translate "Last 12 months" %}</dt><dd>{{ summary.total|money }}</dd></div>
+</dl>
+{% endif %}

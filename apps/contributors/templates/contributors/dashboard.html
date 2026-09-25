@@ -24,18 +24,57 @@
       <div class="min-w-0">
         <p class="hero-label">{% translate "Total Funding" %}</p>
         <p class="hero-value">{{ total_contribution_amount|money }}</p>
-        <p class="hero-sub">{% blocktranslate count counter=total_contributors %}From {{ counter }} contributor{% plural %}From {{ counter }} contributors{% endblocktranslate %} · {% translate "Avg." %} {{ avg_contribution|money }}</p>
+        <p class="hero-sub">{% blocktranslate count counter=contribution_count %}{{ counter }} contribution{% plural %}{{ counter }} contributions{% endblocktranslate %} · {% blocktranslate count counter=giving_count %}from {{ counter }} contributor{% plural %}from {{ counter }} contributors{% endblocktranslate %}</p>
       </div>
       <a href="{% url 'contributor_list' %}" class="btn btn-on-ink">{% translate "View All Contributors" %}{% include "partials/icon.html" with name="arrow-right" %}</a>
     </div>
   </section>
 
-  <div class="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
-    <section class="card">
-      <div class="card-header"><h2 class="card-title">{% translate "Recent Contributions" %}</h2></div>
+  <dl class="stat-grid">
+    <div class="stat" data-tone="good">
+      <div class="stat-top"><dt class="stat-label">{% translate "This month" %}</dt>{% include "partials/delta.html" with change=month.change good="up" %}</div>
+      <dd class="stat-value">{{ month.this_month|money }}</dd>
+      <dd class="stat-hint">{% blocktranslate with month=month.last_label|date:"F" amount=month.last_month|money %}{{ month }}: {{ amount }}{% endblocktranslate %}</dd>
+    </div>
+    <div class="stat" data-tone="info">
+      <dt class="stat-label">{% translate "Average contribution" %}</dt>
+      <dd class="stat-value">{{ avg_per_gift|money }}</dd>
+      <dd class="stat-hint">{% translate "Per entry" %}</dd>
+    </div>
+    <div class="stat" data-tone="accent">
+      <dt class="stat-label">{% translate "Monthly average" %}</dt>
+      <dd class="stat-value">{% if trend_summary %}{{ trend_summary.average|money }}{% else %}{{ 0|money }}{% endif %}</dd>
+      <dd class="stat-hint">{% translate "Months with funding, last 12" %}</dd>
+    </div>
+    <div class="stat" data-tone="gold">
+      <dt class="stat-label">{% translate "Contributors" %}</dt>
+      <dd class="stat-value">{{ total_contributors }}</dd>
+      <dd class="stat-hint">{% blocktranslate count counter=giving_count %}{{ counter }} has given so far{% plural %}{{ counter }} have given so far{% endblocktranslate %}</dd>
+    </div>
+  </dl>
+
+  <div class="grid grid-cols-1 gap-5 lg:grid-cols-5 lg:items-start">
+    <section class="card lg:col-span-3">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">{% translate "Funding by Contributor" %}</h2>
+          <p class="card-subtitle">{% translate "Tap a contributor to see their history." %}</p>
+        </div>
+      </div>
+      <div class="card-body">
+        {% if rank %}<div class="breakdown"><div class="chart-box"><canvas id="contributorChart"></canvas></div>{% include "partials/ranked_list.html" with rows=rank %}</div>
+        {% else %}<div class="empty is-plain"><p class="empty-text">{% translate "Nothing to chart yet." %}</p></div>{% endif %}
+      </div>
+    </section>
+
+    <section class="card lg:col-span-2">
+      <div class="card-header">
+        <h2 class="card-title">{% translate "Recent Contributions" %}</h2>
+        <a href="{% url 'contributor_list' %}" class="btn btn-ghost btn-sm">{% translate "View all" %}{% include "partials/icon.html" with name="arrow-right" %}</a>
+      </div>
       {% if recent_contributions %}
       <ul class="ledger">
-        {% for res in recent_contributions %}
+        {% for res in recent_contributions|slice:":6" %}
         <li>
           <a href="{% url 'contributor_detail' res.contributor.pk %}" class="ledger-row">
             <span class="ledger-icon" data-tone="accent">{{ res.contributor.name|first|upper }}</span>
@@ -57,19 +96,14 @@
       </div>
       {% endif %}
     </section>
-
-    <section class="card">
-      <div class="card-header"><h2 class="card-title">{% translate "Funding by Contributor" %}</h2></div>
-      <div class="card-body">
-        {% if chart_data %}<div class="chart-box"><canvas id="contributorChart"></canvas></div>
-        {% else %}<div class="empty is-plain"><p class="empty-text">{% translate "Nothing to chart yet." %}</p></div>{% endif %}
-      </div>
-    </section>
   </div>
 
-  <section class="card">
+  <section class="card trend-card">
     <div class="card-header"><h2 class="card-title">{% translate "12-Month Trend" %}</h2></div>
-    <div class="card-body"><div class="chart-box"><canvas id="trendChart"></canvas></div></div>
+    <div class="card-body">
+      <div class="chart-box"><canvas id="trendChart"></canvas></div>
+      {% include "partials/trend_summary.html" with summary=trend_summary %}
+    </div>
   </section>
 </div>
 {% endblock %}
@@ -81,7 +115,7 @@
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     FT.multiSelect('category', '{% translate "Select categories..." %}');
-    renderDistributionChart({ canvasId: 'contributorChart', labels: {{ chart_labels|safe }}, data: {{ chart_data|safe }}, centerLabel: '{% translate "Total Given" %}' });
+    renderDistributionChart({ canvasId: 'contributorChart', showLegend: false, labels: [{% for r in rank %}"{{ r.label|escapejs }}",{% endfor %}], data: [{% for r in rank %}{{ r.value|stringformat:"f" }},{% endfor %}], centerLabel: '{% translate "Total Given" %}' });
     renderTrendChart({
       canvasId: 'trendChart',
       labels: [{% for d in trend_labels %}"{{ d|date:'M Y' }}",{% endfor %}],

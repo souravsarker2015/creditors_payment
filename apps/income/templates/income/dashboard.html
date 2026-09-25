@@ -25,29 +25,103 @@
       <div class="min-w-0">
         <p class="hero-label inline-flex items-center">{% translate "Total Earned" %}{% translate "Sum of all income that matches the filters above, including recurring payouts." as info_text %}{% include "partials/info.html" with text=info_text %}</p>
         <p class="hero-value">{{ total_income|money }}</p>
-        <p class="hero-sub">{% if selected_year or date_from or date_to or selected_source_ids %}{% translate "For the selected filters" %}{% else %}{% translate "All time, all sources" %}{% endif %}</p>
+        <p class="hero-sub">{% if is_filtered %}{% translate "For the selected filters" %}{% else %}{% translate "All time, all sources" %}{% endif %} · {% blocktranslate count counter=payout_count %}{{ counter }} payout{% plural %}{{ counter }} payouts{% endblocktranslate %}</p>
       </div>
       <a href="{% url 'income_source_list' %}" class="btn btn-on-ink">{% translate "Manage Sources" %}{% include "partials/icon.html" with name="arrow-right" %}</a>
     </div>
   </section>
 
-  <div class="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
-    <section class="card">
-      <div class="card-header"><h2 class="card-title">{% translate "Earnings by Source" %}</h2></div>
+  <dl class="stat-grid">
+    <div class="stat" data-tone="good">
+      <div class="stat-top"><dt class="stat-label inline-flex items-center">{% translate "This month" %}{% translate "Earned so far this calendar month, compared with the same days of last month. Follows the source filter." as info_text %}{% include "partials/info.html" with text=info_text %}</dt>{% include "partials/delta.html" with change=month.change good="up" %}</div>
+      <dd class="stat-value">{{ month.this_month|money }}</dd>
+      <dd class="stat-hint">{% translate "So far this month" %}</dd>
+    </div>
+    <div class="stat" data-tone="muted">
+      <dt class="stat-label">{% blocktranslate with month=month.last_label|date:"F" %}Last month ({{ month }}){% endblocktranslate %}</dt>
+      <dd class="stat-value">{{ month.last_month|money }}</dd>
+      <dd class="stat-hint">{% translate "Whole month" %}</dd>
+    </div>
+    <div class="stat" data-tone="info">
+      <dt class="stat-label">{% translate "Monthly average" %}</dt>
+      <dd class="stat-value">{% if trend_summary %}{{ trend_summary.average|money }}{% else %}{{ 0|money }}{% endif %}</dd>
+      <dd class="stat-hint">{% translate "Months with income, last 12" %}</dd>
+    </div>
+    <div class="stat" data-tone="accent">
+      <dt class="stat-label">{% translate "Top source" %}</dt>
+      <dd class="stat-value truncate">{% if top_source %}{{ top_source.label }}{% else %}—{% endif %}</dd>
+      <dd class="stat-hint">{% if top_source %}{% blocktranslate with pct=top_source.pct|floatformat:0 amount=top_source.value|money %}{{ amount }} · {{ pct }}% of earnings{% endblocktranslate %}{% else %}{% translate "Nothing yet" %}{% endif %}</dd>
+    </div>
+  </dl>
+
+  <div class="grid grid-cols-1 gap-5 lg:grid-cols-5 lg:items-start">
+    <section class="card lg:col-span-3">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">{% translate "Earnings by Source" %}</h2>
+          <p class="card-subtitle">{% translate "Tap a source to see its payouts." %}</p>
+        </div>
+      </div>
       <div class="card-body">
-        {% if source_data %}<div class="chart-box"><canvas id="incomeChart"></canvas></div>
+        {% if source_rank %}
+        <div class="breakdown"><div class="chart-box"><canvas id="incomeChart"></canvas></div>{% include "partials/ranked_list.html" with rows=source_rank %}</div>
         {% else %}<div class="empty is-plain"><p class="empty-text">{% translate "No income recorded for these filters." %}</p></div>{% endif %}
       </div>
     </section>
 
-    <section class="card">
+    <section class="card lg:col-span-2">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">{% translate "Coming up" %}</h2>
+          <p class="card-subtitle">{% translate "Recurring income due in the next 30 days." %}</p>
+        </div>
+        <a href="{% url 'recurring_income_list' %}" class="btn btn-ghost btn-sm">{% translate "Manage" %}</a>
+      </div>
+      {% if upcoming %}
+      <ul class="ledger">
+        {% for r in upcoming %}
+        <li class="ledger-row">
+          <span class="date-chip" data-tone="{% if r.next_run_date <= today %}good{% else %}muted{% endif %}"><b>{{ r.next_run_date|date:"j" }}</b><small>{{ r.next_run_date|date:"M" }}</small></span>
+          <div class="ledger-main">
+            <p class="ledger-title">{{ r.source.name }}</p>
+            <p class="ledger-meta">{{ r.get_frequency_display }}{% if r.note %} · {{ r.note }}{% endif %}</p>
+          </div>
+          <span class="ledger-amount" data-tone="good">{{ r.amount|signed_money }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="empty is-plain">
+        <div class="empty-icon">{% include "partials/icon.html" with name="repeat" %}</div>
+        <p class="empty-text">{% translate "No recurring income due soon. Set up a salary once and it's logged for you." %}</p>
+        <a href="{% url 'recurring_income_create' %}" class="btn btn-secondary btn-sm">{% include "partials/icon.html" with name="plus" %}{% translate "Add recurring income" %}</a>
+      </div>
+      {% endif %}
+    </section>
+  </div>
+
+  <div class="grid grid-cols-1 gap-5 lg:grid-cols-5 lg:items-start">
+    <section class="card trend-card lg:col-span-3">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">{% translate "12-Month Trend" %}</h2>
+          <p class="card-subtitle">{% translate "Follows the source filter." %}</p>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="chart-box"><canvas id="trendChart"></canvas></div>
+        {% include "partials/trend_summary.html" with summary=trend_summary %}
+      </div>
+    </section>
+
+    <section class="card lg:col-span-2">
       <div class="card-header">
         <h2 class="card-title">{% translate "Recent Income" %}</h2>
         <a href="{% url 'income_source_list' %}" class="btn btn-ghost btn-sm">{% translate "View all" %}{% include "partials/icon.html" with name="arrow-right" %}</a>
       </div>
       {% if recent_transactions %}
       <ul class="ledger">
-        {% for tx in recent_transactions %}
+        {% for tx in recent_transactions|slice:":6" %}
         <li>
           <a href="{% url 'income_source_detail' tx.source.pk %}" class="ledger-row">
             <span class="ledger-icon" data-tone="good">{{ tx.source.name|first|upper }}</span>
@@ -69,11 +143,6 @@
       {% endif %}
     </section>
   </div>
-
-  <section class="card">
-    <div class="card-header"><h2 class="card-title">{% translate "12-Month Trend" %}</h2></div>
-    <div class="card-body"><div class="chart-box"><canvas id="trendChart"></canvas></div></div>
-  </section>
 </div>
 {% endblock %}
 
@@ -85,7 +154,7 @@
   document.addEventListener('DOMContentLoaded', function () {
     FT.multiSelect('source-filter', '{% translate "Select sources..." %}');
     FT.rangePicker('date-range-filter', 'date-from-hidden', 'date-to-hidden');
-    renderDistributionChart({ canvasId: 'incomeChart', labels: {{ source_labels|safe }}, data: {{ source_data|safe }}, centerLabel: '{% translate "Total Earned" %}' });
+    renderDistributionChart({ canvasId: 'incomeChart', showLegend: false, labels: [{% for r in source_rank %}"{{ r.label|escapejs }}",{% endfor %}], data: [{% for r in source_rank %}{{ r.value|stringformat:"f" }},{% endfor %}], centerLabel: '{% translate "Total Earned" %}' });
     renderTrendChart({
       canvasId: 'trendChart',
       labels: [{% for d in trend_labels %}"{{ d|date:'M Y' }}",{% endfor %}],

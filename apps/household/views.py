@@ -16,6 +16,7 @@ from django.utils import dateformat
 from django.utils.translation import gettext as _, gettext_lazy, ngettext
 
 from .models import HouseholdCategory, HouseholdMember, Purchase, Settlement
+from apps.core.stats import month_compare, month_start, ranked, total, trend_summary
 from apps.core.status import apply_status_filter, toggle_active
 from .forms import HouseholdCategoryForm, HouseholdMemberForm, PurchaseForm, SettlementForm
 
@@ -184,7 +185,24 @@ def dashboard_view(request):
     trend_labels = month_starts
     trend_spent = [float(total_by_month.get(d, 0) or 0) for d in month_starts]
 
+    members_owed = sorted(
+        (m for m in request.user.household_members.all() if m.balance_due > 0),
+        key=lambda m: -m.balance_due,
+    )
+    this_start = month_start(today)
+    this_month_qs = purchases.filter(date__gte=this_start, date__lte=today)
+
     context = {
+        "month": month_compare(purchases),
+        "fronted_this_month": total(this_month_qs.filter(buyer__isnull=False)),
+        "purchases_this_month": this_month_qs.count(),
+        "members_owed": members_owed[:6],
+        "members_owed_count": len(members_owed),
+        "category_rank": ranked([
+            (row["category__name"] or _("Uncategorized"), row["total"], None)
+            for row in purchases.values("category__name").annotate(total=Sum("amount"))
+        ]),
+        "trend_summary": trend_summary(trend_spent, month_starts),
         "total_spent": total_spent,
         "total_settled": total_settled,
         "outstanding_to_members": outstanding_to_members,
@@ -194,6 +212,7 @@ def dashboard_view(request):
         "trend_labels": trend_labels,
         "trend_spent": trend_spent,
         "recent_purchases": recent_purchases,
+        "today": today,
         "current_year": today.year,
         "current_month": today.month,
     }

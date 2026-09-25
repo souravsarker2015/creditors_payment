@@ -4,7 +4,7 @@
 <section class="card">
   <div class="card-header">
     <h2 class="card-title flex items-center gap-2"><span class="h-[1.125rem] w-[1.125rem]" style="color: var(--status-warn);">{% include "partials/icon.html" with name="alert" %}</span>{% translate "Needs Attention" %}</h2>
-    <span class="badge" data-tone="warn">{{ overdue|length|add:due_soon|length }}</span>
+    {% with o=overdue|length d=due_soon|length %}<span class="badge" data-tone="{% if o %}critical{% else %}warn{% endif %}">{{ o|add:d }}</span>{% endwith %}
   </div>
   <ul class="ledger">
     {% for r in overdue %}

@@ -26,13 +26,61 @@
         <p class="hero-value">{{ remaining|money }}</p>
         <p class="hero-sub">{% translate "Total Due" %} {{ total_due|money }} · {% translate "Paid" %} {{ total_paid|money }}</p>
       </div>
-      <a href="{% url 'shop_list' %}" class="btn btn-on-ink">{% translate "View All Shops" %}{% include "partials/icon.html" with name="arrow-right" %}</a>
+      <div class="hero-progress">
+        <div class="hero-progress-row"><span>{% translate "Paid back so far" %}</span><strong>{{ progress_pct }}%</strong></div>
+        <div class="meter" role="progressbar" aria-valuenow="{{ progress_pct }}" aria-valuemin="0" aria-valuemax="100"><span style="width: {{ progress_pct }}%"></span></div>
+      </div>
     </div>
   </section>
+
+  <dl class="stat-grid">
+    <div class="stat" data-tone="good">
+      <div class="stat-top"><dt class="stat-label">{% translate "Paid this month" %}</dt>{% include "partials/delta.html" with change=in_month.change good="up" %}</div>
+      <dd class="stat-value">{{ in_month.this_month|money }}</dd>
+      <dd class="stat-hint">{% blocktranslate with month=in_month.last_label|date:"F" amount=in_month.last_month|money %}{{ month }}: {{ amount }}{% endblocktranslate %}</dd>
+    </div>
+    <div class="stat" data-tone="warn">
+      <div class="stat-top"><dt class="stat-label">{% translate "Bought on credit this month" %}</dt>{% include "partials/delta.html" with change=out_month.change good="down" %}</div>
+      <dd class="stat-value">{{ out_month.this_month|money }}</dd>
+      <dd class="stat-hint">{% blocktranslate with month=out_month.last_label|date:"F" amount=out_month.last_month|money %}{{ month }}: {{ amount }}{% endblocktranslate %}</dd>
+    </div>
+    <div class="stat" data-tone="{% if overdue_count %}critical{% else %}good{% endif %}">
+      <dt class="stat-label">{% translate "Overdue" %}</dt>
+      <dd class="stat-value{% if overdue_count %} is-tone{% endif %}">{{ overdue_total|money }}</dd>
+      <dd class="stat-hint">{% if overdue_count %}{% blocktranslate count counter=overdue_count %}{{ counter }} shop past the due date{% plural %}{{ counter }} shops past the due date{% endblocktranslate %}{% else %}{% translate "Nothing past its due date" %}{% endif %}</dd>
+    </div>
+    <div class="stat" data-tone="info">
+      <dt class="stat-label">{% translate "Shops with dues" %}</dt>
+      <dd class="stat-value">{{ open_count }}</dd>
+      <dd class="stat-hint">{% blocktranslate count counter=open_count %}shop you still owe{% plural %}shops you still owe{% endblocktranslate %}</dd>
+    </div>
+  </dl>
 
   {% include "partials/attention_list.html" with overdue=overdue_shops due_soon=due_soon_shops detail_urlname="shop_detail" %}
 
   <div class="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
+    <section class="card" x-data="{ tab: 'remaining' }">
+      <div class="card-header">
+        <h2 class="card-title">{% translate "Dues by shop" %}</h2>
+        <div class="seg seg-sm">
+          <button type="button" class="seg-item" :class="tab === 'remaining' && 'is-active'" @click="tab = 'remaining'">{% translate "Remaining" %}</button>
+          <button type="button" class="seg-item" :class="tab === 'paid' && 'is-active'" @click="tab = 'paid'">{% translate "Paid" %}</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div x-show="tab === 'remaining'">
+          {% if rank_remaining %}
+          <div class="breakdown"><div class="chart-box"><canvas id="remainingChart"></canvas></div>{% include "partials/ranked_list.html" with rows=rank_remaining %}</div>
+          {% else %}<div class="empty is-plain"><p class="empty-text">{% translate "No dues left. Well done!" %}</p></div>{% endif %}
+        </div>
+        <div x-show="tab === 'paid'" x-cloak>
+          {% if rank_back %}
+          <div class="breakdown"><div class="chart-box"><canvas id="paidChart"></canvas></div>{% include "partials/ranked_list.html" with rows=rank_back %}</div>
+          {% else %}<div class="empty is-plain"><p class="empty-text">{% translate "No payments yet." %}</p></div>{% endif %}
+        </div>
+      </div>
+    </section>
+
     <section class="card">
       <div class="card-header">
         <h2 class="card-title">{% translate "Recent Transactions" %}</h2>
@@ -40,7 +88,7 @@
       </div>
       {% if recent_transactions %}
       <ul class="ledger">
-        {% for tx in recent_transactions %}
+        {% for tx in recent_transactions|slice:":6" %}
         <li>
           <a href="{% url 'shop_detail' tx.shop.pk %}" class="ledger-row">
             {% if tx.transaction_type == 'PURCHASE' %}
@@ -66,29 +114,23 @@
       </div>
       {% endif %}
     </section>
-
-    <section class="card" x-data="{ tab: 'remaining' }">
-      <div class="card-header">
-        <h2 class="card-title">{% translate "Breakdown" %}</h2>
-        <div class="seg">
-          <button type="button" class="seg-item" :class="tab === 'remaining' && 'is-active'" @click="tab = 'remaining'">{% translate "Remaining" %}</button>
-          <button type="button" class="seg-item" :class="tab === 'paid' && 'is-active'" @click="tab = 'paid'">{% translate "Total Paid" %}</button>
-        </div>
-      </div>
-      <div class="card-body">
-        {% if shop_labels %}
-        <div class="chart-box" x-show="tab === 'remaining'"><canvas id="remainingChart"></canvas></div>
-        <div class="chart-box" x-show="tab === 'paid'" x-cloak><canvas id="paidChart"></canvas></div>
-        {% else %}
-        <div class="empty is-plain"><p class="empty-text">{% translate "Nothing to chart yet." %}</p></div>
-        {% endif %}
-      </div>
-    </section>
   </div>
 
-  <section class="card">
-    <div class="card-header"><h2 class="card-title">{% translate "12-Month Trend" %}</h2></div>
-    <div class="card-body"><div class="chart-box"><canvas id="trendChart"></canvas></div></div>
+  <section class="card trend-card">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title">{% translate "12-Month Trend" %}</h2>
+        <p class="card-subtitle">{% translate "Bought on credit vs. paid, month by month." %}</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="chart-box"><canvas id="trendChart"></canvas></div>
+      <dl class="trend-sum">
+        <div><dt>{% translate "Bought on credit" %}</dt><dd>{{ out_12|money }}</dd></div>
+        <div><dt>{% translate "Paid" %}</dt><dd style="color: var(--status-good);">{{ in_12|money }}</dd></div>
+        <div><dt>{% translate "Due change" %}</dt><dd style="color: {% if net_12 > 0 %}var(--status-critical){% else %}var(--status-good){% endif %};">{{ net_12|signed_money }}</dd></div>
+      </dl>
+    </div>
   </section>
 </div>
 {% endblock %}
@@ -100,9 +142,8 @@
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     FT.multiSelect('category', '{% translate "Select categories..." %}');
-    const labels = {{ shop_labels|safe }};
-    renderDistributionChart({ canvasId: 'remainingChart', labels: labels, data: {{ shop_remaining|safe }}, centerLabel: '{% translate "Remaining" %}' });
-    renderDistributionChart({ canvasId: 'paidChart', labels: labels, data: {{ shop_paid|safe }}, centerLabel: '{% translate "Total Paid" %}' });
+    renderDistributionChart({ canvasId: 'remainingChart', showLegend: false, labels: [{% for r in rank_remaining %}"{{ r.label|escapejs }}",{% endfor %}], data: [{% for r in rank_remaining %}{{ r.value|stringformat:"f" }},{% endfor %}], centerLabel: '{% translate "Remaining" %}' });
+    renderDistributionChart({ canvasId: 'paidChart', showLegend: false, labels: [{% for r in rank_back %}"{{ r.label|escapejs }}",{% endfor %}], data: [{% for r in rank_back %}{{ r.value|stringformat:"f" }},{% endfor %}], centerLabel: '{% translate "Paid" %}' });
     renderTrendChart({
       canvasId: 'trendChart',
       labels: [{% for d in trend_labels %}"{{ d|date:'M Y' }}",{% endfor %}],

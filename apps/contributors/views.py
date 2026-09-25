@@ -14,6 +14,8 @@ from django.core.paginator import Paginator
 from django.utils import dateformat
 from django.utils.translation import gettext as _, gettext_lazy
 from .models import Contributor, ContributorCategory, Contribution
+from django.urls import reverse
+from apps.core.stats import month_compare, ranked, trend_summary
 from apps.core.status import apply_status_filter, toggle_active
 from .forms import ContributorForm, ContributionForm
 
@@ -159,7 +161,7 @@ def contributor_dashboard(request):
     # Rolling 12-month contributions trend.
     month_starts = _last_12_month_starts()
     monthly_totals = (
-        Contribution.objects.filter(contributor__user=request.user, date__gte=month_starts[0])
+        Contribution.objects.filter(contributor__in=contributors, date__gte=month_starts[0])
         .annotate(month=TruncMonth("date"))
         .values("month")
         .annotate(total=Sum("amount"))
@@ -168,7 +170,20 @@ def contributor_dashboard(request):
     trend_labels = month_starts
     trend_amount = [float(total_by_month.get(d, 0) or 0) for d in month_starts]
 
+    contributions = Contribution.objects.filter(contributor__in=contributors)
+    contribution_count = contributions.count()
+    rank = ranked([
+        (c.name, c.total_amount, reverse("contributor_detail", args=[c.pk]))
+        for c in contributors.annotate(total_amount=Coalesce(Sum("contributions__amount"), Value(0, output_field=DecimalField())))
+    ])
+
     context = {
+        'month': month_compare(contributions),
+        'contribution_count': contribution_count,
+        'avg_per_gift': total_contribution_amount / contribution_count if contribution_count else 0,
+        'giving_count': contributors.filter(contributions__isnull=False).distinct().count(),
+        'rank': rank,
+        'trend_summary': trend_summary(trend_amount, month_starts),
         'total_contributors': total_contributors,
         'total_contribution_amount': total_contribution_amount,
         'avg_contribution': avg_contribution,

@@ -1,0 +1,17 @@
+{% load i18n %}{% comment %}
+Ranked breakdown with share bars; dots use the same colours, in the same
+order, as the donut beside it. Needs `rows` (apps.core.stats.ranked).
+{% endcomment %}
+<ol class="rank">
+  {% for r in rows %}
+  <li>
+    {% if r.url %}<a href="{{ r.url }}" class="rank-row">{% else %}<div class="rank-row">{% endif %}
+      <span class="rank-dot" data-i="{{ r.index }}"></span>
+      <span class="rank-label">{{ r.label }}</span>
+      <span class="rank-value">{{ r.value|money }}</span>
+      <span class="rank-bar"><span data-i="{{ r.index }}" style="width: {{ r.bar }}%"></span></span>
+      <span class="rank-pct">{{ r.pct|floatformat:0 }}%</span>
+    {% if r.url %}</a>{% else %}</div>{% endif %}
+  </li>
+  {% endfor %}
+</ol>

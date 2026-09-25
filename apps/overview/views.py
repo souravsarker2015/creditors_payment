@@ -4,6 +4,9 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import DecimalField, Q, Sum, Value
 from django.db.models.functions import Coalesce
 from django.shortcuts import render
+from django.urls import reverse
+from django.utils import timezone
+from datetime import timedelta
 
 from apps.contributors.models import Contribution
 from apps.creditors.models import Transaction as CreditorTransaction
@@ -12,6 +15,9 @@ from apps.expense.models import Expense
 from apps.household.models import Purchase
 from apps.income.models import IncomeTransaction
 from apps.shops.models import Transaction as ShopTransaction
+from apps.core.stats import change, last_n_month_starts, month_start, monthly_series, trend_summary
+
+DUE_SOON_DAYS = 7
 
 ZERO = Decimal("0.00")
 
@@ -83,7 +89,46 @@ def networth_view(request):
 
     net_position = net_balance + net_cash_flow
 
+    # ── This month: money in vs money out, and the savings rate ──
+    today = timezone.localdate()
+    this_start, last_start = month_start(today), month_start(today, -1)
+    last_same_day = last_start.replace(day=min(today.day, (this_start - timedelta(days=1)).day))
+    income_qs = IncomeTransaction.objects.filter(source__user=user)
+    contrib_qs = Contribution.objects.filter(contributor__user=user)
+    expense_qs = Expense.objects.filter(user=user)
+    bazar_qs = Purchase.objects.filter(user=user, buyer__isnull=True)
+
+    def money_in(start, end):
+        return _sum(income_qs.filter(date__gte=start, date__lte=end)) + _sum(contrib_qs.filter(date__gte=start, date__lte=end))
+
+    def money_out(start, end):
+        return _sum(expense_qs.filter(date__gte=start, date__lte=end)) + _sum(bazar_qs.filter(date__gte=start, date__lte=end))
+
+    in_month, out_month = money_in(this_start, today), money_out(this_start, today)
+    saved_month = in_month - out_month
+
+    months = last_n_month_starts(12, today)
+    in_series = [a + b for a, b in zip(monthly_series(income_qs, months), monthly_series(contrib_qs, months))]
+    out_series = [a + b for a, b in zip(monthly_series(expense_qs, months), monthly_series(bazar_qs, months))]
+    net_series = [a - b for a, b in zip(in_series, out_series)]
+
     context = {
+        "today": today,
+        "in_month": in_month,
+        "out_month": out_month,
+        "saved_month": saved_month,
+        "savings_rate": int(saved_month / in_month * 100) if in_month > 0 else None,
+        "in_change": change(in_month, money_in(last_start, last_same_day)),
+        "out_change": change(out_month, money_out(last_start, last_same_day)),
+        "last_label": last_start,
+        "months": months,
+        "in_series": [float(v) for v in in_series],
+        "out_series": [float(v) for v in out_series],
+        "in_12": sum(in_series, ZERO),
+        "out_12": sum(out_series, ZERO),
+        "net_12": sum(net_series, ZERO),
+        "positive_months": sum(1 for v in net_series if v > 0),
+        "attention": _attention(user, today),
         "receivables": receivables,
         "creditors_payable": creditors_payable,
         "shops_payable": shops_payable,
@@ -116,3 +161,34 @@ def _bar_percent(value, *comparison_values):
     if scale <= 0 or value <= 0:
         return 0
     return min(100, int((value / scale) * 100))
+
+
+def _attention(user, today):
+    """Overdue and due-soon balances across every ledger with due dates,
+    most urgent first — so one list answers "what needs doing?"."""
+    from apps.creditors.models import Creditor
+    from apps.debtors.models import Debtor
+    from apps.shops.models import Shop
+
+    ledgers = [
+        (Creditor.objects.filter(user=user), CreditorTransaction.BORROW, CreditorTransaction.REPAY, "creditor_detail", "pay"),
+        (Shop.objects.filter(user=user), ShopTransaction.PURCHASE, ShopTransaction.PAYMENT, "shop_detail", "pay"),
+        (Debtor.objects.filter(user=user), DebtorTransaction.LEND, DebtorTransaction.RECEIVE, "debtor_detail", "collect"),
+    ]
+    cutoff = today + timedelta(days=DUE_SOON_DAYS)
+    items = []
+    for qs, out_type, in_type, urlname, kind in ledgers:
+        rows = qs.filter(due_date__isnull=False, due_date__lte=cutoff).annotate(
+            out=Coalesce(Sum("transactions__amount", filter=Q(transactions__transaction_type=out_type)), Value(0, output_field=DecimalField())),
+            back=Coalesce(Sum("transactions__amount", filter=Q(transactions__transaction_type=in_type)), Value(0, output_field=DecimalField())),
+        )
+        for r in rows:
+            remaining = r.out - r.back
+            if remaining > 0:
+                items.append({
+                    "name": r.name, "amount": remaining, "due_date": r.due_date, "kind": kind,
+                    "overdue": r.due_date < today, "days": (r.due_date - today).days, "late": (today - r.due_date).days,
+                    "url": reverse(urlname, args=[r.pk]),
+                })
+    items.sort(key=lambda i: i["due_date"])
+    return items

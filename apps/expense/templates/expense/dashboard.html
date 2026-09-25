@@ -25,35 +25,106 @@
       <div class="min-w-0">
         <p class="hero-label inline-flex items-center">{% translate "Total Spent" %}{% translate "Sum of all expenses that match the filters above, including ones created by recurring schedules." as info_text %}{% include "partials/info.html" with text=info_text %}</p>
         <p class="hero-value">{{ total_spent|money }}</p>
-        <p class="hero-sub">{% if selected_year or date_from or date_to or selected_category_ids %}{% translate "For the selected filters" %}{% else %}{% translate "All time, all categories" %}{% endif %}</p>
+        <p class="hero-sub">{% if is_filtered %}{% translate "For the selected filters" %}{% else %}{% translate "All time, all categories" %}{% endif %} · {% blocktranslate count counter=entry_count %}{{ counter }} entry{% plural %}{{ counter }} entries{% endblocktranslate %}{% if entry_count %} · {% blocktranslate with amount=avg_entry|money %}avg. {{ amount }} each{% endblocktranslate %}{% endif %}</p>
       </div>
       <a href="{% url 'expense_list' %}?{{ request.GET.urlencode }}" class="btn btn-on-ink">{% include "partials/icon.html" with name="list" %}{% translate "Transaction History" %}</a>
     </div>
   </section>
 
-  <div class="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
-    <section class="card">
+  <dl class="stat-grid">
+    <div class="stat" data-tone="critical">
+      <div class="stat-top"><dt class="stat-label inline-flex items-center">{% translate "This month" %}{% translate "Spent so far this calendar month, compared with the same days of last month. Follows the category filter." as info_text %}{% include "partials/info.html" with text=info_text %}</dt>{% include "partials/delta.html" with change=month.change good="down" %}</div>
+      <dd class="stat-value">{{ month.this_month|money }}</dd>
+      <dd class="stat-hint">{% blocktranslate with amount=month.daily_avg|money %}{{ amount }} a day on average{% endblocktranslate %}</dd>
+    </div>
+    <div class="stat" data-tone="muted">
+      <dt class="stat-label">{% blocktranslate with month=month.last_label|date:"F" %}Last month ({{ month }}){% endblocktranslate %}</dt>
+      <dd class="stat-value">{{ month.last_month|money }}</dd>
+      <dd class="stat-hint">{% translate "Whole month" %}</dd>
+    </div>
+    <div class="stat" data-tone="info">
+      <dt class="stat-label">{% translate "Monthly average" %}</dt>
+      <dd class="stat-value">{% if trend_summary %}{{ trend_summary.average|money }}{% else %}{{ 0|money }}{% endif %}</dd>
+      <dd class="stat-hint">{% translate "Months with spending, last 12" %}</dd>
+    </div>
+    <div class="stat" data-tone="warn">
+      <dt class="stat-label">{% translate "Largest expense" %}</dt>
+      <dd class="stat-value">{% if largest %}{{ largest.amount|money }}{% else %}—{% endif %}</dd>
+      <dd class="stat-hint truncate">{% if largest %}{% if largest.category %}{{ largest.category.name }}{% else %}{% translate "General" %}{% endif %} · {{ largest.date|date:"j M Y" }}{% else %}{% translate "Nothing yet" %}{% endif %}</dd>
+    </div>
+  </dl>
+
+  <div class="grid grid-cols-1 gap-5 lg:grid-cols-5 lg:items-start">
+    <section class="card lg:col-span-3">
       <div class="card-header">
-        <h2 class="card-title">{% translate "Spending by Category" %}</h2>
+        <div>
+          <h2 class="card-title">{% translate "Spending by Category" %}</h2>
+          <p class="card-subtitle">{% translate "Tap a category to see its expenses." %}</p>
+        </div>
         <a href="{% url 'category_list' %}" class="btn btn-ghost btn-sm">{% translate "Manage" %}</a>
       </div>
       <div class="card-body">
-        {% if category_data %}
-        <div class="chart-box"><canvas id="expenseChart"></canvas></div>
+        {% if category_rank %}
+        <div class="breakdown"><div class="chart-box"><canvas id="expenseChart"></canvas></div>{% include "partials/ranked_list.html" with rows=category_rank %}</div>
         {% else %}
         <div class="empty is-plain"><p class="empty-text">{% translate "No spending recorded for these filters." %}</p></div>
         {% endif %}
       </div>
     </section>
 
-    <section class="card">
+    <section class="card lg:col-span-2">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">{% translate "Coming up" %}</h2>
+          <p class="card-subtitle">{% translate "Recurring expenses due in the next 30 days." %}</p>
+        </div>
+        <a href="{% url 'recurring_expense_list' %}" class="btn btn-ghost btn-sm">{% translate "Manage" %}</a>
+      </div>
+      {% if upcoming %}
+      <ul class="ledger">
+        {% for r in upcoming %}
+        <li class="ledger-row">
+          <span class="date-chip" data-tone="{% if r.next_run_date <= today %}warn{% else %}muted{% endif %}"><b>{{ r.next_run_date|date:"j" }}</b><small>{{ r.next_run_date|date:"M" }}</small></span>
+          <div class="ledger-main">
+            <p class="ledger-title">{% if r.category %}{{ r.category.name }}{% else %}{% translate "General" %}{% endif %}</p>
+            <p class="ledger-meta">{{ r.get_frequency_display }}{% if r.note %} · {{ r.note }}{% endif %}</p>
+          </div>
+          <span class="ledger-amount">{{ r.amount|money }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="empty is-plain">
+        <div class="empty-icon">{% include "partials/icon.html" with name="repeat" %}</div>
+        <p class="empty-text">{% translate "No recurring expenses due soon. Set up rent or bills once and they're logged for you." %}</p>
+        <a href="{% url 'recurring_expense_create' %}" class="btn btn-secondary btn-sm">{% include "partials/icon.html" with name="plus" %}{% translate "Add recurring expense" %}</a>
+      </div>
+      {% endif %}
+    </section>
+  </div>
+
+  <div class="grid grid-cols-1 gap-5 lg:grid-cols-5 lg:items-start">
+    <section class="card trend-card lg:col-span-3">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">{% translate "12-Month Trend" %}</h2>
+          <p class="card-subtitle">{% translate "Follows the category filter." %}</p>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="chart-box"><canvas id="trendChart"></canvas></div>
+        {% include "partials/trend_summary.html" with summary=trend_summary %}
+      </div>
+    </section>
+
+    <section class="card lg:col-span-2">
       <div class="card-header">
         <h2 class="card-title">{% translate "Recent Expenses" %}</h2>
         <a href="{% url 'expense_list' %}" class="btn btn-ghost btn-sm">{% translate "View all" %}{% include "partials/icon.html" with name="arrow-right" %}</a>
       </div>
       {% if recent_expenses %}
       <ul class="ledger">
-        {% for ex in recent_expenses %}
+        {% for ex in recent_expenses|slice:":6" %}
         <li class="ledger-row">
           <span class="ledger-icon" data-tone="critical">{% if ex.category %}{{ ex.category.name|first|upper }}{% else %}G{% endif %}</span>
           <div class="ledger-main">
@@ -74,11 +145,6 @@
       {% endif %}
     </section>
   </div>
-
-  <section class="card">
-    <div class="card-header"><h2 class="card-title">{% translate "12-Month Trend" %}</h2></div>
-    <div class="card-body"><div class="chart-box"><canvas id="trendChart"></canvas></div></div>
-  </section>
 </div>
 {% endblock %}
 
@@ -90,9 +156,7 @@
   document.addEventListener('DOMContentLoaded', function () {
     FT.multiSelect('category-filter', '{% translate "Select categories..." %}');
     FT.rangePicker('date-range-filter', 'date-from-hidden', 'date-to-hidden');
-    if (document.getElementById('expenseChart')) {
-      renderDistributionChart({ canvasId: 'expenseChart', labels: {{ category_labels|safe }}, data: {{ category_data|safe }}, centerLabel: '{% translate "Total Spent" %}' });
-    }
+    renderDistributionChart({ canvasId: 'expenseChart', showLegend: false, labels: [{% for r in category_rank %}"{{ r.label|escapejs }}",{% endfor %}], data: [{% for r in category_rank %}{{ r.value|stringformat:"f" }},{% endfor %}], centerLabel: '{% translate "Total Spent" %}' });
     renderTrendChart({
       canvasId: 'trendChart',
       labels: [{% for d in trend_labels %}"{{ d|date:'M Y' }}",{% endfor %}],
