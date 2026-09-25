@@ -69,35 +69,94 @@
     return sign + currency + Math.round(abs);
   }
 
-  function centerTextPlugin(centerLabel, currency, total) {
+  // Centre total. Drawn as an HTML overlay rather than on the canvas so the
+  // text can be measured and fitted properly, wrap its label, follow the
+  // theme through CSS, and be read by screen readers.
+  //
+  // The overlay is the largest square that fits inside the hole
+  // (side = innerRadius × √2), so nothing inside it can reach the ring.
+  // The amount shrinks to fit; if it still can't at the smallest readable
+  // size (CENTER_FULL_MIN_PX), it switches to the short form (৳10.6M) and
+  // the exact figure moves into a tooltip.
+  var CENTER_MIN_PX = 11;       // smallest size for anything in the centre
+  var CENTER_FULL_MIN_PX = 14;  // below this the exact figure is too small to read, so go short
+  var CENTER_MAX_PX = 26;
+
+  function centerCompact(value, currency) {
+    var abs = Math.abs(value), sign = value < 0 ? '-' : '';
+    var units = [[1e9, 'B'], [1e6, 'M'], [1e3, 'K']];
+    for (var i = 0; i < units.length; i++) {
+      if (abs >= units[i][0]) {
+        var n = abs / units[i][0];
+        return sign + currency + (n >= 100 ? Math.round(n) : n.toFixed(1).replace(/\.0$/, '')) + units[i][1];
+      }
+    }
+    return sign + currency + Math.round(abs);
+  }
+
+  function mountCenter(canvas, label, full, compact) {
+    var box = canvas.parentElement;
+    if (getComputedStyle(box).position === 'static') box.style.position = 'relative';
+    var old = box.querySelector('.donut-center');
+    if (old) old.remove();
+    var el = document.createElement('div');
+    el.className = 'donut-center';
+    el.innerHTML = '<span class="donut-center-label"></span><span class="donut-center-value"></span>';
+    el.firstChild.textContent = label;
+    el.lastChild.textContent = full;
+    el.dataset.full = full;
+    el.dataset.compact = compact;
+    box.appendChild(el);
+    return el;
+  }
+
+  function shrinkToFit(node, width, startPx, minPx) {
+    var size = startPx;
+    node.style.fontSize = size + 'px';
+    while (node.scrollWidth > width && size > minPx) {
+      size -= 1;
+      node.style.fontSize = size + 'px';
+    }
+    return node.scrollWidth <= width ? size : 0;
+  }
+
+  function fitCenter(chart, el) {
+    var arc = chart.getDatasetMeta(0).data[0];
+    if (!arc || !arc.innerRadius) { el.style.visibility = 'hidden'; return; }
+    var side = Math.floor(arc.innerRadius * Math.SQRT2);
+    el.style.visibility = 'visible';
+    el.style.left = arc.x + 'px';
+    el.style.top = arc.y + 'px';
+    el.style.width = el.style.height = side + 'px';
+
+    var value = el.lastChild, label = el.firstChild;
+    var start = Math.round(Math.max(CENTER_MIN_PX, Math.min(CENTER_MAX_PX, side / 4)));
+    value.textContent = el.dataset.full;
+    var size = shrinkToFit(value, side, start, Math.min(start, CENTER_FULL_MIN_PX));
+    if (!size) {
+      value.textContent = el.dataset.compact;
+      size = shrinkToFit(value, side, start, CENTER_MIN_PX) || CENTER_MIN_PX;
+      el.setAttribute('data-tip', el.dataset.full);
+    } else {
+      el.removeAttribute('data-tip');
+    }
+    label.style.fontSize = Math.max(9, Math.round(size * 0.46)) + 'px';
+  }
+
+  function centerPlugin(el) {
+    var lastKey = '';
     return {
-      id: 'centerTotalText',
+      id: 'donutCenter',
+      // Checked on every draw (first render, window resize, and a chart that
+      // started in a hidden tab getting its real size, which doesn't fire
+      // afterUpdate), but only re-fitted when the hole actually moved or
+      // changed size.
       afterDraw: function (chart) {
-        var meta = chart.getDatasetMeta(0);
-        var arc = meta && meta.data && meta.data[0];
-        if (!arc) return;
-        var ctx = chart.ctx;
-        var cx = arc.x, cy = arc.y;
-        // Keep the text inside the hole: shrink until it fits, and fall
-        // back to the compact form (৳4.0M) when the full figure can't.
-        var maxWidth = arc.innerRadius * 1.6;
-        var text = formatAmount(total, currency);
-        var size = Math.min(22, Math.max(12, arc.innerRadius / 3.2));
-        ctx.save();
-        ctx.font = '800 ' + size + "px 'Inter', sans-serif";
-        while (ctx.measureText(text).width > maxWidth && size > 12) {
-          size -= 1;
-          ctx.font = '800 ' + size + "px 'Inter', sans-serif";
-        }
-        if (ctx.measureText(text).width > maxWidth) text = compactAmount(total, currency);
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = token('--text-primary', '#111827');
-        ctx.fillText(text, cx, cy + size * 0.45);
-        ctx.font = "600 " + Math.max(9, Math.round(size * 0.5)) + "px 'Inter', sans-serif";
-        ctx.fillStyle = token('--text-muted', '#9ca3af');
-        ctx.fillText(centerLabel.toUpperCase(), cx, cy - size * 0.75);
-        ctx.restore();
+        var arc = chart.getDatasetMeta(0).data[0];
+        var key = arc ? [Math.round(arc.x), Math.round(arc.y), Math.round(arc.innerRadius)].join() : '';
+        if (key === lastKey) return;
+        lastKey = key;
+        fitCenter(chart, el);
       },
     };
   }
@@ -135,6 +194,8 @@
       return slice.isOther ? otherColor : CHART_PALETTE[i % CHART_PALETTE.length];
     });
 
+    var center = mountCenter(canvas, centerLabel, formatAmount(total, currency), centerCompact(total, currency));
+
     var chart = new Chart(canvas.getContext('2d'), {
       type: 'doughnut',
       data: {
@@ -149,7 +210,7 @@
           },
         ],
       },
-      plugins: [centerTextPlugin(centerLabel, currency, total)],
+      plugins: [centerPlugin(center)],
       options: {
         responsive: true,
         maintainAspectRatio: false,
@@ -207,6 +268,9 @@
         },
       },
     });
+
+    // Web fonts change text widths; refit once they're in.
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { fitCenter(chart, center); });
 
     return chart;
   }

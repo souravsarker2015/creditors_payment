@@ -1295,3 +1295,22 @@ a.rank-row:hover .rank-label { color: var(--accent); }
     .trend-sum > div + div { border-top: 1px solid var(--border-soft); }
     .trend-sum dd { margin-top: 0; text-align: right; }
 }
+
+/* Donut centre total (js/charts.js fitCenter): a square inscribed in the
+   hole, so its content can never reach the ring. */
+.donut-center {
+    position: absolute; transform: translate(-50%, -50%); pointer-events: none;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.1875rem;
+    text-align: center; visibility: hidden;
+}
+.donut-center[data-tip] { pointer-events: auto; cursor: help; }
+.donut-center-label {
+    max-width: 100%; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+    font-weight: 600; line-height: 1.2; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-muted);
+    overflow-wrap: anywhere;
+}
+.donut-center-value {
+    display: block; max-width: 100%; overflow: hidden; white-space: nowrap;
+    font-family: var(--font-body); font-weight: 800; line-height: 1.1; letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums; color: var(--text-primary);
+}
