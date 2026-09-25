@@ -15,7 +15,7 @@
   <section class="hero">
     <div class="hero-inner">
       <div class="min-w-0">
-        <p class="hero-label">{% translate "Overall Net Position" %}</p>
+        <p class="hero-label inline-flex items-center">{% translate "Overall Net Position" %}{% translate "Net Balance plus Lifetime Net Cash Flow — your overall standing across every ledger." as info_text %}{% include "partials/info.html" with text=info_text %}</p>
         <p class="hero-value" style="color: {% if net_position >= 0 %}#8fe0b0{% else %}#f2a597{% endif %};">{{ net_position|money }}</p>
         <p class="hero-sub">{% translate "Net Balance" %} {{ net_balance|money }} + {% translate "Lifetime Net Cash Flow" %} {{ net_cash_flow|money }}</p>
       </div>
@@ -45,7 +45,7 @@
           <div class="meter" data-tone="critical"><span style="width: {{ payables_pct }}%"></span></div>
         </div>
         <div class="kv kv-total mt-2">
-          <span class="kv-label">{% translate "Net Balance" %}</span>
+          <span class="kv-label inline-flex items-center">{% translate "Net Balance" %}{% translate "What people owe you minus what you owe, as of today." as info_text %}{% include "partials/info.html" with text=info_text %}</span>
           <span class="kv-value" data-tone="{% if net_balance >= 0 %}good{% else %}critical{% endif %}">{{ net_balance|money }}</span>
         </div>
       </div>
@@ -70,7 +70,7 @@
           <div class="meter" data-tone="critical"><span style="width: {{ expense_pct }}%"></span></div>
         </div>
         <div class="kv kv-total mt-2">
-          <span class="kv-label">{% translate "Net Cash Flow" %}</span>
+          <span class="kv-label inline-flex items-center">{% translate "Net Cash Flow" %}{% translate "Everything earned or received minus everything spent, all time." as info_text %}{% include "partials/info.html" with text=info_text %}</span>
           <span class="kv-value" data-tone="{% if net_cash_flow >= 0 %}good{% else %}critical{% endif %}">{{ net_cash_flow|money }}</span>
         </div>
       </div>

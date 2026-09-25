@@ -906,3 +906,109 @@ a.pager-link:hover { background: var(--surface-sunken); color: var(--text-primar
 }
 .pref-ink .pref-mode-btn.is-active, .pref-ink .pref-lang-btn.is-active { background: rgba(255, 255, 255, 0.14); color: var(--text-on-ink); box-shadow: none; }
 .pref-ink .pref-swatch { width: 36px; height: 36px; }
+
+/* ==========================================================================
+   Dropdown + "add new" button (input group)
+   ========================================================================== */
+.input-group { display: flex; align-items: stretch; min-width: 0; }
+.input-group > :is(select, .form-input) { flex: 1; min-width: 0; border-top-right-radius: 0 !important; border-bottom-right-radius: 0 !important; }
+.input-addon-btn {
+    display: grid; place-items: center; flex-shrink: 0; width: 2.875rem; margin-left: -1px;
+    border: 1px solid var(--border); border-radius: 0 0.75rem 0.75rem 0;
+    background: color-mix(in srgb, var(--accent-soft) 55%, var(--surface-raised)); color: var(--accent);
+    transition: background-color .15s, border-color .15s, color .15s;
+    -webkit-tap-highlight-color: transparent;
+}
+.input-addon-btn svg { width: 1.125rem; height: 1.125rem; transition: transform .2s; }
+.input-addon-btn:hover { background: var(--accent); border-color: var(--accent); color: var(--accent-on); position: relative; z-index: 1; }
+.input-addon-btn:hover svg { transform: rotate(90deg); }
+.input-addon-btn:focus-visible { outline: none; position: relative; z-index: 2; box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent); border-color: var(--accent); }
+.input-group > :is(select, .form-input):focus { position: relative; z-index: 1; }
+select.just-added { animation: just-added 1.2s ease; }
+@keyframes just-added { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--status-good) 45%, transparent); border-color: var(--status-good); } 100% { box-shadow: 0 0 0 10px transparent; } }
+
+/* ==========================================================================
+   Modal (quick-add). Bottom sheet on phones, centred dialog from sm up.
+   ========================================================================== */
+.modal-root { position: fixed; inset: 0; z-index: 80; display: flex; align-items: flex-end; justify-content: center; }
+@media (min-width: 640px) { .modal-root { align-items: center; padding: 1.5rem; } }
+.modal-backdrop { position: absolute; inset: 0; background: rgba(10, 18, 15, 0.5); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+.modal {
+    position: relative; width: 100%; max-width: 28rem; max-height: 92vh; overflow-y: auto;
+    background: var(--surface-raised); border: 1px solid var(--border);
+    border-radius: 1.25rem 1.25rem 0 0; box-shadow: 0 -12px 40px -12px rgba(0, 0, 0, 0.35);
+    padding-bottom: env(safe-area-inset-bottom);
+}
+@media (min-width: 640px) { .modal { border-radius: 1.25rem; box-shadow: var(--shadow-lg), 0 24px 64px -24px rgba(0, 0, 0, 0.45); } }
+.modal::before { /* grab handle on phones */
+    content: ""; display: block; width: 2.5rem; height: 0.25rem; margin: 0.625rem auto 0; border-radius: 9999px; background: var(--border);
+}
+@media (min-width: 640px) { .modal::before { display: none; } }
+.modal-header { display: flex; align-items: flex-start; gap: 0.75rem; padding: 1rem 1rem 0.25rem 1.25rem; }
+@media (min-width: 640px) { .modal-header { padding: 1.25rem 1.25rem 0.25rem 1.5rem; } }
+.modal-icon { display: grid; place-items: center; flex-shrink: 0; width: 2.5rem; height: 2.5rem; border-radius: 0.75rem; background: var(--accent-soft); color: var(--accent); }
+.modal-icon svg { width: 1.25rem; height: 1.25rem; }
+.modal-title { font-family: var(--font-ui); font-size: 1.0625rem; font-weight: 700; line-height: 1.3; color: var(--text-primary); }
+.modal-subtitle { margin-top: 0.125rem; font-size: 0.8125rem; color: var(--text-muted); }
+.modal-body { padding: 1rem 1.25rem; }
+@media (min-width: 640px) { .modal-body { padding: 1.125rem 1.5rem; } }
+.modal-footer {
+    display: flex; justify-content: flex-end; gap: 0.5rem; padding: 0.875rem 1.25rem;
+    border-top: 1px solid var(--border-soft); background: color-mix(in srgb, var(--surface-sunken) 55%, var(--surface-raised));
+}
+@media (max-width: 639.98px) { .modal-footer > .btn { flex: 1; } }
+@media (min-width: 640px) { .modal-footer { padding: 0.875rem 1.5rem; border-radius: 0 0 1.25rem 1.25rem; } }
+.modal-enter { transition: transform .26s cubic-bezier(.2, .8, .2, 1), opacity .2s ease; }
+.modal-leave { transition: transform .18s ease-in, opacity .15s ease-in; }
+.modal-enter-start { opacity: 0; transform: translateY(24px) scale(.98); }
+.modal-enter-end { opacity: 1; transform: none; }
+.spin { width: 1rem; height: 1rem; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ==========================================================================
+   Toast
+   ========================================================================== */
+.toast-root { position: fixed; z-index: 90; left: 50%; bottom: calc(1rem + env(safe-area-inset-bottom)); transform: translateX(-50%); display: flex; flex-direction: column; gap: 0.5rem; width: max-content; max-width: calc(100vw - 2rem); pointer-events: none; }
+.toast {
+    display: flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1rem; border-radius: 0.875rem;
+    background: var(--surface-ink); color: var(--text-on-ink); box-shadow: var(--shadow-lg);
+    font-size: 0.875rem; font-weight: 500; opacity: 0; transform: translateY(10px); transition: opacity .2s, transform .25s cubic-bezier(.2, .8, .2, 1);
+}
+.toast::before { content: ""; width: 0.5rem; height: 0.5rem; border-radius: 9999px; background: var(--tone, var(--status-good)); flex-shrink: 0; }
+.toast[data-tone="good"] { --tone: #57c281; }
+.toast.is-in { opacity: 1; transform: none; }
+
+/* ==========================================================================
+   Tooltips (Tippy "ft" theme) + ⓘ info buttons
+   ========================================================================== */
+.tippy-box[data-theme~="ft"] {
+    background: var(--surface-ink); color: var(--text-on-ink); border-radius: 0.625rem;
+    font-size: 0.75rem; font-weight: 500; line-height: 1.5; box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.4);
+}
+.tippy-box[data-theme~="ft"] > .tippy-content { padding: 0.4375rem 0.6875rem; }
+.tippy-box[data-theme~="ft"][data-placement^="top"] > .tippy-arrow::before { border-top-color: var(--surface-ink); }
+.tippy-box[data-theme~="ft"][data-placement^="bottom"] > .tippy-arrow::before { border-bottom-color: var(--surface-ink); }
+.tippy-box[data-theme~="ft"][data-placement^="left"] > .tippy-arrow::before { border-left-color: var(--surface-ink); }
+.tippy-box[data-theme~="ft"][data-placement^="right"] > .tippy-arrow::before { border-right-color: var(--surface-ink); }
+:root[data-theme="dark"] .tippy-box[data-theme~="ft"] { background: #eef1ea; color: #16241f; }
+:root[data-theme="dark"] .tippy-box[data-theme~="ft"][data-placement^="top"] > .tippy-arrow::before { border-top-color: #eef1ea; }
+:root[data-theme="dark"] .tippy-box[data-theme~="ft"][data-placement^="bottom"] > .tippy-arrow::before { border-bottom-color: #eef1ea; }
+.tippy-box[data-animation="shift-away-subtle"][data-state="hidden"] { opacity: 0; transform: translateY(4px); }
+
+.info-tip {
+    display: inline-grid; place-items: center; flex-shrink: 0; vertical-align: middle;
+    width: 1.125rem; height: 1.125rem; margin-left: 0.25rem; border-radius: 9999px;
+    color: var(--text-muted); cursor: help; transition: color .15s, background-color .15s;
+    -webkit-tap-highlight-color: transparent;
+}
+.info-tip svg { width: 1rem; height: 1rem; }
+.info-tip:hover, .info-tip[aria-expanded="true"] { color: var(--accent); background: var(--accent-soft); }
+.info-tip:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.hero .info-tip { color: var(--text-on-ink-muted); }
+.hero .info-tip:hover { color: var(--text-on-ink); background: rgba(255, 255, 255, 0.12); }
+@media (pointer: coarse) { .info-tip { width: 1.5rem; height: 1.5rem; margin: -0.1875rem -0.1875rem -0.1875rem 0.0625rem; } }
+/* Phones: toasts drop in from the top so they never cover a bottom sheet's buttons. */
+@media (max-width: 639.98px) {
+    .toast-root { top: calc(4.25rem + env(safe-area-inset-top)); bottom: auto; }
+    .toast { transform: translateY(-10px); }
+}

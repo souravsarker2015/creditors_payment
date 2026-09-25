@@ -8,6 +8,7 @@ class ExpenseCategoryForm(forms.ModelForm):
     class Meta:
         model = ExpenseCategory
         fields = ["name"]
+        widgets = {"name": forms.TextInput(attrs={"class": "form-input", "placeholder": _("e.g. Groceries, Rent, Transport")})}
 
 
 class ExpenseForm(forms.ModelForm):
@@ -29,6 +30,8 @@ class ExpenseForm(forms.ModelForm):
                 ExpenseCategory.objects.filter(user=user), self.instance.category_id
             )
         self.fields["category"].empty_label = _("General (no category)")
+        self.fields["category"].quick_add = "expense_category"
+        self.fields["category"].help_text = _("Missing one? Use + to add a category without leaving this form.")
 
 
 class RecurringExpenseForm(forms.ModelForm):
@@ -60,4 +63,6 @@ class RecurringExpenseForm(forms.ModelForm):
                 ExpenseCategory.objects.filter(user=user), self.instance.category_id
             )
         self.fields["category"].empty_label = _("General (no category)")
+        self.fields["category"].quick_add = "expense_category"
+        self.fields["category"].help_text = _("Missing one? Use + to add a category without leaving this form.")
         self.fields["category"].required = False

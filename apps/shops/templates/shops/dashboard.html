@@ -22,7 +22,7 @@
   <section class="hero">
     <div class="hero-inner">
       <div class="min-w-0">
-        <p class="hero-label">{% translate "Current Due" %}</p>
+        <p class="hero-label inline-flex items-center">{% translate "Current Due" %}{% translate "What you owe all shops right now: purchases on credit minus payments." as info_text %}{% include "partials/info.html" with text=info_text %}</p>
         <p class="hero-value">{{ remaining|money }}</p>
         <p class="hero-sub">{% translate "Total Due" %} {{ total_due|money }} · {% translate "Paid" %} {{ total_paid|money }}</p>
       </div>

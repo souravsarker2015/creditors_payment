@@ -13,10 +13,10 @@
         <div class="min-w-0">
           <h1 class="page-title">{{ debtor.name }}</h1>
           <div class="mt-1 flex flex-wrap gap-1.5">
-            {% if due_status == 'overdue' %}<span class="badge" data-tone="critical">{% include "partials/icon.html" with name="alert" %}{% translate "Overdue" %}</span>
-            {% elif due_status == 'due_soon' %}<span class="badge" data-tone="warn">{% include "partials/icon.html" with name="clock" %}{% translate "Due Soon" %}</span>{% endif %}
+            {% if due_status == 'overdue' %}<span class="badge" data-tone="critical" data-tip="{% translate 'The due date has passed and money is still owed.' %}">{% include "partials/icon.html" with name="alert" %}{% translate "Overdue" %}</span>
+            {% elif due_status == 'due_soon' %}<span class="badge" data-tone="warn" data-tip="{% translate 'Due within the next 7 days.' %}">{% include "partials/icon.html" with name="clock" %}{% translate "Due Soon" %}</span>{% endif %}
             {% if remaining <= 0 and lent > 0 %}<span class="badge badge-dot" data-tone="good">{% translate "Fully Collected" %}</span>{% endif %}
-            {% if not debtor.is_active %}<span class="badge" data-tone="muted">{% translate "Inactive" %}</span>{% endif %}
+            {% if not debtor.is_active %}<span class="badge" data-tone="muted" data-tip="{% translate 'Hidden from lists and dropdowns. Its history still counts in totals.' %}">{% translate "Inactive" %}</span>{% endif %}
           </div>
         </div>
       </div>
@@ -43,7 +43,7 @@
 
   <dl class="stat-grid">
     <div class="stat" data-tone="{% if remaining > 0 %}info{% else %}good{% endif %}">
-      <dt class="stat-label">{% translate "Still Owed to You" %}</dt>
+      <dt class="stat-label inline-flex items-center">{% translate "Still Owed to You" %}{% translate "Total lent minus total received back." as info_text %}{% include "partials/info.html" with text=info_text %}</dt>
       <dd class="stat-value is-tone">{{ remaining|money }}</dd>
     </div>
     <div class="stat">

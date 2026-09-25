@@ -15,9 +15,9 @@
       <form method="post" action="{% url 'household_category_import' %}" enctype="multipart/form-data" x-data>
         {% csrf_token %}
         <input type="file" id="category-import-file" name="csv_file" accept=".csv,text/csv" class="hidden" @change="$el.form.submit()">
-        <label for="category-import-file" class="btn btn-secondary cursor-pointer">{% include "partials/icon.html" with name="upload" %}{% translate "Import CSV" %}</label>
+        <label for="category-import-file" class="btn btn-secondary cursor-pointer" data-tip="{% translate 'Upload a .csv file to add many at once. Download the Template to see the columns.' %}">{% include "partials/icon.html" with name="upload" %}{% translate "Import CSV" %}</label>
       </form>
-      <a href="{% url 'household_category_import_template' %}" class="btn btn-ghost">{% translate "Template" %}</a>
+      <a href="{% url 'household_category_import_template' %}" class="btn btn-ghost" data-tip="{% translate 'Download a sample CSV with the expected columns.' %}">{% translate "Template" %}</a>
       <a href="{% url 'household_category_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "New Category" %}</a>
     </div>
   </header>
@@ -72,7 +72,7 @@
   <section class="card">
     <div class="card-header">
       <div>
-        <h2 class="card-title">{% translate "Manage Categories" %}</h2>
+        <h2 class="card-title inline-flex items-center">{% translate "Manage Categories" %}{% translate "Categories that have never been used don't appear in the chart above, but you can manage them all here." as info_text %}{% include "partials/info.html" with text=info_text %}</h2>
         <p class="card-subtitle">{% translate "Inactive categories disappear from the purchase form but keep their history." %}</p>
       </div>
     </div>

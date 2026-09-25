@@ -15,9 +15,9 @@
       <form method="post" action="{% url 'category_import' %}" enctype="multipart/form-data" x-data>
         {% csrf_token %}
         <input type="file" id="expense-category-import-file" name="csv_file" accept=".csv,text/csv" class="hidden" @change="$el.form.submit()">
-        <label for="expense-category-import-file" class="btn btn-secondary cursor-pointer">{% include "partials/icon.html" with name="upload" %}{% translate "Import CSV" %}</label>
+        <label for="expense-category-import-file" class="btn btn-secondary cursor-pointer" data-tip="{% translate 'Upload a .csv file to add many at once. Download the Template to see the columns.' %}">{% include "partials/icon.html" with name="upload" %}{% translate "Import CSV" %}</label>
       </form>
-      <a href="{% url 'category_import_template' %}" class="btn btn-ghost">{% translate "Template" %}</a>
+      <a href="{% url 'category_import_template' %}" class="btn btn-ghost" data-tip="{% translate 'Download a sample CSV with the expected columns.' %}">{% translate "Template" %}</a>
       <a href="{% url 'category_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add Category" %}</a>
     </div>
   </header>
@@ -42,13 +42,13 @@
           <h3 class="entity-name">{{ c.name }}</h3>
           <p class="entity-meta">{% blocktranslate count counter=c.entry_count %}{{ counter }} entry{% plural %}{{ counter }} entries{% endblocktranslate %}</p>
         </div>
-        {% if not c.is_active %}<span class="badge" data-tone="muted">{% translate "Inactive" %}</span>{% endif %}
+        {% if not c.is_active %}<span class="badge" data-tone="muted" data-tip="{% translate 'Hidden from lists and dropdowns. Its history still counts in totals.' %}">{% translate "Inactive" %}</span>{% endif %}
       </div>
       <div>
         <p class="entity-figure-label">{% translate "Total spent" %}</p>
         <p class="entity-figure">{{ c.total_amt|money }}</p>
       </div>
-      <div class="meter" data-tone="critical" title="{% translate 'Relative to your biggest category' %}"><span style="width: {{ c.share_percent }}%"></span></div>
+      <div class="meter" data-tone="critical" data-tip="{% translate 'Bar length is relative to your biggest category.' %}"><span style="width: {{ c.share_percent }}%"></span></div>
       <div class="entity-foot">
         <a href="{% url 'expense_list' %}?category={{ c.pk }}" class="btn btn-secondary btn-sm">{% translate "View expenses" %}</a>
         {% url 'category_toggle_active' c.pk as toggle_url %}

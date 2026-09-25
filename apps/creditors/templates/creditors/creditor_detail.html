@@ -13,10 +13,10 @@
         <div class="min-w-0">
           <h1 class="page-title">{{ creditor.name }}</h1>
           <div class="mt-1 flex flex-wrap gap-1.5">
-            {% if due_status == 'overdue' %}<span class="badge" data-tone="critical">{% include "partials/icon.html" with name="alert" %}{% translate "Overdue" %}</span>
-            {% elif due_status == 'due_soon' %}<span class="badge" data-tone="warn">{% include "partials/icon.html" with name="clock" %}{% translate "Due Soon" %}</span>{% endif %}
-            {% if remaining <= 0 and borrowed > 0 %}<span class="badge badge-dot" data-tone="good">{% translate "Paid Completely" %}</span>{% endif %}
-            {% if not creditor.is_active %}<span class="badge" data-tone="muted">{% translate "Inactive" %}</span>{% endif %}
+            {% if due_status == 'overdue' %}<span class="badge" data-tone="critical" data-tip="{% translate 'The due date has passed and money is still owed.' %}">{% include "partials/icon.html" with name="alert" %}{% translate "Overdue" %}</span>
+            {% elif due_status == 'due_soon' %}<span class="badge" data-tone="warn" data-tip="{% translate 'Due within the next 7 days.' %}">{% include "partials/icon.html" with name="clock" %}{% translate "Due Soon" %}</span>{% endif %}
+            {% if remaining <= 0 and borrowed > 0 %}<span class="badge badge-dot" data-tone="good" data-tip="{% translate 'Everything has been paid back.' %}">{% translate "Paid Completely" %}</span>{% endif %}
+            {% if not creditor.is_active %}<span class="badge" data-tone="muted" data-tip="{% translate 'Hidden from lists and dropdowns. Its history still counts in totals.' %}">{% translate "Inactive" %}</span>{% endif %}
           </div>
         </div>
       </div>
@@ -43,7 +43,7 @@
 
   <dl class="stat-grid">
     <div class="stat" data-tone="{% if remaining > 0 %}critical{% else %}good{% endif %}">
-      <dt class="stat-label">{% translate "Outstanding Balance" %}</dt>
+      <dt class="stat-label inline-flex items-center">{% translate "Outstanding Balance" %}{% translate "Total borrowed minus total repaid. Estimated interest isn't included until you post it." as info_text %}{% include "partials/info.html" with text=info_text %}</dt>
       <dd class="stat-value is-tone">{{ remaining|money }}</dd>
     </div>
     <div class="stat">
@@ -60,7 +60,7 @@
   <section class="card">
     <div class="card-header">
       <div>
-        <h2 class="card-title">{% translate "Interest" %}</h2>
+        <h2 class="card-title inline-flex items-center">{% translate "Interest" %}{% translate "Interest is only an estimate shown here. Nothing is added to what you owe unless you press Post to Balance." as info_text %}{% include "partials/info.html" with text=info_text %}</h2>
         <p class="card-subtitle max-w-xl">
           {% if creditor.interest_type == 'FIXED' %}
             {% translate "A flat interest amount you've agreed on. It shows here until you post it — nothing is added automatically." %}
@@ -74,7 +74,7 @@
       {% if accrued_interest > 0 %}
       <form method="post" action="{% url 'creditor_post_interest' creditor.pk %}" data-confirm="{% translate 'Add this accrued interest to the outstanding balance as a new transaction? You can edit or delete that transaction afterwards like any other, but it will not be reversed automatically.' %}">
         {% csrf_token %}
-        <button type="submit" class="btn btn-soft btn-sm">{% include "partials/icon.html" with name="plus" %}{% translate "Post to Balance" %}</button>
+        <button type="submit" class="btn btn-soft btn-sm" data-tip="{% translate 'Adds the accrued interest to the balance as a new Borrowed entry.' %}">{% include "partials/icon.html" with name="plus" %}{% translate "Post to Balance" %}</button>
       </form>
       {% endif %}
     </div>
@@ -89,7 +89,7 @@
           </dd>
         </div>
         <div class="kv sm:block sm:!border-0 sm:py-0">
-          <dt class="kv-label sm:text-xs">{% translate "Accrued Interest (est.)" %}</dt>
+          <dt class="kv-label sm:text-xs inline-flex items-center">{% translate "Accrued Interest (est.)" %}{% translate "Interest built up since the last transaction, prorated by days. It resets each time you post it." as info_text %}{% include "partials/info.html" with text=info_text %}</dt>
           <dd class="kv-value sm:mt-1 sm:text-left sm:text-lg" {% if accrued_interest > 0 %}data-tone="warn"{% endif %}>{{ accrued_interest|money }}</dd>
         </div>
         <div class="kv sm:block sm:!border-0 sm:py-0">

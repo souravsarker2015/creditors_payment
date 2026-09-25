@@ -5,14 +5,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#16241f">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23a9791f'/%3E%3Ctext x='16' y='23' font-size='20' font-family='Georgia,serif' font-weight='700' text-anchor='middle' fill='%23221a06'%3E%E0%A7%B3%3C/text%3E%3C/svg%3E">
     <title>{% block title %}{% translate "Tracker" %}{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Hind+Siliguri:wght@400;500;600;700&family=Tiro+Bangla&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tippy.js@6/dist/tippy.css">
     <link rel="stylesheet" href="{% static 'css/app.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
@@ -108,6 +111,9 @@
 
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tippy.js@6/dist/tippy-bundle.umd.min.js"></script>
+    <div id="toast-root" class="toast-root" aria-live="polite" aria-atomic="true"></div>
     <script>
     /* Shared UI helpers — pages call these instead of repeating setup code. */
     window.FT = {
@@ -142,6 +148,123 @@
 
     document.addEventListener("DOMContentLoaded", function () {
         document.querySelectorAll(".datepicker").forEach(FT.datePicker);
+    });
+
+    /* Toast: a short confirmation at the bottom of the screen. */
+    FT.toast = function (message, tone) {
+        var root = document.getElementById("toast-root");
+        if (!root || !message) return;
+        var el = document.createElement("div");
+        el.className = "toast";
+        el.setAttribute("data-tone", tone || "good");
+        el.textContent = message;
+        root.appendChild(el);
+        requestAnimationFrame(function () { el.classList.add("is-in"); });
+        setTimeout(function () { el.classList.remove("is-in"); setTimeout(function () { el.remove(); }, 250); }, 3200);
+    };
+
+    /* Quick-add popup beside a dropdown (see partials/quick_add_modal.html). */
+    document.addEventListener("alpine:init", function () {
+        Alpine.data("quickAdd", function (url, selectId) {
+            return {
+                open: false, busy: false, errors: {}, reactivate: null, trigger: null,
+                show: function (btn) {
+                    this.trigger = btn; this.errors = {}; this.reactivate = null; this.open = true;
+                    setTimeout(function () {  // after x-trap has moved focus into the dialog
+                        var form = document.getElementById("qa-form-" + selectId);
+                        var first = form && form.querySelector("input:not([type=hidden]), textarea");
+                        if (first) first.focus();
+                    }, 60);
+                },
+                close: function () {
+                    this.open = false;
+                    if (this.trigger) this.trigger.focus();
+                },
+                csrf: function () {
+                    var m = document.cookie.match(/csrftoken=([^;]+)/);
+                    var input = document.querySelector("input[name=csrfmiddlewaretoken]");
+                    return m ? m[1] : (input ? input.value : "");
+                },
+                post: function (body) {
+                    return fetch(url, {
+                        method: "POST", body: body, credentials: "same-origin",
+                        headers: { "X-CSRFToken": this.csrf(), "X-Requested-With": "XMLHttpRequest" },
+                    }).then(function (r) { return r.json(); });
+                },
+                select: function (data) {
+                    var sel = document.getElementById(selectId);
+                    if (!sel) return;
+                    var opt = Array.prototype.find.call(sel.options, function (o) { return o.value === String(data.id); });
+                    if (!opt) {
+                        opt = new Option(data.name, data.id);
+                        // Keep the list alphabetical, after the empty "choose…" option.
+                        var before = Array.prototype.find.call(sel.options, function (o) {
+                            return o.value && o.text.localeCompare(data.name, undefined, { sensitivity: "base" }) > 0;
+                        });
+                        sel.add(opt, before || null);
+                    }
+                    sel.value = String(data.id);
+                    sel.dispatchEvent(new Event("change", { bubbles: true }));
+                    sel.classList.add("just-added");
+                    setTimeout(function () { sel.classList.remove("just-added"); }, 1200);
+                },
+                handle: function (data, formEl) {
+                    this.busy = false;
+                    if (data.ok) {
+                        this.select(data);
+                        if (formEl) formEl.reset();
+                        this.open = false;
+                        var sel = document.getElementById(selectId);
+                        if (sel) sel.focus();
+                        FT.toast(data.message, "good");
+                    } else {
+                        this.errors = data.errors || {};
+                        this.reactivate = data.reactivate || null;
+                    }
+                },
+                save: function (formEl) {
+                    var self = this;
+                    self.busy = true; self.errors = {}; self.reactivate = null;
+                    self.post(new FormData(formEl))
+                        .then(function (data) { self.handle(data, formEl); })
+                        .catch(function () { self.busy = false; self.errors = { __all__: ["{% translate 'Could not save. Check your connection and try again.' %}"] }; });
+                },
+                doReactivate: function () {
+                    var self = this, body = new FormData();
+                    body.append("reactivate", self.reactivate.id);
+                    self.busy = true;
+                    self.post(body).then(function (data) { self.errors = {}; self.handle(data, null); });
+                },
+            };
+        });
+    });
+
+    /* Tooltips (Tippy.js). Two kinds:
+       - [data-tip]: short label on icon buttons/badges — hover & keyboard focus;
+         on touch, press-and-hold so a normal tap still performs the action.
+       - .info-tip[data-info]: the ⓘ explainers — also open on a plain tap. */
+    document.addEventListener("DOMContentLoaded", function () {
+        if (!window.tippy) return;
+        // Icon-only buttons already carry a title/aria-label: reuse it as the tooltip.
+        document.querySelectorAll(".icon-btn:not([data-tip]), .chip[title], .pager-link[aria-label], .pref-swatch[title]").forEach(function (el) {
+            var text = el.getAttribute("title") || el.getAttribute("aria-label");
+            if (text) { el.setAttribute("data-tip", text); el.removeAttribute("title"); }
+        });
+        var base = { theme: "ft", animation: "shift-away-subtle", delay: [250, 0], maxWidth: 260, appendTo: function () { return document.body; } };
+        tippy.delegate("body", Object.assign({}, base, {
+            target: "[data-tip]",
+            content: function (el) { return el.getAttribute("data-tip"); },
+            touch: ["hold", 450],
+        }));
+        tippy.delegate("body", Object.assign({}, base, {
+            target: ".info-tip",
+            content: function (el) { return el.getAttribute("data-info"); },
+            trigger: "mouseenter focus click",
+            delay: [100, 0],
+            maxWidth: 300,
+            touch: true,
+            interactive: false,
+        }));
     });
 
     // Any form with data-confirm asks before submitting (deletes, irreversible actions).

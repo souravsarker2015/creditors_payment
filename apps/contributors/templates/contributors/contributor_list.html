@@ -15,9 +15,9 @@
       <form method="post" action="{% url 'contributor_import' %}" enctype="multipart/form-data" x-data>
         {% csrf_token %}
         <input type="file" id="contributor-import-file" name="csv_file" accept=".csv,text/csv" class="hidden" @change="$el.form.submit()">
-        <label for="contributor-import-file" class="btn btn-secondary cursor-pointer">{% include "partials/icon.html" with name="upload" %}{% translate "Import CSV" %}</label>
+        <label for="contributor-import-file" class="btn btn-secondary cursor-pointer" data-tip="{% translate 'Upload a .csv file to add many at once. Download the Template to see the columns.' %}">{% include "partials/icon.html" with name="upload" %}{% translate "Import CSV" %}</label>
       </form>
-      <a href="{% url 'contributor_import_template' %}" class="btn btn-ghost">{% translate "Template" %}</a>
+      <a href="{% url 'contributor_import_template' %}" class="btn btn-ghost" data-tip="{% translate 'Download a sample CSV with the expected columns.' %}">{% translate "Template" %}</a>
       <a href="{% url 'contributor_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "New Contributor" %}</a>
     </div>
   </header>
@@ -57,7 +57,7 @@
         {% url 'contributor_update' contributor.pk as edit_url %}{% url 'contributor_toggle_active' contributor.pk as toggle_url %}
         {% include "partials/entity_menu.html" with edit_url=edit_url toggle_url=toggle_url active=contributor.is_active %}
       </div>
-      {% if not contributor.is_active %}<div class="entity-badges"><span class="badge" data-tone="muted">{% translate "Inactive" %}</span></div>{% endif %}
+      {% if not contributor.is_active %}<div class="entity-badges"><span class="badge" data-tone="muted" data-tip="{% translate 'Hidden from lists and dropdowns. Its history still counts in totals.' %}">{% translate "Inactive" %}</span></div>{% endif %}
       <div>
         <p class="entity-figure-label">{% translate "Total Support" %}</p>
         <p class="entity-figure" data-tone="good">{{ contributor.total_amount|default:0|money }}</p>

@@ -60,6 +60,9 @@ class PurchaseForm(forms.ModelForm):
         self.fields["category"].empty_label = _("No category")
         self.fields["buyer"].required = False
         self.fields["buyer"].empty_label = _("No one in particular")
+        self.fields["buyer"].help_text = _("Only pick someone if they paid with their own money — you'll owe it back to them.")
+        self.fields["category"].quick_add = "household_category"
+        self.fields["buyer"].quick_add = "household_member"
         if user:
             self.fields["category"].queryset = active_or_current(
                 HouseholdCategory.objects.filter(user=user), self.instance.category_id

@@ -1,0 +1,50 @@
+{% load i18n %}
+{% comment %}
+Quick-add popup, teleported to <body> so its <form> isn't nested inside the
+page's form. Lives inside an element using x-data="quickAdd(...)". Needs: qa (from quick_add_popup).
+{% endcomment %}
+<template x-teleport="body">
+  <div class="modal-root" x-show="open" x-cloak @keydown.escape.window="open && close()" role="dialog" aria-modal="true" aria-labelledby="qa-title-{{ field.auto_id }}">
+    <div class="modal-backdrop" x-show="open" x-transition.opacity.duration.200ms @click="close()"></div>
+    <form method="post" action="{{ qa.url }}" class="modal" id="qa-form-{{ field.auto_id }}" x-show="open" novalidate
+          x-transition:enter="modal-enter" x-transition:enter-start="modal-enter-start" x-transition:enter-end="modal-enter-end"
+          x-transition:leave="modal-leave" x-transition:leave-start="modal-enter-end" x-transition:leave-end="modal-enter-start"
+          @submit.prevent="save($el)" x-trap.noscroll="open">
+      <div class="modal-header">
+        <span class="modal-icon">{% include "partials/icon.html" with name="plus" %}</span>
+        <div class="min-w-0 flex-1">
+          <h2 class="modal-title" id="qa-title-{{ field.auto_id }}">{{ qa.title }}</h2>
+          <p class="modal-subtitle">{% blocktranslate with noun=qa.noun %}It'll be selected for you as soon as it's saved.{% endblocktranslate %}</p>
+        </div>
+        <button type="button" class="icon-btn" @click="close()" aria-label="{% translate 'Close' %}" data-tip="{% translate 'Close (Esc)' %}">{% include "partials/icon.html" with name="x" %}</button>
+      </div>
+      <div class="modal-body form-stack">
+        <template x-if="reactivate">
+          <div class="callout" data-tone="warn">
+            {% include "partials/icon.html" with name="archive" %}
+            <div class="flex-1">
+              <p><span x-text="(errors.name || [''])[0]"></span> {% translate "Reactivate it instead of creating a duplicate?" %}</p>
+              <button type="button" class="btn btn-soft btn-sm mt-2" @click="doReactivate()" :disabled="busy">{% include "partials/icon.html" with name="restore" %}{% translate "Reactivate & select" %}</button>
+            </div>
+          </div>
+        </template>
+        <p class="form-errors" x-show="errors.__all__" x-text="(errors.__all__ || []).join(' ')"></p>
+        {% for f in qa.form %}
+        <div class="field" :class="errors['{{ f.name }}'] && !reactivate && 'has-error'">
+          <label class="label" for="{{ f.id_for_label }}">{{ f.label }}{% if f.field.required %}<span class="req" aria-hidden="true">*</span>{% else %}<span class="opt">{% translate "(optional)" %}</span>{% endif %}</label>
+          {{ f }}
+          <p class="field-error" x-show="errors['{{ f.name }}'] && !reactivate" x-text="(errors['{{ f.name }}'] || []).join(' ')"></p>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" @click="close()">{% translate "Cancel" %}</button>
+        <button type="submit" class="btn btn-primary" :disabled="busy">
+          <svg x-show="busy" class="spin" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-opacity=".25" stroke-width="3"/><path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+          <span x-show="!busy" class="contents">{% include "partials/icon.html" with name="check" %}</span>
+          {% translate "Save & select" %}
+        </button>
+      </div>
+    </form>
+  </div>
+</template>

@@ -15,9 +15,9 @@
       <form method="post" action="{% url 'household_member_import' %}" enctype="multipart/form-data" x-data>
         {% csrf_token %}
         <input type="file" id="member-import-file" name="csv_file" accept=".csv,text/csv" class="hidden" @change="$el.form.submit()">
-        <label for="member-import-file" class="btn btn-secondary cursor-pointer">{% include "partials/icon.html" with name="upload" %}{% translate "Import CSV" %}</label>
+        <label for="member-import-file" class="btn btn-secondary cursor-pointer" data-tip="{% translate 'Upload a .csv file to add many at once. Download the Template to see the columns.' %}">{% include "partials/icon.html" with name="upload" %}{% translate "Import CSV" %}</label>
       </form>
-      <a href="{% url 'household_member_import_template' %}" class="btn btn-ghost">{% translate "Template" %}</a>
+      <a href="{% url 'household_member_import_template' %}" class="btn btn-ghost" data-tip="{% translate 'Download a sample CSV with the expected columns.' %}">{% translate "Template" %}</a>
       <a href="{% url 'household_member_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "New Member" %}</a>
     </div>
   </header>
@@ -61,10 +61,10 @@
       </div>
       <div class="entity-badges">
         {% if m.is_settled %}<span class="badge badge-dot" data-tone="good">{% translate "Settled Up" %}</span>{% endif %}
-        {% if not m.is_active %}<span class="badge" data-tone="muted">{% translate "Inactive" %}</span>{% endif %}
+        {% if not m.is_active %}<span class="badge" data-tone="muted" data-tip="{% translate 'Hidden from lists and dropdowns. Its history still counts in totals.' %}">{% translate "Inactive" %}</span>{% endif %}
       </div>
       <div>
-        <p class="entity-figure-label">{% translate "You owe them" %}</p>
+        <p class="entity-figure-label inline-flex items-center">{% translate "You owe them" %}{% translate "Money this member spent on household shopping that you haven't given back yet." as info_text %}{% include "partials/info.html" with text=info_text %}</p>
         <p class="entity-figure" data-tone="{% if m.is_settled %}good{% else %}warn{% endif %}">{% if m.is_settled %}{{ 0|money }}{% else %}{{ m.balance_due|money }}{% endif %}</p>
       </div>
       <div>

@@ -14,7 +14,7 @@
           <h1 class="page-title">{{ member.name }}</h1>
           <div class="mt-1 flex flex-wrap gap-1.5">
             {% if balance_due <= 0 %}<span class="badge badge-dot" data-tone="good">{% translate "Settled Up" %}</span>{% endif %}
-            {% if not member.is_active %}<span class="badge" data-tone="muted">{% translate "Inactive" %}</span>{% endif %}
+            {% if not member.is_active %}<span class="badge" data-tone="muted" data-tip="{% translate 'Hidden from lists and dropdowns. Its history still counts in totals.' %}">{% translate "Inactive" %}</span>{% endif %}
           </div>
         </div>
       </div>

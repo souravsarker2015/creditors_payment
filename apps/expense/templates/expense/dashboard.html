@@ -23,7 +23,7 @@
   <section class="hero">
     <div class="hero-inner">
       <div class="min-w-0">
-        <p class="hero-label">{% translate "Total Spent" %}</p>
+        <p class="hero-label inline-flex items-center">{% translate "Total Spent" %}{% translate "Sum of all expenses that match the filters above, including ones created by recurring schedules." as info_text %}{% include "partials/info.html" with text=info_text %}</p>
         <p class="hero-value">{{ total_spent|money }}</p>
         <p class="hero-sub">{% if selected_year or date_from or date_to or selected_category_ids %}{% translate "For the selected filters" %}{% else %}{% translate "All time, all categories" %}{% endif %}</p>
       </div>

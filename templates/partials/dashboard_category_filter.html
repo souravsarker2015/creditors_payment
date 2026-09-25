@@ -14,7 +14,7 @@
     <div class="card-body flex flex-col gap-3 lg:flex-row lg:items-end">
       <div class="field flex-1">
         <div class="field-head">
-          <label for="category" class="label">{% translate "Categories" %}</label>
+          <label for="category" class="label inline-flex items-center">{% translate "Categories" %}{% translate "Include shows only the categories you pick. Exclude shows everything except them. Leave empty for all." as info_text %}{% include "partials/info.html" with text=info_text %}</label>
           <div class="seg seg-sm seg-block !w-auto" role="group" aria-label="{% translate 'Filter mode' %}">
             <button type="button" class="seg-item" data-tone="accent" :class="filterType === 'include' && 'is-active'" @click="filterType = 'include'">{% translate "Include" %}</button>
             <button type="button" class="seg-item" data-tone="critical" :class="filterType === 'exclude' && 'is-active'" @click="filterType = 'exclude'">{% translate "Exclude" %}</button>

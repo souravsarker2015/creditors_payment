@@ -168,3 +168,74 @@ class InactiveRecordsStillCountTests(TestCase):
         creditor.transactions.create(transaction_type="BORROW", amount=500, date="2026-01-01")
         response = self.client.get(reverse("dashboard"))
         self.assertEqual(response.context["remaining"], 500)
+
+
+class QuickCreateTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user("owner", password="pw12345!")
+        self.other = User.objects.create_user("other", password="pw12345!")
+        self.client.login(username="owner", password="pw12345!")
+
+    def post(self, kind, **data):
+        payload = {f"qa_{kind}-{k}": v for k, v in data.items()}
+        return self.client.post(reverse("quick_create", args=[kind]), payload)
+
+    def test_creates_and_returns_json(self):
+        response = self.post("expense_category", name="  Fuel ")
+        self.assertEqual(response.status_code, 201)
+        data = response.json()
+        category = ExpenseCategory.objects.get(user=self.user, name="Fuel")
+        self.assertEqual((data["ok"], data["id"], data["name"]), (True, category.pk, "Fuel"))
+
+    def test_every_kind_creates_for_the_current_user(self):
+        for kind, model in [
+            ("expense_category", ExpenseCategory),
+            ("income_source", IncomeSource),
+            ("household_category", HouseholdCategory),
+            ("household_member", HouseholdMember),
+        ]:
+            with self.subTest(kind):
+                self.assertEqual(self.post(kind, name="New thing").status_code, 201)
+                self.assertTrue(model.objects.filter(user=self.user, name="New thing").exists())
+
+    def test_existing_active_name_is_reused_not_duplicated(self):
+        existing = ExpenseCategory.objects.create(user=self.user, name="Rent")
+        response = self.post("expense_category", name="rent")
+        self.assertEqual(response.json()["id"], existing.pk)
+        self.assertEqual(ExpenseCategory.objects.filter(user=self.user).count(), 1)
+
+    def test_existing_inactive_name_offers_reactivation(self):
+        old = HouseholdMember.objects.create(user=self.user, name="Salma", is_active=False)
+        response = self.post("household_member", name="Salma")
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(response.json()["reactivate"]["id"], old.pk)
+
+        response = self.client.post(reverse("quick_create", args=["household_member"]), {"reactivate": old.pk})
+        self.assertTrue(response.json()["ok"])
+        old.refresh_from_db()
+        self.assertTrue(old.is_active)
+
+    def test_validation_errors_come_back_per_field(self):
+        response = self.post("income_source", name="")
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("name", response.json()["errors"])
+
+    def test_same_name_for_another_user_does_not_leak(self):
+        ExpenseCategory.objects.create(user=self.other, name="Fuel")
+        response = self.post("expense_category", name="Fuel")
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(ExpenseCategory.objects.get(pk=response.json()["id"]).user, self.user)
+
+    def test_cannot_reactivate_another_users_record(self):
+        foreign = ExpenseCategory.objects.create(user=self.other, name="X", is_active=False)
+        response = self.client.post(reverse("quick_create", args=["expense_category"]), {"reactivate": foreign.pk})
+        self.assertEqual(response.status_code, 404)
+
+    def test_unknown_kind_and_get_are_rejected(self):
+        self.assertEqual(self.client.post(reverse("quick_create", args=["nope"])).status_code, 404)
+        self.assertEqual(self.client.get(reverse("quick_create", args=["expense_category"])).status_code, 405)
+
+    def test_expense_form_renders_the_add_button_and_popup(self):
+        response = self.client.get(reverse("expense_create"))
+        self.assertContains(response, 'class="input-addon-btn"')
+        self.assertContains(response, 'name="qa_expense_category-name"')

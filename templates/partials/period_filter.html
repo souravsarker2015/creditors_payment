@@ -22,7 +22,7 @@ Needs: year_options, month_choices, selected_year, selected_month, reset_url, st
   <noscript><button type="submit" class="btn btn-secondary btn-sm">{% translate "Apply" %}</button></noscript>
   <div class="flex gap-1">
     {% if selected_year or selected_month %}<a href="{{ reset_url }}" class="btn btn-ghost btn-sm">{% translate "Reset" %}</a>{% endif %}
-    <button type="submit" name="export" value="csv" class="icon-btn" title="{% translate 'Export CSV' %}" aria-label="{% translate 'Export CSV' %}">{% include "partials/icon.html" with name="download" %}</button>
-    <a href="{{ statement_url }}?{{ request.GET.urlencode }}" class="icon-btn" title="{% translate 'Statement' %}" aria-label="{% translate 'Printable statement' %}">{% include "partials/icon.html" with name="printer" %}</a>
+    <button type="submit" name="export" value="csv" class="icon-btn" title="{% translate 'Export this period as CSV' %}" aria-label="{% translate 'Export CSV' %}">{% include "partials/icon.html" with name="download" %}</button>
+    <a href="{{ statement_url }}?{{ request.GET.urlencode }}" class="icon-btn" title="{% translate 'Printable statement for this period (save as PDF)' %}" aria-label="{% translate 'Printable statement' %}">{% include "partials/icon.html" with name="printer" %}</a>
   </div>
 </form>

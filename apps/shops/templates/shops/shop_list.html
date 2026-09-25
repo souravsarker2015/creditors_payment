@@ -15,9 +15,9 @@
       <form method="post" action="{% url 'shop_import' %}" enctype="multipart/form-data" x-data>
         {% csrf_token %}
         <input type="file" id="shop-import-file" name="csv_file" accept=".csv,text/csv" class="hidden" @change="$el.form.submit()">
-        <label for="shop-import-file" class="btn btn-secondary cursor-pointer">{% include "partials/icon.html" with name="upload" %}{% translate "Import CSV" %}</label>
+        <label for="shop-import-file" class="btn btn-secondary cursor-pointer" data-tip="{% translate 'Upload a .csv file to add many at once. Download the Template to see the columns.' %}">{% include "partials/icon.html" with name="upload" %}{% translate "Import CSV" %}</label>
       </form>
-      <a href="{% url 'shop_import_template' %}" class="btn btn-ghost">{% translate "Template" %}</a>
+      <a href="{% url 'shop_import_template' %}" class="btn btn-ghost" data-tip="{% translate 'Download a sample CSV with the expected columns.' %}">{% translate "Template" %}</a>
       <a href="{% url 'shop_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "New Shop" %}</a>
     </div>
   </header>
@@ -28,7 +28,7 @@
 
   <dl class="stat-grid">
     <div class="stat" data-tone="warn">
-      <dt class="stat-label">{% translate "Current Due" %}</dt>
+      <dt class="stat-label inline-flex items-center">{% translate "Current Due" %}{% translate "These totals follow your search, filters and the Active/Inactive tab below." as info_text %}{% include "partials/info.html" with text=info_text %}</dt>
       <dd class="stat-value">{{ remaining|money }}</dd>
     </div>
     <div class="stat" data-tone="critical">
@@ -62,10 +62,10 @@
       </div>
 
       <div class="entity-badges">
-        {% if cr.remaining_amt <= 0 %}<span class="badge badge-dot" data-tone="good">{% translate "Paid Completely" %}</span>{% endif %}
-        {% if cr.due_status == 'overdue' %}<span class="badge" data-tone="critical">{% include "partials/icon.html" with name="alert" %}{% blocktranslate with date=cr.due_date|date:"j M" %}Overdue since {{ date }}{% endblocktranslate %}</span>
-        {% elif cr.due_status == 'due_soon' %}<span class="badge" data-tone="warn">{% include "partials/icon.html" with name="clock" %}{% blocktranslate with date=cr.due_date|date:"j M" %}Due {{ date }}{% endblocktranslate %}</span>{% endif %}
-        {% if not cr.is_active %}<span class="badge" data-tone="muted">{% translate "Inactive" %}</span>{% endif %}
+        {% if cr.remaining_amt <= 0 %}<span class="badge badge-dot" data-tone="good" data-tip="{% translate 'Everything has been paid back.' %}">{% translate "Paid Completely" %}</span>{% endif %}
+        {% if cr.due_status == 'overdue' %}<span class="badge" data-tone="critical" data-tip="{% translate 'The due date has passed and money is still owed.' %}">{% include "partials/icon.html" with name="alert" %}{% blocktranslate with date=cr.due_date|date:"j M" %}Overdue since {{ date }}{% endblocktranslate %}</span>
+        {% elif cr.due_status == 'due_soon' %}<span class="badge" data-tone="warn" data-tip="{% translate 'Due within the next 7 days.' %}">{% include "partials/icon.html" with name="clock" %}{% blocktranslate with date=cr.due_date|date:"j M" %}Due {{ date }}{% endblocktranslate %}</span>{% endif %}
+        {% if not cr.is_active %}<span class="badge" data-tone="muted" data-tip="{% translate 'Hidden from lists and dropdowns. Its history still counts in totals.' %}">{% translate "Inactive" %}</span>{% endif %}
       </div>
 
       <div>

@@ -22,7 +22,7 @@
   <section class="hero">
     <div class="hero-inner">
       <div class="min-w-0">
-        <p class="hero-label">{% translate "Remaining Debt" %}</p>
+        <p class="hero-label inline-flex items-center">{% translate "Remaining Debt" %}{% translate "Everything you borrowed minus everything you've repaid, across all creditors (active and inactive)." as info_text %}{% include "partials/info.html" with text=info_text %}</p>
         <p class="hero-value">{{ remaining|money }}</p>
         <p class="hero-sub">{% translate "Borrowed" %} {{ total_borrowed|money }} · {% translate "Repaid" %} {{ total_paid|money }}</p>
       </div>

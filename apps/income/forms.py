@@ -8,6 +8,10 @@ class IncomeSourceForm(forms.ModelForm):
     class Meta:
         model = IncomeSource
         fields = ["name", "description"]
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "form-input", "placeholder": _("e.g. Salary — ABC Ltd., Freelance")}),
+            "description": forms.Textarea(attrs={"class": "form-input", "rows": 2, "placeholder": _("Optional details...")}),
+        }
 
 
 class IncomeTransactionForm(forms.ModelForm):
@@ -49,3 +53,4 @@ class RecurringIncomeForm(forms.ModelForm):
                 IncomeSource.objects.filter(user=user), self.instance.source_id
             )
         self.fields["source"].empty_label = _("Choose a source…")
+        self.fields["source"].quick_add = "income_source"

@@ -13,7 +13,7 @@
         <div class="min-w-0">
           <h1 class="page-title">{{ source.name }}</h1>
           {% if source.description %}<p class="page-subtitle !mt-1">{{ source.description }}</p>{% endif %}
-          {% if not source.is_active %}<span class="badge mt-1.5" data-tone="muted">{% translate "Inactive" %}</span>{% endif %}
+          {% if not source.is_active %}<span class="badge mt-1.5" data-tone="muted" data-tip="{% translate 'Hidden from lists and dropdowns. Its history still counts in totals.' %}">{% translate "Inactive" %}</span>{% endif %}
         </div>
       </div>
     </div>
@@ -79,7 +79,7 @@
         <li class="ledger-row">
           <span class="ledger-icon" data-tone="good">{% include "partials/icon.html" with name="arrow-down" %}</span>
           <div class="ledger-main">
-            <p class="ledger-title">{{ tx.date|date:"j M Y" }}{% if tx.recurring_source_id %} <span class="badge badge-outline ml-1 !text-[0.6875rem]">{% translate "Recurring" %}</span>{% endif %}</p>
+            <p class="ledger-title">{{ tx.date|date:"j M Y" }}{% if tx.recurring_source_id %} <span class="badge badge-outline ml-1 !text-[0.6875rem]" data-tip="{% translate 'Created automatically by a recurring schedule.' %}">{% translate "Recurring" %}</span>{% endif %}</p>
             <p class="ledger-meta">{{ tx.note|default:_("No note") }}</p>
           </div>
           <div class="ledger-end">

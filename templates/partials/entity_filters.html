@@ -38,7 +38,7 @@ Phones get a search bar + Filters button; the full panel is always open from lg 
         </div>
         {% if show_payment %}
         <div class="field">
-          <div class="field-head"><span class="label">{% translate "Payment status" %}</span></div>
+          <div class="field-head"><span class="label inline-flex items-center">{% translate "Payment status" %}{% translate "Paid: nothing is left to pay. Unpaid: some balance is still outstanding." as info_text %}{% include "partials/info.html" with text=info_text %}</span></div>
           <div class="seg seg-block">
             <button type="button" class="seg-item" :class="paymentStatus === 'ALL' && 'is-active'" @click="paymentStatus = 'ALL'">{% translate "All" %}</button>
             <button type="button" class="seg-item" data-tone="good" :class="paymentStatus === 'PAID' && 'is-active'" @click="paymentStatus = 'PAID'">{% translate "Paid" %}</button>
@@ -48,7 +48,7 @@ Phones get a search bar + Filters button; the full panel is always open from lg 
         {% endif %}
         <div class="field">
           <div class="field-head">
-            <label for="category" class="label">{% translate "Categories" %}</label>
+            <label for="category" class="label inline-flex items-center">{% translate "Categories" %}{% translate "Include shows only the categories you pick. Exclude shows everything except them. Leave empty for all." as info_text %}{% include "partials/info.html" with text=info_text %}</label>
             <div class="seg seg-sm seg-block !w-auto" role="group" aria-label="{% translate 'Filter mode' %}">
               <button type="button" class="seg-item" data-tone="accent" :class="filterType === 'include' && 'is-active'" @click="filterType = 'include'">{% translate "Include" %}</button>
               <button type="button" class="seg-item" data-tone="critical" :class="filterType === 'exclude' && 'is-active'" @click="filterType = 'exclude'">{% translate "Exclude" %}</button>
@@ -66,7 +66,7 @@ Phones get a search bar + Filters button; the full panel is always open from lg 
         </div>
       </div>
       <div class="filter-foot">
-        <button type="submit" name="export" value="csv" class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="download" %}{% translate "Export CSV" %}</button>
+        <button type="submit" name="export" value="csv" class="btn btn-ghost btn-sm" data-tip="{% translate 'Download what you see (with the current filters) as a spreadsheet.' %}">{% include "partials/icon.html" with name="download" %}{% translate "Export CSV" %}</button>
         <span class="spacer"></span>
         <a href="{{ reset_url }}" class="btn btn-secondary btn-sm">{% translate "Reset" %}</a>
         <button type="submit" class="btn btn-primary btn-sm">{% include "partials/icon.html" with name="check" %}{% translate "Apply Filters" %}</button>

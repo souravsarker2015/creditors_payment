@@ -15,9 +15,9 @@
       <form method="post" action="{% url 'income_source_import' %}" enctype="multipart/form-data" x-data>
         {% csrf_token %}
         <input type="file" id="income-source-import-file" name="csv_file" accept=".csv,text/csv" class="hidden" @change="$el.form.submit()">
-        <label for="income-source-import-file" class="btn btn-secondary cursor-pointer">{% include "partials/icon.html" with name="upload" %}{% translate "Import CSV" %}</label>
+        <label for="income-source-import-file" class="btn btn-secondary cursor-pointer" data-tip="{% translate 'Upload a .csv file to add many at once. Download the Template to see the columns.' %}">{% include "partials/icon.html" with name="upload" %}{% translate "Import CSV" %}</label>
       </form>
-      <a href="{% url 'income_source_import_template' %}" class="btn btn-ghost">{% translate "Template" %}</a>
+      <a href="{% url 'income_source_import_template' %}" class="btn btn-ghost" data-tip="{% translate 'Download a sample CSV with the expected columns.' %}">{% translate "Template" %}</a>
       <a href="{% url 'income_source_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Register New Source" %}</a>
     </div>
   </header>
@@ -56,7 +56,7 @@
         {% url 'income_source_edit' s.pk as edit_url %}{% url 'income_source_toggle_active' s.pk as toggle_url %}
         {% include "partials/entity_menu.html" with edit_url=edit_url toggle_url=toggle_url active=s.is_active %}
       </div>
-      {% if not s.is_active %}<div class="entity-badges"><span class="badge" data-tone="muted">{% translate "Inactive" %}</span></div>{% endif %}
+      {% if not s.is_active %}<div class="entity-badges"><span class="badge" data-tone="muted" data-tip="{% translate 'Hidden from lists and dropdowns. Its history still counts in totals.' %}">{% translate "Inactive" %}</span></div>{% endif %}
       <div>
         <p class="entity-figure-label">{% translate "Total Earned" %}</p>
         <p class="entity-figure" data-tone="good">{{ s.total_amt|money }}</p>

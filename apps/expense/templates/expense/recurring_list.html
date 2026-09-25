@@ -42,7 +42,7 @@
         <a href="{% url 'recurring_expense_edit' s.pk %}" class="btn btn-secondary btn-sm">{% include "partials/icon.html" with name="edit" %}{% translate "Edit" %}</a>
         <form method="post" action="{% url 'recurring_expense_toggle' s.pk %}">
           {% csrf_token %}
-          <button type="submit" class="btn {% if s.is_active %}btn-ghost{% else %}btn-soft{% endif %} btn-sm">{% if s.is_active %}{% include "partials/icon.html" with name="pause" %}{% translate "Pause" %}{% else %}{% include "partials/icon.html" with name="play" %}{% translate "Resume" %}{% endif %}</button>
+          <button type="submit" class="btn {% if s.is_active %}btn-ghost{% else %}btn-soft{% endif %} btn-sm" data-tip="{% if s.is_active %}{% translate 'Stop creating new entries until you resume. Past entries stay.' %}{% else %}{% translate 'Start creating entries again from the next date.' %}{% endif %}">{% if s.is_active %}{% include "partials/icon.html" with name="pause" %}{% translate "Pause" %}{% else %}{% include "partials/icon.html" with name="play" %}{% translate "Resume" %}{% endif %}</button>
         </form>
         <form method="post" action="{% url 'recurring_expense_delete' s.pk %}" data-confirm="{% translate 'Delete this recurring schedule? Past entries it already created are kept.' %}">
           {% csrf_token %}

@@ -41,7 +41,7 @@
       <li class="ledger-row">
         <span class="ledger-icon" data-tone="critical">{% if ex.category %}{{ ex.category.name|first|upper }}{% else %}G{% endif %}</span>
         <div class="ledger-main">
-          <p class="ledger-title">{% if ex.category %}{{ ex.category.name }}{% else %}{% translate "General" %}{% endif %}{% if ex.recurring_source_id %} <span class="badge badge-outline ml-1 !text-[0.6875rem]">{% translate "Recurring" %}</span>{% endif %}</p>
+          <p class="ledger-title">{% if ex.category %}{{ ex.category.name }}{% else %}{% translate "General" %}{% endif %}{% if ex.recurring_source_id %} <span class="badge badge-outline ml-1 !text-[0.6875rem]" data-tip="{% translate 'Created automatically by a recurring schedule.' %}">{% translate "Recurring" %}</span>{% endif %}</p>
           <p class="ledger-meta">{{ ex.date|date:"j M Y" }}{% if ex.note %} · {{ ex.note }}{% endif %}</p>
         </div>
         <div class="ledger-end">

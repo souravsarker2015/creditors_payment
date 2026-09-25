@@ -25,7 +25,7 @@
         {% endif %}
         <div class="field">
           <div class="field-head">
-            <label for="source-filter" class="label">{% translate "Sources" %}</label>
+            <label for="source-filter" class="label inline-flex items-center">{% translate "Sources" %}{% translate "Include shows only the sources you pick. Exclude shows everything except them. Leave empty for all." as info_text %}{% include "partials/info.html" with text=info_text %}</label>
             <div class="seg seg-sm seg-block !w-auto" role="group" aria-label="{% translate 'Filter mode' %}">
               <button type="button" class="seg-item" data-tone="accent" :class="filterMode === 'include' && 'is-active'" @click="filterMode = 'include'">{% translate "Include" %}</button>
               <button type="button" class="seg-item" data-tone="critical" :class="filterMode === 'exclude' && 'is-active'" @click="filterMode = 'exclude'">{% translate "Exclude" %}</button>
@@ -63,7 +63,7 @@
         {% endif %}
       </div>
       <div class="filter-foot">
-        {% if show_export %}<button type="submit" name="export" value="csv" class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="download" %}{% translate "Export CSV" %}</button>{% endif %}
+        {% if show_export %}<button type="submit" name="export" value="csv" class="btn btn-ghost btn-sm" data-tip="{% translate 'Download what you see (with the current filters) as a spreadsheet.' %}">{% include "partials/icon.html" with name="download" %}{% translate "Export CSV" %}</button>{% endif %}
         <span class="spacer"></span>
         <a href="{{ reset_url }}" class="btn btn-secondary btn-sm">{% translate "Reset" %}</a>
         <button type="submit" class="btn btn-primary btn-sm">{% include "partials/icon.html" with name="check" %}{% translate "Apply Filters" %}</button>

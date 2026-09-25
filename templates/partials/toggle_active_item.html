@@ -4,8 +4,8 @@
   {% csrf_token %}
   <input type="hidden" name="next" value="{{ request.get_full_path }}">
   {% if active %}
-  <button type="submit" class="{% if as_button %}btn btn-ghost btn-sm{% else %}menu-item{% endif %}" role="menuitem">{% include "partials/icon.html" with name="archive" %}{% translate "Mark as inactive" %}</button>
+  <button type="submit" class="{% if as_button %}btn btn-ghost btn-sm{% else %}menu-item{% endif %}" role="menuitem" {% if as_button %}data-tip="{% translate 'Hide it from lists and dropdowns. Its history and totals are kept.' %}"{% endif %}>{% include "partials/icon.html" with name="archive" %}{% translate "Mark as inactive" %}</button>
   {% else %}
-  <button type="submit" class="{% if as_button %}btn btn-soft btn-sm{% else %}menu-item{% endif %}" role="menuitem">{% include "partials/icon.html" with name="restore" %}{% translate "Mark as active" %}</button>
+  <button type="submit" class="{% if as_button %}btn btn-soft btn-sm{% else %}menu-item{% endif %}" role="menuitem" {% if as_button %}data-tip="{% translate 'Show it in lists and dropdowns again.' %}"{% endif %}>{% include "partials/icon.html" with name="restore" %}{% translate "Mark as active" %}</button>
   {% endif %}
 </form>

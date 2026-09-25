@@ -26,7 +26,7 @@
       <dd class="stat-value">{{ total_spent|money }}</dd>
     </div>
     <div class="stat" data-tone="warn">
-      <dt class="stat-label">{% translate "Outstanding to Members" %}</dt>
+      <dt class="stat-label inline-flex items-center">{% translate "Outstanding to Members" %}{% translate "Bazar that members paid for with their own money and you still need to give back." as info_text %}{% include "partials/info.html" with text=info_text %}</dt>
       <dd class="stat-value">{{ outstanding_to_members|money }}</dd>
     </div>
     <div class="stat" data-tone="good">

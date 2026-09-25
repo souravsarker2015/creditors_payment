@@ -1,5 +1,6 @@
 {% load i18n %}
 {% comment %}Active / Inactive / All tabs. Needs: status, status_counts. Keeps the other query params.{% endcomment %}
+<div class="inline-flex max-w-full items-center gap-1">
 <nav class="seg" aria-label="{% translate 'Filter by status' %}">
   <a href="{% query_with status='' %}" class="seg-item {% if status == 'active' %}is-active{% endif %}" {% if status == 'active' %}aria-current="page"{% endif %}>
     {% translate "Active" %} <span class="seg-count">{{ status_counts.active }}</span>
@@ -11,3 +12,5 @@
     {% translate "All" %} <span class="seg-count">{{ status_counts.all }}</span>
   </a>
 </nav>
+{% translate "Inactive records are hidden from lists and dropdowns, but their history still counts in every total. Use the ⋯ menu on a card to switch." as info_text %}{% include "partials/info.html" with text=info_text %}
+</div>

@@ -23,7 +23,7 @@
   <section class="hero">
     <div class="hero-inner">
       <div class="min-w-0">
-        <p class="hero-label">{% translate "Total Earned" %}</p>
+        <p class="hero-label inline-flex items-center">{% translate "Total Earned" %}{% translate "Sum of all income that matches the filters above, including recurring payouts." as info_text %}{% include "partials/info.html" with text=info_text %}</p>
         <p class="hero-value">{{ total_income|money }}</p>
         <p class="hero-sub">{% if selected_year or date_from or date_to or selected_source_ids %}{% translate "For the selected filters" %}{% else %}{% translate "All time, all sources" %}{% endif %}</p>
       </div>

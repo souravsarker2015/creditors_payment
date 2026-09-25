@@ -1,7 +1,7 @@
 {% load i18n %}
 {% comment %}Kebab menu for a row. Needs: edit_url, delete_url, confirm (text). Optional: up (open upwards).{% endcomment %}
 <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
-  <button type="button" class="icon-btn" @click="open = !open" :aria-expanded="open" aria-haspopup="true" aria-label="{% translate 'Actions' %}">
+  <button type="button" class="icon-btn" @click="open = !open" :aria-expanded="open" aria-haspopup="true" aria-label="{% translate 'More actions' %}">
     <span class="h-[1.125rem] w-[1.125rem]">{% include "partials/icon.html" with name="dots" %}</span>
   </button>
   <div class="menu{% if up %} menu-up{% endif %}" x-show="open" x-cloak x-transition.opacity.scale.95.duration.100ms role="menu">

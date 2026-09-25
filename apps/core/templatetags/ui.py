@@ -48,3 +48,12 @@ def query_with(context, **kwargs):
             params[key] = value
     encoded = params.urlencode()
     return f"?{encoded}" if encoded else "?"
+
+
+@register.simple_tag
+def quick_add_popup(kind):
+    """Context for the quick-add popup of one kind (form, url, title)."""
+    from apps.core.quick_create import popup_context
+
+    return popup_context(kind)
+
