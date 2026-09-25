@@ -134,7 +134,7 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
-<script src="{% static 'js/charts.js' %}"></script>
+<script src="{% asset 'js/charts.js' %}"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     renderDistributionChart({ canvasId: 'categoryChart', showLegend: false, labels: [{% for r in category_rank %}"{{ r.label|escapejs }}",{% endfor %}], data: [{% for r in category_rank %}{{ r.value|stringformat:"f" }},{% endfor %}], centerLabel: '{% translate "Total Spent" %}' });

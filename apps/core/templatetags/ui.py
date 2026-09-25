@@ -57,3 +57,21 @@ def quick_add_popup(kind):
 
     return popup_context(kind)
 
+
+
+@register.simple_tag
+def asset(path):
+    """{% static %} plus ?v=<last modified> so browsers (phones especially)
+    fetch a changed CSS/JS file instead of reusing a stale cached copy.
+    With a hashed storage (ManifestStaticFilesStorage) the URL already
+    changes, and the extra query string is harmless."""
+    import os
+
+    from django.contrib.staticfiles import finders
+    from django.templatetags.static import static
+
+    url = static(path)
+    found = finders.find(path)
+    if not found:
+        return url
+    return f"{url}?v={int(os.path.getmtime(found))}"

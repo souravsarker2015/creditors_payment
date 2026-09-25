@@ -378,3 +378,13 @@ class DashboardTests(TestCase):
         rows = self.client.get(reverse("expense_dashboard")).context["category_rank"]
         self.assertEqual(rows[0]["url"], f"{reverse('expense_list')}?category={cat.pk}")
         self.assertIsNone(rows[1]["url"])  # "General" has no category to filter by
+
+
+class AssetTagTests(TestCase):
+    def test_css_and_js_urls_carry_a_version(self):
+        User.objects.create_user("owner", password="pw12345!")
+        self.client.login(username="owner", password="pw12345!")
+        html = self.client.get(reverse("expense_dashboard")).content.decode()
+        self.assertRegex(html, r'/static/css/app\.css\?v=\d+')
+        self.assertRegex(html, r'/static/js/charts\.js\?v=\d+')
+        self.assertRegex(html, r'/static/js/calculator\.js\?v=\d+')
