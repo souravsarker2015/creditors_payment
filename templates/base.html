@@ -9,6 +9,7 @@
     <title>{% block title %}{% translate "Tracker" %}{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="{% static 'js/calculator.js' %}"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -55,7 +56,11 @@
                 <span class="font-heading text-base font-bold" style="color: var(--text-primary);">FinTrack</span>
             </a>
 
-            <div class="ml-auto flex items-center gap-3">
+            <div class="ml-auto flex items-center gap-2 sm:gap-3">
+                <button type="button" class="calc-trigger" @click="$dispatch('toggle-calculator')" aria-keyshortcuts="Alt+C"
+                        data-tip="{% translate 'Calculator — discounts, VAT, profit, splits (Alt+C)' %}" aria-label="{% translate 'Calculator' %}">
+                    {% include "partials/icon.html" with name="calculator" %}<span class="hidden xl:inline">{% translate "Calculator" %}</span>
+                </button>
                 {% include "partials/preferences_switcher.html" %}
 
                 <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
@@ -113,6 +118,7 @@
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tippy.js@6/dist/tippy-bundle.umd.min.js"></script>
+    {% if user.is_authenticated %}{% include "partials/calculator.html" %}{% endif %}
     <div id="toast-root" class="toast-root" aria-live="polite" aria-atomic="true"></div>
     <script>
     /* Shared UI helpers — pages call these instead of repeating setup code. */
@@ -330,6 +336,15 @@
             });
         }
         document.querySelectorAll(".preferences-switcher").forEach(wire);
+
+        // Calculator history is temporary: drop it (for every account on this
+        // browser) as soon as someone logs out.
+        document.addEventListener("click", function (e) {
+            if (!e.target.closest('a[href="{% url 'logout' %}"]')) return;
+            try {
+                Object.keys(localStorage).forEach(function (k) { if (k.indexOf("ft-calc-history:") === 0) localStorage.removeItem(k); });
+            } catch (err) { /* storage unavailable: nothing to clear */ }
+        });
     })();
     </script>
     {% endif %}

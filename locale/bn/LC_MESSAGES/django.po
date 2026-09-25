@@ -2735,3 +2735,160 @@ msgstr "আবার তালিকা ও ড্রপডাউনে দে�
 
 msgid "Mark as active"
 msgstr "সক্রিয় করুন"
+
+msgid "Calculator — discounts, VAT, profit, splits (Alt+C)"
+msgstr "ক্যালকুলেটর — ছাড়, ভ্যাট, লাভ, ভাগাভাগি (Alt+C)"
+
+msgid "Calculator"
+msgstr "ক্যালকুলেটর"
+
+msgid "Can’t divide by zero"
+msgstr "শূন্য দিয়ে ভাগ করা যায় না"
+
+msgid "Check the expression"
+msgstr "হিসাবটি ঠিক আছে কিনা দেখুন"
+
+msgid "Copied"
+msgstr "কপি হয়েছে"
+
+msgid "৳{value} put into {field}"
+msgstr "৳{value} বসানো হয়েছে: {field}"
+
+msgid "Saved to history"
+msgstr "ইতিহাসে সংরক্ষিত"
+
+msgid "Discount"
+msgstr "ছাড়"
+
+msgid "VAT / Tax"
+msgstr "ভ্যাট / কর"
+
+msgid "Profit & margin"
+msgstr "লাভ ও মার্জিন"
+
+msgid "Split bill"
+msgstr "বিল ভাগাভাগি"
+
+msgid "Simple interest"
+msgstr "সরল সুদ"
+
+msgid "You save"
+msgstr "আপনার সাশ্রয়"
+
+msgid "Final price"
+msgstr "চূড়ান্ত দাম"
+
+msgid "Total with tax"
+msgstr "করসহ মোট"
+
+msgid "Price before tax"
+msgstr "কর ছাড়া দাম"
+
+msgid "Profit"
+msgstr "লাভ"
+
+msgid "Loss"
+msgstr "লোকসান"
+
+msgid "Margin (of selling price)"
+msgstr "মার্জিন (বিক্রয়মূল্যের উপর)"
+
+msgid "Markup (on cost)"
+msgstr "মার্কআপ (ক্রয়মূল্যের উপর)"
+
+msgid "Each person pays"
+msgstr "প্রত্যেকে দেবেন"
+
+msgid "Total to repay"
+msgstr "মোট ফেরত দিতে হবে"
+
+msgid "Per month"
+msgstr "প্রতি মাসে"
+
+msgid "Calculate"
+msgstr "হিসাব"
+
+msgid "Business tools"
+msgstr "ব্যবসার টুল"
+
+msgid "Answers can go into"
+msgstr "ফলাফল বসানো যাবে"
+
+msgid "Calculation"
+msgstr "হিসাব"
+
+msgid "Copy"
+msgstr "কপি"
+
+msgid "Insert"
+msgstr "বসান"
+
+msgid "Delete last"
+msgstr "শেষ অক্ষর মুছুন"
+
+#, python-format
+msgid "Tip: 500 + 15%% = 575 · 500 − 10%% = 450 · 2000 × 5%% = 100"
+msgstr "টিপস: 500 + 15%% = 575 · 500 − 10%% = 450 · 2000 × 5%% = 100"
+
+msgid "Split"
+msgstr "ভাগাভাগি"
+
+msgid "Price"
+msgstr "দাম"
+
+#, python-format
+msgid "Discount %%"
+msgstr "ছাড় %%"
+
+msgid "Add tax"
+msgstr "কর যোগ করুন"
+
+msgid "Tax already included"
+msgstr "কর আগেই ধরা আছে"
+
+#, python-format
+msgid "Rate %%"
+msgstr "হার %%"
+
+msgid "Cost price"
+msgstr "ক্রয়মূল্য"
+
+msgid "Selling price"
+msgstr "বিক্রয়মূল্য"
+
+msgid "Total bill"
+msgstr "মোট বিল"
+
+msgid "People"
+msgstr "লোকসংখ্যা"
+
+msgid "Principal"
+msgstr "আসল"
+
+#, python-format
+msgid "Rate %% / year"
+msgstr "হার %% / বছর"
+
+msgid "Continue in the calculator"
+msgstr "ক্যালকুলেটরে হিসাব চালিয়ে যান"
+
+msgid "Put into the form field"
+msgstr "ফর্মের ঘরে বসান"
+
+msgid "Save to history"
+msgstr "ইতিহাসে রাখুন"
+
+msgid "Fill in the fields — results appear as you type."
+msgstr "ঘরগুলো পূরণ করুন — লিখতে লিখতেই ফলাফল দেখাবে।"
+
+msgid "Tap to edit this again"
+msgstr "আবার সম্পাদনা করতে চাপুন"
+
+msgid "Remove"
+msgstr "সরান"
+
+msgid "Your calculations will show up here."
+msgstr "আপনার হিসাবগুলো এখানে দেখা যাবে।"
+
+msgid "Only on this device, for 7 days. Cleared when you log out."
+msgstr "শুধু এই ডিভাইসে, ৭ দিনের জন্য। লগ আউট করলে মুছে যায়।"

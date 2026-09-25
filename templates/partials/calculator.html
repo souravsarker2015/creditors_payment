@@ -1,0 +1,174 @@
+{% load i18n %}
+{% comment %}
+Global calculator (static/js/calculator.js). Opened from the topbar button or
+Alt+C on any page. Desktop: floating, draggable, non-modal panel, so the form
+behind it stays usable. Phones: bottom sheet. History lives in this browser
+only, per user, and is cleared on logout.
+{% endcomment %}
+<script>
+    window.FTCalcConfig = {
+        user: "{{ user.pk }}",
+        i18n: {
+            div0: "{{ _('Can’t divide by zero')|escapejs }}",
+            invalid: "{{ _('Check the expression')|escapejs }}",
+            copied: "{{ _('Copied')|escapejs }}",
+            inserted: "{{ _('৳{value} put into {field}')|escapejs }}",
+            saved: "{{ _('Saved to history')|escapejs }}",
+            toolNames: {
+                discount: "{{ _('Discount')|escapejs }}", vat: "{{ _('VAT / Tax')|escapejs }}", profit: "{{ _('Profit & margin')|escapejs }}",
+                split: "{{ _('Split bill')|escapejs }}", interest: "{{ _('Simple interest')|escapejs }}"
+            },
+            tools: {
+                saved: "{{ _('You save')|escapejs }}", payable: "{{ _('Final price')|escapejs }}",
+                tax: "{{ _('VAT / Tax')|escapejs }}", withTax: "{{ _('Total with tax')|escapejs }}", beforeTax: "{{ _('Price before tax')|escapejs }}",
+                profit: "{{ _('Profit')|escapejs }}", loss: "{{ _('Loss')|escapejs }}", margin: "{{ _('Margin (of selling price)')|escapejs }}", markup: "{{ _('Markup (on cost)')|escapejs }}",
+                each: "{{ _('Each person pays')|escapejs }}",
+                interest: "{{ _('Interest')|escapejs }}", total: "{{ _('Total to repay')|escapejs }}", perMonth: "{{ _('Per month')|escapejs }}"
+            }
+        }
+    };
+</script>
+<div x-data="calculator(window.FTCalcConfig)" @toggle-calculator.window="toggle()">
+    <div class="calc-backdrop" x-show="open && isSheet" x-cloak x-transition.opacity.duration.200ms @click="close()"></div>
+
+    <section class="calc" x-ref="panel" x-show="open" x-cloak :style="panelStyle"
+             x-transition:enter="calc-enter" x-transition:enter-start="calc-from" x-transition:leave="calc-leave" x-transition:leave-end="calc-from"
+             role="dialog" aria-modal="false" aria-labelledby="calc-title" @keydown.escape.stop="close()">
+        <header class="calc-head" @pointerdown="dragStart($event)" @dblclick="resetPos()">
+            <span class="calc-grip" aria-hidden="true">{% include "partials/icon.html" with name="grip" %}</span>
+            <h2 id="calc-title" class="calc-title">{% include "partials/icon.html" with name="calculator" %}{% translate "Calculator" %}</h2>
+            <kbd class="calc-kbd">Alt+C</kbd>
+            <button type="button" class="icon-btn" @click="close()" aria-label="{% translate 'Close (Esc)' %}">{% include "partials/icon.html" with name="x" %}</button>
+        </header>
+
+        <div class="calc-tabs">
+            <div class="seg seg-block seg-sm" role="tablist">
+                <button type="button" class="seg-item" role="tab" :class="tab === 'calc' && 'is-active'" :aria-selected="tab === 'calc'" @click="tab = 'calc'; $nextTick(() => focusExpr())">{% translate "Calculate" %}</button>
+                <button type="button" class="seg-item" role="tab" :class="tab === 'tools' && 'is-active'" :aria-selected="tab === 'tools'" @click="tab = 'tools'">{% translate "Business tools" %}</button>
+                <button type="button" class="seg-item" role="tab" :class="tab === 'history' && 'is-active'" :aria-selected="tab === 'history'" @click="tab = 'history'">{% translate "History" %} <span class="seg-count" x-show="history.length" x-text="history.length"></span></button>
+            </div>
+        </div>
+
+        <div class="calc-body">
+            <!-- Target hint: where "Insert" will put the answer -->
+            <p class="calc-target" x-show="target && tab !== 'history'" x-cloak>
+                {% include "partials/icon.html" with name="insert" %}
+                <span>{% translate "Answers can go into" %} <strong x-text="targetLabel"></strong></span>
+            </p>
+
+            <!-- ============ Calculate ============ -->
+            <div x-show="tab === 'calc'" role="tabpanel">
+                <div class="calc-screen" :class="{ 'is-error': error, 'is-final': result !== null }">
+                    <input x-ref="expr" class="calc-expr" type="text" inputmode="none" autocomplete="off" spellcheck="false"
+                           :value="expr" @input="onType($event)" @keydown="onKey($event)" placeholder="0"
+                           aria-label="{% translate 'Calculation' %}">
+                    <output class="calc-result" aria-live="polite"><span x-show="result !== null && !error" class="calc-eq">=</span><span x-text="display || ' '"></span></output>
+                </div>
+
+                <div class="calc-answer" x-show="answer !== null && !error">
+                    <button type="button" class="btn btn-ghost btn-sm" @click="copy(answer)">{% include "partials/icon.html" with name="copy" %}{% translate "Copy" %}</button>
+                    <button type="button" class="btn btn-primary btn-sm" x-show="target" @click="insert(answer)">{% include "partials/icon.html" with name="insert" %}{% translate "Insert" %}</button>
+                </div>
+
+                <div class="calc-keys">
+                    <template x-for="k in [
+                        ['AC','fn'],['(','fn'],[')','fn'],['÷','op'],
+                        ['7',''],['8',''],['9',''],['×','op'],
+                        ['4',''],['5',''],['6',''],['−','op'],
+                        ['1',''],['2',''],['3',''],['+','op'],
+                        ['%','fn'],['0',''],['00',''],['.','']
+                    ]" :key="k[0]">
+                        <button type="button" class="calc-key" :class="k[1] && 'is-' + k[1]" @click="press(k[0])" x-text="k[0]"></button>
+                    </template>
+                    <button type="button" class="calc-key is-fn" @click="press('back')" aria-label="{% translate 'Delete last' %}">{% include "partials/icon.html" with name="backspace" %}</button>
+                    <button type="button" class="calc-key is-eq" @click="press('=')">=</button>
+                </div>
+                <p class="calc-hint">{% translate "Tip: 500 + 15% = 575 · 500 − 10% = 450 · 2000 × 5% = 100" %}</p>
+            </div>
+
+            <!-- ============ Business tools ============ -->
+            <div x-show="tab === 'tools'" x-cloak role="tabpanel" class="space-y-3.5">
+                <div class="seg seg-sm calc-toolbar">
+                    <button type="button" class="seg-item" :class="tool === 'discount' && 'is-active'" @click="tool = 'discount'">{% translate "Discount" %}</button>
+                    <button type="button" class="seg-item" :class="tool === 'vat' && 'is-active'" @click="tool = 'vat'">{% translate "VAT / Tax" %}</button>
+                    <button type="button" class="seg-item" :class="tool === 'profit' && 'is-active'" @click="tool = 'profit'">{% translate "Profit" %}</button>
+                    <button type="button" class="seg-item" :class="tool === 'split' && 'is-active'" @click="tool = 'split'">{% translate "Split" %}</button>
+                    <button type="button" class="seg-item" :class="tool === 'interest' && 'is-active'" @click="tool = 'interest'">{% translate "Interest" %}</button>
+                </div>
+
+                <div class="calc-fields" x-show="tool === 'discount'">
+                    <label class="calc-field"><span>{% translate "Price" %}</span><input class="form-input input-compact" inputmode="decimal" placeholder="0" x-model="t.price"></label>
+                    <label class="calc-field"><span>{% translate "Discount %" %}</span><input class="form-input input-compact" inputmode="decimal" placeholder="10" x-model="t.off"></label>
+                </div>
+                <div x-show="tool === 'vat'" class="space-y-2.5">
+                    <div class="seg seg-block seg-sm">
+                        <button type="button" class="seg-item" :class="t.vatMode === 'add' && 'is-active'" @click="t.vatMode = 'add'">{% translate "Add tax" %}</button>
+                        <button type="button" class="seg-item" :class="t.vatMode === 'remove' && 'is-active'" @click="t.vatMode = 'remove'">{% translate "Tax already included" %}</button>
+                    </div>
+                    <div class="calc-fields">
+                        <label class="calc-field"><span>{% translate "Amount" %}</span><input class="form-input input-compact" inputmode="decimal" placeholder="0" x-model="t.vatAmount"></label>
+                        <label class="calc-field"><span>{% translate "Rate %" %}</span><input class="form-input input-compact" inputmode="decimal" x-model="t.vatRate"></label>
+                    </div>
+                </div>
+                <div class="calc-fields" x-show="tool === 'profit'">
+                    <label class="calc-field"><span>{% translate "Cost price" %}</span><input class="form-input input-compact" inputmode="decimal" placeholder="0" x-model="t.cost"></label>
+                    <label class="calc-field"><span>{% translate "Selling price" %}</span><input class="form-input input-compact" inputmode="decimal" placeholder="0" x-model="t.sell"></label>
+                </div>
+                <div class="calc-fields" x-show="tool === 'split'">
+                    <label class="calc-field"><span>{% translate "Total bill" %}</span><input class="form-input input-compact" inputmode="decimal" placeholder="0" x-model="t.splitTotal"></label>
+                    <label class="calc-field"><span>{% translate "People" %}</span><input class="form-input input-compact" inputmode="numeric" x-model="t.people"></label>
+                </div>
+                <div class="calc-fields is-3" x-show="tool === 'interest'">
+                    <label class="calc-field"><span>{% translate "Principal" %}</span><input class="form-input input-compact" inputmode="decimal" placeholder="0" x-model="t.principal"></label>
+                    <label class="calc-field"><span>{% translate "Rate % / year" %}</span><input class="form-input input-compact" inputmode="decimal" placeholder="12" x-model="t.rate"></label>
+                    <label class="calc-field"><span>{% translate "Months" %}</span><input class="form-input input-compact" inputmode="numeric" x-model="t.months"></label>
+                </div>
+
+                <div class="calc-rows" x-show="rows.length">
+                    <template x-for="r in rows" :key="r.k">
+                        <div class="calc-row" :class="r.main && 'is-main'">
+                            <span class="calc-row-k" x-text="r.k"></span>
+                            <span class="calc-row-v num" :data-tone="r.tone || null" x-text="rowText(r)"></span>
+                            <span class="calc-row-a" x-show="!r.pct">
+                                <button type="button" class="icon-btn" @click="useValue(r.v)" data-tip="{% translate 'Continue in the calculator' %}" aria-label="{% translate 'Continue in the calculator' %}">{% include "partials/icon.html" with name="calculator" %}</button>
+                                <button type="button" class="icon-btn" x-show="target" @click="insert(r.v)" data-tip="{% translate 'Put into the form field' %}" aria-label="{% translate 'Put into the form field' %}">{% include "partials/icon.html" with name="insert" %}</button>
+                            </span>
+                        </div>
+                    </template>
+                    <button type="button" class="btn btn-ghost btn-sm w-full" @click="logTool()">{% include "partials/icon.html" with name="clock" %}{% translate "Save to history" %}</button>
+                </div>
+                <p class="calc-hint" x-show="!rows.length">{% translate "Fill in the fields — results appear as you type." %}</p>
+            </div>
+
+            <!-- ============ History ============ -->
+            <div x-show="tab === 'history'" x-cloak role="tabpanel">
+                <template x-if="history.length">
+                    <ul class="calc-history">
+                        <template x-for="(h, i) in history" :key="h.at + ':' + i">
+                            <li class="calc-hist-item">
+                                <button type="button" class="calc-hist-main" @click="reuse(h)" data-tip="{% translate 'Tap to edit this again' %}">
+                                    <span class="calc-hist-expr" x-text="h.label ? h.expr + ' · ' + h.label : h.expr"></span>
+                                    <span class="calc-hist-val num" x-text="'= ' + Number(h.value).toLocaleString('en-US', { maximumFractionDigits: 6 })"></span>
+                                    <span class="calc-hist-time" x-text="when(h.at)"></span>
+                                </button>
+                                <div class="calc-hist-act">
+                                    <button type="button" class="icon-btn" @click="copy(h.value)" aria-label="{% translate 'Copy' %}">{% include "partials/icon.html" with name="copy" %}</button>
+                                    <button type="button" class="icon-btn" x-show="target" @click="insert(h.value)" aria-label="{% translate 'Put into the form field' %}">{% include "partials/icon.html" with name="insert" %}</button>
+                                    <button type="button" class="icon-btn" @click="removeHistory(i)" aria-label="{% translate 'Remove' %}">{% include "partials/icon.html" with name="x" %}</button>
+                                </div>
+                            </li>
+                        </template>
+                    </ul>
+                </template>
+                <div class="calc-empty" x-show="!history.length">
+                    {% include "partials/icon.html" with name="clock" %}
+                    <p>{% translate "Your calculations will show up here." %}</p>
+                </div>
+                <div class="calc-hist-foot">
+                    <p>{% translate "Only on this device, for 7 days. Cleared when you log out." %}</p>
+                    <button type="button" class="btn btn-ghost btn-sm" x-show="history.length" @click="clearHistory()">{% include "partials/icon.html" with name="trash" %}{% translate "Clear all" %}</button>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>

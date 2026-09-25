@@ -239,3 +239,30 @@ class QuickCreateTests(TestCase):
         response = self.client.get(reverse("expense_create"))
         self.assertContains(response, 'class="input-addon-btn"')
         self.assertContains(response, 'name="qa_expense_category-name"')
+
+
+class CalculatorTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user("owner", password="pw12345!")
+
+    def test_available_on_every_signed_in_page(self):
+        self.client.login(username="owner", password="pw12345!")
+        for name in ["dashboard", "expense_dashboard", "household_dashboard", "shop_list"]:
+            with self.subTest(name):
+                response = self.client.get(reverse(name))
+                self.assertContains(response, 'class="calc-trigger"')
+                self.assertContains(response, 'x-data="calculator(window.FTCalcConfig)"')
+                self.assertContains(response, f'user: "{self.user.pk}"')
+
+    def test_not_rendered_for_anonymous_visitors(self):
+        response = self.client.get(reverse("login"))
+        self.assertNotContains(response, "calc-trigger")
+        self.assertNotContains(response, "FTCalcConfig")
+
+    def test_labels_follow_bangla(self):
+        self.client.login(username="owner", password="pw12345!")
+        self.client.post(reverse("update_preferences"), {"language": "bn"})
+        response = self.client.get(reverse("dashboard"))
+        self.assertContains(response, "ব্যবসার টুল")
+        self.assertContains(response, "ছাড় %")  # literal % in a translated label
+        self.assertContains(response, "৳{value} বসানো হয়েছে: {field}")
