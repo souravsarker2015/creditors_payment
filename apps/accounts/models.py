@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils.translation import gettext_lazy as _
 
 
 class ThemeMode(models.TextChoices):
@@ -15,13 +16,25 @@ class AccentTheme(models.TextChoices):
     SLATE = "slate", "Slate Mono"
 
 
+class BackgroundTheme(models.TextChoices):
+    """Page and card tint. Each has a matching tinted dark variant in app.css."""
+
+    PAPER = "paper", _("Warm Paper")
+    WHITE = "white", _("Clean White")
+    NOTEPAD = "notepad", _("Notepad Yellow")
+    HONEYDEW = "honeydew", _("Honeydew Green")
+    SKY = "sky", _("Sky Mist")
+    BLUSH = "blush", _("Rose Blush")
+    LAVENDER = "lavender", _("Lavender")
+
+
 class Language(models.TextChoices):
     ENGLISH = "en", "English"
     BENGALI = "bn", "বাংলা"
 
 
 class UserProfile(models.Model):
-    """Per-user display preferences: theme mode, accent palette, and language.
+    """Per-user display preferences: theme mode, accent, background, and language.
 
     Created automatically for every user via the post_save signal below, so
     callers can always assume ``request.user.profile`` exists once the user
@@ -36,6 +49,9 @@ class UserProfile(models.Model):
     )
     accent = models.CharField(
         max_length=10, choices=AccentTheme.choices, default=AccentTheme.TEAL
+    )
+    background = models.CharField(
+        max_length=10, choices=BackgroundTheme.choices, default=BackgroundTheme.PAPER
     )
     language = models.CharField(
         max_length=5, choices=Language.choices, default=Language.ENGLISH

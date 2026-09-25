@@ -13,7 +13,7 @@ from django.db.models import Sum, Count, DecimalField, Value
 from django.db.models.functions import Coalesce, TruncMonth
 from django.core.paginator import Paginator
 from django.utils import dateformat
-from django.utils.translation import gettext as _, ngettext
+from django.utils.translation import gettext as _, gettext_lazy, ngettext
 
 from .models import HouseholdCategory, HouseholdMember, Purchase, Settlement
 from apps.core.status import apply_status_filter, toggle_active
@@ -84,10 +84,10 @@ def _parse_year_month(request):
 
 
 PURCHASE_LIST_SORT_OPTIONS = [
-    ("-month", _("Month (Newest First)")),
-    ("month", _("Month (Oldest First)")),
-    ("-total", _("Total Spent (High to Low)")),
-    ("total", _("Total Spent (Low to High)")),
+    ("-month", gettext_lazy("Month (Newest First)")),
+    ("month", gettext_lazy("Month (Oldest First)")),
+    ("-total", gettext_lazy("Total Spent (High to Low)")),
+    ("total", gettext_lazy("Total Spent (Low to High)")),
 ]
 PURCHASE_LIST_SORT_FIELDS = {
     "-month": ["-month"],
@@ -97,17 +97,17 @@ PURCHASE_LIST_SORT_FIELDS = {
 }
 
 MEMBER_SORT_OPTIONS = [
-    ("name", _("Name (A–Z)")),
-    ("-name", _("Name (Z–A)")),
-    ("-balance", _("Balance Due (High to Low)")),
-    ("balance", _("Balance Due (Low to High)")),
+    ("name", gettext_lazy("Name (A–Z)")),
+    ("-name", gettext_lazy("Name (Z–A)")),
+    ("-balance", gettext_lazy("Balance Due (High to Low)")),
+    ("balance", gettext_lazy("Balance Due (Low to High)")),
 ]
 
 CATEGORY_SORT_OPTIONS = [
-    ("-total", _("Total Spent (High to Low)")),
-    ("total", _("Total Spent (Low to High)")),
-    ("name", _("Name (A–Z)")),
-    ("-name", _("Name (Z–A)")),
+    ("-total", gettext_lazy("Total Spent (High to Low)")),
+    ("total", gettext_lazy("Total Spent (Low to High)")),
+    ("name", gettext_lazy("Name (A–Z)")),
+    ("-name", gettext_lazy("Name (Z–A)")),
 ]
 CATEGORY_SORT_FIELDS = {
     "-total": ["-total"],

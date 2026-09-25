@@ -10,7 +10,7 @@ from django.utils import translation
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
-from .models import UserProfile, ThemeMode, AccentTheme, Language
+from .models import AccentTheme, BackgroundTheme, Language, ThemeMode, UserProfile
 
 def signup_view(request):
     if request.method == "POST":
@@ -49,9 +49,9 @@ def logout_view(request):
 @login_required
 @require_POST
 def update_preferences_view(request):
-    """Persist theme/accent/language to the user's profile.
+    """Persist theme/accent/background/language to the user's profile.
 
-    Any of the three fields may be posted; only the ones present are
+    Any of the four fields may be posted; only the ones present are
     updated. A language change also activates the new language for this
     response and sets the language cookie Django's LocaleMiddleware reads,
     so the redirect below re-renders fully translated.
@@ -60,19 +60,22 @@ def update_preferences_view(request):
 
     theme_mode = request.POST.get("theme_mode")
     accent = request.POST.get("accent")
+    background = request.POST.get("background")
     language = request.POST.get("language")
 
     if theme_mode in ThemeMode.values:
         profile.theme_mode = theme_mode
     if accent in AccentTheme.values:
         profile.accent = accent
+    if background in BackgroundTheme.values:
+        profile.background = background
     if language in Language.values:
         profile.language = language
         translation.activate(language)
 
     profile.save()
 
-    # Theme/accent-only changes are fired from JS as a background request —
+    # Theme/accent/background-only changes are fired from JS as a background request —
     # the toggle already applied itself instantly client-side, so there's
     # nothing to re-render. A language change needs a real navigation
     # because translated strings are resolved server-side.

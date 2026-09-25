@@ -12,7 +12,7 @@ from django.views.decorators.http import require_POST
 from django.db.models.functions import Coalesce, TruncMonth
 from django.core.paginator import Paginator
 from django.utils import dateformat
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext as _, gettext_lazy
 from .models import Contributor, ContributorCategory, Contribution
 from apps.core.status import apply_status_filter, toggle_active
 from .forms import ContributorForm, ContributionForm
@@ -28,10 +28,10 @@ def _row_value(row, fieldnames, key):
 MONTH_CHOICES = [(i, date_cls(2000, i, 1)) for i in range(1, 13)]
 
 SORT_OPTIONS = [
-    ("name", _("Name (A–Z)")),
-    ("-name", _("Name (Z–A)")),
-    ("-amount", _("Total Given (High to Low)")),
-    ("amount", _("Total Given (Low to High)")),
+    ("name", gettext_lazy("Name (A–Z)")),
+    ("-name", gettext_lazy("Name (Z–A)")),
+    ("-amount", gettext_lazy("Total Given (High to Low)")),
+    ("amount", gettext_lazy("Total Given (Low to High)")),
 ]
 SORT_FIELDS = {
     "name": ["name"],

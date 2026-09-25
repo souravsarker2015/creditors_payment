@@ -287,6 +287,20 @@
     return chart;
   }
 
+  // Theme/background switches apply without a reload, so re-read the
+  // surface-dependent colours (donut slice gaps, grid lines) when they change.
+  new MutationObserver(function () {
+    if (!global.Chart) return;
+    Object.values(global.Chart.instances).forEach(function (chart) {
+      if (chart.config.type === 'doughnut') {
+        chart.data.datasets[0].borderColor = token('--surface-raised', '#ffffff');
+      } else if (chart.options.scales && chart.options.scales.y) {
+        chart.options.scales.y.grid.color = token('--border-soft', '#e5e7eb');
+      }
+      chart.update('none');
+    });
+  }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-bg'] });
+
   global.renderDistributionChart = renderDistributionChart;
   global.renderTrendChart = renderTrendChart;
 })(window);

@@ -1,6 +1,6 @@
 {% load static i18n %}
 <!DOCTYPE html>
-<html lang="{{ LANGUAGE_CODE }}" class="h-full" data-theme="{{ user_theme_mode }}" data-accent="{{ user_accent }}"{% if LANGUAGE_CODE == "bn" %} data-lang="bn"{% endif %}>
+<html lang="{{ LANGUAGE_CODE }}" class="h-full" data-theme="{{ user_theme_mode }}" data-accent="{{ user_accent }}" data-bg="{{ user_background }}"{% if LANGUAGE_CODE == "bn" %} data-lang="bn"{% endif %}>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -246,7 +246,7 @@
     document.addEventListener("DOMContentLoaded", function () {
         if (!window.tippy) return;
         // Icon-only buttons already carry a title/aria-label: reuse it as the tooltip.
-        document.querySelectorAll(".icon-btn:not([data-tip]), .chip[title], .pager-link[aria-label], .pref-swatch[title]").forEach(function (el) {
+        document.querySelectorAll(".icon-btn:not([data-tip]), .chip[title], .pager-link[aria-label], .pref-swatch[title], .bg-pick[aria-label]").forEach(function (el) {
             var text = el.getAttribute("title") || el.getAttribute("aria-label");
             if (text) { el.setAttribute("data-tip", text); el.removeAttribute("title"); }
         });
@@ -306,6 +306,18 @@
                     root.setAttribute("data-accent", accent);
                     document.querySelectorAll(".pref-swatch").forEach(function (b) { b.classList.toggle("is-active", b.dataset.swatch === accent); });
                     save(csrfToken, "accent", accent);
+                });
+            });
+            container.querySelectorAll("[data-bg-choice]").forEach(function (btn) {
+                btn.addEventListener("click", function () {
+                    var bg = btn.dataset.bgChoice;
+                    root.setAttribute("data-bg", bg);
+                    document.querySelectorAll("[data-bg-choice]").forEach(function (b) {
+                        var on = b.dataset.bgChoice === bg;
+                        b.classList.toggle("is-active", on);
+                        b.setAttribute(b.hasAttribute("aria-checked") ? "aria-checked" : "aria-pressed", on ? "true" : "false");
+                    });
+                    save(csrfToken, "background", bg);
                 });
             });
             container.querySelectorAll(".pref-mode-btn").forEach(function (btn) {

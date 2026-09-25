@@ -1,8 +1,8 @@
-from .models import UserProfile, ThemeMode, AccentTheme
+from .models import AccentTheme, BackgroundTheme, ThemeMode, UserProfile
 
 
 def user_preferences(request):
-    """Expose the current user's theme/accent preference to every template.
+    """Expose the current user's theme/accent/background preference to every template.
 
     Falls back to the light/teal defaults for anonymous users (language for
     anonymous users is already handled by Django's own i18n machinery via
@@ -13,8 +13,12 @@ def user_preferences(request):
         return {
             "user_theme_mode": profile.theme_mode,
             "user_accent": profile.accent,
+            "user_background": profile.background,
+            "background_choices": BackgroundTheme.choices,
         }
     return {
         "user_theme_mode": ThemeMode.LIGHT,
         "user_accent": AccentTheme.TEAL,
+        "user_background": BackgroundTheme.PAPER,
+        "background_choices": BackgroundTheme.choices,
     }

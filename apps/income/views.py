@@ -11,7 +11,7 @@ from django.db.models import Sum, Q, DecimalField, Value
 from django.db.models.functions import Coalesce, TruncMonth
 from django.core.paginator import Paginator
 from django.utils import dateformat
-from django.utils.translation import gettext as _, ngettext
+from django.utils.translation import gettext as _, gettext_lazy, ngettext
 from datetime import date as date_cls
 
 from .models import IncomeSource, IncomeTransaction, RecurringIncome, generate_due_recurring_income
@@ -27,10 +27,10 @@ def _row_value(row, fieldnames, key):
     return (row.get(col) or "").strip()
 
 SORT_OPTIONS = [
-    ("-amount", _("Total Earned (High to Low)")),
-    ("amount", _("Total Earned (Low to High)")),
-    ("name", _("Name (A–Z)")),
-    ("-name", _("Name (Z–A)")),
+    ("-amount", gettext_lazy("Total Earned (High to Low)")),
+    ("amount", gettext_lazy("Total Earned (Low to High)")),
+    ("name", gettext_lazy("Name (A–Z)")),
+    ("-name", gettext_lazy("Name (Z–A)")),
 ]
 SORT_FIELDS = {
     "-amount": ["-total_amt", "name"],

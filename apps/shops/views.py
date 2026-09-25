@@ -12,7 +12,7 @@ from django.db.models import Sum, Q, F, DecimalField, Value
 from django.db.models.functions import Coalesce, TruncMonth
 from django.core.paginator import Paginator
 from django.utils import dateformat
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext as _, gettext_lazy
 
 
 def _row_value(row, fieldnames, key):
@@ -38,10 +38,10 @@ from apps.core.status import apply_status_filter, toggle_active
 MONTH_CHOICES = [(i, date_cls(2000, i, 1)) for i in range(1, 13)]
 
 SORT_OPTIONS = [
-    ("name", _("Name (A–Z)")),
-    ("-name", _("Name (Z–A)")),
-    ("-remaining", _("Remaining (High to Low)")),
-    ("remaining", _("Remaining (Low to High)")),
+    ("name", gettext_lazy("Name (A–Z)")),
+    ("-name", gettext_lazy("Name (Z–A)")),
+    ("-remaining", gettext_lazy("Remaining (High to Low)")),
+    ("remaining", gettext_lazy("Remaining (Low to High)")),
 ]
 SORT_FIELDS = {
     "name": ["name"],

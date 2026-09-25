@@ -61,6 +61,13 @@
         <div class="mt-auto space-y-3">
             <div class="preferences-switcher pref-ink md:hidden rounded-2xl p-4" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);">
                 <p class="mb-3 text-[10px] font-bold uppercase tracking-[0.14em]" style="color: var(--text-on-ink-muted);">{% translate "Appearance" %}</p>
+                <p class="mb-1.5 text-xs" style="color: var(--text-on-ink-muted);">{% translate "Background" %}</p>
+                <div class="mb-3 flex flex-wrap items-center gap-1.5">
+                    {% for value, label in background_choices %}
+                    <button type="button" class="bg-pick {% if user_background == value %}is-active{% endif %}" data-bg-choice="{{ value }}" aria-label="{{ label }}" aria-pressed="{% if user_background == value %}true{% else %}false{% endif %}"><span class="bg-swatch" data-bg="{{ value }}"></span></button>
+                    {% endfor %}
+                </div>
+                <p class="mb-1.5 text-xs" style="color: var(--text-on-ink-muted);">{% translate "Accent" %}</p>
                 <div class="mb-3 flex items-center gap-3">
                     <button type="button" class="pref-swatch {% if user_accent == 'teal' %}is-active{% endif %}" data-swatch="teal" data-pref-field="accent" aria-label="{% translate 'Ledger Teal accent' %}"></button>
                     <button type="button" class="pref-swatch {% if user_accent == 'indigo' %}is-active{% endif %}" data-swatch="indigo" data-pref-field="accent" aria-label="{% translate 'Indigo Classic accent' %}"></button>

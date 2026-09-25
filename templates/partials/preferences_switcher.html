@@ -5,6 +5,22 @@ partials/sidebar_nav.html for the mobile off-canvas menu. Both share the
 `.preferences-switcher` wiring script in base.html.
 {% endcomment %}
 <div class="preferences-switcher hidden md:flex items-center gap-2 shrink-0">
+    <!-- Background tint -->
+    <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
+        <button type="button" class="icon-btn" @click="open = !open" :aria-expanded="open" aria-haspopup="true" data-tip="{% translate 'Background colour' %}" aria-label="{% translate 'Background colour' %}">
+            {% include "partials/icon.html" with name="palette" %}
+        </button>
+        <div class="menu bg-menu" x-show="open" x-cloak x-transition.opacity.scale.95.duration.100ms role="menu">
+            <p class="menu-label">{% translate "Background" %}</p>
+            {% for value, label in background_choices %}
+            <button type="button" class="menu-item bg-option {% if user_background == value %}is-active{% endif %}" data-bg-choice="{{ value }}" role="menuitemradio" aria-checked="{% if user_background == value %}true{% else %}false{% endif %}">
+                <span class="bg-swatch" data-bg="{{ value }}"></span>{{ label }}
+                <span class="bg-check">{% include "partials/icon.html" with name="check" %}</span>
+            </button>
+            {% endfor %}
+        </div>
+    </div>
+
     <!-- Accent swatches -->
     <div class="flex items-center gap-1 rounded-lg p-1" style="background: var(--surface-sunken); border: 1px solid var(--border-soft);">
         <button type="button" class="pref-swatch {% if user_accent == 'teal' %}is-active{% endif %}" data-swatch="teal" data-pref-field="accent" title="{% translate 'Ledger Teal' %}" aria-label="{% translate 'Ledger Teal accent' %}"></button>

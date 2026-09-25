@@ -9,7 +9,7 @@ from django.contrib import messages
 from django.db.models import Count, Sum, Q, DecimalField, Value
 from django.db.models.functions import Coalesce, TruncMonth
 from django.core.paginator import Paginator
-from django.utils.translation import gettext as _, ngettext
+from django.utils.translation import gettext as _, gettext_lazy, ngettext
 from datetime import date as date_cls
 
 from .models import ExpenseCategory, Expense, RecurringExpense, generate_due_recurring_expense
@@ -17,10 +17,10 @@ from apps.core.status import apply_status_filter, active_or_current, toggle_acti
 from .forms import ExpenseCategoryForm, ExpenseForm, RecurringExpenseForm
 
 SORT_OPTIONS = [
-    ("-date", _("Date (Newest First)")),
-    ("date", _("Date (Oldest First)")),
-    ("-amount", _("Amount (High to Low)")),
-    ("amount", _("Amount (Low to High)")),
+    ("-date", gettext_lazy("Date (Newest First)")),
+    ("date", gettext_lazy("Date (Oldest First)")),
+    ("-amount", gettext_lazy("Amount (High to Low)")),
+    ("amount", gettext_lazy("Amount (Low to High)")),
 ]
 SORT_FIELDS = {
     "-date": ["-date", "-created_at"],

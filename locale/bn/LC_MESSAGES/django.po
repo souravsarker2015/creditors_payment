@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-08-11 20:30+0600\n"
-"PO-Revision-Date: 2026-08-06 23:49+0600\n"
+"PO-Revision-Date: 2026-09-25 14:30+0600\n"
 "Last-Translator: FinTrack\n"
 "Language-Team: Bengali\n"
 "Language: bn\n"
@@ -130,14 +130,8 @@ msgid "Delete Profile"
 msgstr "প্রোফাইল মুছুন"
 
 #, python-format
-msgid ""
-"Are you sure you want to permanently delete <span class=\"font-extrabold\" "
-"style=\"color: var(--status-critical);\">%(name)s</span> and all their "
-"contribution records? This action cannot be undone."
-msgstr ""
-"আপনি কি নিশ্চিতভাবে <span class=\"font-extrabold\" style=\"color: var(--"
-"status-critical);\">%(name)s</span>-কে এবং তার সমস্ত অনুদান রেকর্ড স্থায়ীভাবে "
-"মুছে ফেলতে চান? এই কাজটি ফিরিয়ে নেওয়া যাবে না।"
+msgid "Are you sure you want to permanently delete <span class=\"font-extrabold\" style=\"color: var(--status-critical);\">%(name)s</span> and all their contribution records? This action cannot be undone."
+msgstr "আপনি কি নিশ্চিতভাবে <span class=\"font-extrabold\" style=\"color: var(--status-critical);\">%(name)s</span>-কে এবং তার সমস্ত অনুদান রেকর্ড স্থায়ীভাবে মুছে ফেলতে চান? এই কাজটি ফিরিয়ে নেওয়া যাবে না।"
 
 msgid "Permanently Delete"
 msgstr "স্থায়ীভাবে মুছুন"
@@ -244,8 +238,7 @@ msgstr "পেমেন্ট রেকর্ড করুন"
 msgid "Danger Zone"
 msgstr "বিপদ অঞ্চল"
 
-msgid ""
-"Careful! This will remove the contributor and all related history forever."
+msgid "Careful! This will remove the contributor and all related history forever."
 msgstr "সতর্ক থাকুন! এটি অবদানকারী এবং তার সমস্ত সম্পর্কিত ইতিহাস চিরতরে মুছে ফেলবে।"
 
 msgid "Delete profile completely?"
@@ -266,12 +259,8 @@ msgstr "অবদানকারীর তালিকা"
 msgid "Manage Contributors"
 msgstr "অবদানকারী পরিচালনা করুন"
 
-msgid ""
-"Detailed list of contributors and their total voluntary support entries. "
-"Search by name or use filters to include/exclude selected categories."
-msgstr ""
-"অবদানকারীদের বিস্তারিত তালিকা এবং তাদের মোট স্বেচ্ছা সহায়তার এন্ট্রি। নাম দিয়ে "
-"অনুসন্ধান করুন অথবা নির্বাচিত ক্যাটাগরি অন্তর্ভুক্ত/বাদ দিতে ফিল্টার ব্যবহার করুন।"
+msgid "Detailed list of contributors and their total voluntary support entries. Search by name or use filters to include/exclude selected categories."
+msgstr "অবদানকারীদের বিস্তারিত তালিকা এবং তাদের মোট স্বেচ্ছা সহায়তার এন্ট্রি। নাম দিয়ে অনুসন্ধান করুন অথবা নির্বাচিত ক্যাটাগরি অন্তর্ভুক্ত/বাদ দিতে ফিল্টার ব্যবহার করুন।"
 
 msgid "Import CSV"
 msgstr "সিএসভি আমদানি করুন"
@@ -366,9 +355,7 @@ msgstr "ভিন্ন নাম চেষ্টা করুন, অথবা 
 msgid "No contributors yet"
 msgstr "এখনো কোনো অবদানকারী নেই"
 
-msgid ""
-"Start recording support from voluntary contributors to keep your records "
-"complete."
+msgid "Start recording support from voluntary contributors to keep your records complete."
 msgstr "আপনার রেকর্ড সম্পূর্ণ রাখতে স্বেচ্ছা অবদানকারীদের সহায়তা রেকর্ড করা শুরু করুন।"
 
 msgid "Add Your First Contributor"
@@ -478,11 +465,8 @@ msgid "Imported %(count)s contributor(s)."
 msgstr "%(count)s জন অবদানকারী আমদানি করা হয়েছে।"
 
 #, python-format
-msgid ""
-"Skipped %(count)s row(s): %(dup)s duplicate name(s), %(blank)s blank name(s)."
-msgstr ""
-"%(count)sটি সারি বাদ দেওয়া হয়েছে: %(dup)sটি নাম পুনরাবৃত্তি, %(blank)sটি নাম "
-"খালি।"
+msgid "Skipped %(count)s row(s): %(dup)s duplicate name(s), %(blank)s blank name(s)."
+msgstr "%(count)sটি সারি বাদ দেওয়া হয়েছে: %(dup)sটি নাম পুনরাবৃত্তি, %(blank)sটি নাম খালি।"
 
 msgid "No rows found to import."
 msgstr "আমদানি করার মতো কোনো সারি পাওয়া যায়নি।"
@@ -586,23 +570,15 @@ msgstr "পরবর্তী পরিশোধের তারিখ (ঐচ�
 msgid "How interest is charged (optional). Leave blank for interest-free debt."
 msgstr "সুদ কীভাবে ধার্য হবে (ঐচ্ছিক)। সুদমুক্ত ঋণের জন্য খালি রাখুন।"
 
-msgid ""
-"For Monthly/Every 3 Months/Every 6 Months/Yearly: charge a percentage of the "
-"balance, or a flat amount each period."
-msgstr ""
-"মাসিক/প্রতি ৩ মাসে/প্রতি ৬ মাসে/বার্ষিকের জন্য: ব্যালেন্সের একটি শতাংশ, অথবা প্রতি "
-"মেয়াদে একটি নির্দিষ্ট পরিমাণ ধার্য করুন।"
+msgid "For Monthly/Every 3 Months/Every 6 Months/Yearly: charge a percentage of the balance, or a flat amount each period."
+msgstr "মাসিক/প্রতি ৩ মাসে/প্রতি ৬ মাসে/বার্ষিকের জন্য: ব্যালেন্সের একটি শতাংশ, অথবা প্রতি মেয়াদে একটি নির্দিষ্ট পরিমাণ ধার্য করুন।"
 
 #, python-format
 msgid "Interest rate per period, %% — used when the basis is Percentage."
 msgstr "প্রতি মেয়াদে সুদের হার, %% — যখন ভিত্তি 'শতাংশ' নির্বাচিত থাকে তখন ব্যবহৃত।"
 
-msgid ""
-"A flat interest amount (৳) — used for a one-time Fixed Amount type, or a "
-"Fixed Amount basis charged every period."
-msgstr ""
-"একটি নির্দিষ্ট সুদের পরিমাণ (৳) — একবারের 'নির্দিষ্ট পরিমাণ' ধরনের জন্য, অথবা প্রতি "
-"মেয়াদে ধার্য 'নির্দিষ্ট পরিমাণ' ভিত্তির জন্য ব্যবহৃত।"
+msgid "A flat interest amount (৳) — used for a one-time Fixed Amount type, or a Fixed Amount basis charged every period."
+msgstr "একটি নির্দিষ্ট সুদের পরিমাণ (৳) — একবারের 'নির্দিষ্ট পরিমাণ' ধরনের জন্য, অথবা প্রতি মেয়াদে ধার্য 'নির্দিষ্ট পরিমাণ' ভিত্তির জন্য ব্যবহৃত।"
 
 msgid "Accrued interest (posted)"
 msgstr "সঞ্চিত সুদ (যোগ করা হয়েছে)"
@@ -638,41 +614,19 @@ msgstr "অবশিষ্ট ব্যালেন্স"
 msgid "Interest"
 msgstr "সুদ"
 
-msgid ""
-"A flat interest amount you've agreed on. It shows here until you post it — "
-"nothing is added automatically."
-msgstr ""
-"আপনার সম্মত একটি নির্দিষ্ট সুদের পরিমাণ। আপনি এটি যোগ না করা পর্যন্ত এটি এখানে "
-"দেখা যাবে — স্বয়ংক্রিয়ভাবে কিছু যোগ হয় না।"
+msgid "A flat interest amount you've agreed on. It shows here until you post it — nothing is added automatically."
+msgstr "আপনার সম্মত একটি নির্দিষ্ট সুদের পরিমাণ। আপনি এটি যোগ না করা পর্যন্ত এটি এখানে দেখা যাবে — স্বয়ংক্রিয়ভাবে কিছু যোগ হয় না।"
 
 #, python-format
-msgid ""
-"A flat ৳%(amount)s charged every %(period)s, accrued proportionally since "
-"the last transaction. This is an estimate only — it doesn't affect the "
-"balance above until you post it."
-msgstr ""
-"প্রতি %(period)s একটি নির্দিষ্ট ৳%(amount)s ধার্য করা হয়, সর্বশেষ লেনদেনের পর "
-"থেকে আনুপাতিকভাবে সঞ্চিত। এটি শুধুমাত্র একটি আনুমানিক হিসাব — আপনি এটি যোগ না করা "
-"পর্যন্ত উপরের ব্যালেন্সে এর কোনো প্রভাব পড়বে না।"
+msgid "A flat ৳%(amount)s charged every %(period)s, accrued proportionally since the last transaction. This is an estimate only — it doesn't affect the balance above until you post it."
+msgstr "প্রতি %(period)s একটি নির্দিষ্ট ৳%(amount)s ধার্য করা হয়, সর্বশেষ লেনদেনের পর থেকে আনুপাতিকভাবে সঞ্চিত। এটি শুধুমাত্র একটি আনুমানিক হিসাব — আপনি এটি যোগ না করা পর্যন্ত উপরের ব্যালেন্সে এর কোনো প্রভাব পড়বে না।"
 
 #, python-format
-msgid ""
-"Estimated simple interest at %(rate)s%% per %(period)s on the outstanding "
-"balance, accrued since the last transaction. This is an estimate only — it "
-"doesn't affect the balance above until you post it."
-msgstr ""
-"অবশিষ্ট ব্যালেন্সের উপর প্রতি %(period)s আনুমানিক %(rate)s%% হারে সরল সুদ, সর্বশেষ "
-"লেনদেনের পর থেকে সঞ্চিত। এটি শুধুমাত্র একটি আনুমানিক হিসাব — আপনি এটি যোগ না করা "
-"পর্যন্ত উপরের ব্যালেন্সে এর কোনো প্রভাব পড়বে না।"
+msgid "Estimated simple interest at %(rate)s%% per %(period)s on the outstanding balance, accrued since the last transaction. This is an estimate only — it doesn't affect the balance above until you post it."
+msgstr "অবশিষ্ট ব্যালেন্সের উপর প্রতি %(period)s আনুমানিক %(rate)s%% হারে সরল সুদ, সর্বশেষ লেনদেনের পর থেকে সঞ্চিত। এটি শুধুমাত্র একটি আনুমানিক হিসাব — আপনি এটি যোগ না করা পর্যন্ত উপরের ব্যালেন্সে এর কোনো প্রভাব পড়বে না।"
 
-msgid ""
-"Add this accrued interest to the outstanding balance as a new transaction? "
-"You can edit or delete that transaction afterwards like any other, but it "
-"will not be reversed automatically."
-msgstr ""
-"এই সঞ্চিত সুদটি একটি নতুন লেনদেন হিসেবে অবশিষ্ট ব্যালেন্সে যোগ করবেন? আপনি "
-"পরবর্তীতে যেকোনো লেনদেনের মতো এটি সম্পাদনা বা মুছে ফেলতে পারবেন, তবে এটি "
-"স্বয়ংক্রিয়ভাবে বাতিল হবে না।"
+msgid "Add this accrued interest to the outstanding balance as a new transaction? You can edit or delete that transaction afterwards like any other, but it will not be reversed automatically."
+msgstr "এই সঞ্চিত সুদটি একটি নতুন লেনদেন হিসেবে অবশিষ্ট ব্যালেন্সে যোগ করবেন? আপনি পরবর্তীতে যেকোনো লেনদেনের মতো এটি সম্পাদনা বা মুছে ফেলতে পারবেন, তবে এটি স্বয়ংক্রিয়ভাবে বাতিল হবে না।"
 
 msgid "Post to Balance"
 msgstr "ব্যালেন্সে যোগ করুন"
@@ -728,14 +682,8 @@ msgstr "আমার পাওনাদার"
 msgid "Manage Creditors"
 msgstr "পাওনাদার পরিচালনা করুন"
 
-msgid ""
-"A complete list of people you have borrowed from and your repayment "
-"progress. Search by name, filter by payment status, or include/exclude "
-"categories."
-msgstr ""
-"আপনি যাদের কাছ থেকে ধার নিয়েছেন তাদের সম্পূর্ণ তালিকা এবং আপনার পরিশোধের "
-"অগ্রগতি। নাম দিয়ে অনুসন্ধান করুন, পেমেন্ট স্ট্যাটাস দিয়ে ফিল্টার করুন, অথবা ক্যাটাগরি "
-"অন্তর্ভুক্ত/বাদ দিন।"
+msgid "A complete list of people you have borrowed from and your repayment progress. Search by name, filter by payment status, or include/exclude categories."
+msgstr "আপনি যাদের কাছ থেকে ধার নিয়েছেন তাদের সম্পূর্ণ তালিকা এবং আপনার পরিশোধের অগ্রগতি। নাম দিয়ে অনুসন্ধান করুন, পেমেন্ট স্ট্যাটাস দিয়ে ফিল্টার করুন, অথবা ক্যাটাগরি অন্তর্ভুক্ত/বাদ দিন।"
 
 msgid "New Creditor"
 msgstr "নতুন পাওনাদার"
@@ -784,9 +732,7 @@ msgstr "আপনার ফিল্টারের সাথে মেলে �
 msgid "No creditors yet"
 msgstr "এখনো কোনো পাওনাদার নেই"
 
-msgid ""
-"Start building your financial reputation by adding your first creditor "
-"record."
+msgid "Start building your financial reputation by adding your first creditor record."
 msgstr "আপনার প্রথম পাওনাদার রেকর্ড যোগ করে আর্থিক সুনাম গড়ে তোলা শুরু করুন।"
 
 msgid "Add Your First Creditor"
@@ -805,8 +751,7 @@ msgid "Add Creditor"
 msgstr "পাওনাদার যোগ করুন"
 
 msgid "Leave unselected for all categories. Use Ctrl/Cmd to select multiple."
-msgstr ""
-"সব ক্যাটাগরির জন্য অনির্বাচিত রাখুন। একাধিক নির্বাচনের জন্য Ctrl/Cmd ব্যবহার করুন।"
+msgstr "সব ক্যাটাগরির জন্য অনির্বাচিত রাখুন। একাধিক নির্বাচনের জন্য Ctrl/Cmd ব্যবহার করুন।"
 
 msgid "Needs Attention"
 msgstr "মনোযোগ প্রয়োজন"
@@ -935,8 +880,7 @@ msgstr "দেনাদার ড্যাশবোর্ড"
 msgid "Debtors Overview"
 msgstr "দেনাদার সংক্ষিপ্ত বিবরণ"
 
-msgid ""
-"Detailed overview of people who owe you money and your collection status."
+msgid "Detailed overview of people who owe you money and your collection status."
 msgstr "যারা আপনার কাছে ঋণী তাদের বিস্তারিত বিবরণ এবং আপনার আদায়ের অবস্থা।"
 
 msgid "Add New Debtor"
@@ -1029,12 +973,8 @@ msgstr "আমার দেনাদার"
 msgid "Active Debtors"
 msgstr "সক্রিয় দেনাদার"
 
-msgid ""
-"Track all accounts receivable and monitor collection progress. Search by "
-"name, filter by payment status, or include/exclude categories."
-msgstr ""
-"সব পাওনা হিসাব ট্র্যাক করুন এবং আদায়ের অগ্রগতি পর্যবেক্ষণ করুন। নাম দিয়ে অনুসন্ধান "
-"করুন, পেমেন্ট স্ট্যাটাস দিয়ে ফিল্টার করুন, অথবা ক্যাটাগরি অন্তর্ভুক্ত/বাদ দিন।"
+msgid "Track all accounts receivable and monitor collection progress. Search by name, filter by payment status, or include/exclude categories."
+msgstr "সব পাওনা হিসাব ট্র্যাক করুন এবং আদায়ের অগ্রগতি পর্যবেক্ষণ করুন। নাম দিয়ে অনুসন্ধান করুন, পেমেন্ট স্ট্যাটাস দিয়ে ফিল্টার করুন, অথবা ক্যাটাগরি অন্তর্ভুক্ত/বাদ দিন।"
 
 msgid "New Debtor"
 msgstr "নতুন দেনাদার"
@@ -1058,12 +998,8 @@ msgstr "আপনার ফিল্টারের সাথে মেলে �
 msgid "Your accounts are currently clear"
 msgstr "আপনার হিসাব বর্তমানে পরিষ্কার"
 
-msgid ""
-"Add people who owe you money to start tracking collections and managing your "
-"receivables efficiently."
-msgstr ""
-"যারা আপনার কাছে ঋণী তাদের যোগ করুন যাতে আদায় ট্র্যাক করা এবং পাওনা কার্যকরভাবে "
-"পরিচালনা করা শুরু করতে পারেন।"
+msgid "Add people who owe you money to start tracking collections and managing your receivables efficiently."
+msgstr "যারা আপনার কাছে ঋণী তাদের যোগ করুন যাতে আদায় ট্র্যাক করা এবং পাওনা কার্যকরভাবে পরিচালনা করা শুরু করতে পারেন।"
 
 msgid "Set Up First Debtor Account"
 msgstr "প্রথম দেনাদার অ্যাকাউন্ট সেটআপ করুন"
@@ -1089,16 +1025,11 @@ msgstr "খরচের বিবরণ..."
 msgid "Next Occurrence"
 msgstr "পরবর্তী তারিখ"
 
-msgid ""
-"Move to the previous working day if this date falls on a Friday or Saturday"
+msgid "Move to the previous working day if this date falls on a Friday or Saturday"
 msgstr "এই তারিখটি শুক্র বা শনিবারে পড়লে আগের কার্যদিবসে সরিয়ে নিন"
 
-msgid ""
-"Common for bank auto-debits. Only affects which date the entry is posted on "
-"— the schedule itself stays anchored to the original date."
-msgstr ""
-"ব্যাংক অটো-ডেবিটের ক্ষেত্রে সাধারণ ব্যাপার। এটি শুধু এন্ট্রি কোন তারিখে পোস্ট হবে তা "
-"প্রভাবিত করে — সময়সূচী নিজে মূল তারিখেই স্থির থাকে।"
+msgid "Common for bank auto-debits. Only affects which date the entry is posted on — the schedule itself stays anchored to the original date."
+msgstr "ব্যাংক অটো-ডেবিটের ক্ষেত্রে সাধারণ ব্যাপার। এটি শুধু এন্ট্রি কোন তারিখে পোস্ট হবে তা প্রভাবিত করে — সময়সূচী নিজে মূল তারিখেই স্থির থাকে।"
 
 msgid "Optional note added to each generated entry..."
 msgstr "প্রতিটি তৈরি হওয়া এন্ট্রিতে যোগ হবে এমন ঐচ্ছিক নোট..."
@@ -1136,11 +1067,8 @@ msgstr "ক্যাটাগরির পরিমাণ"
 msgid "Taxonomy Blank"
 msgstr "শ্রেণীবিন্যাস খালি"
 
-msgid ""
-"Categorization allows for advanced analytical insights into your capital "
-"leakage."
-msgstr ""
-"শ্রেণীবিন্যাস আপনার মূলধন ক্ষয়ের বিষয়ে উন্নত বিশ্লেষণাত্মক অন্তর্দৃষ্টি প্রদান করে।"
+msgid "Categorization allows for advanced analytical insights into your capital leakage."
+msgstr "শ্রেণীবিন্যাস আপনার মূলধন ক্ষয়ের বিষয়ে উন্নত বিশ্লেষণাত্মক অন্তর্দৃষ্টি প্রদান করে।"
 
 msgid "Add Category"
 msgstr "ক্যাটাগরি যোগ করুন"
@@ -1151,8 +1079,7 @@ msgstr "খরচ ড্যাশবোর্ড"
 msgid "Expense Analytics"
 msgstr "খরচ বিশ্লেষণ"
 
-msgid ""
-"Detailed breakdown of your spending habits and category-wise expenditures."
+msgid "Detailed breakdown of your spending habits and category-wise expenditures."
 msgstr "আপনার ব্যয়ের অভ্যাস এবং ক্যাটাগরি অনুযায়ী খরচের বিস্তারিত বিভাজন।"
 
 msgid "New Expense"
@@ -1248,8 +1175,7 @@ msgstr "হিসাব থেকে এই খরচের রেকর্ড�
 msgid "Expenditure Ledger Blank"
 msgstr "খরচের হিসাব খালি"
 
-msgid ""
-"Start recording your spending to gain visibility into your financial leakage."
+msgid "Start recording your spending to gain visibility into your financial leakage."
 msgstr "আপনার আর্থিক ক্ষয় সম্পর্কে দৃষ্টিভঙ্গি পেতে ব্যয় রেকর্ড করা শুরু করুন।"
 
 msgid "Register Outflow"
@@ -1258,12 +1184,8 @@ msgstr "ব্যয় নিবন্ধন করুন"
 msgid "Recurring Expenses"
 msgstr "পুনরাবৃত্ত খরচ"
 
-msgid ""
-"Schedules that auto-log an expense on a cadence — rent, subscriptions, or "
-"any repeating bill — so you don't have to enter it by hand each time."
-msgstr ""
-"একটি নির্দিষ্ট সময়ানুক্রমে স্বয়ংক্রিয়ভাবে খরচ তৈরি করে এমন সময়সূচী — ভাড়া, "
-"সাবস্ক্রিপশন বা যেকোনো পুনরাবৃত্ত বিল — যাতে আপনাকে প্রতিবার হাতে লিখতে না হয়।"
+msgid "Schedules that auto-log an expense on a cadence — rent, subscriptions, or any repeating bill — so you don't have to enter it by hand each time."
+msgstr "একটি নির্দিষ্ট সময়ানুক্রমে স্বয়ংক্রিয়ভাবে খরচ তৈরি করে এমন সময়সূচী — ভাড়া, সাবস্ক্রিপশন বা যেকোনো পুনরাবৃত্ত বিল — যাতে আপনাকে প্রতিবার হাতে লিখতে না হয়।"
 
 msgid "New Schedule"
 msgstr "নতুন সময়সূচী"
@@ -1284,21 +1206,14 @@ msgstr "স্থগিত করুন"
 msgid "Resume"
 msgstr "পুনরায় চালু করুন"
 
-msgid ""
-"Delete this recurring schedule? Past entries it already created are kept."
-msgstr ""
-"এই পুনরাবৃত্ত সময়সূচীটি মুছে ফেলবেন? এটি ইতিমধ্যে তৈরি করা পূর্ববর্তী এন্ট্রিগুলো "
-"সংরক্ষিত থাকবে।"
+msgid "Delete this recurring schedule? Past entries it already created are kept."
+msgstr "এই পুনরাবৃত্ত সময়সূচীটি মুছে ফেলবেন? এটি ইতিমধ্যে তৈরি করা পূর্ববর্তী এন্ট্রিগুলো সংরক্ষিত থাকবে।"
 
 msgid "No recurring expenses yet"
 msgstr "এখনও কোনো পুনরাবৃত্ত খরচ নেই"
 
-msgid ""
-"Set up a schedule for rent or a subscription and it'll be logged "
-"automatically from then on."
-msgstr ""
-"ভাড়া বা সাবস্ক্রিপশনের জন্য একটি সময়সূচী তৈরি করুন, এরপর থেকে এটি স্বয়ংক্রিয়ভাবে "
-"রেকর্ড হবে।"
+msgid "Set up a schedule for rent or a subscription and it'll be logged automatically from then on."
+msgstr "ভাড়া বা সাবস্ক্রিপশনের জন্য একটি সময়সূচী তৈরি করুন, এরপর থেকে এটি স্বয়ংক্রিয়ভাবে রেকর্ড হবে।"
 
 msgid "Date (Newest First)"
 msgstr "তারিখ (নতুন আগে)"
@@ -1314,10 +1229,9 @@ msgstr "পরিমাণ (কম থেকে বেশি)"
 
 #, python-format
 msgid "%(count)s recurring expense entry was generated automatically."
-msgid_plural ""
-"%(count)s recurring expense entries were generated automatically."
-msgstr[0] ""
-msgstr[1] ""
+msgid_plural "%(count)s recurring expense entries were generated automatically."
+msgstr[0] "%(count)sটি পুনরাবৃত্ত খরচের এন্ট্রি স্বয়ংক্রিয়ভাবে তৈরি হয়েছে।"
+msgstr[1] "%(count)sটি পুনরাবৃত্ত খরচের এন্ট্রি স্বয়ংক্রিয়ভাবে তৈরি হয়েছে।"
 
 #, python-format
 msgid "Expense of ৳%(amount)s recorded."
@@ -1388,12 +1302,8 @@ msgstr "নির্দিষ্ট কেউ নয়"
 msgid "Bazar Categories"
 msgstr "বাজারের ক্যাটাগরি"
 
-msgid ""
-"Optional groupings for household purchases, e.g. Vegetables, Fish, "
-"Groceries. Purchases don't need a category at all."
-msgstr ""
-"গৃহস্থালি কেনাকাটার জন্য ঐচ্ছিক শ্রেণীবিভাগ, যেমন সবজি, মাছ, মুদি। কেনাকাটার জন্য "
-"ক্যাটাগরির প্রয়োজন নেই।"
+msgid "Optional groupings for household purchases, e.g. Vegetables, Fish, Groceries. Purchases don't need a category at all."
+msgstr "গৃহস্থালি কেনাকাটার জন্য ঐচ্ছিক শ্রেণীবিভাগ, যেমন সবজি, মাছ, মুদি। কেনাকাটার জন্য ক্যাটাগরির প্রয়োজন নেই।"
 
 msgid "New Category"
 msgstr "নতুন ক্যাটাগরি"
@@ -1410,12 +1320,8 @@ msgstr "বাজারের লগ দেখুন"
 msgid "No categories yet"
 msgstr "এখনো কোনো ক্যাটাগরি নেই"
 
-msgid ""
-"Categories are entirely optional — add one only if you want to break down "
-"bazar spending further."
-msgstr ""
-"ক্যাটাগরি সম্পূর্ণভাবে ঐচ্ছিক — শুধুমাত্র বাজারের খরচ আরও বিভক্ত করতে চাইলে একটি যোগ "
-"করুন।"
+msgid "Categories are entirely optional — add one only if you want to break down bazar spending further."
+msgstr "ক্যাটাগরি সম্পূর্ণভাবে ঐচ্ছিক — শুধুমাত্র বাজারের খরচ আরও বিভক্ত করতে চাইলে একটি যোগ করুন।"
 
 msgid "Add Your First Category"
 msgstr "আপনার প্রথম ক্যাটাগরি যোগ করুন"
@@ -1426,11 +1332,8 @@ msgstr "গৃহস্থালি ড্যাশবোর্ড"
 msgid "Household (Bazar) Overview"
 msgstr "গৃহস্থালি (বাজার) সংক্ষিপ্ত বিবরণ"
 
-msgid ""
-"A summary of your day-to-day household shopping and any reimbursements owed "
-"to members."
-msgstr ""
-"আপনার দৈনন্দিন গৃহস্থালি কেনাকাটা এবং সদস্যদের কাছে বকেয়া ফেরত অর্থের সারাংশ।"
+msgid "A summary of your day-to-day household shopping and any reimbursements owed to members."
+msgstr "আপনার দৈনন্দিন গৃহস্থালি কেনাকাটা এবং সদস্যদের কাছে বকেয়া ফেরত অর্থের সারাংশ।"
 
 msgid "Add Purchase"
 msgstr "কেনাকাটা যোগ করুন"
@@ -1501,13 +1404,8 @@ msgstr "নিষ্পত্তি রেকর্ড করুন"
 msgid "Household Members"
 msgstr "গৃহস্থালি সদস্য"
 
-msgid ""
-"People who occasionally front their own money for bazar. Tracking a member "
-"on a purchase is optional — this page is only for the ones you want to "
-"settle up with."
-msgstr ""
-"যারা মাঝে মাঝে বাজারের জন্য নিজের টাকা অগ্রিম দেন। কেনাকাটায় সদস্য ট্র্যাক করা "
-"ঐচ্ছিক — এই পৃষ্ঠাটি শুধুমাত্র তাদের জন্য যাদের সাথে আপনি নিষ্পত্তি করতে চান।"
+msgid "People who occasionally front their own money for bazar. Tracking a member on a purchase is optional — this page is only for the ones you want to settle up with."
+msgstr "যারা মাঝে মাঝে বাজারের জন্য নিজের টাকা অগ্রিম দেন। কেনাকাটায় সদস্য ট্র্যাক করা ঐচ্ছিক — এই পৃষ্ঠাটি শুধুমাত্র তাদের জন্য যাদের সাথে আপনি নিষ্পত্তি করতে চান।"
 
 msgid "Bazar Log"
 msgstr "বাজারের লগ"
@@ -1533,12 +1431,8 @@ msgstr "ফেরত নিষ্পত্তি"
 msgid "No members tracked yet"
 msgstr "এখনো কোনো সদস্য ট্র্যাক করা হয়নি"
 
-msgid ""
-"Add a member only if you need to keep track of who to pay back for bazar "
-"they fronted."
-msgstr ""
-"শুধুমাত্র তখনই সদস্য যোগ করুন যদি আপনার ট্র্যাক রাখতে হয় কাকে বাজারের অগ্রিম টাকা "
-"ফেরত দিতে হবে।"
+msgid "Add a member only if you need to keep track of who to pay back for bazar they fronted."
+msgstr "শুধুমাত্র তখনই সদস্য যোগ করুন যদি আপনার ট্র্যাক রাখতে হয় কাকে বাজারের অগ্রিম টাকা ফেরত দিতে হবে।"
 
 msgid "Add Your First Member"
 msgstr "আপনার প্রথম সদস্য যোগ করুন"
@@ -1574,12 +1468,8 @@ msgstr "কেনাকাটা সংরক্ষণ করুন"
 msgid "Household (Bazar) Log"
 msgstr "গৃহস্থালি (বাজার) লগ"
 
-msgid ""
-"Every month's household purchases, grouped for a quick overview. Open a "
-"month to see and add individual purchases."
-msgstr ""
-"প্রতি মাসের গৃহস্থালি কেনাকাটা, দ্রুত সংক্ষিপ্ত বিবরণের জন্য গোষ্ঠীবদ্ধ। পৃথক কেনাকাটা "
-"দেখতে এবং যোগ করতে একটি মাস খুলুন।"
+msgid "Every month's household purchases, grouped for a quick overview. Open a month to see and add individual purchases."
+msgstr "প্রতি মাসের গৃহস্থালি কেনাকাটা, দ্রুত সংক্ষিপ্ত বিবরণের জন্য গোষ্ঠীবদ্ধ। পৃথক কেনাকাটা দেখতে এবং যোগ করতে একটি মাস খুলুন।"
 
 #, python-format
 msgid "%(counter)s purchase"
@@ -1593,9 +1483,7 @@ msgstr "কেনাকাটা দেখুন"
 msgid "No bazar purchases yet"
 msgstr "এখনো কোনো বাজারের কেনাকাটা নেই"
 
-msgid ""
-"Start logging your daily household shopping to keep track of spending by "
-"month."
+msgid "Start logging your daily household shopping to keep track of spending by month."
 msgstr "মাস অনুযায়ী ব্যয় ট্র্যাক রাখতে আপনার দৈনিক গৃহস্থালি কেনাকাটা লগ করা শুরু করুন।"
 
 msgid "Add Your First Purchase"
@@ -1680,12 +1568,8 @@ msgstr "সবজি"
 msgid "Fish"
 msgstr "মাছ"
 
-msgid ""
-"Common for bank-paid salary. Only affects which date the entry is posted on "
-"— the schedule itself stays anchored to the original date."
-msgstr ""
-"ব্যাংকের মাধ্যমে প্রদত্ত বেতনের ক্ষেত্রে সাধারণ ব্যাপার। এটি শুধু এন্ট্রি কোন তারিখে "
-"পোস্ট হবে তা প্রভাবিত করে — সময়সূচী নিজে মূল তারিখেই স্থির থাকে।"
+msgid "Common for bank-paid salary. Only affects which date the entry is posted on — the schedule itself stays anchored to the original date."
+msgstr "ব্যাংকের মাধ্যমে প্রদত্ত বেতনের ক্ষেত্রে সাধারণ ব্যাপার। এটি শুধু এন্ট্রি কোন তারিখে পোস্ট হবে তা প্রভাবিত করে — সময়সূচী নিজে মূল তারিখেই স্থির থাকে।"
 
 msgid "Income Dashboard"
 msgstr "আয় ড্যাশবোর্ড"
@@ -1732,23 +1616,14 @@ msgstr "মোট অর্জিত"
 msgid "Recurring Income"
 msgstr "পুনরাবৃত্ত আয়"
 
-msgid ""
-"Schedules that auto-create an income entry on a cadence — salary, rent "
-"received, or any repeating payout — so you don't have to log it by hand each "
-"time."
-msgstr ""
-"একটি নির্দিষ্ট সময়ানুক্রমে স্বয়ংক্রিয়ভাবে আয়ের এন্ট্রি তৈরি করে এমন সময়সূচী — বেতন, "
-"প্রাপ্ত ভাড়া বা যেকোনো পুনরাবৃত্ত প্রাপ্তি — যাতে আপনাকে প্রতিবার হাতে লিখতে না হয়।"
+msgid "Schedules that auto-create an income entry on a cadence — salary, rent received, or any repeating payout — so you don't have to log it by hand each time."
+msgstr "একটি নির্দিষ্ট সময়ানুক্রমে স্বয়ংক্রিয়ভাবে আয়ের এন্ট্রি তৈরি করে এমন সময়সূচী — বেতন, প্রাপ্ত ভাড়া বা যেকোনো পুনরাবৃত্ত প্রাপ্তি — যাতে আপনাকে প্রতিবার হাতে লিখতে না হয়।"
 
 msgid "No recurring income yet"
 msgstr "এখনও কোনো পুনরাবৃত্ত আয় নেই"
 
-msgid ""
-"Set up a schedule for salary or any repeating payout and it'll be logged "
-"automatically from then on."
-msgstr ""
-"বেতন বা যেকোনো পুনরাবৃত্ত প্রাপ্তির জন্য একটি সময়সূচী তৈরি করুন, এরপর থেকে এটি "
-"স্বয়ংক্রিয়ভাবে রেকর্ড হবে।"
+msgid "Set up a schedule for salary or any repeating payout and it'll be logged automatically from then on."
+msgstr "বেতন বা যেকোনো পুনরাবৃত্ত প্রাপ্তির জন্য একটি সময়সূচী তৈরি করুন, এরপর থেকে এটি স্বয়ংক্রিয়ভাবে রেকর্ড হবে।"
 
 msgid "Income Source Ledger"
 msgstr "আয়ের উৎসের হিসাব"
@@ -1808,8 +1683,7 @@ msgstr "আয়ের উৎস"
 msgid "Income Portfolio"
 msgstr "আয়ের পোর্টফোলিও"
 
-msgid ""
-"Manage all entities and sources from where you receive financial inflows."
+msgid "Manage all entities and sources from where you receive financial inflows."
 msgstr "আপনি যেখান থেকে আর্থিক আয় পান সেই সমস্ত সত্তা এবং উৎস পরিচালনা করুন।"
 
 msgid "Register New Source"
@@ -1833,9 +1707,7 @@ msgstr "এই উৎসের জন্য কোনো বিবরণ রে�
 msgid "No Income Sources Defined"
 msgstr "কোনো আয়ের উৎস নির্ধারিত নেই"
 
-msgid ""
-"Registration of entities (employers, clients, businesses) is required before "
-"logging earnings."
+msgid "Registration of entities (employers, clients, businesses) is required before logging earnings."
 msgstr "আয় লগ করার আগে সত্তা (নিয়োগকর্তা, ক্লায়েন্ট, ব্যবসা) নিবন্ধন করা প্রয়োজন।"
 
 msgid "Register First Source"
@@ -1850,8 +1722,8 @@ msgstr "মোট অর্জিত (কম থেকে বেশি)"
 #, python-format
 msgid "%(count)s recurring income entry was generated automatically."
 msgid_plural "%(count)s recurring income entries were generated automatically."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%(count)sটি পুনরাবৃত্ত আয়ের এন্ট্রি স্বয়ংক্রিয়ভাবে তৈরি হয়েছে।"
+msgstr[1] "%(count)sটি পুনরাবৃত্ত আয়ের এন্ট্রি স্বয়ংক্রিয়ভাবে তৈরি হয়েছে।"
 
 msgid "Acme Corp Salary"
 msgstr "একমি কর্পের বেতন"
@@ -1925,12 +1797,8 @@ msgstr "'%(name)s' এর পুনরাবৃত্ত আয় মুছে 
 msgid "Net Worth"
 msgstr "নিট সম্পদ"
 
-msgid ""
-"Your whole financial picture in one place — what you're owed, what you owe, "
-"and what you've earned and spent, across every ledger."
-msgstr ""
-"আপনার সম্পূর্ণ আর্থিক চিত্র একই জায়গায় — আপনি কী পাবেন, কী দেবেন, এবং প্রতিটি "
-"হিসাব জুড়ে আপনি কী উপার্জন ও ব্যয় করেছেন।"
+msgid "Your whole financial picture in one place — what you're owed, what you owe, and what you've earned and spent, across every ledger."
+msgstr "আপনার সম্পূর্ণ আর্থিক চিত্র একই জায়গায় — আপনি কী পাবেন, কী দেবেন, এবং প্রতিটি হিসাব জুড়ে আপনি কী উপার্জন ও ব্যয় করেছেন।"
 
 msgid "Overall Net Position"
 msgstr "সামগ্রিক নিট অবস্থান"
@@ -1963,12 +1831,8 @@ msgstr "নিট ব্যালেন্স"
 msgid "Lifetime Cash Flow"
 msgstr "সারাজীবনের নগদ প্রবাহ"
 
-msgid ""
-"Everything ever earned vs. everything ever spent — all-time totals, not a "
-"current balance."
-msgstr ""
-"এ পর্যন্ত অর্জিত সবকিছু বনাম ব্যয় করা সবকিছু — সর্বমোট সময়ের হিসাব, বর্তমান ব্যালেন্স "
-"নয়।"
+msgid "Everything ever earned vs. everything ever spent — all-time totals, not a current balance."
+msgstr "এ পর্যন্ত অর্জিত সবকিছু বনাম ব্যয় করা সবকিছু — সর্বমোট সময়ের হিসাব, বর্তমান ব্যালেন্স নয়।"
 
 msgid "Earned (Income)"
 msgstr "উপার্জিত (আয়)"
@@ -1988,16 +1852,8 @@ msgstr "নিট নগদ প্রবাহ"
 msgid "How this is calculated:"
 msgstr "এটি যেভাবে হিসাব করা হয়:"
 
-msgid ""
-"Household purchases fronted by a member are counted once, as that member's "
-"balance — not counted again as spending, to avoid double-counting the same "
-"taka. Interest that has accrued but not yet been posted to a creditor's "
-"balance is not included here; check that creditor's page for the estimate."
-msgstr ""
-"কোনো সদস্যের আগাম দেওয়া গৃহস্থালি কেনাকাটা শুধুমাত্র একবার, সেই সদস্যের ব্যালেন্স "
-"হিসেবে গণনা করা হয় — একই টাকা দ্বিগুণ গণনা এড়াতে এটি আবার ব্যয় হিসেবে গণনা করা "
-"হয় না। কোনো পাওনাদারের ব্যালেন্সে এখনও যোগ করা হয়নি এমন সঞ্চিত সুদ এখানে অন্তর্ভুক্ত "
-"নয়; আনুমানিক হিসাবের জন্য সেই পাওনাদারের পাতা দেখুন।"
+msgid "Household purchases fronted by a member are counted once, as that member's balance — not counted again as spending, to avoid double-counting the same taka. Interest that has accrued but not yet been posted to a creditor's balance is not included here; check that creditor's page for the estimate."
+msgstr "কোনো সদস্যের আগাম দেওয়া গৃহস্থালি কেনাকাটা শুধুমাত্র একবার, সেই সদস্যের ব্যালেন্স হিসেবে গণনা করা হয় — একই টাকা দ্বিগুণ গণনা এড়াতে এটি আবার ব্যয় হিসেবে গণনা করা হয় না। কোনো পাওনাদারের ব্যালেন্সে এখনও যোগ করা হয়নি এমন সঞ্চিত সুদ এখানে অন্তর্ভুক্ত নয়; আনুমানিক হিসাবের জন্য সেই পাওনাদারের পাতা দেখুন।"
 
 msgid "Creditors"
 msgstr "পাওনাদার"
@@ -2068,11 +1924,8 @@ msgstr "দোকানের বাকি ড্যাশবোর্ড"
 msgid "Shop Dues Overview"
 msgstr "দোকানের বাকি সংক্ষিপ্ত বিবরণ"
 
-msgid ""
-"A detailed summary of what you owe (বাকি) to local shops and how much you've "
-"paid off."
-msgstr ""
-"স্থানীয় দোকানে আপনার কত বাকি আছে এবং কত পরিশোধ করেছেন তার বিস্তারিত সারাংশ।"
+msgid "A detailed summary of what you owe (বাকি) to local shops and how much you've paid off."
+msgstr "স্থানীয় দোকানে আপনার কত বাকি আছে এবং কত পরিশোধ করেছেন তার বিস্তারিত সারাংশ।"
 
 msgid "Add Shop"
 msgstr "দোকান যোগ করুন"
@@ -2107,9 +1960,7 @@ msgstr "দোকান সম্পাদনা"
 msgid "Balance Summary"
 msgstr "ব্যালেন্স সারসংক্ষেপ"
 
-msgid ""
-"Current Due and Outstanding Balance are always as of today. Filter below to "
-"see totals for a specific period — Transaction History will follow it too."
+msgid "Current Due and Outstanding Balance are always as of today. Filter below to see totals for a specific period — Transaction History will follow it too."
 msgstr "বর্তমান বাকি এবং বকেয়া ব্যালেন্স সবসময় আজকের হিসাবে দেখানো হয়। নির্দিষ্ট সময়ের মোট দেখতে নিচের ফিল্টার ব্যবহার করুন — লেনদেনের ইতিহাসও এটি অনুসরণ করবে।"
 
 msgid "Months"
@@ -2155,13 +2006,8 @@ msgstr "আমার দোকান"
 msgid "Shop Dues (বাকি)"
 msgstr "দোকানের বাকি"
 
-msgid ""
-"Local shops you buy from on credit, and how much is still owed to each. "
-"Search by name, filter by payment status, or include/exclude categories."
-msgstr ""
-"স্থানীয় দোকান যেখান থেকে আপনি বাকিতে কেনেন, এবং প্রতিটির কাছে কত বাকি আছে। নাম "
-"দিয়ে অনুসন্ধান করুন, পেমেন্ট স্ট্যাটাস দিয়ে ফিল্টার করুন, অথবা ক্যাটাগরি অন্তর্ভুক্ত/বাদ "
-"দিন।"
+msgid "Local shops you buy from on credit, and how much is still owed to each. Search by name, filter by payment status, or include/exclude categories."
+msgstr "স্থানীয় দোকান যেখান থেকে আপনি বাকিতে কেনেন, এবং প্রতিটির কাছে কত বাকি আছে। নাম দিয়ে অনুসন্ধান করুন, পেমেন্ট স্ট্যাটাস দিয়ে ফিল্টার করুন, অথবা ক্যাটাগরি অন্তর্ভুক্ত/বাদ দিন।"
 
 msgid "New Shop"
 msgstr "নতুন দোকান"
@@ -2182,12 +2028,8 @@ msgstr "আপনার ফিল্টারের সাথে মেলে �
 msgid "No shops yet"
 msgstr "এখনো কোনো দোকান নেই"
 
-msgid ""
-"Add the local shops you buy from on credit to start tracking what's owed "
-"(বাকি)."
-msgstr ""
-"বাকি ট্র্যাক করা শুরু করতে আপনি যেসব স্থানীয় দোকান থেকে বাকিতে কেনেন সেগুলো যোগ "
-"করুন।"
+msgid "Add the local shops you buy from on credit to start tracking what's owed (বাকি)."
+msgstr "বাকি ট্র্যাক করা শুরু করতে আপনি যেসব স্থানীয় দোকান থেকে বাকিতে কেনেন সেগুলো যোগ করুন।"
 
 msgid "Add Your First Shop"
 msgstr "আপনার প্রথম দোকান যোগ করুন"
@@ -2270,6 +2112,626 @@ msgstr "সময়কাল"
 msgid "No records for this statement."
 msgstr "এই বিবরণীর জন্য কোনো রেকর্ড নেই।"
 
-msgid ""
-"Generated by FinTrack — computer-generated statement, no signature required."
+msgid "Generated by FinTrack — computer-generated statement, no signature required."
 msgstr "ফিনট্র্যাক দ্বারা তৈরি — কম্পিউটার-উৎপাদিত বিবরণী, স্বাক্ষরের প্রয়োজন নেই।"
+
+msgid "Warm Paper"
+msgstr "উষ্ণ কাগজ"
+
+msgid "Clean White"
+msgstr "পরিষ্কার সাদা"
+
+msgid "Notepad Yellow"
+msgstr "নোটপ্যাড হলুদ"
+
+msgid "Honeydew Green"
+msgstr "হানিডিউ সবুজ"
+
+msgid "Sky Mist"
+msgstr "আকাশি নীল"
+
+msgid "Rose Blush"
+msgstr "গোলাপি আভা"
+
+msgid "Lavender"
+msgstr "ল্যাভেন্ডার"
+
+msgid "Are you sure you want to permanently delete <strong>%(name)s</strong> and all their contribution records? This action cannot be undone."
+msgstr "আপনি কি নিশ্চিত যে <strong>%(name)s</strong> এবং তাঁর সব অবদানের রেকর্ড স্থায়ীভাবে মুছে ফেলতে চান? এটি আর ফেরানো যাবে না।"
+
+msgid "Only want to hide them? Mark them as inactive instead — their history is kept and still counts in totals."
+msgstr "শুধু লুকাতে চান? বরং নিষ্ক্রিয় করে দিন — ইতিহাস থেকে যাবে এবং মোট হিসাবে গণনা হবে।"
+
+msgid "This contributor is inactive — hidden from your active list. Their contributions still count in every total."
+msgstr "এই অবদানকারী নিষ্ক্রিয় — সক্রিয় তালিকায় দেখা যাবে না। তবে তাঁর অবদান সব মোট হিসাবে গণনা হয়।"
+
+msgid "Deleting removes the contributor and all related history forever. To just hide them, mark them inactive instead."
+msgstr "মুছে ফেললে অবদানকারী ও সংশ্লিষ্ট সব ইতিহাস চিরতরে মুছে যাবে। শুধু লুকাতে চাইলে নিষ্ক্রিয় করে দিন।"
+
+msgid "People and organisations who support you, and how much each has given."
+msgstr "যেসব ব্যক্তি ও প্রতিষ্ঠান আপনাকে সহায়তা করেন, এবং কে কত দিয়েছেন।"
+
+msgid "From %(counter)s contributor"
+msgid_plural "From %(counter)s contributors"
+msgstr[0] "%(counter)s জন অবদানকারীর কাছ থেকে"
+msgstr[1] "%(counter)s জন অবদানকারীর কাছ থেকে"
+
+msgid "Avg."
+msgstr "গড়"
+
+msgid "Funding by Contributor"
+msgstr "অবদানকারী অনুযায়ী তহবিল"
+
+msgid "New expense category"
+msgstr "নতুন খরচের ক্যাটাগরি"
+
+msgid "category"
+msgstr "ক্যাটাগরি"
+
+msgid "New income source"
+msgstr "নতুন আয়ের উৎস"
+
+msgid "income source"
+msgstr "আয়ের উৎস"
+
+msgid "New bazar category"
+msgstr "নতুন বাজার ক্যাটাগরি"
+
+msgid "New household member"
+msgstr "নতুন পরিবারের সদস্য"
+
+msgid "member"
+msgstr "সদস্য"
+
+msgid "'%(name)s' is active again and selected."
+msgstr "'%(name)s' আবার সক্রিয় করে বেছে নেওয়া হয়েছে।"
+
+msgid "'%(name)s' already exists, so it's been selected."
+msgstr "'%(name)s' আগে থেকেই আছে, তাই সেটিই বেছে নেওয়া হয়েছে।"
+
+msgid "'%(name)s' already exists but is inactive."
+msgstr "'%(name)s' আগে থেকেই আছে, তবে নিষ্ক্রিয়।"
+
+msgid "'%(name)s' added and selected."
+msgstr "'%(name)s' যোগ করে বেছে নেওয়া হয়েছে।"
+
+msgid "'%(name)s' is active again."
+msgstr "'%(name)s' আবার সক্রিয়।"
+
+msgid "'%(name)s' marked inactive. It's hidden from lists and pickers, but its history still counts in every total."
+msgstr "'%(name)s' নিষ্ক্রিয় করা হয়েছে। এটি তালিকা ও ড্রপডাউন থেকে লুকানো থাকবে, তবে এর ইতিহাস সব মোট হিসাবে গণনা হবে।"
+
+msgid "This creditor is inactive — hidden from your active list. The balance below still counts in every total."
+msgstr "এই পাওনাদার নিষ্ক্রিয় — সক্রিয় তালিকায় দেখা যাবে না। নিচের ব্যালেন্স তবুও সব মোট হিসাবে গণনা হয়।"
+
+msgid "Total borrowed minus total repaid. Estimated interest isn't included until you post it."
+msgstr "মোট ধার বাদ মোট ফেরত। আনুমানিক সুদ ব্যালেন্সে যোগ না করা পর্যন্ত এতে ধরা হয় না।"
+
+msgid "Interest is only an estimate shown here. Nothing is added to what you owe unless you press Post to Balance."
+msgstr "এখানে সুদ শুধু একটি আনুমানিক হিসাব। \"ব্যালেন্সে যোগ করুন\" না চাপলে আপনার দেনায় কিছুই যোগ হবে না।"
+
+msgid "Adds the accrued interest to the balance as a new Borrowed entry."
+msgstr "জমা হওয়া সুদ একটি নতুন ধারের এন্ট্রি হিসেবে ব্যালেন্সে যোগ করে।"
+
+msgid "Interest built up since the last transaction, prorated by days. It resets each time you post it."
+msgstr "শেষ লেনদেনের পর থেকে দিনের হিসাবে জমা হওয়া সুদ। প্রতিবার ব্যালেন্সে যোগ করলে এটি শূন্য থেকে শুরু হয়।"
+
+msgid "Optional. Leave the type blank for interest-free debt."
+msgstr "ঐচ্ছিক। সুদবিহীন ঋণের জন্য ধরন ফাঁকা রাখুন।"
+
+msgid "People and institutions you have borrowed from, and how much of it you've paid back."
+msgstr "যেসব ব্যক্তি ও প্রতিষ্ঠান থেকে আপনি ধার নিয়েছেন, এবং তার কতটা ফেরত দিয়েছেন।"
+
+msgid "%(counter)s creditor"
+msgid_plural "%(counter)s creditors"
+msgstr[0] "%(counter)s জন পাওনাদার"
+msgstr[1] "%(counter)s জন পাওনাদার"
+
+msgid "Still owed"
+msgstr "এখনও দেনা"
+
+msgid "Add the first person or bank you've borrowed from to start tracking repayments."
+msgstr "ফেরত দেওয়ার হিসাব রাখতে, যার কাছ থেকে ধার নিয়েছেন সেই প্রথম ব্যক্তি বা ব্যাংক যোগ করুন।"
+
+msgid "Everything you borrowed minus everything you've repaid, across all creditors (active and inactive)."
+msgstr "সব পাওনাদারের (সক্রিয় ও নিষ্ক্রিয়) কাছ থেকে নেওয়া মোট ধার বাদ মোট ফেরত।"
+
+msgid "Money you have lent out and how much is still to be collected."
+msgstr "আপনি যে টাকা ধার দিয়েছেন এবং এখনও কত আদায় বাকি।"
+
+msgid "Add Debtor"
+msgstr "দেনাদার যোগ করুন"
+
+msgid "Everything you lent minus everything you've received back, across all debtors."
+msgstr "সব দেনাদারকে দেওয়া মোট ধার বাদ মোট ফেরত পাওয়া টাকা।"
+
+msgid "Get started by adding your first debtor."
+msgstr "আপনার প্রথম দেনাদার যোগ করে শুরু করুন।"
+
+msgid "This debtor is inactive — hidden from your active list. The balance below still counts in every total."
+msgstr "এই দেনাদার নিষ্ক্রিয় — সক্রিয় তালিকায় দেখা যাবে না। নিচের ব্যালেন্স তবুও সব মোট হিসাবে গণনা হয়।"
+
+msgid "Total lent minus total received back."
+msgstr "মোট ধার দেওয়া বাদ মোট ফেরত পাওয়া।"
+
+msgid "No activity for this debtor yet."
+msgstr "এই দেনাদারের এখনও কোনো লেনদেন নেই।"
+
+msgid "Collected So Far"
+msgstr "এ পর্যন্ত আদায়"
+
+msgid "Manage Debtors"
+msgstr "দেনাদার পরিচালনা"
+
+msgid "People who owe you money, and how much of it you have collected so far."
+msgstr "যাঁদের কাছে আপনার টাকা পাওনা, এবং এ পর্যন্ত তার কতটা আদায় করেছেন।"
+
+msgid "%(counter)s debtor"
+msgid_plural "%(counter)s debtors"
+msgstr[0] "%(counter)s জন দেনাদার"
+msgstr[1] "%(counter)s জন দেনাদার"
+
+msgid "Still to collect"
+msgstr "আদায় বাকি"
+
+msgid "No debtors yet"
+msgstr "এখনও কোনো দেনাদার নেই"
+
+msgid "Add someone you have lent money to and track what they pay back."
+msgstr "যাঁকে টাকা ধার দিয়েছেন তাঁকে যোগ করুন এবং ফেরতের হিসাব রাখুন।"
+
+msgid "Add Your First Debtor"
+msgstr "প্রথম দেনাদার যোগ করুন"
+
+msgid "e.g. Groceries, Rent, Transport"
+msgstr "যেমন: মুদি, বাসা ভাড়া, যাতায়াত"
+
+msgid "General (no category)"
+msgstr "সাধারণ (ক্যাটাগরি ছাড়া)"
+
+msgid "Missing one? Use + to add a category without leaving this form."
+msgstr "দরকারি ক্যাটাগরি নেই? এই ফর্ম না ছেড়েই + চেপে যোগ করুন।"
+
+msgid "Include shows only the categories you pick. Exclude shows everything except them. Leave empty for all."
+msgstr "\"অন্তর্ভুক্ত\" শুধু বাছাই করা ক্যাটাগরি দেখায়। \"বাদ দিন\" সেগুলো ছাড়া বাকি সব দেখায়। সব দেখতে ফাঁকা রাখুন।"
+
+msgid "Expenses"
+msgstr "খরচ"
+
+msgid "Group your spending. Mark a category inactive to hide it from the expense form without losing its history."
+msgstr "খরচগুলো ভাগ করে রাখুন। ইতিহাস না হারিয়ে খরচের ফর্ম থেকে লুকাতে ক্যাটাগরি নিষ্ক্রিয় করুন।"
+
+msgid "%(counter)s entry"
+msgid_plural "%(counter)s entries"
+msgstr[0] "%(counter)sটি এন্ট্রি"
+msgstr[1] "%(counter)sটি এন্ট্রি"
+
+msgid "Total spent"
+msgstr "মোট খরচ"
+
+msgid "Bar length is relative to your biggest category."
+msgstr "বারের দৈর্ঘ্য আপনার সবচেয়ে বড় ক্যাটাগরির তুলনায়।"
+
+msgid "View expenses"
+msgstr "খরচ দেখুন"
+
+msgid "No categories found"
+msgstr "কোনো ক্যাটাগরি পাওয়া যায়নি"
+
+msgid "Try a different name or status."
+msgstr "অন্য নাম বা অবস্থা দিয়ে চেষ্টা করুন।"
+
+msgid "Categories let you see where your money goes, e.g. Groceries, Rent, Transport."
+msgstr "ক্যাটাগরি দিয়ে বোঝা যায় টাকা কোথায় যাচ্ছে, যেমন: মুদি, বাসা ভাড়া, যাতায়াত।"
+
+msgid "Sum of all expenses that match the filters above, including ones created by recurring schedules."
+msgstr "উপরের ফিল্টারের সাথে মেলে এমন সব খরচের যোগফল, পুনরাবৃত্ত সময়সূচি থেকে তৈরি খরচসহ।"
+
+msgid "All time, all categories"
+msgstr "সব সময়, সব ক্যাটাগরি"
+
+msgid "Manage"
+msgstr "পরিচালনা"
+
+msgid "No spending recorded for these filters."
+msgstr "এই ফিল্টারে কোনো খরচ নেই।"
+
+msgid "Recent Expenses"
+msgstr "সাম্প্রতিক খরচ"
+
+msgid "Every expense you've logged, newest first. Filter, sort or export to CSV."
+msgstr "আপনার লেখা সব খরচ, নতুনগুলো আগে। ফিল্টার, সাজানো বা সিএসভিতে এক্সপোর্ট করুন।"
+
+msgid "Delete this expense? This cannot be undone."
+msgstr "এই খরচটি মুছবেন? এটি আর ফেরানো যাবে না।"
+
+msgid "No expenses match your filters"
+msgstr "আপনার ফিল্টারে কোনো খরচ মেলেনি"
+
+msgid "Try a wider date range, or reset the filters."
+msgstr "বড় তারিখের পরিসর দিন, অথবা ফিল্টার রিসেট করুন।"
+
+msgid "No expenses yet"
+msgstr "এখনও কোনো খরচ নেই"
+
+msgid "Start recording your spending to see where your money goes."
+msgstr "টাকা কোথায় যাচ্ছে দেখতে খরচ লিখতে শুরু করুন।"
+
+msgid "Only pick someone if they paid with their own money — you'll owe it back to them."
+msgstr "কেউ নিজের টাকায় কিনে থাকলে তবেই তাঁকে বাছুন — সেই টাকা আপনাকে তাঁকে ফেরত দিতে হবে।"
+
+msgid "Categories that have never been used don't appear in the chart above, but you can manage them all here."
+msgstr "কখনো ব্যবহার হয়নি এমন ক্যাটাগরি উপরের চার্টে দেখা যায় না, তবে এখানে সবগুলো পরিচালনা করতে পারবেন।"
+
+msgid "Inactive categories disappear from the purchase form but keep their history."
+msgstr "নিষ্ক্রিয় ক্যাটাগরি কেনাকাটার ফর্মে দেখা যায় না, তবে ইতিহাস থেকে যায়।"
+
+msgid "Bazar that members paid for with their own money and you still need to give back."
+msgstr "সদস্যরা নিজের টাকায় যে বাজার করেছেন এবং যা আপনাকে এখনও ফেরত দিতে হবে।"
+
+msgid "Monthly Log"
+msgstr "মাসিক হিসাব"
+
+msgid "This member is inactive — hidden from your member list and the purchase form. Their balance still counts in every total."
+msgstr "এই সদস্য নিষ্ক্রিয় — সদস্য তালিকা ও কেনাকাটার ফর্মে দেখা যাবে না। তবে তাঁর ব্যালেন্স সব মোট হিসাবে গণনা হয়।"
+
+msgid "You owe them"
+msgstr "আপনার দেনা"
+
+msgid "Money this member spent on household shopping that you haven't given back yet."
+msgstr "এই সদস্য সংসারের বাজারে যে টাকা খরচ করেছেন এবং আপনি এখনও ফেরত দেননি।"
+
+msgid "No members found"
+msgstr "কোনো সদস্য পাওয়া যায়নি"
+
+msgid "Month navigation"
+msgstr "মাস পরিবর্তন"
+
+msgid "Previous month"
+msgstr "আগের মাস"
+
+msgid "Previous"
+msgstr "আগের"
+
+msgid "Next month"
+msgstr "পরের মাস"
+
+msgid "by %(name)s"
+msgstr "%(name)s কিনেছেন"
+
+msgid "By month"
+msgstr "মাস অনুযায়ী"
+
+msgid "e.g. Salary — ABC Ltd., Freelance"
+msgstr "যেমন: বেতন — ABC লিমিটেড, ফ্রিল্যান্স"
+
+msgid "Optional details..."
+msgstr "ঐচ্ছিক বিবরণ..."
+
+msgid "Choose how often…"
+msgstr "কতদিন পরপর তা বাছুন…"
+
+msgid "Choose a source…"
+msgstr "একটি উৎস বাছুন…"
+
+msgid "Filters"
+msgstr "ফিল্টার"
+
+msgid "Filters applied"
+msgstr "ফিল্টার প্রয়োগ করা হয়েছে"
+
+msgid "Include shows only the sources you pick. Exclude shows everything except them. Leave empty for all."
+msgstr "\"অন্তর্ভুক্ত\" শুধু বাছাই করা উৎস দেখায়। \"বাদ দিন\" সেগুলো ছাড়া বাকি সব দেখায়। সব দেখতে ফাঁকা রাখুন।"
+
+msgid "inactive"
+msgstr "নিষ্ক্রিয়"
+
+msgid "Download what you see (with the current filters) as a spreadsheet."
+msgstr "যা দেখছেন (বর্তমান ফিল্টারসহ) তা স্প্রেডশিট হিসেবে ডাউনলোড করুন।"
+
+msgid "Active filters"
+msgstr "চালু ফিল্টার"
+
+msgid "Remove filter"
+msgstr "ফিল্টার সরান"
+
+msgid "Excluding"
+msgstr "বাদ দেওয়া হচ্ছে"
+
+msgid "%(counter)s selected"
+msgid_plural "%(counter)s selected"
+msgstr[0] "%(counter)sটি বাছাই করা"
+msgstr[1] "%(counter)sটি বাছাই করা"
+
+msgid "Dates"
+msgstr "তারিখ"
+
+msgid "Clear all"
+msgstr "সব মুছুন"
+
+msgid "Sum of all income that matches the filters above, including recurring payouts."
+msgstr "উপরের ফিল্টারের সাথে মেলে এমন সব আয়ের যোগফল, পুনরাবৃত্ত আয়সহ।"
+
+msgid "For the selected filters"
+msgstr "বাছাই করা ফিল্টার অনুযায়ী"
+
+msgid "All time, all sources"
+msgstr "সব সময়, সব উৎস"
+
+msgid "No income recorded for these filters."
+msgstr "এই ফিল্টারে কোনো আয় নেই।"
+
+msgid "Recent Income"
+msgstr "সাম্প্রতিক আয়"
+
+msgid "Stop creating new entries until you resume. Past entries stay."
+msgstr "আবার চালু না করা পর্যন্ত নতুন এন্ট্রি তৈরি বন্ধ থাকবে। আগের এন্ট্রি থেকে যাবে।"
+
+msgid "Start creating entries again from the next date."
+msgstr "পরের তারিখ থেকে আবার এন্ট্রি তৈরি শুরু হবে।"
+
+msgid "This source is inactive — hidden from your active list and from new recurring schedules. Its payouts still count in every total."
+msgstr "এই উৎস নিষ্ক্রিয় — সক্রিয় তালিকা ও নতুন পুনরাবৃত্ত সময়সূচিতে দেখা যাবে না। তবে এর আয় সব মোট হিসাবে গণনা হয়।"
+
+msgid "Total earned from this source"
+msgstr "এই উৎস থেকে মোট আয়"
+
+msgid "Earned in selected period"
+msgstr "বাছাই করা সময়ে আয়"
+
+msgid "Payouts logged"
+msgstr "লেখা আয়ের সংখ্যা"
+
+msgid "Printable statement"
+msgstr "প্রিন্টযোগ্য বিবরণী"
+
+msgid "Created automatically by a recurring schedule."
+msgstr "পুনরাবৃত্ত সময়সূচি থেকে স্বয়ংক্রিয়ভাবে তৈরি।"
+
+msgid "Delete this income record? This cannot be undone."
+msgstr "এই আয়ের রেকর্ডটি মুছবেন? এটি আর ফেরানো যাবে না।"
+
+msgid "No payouts recorded yet."
+msgstr "এখনও কোনো আয় লেখা হয়নি।"
+
+msgid "Save Payout"
+msgstr "আয় সংরক্ষণ করুন"
+
+msgid "Employers, clients and businesses you receive money from."
+msgstr "যেসব নিয়োগকর্তা, ক্লায়েন্ট ও ব্যবসা থেকে আপনি টাকা পান।"
+
+msgid "View payouts"
+msgstr "আয় দেখুন"
+
+msgid "No sources match your filters"
+msgstr "আপনার ফিল্টারে কোনো উৎস মেলেনি"
+
+msgid "Try a different name or status, or reset the filters."
+msgstr "অন্য নাম বা অবস্থা দিয়ে চেষ্টা করুন, অথবা ফিল্টার রিসেট করুন।"
+
+msgid "Add an employer, client or business first, then log what you receive from it."
+msgstr "প্রথমে একটি নিয়োগকর্তা, ক্লায়েন্ট বা ব্যবসা যোগ করুন, তারপর সেখান থেকে যা পান তা লিখুন।"
+
+msgid "Net Balance plus Lifetime Net Cash Flow — your overall standing across every ledger."
+msgstr "নিট ব্যালেন্স যোগ সর্বমোট নিট নগদ প্রবাহ — সব খাতা মিলিয়ে আপনার সার্বিক অবস্থা।"
+
+msgid "Lifetime Net Cash Flow"
+msgstr "সর্বমোট নিট নগদ প্রবাহ"
+
+msgid "In the green"
+msgstr "লাভে আছেন"
+
+msgid "In the red"
+msgstr "ঘাটতিতে আছেন"
+
+msgid "What people owe you minus what you owe, as of today."
+msgstr "আজ পর্যন্ত অন্যদের কাছে আপনার পাওনা বাদ আপনার দেনা।"
+
+msgid "Everything earned or received minus everything spent, all time."
+msgstr "সব সময়ের মোট আয় বা প্রাপ্তি বাদ মোট খরচ।"
+
+msgid "Ledgers"
+msgstr "খাতা"
+
+msgid "Inactive records are hidden from lists and pickers but still count in totals."
+msgstr "নিষ্ক্রিয় রেকর্ড তালিকা ও ড্রপডাউনে লুকানো থাকে, তবে মোট হিসাবে গণনা হয়।"
+
+msgid "What you owe local shops for goods bought on credit, and what you've paid off."
+msgstr "বাকিতে কেনা জিনিসের জন্য দোকানগুলোর কাছে আপনার দেনা, এবং কতটা শোধ করেছেন।"
+
+msgid "What you owe all shops right now: purchases on credit minus payments."
+msgstr "এই মুহূর্তে সব দোকানে আপনার দেনা: বাকিতে কেনা বাদ পরিশোধ।"
+
+msgid "View all"
+msgstr "সব দেখুন"
+
+msgid "Add a shop you buy from on credit to start tracking dues."
+msgstr "বাকির হিসাব রাখতে, যে দোকান থেকে বাকিতে কেনেন সেটি যোগ করুন।"
+
+msgid "Breakdown"
+msgstr "বিস্তারিত হিসাব"
+
+msgid "Nothing to chart yet."
+msgstr "চার্টে দেখানোর মতো এখনও কিছু নেই।"
+
+msgid "Due (বাকি)"
+msgstr "বাকি"
+
+msgid "Shops"
+msgstr "দোকান"
+
+msgid "The due date has passed and money is still owed."
+msgstr "পরিশোধের তারিখ পেরিয়ে গেছে, কিন্তু টাকা এখনও বাকি।"
+
+msgid "Due within the next 7 days."
+msgstr "আগামী ৭ দিনের মধ্যে পরিশোধ করতে হবে।"
+
+msgid "Everything has been paid back."
+msgstr "সব টাকা শোধ হয়ে গেছে।"
+
+msgid "Hidden from lists and dropdowns. Its history still counts in totals."
+msgstr "তালিকা ও ড্রপডাউনে লুকানো। এর ইতিহাস তবুও মোট হিসাবে গণনা হয়।"
+
+msgid "Inactive"
+msgstr "নিষ্ক্রিয়"
+
+msgid "This shop is inactive — hidden from your active list. Its due still counts in every total."
+msgstr "এই দোকান নিষ্ক্রিয় — সক্রিয় তালিকায় দেখা যাবে না। তবে এর বাকি সব মোট হিসাবে গণনা হয়।"
+
+msgid "Current Due is always as of today."
+msgstr "বর্তমান বাকি সবসময় আজকের হিসাবে দেখানো হয়।"
+
+msgid "See totals for chosen months or dates. Transaction History will follow it."
+msgstr "বাছাই করা মাস বা তারিখের মোট হিসাব দেখুন। লেনদেনের ইতিহাসও সেই অনুযায়ী দেখাবে।"
+
+msgid "Filter period"
+msgstr "সময়কাল ফিল্টার"
+
+msgid "What you owe this shop right now: all purchases on credit minus all payments. The period filter doesn't change it."
+msgstr "এই মুহূর্তে এই দোকানে আপনার দেনা: বাকিতে সব কেনা বাদ সব পরিশোধ। সময়কাল ফিল্টারে এটি বদলায় না।"
+
+msgid "Outstanding balance, as of today"
+msgstr "আজ পর্যন্ত অবশিষ্ট ব্যালেন্স"
+
+msgid "Manage Shops"
+msgstr "দোকান পরিচালনা"
+
+msgid "Local shops you buy from on credit (বাকি), and how much you still owe each one."
+msgstr "যেসব দোকান থেকে বাকিতে কেনেন, এবং প্রতিটির কাছে এখনও কত দেনা।"
+
+msgid "Upload a .csv file to add many at once. Download the Template to see the columns."
+msgstr "একসাথে অনেকগুলো যোগ করতে একটি .csv ফাইল আপলোড করুন। কোন কলাম লাগবে দেখতে টেমপ্লেট ডাউনলোড করুন।"
+
+msgid "Download a sample CSV with the expected columns."
+msgstr "প্রয়োজনীয় কলামসহ একটি নমুনা সিএসভি ডাউনলোড করুন।"
+
+msgid "e.g. Mayer Doa Store"
+msgstr "যেমন: মায়ের দোয়া স্টোর"
+
+msgid "These totals follow your search, filters and the Active/Inactive tab below."
+msgstr "এই মোট হিসাব আপনার অনুসন্ধান, ফিল্টার ও নিচের সক্রিয়/নিষ্ক্রিয় ট্যাব অনুযায়ী বদলায়।"
+
+msgid "%(counter)s shop"
+msgid_plural "%(counter)s shops"
+msgstr[0] "%(counter)sটি দোকান"
+msgstr[1] "%(counter)sটি দোকান"
+
+msgid "Paid Off"
+msgstr "শোধ হয়েছে"
+
+msgid "Bought on credit"
+msgstr "বাকিতে কেনা"
+
+msgid "Add a shop you buy from on credit to keep track of what you owe."
+msgstr "দেনার হিসাব রাখতে, যে দোকান থেকে বাকিতে কেনেন সেটি যোগ করুন।"
+
+msgid "Navigation"
+msgstr "নেভিগেশন"
+
+msgid "Signed in as"
+msgstr "লগইন করা আছেন"
+
+msgid "Dismiss"
+msgstr "বন্ধ করুন"
+
+msgid "Could not save. Check your connection and try again."
+msgstr "সংরক্ষণ করা যায়নি। ইন্টারনেট সংযোগ দেখে আবার চেষ্টা করুন।"
+
+msgid "Search & filter"
+msgstr "অনুসন্ধান ও ফিল্টার"
+
+msgid "Paid: nothing is left to pay. Unpaid: some balance is still outstanding."
+msgstr "পরিশোধিত: আর কিছু দেওয়া বাকি নেই। অপরিশোধিত: কিছু টাকা এখনও বাকি।"
+
+msgid "View details"
+msgstr "বিস্তারিত দেখুন"
+
+msgid "Add a new %(noun)s"
+msgstr "নতুন %(noun)s যোগ করুন"
+
+msgid "More info"
+msgstr "আরও তথ্য"
+
+msgid "Pagination"
+msgstr "পৃষ্ঠা পরিবর্তন"
+
+msgid "Previous page"
+msgstr "আগের পৃষ্ঠা"
+
+msgid "Next page"
+msgstr "পরের পৃষ্ঠা"
+
+msgid "Go to"
+msgstr "যান"
+
+msgid "Export this period as CSV"
+msgstr "এই সময়কাল সিএসভি হিসেবে এক্সপোর্ট করুন"
+
+msgid "Printable statement for this period (save as PDF)"
+msgstr "এই সময়কালের প্রিন্টযোগ্য বিবরণী (PDF হিসেবে সংরক্ষণ করুন)"
+
+msgid "Background colour"
+msgstr "পটভূমির রং"
+
+msgid "Background"
+msgstr "পটভূমি"
+
+msgid "It'll be selected for you as soon as it's saved."
+msgstr "সংরক্ষণ করা মাত্রই এটি বেছে নেওয়া হবে।"
+
+msgid "Close"
+msgstr "বন্ধ করুন"
+
+msgid "Close (Esc)"
+msgstr "বন্ধ করুন (Esc)"
+
+msgid "Reactivate it instead of creating a duplicate?"
+msgstr "নতুন কপি না বানিয়ে এটিকেই আবার সক্রিয় করবেন?"
+
+msgid "Reactivate & select"
+msgstr "সক্রিয় করে বেছে নিন"
+
+msgid "(optional)"
+msgstr "(ঐচ্ছিক)"
+
+msgid "Save & select"
+msgstr "সংরক্ষণ করে বেছে নিন"
+
+msgid "More actions"
+msgstr "আরও অপশন"
+
+msgid "Main"
+msgstr "প্রধান"
+
+msgid "Overview"
+msgstr "সারসংক্ষেপ"
+
+msgid "Borrowing & lending"
+msgstr "ধার নেওয়া ও দেওয়া"
+
+msgid "Cash flow"
+msgstr "নগদ প্রবাহ"
+
+msgid "Home"
+msgstr "হোম"
+
+msgid "Accent"
+msgstr "প্রধান রং"
+
+msgid "Filter by status"
+msgstr "অবস্থা অনুযায়ী ফিল্টার"
+
+msgid "Inactive records are hidden from lists and dropdowns, but their history still counts in every total. Use the ⋯ menu on a card to switch."
+msgstr "নিষ্ক্রিয় রেকর্ড তালিকা ও ড্রপডাউনে লুকানো থাকে, তবে এদের ইতিহাস সব মোট হিসাবে গণনা হয়। পরিবর্তন করতে কার্ডের ⋯ মেনু ব্যবহার করুন।"
+
+msgid "Hide it from lists and dropdowns. Its history and totals are kept."
+msgstr "তালিকা ও ড্রপডাউন থেকে লুকান। এর ইতিহাস ও মোট হিসাব থেকে যাবে।"
+
+msgid "Mark as inactive"
+msgstr "নিষ্ক্রিয় করুন"
+
+msgid "Show it in lists and dropdowns again."
+msgstr "আবার তালিকা ও ড্রপডাউনে দেখান।"
+
+msgid "Mark as active"
+msgstr "সক্রিয় করুন"
