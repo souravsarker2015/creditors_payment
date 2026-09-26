@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% translate "Deleted sales" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-narrow stack">
+  <header class="page-header !mb-0"><div><a href="{% url 'business:sales' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Fish sales" %}</a><h1 class="page-title">{% translate "Deleted sales" %}</h1></div></header>
+  <section class="card">
+    <ul class="ledger">{% for sale in sales %}
+      <li class="ledger-row">
+        <span class="ledger-icon" data-tone="muted">{% include "partials/icon.html" with name="trash" %}</span>
+        <div class="ledger-main"><p class="ledger-title">{{ sale.buyer|default:sale.market|default:_("Cash sale") }}</p><p class="ledger-meta">{{ sale.date|date:"j M Y" }} · {{ sale.net|bdt }}</p></div>
+        <div class="ledger-end">{% if biz_can.delete %}<form method="post" action="{% url 'business:sale_restore' sale.pk %}">{% csrf_token %}<button class="btn btn-secondary btn-sm">{% include "partials/icon.html" with name="restore" %}{% translate "Restore" %}</button></form>{% endif %}</div>
+      </li>{% empty %}<li class="empty is-plain"><p class="empty-text">{% translate "Nothing deleted." %}</p></li>{% endfor %}
+    </ul>
+  </section>
+</div>
+{% endblock %}

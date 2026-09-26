@@ -1,0 +1,28 @@
+{% load i18n %}<div class="form-row ded-line" x-data="{ method: '{{ f.method.value|default:'fixed' }}', gone: {{ f.DELETE.value|yesno:'true,false' }} }" x-show="!gone" :data-gone="gone">
+  {{ f.id }}<input type="checkbox" name="{{ f.DELETE.html_name }}" x-model="gone" class="hidden" @change="$nextTick(() => calc())">
+  <div class="form-row-grid">
+    <div class="field{% if f.deduction_type.errors %} has-error{% endif %}">
+      <label class="label" for="{{ f.deduction_type.id_for_label }}">{{ f.deduction_type.label }}</label>{{ f.deduction_type }}
+      {% for e in f.deduction_type.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+    </div>
+    <div class="field">
+      <label class="label" for="{{ f.method.id_for_label }}">{{ f.method.label }}</label>
+      <select name="{{ f.method.html_name }}" id="{{ f.method.id_for_label }}" class="form-input" x-model="method">
+        {% for value, label in f.method.field.choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field{% if f.value.errors %} has-error{% endif %}">
+      <label class="label" for="{{ f.value.id_for_label }}">{{ f.value.label }}</label>
+      <div class="input-affix" :class="method === 'percent' ? 'has-end' : 'has-start'">
+        <span class="affix affix-start" x-show="method !== 'percent'" aria-hidden="true">৳</span>{{ f.value }}<span class="affix affix-end" x-show="method === 'percent'" aria-hidden="true">%</span>
+      </div>
+      {% for e in f.value.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+    </div>
+    <div class="field{% if f.unit.errors %} has-error{% endif %}" x-show="method === 'per_unit'">
+      <label class="label" for="{{ f.unit.id_for_label }}">{{ f.unit.label }}</label>{{ f.unit }}
+      {% for e in f.unit.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+    </div>
+  </div>
+  <p class="doc-line-amount"><span></span><strong data-line-amount></strong></p>
+  <button type="button" class="icon-btn form-row-x" @click="gone = true; $nextTick(() => calc())" aria-label="{% translate 'Remove' %}" data-tip="{% translate 'Remove' %}">{% include "partials/icon.html" with name="trash" %}</button>
+</div>

@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% translate "Fish sales" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "Fish sales" %}</h1>
+      <p class="page-subtitle">{% translate "Every sale with its market deductions — and what buyers still owe you." %}</p>
+    </div>
+    {% if biz_can.enter_data %}<div class="page-actions"><a href="{% url 'business:sale_add' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "New sale" %}</a></div>{% endif %}
+  </header>
+
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="min-w-0">
+        <p class="hero-label">{{ period_label }} · {% translate "you got" %}</p>
+        <p class="hero-value">{{ totals.net|default:0|bdt }}</p>
+        <p class="hero-sub">{% blocktranslate count counter=totals.n with kg=kg|num %}{{ counter }} sale · {{ kg }} kg{% plural %}{{ counter }} sales · {{ kg }} kg{% endblocktranslate %}{% if totals.ded %} · {% blocktranslate with amount=totals.ded|bdt %}{{ amount }} taken by markets{% endblocktranslate %}{% endif %}</p>
+      </div>
+      {% if due_total %}
+      <a href="?period={{ period }}&due=1" class="loan-hero-next">
+        <span class="loan-hero-next-label">{% translate "Still to receive" %}</span>
+        <strong>{{ due_total|bdt }}</strong>
+        <span class="loan-hero-next-sub">{% translate "Show sales with dues" %}</span>
+      </a>
+      {% endif %}
+    </div>
+  </section>
+
+  <div class="master-bar">
+    <nav class="seg seg-scroll" aria-label="{% translate 'Period' %}">
+      {% for key, label, s, e in periods %}<a href="?period={{ key }}{% if due_only %}&due=1{% endif %}" class="seg-item {% if period == key %}is-active{% endif %}">{{ label }}</a>{% endfor %}
+    </nav>
+    <form method="get" class="master-search" role="search">
+      <input type="hidden" name="period" value="{{ period }}">
+      <div class="input-icon">{% include "partials/icon.html" with name="search" %}<input type="search" name="q" value="{{ q }}" class="form-input" placeholder="{% translate 'Buyer, market, fish…' %}" aria-label="{% translate 'Search' %}"></div>
+    </form>
+  </div>
+  {% if due_only %}<span class="chip"><span>{% translate "Only sales with dues" %}</span><a href="?period={{ period }}" class="chip-x" aria-label="{% translate 'Show all' %}">{% include "partials/icon.html" with name="x" %}</a></span>{% endif %}
+
+  {% if page_obj.object_list %}
+  <section class="card">
+    <ul class="ledger">
+      {% for sale in page_obj %}
+      <li><a href="{% url 'business:sale_detail' sale.pk %}" class="ledger-row">
+        <span class="ledger-icon" data-tone="{% if sale.payment_status == 'paid' %}good{% elif sale.payment_status == 'partial' %}warn{% else %}critical{% endif %}">{% include "partials/icon.html" with name="cart" %}</span>
+        <div class="ledger-main">
+          <p class="ledger-title">{{ sale.buyer|default:sale.market|default:_("Cash sale") }}</p>
+          <p class="ledger-meta">{{ sale.date|date:"j M" }}{% if sale.market and sale.buyer %} · {{ sale.market }}{% endif %}{% for l in sale.lines.all %}{% if forloop.first %} · {% else %}, {% endif %}{{ l.species }} {{ l.quantity|num }} {{ l.unit.symbol }}{% endfor %}</p>
+        </div>
+        <div class="ledger-end">
+          <span class="party-bal" data-tone="good"><strong>{{ sale.net|bdt }}</strong><span>{% if sale.due %}{% blocktranslate with amount=sale.due|bdt %}{{ amount }} due{% endblocktranslate %}{% else %}{% translate "received" %}{% endif %}</span></span>
+        </div>
+      </a></li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% include "partials/pagination.html" %}
+  {% else %}
+  <div class="empty">
+    <div class="empty-icon">{% include "partials/icon.html" with name="cart" %}</div>
+    <h3 class="empty-title">{% if q %}{% blocktranslate %}Nothing matches “{{ q }}”.{% endblocktranslate %}{% else %}{% translate "No sales in this period" %}{% endif %}</h3>
+    <p class="empty-text">{% translate "Record a sale from the market memo: fish, quantity and rate. The market's commission and charges fill in by themselves." %}</p>
+    {% if biz_can.enter_data %}<a href="{% url 'business:sale_add' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "New sale" %}</a>{% endif %}
+  </div>
+  {% endif %}
+  {% if deleted_count %}<p class="text-center"><a href="{% url 'business:sales_deleted' %}" class="btn btn-ghost btn-sm">{% blocktranslate count counter=deleted_count %}{{ counter }} deleted sale{% plural %}{{ counter }} deleted sales{% endblocktranslate %}</a></p>{% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% if obj %}{% translate "Edit sale" %}{% else %}{% translate "New sale" %}{% endif %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-narrow page-wide-form">
+  <header class="page-header">
+    <div>
+      <a href="{% if obj %}{% url 'business:sale_detail' obj.pk %}{% else %}{% url 'business:sales' %}{% endif %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Fish sales" %}</a>
+      <h1 class="page-title">{% if obj %}{% translate "Edit sale" %}{% else %}{% translate "New sale" %}{% endif %}</h1>
+      {% if harvest %}<p class="page-subtitle">{% blocktranslate with h=harvest %}From the harvest: {{ h }}{% endblocktranslate %}</p>{% endif %}
+    </div>
+  </header>
+  <form method="post" class="stack" novalidate x-data="docTotals({{ sale_json }}, 'sale')" @input="calc($event)" @change="calc($event)">
+    {% csrf_token %}
+    {% if harvest %}<input type="hidden" name="harvest" value="{{ harvest.pk }}">{% endif %}
+    {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+
+    <section class="card">
+      <div class="card-body form-stack">
+        <div class="form-grid form-grid-2">
+          {% with field=form.date %}{% include "business/partials/field.html" %}{% endwith %}
+          {% with field=form.memo_no %}{% include "business/partials/field.html" %}{% endwith %}
+        </div>
+        <div class="form-grid form-grid-2">
+          <div @change="if ($event.target.name === 'market') applyMarket($event.target.value)">{% with field=form.market %}{% include "business/partials/field.html" %}{% endwith %}</div>
+          {% with field=form.buyer %}{% include "business/partials/field.html" %}{% endwith %}
+        </div>
+        {% with field=form.cycle %}{% include "business/partials/field.html" %}{% endwith %}
+      </div>
+    </section>
+
+    <section class="card" x-data="formRows('{{ lines.prefix }}')" @row-added="calc()">
+      <div class="card-header"><div><h2 class="card-title">{% translate "Fish sold" %}</h2><p class="card-subtitle">{% translate "Sell by mon, kg or piece — whatever the market uses." %}</p></div></div>
+      {{ lines.management_form }}
+      {% if lines.non_form_errors %}<div class="card-body"><div class="form-errors">{% for e in lines.non_form_errors %}<p>{{ e }}</p>{% endfor %}</div></div>{% endif %}
+      <div class="rows-list" x-ref="list">{% for f in lines %}{% include "business/sales/sale_line.html" %}{% endfor %}</div>
+      <template x-ref="tpl">{% with f=lines.empty_form %}{% include "business/sales/sale_line.html" %}{% endwith %}</template>
+      <div class="card-footer"><button type="button" class="btn btn-secondary btn-sm" @click="add()" x-init="if (!$refs.list.children.length) { silent = true; add(); silent = false }">{% include "partials/icon.html" with name="plus" %}{% translate "Add another fish" %}</button></div>
+    </section>
+
+    <section class="card" x-data="formRows('{{ deds.prefix }}')" data-rows="ded" @row-added="calc()">
+      <div class="card-header"><div><h2 class="card-title">{% translate "Market deductions" %}</h2><p class="card-subtitle">{% translate "Filled in from the market. Change or remove any for this sale." %}</p></div></div>
+      {{ deds.management_form }}
+      <div class="rows-list" x-ref="list">{% for f in deds %}{% include "business/sales/ded_line.html" %}{% endfor %}</div>
+      <template x-ref="tpl">{% with f=deds.empty_form %}{% include "business/sales/ded_line.html" %}{% endwith %}</template>
+      <div class="card-footer"><button type="button" class="btn btn-secondary btn-sm" @click="add()">{% include "partials/icon.html" with name="plus" %}{% translate "Add a deduction" %}</button></div>
+    </section>
+
+    <section class="card">
+      <div class="card-header"><h2 class="card-title">{% translate "Total and payment" %}</h2></div>
+      <div class="card-body form-stack">
+        <dl class="doc-totals">
+          <div><dt>{% translate "Sale value" %}</dt><dd x-text="money(gross)"></dd></div>
+          <div x-show="deductions"><dt>{% translate "Deductions" %}</dt><dd x-text="'− ' + money(deductions)"></dd></div>
+          <div class="is-total"><dt>{% translate "You get" %}</dt><dd x-text="money(net)"></dd></div>
+        </dl>
+        <div class="form-grid form-grid-2">
+          <div>
+            {% with field=form.received_now %}{% include "business/partials/field.html" %}{% endwith %}
+            <div class="chip-row mt-2"><button type="button" class="chip chip-choice" @click="setPaid(net)">{% translate "Received in full" %}</button><button type="button" class="chip chip-choice" @click="setPaid(0)">{% translate "All on baki" %}</button></div>
+          </div>
+          {% with field=form.account %}{% include "business/partials/field.html" %}{% endwith %}
+        </div>
+        <p class="doc-due" x-show="net > 0" :data-tone="due > 0 ? 'warn' : 'good'">
+          <span x-show="due > 0" x-text="'{{ _('Still to receive')|escapejs }}: ' + money(due)"></span>
+          <span x-show="due <= 0">{% translate "Received in full" %}</span>
+        </p>
+        {% with field=form.notes %}{% include "business/partials/field.html" %}{% endwith %}
+      </div>
+    </section>
+
+    <div class="form-actions">
+      <a href="{% if obj %}{% url 'business:sale_detail' obj.pk %}{% else %}{% url 'business:sales' %}{% endif %}" class="btn btn-ghost btn-lg">{% translate "Cancel" %}</a>
+      <button type="submit" class="btn btn-primary btn-lg">{% include "partials/icon.html" with name="check" %}{% translate "Save sale" %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{% asset 'js/business-forms.js' %}"></script>{% endblock %}
