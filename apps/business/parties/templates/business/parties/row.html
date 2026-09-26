@@ -1,14 +1,14 @@
 {% load i18n business %}<li class="ledger-row">
   <span class="avatar party-avatar" data-kind="{% if o.is_supplier %}supplier{% else %}buyer{% endif %}" aria-hidden="true">{{ o.name|slice:":1"|upper }}</span>
   <div class="ledger-main">
-    <p class="ledger-title">{{ o.name }}{% if o.is_supplier and o.is_buyer %} <span class="badge badge-outline">{% translate "Supplier & buyer" %}</span>{% endif %}</p>
+    <p class="ledger-title">{% if biz_can.view_finance and not is_deleted_tab %}<a href="{% url 'business:party_statement' o.pk %}" class="hover:underline">{{ o.name }}</a>{% else %}{{ o.name }}{% endif %}{% if o.is_supplier and o.is_buyer %} <span class="badge badge-outline">{% translate "Supplier & buyer" %}</span>{% endif %}</p>
     <p class="ledger-meta">{% if o.buyer_type %}{{ o.get_buyer_type_display }}{% endif %}{% if o.market %}{% if o.buyer_type %} · {% endif %}{{ o.market }}{% endif %}{% if o.phone %}{% if o.buyer_type or o.market %} · {% endif %}<a href="tel:{{ o.phone }}" class="hover:underline">{{ o.phone }}</a>{% endif %}{% if not o.buyer_type and not o.market and not o.phone %}{{ o.address }}{% endif %}</p>
   </div>
   <div class="ledger-end">
-    {% if o.opening_balance and biz_can.view_finance %}
-    <span class="party-bal" data-tone="{% if o.opening_type == 'payable' %}critical{% else %}good{% endif %}">
-      <strong>{{ o.opening_balance|bdt }}</strong><span>{% if o.opening_type == 'payable' %}{% translate "you owe" %}{% else %}{% translate "owes you" %}{% endif %}</span>
-    </span>
+    {% if o.balance and biz_can.view_finance %}
+    <a href="{% url 'business:party_statement' o.pk %}" class="party-bal hover:underline" data-tone="{% if o.balance < 0 %}critical{% else %}good{% endif %}">
+      <strong>{{ o.balance|absolute|bdt }}</strong><span>{% if o.balance < 0 %}{% translate "you owe" %}{% else %}{% translate "owes you" %}{% endif %}</span>
+    </a>
     {% endif %}
     {% include "business/master/_actions.html" with up=forloop.last %}
   </div>

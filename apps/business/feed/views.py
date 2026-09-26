@@ -1,6 +1,7 @@
 import json
 from datetime import date, timedelta
 
+from django.apps import apps
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import F, Q, Sum
@@ -29,12 +30,25 @@ def _recalc(purchase, request):
     purchase.recalc()
 
 
+def _current_dues(objects, business):
+    """Each purchase's remaining due once later payments are counted."""
+    if apps.is_installed("apps.business.credit"):
+        from apps.business.credit.services import open_dues
+
+        dues = open_dues(business, "feed")
+        for o in objects:
+            o.due_now = dues.get(o.pk, 0)
+    else:
+        for o in objects:
+            o.due_now = o.due
+
+
 feed_purchases = Master(
     name="feed_purchases", model=FeedPurchase, form_class=FeedPurchaseForm, edit_cap="enter_data",
     title=_("Feed purchases"), subtitle=_("Every bag you buy — paid now or on baki. Stock goes up automatically."),
     add_label=_("Buy feed"), row_template="business/feed/purchase_row.html", icon="truck", nav_template="business/feed/feed_tabs.html",
     search_fields=("supplier__name", "invoice_no", "lines__product__name"), select_related=("supplier",), prefetch=("lines__product",),
-    filters=[("credit", _("With dues"), Q(total__gt=F("paid_now")))],
+    filters=[("credit", _("Bought on baki"), Q(total__gt=F("paid_now")))], decorate=_current_dues,
     formset_class=FeedLineFormSet, form_template="business/feed/purchase_form.html", after_save=_recalc,
     form_context=lambda request: {"feed_json": _form_json(request.business)},
     empty_title=_("No feed bought yet"), empty_text=_("Record a purchase from the memo: the feeds, bags, rate and what you paid. What's left is owed to the supplier."),
@@ -57,12 +71,19 @@ def stock_view(request):
     month_start = date.today().replace(day=1)
     used_month = FeedUsage.objects.filter(business=b, date__gte=month_start).aggregate(kg=Sum("kg"))["kg"] or 0
     bought_month = FeedPurchase.objects.filter(business=b, date__gte=month_start).aggregate(t=Sum("total"))["t"] or 0
-    dues = FeedPurchase.objects.filter(business=b, total__gt=F("paid_now")).aggregate(d=Sum(F("total") - F("paid_now")))["d"] or 0
+    recent = list(FeedPurchase.objects.filter(business=b).select_related("supplier")[:5])
+    _current_dues(recent, b)
+    if apps.is_installed("apps.business.credit"):
+        from apps.business.credit.services import open_dues
+
+        dues = sum(open_dues(b, "feed").values(), 0)
+    else:
+        dues = FeedPurchase.objects.filter(business=b, total__gt=F("paid_now")).aggregate(d=Sum(F("total") - F("paid_now")))["d"] or 0
     return render(request, "business/feed/stock.html", {
         "rows": [r for r in rows if r.bought_kg or r.used_kg], "unused": [r for r in rows if not (r.bought_kg or r.used_kg)],
         "value": sum((r.value or 0) for r in rows), "low": [r for r in rows if (r.is_low or r.is_negative) and (r.bought_kg or r.used_kg)],
         "used_month": used_month, "bought_month": bought_month, "dues": dues,
-        "recent": FeedPurchase.objects.filter(business=b).select_related("supplier")[:5],
+        "recent": recent,
     })
 
 

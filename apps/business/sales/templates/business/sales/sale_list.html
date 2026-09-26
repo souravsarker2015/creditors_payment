@@ -44,13 +44,13 @@
     <ul class="ledger">
       {% for sale in page_obj %}
       <li><a href="{% url 'business:sale_detail' sale.pk %}" class="ledger-row">
-        <span class="ledger-icon" data-tone="{% if sale.payment_status == 'paid' %}good{% elif sale.payment_status == 'partial' %}warn{% else %}critical{% endif %}">{% include "partials/icon.html" with name="cart" %}</span>
+        <span class="ledger-icon" data-tone="{% if not sale.due_now %}good{% elif sale.due_now < sale.net %}warn{% else %}critical{% endif %}">{% include "partials/icon.html" with name="cart" %}</span>
         <div class="ledger-main">
           <p class="ledger-title">{{ sale.buyer|default:sale.market|default:_("Cash sale") }}</p>
           <p class="ledger-meta">{{ sale.date|date:"j M" }}{% if sale.market and sale.buyer %} · {{ sale.market }}{% endif %}{% for l in sale.lines.all %}{% if forloop.first %} · {% else %}, {% endif %}{{ l.species }} {{ l.quantity|num }} {{ l.unit.symbol }}{% endfor %}</p>
         </div>
         <div class="ledger-end">
-          <span class="party-bal" data-tone="good"><strong>{{ sale.net|bdt }}</strong><span>{% if sale.due %}{% blocktranslate with amount=sale.due|bdt %}{{ amount }} due{% endblocktranslate %}{% else %}{% translate "received" %}{% endif %}</span></span>
+          <span class="party-bal" data-tone="good"><strong>{{ sale.net|bdt }}</strong><span>{% if sale.due_now %}{% blocktranslate with amount=sale.due_now|bdt %}{{ amount }} due{% endblocktranslate %}{% else %}{% translate "received" %}{% endif %}</span></span>
         </div>
       </a></li>
       {% endfor %}

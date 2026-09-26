@@ -1,11 +1,11 @@
 {% load i18n business %}<li class="ledger-row">
-  <span class="ledger-icon" data-tone="{% if o.payment_status == 'paid' %}good{% elif o.payment_status == 'partial' %}warn{% else %}critical{% endif %}">{% include "business/partials/icon.html" with name="truck" %}</span>
+  <span class="ledger-icon" data-tone="{% if not o.due_now %}good{% elif o.due_now < o.total %}warn{% else %}critical{% endif %}">{% include "business/partials/icon.html" with name="truck" %}</span>
   <div class="ledger-main">
     <p class="ledger-title">{% if m %}<a href="{% url 'business:feed_purchases_edit' o.pk %}" class="hover:underline">{{ o.supplier }}</a>{% else %}{{ o.supplier }}{% endif %}</p>
     <p class="ledger-meta">{{ o.date|date:"j M Y" }}{% if o.invoice_no %} · #{{ o.invoice_no }}{% endif %}{% for l in o.lines.all %}{% if forloop.first %} · {% else %}, {% endif %}{{ l.product.name }}{% endfor %}</p>
   </div>
   <div class="ledger-end">
-    <span class="party-bal" data-tone="{% if o.due %}critical{% endif %}"><strong>{{ o.total|bdt }}</strong><span>{% if o.due %}{% blocktranslate with amount=o.due|bdt %}{{ amount }} on baki{% endblocktranslate %}{% else %}{% translate "paid" %}{% endif %}</span></span>
+    <span class="party-bal" data-tone="{% if o.due_now %}critical{% endif %}"><strong>{{ o.total|bdt }}</strong><span>{% if o.due_now %}{% blocktranslate with amount=o.due_now|bdt %}{{ amount }} on baki{% endblocktranslate %}{% else %}{% translate "paid" %}{% endif %}</span></span>
     {% if m %}{% include "business/master/_actions.html" with up=forloop.last %}{% endif %}
   </div>
 </li>

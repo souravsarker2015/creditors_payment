@@ -44,6 +44,7 @@ def home_view(request):
         "setup_steps": _setup_steps(request),
         "has_ponds": _has_ponds(b),
         "low_feed": _low_feed(b),
+        "baki": _baki_summary(request),
     })
 
 
@@ -77,6 +78,21 @@ def _setup_steps(request):
         (markets and buyers, _("Markets and buyers"), _("%(m)s markets · %(b)s buyers") % {"m": markets, "b": buyers} if markets or buyers else _("Where you sell and who buys your fish."), "business:markets_add" if not markets else "business:buyers"),
     ]
     return [{"no": first + i, "done": bool(done), "title": title, "text": text, "url": reverse(url)} for i, (done, title, text, url) in enumerate(steps)]
+
+
+def _baki_summary(request):
+    """Baki card on the home page: to collect, to pay, oldest dues and today's follow-ups."""
+    if not (apps.is_installed("apps.business.credit") and can(request.membership, "view_finance")):
+        return None
+    from datetime import date
+
+    from apps.business.credit.services import totals
+
+    t = totals(request.business)
+    today = date.today()
+    t["oldest"] = sorted((led for led in t["ledgers"] if led.balance > 0), key=lambda led: led.oldest or today)[:4]
+    t["follow_ups"] = [led for led in t["ledgers"] if led.party.follow_up_on and led.party.follow_up_on <= today]
+    return t
 
 
 def _loans_summary(request):

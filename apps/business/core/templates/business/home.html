@@ -75,7 +75,7 @@
         {% endfor %}
         <li class="is-next">
           <span class="biz-step-dot">{% include "business/partials/icon.html" with name="fish" %}</span>
-          <div><p class="biz-step-title">{% translate "Baki ledger, income & expenses, reports" %}</p><p class="biz-step-text">{% translate "Coming next to this dashboard." %}</p></div>
+          <div><p class="biz-step-title">{% translate "Income & expenses, budgets and reports" %}</p><p class="biz-step-text">{% translate "Coming next to this dashboard." %}</p></div>
         </li>
       </ol>
     </section>
@@ -90,6 +90,42 @@
       {% include "business/partials/converter.html" %}
     </section>
   </div>
+
+  {% if baki is not None %}
+  <section class="card">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title flex items-center gap-2"><span class="h-[1.125rem] w-[1.125rem]" style="color: var(--accent);">{% include "business/partials/icon.html" with name="book" %}</span>{% translate "Baki (dues)" %}</h2>
+        <p class="card-subtitle">{% if baki.receivable or baki.payable %}{% translate "Worked out from your sales, purchases and payments." %}{% else %}{% translate "Nobody owes you and you owe nobody." %}{% endif %}</p>
+      </div>
+      <a href="{% url 'business:dues' %}" class="btn btn-ghost btn-sm">{% translate "View all" %}{% include "partials/icon.html" with name="arrow-right" %}</a>
+    </div>
+    <div class="card-body !pb-0">
+      <div class="baki-sides baki-sides-sm">
+        <a href="{% url 'business:dues' %}?side=receive" class="baki-side" data-tone="good"><span class="baki-side-label">{% translate "To collect" %}</span><strong class="baki-side-value">{{ baki.receivable|bdt }}</strong></a>
+        <a href="{% url 'business:dues' %}?side=pay" class="baki-side" data-tone="critical"><span class="baki-side-label">{% translate "To pay" %}</span><strong class="baki-side-value">{{ baki.payable|bdt }}</strong></a>
+      </div>
+      {% if baki.follow_ups %}<div class="callout mt-3" data-tone="warn">{% include "partials/icon.html" with name="bell" %}<p>{% translate "Follow up today:" %} {% for led in baki.follow_ups %}<a href="{% url 'business:party_statement' led.party.pk %}" class="font-semibold hover:underline">{{ led.party.name }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}</p></div>{% endif %}
+    </div>
+    {% if baki.oldest %}
+    <ul class="ledger mt-2">
+      {% for led in baki.oldest %}
+      <li class="ledger-row">
+        <span class="avatar party-avatar" data-kind="buyer" aria-hidden="true">{{ led.party.name|slice:":1"|upper }}</span>
+        <div class="ledger-main">
+          <p class="ledger-title"><a href="{% url 'business:party_statement' led.party.pk %}" class="hover:underline">{{ led.party.name }}</a></p>
+          <p class="ledger-meta">{% if led.oldest_days is not None %}<span class="{% if led.oldest_days > 90 %}tone-critical{% elif led.oldest_days > 30 %}tone-warn{% endif %}">{% blocktranslate count counter=led.oldest_days %}oldest {{ counter }} day{% plural %}oldest {{ counter }} days{% endblocktranslate %}</span>{% endif %}</p>
+        </div>
+        <div class="ledger-end">
+          <span class="ledger-amount" data-tone="good" style="--tone: var(--status-good)">{{ led.amount|bdt }}</span>
+          {% if biz_can.enter_data %}<a href="{% url 'business:payment_add' %}?party={{ led.party.pk }}&dir=in&next={{ request.path|urlencode }}" class="btn btn-soft btn-sm ml-2">{% translate "Receive" %}</a>{% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}<div class="card-body"></div>{% endif %}
+  </section>
+  {% endif %}
 
   {% if loans is not None %}
   <section class="card">
