@@ -37,6 +37,8 @@ class Party(BusinessBaseModel):
     opening_balance = models.DecimalField(_("Balance before using this app"), default=0, validators=[MinValueValidator(0)], **MONEY)
     opening_type = models.CharField(_("Who owes whom"), max_length=10, choices=OpeningType.choices, default=OpeningType.PAYABLE)
     opening_date = models.DateField(_("As of"), null=True, blank=True)
+    follow_up_on = models.DateField(_("Follow up on"), null=True, blank=True, help_text=_("A date they promised to pay, or to remind them."))
+    follow_up_note = models.CharField(_("Promise / note"), max_length=160, blank=True)
 
     class Meta:
         verbose_name_plural = "parties"
