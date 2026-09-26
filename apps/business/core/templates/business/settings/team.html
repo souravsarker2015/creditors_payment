@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% translate "Team & roles" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "Team & roles" %}</h1>
+      <p class="page-subtitle">{% translate "Let managers and pond staff use the farm dashboard from their own phones. Each role only sees what it needs." %}</p>
+    </div>
+  </header>
+
+  <div class="grid grid-cols-1 gap-5 lg:grid-cols-5 lg:items-start">
+    <section class="card lg:col-span-3">
+      <div class="card-header"><h2 class="card-title">{% blocktranslate count counter=members|length %}{{ counter }} person{% plural %}{{ counter }} people{% endblocktranslate %}</h2></div>
+      <ul class="ledger">
+        {% for m in members %}
+        <li class="ledger-row team-row">
+          <span class="avatar">{{ m.user.username|first|upper }}</span>
+          <div class="ledger-main">
+            <p class="ledger-title">{{ m.user.get_full_name|default:m.user.username }}{% if m.user == request.user %} <span class="badge" data-tone="muted">{% translate "You" %}</span>{% endif %}</p>
+            <p class="ledger-meta">@{{ m.user.username }}</p>
+          </div>
+          <div class="ledger-end">
+            {% if m.role == "owner" %}
+              <span class="badge badge-dot" data-tone="gold">{{ m.get_role_display }}</span>
+            {% else %}
+              <form method="post" action="{% url 'business:member_role' m.pk %}">{% csrf_token %}
+                <select name="role" class="form-input input-compact" onchange="this.form.submit()" aria-label="{% translate 'Role' %}">
+                  {% for value, label in form.fields.role.choices %}<option value="{{ value }}" {% if m.role == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+                </select>
+              </form>
+              <form method="post" action="{% url 'business:member_remove' m.pk %}" data-confirm="{% blocktranslate with name=m.user.username %}Remove {{ name }} from the team? They lose access to this farm; nothing they entered is deleted.{% endblocktranslate %}">{% csrf_token %}
+                <button type="submit" class="icon-btn" aria-label="{% translate 'Remove' %}" data-tip="{% translate 'Remove from team' %}">{% include "partials/icon.html" with name="x" %}</button>
+              </form>
+            {% endif %}
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <section class="card lg:col-span-2">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">{% translate "Add a person" %}</h2>
+          <p class="card-subtitle">{% translate "They need a FinTrack account first. Adding them gives them this farm's dashboard." %}</p>
+        </div>
+      </div>
+      <form method="post" class="card-body form-stack" novalidate>
+        {% csrf_token %}
+        {% with field=form.username %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.role %}{% include "partials/field.html" %}{% endwith %}
+        <button type="submit" class="btn btn-primary btn-block">{% include "partials/icon.html" with name="plus" %}{% translate "Add to team" %}</button>
+      </form>
+    </section>
+  </div>
+
+  <section class="card">
+    <div class="card-header"><h2 class="card-title">{% translate "What each role can do" %}</h2></div>
+    <ul class="role-cards">
+      {% for r in matrix %}
+      <li>
+        <p class="role-card-name">{{ r.label }}</p>
+        <ul class="role-card-caps">
+          {% for key, label in caps %}{% for k, ok in r.caps.items %}{% if k == key and ok %}<li>{% include "partials/icon.html" with name="check" %}{{ label }}</li>{% endif %}{% endfor %}{% endfor %}
+        </ul>
+      </li>
+      {% endfor %}
+    </ul>
+    <div class="role-table-wrap">
+      <table class="role-table">
+        <thead><tr><th scope="col"></th>{% for r in matrix %}<th scope="col">{{ r.label }}</th>{% endfor %}</tr></thead>
+        <tbody>
+          {% for key, label in caps %}
+          <tr>
+            <th scope="row">{{ label }}</th>
+            {% for r in matrix %}{% for k, ok in r.caps.items %}{% if k == key %}<td>{% if ok %}<span class="role-yes" aria-label="{% translate 'Yes' %}">{% include "partials/icon.html" with name="check" %}</span>{% else %}<span class="role-no" aria-label="{% translate 'No' %}">—</span>{% endif %}</td>{% endif %}{% endfor %}{% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}

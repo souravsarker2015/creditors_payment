@@ -3812,3 +3812,421 @@ msgstr "স্বয়ংক্রিয় সঞ্চয় আবার চ
 
 msgid "Auto-save removed. Deposits it already made are kept."
 msgstr "স্বয়ংক্রিয় সঞ্চয় সরানো হয়েছে। আগে যা জমা হয়েছে তা থেকে যাবে।"
+
+msgid "Add and edit day-to-day records (sales, feed, stocking…)"
+msgstr "দৈনন্দিন হিসাব লেখা ও সম্পাদনা (বিক্রি, খাবার, পোনা ছাড়া…)"
+
+msgid "Delete and restore records"
+msgstr "হিসাব মোছা ও ফিরিয়ে আনা"
+
+msgid "See profit, loss and reports"
+msgstr "লাভ-ক্ষতি ও রিপোর্ট দেখা"
+
+msgid "See income, expenses and household spending"
+msgstr "আয়, খরচ ও সংসারের খরচ দেখা"
+
+msgid "Change units, species, markets and other settings"
+msgstr "একক, মাছের জাত, বাজার ও অন্যান্য সেটিংস বদলানো"
+
+msgid "Add or remove people and change their roles"
+msgstr "লোক যোগ বা বাদ দেওয়া এবং তাদের ভূমিকা বদলানো"
+
+msgid "1 mon equals how many kg?"
+msgstr "১ মণ = কত কেজি?"
+
+msgid "Most markets use 40 kg. You can change this any time in Units."
+msgstr "বেশিরভাগ বাজারে ৪০ কেজি ধরা হয়। পরে যেকোনো সময় 'একক' থেকে বদলাতে পারবেন।"
+
+msgid "e.g. Rahman Fish Farm"
+msgstr "যেমন: রহমান মৎস্য খামার"
+
+msgid "Village, upazila, district"
+msgstr "গ্রাম, উপজেলা, জেলা"
+
+msgid "e.g. Mon (maund)"
+msgstr "যেমন: মণ"
+
+msgid "e.g. মণ"
+msgstr "যেমন: মণ"
+
+msgid "e.g. mon"
+msgstr "যেমন: mon"
+
+msgid "This is the base unit — other units are measured against it."
+msgstr "এটি মূল একক — অন্য এককগুলো এর সাথে তুলনা করে মাপা হয়।"
+
+msgid "You already have a unit called “%(symbol)s”."
+msgstr "“%(symbol)s” নামে একটি একক আগে থেকেই আছে।"
+
+msgid "Username"
+msgstr "ইউজারনেম"
+
+msgid "Their FinTrack username"
+msgstr "তাদের FinTrack ইউজারনেম"
+
+msgid "Role"
+msgstr "ভূমিকা"
+
+msgid "No one with that username. Ask them to sign up first, then add them here."
+msgstr "এই ইউজারনেমে কেউ নেই। আগে তাকে সাইন আপ করতে বলুন, তারপর এখানে যোগ করুন।"
+
+msgid "%(name)s is already on your team."
+msgstr "%(name)s আগে থেকেই আপনার দলে আছেন।"
+
+msgid "Business name"
+msgstr "ব্যবসার নাম"
+
+msgid "Address"
+msgstr "ঠিকানা"
+
+msgid "Owner"
+msgstr "মালিক"
+
+msgid "Manager"
+msgstr "ম্যানেজার"
+
+msgid "Data entry"
+msgstr "তথ্য এন্ট্রি"
+
+msgid "Viewer"
+msgstr "দর্শক"
+
+msgid "Notes"
+msgstr "নোট"
+
+msgid "Weight"
+msgstr "ওজন"
+
+msgid "Count"
+msgstr "সংখ্যা"
+
+msgid "Volume"
+msgstr "আয়তন"
+
+msgid "Area"
+msgstr "জমির মাপ"
+
+msgid "Name in Bangla"
+msgstr "বাংলা নাম"
+
+msgid "Short name"
+msgstr "সংক্ষিপ্ত নাম"
+
+msgid "Measures"
+msgstr "কী মাপে"
+
+msgid "Equals (in base unit)"
+msgstr "সমান (মূল এককে)"
+
+msgid "How many base units one of this is, e.g. 1 mon = 40 kg."
+msgstr "এর ১টি মূল এককের কতটির সমান, যেমন ১ মণ = ৪০ কেজি।"
+
+msgid "Quantity"
+msgstr "পরিমাণ"
+
+msgid "Unit"
+msgstr "একক"
+
+msgid "Created"
+msgstr "তৈরি"
+
+msgid "Changed"
+msgstr "পরিবর্তিত"
+
+msgid "Deleted"
+msgstr "মুছে ফেলা"
+
+msgid "Restored"
+msgstr "ফিরিয়ে আনা"
+
+msgid "No access"
+msgstr "অনুমতি নেই"
+
+msgid "You don't have the business dashboard yet"
+msgstr "আপনার এখনও ব্যবসার ড্যাশবোর্ড নেই"
+
+msgid "Ask the farm owner to add you to their team, or an admin to give you access."
+msgstr "খামারের মালিককে আপনাকে দলে যোগ করতে বলুন, অথবা অ্যাডমিনকে অনুমতি দিতে বলুন।"
+
+msgid "Your role can't open this page"
+msgstr "আপনার ভূমিকায় এই পাতা খোলা যায় না"
+
+msgid "Ask the farm owner or a manager if you need it."
+msgstr "দরকার হলে খামারের মালিক বা ম্যানেজারকে বলুন।"
+
+msgid "You're the %(role)s"
+msgstr "আপনি %(role)s"
+
+msgid "Switch business"
+msgstr "ব্যবসা বদলান"
+
+msgid "Getting started"
+msgstr "শুরু করুন"
+
+msgid "A few quick steps to get your farm ready."
+msgstr "খামার প্রস্তুত করতে কয়েকটি ছোট ধাপ।"
+
+msgid "Create your farm"
+msgstr "খামার তৈরি করুন"
+
+msgid "Units are ready"
+msgstr "একক প্রস্তুত"
+
+msgid "%(counter)s unit"
+msgid_plural "%(counter)s units"
+msgstr[0] "%(counter)sটি একক"
+msgstr[1] "%(counter)sটি একক"
+
+msgid "Review"
+msgstr "দেখুন"
+
+msgid "Add your team"
+msgstr "দলের লোক যোগ করুন"
+
+msgid "%(counter)s person"
+msgid_plural "%(counter)s people"
+msgstr[0] "%(counter)s জন"
+msgstr[1] "%(counter)s জন"
+
+msgid "Let a manager or pond staff enter data from their own phone."
+msgstr "ম্যানেজার বা পুকুরের কর্মী নিজের ফোন থেকে হিসাব লিখতে পারবেন।"
+
+msgid "Add people"
+msgstr "লোক যোগ করুন"
+
+msgid "Ponds, feed, sales and baki"
+msgstr "পুকুর, খাবার, বিক্রি ও বাকি"
+
+msgid "Coming soon to this dashboard."
+msgstr "শীঘ্রই এই ড্যাশবোর্ডে আসছে।"
+
+msgid "Unit converter"
+msgstr "একক রূপান্তর"
+
+msgid "Uses your own unit sizes."
+msgstr "আপনার নিজের এককের মাপ ব্যবহার করে।"
+
+msgid "Recent changes"
+msgstr "সাম্প্রতিক পরিবর্তন"
+
+msgid "No dashboards are open to you yet"
+msgstr "এখনও আপনার জন্য কোনো ড্যাশবোর্ড খোলা নেই"
+
+msgid "Your account is ready, but an admin still needs to give you access."
+msgstr "আপনার অ্যাকাউন্ট প্রস্তুত, তবে অ্যাডমিনের অনুমতি এখনও বাকি।"
+
+msgid "System"
+msgstr "সিস্টেম"
+
+msgid "From unit"
+msgstr "যে একক থেকে"
+
+msgid "Swap units"
+msgstr "একক অদলবদল"
+
+msgid "Swap"
+msgstr "অদলবদল"
+
+msgid "To unit"
+msgstr "যে এককে"
+
+msgid "Switch dashboard"
+msgstr "ড্যাশবোর্ড বদলান"
+
+msgid "Switch to"
+msgstr "যেখানে যাবেন"
+
+msgid "Open this one after login"
+msgstr "লগইনের পর এটিই খুলবে"
+
+msgid "Farm"
+msgstr "খামার"
+
+msgid "Dashboard"
+msgstr "ড্যাশবোর্ড"
+
+msgid "Admin"
+msgstr "অ্যাডমিন"
+
+msgid "Dashboard access"
+msgstr "ড্যাশবোর্ডের অনুমতি"
+
+msgid "Choose which dashboards each person can open, and which one opens after they log in. Farm owners manage roles inside their own farm."
+msgstr "কে কোন ড্যাশবোর্ড খুলতে পারবেন এবং লগইনের পর কোনটি খুলবে তা বাছুন। খামারের ভেতরের ভূমিকা মালিক নিজে ঠিক করেন।"
+
+msgid "Search people"
+msgstr "লোক খুঁজুন"
+
+msgid "Admin · sees all"
+msgstr "অ্যাডমিন · সব দেখেন"
+
+msgid "No email"
+msgstr "ইমেইল নেই"
+
+msgid "never"
+msgstr "কখনো না"
+
+msgid "last seen %(date)s"
+msgstr "সর্বশেষ দেখা %(date)s"
+
+msgid "Opens"
+msgstr "খোলে"
+
+msgid "No one matches."
+msgstr "কাউকে পাওয়া যায়নি।"
+
+msgid "Activity log"
+msgstr "কার্যক্রমের খাতা"
+
+msgid "Every record created, changed, deleted or restored — who did it and when."
+msgstr "প্রতিটি হিসাব কে কখন তৈরি, পরিবর্তন, মুছে ফেলা বা ফিরিয়ে এনেছেন।"
+
+msgid "Nothing recorded yet."
+msgstr "এখনও কিছু লেখা হয়নি।"
+
+msgid "Business details"
+msgstr "ব্যবসার তথ্য"
+
+msgid "Shown on invoices and statements."
+msgstr "চালান ও বিবরণীতে দেখানো হয়।"
+
+msgid "Team & roles"
+msgstr "দল ও ভূমিকা"
+
+msgid "Let managers and pond staff use the farm dashboard from their own phones. Each role only sees what it needs."
+msgstr "ম্যানেজার ও পুকুরের কর্মীরা নিজের ফোন থেকে খামারের ড্যাশবোর্ড ব্যবহার করতে পারবেন। প্রতিটি ভূমিকা শুধু দরকারি অংশই দেখে।"
+
+msgid "You"
+msgstr "আপনি"
+
+msgid "Remove %(name)s from the team? They lose access to this farm; nothing they entered is deleted."
+msgstr "%(name)s-কে দল থেকে বাদ দেবেন? তিনি এই খামারে আর ঢুকতে পারবেন না; তার লেখা কোনো হিসাব মুছবে না।"
+
+msgid "Remove from team"
+msgstr "দল থেকে বাদ দিন"
+
+msgid "Add a person"
+msgstr "একজন যোগ করুন"
+
+msgid "They need a FinTrack account first. Adding them gives them this farm's dashboard."
+msgstr "আগে তাদের FinTrack অ্যাকাউন্ট থাকতে হবে। যোগ করলে তারা এই খামারের ড্যাশবোর্ড পাবেন।"
+
+msgid "Add to team"
+msgstr "দলে যোগ করুন"
+
+msgid "What each role can do"
+msgstr "কোন ভূমিকা কী করতে পারে"
+
+msgid "Yes"
+msgstr "হ্যাঁ"
+
+msgid "No"
+msgstr "না"
+
+msgid "Edit unit"
+msgstr "একক সম্পাদনা"
+
+msgid "Add unit"
+msgstr "একক যোগ করুন"
+
+msgid "Units"
+msgstr "একক"
+
+msgid "Every quantity is saved in the unit you pick and converted to a base unit (kg, piece, litre, decimal), so reports can add mon, kg and grams together."
+msgstr "প্রতিটি পরিমাণ আপনার বাছাই করা এককে রাখা হয় এবং মূল এককে (কেজি, পিস, লিটার, শতাংশ) রূপান্তর করা হয়, যাতে রিপোর্টে মণ, কেজি ও গ্রাম একসাথে যোগ করা যায়।"
+
+msgid "In use"
+msgstr "ব্যবহৃত"
+
+msgid "Base unit: %(name)s (%(symbol)s)"
+msgstr "মূল একক: %(name)s (%(symbol)s)"
+
+msgid "Add"
+msgstr "যোগ"
+
+msgid "Base"
+msgstr "মূল"
+
+msgid "Others convert to this"
+msgstr "অন্যগুলো এতে রূপান্তর হয়"
+
+msgid "Restore"
+msgstr "ফিরিয়ে আনুন"
+
+msgid "Delete this unit? Records that already use it keep it, and you can restore it from Deleted."
+msgstr "এই একক মুছবেন? যেসব হিসাবে ব্যবহার হয়েছে সেগুলোতে থেকে যাবে, আর 'মুছে ফেলা' থেকে ফিরিয়েও আনতে পারবেন।"
+
+msgid "Nothing deleted."
+msgstr "কিছু মোছা হয়নি।"
+
+msgid "No units yet."
+msgstr "এখনও কোনো একক নেই।"
+
+msgid "Try a conversion"
+msgstr "রূপান্তর করে দেখুন"
+
+msgid "Set up your farm"
+msgstr "খামার সেট আপ করুন"
+
+msgid "Set up your fish farm"
+msgstr "আপনার মাছের খামার সেট আপ করুন"
+
+msgid "Takes a minute. You can change everything later."
+msgstr "এক মিনিট লাগবে। পরে সবকিছু বদলাতে পারবেন।"
+
+msgid "We'll also add kg, gram, piece, hali, dozen, decimal, bigha, acre and more — ready to use."
+msgstr "কেজি, গ্রাম, পিস, হালি, ডজন, শতাংশ, বিঘা, একরসহ আরও একক যোগ হয়ে যাবে — সরাসরি ব্যবহার করতে পারবেন।"
+
+msgid "Create my farm"
+msgstr "খামার তৈরি করুন"
+
+msgid "Welcome to %(name)s! Your units are ready — 1 mon = %(kg)s kg."
+msgstr "%(name)s-এ স্বাগতম! একক প্রস্তুত — ১ মণ = %(kg)s কেজি।"
+
+msgid "Now working in %(name)s."
+msgstr "এখন %(name)s-এ কাজ করছেন।"
+
+msgid "%(name)s will open after you log in."
+msgstr "লগইনের পর %(name)s খুলবে।"
+
+msgid "Business details saved."
+msgstr "ব্যবসার তথ্য সংরক্ষিত।"
+
+msgid "Unit saved: %(name)s."
+msgstr "একক সংরক্ষিত: %(name)s।"
+
+msgid "The base unit can't be deleted — other units are measured against it."
+msgstr "মূল একক মোছা যায় না — অন্য এককগুলো এর সাথে মাপা হয়।"
+
+msgid "“%(name)s” moved to Deleted. You can restore it any time."
+msgstr "“%(name)s” মুছে ফেলা তালিকায় গেছে। যেকোনো সময় ফিরিয়ে আনতে পারবেন।"
+
+msgid "Another unit is already called “%(symbol)s”. Rename it first."
+msgstr "“%(symbol)s” নামে আরেকটি একক আছে। আগে নাম বদলান।"
+
+msgid "“%(name)s” restored."
+msgstr "“%(name)s” ফিরিয়ে আনা হয়েছে।"
+
+msgid "%(name)s added as %(role)s."
+msgstr "%(name)s-কে %(role)s হিসেবে যোগ করা হয়েছে।"
+
+msgid "The owner's role can't be changed."
+msgstr "মালিকের ভূমিকা বদলানো যায় না।"
+
+msgid "%(name)s is now %(role)s."
+msgstr "%(name)s এখন %(role)s।"
+
+msgid "The owner can't be removed."
+msgstr "মালিককে বাদ দেওয়া যায় না।"
+
+msgid "%(name)s removed from the team."
+msgstr "%(name)s-কে দল থেকে বাদ দেওয়া হয়েছে।"
+
+msgid "%(name)s now has no dashboards and will see a “no access” page."
+msgstr "%(name)s-এর এখন কোনো ড্যাশবোর্ড নেই, তিনি “অনুমতি নেই” পাতা দেখবেন।"
+
+msgid "Access updated for %(name)s."
+msgstr "%(name)s-এর অনুমতি হালনাগাদ হয়েছে।"
+
+msgid "Fish Farm Business"
+msgstr "মাছের খামার ব্যবসা"

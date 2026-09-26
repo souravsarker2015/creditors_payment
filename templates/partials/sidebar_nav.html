@@ -1,15 +1,17 @@
 {% load i18n %}
 {% with p=request.path %}
 <div class="sidebar">
-    <a href="{% url 'networth' %}" class="flex h-16 shrink-0 items-center gap-2.5 px-2">
+    <a href="{% if active_dashboard == 'business' %}{% url 'business:home' %}{% else %}{% url 'networth' %}{% endif %}" class="flex h-16 shrink-0 items-center gap-2.5 px-2">
         <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg font-heading text-base font-bold" style="background: var(--gold); color: #221a06;">৳</span>
         <span>
             <span class="block font-heading text-lg font-bold leading-tight" style="color: var(--text-on-ink);">FinTrack</span>
-            <span class="block text-[10px] font-semibold uppercase tracking-[0.14em]" style="color: var(--text-on-ink-muted);">{% translate "Ledger & Household" %}</span>
+            <span class="block text-[10px] font-semibold uppercase tracking-[0.14em]" style="color: var(--text-on-ink-muted);">{% if active_dashboard == 'business' %}{% translate "Fish Farm Business" %}{% else %}{% translate "Ledger & Household" %}{% endif %}</span>
         </span>
     </a>
 
     <nav class="flex flex-1 flex-col gap-5" aria-label="{% translate 'Main' %}">
+        {# ── business module hook: its own menu inside /business/ ── #}
+        {% if active_dashboard == "business" %}{% include "business/partials/nav.html" %}{% else %}
         <div>
             <p class="nav-section-label">{% translate "Overview" %}</p>
             <a href="{% url 'networth' %}" class="nav-link {% if '/networth/' in p %}is-active{% endif %}" {% if '/networth/' in p %}aria-current="page"{% endif %}>
@@ -66,6 +68,7 @@
             </a>
         </div>
 
+        {% endif %}
         <div class="mt-auto space-y-3">
             <div class="preferences-switcher pref-ink md:hidden rounded-2xl p-4" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);">
                 <p class="mb-3 text-[10px] font-bold uppercase tracking-[0.14em]" style="color: var(--text-on-ink-muted);">{% translate "Appearance" %}</p>

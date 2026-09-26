@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% translate "Units" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "Units" %}</h1>
+      <p class="page-subtitle">{% translate "Every quantity is saved in the unit you pick and converted to a base unit (kg, piece, litre, decimal), so reports can add mon, kg and grams together." %}</p>
+    </div>
+    {% if biz_can.manage_settings %}<div class="page-actions"><a href="{% url 'business:unit_add' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add unit" %}</a></div>{% endif %}
+  </header>
+
+  <nav class="seg" aria-label="{% translate 'Filter by status' %}">
+    <a href="{% url 'business:units' %}" class="seg-item {% if not show_deleted %}is-active{% endif %}">{% translate "In use" %}</a>
+    <a href="?show=deleted" class="seg-item {% if show_deleted %}is-active{% endif %}">{% translate "Deleted" %} <span class="seg-count">{{ deleted_count }}</span></a>
+  </nav>
+
+  {% if groups %}
+  <div class="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
+    {% for g in groups %}
+    <section class="card" id="type-{{ g.type }}">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">{{ g.label }}</h2>
+          {% if g.base %}<p class="card-subtitle">{% blocktranslate with name=g.base.display_name symbol=g.base.symbol %}Base unit: {{ name }} ({{ symbol }}){% endblocktranslate %}</p>{% endif %}
+        </div>
+        {% if biz_can.manage_settings and not show_deleted %}<a href="{% url 'business:unit_add' %}?type={{ g.type }}" class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="plus" %}{% translate "Add" %}</a>{% endif %}
+      </div>
+      <ul class="ledger">
+        {% for u in g.units %}
+        <li class="ledger-row">
+          <span class="unit-chip{% if u.is_base %} is-base{% endif %}">{{ u.symbol }}</span>
+          <div class="ledger-main">
+            <p class="ledger-title">{{ u.name }}{% if u.name_bn %} <span class="unit-bn">{{ u.name_bn }}</span>{% endif %}{% if u.is_base %} <span class="badge" data-tone="accent">{% translate "Base" %}</span>{% endif %}</p>
+            <p class="ledger-meta">{% if u.is_base %}{% translate "Others convert to this" %}{% elif g.base %}1 {{ u.symbol }} = {{ u.factor|num }} {{ g.base.symbol }}{% endif %}</p>
+          </div>
+          <div class="ledger-end">
+            {% if show_deleted %}
+              {% if biz_can.delete %}<form method="post" action="{% url 'business:unit_restore' u.pk %}">{% csrf_token %}<button class="btn btn-secondary btn-sm">{% include "partials/icon.html" with name="restore" %}{% translate "Restore" %}</button></form>{% endif %}
+            {% elif biz_can.manage_settings %}
+              <a href="{% url 'business:unit_edit' u.pk %}" class="icon-btn" aria-label="{% translate 'Edit' %}" data-tip="{% translate 'Edit' %}">{% include "partials/icon.html" with name="edit" %}</a>
+              {% if biz_can.delete and not u.is_base %}
+              <form method="post" action="{% url 'business:unit_delete' u.pk %}" data-confirm="{% translate 'Delete this unit? Records that already use it keep it, and you can restore it from Deleted.' %}">{% csrf_token %}
+                <button type="submit" class="icon-btn" aria-label="{% translate 'Delete' %}" data-tip="{% translate 'Delete' %}">{% include "partials/icon.html" with name="trash" %}</button>
+              </form>
+              {% endif %}
+            {% endif %}
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty is-plain"><p class="empty-text">{% if show_deleted %}{% translate "Nothing deleted." %}{% else %}{% translate "No units yet." %}{% endif %}</p></div>
+  {% endif %}
+
+  {% if not show_deleted %}
+  <section class="card" x-data="unitConverter({{ units_json }})">
+    <div class="card-header"><h2 class="card-title">{% translate "Try a conversion" %}</h2></div>
+    {% include "business/partials/converter.html" %}
+  </section>
+  {% endif %}
+</div>
+{% endblock %}
+{% block extra_js %}{% include "business/partials/converter_js.html" %}{% endblock %}

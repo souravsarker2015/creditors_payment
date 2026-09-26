@@ -1,0 +1,31 @@
+<script>
+document.addEventListener("alpine:init", function () {
+  Alpine.data("unitConverter", function (units) {
+    return {
+      units: units, qty: 1, from: null, to: null,
+      init() {
+        var mon = units.find(u => u.symbol === "mon"), kg = units.find(u => u.symbol === "kg");
+        this.from = (mon || units[0] || {}).id; this.to = (kg || units[0] || {}).id; this.fixTo();
+      },
+      // "Kilogram (kg)", but "Mon (maund)" rather than "Mon (maund) (mon)"
+      label(u) { return u.name.toLowerCase().includes(u.symbol.toLowerCase()) ? u.name : u.name + " (" + u.symbol + ")"; },
+      unit(id) { return this.units.find(u => u.id == id); },
+      sameType() { var f = this.unit(this.from); return f ? this.units.filter(u => u.type === f.type) : []; },
+      fixTo() { var list = this.sameType(); if (!list.some(u => u.id == this.to)) this.to = (list.find(u => u.id != this.from) || list[0] || {}).id; },
+      swap() { var f = this.from; this.from = this.to; this.to = f; },
+      result() {
+        var f = this.unit(this.from), t = this.unit(this.to), q = parseFloat(this.qty);
+        if (!f || !t || isNaN(q)) return "—";
+        var v = q * parseFloat(f.factor) / parseFloat(t.factor);
+        return (Math.round(v * 1000) / 1000).toLocaleString("en-IN", { maximumFractionDigits: 3 }) + " " + t.symbol;
+      },
+      presets() {
+        var pairs = [["mon", "kg"], ["kg", "mon"], ["bigha", "dec"], ["hali", "pcs"]], self = this;
+        return pairs.map(p => ({ f: self.units.find(u => u.symbol === p[0]), t: self.units.find(u => u.symbol === p[1]) }))
+          .filter(p => p.f && p.t).map(p => ({ label: p.f.symbol + " → " + p.t.symbol, from: p.f.id, to: p.t.id }));
+      },
+      apply(p) { this.from = p.from; this.to = p.to; },
+    };
+  });
+});
+</script>

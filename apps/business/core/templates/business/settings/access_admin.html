@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% translate "Dashboard access" %} | FinTrack{% endblock %}
+{% block content %}
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "Dashboard access" %}</h1>
+      <p class="page-subtitle">{% translate "Choose which dashboards each person can open, and which one opens after they log in. Farm owners manage roles inside their own farm." %}</p>
+    </div>
+  </header>
+
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <form method="get" class="input-icon max-w-xs flex-1">{% include "partials/icon.html" with name="search" %}
+      <input type="search" name="q" value="{{ q }}" class="form-input" placeholder="{% translate 'Search people' %}" aria-label="{% translate 'Search people' %}">
+    </form>
+    <div class="chip-row">{% for d, n in dash_counts %}<span class="badge" data-dash="{{ d.code }}" style="background: var(--dash-bg); color: var(--dash);">{{ d.display_name }} · {% blocktranslate count counter=n %}{{ counter }} person{% plural %}{{ counter }} people{% endblocktranslate %}</span>{% endfor %}</div>
+  </div>
+
+  <div class="access-list">
+    {% for r in rows %}
+    <form method="post" action="{% url 'business:access_update' r.user.pk %}" class="card access-row" x-data="{ dirty: false }" @change="dirty = true">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <div class="access-user">
+        <span class="avatar">{{ r.user.username|first|upper }}</span>
+        <div class="min-w-0">
+          <p class="ledger-title">{{ r.user.username }}{% if r.user.is_superuser %} <span class="badge" data-tone="gold">{% translate "Admin · sees all" %}</span>{% endif %}</p>
+          <p class="ledger-meta">{{ r.user.email|default:_("No email") }} · {% blocktranslate with date=r.user.last_login|date:"j M Y"|default:_("never") %}last seen {{ date }}{% endblocktranslate %}</p>
+        </div>
+      </div>
+      <div class="access-dash">
+        {% for d in dashboards %}
+        <label class="access-pill" data-dash="{{ d.code }}">
+          <input type="checkbox" name="dashboards" value="{{ d.code }}" {% if d.code in r.codes %}checked{% endif %}>
+          <span class="access-pill-box">{% include "business/partials/icon.html" with name=d.icon %}{{ d.display_name }}</span>
+        </label>
+        {% endfor %}
+      </div>
+      <label class="access-default">
+        <span>{% translate "Opens" %}</span>
+        <select name="default" class="form-input input-compact">
+          {% for d in dashboards %}<option value="{{ d.code }}" {% if r.default == d.code %}selected{% endif %}>{{ d.display_name }}</option>{% endfor %}
+        </select>
+      </label>
+      <button type="submit" class="btn btn-primary btn-sm" :disabled="!dirty" :class="!dirty && 'opacity-50'">{% include "partials/icon.html" with name="check" %}{% translate "Save" %}</button>
+    </form>
+    {% empty %}
+    <div class="empty is-plain"><p class="empty-text">{% translate "No one matches." %}</p></div>
+    {% endfor %}
+  </div>
+  {% include "partials/pagination.html" %}
+</div>
+{% endblock %}

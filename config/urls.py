@@ -29,6 +29,7 @@ urlpatterns = [
     path("core/", include("apps.core.urls")),
     path("budgets/", include("apps.budgets.urls")),
     path("goals/", include("apps.goals.urls")),
+    path("business/", include("apps.business.urls")),  # business module
 ]
 
 # Serve media files in development

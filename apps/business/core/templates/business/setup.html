@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% translate "Set up your farm" %} | FinTrack{% endblock %}
+{% block content %}
+<div class="page-narrow">
+  <div class="biz-setup-head">
+    <span class="biz-setup-logo">{% include "business/partials/icon.html" with name="fish" %}</span>
+    <h1 class="page-title">{% translate "Set up your fish farm" %}</h1>
+    <p class="page-subtitle">{% translate "Takes a minute. You can change everything later." %}</p>
+  </div>
+  <form method="post" class="card" novalidate>
+    {% csrf_token %}
+    <div class="card-body form-stack">
+      {% with field=form.name %}{% include "partials/field.html" %}{% endwith %}
+      <div class="form-grid form-grid-2">
+        {% with field=form.phone %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.address %}{% include "partials/field.html" %}{% endwith %}
+      </div>
+      <div class="biz-mon">
+        {% with field=form.mon_kg %}{% include "partials/field.html" %}{% endwith %}
+        <p class="biz-mon-note">{% include "business/partials/icon.html" with name="scale" %}<span>{% translate "We'll also add kg, gram, piece, hali, dozen, decimal, bigha, acre and more — ready to use." %}</span></p>
+      </div>
+    </div>
+    <div class="card-footer form-actions">
+      <button type="submit" class="btn btn-primary btn-lg">{% include "partials/icon.html" with name="check" %}{% translate "Create my farm" %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

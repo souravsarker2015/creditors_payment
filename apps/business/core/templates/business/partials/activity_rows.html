@@ -1,0 +1,12 @@
+{% load i18n %}
+<ul class="ledger">
+  {% for a in rows %}
+  <li class="ledger-row">
+    <span class="ledger-icon" data-tone="{% if a.action == 'create' %}good{% elif a.action == 'delete' %}critical{% elif a.action == 'restore' %}info{% else %}accent{% endif %}">{% if a.action == 'create' %}{% include "partials/icon.html" with name="plus" %}{% elif a.action == 'delete' %}{% include "partials/icon.html" with name="trash" %}{% elif a.action == 'restore' %}{% include "partials/icon.html" with name="restore" %}{% else %}{% include "partials/icon.html" with name="edit" %}{% endif %}</span>
+    <div class="ledger-main">
+      <p class="ledger-title">{{ a.get_action_display }} · {{ a.object_repr }}</p>
+      <p class="ledger-meta">{% if a.user %}{{ a.user.username }}{% else %}{% translate "System" %}{% endif %} · {{ a.at|date:"j M Y, g:i A" }}{% if a.changes and a.action == 'update' %} · {% for k, v in a.changes.items %}{{ k }}: {{ v.0|default:"—" }} → {{ v.1|default:"—" }}{% if not forloop.last %}, {% endif %}{% endfor %}{% endif %}</p>
+    </div>
+  </li>
+  {% endfor %}
+</ul>

@@ -51,6 +51,8 @@ LOCAL_APPS = [
     "apps.overview",
     "apps.budgets",
     "apps.goals",
+    # ── Business module (fully separate; see apps/business/) ──
+    "apps.business.core",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -66,6 +68,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "apps.business.core.middleware.DashboardMiddleware",  # business module: dashboard access
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
@@ -92,6 +95,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "apps.accounts.context_processors.user_preferences",
+                "apps.business.core.context_processors.dashboards",  # business module
             ],
             "builtins": ["apps.core.templatetags.ui"],
         },

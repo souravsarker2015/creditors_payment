@@ -1,0 +1,36 @@
+{% load i18n %}{% comment %}
+Dashboard switcher in the top bar. Only shown to people who can open two or
+more dashboards, so everyone else sees the top bar exactly as before.
+{% endcomment %}
+{% if available_dashboards|length > 1 %}
+<div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
+  {% for d in available_dashboards %}{% if d.code == active_dashboard %}
+  <button type="button" class="dash-switch" data-dash="{{ d.code }}" @click="open = !open" :aria-expanded="open" aria-haspopup="true"
+          aria-label="{% translate 'Switch dashboard' %}" data-tip="{% translate 'Switch dashboard' %}">
+    <span class="dash-switch-icon">{% include "business/partials/icon.html" with name=d.icon %}</span>
+    <span class="dash-switch-name">{{ d.display_name }}</span>
+    <span class="dash-switch-caret">{% include "partials/icon.html" with name="chevron-down" %}</span>
+  </button>
+  {% endif %}{% endfor %}
+  <div class="menu dash-menu" x-show="open" x-cloak x-transition.opacity.scale.95.duration.100ms role="menu">
+    <p class="menu-label">{% translate "Switch to" %}</p>
+    {% for d in available_dashboards %}
+    <a href="{% url d.url_name %}" class="dash-option {% if d.code == active_dashboard %}is-active{% endif %}" data-dash="{{ d.code }}" role="menuitem">
+      <span class="dash-option-icon">{% include "business/partials/icon.html" with name=d.icon %}</span>
+      <span class="min-w-0 flex-1">
+        <span class="dash-option-name">{{ d.display_name }}</span>
+        {% if d.description %}<span class="dash-option-desc">{{ d.description }}</span>{% endif %}
+      </span>
+      {% if d.code == active_dashboard %}<span class="dash-option-check">{% include "partials/icon.html" with name="check" %}</span>{% endif %}
+    </a>
+    {% endfor %}
+    <div class="menu-sep"></div>
+    <form method="post" action="{% url 'business:default_dashboard' %}">
+      {% csrf_token %}
+      <input type="hidden" name="dashboard" value="{{ active_dashboard }}">
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <button type="submit" class="menu-item text-xs">{% include "partials/icon.html" with name="check" %}{% translate "Open this one after login" %}</button>
+    </form>
+  </div>
+</div>
+{% endif %}

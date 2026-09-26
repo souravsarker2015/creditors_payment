@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% if unit %}{% translate "Edit unit" %}{% else %}{% translate "Add unit" %}{% endif %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-narrow">
+  <header class="page-header">
+    <div>
+      <a href="{% url 'business:units' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Units" %}</a>
+      <h1 class="page-title">{% if unit %}{% translate "Edit unit" %}{% else %}{% translate "Add unit" %}{% endif %}</h1>
+    </div>
+  </header>
+  <form method="post" class="card" novalidate x-data="{ type: '{{ form.unit_type.value|default:'weight' }}', symbol: '{{ form.symbol.value|default:''|escapejs }}', factor: '{{ form.factor.value|default:'1' }}', bases: {{ bases_json }} }">
+    {% csrf_token %}
+    <div class="card-body form-stack">
+      {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+      <div class="form-grid form-grid-2">
+        {% with field=form.name %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.name_bn %}{% include "partials/field.html" %}{% endwith %}
+      </div>
+      <div class="form-grid form-grid-2">
+        <div x-effect="symbol = $el.querySelector('input').value" @input="symbol = $event.target.value">{% with field=form.symbol %}{% include "partials/field.html" %}{% endwith %}</div>
+        <div @change="type = $event.target.value">{% with field=form.unit_type %}{% include "partials/field.html" %}{% endwith %}</div>
+      </div>
+      <div @input="factor = $event.target.value">{% with field=form.factor %}{% include "partials/field.html" %}{% endwith %}</div>
+      <p class="unit-preview" x-show="bases[type] && factor">
+        {% include "business/partials/icon.html" with name="scale" %}
+        <span>1 <strong x-text="symbol || '…'"></strong> = <strong x-text="factor"></strong> <strong x-text="bases[type]"></strong></span>
+      </p>
+      {% with field=form.notes %}{% include "partials/field.html" %}{% endwith %}
+    </div>
+    <div class="card-footer form-actions">
+      <a href="{% url 'business:units' %}" class="btn btn-ghost btn-lg">{% translate "Cancel" %}</a>
+      <button type="submit" class="btn btn-primary btn-lg">{% include "partials/icon.html" with name="check" %}{% translate "Save" %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

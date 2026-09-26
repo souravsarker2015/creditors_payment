@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% translate "Business details" %} | {{ business.name }}{% endblock %}
+{% block content %}
+{% url 'business:home' as back %}
+{% translate "Business details" as title %}
+{% translate "Shown on invoices and statements." as subtitle %}
+{% include "partials/form_page.html" %}
+{% endblock %}

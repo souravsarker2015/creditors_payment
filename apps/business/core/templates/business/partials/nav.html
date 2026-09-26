@@ -1,0 +1,40 @@
+{% load i18n %}{% comment %}Business sidebar menu (sections appear as each phase ships).{% endcomment %}
+{% with p=request.path %}
+<div>
+  <p class="nav-section-label">{% translate "Farm" %}</p>
+  <a href="{% url 'business:home' %}" class="nav-link {% if p == '/business/' %}is-active{% endif %}" {% if p == '/business/' %}aria-current="page"{% endif %}>
+    {% include "business/partials/icon.html" with name="home" %}{% translate "Dashboard" %}
+  </a>
+</div>
+
+{% if business %}
+<div class="space-y-0.5">
+  <p class="nav-section-label">{% translate "Settings" %}</p>
+  <a href="{% url 'business:units' %}" class="nav-link {% if '/business/settings/units/' in p %}is-active{% endif %}">
+    {% include "business/partials/icon.html" with name="scale" %}{% translate "Units" %}
+  </a>
+  {% if biz_can.manage_team %}
+  <a href="{% url 'business:team' %}" class="nav-link {% if '/business/settings/team/' in p %}is-active{% endif %}">
+    {% include "partials/icon.html" with name="users" %}{% translate "Team & roles" %}
+  </a>
+  {% endif %}
+  {% if biz_can.manage_settings %}
+  <a href="{% url 'business:profile' %}" class="nav-link {% if '/business/settings/profile/' in p %}is-active{% endif %}">
+    {% include "business/partials/icon.html" with name="cog" %}{% translate "Business details" %}
+  </a>
+  <a href="{% url 'business:activity' %}" class="nav-link {% if '/business/settings/activity/' in p %}is-active{% endif %}">
+    {% include "business/partials/icon.html" with name="history" %}{% translate "Activity log" %}
+  </a>
+  {% endif %}
+</div>
+{% endif %}
+
+{% if user.is_staff %}
+<div class="space-y-0.5">
+  <p class="nav-section-label">{% translate "Admin" %}</p>
+  <a href="{% url 'business:access_admin' %}" class="nav-link {% if '/business/admin/access/' in p %}is-active{% endif %}">
+    {% include "business/partials/icon.html" with name="shield" %}{% translate "Dashboard access" %}
+  </a>
+</div>
+{% endif %}
+{% endwith %}

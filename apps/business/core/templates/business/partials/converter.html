@@ -1,0 +1,21 @@
+{% load i18n %}{% comment %}Inside x-data="unitConverter(units)".{% endcomment %}
+<div class="card-body biz-conv">
+  <div class="biz-conv-row">
+    <input type="number" inputmode="decimal" min="0" step="any" class="form-input" x-model="qty" aria-label="{% translate 'Quantity' %}">
+    <select class="form-input" x-model="from" @change="fixTo()" aria-label="{% translate 'From unit' %}">
+      <template x-for="u in units" :key="u.id"><option :value="u.id" x-text="label(u)"></option></template>
+    </select>
+  </div>
+  <div class="biz-conv-mid">
+    <button type="button" class="icon-btn" @click="swap()" aria-label="{% translate 'Swap units' %}" data-tip="{% translate 'Swap' %}">{% include "business/partials/icon.html" with name="swap" %}</button>
+  </div>
+  <div class="biz-conv-row">
+    <output class="biz-conv-result" x-text="result()"></output>
+    <select class="form-input" x-model="to" aria-label="{% translate 'To unit' %}">
+      <template x-for="u in sameType()" :key="u.id"><option :value="u.id" x-text="label(u)"></option></template>
+    </select>
+  </div>
+  <div class="chip-row mt-3">
+    <template x-for="p in presets()" :key="p.label"><button type="button" class="chip" @click="apply(p)" x-text="p.label"></button></template>
+  </div>
+</div>

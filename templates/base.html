@@ -67,6 +67,7 @@
                         data-tip="{% translate 'Calculator — discounts, VAT, profit, splits (Alt+C)' %}" aria-label="{% translate 'Calculator' %}">
                     {% include "partials/icon.html" with name="calculator" %}<span class="hidden xl:inline">{% translate "Calculator" %}</span>
                 </button>
+                {% include "business/partials/dashboard_switcher.html" %}{# business module hook #}
                 {% include "partials/preferences_switcher.html" %}
 
                 <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">

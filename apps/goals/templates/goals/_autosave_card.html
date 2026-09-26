@@ -48,7 +48,7 @@
   <form method="post" action="{% url 'goal_autosave' goal.pk %}" class="card-body form-stack !pt-3" x-show="editing" x-cloak novalidate>
     {% csrf_token %}
     {% with field=autosave_form.amount %}{% include "partials/field.html" %}{% endwith %}
-    <div class="form-grid-2">
+    <div class="form-grid form-grid-2">
       {% with field=autosave_form.frequency %}{% include "partials/field.html" %}{% endwith %}
       {% with field=autosave_form.next_run_date %}{% include "partials/field.html" %}{% endwith %}
     </div>

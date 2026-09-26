@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{{ business.name }} | FinTrack{% endblock %}
+{% block content %}
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <p class="text-sm font-semibold" style="color: var(--text-muted);">{% now "l, j F Y" %}</p>
+      <h1 class="page-title">{{ business.name }}</h1>
+      <div class="meta-list">
+        <span class="meta-item">{% include "business/partials/icon.html" with name="shield" %}{% blocktranslate with role=membership.get_role_display %}You're the {{ role }}{% endblocktranslate %}</span>
+        {% if business.address %}<span class="meta-item">{% include "partials/icon.html" with name="tag" %}{{ business.address }}</span>{% endif %}
+      </div>
+    </div>
+    {% if other_businesses %}
+    <form method="post" action="{% url 'business:switch_business' %}" class="page-actions">
+      {% csrf_token %}
+      <select name="business" class="form-input input-compact" onchange="this.form.submit()" aria-label="{% translate 'Switch business' %}">
+        <option value="{{ business.pk }}" selected>{{ business.name }}</option>
+        {% for m in other_businesses %}<option value="{{ m.business_id }}">{{ m.business.name }}</option>{% endfor %}
+      </select>
+    </form>
+    {% endif %}
+  </header>
+
+  <div class="grid grid-cols-1 gap-5 lg:grid-cols-5 lg:items-start">
+    <section class="card lg:col-span-3">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">{% translate "Getting started" %}</h2>
+          <p class="card-subtitle">{% translate "A few quick steps to get your farm ready." %}</p>
+        </div>
+      </div>
+      <ol class="biz-steps">
+        <li class="is-done">
+          <span class="biz-step-dot">{% include "partials/icon.html" with name="check" %}</span>
+          <div><p class="biz-step-title">{% translate "Create your farm" %}</p><p class="biz-step-text">{{ business.name }}</p></div>
+        </li>
+        <li class="is-done">
+          <span class="biz-step-dot">{% include "partials/icon.html" with name="check" %}</span>
+          <div class="min-w-0 flex-1">
+            <p class="biz-step-title">{% translate "Units are ready" %}</p>
+            <p class="biz-step-text">{% blocktranslate count counter=unit_count %}{{ counter }} unit{% plural %}{{ counter }} units{% endblocktranslate %}{% if mon %} · 1 mon = {{ mon.factor|num }} kg{% endif %}</p>
+          </div>
+          <a href="{% url 'business:units' %}" class="btn btn-ghost btn-sm">{% translate "Review" %}</a>
+        </li>
+        {% if biz_can.manage_team %}
+        <li class="{% if team_count > 1 %}is-done{% endif %}">
+          <span class="biz-step-dot">{% if team_count > 1 %}{% include "partials/icon.html" with name="check" %}{% else %}3{% endif %}</span>
+          <div class="min-w-0 flex-1">
+            <p class="biz-step-title">{% translate "Add your team" %}</p>
+            <p class="biz-step-text">{% if team_count > 1 %}{% blocktranslate count counter=team_count %}{{ counter }} person{% plural %}{{ counter }} people{% endblocktranslate %}{% else %}{% translate "Let a manager or pond staff enter data from their own phone." %}{% endif %}</p>
+          </div>
+          <a href="{% url 'business:team' %}" class="btn {% if team_count > 1 %}btn-ghost{% else %}btn-primary{% endif %} btn-sm">{% if team_count > 1 %}{% translate "Manage" %}{% else %}{% translate "Add people" %}{% endif %}</a>
+        </li>
+        {% endif %}
+        <li class="is-next">
+          <span class="biz-step-dot">{% include "business/partials/icon.html" with name="fish" %}</span>
+          <div><p class="biz-step-title">{% translate "Ponds, feed, sales and baki" %}</p><p class="biz-step-text">{% translate "Coming soon to this dashboard." %}</p></div>
+        </li>
+      </ol>
+    </section>
+
+    <section class="card lg:col-span-2" x-data="unitConverter({{ units_json }})">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title flex items-center gap-2"><span class="h-[1.125rem] w-[1.125rem]" style="color: var(--accent);">{% include "business/partials/icon.html" with name="scale" %}</span>{% translate "Unit converter" %}</h2>
+          <p class="card-subtitle">{% translate "Uses your own unit sizes." %}</p>
+        </div>
+      </div>
+      {% include "business/partials/converter.html" %}
+    </section>
+  </div>
+
+  {% if recent_activity %}
+  <section class="card">
+    <div class="card-header">
+      <h2 class="card-title">{% translate "Recent changes" %}</h2>
+      {% if biz_can.manage_settings %}<a href="{% url 'business:activity' %}" class="btn btn-ghost btn-sm">{% translate "View all" %}{% include "partials/icon.html" with name="arrow-right" %}</a>{% endif %}
+    </div>
+    {% include "business/partials/activity_rows.html" with rows=recent_activity %}
+  </section>
+  {% endif %}
+</div>
+{% endblock %}
+{% block extra_js %}{% include "business/partials/converter_js.html" %}{% endblock %}

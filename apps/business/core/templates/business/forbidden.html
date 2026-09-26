@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% translate "No access" %} | FinTrack{% endblock %}
+{% block content %}
+<div class="page-narrow">
+  <div class="empty">
+    <div class="empty-icon">{% include "business/partials/icon.html" with name="shield" %}</div>
+    {% if reason == "dashboard" %}
+      <h1 class="empty-title">{% translate "You don't have the business dashboard yet" %}</h1>
+      <p class="empty-text">{% translate "Ask the farm owner to add you to their team, or an admin to give you access." %}</p>
+    {% else %}
+      <h1 class="empty-title">{% translate "Your role can't open this page" %}</h1>
+      <p class="empty-text">{% translate "Ask the farm owner or a manager if you need it." %}</p>
+    {% endif %}
+    <div class="flex flex-wrap justify-center gap-2">
+      {% for d in available_dashboards %}<a href="{% url d.url_name %}" class="btn btn-secondary">{{ d.display_name }}</a>{% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

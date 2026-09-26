@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% translate "Activity log" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-medium stack">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "Activity log" %}</h1>
+      <p class="page-subtitle">{% translate "Every record created, changed, deleted or restored — who did it and when." %}</p>
+    </div>
+  </header>
+  <section class="card">
+    {% if page_obj.object_list %}
+    {% include "business/partials/activity_rows.html" with rows=page_obj.object_list %}
+    {% else %}
+    <div class="empty is-plain"><p class="empty-text">{% translate "Nothing recorded yet." %}</p></div>
+    {% endif %}
+  </section>
+  {% include "partials/pagination.html" %}
+</div>
+{% endblock %}
