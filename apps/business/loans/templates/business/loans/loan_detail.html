@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{{ loan.title }} | {% translate "Loans" %}{% endblock %}
+{% block content %}
+{% with n=s.next_due %}
+<div class="page stack" x-data="{ tab: '{{ tab|escapejs }}', modal: {% if open_pay and not loan.closed_on %}'pay'{% else %}null{% endif %} }" @open-modal.window="modal = $event.detail">
+  <header class="page-header !mb-0">
+    <div class="min-w-0">
+      <a href="{% url 'business:loans' %}{% if loan.closed_on %}?status=closed{% endif %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Loans" %}</a>
+      <div class="flex items-center gap-3">
+        {% include "business/loans/partials/lender_icon.html" with kind=loan.lender.kind %}
+        <div class="min-w-0">
+          <h1 class="page-title truncate">{{ loan.title }}</h1>
+          <div class="meta-list !mt-1">
+            <span class="meta-item">{% if loan.name %}{{ loan.lender.name }} · {% endif %}{{ loan.lender.get_kind_display }}</span>
+            {% if loan.account_no %}<span class="meta-item">{% include "partials/icon.html" with name="tag" %}{{ loan.account_no }}</span>{% endif %}
+            {% if loan.lender.phone %}<a class="meta-item hover:underline" href="tel:{{ loan.lender.phone }}">{% include "partials/icon.html" with name="phone" %}{{ loan.lender.phone }}</a>{% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="page-actions">
+      {% if loan.is_deleted %}
+        {% if biz_can.delete %}<form method="post" action="{% url 'business:loan_restore' loan.pk %}">{% csrf_token %}<button class="btn btn-primary">{% include "partials/icon.html" with name="restore" %}{% translate "Restore" %}</button></form>{% endif %}
+      {% else %}
+      {% if not loan.closed_on %}<button type="button" class="btn btn-primary" @click="modal = 'pay'">{% include "partials/icon.html" with name="check" %}{% translate "Record payment" %}</button>{% endif %}
+      <a href="{% url 'business:loan_edit' loan.pk %}" class="btn btn-secondary">{% include "partials/icon.html" with name="edit" %}{% translate "Edit" %}</a>
+      <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
+        <button type="button" class="icon-btn" @click="open = !open" :aria-expanded="open" aria-haspopup="true" aria-label="{% translate 'More actions' %}">{% include "partials/icon.html" with name="dots" %}</button>
+        <div class="menu" x-show="open" x-cloak x-transition.opacity.scale.95.duration.100ms role="menu">
+          {% if not loan.closed_on %}
+          <button type="button" class="menu-item" role="menuitem" @click="open = false; modal = 'topup'">{% include "partials/icon.html" with name="arrow-down" %}{% translate "Borrow more on this loan" %}</button>
+          <button type="button" class="menu-item" role="menuitem" @click="open = false; tab = 'terms'; $nextTick(() => document.getElementById('rate-change').scrollIntoView({ behavior: 'smooth' }))">{% include "business/partials/icon.html" with name="percent" %}{% translate "Lender changed the rate" %}</button>
+          {% endif %}
+          <a href="{% url 'business:loan_csv' loan.pk %}" class="menu-item" role="menuitem">{% include "partials/icon.html" with name="download" %}{% translate "Download schedule (Excel)" %}</a>
+          <div class="menu-sep"></div>
+          {% if loan.closed_on %}
+          <form method="post" action="{% url 'business:loan_close' loan.pk %}">{% csrf_token %}<button type="submit" class="menu-item" role="menuitem">{% include "partials/icon.html" with name="restore" %}{% translate "Reopen loan" %}</button></form>
+          {% else %}
+          <button type="button" class="menu-item" role="menuitem" @click="open = false; modal = 'close'">{% include "business/partials/icon.html" with name="lock" %}{% translate "Close loan" %}</button>
+          {% endif %}
+          {% if biz_can.delete %}
+          <form method="post" action="{% url 'business:loan_delete' loan.pk %}" data-confirm="{% translate 'Delete this loan with its payments? You can restore it from Deleted.' %}">{% csrf_token %}
+            <button type="submit" class="menu-item is-danger" role="menuitem">{% include "partials/icon.html" with name="trash" %}{% translate "Delete loan" %}</button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </header>
+
+  {% if loan.is_deleted %}
+  <div class="callout" data-tone="warn">{% include "partials/icon.html" with name="trash" %}<p>{% translate "This loan is deleted. Restore it to work with it again." %}</p></div>
+  {% elif loan.closed_on %}
+  <div class="callout" data-tone="info">{% include "business/partials/icon.html" with name="lock" %}<p>{% blocktranslate with date=loan.closed_on|date:"j M Y" %}Closed on {{ date }}. The full history is kept here.{% endblocktranslate %}{% if s.outstanding %} {% blocktranslate with amount=s.outstanding|bdt %}{{ amount }} of the loan was left unpaid when it was closed.{% endblocktranslate %}{% endif %}</p></div>
+  {% elif s.overdue_periods %}
+  <div class="callout" data-tone="critical">
+    {% include "partials/icon.html" with name="alert" %}
+    <div class="flex-1">
+      <p class="callout-title">{% blocktranslate count counter=s.overdue_periods|length with amount=s.overdue|bdt %}{{ amount }} overdue — {{ counter }} payment{% plural %}{{ amount }} overdue — {{ counter }} payments{% endblocktranslate %}</p>
+      <p>{% blocktranslate with date=s.overdue_periods.0.due|date:"j M Y" %}The oldest was due on {{ date }}.{% endblocktranslate %}</p>
+      <div class="flex flex-wrap gap-2 mt-3">
+        <button type="button" class="btn btn-primary btn-sm" @click="modal = 'pay'; $dispatch('pay-pick', 'overdue')">{% translate "Pay now" %}</button>
+        <form method="post" action="{% url 'business:loan_pay_past' loan.pk %}" data-confirm="{% translate 'Mark every overdue payment as paid on its due date? Use this when you are entering an older loan that you have been paying all along.' %}">{% csrf_token %}
+          <button type="submit" class="btn btn-soft btn-sm" data-tip="{% translate 'For older loans: records each overdue payment as paid on its due date' %}">{% include "partials/icon.html" with name="check" %}{% translate "Already paid these" %}</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% elif s.is_paid_off %}
+  <div class="callout" data-tone="good">
+    {% include "partials/icon.html" with name="check" %}
+    <div class="flex-1">
+      <p class="callout-title">{% translate "This loan is fully paid!" %}</p>
+      <p>{% translate "Close it to move it out of your open loans. Its history stays." %}</p>
+      <button type="button" class="btn btn-primary btn-sm mt-3" @click="modal = 'close'">{% include "business/partials/icon.html" with name="lock" %}{% translate "Close loan" %}</button>
+    </div>
+  </div>
+  {% endif %}
+
+  <section class="card loan-hero">
+    <div class="loan-hero-main">
+      <p class="entity-figure-label">{% translate "Still owed" %}</p>
+      <p class="budget-figure !mb-2"><strong>{{ s.outstanding|bdt }}</strong> <span>{% blocktranslate with amount=s.borrowed|bdt %}of {{ amount }} borrowed{% endblocktranslate %}</span></p>
+      <div class="meter meter-lg" data-tone="good"><span style="width: {{ s.progress }}%"></span></div>
+      <p class="loan-hero-note">{% blocktranslate with pct=s.progress amount=s.principal_paid|bdt %}{{ pct }}% paid back · {{ amount }}{% endblocktranslate %}</p>
+    </div>
+    {% if not loan.closed_on and s.outstanding %}
+    <div class="loan-hero-side">
+      <p class="entity-figure-label inline-flex items-center">{% translate "To settle today" %}{% translate "The loan still owed plus the interest built up until today. Ask the lender for their exact figure before closing — some add fees." as info_text %}{% include "partials/info.html" with text=info_text %}</p>
+      <p class="loan-hero-payoff">{{ s.payoff|bdt }}</p>
+      {% if s.unpaid_interest %}<p class="loan-hero-note">{% blocktranslate with amount=s.unpaid_interest|bdt %}incl. {{ amount }} interest{% endblocktranslate %}</p>{% endif %}
+    </div>
+    {% endif %}
+  </section>
+
+  <dl class="stat-grid">
+    <div class="stat" data-tone="{% if n.status == 'overdue' %}critical{% elif n.status == 'due_soon' %}warn{% else %}info{% endif %}">
+      <dt class="stat-label">{% if n.status == "overdue" %}{% translate "Oldest unpaid" %}{% else %}{% translate "Next payment" %}{% endif %}</dt>
+      <dd class="stat-value">{% if n and not loan.closed_on %}{{ n.remaining|bdt }}{% else %}—{% endif %}</dd>
+      <dd class="stat-hint">{% if n and not loan.closed_on %}{{ n.due|date:"j M Y" }}{% with d=n.due|days_until %} · {% if d == 0 %}{% translate "today" %}{% elif d > 0 %}{% blocktranslate count counter=d %}in {{ counter }} day{% plural %}in {{ counter }} days{% endblocktranslate %}{% else %}{% blocktranslate count counter=d|absolute %}{{ counter }} day late{% plural %}{{ counter }} days late{% endblocktranslate %}{% endif %}{% endwith %}{% elif loan.closed_on %}{% translate "Loan closed" %}{% else %}{% translate "Pay back any time" %}{% endif %}</dd>
+    </div>
+    <div class="stat" data-tone="accent">
+      <dt class="stat-label">{% translate "Interest paid so far" %}</dt>
+      <dd class="stat-value">{{ s.interest_paid|bdt }}</dd>
+      <dd class="stat-hint">{% if s.charges_paid %}{% blocktranslate with amount=s.charges_paid|bdt %}+ {{ amount }} fees / fines{% endblocktranslate %}{% else %}{% blocktranslate with amount=s.total_paid|bdt %}{{ amount }} paid in all{% endblocktranslate %}{% endif %}</dd>
+    </div>
+    <div class="stat" data-tone="warn">
+      {% if loan.maturity %}
+      <dt class="stat-label inline-flex items-center">{% translate "Interest still to come" %}{% translate "Interest on the rest of the plan if every payment is made on time. Paying early lowers it." as info_text %}{% include "partials/info.html" with text=info_text %}</dt>
+      <dd class="stat-value">{{ s.interest_left|bdt }}</dd>
+      <dd class="stat-hint">{% blocktranslate with amount=s.interest_planned|bdt %}{{ amount }} over the whole loan{% endblocktranslate %}</dd>
+      {% else %}
+      <dt class="stat-label">{% translate "Interest owed now" %}</dt>
+      <dd class="stat-value">{{ s.unpaid_interest|bdt }}</dd>
+      <dd class="stat-hint">{% translate "No end date — interest runs until it's paid back" %}</dd>
+      {% endif %}
+    </div>
+    <div class="stat" data-tone="muted">
+      <dt class="stat-label">{% translate "Interest rate" %}</dt>
+      <dd class="stat-value">{% if current_rate is not None %}{{ current_rate|num }}%{% else %}{{ loan.rate|num }}%{% endif %}</dd>
+      <dd class="stat-hint">{{ loan.get_rate_period_display }} · {{ loan.frequency_label }}{% if rate_changes %} · {% translate "changed" %}{% endif %}</dd>
+    </div>
+  </dl>
+
+  <nav class="seg seg-block loan-tabs" role="tablist">
+    <button type="button" role="tab" class="seg-item" :class="tab === 'schedule' && 'is-active'" :aria-selected="(tab === 'schedule').toString()" @click="tab = 'schedule'">{% translate "Schedule" %}</button>
+    <button type="button" role="tab" class="seg-item" :class="tab === 'history' && 'is-active'" :aria-selected="(tab === 'history').toString()" @click="tab = 'history'">{% translate "History" %} <span class="seg-count">{{ txns|length }}</span></button>
+    <button type="button" role="tab" class="seg-item" :class="tab === 'terms' && 'is-active'" :aria-selected="(tab === 'terms').toString()" @click="tab = 'terms'">{% translate "Terms" %}</button>
+  </nav>
+
+  <!-- Schedule -->
+  <section class="card" x-show="tab === 'schedule'" x-data="{ all: false }">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title">{% translate "Payment schedule" %}</h2>
+        <p class="card-subtitle">{% if loan.maturity %}{% blocktranslate count counter=s.periods|length with left=s.unpaid_count %}{{ counter }} payment, {{ left }} left{% plural %}{{ counter }} payments, {{ left }} left{% endblocktranslate %}{% else %}{% translate "Interest dates so far, and the next one" %}{% endif %}</p>
+      </div>
+      <a href="{% url 'business:loan_csv' loan.pk %}" class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="download" %}<span class="hidden sm:inline">{% translate "Download" %}</span></a>
+    </div>
+    {% if s.periods %}
+    <div class="loan-table-wrap">
+      <table class="loan-table">
+        <thead><tr>
+          <th>{% translate "Due date" %}</th><th class="num">{% translate "Interest" %}</th><th class="num">{% translate "Towards the loan" %}</th>
+          <th class="num">{% translate "Payment" %}</th><th class="num">{% translate "Owed after" %}</th><th>{% translate "Status" %}</th>
+        </tr></thead>
+        <tbody>
+          {% for p, visible in rows %}
+          <tr class="{% if p.is_current %}is-current{% endif %} is-{{ p.status }}"{% if not visible %} x-show="all" x-cloak{% endif %}>
+            <td><span class="loan-no">{{ p.no }}</span>{{ p.due|date:"j M Y" }}</td>
+            <td class="num">{{ p.interest|bdt }}</td>
+            <td class="num">{{ p.principal|bdt }}</td>
+            <td class="num"><strong>{{ p.total|bdt }}</strong>{% if p.is_partial %}<span class="loan-left">{% blocktranslate with amount=p.remaining|bdt %}{{ amount }} left{% endblocktranslate %}</span>{% endif %}</td>
+            <td class="num muted">{{ p.balance_after|bdt }}</td>
+            <td>{% include "business/loans/partials/due_status.html" %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <ul class="ledger loan-sched-list">
+      {% for p, visible in rows %}
+      <li class="ledger-row{% if p.is_current %} is-current{% endif %}"{% if not visible %} x-show="all" x-cloak{% endif %}>
+        <span class="loan-no">{{ p.no }}</span>
+        <div class="ledger-main">
+          <p class="ledger-title">{{ p.due|date:"j M Y" }}</p>
+          <p class="ledger-meta">{% blocktranslate with i=p.interest|bdt l=p.principal|bdt %}Interest {{ i }} · Loan {{ l }}{% endblocktranslate %}</p>
+        </div>
+        <div class="loan-sched-end">
+          <span class="ledger-amount">{{ p.total|bdt }}</span>
+          {% if p.is_partial %}<span class="loan-left">{% blocktranslate with amount=p.remaining|bdt %}{{ amount }} left{% endblocktranslate %}</span>{% else %}{% include "business/loans/partials/due_status.html" %}{% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% if hidden_rows %}
+    <div class="card-footer text-center">
+      <button type="button" class="btn btn-ghost btn-sm" @click="all = !all">
+        <span x-show="!all">{% blocktranslate count counter=hidden_rows %}Show {{ counter }} more payment{% plural %}Show all {{ counter }} more payments{% endblocktranslate %}</span>
+        <span x-show="all" x-cloak>{% translate "Show fewer" %}</span>
+      </button>
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="empty is-plain"><p class="empty-text">{% translate "No fixed payments on this loan — it's interest-free with no end date. Record payments whenever you pay something back." %}</p></div>
+    {% endif %}
+    {% if s.late_interest %}
+    <div class="card-footer"><p class="help">{% blocktranslate with amount=s.late_interest|bdt %}The end date has passed; {{ amount }} more interest has built up since then on what's still owed.{% endblocktranslate %}</p></div>
+    {% endif %}
+  </section>
+
+  <!-- History -->
+  <section class="card" x-show="tab === 'history'" x-cloak>
+    <div class="card-header">
+      <h2 class="card-title">{% translate "Payments and borrowing" %}</h2>
+      {% if not loan.closed_on and not loan.is_deleted %}<button type="button" class="btn btn-ghost btn-sm" @click="modal = 'topup'">{% include "partials/icon.html" with name="plus" %}{% translate "Borrow more" %}</button>{% endif %}
+    </div>
+    <ul class="ledger">
+      {% for t in txns %}
+      <li class="ledger-row">
+        {% if t.kind == "payment" %}<span class="ledger-icon" data-tone="good">{% include "partials/icon.html" with name="arrow-up" %}</span>{% else %}<span class="ledger-icon" data-tone="warn">{% include "partials/icon.html" with name="arrow-down" %}</span>{% endif %}
+        <div class="ledger-main">
+          <p class="ledger-title">{% if t.kind == "payment" %}{% translate "Paid" %}{% else %}{% translate "Borrowed more" %}{% endif %} · {{ t.date|date:"j M Y" }}</p>
+          <p class="ledger-meta">{% if t.kind == "payment" %}{% if t.interest %}{% blocktranslate with amount=t.interest|bdt %}Interest {{ amount }}{% endblocktranslate %}{% endif %}{% if t.principal %}{% if t.interest %} · {% endif %}{% blocktranslate with amount=t.principal|bdt %}Loan {{ amount }}{% endblocktranslate %}{% endif %}{% if t.charges %} · {% blocktranslate with amount=t.charges|bdt %}Fees {{ amount }}{% endblocktranslate %}{% endif %} · {% endif %}{{ t.get_paid_via_display }}{% if t.reference %} · {{ t.reference }}{% endif %}{% if t.notes %} · {{ t.notes }}{% endif %}</p>
+        </div>
+        <div class="ledger-end">
+          <span class="ledger-amount" data-tone="{% if t.kind == 'payment' %}good{% else %}warn{% endif %}">{{ t.total|bdt }}</span>
+          {% url 'business:loan_txn_edit' t.pk as edit_url %}{% url 'business:loan_txn_delete' t.pk as delete_url %}
+          {% translate "Delete this entry? The schedule will be worked out again." as confirm_text %}
+          {% include "partials/row_menu.html" with edit_url=edit_url delete_url=delete_url confirm=confirm_text up=forloop.last %}
+        </div>
+      </li>
+      {% endfor %}
+      <li class="ledger-row">
+        <span class="ledger-icon" data-tone="info">{% include "business/partials/icon.html" with name="banknotes" %}</span>
+        <div class="ledger-main"><p class="ledger-title">{% translate "Loan received" %} · {{ loan.taken_on|date:"j M Y" }}</p><p class="ledger-meta">{{ loan.lender.name }}</p></div>
+        <div class="ledger-end"><span class="ledger-amount" data-tone="warn">{{ loan.principal|bdt }}</span></div>
+      </li>
+    </ul>
+  </section>
+
+  <!-- Terms -->
+  <div class="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start" x-show="tab === 'terms'" x-cloak>
+    <section class="card">
+      <div class="card-header"><h2 class="card-title">{% translate "Loan terms" %}</h2><a href="{% url 'business:loan_edit' loan.pk %}" class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="edit" %}{% translate "Edit" %}</a></div>
+      <dl class="loan-terms-dl">
+        <div><dt>{% translate "Lender" %}</dt><dd>{{ loan.lender.name }} <span class="muted">· {{ loan.lender.get_kind_display }}</span></dd></div>
+        <div><dt>{% translate "Amount borrowed" %}</dt><dd>{{ loan.principal|bdt }}</dd></div>
+        <div><dt>{% translate "Date received" %}</dt><dd>{{ loan.taken_on|date:"j M Y" }}</dd></div>
+        <div><dt>{% translate "Interest" %}</dt><dd>{% if loan.rate %}{{ loan.rate|num }}% {{ loan.get_rate_period_display }} · {{ loan.get_method_display|lower }}{% else %}{% translate "Interest-free" %}{% endif %}</dd></div>
+        <div><dt>{% translate "Payments" %}</dt><dd>{{ loan.frequency_label }}</dd></div>
+        <div><dt>{% translate "Loan amount is paid back" %}</dt><dd>{{ loan.get_repayment_display }}</dd></div>
+        <div><dt>{% translate "First payment" %}</dt><dd>{% if s.periods %}{{ s.periods.0.due|date:"j M Y" }}{% else %}—{% endif %}</dd></div>
+        <div><dt>{% translate "End date" %}</dt><dd>{% if loan.maturity %}{{ loan.maturity|date:"j M Y" }}{% else %}{% translate "No fixed end" %}{% endif %}</dd></div>
+        {% if loan.account_no %}<div><dt>{% translate "Loan / account number" %}</dt><dd>{{ loan.account_no }}</dd></div>{% endif %}
+        {% if loan.notes %}<div><dt>{% translate "Notes" %}</dt><dd>{{ loan.notes|linebreaksbr }}</dd></div>{% endif %}
+      </dl>
+    </section>
+
+    <section class="card" id="rate-change">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">{% translate "Rate changes" %}</h2>
+          <p class="card-subtitle">{% translate "Banks sometimes change the rate. Interest from that date on uses the new one." %}</p>
+        </div>
+      </div>
+      <ul class="ledger">
+        <li class="ledger-row">
+          <span class="ledger-icon" data-tone="muted">{% include "business/partials/icon.html" with name="percent" %}</span>
+          <div class="ledger-main"><p class="ledger-title">{{ loan.rate|num }}% {{ loan.get_rate_period_display }}</p><p class="ledger-meta">{% blocktranslate with date=loan.taken_on|date:"j M Y" %}From the start · {{ date }}{% endblocktranslate %}</p></div>
+        </li>
+        {% for c in rate_changes %}
+        <li class="ledger-row">
+          <span class="ledger-icon" data-tone="accent">{% include "business/partials/icon.html" with name="percent" %}</span>
+          <div class="ledger-main"><p class="ledger-title">{{ c.rate|num }}% {{ loan.get_rate_period_display }}</p><p class="ledger-meta">{% blocktranslate with date=c.effective_from|date:"j M Y" %}From {{ date }}{% endblocktranslate %}</p></div>
+          <div class="ledger-end">
+            <form method="post" action="{% url 'business:loan_rate_delete' c.pk %}" data-confirm="{% translate 'Remove this rate change?' %}">{% csrf_token %}
+              <button type="submit" class="icon-btn" aria-label="{% translate 'Remove' %}" data-tip="{% translate 'Remove' %}">{% include "partials/icon.html" with name="trash" %}</button>
+            </form>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% if not loan.closed_on and not loan.is_deleted %}
+      <form method="post" action="{% url 'business:loan_rate' loan.pk %}" class="card-footer loan-rate-form">
+        {% csrf_token %}
+        <div class="field">
+          <label class="label" for="rc-date">{% translate "From" %}</label>
+          <input id="rc-date" type="date" name="rate-effective_from" class="form-input" required min="{{ loan.taken_on|date:'Y-m-d' }}">
+        </div>
+        <div class="field">
+          <label class="label" for="rc-rate">{% blocktranslate with period=loan.get_rate_period_display %}New rate ({{ period }}){% endblocktranslate %}</label>
+          <div class="input-affix has-end"><input id="rc-rate" type="number" name="rate-rate" class="form-input" step="any" min="0" max="100" inputmode="decimal" required><span class="affix affix-end" aria-hidden="true">%</span></div>
+        </div>
+        <button type="submit" class="btn btn-secondary">{% include "partials/icon.html" with name="plus" %}{% translate "Add" %}</button>
+      </form>
+      {% endif %}
+    </section>
+  </div>
+
+  {% if not loan.closed_on and not loan.is_deleted %}
+  {% include "business/loans/partials/pay_modal.html" %}
+  {% include "business/loans/partials/topup_modal.html" %}
+  {% include "business/loans/partials/close_modal.html" %}
+  {% endif %}
+</div>
+{% endwith %}
+{% endblock %}

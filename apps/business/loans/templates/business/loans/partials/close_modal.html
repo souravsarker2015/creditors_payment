@@ -1,0 +1,32 @@
+{% load i18n business %}
+<template x-teleport="body">
+<div class="modal-root" x-show="modal === 'close'" x-cloak @keydown.escape.window="modal = null" role="dialog" aria-modal="true" aria-labelledby="m-close-title">
+  <div class="modal-backdrop" x-show="modal === 'close'" x-transition.opacity.duration.200ms @click="modal = null"></div>
+  <form method="post" action="{% url 'business:loan_close' loan.pk %}" class="modal" x-show="modal === 'close'" x-trap.noscroll="modal === 'close'"
+        x-transition:enter="modal-enter" x-transition:enter-start="modal-enter-start" x-transition:enter-end="modal-enter-end"
+        x-transition:leave="modal-leave" x-transition:leave-start="modal-enter-end" x-transition:leave-end="modal-enter-start">
+    {% csrf_token %}
+    <div class="modal-header">
+      <span class="modal-icon">{% include "business/partials/icon.html" with name="lock" %}</span>
+      <div class="min-w-0 flex-1">
+        <h2 class="modal-title" id="m-close-title">{% translate "Close this loan" %}</h2>
+        <p class="modal-subtitle">{% translate "It moves to Closed with its full history. You can reopen it any time." %}</p>
+      </div>
+      <button type="button" class="icon-btn" @click="modal = null" aria-label="{% translate 'Close' %}">{% include "partials/icon.html" with name="x" %}</button>
+    </div>
+    <div class="modal-body form-stack">
+      {% if s.outstanding %}
+      <div class="callout" data-tone="warn">{% include "partials/icon.html" with name="alert" %}<p>{% blocktranslate with amount=s.outstanding|bdt payoff=s.payoff|bdt %}{{ amount }} of the loan is still unpaid. To settle it today you'd pay about {{ payoff }} — record that payment first, unless the lender has let it go.{% endblocktranslate %}</p></div>
+      {% endif %}
+      <div class="field">
+        <label class="label" for="close-date">{% translate "Closed on" %}</label>
+        <input id="close-date" name="closed_on" type="date" class="form-input" value="{% now 'Y-m-d' %}" min="{{ loan.taken_on|date:'Y-m-d' }}" required>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" @click="modal = null">{% translate "Cancel" %}</button>
+      <button type="submit" class="btn btn-primary">{% include "business/partials/icon.html" with name="lock" %}{% translate "Close loan" %}</button>
+    </div>
+  </form>
+</div>
+</template>

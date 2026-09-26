@@ -72,6 +72,40 @@
     </section>
   </div>
 
+  {% if loans is not None %}
+  <section class="card">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title flex items-center gap-2"><span class="h-[1.125rem] w-[1.125rem]" style="color: var(--accent);">{% include "business/partials/icon.html" with name="banknotes" %}</span>{% translate "Loans" %}</h2>
+        <p class="card-subtitle">{% if loans.count %}{% blocktranslate with amount=loans.outstanding|bdt count counter=loans.count %}{{ amount }} still owed on {{ counter }} loan{% plural %}{{ amount }} still owed on {{ counter }} loans{% endblocktranslate %}{% else %}{% translate "No open loans." %}{% endif %}</p>
+      </div>
+      <a href="{% url 'business:loans' %}" class="btn btn-ghost btn-sm">{% if loans.count %}{% translate "View all" %}{% else %}{% translate "Add loan" %}{% endif %}{% include "partials/icon.html" with name="arrow-right" %}</a>
+    </div>
+    {% if loans.overdue %}
+    <div class="card-body !pb-0"><div class="callout" data-tone="critical">{% include "partials/icon.html" with name="alert" %}<p>{% blocktranslate with amount=loans.overdue|bdt %}{{ amount }} overdue — pay it soon to avoid fines.{% endblocktranslate %}</p></div></div>
+    {% endif %}
+    {% if loans.due_soon %}
+    <ul class="ledger">
+      {% for p, l in loans.due_soon %}
+      <li class="ledger-row">
+        {% include "business/loans/partials/lender_icon.html" with kind=l.lender.kind %}
+        <div class="ledger-main">
+          <p class="ledger-title"><a href="{% url 'business:loan_detail' l.pk %}" class="hover:underline">{{ l.title }}</a></p>
+          <p class="ledger-meta">{{ p.due|date:"j M Y" }}{% with d=p.due|days_until %} · {% if d < 0 %}{% translate "overdue" %}{% elif d == 0 %}{% translate "today" %}{% else %}{% blocktranslate count counter=d %}in {{ counter }} day{% plural %}in {{ counter }} days{% endblocktranslate %}{% endif %}{% endwith %}</p>
+        </div>
+        <div class="ledger-end">
+          <span class="ledger-amount" {% if p.status == "overdue" %}data-tone="critical"{% endif %}>{{ p.remaining|bdt }}</span>
+          <a href="{% url 'business:loan_detail' l.pk %}?pay=1" class="btn btn-soft btn-sm ml-2">{% translate "Pay" %}</a>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% elif loans.count %}
+    <div class="card-body"><p class="help">{% translate "Nothing due in the next 30 days." %}</p></div>
+    {% endif %}
+  </section>
+  {% endif %}
+
   {% if recent_activity %}
   <section class="card">
     <div class="card-header">

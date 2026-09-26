@@ -53,6 +53,7 @@ LOCAL_APPS = [
     "apps.goals",
     # ── Business module (fully separate; see apps/business/) ──
     "apps.business.core",
+    "apps.business.loans",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS

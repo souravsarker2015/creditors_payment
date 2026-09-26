@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% if kind == "payment" %}{% translate "Payment" %}{% else %}{% translate "Extra borrowing" %}{% endif %} | {{ loan.title }}{% endblock %}
+{% block content %}
+<div class="page-narrow">
+  <header class="page-header">
+    <div>
+      <a href="{% url 'business:loan_detail' loan.pk %}?tab=history" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{{ loan.title }}</a>
+      <h1 class="page-title">{% if txn %}{% if kind == "payment" %}{% translate "Edit payment" %}{% else %}{% translate "Edit extra borrowing" %}{% endif %}{% else %}{% if kind == "payment" %}{% translate "Record a payment" %}{% else %}{% translate "Borrow more on this loan" %}{% endif %}{% endif %}</h1>
+    </div>
+  </header>
+  <form method="post" class="card" novalidate>
+    {% csrf_token %}
+    <div class="card-body form-stack">
+      {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+      {% if kind == "payment" %}
+      <div class="form-grid form-grid-2">
+        {% with field=form.interest %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.principal %}{% include "partials/field.html" %}{% endwith %}
+      </div>
+      <div class="form-grid form-grid-2">
+        {% with field=form.date %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.paid_via %}{% include "partials/field.html" %}{% endwith %}
+      </div>
+      <div class="form-grid form-grid-2">
+        {% with field=form.charges %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.reference %}{% include "partials/field.html" %}{% endwith %}
+      </div>
+      {% else %}
+      {% with field=form.principal %}{% include "partials/field.html" %}{% endwith %}
+      <div class="form-grid form-grid-2">
+        {% with field=form.date %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.paid_via %}{% include "partials/field.html" %}{% endwith %}
+      </div>
+      {% with field=form.reference %}{% include "partials/field.html" %}{% endwith %}
+      {% endif %}
+      {% with field=form.notes %}{% include "partials/field.html" %}{% endwith %}
+    </div>
+    <div class="card-footer form-actions">
+      <a href="{% url 'business:loan_detail' loan.pk %}?tab=history" class="btn btn-ghost btn-lg">{% translate "Cancel" %}</a>
+      <button type="submit" class="btn btn-primary btn-lg">{% include "partials/icon.html" with name="check" %}{% translate "Save" %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

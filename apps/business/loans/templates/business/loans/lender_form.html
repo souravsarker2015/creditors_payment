@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% if lender %}{% translate "Edit lender" %}{% else %}{% translate "Add lender" %}{% endif %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-narrow">
+  <header class="page-header">
+    <div>
+      <a href="{% url 'business:lenders' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Lenders" %}</a>
+      <h1 class="page-title">{% if lender %}{% translate "Edit lender" %}{% else %}{% translate "Add lender" %}{% endif %}</h1>
+    </div>
+  </header>
+  <form method="post" class="card" novalidate>
+    {% csrf_token %}
+    <div class="card-body form-stack">
+      <div class="form-grid form-grid-2">
+        {% with field=form.name %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.kind %}{% include "partials/field.html" %}{% endwith %}
+      </div>
+      <div class="form-grid form-grid-2">
+        {% with field=form.phone %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.address %}{% include "partials/field.html" %}{% endwith %}
+      </div>
+      {% with field=form.notes %}{% include "partials/field.html" %}{% endwith %}
+    </div>
+    <div class="card-footer form-actions">
+      <a href="{% url 'business:lenders' %}" class="btn btn-ghost btn-lg">{% translate "Cancel" %}</a>
+      <button type="submit" class="btn btn-primary btn-lg">{% include "partials/icon.html" with name="check" %}{% translate "Save" %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,128 @@
+{% load i18n business %}
+<template x-teleport="body">
+<div class="modal-root" x-show="modal === 'pay'" x-cloak @keydown.escape.window="modal = null" role="dialog" aria-modal="true" aria-labelledby="m-pay-title">
+  <div class="modal-backdrop" x-show="modal === 'pay'" x-transition.opacity.duration.200ms @click="modal = null"></div>
+  <form method="post" action="{% url 'business:loan_pay' loan.pk %}" class="modal" x-show="modal === 'pay'" x-trap.noscroll="modal === 'pay'"
+        x-data="loanPay({{ chips_json }}, '{{ interest_due_now }}')" @pay-pick.window="pickKey($event.detail)"
+        x-transition:enter="modal-enter" x-transition:enter-start="modal-enter-start" x-transition:enter-end="modal-enter-end"
+        x-transition:leave="modal-leave" x-transition:leave-start="modal-enter-end" x-transition:leave-end="modal-enter-start">
+    {% csrf_token %}
+    <div class="modal-header">
+      <span class="modal-icon">{% include "partials/icon.html" with name="check" %}</span>
+      <div class="min-w-0 flex-1">
+        <h2 class="modal-title" id="m-pay-title">{% translate "Record a payment" %}</h2>
+        <p class="modal-subtitle">{{ loan.title }}{% if n %} · {% blocktranslate with date=n.due|date:"j M" %}next due {{ date }}{% endblocktranslate %}{% endif %}</p>
+      </div>
+      <button type="button" class="icon-btn" @click="modal = null" aria-label="{% translate 'Close' %}">{% include "partials/icon.html" with name="x" %}</button>
+    </div>
+    <div class="modal-body form-stack">
+      <div class="field">
+        <label class="label" for="pay-total">{% translate "Amount paid" %}<span class="req" aria-hidden="true">*</span></label>
+        <div class="input-affix has-start"><span class="affix affix-start" aria-hidden="true">৳</span>
+          <input id="pay-total" x-ref="total" x-model="total" @input="manual = false; split()" type="number" inputmode="decimal" min="0" step="any" class="form-input loan-pay-total" placeholder="0"></div>
+        {% if chips %}
+        <div class="loan-pay-chips">
+          {% for c in chips %}
+          <button type="button" class="loan-pay-chip" :class="picked === '{{ c.key }}' && 'is-on'" @click="pick({{ forloop.counter0 }})">
+            <span>{{ c.label }}</span><strong>{{ c.text }}</strong>
+          </button>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="loan-split">
+        <p class="loan-split-head">
+          <span>{% translate "How it's split" %}</span>
+          <span class="loan-split-mode" x-text="manual ? '{{ _('Your split')|escapejs }}' : '{{ _('Interest first, then the loan')|escapejs }}'"></span>
+        </p>
+        <div class="form-grid form-grid-2">
+          <div class="field">
+            <label class="label" for="pay-interest">{% translate "Interest" %}</label>
+            <div class="input-affix has-start"><span class="affix affix-start" aria-hidden="true">৳</span>
+              <input id="pay-interest" name="pay-interest" x-model="interest" @input="manual = true; sum()" type="number" inputmode="decimal" min="0" step="any" class="form-input" placeholder="0"></div>
+          </div>
+          <div class="field">
+            <label class="label" for="pay-principal">{% translate "Towards the loan" %}</label>
+            <div class="input-affix has-start"><span class="affix affix-start" aria-hidden="true">৳</span>
+              <input id="pay-principal" name="pay-principal" x-model="principal" @input="manual = true; sum()" type="number" inputmode="decimal" min="0" step="any" class="form-input" placeholder="0"></div>
+          </div>
+        </div>
+        <p class="help" x-show="Number(principal) > {{ s.outstanding|stringformat:'s' }}" x-cloak>{% blocktranslate with amount=s.outstanding|bdt %}That's more than the {{ amount }} still owed.{% endblocktranslate %}</p>
+      </div>
+
+      <div class="form-grid form-grid-2">
+        <div class="field">
+          <label class="label" for="pay-date">{% translate "Date" %}</label>
+          <input id="pay-date" name="pay-date" type="date" class="form-input" value="{% now 'Y-m-d' %}" min="{{ loan.taken_on|date:'Y-m-d' }}" required>
+        </div>
+        <div class="field">
+          <label class="label" for="pay-via">{% translate "Paid by" %}</label>
+          <select id="pay-via" name="pay-paid_via" class="form-input">{% for value, label in pay_form.fields.paid_via.choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select>
+        </div>
+      </div>
+
+      <div x-data="{ more: false }">
+        <button type="button" class="btn btn-ghost btn-sm !px-0" @click="more = !more" x-show="!more">{% include "partials/icon.html" with name="plus" %}{% translate "Fees, fine, receipt no. or note" %}</button>
+        <div class="form-stack" x-show="more" x-cloak>
+          <div class="form-grid form-grid-2">
+            <div class="field">
+              <label class="label" for="pay-charges">{% translate "Fees / fines" %}<span class="opt">{% translate "(optional)" %}</span></label>
+              <div class="input-affix has-start"><span class="affix affix-start" aria-hidden="true">৳</span>
+                <input id="pay-charges" name="pay-charges" x-model="charges" type="number" inputmode="decimal" min="0" step="any" class="form-input" placeholder="0"></div>
+            </div>
+            <div class="field">
+              <label class="label" for="pay-ref">{% translate "Receipt / reference" %}<span class="opt">{% translate "(optional)" %}</span></label>
+              <input id="pay-ref" name="pay-reference" class="form-input" maxlength="60">
+            </div>
+          </div>
+          <div class="field">
+            <label class="label" for="pay-notes">{% translate "Note" %}<span class="opt">{% translate "(optional)" %}</span></label>
+            <input id="pay-notes" name="pay-notes" class="form-input" maxlength="300">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" @click="modal = null">{% translate "Cancel" %}</button>
+      <button type="submit" class="btn btn-primary" :disabled="!(Number(interest) + Number(principal) + Number(charges) > 0)">
+        {% include "partials/icon.html" with name="check" %}<span>{% translate "Save payment" %}</span><span x-show="grand() > 0" x-text="'· ' + money(grand())"></span>
+      </button>
+    </div>
+  </form>
+</div>
+</template>
+
+<script>
+document.addEventListener("alpine:init", function () {
+  Alpine.data("loanPay", function (chips, interestDue) {
+    return {
+      chips: chips, dueNow: Number(interestDue) || 0, cap: Number(interestDue) || 0, picked: null,
+      total: "", interest: "", principal: "", charges: "", manual: false,
+      init() {
+        if (this.chips.length) this.pick(0);
+        this.$watch("modal", v => { if (v === "pay") setTimeout(() => this.$refs.total.select(), 80); });
+      },
+      pick(i) {
+        var c = this.chips[i];
+        this.picked = c.key; this.total = Number(c.amount); this.manual = false;
+        this.cap = Number(c.interest); this.split();
+      },
+      pickKey(key) { var i = this.chips.findIndex(c => c.key === key); if (i >= 0) this.pick(i); },
+      r2(n) { return Math.round(n * 100) / 100; },
+      // Interest is settled first (what the chip says is interest, or all interest
+      // due up to the next date), the rest goes towards the loan.
+      split() {
+        if (this.manual) return;
+        var t = Number(this.total) || 0, chip = this.chips.find(c => c.key === this.picked);
+        if (!chip || Number(chip.amount) !== t) { this.picked = null; this.cap = this.dueNow; }
+        var i = Math.min(t, this.cap);
+        this.interest = t ? this.r2(i) : ""; this.principal = t ? this.r2(t - i) : "";
+      },
+      sum() { this.total = this.r2((Number(this.interest) || 0) + (Number(this.principal) || 0)); this.picked = null; },
+      grand() { return (Number(this.interest) || 0) + (Number(this.principal) || 0) + (Number(this.charges) || 0); },
+      money(n) { return "৳" + n.toLocaleString("en-IN", { maximumFractionDigits: 2 }); },
+    };
+  });
+});
+</script>

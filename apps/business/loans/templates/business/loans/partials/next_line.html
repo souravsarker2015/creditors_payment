@@ -1,0 +1,7 @@
+{% load i18n business %}{% comment %}The loan card's "what's next" line. Needs: loan, s.{% endcomment %}{% with n=s.next_due %}
+{% if loan.closed_on %}<p class="loan-next" data-tone="muted">{% include "business/partials/icon.html" with name="lock" %}{% blocktranslate with date=loan.closed_on|date:"j M Y" %}Closed on {{ date }}{% endblocktranslate %}</p>
+{% elif s.overdue_periods %}<p class="loan-next" data-tone="critical">{% include "partials/icon.html" with name="alert" %}{% blocktranslate count counter=s.overdue_periods|length with amount=s.overdue|bdt %}{{ amount }} overdue ({{ counter }} payment){% plural %}{{ amount }} overdue ({{ counter }} payments){% endblocktranslate %}</p>
+{% elif s.is_paid_off %}<p class="loan-next" data-tone="good">{% include "partials/icon.html" with name="check" %}{% translate "Fully paid — ready to close" %}</p>
+{% elif n %}<p class="loan-next" data-tone="{% if n.status == 'due_soon' %}warn{% else %}info{% endif %}">{% include "partials/icon.html" with name="calendar" %}{% blocktranslate with amount=n.remaining|bdt date=n.due|date:"j M" %}Next: {{ amount }} on {{ date }}{% endblocktranslate %}{% if n.due == s.today %} · {% translate "today" %}{% else %} · {% blocktranslate count counter=n.due|days_until %}in {{ counter }} day{% plural %}in {{ counter }} days{% endblocktranslate %}{% endif %}</p>
+{% else %}<p class="loan-next" data-tone="info">{% include "partials/icon.html" with name="clock" %}{% translate "No fixed payments — pay back any time" %}</p>{% endif %}
+{% endwith %}

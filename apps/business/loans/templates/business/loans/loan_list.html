@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% translate "Loans" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "Loans" %}</h1>
+      <p class="page-subtitle">{% translate "Money the farm has borrowed from banks, NGOs, samities or people — what's owed, what's due next, and how much the interest costs." %}</p>
+    </div>
+    <div class="page-actions">
+      <a href="{% url 'business:lenders' %}" class="btn btn-secondary">{% include "business/partials/icon.html" with name="bank" %}{% translate "Lenders" %}</a>
+      <a href="{% url 'business:loan_add' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add loan" %}</a>
+    </div>
+  </header>
+
+  {% if summary.count or counts.closed or counts.deleted %}
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="min-w-0">
+        <p class="hero-label inline-flex items-center">{% translate "Still owed" %}{% translate "The loan amount not yet paid back, across all open loans. Interest owed is shown separately." as info_text %}{% include "partials/info.html" with text=info_text %}</p>
+        <p class="hero-value">{{ summary.outstanding|bdt }}</p>
+        <p class="hero-sub">{% blocktranslate count counter=summary.count %}{{ counter }} open loan{% plural %}{{ counter }} open loans{% endblocktranslate %} · {% blocktranslate with amount=summary.interest_year|bdt %}{{ amount }} interest paid this year{% endblocktranslate %}</p>
+      </div>
+      {% if summary.next %}{% with p=summary.next.0 l=summary.next.1 %}
+      <a href="{% url 'business:loan_detail' l.pk %}?pay=1" class="loan-hero-next">
+        <span class="loan-hero-next-label">{% if p.status == "overdue" %}{% translate "Overdue since" %}{% else %}{% translate "Next payment" %}{% endif %} · {{ p.due|date:"j M" }}</span>
+        <strong>{{ p.remaining|bdt }}</strong>
+        <span class="loan-hero-next-sub">{{ l.title }}</span>
+      </a>
+      {% endwith %}{% endif %}
+    </div>
+  </section>
+
+  {% if summary.overdue %}
+  <div class="callout" data-tone="critical">
+    {% include "partials/icon.html" with name="alert" %}
+    <div>
+      <p class="callout-title">{% blocktranslate with amount=summary.overdue|bdt count counter=summary.overdue_loans %}{{ amount }} overdue on {{ counter }} loan{% plural %}{{ amount }} overdue on {{ counter }} loans{% endblocktranslate %}</p>
+      <p>{% translate "Late payments usually mean fines and more interest. Overdue loans are listed first." %}</p>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="flex flex-wrap items-center gap-3">
+    <nav class="seg" aria-label="{% translate 'Filter by status' %}">
+      <a href="?status=active{% if lender %}&lender={{ lender.pk }}{% endif %}" class="seg-item {% if status == 'active' %}is-active{% endif %}">{% translate "Open" %} <span class="seg-count">{{ counts.active }}</span></a>
+      <a href="?status=closed{% if lender %}&lender={{ lender.pk }}{% endif %}" class="seg-item {% if status == 'closed' %}is-active{% endif %}">{% translate "Closed" %} <span class="seg-count">{{ counts.closed }}</span></a>
+      {% if counts.deleted %}<a href="?status=deleted" class="seg-item {% if status == 'deleted' %}is-active{% endif %}">{% translate "Deleted" %} <span class="seg-count">{{ counts.deleted }}</span></a>{% endif %}
+    </nav>
+    {% if lender %}<span class="chip"><span><b>{% translate "Lender" %}:</b> {{ lender.name }}</span><a href="?status={{ status }}" class="chip-x" aria-label="{% translate 'Show all lenders' %}">{% include "partials/icon.html" with name="x" %}</a></span>{% endif %}
+  </div>
+  {% endif %}
+
+  {% if rows %}
+  <div class="card-grid card-grid-3">
+    {% for loan, s in rows %}
+    <article class="card entity loan-card{% if s.overdue_periods and not loan.closed_on %} is-overdue{% endif %}{% if loan.closed_on %} is-inactive{% endif %}">
+      <div class="entity-head">
+        {% include "business/loans/partials/lender_icon.html" with kind=loan.lender.kind %}
+        <div class="min-w-0 flex-1">
+          <h3 class="entity-name"><a href="{% url 'business:loan_detail' loan.pk %}">{{ loan.title }}</a></h3>
+          <p class="entity-meta">{% if loan.name %}{{ loan.lender.name }} · {% endif %}{{ loan.lender.get_kind_display }}</p>
+        </div>
+      </div>
+
+      <div>
+        <p class="entity-figure-label">{% translate "Still owed" %}</p>
+        <p class="budget-figure !mb-2"><strong>{{ s.outstanding|bdt }}</strong> <span>{% blocktranslate with amount=s.borrowed|bdt %}of {{ amount }}{% endblocktranslate %}</span></p>
+        <div class="meter" data-tone="good" aria-label="{% blocktranslate with pct=s.progress %}{{ pct }}% paid back{% endblocktranslate %}"><span style="width: {{ s.progress }}%"></span></div>
+        <p class="loan-terms">{% include "business/loans/partials/terms_line.html" %}</p>
+      </div>
+
+      {% include "business/loans/partials/next_line.html" %}
+
+      <div class="entity-foot">
+        {% if status == "deleted" %}
+          {% if biz_can.delete %}<form method="post" action="{% url 'business:loan_restore' loan.pk %}">{% csrf_token %}<button class="btn btn-secondary btn-sm">{% include "partials/icon.html" with name="restore" %}{% translate "Restore" %}</button></form>{% endif %}
+        {% else %}
+          {% if not loan.closed_on and not s.is_paid_off %}<a href="{% url 'business:loan_detail' loan.pk %}?pay=1" class="btn btn-primary btn-sm">{% include "partials/icon.html" with name="check" %}{% translate "Record payment" %}</a>{% endif %}
+          <a href="{% url 'business:loan_detail' loan.pk %}" class="btn btn-secondary btn-sm">{% translate "Details" %}{% include "partials/icon.html" with name="arrow-right" %}</a>
+        {% endif %}
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  {% elif status == "active" %}
+  <div class="empty">
+    <div class="empty-icon">{% include "business/partials/icon.html" with name="banknotes" %}</div>
+    <h3 class="empty-title">{% if counts.closed %}{% translate "No open loans — the farm is debt-free!" %}{% else %}{% translate "Keep track of the farm's loans" %}{% endif %}</h3>
+    <p class="empty-text">{% translate "A bank loan, an NGO kisti or money from a relative — add it once with its interest and payment terms, and you'll always know what's due and when." %}</p>
+    <a href="{% url 'business:loan_add' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add loan" %}</a>
+  </div>
+  {% else %}
+  <div class="empty is-plain"><p class="empty-text">{% if status == "closed" %}{% translate "No closed loans yet." %}{% else %}{% translate "Nothing deleted." %}{% endif %}</p></div>
+  {% endif %}
+</div>
+{% endblock %}

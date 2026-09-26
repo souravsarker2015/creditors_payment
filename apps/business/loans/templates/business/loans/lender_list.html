@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% translate "Lenders" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <a href="{% url 'business:loans' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Loans" %}</a>
+      <h1 class="page-title">{% translate "Lenders" %}</h1>
+      <p class="page-subtitle">{% translate "Banks, NGOs, samities and people the farm borrows from." %}</p>
+    </div>
+    <div class="page-actions"><a href="{% url 'business:lender_add' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add lender" %}</a></div>
+  </header>
+
+  <nav class="seg" aria-label="{% translate 'Filter by status' %}">
+    <a href="{% url 'business:lenders' %}" class="seg-item {% if not show_deleted %}is-active{% endif %}">{% translate "In use" %}</a>
+    <a href="?show=deleted" class="seg-item {% if show_deleted %}is-active{% endif %}">{% translate "Deleted" %} <span class="seg-count">{{ deleted_count }}</span></a>
+  </nav>
+
+  {% if lenders %}
+  <section class="card">
+    <ul class="ledger">
+      {% for l in lenders %}
+      <li class="ledger-row">
+        {% include "business/loans/partials/lender_icon.html" with kind=l.kind %}
+        <div class="ledger-main">
+          <p class="ledger-title">{{ l.name }}</p>
+          <p class="ledger-meta">{{ l.get_kind_display }}{% if l.address %} · {{ l.address }}{% endif %}{% if l.phone %} · <a href="tel:{{ l.phone }}" class="hover:underline">{{ l.phone }}</a>{% endif %}</p>
+        </div>
+        <div class="ledger-end">
+          {% if show_deleted %}
+            {% if biz_can.delete %}<form method="post" action="{% url 'business:lender_restore' l.pk %}">{% csrf_token %}<button class="btn btn-secondary btn-sm">{% include "partials/icon.html" with name="restore" %}{% translate "Restore" %}</button></form>{% endif %}
+          {% else %}
+            {% if l.stats.count %}<a href="{% url 'business:loans' %}?lender={{ l.pk }}" class="lender-owed" data-tip="{% translate 'Show these loans' %}"><strong>{{ l.stats.outstanding|bdt }}</strong><span>{% blocktranslate count counter=l.stats.count %}{{ counter }} open loan{% plural %}{{ counter }} open loans{% endblocktranslate %}</span></a>
+            {% else %}<a href="{% url 'business:loan_add' %}?lender={{ l.pk }}" class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="plus" %}{% translate "Loan" %}</a>{% endif %}
+            <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
+              <button type="button" class="icon-btn" @click="open = !open" :aria-expanded="open" aria-haspopup="true" aria-label="{% translate 'More actions' %}">{% include "partials/icon.html" with name="dots" %}</button>
+              <div class="menu{% if forloop.last and not forloop.first %} menu-up{% endif %}" x-show="open" x-cloak x-transition.opacity.scale.95.duration.100ms role="menu">
+                <a href="{% url 'business:loan_add' %}?lender={{ l.pk }}" class="menu-item" role="menuitem">{% include "partials/icon.html" with name="plus" %}{% translate "New loan from them" %}</a>
+                <a href="{% url 'business:lender_edit' l.pk %}" class="menu-item" role="menuitem">{% include "partials/icon.html" with name="edit" %}{% translate "Edit" %}</a>
+                {% if biz_can.delete %}
+                <form method="post" action="{% url 'business:lender_delete' l.pk %}" data-confirm="{% translate 'Delete this lender? You can restore it from Deleted.' %}">{% csrf_token %}
+                  <button type="submit" class="menu-item is-danger" role="menuitem">{% include "partials/icon.html" with name="trash" %}{% translate "Delete" %}</button>
+                </form>
+                {% endif %}
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% else %}
+  <div class="empty{% if show_deleted %} is-plain{% endif %}">
+    {% if show_deleted %}<p class="empty-text">{% translate "Nothing deleted." %}</p>
+    {% else %}
+    <div class="empty-icon">{% include "business/partials/icon.html" with name="bank" %}</div>
+    <h3 class="empty-title">{% translate "No lenders yet" %}</h3>
+    <p class="empty-text">{% translate "Add them here, or straight from the loan form with the + button." %}</p>
+    <a href="{% url 'business:lender_add' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add lender" %}</a>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

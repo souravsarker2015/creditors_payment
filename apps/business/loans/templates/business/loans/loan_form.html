@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% if loan %}{% translate "Edit loan" %}{% else %}{% translate "Add loan" %}{% endif %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page">
+  <header class="page-header">
+    <div>
+      <a href="{% if loan %}{% url 'business:loan_detail' loan.pk %}{% else %}{% url 'business:loans' %}{% endif %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% if loan %}{{ loan.title }}{% else %}{% translate "Loans" %}{% endif %}</a>
+      <h1 class="page-title">{% if loan %}{% translate "Edit loan" %}{% else %}{% translate "Add loan" %}{% endif %}</h1>
+      <p class="page-subtitle">{% translate "Fill in the terms the way the lender explained them. The payment plan on the right updates as you type." %}</p>
+    </div>
+  </header>
+
+  <form method="post" novalidate class="loan-form-grid" x-data="loanForm('{% url 'business:loan_preview' %}')" x-ref="form"
+        @input.debounce.350ms="refresh()" @change="refresh()">
+    {% csrf_token %}
+    <div class="stack min-w-0">
+      {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+
+      <!-- 1. Lender -->
+      <section class="card">
+        <div class="card-header"><h2 class="card-title loan-step"><span>1</span>{% translate "Who lent the money?" %}</h2></div>
+        <div class="card-body form-stack">
+          {% with field=form.lender %}
+          <div class="field{% if field.errors %} has-error{% endif %}" x-data="quickAdd('{% url 'business:lender_quick_add' %}', '{{ field.id_for_label }}')">
+            <label class="label" for="{{ field.id_for_label }}">{{ field.label }}<span class="req" aria-hidden="true">*</span></label>
+            <div class="input-group">
+              {{ field }}
+              <button type="button" class="input-addon-btn" @click="show($el)" aria-haspopup="dialog" aria-label="{% translate 'Add a new lender' %}" data-tip="{% translate 'Add a new lender' %}">{% include "partials/icon.html" with name="plus" %}</button>
+            </div>
+            {% if not field.field.queryset.exists %}<p class="help">{% translate "No lenders yet — tap + to add the bank or person." %}</p>{% endif %}
+            {% for error in field.errors %}<p class="field-error">{% include "partials/icon.html" with name="alert" %}{{ error }}</p>{% endfor %}
+            {% include "partials/quick_add_modal.html" with qa=lender_qa %}
+          </div>
+          {% endwith %}
+          <div class="form-grid form-grid-2">
+            {% with field=form.name %}{% include "partials/field.html" %}{% endwith %}
+            {% with field=form.account_no %}{% include "partials/field.html" %}{% endwith %}
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Amount -->
+      <section class="card">
+        <div class="card-header"><h2 class="card-title loan-step"><span>2</span>{% translate "How much, and when?" %}</h2></div>
+        <div class="card-body form-grid form-grid-2">
+          {% with field=form.principal %}
+          <div class="field{% if field.errors %} has-error{% endif %}">
+            <label class="label" for="{{ field.id_for_label }}">{{ field.label }}<span class="req" aria-hidden="true">*</span></label>
+            <div class="input-affix has-start"><span class="affix affix-start" aria-hidden="true">৳</span>{{ field }}</div>
+            <p class="help" x-show="words" x-text="words"></p>
+            {% for error in field.errors %}<p class="field-error">{% include "partials/icon.html" with name="alert" %}{{ error }}</p>{% endfor %}
+          </div>
+          {% endwith %}
+          {% with field=form.taken_on %}{% include "partials/field.html" %}{% endwith %}
+        </div>
+      </section>
+
+      <!-- 3. Interest -->
+      <section class="card">
+        <div class="card-header"><h2 class="card-title loan-step"><span>3</span>{% translate "Interest" %}</h2></div>
+        <div class="card-body form-stack">
+          <div class="field{% if form.rate.errors %} has-error{% endif %}">
+            <label class="label" for="{{ form.rate.id_for_label }}">{{ form.rate.label }}</label>
+            <div class="loan-rate-row">
+              <div class="input-affix has-end">{{ form.rate }}<span class="affix affix-end" aria-hidden="true">%</span></div>
+              <div class="seg seg-block" role="radiogroup" aria-label="{{ form.rate_period.label }}">
+                {% for value, label in form.rate_period.field.choices %}
+                <label class="seg-item"><input type="radio" class="sr-only" name="{{ form.rate_period.html_name }}" value="{{ value }}" x-model="ratePeriod">{{ label }}</label>
+                {% endfor %}
+              </div>
+            </div>
+            <div class="chip-row mt-2">
+              <button type="button" class="chip" :class="rate == 0 && 'is-on'" @click="setRate(0)">{% translate "Interest-free" %}</button>
+              <p class="help !mt-0" x-show="perLakh" x-text="perLakh"></p>
+            </div>
+            {% for error in form.rate.errors %}<p class="field-error">{% include "partials/icon.html" with name="alert" %}{{ error }}</p>{% endfor %}
+          </div>
+
+          <fieldset class="field" x-show="rate > 0" x-transition.opacity>
+            <legend class="label">{{ form.method.label }}</legend>
+            <div class="option-cards option-cards-2">
+              <label class="option-card">
+                <input type="radio" name="{{ form.method.html_name }}" value="reducing" x-model="method">
+                <span class="option-card-title">{% translate "On what's still owed" %}</span>
+                <span class="option-card-text">{% translate "Interest shrinks as you pay the loan back. Banks usually work this way." %}</span>
+              </label>
+              <label class="option-card">
+                <input type="radio" name="{{ form.method.html_name }}" value="flat" x-model="method">
+                <span class="option-card-title">{% translate "On the full amount (flat)" %}</span>
+                <span class="option-card-text">{% translate "Same interest on the whole loan until the end. Common with NGOs and private lenders." %}</span>
+              </label>
+            </div>
+          </fieldset>
+        </div>
+      </section>
+
+      <!-- 4. Payments -->
+      <section class="card">
+        <div class="card-header"><h2 class="card-title loan-step"><span>4</span>{% translate "How is it paid back?" %}</h2></div>
+        <div class="card-body form-stack">
+          <div class="field{% if form.every.errors %} has-error{% endif %}">
+            <span class="label">{% translate "Payments are made" %}</span>
+            <div class="chip-row" role="radiogroup">
+              <template x-for="f in presets" :key="f.key">
+                <button type="button" class="chip chip-choice" :class="freqKey() === f.key && 'is-on'" :aria-pressed="(freqKey() === f.key).toString()" @click="setFreq(f)" x-text="f.label"></button>
+              </template>
+              <button type="button" class="chip chip-choice" :class="custom && 'is-on'" :aria-pressed="custom.toString()" @click="custom = true; $nextTick(() => $refs.every.focus())">{% translate "Other…" %}</button>
+            </div>
+            <div class="loan-every" x-show="custom" x-cloak>
+              <span>{% translate "Every" %}</span>
+              <input type="number" name="{{ form.every.html_name }}" x-model.number="every" x-ref="every" min="1" max="60" inputmode="numeric" class="form-input" aria-label="{% translate 'Every how many' %}">
+              <select name="{{ form.every_unit.html_name }}" x-model="unit" class="form-input" aria-label="{% translate 'Months or weeks' %}">
+                {% for value, label in form.every_unit.field.choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+              </select>
+            </div>
+            {% for error in form.every.errors %}<p class="field-error">{% include "partials/icon.html" with name="alert" %}{{ error }}</p>{% endfor %}
+          </div>
+
+          <fieldset class="field">
+            <legend class="label">{{ form.repayment.label }}</legend>
+            <div class="option-cards">
+              <label class="option-card">
+                <input type="radio" name="{{ form.repayment.html_name }}" value="end" x-model="repayment">
+                <span class="option-card-title">{% translate "All at the end" %}</span>
+                <span class="option-card-text">{% translate "Pay only the interest on each date, and the loan amount at the end — or whenever you can." %}</span>
+              </label>
+              <label class="option-card">
+                <input type="radio" name="{{ form.repayment.html_name }}" value="emi" x-model="repayment">
+                <span class="option-card-title">{% translate "Equal instalments (EMI / kisti)" %}</span>
+                <span class="option-card-text">{% translate "The same amount every time, interest included. Most bank and NGO loans." %}</span>
+              </label>
+              <label class="option-card">
+                <input type="radio" name="{{ form.repayment.html_name }}" value="equal" x-model="repayment">
+                <span class="option-card-title">{% translate "A part every time" %}</span>
+                <span class="option-card-text">{% translate "The loan amount is split equally over the payments, plus that period's interest — so payments get smaller." %}</span>
+              </label>
+            </div>
+          </fieldset>
+        </div>
+      </section>
+
+      <!-- 5. Dates -->
+      <section class="card">
+        <div class="card-header"><h2 class="card-title loan-step"><span>5</span>{% translate "For how long?" %}</h2></div>
+        <div class="card-body form-stack">
+          <div class="chip-row">
+            <template x-for="d in durations" :key="d.months">
+              <button type="button" class="chip chip-choice" :class="duration === d.months && 'is-on'" @click="setDuration(d.months)" x-text="d.label"></button>
+            </template>
+            <button type="button" class="chip chip-choice" x-show="repayment === 'end'" :class="openEnded && 'is-on'" @click="setDuration(0)">{% translate "No fixed end" %}</button>
+          </div>
+          <div class="form-grid form-grid-2">
+            <div x-ref="maturity">{% with field=form.maturity %}{% include "partials/field.html" %}{% endwith %}</div>
+            {% with field=form.first_due %}{% include "partials/field.html" %}{% endwith %}
+          </div>
+          <p class="help !mt-2">{% translate "Leave the first payment date empty if it's one period after you received the money." %}</p>
+          {% with field=form.notes %}{% include "partials/field.html" %}{% endwith %}
+        </div>
+      </section>
+    </div>
+
+    <!-- Phones: the plan is at the bottom, so keep its headline figure in view -->
+    <button type="button" class="loan-plan-bar" x-show="p.ok && !planVisible" x-cloak x-transition.opacity
+            @click="$refs.plan.scrollIntoView({ behavior: 'smooth', block: 'start' })">
+      <span>{% translate "Your payment plan" %}</span>
+      <strong><span x-text="p.instalment"></span> <small x-text="(p.frequency || '').toLowerCase()"></small></strong>
+      {% include "partials/icon.html" with name="chevron-down" %}
+    </button>
+
+    <!-- Live plan -->
+    <aside class="loan-preview-col">
+      <section class="card loan-preview" aria-live="polite" x-ref="plan">
+        <div class="card-header"><h2 class="card-title">{% translate "Your payment plan" %}</h2><span class="spin-dot" x-show="busy" x-cloak></span></div>
+        <div class="card-body">
+          <template x-if="!p.ok">
+            <p class="loan-preview-empty">{% include "business/partials/icon.html" with name="banknotes" %}<span x-text="hint()"></span></p>
+          </template>
+          <template x-if="p.ok">
+            <div>
+              <p class="loan-preview-label" x-text="repayment === 'end' ? '{{ _('Interest each time')|escapejs }}' : '{{ _('Each payment')|escapejs }}'"></p>
+              <p class="loan-preview-big"><span x-text="p.instalment"></span> <small x-text="(p.frequency || '').toLowerCase()"></small></p>
+              <p class="loan-preview-sub" x-show="!p.open_ended"><span x-text="p.count"></span> {% translate "payments" %} · <span x-text="p.first_due"></span> → <span x-text="p.last_due"></span></p>
+              <p class="loan-preview-sub" x-show="p.open_ended">{% translate "Until you pay the loan back. First on" %} <span x-text="p.first_due"></span></p>
+              <dl class="loan-preview-dl" x-show="!p.open_ended">
+                <div><dt>{% translate "Total interest" %}</dt><dd x-text="p.interest"></dd></div>
+                <div><dt>{% translate "You'll pay back in all" %}</dt><dd x-text="p.total"></dd></div>
+              </dl>
+              <table class="loan-mini">
+                <thead><tr><th>{% translate "Date" %}</th><th>{% translate "Interest" %}</th><th>{% translate "Loan" %}</th><th>{% translate "Pay" %}</th></tr></thead>
+                <tbody>
+                  <template x-for="r in p.rows" :key="r.due"><tr><td x-text="r.due"></td><td x-text="r.interest"></td><td x-text="r.principal"></td><td x-text="r.total"></td></tr></template>
+                </tbody>
+              </table>
+              <p class="help !mt-2" x-show="p.count > 4">{% translate "The full schedule is on the loan's page after you save." %}</p>
+            </div>
+          </template>
+        </div>
+        <div class="card-footer form-actions">
+          <a href="{% if loan %}{% url 'business:loan_detail' loan.pk %}{% else %}{% url 'business:loans' %}{% endif %}" class="btn btn-ghost btn-lg">{% translate "Cancel" %}</a>
+          <button type="submit" class="btn btn-primary btn-lg">{% include "partials/icon.html" with name="check" %}{% if loan %}{% translate "Save changes" %}{% else %}{% translate "Save loan" %}{% endif %}</button>
+        </div>
+      </section>
+    </aside>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("alpine:init", function () {
+  Alpine.data("loanForm", function (url) {
+    var presets = [
+      { key: "month-1", every: 1, unit: "month", label: "{{ _('Monthly')|escapejs }}" },
+      { key: "month-2", every: 2, unit: "month", label: "{{ _('Every 2 months')|escapejs }}" },
+      { key: "month-3", every: 3, unit: "month", label: "{{ _('Quarterly')|escapejs }}" },
+      { key: "month-6", every: 6, unit: "month", label: "{{ _('Half-yearly')|escapejs }}" },
+      { key: "month-12", every: 12, unit: "month", label: "{{ _('Yearly')|escapejs }}" },
+      { key: "week-1", every: 1, unit: "week", label: "{{ _('Weekly')|escapejs }}" },
+    ];
+    return {
+      presets: presets,
+      durations: [
+        { months: 6, label: "{{ _('6 months')|escapejs }}" }, { months: 12, label: "{{ _('1 year')|escapejs }}" },
+        { months: 24, label: "{{ _('2 years')|escapejs }}" }, { months: 36, label: "{{ _('3 years')|escapejs }}" },
+        { months: 60, label: "{{ _('5 years')|escapejs }}" },
+      ],
+      rate: "{{ form.rate.value|default_if_none:''|stringformat:'s'|escapejs }}",
+      ratePeriod: "{{ form.rate_period.value|default:'year' }}",
+      method: "{{ form.method.value|default:'reducing' }}",
+      repayment: "{{ form.repayment.value|default:'end' }}",
+      every: {{ form.every.value|default:1 }},
+      unit: "{{ form.every_unit.value|default:'month' }}",
+      custom: false, duration: null, openEnded: false, planVisible: false,
+      principal: "", words: "", perLakh: "", busy: false, p: { ok: false }, timer: null,
+
+      init() {
+        this.custom = !presets.some(f => f.every == this.every && f.unit === this.unit);
+        var rateEl = document.getElementById("{{ form.rate.id_for_label }}");
+        rateEl.addEventListener("input", () => { this.rate = rateEl.value; this.describeRate(); });
+        var amountEl = document.getElementById("{{ form.principal.id_for_label }}");
+        amountEl.addEventListener("input", () => { this.principal = amountEl.value; this.describeAmount(); });
+        this.principal = amountEl.value;
+        this.openEnded = !document.getElementById("{{ form.maturity.id_for_label }}").value && this.repayment === "end";
+        document.getElementById("{{ form.taken_on.id_for_label }}").addEventListener("change", () => { if (this.duration) this.setDuration(this.duration); });
+        this.$watch("repayment", v => { if (v !== "end" && this.openEnded) { this.openEnded = false; this.setDuration(12); } });
+        this.describeAmount(); this.describeRate();
+        if ("IntersectionObserver" in window) {
+          new IntersectionObserver(e => { this.planVisible = e[0].isIntersecting; }).observe(this.$refs.plan);
+        }
+        this.$nextTick(() => this.refresh());
+      },
+      freqKey() { return this.custom ? null : this.unit + "-" + this.every; },
+      setFreq(f) { this.custom = false; this.every = f.every; this.unit = f.unit; this.$nextTick(() => this.refresh()); },
+      setRate(v) {
+        var el = document.getElementById("{{ form.rate.id_for_label }}");
+        el.value = v; this.rate = String(v); this.describeRate(); this.refresh();
+      },
+      setDuration(months) {
+        this.duration = months || null; this.openEnded = months === 0;
+        var taken = document.getElementById("{{ form.taken_on.id_for_label }}").value;
+        var el = document.getElementById("{{ form.maturity.id_for_label }}");
+        var value = "";
+        if (months && taken) {
+          var d = new Date(taken + "T00:00:00"), day = d.getDate();
+          d.setDate(1); d.setMonth(d.getMonth() + months);
+          d.setDate(Math.min(day, new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()));
+          value = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+        }
+        if (el._flatpickr) el._flatpickr.setDate(value || null, false); else el.value = value;
+        this.refresh();
+      },
+      bd(n) { return "৳" + Math.round(n).toLocaleString("en-IN"); },
+      describeAmount() {
+        var n = parseFloat(this.principal);
+        if (!n) { this.words = ""; return; }
+        var crore = 1e7, lakh = 1e5;
+        if (n >= crore) this.words = (n / crore).toLocaleString("en-IN", { maximumFractionDigits: 2 }) + " {{ _('crore')|escapejs }}";
+        else if (n >= lakh) this.words = (n / lakh).toLocaleString("en-IN", { maximumFractionDigits: 2 }) + " {{ _('lakh')|escapejs }}";
+        else this.words = "";
+        this.describeRate();
+      },
+      // Private lenders often say "৳2,000 per lakh a month": show that and the yearly %.
+      describeRate() {
+        var r = parseFloat(this.rate);
+        if (!r) { this.perLakh = ""; return; }
+        var monthly = this.ratePeriod === "month" ? r : r / 12;
+        var text = "= " + this.bd(monthly * 1000) + " {{ _('per lakh a month')|escapejs }}";
+        if (this.ratePeriod === "month") text += " · " + (+(r * 12).toFixed(2)) + "% {{ _('a year')|escapejs }}";
+        var n = parseFloat(this.principal);
+        if (n) text += " · " + this.bd(n * monthly / 100) + " {{ _('a month on this loan')|escapejs }}";
+        this.perLakh = text;
+      },
+      hint() {
+        if (!parseFloat(this.principal)) return "{{ _('Enter the amount to see the plan.')|escapejs }}";
+        var errs = this.p.errors || {};
+        var first = Object.keys(errs).filter(k => k !== "lender")[0];
+        return first ? errs[first][0] : "{{ _('Working it out…')|escapejs }}";
+      },
+      refresh() {
+        this.describeRate();
+        clearTimeout(this.timer);
+        this.timer = setTimeout(() => {
+          var form = this.$refs.form, body = new FormData(form);
+          if (!parseFloat(body.get("principal"))) { this.p = { ok: false }; return; }
+          this.busy = true;
+          fetch(url, { method: "POST", body: body, credentials: "same-origin", headers: { "X-Requested-With": "XMLHttpRequest" } })
+            .then(r => r.json()).then(data => { this.p = data; this.busy = false; })
+            .catch(() => { this.busy = false; });
+        }, 150);
+      },
+    };
+  });
+});
+</script>
+{% endblock %}

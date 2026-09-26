@@ -64,3 +64,19 @@ def qty(quantity, unit, base=None):
     if base_unit is None:
         return main
     return format_html('{} <span class="qty-base">= {} {}</span>', main, num(Decimal(quantity) * unit.factor), base_unit.symbol)
+
+
+@register.filter
+def days_until(value):
+    """Whole days from today to a date (negative when it's past)."""
+    from datetime import date
+
+    return (value - date.today()).days if value else 0
+
+
+@register.filter
+def absolute(value):
+    try:
+        return abs(value)
+    except TypeError:
+        return value

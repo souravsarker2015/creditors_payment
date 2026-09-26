@@ -1,0 +1,1 @@
+{% load i18n business %}{% comment %}"12% per year · Monthly · EMI". Needs: loan.{% endcomment %}{% if loan.rate %}{{ loan.rate|num }}% {{ loan.get_rate_period_display }}{% else %}{% translate "Interest-free" %}{% endif %} · {{ loan.frequency_label }} · {{ loan.get_repayment_display }}

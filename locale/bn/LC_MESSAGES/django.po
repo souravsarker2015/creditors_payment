@@ -4230,3 +4230,785 @@ msgstr "%(name)s-এর অনুমতি হালনাগাদ হয়ে
 
 msgid "Fish Farm Business"
 msgstr "মাছের খামার ব্যবসা"
+
+msgid "Loans"
+msgstr "ঋণ"
+
+msgid "%(amount)s still owed on %(counter)s loan"
+msgid_plural "%(amount)s still owed on %(counter)s loans"
+msgstr[0] "%(counter)sটি ঋণে এখনো বাকি %(amount)s"
+msgstr[1] "%(counter)sটি ঋণে এখনো বাকি %(amount)s"
+
+msgid "No open loans."
+msgstr "কোনো চলমান ঋণ নেই।"
+
+msgid "Add loan"
+msgstr "ঋণ যোগ করুন"
+
+msgid "%(amount)s overdue — pay it soon to avoid fines."
+msgstr "%(amount)s বকেয়া — জরিমানা এড়াতে দ্রুত পরিশোধ করুন।"
+
+msgid "overdue"
+msgstr "বকেয়া"
+
+msgid "today"
+msgstr "আজ"
+
+msgid "Pay"
+msgstr "পরিশোধ"
+
+msgid "Nothing due in the next 30 days."
+msgstr "আগামী ৩০ দিনে কিছু দিতে হবে না।"
+
+msgid "Money"
+msgstr "টাকা-পয়সা"
+
+msgid "e.g. Sonali Bank, BRAC, Karim bhai"
+msgstr "যেমন: সোনালী ব্যাংক, ব্র্যাক, করিম ভাই"
+
+msgid "e.g. Jessore branch"
+msgstr "যেমন: যশোর শাখা"
+
+msgid "“%(name)s” is already in your lenders."
+msgstr "“%(name)s” আগে থেকেই আপনার ঋণদাতার তালিকায় আছে।"
+
+msgid "e.g. New pond digging"
+msgstr "যেমন: নতুন পুকুর খনন"
+
+msgid "Choose who lent the money…"
+msgstr "কে টাকা ধার দিয়েছে বেছে নিন…"
+
+msgid "The end date has to be after the date you received the money."
+msgstr "শেষ তারিখ টাকা পাওয়ার তারিখের পরে হতে হবে।"
+
+msgid "The first payment has to be after the date you received the money."
+msgstr "প্রথম কিস্তি টাকা পাওয়ার তারিখের পরে হতে হবে।"
+
+msgid "The first payment can't be after the end date."
+msgstr "প্রথম কিস্তি শেষ তারিখের পরে হতে পারে না।"
+
+msgid "Pick an end date so the loan can be split into payments."
+msgstr "ঋণটি কিস্তিতে ভাগ করতে একটি শেষ তারিখ দিন।"
+
+msgid "Enter how much you paid."
+msgstr "কত টাকা দিয়েছেন লিখুন।"
+
+msgid "This is before the loan was taken."
+msgstr "এটি ঋণ নেওয়ার আগের তারিখ।"
+
+msgid "Extra amount received"
+msgstr "অতিরিক্ত যত টাকা পেয়েছেন"
+
+msgid "Received by"
+msgstr "যেভাবে পেয়েছেন"
+
+msgid "Enter the amount."
+msgstr "টাকার পরিমাণ লিখুন।"
+
+msgid "Pick a date after the loan was taken. To change the starting rate, edit the loan."
+msgstr "ঋণ নেওয়ার পরের একটি তারিখ দিন। শুরুর হার বদলাতে ঋণটি সম্পাদনা করুন।"
+
+msgid "There's already a rate change on this date."
+msgstr "এই তারিখে আগেই একটি হার পরিবর্তন আছে।"
+
+msgid "Closed on"
+msgstr "বন্ধের তারিখ"
+
+msgid "NGO / microfinance"
+msgstr "এনজিও / ক্ষুদ্রঋণ"
+
+msgid "Samity / co-operative"
+msgstr "সমিতি / সমবায়"
+
+msgid "Person"
+msgstr "ব্যক্তি"
+
+msgid "Branch / address"
+msgstr "শাখা / ঠিকানা"
+
+msgid "per year"
+msgstr "বছরে"
+
+msgid "per month"
+msgstr "মাসে"
+
+msgid "On what's still owed"
+msgstr "বাকি টাকার উপর"
+
+msgid "On the full amount (flat)"
+msgstr "পুরো টাকার উপর (ফ্ল্যাট)"
+
+msgid "All at the end"
+msgstr "সব শেষে একবারে"
+
+msgid "A part every time"
+msgstr "প্রতিবার কিছু অংশ"
+
+msgid "Equal instalments (EMI)"
+msgstr "সমান কিস্তি (EMI)"
+
+msgid "months"
+msgstr "মাস"
+
+msgid "weeks"
+msgstr "সপ্তাহ"
+
+msgid "Lender"
+msgstr "ঋণদাতা"
+
+msgid "Purpose"
+msgstr "উদ্দেশ্য"
+
+msgid "Loan / account number"
+msgstr "ঋণ / হিসাব নম্বর"
+
+msgid "Amount borrowed"
+msgstr "ঋণের পরিমাণ"
+
+msgid "Date received"
+msgstr "টাকা পাওয়ার তারিখ"
+
+msgid "Interest rate"
+msgstr "সুদের হার"
+
+msgid "Rate is"
+msgstr "হার"
+
+msgid "Interest is charged"
+msgstr "সুদ ধরা হয়"
+
+msgid "Pay every"
+msgstr "পরিশোধ প্রতি"
+
+msgid "Loan amount is paid back"
+msgstr "আসল টাকা ফেরত দেওয়া হয়"
+
+msgid "First payment date"
+msgstr "প্রথম কিস্তির তারিখ"
+
+msgid "End date"
+msgstr "শেষ তারিখ"
+
+msgid "Every %(n)s week"
+msgid_plural "Every %(n)s weeks"
+msgstr[0] "প্রতি %(n)s সপ্তাহে"
+msgstr[1] "প্রতি %(n)s সপ্তাহে"
+
+msgid "Every %(n)s month"
+msgid_plural "Every %(n)s months"
+msgstr[0] "প্রতি %(n)s মাসে"
+msgstr[1] "প্রতি %(n)s মাসে"
+
+msgid "Extra borrowing"
+msgstr "অতিরিক্ত ঋণ"
+
+msgid "Cash"
+msgstr "নগদ"
+
+msgid "Bank transfer"
+msgstr "ব্যাংক ট্রান্সফার"
+
+msgid "bKash / Nagad"
+msgstr "বিকাশ / নগদ"
+
+msgid "Cheque"
+msgstr "চেক"
+
+msgid "Fees / fines"
+msgstr "ফি / জরিমানা"
+
+msgid "Paid by"
+msgstr "যেভাবে দিয়েছেন"
+
+msgid "Receipt / reference"
+msgstr "রসিদ / রেফারেন্স"
+
+msgid "From"
+msgstr "থেকে"
+
+msgid "New rate"
+msgstr "নতুন হার"
+
+msgid "Edit lender"
+msgstr "ঋণদাতা সম্পাদনা"
+
+msgid "Add lender"
+msgstr "ঋণদাতা যোগ করুন"
+
+msgid "Lenders"
+msgstr "ঋণদাতা"
+
+msgid "Banks, NGOs, samities and people the farm borrows from."
+msgstr "যেসব ব্যাংক, এনজিও, সমিতি ও ব্যক্তির কাছ থেকে খামার ঋণ নেয়।"
+
+msgid "Show these loans"
+msgstr "এই ঋণগুলো দেখুন"
+
+msgid "New loan from them"
+msgstr "তাদের কাছ থেকে নতুন ঋণ"
+
+msgid "Delete this lender? You can restore it from Deleted."
+msgstr "এই ঋণদাতা মুছবেন? 'মুছে ফেলা' থেকে ফিরিয়ে আনতে পারবেন।"
+
+msgid "No lenders yet"
+msgstr "এখনো কোনো ঋণদাতা নেই"
+
+msgid "Add them here, or straight from the loan form with the + button."
+msgstr "এখানে যোগ করুন, অথবা ঋণের ফর্ম থেকে সরাসরি + বোতাম দিয়ে।"
+
+msgid "Lender changed the rate"
+msgstr "ঋণদাতা হার বদলেছে"
+
+msgid "Download schedule (Excel)"
+msgstr "কিস্তির তালিকা ডাউনলোড (এক্সেল)"
+
+msgid "Reopen loan"
+msgstr "ঋণ আবার চালু করুন"
+
+msgid "Close loan"
+msgstr "ঋণ বন্ধ করুন"
+
+msgid "Delete this loan with its payments? You can restore it from Deleted."
+msgstr "পরিশোধসহ এই ঋণ মুছবেন? 'মুছে ফেলা' থেকে ফিরিয়ে আনতে পারবেন।"
+
+msgid "Delete loan"
+msgstr "ঋণ মুছুন"
+
+msgid "This loan is deleted. Restore it to work with it again."
+msgstr "এই ঋণ মুছে ফেলা হয়েছে। আবার কাজ করতে ফিরিয়ে আনুন।"
+
+msgid "Closed on %(date)s. The full history is kept here."
+msgstr "%(date)s তারিখে বন্ধ হয়েছে। পুরো ইতিহাস এখানে রাখা আছে।"
+
+msgid "%(amount)s of the loan was left unpaid when it was closed."
+msgstr "বন্ধ করার সময় ঋণের %(amount)s অপরিশোধিত ছিল।"
+
+msgid "%(amount)s overdue — %(counter)s payment"
+msgid_plural "%(amount)s overdue — %(counter)s payments"
+msgstr[0] "%(amount)s বকেয়া — %(counter)sটি কিস্তি"
+msgstr[1] "%(amount)s বকেয়া — %(counter)sটি কিস্তি"
+
+msgid "The oldest was due on %(date)s."
+msgstr "সবচেয়ে পুরনোটি %(date)s তারিখে দেওয়ার কথা ছিল।"
+
+msgid "Pay now"
+msgstr "এখনই পরিশোধ"
+
+msgid "Mark every overdue payment as paid on its due date? Use this when you are entering an older loan that you have been paying all along."
+msgstr "সব বকেয়া কিস্তি তাদের নির্ধারিত তারিখে পরিশোধিত হিসেবে লিখবেন? পুরনো কোনো ঋণ লিখছেন যা নিয়মিত দিয়ে আসছেন, তখন এটি ব্যবহার করুন।"
+
+msgid "For older loans: records each overdue payment as paid on its due date"
+msgstr "পুরনো ঋণের জন্য: প্রতিটি বকেয়া কিস্তি নির্ধারিত তারিখে পরিশোধিত হিসেবে লেখে"
+
+msgid "Already paid these"
+msgstr "এগুলো দেওয়া হয়ে গেছে"
+
+msgid "This loan is fully paid!"
+msgstr "এই ঋণ পুরোপুরি পরিশোধ হয়েছে!"
+
+msgid "Close it to move it out of your open loans. Its history stays."
+msgstr "চলমান ঋণের তালিকা থেকে সরাতে এটি বন্ধ করুন। ইতিহাস থেকে যাবে।"
+
+msgid "of %(amount)s borrowed"
+msgstr "%(amount)s ঋণের মধ্যে"
+
+#, python-format
+msgid "%(pct)s%% paid back · %(amount)s"
+msgstr "%(pct)s%% ফেরত দেওয়া হয়েছে · %(amount)s"
+
+msgid "To settle today"
+msgstr "আজ শোধ করতে"
+
+msgid "The loan still owed plus the interest built up until today. Ask the lender for their exact figure before closing — some add fees."
+msgstr "বাকি আসল টাকা আর আজ পর্যন্ত জমা সুদ। বন্ধ করার আগে ঋণদাতার কাছ থেকে সঠিক অঙ্ক জেনে নিন — কেউ কেউ ফি যোগ করে।"
+
+msgid "incl. %(amount)s interest"
+msgstr "%(amount)s সুদসহ"
+
+msgid "Oldest unpaid"
+msgstr "সবচেয়ে পুরনো বাকি"
+
+msgid "%(counter)s day late"
+msgid_plural "%(counter)s days late"
+msgstr[0] "%(counter)s দিন দেরি"
+msgstr[1] "%(counter)s দিন দেরি"
+
+msgid "Loan closed"
+msgstr "ঋণ বন্ধ"
+
+msgid "Pay back any time"
+msgstr "যেকোনো সময় ফেরত দিন"
+
+msgid "Interest paid so far"
+msgstr "এ পর্যন্ত দেওয়া সুদ"
+
+msgid "+ %(amount)s fees / fines"
+msgstr "+ %(amount)s ফি / জরিমানা"
+
+msgid "%(amount)s paid in all"
+msgstr "মোট দেওয়া %(amount)s"
+
+msgid "Interest still to come"
+msgstr "সামনে আরও সুদ"
+
+msgid "Interest on the rest of the plan if every payment is made on time. Paying early lowers it."
+msgstr "প্রতিটি কিস্তি সময়মতো দিলে বাকি সময়ের সুদ। আগে দিলে এটি কমে।"
+
+msgid "%(amount)s over the whole loan"
+msgstr "পুরো ঋণে %(amount)s"
+
+msgid "Interest owed now"
+msgstr "এখন পর্যন্ত বাকি সুদ"
+
+msgid "No end date — interest runs until it's paid back"
+msgstr "শেষ তারিখ নেই — ফেরত না দেওয়া পর্যন্ত সুদ চলবে"
+
+msgid "changed"
+msgstr "বদলেছে"
+
+msgid "Schedule"
+msgstr "কিস্তির তালিকা"
+
+msgid "Terms"
+msgstr "শর্ত"
+
+msgid "Payment schedule"
+msgstr "কিস্তির তালিকা"
+
+msgid "%(counter)s payment, %(left)s left"
+msgid_plural "%(counter)s payments, %(left)s left"
+msgstr[0] "%(counter)sটি কিস্তি, বাকি %(left)sটি"
+msgstr[1] "%(counter)sটি কিস্তি, বাকি %(left)sটি"
+
+msgid "Interest dates so far, and the next one"
+msgstr "এ পর্যন্ত সুদের তারিখগুলো এবং পরেরটি"
+
+msgid "Download"
+msgstr "ডাউনলোড"
+
+msgid "Owed after"
+msgstr "এরপর বাকি"
+
+msgid "Interest %(i)s · Loan %(l)s"
+msgstr "সুদ %(i)s · আসল %(l)s"
+
+msgid "Show %(counter)s more payment"
+msgid_plural "Show all %(counter)s more payments"
+msgstr[0] "আরও %(counter)sটি কিস্তি দেখুন"
+msgstr[1] "আরও %(counter)sটি কিস্তি দেখুন"
+
+msgid "Show fewer"
+msgstr "কম দেখান"
+
+msgid "No fixed payments on this loan — it's interest-free with no end date. Record payments whenever you pay something back."
+msgstr "এই ঋণে নির্দিষ্ট কিস্তি নেই — সুদমুক্ত এবং শেষ তারিখ নেই। যখনই কিছু ফেরত দেবেন, লিখে রাখুন।"
+
+msgid "The end date has passed; %(amount)s more interest has built up since then on what's still owed."
+msgstr "শেষ তারিখ পার হয়ে গেছে; তারপর থেকে বাকি টাকার উপর আরও %(amount)s সুদ জমেছে।"
+
+msgid "Payments and borrowing"
+msgstr "পরিশোধ ও ঋণ গ্রহণ"
+
+msgid "Borrow more"
+msgstr "আরও ঋণ নিন"
+
+msgid "Borrowed more"
+msgstr "আরও ঋণ নেওয়া"
+
+msgid "Interest %(amount)s"
+msgstr "সুদ %(amount)s"
+
+msgid "Loan %(amount)s"
+msgstr "আসল %(amount)s"
+
+msgid "Fees %(amount)s"
+msgstr "ফি %(amount)s"
+
+msgid "Delete this entry? The schedule will be worked out again."
+msgstr "এই এন্ট্রি মুছবেন? কিস্তির তালিকা আবার হিসাব করা হবে।"
+
+msgid "Loan received"
+msgstr "ঋণ পাওয়া"
+
+msgid "Loan terms"
+msgstr "ঋণের শর্ত"
+
+msgid "Payments"
+msgstr "কিস্তি"
+
+msgid "First payment"
+msgstr "প্রথম কিস্তি"
+
+msgid "Rate changes"
+msgstr "হার পরিবর্তন"
+
+msgid "Banks sometimes change the rate. Interest from that date on uses the new one."
+msgstr "ব্যাংক মাঝে মাঝে হার বদলায়। সেই তারিখ থেকে নতুন হারে সুদ ধরা হবে।"
+
+msgid "From the start · %(date)s"
+msgstr "শুরু থেকে · %(date)s"
+
+msgid "From %(date)s"
+msgstr "%(date)s থেকে"
+
+msgid "Remove this rate change?"
+msgstr "এই হার পরিবর্তন বাদ দেবেন?"
+
+msgid "New rate (%(period)s)"
+msgstr "নতুন হার (%(period)s)"
+
+msgid "Edit loan"
+msgstr "ঋণ সম্পাদনা"
+
+msgid "Fill in the terms the way the lender explained them. The payment plan on the right updates as you type."
+msgstr "ঋণদাতা যেভাবে বলেছে সেভাবে শর্তগুলো লিখুন। লেখার সাথে সাথে পাশের কিস্তির পরিকল্পনা বদলাবে।"
+
+msgid "Who lent the money?"
+msgstr "কে টাকা ধার দিয়েছে?"
+
+msgid "Add a new lender"
+msgstr "নতুন ঋণদাতা যোগ করুন"
+
+msgid "No lenders yet — tap + to add the bank or person."
+msgstr "এখনো কোনো ঋণদাতা নেই — ব্যাংক বা ব্যক্তি যোগ করতে + চাপুন।"
+
+msgid "How much, and when?"
+msgstr "কত টাকা, কবে?"
+
+msgid "Interest-free"
+msgstr "সুদমুক্ত"
+
+msgid "Interest shrinks as you pay the loan back. Banks usually work this way."
+msgstr "ঋণ ফেরত দেওয়ার সাথে সাথে সুদ কমে। ব্যাংক সাধারণত এভাবে হিসাব করে।"
+
+msgid "Same interest on the whole loan until the end. Common with NGOs and private lenders."
+msgstr "শেষ পর্যন্ত পুরো ঋণের উপর একই সুদ। এনজিও ও ব্যক্তিগত ঋণে বেশি দেখা যায়।"
+
+msgid "How is it paid back?"
+msgstr "কীভাবে ফেরত দেবেন?"
+
+msgid "Payments are made"
+msgstr "কিস্তি দিতে হয়"
+
+msgid "Other…"
+msgstr "অন্যান্য…"
+
+msgid "Every"
+msgstr "প্রতি"
+
+msgid "Every how many"
+msgstr "কত পর পর"
+
+msgid "Months or weeks"
+msgstr "মাস না সপ্তাহ"
+
+msgid "Pay only the interest on each date, and the loan amount at the end — or whenever you can."
+msgstr "প্রতি তারিখে শুধু সুদ দিন, আর আসল টাকা শেষে — বা যখন পারেন।"
+
+msgid "Equal instalments (EMI / kisti)"
+msgstr "সমান কিস্তি (EMI)"
+
+msgid "The same amount every time, interest included. Most bank and NGO loans."
+msgstr "প্রতিবার একই টাকা, সুদসহ। বেশিরভাগ ব্যাংক ও এনজিও ঋণ এমন।"
+
+msgid "The loan amount is split equally over the payments, plus that period's interest — so payments get smaller."
+msgstr "আসল টাকা কিস্তিগুলোতে সমান ভাগ হয়, সাথে সেই সময়ের সুদ — তাই কিস্তি ধীরে ধীরে কমে।"
+
+msgid "For how long?"
+msgstr "কত দিনের জন্য?"
+
+msgid "No fixed end"
+msgstr "নির্দিষ্ট শেষ নেই"
+
+msgid "Leave the first payment date empty if it's one period after you received the money."
+msgstr "টাকা পাওয়ার এক কিস্তি-সময় পরে প্রথম কিস্তি হলে তারিখটি খালি রাখুন।"
+
+msgid "Your payment plan"
+msgstr "আপনার কিস্তির পরিকল্পনা"
+
+msgid "Interest each time"
+msgstr "প্রতিবার সুদ"
+
+msgid "Each payment"
+msgstr "প্রতি কিস্তি"
+
+msgid "payments"
+msgstr "কিস্তি"
+
+msgid "Until you pay the loan back. First on"
+msgstr "ঋণ ফেরত না দেওয়া পর্যন্ত। প্রথমটি"
+
+msgid "Total interest"
+msgstr "মোট সুদ"
+
+msgid "You'll pay back in all"
+msgstr "মোট ফেরত দেবেন"
+
+msgid "Loan"
+msgstr "আসল"
+
+msgid "The full schedule is on the loan's page after you save."
+msgstr "সেভ করার পর ঋণের পাতায় পুরো কিস্তির তালিকা পাবেন।"
+
+msgid "Save loan"
+msgstr "ঋণ সেভ করুন"
+
+msgid "Every 2 months"
+msgstr "প্রতি ২ মাসে"
+
+msgid "Quarterly"
+msgstr "ত্রৈমাসিক"
+
+msgid "Half-yearly"
+msgstr "ষাণ্মাসিক"
+
+msgid "1 year"
+msgstr "১ বছর"
+
+msgid "2 years"
+msgstr "২ বছর"
+
+msgid "3 years"
+msgstr "৩ বছর"
+
+msgid "5 years"
+msgstr "৫ বছর"
+
+msgid "crore"
+msgstr "কোটি"
+
+msgid "lakh"
+msgstr "লাখ"
+
+msgid "per lakh a month"
+msgstr "(প্রতি লাখে, প্রতি মাসে)"
+
+msgid "a year"
+msgstr "বার্ষিক"
+
+msgid "a month on this loan"
+msgstr "(এই ঋণে প্রতি মাসে)"
+
+msgid "Enter the amount to see the plan."
+msgstr "পরিকল্পনা দেখতে টাকার পরিমাণ লিখুন।"
+
+msgid "Working it out…"
+msgstr "হিসাব করা হচ্ছে…"
+
+msgid "Money the farm has borrowed from banks, NGOs, samities or people — what's owed, what's due next, and how much the interest costs."
+msgstr "খামার যে ব্যাংক, এনজিও, সমিতি বা ব্যক্তির কাছ থেকে ঋণ নিয়েছে — কত বাকি, পরের কিস্তি কবে, আর সুদে কত খরচ হচ্ছে।"
+
+msgid "The loan amount not yet paid back, across all open loans. Interest owed is shown separately."
+msgstr "সব চলমান ঋণে এখনো ফেরত না দেওয়া আসল টাকা। বাকি সুদ আলাদা দেখানো হয়।"
+
+msgid "%(counter)s open loan"
+msgid_plural "%(counter)s open loans"
+msgstr[0] "%(counter)sটি চলমান ঋণ"
+msgstr[1] "%(counter)sটি চলমান ঋণ"
+
+msgid "%(amount)s interest paid this year"
+msgstr "এ বছর %(amount)s সুদ দেওয়া হয়েছে"
+
+msgid "Overdue since"
+msgstr "বকেয়া যেদিন থেকে"
+
+msgid "%(amount)s overdue on %(counter)s loan"
+msgid_plural "%(amount)s overdue on %(counter)s loans"
+msgstr[0] "%(counter)sটি ঋণে %(amount)s বকেয়া"
+msgstr[1] "%(counter)sটি ঋণে %(amount)s বকেয়া"
+
+msgid "Late payments usually mean fines and more interest. Overdue loans are listed first."
+msgstr "দেরিতে দিলে সাধারণত জরিমানা ও বাড়তি সুদ লাগে। বকেয়া ঋণগুলো আগে দেখানো হয়েছে।"
+
+msgid "Open"
+msgstr "চলমান"
+
+msgid "Closed"
+msgstr "বন্ধ"
+
+msgid "Show all lenders"
+msgstr "সব ঋণদাতা দেখুন"
+
+msgid "of %(amount)s"
+msgstr "%(amount)s এর মধ্যে"
+
+#, python-format
+msgid "%(pct)s%% paid back"
+msgstr "%(pct)s%% ফেরত দেওয়া হয়েছে"
+
+msgid "Record payment"
+msgstr "পরিশোধ লিখুন"
+
+msgid "No open loans — the farm is debt-free!"
+msgstr "কোনো চলমান ঋণ নেই — খামার ঋণমুক্ত!"
+
+msgid "Keep track of the farm's loans"
+msgstr "খামারের ঋণের হিসাব রাখুন"
+
+msgid "A bank loan, an NGO kisti or money from a relative — add it once with its interest and payment terms, and you'll always know what's due and when."
+msgstr "ব্যাংক ঋণ, এনজিওর কিস্তি বা আত্মীয়ের কাছ থেকে টাকা — সুদ ও কিস্তির শর্তসহ একবার লিখুন, তাহলে সবসময় জানবেন কবে কত দিতে হবে।"
+
+msgid "No closed loans yet."
+msgstr "এখনো কোনো বন্ধ ঋণ নেই।"
+
+msgid "Close this loan"
+msgstr "এই ঋণ বন্ধ করুন"
+
+msgid "It moves to Closed with its full history. You can reopen it any time."
+msgstr "পুরো ইতিহাসসহ এটি 'বন্ধ'-এ চলে যাবে। যেকোনো সময় আবার চালু করতে পারবেন।"
+
+msgid "%(amount)s of the loan is still unpaid. To settle it today you'd pay about %(payoff)s — record that payment first, unless the lender has let it go."
+msgstr "ঋণের %(amount)s এখনো বাকি। আজ শোধ করতে প্রায় %(payoff)s লাগবে — ঋণদাতা মাফ না করলে আগে সেই পরিশোধ লিখুন।"
+
+msgid "Part paid · overdue"
+msgstr "আংশিক দেওয়া · বকেয়া"
+
+msgid "Part paid"
+msgstr "আংশিক দেওয়া"
+
+msgid "Closed on %(date)s"
+msgstr "%(date)s তারিখে বন্ধ"
+
+msgid "%(amount)s overdue (%(counter)s payment)"
+msgid_plural "%(amount)s overdue (%(counter)s payments)"
+msgstr[0] "%(amount)s বকেয়া (%(counter)sটি কিস্তি)"
+msgstr[1] "%(amount)s বকেয়া (%(counter)sটি কিস্তি)"
+
+msgid "Fully paid — ready to close"
+msgstr "পুরো পরিশোধ — বন্ধ করা যায়"
+
+msgid "Next: %(amount)s on %(date)s"
+msgstr "পরের কিস্তি: %(date)s, %(amount)s"
+
+msgid "No fixed payments — pay back any time"
+msgstr "নির্দিষ্ট কিস্তি নেই — যেকোনো সময় ফেরত দিন"
+
+msgid "next due %(date)s"
+msgstr "পরের কিস্তি %(date)s"
+
+msgid "Amount paid"
+msgstr "যত টাকা দিয়েছেন"
+
+msgid "How it's split"
+msgstr "কীভাবে ভাগ হলো"
+
+msgid "Your split"
+msgstr "আপনার ভাগ"
+
+msgid "Interest first, then the loan"
+msgstr "আগে সুদ, তারপর আসল"
+
+msgid "That's more than the %(amount)s still owed."
+msgstr "এটি বাকি %(amount)s এর চেয়ে বেশি।"
+
+msgid "Fees, fine, receipt no. or note"
+msgstr "ফি, জরিমানা, রসিদ নম্বর বা নোট"
+
+msgid "Save payment"
+msgstr "পরিশোধ সেভ করুন"
+
+msgid "Same lender and terms. The rest of the schedule is worked out again to include it."
+msgstr "একই ঋণদাতা ও শর্ত। বাকি কিস্তির তালিকা এটিসহ আবার হিসাব হবে।"
+
+msgid "Edit payment"
+msgstr "পরিশোধ সম্পাদনা"
+
+msgid "Edit extra borrowing"
+msgstr "অতিরিক্ত ঋণ সম্পাদনা"
+
+msgid "Record a payment"
+msgstr "পরিশোধ লিখুন"
+
+msgid "Borrow more on this loan"
+msgstr "এই ঋণে আরও টাকা নিন"
+
+msgid "Loan saved. Its payment schedule is ready below."
+msgstr "ঋণ সেভ হয়েছে। নিচে কিস্তির তালিকা তৈরি।"
+
+msgid "Loan updated — the schedule has been worked out again."
+msgstr "ঋণ আপডেট হয়েছে — কিস্তির তালিকা আবার হিসাব করা হয়েছে।"
+
+msgid "New lender"
+msgstr "নতুন ঋণদাতা"
+
+msgid "lender"
+msgstr "ঋণদাতা"
+
+msgid "Next payment"
+msgstr "পরের কিস্তি"
+
+msgid "Everything overdue"
+msgstr "সব বকেয়া"
+
+msgid "Interest owed"
+msgstr "বাকি সুদ"
+
+msgid "Settle the whole loan"
+msgstr "পুরো ঋণ শোধ"
+
+msgid "%(amount)s more borrowed. The schedule now includes it."
+msgstr "আরও %(amount)s ঋণ নেওয়া হলো। কিস্তির তালিকায় এটি যোগ হয়েছে।"
+
+msgid "Payment of %(amount)s saved — the loan is fully paid! You can close it now."
+msgstr "%(amount)s পরিশোধ সেভ হয়েছে — ঋণ পুরোপুরি শোধ! এখন বন্ধ করতে পারেন।"
+
+msgid "Payment of %(amount)s saved. Still owed: %(left)s."
+msgstr "%(amount)s পরিশোধ সেভ হয়েছে। এখনো বাকি: %(left)s।"
+
+msgid "Saved. The schedule has been updated."
+msgstr "সেভ হয়েছে। কিস্তির তালিকা আপডেট হয়েছে।"
+
+msgid "Entry deleted. The schedule has been updated."
+msgstr "এন্ট্রি মুছে ফেলা হয়েছে। কিস্তির তালিকা আপডেট হয়েছে।"
+
+msgid "%(n)s past payments marked as paid on their due dates."
+msgstr "আগের %(n)sটি কিস্তি নির্ধারিত তারিখে পরিশোধিত হিসেবে লেখা হয়েছে।"
+
+#, python-format
+msgid "New rate %(rate)s%% from %(date)s. Interest from that day on uses it."
+msgstr "%(date)s থেকে নতুন হার %(rate)s%%। সেদিন থেকে এই হারে সুদ ধরা হবে।"
+
+msgid "Rate change removed."
+msgstr "হার পরিবর্তন বাদ দেওয়া হয়েছে।"
+
+msgid "Loan reopened."
+msgstr "ঋণ আবার চালু হয়েছে।"
+
+msgid "Loan closed. It's kept under Closed with its full history."
+msgstr "ঋণ বন্ধ হয়েছে। পুরো ইতিহাসসহ 'বন্ধ'-এ রাখা আছে।"
+
+msgid "No."
+msgstr "নং"
+
+msgid "Due date"
+msgstr "নির্ধারিত তারিখ"
+
+msgid "Towards the loan"
+msgstr "আসল বাবদ"
+
+msgid "Total"
+msgstr "মোট"
+
+msgid "Left to pay"
+msgstr "দিতে বাকি"
+
+msgid "Balance after"
+msgstr "এরপর বাকি"
+
+msgid "Due soon"
+msgstr "শিগগির দিতে হবে"
+
+msgid "Upcoming"
+msgstr "আসন্ন"
+
+msgid "Lender saved: %(name)s."
+msgstr "ঋণদাতা সেভ হয়েছে: %(name)s।"
+
+msgid "“%(name)s” added and selected."
+msgstr "“%(name)s” যোগ করে বেছে নেওয়া হয়েছে।"
+
+msgid "%(name)s still has loans. Delete or move those first."
+msgstr "%(name)s এর এখনো ঋণ আছে। আগে সেগুলো মুছুন বা সরান।"
+
+msgid "Another lender is already called “%(name)s”. Rename it first."
+msgstr "“%(name)s” নামে আরেকজন ঋণদাতা আছে। আগে নাম বদলান।"

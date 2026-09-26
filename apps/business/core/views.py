@@ -1,5 +1,6 @@
 import json
 
+from django.apps import apps
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import get_user_model
@@ -39,7 +40,17 @@ def home_view(request):
         "units_json": _units_json(b),
         "recent_activity": AuditLog.objects.filter(business=b).select_related("user")[:5],
         "other_businesses": memberships(request.user).exclude(business=b),
+        "loans": _loans_summary(request),
     })
+
+
+def _loans_summary(request):
+    """Loans card on the home page (only for people who may see finance)."""
+    if not (apps.is_installed("apps.business.loans") and can(request.membership, "view_finance")):
+        return None
+    from apps.business.loans.services import overview
+
+    return overview(request.business)
 
 
 @business_access_required(need_business=False)

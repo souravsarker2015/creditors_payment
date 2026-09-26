@@ -1,0 +1,44 @@
+{% load i18n %}
+<template x-teleport="body">
+<div class="modal-root" x-show="modal === 'topup'" x-cloak @keydown.escape.window="modal = null" role="dialog" aria-modal="true" aria-labelledby="m-top-title">
+  <div class="modal-backdrop" x-show="modal === 'topup'" x-transition.opacity.duration.200ms @click="modal = null"></div>
+  <form method="post" action="{% url 'business:loan_topup' loan.pk %}" class="modal" x-show="modal === 'topup'" x-trap.noscroll="modal === 'topup'"
+        x-transition:enter="modal-enter" x-transition:enter-start="modal-enter-start" x-transition:enter-end="modal-enter-end"
+        x-transition:leave="modal-leave" x-transition:leave-start="modal-enter-end" x-transition:leave-end="modal-enter-start">
+    {% csrf_token %}
+    <div class="modal-header">
+      <span class="modal-icon">{% include "partials/icon.html" with name="arrow-down" %}</span>
+      <div class="min-w-0 flex-1">
+        <h2 class="modal-title" id="m-top-title">{% translate "Borrow more on this loan" %}</h2>
+        <p class="modal-subtitle">{% translate "Same lender and terms. The rest of the schedule is worked out again to include it." %}</p>
+      </div>
+      <button type="button" class="icon-btn" @click="modal = null" aria-label="{% translate 'Close' %}">{% include "partials/icon.html" with name="x" %}</button>
+    </div>
+    <div class="modal-body form-stack">
+      <div class="field">
+        <label class="label" for="top-amount">{% translate "Extra amount received" %}<span class="req" aria-hidden="true">*</span></label>
+        <div class="input-affix has-start"><span class="affix affix-start" aria-hidden="true">৳</span>
+          <input id="top-amount" name="top-principal" type="number" inputmode="decimal" min="1" step="any" class="form-input" placeholder="0" required></div>
+      </div>
+      <div class="form-grid form-grid-2">
+        <div class="field">
+          <label class="label" for="top-date">{% translate "Date" %}</label>
+          <input id="top-date" name="top-date" type="date" class="form-input" value="{% now 'Y-m-d' %}" min="{{ loan.taken_on|date:'Y-m-d' }}" required>
+        </div>
+        <div class="field">
+          <label class="label" for="top-via">{% translate "Received by" %}</label>
+          <select id="top-via" name="top-paid_via" class="form-input">{% for value, label in topup_form.fields.paid_via.choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select>
+        </div>
+      </div>
+      <div class="field">
+        <label class="label" for="top-notes">{% translate "Note" %}<span class="opt">{% translate "(optional)" %}</span></label>
+        <input id="top-notes" name="top-notes" class="form-input" maxlength="300">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" @click="modal = null">{% translate "Cancel" %}</button>
+      <button type="submit" class="btn btn-primary">{% include "partials/icon.html" with name="check" %}{% translate "Save" %}</button>
+    </div>
+  </form>
+</div>
+</template>

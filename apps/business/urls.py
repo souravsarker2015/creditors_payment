@@ -6,4 +6,5 @@ app_name = "business"
 
 urlpatterns = [
     path("", include("apps.business.core.urls")),
+    path("loans/", include("apps.business.loans.urls")),
 ]
