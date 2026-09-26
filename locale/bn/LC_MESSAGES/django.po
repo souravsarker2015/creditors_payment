@@ -5012,3 +5012,629 @@ msgstr "%(name)s এর এখনো ঋণ আছে। আগে সেগু�
 
 msgid "Another lender is already called “%(name)s”. Rename it first."
 msgstr "“%(name)s” নামে আরেকজন ঋণদাতা আছে। আগে নাম বদলান।"
+
+msgid "“%(value)s” already exists."
+msgstr "“%(value)s” আগে থেকেই আছে।"
+
+msgid "Saved: %(name)s."
+msgstr "সেভ হয়েছে: %(name)s।"
+
+msgid "Another one is already called “%(name)s”. Rename it first."
+msgstr "“%(name)s” নামে আরেকটি আছে। আগে নাম বদলান।"
+
+msgid "You don't have permission to add this."
+msgstr "এটি যোগ করার অনুমতি আপনার নেই।"
+
+msgid "Stocking, feeding, sales and baki"
+msgstr "পোনা ছাড়া, খাবার, বিক্রি ও বাকি"
+
+msgid "Coming next to this dashboard."
+msgstr "শিগগির এই ড্যাশবোর্ডে আসছে।"
+
+msgid "Delete this? Records that already use it keep it, and you can restore it from Deleted."
+msgstr "এটি মুছবেন? যেসব হিসাবে এটি আছে সেগুলোতে থেকে যাবে, আর 'মুছে ফেলা' থেকে ফিরিয়ে আনতে পারবেন।"
+
+msgid "Filter"
+msgstr "ফিল্টার"
+
+msgid "Search…"
+msgstr "খুঁজুন…"
+
+msgid "Nothing matches “%(q)s”."
+msgstr "“%(q)s” এর সাথে কিছু মেলেনি।"
+
+msgid "Buy & sell"
+msgstr "কেনা-বেচা"
+
+msgid "Farm setup"
+msgstr "খামারের সেটআপ"
+
+msgid "The lists everything else is built on. Common ones are filled in for you — change, add or remove anything."
+msgstr "যে তালিকাগুলোর উপর বাকি সব হিসাব চলে। সাধারণগুলো আগেই দেওয়া আছে — যা খুশি বদলান, যোগ করুন বা বাদ দিন।"
+
+msgid "Add your ponds"
+msgstr "পুকুর যোগ করুন"
+
+msgid "%(n)s pond"
+msgid_plural "%(n)s ponds"
+msgstr[0] "%(n)sটি পুকুর"
+msgstr[1] "%(n)sটি পুকুর"
+
+msgid "Name, size and whether it's leased."
+msgstr "নাম, আয়তন আর লিজ নেওয়া কি না।"
+
+msgid "Suppliers and feed"
+msgstr "সরবরাহকারী ও খাবার"
+
+msgid "%(n)s supplier"
+msgid_plural "%(n)s suppliers"
+msgstr[0] "%(n)s জন সরবরাহকারী"
+msgstr[1] "%(n)s জন সরবরাহকারী"
+
+msgid "Who you buy feed from, and what you already owe them."
+msgstr "কার কাছ থেকে খাবার কেনেন, আর তাদের কাছে কত বাকি।"
+
+msgid "Markets and buyers"
+msgstr "বাজার ও ক্রেতা"
+
+msgid "%(m)s markets · %(b)s buyers"
+msgstr "%(m)sটি বাজার · %(b)s জন ক্রেতা"
+
+msgid "Where you sell and who buys your fish."
+msgstr "কোথায় বিক্রি করেন আর কে মাছ কেনে।"
+
+msgid "Your farm"
+msgstr "আপনার খামার"
+
+msgid "Ponds"
+msgstr "পুকুর"
+
+msgid "Size, lease and status of each pond"
+msgstr "প্রতিটি পুকুরের আয়তন, লিজ ও অবস্থা"
+
+msgid "Fish species"
+msgstr "মাছের জাত"
+
+msgid "Rui, Katla, Pangas… in English and Bangla"
+msgstr "রুই, কাতলা, পাঙ্গাস… বাংলা ও ইংরেজিতে"
+
+msgid "Feed products"
+msgstr "মাছের খাবার"
+
+msgid "Brand, bag size, price and supplier"
+msgstr "ব্র্যান্ড, বস্তার মাপ, দাম ও সরবরাহকারী"
+
+msgid "Buying and selling"
+msgstr "কেনা-বেচা"
+
+msgid "Suppliers"
+msgstr "সরবরাহকারী"
+
+msgid "Feed dealers, hatcheries, medicine shops"
+msgstr "খাবারের ডিলার, হ্যাচারি, ওষুধের দোকান"
+
+msgid "Buyers"
+msgstr "ক্রেতা"
+
+msgid "Aratdars, paikars and local buyers"
+msgstr "আড়তদার, পাইকার ও স্থানীয় ক্রেতা"
+
+msgid "Markets & aarots"
+msgstr "বাজার ও আড়ত"
+
+msgid "Where you sell and their usual deductions"
+msgstr "কোথায় বিক্রি করেন ও সেখানকার সাধারণ কর্তন"
+
+msgid "Deduction types"
+msgstr "কর্তনের ধরন"
+
+msgid "Commission, labour, khajna, ice…"
+msgstr "কমিশন, শ্রমিক, খাজনা, বরফ…"
+
+msgid "Money and measures"
+msgstr "টাকা ও মাপ"
+
+msgid "Farm, household and personal income and spending"
+msgstr "খামার, সংসার ও ব্যক্তিগত আয়-ব্যয়"
+
+msgid "Accounts"
+msgstr "হিসাব (একাউন্ট)"
+
+msgid "Cash, bank, bKash, Nagad"
+msgstr "নগদ, ব্যাংক, বিকাশ, নগদ"
+
+msgid "kg, mon, piece, decimal, bigha…"
+msgstr "কেজি, মণ, পিস, শতাংশ, বিঘা…"
+
+msgid "e.g. Floating grower 28%"
+msgstr "যেমন: ভাসমান গ্রোয়ার ২৮%"
+
+msgid "e.g. Nourish, Quality, Mega"
+msgstr "যেমন: নারিশ, কোয়ালিটি, মেগা"
+
+msgid "Pick one or more. Add new suppliers under Suppliers."
+msgstr "এক বা একাধিক বেছে নিন। নতুন সরবরাহকারী 'সরবরাহকারী' পাতায় যোগ করুন।"
+
+msgid "Any / not sure"
+msgstr "যেকোনো / নিশ্চিত নই"
+
+msgid "Floating"
+msgstr "ভাসমান"
+
+msgid "Sinking"
+msgstr "ডুবন্ত"
+
+msgid "Powder / mash"
+msgstr "পাউডার / গুঁড়া"
+
+msgid "Nursery"
+msgstr "নার্সারি"
+
+msgid "Starter"
+msgstr "স্টার্টার"
+
+msgid "Grower"
+msgstr "গ্রোয়ার"
+
+msgid "Finisher"
+msgstr "ফিনিশার"
+
+msgid "Brand / company"
+msgstr "ব্র্যান্ড / কোম্পানি"
+
+msgid "Stage"
+msgstr "পর্যায়"
+
+msgid "Protein"
+msgstr "প্রোটিন"
+
+msgid "Bag size"
+msgstr "বস্তার মাপ"
+
+msgid "Bag unit"
+msgstr "বস্তার একক"
+
+msgid "Usual price per bag"
+msgstr "প্রতি বস্তার সাধারণ দাম"
+
+msgid "Bought from"
+msgstr "যার কাছ থেকে কেনা"
+
+msgid "Warn me below (bags)"
+msgstr "এর কম হলে সতর্ক করুন (বস্তা)"
+
+msgid "Low-stock alert once feed stock is tracked."
+msgstr "খাবারের মজুত হিসাব শুরু হলে কম মজুতের সতর্কতা।"
+
+msgid "protein"
+msgstr "প্রোটিন"
+
+msgid "%(size)s %(unit)s bag"
+msgstr "%(size)s %(unit)s বস্তা"
+
+msgid "%(price)s/kg"
+msgstr "%(price)s/কেজি"
+
+msgid "The feeds you buy: bag size, usual price and who sells them. Stock and usage come next."
+msgstr "যে খাবার কেনেন: বস্তার মাপ, সাধারণ দাম ও কে বিক্রি করে। মজুত ও ব্যবহার পরে আসছে।"
+
+msgid "Add feed"
+msgstr "খাবার যোগ করুন"
+
+msgid "No feed products yet"
+msgstr "এখনো কোনো খাবার নেই"
+
+msgid "Add the feeds you use — brand, bag size and price — so purchases and daily feeding are quick to enter."
+msgstr "যে খাবার ব্যবহার করেন তা যোগ করুন — ব্র্যান্ড, বস্তার মাপ ও দাম — তাহলে কেনা ও প্রতিদিনের খাওয়ানো দ্রুত লেখা যাবে।"
+
+msgid "e.g. School fees"
+msgstr "যেমন: স্কুলের বেতন"
+
+msgid "— Main category —"
+msgstr "— মূল ক্যাটাগরি —"
+
+msgid "Put it inside another category (e.g. Children › School fees), or leave as a main category."
+msgstr "অন্য ক্যাটাগরির ভেতরে রাখুন (যেমন: সন্তান › স্কুলের বেতন), অথবা মূল ক্যাটাগরি হিসেবে রাখুন।"
+
+msgid "It has its own sub-categories, so it stays a main category."
+msgstr "এর নিজস্ব উপ-ক্যাটাগরি আছে, তাই এটি মূল ক্যাটাগরিই থাকবে।"
+
+msgid "“%(value)s” already exists here."
+msgstr "“%(value)s” এখানে আগে থেকেই আছে।"
+
+msgid "This category is filled in automatically; its type can't change."
+msgstr "এই ক্যাটাগরি স্বয়ংক্রিয়ভাবে পূরণ হয়; এর ধরন বদলানো যাবে না।"
+
+msgid "e.g. Sonali Bank, bKash personal"
+msgstr "যেমন: সোনালী ব্যাংক, বিকাশ পার্সোনাল"
+
+msgid "Farm business"
+msgstr "খামার ব্যবসা"
+
+msgid "Personal"
+msgstr "ব্যক্তিগত"
+
+msgid "For"
+msgstr "কিসের জন্য"
+
+msgid "Inside"
+msgstr "যার ভেতরে"
+
+msgid "Bank account"
+msgstr "ব্যাংক একাউন্ট"
+
+msgid "Mobile banking (bKash, Nagad…)"
+msgstr "মোবাইল ব্যাংকিং (বিকাশ, নগদ…)"
+
+msgid "Bank / provider"
+msgstr "ব্যাংক / প্রতিষ্ঠান"
+
+msgid "Account / wallet number"
+msgstr "একাউন্ট / ওয়ালেট নম্বর"
+
+msgid "Balance when you start"
+msgstr "শুরুর সময়ের ব্যালান্স"
+
+msgid "As of"
+msgstr "তারিখ অনুযায়ী"
+
+msgid "Use by default"
+msgstr "ডিফল্ট হিসেবে ব্যবহার"
+
+msgid "Picked first when you record money in or out."
+msgstr "টাকা আসা-যাওয়া লেখার সময় এটি আগে বাছাই থাকবে।"
+
+msgid "Default"
+msgstr "ডিফল্ট"
+
+msgid "balance"
+msgstr "ব্যালান্স"
+
+msgid "Filled in automatically from sales"
+msgstr "বিক্রি থেকে স্বয়ংক্রিয়ভাবে পূরণ হয়"
+
+msgid "Add a sub-category"
+msgstr "উপ-ক্যাটাগরি যোগ করুন"
+
+msgid "This category is filled in automatically, so it can't be deleted."
+msgstr "এই ক্যাটাগরি স্বয়ংক্রিয়ভাবে পূরণ হয়, তাই মোছা যাবে না।"
+
+msgid "Group income and spending — for the farm, the household and yourself. Sub-categories keep things tidy."
+msgstr "আয় ও খরচ ভাগ করে রাখুন — খামার, সংসার ও নিজের জন্য। উপ-ক্যাটাগরি দিয়ে গুছিয়ে রাখুন।"
+
+msgid "Add category"
+msgstr "ক্যাটাগরি যোগ করুন"
+
+msgid "No categories"
+msgstr "কোনো ক্যাটাগরি নেই"
+
+msgid "Add categories for what the farm and the family spend and earn."
+msgstr "খামার ও পরিবারের আয়-ব্যয়ের ক্যাটাগরি যোগ করুন।"
+
+msgid "Where the money is: cash in hand, bank accounts, bKash and Nagad."
+msgstr "টাকা কোথায় আছে: হাতে নগদ, ব্যাংক একাউন্ট, বিকাশ ও নগদ।"
+
+msgid "Add account"
+msgstr "একাউন্ট যোগ করুন"
+
+msgid "No accounts yet"
+msgstr "এখনো কোনো একাউন্ট নেই"
+
+msgid "Add your cash box, bank accounts and mobile wallets."
+msgstr "ক্যাশ বাক্স, ব্যাংক একাউন্ট ও মোবাইল ওয়ালেট যোগ করুন।"
+
+msgid "New market"
+msgstr "নতুন বাজার"
+
+msgid "market"
+msgstr "বাজার"
+
+msgid "New deduction type"
+msgstr "নতুন কর্তনের ধরন"
+
+msgid "deduction type"
+msgstr "কর্তনের ধরন"
+
+msgid "e.g. Jatrabari fish aarot"
+msgstr "যেমন: যাত্রাবাড়ী মাছের আড়ত"
+
+msgid "e.g. Ice"
+msgstr "যেমন: বরফ"
+
+msgid "Choose…"
+msgstr "বেছে নিন…"
+
+msgid "Per which unit?"
+msgstr "কোন একক প্রতি?"
+
+msgid "% of the sale"
+msgstr "বিক্রির %"
+
+msgid "Per unit sold"
+msgstr "প্রতি একক বিক্রিতে"
+
+msgid "Fixed per sale"
+msgstr "প্রতি বিক্রিতে নির্দিষ্ট"
+
+msgid "Usually charged"
+msgstr "সাধারণত যেভাবে কাটে"
+
+msgid "Market days"
+msgstr "হাটবার"
+
+msgid "e.g. Every day, or Sat & Tue"
+msgstr "যেমন: প্রতিদিন, বা শনি ও মঙ্গল"
+
+msgid "Distance (km)"
+msgstr "দূরত্ব (কিমি)"
+
+msgid "Deduction"
+msgstr "কর্তন"
+
+msgid "How"
+msgstr "কীভাবে"
+
+msgid "Per"
+msgstr "প্রতি"
+
+msgid "Usual deductions"
+msgstr "সাধারণ কর্তন"
+
+msgid "Filled in on every sale at this market. You can still change them per sale."
+msgstr "এই বাজারের প্রতিটি বিক্রিতে আগে থেকে বসে যাবে। প্রতি বিক্রিতে বদলাতেও পারবেন।"
+
+msgid "Add a deduction"
+msgstr "কর্তন যোগ করুন"
+
+msgid "%(counter)s buyer"
+msgid_plural "%(counter)s buyers"
+msgstr[0] "%(counter)s জন ক্রেতা"
+msgstr[1] "%(counter)s জন ক্রেতা"
+
+msgid "Where you sell fish, and what each one takes off a sale — commission, labour, khajna, ice…"
+msgstr "কোথায় মাছ বিক্রি করেন, আর প্রতিটি বাজার বিক্রি থেকে কী কাটে — কমিশন, শ্রমিক, খাজনা, বরফ…"
+
+msgid "Add market"
+msgstr "বাজার যোগ করুন"
+
+msgid "No markets yet"
+msgstr "এখনো কোনো বাজার নেই"
+
+msgid "Add the aarots you sell at with their usual commission and charges. Every sale there will start with them filled in."
+msgstr "যেসব আড়তে বিক্রি করেন সেগুলো সাধারণ কমিশন ও খরচসহ যোগ করুন। সেখানে প্রতিটি বিক্রিতে এগুলো আগে থেকে বসে যাবে।"
+
+msgid "Charges that can be taken off a sale. Add your own — e.g. association fee, weighing."
+msgstr "বিক্রি থেকে যেসব খরচ কাটা হয়। নিজেরগুলো যোগ করুন — যেমন সমিতির চাঁদা, ওজন।"
+
+msgid "Add deduction type"
+msgstr "কর্তনের ধরন যোগ করুন"
+
+msgid "It's used by a market. Remove it there first."
+msgstr "এটি কোনো বাজারে ব্যবহার হচ্ছে। আগে সেখান থেকে বাদ দিন।"
+
+msgid "No deduction types"
+msgstr "কোনো কর্তনের ধরন নেই"
+
+msgid "Add the charges markets take off a sale."
+msgstr "বাজার বিক্রি থেকে যে খরচ কাটে তা যোগ করুন।"
+
+msgid "New supplier"
+msgstr "নতুন সরবরাহকারী"
+
+msgid "supplier"
+msgstr "সরবরাহকারী"
+
+msgid "New buyer"
+msgstr "নতুন ক্রেতা"
+
+msgid "buyer"
+msgstr "ক্রেতা"
+
+msgid "Leave empty if you start with nothing owed either way."
+msgstr "কারো কাছে কিছু পাওনা বা দেনা না থাকলে খালি রাখুন।"
+
+msgid "None / various"
+msgstr "নির্দিষ্ট নয় / বিভিন্ন"
+
+msgid "Balance before using this app"
+msgstr "অ্যাপ ব্যবহারের আগের বাকি"
+
+msgid "Aratdar / wholesaler"
+msgstr "আড়তদার / পাইকারি"
+
+msgid "Paikar / trader"
+msgstr "পাইকার / ব্যবসায়ী"
+
+msgid "Retail / local buyer"
+msgstr "খুচরা / স্থানীয় ক্রেতা"
+
+msgid "They owe me"
+msgstr "তারা আমার কাছে দেনা"
+
+msgid "I owe them"
+msgstr "আমি তাদের কাছে দেনা"
+
+msgid "Contact person"
+msgstr "যোগাযোগের ব্যক্তি"
+
+msgid "Sells you feed, fingerlings, medicine…"
+msgstr "খাবার, পোনা, ওষুধ… বিক্রি করে"
+
+msgid "Buys your fish."
+msgstr "আপনার মাছ কেনে।"
+
+msgid "Buyer type"
+msgstr "ক্রেতার ধরন"
+
+msgid "Usual market"
+msgstr "সাধারণ বাজার"
+
+msgid "Who owes whom"
+msgstr "কে কার কাছে পায়"
+
+msgid "Supplier & buyer"
+msgstr "সরবরাহকারী ও ক্রেতা"
+
+msgid "you owe"
+msgstr "আপনার দেনা"
+
+msgid "owes you"
+msgstr "আপনার পাওনা"
+
+msgid "Feed dealers, fingerling hatcheries, medicine shops — anyone you buy from, often on baki."
+msgstr "খাবারের ডিলার, পোনার হ্যাচারি, ওষুধের দোকান — যাদের কাছ থেকে কেনেন, প্রায়ই বাকিতে।"
+
+msgid "Add supplier"
+msgstr "সরবরাহকারী যোগ করুন"
+
+msgid "No suppliers yet"
+msgstr "এখনো কোনো সরবরাহকারী নেই"
+
+msgid "Add the feed dealer or hatchery you buy from. If you already owe them, enter that balance too."
+msgstr "যে খাবারের ডিলার বা হ্যাচারি থেকে কেনেন তাদের যোগ করুন। আগে থেকে দেনা থাকলে সেটাও লিখুন।"
+
+msgid "Aratdars, paikars and others who buy your fish."
+msgstr "আড়তদার, পাইকার ও অন্য যারা আপনার মাছ কেনে।"
+
+msgid "Add buyer"
+msgstr "ক্রেতা যোগ করুন"
+
+msgid "No buyers yet"
+msgstr "এখনো কোনো ক্রেতা নেই"
+
+msgid "Add the aratdars and paikars you sell to, with their usual market."
+msgstr "যে আড়তদার ও পাইকারদের কাছে বিক্রি করেন, তাদের সাধারণ বাজারসহ যোগ করুন।"
+
+msgid "Ownership"
+msgstr "মালিকানা"
+
+msgid "Photo and notes"
+msgstr "ছবি ও নোট"
+
+msgid "e.g. Big pond (east)"
+msgstr "যেমন: বড় পুকুর (পূর্ব)"
+
+msgid "Village / mouza, landmark"
+msgstr "গ্রাম / মৌজা, চেনার জায়গা"
+
+msgid "For the whole lease period."
+msgstr "পুরো লিজের সময়ের জন্য।"
+
+msgid "Please use a photo under %(mb)s MB."
+msgstr "%(mb)s MB এর কম আকারের ছবি দিন।"
+
+msgid "The lease has to end after it starts."
+msgstr "লিজ শুরুর পরে শেষ হতে হবে।"
+
+msgid "Being prepared"
+msgstr "প্রস্তুত করা হচ্ছে"
+
+msgid "Empty / dry"
+msgstr "খালি / শুকনো"
+
+msgid "Own"
+msgstr "নিজের"
+
+msgid "Short code"
+msgstr "সংক্ষিপ্ত কোড"
+
+msgid "e.g. P-1. Handy on small screens."
+msgstr "যেমন: P-1। ছোট স্ক্রিনে সুবিধা।"
+
+msgid "Location"
+msgstr "অবস্থান"
+
+msgid "Area unit"
+msgstr "আয়তনের একক"
+
+msgid "Water depth (feet)"
+msgstr "পানির গভীরতা (ফুট)"
+
+msgid "Leased from"
+msgstr "যার কাছ থেকে লিজ"
+
+msgid "Lease amount"
+msgstr "লিজের টাকা"
+
+msgid "Lease starts"
+msgstr "লিজ শুরু"
+
+msgid "Lease ends"
+msgstr "লিজ শেষ"
+
+msgid "Photo"
+msgstr "ছবি"
+
+msgid "Depth"
+msgstr "গভীরতা"
+
+msgid "ft"
+msgstr "ফুট"
+
+msgid "%(counter)s month"
+msgid_plural "%(counter)s months"
+msgstr[0] "%(counter)s মাস"
+msgstr[1] "%(counter)s মাস"
+
+msgid "Lease ended %(date)s"
+msgstr "লিজ শেষ হয়েছে %(date)s"
+
+msgid "Lease ends %(date)s"
+msgstr "লিজ শেষ হবে %(date)s"
+
+msgid "Lease end date not set"
+msgstr "লিজ শেষের তারিখ দেওয়া নেই"
+
+msgid "Every pond or gher you farm — its size, whether it's leased, and what's in it now."
+msgstr "আপনার প্রতিটি পুকুর বা ঘের — আয়তন, লিজ কি না, আর এখন কী আছে।"
+
+msgid "Add pond"
+msgstr "পুকুর যোগ করুন"
+
+msgid "Fish in it"
+msgstr "মাছ আছে"
+
+msgid "Leased"
+msgstr "লিজ নেওয়া"
+
+msgid "Add your first pond"
+msgstr "প্রথম পুকুর যোগ করুন"
+
+msgid "Give it a name and size. Stocking, feeding and harvests will be recorded per pond, so you'll see what each one earns."
+msgstr "নাম ও আয়তন দিন। পোনা ছাড়া, খাওয়ানো ও মাছ ধরা পুকুরভিত্তিক লেখা হবে, তাই প্রতিটি পুকুরের আয় দেখতে পাবেন।"
+
+msgid "e.g. Rui"
+msgstr "যেমন: Rui"
+
+msgid "e.g. রুই"
+msgstr "যেমন: রুই"
+
+msgid "Scientific name"
+msgstr "বৈজ্ঞানিক নাম"
+
+msgid "Usually sold by"
+msgstr "সাধারণত যে এককে বিক্রি"
+
+msgid "Used for this fish in charts."
+msgstr "চার্টে এই মাছের রং।"
+
+msgid "Sold by %(unit)s"
+msgstr "%(unit)s হিসেবে বিক্রি"
+
+msgid "The fish you raise and sell. Names show in Bangla when the app is in Bangla."
+msgstr "যে মাছ চাষ ও বিক্রি করেন। অ্যাপ বাংলায় থাকলে নাম বাংলায় দেখাবে।"
+
+msgid "Add species"
+msgstr "মাছের জাত যোগ করুন"
+
+msgid "No fish species yet"
+msgstr "এখনো কোনো মাছের জাত নেই"
+
+msgid "Add the fish you raise — Rui, Katla, Pangas, Tilapia…"
+msgstr "যে মাছ চাষ করেন তা যোগ করুন — রুই, কাতলা, পাঙ্গাস, তেলাপিয়া…"
+
+msgid "Also a buyer"
+msgstr "ক্রেতাও"
+
+msgid "Also a supplier"
+msgstr "সরবরাহকারীও"

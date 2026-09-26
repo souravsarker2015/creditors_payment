@@ -1,26 +1,47 @@
-{% load i18n %}{% comment %}Business sidebar menu (sections appear as each phase ships).{% endcomment %}
+{% load i18n %}{% comment %}Business sidebar menu.{% endcomment %}
 {% with p=request.path %}
-<div>
+<div class="space-y-0.5">
   <p class="nav-section-label">{% translate "Farm" %}</p>
   <a href="{% url 'business:home' %}" class="nav-link {% if p == '/business/' %}is-active{% endif %}" {% if p == '/business/' %}aria-current="page"{% endif %}>
     {% include "business/partials/icon.html" with name="home" %}{% translate "Dashboard" %}
   </a>
+  {% if business %}
+  <a href="{% url 'business:ponds' %}" class="nav-link {% if '/business/ponds/' in p %}is-active{% endif %}">
+    {% include "business/partials/icon.html" with name="fish" %}{% translate "Ponds" %}
+  </a>
+  {% endif %}
 </div>
 
-{% if business and biz_can.view_finance %}
+{% if business %}
+<div class="space-y-0.5">
+  <p class="nav-section-label">{% translate "Buy & sell" %}</p>
+  <a href="{% url 'business:suppliers' %}" class="nav-link {% if '/business/people/suppliers/' in p %}is-active{% endif %}">
+    {% include "business/partials/icon.html" with name="truck" %}{% translate "Suppliers" %}
+  </a>
+  <a href="{% url 'business:buyers' %}" class="nav-link {% if '/business/people/buyers/' in p %}is-active{% endif %}">
+    {% include "partials/icon.html" with name="users" %}{% translate "Buyers" %}
+  </a>
+  <a href="{% url 'business:markets' %}" class="nav-link {% if '/business/markets/' in p and 'deduction' not in p %}is-active{% endif %}">
+    {% include "partials/icon.html" with name="cart" %}{% translate "Markets & aarots" %}
+  </a>
+</div>
+
+{% if biz_can.view_finance %}
 <div class="space-y-0.5">
   <p class="nav-section-label">{% translate "Money" %}</p>
   <a href="{% url 'business:loans' %}" class="nav-link {% if '/business/loans/' in p %}is-active{% endif %}" {% if '/business/loans/' in p %}aria-current="page"{% endif %}>
     {% include "business/partials/icon.html" with name="banknotes" %}{% translate "Loans" %}
   </a>
+  <a href="{% url 'business:accounts' %}" class="nav-link {% if '/business/finance/accounts/' in p %}is-active{% endif %}">
+    {% include "partials/icon.html" with name="wallet" %}{% translate "Accounts" %}
+  </a>
 </div>
 {% endif %}
 
-{% if business %}
 <div class="space-y-0.5">
   <p class="nav-section-label">{% translate "Settings" %}</p>
-  <a href="{% url 'business:units' %}" class="nav-link {% if '/business/settings/units/' in p %}is-active{% endif %}">
-    {% include "business/partials/icon.html" with name="scale" %}{% translate "Units" %}
+  <a href="{% url 'business:setup_hub' %}" class="nav-link {% if p == '/business/settings/' or '/business/species/' in p or '/business/feed/' in p or '/business/finance/categories/' in p or '/business/settings/units/' in p or 'deduction-types' in p %}is-active{% endif %}">
+    {% include "business/partials/icon.html" with name="squares" %}{% translate "Farm setup" %}
   </a>
   {% if biz_can.manage_team %}
   <a href="{% url 'business:team' %}" class="nav-link {% if '/business/settings/team/' in p %}is-active{% endif %}">

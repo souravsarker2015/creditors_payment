@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% translate "Farm setup" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "Farm setup" %}</h1>
+      <p class="page-subtitle">{% translate "The lists everything else is built on. Common ones are filled in for you — change, add or remove anything." %}</p>
+    </div>
+  </header>
+  {% for title, tiles in sections %}
+  <section>
+    <h2 class="setup-title">{{ title }}</h2>
+    <div class="setup-grid">
+      {% for t in tiles %}
+      <a href="{{ t.url }}" class="card setup-tile">
+        <span class="setup-icon">{% include "business/partials/icon.html" with name=t.icon %}</span>
+        <span class="min-w-0 flex-1">
+          <span class="setup-tile-title">{{ t.title }}</span>
+          <span class="setup-tile-text">{{ t.text }}</span>
+        </span>
+        <span class="setup-count{% if not t.count %} is-zero{% endif %}">{{ t.count }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}

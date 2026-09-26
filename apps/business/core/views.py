@@ -10,7 +10,7 @@ from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext as _, ngettext
 from django.views.decorators.http import require_POST
 
 from .access import (BUSINESS, CAPABILITIES, PERSONAL, ROLE_CAPS, active_membership, can, create_business,
@@ -41,7 +41,28 @@ def home_view(request):
         "recent_activity": AuditLog.objects.filter(business=b).select_related("user")[:5],
         "other_businesses": memberships(request.user).exclude(business=b),
         "loans": _loans_summary(request),
+        "setup_steps": _setup_steps(request),
     })
+
+
+def _setup_steps(request):
+    """Getting-started steps for the master data, numbered after the fixed ones."""
+    from apps.business.markets.models import Market
+    from apps.business.parties.models import Party
+    from apps.business.ponds.models import Pond
+
+    b = request.business
+    ponds = Pond.objects.filter(business=b).count()
+    suppliers = Party.objects.filter(business=b, is_supplier=True).count()
+    markets = Market.objects.filter(business=b).count()
+    buyers = Party.objects.filter(business=b, is_buyer=True).count()
+    first = 4 if can(request.membership, "manage_team") else 3
+    steps = [
+        (ponds, _("Add your ponds"), ngettext("%(n)s pond", "%(n)s ponds", ponds) % {"n": ponds} if ponds else _("Name, size and whether it's leased."), "business:ponds_add" if not ponds else "business:ponds"),
+        (suppliers, _("Suppliers and feed"), ngettext("%(n)s supplier", "%(n)s suppliers", suppliers) % {"n": suppliers} if suppliers else _("Who you buy feed from, and what you already owe them."), "business:suppliers_add" if not suppliers else "business:suppliers"),
+        (markets and buyers, _("Markets and buyers"), _("%(m)s markets · %(b)s buyers") % {"m": markets, "b": buyers} if markets or buyers else _("Where you sell and who buys your fish."), "business:markets_add" if not markets else "business:buyers"),
+    ]
+    return [{"no": first + i, "done": bool(done), "title": title, "text": text, "url": reverse(url)} for i, (done, title, text, url) in enumerate(steps)]
 
 
 def _loans_summary(request):
@@ -271,3 +292,43 @@ def access_update_view(request, user_id):
         messages.success(request, _("Access updated for %(name)s.") % {"name": user.username})
     nxt = request.POST.get("next") or reverse("business:access_admin")
     return redirect(nxt if url_has_allowed_host_and_scheme(nxt, {request.get_host()}) else reverse("business:access_admin"))
+
+
+# ── Farm setup hub ──────────────────────────────────────────────────────────
+
+@business_access_required
+def setup_hub_view(request):
+    """Everything the farm is set up with, in one place, with counts."""
+    from apps.business.feed.models import FeedProduct
+    from apps.business.finance.models import Account, Category
+    from apps.business.markets.models import DeductionType, Market
+    from apps.business.parties.models import Party
+    from apps.business.ponds.models import Pond
+    from apps.business.species.models import Species
+
+    b = request.business
+    fin = can(request.membership, "view_finance")
+
+    def tile(url, icon, title, text, count, show=True):
+        return {"url": reverse(url), "icon": icon, "title": title, "text": text, "count": count} if show else None
+
+    sections = [
+        (_("Your farm"), [
+            tile("business:ponds", "fish", _("Ponds"), _("Size, lease and status of each pond"), Pond.objects.filter(business=b).count()),
+            tile("business:species", "fish", _("Fish species"), _("Rui, Katla, Pangas… in English and Bangla"), Species.objects.filter(business=b).count()),
+            tile("business:feed_products", "banknotes", _("Feed products"), _("Brand, bag size, price and supplier"), FeedProduct.objects.filter(business=b).count()),
+        ]),
+        (_("Buying and selling"), [
+            tile("business:suppliers", "truck", _("Suppliers"), _("Feed dealers, hatcheries, medicine shops"), Party.objects.filter(business=b, is_supplier=True).count()),
+            tile("business:buyers", "users", _("Buyers"), _("Aratdars, paikars and local buyers"), Party.objects.filter(business=b, is_buyer=True).count()),
+            tile("business:markets", "cart", _("Markets & aarots"), _("Where you sell and their usual deductions"), Market.objects.filter(business=b).count()),
+            tile("business:deduction_types", "tag", _("Deduction types"), _("Commission, labour, khajna, ice…"), DeductionType.objects.filter(business=b).count()),
+        ]),
+        (_("Money and measures"), [
+            tile("business:categories", "tag", _("Categories"), _("Farm, household and personal income and spending"), Category.objects.filter(business=b).count()),
+            tile("business:accounts", "wallet", _("Accounts"), _("Cash, bank, bKash, Nagad"), Account.objects.filter(business=b).count(), show=fin),
+            tile("business:units", "scale", _("Units"), _("kg, mon, piece, decimal, bigha…"), Unit.objects.filter(business=b).count()),
+        ]),
+    ]
+    sections = [(title, [t for t in tiles if t]) for title, tiles in sections]
+    return render(request, "business/settings/setup_hub.html", {"sections": sections})

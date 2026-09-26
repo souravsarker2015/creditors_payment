@@ -1,6 +1,7 @@
 from django.urls import path
 
 from . import views
+from .crud import quick_add_view
 
 urlpatterns = [
     path("", views.home_view, name="home"),
@@ -17,6 +18,8 @@ urlpatterns = [
     path("settings/team/<int:pk>/role/", views.member_role_view, name="member_role"),
     path("settings/team/<int:pk>/remove/", views.member_remove_view, name="member_remove"),
     path("settings/activity/", views.activity_view, name="activity"),
+    path("quick-add/<slug:kind>/", quick_add_view, name="quick_add"),
+    path("settings/", views.setup_hub_view, name="setup_hub"),
     path("admin/access/", views.access_admin_view, name="access_admin"),
     path("admin/access/<int:user_id>/", views.access_update_view, name="access_update"),
 ]

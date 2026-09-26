@@ -54,9 +54,16 @@
           <a href="{% url 'business:team' %}" class="btn {% if team_count > 1 %}btn-ghost{% else %}btn-primary{% endif %} btn-sm">{% if team_count > 1 %}{% translate "Manage" %}{% else %}{% translate "Add people" %}{% endif %}</a>
         </li>
         {% endif %}
+        {% for step in setup_steps %}
+        <li class="{% if step.done %}is-done{% endif %}">
+          <span class="biz-step-dot">{% if step.done %}{% include "partials/icon.html" with name="check" %}{% else %}{{ step.no }}{% endif %}</span>
+          <div class="min-w-0 flex-1"><p class="biz-step-title">{{ step.title }}</p><p class="biz-step-text">{{ step.text }}</p></div>
+          <a href="{{ step.url }}" class="btn {% if step.done %}btn-ghost{% else %}btn-primary{% endif %} btn-sm">{% if step.done %}{% translate "Manage" %}{% else %}{% translate "Add" %}{% endif %}</a>
+        </li>
+        {% endfor %}
         <li class="is-next">
           <span class="biz-step-dot">{% include "business/partials/icon.html" with name="fish" %}</span>
-          <div><p class="biz-step-title">{% translate "Ponds, feed, sales and baki" %}</p><p class="biz-step-text">{% translate "Coming soon to this dashboard." %}</p></div>
+          <div><p class="biz-step-title">{% translate "Stocking, feeding, sales and baki" %}</p><p class="biz-step-text">{% translate "Coming next to this dashboard." %}</p></div>
         </li>
       </ol>
     </section>
