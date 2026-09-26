@@ -1,0 +1,1 @@
+{% load i18n %}{% if biz_can.enter_data %}{% url 'business:entry_edit' kind e.pk as edit_url %}{% url 'business:entry_delete' kind e.pk as delete_url %}{% translate "Delete this entry?" as confirm_text %}{% include "partials/row_menu.html" with edit_url=edit_url delete_url=delete_url confirm=confirm_text up=forloop.last %}{% endif %}

@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{{ pond }} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page stack" x-data="{ modal: null }">
+  <header class="page-header !mb-0">
+    <div class="min-w-0">
+      <a href="{% url 'business:ponds' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Ponds" %}</a>
+      <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <h1 class="page-title">{% if pond.code %}<span class="pond-code">{{ pond.code }}</span>{% endif %}{{ pond.name }}</h1>
+        <span class="badge" data-tone="{% if pond.status == 'in_use' %}good{% elif pond.status == 'preparing' %}warn{% else %}muted{% endif %}">{{ pond.get_status_display }}</span>
+      </div>
+      <div class="meta-list">
+        {% if pond.area %}<span class="meta-item">{% include "business/partials/icon.html" with name="scale" %}{% qty pond.area pond.area_unit %}</span>{% endif %}
+        {% if pond.depth_ft %}<span class="meta-item">{{ pond.depth_ft|num }} {% translate "ft deep" %}</span>{% endif %}
+        {% if pond.location %}<span class="meta-item">{% include "partials/icon.html" with name="tag" %}{{ pond.location }}</span>{% endif %}
+        {% if pond.is_leased %}<span class="meta-item">{% include "partials/icon.html" with name="calendar" %}{% translate "Leased" %}{% if pond.lease_end %} · {% blocktranslate with date=pond.lease_end|date:"j M Y" %}until {{ date }}{% endblocktranslate %}{% endif %}</span>{% endif %}
+      </div>
+    </div>
+    <div class="page-actions">
+      {% if biz_can.manage_settings %}<a href="{% url 'business:ponds_edit' pond.pk %}?next={{ request.path|urlencode }}" class="btn btn-secondary">{% include "partials/icon.html" with name="edit" %}{% translate "Edit pond" %}</a>{% endif %}
+    </div>
+  </header>
+
+  {% if pond.photo %}<img src="{{ pond.photo.url }}" alt="{{ pond.name }}" class="pond-hero-photo">{% endif %}
+
+  {% if current %}
+  <a href="{% url 'business:cycle_detail' current.pk %}" class="card cycle-card">
+    <div class="cycle-card-head">
+      <span class="pond-cycle-dot"></span>
+      <div class="min-w-0 flex-1">
+        <p class="cycle-card-title">{{ current.label }}</p>
+        <p class="cycle-card-meta">{% blocktranslate with date=current.start_date|date:"j M Y" %}Running since {{ date }}{% endblocktranslate %} · {% blocktranslate count counter=current.days %}day {{ counter }}{% plural %}day {{ counter }}{% endblocktranslate %}</p>
+      </div>
+      <span class="btn btn-primary btn-sm">{% translate "Open" %}{% include "partials/icon.html" with name="arrow-right" %}</span>
+    </div>
+    <dl class="pond-facts cycle-card-facts">
+      <div><dt>{% translate "Fish in pond" %}</dt><dd>{{ summary.alive|num }}</dd></div>
+      <div><dt>{% translate "Feed used" %}</dt><dd>{{ summary.feed_kg|num }} kg</dd></div>
+      <div><dt>{% translate "Spent" %}</dt><dd>{{ summary.cost|bdt }}</dd></div>
+      <div><dt>{% translate "Sold" %}</dt><dd>{{ summary.sales_net|bdt }}</dd></div>
+    </dl>
+  </a>
+  {% elif biz_can.enter_data %}
+  <section class="card">
+    <div class="empty is-plain">
+      <div class="empty-icon">{% include "business/partials/icon.html" with name="fish" %}</div>
+      <h3 class="empty-title">{% translate "No fish in this pond right now" %}</h3>
+      <p class="empty-text">{% translate "Start a cycle when you release fingerlings. Feeding, deaths, weighing, harvests and sales are then recorded against it." %}</p>
+      <a href="{% url 'business:cycle_start' pond.pk %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Start a cycle" %}</a>
+    </div>
+  </section>
+  {% endif %}
+
+  <section class="card">
+    <div class="card-header"><div><h2 class="card-title">{% translate "Past cycles" %}</h2><p class="card-subtitle">{% translate "How each season in this pond turned out." %}</p></div></div>
+    {% if past_summaries %}
+    <ul class="ledger">{% for c, ps in past_summaries %}
+      <li><a href="{% url 'business:cycle_detail' c.pk %}" class="ledger-row">
+        <span class="ledger-icon" data-tone="{% if ps.profit >= 0 %}good{% else %}critical{% endif %}">{% include "business/partials/icon.html" with name="fish" %}</span>
+        <div class="ledger-main">
+          <p class="ledger-title">{{ c.label }}</p>
+          <p class="ledger-meta">{{ c.start_date|date:"M Y" }} – {{ c.ended_on|date:"M Y" }} · {% blocktranslate count counter=c.days %}{{ counter }} day{% plural %}{{ counter }} days{% endblocktranslate %}{% if ps.harvest_kg %} · {{ ps.harvest_kg|num }} kg{% endif %}{% if ps.fcr %} · FCR {{ ps.fcr }}{% endif %}</p>
+        </div>
+        <div class="ledger-end"><span class="party-bal" data-tone="{% if ps.profit >= 0 %}good{% else %}critical{% endif %}"><strong>{{ ps.profit|bdt }}</strong><span>{% translate "sales − costs" %}</span></span></div>
+      </a></li>{% endfor %}
+    </ul>
+    {% else %}<div class="empty is-plain"><p class="empty-text">{% translate "Finished cycles will be listed here with their results." %}</p></div>{% endif %}
+  </section>
+</div>
+{% endblock %}

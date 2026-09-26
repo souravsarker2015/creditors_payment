@@ -29,6 +29,13 @@ class SpeciesForm(BusinessForm):
             self.initial.setdefault("color", COLORS[used % len(COLORS)])
 
 
-class SpeciesQuickForm(SpeciesForm):
-    class Meta(SpeciesForm.Meta):
+class SpeciesQuickForm(BusinessForm):
+    class Meta:
+        model = Species
         fields = ["name", "name_bn"]
+
+    def save(self, commit=True):
+        self.instance.default_unit = Unit.objects.filter(business=self.business, symbol="kg").first()
+        used = Species.objects.filter(business=self.business).count()
+        self.instance.color = COLORS[used % len(COLORS)]
+        return super().save(commit)

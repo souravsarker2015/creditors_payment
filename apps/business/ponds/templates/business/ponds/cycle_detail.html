@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{{ cycle.label }} · {{ pond }} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page stack" x-data="{ modal: {% if open %}'{{ open }}'{% else %}null{% endif %}, tab: '{{ tab|escapejs }}' }">
+  <header class="page-header !mb-0">
+    <div class="min-w-0">
+      <a href="{% url 'business:pond_detail' pond.pk %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{{ pond }}</a>
+      <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <h1 class="page-title">{{ cycle.label }}</h1>
+        {% if cycle.is_running %}<span class="badge" data-tone="good">{% translate "Running" %}</span>{% else %}<span class="badge" data-tone="muted">{% translate "Finished" %}</span>{% endif %}
+      </div>
+      <div class="meta-list">
+        <span class="meta-item">{% include "partials/icon.html" with name="calendar" %}{% blocktranslate with date=cycle.start_date|date:"j M Y" %}Started {{ date }}{% endblocktranslate %} · {% blocktranslate count counter=cycle.days %}{{ counter }} day{% plural %}{{ counter }} days{% endblocktranslate %}</span>
+        {% if cycle.days_to_harvest is not None %}<span class="meta-item">{% include "partials/icon.html" with name="clock" %}{% if cycle.days_to_harvest >= 0 %}{% blocktranslate count counter=cycle.days_to_harvest %}Harvest in {{ counter }} day{% plural %}Harvest in {{ counter }} days{% endblocktranslate %}{% else %}{% translate "Harvest date passed" %}{% endif %}</span>{% endif %}
+        {% if cycle.ended_on %}<span class="meta-item">{% include "business/partials/icon.html" with name="lock" %}{% blocktranslate with date=cycle.ended_on|date:"j M Y" %}Finished {{ date }}{% endblocktranslate %}</span>{% endif %}
+      </div>
+    </div>
+    <div class="page-actions">
+      <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
+        <button type="button" class="btn btn-secondary" @click="open = !open" :aria-expanded="open">{% translate "Cycle" %}{% include "partials/icon.html" with name="chevron-down" %}</button>
+        <div class="menu" x-show="open" x-cloak x-transition.opacity.scale.95.duration.100ms role="menu">
+          {% if biz_can.enter_data %}<a href="{% url 'business:cycle_edit' cycle.pk %}" class="menu-item" role="menuitem">{% include "partials/icon.html" with name="edit" %}{% translate "Edit dates and name" %}</a>{% endif %}
+          {% if biz_can.enter_data and cycle.is_running %}<button type="button" class="menu-item" role="menuitem" @click="open = false; modal = 'finish'">{% include "business/partials/icon.html" with name="lock" %}{% translate "Finish this cycle" %}</button>{% endif %}
+          {% if biz_can.enter_data and not cycle.is_running %}<form method="post" action="{% url 'business:cycle_finish' cycle.pk %}">{% csrf_token %}<button type="submit" class="menu-item" role="menuitem">{% include "partials/icon.html" with name="restore" %}{% translate "Reopen cycle" %}</button></form>{% endif %}
+          {% if biz_can.delete %}<form method="post" action="{% url 'business:cycle_delete' cycle.pk %}" data-confirm="{% translate 'Delete this cycle with everything recorded in it?' %}">{% csrf_token %}<button type="submit" class="menu-item is-danger" role="menuitem">{% include "partials/icon.html" with name="trash" %}{% translate "Delete cycle" %}</button></form>{% endif %}
+        </div>
+      </div>
+    </div>
+  </header>
+
+  {% if cycle.is_running and biz_can.enter_data %}
+  <nav class="quick-actions" aria-label="{% translate 'Record' %}">
+    <button type="button" class="quick-action" @click="modal = 'feeding'">{% include "business/partials/icon.html" with name="banknotes" %}<span>{% translate "Feed" %}</span></button>
+    <button type="button" class="quick-action" @click="modal = 'weighing'">{% include "business/partials/icon.html" with name="scale" %}<span>{% translate "Weigh" %}</span></button>
+    <button type="button" class="quick-action" @click="modal = 'mortality'">{% include "partials/icon.html" with name="alert" %}<span>{% translate "Deaths" %}</span></button>
+    <button type="button" class="quick-action" @click="modal = 'stocking'">{% include "business/partials/icon.html" with name="fish" %}<span>{% translate "Stock" %}</span></button>
+    <button type="button" class="quick-action" @click="modal = 'harvest'">{% include "partials/icon.html" with name="cart" %}<span>{% translate "Harvest" %}</span></button>
+    <a href="{% url 'business:sale_add' %}?cycle={{ cycle.pk }}" class="quick-action is-primary">{% include "partials/icon.html" with name="check" %}<span>{% translate "Sell" %}</span></a>
+  </nav>
+  {% endif %}
+
+  <dl class="stat-grid">
+    <div class="stat" data-tone="info">
+      <dt class="stat-label inline-flex items-center">{% translate "Fish in the pond" %}{% translate "Fish released, minus deaths recorded and fish harvested by count. An estimate — unrecorded losses aren't included." as info_text %}{% include "partials/info.html" with text=info_text %}</dt>
+      <dd class="stat-value">{{ s.alive|num }}</dd>
+      <dd class="stat-hint">{% if s.stocked %}{% blocktranslate with n=s.stocked|num %}of {{ n }} released{% endblocktranslate %}{% if s.died %} · {% blocktranslate with n=s.died|num %}{{ n }} died{% endblocktranslate %}{% endif %}{% else %}{% translate "No fingerlings recorded yet" %}{% endif %}</dd>
+    </div>
+    <div class="stat" data-tone="accent">
+      <dt class="stat-label inline-flex items-center">{% translate "Fish weight now" %}{% translate "Fish still in the pond × their latest sample weight." as info_text %}{% include "partials/info.html" with text=info_text %}</dt>
+      <dd class="stat-value">{% if s.biomass_kg %}{{ s.biomass_kg|num }} kg{% else %}—{% endif %}</dd>
+      <dd class="stat-hint">{% if s.biomass_kg %}{% translate "estimated, from sample weighing" %}{% else %}{% translate "Weigh a sample to see this" %}{% endif %}</dd>
+    </div>
+    <div class="stat" data-tone="warn">
+      <dt class="stat-label">{% translate "Spent so far" %}</dt>
+      <dd class="stat-value">{{ s.cost|bdt }}</dd>
+      <dd class="stat-hint">{% blocktranslate with f=s.feed_cost|bdt kg=s.feed_kg|num %}Feed {{ f }} ({{ kg }} kg){% endblocktranslate %} · {% blocktranslate with c=s.stocking_cost|bdt %}fingerlings {{ c }}{% endblocktranslate %}</dd>
+    </div>
+    <div class="stat" data-tone="{% if s.profit >= 0 %}good{% else %}critical{% endif %}">
+      <dt class="stat-label inline-flex items-center">{% translate "Sales so far" %}{% translate "Net sales (after market deductions) from this cycle, and the result after fingerling and feed costs. Other expenses join in once income and expenses are added." as info_text %}{% include "partials/info.html" with text=info_text %}</dt>
+      <dd class="stat-value">{{ s.sales_net|bdt }}</dd>
+      <dd class="stat-hint">{% if s.profit >= 0 %}{% blocktranslate with amount=s.profit|bdt %}{{ amount }} ahead of costs{% endblocktranslate %}{% else %}{% blocktranslate with amount=s.profit|absolute|bdt %}{{ amount }} still to recover{% endblocktranslate %}{% endif %}{% if s.fcr %} · FCR {{ s.fcr }}{% endif %}</dd>
+    </div>
+  </dl>
+
+  <nav class="seg seg-scroll" role="tablist">
+    <button type="button" role="tab" class="seg-item" :class="tab === 'overview' && 'is-active'" @click="tab = 'overview'">{% translate "Fish" %}</button>
+    <button type="button" role="tab" class="seg-item" :class="tab === 'feeding' && 'is-active'" @click="tab = 'feeding'">{% translate "Feeding" %} <span class="seg-count">{{ feedings|length }}</span></button>
+    <button type="button" role="tab" class="seg-item" :class="tab === 'stocking' && 'is-active'" @click="tab = 'stocking'">{% translate "Stocking" %} <span class="seg-count">{{ stockings|length }}</span></button>
+    <button type="button" role="tab" class="seg-item" :class="tab === 'growth' && 'is-active'" @click="tab = 'growth'">{% translate "Growth & deaths" %}</button>
+    <button type="button" role="tab" class="seg-item" :class="tab === 'harvest' && 'is-active'" @click="tab = 'harvest'">{% translate "Harvest & sales" %} <span class="seg-count">{{ harvest_sale_count }}</span></button>
+  </nav>
+
+  <!-- Fish -->
+  <section class="card" x-show="tab === 'overview'">
+    <div class="card-header"><div><h2 class="card-title">{% translate "Fish in this cycle" %}</h2><p class="card-subtitle">{% translate "Per species: released, lost, harvested and what's left." %}</p></div></div>
+    {% if s.species %}
+    <ul class="ledger">
+      {% for r in s.species %}
+      <li class="ledger-row species-row">
+        <span class="species-dot" style="--c: {{ r.species.color }}">{% include "business/partials/icon.html" with name="fish" %}</span>
+        <div class="ledger-main">
+          <p class="ledger-title">{{ r.species }}</p>
+          <p class="ledger-meta">{% blocktranslate with n=r.stocked|num %}{{ n }} released{% endblocktranslate %}{% if r.died %} · {% blocktranslate with n=r.died|num %}{{ n }} died{% endblocktranslate %}{% endif %}{% if r.survival is not None %} · {% blocktranslate with pct=r.survival %}{{ pct }}% alive{% endblocktranslate %}{% endif %}{% if r.harvested_kg %} · {% blocktranslate with kg=r.harvested_kg|num %}{{ kg }} kg harvested{% endblocktranslate %}{% endif %}</p>
+        </div>
+        <div class="ledger-end">
+          <span class="party-bal"><strong>{% if r.avg_g %}{{ r.avg_g|num }} g{% else %}—{% endif %}</strong><span>{% if r.weighed_on %}{% blocktranslate with date=r.weighed_on|date:"j M" %}avg on {{ date }}{% endblocktranslate %}{% else %}{% translate "not weighed" %}{% endif %}</span></span>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty is-plain"><p class="empty-text">{% translate "Record the fingerlings you released to start tracking this cycle." %}</p>{% if cycle.is_running and biz_can.enter_data %}<button type="button" class="btn btn-primary" @click="modal = 'stocking'">{% include "partials/icon.html" with name="plus" %}{% translate "Add fingerlings" %}</button>{% endif %}</div>
+    {% endif %}
+  </section>
+
+  <!-- Feeding -->
+  <section class="card" x-show="tab === 'feeding'" x-cloak>
+    <div class="card-header">
+      <div><h2 class="card-title">{% translate "Feeding" %}</h2><p class="card-subtitle">{% blocktranslate with kg=s.feed_kg|num amount=s.feed_cost|bdt %}{{ kg }} kg in all · about {{ amount }}{% endblocktranslate %}</p></div>
+      {% if cycle.is_running and biz_can.enter_data %}<button type="button" class="btn btn-ghost btn-sm" @click="modal = 'feeding'">{% include "partials/icon.html" with name="plus" %}{% translate "Add" %}</button>{% endif %}
+    </div>
+    {% if feed_by_product %}<div class="card-body !pb-0"><div class="deduction-chips">{% for f in feed_by_product %}<span class="badge badge-outline">{% if f.product__brand %}{{ f.product__brand }} {% endif %}{{ f.product__name }}: {{ f.kg|num }} kg</span>{% endfor %}</div></div>{% endif %}
+    {% if feedings %}
+    <ul class="ledger">{% for e in feedings %}
+      <li class="ledger-row">
+        <span class="ledger-icon" data-tone="gold">{% include "business/partials/icon.html" with name="banknotes" %}</span>
+        <div class="ledger-main"><p class="ledger-title">{{ e.date|date:"j M Y" }}</p><p class="ledger-meta">{{ e.product }}</p></div>
+        <div class="ledger-end">
+          <span class="ledger-amount">{% if e.unit %}{% qty e.quantity e.unit %}{% else %}{% blocktranslate with n=e.quantity|num %}{{ n }} bags{% endblocktranslate %}{% endif %}</span>
+          {% include "business/ponds/entry_menu.html" with kind="feeding" %}
+        </div>
+      </li>{% endfor %}
+    </ul>
+    {% else %}<div class="empty is-plain"><p class="empty-text">{% translate "No feeding recorded yet." %}</p></div>{% endif %}
+  </section>
+
+  <!-- Stocking -->
+  <section class="card" x-show="tab === 'stocking'" x-cloak>
+    <div class="card-header">
+      <h2 class="card-title">{% translate "Fingerlings released" %}</h2>
+      {% if cycle.is_running and biz_can.enter_data %}<button type="button" class="btn btn-ghost btn-sm" @click="modal = 'stocking'">{% include "partials/icon.html" with name="plus" %}{% translate "Add" %}</button>{% endif %}
+    </div>
+    {% if stockings %}
+    <ul class="ledger">{% for e in stockings %}
+      <li class="ledger-row">
+        <span class="species-dot" style="--c: {{ e.species.color }}">{% include "business/partials/icon.html" with name="fish" %}</span>
+        <div class="ledger-main">
+          <p class="ledger-title">{{ e.species }}{% if e.count %} · {{ e.count|num }} {% translate "pcs" %}{% endif %}{% if e.weight %} · {% qty e.weight e.weight_unit %}{% endif %}</p>
+          <p class="ledger-meta">{{ e.date|date:"j M Y" }}{% if e.avg_g %} · {% blocktranslate with g=e.avg_g|num %}{{ g }} g each{% endblocktranslate %}{% endif %}{% if e.size %} · {{ e.size }}{% endif %}{% if e.supplier %} · {{ e.supplier }}{% endif %}</p>
+        </div>
+        <div class="ledger-end">
+          {% if e.cost %}<span class="party-bal"><strong>{{ e.cost|bdt }}</strong><span>{% if e.due %}{% blocktranslate with amount=e.due|bdt %}{{ amount }} due{% endblocktranslate %}{% else %}{% translate "paid" %}{% endif %}</span></span>{% endif %}
+          {% include "business/ponds/entry_menu.html" with kind="stocking" %}
+        </div>
+      </li>{% endfor %}
+    </ul>
+    {% else %}<div class="empty is-plain"><p class="empty-text">{% translate "No fingerlings recorded yet." %}</p></div>{% endif %}
+  </section>
+
+  <!-- Growth & deaths -->
+  <div class="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start" x-show="tab === 'growth'" x-cloak>
+    <section class="card">
+      <div class="card-header">
+        <div><h2 class="card-title">{% translate "Sample weighing" %}</h2><p class="card-subtitle">{% translate "Average weight per fish over time." %}</p></div>
+        {% if cycle.is_running and biz_can.enter_data %}<button type="button" class="btn btn-ghost btn-sm" @click="modal = 'weighing'">{% include "partials/icon.html" with name="plus" %}{% translate "Add" %}</button>{% endif %}
+      </div>
+      {% if weighings %}
+      <ul class="ledger">{% for e in weighings %}
+        <li class="ledger-row">
+          <span class="species-dot" style="--c: {{ e.species.color }}">{% include "business/partials/icon.html" with name="scale" %}</span>
+          <div class="ledger-main"><p class="ledger-title">{{ e.species }} · {{ e.avg_g|num }} g</p><p class="ledger-meta">{{ e.date|date:"j M Y" }} · {% blocktranslate with n=e.fish_count %}{{ n }} fish weighed{% endblocktranslate %}</p></div>
+          <div class="ledger-end">{% include "business/ponds/entry_menu.html" with kind="weighing" %}</div>
+        </li>{% endfor %}
+      </ul>
+      {% else %}<div class="empty is-plain"><p class="empty-text">{% translate "Every 2–3 weeks, net 10–20 fish and weigh them together. You'll see how they're growing and roughly how much fish is in the pond." %}</p></div>{% endif %}
+    </section>
+    <section class="card">
+      <div class="card-header">
+        <h2 class="card-title">{% translate "Deaths" %}</h2>
+        {% if cycle.is_running and biz_can.enter_data %}<button type="button" class="btn btn-ghost btn-sm" @click="modal = 'mortality'">{% include "partials/icon.html" with name="plus" %}{% translate "Add" %}</button>{% endif %}
+      </div>
+      {% if mortalities %}
+      <ul class="ledger">{% for e in mortalities %}
+        <li class="ledger-row">
+          <span class="ledger-icon" data-tone="critical">{% include "partials/icon.html" with name="alert" %}</span>
+          <div class="ledger-main"><p class="ledger-title">{% blocktranslate count counter=e.count %}{{ counter }} fish{% plural %}{{ counter }} fish{% endblocktranslate %}{% if e.species %} · {{ e.species }}{% endif %}</p><p class="ledger-meta">{{ e.date|date:"j M Y" }}{% if e.cause %} · {{ e.cause }}{% endif %}</p></div>
+          <div class="ledger-end">{% include "business/ponds/entry_menu.html" with kind="mortality" %}</div>
+        </li>{% endfor %}
+      </ul>
+      {% else %}<div class="empty is-plain"><p class="empty-text">{% translate "No deaths recorded. Good!" %}</p></div>{% endif %}
+    </section>
+  </div>
+
+  <!-- Harvest & sales -->
+  <div class="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start" x-show="tab === 'harvest'" x-cloak>
+    <section class="card">
+      <div class="card-header">
+        <h2 class="card-title">{% translate "Harvests" %}</h2>
+        {% if cycle.is_running and biz_can.enter_data %}<button type="button" class="btn btn-ghost btn-sm" @click="modal = 'harvest'">{% include "partials/icon.html" with name="plus" %}{% translate "Add" %}</button>{% endif %}
+      </div>
+      {% if harvests %}
+      <ul class="ledger">{% for e in harvests %}
+        <li class="ledger-row">
+          <span class="species-dot" style="--c: {{ e.species.color }}">{% include "partials/icon.html" with name="cart" %}</span>
+          <div class="ledger-main"><p class="ledger-title">{{ e.species }} · {% qty e.quantity e.unit %}</p><p class="ledger-meta">{{ e.date|date:"j M Y" }}{% if e.fish_count %} · {{ e.fish_count|num }} {% translate "pcs" %}{% endif %}{% if e.is_final %} · {% translate "last harvest" %}{% endif %}</p></div>
+          <div class="ledger-end">
+            {% if biz_can.enter_data %}<a href="{% url 'business:sale_add' %}?harvest={{ e.pk }}" class="btn btn-soft btn-sm">{% translate "Sell" %}</a>{% endif %}
+            {% include "business/ponds/entry_menu.html" with kind="harvest" %}
+          </div>
+        </li>{% endfor %}
+      </ul>
+      {% else %}<div class="empty is-plain"><p class="empty-text">{% translate "No harvest yet." %}</p></div>{% endif %}
+    </section>
+    <section class="card">
+      <div class="card-header">
+        <div><h2 class="card-title">{% translate "Sales from this pond" %}</h2><p class="card-subtitle">{% blocktranslate with amount=s.sales_net|bdt %}{{ amount }} net{% endblocktranslate %}</p></div>
+        {% if biz_can.enter_data %}<a href="{% url 'business:sale_add' %}?cycle={{ cycle.pk }}" class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="plus" %}{% translate "Add" %}</a>{% endif %}
+      </div>
+      {% if sales %}
+      <ul class="ledger">{% for sale in sales %}
+        <li><a href="{% url 'business:sale_detail' sale.pk %}" class="ledger-row">
+          <span class="ledger-icon" data-tone="good">{% include "partials/icon.html" with name="arrow-down" %}</span>
+          <div class="ledger-main"><p class="ledger-title">{{ sale.buyer|default:sale.market|default:_("Cash sale") }}</p><p class="ledger-meta">{{ sale.date|date:"j M Y" }}{% if sale.due %} · {% blocktranslate with amount=sale.due|bdt %}{{ amount }} due{% endblocktranslate %}{% endif %}</p></div>
+          <div class="ledger-end"><span class="ledger-amount" data-tone="good">{{ sale.net|bdt }}</span></div>
+        </a></li>{% endfor %}
+      </ul>
+      {% else %}<div class="empty is-plain"><p class="empty-text">{% translate "No sales linked to this pond yet." %}</p></div>{% endif %}
+    </section>
+  </div>
+
+  {% if cycle.is_running and biz_can.enter_data %}
+    {% for key, kind, form, action in popups %}{% include "business/ponds/entry_modal.html" %}{% endfor %}
+    <template x-teleport="body">
+    <div class="modal-root" x-show="modal === 'finish'" x-cloak @keydown.escape.window="modal = null" role="dialog" aria-modal="true">
+      <div class="modal-backdrop" x-show="modal === 'finish'" x-transition.opacity.duration.200ms @click="modal = null"></div>
+      <form method="post" action="{% url 'business:cycle_finish' cycle.pk %}" class="modal" x-show="modal === 'finish'" x-trap.noscroll="modal === 'finish'"
+            x-transition:enter="modal-enter" x-transition:enter-start="modal-enter-start" x-transition:enter-end="modal-enter-end">
+        {% csrf_token %}
+        <div class="modal-header">
+          <span class="modal-icon">{% include "business/partials/icon.html" with name="lock" %}</span>
+          <div class="min-w-0 flex-1"><h2 class="modal-title">{% translate "Finish this cycle" %}</h2><p class="modal-subtitle">{% translate "Use this when the pond has been fully harvested or emptied. The pond is marked empty." %}</p></div>
+          <button type="button" class="icon-btn" @click="modal = null" aria-label="{% translate 'Close' %}">{% include "partials/icon.html" with name="x" %}</button>
+        </div>
+        <div class="modal-body"><div class="field"><label class="label" for="finish-date">{% translate "Finished on" %}</label><input id="finish-date" type="date" name="ended_on" class="form-input" value="{% now 'Y-m-d' %}" min="{{ cycle.start_date|date:'Y-m-d' }}"></div></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" @click="modal = null">{% translate "Cancel" %}</button>
+          <button type="submit" class="btn btn-primary">{% include "business/partials/icon.html" with name="lock" %}{% translate "Finish cycle" %}</button>
+        </div>
+      </form>
+    </div>
+    </template>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% load i18n %}{% comment %}Popup for one kind of pond entry. Needs: key, kind, form, action. Lives inside x-data with `modal`.{% endcomment %}
+<template x-teleport="body">
+<div class="modal-root" x-show="modal === '{{ key }}'" x-cloak @keydown.escape.window="modal = null" role="dialog" aria-modal="true" aria-labelledby="m-{{ key }}-title">
+  <div class="modal-backdrop" x-show="modal === '{{ key }}'" x-transition.opacity.duration.200ms @click="modal = null"></div>
+  <form method="post" action="{{ action }}" class="modal" x-show="modal === '{{ key }}'" x-trap.noscroll="modal === '{{ key }}'" novalidate
+        x-transition:enter="modal-enter" x-transition:enter-start="modal-enter-start" x-transition:enter-end="modal-enter-end"
+        x-transition:leave="modal-leave" x-transition:leave-start="modal-enter-end" x-transition:leave-end="modal-enter-start">
+    {% csrf_token %}
+    <div class="modal-header">
+      <span class="modal-icon">{% include "business/partials/icon.html" with name=kind.icon %}</span>
+      <div class="min-w-0 flex-1">
+        <h2 class="modal-title" id="m-{{ key }}-title">{{ kind.title }}</h2>
+        <p class="modal-subtitle">{{ cycle }}</p>
+      </div>
+      <button type="button" class="icon-btn" @click="modal = null" aria-label="{% translate 'Close' %}">{% include "partials/icon.html" with name="x" %}</button>
+    </div>
+    <div class="modal-body form-stack">
+      {% for section in form.rows %}{% for row in section.fields %}
+        {% if row|length > 1 %}<div class="form-grid form-grid-2">{% for field in row %}{% include "business/partials/field.html" %}{% endfor %}</div>
+        {% else %}{% with field=row.0 %}{% include "business/partials/field.html" %}{% endwith %}{% endif %}
+      {% endfor %}{% endfor %}
+      {% if key == "feeding" %}<p class="help">{% translate "Feeding several ponds today?" %} <a href="{% url 'business:feed_usage_bulk' %}" class="font-semibold underline">{% translate "Enter all ponds at once" %}</a></p>{% endif %}
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" @click="modal = null">{% translate "Cancel" %}</button>
+      {% if key == "harvest" %}<button type="submit" name="then" value="sell" class="btn btn-secondary">{% translate "Save & sell" %}</button>{% endif %}
+      <button type="submit" class="btn btn-primary">{% include "partials/icon.html" with name="check" %}{% translate "Save" %}</button>
+    </div>
+  </form>
+</div>
+</template>

@@ -5,7 +5,7 @@
   </div>
   <div class="entity-head">
     <div class="min-w-0 flex-1">
-      <h3 class="entity-name">{% if o.code %}<span class="pond-code">{{ o.code }}</span>{% endif %}{{ o.name }}</h3>
+      <h3 class="entity-name"><a href="{% url 'business:pond_detail' o.pk %}">{% if o.code %}<span class="pond-code">{{ o.code }}</span>{% endif %}{{ o.name }}</a></h3>
       <p class="entity-meta">{% if o.location %}{{ o.location }}{% else %}&nbsp;{% endif %}</p>
     </div>
     {% include "business/master/_actions.html" %}
@@ -15,6 +15,17 @@
     <div><dt>{% translate "Depth" %}</dt><dd>{% if o.depth_ft %}{{ o.depth_ft|num }} {% translate "ft" %}{% else %}—{% endif %}</dd></div>
     <div><dt>{% translate "Ownership" %}</dt><dd>{{ o.get_ownership_display }}</dd></div>
   </dl>
+  {% if not is_deleted_tab %}
+  {% if o.current %}
+  <a href="{% url 'business:cycle_detail' o.current.pk %}" class="pond-cycle">
+    <span class="pond-cycle-dot"></span>
+    <span class="min-w-0 flex-1"><strong>{{ o.current.label }}</strong> · {% blocktranslate count counter=o.current.days %}day {{ counter }}{% plural %}day {{ counter }}{% endblocktranslate %}</span>
+    {% include "partials/icon.html" with name="arrow-right" %}
+  </a>
+  {% elif biz_can.enter_data %}
+  <a href="{% url 'business:cycle_start' o.pk %}" class="pond-cycle is-empty">{% include "partials/icon.html" with name="plus" %}<span class="flex-1">{% translate "Start a cycle" %}</span></a>
+  {% endif %}
+  {% endif %}
   {% if o.is_leased %}
   <p class="loan-next" data-tone="{% if o.lease_days_left is not None and o.lease_days_left < 0 %}critical{% elif o.lease_days_left is not None and o.lease_days_left <= 60 %}warn{% else %}info{% endif %}">
     {% include "partials/icon.html" with name="calendar" %}
