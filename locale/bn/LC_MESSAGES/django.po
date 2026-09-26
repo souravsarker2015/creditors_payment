@@ -5638,3 +5638,763 @@ msgstr "ক্রেতাও"
 
 msgid "Also a supplier"
 msgstr "সরবরাহকারীও"
+
+msgid "Record"
+msgstr "লিখুন"
+
+msgid "Feeding"
+msgstr "খাওয়ানো"
+
+msgid "Sale"
+msgstr "বিক্রি"
+
+msgid "Buy feed"
+msgstr "খাবার কিনুন"
+
+msgid "Feed running low"
+msgstr "খাবার ফুরিয়ে আসছে"
+
+msgid "%(n)s bags"
+msgstr "%(n)s বস্তা"
+
+msgid "Baki ledger, income & expenses, reports"
+msgstr "বাকির খাতা, আয়-ব্যয়, রিপোর্ট"
+
+msgid "Feed"
+msgstr "খাবার"
+
+msgid "Fish sales"
+msgstr "মাছ বিক্রি"
+
+msgid "bags"
+msgstr "বস্তা"
+
+msgid "Choose supplier…"
+msgstr "সরবরাহকারী বেছে নিন…"
+
+msgid "Choose feed…"
+msgstr "খাবার বেছে নিন…"
+
+msgid "Add at least one line."
+msgstr "অন্তত একটি লাইন যোগ করুন।"
+
+msgid "Enter the feed given to at least one pond."
+msgstr "অন্তত একটি পুকুরে দেওয়া খাবার লিখুন।"
+
+msgid "Memo / invoice no."
+msgstr "মেমো / চালান নং"
+
+msgid "Transport / labour"
+msgstr "পরিবহন / শ্রমিক"
+
+msgid "Paid from"
+msgstr "যেখান থেকে দেওয়া"
+
+msgid "One feed for all ponds. Last time's amounts are filled in — change what's different and save."
+msgstr "সব পুকুরের জন্য একটি খাবার। গতবারের পরিমাণ বসানো আছে — যা আলাদা শুধু তা বদলে সেভ করুন।"
+
+msgid "How much for each pond"
+msgstr "কোন পুকুরে কতটুকু"
+
+msgid "Save feeding"
+msgstr "খাওয়ানো সেভ করুন"
+
+msgid "Edit purchase"
+msgstr "কেনা সম্পাদনা"
+
+msgid "Feed bought"
+msgstr "কেনা খাবার"
+
+msgid "Choose bags or a weight. The usual price per bag fills in by itself."
+msgstr "বস্তা বা ওজন বেছে নিন। বস্তার সাধারণ দাম নিজে থেকেই বসে যাবে।"
+
+msgid "Add another feed"
+msgstr "আরেকটি খাবার যোগ করুন"
+
+msgid "Paid in full"
+msgstr "পুরো টাকা দিয়েছি"
+
+msgid "Owed to the supplier"
+msgstr "সরবরাহকারীর পাওনা"
+
+msgid "Fully paid"
+msgstr "পুরো পরিশোধ"
+
+msgid "Save purchase"
+msgstr "কেনা সেভ করুন"
+
+msgid "%(amount)s on baki"
+msgstr "%(amount)s বাকিতে"
+
+msgid "What's in the store, what the ponds are eating, and what you owe for it. Stock updates by itself from purchases and feeding."
+msgstr "গুদামে কী আছে, পুকুরে কী খাওয়ানো হচ্ছে, আর এর জন্য কত বাকি। কেনা ও খাওয়ানো থেকে মজুত নিজে থেকেই হালনাগাদ হয়।"
+
+msgid "%(counter)s feed is running low"
+msgid_plural "%(counter)s feeds are running low"
+msgstr[0] "%(counter)sটি খাবার ফুরিয়ে আসছে"
+msgstr[1] "%(counter)sটি খাবার ফুরিয়ে আসছে"
+
+msgid "more used than bought — check the entries"
+msgstr "কেনার চেয়ে বেশি খাওয়ানো হয়েছে — এন্ট্রিগুলো দেখুন"
+
+msgid "%(n)s bags left"
+msgstr "%(n)s বস্তা বাকি"
+
+msgid "Feed in store"
+msgstr "গুদামে খাবার"
+
+msgid "at the average price paid"
+msgstr "গড় কেনা দামে"
+
+msgid "Used this month"
+msgstr "এ মাসে খাওয়ানো"
+
+msgid "Bought this month"
+msgstr "এ মাসে কেনা"
+
+msgid "Owed to feed suppliers"
+msgstr "খাবারের দোকানে বাকি"
+
+msgid "from purchases on baki"
+msgstr "বাকিতে কেনা থেকে"
+
+msgid "Stock by feed"
+msgstr "খাবার অনুযায়ী মজুত"
+
+#, python-format
+msgid "%(pct)s%% used"
+msgstr "%(pct)s%% ব্যবহার হয়েছে"
+
+msgid "Bought %(b)s kg · used %(u)s kg"
+msgstr "কেনা %(b)s কেজি · খাওয়ানো %(u)s কেজি"
+
+msgid "No feed in store yet"
+msgstr "গুদামে এখনো খাবার নেই"
+
+msgid "Record your first feed purchase and the stock appears here. Every feeding you record takes it down."
+msgstr "প্রথম খাবার কেনা লিখুন, মজুত এখানে দেখাবে। প্রতিবার খাওয়ানো লিখলে তা কমবে।"
+
+msgid "Recent purchases"
+msgstr "সাম্প্রতিক কেনা"
+
+msgid "Feeding log"
+msgstr "খাওয়ানোর খাতা"
+
+msgid "%(kg)s kg fed in the last 7 days."
+msgstr "গত ৭ দিনে %(kg)s কেজি খাওয়ানো হয়েছে।"
+
+msgid "Today's feeding isn't recorded yet."
+msgstr "আজকের খাওয়ানো এখনো লেখা হয়নি।"
+
+msgid "Record it now"
+msgstr "এখনই লিখুন"
+
+msgid "No feeding recorded yet"
+msgstr "এখনো কোনো খাওয়ানো লেখা হয়নি"
+
+msgid "Record each day's feed for all ponds in one go — the amounts from last time are filled in for you."
+msgstr "প্রতিদিনের খাবার সব পুকুরের জন্য একবারে লিখুন — গতবারের পরিমাণ আগেই বসানো থাকবে।"
+
+msgid "The feeds you buy: bag size, usual price and who sells them."
+msgstr "যে খাবার কেনেন: বস্তার মাপ, সাধারণ দাম ও কে বিক্রি করে।"
+
+msgid "Feed purchases"
+msgstr "খাবার কেনা"
+
+msgid "Every bag you buy — paid now or on baki. Stock goes up automatically."
+msgstr "প্রতিটি বস্তা কেনা — নগদে বা বাকিতে। মজুত নিজে থেকেই বাড়ে।"
+
+msgid "With dues"
+msgstr "বাকি আছে"
+
+msgid "No feed bought yet"
+msgstr "এখনো খাবার কেনা হয়নি"
+
+msgid "Record a purchase from the memo: the feeds, bags, rate and what you paid. What's left is owed to the supplier."
+msgstr "মেমো দেখে কেনা লিখুন: খাবার, বস্তা, দর আর কত দিয়েছেন। বাকিটা সরবরাহকারীর পাওনা থাকবে।"
+
+msgid "bag"
+msgstr "বস্তা"
+
+msgid "No pond has a running cycle. Start one from the pond's page first."
+msgstr "কোনো পুকুরে চলমান চক্র নেই। আগে পুকুরের পাতা থেকে একটি শুরু করুন।"
+
+msgid "Feeding saved for %(n)s ponds — %(kg)s kg in all."
+msgstr "%(n)sটি পুকুরের খাওয়ানো সেভ হয়েছে — মোট %(kg)s কেজি।"
+
+msgid "Harvest has to come after the start."
+msgstr "মাছ ধরা শুরুর পরে হতে হবে।"
+
+msgid "This is before the cycle started (%(date)s)."
+msgstr "এটি চক্র শুরুর আগের তারিখ (%(date)s)।"
+
+msgid "This date is in the future."
+msgstr "এই তারিখটি ভবিষ্যতের।"
+
+msgid "Own / not bought"
+msgstr "নিজের / কেনা নয়"
+
+msgid "The rest is recorded as owed to the supplier."
+msgstr "বাকিটা সরবরাহকারীর পাওনা হিসেবে লেখা হবে।"
+
+msgid "Enter the number of fish, their weight, or both."
+msgstr "মাছের সংখ্যা, ওজন, বা দুটোই লিখুন।"
+
+msgid "That's more than the cost."
+msgstr "এটি দামের চেয়ে বেশি।"
+
+msgid "Mixed / not sure"
+msgstr "মিশ্র / নিশ্চিত নই"
+
+msgid "Catch 10–20 fish with a net and weigh them together."
+msgstr "জাল দিয়ে ১০–২০টি মাছ ধরে একসাথে ওজন করুন।"
+
+msgid "Running"
+msgstr "চলমান"
+
+msgid "Finished"
+msgstr "শেষ"
+
+msgid "Pond"
+msgstr "পুকুর"
+
+msgid "e.g. Carp mix 2026. Leave empty to name it by date."
+msgstr "যেমন: কার্প মিক্স ২০২৬। খালি রাখলে তারিখ দিয়ে নাম হবে।"
+
+msgid "Started on"
+msgstr "শুরুর তারিখ"
+
+msgid "Expected harvest"
+msgstr "সম্ভাব্য মাছ ধরা"
+
+msgid "Finished on"
+msgstr "শেষের তারিখ"
+
+msgid "Number of fish"
+msgstr "মাছের সংখ্যা"
+
+msgid "Total weight"
+msgstr "মোট ওজন"
+
+msgid "Weight unit"
+msgstr "ওজনের একক"
+
+msgid "Size"
+msgstr "আকার"
+
+msgid "e.g. 3–4 inch, or 20 per kg"
+msgstr "যেমন: ৩–৪ ইঞ্চি, বা কেজিতে ২০টি"
+
+msgid "Total cost"
+msgstr "মোট দাম"
+
+msgid "Paid now"
+msgstr "এখন দিয়েছেন"
+
+msgid "Number found dead"
+msgstr "কতটি মারা গেছে"
+
+msgid "Likely cause"
+msgstr "সম্ভাব্য কারণ"
+
+msgid "e.g. low oxygen, disease, bird"
+msgstr "যেমন: অক্সিজেন কম, রোগ, পাখি"
+
+msgid "Fish weighed"
+msgstr "কতটি মাছ ওজন করা হয়েছে"
+
+msgid "Their total weight"
+msgstr "সেগুলোর মোট ওজন"
+
+msgid "Last harvest of this cycle"
+msgstr "এই চক্রের শেষ মাছ ধরা"
+
+msgid "The pond has been emptied: the cycle is marked finished."
+msgstr "পুকুর খালি করা হয়েছে: চক্রটি শেষ হিসেবে চিহ্নিত হবে।"
+
+msgid "day %(counter)s"
+msgid_plural "day %(counter)s"
+msgstr[0] "%(counter)s তম দিন"
+msgstr[1] "%(counter)s তম দিন"
+
+msgid "Start a cycle"
+msgstr "চক্র শুরু করুন"
+
+msgid "Started %(date)s"
+msgstr "শুরু %(date)s"
+
+msgid "%(counter)s day"
+msgid_plural "%(counter)s days"
+msgstr[0] "%(counter)s দিন"
+msgstr[1] "%(counter)s দিন"
+
+msgid "Harvest in %(counter)s day"
+msgid_plural "Harvest in %(counter)s days"
+msgstr[0] "মাছ ধরা %(counter)s দিন পর"
+msgstr[1] "মাছ ধরা %(counter)s দিন পর"
+
+msgid "Harvest date passed"
+msgstr "মাছ ধরার তারিখ পার হয়েছে"
+
+msgid "Finished %(date)s"
+msgstr "শেষ %(date)s"
+
+msgid "Cycle"
+msgstr "চক্র"
+
+msgid "Edit dates and name"
+msgstr "তারিখ ও নাম বদলান"
+
+msgid "Finish this cycle"
+msgstr "এই চক্র শেষ করুন"
+
+msgid "Reopen cycle"
+msgstr "চক্র আবার চালু করুন"
+
+msgid "Delete this cycle with everything recorded in it?"
+msgstr "এই চক্র ও এতে লেখা সবকিছু মুছবেন?"
+
+msgid "Delete cycle"
+msgstr "চক্র মুছুন"
+
+msgid "Weigh"
+msgstr "ওজন"
+
+msgid "Deaths"
+msgstr "মৃত্যু"
+
+msgid "Stock"
+msgstr "মজুত"
+
+msgid "Sell"
+msgstr "বিক্রি"
+
+msgid "Fish in the pond"
+msgstr "পুকুরে মাছ"
+
+msgid "Fish released, minus deaths recorded and fish harvested by count. An estimate — unrecorded losses aren't included."
+msgstr "ছাড়া মাছ থেকে লেখা মৃত্যু ও সংখ্যায় ধরা মাছ বাদ দিয়ে। আনুমানিক — না-লেখা ক্ষতি ধরা নেই।"
+
+msgid "of %(n)s released"
+msgstr "%(n)sটি ছাড়ার মধ্যে"
+
+msgid "%(n)s died"
+msgstr "%(n)sটি মারা গেছে"
+
+msgid "No fingerlings recorded yet"
+msgstr "এখনো পোনা লেখা হয়নি"
+
+msgid "Fish weight now"
+msgstr "এখন মাছের ওজন"
+
+msgid "Fish still in the pond × their latest sample weight."
+msgstr "পুকুরে থাকা মাছ × সর্বশেষ নমুনা ওজন।"
+
+msgid "estimated, from sample weighing"
+msgstr "আনুমানিক, নমুনা ওজন থেকে"
+
+msgid "Weigh a sample to see this"
+msgstr "দেখতে কিছু মাছ ওজন করুন"
+
+msgid "Spent so far"
+msgstr "এ পর্যন্ত খরচ"
+
+msgid "Feed %(f)s (%(kg)s kg)"
+msgstr "খাবার %(f)s (%(kg)s কেজি)"
+
+msgid "fingerlings %(c)s"
+msgstr "পোনা %(c)s"
+
+msgid "Sales so far"
+msgstr "এ পর্যন্ত বিক্রি"
+
+msgid "Net sales (after market deductions) from this cycle, and the result after fingerling and feed costs. Other expenses join in once income and expenses are added."
+msgstr "এই চক্রের নিট বিক্রি (বাজারের কর্তনের পরে), আর পোনা ও খাবারের খরচ বাদে ফলাফল। আয়-ব্যয় যোগ হলে অন্য খরচও ধরা হবে।"
+
+msgid "%(amount)s ahead of costs"
+msgstr "খরচের চেয়ে %(amount)s বেশি"
+
+msgid "%(amount)s still to recover"
+msgstr "আরও %(amount)s উঠাতে হবে"
+
+msgid "Stocking"
+msgstr "পোনা ছাড়া"
+
+msgid "Growth & deaths"
+msgstr "বৃদ্ধি ও মৃত্যু"
+
+msgid "Harvest & sales"
+msgstr "মাছ ধরা ও বিক্রি"
+
+msgid "Fish in this cycle"
+msgstr "এই চক্রের মাছ"
+
+msgid "Per species: released, lost, harvested and what's left."
+msgstr "জাত অনুযায়ী: ছাড়া, মারা যাওয়া, ধরা ও বাকি।"
+
+msgid "%(n)s released"
+msgstr "%(n)sটি ছাড়া"
+
+#, python-format
+msgid "%(pct)s%% alive"
+msgstr "%(pct)s%% বেঁচে আছে"
+
+msgid "%(kg)s kg harvested"
+msgstr "%(kg)s কেজি ধরা হয়েছে"
+
+msgid "avg on %(date)s"
+msgstr "%(date)s এর গড়"
+
+msgid "not weighed"
+msgstr "ওজন করা হয়নি"
+
+msgid "Record the fingerlings you released to start tracking this cycle."
+msgstr "এই চক্রের হিসাব শুরু করতে ছাড়া পোনা লিখুন।"
+
+msgid "%(kg)s kg in all · about %(amount)s"
+msgstr "মোট %(kg)s কেজি · প্রায় %(amount)s"
+
+msgid "No feeding recorded yet."
+msgstr "এখনো খাওয়ানো লেখা হয়নি।"
+
+msgid "Fingerlings released"
+msgstr "ছাড়া পোনা"
+
+msgid "pcs"
+msgstr "টি"
+
+msgid "%(g)s g each"
+msgstr "প্রতিটি %(g)s গ্রাম"
+
+msgid "paid"
+msgstr "পরিশোধিত"
+
+msgid "No fingerlings recorded yet."
+msgstr "এখনো পোনা লেখা হয়নি।"
+
+msgid "Average weight per fish over time."
+msgstr "সময়ের সাথে মাছ প্রতি গড় ওজন।"
+
+msgid "%(n)s fish weighed"
+msgstr "%(n)sটি মাছ ওজন করা"
+
+msgid "Every 2–3 weeks, net 10–20 fish and weigh them together. You'll see how they're growing and roughly how much fish is in the pond."
+msgstr "প্রতি ২–৩ সপ্তাহে জাল দিয়ে ১০–২০টি মাছ ধরে একসাথে ওজন করুন। মাছ কেমন বাড়ছে আর পুকুরে প্রায় কত মাছ আছে দেখতে পাবেন।"
+
+msgid "%(counter)s fish"
+msgid_plural "%(counter)s fish"
+msgstr[0] "%(counter)sটি মাছ"
+msgstr[1] "%(counter)sটি মাছ"
+
+msgid "No deaths recorded. Good!"
+msgstr "কোনো মৃত্যু লেখা নেই। ভালো!"
+
+msgid "Harvests"
+msgstr "মাছ ধরা"
+
+msgid "last harvest"
+msgstr "শেষ মাছ ধরা"
+
+msgid "No harvest yet."
+msgstr "এখনো মাছ ধরা হয়নি।"
+
+msgid "Sales from this pond"
+msgstr "এই পুকুরের বিক্রি"
+
+msgid "%(amount)s net"
+msgstr "নিট %(amount)s"
+
+msgid "No sales linked to this pond yet."
+msgstr "এই পুকুরের সাথে এখনো কোনো বিক্রি নেই।"
+
+msgid "Use this when the pond has been fully harvested or emptied. The pond is marked empty."
+msgstr "পুকুরের সব মাছ ধরা বা পুকুর খালি হলে এটি ব্যবহার করুন। পুকুর খালি হিসেবে চিহ্নিত হবে।"
+
+msgid "Finish cycle"
+msgstr "চক্র শেষ করুন"
+
+msgid "Delete this entry?"
+msgstr "এই এন্ট্রি মুছবেন?"
+
+msgid "Feeding several ponds today?"
+msgstr "আজ কয়েকটি পুকুরে খাওয়াচ্ছেন?"
+
+msgid "Enter all ponds at once"
+msgstr "সব পুকুর একবারে লিখুন"
+
+msgid "Save & sell"
+msgstr "সেভ করে বিক্রি"
+
+msgid "ft deep"
+msgstr "ফুট গভীর"
+
+msgid "until %(date)s"
+msgstr "%(date)s পর্যন্ত"
+
+msgid "Edit pond"
+msgstr "পুকুর সম্পাদনা"
+
+msgid "Running since %(date)s"
+msgstr "%(date)s থেকে চলছে"
+
+msgid "Fish in pond"
+msgstr "পুকুরে মাছ"
+
+msgid "Feed used"
+msgstr "খাবার খাওয়ানো"
+
+msgid "Spent"
+msgstr "খরচ"
+
+msgid "Sold"
+msgstr "বিক্রি"
+
+msgid "No fish in this pond right now"
+msgstr "এই পুকুরে এখন মাছ নেই"
+
+msgid "Start a cycle when you release fingerlings. Feeding, deaths, weighing, harvests and sales are then recorded against it."
+msgstr "পোনা ছাড়লে একটি চক্র শুরু করুন। খাওয়ানো, মৃত্যু, ওজন, মাছ ধরা ও বিক্রি এর মধ্যে লেখা হবে।"
+
+msgid "Past cycles"
+msgstr "আগের চক্র"
+
+msgid "How each season in this pond turned out."
+msgstr "এই পুকুরে প্রতিটি মৌসুম কেমন গেছে।"
+
+msgid "sales − costs"
+msgstr "বিক্রি − খরচ"
+
+msgid "Finished cycles will be listed here with their results."
+msgstr "শেষ হওয়া চক্রগুলো ফলাফলসহ এখানে দেখাবে।"
+
+msgid "Record feeding"
+msgstr "খাওয়ানো লিখুন"
+
+msgid "Add fingerlings"
+msgstr "পোনা যোগ করুন"
+
+msgid "Sample weighing"
+msgstr "নমুনা ওজন"
+
+msgid "Record deaths"
+msgstr "মৃত্যু লিখুন"
+
+msgid "Record harvest"
+msgstr "মাছ ধরা লিখুন"
+
+msgid "%(pond)s already has a running cycle. Finish it first."
+msgstr "%(pond)s এ আগে থেকেই একটি চক্র চলছে। আগে সেটি শেষ করুন।"
+
+msgid "New cycle started in %(pond)s. Add the fingerlings you released."
+msgstr "%(pond)s এ নতুন চক্র শুরু হয়েছে। ছাড়া পোনা যোগ করুন।"
+
+msgid "Start a new cycle"
+msgstr "নতুন চক্র শুরু করুন"
+
+msgid "Cycle updated."
+msgstr "চক্র হালনাগাদ হয়েছে।"
+
+msgid "Edit cycle"
+msgstr "চক্র সম্পাদনা"
+
+msgid "Cycle finished. %(pond)s is marked empty — start a new cycle when you restock."
+msgstr "চক্র শেষ। %(pond)s খালি হিসেবে চিহ্নিত — আবার পোনা ছাড়লে নতুন চক্র শুরু করুন।"
+
+msgid "%(pond)s already has a running cycle."
+msgstr "%(pond)s এ আগে থেকেই একটি চক্র চলছে।"
+
+msgid "Cycle reopened."
+msgstr "চক্র আবার চালু হয়েছে।"
+
+msgid "Cycle deleted. You can ask an admin to restore it."
+msgstr "চক্র মুছে ফেলা হয়েছে। ফেরাতে অ্যাডমিনকে বলুন।"
+
+msgid "Harvest saved and the cycle is finished."
+msgstr "মাছ ধরা সেভ হয়েছে এবং চক্র শেষ হয়েছে।"
+
+msgid "Saved."
+msgstr "সেভ হয়েছে।"
+
+msgid "Deleted."
+msgstr "মুছে ফেলা হয়েছে।"
+
+msgid "Not at a market / direct"
+msgstr "বাজারে নয় / সরাসরি"
+
+msgid "Cash buyer / not recorded"
+msgstr "নগদ ক্রেতা / লেখা নেই"
+
+msgid "Not from a particular pond"
+msgstr "নির্দিষ্ট পুকুরের নয়"
+
+msgid "Not recorded"
+msgstr "লেখা নেই"
+
+msgid "Choose fish…"
+msgstr "মাছ বেছে নিন…"
+
+msgid "Add at least one fish."
+msgstr "অন্তত একটি মাছ যোগ করুন।"
+
+msgid "Market"
+msgstr "বাজার"
+
+msgid "From pond"
+msgstr "যে পুকুরের"
+
+msgid "Harvest"
+msgstr "মাছ ধরা"
+
+msgid "Memo no."
+msgstr "মেমো নং"
+
+msgid "Received now"
+msgstr "এখন পেয়েছেন"
+
+msgid "Received into"
+msgstr "যেখানে জমা"
+
+msgid "Per unit chosen"
+msgstr "বাছাই করা একক প্রতি"
+
+msgid "Deleted sales"
+msgstr "মুছে ফেলা বিক্রি"
+
+msgid "Print"
+msgstr "প্রিন্ট"
+
+msgid "Delete this sale? You can restore it later."
+msgstr "এই বিক্রি মুছবেন? পরে ফিরিয়ে আনতে পারবেন।"
+
+msgid "This sale is deleted and isn't counted anywhere."
+msgstr "এই বিক্রি মুছে ফেলা হয়েছে, কোথাও হিসাবে ধরা হচ্ছে না।"
+
+msgid "Fish sale"
+msgstr "মাছ বিক্রি"
+
+msgid "fixed"
+msgstr "নির্দিষ্ট"
+
+msgid "Net amount"
+msgstr "নিট টাকা"
+
+msgid "Recorded by %(name)s"
+msgstr "লিখেছেন %(name)s"
+
+msgid "Edit sale"
+msgstr "বিক্রি সম্পাদনা"
+
+msgid "New sale"
+msgstr "নতুন বিক্রি"
+
+msgid "From the harvest: %(h)s"
+msgstr "মাছ ধরা থেকে: %(h)s"
+
+msgid "Fish sold"
+msgstr "বিক্রি করা মাছ"
+
+msgid "Sell by mon, kg or piece — whatever the market uses."
+msgstr "মণ, কেজি বা পিস — বাজার যেভাবে কেনে সেভাবে বিক্রি লিখুন।"
+
+msgid "Add another fish"
+msgstr "আরেকটি মাছ যোগ করুন"
+
+msgid "Market deductions"
+msgstr "বাজারের কর্তন"
+
+msgid "Filled in from the market. Change or remove any for this sale."
+msgstr "বাজার থেকে বসানো। এই বিক্রির জন্য যেকোনোটি বদলান বা বাদ দিন।"
+
+msgid "Total and payment"
+msgstr "মোট ও পরিশোধ"
+
+msgid "Sale value"
+msgstr "বিক্রির দাম"
+
+msgid "Deductions"
+msgstr "কর্তন"
+
+msgid "You get"
+msgstr "আপনি পাবেন"
+
+msgid "Received in full"
+msgstr "পুরো টাকা পেয়েছি"
+
+msgid "All on baki"
+msgstr "সব বাকিতে"
+
+msgid "Still to receive"
+msgstr "এখনো পাওনা"
+
+msgid "Save sale"
+msgstr "বিক্রি সেভ করুন"
+
+msgid "Every sale with its market deductions — and what buyers still owe you."
+msgstr "বাজারের কর্তনসহ প্রতিটি বিক্রি — আর ক্রেতাদের কাছে এখনো কত পাওনা।"
+
+msgid "you got"
+msgstr "আপনি পেয়েছেন"
+
+msgid "%(counter)s sale · %(kg)s kg"
+msgid_plural "%(counter)s sales · %(kg)s kg"
+msgstr[0] "%(counter)sটি বিক্রি · %(kg)s কেজি"
+msgstr[1] "%(counter)sটি বিক্রি · %(kg)s কেজি"
+
+msgid "%(amount)s taken by markets"
+msgstr "বাজার কেটেছে %(amount)s"
+
+msgid "Show sales with dues"
+msgstr "বাকি থাকা বিক্রি দেখুন"
+
+msgid "Buyer, market, fish…"
+msgstr "ক্রেতা, বাজার, মাছ…"
+
+msgid "Only sales with dues"
+msgstr "শুধু বাকি থাকা বিক্রি"
+
+msgid "Show all"
+msgstr "সব দেখুন"
+
+msgid "Cash sale"
+msgstr "নগদ বিক্রি"
+
+msgid "%(amount)s due"
+msgstr "%(amount)s বাকি"
+
+msgid "received"
+msgstr "পাওয়া গেছে"
+
+msgid "No sales in this period"
+msgstr "এই সময়ে কোনো বিক্রি নেই"
+
+msgid "Record a sale from the market memo: fish, quantity and rate. The market's commission and charges fill in by themselves."
+msgstr "বাজারের মেমো দেখে বিক্রি লিখুন: মাছ, পরিমাণ ও দর। বাজারের কমিশন ও খরচ নিজে থেকেই বসে যাবে।"
+
+msgid "%(counter)s deleted sale"
+msgid_plural "%(counter)s deleted sales"
+msgstr[0] "%(counter)sটি মুছে ফেলা বিক্রি"
+msgstr[1] "%(counter)sটি মুছে ফেলা বিক্রি"
+
+msgid "Last month"
+msgstr "গত মাস"
+
+msgid "This year"
+msgstr "এ বছর"
+
+msgid "Sale saved: %(net)s net, %(due)s still to receive."
+msgstr "বিক্রি সেভ হয়েছে: নিট %(net)s, এখনো %(due)s পাওনা।"
+
+msgid "Sale saved: %(net)s received in full."
+msgstr "বিক্রি সেভ হয়েছে: %(net)s পুরোটা পাওয়া গেছে।"
+
+msgid "Sale deleted. You can restore it from the sales list."
+msgstr "বিক্রি মুছে ফেলা হয়েছে। বিক্রির তালিকা থেকে ফিরিয়ে আনতে পারবেন।"
+
+msgid "Sale restored."
+msgstr "বিক্রি ফিরিয়ে আনা হয়েছে।"
+
+msgid "New fish species"
+msgstr "নতুন মাছের জাত"
+
+msgid "fish"
+msgstr "মাছ"

@@ -136,6 +136,8 @@ class Master:
     delete_check: object = None     # fn(obj) -> error message or None
     initial: object = None          # fn(request) -> dict for a new record
     after_save: object = None       # fn(obj, request)
+    form_context: object = None     # fn(request) -> extra context for the form page
+    nav_template: str = ""          # tabs shown above the list (e.g. the Feed section's tabs)
 
     # views -------------------------------------------------------------------
     def urls(self):
@@ -173,7 +175,7 @@ class Master:
             cond = Q()
             for f in self.search_fields:
                 cond |= Q(**{f"{f}__icontains": q})
-            qs = qs.filter(cond)
+            qs = qs.filter(cond).distinct()
         objects = list(qs[:500])
         if self.decorate:
             self.decorate(objects, b)
@@ -219,8 +221,10 @@ class Master:
             if nxt and url_has_allowed_host_and_scheme(nxt, {request.get_host()}):
                 return redirect(nxt)
             return redirect(f"business:{self.name}")
-        return render(request, self.form_template, {"m": self, "form": form, "formset": formset, "obj": obj,
-                                                     "url_list": reverse(f"business:{self.name}")})
+        ctx = {"m": self, "form": form, "formset": formset, "obj": obj, "url_list": reverse(f"business:{self.name}")}
+        if self.form_context:
+            ctx.update(self.form_context(request))
+        return render(request, self.form_template, ctx)
 
     def delete_view(self, request, pk):
         obj = get_object_or_404(self.model, pk=pk, business=request.business)

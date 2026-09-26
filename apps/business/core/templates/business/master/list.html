@@ -11,6 +11,8 @@
     {% if can_edit %}<div class="page-actions"><a href="{{ url_add }}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{{ m.add_label }}</a></div>{% endif %}
   </header>
 
+  {% if m.nav_template %}{% include m.nav_template %}{% endif %}
+
   {% if total or is_deleted_tab or q %}
   <div class="master-bar">
     {% if tabs|length > 1 %}

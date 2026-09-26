@@ -9,6 +9,12 @@
   <a href="{% url 'business:ponds' %}" class="nav-link {% if '/business/ponds/' in p %}is-active{% endif %}">
     {% include "business/partials/icon.html" with name="fish" %}{% translate "Ponds" %}
   </a>
+  <a href="{% url 'business:feed_stock' %}" class="nav-link {% if '/business/feed/' in p %}is-active{% endif %}">
+    {% include "business/partials/icon.html" with name="banknotes" %}{% translate "Feed" %}
+  </a>
+  <a href="{% url 'business:sales' %}" class="nav-link {% if '/business/sales/' in p %}is-active{% endif %}">
+    {% include "partials/icon.html" with name="cart" %}{% translate "Fish sales" %}
+  </a>
   {% endif %}
 </div>
 
@@ -40,7 +46,7 @@
 
 <div class="space-y-0.5">
   <p class="nav-section-label">{% translate "Settings" %}</p>
-  <a href="{% url 'business:setup_hub' %}" class="nav-link {% if p == '/business/settings/' or '/business/species/' in p or '/business/feed/' in p or '/business/finance/categories/' in p or '/business/settings/units/' in p or 'deduction-types' in p %}is-active{% endif %}">
+  <a href="{% url 'business:setup_hub' %}" class="nav-link {% if p == '/business/settings/' or '/business/species/' in p or '/business/finance/categories/' in p or '/business/settings/units/' in p or 'deduction-types' in p %}is-active{% endif %}">
     {% include "business/partials/icon.html" with name="squares" %}{% translate "Farm setup" %}
   </a>
   {% if biz_can.manage_team %}

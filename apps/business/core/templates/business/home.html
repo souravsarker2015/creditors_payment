@@ -23,6 +23,18 @@
     {% endif %}
   </header>
 
+  {% if biz_can.enter_data and has_ponds %}
+  <nav class="quick-actions home-actions" aria-label="{% translate 'Record' %}">
+    <a href="{% url 'business:feed_usage_bulk' %}" class="quick-action">{% include "business/partials/icon.html" with name="banknotes" %}<span>{% translate "Feeding" %}</span></a>
+    <a href="{% url 'business:sale_add' %}" class="quick-action is-primary">{% include "partials/icon.html" with name="cart" %}<span>{% translate "Sale" %}</span></a>
+    <a href="{% url 'business:feed_purchases_add' %}" class="quick-action">{% include "business/partials/icon.html" with name="truck" %}<span>{% translate "Buy feed" %}</span></a>
+    <a href="{% url 'business:ponds' %}" class="quick-action">{% include "business/partials/icon.html" with name="fish" %}<span>{% translate "Ponds" %}</span></a>
+  </nav>
+  {% endif %}
+  {% if low_feed %}
+  <div class="callout" data-tone="warn">{% include "partials/icon.html" with name="alert" %}<div class="flex-1"><p class="callout-title">{% translate "Feed running low" %}</p><p>{% for r in low_feed %}{{ r.product }}: {% blocktranslate with n=r.left_bags|num %}{{ n }} bags{% endblocktranslate %}{% if not forloop.last %} · {% endif %}{% endfor %}</p><a href="{% url 'business:feed_purchases_add' %}" class="btn btn-soft btn-sm mt-2">{% translate "Buy feed" %}</a></div></div>
+  {% endif %}
+
   <div class="grid grid-cols-1 gap-5 lg:grid-cols-5 lg:items-start">
     <section class="card lg:col-span-3">
       <div class="card-header">
@@ -63,7 +75,7 @@
         {% endfor %}
         <li class="is-next">
           <span class="biz-step-dot">{% include "business/partials/icon.html" with name="fish" %}</span>
-          <div><p class="biz-step-title">{% translate "Stocking, feeding, sales and baki" %}</p><p class="biz-step-text">{% translate "Coming next to this dashboard." %}</p></div>
+          <div><p class="biz-step-title">{% translate "Baki ledger, income & expenses, reports" %}</p><p class="biz-step-text">{% translate "Coming next to this dashboard." %}</p></div>
         </li>
       </ol>
     </section>

@@ -42,7 +42,21 @@ def home_view(request):
         "other_businesses": memberships(request.user).exclude(business=b),
         "loans": _loans_summary(request),
         "setup_steps": _setup_steps(request),
+        "has_ponds": _has_ponds(b),
+        "low_feed": _low_feed(b),
     })
+
+
+def _has_ponds(business):
+    from apps.business.ponds.models import Pond
+
+    return Pond.objects.filter(business=business).exists()
+
+
+def _low_feed(business):
+    from apps.business.feed.services import low_stock
+
+    return low_stock(business)
 
 
 def _setup_steps(request):
