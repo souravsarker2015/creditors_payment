@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% translate "Record feeding" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-narrow">
+  <header class="page-header">
+    <div>
+      <a href="{% url 'business:feed_usage' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Feeding log" %}</a>
+      <h1 class="page-title">{% translate "Record feeding" %}</h1>
+      <p class="page-subtitle">{% translate "One feed for all ponds. Last time's amounts are filled in — change what's different and save." %}</p>
+    </div>
+  </header>
+  <form method="post" class="stack" novalidate x-data="{ total: 0, sum() { this.total = Array.from($el.querySelectorAll('[data-pond]')).reduce((a, i) => a + (parseFloat(i.value) || 0), 0); } }" x-init="sum()" @input="sum()">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+    <section class="card">
+      <div class="card-body form-stack">
+        {% with field=form.date %}{% include "business/partials/field.html" %}{% endwith %}
+        <div class="form-grid form-grid-2">
+          {% with field=form.product %}{% include "business/partials/field.html" %}{% endwith %}
+          {% with field=form.unit %}{% include "business/partials/field.html" %}{% endwith %}
+        </div>
+      </div>
+    </section>
+    <section class="card">
+      <div class="card-header"><h2 class="card-title">{% translate "How much for each pond" %}</h2><span class="badge badge-outline" x-text="(Math.round(total * 10) / 10) + ' ' + ($root.querySelector('[name=unit]').selectedOptions[0] || {}).text"></span></div>
+      <ul class="ledger">
+        {% for cycle, field in form.pond_fields %}
+        <li class="ledger-row bulk-row">
+          <span class="ledger-icon" data-tone="info">{% include "business/partials/icon.html" with name="fish" %}</span>
+          <label class="ledger-main" for="{{ field.id_for_label }}"><span class="ledger-title block">{{ cycle.pond }}</span><span class="ledger-meta block">{{ cycle.label }} · {% blocktranslate count counter=cycle.days %}day {{ counter }}{% plural %}day {{ counter }}{% endblocktranslate %}</span></label>
+          <div class="bulk-input">{{ field }}</div>
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+    <div class="form-actions">
+      <a href="{% url 'business:feed_usage' %}" class="btn btn-ghost btn-lg">{% translate "Cancel" %}</a>
+      <button type="submit" class="btn btn-primary btn-lg">{% include "partials/icon.html" with name="check" %}{% translate "Save feeding" %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

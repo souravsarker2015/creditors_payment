@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% translate "Feeding log" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "Feed" %}</h1>
+      <p class="page-subtitle">{% blocktranslate with kg=week_kg|num %}{{ kg }} kg fed in the last 7 days.{% endblocktranslate %}</p>
+    </div>
+    {% if biz_can.enter_data %}<div class="page-actions"><a href="{% url 'business:feed_usage_bulk' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Record feeding" %}</a></div>{% endif %}
+  </header>
+  {% include "business/feed/feed_tabs.html" %}
+  {% if not today_done and biz_can.enter_data %}
+  <div class="callout" data-tone="info">{% include "partials/icon.html" with name="clock" %}<div class="flex-1"><p>{% translate "Today's feeding isn't recorded yet." %}</p><a href="{% url 'business:feed_usage_bulk' %}" class="btn btn-soft btn-sm mt-2">{% translate "Record it now" %}</a></div></div>
+  {% endif %}
+  {% for day in days %}
+  <section class="card">
+    <div class="card-header"><h2 class="card-title">{{ day.date|date:"l, j M" }}</h2><span class="badge badge-outline">{{ day.kg|num }} kg</span></div>
+    <ul class="ledger">{% for e in day.rows %}
+      <li class="ledger-row">
+        <span class="ledger-icon" data-tone="gold">{% include "business/partials/icon.html" with name="fish" %}</span>
+        <div class="ledger-main"><p class="ledger-title"><a href="{% url 'business:cycle_detail' e.cycle_id %}?tab=feeding" class="hover:underline">{{ e.cycle.pond }}</a></p><p class="ledger-meta">{{ e.product }}</p></div>
+        <div class="ledger-end">
+          <span class="ledger-amount">{% if e.unit %}{% qty e.quantity e.unit %}{% else %}{% blocktranslate with n=e.quantity|num %}{{ n }} bags{% endblocktranslate %}{% endif %}</span>
+          {% if biz_can.enter_data %}{% url 'business:entry_edit' 'feeding' e.pk as edit_url %}{% url 'business:entry_delete' 'feeding' e.pk as delete_url %}{% translate "Delete this entry?" as confirm_text %}{% include "partials/row_menu.html" with edit_url=edit_url delete_url=delete_url confirm=confirm_text up=forloop.last %}{% endif %}
+        </div>
+      </li>{% endfor %}
+    </ul>
+  </section>
+  {% empty %}
+  <div class="empty"><div class="empty-icon">{% include "business/partials/icon.html" with name="fish" %}</div><h3 class="empty-title">{% translate "No feeding recorded yet" %}</h3><p class="empty-text">{% translate "Record each day's feed for all ponds in one go — the amounts from last time are filled in for you." %}</p></div>
+  {% endfor %}
+  {% include "partials/pagination.html" %}
+</div>
+{% endblock %}

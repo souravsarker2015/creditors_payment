@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% if obj %}{% translate "Edit purchase" %}{% else %}{% translate "Buy feed" %}{% endif %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-narrow page-wide-form">
+  <header class="page-header">
+    <div>
+      <a href="{{ request.GET.next|default:url_list }}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Feed purchases" %}</a>
+      <h1 class="page-title">{% if obj %}{% translate "Edit purchase" %}{% else %}{% translate "Buy feed" %}{% endif %}</h1>
+    </div>
+  </header>
+  <form method="post" class="stack" novalidate x-data="docTotals({{ feed_json }}, 'feed')" @input="calc($event)" @change="calc($event)">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+    <section class="card">
+      <div class="card-body form-stack">
+        {% with field=form.supplier %}{% include "business/partials/field.html" %}{% endwith %}
+        <div class="form-grid form-grid-2">
+          {% with field=form.date %}{% include "business/partials/field.html" %}{% endwith %}
+          {% with field=form.invoice_no %}{% include "business/partials/field.html" %}{% endwith %}
+        </div>
+      </div>
+    </section>
+
+    <section class="card" x-data="formRows('{{ formset.prefix }}')" @row-added="calc()">
+      <div class="card-header"><div><h2 class="card-title">{% translate "Feed bought" %}</h2><p class="card-subtitle">{% translate "Choose bags or a weight. The usual price per bag fills in by itself." %}</p></div></div>
+      {{ formset.management_form }}
+      {% if formset.non_form_errors %}<div class="card-body"><div class="form-errors">{% for e in formset.non_form_errors %}<p>{{ e }}</p>{% endfor %}</div></div>{% endif %}
+      <div class="rows-list" x-ref="list">{% for f in formset %}{% include "business/feed/purchase_line.html" %}{% endfor %}</div>
+      <template x-ref="tpl">{% with f=formset.empty_form %}{% include "business/feed/purchase_line.html" %}{% endwith %}</template>
+      <div class="card-footer"><button type="button" class="btn btn-secondary btn-sm" @click="add()" x-init="if (!$refs.list.children.length) add()">{% include "partials/icon.html" with name="plus" %}{% translate "Add another feed" %}</button></div>
+    </section>
+
+    <section class="card">
+      <div class="card-header"><h2 class="card-title">{% translate "Total and payment" %}</h2></div>
+      <div class="card-body form-stack">
+        <div class="form-grid form-grid-2">
+          {% with field=form.transport %}{% include "business/partials/field.html" %}{% endwith %}
+          {% with field=form.discount %}{% include "business/partials/field.html" %}{% endwith %}
+        </div>
+        <dl class="doc-totals">
+          <div><dt>{% translate "Feed" %} <small x-show="kg" x-text="'· ' + fmtNum(kg) + ' kg'"></small></dt><dd x-text="money(subtotal)"></dd></div>
+          <div x-show="extra"><dt>{% translate "Transport / labour" %}</dt><dd x-text="'+ ' + money(extra)"></dd></div>
+          <div x-show="less"><dt>{% translate "Discount" %}</dt><dd x-text="'− ' + money(less)"></dd></div>
+          <div class="is-total"><dt>{% translate "Total" %}</dt><dd x-text="money(total)"></dd></div>
+        </dl>
+        <div class="form-grid form-grid-2">
+          <div>
+            {% with field=form.paid_now %}{% include "business/partials/field.html" %}{% endwith %}
+            <div class="chip-row mt-2"><button type="button" class="chip chip-choice" @click="setPaid(total)">{% translate "Paid in full" %}</button><button type="button" class="chip chip-choice" @click="setPaid(0)">{% translate "All on baki" %}</button></div>
+          </div>
+          {% with field=form.account %}{% include "business/partials/field.html" %}{% endwith %}
+        </div>
+        <p class="doc-due" x-show="total > 0" :data-tone="due > 0 ? 'warn' : 'good'">
+          <span x-show="due > 0" x-text="'{{ _('Owed to the supplier')|escapejs }}: ' + money(due)"></span>
+          <span x-show="due <= 0">{% translate "Fully paid" %}</span>
+        </p>
+        {% with field=form.notes %}{% include "business/partials/field.html" %}{% endwith %}
+      </div>
+    </section>
+
+    <div class="form-actions">
+      <a href="{{ request.GET.next|default:url_list }}" class="btn btn-ghost btn-lg">{% translate "Cancel" %}</a>
+      <button type="submit" class="btn btn-primary btn-lg">{% include "partials/icon.html" with name="check" %}{% translate "Save purchase" %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{% asset 'js/business-forms.js' %}"></script>{% endblock %}

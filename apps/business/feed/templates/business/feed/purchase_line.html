@@ -1,0 +1,23 @@
+{% load i18n %}<div class="form-row doc-line" x-data="{ gone: {{ f.DELETE.value|yesno:'true,false' }} }" x-show="!gone" :data-gone="gone">
+  {{ f.id }}{% if f.instance.pk %}<input type="checkbox" name="{{ f.DELETE.html_name }}" x-model="gone" class="hidden" @change="$nextTick(() => calc())">{% endif %}
+  <div class="form-row-grid doc-line-grid">
+    <div class="field{% if f.product.errors %} has-error{% endif %}">
+      <label class="label" for="{{ f.product.id_for_label }}">{{ f.product.label }}</label>{{ f.product }}
+      {% for e in f.product.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+    </div>
+    <div class="field{% if f.quantity.errors %} has-error{% endif %}">
+      <label class="label" for="{{ f.quantity.id_for_label }}">{{ f.quantity.label }}</label>{{ f.quantity }}
+      {% for e in f.quantity.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+    </div>
+    <div class="field">
+      <label class="label" for="{{ f.unit.id_for_label }}">{{ f.unit.label }}</label>{{ f.unit }}
+    </div>
+    <div class="field{% if f.rate.errors %} has-error{% endif %}">
+      <label class="label" for="{{ f.rate.id_for_label }}">{% translate "Rate" %} <span class="opt" data-rate-per></span></label>
+      <div class="input-affix has-start"><span class="affix affix-start" aria-hidden="true">৳</span>{{ f.rate }}</div>
+      {% for e in f.rate.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+    </div>
+  </div>
+  <p class="doc-line-amount"><span data-line-kg></span><strong data-line-amount></strong></p>
+  <button type="button" class="icon-btn form-row-x" @click="{% if f.instance.pk %}gone = true; $nextTick(() => calc()){% else %}$el.closest('.form-row').remove(); calc(){% endif %}" aria-label="{% translate 'Remove' %}" data-tip="{% translate 'Remove' %}">{% include "partials/icon.html" with name="trash" %}</button>
+</div>

@@ -44,7 +44,7 @@ class MarketDeductionForm(BusinessForm):
 
     class Meta:
         model = MarketDeduction
-        fields = ["deduction_type", "method", "value", "unit"]
+        fields = ("deduction_type", "method", "value", "unit")  # a tuple: inline formsets append their FK to a list in place
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

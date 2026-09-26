@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% translate "Feed" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "Feed" %}</h1>
+      <p class="page-subtitle">{% translate "What's in the store, what the ponds are eating, and what you owe for it. Stock updates by itself from purchases and feeding." %}</p>
+    </div>
+    {% if biz_can.enter_data %}
+    <div class="page-actions">
+      <a href="{% url 'business:feed_purchases_add' %}" class="btn btn-secondary">{% include "business/partials/icon.html" with name="truck" %}{% translate "Buy feed" %}</a>
+      <a href="{% url 'business:feed_usage_bulk' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Record feeding" %}</a>
+    </div>
+    {% endif %}
+  </header>
+  {% include "business/feed/feed_tabs.html" %}
+
+  {% if low %}
+  <div class="callout" data-tone="warn">
+    {% include "partials/icon.html" with name="alert" %}
+    <div><p class="callout-title">{% blocktranslate count counter=low|length %}{{ counter }} feed is running low{% plural %}{{ counter }} feeds are running low{% endblocktranslate %}</p>
+    <p>{% for r in low %}{{ r.product }}: {% if r.is_negative %}{% translate "more used than bought — check the entries" %}{% else %}{% blocktranslate with n=r.left_bags|num %}{{ n }} bags left{% endblocktranslate %}{% endif %}{% if not forloop.last %} · {% endif %}{% endfor %}</p></div>
+  </div>
+  {% endif %}
+
+  <dl class="stat-grid">
+    <div class="stat" data-tone="accent"><dt class="stat-label">{% translate "Feed in store" %}</dt><dd class="stat-value">{{ value|bdt }}</dd><dd class="stat-hint">{% translate "at the average price paid" %}</dd></div>
+    <div class="stat" data-tone="gold"><dt class="stat-label">{% translate "Used this month" %}</dt><dd class="stat-value">{{ used_month|num }} kg</dd><dd class="stat-hint">{% now "F" %}</dd></div>
+    <div class="stat" data-tone="info"><dt class="stat-label">{% translate "Bought this month" %}</dt><dd class="stat-value">{{ bought_month|bdt }}</dd><dd class="stat-hint">{% now "F" %}</dd></div>
+    <div class="stat" data-tone="{% if dues %}critical{% else %}good{% endif %}"><dt class="stat-label">{% translate "Owed to feed suppliers" %}</dt><dd class="stat-value">{{ dues|bdt }}</dd><dd class="stat-hint">{% translate "from purchases on baki" %}</dd></div>
+  </dl>
+
+  <section class="card">
+    <div class="card-header"><h2 class="card-title">{% translate "Stock by feed" %}</h2></div>
+    {% if rows %}
+    <ul class="ledger">
+      {% for r in rows %}
+      <li class="ledger-row stock-row">
+        <span class="ledger-icon" data-tone="{% if r.is_negative %}critical{% elif r.is_low %}warn{% else %}good{% endif %}">{% include "business/partials/icon.html" with name="banknotes" %}</span>
+        <div class="ledger-main">
+          <p class="ledger-title">{{ r.product }}</p>
+          <div class="meter stock-meter" data-tone="{% if r.is_low or r.is_negative %}warn{% else %}good{% endif %}" title="{% blocktranslate with pct=r.used_pct %}{{ pct }}% used{% endblocktranslate %}"><span style="width: {{ r.used_pct }}%"></span></div>
+          <p class="ledger-meta">{% blocktranslate with b=r.bought_kg|num u=r.used_kg|num %}Bought {{ b }} kg · used {{ u }} kg{% endblocktranslate %}</p>
+        </div>
+        <div class="ledger-end">
+          <span class="party-bal" data-tone="{% if r.is_negative %}critical{% elif r.is_low %}warn{% endif %}"><strong>{% blocktranslate with n=r.left_bags|num %}{{ n }} bags{% endblocktranslate %}</strong><span>{{ r.left_kg|num }} kg</span></span>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty is-plain">
+      <div class="empty-icon">{% include "business/partials/icon.html" with name="banknotes" %}</div>
+      <h3 class="empty-title">{% translate "No feed in store yet" %}</h3>
+      <p class="empty-text">{% translate "Record your first feed purchase and the stock appears here. Every feeding you record takes it down." %}</p>
+      {% if biz_can.enter_data %}<a href="{% url 'business:feed_purchases_add' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Buy feed" %}</a>{% endif %}
+    </div>
+    {% endif %}
+  </section>
+
+  {% if recent %}
+  <section class="card">
+    <div class="card-header"><h2 class="card-title">{% translate "Recent purchases" %}</h2><a href="{% url 'business:feed_purchases' %}" class="btn btn-ghost btn-sm">{% translate "View all" %}{% include "partials/icon.html" with name="arrow-right" %}</a></div>
+    <ul class="ledger">{% for o in recent %}{% include "business/feed/purchase_row.html" with m=None %}{% endfor %}</ul>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}
