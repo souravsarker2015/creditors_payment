@@ -6398,3 +6398,392 @@ msgstr "নতুন মাছের জাত"
 
 msgid "fish"
 msgstr "মাছ"
+
+msgid "Income & expenses, budgets and reports"
+msgstr "আয়-ব্যয়, বাজেট ও রিপোর্ট"
+
+msgid "Baki (dues)"
+msgstr "বাকি খাতা"
+
+msgid "Worked out from your sales, purchases and payments."
+msgstr "আপনার বিক্রি, কেনা ও লেনদেন থেকে নিজে থেকেই হিসাব হয়।"
+
+msgid "Nobody owes you and you owe nobody."
+msgstr "কারও কাছে পাওনা নেই, কাউকে দেনাও নেই।"
+
+msgid "Follow up today:"
+msgstr "আজ খোঁজ নিন:"
+
+msgid "oldest %(counter)s day"
+msgid_plural "oldest %(counter)s days"
+msgstr[0] "সবচেয়ে পুরোনো %(counter)s দিন"
+msgstr[1] "সবচেয়ে পুরোনো %(counter)s দিন"
+
+msgid "Receive"
+msgstr "টাকা নিন"
+
+msgid "Choose a person or firm…"
+msgstr "লোক বা প্রতিষ্ঠান বাছুন…"
+
+msgid "That date is in the future."
+msgstr "তারিখটি ভবিষ্যতের।"
+
+msgid "That bill isn't one of %(name)s's."
+msgstr "এই বিলটি %(name)s-এর নয়।"
+
+msgid "e.g. Said he'll pay after Friday's market"
+msgstr "যেমন: শুক্রবারের হাটের পর দেবে বলেছে"
+
+msgid "Received from them"
+msgstr "তাদের থেকে পেলাম"
+
+msgid "Paid to them"
+msgstr "তাদের দিলাম"
+
+msgid "Who"
+msgstr "কে"
+
+msgid "Discount / let go"
+msgstr "ছাড় / মাফ"
+
+msgid "Settled without money changing hands, e.g. ৳50 let go to round off."
+msgstr "টাকা না নিয়েই মিটিয়ে দেওয়া অংশ, যেমন হিসাব গোল করতে ৳৫০ ছাড়।"
+
+msgid "Account"
+msgstr "অ্যাকাউন্ট"
+
+msgid "0–30 days"
+msgstr "০–৩০ দিন"
+
+msgid "31–60 days"
+msgstr "৩১–৬০ দিন"
+
+msgid "61–90 days"
+msgstr "৬১–৯০ দিন"
+
+msgid "Over 90 days"
+msgstr "৯০ দিনের বেশি"
+
+msgid "Fingerlings: %(fish)s"
+msgstr "পোনা: %(fish)s"
+
+msgid "incl. %(amount)s discount"
+msgstr "%(amount)s ছাড়সহ"
+
+msgid "for %(bill)s"
+msgstr "%(bill)s-এর জন্য"
+
+msgid "Payment received"
+msgstr "টাকা পেলাম"
+
+msgid "Payment made"
+msgstr "টাকা দিলাম"
+
+msgid "sale of %(date)s"
+msgstr "%(date)s-এর বিক্রি"
+
+msgid "feed of %(date)s"
+msgstr "%(date)s-এর খাবার"
+
+msgid "fingerlings of %(date)s"
+msgstr "%(date)s-এর পোনা"
+
+msgid "Who owes you, whom you owe, and for how long — worked out from your sales, purchases and payments."
+msgstr "কে আপনার কাছে কত বাকি, আপনি কার কাছে কত বাকি, আর কতদিন ধরে — বিক্রি, কেনা ও লেনদেন থেকে নিজে থেকেই হিসাব হয়।"
+
+msgid "%(counter)s person owes you"
+msgid_plural "%(counter)s people owe you"
+msgstr[0] "%(counter)s জনের কাছে পাওনা"
+msgstr[1] "%(counter)s জনের কাছে পাওনা"
+
+msgid "you owe %(counter)s person"
+msgid_plural "you owe %(counter)s people"
+msgstr[0] "%(counter)s জনের কাছে দেনা"
+msgstr[1] "%(counter)s জনের কাছে দেনা"
+
+msgid "Follow up today"
+msgstr "আজ খোঁজ নিন"
+
+msgid "How old the dues are"
+msgstr "বাকি কতদিনের"
+
+msgid "How long you've owed"
+msgstr "কতদিন ধরে দেনা"
+
+msgid "Sort"
+msgstr "সাজান"
+
+msgid "Biggest first"
+msgstr "বড় অঙ্ক আগে"
+
+msgid "A–Z"
+msgstr "নাম অনুযায়ী"
+
+msgid "Name or phone…"
+msgstr "নাম বা ফোন…"
+
+msgid "Statement for %(name)s"
+msgstr "%(name)s-এর হিসাব"
+
+msgid "last paid %(date)s"
+msgstr "শেষ দিয়েছে %(date)s"
+
+msgid "Call"
+msgstr "ফোন করুন"
+
+msgid "Remind on WhatsApp"
+msgstr "হোয়াটসঅ্যাপে মনে করিয়ে দিন"
+
+msgid "Nobody owes you anything"
+msgstr "কারও কাছে কোনো পাওনা নেই"
+
+msgid "You don't owe anyone"
+msgstr "আপনার কোনো দেনা নেই"
+
+msgid "Dues appear here by themselves when a sale isn't fully paid, or you buy feed or fingerlings on baki."
+msgstr "বিক্রির পুরো টাকা না পেলে, বা বাকিতে খাবার বা পোনা কিনলে এখানে নিজে থেকেই দেখাবে।"
+
+msgid "Money a buyer paid you, or you paid a supplier, to settle baki."
+msgstr "বাকি মেটাতে ক্রেতা আপনাকে যে টাকা দিল, বা আপনি সরবরাহকারীকে যা দিলেন।"
+
+msgid "Delete this payment? The balance will go back up. You can restore it later."
+msgstr "এই লেনদেন মুছবেন? বাকি আবার বেড়ে যাবে। পরে ফিরিয়ে আনতে পারবেন।"
+
+msgid "Nothing due right now"
+msgstr "এখন কোনো বাকি নেই"
+
+msgid "For which bill?"
+msgstr "কোন বিলের জন্য?"
+
+msgid "Oldest bills first"
+msgstr "পুরোনো বিল আগে"
+
+msgid "Settles whatever has been due longest."
+msgstr "যা সবচেয়ে বেশিদিন বাকি, সেটা আগে মেটে।"
+
+msgid "Discount or note"
+msgstr "ছাড় বা নোট"
+
+msgid "After this, they will owe {amount}"
+msgstr "এরপর তাদের কাছে বাকি থাকবে {amount}"
+
+msgid "After this, you will owe {amount}"
+msgstr "এরপর আপনার দেনা থাকবে {amount}"
+
+msgid "After this, all settled"
+msgstr "এরপর সব হিসাব মিটে যাবে"
+
+msgid "{n} days"
+msgstr "{n} দিন"
+
+msgid "1 day"
+msgstr "১ দিন"
+
+msgid "Money received from buyers and paid to suppliers against baki."
+msgstr "বাকির বিপরীতে ক্রেতাদের থেকে পাওয়া ও সরবরাহকারীদের দেওয়া টাকা।"
+
+msgid "Name, receipt no.…"
+msgstr "নাম, রসিদ নং…"
+
+msgid "Only money received"
+msgstr "শুধু পাওয়া টাকা"
+
+msgid "Only money paid"
+msgstr "শুধু দেওয়া টাকা"
+
+msgid "for a sale"
+msgstr "বিক্রির জন্য"
+
+msgid "for a purchase"
+msgstr "কেনার জন্য"
+
+msgid "%(amount)s discount"
+msgstr "%(amount)s ছাড়"
+
+msgid "No payments in this period"
+msgstr "এই সময়ে কোনো লেনদেন নেই"
+
+msgid "When a buyer pays off baki, or you pay a supplier, record it here and their balance updates straight away."
+msgstr "ক্রেতা বাকি শোধ করলে বা আপনি সরবরাহকারীকে টাকা দিলে এখানে লিখুন — হিসাব সঙ্গে সঙ্গে ঠিক হয়ে যাবে।"
+
+msgid "WhatsApp"
+msgstr "হোয়াটসঅ্যাপ"
+
+msgid "Edit details"
+msgstr "তথ্য বদলান"
+
+msgid "Owes you"
+msgstr "আপনার পাওনা"
+
+msgid "Balance"
+msgstr "ব্যালান্স"
+
+msgid "Oldest unpaid bill: %(counter)s day"
+msgid_plural "Oldest unpaid bill: %(counter)s days"
+msgstr[0] "সবচেয়ে পুরোনো বাকি বিল: %(counter)s দিন"
+msgstr[1] "সবচেয়ে পুরোনো বাকি বিল: %(counter)s দিন"
+
+msgid "Last payment %(date)s"
+msgstr "শেষ লেনদেন %(date)s"
+
+msgid "Receive money"
+msgstr "টাকা নিন"
+
+msgid "Pay money"
+msgstr "টাকা দিন"
+
+msgid "Unpaid bills"
+msgstr "বাকি বিল"
+
+msgid "Payments settle the oldest first, unless you pick a bill."
+msgstr "বিল বেছে না দিলে টাকা আগে পুরোনো বিলে যায়।"
+
+msgid "Follow-up"
+msgstr "খোঁজ নেওয়ার দিন"
+
+msgid "When they promised to pay — it shows on the dues page on that day."
+msgstr "যেদিন টাকা দেবে বলেছে — সেদিন বাকি খাতায় মনে করিয়ে দেবে।"
+
+msgid "Change"
+msgstr "বদলান"
+
+msgid "Done"
+msgstr "হয়ে গেছে"
+
+msgid "No follow-up set."
+msgstr "কোনো দিন ঠিক করা নেই।"
+
+msgid "To"
+msgstr "পর্যন্ত"
+
+msgid "Account statement"
+msgstr "হিসাব বিবরণী"
+
+msgid "All entries"
+msgstr "সব লেনদেন"
+
+msgid "You gave"
+msgstr "দিলাম"
+
+msgid "fish, or money paid to them"
+msgstr "মাছ, বা তাদের দেওয়া টাকা"
+
+msgid "You got"
+msgstr "পেলাম"
+
+msgid "feed, fingerlings, or money from them"
+msgstr "খাবার, পোনা, বা তাদের থেকে পাওয়া টাকা"
+
+msgid "Brought forward"
+msgstr "আগের জের"
+
+msgid "%(name)s owes you"
+msgstr "%(name)s-এর কাছে পাওনা"
+
+msgid "You owe %(name)s"
+msgstr "%(name)s-এর কাছে দেনা"
+
+msgid "gave"
+msgstr "দিলাম"
+
+msgid "got"
+msgstr "পেলাম"
+
+msgid "Oldest first"
+msgstr "পুরোনো আগে"
+
+msgid "Newest first"
+msgstr "নতুন আগে"
+
+msgid "Nothing in this period."
+msgstr "এই সময়ে কিছু নেই।"
+
+msgid "Printed %(date)s"
+msgstr "প্রিন্ট %(date)s"
+
+msgid "Assalamu alaikum %(name)s. As per %(farm)s's records, %(amount)s is due from you. Please pay when you can. Thank you."
+msgstr "আসসালামু আলাইকুম %(name)s। %(farm)s-এর হিসাব অনুযায়ী আপনার কাছে %(amount)s বাকি আছে। সুবিধামতো পরিশোধ করবেন। ধন্যবাদ।"
+
+msgid "Last 3 months"
+msgstr "গত ৩ মাস"
+
+msgid "Tomorrow"
+msgstr "আগামীকাল"
+
+msgid "In 3 days"
+msgstr "৩ দিন পর"
+
+msgid "In a week"
+msgstr "এক সপ্তাহ পর"
+
+msgid "In 15 days"
+msgstr "১৫ দিন পর"
+
+msgid "Follow-up cleared."
+msgstr "খোঁজ নেওয়ার দিন মুছে ফেলা হলো।"
+
+msgid "You'll be reminded on %(date)s."
+msgstr "%(date)s তারিখে মনে করিয়ে দেওয়া হবে।"
+
+msgid "Please check the date."
+msgstr "তারিখটি দেখে নিন।"
+
+msgid "%(name)s — owes you %(amount)s"
+msgstr "%(name)s — পাওনা %(amount)s"
+
+msgid "%(name)s — you owe %(amount)s"
+msgstr "%(name)s — দেনা %(amount)s"
+
+msgid "They owe you"
+msgstr "আপনার পাওনা"
+
+msgid "Settled"
+msgstr "হিসাব মেটানো"
+
+msgid "Received %(amount)s from %(name)s."
+msgstr "%(name)s-এর থেকে %(amount)s পাওয়া গেল।"
+
+msgid "Paid %(amount)s to %(name)s."
+msgstr "%(name)s-কে %(amount)s দেওয়া হলো।"
+
+msgid "They still owe %(amount)s."
+msgstr "এখনো পাওনা %(amount)s।"
+
+msgid "You still owe %(amount)s."
+msgstr "এখনো দেনা %(amount)s।"
+
+msgid "All settled."
+msgstr "সব হিসাব মিটে গেছে।"
+
+msgid "Payment deleted. You can restore it from the payments list."
+msgstr "লেনদেন মুছে ফেলা হলো। লেনদেনের তালিকা থেকে ফিরিয়ে আনতে পারবেন।"
+
+msgid "Payment restored."
+msgstr "লেনদেন ফিরিয়ে আনা হলো।"
+
+msgid "Bought on baki"
+msgstr "বাকিতে কেনা"
+
+msgid "Follow up on"
+msgstr "খোঁজ নেওয়ার তারিখ"
+
+msgid "A date they promised to pay, or to remind them."
+msgstr "যেদিন টাকা দেবে বলেছে, বা মনে করিয়ে দিতে চান।"
+
+msgid "Promise / note"
+msgstr "কথা / নোট"
+
+msgid "%(name)s still has a balance. Settle it before deleting."
+msgstr "%(name)s-এর হিসাবে এখনো বাকি আছে। মোছার আগে মিটিয়ে নিন।"
+
+msgid "Receive payment"
+msgstr "টাকা নিন"
+
+msgid "Buyer's account"
+msgstr "ক্রেতার হিসাব"
+
+msgid "Paid later"
+msgstr "পরে পাওয়া"
+
+msgid "Choose the buyer who owes the rest, or enter the full amount as received."
+msgstr "বাকি টাকা কার কাছে পাওনা সেই ক্রেতা বাছুন, অথবা পুরো টাকা পাওয়া হিসেবে লিখুন।"
