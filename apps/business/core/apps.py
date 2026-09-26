@@ -9,3 +9,7 @@ class BusinessCoreConfig(AppConfig):
 
     def ready(self):
         from . import signals  # noqa: F401  (access grants, login redirect, audit trail)
+        from .seeding import register
+        from .units import seed_units
+
+        register("units", seed_units)

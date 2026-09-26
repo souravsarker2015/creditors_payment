@@ -80,3 +80,13 @@ def absolute(value):
         return abs(value)
     except TypeError:
         return value
+
+
+@register.simple_tag(takes_context=True)
+def biz_quick_add(context, kind):
+    """Context for a business "+ Add new" popup (see core/crud.py)."""
+    from apps.business.core.crud import quick_add_context
+
+    request = context.get("request")
+    business = getattr(request, "business", None) or context.get("business")
+    return quick_add_context(kind, business)

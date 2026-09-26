@@ -1,0 +1,17 @@
+{% load i18n %}{% comment %}Row actions for a master record. Needs: o, m, can_edit, is_deleted_tab. Optional: up, extra (template).{% endcomment %}
+{% if is_deleted_tab %}
+  {% if biz_can.delete %}<form method="post" action="{% url 'business:'|add:m.name|add:'_restore' o.pk %}">{% csrf_token %}<button class="btn btn-secondary btn-sm">{% include "partials/icon.html" with name="restore" %}{% translate "Restore" %}</button></form>{% endif %}
+{% elif can_edit %}
+<div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
+  <button type="button" class="icon-btn" @click="open = !open" :aria-expanded="open" aria-haspopup="true" aria-label="{% translate 'More actions' %}">{% include "partials/icon.html" with name="dots" %}</button>
+  <div class="menu{% if up %} menu-up{% endif %}" x-show="open" x-cloak x-transition.opacity.scale.95.duration.100ms role="menu">
+    {% if extra %}{% include extra %}{% endif %}
+    <a href="{% url 'business:'|add:m.name|add:'_edit' o.pk %}" class="menu-item" role="menuitem">{% include "partials/icon.html" with name="edit" %}{% translate "Edit" %}</a>
+    {% if biz_can.delete %}
+    <form method="post" action="{% url 'business:'|add:m.name|add:'_delete' o.pk %}" data-confirm="{% translate 'Delete this? Records that already use it keep it, and you can restore it from Deleted.' %}">{% csrf_token %}
+      <button type="submit" class="menu-item is-danger" role="menuitem">{% include "partials/icon.html" with name="trash" %}{% translate "Delete" %}</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+{% endif %}

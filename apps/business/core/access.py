@@ -94,10 +94,13 @@ def can(membership, capability):
 
 
 def create_business(user, name, **fields):
-    """New business with its creator as owner, seeded with standard units."""
+    """New business with its creator as owner, seeded with standard units
+    and every app's starter data (species, categories, …)."""
+    from .seeding import seed_all
     from .units import seed_units
 
     business = Business.objects.create(name=name, owner=user, **{k: v for k, v in fields.items() if k != "mon_kg"})
     Membership.objects.create(business=business, user=user, role=Role.OWNER, added_by=user)
     seed_units(business, mon_kg=fields.get("mon_kg"))
+    seed_all(business)
     return business
