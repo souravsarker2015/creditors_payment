@@ -1747,3 +1747,114 @@ a.hero-progress:hover .hero-progress-row span { color: var(--text-on-ink); }
 }
 @media (max-width: 479.98px) { .memo-meta { text-align: left; } }
 .bulk-row .ledger-title, .species-row .ledger-meta { white-space: normal; }
+
+/* ── Business: baki (credit ledger) ─────────────────────────────────────── */
+.tone-critical { color: var(--status-critical); font-weight: 600; }
+.tone-warn { color: var(--status-warn); font-weight: 600; }
+.baki-sides { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+.baki-side {
+    display: flex; flex-direction: column; gap: 0.125rem; min-width: 0; padding: 1rem 1.125rem; border-radius: var(--radius, 1rem);
+    background: var(--surface); border: 1px solid var(--border); box-shadow: inset 0 3px 0 var(--tone), var(--shadow-sm);
+    transition: border-color .15s, box-shadow .15s, background-color .15s;
+}
+.baki-side:hover { border-color: color-mix(in srgb, var(--tone) 45%, var(--border)); }
+.baki-side.is-active { background: var(--tone-bg); border-color: color-mix(in srgb, var(--tone) 55%, transparent); }
+.baki-side-label { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); }
+.baki-side-value { font-size: 1.5rem; font-weight: 780; letter-spacing: -0.01em; color: var(--tone); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+@media (min-width: 640px) { .baki-side-value { font-size: 1.875rem; } }
+.baki-side-sub { font-size: 0.75rem; color: var(--text-muted); }
+.baki-sides-sm .baki-side { padding: 0.75rem 0.875rem; box-shadow: inset 0 3px 0 var(--tone); }
+.baki-sides-sm .baki-side-value { font-size: 1.25rem; }
+
+/* Ageing: 0–30 green → 90+ red */
+[data-age="0"] { --age: var(--status-good); }
+[data-age="1"] { --age: #d6a01e; }
+[data-age="2"] { --age: #e07a2e; }
+[data-age="3"] { --age: var(--status-critical); }
+.age-bar { display: flex; gap: 2px; height: 0.625rem; overflow: hidden; border-radius: 9999px; background: var(--surface-sunken); }
+.age-bar > span { min-width: 4px; background: var(--age); }
+.age-bar-sm { height: 0.25rem; margin-top: 0.4375rem; max-width: 12rem; }
+.age-legend { display: flex; flex-wrap: wrap; gap: 0.375rem 1rem; margin-top: 0.75rem; font-size: 0.75rem; color: var(--text-secondary); }
+.age-legend li { display: inline-flex; align-items: center; gap: 0.375rem; }
+.age-legend strong { font-weight: 650; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.age-dot { width: 0.5rem; height: 0.5rem; border-radius: 9999px; background: var(--age); }
+.age-bar-hero { position: relative; z-index: 1; margin-top: 1.25rem; background: rgba(255, 255, 255, 0.12); }
+.age-legend-hero { position: relative; z-index: 1; color: var(--text-on-ink-muted); }
+.age-legend-hero strong { color: var(--text-on-ink); }
+
+.baki-row { position: relative; }
+.baki-row-link { position: absolute; inset: 0; z-index: 0; border-radius: inherit; }
+.baki-row:hover { background: var(--surface-hover); }
+.baki-row .ledger-end { position: relative; z-index: 1; flex-wrap: wrap; justify-content: flex-end; gap: 0.25rem 0.375rem; }
+.baki-row .ledger-meta { white-space: normal; }
+.baki-row-actions { display: flex; align-items: center; gap: 0.125rem; }
+.baki-promise { display: inline-flex; align-items: center; gap: 0.1875rem; color: var(--status-warn); font-weight: 600; }
+.baki-promise svg { width: 0.8125rem; height: 0.8125rem; }
+.baki-follow { margin-top: 0.25rem; display: grid; gap: 0.25rem; font-size: 0.8125rem; }
+.baki-follow span { color: var(--text-secondary); }
+.baki-follow em { font-style: normal; font-weight: 600; color: var(--status-critical); }
+.baki-promise-box { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; padding: 0.75rem 0.875rem; border-radius: var(--radius-sm); background: var(--status-warn-bg); }
+@media (max-width: 479.98px) {
+    .baki-row { grid-template-columns: auto minmax(0, 1fr); }
+    .baki-row .ledger-end { grid-column: 1 / -1; justify-content: space-between; padding-left: 3.125rem; }
+    .baki-row .party-bal { align-items: flex-start; }
+}
+
+/* Running balance, statement */
+.bal { display: inline-flex; flex-direction: column; align-items: flex-end; line-height: 1.2; font-weight: 650; color: var(--tone, var(--text-primary)); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bal small { font-size: 0.625rem; font-weight: 500; color: var(--text-muted); }
+.stmt-range { display: flex; align-items: center; gap: 0.375rem; color: var(--text-muted); }
+.stmt-range input { width: 9.5rem; }
+.stmt-help { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; margin-bottom: 0.5rem; font-size: 0.75rem; color: var(--text-muted); }
+.stmt-gave { color: var(--status-good); }
+.stmt-got { color: var(--status-critical); }
+.stmt-help b { font-weight: 650; }
+.stmt-title { display: block; font-weight: 600; color: var(--text-primary); }
+.stmt-detail { display: block; font-size: 0.75rem; color: var(--text-muted); }
+.stmt-table tbody tr.is-pay td { background: color-mix(in srgb, var(--surface-sunken) 55%, transparent); }
+.stmt-table .stmt-bf td { font-style: italic; color: var(--text-secondary); }
+.stmt-table td:nth-child(3) { color: var(--status-good); }
+.stmt-table td:nth-child(4) { color: var(--status-critical); }
+.stmt-list { display: none; }
+@media (max-width: 639.98px) {
+    .stmt-table { display: none; }
+    .stmt-list { display: block; }
+    .stmt-item { display: flex; justify-content: space-between; gap: 0.75rem; padding: 0.6875rem 0; border-bottom: 1px solid var(--border-soft); }
+    .stmt-item.is-bf .stmt-title { font-style: italic; }
+    .stmt-amounts { display: flex; flex-direction: column; align-items: flex-end; gap: 0.0625rem; font-size: 0.8125rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .stmt-amounts .stmt-gave, .stmt-amounts .stmt-got { font-weight: 600; }
+    .stmt-run { margin-top: 0.125rem; font-size: 0.75rem; }
+    .stmt-help { display: none; }
+    .stmt-range { width: 100%; }
+    .stmt-range input { flex: 1 1 0; width: auto; min-width: 0; }
+}
+@media print {
+    .stmt-table { display: table !important; }
+    .stmt-list { display: none !important; }
+    .stmt-table a { color: inherit; text-decoration: none; }
+}
+
+/* Payment form */
+.pay-balance { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; padding: 0.75rem 1rem; border-radius: var(--radius-sm); background: var(--tone-bg, var(--surface-sunken)); }
+.pay-balance-label { font-size: 0.8125rem; font-weight: 600; color: var(--text-secondary); }
+.pay-balance strong { font-size: 1.25rem; font-weight: 750; color: var(--tone); font-variant-numeric: tabular-nums; }
+.pay-bills { display: grid; gap: 0.5rem; }
+.pay-bill {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.6875rem 0.875rem; cursor: pointer;
+    border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); transition: border-color .15s, background-color .15s, box-shadow .15s;
+}
+.pay-bill:hover { border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); }
+.pay-bill:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 1px var(--accent); }
+.pay-bill:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pay-bill-main { display: flex; flex-direction: column; min-width: 0; }
+.pay-bill-main strong { font-size: 0.875rem; font-weight: 600; color: var(--text-primary); }
+.pay-bill-main span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.75rem; color: var(--text-muted); }
+.pay-bill-end { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; font-size: 0.75rem; color: var(--text-muted); }
+.pay-bill-end strong { font-size: 0.9375rem; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.chip-choice.is-on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.baki-promise-box > div:first-child { flex: 1 1 12rem; }
+@media (max-width: 639.98px) { .page-header .page-actions:has(> .btn + .btn) > .btn { flex: 1 1 auto; } }
+@media print {
+    .lg\:pl-64 { padding-left: 0 !important; }
+    .app-main > .page[aria-live] { display: none !important; }
+}

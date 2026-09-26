@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% translate "Payments" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <a href="{% url 'business:dues' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Baki (dues)" %}</a>
+      <h1 class="page-title">{% translate "Payments" %}</h1>
+      <p class="page-subtitle">{% translate "Money received from buyers and paid to suppliers against baki." %}</p>
+    </div>
+    {% if biz_can.enter_data %}<div class="page-actions"><a href="{% url 'business:payment_add' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Record payment" %}</a></div>{% endif %}
+  </header>
+
+  {% if show != "deleted" %}
+  <div class="stat-grid">
+    <a href="?period={{ period }}&show=in" class="stat" data-tone="good" style="--tone: var(--status-good)"><p class="stat-label">{{ period_label }} · {% translate "Received" %}</p><p class="stat-value">{{ received|bdt }}</p></a>
+    <a href="?period={{ period }}&show=out" class="stat" data-tone="critical" style="--tone: var(--status-critical)"><p class="stat-label">{{ period_label }} · {% translate "Paid" %}</p><p class="stat-value">{{ paid|bdt }}</p></a>
+  </div>
+  {% endif %}
+
+  <div class="master-bar">
+    <nav class="seg seg-scroll" aria-label="{% translate 'Period' %}">
+      {% for key, label, s, e in periods %}<a href="?period={{ key }}{% if show %}&show={{ show }}{% endif %}" class="seg-item {% if period == key and show != 'deleted' %}is-active{% endif %}">{{ label }}</a>{% endfor %}
+      {% if deleted_count %}<a href="?show=deleted" class="seg-item {% if show == 'deleted' %}is-active{% endif %}">{% translate "Deleted" %} <span class="seg-count">{{ deleted_count }}</span></a>{% endif %}
+    </nav>
+    <form method="get" class="master-search" role="search">
+      <input type="hidden" name="period" value="{{ period }}">{% if show %}<input type="hidden" name="show" value="{{ show }}">{% endif %}
+      <div class="input-icon">{% include "partials/icon.html" with name="search" %}<input type="search" name="q" value="{{ q }}" class="form-input" placeholder="{% translate 'Name, receipt no.…' %}" aria-label="{% translate 'Search' %}"></div>
+    </form>
+  </div>
+  {% if show == "in" or show == "out" %}<span class="chip"><span>{% if show == "in" %}{% translate "Only money received" %}{% else %}{% translate "Only money paid" %}{% endif %}</span><a href="?period={{ period }}" class="chip-x" aria-label="{% translate 'Show all' %}">{% include "partials/icon.html" with name="x" %}</a></span>{% endif %}
+
+  {% if page_obj.object_list %}
+  <section class="card">
+    <ul class="ledger">
+      {% for p in page_obj %}
+      <li class="ledger-row">
+        <span class="ledger-icon" data-tone="{% if p.direction == 'in' %}good{% else %}critical{% endif %}">{% if p.direction == 'in' %}{% include "partials/icon.html" with name="arrow-down" %}{% else %}{% include "partials/icon.html" with name="arrow-up" %}{% endif %}</span>
+        <div class="ledger-main">
+          <p class="ledger-title"><a href="{% url 'business:party_statement' p.party_id %}" class="hover:underline">{{ p.party }}</a></p>
+          <p class="ledger-meta">{{ p.date|date:"j M Y" }}{% if p.account %} · {{ p.account }}{% endif %}{% if p.reference %} · #{{ p.reference }}{% endif %}{% if p.bill %} · {% if p.sale_id %}{% translate "for a sale" %}{% else %}{% translate "for a purchase" %}{% endif %} {{ p.bill.date|date:"j M" }}{% endif %}{% if p.discount %} · {% blocktranslate with amount=p.discount|bdt %}{{ amount }} discount{% endblocktranslate %}{% endif %}</p>
+        </div>
+        <div class="ledger-end">
+          <span class="party-bal" data-tone="{% if p.direction == 'in' %}good{% else %}critical{% endif %}"><strong>{{ p.amount|bdt }}</strong><span>{% if p.direction == 'in' %}{% translate "received" %}{% else %}{% translate "paid" %}{% endif %}</span></span>
+          {% if show == "deleted" %}
+            {% if biz_can.delete %}<form method="post" action="{% url 'business:payment_restore' p.pk %}">{% csrf_token %}<button class="btn btn-soft btn-sm">{% include "partials/icon.html" with name="restore" %}{% translate "Restore" %}</button></form>{% endif %}
+          {% elif biz_can.enter_data %}<a href="{% url 'business:payment_edit' p.pk %}" class="icon-btn" aria-label="{% translate 'Edit' %}" data-tip="{% translate 'Edit' %}">{% include "partials/icon.html" with name="edit" %}</a>{% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% include "partials/pagination.html" %}
+  {% else %}
+  <div class="empty">
+    <div class="empty-icon">{% include "partials/icon.html" with name="wallet" %}</div>
+    <h3 class="empty-title">{% if q %}{% blocktranslate %}Nothing matches “{{ q }}”.{% endblocktranslate %}{% else %}{% translate "No payments in this period" %}{% endif %}</h3>
+    <p class="empty-text">{% translate "When a buyer pays off baki, or you pay a supplier, record it here and their balance updates straight away." %}</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

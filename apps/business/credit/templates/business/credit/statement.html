@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{{ party.name }} · {% translate "Statement" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-narrow stack">
+  <header class="page-header !mb-0 no-print">
+    <div class="min-w-0">
+      <a href="{% url 'business:dues' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Baki (dues)" %}</a>
+      <h1 class="page-title">{{ party.name }}</h1>
+      <div class="meta-list">
+        {% if party.is_supplier %}<span class="meta-item">{% include "business/partials/icon.html" with name="truck" %}{% translate "Supplier" %}</span>{% endif %}
+        {% if party.is_buyer %}<span class="meta-item">{% include "partials/icon.html" with name="users" %}{% translate "Buyer" %}</span>{% endif %}
+        {% if party.phone %}<a href="tel:{{ party.phone }}" class="meta-item hover:underline">{% include "partials/icon.html" with name="phone" %}{{ party.phone }}</a>{% endif %}
+      </div>
+    </div>
+    <div class="page-actions">
+      <button type="button" class="btn btn-secondary" onclick="window.print()">{% include "partials/icon.html" with name="printer" %}{% translate "Print" %}</button>
+      {% if wa %}<a href="{{ wa }}" target="_blank" rel="noopener" class="btn btn-secondary">{% include "partials/icon.html" with name="chat" %}{% translate "WhatsApp" %}</a>{% endif %}
+      {% if biz_can.enter_data %}<a href="{% if party.is_supplier %}{% url 'business:suppliers_edit' party.pk %}{% else %}{% url 'business:buyers_edit' party.pk %}{% endif %}?next={{ request.path|urlencode }}" class="icon-btn" aria-label="{% translate 'Edit details' %}" data-tip="{% translate 'Edit details' %}">{% include "partials/icon.html" with name="edit" %}</a>{% endif %}
+    </div>
+  </header>
+
+  <section class="hero no-print">
+    <div class="hero-inner">
+      <div class="min-w-0">
+        <p class="hero-label">{% if led.balance > 0 %}{% translate "Owes you" %}{% elif led.balance < 0 %}{% translate "You owe" %}{% else %}{% translate "Balance" %}{% endif %}</p>
+        <p class="hero-value">{% if led.balance %}{{ led.amount|bdt }}{% else %}{% translate "All settled" %}{% endif %}</p>
+        <p class="hero-sub">
+          {% if led.oldest_days is not None %}{% blocktranslate count counter=led.oldest_days %}Oldest unpaid bill: {{ counter }} day{% plural %}Oldest unpaid bill: {{ counter }} days{% endblocktranslate %}{% endif %}
+          {% if led.last_payment %}{% if led.oldest_days is not None %} · {% endif %}{% blocktranslate with date=led.last_payment|date:"j M Y" %}Last payment {{ date }}{% endblocktranslate %}{% endif %}
+        </p>
+      </div>
+      {% if biz_can.enter_data %}
+      <div class="flex flex-wrap gap-2">
+        {% if led.balance >= 0 %}<a href="{% url 'business:payment_add' %}?party={{ party.pk }}&dir=in" class="btn btn-primary">{% include "partials/icon.html" with name="arrow-down" %}{% translate "Receive money" %}</a>{% endif %}
+        {% if led.balance <= 0 %}<a href="{% url 'business:payment_add' %}?party={{ party.pk }}&dir=out" class="btn btn-primary">{% include "partials/icon.html" with name="arrow-up" %}{% translate "Pay money" %}</a>{% endif %}
+      </div>
+      {% endif %}
+    </div>
+    {% if led.balance %}
+    <div class="age-bar age-bar-hero" role="img" aria-label="{% for label, amount, pct in led.bucket_rows %}{{ label }}: {{ amount|bdt }}{% if not forloop.last %}, {% endif %}{% endfor %}">
+      {% for label, amount, pct in led.bucket_rows %}{% if amount %}<span data-age="{{ forloop.counter0 }}" style="flex-grow: {{ pct }}" data-tip="{{ label }}: {{ amount|bdt }}"></span>{% endif %}{% endfor %}
+    </div>
+    <ul class="age-legend age-legend-hero">
+      {% for label, amount, pct in led.bucket_rows %}{% if amount %}<li data-age="{{ forloop.counter0 }}"><span class="age-dot"></span>{{ label }}<strong>{{ amount|bdt }}</strong></li>{% endif %}{% endfor %}
+    </ul>
+    {% endif %}
+  </section>
+
+  <div class="grid grid-cols-1 gap-5 md:grid-cols-2 md:items-start no-print">
+    {% if open_items %}
+    <section class="card">
+      <div class="card-header"><div><h2 class="card-title">{% translate "Unpaid bills" %}</h2><p class="card-subtitle">{% translate "Payments settle the oldest first, unless you pick a bill." %}</p></div></div>
+      <ul class="ledger">
+        {% for e in open_items %}
+        <li class="ledger-row">
+          <div class="ledger-main">
+            <p class="ledger-title">{% if e.url %}<a href="{{ e.url }}" class="hover:underline">{{ e.title }}</a>{% else %}{{ e.title }}{% endif %}</p>
+            <p class="ledger-meta">{{ e.date|date:"j M Y" }}{% with d=e.date|days_until|absolute %} · <span class="{% if d > 90 %}tone-critical{% elif d > 30 %}tone-warn{% endif %}">{% blocktranslate count counter=d %}{{ counter }} day{% plural %}{{ counter }} days{% endblocktranslate %}</span>{% endwith %}</p>
+          </div>
+          <div class="ledger-end">
+            <span class="ledger-amount">{{ e.open|bdt }}</span>
+            {% if biz_can.enter_data and e.kind != "opening" and e.kind != "pay_in" and e.kind != "pay_out" %}<a href="{% url 'business:payment_add' %}?party={{ party.pk }}&dir={% if led.balance > 0 %}in{% else %}out{% endif %}&against={{ e.kind }}:{{ e.pk }}" class="btn btn-soft btn-sm ml-2">{% if led.balance > 0 %}{% translate "Receive" %}{% else %}{% translate "Pay" %}{% endif %}</a>{% endif %}
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+
+    <section class="card" x-data="{ edit: false }">
+      <div class="card-header">
+        <div><h2 class="card-title flex items-center gap-2"><span class="h-[1.125rem] w-[1.125rem]" style="color: var(--accent);">{% include "partials/icon.html" with name="bell" %}</span>{% translate "Follow-up" %}</h2>
+          <p class="card-subtitle">{% translate "When they promised to pay — it shows on the dues page on that day." %}</p></div>
+      </div>
+      <div class="card-body">
+        {% if party.follow_up_on %}
+        <div x-show="!edit" class="baki-promise-box">
+          <div class="min-w-0 flex-1">
+            <p class="font-semibold">{{ party.follow_up_on|date:"l, j M Y" }}{% with d=party.follow_up_on|days_until %} · <span class="{% if d < 0 %}tone-critical{% endif %}">{% if d < 0 %}{% blocktranslate count counter=d|absolute %}{{ counter }} day late{% plural %}{{ counter }} days late{% endblocktranslate %}{% elif d == 0 %}{% translate "today" %}{% else %}{% blocktranslate count counter=d %}in {{ counter }} day{% plural %}in {{ counter }} days{% endblocktranslate %}{% endif %}</span>{% endwith %}</p>
+            {% if party.follow_up_note %}<p class="help">{{ party.follow_up_note }}</p>{% endif %}
+          </div>
+          {% if biz_can.enter_data %}
+          <div class="flex gap-1">
+            <button type="button" class="btn btn-ghost btn-sm" @click="edit = true">{% translate "Change" %}</button>
+            <form method="post" action="{% url 'business:party_follow_up' party.pk %}">{% csrf_token %}<button name="clear" value="1" class="btn btn-ghost btn-sm">{% translate "Done" %}</button></form>
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+        {% if biz_can.enter_data %}
+        <form method="post" action="{% url 'business:party_follow_up' party.pk %}" class="form-stack" {% if party.follow_up_on %}x-show="edit" x-cloak{% endif %}
+              x-data="{ inDays(n) { var d = new Date(); d.setDate(d.getDate() + n); var v = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); var i = $el.querySelector('[name=follow_up_on]'); i._flatpickr ? i._flatpickr.setDate(v, true) : (i.value = v); } }">
+          {% csrf_token %}
+          <div class="form-grid form-grid-2">
+            <div class="field"><label class="label" for="{{ follow_form.follow_up_on.id_for_label }}">{% translate "Date" %}</label>{{ follow_form.follow_up_on }}</div>
+            <div class="field"><label class="label" for="{{ follow_form.follow_up_note.id_for_label }}">{% translate "Note" %}<span class="opt">{% translate "(optional)" %}</span></label>{{ follow_form.follow_up_note }}</div>
+          </div>
+          <div class="chip-row">
+            {% for days, label in follow_quick %}<button type="button" class="chip chip-choice" @click="inDays({{ days }})">{{ label }}</button>{% endfor %}
+            <button class="btn btn-secondary btn-sm ml-auto">{% translate "Save" %}</button>
+          </div>
+        </form>
+        {% elif not party.follow_up_on %}<p class="help">{% translate "No follow-up set." %}</p>{% endif %}
+      </div>
+    </section>
+  </div>
+
+  <div class="master-bar no-print">
+    <nav class="seg seg-scroll" aria-label="{% translate 'Period' %}">
+      {% for key, label, s, e in periods %}<a href="?period={{ key }}" class="seg-item {% if period == key %}is-active{% endif %}">{{ label }}</a>{% endfor %}
+    </nav>
+    <form method="get" class="stmt-range">
+      <input type="text" name="from" value="{{ start|date:'Y-m-d' }}" class="form-input input-compact datepicker" autocomplete="off" placeholder="{% translate 'From' %}" aria-label="{% translate 'From' %}" onchange="this.form.submit()">
+      <span aria-hidden="true">–</span>
+      <input type="text" name="to" value="{{ end|date:'Y-m-d' }}" class="form-input input-compact datepicker" autocomplete="off" placeholder="{% translate 'To' %}" aria-label="{% translate 'To' %}" onchange="this.form.submit()">
+    </form>
+  </div>
+
+  <article class="card memo stmt">
+    <header class="memo-head">
+      <div>
+        <p class="memo-business">{{ business.name }}</p>
+        {% if business.address or business.phone %}<p class="memo-sub">{{ business.address }}{% if business.address and business.phone %} · {% endif %}{{ business.phone }}</p>{% endif %}
+      </div>
+      <div class="memo-meta">
+        <p class="memo-kind">{% translate "Account statement" %}</p>
+        <p>{% if start or end %}{{ start|date:"j M Y"|default:"…" }} – {{ end|date:"j M Y"|default:_("today") }}{% else %}{% translate "All entries" %}{% endif %}</p>
+      </div>
+    </header>
+    <dl class="memo-parties">
+      <div><dt>{% translate "Name" %}</dt><dd>{{ party.name }}</dd></div>
+      {% if party.phone %}<div><dt>{% translate "Phone" %}</dt><dd>{{ party.phone }}</dd></div>{% endif %}
+      {% if party.address %}<div><dt>{% translate "Address" %}</dt><dd>{{ party.address }}</dd></div>{% endif %}
+    </dl>
+
+    {% if rows or brought %}
+    <div class="stmt-help no-print">
+      <span><b class="stmt-gave">{% translate "You gave" %}</b> {% translate "fish, or money paid to them" %}</span>
+      <span><b class="stmt-got">{% translate "You got" %}</b> {% translate "feed, fingerlings, or money from them" %}</span>
+    </div>
+    <table class="memo-table stmt-table">
+      <thead><tr>
+        <th>{% translate "Date" %}</th><th>{% translate "Details" %}</th>
+        <th class="num">{% translate "You gave" %}</th><th class="num">{% translate "You got" %}</th><th class="num">{% translate "Balance" %}</th>
+      </tr></thead>
+      <tbody>
+        {% if brought is not None and not newest_first %}<tr class="stmt-bf"><td>{{ start|date:"j M y" }}</td><td>{% translate "Brought forward" %}</td><td></td><td></td><td class="num">{% include "business/credit/_bal.html" with v=brought %}</td></tr>{% endif %}
+        {% for e in rows %}
+        <tr class="{% if e.is_payment %}is-pay{% endif %}">
+          <td class="whitespace-nowrap">{{ e.date|date:"j M y" }}</td>
+          <td><span class="stmt-title">{% if e.url %}<a href="{{ e.url }}" class="hover:underline">{{ e.title }}</a>{% else %}{{ e.title }}{% endif %}</span>{% if e.detail %}<span class="stmt-detail">{{ e.detail }}</span>{% endif %}</td>
+          <td class="num">{% if e.gave %}{{ e.gave|bdt }}{% endif %}</td>
+          <td class="num">{% if e.got %}{{ e.got|bdt }}{% endif %}</td>
+          <td class="num">{% include "business/credit/_bal.html" with v=e.balance %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr><th colspan="2">{% translate "Total" %}</th><td class="num">{{ shown_gave|bdt }}</td><td class="num">{{ shown_got|bdt }}</td><td></td></tr>
+        <tr class="is-total"><th colspan="4">{% if closing > 0 %}{% blocktranslate with name=party.name %}{{ name }} owes you{% endblocktranslate %}{% elif closing < 0 %}{% blocktranslate with name=party.name %}You owe {{ name }}{% endblocktranslate %}{% else %}{% translate "Balance" %}{% endif %}</th><td class="num">{% if closing %}{% include "business/credit/_bal.html" with v=closing plain=1 %}{% else %}৳0{% endif %}</td></tr>
+      </tfoot>
+    </table>
+
+    <ol class="stmt-list no-print">
+      {% if brought is not None and not newest_first %}<li class="stmt-item is-bf"><div class="min-w-0"><p class="stmt-title">{% translate "Brought forward" %}</p><p class="stmt-detail">{{ start|date:"j M Y" }}</p></div><div class="stmt-amounts">{% include "business/credit/_bal.html" with v=brought %}</div></li>{% endif %}
+      {% for e in rows %}
+      <li class="stmt-item">
+        <div class="min-w-0">
+          <p class="stmt-title">{% if e.url %}<a href="{{ e.url }}">{{ e.title }}</a>{% else %}{{ e.title }}{% endif %}</p>
+          <p class="stmt-detail">{{ e.date|date:"j M Y" }}{% if e.detail %} · {{ e.detail }}{% endif %}</p>
+        </div>
+        <div class="stmt-amounts">
+          {% if e.gave %}<span class="stmt-gave">{% translate "gave" %} {{ e.gave|bdt }}</span>{% endif %}
+          {% if e.got %}<span class="stmt-got">{% translate "got" %} {{ e.got|bdt }}</span>{% endif %}
+          <span class="stmt-run">{% include "business/credit/_bal.html" with v=e.balance %}</span>
+        </div>
+      </li>
+      {% endfor %}
+    </ol>
+    <p class="text-right mt-3 no-print"><a href="?{% if period != 'custom' %}period={{ period }}{% else %}from={{ start|date:'Y-m-d' }}&to={{ end|date:'Y-m-d' }}{% endif %}{% if not newest_first %}&order=new{% endif %}" class="btn btn-ghost btn-sm">{% include "business/partials/icon.html" with name="swap" %}{% if newest_first %}{% translate "Oldest first" %}{% else %}{% translate "Newest first" %}{% endif %}</a></p>
+    {% else %}
+    <p class="empty-text py-8 text-center">{% translate "Nothing in this period." %}</p>
+    {% endif %}
+    <p class="memo-foot">{% blocktranslate with date=today|date:"j M Y" %}Printed {{ date }}{% endblocktranslate %}</p>
+  </article>
+</div>
+{% endblock %}

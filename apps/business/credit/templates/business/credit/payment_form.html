@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% if obj %}{% translate "Edit payment" %}{% else %}{% translate "Record payment" %}{% endif %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-narrow">
+  <header class="page-header">
+    <div>
+      <a href="{{ back }}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Back" %}</a>
+      <h1 class="page-title">{% if obj %}{% translate "Edit payment" %}{% else %}{% translate "Record payment" %}{% endif %}</h1>
+      <p class="page-subtitle">{% translate "Money a buyer paid you, or you paid a supplier, to settle baki." %}</p>
+    </div>
+    {% if obj and biz_can.delete %}
+    <div class="page-actions"><form method="post" action="{% url 'business:payment_delete' obj.pk %}" data-confirm="{% translate 'Delete this payment? The balance will go back up. You can restore it later.' %}">{% csrf_token %}<button type="submit" class="icon-btn" aria-label="{% translate 'Delete' %}" data-tip="{% translate 'Delete' %}">{% include "partials/icon.html" with name="trash" %}</button></form></div>
+    {% endif %}
+  </header>
+
+  <form method="post" class="stack" novalidate x-data="payForm({{ pay_json }}, {{ obj|yesno:'true,false' }})">
+    {% csrf_token %}
+    {{ form.against }}
+    {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+
+    <section class="card">
+      <div class="card-body form-stack">
+        <div class="field{% if form.party.errors %} has-error{% endif %}">
+          <label class="label" for="{{ form.party.id_for_label }}">{% translate "Who" %}<span class="req" aria-hidden="true">*</span></label>
+          <div x-ref="partyWrap">{{ form.party }}</div>
+          {% for error in form.party.errors %}<p class="field-error">{% include "partials/icon.html" with name="alert" %}{{ error }}</p>{% endfor %}
+        </div>
+
+        <div class="pay-balance" x-show="party" x-cloak :data-tone="balance > 0 ? 'good' : (balance < 0 ? 'critical' : '')">
+          <span class="pay-balance-label" x-text="balance > 0 ? '{{ _('Owes you')|escapejs }}' : (balance < 0 ? '{{ _('You owe')|escapejs }}' : '{{ _('Nothing due right now')|escapejs }}')"></span>
+          <strong x-show="balance" x-text="money(Math.abs(balance))"></strong>
+        </div>
+
+        {% with field=form.direction %}{% include "business/partials/field.html" %}{% endwith %}
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-body form-stack">
+        <div class="form-grid form-grid-2">
+          <div>
+            <div class="field{% if form.amount.errors %} has-error{% endif %}">
+              <label class="label" for="{{ form.amount.id_for_label }}">{% translate "Amount" %}<span class="req" aria-hidden="true">*</span></label>
+              <div class="input-affix has-start"><span class="affix affix-start" aria-hidden="true">৳</span>{{ form.amount }}</div>
+              {% for error in form.amount.errors %}<p class="field-error">{% include "partials/icon.html" with name="alert" %}{{ error }}</p>{% endfor %}
+            </div>
+            <div class="chip-row mt-2" x-show="Math.abs(balance) > 0" x-cloak>
+              <button type="button" class="chip chip-choice" :class="Number(amount) === Math.abs(balance) && !against && 'is-on'" @click="pickAll()"><span x-text="'{{ _('All')|escapejs }} ' + money(Math.abs(balance))"></span></button>
+            </div>
+          </div>
+          {% with field=form.date %}{% include "business/partials/field.html" %}{% endwith %}
+        </div>
+
+        <div class="pay-bills" x-show="bills.length" x-cloak>
+          <p class="label">{% translate "For which bill?" %}</p>
+          <label class="pay-bill">
+            <input type="radio" name="_bill" value="" x-model="against" class="sr-only">
+            <span class="pay-bill-main"><strong>{% translate "Oldest bills first" %}</strong><span>{% translate "Settles whatever has been due longest." %}</span></span>
+          </label>
+          <template x-for="b in bills" :key="b.key">
+            <label class="pay-bill">
+              <input type="radio" name="_bill" :value="b.key" x-model="against" @change="amount = Number(b.open)" class="sr-only">
+              <span class="pay-bill-main"><strong x-text="b.title + ' · ' + b.date"></strong><span x-text="b.detail"></span></span>
+              <span class="pay-bill-end"><strong x-text="money(b.open)"></strong><span :class="b.days > 90 ? 'tone-critical' : (b.days > 30 ? 'tone-warn' : '')" x-text="dayText(b.days)"></span></span>
+            </label>
+          </template>
+        </div>
+
+        <div class="form-grid form-grid-2">
+          {% with field=form.account %}{% include "business/partials/field.html" %}{% endwith %}
+          {% with field=form.reference %}{% include "business/partials/field.html" %}{% endwith %}
+        </div>
+
+        <div x-data="{ more: {% if form.discount.value and form.discount.value != '0' and form.discount.value != '0.00' or form.notes.value %}true{% else %}false{% endif %} }">
+          <button type="button" class="btn btn-ghost btn-sm !px-0" @click="more = true" x-show="!more">{% include "partials/icon.html" with name="plus" %}{% translate "Discount or note" %}</button>
+          <div class="form-stack" x-show="more" x-cloak>
+            <div class="field">
+              <label class="label" for="{{ form.discount.id_for_label }}">{{ form.discount.label }}<span class="opt">{% translate "(optional)" %}</span></label>
+              <div class="input-affix has-start"><span class="affix affix-start" aria-hidden="true">৳</span>{{ form.discount }}</div>
+              <p class="help">{{ form.discount.help_text }}</p>
+            </div>
+            {% with field=form.notes %}{% include "business/partials/field.html" %}{% endwith %}
+          </div>
+        </div>
+
+        <p class="doc-due" x-show="party && (Number(amount) || Number(discount))" x-cloak :data-tone="after === 0 ? 'good' : 'warn'">
+          <span x-text="afterText()"></span>
+        </p>
+      </div>
+    </section>
+
+    <div class="form-actions">
+      <a href="{{ back }}" class="btn btn-ghost btn-lg">{% translate "Cancel" %}</a>
+      <button type="submit" class="btn btn-primary btn-lg">{% include "partials/icon.html" with name="check" %}<span>{% translate "Save payment" %}</span><span x-show="Number(amount) > 0" x-text="'· ' + money(amount)"></span></button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.addEventListener("alpine:init", function () {
+  Alpine.data("payForm", function (data, editing) {
+    var T = {
+      owes: "{{ _('After this, they will owe {amount}')|escapejs }}", iOwe: "{{ _('After this, you will owe {amount}')|escapejs }}",
+      settled: "{{ _('After this, all settled')|escapejs }}", today: "{{ _('today')|escapejs }}",
+      days: "{{ _('{n} days')|escapejs }}", day: "{{ _('1 day')|escapejs }}",
+    };
+    return {
+      data: data, party: "", balance: 0, bills: [], against: "", amount: "", discount: "", direction: "in", touchedDir: editing, after: 0,
+      init() {
+        var form = this.$root, self = this;
+        var sel = form.querySelector("[name=party]"), amt = form.querySelector("[name=amount]"), disc = form.querySelector("[name=discount]");
+        this.amount = amt.value; this.discount = disc.value; this.against = form.querySelector("[name=against]").value;
+        amt.addEventListener("input", function () { self.amount = amt.value; });
+        disc.addEventListener("input", function () { self.discount = disc.value; });
+        form.querySelectorAll("[name=direction]").forEach(function (r) {
+          if (r.checked) self.direction = r.value;
+          r.addEventListener("change", function () { self.direction = r.value; self.touchedDir = true; self.calc(); });
+        });
+        this.setParty(sel.value, true);
+        if (window.TomSelect) {
+          new TomSelect(sel, { maxOptions: 1000, allowEmptyOption: true, onChange: function (v) { self.setParty(v, false); } });
+        } else {
+          sel.addEventListener("change", function () { self.setParty(sel.value, false); });
+        }
+        this.$watch("amount", function (v) { if (String(amt.value) !== String(v)) amt.value = v; self.calc(); });
+        this.$watch("discount", function (v) { if (String(disc.value) !== String(v)) disc.value = v; self.calc(); });
+        this.$watch("against", function (v) { form.querySelector("[name=against]").value = v || ""; });
+      },
+      setParty(v, first) {
+        this.party = v || "";
+        var info = this.data[v] || { balance: "0", bills: [] };
+        this.balance = Number(info.balance);
+        this.bills = info.bills;
+        if (!first) this.against = "";
+        if (this.against && !this.bills.some(b => b.key === this.against)) this.against = "";
+        if (!this.touchedDir && this.balance) this.setDir(this.balance > 0 ? "in" : "out");
+        this.calc();
+      },
+      setDir(d) {
+        this.direction = d;
+        this.$root.querySelectorAll("[name=direction]").forEach(function (r) { r.checked = r.value === d; });
+      },
+      pickAll() { this.against = ""; this.amount = Math.abs(this.balance); },
+      calc() {
+        var settled = (Number(this.amount) || 0) + (Number(this.discount) || 0);
+        this.after = Math.round((this.balance + (this.direction === "in" ? -settled : settled)) * 100) / 100;
+      },
+      afterText() {
+        if (this.after === 0) return T.settled;
+        return (this.after > 0 ? T.owes : T.iOwe).replace("{amount}", this.money(Math.abs(this.after)));
+      },
+      dayText(n) { return n === 0 ? T.today : (n === 1 ? T.day : T.days.replace("{n}", n)); },
+      money(n) { return "৳" + Number(n).toLocaleString("en-IN", { maximumFractionDigits: 2 }); },
+    };
+  });
+});
+</script>
+{% endblock %}

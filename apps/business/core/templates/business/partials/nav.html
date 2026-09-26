@@ -35,6 +35,9 @@
 {% if biz_can.view_finance %}
 <div class="space-y-0.5">
   <p class="nav-section-label">{% translate "Money" %}</p>
+  <a href="{% url 'business:dues' %}" class="nav-link {% if '/business/baki/' in p %}is-active{% endif %}" {% if '/business/baki/' in p %}aria-current="page"{% endif %}>
+    {% include "business/partials/icon.html" with name="book" %}{% translate "Baki (dues)" %}
+  </a>
   <a href="{% url 'business:loans' %}" class="nav-link {% if '/business/loans/' in p %}is-active{% endif %}" {% if '/business/loans/' in p %}aria-current="page"{% endif %}>
     {% include "business/partials/icon.html" with name="banknotes" %}{% translate "Loans" %}
   </a>

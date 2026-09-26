@@ -1,0 +1,1 @@
+{% load i18n business %}{% if v > 0 %}<span class="bal" data-tone="good">{{ v|bdt }}{% if not plain %}<small>{% translate "owes you" %}</small>{% endif %}</span>{% elif v < 0 %}<span class="bal" data-tone="critical">{{ v|absolute|bdt }}{% if not plain %}<small>{% translate "you owe" %}</small>{% endif %}</span>{% else %}<span class="bal">৳0</span>{% endif %}

@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% translate "Baki (dues)" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "Baki (dues)" %}</h1>
+      <p class="page-subtitle">{% translate "Who owes you, whom you owe, and for how long — worked out from your sales, purchases and payments." %}</p>
+    </div>
+    <div class="page-actions">
+      <a href="{% url 'business:payments' %}" class="btn btn-secondary">{% include "partials/icon.html" with name="list" %}{% translate "Payments" %}</a>
+      {% if biz_can.enter_data %}<a href="{% url 'business:payment_add' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Record payment" %}</a>{% endif %}
+    </div>
+  </header>
+
+  <div class="baki-sides">
+    <a href="?side=receive" class="baki-side {% if side == 'receive' %}is-active{% endif %}" data-tone="good">
+      <span class="baki-side-label">{% translate "To collect" %}</span>
+      <strong class="baki-side-value">{{ t.receivable|bdt }}</strong>
+      <span class="baki-side-sub">{% blocktranslate count counter=t.receivable_count %}{{ counter }} person owes you{% plural %}{{ counter }} people owe you{% endblocktranslate %}</span>
+    </a>
+    <a href="?side=pay" class="baki-side {% if side == 'pay' %}is-active{% endif %}" data-tone="critical">
+      <span class="baki-side-label">{% translate "To pay" %}</span>
+      <strong class="baki-side-value">{{ t.payable|bdt }}</strong>
+      <span class="baki-side-sub">{% blocktranslate count counter=t.payable_count %}you owe {{ counter }} person{% plural %}you owe {{ counter }} people{% endblocktranslate %}</span>
+    </a>
+  </div>
+
+  {% if follow_ups %}
+  <section class="callout" data-tone="warn">
+    {% include "business/partials/icon.html" with name="bell" %}
+    <div class="flex-1 min-w-0">
+      <p class="callout-title">{% translate "Follow up today" %}</p>
+      <ul class="baki-follow">
+        {% for led in follow_ups %}
+        <li><a href="{% url 'business:party_statement' led.party.pk %}" class="hover:underline"><strong>{{ led.party.name }}</strong></a>
+          <span>{% if led.balance %}{{ led.amount|bdt }}{% endif %}{% if led.party.follow_up_note %} · {{ led.party.follow_up_note }}{% endif %}{% with d=led.party.follow_up_on|days_until %}{% if d < 0 %} · <em>{% blocktranslate count counter=d|absolute %}{{ counter }} day late{% plural %}{{ counter }} days late{% endblocktranslate %}</em>{% endif %}{% endwith %}</span></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </section>
+  {% endif %}
+
+  {% if total %}
+  <section class="card card-body">
+    <div class="meter-row"><span>{% if side == 'receive' %}{% translate "How old the dues are" %}{% else %}{% translate "How long you've owed" %}{% endif %}</span><strong>{{ total|bdt }}</strong></div>
+    <div class="age-bar" role="img" aria-label="{% for label, amount, pct in ageing %}{{ label }}: {{ amount|bdt }}{% if not forloop.last %}, {% endif %}{% endfor %}">
+      {% for label, amount, pct in ageing %}{% if amount %}<span data-age="{{ forloop.counter0 }}" style="flex-grow: {{ pct }}" data-tip="{{ label }}: {{ amount|bdt }}"></span>{% endif %}{% endfor %}
+    </div>
+    <ul class="age-legend">
+      {% for label, amount, pct in ageing %}<li data-age="{{ forloop.counter0 }}"><span class="age-dot"></span>{{ label }}<strong>{{ amount|bdt }}</strong></li>{% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  <div class="master-bar">
+    <nav class="seg seg-scroll" aria-label="{% translate 'Sort' %}">
+      <a href="?side={{ side }}&sort=amount{% if q %}&q={{ q|urlencode }}{% endif %}" class="seg-item {% if sort == 'amount' %}is-active{% endif %}">{% translate "Biggest first" %}</a>
+      <a href="?side={{ side }}&sort=oldest{% if q %}&q={{ q|urlencode }}{% endif %}" class="seg-item {% if sort == 'oldest' %}is-active{% endif %}">{% translate "Oldest first" %}</a>
+      <a href="?side={{ side }}&sort=name{% if q %}&q={{ q|urlencode }}{% endif %}" class="seg-item {% if sort == 'name' %}is-active{% endif %}">{% translate "A–Z" %}</a>
+    </nav>
+    <form method="get" class="master-search" role="search">
+      <input type="hidden" name="side" value="{{ side }}"><input type="hidden" name="sort" value="{{ sort }}">
+      <div class="input-icon">{% include "partials/icon.html" with name="search" %}<input type="search" name="q" value="{{ q }}" class="form-input" placeholder="{% translate 'Name or phone…' %}" aria-label="{% translate 'Search' %}"></div>
+    </form>
+  </div>
+
+  {% if rows %}
+  <section class="card">
+    <ul class="ledger">
+      {% for led in rows %}
+      <li class="ledger-row baki-row">
+        <a href="{% url 'business:party_statement' led.party.pk %}" class="baki-row-link" aria-label="{% blocktranslate with name=led.party.name %}Statement for {{ name }}{% endblocktranslate %}"></a>
+        <span class="avatar party-avatar" data-kind="{% if led.owes_me %}buyer{% else %}supplier{% endif %}" aria-hidden="true">{{ led.party.name|slice:":1"|upper }}</span>
+        <div class="ledger-main">
+          <p class="ledger-title">{{ led.party.name }}</p>
+          <p class="ledger-meta">
+            {% if led.oldest_days is not None %}<span {% if led.oldest_days > 90 %}class="tone-critical"{% elif led.oldest_days > 30 %}class="tone-warn"{% endif %}>{% blocktranslate count counter=led.oldest_days %}oldest {{ counter }} day{% plural %}oldest {{ counter }} days{% endblocktranslate %}</span>{% endif %}
+            {% if led.last_payment %} · {% blocktranslate with date=led.last_payment|date:"j M" %}last paid {{ date }}{% endblocktranslate %}{% endif %}
+            {% if led.party.follow_up_on %} · <span class="baki-promise">{% include "business/partials/icon.html" with name="bell" %}{{ led.party.follow_up_on|date:"j M" }}</span>{% endif %}
+          </p>
+          <div class="age-bar age-bar-sm" aria-hidden="true">{% for label, amount, pct in led.bucket_rows %}{% if amount %}<span data-age="{{ forloop.counter0 }}" style="flex-grow: {{ pct }}"></span>{% endif %}{% endfor %}</div>
+        </div>
+        <div class="ledger-end">
+          <span class="party-bal" data-tone="{% if led.owes_me %}good{% else %}critical{% endif %}"><strong>{{ led.amount|bdt }}</strong><span>{% if led.owes_me %}{% translate "owes you" %}{% else %}{% translate "you owe" %}{% endif %}</span></span>
+          <div class="baki-row-actions">
+            {% if led.party.phone %}<a href="tel:{{ led.party.phone }}" class="icon-btn" aria-label="{% translate 'Call' %}" data-tip="{% translate 'Call' %}">{% include "business/partials/icon.html" with name="phone" %}</a>{% endif %}
+            {% if led.wa %}<a href="{{ led.wa }}" target="_blank" rel="noopener" class="icon-btn" aria-label="{% translate 'Remind on WhatsApp' %}" data-tip="{% translate 'Remind on WhatsApp' %}">{% include "business/partials/icon.html" with name="chat" %}</a>{% endif %}
+            {% if biz_can.enter_data %}<a href="{% url 'business:payment_add' %}?party={{ led.party.pk }}&dir={% if led.owes_me %}in{% else %}out{% endif %}&next={{ request.get_full_path|urlencode }}" class="btn btn-soft btn-sm">{% if led.owes_me %}{% translate "Receive" %}{% else %}{% translate "Pay" %}{% endif %}</a>{% endif %}
+          </div>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% else %}
+  <div class="empty">
+    <div class="empty-icon">{% include "partials/icon.html" with name="check" %}</div>
+    <h3 class="empty-title">{% if q %}{% blocktranslate %}Nothing matches “{{ q }}”.{% endblocktranslate %}{% elif side == 'receive' %}{% translate "Nobody owes you anything" %}{% else %}{% translate "You don't owe anyone" %}{% endif %}</h3>
+    <p class="empty-text">{% translate "Dues appear here by themselves when a sale isn't fully paid, or you buy feed or fingerlings on baki." %}</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
