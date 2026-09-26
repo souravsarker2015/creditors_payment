@@ -1,0 +1,8 @@
+{% load i18n %}<li class="ledger-row">
+  <span class="ledger-icon" data-tone="warn">{% include "partials/icon.html" with name="tag" %}</span>
+  <div class="ledger-main">
+    <p class="ledger-title">{{ o.name }}{% if o.name_bn %} <span class="unit-bn">{{ o.name_bn }}</span>{% endif %}</p>
+    <p class="ledger-meta">{{ o.get_method_display }}</p>
+  </div>
+  <div class="ledger-end">{% include "business/master/_actions.html" with up=forloop.last %}</div>
+</li>

@@ -1,0 +1,11 @@
+{% load i18n business %}<li class="ledger-row">
+  <span class="ledger-icon" data-tone="{% if o.kind == 'cash' %}good{% elif o.kind == 'bank' %}info{% elif o.kind == 'mobile' %}accent{% else %}muted{% endif %}">{% if o.kind == 'bank' %}{% include "business/partials/icon.html" with name="bank" %}{% elif o.kind == 'mobile' %}{% include "partials/icon.html" with name="phone" %}{% else %}{% include "partials/icon.html" with name="wallet" %}{% endif %}</span>
+  <div class="ledger-main">
+    <p class="ledger-title">{{ o.name }}{% if o.is_default %} <span class="badge" data-tone="accent">{% translate "Default" %}</span>{% endif %}</p>
+    <p class="ledger-meta">{{ o.get_kind_display }}{% if o.institution %} · {{ o.institution }}{% endif %}{% if o.number %} · {{ o.masked_number }}{% endif %}</p>
+  </div>
+  <div class="ledger-end">
+    <span class="party-bal"><strong>{{ o.show_balance|bdt }}</strong><span>{% translate "balance" %}</span></span>
+    {% include "business/master/_actions.html" with up=forloop.last %}
+  </div>
+</li>

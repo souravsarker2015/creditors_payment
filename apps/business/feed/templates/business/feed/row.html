@@ -1,0 +1,11 @@
+{% load i18n business %}<li class="ledger-row">
+  <span class="ledger-icon" data-tone="{% if o.form == 'floating' %}info{% else %}gold{% endif %}">{% include "business/partials/icon.html" with name="banknotes" %}</span>
+  <div class="ledger-main">
+    <p class="ledger-title">{{ o }}</p>
+    <p class="ledger-meta">{{ o.get_form_display }}{% if o.stage %} · {{ o.get_stage_display }}{% endif %}{% if o.protein_pct %} · {{ o.protein_pct|num }}% {% translate "protein" %}{% endif %} · {% blocktranslate with size=o.bag_size|num unit=o.bag_unit.symbol %}{{ size }} {{ unit }} bag{% endblocktranslate %}{% for s in o.suppliers.all %}{% if forloop.first %} · {% else %}, {% endif %}{{ s.name }}{% endfor %}</p>
+  </div>
+  <div class="ledger-end">
+    {% if o.default_price %}<span class="party-bal"><strong>{{ o.default_price|bdt }}</strong><span>{% blocktranslate with price=o.price_per_kg|bdt %}{{ price }}/kg{% endblocktranslate %}</span></span>{% endif %}
+    {% include "business/master/_actions.html" with up=forloop.last %}
+  </div>
+</li>

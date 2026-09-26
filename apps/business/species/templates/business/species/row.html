@@ -1,0 +1,8 @@
+{% load i18n %}<li class="ledger-row">
+  <span class="species-dot" style="--c: {{ o.color }}">{% include "business/partials/icon.html" with name="fish" %}</span>
+  <div class="ledger-main">
+    <p class="ledger-title">{{ o.name }}{% if o.name_bn %} <span class="unit-bn">{{ o.name_bn }}</span>{% endif %}</p>
+    <p class="ledger-meta">{% if o.default_unit %}{% blocktranslate with unit=o.default_unit.display_name %}Sold by {{ unit }}{% endblocktranslate %}{% endif %}{% if o.scientific_name %} · <i>{{ o.scientific_name }}</i>{% endif %}</p>
+  </div>
+  <div class="ledger-end">{% include "business/master/_actions.html" with up=forloop.last %}</div>
+</li>

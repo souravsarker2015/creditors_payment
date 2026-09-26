@@ -1,0 +1,24 @@
+{% load i18n business %}
+<section class="card" x-data="formRows('{{ formset.prefix }}')">
+  <div class="card-header">
+    <div>
+      <h2 class="card-title">{% translate "Usual deductions" %}</h2>
+      <p class="card-subtitle">{% translate "Filled in on every sale at this market. You can still change them per sale." %}</p>
+    </div>
+  </div>
+  {{ formset.management_form }}
+  {% if formset.non_form_errors %}<div class="card-body"><div class="form-errors">{% for e in formset.non_form_errors %}<p>{{ e }}</p>{% endfor %}</div></div>{% endif %}
+  <div class="rows-list" x-ref="list">
+    {% for f in formset %}{% include "business/markets/deduction_row.html" %}{% endfor %}
+  </div>
+  <template x-ref="tpl">{% with f=formset.empty_form %}{% include "business/markets/deduction_row.html" %}{% endwith %}</template>
+  <div class="card-footer flex flex-wrap items-center gap-2">
+    <button type="button" class="btn btn-secondary btn-sm" @click="add()">{% include "partials/icon.html" with name="plus" %}{% translate "Add a deduction" %}</button>
+    {% biz_quick_add "deduction_type" as qa %}
+    <span x-data="quickAdd('{{ qa.url }}', 'dt-new')" class="contents">
+      <select id="dt-new" class="hidden" aria-hidden="true" tabindex="-1" @change="$dispatch('new-option', { value: $el.value, text: $el.options[$el.selectedIndex].text })"><option value=""></option></select>
+      <button type="button" class="btn btn-ghost btn-sm" @click="show($el)">{% include "partials/icon.html" with name="tag" %}{% translate "New deduction type" %}</button>
+      {% with field=formset.empty_form.deduction_type %}{% include "partials/quick_add_modal.html" %}{% endwith %}
+    </span>
+  </div>
+</section>

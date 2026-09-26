@@ -1,0 +1,11 @@
+{% load i18n %}<li class="ledger-row{% if o.parent_id %} is-child{% endif %}">
+  <span class="ledger-icon" data-tone="{% if o.type == 'income' %}good{% else %}warn{% endif %}">{% if o.parent_id %}<span class="cat-branch" aria-hidden="true"></span>{% elif o.type == 'income' %}{% include "partials/icon.html" with name="arrow-down" %}{% else %}{% include "partials/icon.html" with name="arrow-up" %}{% endif %}</span>
+  <div class="ledger-main">
+    <p class="ledger-title">{{ o.name }}{% if o.name_bn %} <span class="unit-bn">{{ o.name_bn }}</span>{% endif %}{% if o.is_system %} <span class="badge" data-tone="accent" data-tip="{% translate 'Filled in automatically from sales' %}">{% translate "Auto" %}</span>{% endif %}</p>
+    {% if groups is None %}<p class="ledger-meta">{% if o.parent_id %}{{ o.parent.display_name }} · {% endif %}{{ o.get_scope_display }} · {{ o.get_type_display }}</p>{% endif %}
+  </div>
+  <div class="ledger-end">
+    {% if can_edit and not o.parent_id and not is_deleted_tab %}<a href="{% url 'business:categories_add' %}?parent={{ o.pk }}" class="icon-btn" aria-label="{% translate 'Add a sub-category' %}" data-tip="{% translate 'Add a sub-category' %}">{% include "partials/icon.html" with name="plus" %}</a>{% endif %}
+    {% include "business/master/_actions.html" with up=forloop.last %}
+  </div>
+</li>

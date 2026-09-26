@@ -1,0 +1,9 @@
+{% load i18n %}<li class="ledger-row">
+  <span class="ledger-icon" data-tone="accent">{% include "partials/icon.html" with name="cart" %}</span>
+  <div class="ledger-main">
+    <p class="ledger-title">{{ o.name }}</p>
+    <p class="ledger-meta">{% if o.location %}{{ o.location }}{% endif %}{% if o.market_days %} · {{ o.market_days }}{% endif %}{% if o.buyer_count %} · {% blocktranslate count counter=o.buyer_count %}{{ counter }} buyer{% plural %}{{ counter }} buyers{% endblocktranslate %}{% endif %}</p>
+    {% if o.deduction_rows %}<div class="deduction-chips">{% for d in o.deduction_rows %}<span class="badge badge-outline">{{ d.deduction_type }} {{ d.describe }}</span>{% endfor %}</div>{% endif %}
+  </div>
+  <div class="ledger-end">{% include "business/master/_actions.html" with up=forloop.last %}</div>
+</li>

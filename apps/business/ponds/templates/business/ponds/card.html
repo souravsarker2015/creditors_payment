@@ -1,0 +1,25 @@
+{% load i18n business %}<article class="card entity pond-card">
+  <div class="pond-photo{% if not o.photo %} is-empty{% endif %}">
+    {% if o.photo %}<img src="{{ o.photo.url }}" alt="" loading="lazy">{% else %}{% include "business/partials/icon.html" with name="fish" %}{% endif %}
+    <span class="badge pond-status" data-tone="{% if o.status == 'in_use' %}good{% elif o.status == 'preparing' %}warn{% else %}muted{% endif %}">{{ o.get_status_display }}</span>
+  </div>
+  <div class="entity-head">
+    <div class="min-w-0 flex-1">
+      <h3 class="entity-name">{% if o.code %}<span class="pond-code">{{ o.code }}</span>{% endif %}{{ o.name }}</h3>
+      <p class="entity-meta">{% if o.location %}{{ o.location }}{% else %}&nbsp;{% endif %}</p>
+    </div>
+    {% include "business/master/_actions.html" %}
+  </div>
+  <dl class="pond-facts">
+    <div><dt>{% translate "Area" %}</dt><dd>{% if o.area %}{% qty o.area o.area_unit %}{% else %}—{% endif %}</dd></div>
+    <div><dt>{% translate "Depth" %}</dt><dd>{% if o.depth_ft %}{{ o.depth_ft|num }} {% translate "ft" %}{% else %}—{% endif %}</dd></div>
+    <div><dt>{% translate "Ownership" %}</dt><dd>{{ o.get_ownership_display }}</dd></div>
+  </dl>
+  {% if o.is_leased %}
+  <p class="loan-next" data-tone="{% if o.lease_days_left is not None and o.lease_days_left < 0 %}critical{% elif o.lease_days_left is not None and o.lease_days_left <= 60 %}warn{% else %}info{% endif %}">
+    {% include "partials/icon.html" with name="calendar" %}
+    <span>{% if o.lease_amount %}{{ o.lease_amount|bdt }}{% if o.lease_months %} · {% blocktranslate count counter=o.lease_months %}{{ counter }} month{% plural %}{{ counter }} months{% endblocktranslate %}{% endif %}{% if o.lease_from %} · {{ o.lease_from }}{% endif %}<br>{% endif %}
+    {% if o.lease_end %}{% if o.lease_days_left < 0 %}{% blocktranslate with date=o.lease_end|date:"j M Y" %}Lease ended {{ date }}{% endblocktranslate %}{% else %}{% blocktranslate with date=o.lease_end|date:"j M Y" %}Lease ends {{ date }}{% endblocktranslate %}{% endif %}{% else %}{% translate "Lease end date not set" %}{% endif %}</span>
+  </p>
+  {% endif %}
+</article>
