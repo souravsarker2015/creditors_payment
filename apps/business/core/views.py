@@ -44,6 +44,7 @@ def home_view(request):
         "loans": _loans_summary(request),
         "setup_steps": _setup_steps(request),
         "has_ponds": _has_ponds(b),
+        "tasks": _farm_tasks(b),
         "low_feed": _low_feed(b),
         "baki": _baki_summary(request),
         "money": _money_summary(request),
@@ -54,6 +55,14 @@ def _has_ponds(business):
     from apps.business.ponds.models import Pond
 
     return Pond.objects.filter(business=business).exists()
+
+
+def _farm_tasks(business):
+    if not apps.is_installed("apps.business.ponds"):
+        return []
+    from apps.business.ponds.services import farm_tasks
+
+    return farm_tasks(business)
 
 
 def _low_feed(business):

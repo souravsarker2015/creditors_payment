@@ -11,6 +11,7 @@ from django.views.decorators.http import require_POST
 
 from apps.business.core.crud import Master
 from apps.business.core.decorators import business_access_required
+from apps.business.core.models import Unit
 from apps.business.feed.forms import FeedUsageForm
 from apps.business.feed.models import FeedUsage
 
@@ -114,8 +115,11 @@ def cycle_detail_view(request, pk):
     feedings = list(cycle.feedings.select_related("product", "unit")[:60])
     harvests = list(cycle.harvests.select_related("species", "unit"))
     sales = list(cycle.sales.select_related("buyer", "market"))
+    summary = services.summarize(cycle)
+    mon = Unit.objects.filter(business=b, symbol="mon", unit_type="weight").first()
     return render(request, "business/ponds/cycle_detail.html", {
-        "cycle": cycle, "pond": cycle.pond, "s": services.summarize(cycle),
+        "cycle": cycle, "pond": cycle.pond, "s": summary,
+        "p": services.projection(summary) if cycle.is_running else None, "mon": mon,
         "popups": popups,
         "stockings": list(cycle.stockings.select_related("species", "supplier", "weight_unit")),
         "feedings": feedings, "feed_by_product": _feed_by_product(cycle),

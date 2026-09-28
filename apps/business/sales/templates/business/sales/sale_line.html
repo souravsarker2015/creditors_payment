@@ -15,6 +15,7 @@
     <div class="field{% if f.rate.errors %} has-error{% endif %}">
       <label class="label" for="{{ f.rate.id_for_label }}">{% translate "Rate" %} <span class="opt" data-rate-per></span></label>
       <div class="input-affix has-start"><span class="affix affix-start" aria-hidden="true">৳</span>{{ f.rate }}</div>
+      <p class="help" data-rate-hint aria-live="polite"></p>
       {% for e in f.rate.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
     </div>
   </div>

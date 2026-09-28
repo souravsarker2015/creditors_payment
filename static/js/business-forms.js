@@ -60,7 +60,13 @@ document.addEventListener("alpine:init", function () {
       data: data, mode: mode,
       kg: 0, subtotal: 0, extra: 0, less: 0, total: 0, paid: 0, due: 0,
       gross: 0, deductions: 0, net: 0,
-      init() { root = this.$el; this.$nextTick(() => this.calc()); },
+      init() {
+        root = this.$el;
+        this.$nextTick(() => {
+          if (this.mode === "sale") this.rows(".sale-line").forEach((row) => this.autoSaleRate(row));
+          this.calc();
+        });
+      },
       field(row, name) { return row.querySelector("[name$='-" + name + "']"); },
       rows(sel) { return Array.from(root.querySelectorAll(sel)).filter(function (r) { return !r.closest("template") && r.dataset.gone !== "true" && r.offsetParent !== null; }); },
       money(n) { return "৳" + (Math.round(n * 100) / 100).toLocaleString("en-IN", { maximumFractionDigits: 2 }); },
@@ -74,6 +80,20 @@ document.addEventListener("alpine:init", function () {
         var unit = this.data.units[this.field(row, "unit").value];
         var v = unit ? num(p.price) / num(p.bag_kg) * num(unit.factor) : num(p.price);
         rate.value = Math.round(v * 100) / 100; rate.dataset.auto = "1";
+      },
+      // A sale line: start from the last price this fish sold for (at this market if it has
+      // sold there, else anywhere), in the unit chosen, unless the user typed a rate.
+      autoSaleRate(row) {
+        var rates = this.data.rates || {}, sp = (this.field(row, "species") || {}).value;
+        var unit = this.data.units[(this.field(row, "unit") || {}).value];
+        var market = (root.querySelector("[name=market]") || {}).value || "0";
+        var last = sp && unit ? (rates[sp + ":" + market + ":" + unit.type] || rates[sp + ":*:" + unit.type]) : null;
+        var hint = row.querySelector("[data-rate-hint]"), rate = this.field(row, "rate");
+        var value = last ? Math.round(num(last.per_base) * num(unit.factor) * 100) / 100 : 0;
+        if (hint) hint.textContent = last ? (this.data.text.last || "").replace("{rate}", this.money(value)).replace("{unit}", unit.symbol)
+          .replace("{date}", last.date + (last.market ? " · " + last.market : "")) : "";
+        if (!last || !rate || (rate.value && rate.dataset.auto !== "1")) return;
+        rate.value = value; rate.dataset.auto = "1";
       },
       calc(e) {
         var self = this;
@@ -107,6 +127,7 @@ document.addEventListener("alpine:init", function () {
             var sp = self.data.species[e.target.value]; var u = self.field(row, "unit");
             if (sp && sp.unit && !self.field(row, "quantity").value) u.value = sp.unit;
           }
+          if (e && e.type === "change" && (e.target.name === "market" || (row.contains(e.target) && /-(species|unit)$/.test(e.target.name)))) self.autoSaleRate(row);
           gross += q * rate;
           if (unit) base[unit.type] = (base[unit.type] || 0) + q * num(unit.factor);
           row.querySelector("[data-line-amount]").textContent = q && rate ? self.money(q * rate) : "";
@@ -133,6 +154,7 @@ document.addEventListener("alpine:init", function () {
         if (sel.value !== String(market)) return;   // that market is no longer in the list
         if (sel.tomselect) sel.tomselect.setValue(String(market), true);
         this.applyMarket(String(market));
+        this.rows(".sale-line").forEach((row) => this.autoSaleRate(row));   // prices can differ by market
       },
       // Market chosen: replace the deductions that haven't been saved yet with its usual ones.
       applyMarket(id) {

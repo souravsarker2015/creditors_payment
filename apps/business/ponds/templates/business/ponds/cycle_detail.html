@@ -66,6 +66,48 @@
     </div>
   </dl>
 
+  {% if p %}
+  <section class="card" x-data="{ price: '{% if p.usual_price %}{{ p.usual_price|stringformat:'s' }}{% endif %}', kg: {{ p.fish_kg|default:0|stringformat:'s' }},
+      cost: {{ p.cost|stringformat:'s' }}, sold: {{ p.sold|stringformat:'s' }}, mon: {% if mon %}{{ mon.factor|stringformat:'s' }}{% else %}0{% endif %},
+      get n() { var v = parseFloat(this.price); return isNaN(v) ? 0 : v; },
+      get income() { return this.kg * this.n; },
+      get profit() { return this.sold + this.income - this.cost; },
+      fmt(v) { return (v < 0 ? '−' : '') + '৳' + Math.round(Math.abs(v)).toLocaleString('en-IN'); } }">
+    <div class="card-header">
+      <div><h2 class="card-title">{% translate "If you sell now" %}{% include "business/partials/tip.html" with text=_("An estimate: the fish still in the pond (from your latest sample weighing) × the price you type, added to what this cycle has already sold, minus everything it has cost.") %}</h2>
+      <p class="card-subtitle">{% translate "Type the price you expect to see what the cycle would make." %}</p></div>
+    </div>
+    <div class="card-body">
+      {% if p.fish_kg %}
+      <div class="form-grid form-grid-2 items-start">
+        <div class="field">
+          <label class="label" for="proj-price">{% translate "Price you expect, per kg" %}</label>
+          <div class="input-affix has-start"><span class="affix affix-start" aria-hidden="true">৳</span><input id="proj-price" type="number" inputmode="decimal" min="0" step="any" class="form-input" x-model="price" placeholder="0"></div>
+          {% if mon %}<p class="help" x-show="n" x-text="'= ' + fmt(n * mon) + ' / {{ mon.symbol|escapejs }}'"></p>{% endif %}
+          {% if p.usual_price %}<p class="help">{% blocktranslate with price=p.usual_price|bdt days=90 %}You've been getting about {{ price }}/kg in the last {{ days }} days, after market deductions.{% endblocktranslate %}</p>
+          {% else %}<p class="help">{% translate "No sales of these fish by weight in the last 90 days, so type a price." %}</p>{% endif %}
+        </div>
+        <dl class="doc-totals">
+          <div><dt>{% translate "Fish in the pond" %}</dt><dd>≈ {{ p.fish_kg|num }} kg</dd></div>
+          <div><dt>{% translate "They would bring in" %}</dt><dd x-text="fmt(income)"></dd></div>
+          <div class="is-total"><dt>{% translate "Profit for the whole cycle" %}</dt><dd x-text="fmt(profit)" :class="profit < 0 ? 'tone-critical' : ''"></dd></div>
+        </dl>
+      </div>
+      <div class="proj-facts">
+        {% if p.to_cover %}<p><strong>{% blocktranslate with price=p.break_even|bdt %}Break-even: {{ price }}/kg{% endblocktranslate %}</strong> · {% translate "sell above this and the cycle makes money." %}{% if mon %} ({% widthratio p.break_even 1 mon.factor as per_mon %}{{ per_mon|bdt }}/{{ mon.symbol }}){% endif %}</p>
+        {% else %}<p><strong>{% translate "Costs are already covered." %}</strong> {% translate "Whatever the fish in the pond bring in now is profit." %}</p>{% endif %}
+        {% if p.cost_per_kg %}<p>{% blocktranslate with price=p.cost_per_kg|bdt %}Each kg of fish has cost you about {{ price }} to grow.{% endblocktranslate %}{% include "business/partials/tip.html" with text=_("Everything this cycle has cost, divided by the fish harvested so far plus the estimated fish still in the pond.") %}</p>{% endif %}
+      </div>
+      {% else %}
+      <div class="empty is-plain">
+        <p class="empty-text">{% translate "Weigh a sample of fish to see what the fish in the pond are worth, and the price you need to cover your costs." %}</p>
+        {% if biz_can.enter_data %}<button type="button" class="btn btn-primary" @click="modal = 'weighing'">{% include "business/partials/icon.html" with name="scale" %}{% translate "Weigh a sample" %}</button>{% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </section>
+  {% endif %}
+
   <nav class="seg seg-scroll" role="tablist">
     <button type="button" role="tab" class="seg-item" :class="tab === 'overview' && 'is-active'" @click="tab = 'overview'">{% translate "Fish" %}</button>
     <button type="button" role="tab" class="seg-item" :class="tab === 'feeding' && 'is-active'" @click="tab = 'feeding'">{% translate "Feeding" %} <span class="seg-count">{{ feedings|length }}</span></button>

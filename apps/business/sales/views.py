@@ -22,6 +22,7 @@ from apps.business.species.models import Species
 
 from .forms import FishSaleForm, SaleDeductionForm, SaleDeductionFormSet, SaleLineForm, SaleLineFormSet, _SaleLines
 from .models import FishSale, FishSaleLine, SaleDeduction
+from .services import last_rates
 
 
 def _periods(today):
@@ -72,14 +73,16 @@ def _sale_dues(business):
     return {s.pk: s.net - s.received_now for s in FishSale.objects.filter(business=business, net__gt=F("received_now"))}
 
 
-def _form_json(business):
+def _form_json(business, sale=None):
     units = {u.pk: {"factor": str(u.factor), "symbol": u.symbol, "type": u.unit_type} for u in Unit.objects.filter(business=business)}
     species = {s.pk: {"unit": s.default_unit_id} for s in Species.objects.filter(business=business)}
     markets = {}
     for d in MarketDeduction.objects.filter(business=business, market__is_deleted=False).select_related("deduction_type"):
         markets.setdefault(d.market_id, []).append({"type": d.deduction_type_id, "method": d.method, "value": format(d.value.normalize(), "f"), "unit": d.unit_id})
     buyers = dict(Party.objects.filter(business=business, is_buyer=True, market__isnull=False).values_list("pk", "market_id"))
-    return json.dumps({"units": units, "species": species, "markets": markets, "buyers": buyers})
+    return json.dumps({"units": units, "species": species, "markets": markets, "buyers": buyers,
+                       "rates": last_rates(business, exclude_sale=sale),
+                       "text": {"last": _("Last sold for {rate}/{unit} on {date}")}})
 
 
 def _initial(request, form):
@@ -140,7 +143,7 @@ def sale_form_view(request, pk=None):
             return _saved(request, obj)
     return render(request, "business/sales/sale_form.html", {
         "form": form, "lines": lines, "deds": deds, "obj": sale, "harvest": harvest or (sale.harvest if sale else None),
-        "sale_json": _form_json(b),
+        "sale_json": _form_json(b, sale),
     })
 
 
