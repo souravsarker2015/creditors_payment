@@ -90,3 +90,10 @@ def biz_quick_add(context, kind):
     request = context.get("request")
     business = getattr(request, "business", None) or context.get("business")
     return quick_add_context(kind, business)
+
+
+@register.filter
+def tip(field):
+    """The ⓘ explainer for a form field: the form's `tips` dict, by field name."""
+    tips = getattr(getattr(field, "form", None), "tips", None) or {}
+    return tips.get(getattr(field, "name", None), "")

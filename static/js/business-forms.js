@@ -3,14 +3,19 @@
    Removed new rows simply leave a gap: Django ignores empty extra forms. */
 document.addEventListener("alpine:init", function () {
   Alpine.data("formRows", function (prefix) {
+    var root;   // the section itself: `this.$el` is whichever element fired the event
     return {
-      total() { return document.getElementById("id_" + prefix + "-TOTAL_FORMS"); },
-      add() {
-        var total = this.total(), i = parseInt(total.value, 10);
+      // Not called "total": the sale/purchase totals around these rows have a `total` of their own.
+      totalForms() { return document.getElementById("id_" + prefix + "-TOTAL_FORMS"); },
+      // `prep(row)` fills the new row in before Alpine starts it, so its own
+      // x-data (e.g. a deduction's method) begins from those values.
+      add(prep) {
+        var total = this.totalForms(), i = parseInt(total.value, 10);
         var html = this.$refs.tpl.innerHTML.replace(/__prefix__/g, i);
         var wrap = document.createElement("div");
         wrap.innerHTML = html.trim();
         var row = wrap.firstElementChild;
+        if (typeof prep === "function") prep(row);
         this.$refs.list.appendChild(row);
         total.value = i + 1;
         var first = row.querySelector("select, input:not([type=hidden])");
@@ -19,11 +24,12 @@ document.addEventListener("alpine:init", function () {
         return row;
       },
       init() {
+        root = this.$el;
         // "+ New …" created an option: add it to every row and to the row template.
         window.addEventListener("new-option", (e) => {
           var d = e.detail;
           if (!d || !d.value) return;
-          var selects = Array.from(this.$el.querySelectorAll("select[name$='-deduction_type']"));
+          var selects = Array.from(root.querySelectorAll("select[name$='-deduction_type']"));
           selects.forEach(function (sel) {
             if (!Array.from(sel.options).some(function (o) { return o.value === d.value; })) sel.add(new Option(d.text, d.value));
           });
@@ -49,16 +55,17 @@ document.addEventListener("DOMContentLoaded", function () {
 document.addEventListener("alpine:init", function () {
   Alpine.data("docTotals", function (data, mode) {
     var num = function (v) { var n = parseFloat(v); return isNaN(n) ? 0 : n; };
+    var root;   // the form itself: in a method, `this.$el` is whichever element called it (a chip, a wrapper)
     return {
       data: data, mode: mode,
       kg: 0, subtotal: 0, extra: 0, less: 0, total: 0, paid: 0, due: 0,
       gross: 0, deductions: 0, net: 0,
-      init() { this.$nextTick(() => this.calc()); },
+      init() { root = this.$el; this.$nextTick(() => this.calc()); },
       field(row, name) { return row.querySelector("[name$='-" + name + "']"); },
-      rows(sel) { return Array.from(this.$el.querySelectorAll(sel)).filter(function (r) { return !r.closest("template") && r.dataset.gone !== "true" && r.offsetParent !== null; }); },
+      rows(sel) { return Array.from(root.querySelectorAll(sel)).filter(function (r) { return !r.closest("template") && r.dataset.gone !== "true" && r.offsetParent !== null; }); },
       money(n) { return "৳" + (Math.round(n * 100) / 100).toLocaleString("en-IN", { maximumFractionDigits: 2 }); },
       fmtNum(n) { return (Math.round(n * 10) / 10).toLocaleString("en-IN", { maximumFractionDigits: 1 }); },
-      setPaid(v) { var el = this.$el.querySelector("[name=paid_now], [name=received_now]"); if (el) { el.value = v ? Math.round(v * 100) / 100 : ""; } this.calc(); },
+      setPaid(v) { var el = root.querySelector("[name=paid_now], [name=received_now]"); if (el) { el.value = v ? Math.round(v * 100) / 100 : ""; } this.calc(); },
       // Fill the rate from the feed's usual price (per bag, or per kg/mon…) unless the user typed one.
       autoRate(row) {
         var p = this.data.products[(this.field(row, "product") || {}).value];
@@ -84,10 +91,10 @@ document.addEventListener("alpine:init", function () {
             var per = row.querySelector("[data-rate-per]"); if (per) per.textContent = "/ " + (unit ? unit.symbol : (self.data.bagWord || "bag"));
           });
           this.kg = kg; this.subtotal = sub;
-          this.extra = num((this.$el.querySelector("[name=transport]") || {}).value);
-          this.less = num((this.$el.querySelector("[name=discount]") || {}).value);
+          this.extra = num((root.querySelector("[name=transport]") || {}).value);
+          this.less = num((root.querySelector("[name=discount]") || {}).value);
           this.total = Math.max(sub + this.extra - this.less, 0);
-          this.paid = num((this.$el.querySelector("[name=paid_now]") || {}).value);
+          this.paid = num((root.querySelector("[name=paid_now]") || {}).value);
           this.due = Math.max(this.total - this.paid, 0);
           return;
         }
@@ -115,12 +122,21 @@ document.addEventListener("alpine:init", function () {
           row.querySelector("[data-line-amount]").textContent = amount ? "− " + self.money(amount) : "";
         });
         this.gross = gross; this.deductions = ded; this.net = gross - ded;
-        this.paid = num((this.$el.querySelector("[name=received_now]") || {}).value);
+        this.paid = num((root.querySelector("[name=received_now]") || {}).value);
         this.due = Math.max(this.net - this.paid, 0); this.total = this.net;
+      },
+      // Buyer chosen while the market is still empty: use the buyer's usual market.
+      applyBuyer(id) {
+        var market = (this.data.buyers || {})[id], sel = root.querySelector("[name=market]");
+        if (!market || !sel || sel.value) return;
+        sel.value = String(market);
+        if (sel.value !== String(market)) return;   // that market is no longer in the list
+        if (sel.tomselect) sel.tomselect.setValue(String(market), true);
+        this.applyMarket(String(market));
       },
       // Market chosen: replace the deductions that haven't been saved yet with its usual ones.
       applyMarket(id) {
-        var list = this.data.markets[id]; var box = this.$el.querySelector("[data-rows='ded']");
+        var list = this.data.markets[id]; var box = root.querySelector("[data-rows='ded']");
         if (!box || !list) return;
         var rows = Alpine.$data(box);
         box.querySelectorAll(".ded-line").forEach(function (r) {
@@ -130,11 +146,13 @@ document.addEventListener("alpine:init", function () {
         });
         rows.silent = true;
         list.forEach(function (d) {
-          var row = rows.add();
-          row.querySelector("[name$='-deduction_type']").value = d.type;
-          var m = row.querySelector("[name$='-method']"); m.value = d.method; m.dispatchEvent(new Event("change", { bubbles: true }));
-          row.querySelector("[name$='-value']").value = d.value;
-          if (d.unit) row.querySelector("[name$='-unit']").value = d.unit;
+          rows.add(function (row) {
+            // The row's x-data holds the method; set it there, or Alpine resets the select to "fixed".
+            row.setAttribute("x-data", row.getAttribute("x-data").replace(/method: '[^']*'/, "method: '" + d.method + "'"));
+            row.querySelector("[name$='-deduction_type']").value = d.type;
+            row.querySelector("[name$='-value']").value = d.value;
+            if (d.unit) row.querySelector("[name$='-unit']").value = d.unit;
+          });
         });
         rows.silent = false;
         this.$nextTick(() => this.calc());

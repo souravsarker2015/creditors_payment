@@ -23,14 +23,14 @@
         </div>
         <div class="form-grid form-grid-2">
           <div @change="if ($event.target.name === 'market') applyMarket($event.target.value)">{% with field=form.market %}{% include "business/partials/field.html" %}{% endwith %}</div>
-          {% with field=form.buyer %}{% include "business/partials/field.html" %}{% endwith %}
+          <div @change="if ($event.target.name === 'buyer') applyBuyer($event.target.value)">{% with field=form.buyer %}{% include "business/partials/field.html" %}{% endwith %}</div>
         </div>
         {% with field=form.cycle %}{% include "business/partials/field.html" %}{% endwith %}
       </div>
     </section>
 
     <section class="card" x-data="formRows('{{ lines.prefix }}')" @row-added="calc()">
-      <div class="card-header"><div><h2 class="card-title">{% translate "Fish sold" %}</h2><p class="card-subtitle">{% translate "Sell by mon, kg or piece — whatever the market uses." %}</p></div></div>
+      <div class="card-header"><div><h2 class="card-title">{% translate "Fish sold" %}{% include "business/partials/tip.html" with text=_("One line per fish. The amount is quantity × rate, and the rate is per the unit you choose (per mon, per kg or per piece).") %}</h2><p class="card-subtitle">{% translate "Sell by mon, kg or piece — whatever the market uses." %}</p></div></div>
       {{ lines.management_form }}
       {% if lines.non_form_errors %}<div class="card-body"><div class="form-errors">{% for e in lines.non_form_errors %}<p>{{ e }}</p>{% endfor %}</div></div>{% endif %}
       <div class="rows-list" x-ref="list">{% for f in lines %}{% include "business/sales/sale_line.html" %}{% endfor %}</div>
@@ -39,7 +39,7 @@
     </section>
 
     <section class="card" x-data="formRows('{{ deds.prefix }}')" data-rows="ded" @row-added="calc()">
-      <div class="card-header"><div><h2 class="card-title">{% translate "Market deductions" %}</h2><p class="card-subtitle">{% translate "Filled in from the market. Change or remove any for this sale." %}</p></div></div>
+      <div class="card-header"><div><h2 class="card-title">{% translate "Market deductions" %}{% translate "What the market keeps from the sale. “% of the sale” is a share of the sale value; “Per unit sold” is an amount for each mon or kg; “Fixed per sale” is a set amount once." as ded_tip %}{% include "business/partials/tip.html" with text=ded_tip %}</h2><p class="card-subtitle">{% translate "Filled in from the market. Change or remove any for this sale." %}</p></div></div>
       {{ deds.management_form }}
       <div class="rows-list" x-ref="list">{% for f in deds %}{% include "business/sales/ded_line.html" %}{% endfor %}</div>
       <template x-ref="tpl">{% with f=deds.empty_form %}{% include "business/sales/ded_line.html" %}{% endwith %}</template>
@@ -52,7 +52,7 @@
         <dl class="doc-totals">
           <div><dt>{% translate "Sale value" %}</dt><dd x-text="money(gross)"></dd></div>
           <div x-show="deductions"><dt>{% translate "Deductions" %}</dt><dd x-text="'− ' + money(deductions)"></dd></div>
-          <div class="is-total"><dt>{% translate "You get" %}</dt><dd x-text="money(net)"></dd></div>
+          <div class="is-total"><dt>{% translate "You get" %}{% include "business/partials/tip.html" with text=_("Sale value minus the market's deductions: the money that is really yours from this sale.") %}</dt><dd x-text="money(net)"></dd></div>
         </dl>
         <div class="form-grid form-grid-2">
           <div>

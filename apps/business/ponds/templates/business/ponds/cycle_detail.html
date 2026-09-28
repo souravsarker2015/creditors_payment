@@ -41,6 +41,8 @@
   </nav>
   {% endif %}
 
+  {% include "business/partials/note.html" with key="cycle" title=_("How a cycle works") p1=_("A cycle is one round of farming in a pond: from releasing fingerlings to the last harvest. Everything you record here adds up to its cost and profit.") p2=_("Use the buttons above to record feed given, sample weights, deaths, fingerlings, harvests, other costs and sales.") p3=_("Weigh 10–20 fish every 2–3 weeks. That's how the app estimates the fish weight in the pond and the FCR.") p4=_("When the pond is fully harvested, open the Cycle menu and choose “Finish this cycle”.") %}
+
   <dl class="stat-grid">
     <div class="stat" data-tone="info">
       <dt class="stat-label inline-flex items-center">{% translate "Fish in the pond" %}{% translate "Fish released, minus deaths recorded and fish harvested by count. An estimate — unrecorded losses aren't included." as info_text %}{% include "partials/info.html" with text=info_text %}</dt>
@@ -53,14 +55,14 @@
       <dd class="stat-hint">{% if s.biomass_kg %}{% translate "estimated, from sample weighing" %}{% else %}{% translate "Weigh a sample to see this" %}{% endif %}</dd>
     </div>
     <div class="stat" data-tone="warn">
-      <dt class="stat-label">{% translate "Spent so far" %}</dt>
+      <dt class="stat-label inline-flex items-center">{% translate "Spent so far" %}{% include "business/partials/tip.html" with text=_("Fingerlings bought + feed eaten (at the average price you paid for it) + any other cost you put on this cycle, like medicine or labour.") %}</dt>
       <dd class="stat-value">{{ s.cost|bdt }}</dd>
       <dd class="stat-hint">{% blocktranslate with f=s.feed_cost|bdt kg=s.feed_kg|num %}Feed {{ f }} ({{ kg }} kg){% endblocktranslate %} · {% blocktranslate with c=s.stocking_cost|bdt %}fingerlings {{ c }}{% endblocktranslate %}{% if s.other_cost %} · {% blocktranslate with o=s.other_cost|bdt %}other {{ o }}{% endblocktranslate %}{% endif %}</dd>
     </div>
     <div class="stat" data-tone="{% if s.profit >= 0 %}good{% else %}critical{% endif %}">
-      <dt class="stat-label inline-flex items-center">{% translate "Sales so far" %}{% translate "Net sales (after market deductions) from this cycle, and the result after fingerling and feed costs. Other expenses join in once income and expenses are added." as info_text %}{% include "partials/info.html" with text=info_text %}</dt>
+      <dt class="stat-label inline-flex items-center">{% translate "Sales so far" %}{% translate "Money from fish sold out of this cycle, after market deductions. Below it: how far ahead of (or behind) all this cycle's costs you are." as info_text %}{% include "partials/info.html" with text=info_text %}</dt>
       <dd class="stat-value">{{ s.sales_net|bdt }}</dd>
-      <dd class="stat-hint">{% if s.profit >= 0 %}{% blocktranslate with amount=s.profit|bdt %}{{ amount }} ahead of costs{% endblocktranslate %}{% else %}{% blocktranslate with amount=s.profit|absolute|bdt %}{{ amount }} still to recover{% endblocktranslate %}{% endif %}{% if s.fcr %} · FCR {{ s.fcr }}{% endif %}</dd>
+      <dd class="stat-hint">{% if s.profit >= 0 %}{% blocktranslate with amount=s.profit|bdt %}{{ amount }} ahead of costs{% endblocktranslate %}{% else %}{% blocktranslate with amount=s.profit|absolute|bdt %}{{ amount }} still to recover{% endblocktranslate %}{% endif %}{% if s.fcr %} · FCR {{ s.fcr }}{% include "business/partials/tip.html" with text=_("FCR (feed conversion ratio): kg of feed eaten for each 1 kg the fish grew (harvest weight minus fingerling weight). Lower is better: less feed for the same fish.") %}{% endif %}</dd>
     </div>
   </dl>
 
@@ -143,7 +145,7 @@
   <div class="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start" x-show="tab === 'growth'" x-cloak>
     <section class="card">
       <div class="card-header">
-        <div><h2 class="card-title">{% translate "Sample weighing" %}</h2><p class="card-subtitle">{% translate "Average weight per fish over time." %}</p></div>
+        <div><h2 class="card-title">{% translate "Sample weighing" %}{% include "business/partials/tip.html" with text=_("Net a few fish, weigh them together and count them. The average weight per fish shows how fast they're growing.") %}</h2><p class="card-subtitle">{% translate "Average weight per fish over time." %}</p></div>
         {% if cycle.is_running and biz_can.enter_data %}<button type="button" class="btn btn-ghost btn-sm" @click="modal = 'weighing'">{% include "partials/icon.html" with name="plus" %}{% translate "Add" %}</button>{% endif %}
       </div>
       {% if weighings %}
@@ -177,7 +179,7 @@
   <div class="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start" x-show="tab === 'harvest'" x-cloak>
     <section class="card">
       <div class="card-header">
-        <h2 class="card-title">{% translate "Harvests" %}</h2>
+        <h2 class="card-title">{% translate "Harvests" %}{% include "business/partials/tip.html" with text=_("A harvest is fish taken out of the pond. It's separate from the sale (the money): tap “Sell” on a harvest and the sale is filled in for you.") %}</h2>
         {% if cycle.is_running and biz_can.enter_data %}<button type="button" class="btn btn-ghost btn-sm" @click="modal = 'harvest'">{% include "partials/icon.html" with name="plus" %}{% translate "Add" %}</button>{% endif %}
       </div>
       {% if harvests %}

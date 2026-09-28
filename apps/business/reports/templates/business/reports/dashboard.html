@@ -16,7 +16,7 @@
   <section class="hero">
     <div class="hero-inner">
       <div class="min-w-0">
-        <p class="hero-label">{% translate "This month" %} · {% if d.month.profit >= 0 %}{% translate "money left" %}{% else %}{% translate "short by" %}{% endif %}</p>
+        <p class="hero-label">{% translate "This month" %} · {% if d.month.profit >= 0 %}{% translate "money left" %}{% else %}{% translate "short by" %}{% endif %}{% include "business/partials/tip.html" with text=_("Farm income minus farm costs so far this month. Feed counts when it's eaten; fish sales count even if the buyer hasn't paid yet.") %}</p>
         <p class="hero-value">{{ d.month.profit|absolute|bdt }}</p>
         <p class="hero-sub">{% blocktranslate with income=d.month.income|bdt expense=d.month.expense|bdt %}{{ income }} came in · {{ expense }} went out{% endblocktranslate %}{% if d.month.kg %} · {% blocktranslate with kg=d.month.kg|num %}{{ kg }} kg sold{% endblocktranslate %}{% endif %}</p>
       </div>

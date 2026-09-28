@@ -11,13 +11,13 @@
   <form method="post" class="card" novalidate>
     {% csrf_token %}
     <div class="card-body form-stack">
-      {% with field=form.name %}{% include "partials/field.html" %}{% endwith %}
+      {% with field=form.name %}{% include "business/partials/field.html" %}{% endwith %}
       <div class="form-grid form-grid-2">
-        {% with field=form.phone %}{% include "partials/field.html" %}{% endwith %}
-        {% with field=form.address %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.phone %}{% include "business/partials/field.html" %}{% endwith %}
+        {% with field=form.address %}{% include "business/partials/field.html" %}{% endwith %}
       </div>
       <div class="biz-mon">
-        {% with field=form.mon_kg %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.mon_kg %}{% include "business/partials/field.html" %}{% endwith %}
         <p class="biz-mon-note">{% include "business/partials/icon.html" with name="scale" %}<span>{% translate "We'll also add kg, gram, piece, hali, dozen, decimal, bigha, acre and more — ready to use." %}</span></p>
       </div>
     </div>

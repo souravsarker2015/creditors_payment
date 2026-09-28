@@ -53,7 +53,7 @@
   {% endif %}
 
   <section class="card">
-    <div class="card-header"><div><h2 class="card-title">{% translate "Past cycles" %}</h2><p class="card-subtitle">{% translate "How each season in this pond turned out." %}</p></div></div>
+    <div class="card-header"><div><h2 class="card-title">{% translate "Past cycles" %}</h2><p class="card-subtitle">{% translate "How each cycle in this pond turned out." %}</p></div></div>
     {% if past_summaries %}
     <ul class="ledger">{% for c, ps in past_summaries %}
       <li><a href="{% url 'business:cycle_detail' c.pk %}" class="ledger-row">

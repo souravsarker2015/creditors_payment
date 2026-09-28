@@ -18,6 +18,8 @@
   </div>
 
   {% if rows %}
+  {% translate "Each bar fills as you spend: green is fine, orange means 80% is used, red means over the budget." as budget_p2 %}{# "%" can't go in a _() literal #}
+  {% include "business/partials/note.html" with key="budget" title=_("How the budget works") p1=_("Set how much you plan to spend in each category this month. Spending is counted from what you record.") p2=budget_p2 p3=_("For a new month with no budget yet, tap “Copy from …” to start from the last one instead of typing everything again.") %}
   <section class="card card-body">
     <div class="meter-row">
       <span>{% blocktranslate with spent=spent|bdt planned=planned|bdt %}{{ spent }} of {{ planned }}{% endblocktranslate %}</span>

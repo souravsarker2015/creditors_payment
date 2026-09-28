@@ -16,6 +16,7 @@ from apps.business.core.decorators import business_access_required
 from apps.business.core.models import Unit
 from apps.business.core.templatetags.business import bdt
 from apps.business.markets.models import MarketDeduction
+from apps.business.parties.models import Party
 from apps.business.ponds.models import CultureCycle, Harvest
 from apps.business.species.models import Species
 
@@ -77,7 +78,8 @@ def _form_json(business):
     markets = {}
     for d in MarketDeduction.objects.filter(business=business, market__is_deleted=False).select_related("deduction_type"):
         markets.setdefault(d.market_id, []).append({"type": d.deduction_type_id, "method": d.method, "value": format(d.value.normalize(), "f"), "unit": d.unit_id})
-    return json.dumps({"units": units, "species": species, "markets": markets})
+    buyers = dict(Party.objects.filter(business=business, is_buyer=True, market__isnull=False).values_list("pk", "market_id"))
+    return json.dumps({"units": units, "species": species, "markets": markets, "buyers": buyers})
 
 
 def _initial(request, form):

@@ -8,6 +8,10 @@ from .models import COLORS, Species
 
 
 class SpeciesForm(BusinessForm):
+    tips = {
+        "name_bn": _("Shown instead of the English name when the app is in Bangla, e.g. রুই."),
+        "default_unit": _("How you usually sell this fish. Picked first on a sale; you can still change it."),
+    }
     layout = [("name", "name_bn"), ("default_unit", "scientific_name"), ("color",), ("notes",)]
 
     class Meta:

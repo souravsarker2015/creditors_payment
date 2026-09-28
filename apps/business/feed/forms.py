@@ -15,6 +15,14 @@ from .models import FeedProduct, FeedPurchase, FeedPurchaseLine, FeedUsage
 
 
 class FeedProductForm(BusinessForm):
+    tips = {
+        "form": _("Floating feed stays on top, so you can see the fish eat it. Sinking feed goes to the bottom."),
+        "stage": _("Which size of fish it's made for: starter for small fish, grower in the middle, finisher before harvest."),
+        "protein_pct": _("Printed on the bag. Feed for small fish usually has more protein than feed for big fish."),
+        "bag_size": _("How much one bag holds, e.g. 25 kg. Used to turn bags into kg for stock and cost."),
+        "default_price": _("The usual price of one bag. Filled in as the rate when you buy this feed; you can change it on each purchase."),
+        "low_stock_bags": _("When fewer bags than this are left, the dashboard and the Feed page warn you."),
+    }
     layout = [("name", "brand"), ("form", "stage"), ("bag_size", "bag_unit"), ("default_price", "protein_pct"),
               ("suppliers",), ("low_stock_bags",), ("notes",)]
 
@@ -52,6 +60,13 @@ def _bag_or_weight(field, business):
 
 class FeedPurchaseForm(BusinessForm):
     unique_name = ()
+    tips = {
+        "invoice_no": _("The number on the dealer's memo, so you can match it later."),
+        "transport": _("Van fare or labour to bring the feed. It is added to the bill total."),
+        "discount": _("Money the dealer took off the bill."),
+        "paid_now": _("What you paid at the time of buying. The rest is added to this supplier's Baki."),
+        "account": _("Which account you paid from: cash, bank or bKash/Nagad."),
+    }
 
     class Meta:
         model = FeedPurchase
@@ -117,6 +132,9 @@ FeedLineFormSet = inlineformset_factory(FeedPurchase, FeedPurchaseLine, form=Fee
 
 
 class FeedUsageForm(EntryForm):
+    tips = {
+        "quantity": _("How much this pond ate. Leave the unit on “bags”, or pick kg if you weighed it out."),
+    }
     layout = [("date",), ("product",), ("quantity", "unit"), ("notes",)]
 
     class Meta:
@@ -136,6 +154,10 @@ class FeedUsageForm(EntryForm):
 
 class BulkFeedingForm(forms.Form):
     """Feed several ponds in one go: one date and feed, a quantity per pond."""
+
+    tips = {
+        "unit": _("“bags” uses the feed's bag size. Choose kg if you weighed it out."),
+    }
 
     date = forms.DateField(label=_("Date"), widget=forms.DateInput(attrs={"class": "form-input datepicker"}, format="%Y-%m-%d"))
     product = forms.ModelChoiceField(label=_("Feed"), queryset=FeedProduct.objects.none(), empty_label=_("Choose feed…"),

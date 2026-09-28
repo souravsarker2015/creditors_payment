@@ -32,6 +32,8 @@
     </div>
   </section>
 
+  {% include "business/partials/note.html" with key="loans" title=_("How loans work") p1=_("Add each loan once with its terms. The app works out the payment schedule and the interest for you.") p2=_("When you pay, open the loan and tap “Record payment”. The amount is split for you: interest first, then the loan. You can change the split.") p3=_("Only interest and charges are the farm's cost. Paying back the loan amount is not spending, and loans are kept apart from supplier Baki.") %}
+
   {% if summary.overdue %}
   <div class="callout" data-tone="critical">
     {% include "partials/icon.html" with name="alert" %}

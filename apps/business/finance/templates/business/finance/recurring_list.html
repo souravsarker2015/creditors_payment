@@ -11,6 +11,8 @@
     <div class="page-actions"><a href="{% url 'business:recurring_add' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add" %}</a></div>
   </header>
 
+  {% include "business/partials/note.html" with key="recurring" title=_("How regular bills work") p1=_("Add bills that come back, like rent, pond lease, salaries or school fees, with how often they come.") p2=_("When one is due, it shows here and on Money in & out. Tap “Paid” to record it (you can change the amount first), or “Skip” if it didn't happen this time.") p3=_("Nothing is recorded by itself, so your accounts never show money you didn't really spend.") %}
+
   {% if monthly %}<div class="stat-grid"><div class="stat" data-tone="info"><p class="stat-label">{% translate "Every month" %}</p><p class="stat-value">{{ monthly|bdt }}</p><p class="stat-hint">{% translate "monthly bills added up" %}</p></div></div>{% endif %}
 
   {% if due %}

@@ -27,6 +27,8 @@
     </span>
   </div>
 
+  {% include "business/partials/note.html" with key="statement" title=_("What counts here") p1=_("Fish sales count on the day you sold, even if the buyer hasn't paid yet.") p2=_("Feed counts as a cost when it's eaten in a pond, not when you buy it. Feed still in the store isn't a cost yet.") p3=_("For loans, only interest and charges are costs. Repaying the loan itself, Baki payments and moving money between your accounts are not income or spending.") %}
+
   <section class="hero">
     <div class="hero-inner">
       <div class="min-w-0">

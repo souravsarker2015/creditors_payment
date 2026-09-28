@@ -15,26 +15,26 @@
       {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
       {% if kind == "payment" %}
       <div class="form-grid form-grid-2">
-        {% with field=form.interest %}{% include "partials/field.html" %}{% endwith %}
-        {% with field=form.principal %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.interest %}{% include "business/partials/field.html" %}{% endwith %}
+        {% with field=form.principal %}{% include "business/partials/field.html" %}{% endwith %}
       </div>
       <div class="form-grid form-grid-2">
-        {% with field=form.date %}{% include "partials/field.html" %}{% endwith %}
-        {% with field=form.paid_via %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.date %}{% include "business/partials/field.html" %}{% endwith %}
+        {% with field=form.paid_via %}{% include "business/partials/field.html" %}{% endwith %}
       </div>
       <div class="form-grid form-grid-2">
-        {% with field=form.charges %}{% include "partials/field.html" %}{% endwith %}
-        {% with field=form.reference %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.charges %}{% include "business/partials/field.html" %}{% endwith %}
+        {% with field=form.reference %}{% include "business/partials/field.html" %}{% endwith %}
       </div>
       {% else %}
-      {% with field=form.principal %}{% include "partials/field.html" %}{% endwith %}
+      {% with field=form.principal %}{% include "business/partials/field.html" %}{% endwith %}
       <div class="form-grid form-grid-2">
-        {% with field=form.date %}{% include "partials/field.html" %}{% endwith %}
-        {% with field=form.paid_via %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.date %}{% include "business/partials/field.html" %}{% endwith %}
+        {% with field=form.paid_via %}{% include "business/partials/field.html" %}{% endwith %}
       </div>
-      {% with field=form.reference %}{% include "partials/field.html" %}{% endwith %}
+      {% with field=form.reference %}{% include "business/partials/field.html" %}{% endwith %}
       {% endif %}
-      {% with field=form.notes %}{% include "partials/field.html" %}{% endwith %}
+      {% with field=form.notes %}{% include "business/partials/field.html" %}{% endwith %}
     </div>
     <div class="card-footer form-actions">
       <a href="{% url 'business:loan_detail' loan.pk %}?tab=history" class="btn btn-ghost btn-lg">{% translate "Cancel" %}</a>

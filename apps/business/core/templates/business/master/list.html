@@ -13,6 +13,8 @@
 
   {% if m.nav_template %}{% include m.nav_template %}{% endif %}
 
+  {% if m.note and total %}{% include "business/partials/note.html" with key=m.name title=m.note.0 p1=m.note.1 p2=m.note.2 p3=m.note.3 p4=m.note.4 %}{% endif %}
+
   {% if total or is_deleted_tab or q %}
   <div class="master-bar">
     {% if tabs|length > 1 %}
@@ -28,6 +30,8 @@
     {% endif %}
   </div>
   {% endif %}
+
+  {% if is_deleted_tab and objects %}<p class="help">{% translate "Deleted records don't count in any total. Restore one to bring it back everywhere." %}</p>{% endif %}
 
   {% if objects %}
     {% if groups %}

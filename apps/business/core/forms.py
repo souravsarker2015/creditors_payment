@@ -8,6 +8,9 @@ from .models import Business, Membership, Role, Unit, UnitType
 
 
 class BusinessSetupForm(forms.ModelForm):
+    tips = {
+        "mon_kg": _("A mon is the weight markets sell fish by. It's 40 kg in most places; set it to what your market uses."),
+    }
     mon_kg = forms.DecimalField(
         label=_("1 mon equals how many kg?"), initial=Decimal("40"), min_value=Decimal("1"), max_value=Decimal("100"),
         max_digits=6, decimal_places=3,
@@ -33,6 +36,11 @@ class BusinessProfileForm(forms.ModelForm):
 
 
 class UnitForm(forms.ModelForm):
+    tips = {
+        "symbol": _("The short name shown next to numbers, e.g. kg, mon, pcs."),
+        "unit_type": _("What it measures. Only units of the same kind can be converted into each other."),
+        "name_bn": _("Shown instead of the English name when the app is in Bangla."),
+    }
     class Meta:
         model = Unit
         fields = ["name", "name_bn", "symbol", "unit_type", "factor", "notes"]
@@ -65,6 +73,10 @@ class UnitForm(forms.ModelForm):
 
 
 class MemberAddForm(forms.Form):
+    tips = {
+        "username": _("They need their own account in this app first. Ask them for the username they sign in with."),
+        "role": _("Decides what they can see and do. See “What each role can do” on this page. You can change it any time."),
+    }
     username = forms.CharField(label=_("Username"), widget=forms.TextInput(attrs={"class": "form-input", "autocomplete": "off", "placeholder": _("Their FinTrack username")}))
     role = forms.ChoiceField(label=_("Role"), choices=[c for c in Role.choices if c[0] != Role.OWNER], initial=Role.DATA_ENTRY,
                              widget=forms.Select(attrs={"class": "form-input"}))

@@ -14,7 +14,7 @@
   <section class="hero">
     <div class="hero-inner">
       <div class="min-w-0">
-        <p class="hero-label">{{ period_label }} · {% translate "you got" %}</p>
+        <p class="hero-label">{{ period_label }} · {% translate "you got" %}{% include "business/partials/tip.html" with text=_("The total of all sales in this period after market deductions (commission, labour, khajna…), whether the buyer has paid yet or not.") %}</p>
         <p class="hero-value">{{ totals.net|default:0|bdt }}</p>
         <p class="hero-sub">{% blocktranslate count counter=totals.n with kg=kg|num %}{{ counter }} sale · {{ kg }} kg{% plural %}{{ counter }} sales · {{ kg }} kg{% endblocktranslate %}{% if totals.ded %} · {% blocktranslate with amount=totals.ded|bdt %}{{ amount }} taken by markets{% endblocktranslate %}{% endif %}</p>
       </div>
@@ -27,6 +27,8 @@
       {% endif %}
     </div>
   </section>
+
+  {% include "business/partials/note.html" with key="sales" title=_("How sales work") p1=_("Record each sale from the aarot's memo: the fish, quantity and rate. The market's deductions are filled in for you.") p2=_("If the buyer doesn't pay in full, the rest is kept as Baki. When they pay, record it in Baki; the sale then shows as paid.") p3=_("Selling fish you just harvested? Open the pond's cycle and tap “Sell” on the harvest, so the quantities are filled in.") %}
 
   <div class="master-bar">
     <nav class="seg seg-scroll" aria-label="{% translate 'Period' %}">

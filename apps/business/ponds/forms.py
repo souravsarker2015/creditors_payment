@@ -14,6 +14,12 @@ MAX_PHOTO_MB = 5
 
 
 class PondForm(BusinessForm):
+    tips = {
+        "area": _("The water area. It's used to work out profit per decimal, so you can compare ponds of different sizes. 100 decimals = 1 acre."),
+        "depth_ft": _("Average water depth in feet. Useful when deciding how many fish to release."),
+        "status": _("Changes on its own: starting a cycle sets “Fish in it”, finishing one sets “Empty / dry”. Change it here only to correct it."),
+        "ownership": _("Leased? Fill in the lease below so you can see who it's from, what it cost and when it ends."),
+    }
     layout = [
         ("name", "code"), ("location",), ("area", "area_unit"), ("depth_ft", "status"),
         ("#", _("Ownership")), ("ownership",), ("lease_from", "lease_amount"), ("lease_start", "lease_end"),
@@ -60,6 +66,10 @@ class PondForm(BusinessForm):
 
 
 class CycleForm(BusinessForm):
+    tips = {
+        "start_date": _("The day you released (or will release) the first fingerlings."),
+        "expected_harvest": _("Roughly when you plan to harvest. The cycle page counts down the days to it."),
+    }
     unique_name = ()
     layout = [("start_date", "expected_harvest"), ("name",), ("notes",)]
 
@@ -114,6 +124,12 @@ def _units(business, types):
 
 
 class StockingForm(EntryForm):
+    tips = {
+        "count": _("How many fingerlings (pona) you released."),
+        "weight": _("Total weight of all these fingerlings. With the count, it gives the starting size of each fish."),
+        "supplier": _("Who sold you the fingerlings. Choose “Own / not bought” if they came from your own nursery."),
+        "cost": _("The total price of these fingerlings. It becomes part of this cycle's cost."),
+    }
     layout = [("date", "species"), ("count", "size"), ("weight", "weight_unit"), ("supplier",), ("cost", "paid_now"), ("notes",)]
 
     class Meta:
@@ -151,6 +167,10 @@ class StockingForm(EntryForm):
 
 
 class MortalityForm(EntryForm):
+    tips = {
+        "count": _("Number of dead fish found. It lowers the fish count in the pond."),
+        "species": _("Not sure which fish? Leave it as “Mixed / not sure”."),
+    }
     layout = [("date", "species"), ("count",), ("cause",), ("notes",)]
 
     class Meta:
@@ -163,6 +183,10 @@ class MortalityForm(EntryForm):
 
 
 class WeighingForm(EntryForm):
+    tips = {
+        "fish_count": _("How many fish are in the sample you weighed."),
+        "total_weight": _("The weight of all the sampled fish together, not of one fish. The app divides it for you."),
+    }
     layout = [("date", "species"), ("fish_count",), ("total_weight", "unit"), ("notes",)]
 
     class Meta:
@@ -179,6 +203,11 @@ class WeighingForm(EntryForm):
 
 
 class HarvestForm(EntryForm):
+    tips = {
+        "quantity": _("How much fish came out. A mon is the weight set in Farm setup → Units (usually 40 kg)."),
+        "fish_count": _("If you counted the fish, the pond's fish count goes down by this many."),
+        "is_final": _("Tick only for the last harvest: the cycle is finished and the pond is marked empty. You can reopen it later."),
+    }
     layout = [("date", "species"), ("quantity", "unit"), ("fish_count",), ("is_final",), ("notes",)]
 
     class Meta:

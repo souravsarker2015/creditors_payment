@@ -7507,3 +7507,557 @@ msgstr "সঙ্গে অন্যান্য আয় %(amount)s"
 
 msgid "(no unit set)"
 msgstr "(একক ঠিক করা নেই)"
+
+msgid "A mon is the weight markets sell fish by. It's 40 kg in most places; set it to what your market uses."
+msgstr "মন হলো যে ওজনে বাজারে মাছ বিক্রি হয়। বেশিরভাগ জায়গায় ৪০ কেজি; আপনার বাজারে যা চলে তা দিন।"
+
+msgid "The short name shown next to numbers, e.g. kg, mon, pcs."
+msgstr "সংখ্যার পাশে দেখানো ছোট নাম, যেমন কেজি, মন, পিস।"
+
+msgid "What it measures. Only units of the same kind can be converted into each other."
+msgstr "এটা কী মাপে। শুধু একই ধরনের এককগুলো একটা থেকে আরেকটায় বদলানো যায়।"
+
+msgid "Shown instead of the English name when the app is in Bangla."
+msgstr "অ্যাপ বাংলায় থাকলে ইংরেজি নামের বদলে এটা দেখানো হয়।"
+
+msgid "They need their own account in this app first. Ask them for the username they sign in with."
+msgstr "আগে এই অ্যাপে তাদের নিজের একাউন্ট থাকতে হবে। যে ইউজারনেম দিয়ে তারা লগইন করেন, সেটা জেনে নিন।"
+
+msgid "Decides what they can see and do. See “What each role can do” on this page. You can change it any time."
+msgstr "তারা কী দেখতে ও করতে পারবেন তা এটা ঠিক করে। এই পাতায় “কোন ভূমিকা কী করতে পারে” দেখুন। যেকোনো সময় বদলাতে পারবেন।"
+
+msgid "Feed eaten, fingerlings, loan interest and every farm expense this month."
+msgstr "এ মাসে খাওয়ানো খাবার, পোনা, ঋণের সুদ আর খামারের সব খরচ।"
+
+msgid "Farm income minus farm costs this month. Household spending is kept apart and not taken off."
+msgstr "এ মাসে খামারের আয় থেকে খামারের খরচ বাদ দিয়ে। গৃহস্থালির খরচ আলাদা রাখা হয়, এখান থেকে বাদ যায় না।"
+
+msgid "Deleted records don't count in any total. Restore one to bring it back everywhere."
+msgstr "মুছে ফেলা হিসাব কোনো মোটে ধরা হয় না। ফিরিয়ে আনলে আবার সব জায়গায় যোগ হবে।"
+
+msgid "Hide"
+msgstr "লুকান"
+
+msgid "Show"
+msgstr "দেখান"
+
+msgid "Received: a buyer paid you. Paid: you paid a supplier. It's chosen for you from who owes whom."
+msgstr "গৃহীত: ক্রেতা আপনাকে টাকা দিয়েছেন। পরিশোধিত: আপনি সরবরাহকারীকে দিয়েছেন। কে কার কাছে পাবে দেখে এটা নিজেই বেছে নেওয়া হয়।"
+
+msgid "Where the money went in or came out: cash, bank or bKash/Nagad. That account's balance changes."
+msgstr "টাকা কোথায় জমা হলো বা কোথা থেকে গেল: নগদ, ব্যাংক বা বিকাশ/নগদ। সেই একাউন্টের ব্যালেন্স বদলাবে।"
+
+msgid "Anything to find it later: cheque number, bKash transaction ID or receipt number."
+msgstr "পরে খুঁজে পাওয়ার মতো কিছু: চেক নম্বর, বিকাশের ট্রানজ্যাকশন আইডি বা রসিদ নম্বর।"
+
+msgid "How Baki works"
+msgstr "বাকি খাতা যেভাবে কাজ করে"
+
+msgid "Baki is worked out for you: a sale not paid in full, or a purchase you didn't pay in full, shows up here by itself."
+msgstr "বাকি নিজেই হিসাব হয়: যে বিক্রির পুরো টাকা পাননি, বা যে কেনার পুরো টাকা দেননি, তা এখানে আপনা থেকেই চলে আসে।"
+
+msgid "When someone pays you, or you pay a supplier, tap “Record payment”. It settles their oldest bill first unless you choose a bill."
+msgstr "কেউ টাকা দিলে, বা আপনি সরবরাহকারীকে দিলে, “পরিশোধ লিখুন” চাপুন। আপনি বিল বেছে না দিলে সবচেয়ে পুরোনো বিল আগে শোধ হয়।"
+
+msgid "Tap a name to see their statement: every bill and payment. From there you can send a WhatsApp reminder or set a follow-up date."
+msgstr "নামে চাপলে তার পুরো হিসাব দেখবেন: প্রতিটি বিল ও পরিশোধ। সেখান থেকে হোয়াটসঅ্যাপে তাগাদা পাঠাতে বা মনে করানোর তারিখ দিতে পারবেন।"
+
+msgid "Unpaid amounts grouped by how many days ago the bill was made. Old baki is harder to collect, so follow up on the oldest first."
+msgstr "বিল কত দিন আগের, সেই অনুযায়ী অপরিশোধিত টাকা ভাগ করা। পুরোনো বাকি আদায় করা কঠিন, তাই সবচেয়ে পুরোনোগুলোর তাগাদা আগে দিন।"
+
+msgid "Leave it on “Oldest bills first” and the payment clears the oldest bills first. Pick a bill if they said this money is for that one."
+msgstr "“পুরোনো বিল আগে” রাখলে টাকা সবচেয়ে পুরোনো বিলগুলো আগে শোধ করবে। তারা যদি বলেন টাকাটা কোনো নির্দিষ্ট বিলের, তাহলে সেটা বেছে নিন।"
+
+msgid "Floating feed stays on top, so you can see the fish eat it. Sinking feed goes to the bottom."
+msgstr "ভাসমান খাবার পানির ওপরে থাকে, তাই মাছ খাচ্ছে কিনা দেখা যায়। ডুবন্ত খাবার তলায় চলে যায়।"
+
+msgid "Which size of fish it's made for: starter for small fish, grower in the middle, finisher before harvest."
+msgstr "কোন আকারের মাছের জন্য বানানো: ছোট মাছের জন্য স্টার্টার, মাঝারির জন্য গ্রোয়ার, ধরার আগে ফিনিশার।"
+
+msgid "Printed on the bag. Feed for small fish usually has more protein than feed for big fish."
+msgstr "বস্তার গায়ে লেখা থাকে। ছোট মাছের খাবারে সাধারণত বড় মাছের খাবারের চেয়ে প্রোটিন বেশি থাকে।"
+
+msgid "How much one bag holds, e.g. 25 kg. Used to turn bags into kg for stock and cost."
+msgstr "এক বস্তায় কতটা থাকে, যেমন ২৫ কেজি। মজুদ ও খরচের জন্য বস্তাকে কেজিতে বদলাতে লাগে।"
+
+msgid "The usual price of one bag. Filled in as the rate when you buy this feed; you can change it on each purchase."
+msgstr "এক বস্তার সাধারণ দাম। এই খাবার কিনলে দর হিসেবে বসে যায়; প্রতিবার কেনার সময় বদলাতে পারবেন।"
+
+msgid "When fewer bags than this are left, the dashboard and the Feed page warn you."
+msgstr "এর চেয়ে কম বস্তা থাকলে ড্যাশবোর্ড আর খাবারের পাতায় সতর্ক করা হবে।"
+
+msgid "The number on the dealer's memo, so you can match it later."
+msgstr "ডিলারের মেমোর নম্বর, যাতে পরে মিলিয়ে দেখতে পারেন।"
+
+msgid "Van fare or labour to bring the feed. It is added to the bill total."
+msgstr "খাবার আনার ভ্যান ভাড়া বা শ্রমিক খরচ। এটা বিলের মোটে যোগ হয়।"
+
+msgid "Money the dealer took off the bill."
+msgstr "ডিলার বিল থেকে যত টাকা কম নিয়েছেন।"
+
+msgid "What you paid at the time of buying. The rest is added to this supplier's Baki."
+msgstr "কেনার সময় যত টাকা দিয়েছেন। বাকিটা এই সরবরাহকারীর বাকি খাতায় যোগ হবে।"
+
+msgid "Which account you paid from: cash, bank or bKash/Nagad."
+msgstr "কোন একাউন্ট থেকে দিয়েছেন: নগদ, ব্যাংক বা বিকাশ/নগদ।"
+
+msgid "How much this pond ate. Leave the unit on “bags”, or pick kg if you weighed it out."
+msgstr "এই পুকুরের মাছ কতটা খেয়েছে। একক “বস্তা” রাখুন, অথবা মেপে দিলে কেজি বেছে নিন।"
+
+msgid "“bags” uses the feed's bag size. Choose kg if you weighed it out."
+msgstr "“বস্তা” দিলে খাবারের বস্তার মাপ ধরা হয়। মেপে দিলে কেজি বেছে নিন।"
+
+msgid "Only ponds with a running cycle are listed. Leave a pond empty if it wasn't fed today."
+msgstr "শুধু যে পুকুরে চক্র চলছে সেগুলো দেখানো হয়েছে। আজ কোনো পুকুরে খাবার না দিলে সেটা খালি রাখুন।"
+
+msgid "How feed works"
+msgstr "খাবারের হিসাব যেভাবে চলে"
+
+msgid "Buy feed: copy the dealer's memo. Stock goes up, and anything unpaid goes to that supplier's Baki."
+msgstr "খাবার কিনুন: ডিলারের মেমো দেখে লিখুন। মজুদ বাড়বে, আর যা দেননি তা সেই সরবরাহকারীর বাকিতে যাবে।"
+
+msgid "Record feeding: enter what each pond ate. Stock goes down, and the cost is added to that pond's cycle."
+msgstr "খাওয়ানো লিখুন: কোন পুকুরে কতটা খাবার দিলেন তা লিখুন। মজুদ কমবে, আর খরচ সেই পুকুরের চক্রে যোগ হবে।"
+
+msgid "Feed cost uses the average price you paid per kg, so ponds are charged fairly even when prices change."
+msgstr "খাবারের খরচ ধরা হয় আপনার দেওয়া কেজিপ্রতি গড় দামে, তাই দাম ওঠানামা করলেও প্রতিটি পুকুরে ন্যায্য খরচ পড়ে।"
+
+msgid "What the feed still in your store is worth, at the average price per kg you have paid for it."
+msgstr "গুদামে থাকা খাবারের দাম, আপনার দেওয়া কেজিপ্রতি গড় দামে।"
+
+msgid "Unpaid feed bills. Pay them from Baki; this goes down as you pay."
+msgstr "খাবারের অপরিশোধিত বিল। বাকি খাতা থেকে শোধ করুন; শোধ করলে এটা কমবে।"
+
+msgid "Bought minus fed to the ponds. The bar shows how much of what you bought is used up."
+msgstr "কেনা থেকে পুকুরে খাওয়ানো বাদ দিয়ে। দাগটা দেখায় কেনা খাবারের কতটা শেষ হয়েছে।"
+
+msgid "About feed products"
+msgstr "খাবারের ধরন সম্পর্কে"
+
+msgid "Add each feed once with its bag size and usual price. Purchases and daily feeding then take only a few taps."
+msgstr "প্রতিটি খাবার একবার বস্তার মাপ আর সাধারণ দামসহ যোগ করুন। তারপর কেনা আর রোজের খাওয়ানো কয়েক চাপেই হয়ে যাবে।"
+
+msgid "Stock goes up when you buy feed and down when you record feeding in a pond."
+msgstr "খাবার কিনলে মজুদ বাড়ে, পুকুরে খাওয়ানো লিখলে কমে।"
+
+msgid "Set a low-stock alert (in bags) to get a warning on the dashboard before you run out."
+msgstr "খাবার ফুরানোর আগেই ড্যাশবোর্ডে সতর্কবার্তা পেতে কম-মজুদের সীমা (বস্তায়) দিন।"
+
+msgid "About feed purchases"
+msgstr "খাবার কেনা সম্পর্কে"
+
+msgid "Copy each purchase from the dealer's memo: the feeds, number of bags and rate."
+msgstr "প্রতিটি কেনা ডিলারের মেমো দেখে লিখুন: কোন খাবার, কত বস্তা আর দর।"
+
+msgid "Enter what you paid now. The rest is added to that supplier's Baki, and paying it later is done from Baki."
+msgstr "এখন কত দিলেন তা লিখুন। বাকিটা সেই সরবরাহকারীর বাকিতে যোগ হবে, পরে শোধ করবেন বাকি খাতা থেকে।"
+
+msgid "Feed stock goes up automatically. Feed cost reaches each pond only when that feed is eaten there."
+msgstr "খাবারের মজুদ নিজেই বাড়ে। খাবারের খরচ কোনো পুকুরে যোগ হয় কেবল সেখানে খাবারটা খাওয়ানো হলে।"
+
+msgid "Expense: money going out. Income: money coming in."
+msgstr "খরচ: টাকা বেরিয়ে যাওয়া। আয়: টাকা আসা।"
+
+msgid "Farm business counts in the farm's profit. Household and Personal are kept apart, so family spending doesn't make the farm look worse."
+msgstr "খামার ব্যবসার হিসাব খামারের লাভে ধরা হয়। গৃহস্থালি আর ব্যক্তিগত আলাদা থাকে, তাই সংসারের খরচে খামারের হিসাব খারাপ দেখায় না।"
+
+msgid "How much was in this account on the opening date. Everything recorded after that is added or taken off."
+msgstr "শুরুর তারিখে এই একাউন্টে কত টাকা ছিল। এরপর যা লিখবেন তা যোগ বা বাদ হবে।"
+
+msgid "The day you counted the opening balance. Usually the day you start using the app."
+msgstr "যেদিন শুরুর ব্যালেন্স গুনেছেন। সাধারণত যেদিন অ্যাপ ব্যবহার শুরু করছেন।"
+
+msgid "Account or wallet number, only for your reference."
+msgstr "একাউন্ট বা ওয়ালেট নম্বর, শুধু আপনার মনে রাখার জন্য।"
+
+msgid "What the money was for. Farm categories count in the farm's profit; household and personal ones don't."
+msgstr "টাকাটা কীসের জন্য। খামারের খাত খামারের লাভে ধরা হয়; গৃহস্থালি আর ব্যক্তিগত খাত ধরা হয় না।"
+
+msgid "Which cash box, bank or wallet the money came out of or went into. Its balance changes."
+msgstr "কোন ক্যাশবাক্স, ব্যাংক বা ওয়ালেট থেকে টাকা গেল বা কোথায় এলো। তার ব্যালেন্স বদলাবে।"
+
+msgid "Only a note of who it was. It doesn't create any Baki; use Baki for money owed."
+msgstr "শুধু কে ছিলেন তা মনে রাখার জন্য। এতে কোনো বাকি তৈরি হয় না; পাওনা-দেনার জন্য বাকি খাতা ব্যবহার করুন।"
+
+msgid "Medicine, lime, labour, pond rent… for one pond? Pick its cycle and the cost is added to that pond's profit and loss."
+msgstr "ওষুধ, চুন, শ্রমিক, পুকুর ভাড়া… কোনো একটা পুকুরের জন্য? তার চক্র বেছে নিন, খরচটা সেই পুকুরের লাভ-ক্ষতিতে যোগ হবে।"
+
+msgid "A photo of the memo or receipt, to check later."
+msgstr "মেমো বা রসিদের ছবি, পরে মিলিয়ে দেখার জন্য।"
+
+msgid "Put this cost on one pond's cycle, so its profit is right."
+msgstr "খরচটা কোনো পুকুরের চক্রে ধরুন, যাতে তার লাভ ঠিক আসে।"
+
+msgid "Where the money left from."
+msgstr "টাকা কোথা থেকে গেল।"
+
+msgid "Where the money arrived."
+msgstr "টাকা কোথায় পৌঁছাল।"
+
+msgid "How often it comes back. The next due date moves forward each time you record or skip it."
+msgstr "কত দিন পরপর আসে। প্রতিবার লিখলে বা বাদ দিলে পরের তারিখ এগিয়ে যায়।"
+
+msgid "The first due date."
+msgstr "প্রথম দেওয়ার তারিখ।"
+
+msgid "The usual amount. You can change it each time before recording."
+msgstr "সাধারণ পরিমাণ। প্রতিবার লেখার আগে বদলাতে পারবেন।"
+
+msgid "Opening balance plus every sale received, payment, transfer and money in, minus everything paid out of this account. If it doesn't match the real cash or bank balance, something wasn't recorded."
+msgstr "শুরুর ব্যালেন্স, সঙ্গে বিক্রির টাকা, পরিশোধ, স্থানান্তর আর সব জমা; তা থেকে এই একাউন্ট থেকে দেওয়া সব টাকা বাদ। আসল নগদ বা ব্যাংকের সঙ্গে না মিললে বুঝবেন কিছু লেখা বাকি আছে।"
+
+msgid "How the budget works"
+msgstr "বাজেট যেভাবে কাজ করে"
+
+msgid "Set how much you plan to spend in each category this month. Spending is counted from what you record."
+msgstr "এ মাসে প্রতিটি খাতে কত খরচ করতে চান তা ঠিক করুন। আপনি যা লেখেন তা থেকেই খরচ গোনা হয়।"
+
+msgid "Each bar fills as you spend: green is fine, orange means 80% is used, red means over the budget."
+msgstr "খরচ হলে দাগটা ভরতে থাকে: সবুজ মানে ঠিক আছে, কমলা মানে ৮০% খরচ হয়ে গেছে, লাল মানে বাজেট ছাড়িয়ে গেছে।"
+
+msgid "For a new month with no budget yet, tap “Copy from …” to start from the last one instead of typing everything again."
+msgstr "নতুন মাসে বাজেট না থাকলে, সব আবার না লিখে “… থেকে কপি করুন” চাপুন, আগের মাসেরটা দিয়ে শুরু হবে।"
+
+msgid "How regular bills work"
+msgstr "নিয়মিত বিল যেভাবে কাজ করে"
+
+msgid "Add bills that come back, like rent, pond lease, salaries or school fees, with how often they come."
+msgstr "যে বিলগুলো বারবার আসে, যেমন ভাড়া, পুকুরের লিজ, বেতন বা স্কুলের বেতন, কত দিন পরপর আসে সহ যোগ করুন।"
+
+msgid "When one is due, it shows here and on Money in & out. Tap “Paid” to record it (you can change the amount first), or “Skip” if it didn't happen this time."
+msgstr "কোনোটা দেওয়ার সময় হলে এখানে আর জমা-খরচ পাতায় দেখাবে। লিখতে “পরিশোধিত” চাপুন (আগে পরিমাণ বদলাতে পারবেন), এবার না হলে “বাদ দিন” চাপুন।"
+
+msgid "Nothing is recorded by itself, so your accounts never show money you didn't really spend."
+msgstr "নিজে থেকে কিছুই লেখা হয় না, তাই যে টাকা আসলে খরচ করেননি তা কখনো হিসাবে দেখাবে না।"
+
+msgid "What counts here"
+msgstr "এখানে কী ধরা হয়"
+
+msgid "Fish sales count on the day you sold, even if the buyer hasn't paid yet."
+msgstr "মাছ বিক্রি ধরা হয় বিক্রির দিনে, ক্রেতা টাকা না দিলেও।"
+
+msgid "Feed counts as a cost when it's eaten in a pond, not when you buy it. Feed still in the store isn't a cost yet."
+msgstr "খাবার খরচ ধরা হয় পুকুরে খাওয়ানো হলে, কেনার সময় নয়। গুদামে থাকা খাবার এখনো খরচ নয়।"
+
+msgid "For loans, only interest and charges are costs. Repaying the loan itself, Baki payments and moving money between your accounts are not income or spending."
+msgstr "ঋণের বেলায় শুধু সুদ আর চার্জ খরচ। আসল ঋণ শোধ, বাকি পরিশোধ আর নিজের একাউন্টের মধ্যে টাকা সরানো আয় বা খরচ নয়।"
+
+msgid "What to record here"
+msgstr "এখানে কী লিখবেন"
+
+msgid "Everyday costs and income: labour, medicine, lime, electricity, pond rent, household bazar and so on."
+msgstr "রোজকার খরচ ও আয়: শ্রমিক, ওষুধ, চুন, বিদ্যুৎ, পুকুর ভাড়া, সংসারের বাজার ইত্যাদি।"
+
+msgid "Fish sales, feed purchases, Baki payments and loan payments are recorded on their own pages and already count here. Don't enter them again."
+msgstr "মাছ বিক্রি, খাবার কেনা, বাকি পরিশোধ আর ঋণ পরিশোধ নিজ নিজ পাতায় লেখা হয় এবং এখানে আগেই ধরা আছে। আবার লিখবেন না।"
+
+msgid "Use the tabs to switch between farm, household and personal money. Only farm money counts in the farm's profit."
+msgstr "ট্যাব দিয়ে খামার, গৃহস্থালি আর ব্যক্তিগত হিসাবের মধ্যে যান। খামারের লাভে শুধু খামারের টাকা ধরা হয়।"
+
+msgid "How categories work"
+msgstr "খাত যেভাবে কাজ করে"
+
+msgid "Every money in or out gets a category, so you can see where money comes from and goes."
+msgstr "প্রতিটি জমা বা খরচের একটা খাত থাকে, তাই টাকা কোথা থেকে আসে আর কোথায় যায় তা দেখা যায়।"
+
+msgid "Each category belongs to the farm, the household or you personally. Only farm categories count in the farm's profit."
+msgstr "প্রতিটি খাত খামারের, গৃহস্থালির বা আপনার ব্যক্তিগত। খামারের লাভে শুধু খামারের খাত ধরা হয়।"
+
+msgid "Use sub-categories for detail, e.g. Labour → Daily labour. Reports add them up under the main one."
+msgstr "খুঁটিনাটির জন্য উপ-খাত ব্যবহার করুন, যেমন শ্রমিক → দিনমজুর। রিপোর্টে এগুলো মূল খাতের নিচে যোগ হয়।"
+
+msgid "How accounts work"
+msgstr "একাউন্ট যেভাবে কাজ করে"
+
+msgid "An account is where money sits: cash in hand, a bank account, bKash or Nagad."
+msgstr "একাউন্ট মানে যেখানে টাকা থাকে: হাতে নগদ, ব্যাংক একাউন্ট, বিকাশ বা নগদ।"
+
+msgid "Balances update on their own from sales, purchases, Baki payments, loans and every money in or out."
+msgstr "বিক্রি, কেনা, বাকি পরিশোধ, ঋণ আর প্রতিটি জমা-খরচ থেকে ব্যালেন্স নিজেই হালনাগাদ হয়।"
+
+msgid "Moved money between accounts (e.g. cash into the bank)? Use “Move money”, so it isn't counted as income or spending."
+msgstr "এক একাউন্ট থেকে আরেকটায় টাকা সরিয়েছেন (যেমন নগদ থেকে ব্যাংকে)? “টাকা সরান” ব্যবহার করুন, তাহলে এটা আয় বা খরচ হিসেবে ধরা হবে না।"
+
+msgid "How loans work"
+msgstr "ঋণ যেভাবে কাজ করে"
+
+msgid "Add each loan once with its terms. The app works out the payment schedule and the interest for you."
+msgstr "প্রতিটি ঋণ শর্তসহ একবার যোগ করুন। কিস্তির তালিকা আর সুদ অ্যাপ নিজেই হিসাব করবে।"
+
+msgid "When you pay, open the loan and tap “Record payment”. The amount is split for you: interest first, then the loan. You can change the split."
+msgstr "টাকা দিলে ঋণটা খুলে “পরিশোধ লিখুন” চাপুন। টাকাটা নিজেই ভাগ হয়: আগে সুদ, তারপর আসল। ভাগটা বদলাতে পারবেন।"
+
+msgid "Only interest and charges are the farm's cost. Paying back the loan amount is not spending, and loans are kept apart from supplier Baki."
+msgstr "খামারের খরচ শুধু সুদ আর চার্জ। আসল ঋণ ফেরত দেওয়া খরচ নয়, আর ঋণ সরবরাহকারীর বাকি থেকে আলাদা রাখা হয়।"
+
+msgid "Which days the market runs, for your own reference."
+msgstr "বাজার কোন কোন দিন বসে, আপনার মনে রাখার জন্য।"
+
+msgid "“% of the sale”: e.g. 3% commission. “Per unit sold”: e.g. ৳20 per mon for labour. “Fixed per sale”: the same amount on every sale, e.g. ৳100 khajna. This is only the usual way; each market can set its own."
+msgstr "“বিক্রির %”: যেমন ৩% কমিশন। “প্রতি একক বিক্রিতে”: যেমন মনপ্রতি ৳২০ শ্রমিক খরচ। “প্রতি বিক্রিতে নির্দিষ্ট”: প্রতিটি বিক্রিতে একই টাকা, যেমন ৳১০০ খাজনা। এটা শুধু সাধারণ নিয়ম; প্রতিটি বাজার নিজেরটা ঠিক করতে পারে।"
+
+msgid "The percentage, or the taka amount, depending on how it's charged."
+msgstr "কীভাবে কাটা হয় তার ওপর নির্ভর করে শতকরা হার, বা টাকার পরিমাণ।"
+
+msgid "How markets and deductions work"
+msgstr "বাজার ও কর্তন যেভাবে কাজ করে"
+
+msgid "Each market or aarot keeps its usual deductions: commission, labour, khajna, ice and so on."
+msgstr "প্রতিটি বাজার বা আড়তের নিজস্ব সাধারণ কর্তন থাকে: কমিশন, শ্রমিক, খাজনা, বরফ ইত্যাদি।"
+
+msgid "When you record a sale at that market, these deductions are filled in for you. You can still change them on each sale."
+msgstr "সেই বাজারে বিক্রি লিখলে এই কর্তনগুলো নিজেই বসে যায়। প্রতিটি বিক্রিতে তবুও বদলাতে পারবেন।"
+
+msgid "A deduction can be a % of the sale, an amount per unit sold (e.g. ৳20 per mon), or a fixed amount per sale."
+msgstr "কর্তন হতে পারে বিক্রির %, প্রতি একক বিক্রিতে একটা টাকা (যেমন মনপ্রতি ৳২০), বা প্রতি বিক্রিতে নির্দিষ্ট টাকা।"
+
+msgid "About deduction types"
+msgstr "কর্তনের ধরন সম্পর্কে"
+
+msgid "These are the names of charges a market can take off a sale. Add any your markets use."
+msgstr "বাজার বিক্রি থেকে যে খরচগুলো কাটতে পারে, এগুলো তার নাম। আপনার বাজারে যা চলে তা যোগ করুন।"
+
+msgid "Set the actual amount on each market (Markets & aarots), or on a single sale."
+msgstr "আসল পরিমাণ দিন প্রতিটি বাজারে (বাজার ও আড়ত), অথবা একটা নির্দিষ্ট বিক্রিতে।"
+
+msgid "Money owed between you from before you started using this app, e.g. an old feed bill. It becomes the first line of their Baki statement."
+msgstr "এই অ্যাপ ব্যবহার শুরুর আগের পাওনা-দেনা, যেমন পুরোনো খাবারের বিল। এটা তার বাকি হিসাবের প্রথম লাইন হবে।"
+
+msgid "“They owe me”: money you'll collect from them. “I owe them”: money you still have to pay."
+msgstr "“তারা আমার কাছে দেনা”: যে টাকা তাদের কাছ থেকে পাবেন। “আমি তাদের কাছে দেনা”: যে টাকা আপনাকে এখনো দিতে হবে।"
+
+msgid "When that old balance was due from. Used to show how old the Baki is."
+msgstr "পুরোনো বাকিটা কবে থেকে। বাকি কত পুরোনো তা দেখাতে লাগে।"
+
+msgid "Their usual market. On a new sale with no market chosen yet, picking this buyer fills it in."
+msgstr "তাদের সাধারণ বাজার। নতুন বিক্রিতে বাজার বাছা না থাকলে, এই ক্রেতা বাছলেই বাজারটা বসে যাবে।"
+
+msgid "Used for the WhatsApp reminder button on their Baki statement."
+msgstr "তার বাকি হিসাবের পাতায় হোয়াটসঅ্যাপ তাগাদার বোতামের জন্য লাগে।"
+
+msgid "About suppliers"
+msgstr "সরবরাহকারী সম্পর্কে"
+
+msgid "Suppliers are people you buy from: feed, fingerlings, medicine. Anything you haven't paid them shows in Baki."
+msgstr "সরবরাহকারী হলেন যাদের কাছ থেকে কেনেন: খাবার, পোনা, ওষুধ। তাদের যা দেননি তা বাকি খাতায় দেখাবে।"
+
+msgid "Already owed them money before you started using the app? Enter it as the opening balance on their page."
+msgstr "অ্যাপ ব্যবহারের আগে থেকেই তাদের কাছে দেনা ছিল? তাদের পাতায় শুরুর বাকি হিসেবে লিখুন।"
+
+msgid "Tap a name to see their full statement: every bill and payment, with the balance after each."
+msgstr "নামে চাপলে পুরো হিসাব দেখবেন: প্রতিটি বিল ও পরিশোধ, আর প্রতিটির পরের ব্যালেন্স।"
+
+msgid "About buyers"
+msgstr "ক্রেতা সম্পর্কে"
+
+msgid "Buyers are aratdars, paikars and others who buy your fish. If they don't pay in full, the rest shows in Baki as money to collect."
+msgstr "ক্রেতা হলেন আড়তদার, পাইকার ও অন্যরা যারা আপনার মাছ কেনেন। পুরো টাকা না দিলে বাকিটা বাকি খাতায় পাওনা হিসেবে দেখাবে।"
+
+msgid "Set a buyer's usual market: on a new sale with no market chosen yet, picking the buyer fills it in, with its deductions."
+msgstr "ক্রেতার সাধারণ বাজার দিন: নতুন বিক্রিতে বাজার বাছা না থাকলে, ক্রেতা বাছলেই বাজারটা কর্তনসহ বসে যাবে।"
+
+msgid "One person can be both a buyer and a supplier; their Baki is then worked out together."
+msgstr "একজন একসঙ্গে ক্রেতা ও সরবরাহকারী হতে পারেন; তখন তার বাকি একসঙ্গে হিসাব হয়।"
+
+msgid "The water area. It's used to work out profit per decimal, so you can compare ponds of different sizes. 100 decimals = 1 acre."
+msgstr "পানির আয়তন। এটা দিয়ে শতাংশপ্রতি লাভ হিসাব হয়, তাই ছোট-বড় পুকুর তুলনা করা যায়। ১০০ শতাংশ = ১ একর।"
+
+msgid "Average water depth in feet. Useful when deciding how many fish to release."
+msgstr "পানির গড় গভীরতা, ফুটে। কত মাছ ছাড়বেন ঠিক করতে কাজে লাগে।"
+
+msgid "Changes on its own: starting a cycle sets “Fish in it”, finishing one sets “Empty / dry”. Change it here only to correct it."
+msgstr "নিজেই বদলায়: চক্র শুরু করলে “মাছ আছে”, শেষ করলে “খালি / শুকনো” হয়। শুধু ভুল ঠিক করতে এখানে বদলান।"
+
+msgid "Leased? Fill in the lease below so you can see who it's from, what it cost and when it ends."
+msgstr "লিজ নেওয়া? নিচে লিজের তথ্য দিন, তাহলে কার কাছ থেকে, কত টাকায় আর কবে শেষ তা দেখতে পাবেন।"
+
+msgid "The day you released (or will release) the first fingerlings."
+msgstr "যেদিন প্রথম পোনা ছেড়েছেন (বা ছাড়বেন)।"
+
+msgid "Roughly when you plan to harvest. The cycle page counts down the days to it."
+msgstr "মোটামুটি কবে মাছ ধরবেন। চক্রের পাতায় সেই দিন পর্যন্ত কত দিন বাকি তা দেখাবে।"
+
+msgid "How many fingerlings (pona) you released."
+msgstr "কতগুলো পোনা ছেড়েছেন।"
+
+msgid "Total weight of all these fingerlings. With the count, it gives the starting size of each fish."
+msgstr "এই সব পোনার মোট ওজন। সংখ্যার সঙ্গে মিলিয়ে প্রতিটি মাছের শুরুর আকার বোঝা যায়।"
+
+msgid "Who sold you the fingerlings. Choose “Own / not bought” if they came from your own nursery."
+msgstr "কার কাছ থেকে পোনা কিনেছেন। নিজের নার্সারির হলে “নিজের / কেনা নয়” বেছে নিন।"
+
+msgid "The total price of these fingerlings. It becomes part of this cycle's cost."
+msgstr "এই পোনার মোট দাম। এটা এই চক্রের খরচে যোগ হয়।"
+
+msgid "Number of dead fish found. It lowers the fish count in the pond."
+msgstr "কতগুলো মরা মাছ পেয়েছেন। এতে পুকুরে মাছের সংখ্যা কমে।"
+
+msgid "Not sure which fish? Leave it as “Mixed / not sure”."
+msgstr "কোন মাছ নিশ্চিত নন? “মিশ্র / নিশ্চিত নই” রেখে দিন।"
+
+msgid "How many fish are in the sample you weighed."
+msgstr "যে নমুনা মেপেছেন তাতে কতগুলো মাছ।"
+
+msgid "The weight of all the sampled fish together, not of one fish. The app divides it for you."
+msgstr "নমুনার সব মাছের একসঙ্গে ওজন, একটা মাছের নয়। অ্যাপ নিজেই ভাগ করে নেবে।"
+
+msgid "How much fish came out. A mon is the weight set in Farm setup → Units (usually 40 kg)."
+msgstr "কতটা মাছ উঠল। এক মন হলো খামারের সেটআপ → একক-এ দেওয়া ওজন (সাধারণত ৪০ কেজি)।"
+
+msgid "If you counted the fish, the pond's fish count goes down by this many."
+msgstr "মাছ গুনে থাকলে পুকুরের মাছের সংখ্যা এতগুলো কমবে।"
+
+msgid "Tick only for the last harvest: the cycle is finished and the pond is marked empty. You can reopen it later."
+msgstr "শুধু শেষবার মাছ ধরার সময় টিক দিন: চক্র শেষ হবে আর পুকুর খালি দেখাবে। পরে আবার খুলতে পারবেন।"
+
+msgid "How a cycle works"
+msgstr "চক্র যেভাবে কাজ করে"
+
+msgid "A cycle is one round of farming in a pond: from releasing fingerlings to the last harvest. Everything you record here adds up to its cost and profit."
+msgstr "চক্র মানে একটা পুকুরে একবারের চাষ: পোনা ছাড়া থেকে শেষবার মাছ ধরা পর্যন্ত। এখানে যা লেখেন সব মিলে তার খরচ আর লাভ হয়।"
+
+msgid "Use the buttons above to record feed given, sample weights, deaths, fingerlings, harvests, other costs and sales."
+msgstr "ওপরের বোতামগুলো দিয়ে খাবার দেওয়া, নমুনা ওজন, মাছ মরা, পোনা, মাছ ধরা, অন্য খরচ আর বিক্রি লিখুন।"
+
+msgid "Weigh 10–20 fish every 2–3 weeks. That's how the app estimates the fish weight in the pond and the FCR."
+msgstr "প্রতি ২–৩ সপ্তাহে ১০–২০টা মাছ মাপুন। এভাবেই অ্যাপ পুকুরে মাছের ওজন আর এফসিআর আন্দাজ করে।"
+
+msgid "When the pond is fully harvested, open the Cycle menu and choose “Finish this cycle”."
+msgstr "পুকুরের সব মাছ ধরা হয়ে গেলে “চক্র” মেনু খুলে “এই চক্র শেষ করুন” বেছে নিন।"
+
+msgid "Fingerlings bought + feed eaten (at the average price you paid for it) + any other cost you put on this cycle, like medicine or labour."
+msgstr "কেনা পোনা + খাওয়ানো খাবার (আপনার দেওয়া গড় দামে) + এই চক্রে ধরা অন্য যেকোনো খরচ, যেমন ওষুধ বা শ্রমিক।"
+
+msgid "Money from fish sold out of this cycle, after market deductions. Below it: how far ahead of (or behind) all this cycle's costs you are."
+msgstr "এই চক্রের মাছ বিক্রির টাকা, বাজারের কর্তনের পরে। নিচে: এই চক্রের সব খরচের চেয়ে কত এগিয়ে (বা পিছিয়ে) আছেন।"
+
+msgid "FCR (feed conversion ratio): kg of feed eaten for each 1 kg the fish grew (harvest weight minus fingerling weight). Lower is better: less feed for the same fish."
+msgstr "এফসিআর (খাদ্য রূপান্তর হার): মাছের ওজন ১ কেজি বাড়াতে কত কেজি খাবার লেগেছে (ধরা মাছের ওজন থেকে পোনার ওজন বাদ দিয়ে)। যত কম, তত ভালো: একই মাছে কম খাবার।"
+
+msgid "Net a few fish, weigh them together and count them. The average weight per fish shows how fast they're growing."
+msgstr "জাল দিয়ে কয়েকটা মাছ তুলে একসঙ্গে মাপুন আর গুনুন। মাছপ্রতি গড় ওজন দেখায় তারা কত তাড়াতাড়ি বাড়ছে।"
+
+msgid "A harvest is fish taken out of the pond. It's separate from the sale (the money): tap “Sell” on a harvest and the sale is filled in for you."
+msgstr "মাছ ধরা মানে পুকুর থেকে মাছ তোলা। এটা বিক্রি (টাকা) থেকে আলাদা: ধরা মাছের পাশে “বিক্রি” চাপলে বিক্রির ঘর নিজেই ভরে যাবে।"
+
+msgid "An estimate: fingerlings released, minus deaths and fish harvested by count."
+msgstr "আন্দাজ: ছাড়া পোনা থেকে মরা মাছ আর গুনে ধরা মাছ বাদ দিয়ে।"
+
+msgid "How each cycle in this pond turned out."
+msgstr "এই পুকুরের প্রতিটি চক্রের ফল কেমন হলো।"
+
+msgid "How ponds work"
+msgstr "পুকুর যেভাবে কাজ করে"
+
+msgid "Open a pond to start a cycle when you release fingerlings. Feeding, weighing, deaths, harvests and sales are all recorded inside that cycle."
+msgstr "পোনা ছাড়ার সময় পুকুর খুলে একটা চক্র শুরু করুন। খাওয়ানো, মাপা, মাছ মরা, মাছ ধরা আর বিক্রি সব সেই চক্রের ভেতরে লেখা হয়।"
+
+msgid "A pond's cost and profit come from its cycles, so you can see which pond earns the most."
+msgstr "পুকুরের খরচ আর লাভ আসে তার চক্রগুলো থেকে, তাই কোন পুকুর সবচেয়ে বেশি আয় করে দেখতে পাবেন।"
+
+msgid "The coloured badge shows the pond's state: fish in it, being prepared, or empty."
+msgstr "রঙিন চিহ্নটা পুকুরের অবস্থা দেখায়: মাছ আছে, প্রস্তুত হচ্ছে, বা খালি।"
+
+msgid "Print it, or choose “Save as PDF” in the print window."
+msgstr "প্রিন্ট করুন, অথবা প্রিন্টের জানালায় “Save as PDF” বেছে নিন।"
+
+msgid "Download to open in Excel or Google Sheets. Bangla text shows correctly."
+msgstr "ডাউনলোড করে এক্সেল বা গুগল শিটে খুলুন। বাংলা লেখা ঠিকঠাক দেখাবে।"
+
+msgid "Pond & cycle"
+msgstr "পুকুর ও চক্র"
+
+msgid "Fingerlings released in this cycle."
+msgstr "এই চক্রে ছাড়া পোনা।"
+
+msgid "No cycles in this period."
+msgstr "এই সময়ে কোনো চক্র নেই।"
+
+msgid "Farm income minus farm costs so far this month. Feed counts when it's eaten; fish sales count even if the buyer hasn't paid yet."
+msgstr "এ মাসে এখন পর্যন্ত খামারের আয় থেকে খরচ বাদ দিয়ে। খাবার ধরা হয় খাওয়ানো হলে; মাছ বিক্রি ধরা হয় ক্রেতা টাকা না দিলেও।"
+
+msgid "Fingerlings, feed eaten, and other costs you put on the ponds' cycles. Farm-wide costs that aren't put on a pond are not shared out here."
+msgstr "পোনা, খাওয়ানো খাবার, আর পুকুরের চক্রে ধরা অন্য খরচ। পুরো খামারের যে খরচ কোনো পুকুরে ধরা হয়নি, তা এখানে ভাগ করা হয় না।"
+
+msgid "A cycle is counted in full if it ran at any time in the chosen period. Choose “All time” to compare every cycle."
+msgstr "বাছাই করা সময়ের মধ্যে যেকোনো সময় চললে চক্রটা পুরোটাই ধরা হয়। সব চক্র তুলনা করতে “সব সময়” বেছে নিন।"
+
+msgid "Profit divided by the pond's area in decimals, so small and big ponds can be compared fairly."
+msgstr "লাভকে পুকুরের শতাংশ দিয়ে ভাগ, তাই ছোট-বড় পুকুর ন্যায্যভাবে তুলনা করা যায়।"
+
+msgid "Cycle by cycle"
+msgstr "চক্র অনুযায়ী"
+
+msgid "Cycles"
+msgstr "চক্র"
+
+msgid "The number on the aarot's memo (chalan), so you can match this sale to the paper later."
+msgstr "আড়তের মেমোর (চালান) নম্বর, যাতে পরে কাগজের সঙ্গে এই বিক্রি মিলিয়ে দেখতে পারেন।"
+
+msgid "Where you sold. Its usual deductions (commission, labour, khajna…) are filled in below."
+msgstr "কোথায় বিক্রি করেছেন। সেখানকার সাধারণ কর্তন (কমিশন, শ্রমিক, খাজনা…) নিচে নিজেই বসে যাবে।"
+
+msgid "Who bought the fish. If they don't pay in full, the rest is added to their Baki. Choosing a buyer fills in their usual market when the market is empty."
+msgstr "কে মাছ কিনেছেন। পুরো টাকা না দিলে বাকিটা তার বাকিতে যোগ হবে। বাজার খালি থাকলে ক্রেতা বাছলে তার সাধারণ বাজার বসে যায়।"
+
+msgid "Which pond's cycle this fish came from, so the sale counts in that pond's profit."
+msgstr "মাছ কোন পুকুরের চক্র থেকে এসেছে, যাতে বিক্রিটা সেই পুকুরের লাভে ধরা হয়।"
+
+msgid "Money you got for this sale today. Whatever is left is Baki the buyer still owes you; record it in Baki when they pay."
+msgstr "এই বিক্রির জন্য আজ যত টাকা পেলেন। বাকিটা ক্রেতার কাছে আপনার পাওনা; তিনি দিলে বাকি খাতায় লিখুন।"
+
+msgid "Where the money you received went: cash, bank or bKash/Nagad. That account's balance goes up."
+msgstr "পাওয়া টাকা কোথায় রাখলেন: নগদ, ব্যাংক বা বিকাশ/নগদ। সেই একাউন্টের ব্যালেন্স বাড়বে।"
+
+msgid "Sale value minus the market deductions above."
+msgstr "বিক্রির দাম থেকে ওপরের বাজারের কর্তন বাদ দিয়ে।"
+
+msgid "One line per fish. The amount is quantity × rate, and the rate is per the unit you choose (per mon, per kg or per piece)."
+msgstr "প্রতিটি মাছের জন্য এক লাইন। টাকা = পরিমাণ × দর, আর দর আপনার বাছা একক অনুযায়ী (মনপ্রতি, কেজিপ্রতি বা পিসপ্রতি)।"
+
+msgid "What the market keeps from the sale. “% of the sale” is a share of the sale value; “Per unit sold” is an amount for each mon or kg; “Fixed per sale” is a set amount once."
+msgstr "বিক্রি থেকে বাজার যা রেখে দেয়। “বিক্রির %” হলো বিক্রির দামের একটা অংশ; “প্রতি একক বিক্রিতে” হলো প্রতি মন বা কেজিতে একটা টাকা; “প্রতি বিক্রিতে নির্দিষ্ট” হলো একবার একটা নির্দিষ্ট টাকা।"
+
+msgid "Sale value minus the market's deductions: the money that is really yours from this sale."
+msgstr "বিক্রির দাম থেকে বাজারের কর্তন বাদ দিয়ে: এই বিক্রি থেকে আসলে আপনার টাকা।"
+
+msgid "The total of all sales in this period after market deductions (commission, labour, khajna…), whether the buyer has paid yet or not."
+msgstr "এই সময়ের সব বিক্রির মোট, বাজারের কর্তনের (কমিশন, শ্রমিক, খাজনা…) পরে, ক্রেতা টাকা দিয়েছেন কি না তা যাই হোক।"
+
+msgid "How sales work"
+msgstr "বিক্রি যেভাবে কাজ করে"
+
+msgid "Record each sale from the aarot's memo: the fish, quantity and rate. The market's deductions are filled in for you."
+msgstr "প্রতিটি বিক্রি আড়তের মেমো দেখে লিখুন: মাছ, পরিমাণ আর দর। বাজারের কর্তন নিজেই বসে যাবে।"
+
+msgid "If the buyer doesn't pay in full, the rest is kept as Baki. When they pay, record it in Baki; the sale then shows as paid."
+msgstr "ক্রেতা পুরো টাকা না দিলে বাকিটা বাকি হিসেবে থাকে। তিনি দিলে বাকি খাতায় লিখুন; তখন বিক্রিটা পরিশোধিত দেখাবে।"
+
+msgid "Selling fish you just harvested? Open the pond's cycle and tap “Sell” on the harvest, so the quantities are filled in."
+msgstr "এইমাত্র ধরা মাছ বিক্রি করছেন? পুকুরের চক্র খুলে ধরা মাছের পাশে “বিক্রি” চাপুন, পরিমাণ নিজেই বসে যাবে।"
+
+msgid "Shown instead of the English name when the app is in Bangla, e.g. রুই."
+msgstr "অ্যাপ বাংলায় থাকলে ইংরেজি নামের বদলে এটা দেখানো হয়, যেমন রুই।"
+
+msgid "How you usually sell this fish. Picked first on a sale; you can still change it."
+msgstr "এই মাছ সাধারণত কোন এককে বিক্রি করেন। বিক্রিতে এটাই আগে বাছা থাকবে; তবুও বদলাতে পারবেন।"
+
+msgid "About fish species"
+msgstr "মাছের জাত সম্পর্কে"
+
+msgid "Add every fish you raise or sell. They're used when you release fingerlings, weigh, harvest and sell."
+msgstr "যত মাছ চাষ বা বিক্রি করেন সব যোগ করুন। পোনা ছাড়া, মাপা, মাছ ধরা আর বিক্রিতে এগুলো লাগে।"
+
+msgid "Give each one a Bangla name; it's shown instead of the English one when the app is in Bangla."
+msgstr "প্রতিটির একটা বাংলা নাম দিন; অ্যাপ বাংলায় থাকলে ইংরেজির বদলে সেটা দেখাবে।"
+
+msgid "The default unit (kg, mon or pieces) is picked first when you sell that fish."
+msgstr "সেই মাছ বিক্রির সময় তার মূল একক (কেজি, মন বা পিস) আগে বাছা থাকে।"
+
+#, python-format
+msgid "Each bar fills as you spend: green is fine, orange means 80%% is used, red means over the budget."
+msgstr "খরচ হলে দাগটা ভরতে থাকে: সবুজ মানে ঠিক আছে, কমলা মানে ৮০%% খরচ হয়ে গেছে, লাল মানে বাজেট ছাড়িয়ে গেছে।"
+
+#, python-format
+msgid "What the market keeps from the sale. “%% of the sale” is a share of the sale value; “Per unit sold” is an amount for each mon or kg; “Fixed per sale” is a set amount once."
+msgstr "বিক্রি থেকে বাজার যা রেখে দেয়। “বিক্রির %%” হলো বিক্রির দামের একটা অংশ; “প্রতি একক বিক্রিতে” হলো প্রতি মন বা কেজিতে একটা টাকা; “প্রতি বিক্রিতে নির্দিষ্ট” হলো একবার একটা নির্দিষ্ট টাকা।"

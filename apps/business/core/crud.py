@@ -138,6 +138,7 @@ class Master:
     after_save: object = None       # fn(obj, request)
     form_context: object = None     # fn(request) -> extra context for the form page
     nav_template: str = ""          # tabs shown above the list (e.g. the Feed section's tabs)
+    note: tuple = ()                # ("How … works", point, point, …) folding note on the list
 
     # views -------------------------------------------------------------------
     def urls(self):

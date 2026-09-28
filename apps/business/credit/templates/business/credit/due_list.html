@@ -27,6 +27,8 @@
     </a>
   </div>
 
+  {% include "business/partials/note.html" with key="baki" title=_("How Baki works") p1=_("Baki is worked out for you: a sale not paid in full, or a purchase you didn't pay in full, shows up here by itself.") p2=_("When someone pays you, or you pay a supplier, tap “Record payment”. It settles their oldest bill first unless you choose a bill.") p3=_("Tap a name to see their statement: every bill and payment. From there you can send a WhatsApp reminder or set a follow-up date.") %}
+
   {% if follow_ups %}
   <section class="callout" data-tone="warn">
     {% include "business/partials/icon.html" with name="bell" %}
@@ -44,7 +46,7 @@
 
   {% if total %}
   <section class="card card-body">
-    <div class="meter-row"><span>{% if side == 'receive' %}{% translate "How old the dues are" %}{% else %}{% translate "How long you've owed" %}{% endif %}</span><strong>{{ total|bdt }}</strong></div>
+    <div class="meter-row"><span>{% if side == 'receive' %}{% translate "How old the dues are" %}{% else %}{% translate "How long you've owed" %}{% endif %}{% include "business/partials/tip.html" with text=_("Unpaid amounts grouped by how many days ago the bill was made. Old baki is harder to collect, so follow up on the oldest first.") %}</span><strong>{{ total|bdt }}</strong></div>
     <div class="age-bar" role="img" aria-label="{% for label, amount, pct in ageing %}{{ label }}: {{ amount|bdt }}{% if not forloop.last %}, {% endif %}{% endfor %}">
       {% for label, amount, pct in ageing %}{% if amount %}<span data-age="{{ forloop.counter0 }}" style="flex-grow: {{ pct }}" data-tip="{{ label }}: {{ amount|bdt }}"></span>{% endif %}{% endfor %}
     </div>

@@ -1,0 +1,16 @@
+{% load i18n %}{% comment %}
+"How this page works" — a short note at the top of a page. Needs: key, title,
+p1 (and optionally p2–p4). Open for a newcomer; once closed it folds to a
+one-line button and stays folded for that browser.
+{% endcomment %}<section class="biz-note" x-data="{ open: true, k: 'bizNote:{{ key }}',
+    init() { try { this.open = localStorage.getItem(this.k) !== '0'; } catch (e) {} },
+    toggle() { this.open = !this.open; try { localStorage.setItem(this.k, this.open ? '1' : '0'); } catch (e) {} } }">
+  <button type="button" class="biz-note-head" @click="toggle()" :aria-expanded="open.toString()" aria-controls="note-{{ key }}">
+    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 1a6 6 0 00-3.815 10.631C7.237 12.5 8 13.443 8 14.456v.644a.75.75 0 00.572.729 6.016 6.016 0 002.856 0A.75.75 0 0012 15.1v-.644c0-1.013.762-1.957 1.815-2.825A6 6 0 0010 1zM8.863 17.414a.75.75 0 00-.226 1.483 9.066 9.066 0 002.726 0 .75.75 0 00-.226-1.483 7.553 7.553 0 01-2.274 0z"/></svg>
+    <span class="biz-note-title">{{ title }}</span>
+    <span class="biz-note-toggle" x-text="open ? '{% translate "Hide"|escapejs %}' : '{% translate "Show"|escapejs %}'">{% translate "Hide" %}</span>
+  </button>
+  <ul class="biz-note-body" id="note-{{ key }}" x-show="open" x-cloak x-transition.opacity>
+    <li>{{ p1 }}</li>{% if p2 %}<li>{{ p2 }}</li>{% endif %}{% if p3 %}<li>{{ p3 }}</li>{% endif %}{% if p4 %}<li>{{ p4 }}</li>{% endif %}
+  </ul>
+</section>

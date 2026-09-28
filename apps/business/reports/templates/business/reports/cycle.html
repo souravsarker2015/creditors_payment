@@ -5,11 +5,12 @@
 <div class="page stack">
   {% include "business/reports/_head.html" %}
   {% include "business/reports/_bar.html" %}
+  <p class="help no-print">{% translate "A cycle is counted in full if it ran at any time in the chosen period. Choose “All time” to compare every cycle." %}</p>
   <article class="card memo stmt">
     {% include "business/reports/_memo_head.html" %}
     {% if r.objects %}
     <table class="memo-table stmt-table">
-      <thead><tr><th>{% translate "Pond & season" %}</th><th class="num">{% translate "Days" %}</th><th class="num">{% translate "Fish in" %}</th><th class="num">{% translate "Harvest kg" %}</th><th class="num">{% translate "FCR" %}</th><th class="num">{% translate "Cost" %}</th><th class="num">{% translate "Sold" %}</th><th class="num">{% translate "Profit" %}</th></tr></thead>
+      <thead><tr><th>{% translate "Pond & cycle" %}</th><th class="num">{% translate "Days" %}</th><th class="num">{% translate "Fish in" %}{% include "business/partials/tip.html" with text=_("Fingerlings released in this cycle.") %}</th><th class="num">{% translate "Harvest kg" %}</th><th class="num">{% translate "FCR" %}{% include "business/partials/tip.html" with text=_("FCR (feed conversion ratio): kg of feed eaten for each 1 kg the fish grew (harvest weight minus fingerling weight). Lower is better: less feed for the same fish.") %}</th><th class="num">{% translate "Cost" %}</th><th class="num">{% translate "Sold" %}</th><th class="num">{% translate "Profit" %}</th></tr></thead>
       <tbody>
         {% for o in r.objects %}
         <tr>
@@ -35,7 +36,7 @@
       </li>
       {% endfor %}
     </ol>
-    {% else %}<p class="empty-text py-8 text-center">{% translate "No seasons in this period." %}</p>{% endif %}
+    {% else %}<p class="empty-text py-8 text-center">{% translate "No cycles in this period." %}</p>{% endif %}
     <p class="memo-foot">{% blocktranslate with date=today|date:"j M Y" %}Printed {{ date }}{% endblocktranslate %}</p>
   </article>
 </div>

@@ -23,7 +23,7 @@
   <section class="hero no-print">
     <div class="hero-inner">
       <div class="min-w-0">
-        <p class="hero-label">{% translate "In this account now" %}</p>
+        <p class="hero-label">{% translate "In this account now" %}{% include "business/partials/tip.html" with text=_("Opening balance plus every sale received, payment, transfer and money in, minus everything paid out of this account. If it doesn't match the real cash or bank balance, something wasn't recorded.") %}</p>
         <p class="hero-value">{{ balance|bdt }}</p>
         <p class="hero-sub">{% blocktranslate with period=period_label|lower in_=money_in|bdt out=money_out|bdt %}{{ period }}: {{ in_ }} in · {{ out }} out{% endblocktranslate %}</p>
       </div>

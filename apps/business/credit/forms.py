@@ -22,6 +22,11 @@ class PaymentForm(BusinessForm):
 
     unique_name = ()
     against = forms.CharField(required=False, widget=forms.HiddenInput)
+    tips = {
+        "direction": _("Received: a buyer paid you. Paid: you paid a supplier. It's chosen for you from who owes whom."),
+        "account": _("Where the money went in or came out: cash, bank or bKash/Nagad. That account's balance changes."),
+        "reference": _("Anything to find it later: cheque number, bKash transaction ID or receipt number."),
+    }
 
     class Meta:
         model = PartyPayment

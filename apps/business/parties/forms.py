@@ -10,6 +10,13 @@ from .models import OpeningType, Party
 
 class PartyForm(BusinessForm):
     role = None   # "supplier" | "buyer": the page it's added from
+    tips = {
+        "opening_balance": _("Money owed between you from before you started using this app, e.g. an old feed bill. It becomes the first line of their Baki statement."),
+        "opening_type": _("“They owe me”: money you'll collect from them. “I owe them”: money you still have to pay."),
+        "opening_date": _("When that old balance was due from. Used to show how old the Baki is."),
+        "market": _("Their usual market. On a new sale with no market chosen yet, picking this buyer fills it in."),
+        "phone": _("Used for the WhatsApp reminder button on their Baki statement."),
+    }
 
     class Meta:
         model = Party

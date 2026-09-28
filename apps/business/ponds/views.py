@@ -32,6 +32,10 @@ ponds = Master(
     filters=[("in_use", _("Fish in it"), Q(status=PondStatus.IN_USE)),
              ("leased", _("Leased"), Q(ownership="leased"))],
     empty_title=_("Add your first pond"), empty_text=_("Give it a name and size. Stocking, feeding and harvests will be recorded per pond, so you'll see what each one earns."),
+    note=(_("How ponds work"),
+          _("Open a pond to start a cycle when you release fingerlings. Feeding, weighing, deaths, harvests and sales are all recorded inside that cycle."),
+          _("A pond's cost and profit come from its cycles, so you can see which pond earns the most."),
+          _("The coloured badge shows the pond's state: fish in it, being prepared, or empty.")),
 )
 
 

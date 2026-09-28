@@ -36,6 +36,10 @@ suppliers = Master(
     add_label=_("Add supplier"), row_template="business/parties/row.html", icon="truck", decorate=_balances, delete_check=_can_delete,
     view_cap=None, edit_cap="enter_data", search_fields=("name", "phone", "address", "contact_person"),
     empty_title=_("No suppliers yet"), empty_text=_("Add the feed dealer or hatchery you buy from. If you already owe them, enter that balance too."),
+    note=(_("About suppliers"),
+          _("Suppliers are people you buy from: feed, fingerlings, medicine. Anything you haven't paid them shows in Baki."),
+          _("Already owed them money before you started using the app? Enter it as the opening balance on their page."),
+          _("Tap a name to see their full statement: every bill and payment, with the balance after each.")),
 )
 
 buyers = Master(
@@ -46,4 +50,8 @@ buyers = Master(
     select_related=("market",),
     filters=[(k, label, Q(buyer_type=k)) for k, label in BuyerType.choices if k != "other"],
     empty_title=_("No buyers yet"), empty_text=_("Add the aratdars and paikars you sell to, with their usual market."),
+    note=(_("About buyers"),
+          _("Buyers are aratdars, paikars and others who buy your fish. If they don't pay in full, the rest shows in Baki as money to collect."),
+          _("Set a buyer's usual market: on a new sale with no market chosen yet, picking the buyer fills it in, with its deductions."),
+          _("One person can be both a buyer and a supplier; their Baki is then worked out together.")),
 )

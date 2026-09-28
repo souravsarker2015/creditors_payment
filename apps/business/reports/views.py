@@ -81,7 +81,7 @@ def dashboard_view(request):
 
 REPORTS = [
     ("pond", _("Pond profit & loss"), _("Every pond: what it cost, what it sold, what it made."), "fish"),
-    ("cycle", _("Season by season"), _("Each batch with its FCR, cost and result."), "fish"),
+    ("cycle", _("Cycle by cycle"), _("Each batch with its FCR, cost and result."), "fish"),
     ("species", _("Sales by fish"), _("Which fish brings in the most money."), "cart"),
     ("market", _("Sales by market"), _("Which aarot or buyer you sell most through."), "cart"),
     ("feed", _("Feed use"), _("Bought against eaten, and what it cost."), "truck"),
@@ -152,7 +152,7 @@ def _pond_report(business, period, request):
     rows = services.pond_rows(business, period.start, period.end)
     return {
         "title": _("Pond profit & loss"), "template": "business/reports/pond.html", "objects": rows,
-        "columns": [_("Pond"), _("Seasons"), _("Sold"), _("Cost"), _("Profit"), _("Per decimal"), _("Feed kg"), _("Harvest kg"), _("FCR")],
+        "columns": [_("Pond"), _("Cycles"), _("Sold"), _("Cost"), _("Profit"), _("Per decimal"), _("Feed kg"), _("Harvest kg"), _("FCR")],
         "rows": [[r["pond"].name, r["cycles"], _n(r["sales"]), _n(r["cost"]), _n(r["profit"]), _n(r["per_decimal"]),
                   _n(r["feed_kg"]), _n(r["harvest_kg"]), _n(r["fcr"])] for r in rows],
         "total": [_("Total"), "", _n(sum((r["sales"] for r in rows), ZERO)), _n(sum((r["cost"] for r in rows), ZERO)),
@@ -165,8 +165,8 @@ def _pond_report(business, period, request):
 def _cycle_report(business, period, request):
     rows = services.cycle_rows(business, period.start, period.end)
     return {
-        "title": _("Season by season"), "template": "business/reports/cycle.html", "objects": rows,
-        "columns": [_("Pond"), _("Season"), _("Started"), _("Days"), _("Fish put in"), _("Alive"), _("Harvest kg"),
+        "title": _("Cycle by cycle"), "template": "business/reports/cycle.html", "objects": rows,
+        "columns": [_("Pond"), _("Cycle"), _("Started"), _("Days"), _("Fish put in"), _("Alive"), _("Harvest kg"),
                     _("Feed kg"), _("FCR"), _("Cost"), _("Sold"), _("Profit")],
         "rows": [[r.pond.name, r.cycle.label, f"{r.cycle.start_date:%Y-%m-%d}", r.days, r.summary.stocked, r.summary.alive,
                   _n(r.summary.harvest_kg), _n(r.summary.feed_kg), _n(r.summary.fcr), _n(r.summary.cost),

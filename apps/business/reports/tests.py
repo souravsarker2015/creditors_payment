@@ -162,6 +162,18 @@ class PondReportTests(ReportBase):
         row = services.pond_rows(self.b)[0]
         self.assertEqual(row["fcr"], D("3"))
 
+    def test_pond_fcr_matches_the_cycle_fcr(self):
+        # Fingerling weight isn't growth: 300 kg of feed for 100 − 20 = 80 kg gained.
+        product = FeedProduct.objects.create(business=self.b, name="Float", bag_size=25, bag_unit=self.kg)
+        Stocking.objects.create(business=self.b, cycle=self.cycle, date=ago(120), species=self.rui, count=2000,
+                                weight=D("20"), weight_unit=self.kg)
+        FeedUsage.objects.create(business=self.b, cycle=self.cycle, date=ago(10), product=product, quantity=D("300"), unit=self.kg)
+        Harvest.objects.create(business=self.b, cycle=self.cycle, date=ago(2), species=self.rui, quantity=D("100"), unit=self.kg)
+        pond_fcr = services.pond_rows(self.b)[0]["fcr"]
+        cycle_fcr = services.cycle_rows(self.b)[0].summary.fcr
+        self.assertEqual(cycle_fcr, D("3.75"))
+        self.assertEqual(pond_fcr, cycle_fcr)
+
     def test_a_pond_with_nothing_still_appears(self):
         Pond.objects.create(business=self.b, name="West")
         names = {r["pond"].name for r in services.pond_rows(self.b)}

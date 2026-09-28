@@ -34,8 +34,8 @@
           </div>
           {% endwith %}
           <div class="form-grid form-grid-2">
-            {% with field=form.name %}{% include "partials/field.html" %}{% endwith %}
-            {% with field=form.account_no %}{% include "partials/field.html" %}{% endwith %}
+            {% with field=form.name %}{% include "business/partials/field.html" %}{% endwith %}
+            {% with field=form.account_no %}{% include "business/partials/field.html" %}{% endwith %}
           </div>
         </div>
       </section>
@@ -52,7 +52,7 @@
             {% for error in field.errors %}<p class="field-error">{% include "partials/icon.html" with name="alert" %}{{ error }}</p>{% endfor %}
           </div>
           {% endwith %}
-          {% with field=form.taken_on %}{% include "partials/field.html" %}{% endwith %}
+          {% with field=form.taken_on %}{% include "business/partials/field.html" %}{% endwith %}
         </div>
       </section>
 
@@ -151,11 +151,11 @@
             <button type="button" class="chip chip-choice" x-show="repayment === 'end'" :class="openEnded && 'is-on'" @click="setDuration(0)">{% translate "No fixed end" %}</button>
           </div>
           <div class="form-grid form-grid-2">
-            <div x-ref="maturity">{% with field=form.maturity %}{% include "partials/field.html" %}{% endwith %}</div>
-            {% with field=form.first_due %}{% include "partials/field.html" %}{% endwith %}
+            <div x-ref="maturity">{% with field=form.maturity %}{% include "business/partials/field.html" %}{% endwith %}</div>
+            {% with field=form.first_due %}{% include "business/partials/field.html" %}{% endwith %}
           </div>
           <p class="help !mt-2">{% translate "Leave the first payment date empty if it's one period after you received the money." %}</p>
-          {% with field=form.notes %}{% include "partials/field.html" %}{% endwith %}
+          {% with field=form.notes %}{% include "business/partials/field.html" %}{% endwith %}
         </div>
       </section>
     </div>

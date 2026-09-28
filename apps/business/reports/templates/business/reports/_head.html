@@ -6,7 +6,7 @@
     <p class="page-subtitle">{{ subtitle }}</p>
   </div>
   <div class="page-actions">
-    <button type="button" class="btn btn-secondary" onclick="window.print()">{% include "partials/icon.html" with name="printer" %}{% translate "Print" %}</button>
-    <a href="{{ export_url }}" class="btn btn-secondary">{% include "partials/icon.html" with name="download" %}{% translate "Excel (CSV)" %}</a>
+    <button type="button" class="btn btn-secondary" onclick="window.print()" data-tip="{% translate 'Print it, or choose “Save as PDF” in the print window.' %}">{% include "partials/icon.html" with name="printer" %}{% translate "Print" %}</button>
+    <a href="{{ export_url }}" class="btn btn-secondary" data-tip="{% translate 'Download to open in Excel or Google Sheets. Bangla text shows correctly.' %}">{% include "partials/icon.html" with name="download" %}{% translate "Excel (CSV)" %}</a>
   </div>
 </header>

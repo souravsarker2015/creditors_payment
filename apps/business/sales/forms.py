@@ -18,6 +18,14 @@ from .models import FishSale, FishSaleLine, SaleDeduction
 
 class FishSaleForm(BusinessForm):
     unique_name = ()
+    tips = {
+        "memo_no": _("The number on the aarot's memo (chalan), so you can match this sale to the paper later."),
+        "market": _("Where you sold. Its usual deductions (commission, labour, khajna…) are filled in below."),
+        "buyer": _("Who bought the fish. If they don't pay in full, the rest is added to their Baki. Choosing a buyer fills in their usual market when the market is empty."),
+        "cycle": _("Which pond's cycle this fish came from, so the sale counts in that pond's profit."),
+        "received_now": _("Money you got for this sale today. Whatever is left is Baki the buyer still owes you; record it in Baki when they pay."),
+        "account": _("Where the money you received went: cash, bank or bKash/Nagad. That account's balance goes up."),
+    }
 
     class Meta:
         model = FishSale

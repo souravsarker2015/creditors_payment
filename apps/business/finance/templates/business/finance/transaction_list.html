@@ -15,6 +15,8 @@
     {% endif %}
   </header>
 
+  {% include "business/partials/note.html" with key="money" title=_("What to record here") p1=_("Everyday costs and income: labour, medicine, lime, electricity, pond rent, household bazar and so on.") p2=_("Fish sales, feed purchases, Baki payments and loan payments are recorded on their own pages and already count here. Don't enter them again.") p3=_("Use the tabs to switch between farm, household and personal money. Only farm money counts in the farm's profit.") %}
+
   <nav class="seg seg-scroll" aria-label="{% translate 'Whose money' %}">
     {% for value, label in scopes %}<a href="?scope={{ value }}&period={{ period }}" class="seg-item {% if scope == value %}is-active{% endif %}">{{ label }}</a>{% endfor %}
   </nav>

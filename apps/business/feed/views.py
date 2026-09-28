@@ -23,6 +23,10 @@ feed_products = Master(
     search_fields=("name", "brand"), select_related=("bag_unit",), prefetch=("suppliers",),
     filters=[(k, label, Q(form=k)) for k, label in FeedForm.choices[:2]],
     empty_title=_("No feed products yet"), empty_text=_("Add the feeds you use — brand, bag size and price — so purchases and daily feeding are quick to enter."),
+    note=(_("About feed products"),
+          _("Add each feed once with its bag size and usual price. Purchases and daily feeding then take only a few taps."),
+          _("Stock goes up when you buy feed and down when you record feeding in a pond."),
+          _("Set a low-stock alert (in bags) to get a warning on the dashboard before you run out.")),
 )
 
 
@@ -52,6 +56,10 @@ feed_purchases = Master(
     formset_class=FeedLineFormSet, form_template="business/feed/purchase_form.html", after_save=_recalc,
     form_context=lambda request: {"feed_json": _form_json(request.business)},
     empty_title=_("No feed bought yet"), empty_text=_("Record a purchase from the memo: the feeds, bags, rate and what you paid. What's left is owed to the supplier."),
+    note=(_("About feed purchases"),
+          _("Copy each purchase from the dealer's memo: the feeds, number of bags and rate."),
+          _("Enter what you paid now. The rest is added to that supplier's Baki, and paying it later is done from Baki."),
+          _("Feed stock goes up automatically. Feed cost reaches each pond only when that feed is eaten there.")),
 )
 
 

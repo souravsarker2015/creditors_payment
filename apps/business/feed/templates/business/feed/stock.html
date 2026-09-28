@@ -17,6 +17,8 @@
   </header>
   {% include "business/feed/feed_tabs.html" %}
 
+  {% include "business/partials/note.html" with key="feed" title=_("How feed works") p1=_("Buy feed: copy the dealer's memo. Stock goes up, and anything unpaid goes to that supplier's Baki.") p2=_("Record feeding: enter what each pond ate. Stock goes down, and the cost is added to that pond's cycle.") p3=_("Feed cost uses the average price you paid per kg, so ponds are charged fairly even when prices change.") %}
+
   {% if low %}
   <div class="callout" data-tone="warn">
     {% include "partials/icon.html" with name="alert" %}
@@ -26,14 +28,14 @@
   {% endif %}
 
   <dl class="stat-grid">
-    <div class="stat" data-tone="accent"><dt class="stat-label">{% translate "Feed in store" %}</dt><dd class="stat-value">{{ value|bdt }}</dd><dd class="stat-hint">{% translate "at the average price paid" %}</dd></div>
+    <div class="stat" data-tone="accent"><dt class="stat-label">{% translate "Feed in store" %}{% include "business/partials/tip.html" with text=_("What the feed still in your store is worth, at the average price per kg you have paid for it.") %}</dt><dd class="stat-value">{{ value|bdt }}</dd><dd class="stat-hint">{% translate "at the average price paid" %}</dd></div>
     <div class="stat" data-tone="gold"><dt class="stat-label">{% translate "Used this month" %}</dt><dd class="stat-value">{{ used_month|num }} kg</dd><dd class="stat-hint">{% now "F" %}</dd></div>
     <div class="stat" data-tone="info"><dt class="stat-label">{% translate "Bought this month" %}</dt><dd class="stat-value">{{ bought_month|bdt }}</dd><dd class="stat-hint">{% now "F" %}</dd></div>
-    <div class="stat" data-tone="{% if dues %}critical{% else %}good{% endif %}"><dt class="stat-label">{% translate "Owed to feed suppliers" %}</dt><dd class="stat-value">{{ dues|bdt }}</dd><dd class="stat-hint">{% translate "from purchases on baki" %}</dd></div>
+    <div class="stat" data-tone="{% if dues %}critical{% else %}good{% endif %}"><dt class="stat-label">{% translate "Owed to feed suppliers" %}{% include "business/partials/tip.html" with text=_("Unpaid feed bills. Pay them from Baki; this goes down as you pay.") %}</dt><dd class="stat-value">{{ dues|bdt }}</dd><dd class="stat-hint">{% translate "from purchases on baki" %}</dd></div>
   </dl>
 
   <section class="card">
-    <div class="card-header"><h2 class="card-title">{% translate "Stock by feed" %}</h2></div>
+    <div class="card-header"><h2 class="card-title">{% translate "Stock by feed" %}{% include "business/partials/tip.html" with text=_("Bought minus fed to the ponds. The bar shows how much of what you bought is used up.") %}</h2></div>
     {% if rows %}
     <ul class="ledger">
       {% for r in rows %}

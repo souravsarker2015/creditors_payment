@@ -9,6 +9,9 @@ from .models import DeductionMethod, DeductionType, Market, MarketDeduction
 
 
 class MarketForm(BusinessForm):
+    tips = {
+        "market_days": _("Which days the market runs, for your own reference."),
+    }
     layout = [("name",), ("location", "phone"), ("market_days", "distance_km"), ("notes",)]
 
     class Meta:
@@ -26,6 +29,10 @@ class MarketQuickForm(MarketForm):
 
 
 class DeductionTypeForm(BusinessForm):
+    tips = {
+        "method": _("“% of the sale”: e.g. 3% commission. “Per unit sold”: e.g. ৳20 per mon for labour. “Fixed per sale”: the same amount on every sale, e.g. ৳100 khajna. This is only the usual way; each market can set its own."),
+        "name_bn": _("Shown instead of the English name when the app is in Bangla."),
+    }
     layout = [("name", "name_bn"), ("method",), ("notes",)]
 
     class Meta:
@@ -41,6 +48,9 @@ class DeductionTypeQuickForm(DeductionTypeForm):
 
 class MarketDeductionForm(BusinessForm):
     unique_name = ()
+    tips = {
+        "value": _("The percentage, or the taka amount, depending on how it's charged."),
+    }
 
     class Meta:
         model = MarketDeduction

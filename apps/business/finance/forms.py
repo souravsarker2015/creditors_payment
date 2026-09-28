@@ -9,6 +9,11 @@ from .models import Account, Budget, Category, CategoryType, RecurringTransactio
 
 
 class CategoryForm(BusinessForm):
+    tips = {
+        "type": _("Expense: money going out. Income: money coming in."),
+        "scope": _("Farm business counts in the farm's profit. Household and Personal are kept apart, so family spending doesn't make the farm look worse."),
+        "name_bn": _("Shown instead of the English name when the app is in Bangla."),
+    }
     layout = [("name", "name_bn"), ("type", "scope"), ("parent",), ("notes",)]
     unique_name = ()
 
@@ -46,6 +51,11 @@ class CategoryForm(BusinessForm):
 
 
 class AccountForm(BusinessForm):
+    tips = {
+        "opening_balance": _("How much was in this account on the opening date. Everything recorded after that is added or taken off."),
+        "opening_date": _("The day you counted the opening balance. Usually the day you start using the app."),
+        "number": _("Account or wallet number, only for your reference."),
+    }
     layout = [("name", "kind"), ("institution", "number"), ("opening_balance", "opening_date"), ("is_default",), ("notes",)]
 
     class Meta:
@@ -104,6 +114,13 @@ class AccountQuickForm(BusinessForm):
 
 
 class TransactionForm(BusinessForm):
+    tips = {
+        "category": _("What the money was for. Farm categories count in the farm's profit; household and personal ones don't."),
+        "account": _("Which cash box, bank or wallet the money came out of or went into. Its balance changes."),
+        "party": _("Only a note of who it was. It doesn't create any Baki; use Baki for money owed."),
+        "cycle": _("Medicine, lime, labour, pond rent… for one pond? Pick its cycle and the cost is added to that pond's profit and loss."),
+        "receipt": _("A photo of the memo or receipt, to check later."),
+    }
     """One expense or income. Type is chosen by the category picked."""
 
     unique_name = ()
@@ -136,7 +153,7 @@ class TransactionForm(BusinessForm):
             cycles = cycles | CultureCycle.objects.filter(pk=self.instance.cycle_id)
         self.fields["cycle"].queryset = cycles.distinct().select_related("pond")
         self.fields["cycle"].empty_label = _("Not for one pond")
-        self.fields["cycle"].help_text = _("Put this cost on one pond's season, so its profit is right.")
+        self.fields["cycle"].help_text = _("Put this cost on one pond's cycle, so its profit is right.")
         money_field(self.fields["amount"])
         if self.scope != Scope.BUSINESS:
             for name in ("cycle", "party"):
@@ -162,6 +179,10 @@ class TransactionForm(BusinessForm):
 
 
 class TransferForm(BusinessForm):
+    tips = {
+        "from_account": _("Where the money left from."),
+        "to_account": _("Where the money arrived."),
+    }
     unique_name = ()
     layout = [("from_account", "to_account"), ("amount", "date"), ("charge", "reference"), ("notes",)]
 
@@ -193,6 +214,11 @@ class TransferForm(BusinessForm):
 
 
 class RecurringForm(BusinessForm):
+    tips = {
+        "repeat": _("How often it comes back. The next due date moves forward each time you record or skip it."),
+        "start_date": _("The first due date."),
+        "amount": _("The usual amount. You can change it each time before recording."),
+    }
     unique_name = ()
     layout = [("name", "amount"), ("category", "account"), ("repeat", "start_date"), ("end_date",), ("description",), ("notes",)]
 

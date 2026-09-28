@@ -53,7 +53,7 @@
         </div>
 
         <div class="pay-bills" x-show="bills.length" x-cloak>
-          <p class="label">{% translate "For which bill?" %}</p>
+          <p class="label">{% translate "For which bill?" %}{% include "business/partials/tip.html" with text=_("Leave it on “Oldest bills first” and the payment clears the oldest bills first. Pick a bill if they said this money is for that one.") %}</p>
           <label class="pay-bill">
             <input type="radio" name="_bill" value="" x-model="against" class="sr-only">
             <span class="pay-bill-main"><strong>{% translate "Oldest bills first" %}</strong><span>{% translate "Settles whatever has been due longest." %}</span></span>

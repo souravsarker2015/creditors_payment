@@ -49,8 +49,8 @@
       </div>
       <form method="post" class="card-body form-stack" novalidate>
         {% csrf_token %}
-        {% with field=form.username %}{% include "partials/field.html" %}{% endwith %}
-        {% with field=form.role %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.username %}{% include "business/partials/field.html" %}{% endwith %}
+        {% with field=form.role %}{% include "business/partials/field.html" %}{% endwith %}
         <button type="submit" class="btn btn-primary btn-block">{% include "partials/icon.html" with name="plus" %}{% translate "Add to team" %}</button>
       </form>
     </section>

@@ -13,14 +13,14 @@
     {% csrf_token %}
     <div class="card-body form-stack">
       <div class="form-grid form-grid-2">
-        {% with field=form.name %}{% include "partials/field.html" %}{% endwith %}
-        {% with field=form.kind %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.name %}{% include "business/partials/field.html" %}{% endwith %}
+        {% with field=form.kind %}{% include "business/partials/field.html" %}{% endwith %}
       </div>
       <div class="form-grid form-grid-2">
-        {% with field=form.phone %}{% include "partials/field.html" %}{% endwith %}
-        {% with field=form.address %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.phone %}{% include "business/partials/field.html" %}{% endwith %}
+        {% with field=form.address %}{% include "business/partials/field.html" %}{% endwith %}
       </div>
-      {% with field=form.notes %}{% include "partials/field.html" %}{% endwith %}
+      {% with field=form.notes %}{% include "business/partials/field.html" %}{% endwith %}
     </div>
     <div class="card-footer form-actions">
       <a href="{% url 'business:lenders' %}" class="btn btn-ghost btn-lg">{% translate "Cancel" %}</a>

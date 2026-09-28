@@ -25,6 +25,10 @@ markets = Master(
     decorate=_deductions,
     formset_class=MarketDeductionFormSet, formset_template="business/markets/deductions.html",
     empty_title=_("No markets yet"), empty_text=_("Add the aarots you sell at with their usual commission and charges. Every sale there will start with them filled in."),
+    note=(_("How markets and deductions work"),
+          _("Each market or aarot keeps its usual deductions: commission, labour, khajna, ice and so on."),
+          _("When you record a sale at that market, these deductions are filled in for you. You can still change them on each sale."),
+          _("A deduction can be a % of the sale, an amount per unit sold (e.g. ৳20 per mon), or a fixed amount per sale.")),
 )
 
 deduction_types = Master(
@@ -34,4 +38,7 @@ deduction_types = Master(
     search_fields=("name", "name_bn"),
     delete_check=lambda o: _("It's used by a market. Remove it there first.") if MarketDeduction.objects.filter(deduction_type=o).exists() else None,
     empty_title=_("No deduction types"), empty_text=_("Add the charges markets take off a sale."),
+    note=(_("About deduction types"),
+          _("These are the names of charges a market can take off a sale. Add any your markets use."),
+          _("Set the actual amount on each market (Markets & aarots), or on a single sale.")),
 )

@@ -194,20 +194,22 @@ def pond_rows(business, start=None, end=None):
     by_pond = {}
     for row in cycle_rows(business, start, end):
         got = by_pond.setdefault(row.pond.pk, {"pond": row.pond, "sales": ZERO, "cost": ZERO, "cycles": 0,
-                                               "feed_kg": ZERO, "harvest_kg": ZERO})
+                                               "feed_kg": ZERO, "harvest_kg": ZERO, "stocked_kg": ZERO})
         got["sales"] += row.summary.sales_net
         got["cost"] += row.summary.cost
         got["cycles"] += 1
         got["feed_kg"] += row.summary.feed_kg
         got["harvest_kg"] += row.summary.harvest_kg
+        got["stocked_kg"] += row.summary.stocked_kg
     for pond in Pond.objects.filter(business=business):
-        by_pond.setdefault(pond.pk, {"pond": pond, "sales": ZERO, "cost": ZERO, "cycles": 0, "feed_kg": ZERO, "harvest_kg": ZERO})
+        by_pond.setdefault(pond.pk, {"pond": pond, "sales": ZERO, "cost": ZERO, "cycles": 0, "feed_kg": ZERO, "harvest_kg": ZERO,
+                                     "stocked_kg": ZERO})
     rows = list(by_pond.values())
     for r in rows:
         r["profit"] = r["sales"] - r["cost"]
         area = r["pond"].area_decimal
         r["per_decimal"] = (r["profit"] / area).quantize(Decimal("1")) if area else None
-        gained = r["harvest_kg"]
+        gained = r["harvest_kg"] - r["stocked_kg"]   # same rule as a cycle's own FCR
         r["fcr"] = (r["feed_kg"] / gained).quantize(Decimal("0.01")) if (r["feed_kg"] and gained > 0) else None
     rows.sort(key=lambda r: -r["profit"])
     return rows

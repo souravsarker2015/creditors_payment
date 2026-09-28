@@ -1907,3 +1907,25 @@ a.hero-progress:hover .hero-progress-row span { color: var(--text-on-ink); }
     .info-tip { position: relative; }
     .info-tip::after { content: ""; position: absolute; top: 50%; left: 50%; width: 44px; height: 44px; transform: translate(-50%, -50%); }
 }
+
+/* ==========================================================================
+   Business: ⓘ beside form labels, and the "How this page works" notes
+   ========================================================================== */
+.label-row { display: flex; align-items: center; gap: 0.25rem; min-width: 0; flex-wrap: wrap; }
+.label-row > .check { flex: 1 1 auto; }
+.stat-label .info-tip, .card-title .info-tip, .ledger-meta .info-tip, th .info-tip, .hero-label .info-tip { vertical-align: -0.1875rem; margin-left: 0.125rem; }
+.biz-note {
+    border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: var(--radius);
+    background: var(--surface-raised); font-size: 0.875rem; line-height: 1.55;
+}
+.biz-note-head {
+    display: flex; align-items: center; gap: 0.5rem; width: 100%; min-height: 2.75rem;
+    padding: 0.5rem 0.875rem; text-align: left; color: var(--text-primary); border-radius: var(--radius);
+}
+.biz-note-head:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.biz-note-head > svg { width: 1.125rem; height: 1.125rem; flex-shrink: 0; color: var(--accent); }
+.biz-note-title { flex: 1; font-weight: 600; }
+.biz-note-toggle { font-size: 0.8125rem; font-weight: 500; color: var(--accent); }
+.biz-note-body { margin: 0; padding: 0 0.875rem 0.75rem 2.5rem; list-style: disc; color: var(--text-secondary, var(--text-muted)); }
+.biz-note-body > li + li { margin-top: 0.25rem; }
+@media print { .biz-note, .info-tip { display: none !important; } }

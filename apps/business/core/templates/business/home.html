@@ -103,8 +103,8 @@
     <div class="card-body">
       <div class="stat-grid">
         <div class="stat" data-tone="good"><p class="stat-label">{% translate "Farm income" %}</p><p class="stat-value">{{ money.farm.total_income|bdt }}</p></div>
-        <div class="stat" data-tone="critical"><p class="stat-label">{% translate "Farm costs" %}</p><p class="stat-value">{{ money.farm.total_expense|bdt }}</p></div>
-        <div class="stat" data-tone="{% if money.farm.profit >= 0 %}accent{% else %}critical{% endif %}"><p class="stat-label">{% if money.farm.profit >= 0 %}{% translate "Farm profit" %}{% else %}{% translate "Farm loss" %}{% endif %}</p><p class="stat-value">{{ money.farm.profit|absolute|bdt }}</p></div>
+        <div class="stat" data-tone="critical"><p class="stat-label">{% translate "Farm costs" %}{% include "business/partials/tip.html" with text=_("Feed eaten, fingerlings, loan interest and every farm expense this month.") %}</p><p class="stat-value">{{ money.farm.total_expense|bdt }}</p></div>
+        <div class="stat" data-tone="{% if money.farm.profit >= 0 %}accent{% else %}critical{% endif %}"><p class="stat-label">{% if money.farm.profit >= 0 %}{% translate "Farm profit" %}{% else %}{% translate "Farm loss" %}{% endif %}{% include "business/partials/tip.html" with text=_("Farm income minus farm costs this month. Household spending is kept apart and not taken off.") %}</p><p class="stat-value">{{ money.farm.profit|absolute|bdt }}</p></div>
         <div class="stat" data-tone="gold"><p class="stat-label">{% translate "Household spending" %}</p><p class="stat-value">{{ money.household|bdt }}</p></div>
       </div>
       {% if money.due_recurring %}

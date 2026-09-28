@@ -1,29 +1,24 @@
 {% load i18n business %}{% comment %}
-A business form field: adds the "+ Add new" popup (field.field.biz_quick_add)
-and ৳ / % affixes (field.field.affix); everything else uses the shared partial.
-{% endcomment %}{% if field.field.biz_quick_add %}{% biz_quick_add field.field.biz_quick_add as qa %}{% endif %}
-{% if qa or field.field.affix %}
-<div class="field{% if field.errors %} has-error{% endif %}"{% if qa %} x-data="quickAdd('{{ qa.url }}', '{{ field.id_for_label }}')"{% endif %}>
-  <label class="label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span class="req" aria-hidden="true">*</span>{% else %}<span class="opt">{% translate "(optional)" %}</span>{% endif %}</label>
-  {% if qa %}
-  <div class="input-group">
-    {{ field }}
-    <button type="button" class="input-addon-btn" @click="show($el)" aria-haspopup="dialog"
-            aria-label="{% blocktranslate with noun=qa.noun %}Add a new {{ noun }}{% endblocktranslate %}"
-            data-tip="{% blocktranslate with noun=qa.noun %}Add a new {{ noun }}{% endblocktranslate %}">{% include "partials/icon.html" with name="plus" %}</button>
+A business form field: label with its ⓘ tip (the form's `tips` dict), the
+"+ Add new" popup (field.field.biz_quick_add), ৳ / % affixes
+(field.field.affix), help text and errors.
+{% endcomment %}{% if field.is_hidden %}{{ field }}{% else %}{% if field.field.biz_quick_add %}{% biz_quick_add field.field.biz_quick_add as qa %}{% endif %}{% with tip_text=field|tip %}
+{% if field.field.widget.input_type == "checkbox" %}
+<div class="field{% if field.errors %} has-error{% endif %}">
+  <div class="label-row">
+    <label class="check" for="{{ field.id_for_label }}">
+      {{ field }}
+      <span>
+        <span class="check-label">{{ field.label }}</span>
+        {% if field.help_text %}<span class="help mt-0.5 block">{{ field.help_text|safe }}</span>{% endif %}
+      </span>
+    </label>{% include "business/partials/tip.html" with text=tip_text %}
   </div>
-  {% elif field.field.affix == "%" %}
-  <div class="input-affix has-end">{{ field }}<span class="affix affix-end" aria-hidden="true">%</span></div>
-  {% else %}
-  <div class="input-affix has-start"><span class="affix affix-start" aria-hidden="true">{{ field.field.affix }}</span>{{ field }}</div>
-  {% endif %}
-  {% if field.help_text %}<p class="help">{{ field.help_text|safe }}</p>{% endif %}
   {% for error in field.errors %}<p class="field-error">{% include "partials/icon.html" with name="alert" %}{{ error }}</p>{% endfor %}
-  {% if qa %}{% include "partials/quick_add_modal.html" %}{% endif %}
 </div>
 {% elif field.field.widget.attrs.class == "color-pick" %}
 <div class="field">
-  <span class="label">{{ field.label }}</span>
+  <div class="label-row"><span class="label">{{ field.label }}</span>{% include "business/partials/tip.html" with text=tip_text %}</div>
   <div class="color-pick" role="radiogroup" aria-label="{{ field.label }}">
     {% for value, label in field.field.choices %}<label class="color-swatch" style="--c: {{ value }}"><input type="radio" name="{{ field.html_name }}" value="{{ value }}" {% if field.value == value %}checked{% endif %} class="sr-only"><span></span></label>{% endfor %}
   </div>
@@ -31,10 +26,36 @@ and ৳ / % affixes (field.field.affix); everything else uses the shared partial
 </div>
 {% elif field.field.widget.input_type == "radio" %}
 <div class="field{% if field.errors %} has-error{% endif %}">
-  <span class="label" id="{{ field.auto_id }}_label">{{ field.label }}</span>
+  <div class="label-row"><span class="label" id="{{ field.auto_id }}_label">{{ field.label }}</span>{% include "business/partials/tip.html" with text=tip_text %}</div>
   <div class="seg seg-block" role="radiogroup" aria-labelledby="{{ field.auto_id }}_label">
     {% for value, label in field.field.choices %}{% if value %}<label class="seg-item"><input type="radio" class="sr-only" name="{{ field.html_name }}" value="{{ value }}" {% if field.value|stringformat:"s" == value|stringformat:"s" %}checked{% endif %}>{{ label }}</label>{% endif %}{% endfor %}
   </div>
+  {% if field.help_text %}<p class="help">{{ field.help_text|safe }}</p>{% endif %}
   {% for error in field.errors %}<p class="field-error">{% include "partials/icon.html" with name="alert" %}{{ error }}</p>{% endfor %}
 </div>
-{% else %}{% include "partials/field.html" %}{% endif %}
+{% else %}
+<div class="field{% if field.errors %} has-error{% endif %}"{% if qa %} x-data="quickAdd('{{ qa.url }}', '{{ field.id_for_label }}')"{% endif %}>
+  <div class="label-row">{% include "business/partials/label.html" %}</div>
+  {% if qa %}
+  <div class="input-group">
+    {{ field }}
+    <button type="button" class="input-addon-btn" @click="show($el)" aria-haspopup="dialog"
+            aria-label="{% blocktranslate with noun=qa.noun %}Add a new {{ noun }}{% endblocktranslate %}"
+            data-tip="{% blocktranslate with noun=qa.noun %}Add a new {{ noun }}{% endblocktranslate %}">{% include "partials/icon.html" with name="plus" %}</button>
+  </div>
+  {% elif field.field.affix == "%" or field.name == "interest_rate" %}
+  <div class="input-affix has-end">{{ field }}<span class="affix affix-end" aria-hidden="true">%</span></div>
+  {% elif field.field.affix %}
+  <div class="input-affix has-start"><span class="affix affix-start" aria-hidden="true">{{ field.field.affix }}</span>{{ field }}</div>
+  {% elif field.name == "amount" %}
+  <div class="input-affix has-start"><span class="affix affix-start" aria-hidden="true">৳</span>{{ field }}</div>
+  {% elif "datepicker" in field.field.widget.attrs.class %}
+  <div class="input-icon">{% include "partials/icon.html" with name="calendar" %}{{ field }}</div>
+  {% else %}
+  {{ field }}
+  {% endif %}
+  {% if field.help_text %}<p class="help">{{ field.help_text|safe }}</p>{% endif %}
+  {% for error in field.errors %}<p class="field-error">{% include "partials/icon.html" with name="alert" %}{{ error }}</p>{% endfor %}
+  {% if qa %}{% include "partials/quick_add_modal.html" %}{% endif %}
+</div>
+{% endif %}{% endwith %}{% endif %}

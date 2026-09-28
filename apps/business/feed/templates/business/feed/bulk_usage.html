@@ -23,7 +23,7 @@
       </div>
     </section>
     <section class="card">
-      <div class="card-header"><h2 class="card-title">{% translate "How much for each pond" %}</h2><span class="badge badge-outline" x-text="(Math.round(total * 10) / 10) + ' ' + ($root.querySelector('[name=unit]').selectedOptions[0] || {}).text"></span></div>
+      <div class="card-header"><h2 class="card-title">{% translate "How much for each pond" %}{% include "business/partials/tip.html" with text=_("Only ponds with a running cycle are listed. Leave a pond empty if it wasn't fed today.") %}</h2><span class="badge badge-outline" x-text="(Math.round(total * 10) / 10) + ' ' + ($root.querySelector('[name=unit]').selectedOptions[0] || {}).text"></span></div>
       <ul class="ledger">
         {% for cycle, field in form.pond_fields %}
         <li class="ledger-row bulk-row">
