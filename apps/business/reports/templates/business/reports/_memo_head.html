@@ -1,0 +1,10 @@
+{% load i18n %}<header class="memo-head">
+  <div>
+    <p class="memo-business">{{ business.name }}</p>
+    {% if business.address %}<p class="memo-sub">{{ business.address }}</p>{% endif %}
+  </div>
+  <div class="memo-meta">
+    <p class="memo-kind">{{ title }}</p>
+    <p>{{ period.label }}</p>
+  </div>
+</header>

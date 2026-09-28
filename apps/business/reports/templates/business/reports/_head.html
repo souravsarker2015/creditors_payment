@@ -1,0 +1,12 @@
+{% load i18n %}{% comment %}Report page header with print and Excel buttons.{% endcomment %}
+<header class="page-header !mb-0 no-print">
+  <div>
+    <a href="{% url 'business:reports' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Reports" %}</a>
+    <h1 class="page-title">{{ title }}</h1>
+    <p class="page-subtitle">{{ subtitle }}</p>
+  </div>
+  <div class="page-actions">
+    <button type="button" class="btn btn-secondary" onclick="window.print()">{% include "partials/icon.html" with name="printer" %}{% translate "Print" %}</button>
+    <a href="{{ export_url }}" class="btn btn-secondary">{% include "partials/icon.html" with name="download" %}{% translate "Excel (CSV)" %}</a>
+  </div>
+</header>

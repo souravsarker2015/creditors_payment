@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{{ title }} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-narrow stack">
+  {% include "business/reports/_head.html" %}
+  {% include "business/reports/_bar.html" %}
+  <article class="card memo stmt">
+    {% include "business/reports/_memo_head.html" %}
+    {% if r.objects %}
+    {% if r.chart %}<div class="breakdown no-print my-4"><div class="chart-box"><canvas id="repChart"></canvas></div>{% include "business/partials/ranked_list.html" with rows=r.ranked %}</div>{% endif %}
+    <table class="memo-table stmt-table">
+      <thead><tr><th>{{ r.columns.0 }}</th><th class="num">{{ r.columns.1 }}</th><th class="num">{{ r.columns.2 }}</th><th class="num">{{ r.columns.3 }}</th></tr></thead>
+      <tbody>
+        {% for o in r.objects %}
+        <tr>
+          <td><span class="stmt-title">{{ o.label }}</span></td>
+          <td class="num">{{ o.value|bdt }}</td>
+          <td class="num">{{ o.extra }}</td>
+          <td class="num">{% if r.total_value %}{% widthratio o.value r.total_value 100 %}%{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot><tr class="is-total"><th>{% translate "Total" %}</th><td class="num">{{ r.total_value|bdt }}</td><td></td><td></td></tr></tfoot>
+    </table>
+    <ol class="stmt-list no-print">
+      {% for o in r.objects %}
+      <li class="stmt-item">
+        <div class="min-w-0"><p class="stmt-title">{{ o.label }}</p>{% if o.extra %}<p class="stmt-detail">{{ o.extra }}</p>{% endif %}</div>
+        <div class="stmt-amounts"><span class="stmt-run">{{ o.value|bdt }}</span>{% if r.total_value %}<span class="stmt-detail">{% widthratio o.value r.total_value 100 %}%</span>{% endif %}</div>
+      </li>
+      {% endfor %}
+    </ol>
+    {% else %}
+    <p class="empty-text py-8 text-center">{% translate "Nothing in this period." %}</p>
+    {% endif %}
+    <p class="memo-foot">{% blocktranslate with date=today|date:"j M Y" %}Printed {{ date }}{% endblocktranslate %}</p>
+  </article>
+</div>
+{% endblock %}
+{% block extra_js %}
+{% if r.chart and r.objects %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+<script src="{% asset 'js/charts.js' %}"></script>
+<script>
+  renderDistributionChart({
+    canvasId: 'repChart', showLegend: false,
+    labels: [{% for o in r.ranked %}"{{ o.label|escapejs }}",{% endfor %}],
+    data: [{% for o in r.ranked %}{{ o.value|stringformat:"f" }},{% endfor %}],
+    centerLabel: '{% translate "Total"|escapejs %}'
+  });
+</script>
+{% endif %}
+{% endblock %}

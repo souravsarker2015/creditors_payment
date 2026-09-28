@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{{ title }} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-narrow stack">
+  {% include "business/reports/_head.html" %}
+  {% include "business/reports/_bar.html" %}
+  <article class="card memo stmt">
+    {% include "business/reports/_memo_head.html" %}
+    {% if r.objects %}
+    <div class="breakdown no-print my-4"><div class="chart-box"><canvas id="repChart"></canvas></div>{% include "business/partials/ranked_list.html" with rows=r.ranked %}</div>
+    <table class="memo-table stmt-table">
+      <thead><tr><th>{% translate "Market" %}</th><th class="num">{% translate "Sold for" %}</th><th class="num">{% translate "Sales" %}</th><th class="num">{% translate "Share" %}</th></tr></thead>
+      <tbody>
+        {% for o in r.objects %}
+        <tr><td><span class="stmt-title">{{ o.label }}</span></td><td class="num">{{ o.value|bdt }}</td><td class="num">{{ o.extra }}</td><td class="num">{% widthratio o.value r.total_value 100 %}%</td></tr>
+        {% endfor %}
+      </tbody>
+      <tfoot><tr class="is-total"><th>{% translate "Total" %}</th><td class="num">{{ r.total_value|bdt }}</td><td></td><td></td></tr></tfoot>
+    </table>
+    <ol class="stmt-list no-print">
+      {% for o in r.objects %}
+      <li class="stmt-item"><div class="min-w-0"><p class="stmt-title">{{ o.label }}</p><p class="stmt-detail">{{ o.extra }}</p></div><div class="stmt-amounts"><span class="stmt-run">{{ o.value|bdt }}</span></div></li>
+      {% endfor %}
+    </ol>
+    {% else %}<p class="empty-text py-8 text-center">{% translate "No sales in this period." %}</p>{% endif %}
+    <p class="memo-foot">{% blocktranslate with date=today|date:"j M Y" %}Printed {{ date }}{% endblocktranslate %}</p>
+  </article>
+
+  {% if r.buyers %}
+  <section class="card no-print">
+    <div class="card-header"><div><h2 class="card-title">{% translate "By buyer" %}</h2><p class="card-subtitle">{% translate "Who buys the most from you." %}</p></div></div>
+    <ul class="ledger">
+      {% for o in r.buyers %}
+      <li class="ledger-row">
+        <span class="avatar party-avatar" data-kind="buyer" aria-hidden="true">{{ o.label|slice:":1"|upper }}</span>
+        <div class="ledger-main"><p class="ledger-title">{% if o.url %}<a href="{{ o.url }}" class="hover:underline">{{ o.label }}</a>{% else %}{{ o.label }}{% endif %}</p><p class="ledger-meta">{{ o.extra }}</p></div>
+        <div class="ledger-end"><span class="ledger-amount">{{ o.value|bdt }}</span></div>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}
+{% block extra_js %}
+{% if r.objects %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+<script src="{% asset 'js/charts.js' %}"></script>
+<script>
+  renderDistributionChart({ canvasId: 'repChart', showLegend: false,
+    labels: [{% for o in r.ranked %}"{{ o.label|escapejs }}",{% endfor %}],
+    data: [{% for o in r.ranked %}{{ o.value|stringformat:"f" }},{% endfor %}],
+    centerLabel: '{% translate "Sold"|escapejs %}' });
+</script>
+{% endif %}
+{% endblock %}

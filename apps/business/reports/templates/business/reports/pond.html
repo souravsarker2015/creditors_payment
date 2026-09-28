@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{{ title }} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page stack">
+  {% include "business/reports/_head.html" %}
+  {% include "business/reports/_bar.html" %}
+
+  <dl class="stat-grid no-print">
+    <div class="stat" data-tone="good"><dt class="stat-label">{% translate "Sold" %}</dt><dd class="stat-value">{{ r.sales|bdt }}</dd></div>
+    <div class="stat" data-tone="critical"><dt class="stat-label">{% translate "Cost" %}</dt><dd class="stat-value">{{ r.cost|bdt }}</dd></div>
+    <div class="stat" data-tone="{% if r.profit >= 0 %}accent{% else %}critical{% endif %}"><dt class="stat-label">{% if r.profit >= 0 %}{% translate "Profit" %}{% else %}{% translate "Loss" %}{% endif %}</dt><dd class="stat-value">{{ r.profit|absolute|bdt }}</dd></div>
+  </dl>
+
+  <article class="card memo stmt">
+    {% include "business/reports/_memo_head.html" %}
+    {% if r.objects %}
+    <table class="memo-table stmt-table">
+      <thead><tr><th>{% translate "Pond" %}</th><th class="num">{% translate "Seasons" %}</th><th class="num">{% translate "Sold" %}</th><th class="num">{% translate "Cost" %}</th><th class="num">{% translate "Profit" %}</th><th class="num">{% translate "Per decimal" %}</th><th class="num">{% translate "FCR" %}</th></tr></thead>
+      <tbody>
+        {% for o in r.objects %}
+        <tr>
+          <td><span class="stmt-title">{{ o.pond.name }}</span>{% if o.pond.area and o.pond.area_unit %}<span class="stmt-detail">{% qty o.pond.area o.pond.area_unit %}</span>{% elif o.pond.area %}<span class="stmt-detail">{{ o.pond.area|num }} <a href="{% url 'business:ponds_edit' o.pond.pk %}" class="hover:underline">{% translate "(no unit set)" %}</a></span>{% endif %}</td>
+          <td class="num">{{ o.cycles }}</td>
+          <td class="num">{{ o.sales|bdt }}</td>
+          <td class="num">{{ o.cost|bdt }}</td>
+          <td class="num {% if o.profit < 0 %}tone-critical{% endif %}">{{ o.profit|bdt }}</td>
+          <td class="num">{% if o.per_decimal %}{{ o.per_decimal|bdt }}{% endif %}</td>
+          <td class="num">{% if o.fcr %}{{ o.fcr|num }}{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot><tr class="is-total"><th>{% translate "Total" %}</th><td></td><td class="num">{{ r.sales|bdt }}</td><td class="num">{{ r.cost|bdt }}</td><td class="num">{{ r.profit|bdt }}</td><td></td><td></td></tr></tfoot>
+    </table>
+    <ol class="stmt-list no-print">
+      {% for o in r.objects %}
+      <li class="stmt-item">
+        <div class="min-w-0"><p class="stmt-title">{{ o.pond.name }}</p><p class="stmt-detail">{% blocktranslate count counter=o.cycles %}{{ counter }} season{% plural %}{{ counter }} seasons{% endblocktranslate %} · {% blocktranslate with sold=o.sales|bdt cost=o.cost|bdt %}sold {{ sold }}, cost {{ cost }}{% endblocktranslate %}{% if o.fcr %} · {% blocktranslate with f=o.fcr|num %}FCR {{ f }}{% endblocktranslate %}{% endif %}</p></div>
+        <div class="stmt-amounts"><span class="{% if o.profit < 0 %}stmt-got{% else %}stmt-gave{% endif %}">{{ o.profit|bdt }}</span>{% if o.per_decimal %}<span class="stmt-detail">{% blocktranslate with amount=o.per_decimal|bdt %}{{ amount }}/decimal{% endblocktranslate %}</span>{% endif %}</div>
+      </li>
+      {% endfor %}
+    </ol>
+    {% else %}<p class="empty-text py-8 text-center">{% translate "No ponds yet." %}</p>{% endif %}
+    <p class="memo-foot">{% blocktranslate with date=today|date:"j M Y" %}Printed {{ date }}{% endblocktranslate %}</p>
+  </article>
+</div>
+{% endblock %}

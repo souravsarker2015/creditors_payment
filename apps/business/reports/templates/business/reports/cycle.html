@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{{ title }} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page stack">
+  {% include "business/reports/_head.html" %}
+  {% include "business/reports/_bar.html" %}
+  <article class="card memo stmt">
+    {% include "business/reports/_memo_head.html" %}
+    {% if r.objects %}
+    <table class="memo-table stmt-table">
+      <thead><tr><th>{% translate "Pond & season" %}</th><th class="num">{% translate "Days" %}</th><th class="num">{% translate "Fish in" %}</th><th class="num">{% translate "Harvest kg" %}</th><th class="num">{% translate "FCR" %}</th><th class="num">{% translate "Cost" %}</th><th class="num">{% translate "Sold" %}</th><th class="num">{% translate "Profit" %}</th></tr></thead>
+      <tbody>
+        {% for o in r.objects %}
+        <tr>
+          <td><span class="stmt-title"><a href="{% url 'business:cycle_detail' o.cycle.pk %}" class="hover:underline">{{ o.pond.name }}</a></span><span class="stmt-detail">{{ o.cycle.label }}{% if o.cycle.is_running %} · {% translate "running" %}{% endif %}</span></td>
+          <td class="num">{{ o.days }}</td>
+          <td class="num">{{ o.summary.stocked|num }}</td>
+          <td class="num">{{ o.summary.harvest_kg|num }}</td>
+          <td class="num">{% if o.summary.fcr %}{{ o.summary.fcr|num }}{% endif %}</td>
+          <td class="num">{{ o.summary.cost|bdt }}</td>
+          <td class="num">{{ o.summary.sales_net|bdt }}</td>
+          <td class="num {% if o.profit < 0 %}tone-critical{% endif %}">{{ o.profit|bdt }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot><tr class="is-total"><th colspan="7">{% translate "Total" %}</th><td class="num">{{ r.profit|bdt }}</td></tr></tfoot>
+    </table>
+    <ol class="stmt-list no-print">
+      {% for o in r.objects %}
+      <li class="stmt-item">
+        <div class="min-w-0"><p class="stmt-title"><a href="{% url 'business:cycle_detail' o.cycle.pk %}">{{ o.pond.name }} · {{ o.cycle.label }}</a></p>
+          <p class="stmt-detail">{% blocktranslate count counter=o.days %}{{ counter }} day{% plural %}{{ counter }} days{% endblocktranslate %}{% if o.summary.fcr %} · {% blocktranslate with f=o.summary.fcr|num %}FCR {{ f }}{% endblocktranslate %}{% endif %} · {% blocktranslate with cost=o.summary.cost|bdt %}cost {{ cost }}{% endblocktranslate %}</p></div>
+        <div class="stmt-amounts"><span class="{% if o.profit < 0 %}stmt-got{% else %}stmt-gave{% endif %}">{{ o.profit|bdt }}</span><span class="stmt-detail">{{ o.summary.sales_net|bdt }} {% translate "sold" %}</span></div>
+      </li>
+      {% endfor %}
+    </ol>
+    {% else %}<p class="empty-text py-8 text-center">{% translate "No seasons in this period." %}</p>{% endif %}
+    <p class="memo-foot">{% blocktranslate with date=today|date:"j M Y" %}Printed {{ date }}{% endblocktranslate %}</p>
+  </article>
+</div>
+{% endblock %}

@@ -7231,3 +7231,270 @@ msgstr "যাতে ওই অ্যাকাউন্টের ব্যাল
 
 msgid "other %(o)s"
 msgstr "অন্যান্য %(o)s"
+
+msgid "Business dashboard"
+msgstr "ব্যবসার ড্যাশবোর্ড"
+
+msgid "Reports"
+msgstr "রিপোর্ট"
+
+msgid "All reports"
+msgstr "সব রিপোর্ট"
+
+msgid "%(n)s sales"
+msgstr "%(n)s টি বিক্রি"
+
+msgid "1 sale"
+msgstr "১ টি বিক্রি"
+
+msgid "%(kg)s kg"
+msgstr "%(kg)s কেজি"
+
+msgid "Excel (CSV)"
+msgstr "এক্সেল (CSV)"
+
+msgid "Pond & season"
+msgstr "পুকুর ও মৌসুম"
+
+msgid "Fish in"
+msgstr "ছাড়া মাছ"
+
+msgid "running"
+msgstr "চলছে"
+
+msgid "cost %(cost)s"
+msgstr "খরচ %(cost)s"
+
+msgid "sold"
+msgstr "বিক্রি"
+
+msgid "No seasons in this period."
+msgstr "এই সময়ে কোনো মৌসুম নেই।"
+
+msgid "How the farm is doing — today, this month and this year."
+msgstr "খামার কেমন চলছে — আজ, এই মাসে আর এই বছরে।"
+
+msgid "money left"
+msgstr "থাকল"
+
+msgid "short by"
+msgstr "ঘাটতি"
+
+msgid "%(kg)s kg sold"
+msgstr "%(kg)s কেজি বিক্রি"
+
+msgid "Money in hand"
+msgstr "হাতে আছে"
+
+msgid "cash, bank and mobile together"
+msgstr "নগদ, ব্যাংক ও মোবাইল মিলিয়ে"
+
+msgid "Sold today"
+msgstr "আজকের বিক্রি"
+
+msgid "%(counter)s sale"
+msgid_plural "%(counter)s sales"
+msgstr[0] "%(counter)s টি বিক্রি"
+msgstr[1] "%(counter)s টি বিক্রি"
+
+msgid "%(kg)s kg of fish"
+msgstr "%(kg)s কেজি মাছ"
+
+msgid "from %(counter)s person"
+msgid_plural "from %(counter)s people"
+msgstr[0] "%(counter)s জনের কাছে"
+msgstr[1] "%(counter)s জনের কাছে"
+
+msgid "suppliers and others"
+msgstr "সরবরাহকারী ও অন্যান্য"
+
+msgid "%(amount)s overdue"
+msgstr "%(amount)s বকেয়া"
+
+msgid "Next instalment %(amount)s on %(date)s"
+msgstr "পরের কিস্তি %(amount)s, %(date)s তারিখে"
+
+msgid "Loans are separate from supplier baki."
+msgstr "ঋণ সরবরাহকারীর বাকি থেকে আলাদা।"
+
+msgid "Month by month"
+msgstr "মাসে মাসে"
+
+msgid "What came in against what went out."
+msgstr "কত এলো আর কত গেল।"
+
+msgid "Report"
+msgstr "রিপোর্ট"
+
+msgid "No fish sold yet this year."
+msgstr "এ বছর এখনো কোনো মাছ বিক্রি হয়নি।"
+
+msgid "Where the money goes"
+msgstr "টাকা কোথায় যাচ্ছে"
+
+msgid "Farm costs this month"
+msgstr "এই মাসে খামারের খরচ"
+
+msgid "Nothing spent yet this month."
+msgstr "এই মাসে এখনো কোনো খরচ হয়নি।"
+
+msgid "Ponds running now"
+msgstr "এখন চলছে যে পুকুরগুলো"
+
+msgid "Days gone, what's been spent, and what it's sold."
+msgstr "কত দিন গেল, কত খরচ হলো, আর কত বিক্রি হলো।"
+
+msgid "%(n)s fish"
+msgstr "%(n)s টি মাছ"
+
+msgid "spent"
+msgstr "খরচ"
+
+msgid "Nobody owes anything either way."
+msgstr "কোনো দিকেই কোনো বাকি নেই।"
+
+msgid "Feed eaten in this period"
+msgstr "এই সময়ে খাওয়ানো খাবার"
+
+msgid "bought %(b)s kg · eaten %(u)s kg"
+msgstr "কেনা %(b)s কেজি · খাওয়ানো %(u)s কেজি"
+
+msgid "eaten"
+msgstr "খাওয়ানো"
+
+msgid "No feed bought or eaten in this period."
+msgstr "এই সময়ে কোনো খাবার কেনা বা খাওয়ানো হয়নি।"
+
+msgid "Pick a report, choose the dates, then print it or save it for Excel."
+msgstr "রিপোর্ট বাছুন, তারিখ ঠিক করুন, তারপর প্রিন্ট করুন বা এক্সেলের জন্য সেভ করুন।"
+
+msgid "No sales in this period."
+msgstr "এই সময়ে কোনো বিক্রি নেই।"
+
+msgid "By buyer"
+msgstr "ক্রেতা অনুযায়ী"
+
+msgid "Who buys the most from you."
+msgstr "আপনার কাছ থেকে কে সবচেয়ে বেশি কেনে।"
+
+msgid "%(counter)s season"
+msgid_plural "%(counter)s seasons"
+msgstr[0] "%(counter)s টি মৌসুম"
+msgstr[1] "%(counter)s টি মৌসুম"
+
+msgid "sold %(sold)s, cost %(cost)s"
+msgstr "বিক্রি %(sold)s, খরচ %(cost)s"
+
+msgid "FCR %(f)s"
+msgstr "এফসিআর %(f)s"
+
+msgid "%(amount)s/decimal"
+msgstr "%(amount)s/শতাংশ"
+
+msgid "No ponds yet."
+msgstr "এখনো কোনো পুকুর নেই।"
+
+msgid "%(from)s – %(to)s"
+msgstr "%(from)s – %(to)s"
+
+msgid "Pond profit & loss"
+msgstr "পুকুরের লাভ-লোকসান"
+
+msgid "Every pond: what it cost, what it sold, what it made."
+msgstr "প্রতিটি পুকুর: কত খরচ, কত বিক্রি, কত লাভ।"
+
+msgid "Season by season"
+msgstr "মৌসুম অনুযায়ী"
+
+msgid "Each batch with its FCR, cost and result."
+msgstr "প্রতিটি ব্যাচের এফসিআর, খরচ ও ফলাফল।"
+
+msgid "Sales by fish"
+msgstr "মাছ অনুযায়ী বিক্রি"
+
+msgid "Which fish brings in the most money."
+msgstr "কোন মাছে সবচেয়ে বেশি টাকা আসে।"
+
+msgid "Sales by market"
+msgstr "বাজার অনুযায়ী বিক্রি"
+
+msgid "Which aarot or buyer you sell most through."
+msgstr "কোন আড়ত বা ক্রেতার মাধ্যমে সবচেয়ে বেশি বিক্রি।"
+
+msgid "Feed use"
+msgstr "খাবারের হিসাব"
+
+msgid "Bought against eaten, and what it cost."
+msgstr "কত কেনা হলো, কত খাওয়ানো হলো, আর খরচ কত।"
+
+msgid "Baki & ageing"
+msgstr "বাকি ও কতদিনের"
+
+msgid "Who owes you, whom you owe, and for how long."
+msgstr "কার কাছে পাওনা, কার কাছে দেনা, আর কতদিন ধরে।"
+
+msgid "Everything in and out, by category."
+msgstr "খাত অনুযায়ী সব জমা ও খরচ।"
+
+msgid "Seasons"
+msgstr "মৌসুম"
+
+msgid "Per decimal"
+msgstr "প্রতি শতাংশে"
+
+msgid "Feed kg"
+msgstr "খাবার (কেজি)"
+
+msgid "Harvest kg"
+msgstr "আহরণ (কেজি)"
+
+msgid "FCR"
+msgstr "এফসিআর"
+
+msgid "Season"
+msgstr "মৌসুম"
+
+msgid "Started"
+msgstr "শুরু"
+
+msgid "Days"
+msgstr "দিন"
+
+msgid "Fish put in"
+msgstr "ছাড়া মাছ"
+
+msgid "Alive"
+msgstr "বেঁচে আছে"
+
+msgid "Sold for"
+msgstr "বিক্রি হয়েছে"
+
+msgid "Share"
+msgstr "অংশ"
+
+msgid "Sales"
+msgstr "বিক্রি"
+
+msgid "Bought kg"
+msgstr "কেনা (কেজি)"
+
+msgid "Bought for"
+msgstr "কেনার দাম"
+
+msgid "Eaten kg"
+msgstr "খাওয়ানো (কেজি)"
+
+msgid "Feed cost"
+msgstr "খাবারের খরচ"
+
+msgid "Per kg"
+msgstr "প্রতি কেজি"
+
+msgid "They owe"
+msgstr "তাদের কাছে পাওনা"
+
+msgid "Oldest days"
+msgstr "সবচেয়ে পুরোনো (দিন)"
+
+msgid "In or out"
+msgstr "জমা না খরচ"

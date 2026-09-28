@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% translate "Business dashboard" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "Business dashboard" %}</h1>
+      <p class="page-subtitle">{% translate "How the farm is doing — today, this month and this year." %}</p>
+    </div>
+    <div class="page-actions">
+      <a href="{% url 'business:reports' %}" class="btn btn-secondary">{% include "partials/icon.html" with name="list" %}{% translate "Reports" %}</a>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="min-w-0">
+        <p class="hero-label">{% translate "This month" %} · {% if d.month.profit >= 0 %}{% translate "money left" %}{% else %}{% translate "short by" %}{% endif %}</p>
+        <p class="hero-value">{{ d.month.profit|absolute|bdt }}</p>
+        <p class="hero-sub">{% blocktranslate with income=d.month.income|bdt expense=d.month.expense|bdt %}{{ income }} came in · {{ expense }} went out{% endblocktranslate %}{% if d.month.kg %} · {% blocktranslate with kg=d.month.kg|num %}{{ kg }} kg sold{% endblocktranslate %}{% endif %}</p>
+      </div>
+      {% if d.in_hand is not None %}
+      <a href="{% url 'business:accounts' %}" class="loan-hero-next">
+        <span class="loan-hero-next-label">{% translate "Money in hand" %}</span>
+        <strong>{{ d.in_hand|bdt }}</strong>
+        <span class="loan-hero-next-sub">{% translate "cash, bank and mobile together" %}</span>
+      </a>
+      {% endif %}
+    </div>
+  </section>
+
+  <dl class="stat-grid">
+    <div class="stat" data-tone="good"><dt class="stat-label">{% translate "Sold today" %}</dt><dd class="stat-value">{{ d.today.income|bdt }}</dd><dd class="stat-hint">{% blocktranslate count counter=d.today.sale_count %}{{ counter }} sale{% plural %}{{ counter }} sales{% endblocktranslate %}</dd></div>
+    <div class="stat" data-tone="accent"><dt class="stat-label">{% translate "This year" %}</dt><dd class="stat-value">{{ d.year.income|bdt }}</dd><dd class="stat-hint">{% blocktranslate with kg=d.year.kg|num %}{{ kg }} kg of fish{% endblocktranslate %}</dd></div>
+    {% if d.baki %}
+    <a href="{% url 'business:dues' %}?side=receive" class="stat" data-tone="good" style="--tone: var(--status-good)"><p class="stat-label">{% translate "To collect" %}</p><p class="stat-value">{{ d.baki.receivable|bdt }}</p><p class="stat-hint">{% blocktranslate count counter=d.baki.receivable_count %}from {{ counter }} person{% plural %}from {{ counter }} people{% endblocktranslate %}</p></a>
+    <a href="{% url 'business:dues' %}?side=pay" class="stat" data-tone="critical" style="--tone: var(--status-critical)"><p class="stat-label">{% translate "To pay" %}</p><p class="stat-value">{{ d.baki.payable|bdt }}</p><p class="stat-hint">{% translate "suppliers and others" %}</p></a>
+    {% endif %}
+  </dl>
+
+  {% if d.loans and d.loans.count %}
+  <a href="{% url 'business:loans' %}" class="callout" data-tone="{% if d.loans.overdue %}critical{% else %}info{% endif %}">
+    {% include "business/partials/icon.html" with name="banknotes" %}
+    <div class="flex-1"><p class="callout-title">{% blocktranslate with amount=d.loans.outstanding|bdt count counter=d.loans.count %}{{ amount }} still owed on {{ counter }} loan{% plural %}{{ amount }} still owed on {{ counter }} loans{% endblocktranslate %}</p>
+    <p>{% if d.loans.overdue %}{% blocktranslate with amount=d.loans.overdue|bdt %}{{ amount }} overdue{% endblocktranslate %}{% elif d.loans.next %}{% blocktranslate with date=d.loans.next.0.due|date:"j M" amount=d.loans.next.0.remaining|bdt %}Next instalment {{ amount }} on {{ date }}{% endblocktranslate %}{% else %}{% translate "Loans are separate from supplier baki." %}{% endif %}</p></div>
+    {% include "partials/icon.html" with name="chevron-right" %}
+  </a>
+  {% endif %}
+
+  {% if d.low_feed %}
+  <div class="callout" data-tone="warn">{% include "partials/icon.html" with name="alert" %}<div class="flex-1"><p class="callout-title">{% translate "Feed running low" %}</p><p>{% for r in d.low_feed %}{{ r.product }}: {% blocktranslate with n=r.left_bags|num %}{{ n }} bags{% endblocktranslate %}{% if not forloop.last %} · {% endif %}{% endfor %}</p></div><a href="{% url 'business:feed_purchases_add' %}" class="btn btn-soft btn-sm">{% translate "Buy feed" %}</a></div>
+  {% endif %}
+
+  <section class="card">
+    <div class="card-header">
+      <div><h2 class="card-title">{% translate "Month by month" %}</h2><p class="card-subtitle">{% translate "What came in against what went out." %}</p></div>
+    </div>
+    <div class="card-body"><div class="chart-box"><canvas id="trendChart"></canvas></div></div>
+  </section>
+
+  <div class="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
+    <section class="card">
+      <div class="card-header">
+        <div><h2 class="card-title">{% translate "Sales by fish" %}</h2><p class="card-subtitle">{% translate "This year" %}</p></div>
+        <a href="{% url 'business:report' 'species' %}?period=year" class="btn btn-ghost btn-sm">{% translate "Report" %}{% include "partials/icon.html" with name="arrow-right" %}</a>
+      </div>
+      {% if d.by_species %}
+      <div class="card-body">
+        <div class="breakdown"><div class="chart-box"><canvas id="speciesChart"></canvas></div>{% include "business/partials/ranked_list.html" with rows=d.by_species %}</div>
+      </div>
+      {% else %}<div class="card-body"><p class="help">{% translate "No fish sold yet this year." %}</p></div>{% endif %}
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <div><h2 class="card-title">{% translate "Where the money goes" %}</h2><p class="card-subtitle">{% translate "Farm costs this month" %}</p></div>
+        <a href="{% url 'business:statement' %}" class="btn btn-ghost btn-sm">{% translate "Details" %}{% include "partials/icon.html" with name="arrow-right" %}</a>
+      </div>
+      {% if d.expenses %}
+      <div class="card-body">
+        <div class="breakdown"><div class="chart-box"><canvas id="expenseChart"></canvas></div>{% include "business/partials/ranked_list.html" with rows=d.expenses %}</div>
+      </div>
+      {% else %}<div class="card-body"><p class="help">{% translate "Nothing spent yet this month." %}</p></div>{% endif %}
+    </section>
+  </div>
+
+  {% if d.running %}
+  <section class="card">
+    <div class="card-header">
+      <div><h2 class="card-title">{% translate "Ponds running now" %}</h2><p class="card-subtitle">{% translate "Days gone, what's been spent, and what it's sold." %}</p></div>
+      <a href="{% url 'business:report' 'cycle' %}" class="btn btn-ghost btn-sm">{% translate "Report" %}{% include "partials/icon.html" with name="arrow-right" %}</a>
+    </div>
+    <ul class="ledger">
+      {% for r in d.running %}
+      <li class="ledger-row">
+        <span class="ledger-icon" data-tone="accent">{% include "business/partials/icon.html" with name="fish" %}</span>
+        <div class="ledger-main">
+          <p class="ledger-title"><a href="{% url 'business:cycle_detail' r.cycle.pk %}" class="hover:underline">{{ r.pond.name }} · {{ r.cycle.label }}</a></p>
+          <p class="ledger-meta">{% blocktranslate count counter=r.days %}day {{ counter }}{% plural %}day {{ counter }}{% endblocktranslate %}{% if r.summary.alive %} · {% blocktranslate with n=r.summary.alive|num %}{{ n }} fish{% endblocktranslate %}{% endif %}{% if r.summary.fcr %} · {% blocktranslate with f=r.summary.fcr|num %}FCR {{ f }}{% endblocktranslate %}{% endif %}</p>
+        </div>
+        <div class="ledger-end">
+          <span class="party-bal"><strong>{{ r.summary.cost|bdt }}</strong><span>{% translate "spent" %}</span></span>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% if d.accounts %}
+  <section class="card">
+    <div class="card-header">
+      <div><h2 class="card-title">{% translate "Accounts" %}</h2></div>
+      <a href="{% url 'business:accounts' %}" class="btn btn-ghost btn-sm">{% translate "View all" %}{% include "partials/icon.html" with name="arrow-right" %}</a>
+    </div>
+    <ul class="ledger">
+      {% for a in d.accounts %}
+      <li class="ledger-row">
+        <span class="ledger-icon" data-tone="{% if a.kind == 'cash' %}good{% elif a.kind == 'bank' %}info{% elif a.kind == 'mobile' %}accent{% else %}muted{% endif %}">{% if a.kind == 'bank' %}{% include "business/partials/icon.html" with name="bank" %}{% elif a.kind == 'mobile' %}{% include "partials/icon.html" with name="phone" %}{% else %}{% include "partials/icon.html" with name="wallet" %}{% endif %}</span>
+        <div class="ledger-main"><p class="ledger-title"><a href="{% url 'business:account_detail' a.pk %}" class="hover:underline">{{ a.name }}</a></p><p class="ledger-meta">{{ a.get_kind_display }}</p></div>
+        <div class="ledger-end"><span class="ledger-amount" {% if a.now < 0 %}data-tone="critical" style="--tone: var(--status-critical)"{% endif %}>{{ a.now|bdt }}</span></div>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+<script src="{% asset 'js/charts.js' %}"></script>
+<script>
+  renderTrendChart({
+    canvasId: 'trendChart',
+    labels: [{% for m in d.trend %}"{{ m.label|escapejs }}",{% endfor %}],
+    datasets: [
+      { label: '{% translate "Came in"|escapejs %}', data: [{% for m in d.trend %}{{ m.income|stringformat:"f" }},{% endfor %}] },
+      { label: '{% translate "Went out"|escapejs %}', data: [{% for m in d.trend %}{{ m.expense|stringformat:"f" }},{% endfor %}] }
+    ]
+  });
+  {% if d.by_species %}
+  renderDistributionChart({
+    canvasId: 'speciesChart', showLegend: false,
+    labels: [{% for r in d.by_species %}"{{ r.label|escapejs }}",{% endfor %}],
+    data: [{% for r in d.by_species %}{{ r.value|stringformat:"f" }},{% endfor %}],
+    centerLabel: '{% translate "Sold"|escapejs %}'
+  });
+  {% endif %}
+  {% if d.expenses %}
+  renderDistributionChart({
+    canvasId: 'expenseChart', showLegend: false,
+    labels: [{% for r in d.expenses %}"{{ r.label|escapejs }}",{% endfor %}],
+    data: [{% for r in d.expenses %}{{ r.value|stringformat:"f" }},{% endfor %}],
+    centerLabel: '{% translate "Spent"|escapejs %}'
+  });
+  {% endif %}
+</script>
+{% endblock %}

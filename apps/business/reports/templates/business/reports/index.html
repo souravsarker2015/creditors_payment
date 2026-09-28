@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% translate "Reports" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "Reports" %}</h1>
+      <p class="page-subtitle">{% translate "Pick a report, choose the dates, then print it or save it for Excel." %}</p>
+    </div>
+    <div class="page-actions"><a href="{% url 'business:dashboard' %}" class="btn btn-secondary">{% include "business/partials/icon.html" with name="home" %}{% translate "Dashboard" %}</a></div>
+  </header>
+
+  <div class="tile-grid">
+    {% for r in reports %}
+    <a href="{{ r.url }}?{{ period.query }}" class="tile">
+      <span class="tile-icon">{% include "business/partials/icon.html" with name=r.icon %}</span>
+      <span class="tile-body"><strong class="tile-title">{{ r.title }}</strong><span class="tile-text">{{ r.text }}</span></span>
+      {% include "partials/icon.html" with name="chevron-right" %}
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

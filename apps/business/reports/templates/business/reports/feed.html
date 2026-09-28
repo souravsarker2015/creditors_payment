@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{{ title }} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-narrow stack">
+  {% include "business/reports/_head.html" %}
+  {% include "business/reports/_bar.html" %}
+  <article class="card memo stmt">
+    {% include "business/reports/_memo_head.html" %}
+    {% if r.objects %}
+    <table class="memo-table stmt-table">
+      <thead><tr><th>{% translate "Feed" %}</th><th class="num">{% translate "Bought kg" %}</th><th class="num">{% translate "Bought for" %}</th><th class="num">{% translate "Eaten kg" %}</th><th class="num">{% translate "Feed cost" %}</th><th class="num">{% translate "Per kg" %}</th></tr></thead>
+      <tbody>
+        {% for o in r.objects %}
+        <tr>
+          <td><span class="stmt-title">{{ o.product.name }}</span>{% if o.product.brand %}<span class="stmt-detail">{{ o.product.brand }}</span>{% endif %}</td>
+          <td class="num">{{ o.bought_kg|num }}</td>
+          <td class="num">{{ o.bought_amount|bdt }}</td>
+          <td class="num">{{ o.used_kg|num }}</td>
+          <td class="num">{{ o.used_cost|bdt }}</td>
+          <td class="num">{% if o.rate %}{{ o.rate|bdt }}{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot><tr class="is-total"><th colspan="4">{% translate "Feed eaten in this period" %}</th><td class="num">{{ r.used_cost|bdt }}</td><td></td></tr></tfoot>
+    </table>
+    <ol class="stmt-list no-print">
+      {% for o in r.objects %}
+      <li class="stmt-item">
+        <div class="min-w-0"><p class="stmt-title">{{ o.product.name }}</p><p class="stmt-detail">{% blocktranslate with b=o.bought_kg|num u=o.used_kg|num %}bought {{ b }} kg · eaten {{ u }} kg{% endblocktranslate %}</p></div>
+        <div class="stmt-amounts"><span class="stmt-run">{{ o.used_cost|bdt }}</span><span class="stmt-detail">{% translate "eaten" %}</span></div>
+      </li>
+      {% endfor %}
+    </ol>
+    {% else %}<p class="empty-text py-8 text-center">{% translate "No feed bought or eaten in this period." %}</p>{% endif %}
+    <p class="memo-foot">{% blocktranslate with date=today|date:"j M Y" %}Printed {{ date }}{% endblocktranslate %}</p>
+  </article>
+</div>
+{% endblock %}

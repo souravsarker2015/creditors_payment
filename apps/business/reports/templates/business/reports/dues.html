@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{{ title }} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page stack">
+  {% include "business/reports/_head.html" %}
+  <dl class="stat-grid no-print">
+    <div class="stat" data-tone="good"><dt class="stat-label">{% translate "To collect" %}</dt><dd class="stat-value">{{ r.receivable|bdt }}</dd></div>
+    <div class="stat" data-tone="critical"><dt class="stat-label">{% translate "To pay" %}</dt><dd class="stat-value">{{ r.payable|bdt }}</dd></div>
+  </dl>
+  <article class="card memo stmt">
+    {% include "business/reports/_memo_head.html" %}
+    {% if r.objects %}
+    <table class="memo-table stmt-table">
+      <thead><tr><th>{% translate "Name" %}</th><th class="num">{% translate "They owe" %}</th><th class="num">{% translate "You owe" %}</th>{% for label in r.bucket_labels %}<th class="num">{{ label }}</th>{% endfor %}</tr></thead>
+      <tbody>
+        {% for led in r.objects %}
+        <tr>
+          <td><span class="stmt-title"><a href="{% url 'business:party_statement' led.party.pk %}" class="hover:underline">{{ led.party.name }}</a></span>{% if led.party.phone %}<span class="stmt-detail">{{ led.party.phone }}</span>{% endif %}</td>
+          <td class="num">{% if led.balance > 0 %}{{ led.balance|bdt }}{% endif %}</td>
+          <td class="num">{% if led.balance < 0 %}{{ led.balance|absolute|bdt }}{% endif %}</td>
+          {% for amount in led.buckets %}<td class="num">{% if amount %}{{ amount|bdt }}{% endif %}</td>{% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot><tr class="is-total"><th>{% translate "Total" %}</th><td class="num">{{ r.receivable|bdt }}</td><td class="num">{{ r.payable|bdt }}</td><td colspan="4"></td></tr></tfoot>
+    </table>
+    <ol class="stmt-list no-print">
+      {% for led in r.objects %}
+      <li class="stmt-item">
+        <div class="min-w-0"><p class="stmt-title"><a href="{% url 'business:party_statement' led.party.pk %}">{{ led.party.name }}</a></p>
+          <p class="stmt-detail">{% if led.oldest_days is not None %}{% blocktranslate count counter=led.oldest_days %}oldest {{ counter }} day{% plural %}oldest {{ counter }} days{% endblocktranslate %}{% endif %}</p></div>
+        <div class="stmt-amounts"><span class="{% if led.balance > 0 %}stmt-gave{% else %}stmt-got{% endif %}">{{ led.amount|bdt }}</span><span class="stmt-detail">{% if led.balance > 0 %}{% translate "owes you" %}{% else %}{% translate "you owe" %}{% endif %}</span></div>
+      </li>
+      {% endfor %}
+    </ol>
+    {% else %}<p class="empty-text py-8 text-center">{% translate "Nobody owes anything either way." %}</p>{% endif %}
+    <p class="memo-foot">{% blocktranslate with date=today|date:"j M Y" %}Printed {{ date }}{% endblocktranslate %}</p>
+  </article>
+</div>
+{% endblock %}

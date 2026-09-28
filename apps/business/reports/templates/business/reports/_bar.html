@@ -1,0 +1,11 @@
+{% load i18n %}{% comment %}Period picker shared by every report.{% endcomment %}
+<div class="master-bar no-print">
+  <nav class="seg seg-scroll" aria-label="{% translate 'Period' %}">
+    {% for key, label, s, e in periods %}<a href="?period={{ key }}{% if r.scope %}&scope={{ r.scope }}{% endif %}" class="seg-item {% if period.key == key %}is-active{% endif %}">{{ label }}</a>{% endfor %}
+  </nav>
+  <form method="get" class="stmt-range">
+    <input type="text" name="from" value="{{ period.start|date:'Y-m-d' }}" class="form-input input-compact datepicker" autocomplete="off" placeholder="{% translate 'From' %}" aria-label="{% translate 'From' %}" onchange="this.form.submit()">
+    <span aria-hidden="true">–</span>
+    <input type="text" name="to" value="{{ period.end|date:'Y-m-d' }}" class="form-input input-compact datepicker" autocomplete="off" placeholder="{% translate 'To' %}" aria-label="{% translate 'To' %}" onchange="this.form.submit()">
+  </form>
+</div>

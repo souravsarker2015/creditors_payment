@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{{ title }} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-narrow stack">
+  {% include "business/reports/_head.html" %}
+  <nav class="seg seg-scroll no-print" aria-label="{% translate 'Whose money' %}">
+    {% for value, label in r.scopes %}<a href="?{{ period.query }}&scope={{ value }}" class="seg-item {% if r.scope == value %}is-active{% endif %}">{{ label }}</a>{% endfor %}
+  </nav>
+  {% include "business/reports/_bar.html" %}
+  <article class="card memo stmt">
+    {% include "business/reports/_memo_head.html" %}
+    {% if r.s.income or r.s.expense %}
+    <div class="fin-cols">
+      <section>
+        <h3 class="fin-head" data-tone="good">{% translate "Money in" %}<strong>{{ r.s.total_income|bdt }}</strong></h3>
+        <ul class="fin-list">
+          {% for l in r.s.income %}
+          <li class="fin-line">
+            <div class="fin-line-top"><span class="fin-name">{% if l.url %}<a href="{{ l.url }}" class="hover:underline">{{ l.label }}</a>{% else %}{{ l.label }}{% endif %}</span><span class="fin-amount">{{ l.amount|bdt }}</span></div>
+            <div class="meter" data-tone="good"><span style="width: {% widthratio l.amount r.max_income 100 %}%"></span></div>
+            {% if l.has_children %}<ul class="fin-kids">{% for c in l.children %}<li><span>{{ c.label }}</span><span>{{ c.amount|bdt }}</span></li>{% endfor %}</ul>{% endif %}
+          </li>
+          {% empty %}<li class="fin-empty">{% translate "Nothing came in." %}</li>
+          {% endfor %}
+        </ul>
+      </section>
+      <section>
+        <h3 class="fin-head" data-tone="critical">{% translate "Money out" %}<strong>{{ r.s.total_expense|bdt }}</strong></h3>
+        <ul class="fin-list">
+          {% for l in r.s.expense %}
+          <li class="fin-line">
+            <div class="fin-line-top"><span class="fin-name">{% if l.url %}<a href="{{ l.url }}" class="hover:underline">{{ l.label }}</a>{% else %}{{ l.label }}{% endif %}</span><span class="fin-amount">{{ l.amount|bdt }}</span></div>
+            <div class="meter" data-tone="critical"><span style="width: {% widthratio l.amount r.max_expense 100 %}%"></span></div>
+            {% if l.has_children %}<ul class="fin-kids">{% for c in l.children %}<li><span>{{ c.label }}</span><span>{{ c.amount|bdt }}</span></li>{% endfor %}</ul>{% endif %}
+          </li>
+          {% empty %}<li class="fin-empty">{% translate "Nothing went out." %}</li>
+          {% endfor %}
+        </ul>
+      </section>
+    </div>
+    <dl class="fin-total" data-tone="{% if r.s.profit >= 0 %}good{% else %}critical{% endif %}">
+      <dt>{% if r.s.profit >= 0 %}{% translate "Money left" %}{% else %}{% translate "Short by" %}{% endif %}</dt>
+      <dd>{{ r.s.profit|absolute|bdt }}</dd>
+    </dl>
+    {% else %}<p class="empty-text py-8 text-center">{% translate "Nothing in this period." %}</p>{% endif %}
+    <p class="memo-foot">{% blocktranslate with date=today|date:"j M Y" %}Printed {{ date }}{% endblocktranslate %}</p>
+  </article>
+</div>
+{% endblock %}

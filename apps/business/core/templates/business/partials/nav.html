@@ -6,6 +6,11 @@
     {% include "business/partials/icon.html" with name="home" %}{% translate "Dashboard" %}
   </a>
   {% if business %}
+  {% if biz_can.view_reports %}
+  <a href="{% url 'business:dashboard' %}" class="nav-link {% if p == '/business/insights/' %}is-active{% endif %}">
+    {% include "business/partials/icon.html" with name="scale" %}{% translate "Business dashboard" %}
+  </a>
+  {% endif %}
   <a href="{% url 'business:ponds' %}" class="nav-link {% if '/business/ponds/' in p %}is-active{% endif %}">
     {% include "business/partials/icon.html" with name="fish" %}{% translate "Ponds" %}
   </a>
@@ -57,6 +62,15 @@
   </a>
   <a href="{% url 'business:accounts' %}" class="nav-link {% if '/business/finance/accounts/' in p or '/business/finance/transfer/' in p %}is-active{% endif %}">
     {% include "partials/icon.html" with name="wallet" %}{% translate "Accounts" %}
+  </a>
+</div>
+{% endif %}
+
+{% if biz_can.view_reports %}
+<div class="space-y-0.5">
+  <p class="nav-section-label">{% translate "Reports" %}</p>
+  <a href="{% url 'business:reports' %}" class="nav-link {% if '/business/insights/reports' in p %}is-active{% endif %}">
+    {% include "partials/icon.html" with name="list" %}{% translate "All reports" %}
   </a>
 </div>
 {% endif %}
