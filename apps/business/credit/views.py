@@ -9,6 +9,7 @@ from django.db.models import Count, Q, Sum
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.formats import date_format
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
@@ -133,7 +134,7 @@ def follow_up_view(request, pk):
         if form.is_valid():
             form.save()
             if party.follow_up_on:
-                messages.success(request, _("You'll be reminded on %(date)s.") % {"date": f"{party.follow_up_on:%d %b %Y}"})
+                messages.success(request, _("You'll be reminded on %(date)s.") % {"date": date_format(party.follow_up_on, "j M Y")})
         else:
             messages.error(request, _("Please check the date."))
     return redirect("business:party_statement", party.pk)
@@ -147,7 +148,7 @@ def _payment_data(business, form, payment=None):
     ledgers = services.build(business)
     data = {}
     for pk, led in ledgers.items():
-        bills = [{"key": f"{e.kind}:{e.pk}", "title": e.title, "detail": e.detail, "date": e.date.strftime("%d %b %Y"),
+        bills = [{"key": f"{e.kind}:{e.pk}", "title": e.title, "detail": e.detail, "date": date_format(e.date, "j M Y"),
                   "open": str(e.open), "days": (date.today() - e.date).days}
                  for e in led.open_items if e.kind in ("sale", "feed", "stocking")]
         balance = led.balance

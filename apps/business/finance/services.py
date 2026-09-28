@@ -183,8 +183,12 @@ class Statement:
         return round(self.profit * 100 / self.total_income) if self.total_income else None
 
 
-def statement(business, start, end, scope=Scope.BUSINESS, cycle=None):
+def statement(business, start, end, scope=Scope.BUSINESS, cycle=None, cache=None):
     """What came in and what went out between two dates.
+
+    A page that asks for several periods at once (the dashboard asks for nine)
+    can pass a dict as `cache`, so the feed prices and category names are
+    looked up once instead of once per period.
 
     The farm's own income and costs come from the documents (sales, feed,
     fingerlings, loan interest); household and personal spending come from the
@@ -210,7 +214,7 @@ def statement(business, start, end, scope=Scope.BUSINESS, cycle=None):
             used = FeedUsage.objects.filter(business=business, cycle__is_deleted=False, **in_range)
             if cycle is not None:
                 used = used.filter(cycle=cycle)
-            prices = cost_per_kg(business)
+            prices = cost_per_kg(business, cache=cache.setdefault("prices", {}) if cache is not None else None)
             total = sum((u.kg * prices.get(u.product_id, ZERO) for u in used), ZERO)
             if total:
                 s.expense.append(Line("feed", _("Feed used"), total.quantize(Decimal("0.01")), reverse("business:feed_stock")))
@@ -238,7 +242,12 @@ def statement(business, start, end, scope=Scope.BUSINESS, cycle=None):
     for t in rows:
         main = t.category.parent or t.category
         groups[(t.category.type, main.pk, main.display_name)][t.category.pk] += t.amount
-    names = {c.pk: c.display_name for c in Category.all_objects.filter(business=business)}
+    if cache is not None and "names" in cache:
+        names = cache["names"]
+    else:
+        names = {c.pk: c.display_name for c in Category.all_objects.filter(business=business)}
+        if cache is not None:
+            cache["names"] = names
     for (type_, main_pk, main_name), children in sorted(groups.items(), key=lambda kv: -sum(kv[1].values())):
         line = Line(f"cat{main_pk}", main_name, sum(children.values(), ZERO),
                     reverse("business:transactions") + f"?category={main_pk}")
@@ -250,8 +259,18 @@ def statement(business, start, end, scope=Scope.BUSINESS, cycle=None):
     return s
 
 
-def cycle_costs(cycle):
-    """Farm costs typed in against one pond season (labour, medicine…)."""
+def cycle_costs(cycle, cache=None):
+    """Farm costs typed in against one pond season (labour, medicine…).
+
+    With a `cache` dict, every season's costs are fetched in one query the
+    first time, so a report of many ponds doesn't ask once per pond.
+    """
+    if cache is not None:
+        if "cycle_costs" not in cache:
+            rows = (Transaction.objects.filter(business=cycle.business, cycle__isnull=False, category__type=CategoryType.EXPENSE)
+                    .values("cycle_id").annotate(t=Sum("amount")))
+            cache["cycle_costs"] = {r["cycle_id"]: r["t"] for r in rows}
+        return cache["cycle_costs"].get(cycle.pk, ZERO)
     return Transaction.objects.filter(business=cycle.business, cycle=cycle, category__type=CategoryType.EXPENSE
                                       ).aggregate(t=Sum("amount"))["t"] or ZERO
 

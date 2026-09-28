@@ -10,11 +10,20 @@ from .models import FeedProduct, FeedPurchaseLine, FeedUsage
 ZERO = Decimal(0)
 
 
-def cost_per_kg(business):
-    """Average price paid per kg, per feed (from purchase lines)."""
+def cost_per_kg(business, cache=None):
+    """Average price paid per kg, per feed (from purchase lines).
+
+    Reports ask for this once per pond season, so pass a dict as `cache` to
+    work it out once for the whole page.
+    """
+    if cache is not None and business.pk in cache:
+        return cache[business.pk]
     rows = (FeedPurchaseLine.objects.filter(business=business, purchase__is_deleted=False)
             .values("product_id").annotate(amount=Sum("amount"), kg=Sum("kg")))
-    return {r["product_id"]: (r["amount"] / r["kg"]) for r in rows if r["kg"]}
+    prices = {r["product_id"]: (r["amount"] / r["kg"]) for r in rows if r["kg"]}
+    if cache is not None:
+        cache[business.pk] = prices
+    return prices
 
 
 @dataclass

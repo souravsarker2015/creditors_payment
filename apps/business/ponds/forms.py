@@ -1,6 +1,7 @@
 from datetime import date
 
 from django import forms
+from django.utils.formats import date_format
 from django.utils.translation import gettext_lazy as _
 
 from apps.business.core.crud import BusinessForm, money_field
@@ -102,7 +103,7 @@ class EntryForm(BusinessForm):
     def clean_date(self):
         d = self.cleaned_data["date"]
         if self.cycle and d < self.cycle.start_date:
-            raise forms.ValidationError(_("This is before the cycle started (%(date)s).") % {"date": self.cycle.start_date.strftime("%d %b %Y")})
+            raise forms.ValidationError(_("This is before the cycle started (%(date)s).") % {"date": date_format(self.cycle.start_date, "j M Y")})
         if d > date.today():
             raise forms.ValidationError(_("This date is in the future."))
         return d

@@ -7498,3 +7498,12 @@ msgstr "সবচেয়ে পুরোনো (দিন)"
 
 msgid "In or out"
 msgstr "জমা না খরচ"
+
+msgid "Fish sold this year"
+msgstr "এ বছর মাছ বিক্রি"
+
+msgid "plus %(amount)s other income"
+msgstr "সঙ্গে অন্যান্য আয় %(amount)s"
+
+msgid "(no unit set)"
+msgstr "(একক ঠিক করা নেই)"

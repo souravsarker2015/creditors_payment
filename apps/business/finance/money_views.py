@@ -10,6 +10,7 @@ from django.db.models import Q, Sum
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.formats import date_format
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
@@ -219,7 +220,7 @@ def statement_view(request):
     else:
         period = "month"
         start, end = month, min(_month_end(month), today)
-        label = f"{month:%B %Y}"
+        label = date_format(month, "F Y")
     s = services.statement(b, start, end, scope=scope)
     return render(request, "business/finance/statement.html", {
         "s": s, "scope": scope, "scopes": Scope.choices, "period": period, "label": label, "month": month,
@@ -258,7 +259,7 @@ def budget_edit_view(request):
     form = BudgetForm(request.POST or None, business=b, month=month)
     if request.method == "POST" and form.is_valid():
         kept = form.save()
-        messages.success(request, _("Budget saved for %(month)s: %(n)s categories.") % {"month": f"{month:%B %Y}", "n": kept})
+        messages.success(request, _("Budget saved for %(month)s: %(n)s categories.") % {"month": date_format(month, "F Y"), "n": kept})
         return redirect(reverse("business:budget") + f"?month={month:%Y-%m}")
     return render(request, "business/finance/budget_form.html", {
         "form": form, "month": month, "back": reverse("business:budget") + f"?month={month:%Y-%m}",
@@ -278,9 +279,9 @@ def budget_copy_view(request):
                 Budget.objects.create(business=b, category=old.category, month=month, amount=old.amount)
                 made += 1
     if made:
-        messages.success(request, _("Copied %(n)s budgets from %(month)s.") % {"n": made, "month": f"{source:%B %Y}"})
+        messages.success(request, _("Copied %(n)s budgets from %(month)s.") % {"n": made, "month": date_format(source, "F Y")})
     else:
-        messages.info(request, _("Nothing to copy from %(month)s.") % {"month": f"{source:%B %Y}"})
+        messages.info(request, _("Nothing to copy from %(month)s.") % {"month": date_format(source, "F Y")})
     return redirect(reverse("business:budget") + f"?month={month:%Y-%m}")
 
 
@@ -326,7 +327,7 @@ def recurring_skip_view(request, pk):
     r = get_object_or_404(RecurringTransaction, pk=pk, business=request.business)
     when = r.next_due
     _advance(r, date.today())
-    messages.success(request, _("Skipped %(name)s for %(date)s.") % {"name": r.name, "date": f"{when:%d %b %Y}"} if when
+    messages.success(request, _("Skipped %(name)s for %(date)s.") % {"name": r.name, "date": date_format(when, "j M Y")} if when
                      else _("Skipped %(name)s.") % {"name": r.name})
     return redirect(request.POST.get("next") or "business:recurring")
 

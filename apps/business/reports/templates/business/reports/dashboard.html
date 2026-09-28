@@ -32,7 +32,7 @@
 
   <dl class="stat-grid">
     <div class="stat" data-tone="good"><dt class="stat-label">{% translate "Sold today" %}</dt><dd class="stat-value">{{ d.today.income|bdt }}</dd><dd class="stat-hint">{% blocktranslate count counter=d.today.sale_count %}{{ counter }} sale{% plural %}{{ counter }} sales{% endblocktranslate %}</dd></div>
-    <div class="stat" data-tone="accent"><dt class="stat-label">{% translate "This year" %}</dt><dd class="stat-value">{{ d.year.income|bdt }}</dd><dd class="stat-hint">{% blocktranslate with kg=d.year.kg|num %}{{ kg }} kg of fish{% endblocktranslate %}</dd></div>
+    <div class="stat" data-tone="accent"><dt class="stat-label">{% translate "Fish sold this year" %}</dt><dd class="stat-value">{{ d.year.fish|bdt }}</dd><dd class="stat-hint">{% blocktranslate with kg=d.year.kg|num %}{{ kg }} kg{% endblocktranslate %}{% if d.year.other_income %} · {% blocktranslate with amount=d.year.other_income|bdt %}plus {{ amount }} other income{% endblocktranslate %}{% endif %}</dd></div>
     {% if d.baki %}
     <a href="{% url 'business:dues' %}?side=receive" class="stat" data-tone="good" style="--tone: var(--status-good)"><p class="stat-label">{% translate "To collect" %}</p><p class="stat-value">{{ d.baki.receivable|bdt }}</p><p class="stat-hint">{% blocktranslate count counter=d.baki.receivable_count %}from {{ counter }} person{% plural %}from {{ counter }} people{% endblocktranslate %}</p></a>
     <a href="{% url 'business:dues' %}?side=pay" class="stat" data-tone="critical" style="--tone: var(--status-critical)"><p class="stat-label">{% translate "To pay" %}</p><p class="stat-value">{{ d.baki.payable|bdt }}</p><p class="stat-hint">{% translate "suppliers and others" %}</p></a>

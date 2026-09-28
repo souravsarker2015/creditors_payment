@@ -60,6 +60,15 @@ class DashboardTests(ReportBase):
         self.assertEqual(d["month"]["expense"], D("3000"))
         self.assertEqual(d["month"]["profit"], D("7000"))
 
+    def test_fish_income_is_split_from_other_income(self):
+        self.sell(10000, days=2)
+        Transaction.objects.create(business=self.b, date=ago(1), amount=D("4500"), account=self.cash,
+                                   category=Category.objects.get(business=self.b, name="Other income"))
+        d = services.dashboard(self.b)
+        self.assertEqual(d["month"]["fish"], D("10000"))
+        self.assertEqual(d["month"]["other_income"], D("4500"))
+        self.assertEqual(d["month"]["income"], D("14500"))
+
     def test_today_only_counts_today(self):
         self.sell(5000, days=0)
         self.sell(9000, days=3)
@@ -262,3 +271,67 @@ class AccessTests(TestCase):
         self.client.force_login(staff)
         self.assertEqual(self.client.get(reverse("business:dashboard")).status_code, 403)
         self.assertEqual(self.client.get(reverse("business:report", args=["pond"])).status_code, 403)
+
+
+class QueryCountTests(ReportBase):
+    """The reports must not run one query per pond: a farm with 20 ponds
+    should cost the same as a farm with two."""
+
+    made = 0
+
+    def _make_ponds(self, n):
+        for _ in range(n):
+            i = QueryCountTests.made = QueryCountTests.made + 1
+            pond = Pond.objects.create(business=self.b, name=f"P{i}", area=D("40"), area_unit=self.dec)
+            cycle = CultureCycle.objects.create(business=self.b, pond=pond, name=f"C{i}", start_date=ago(100))
+            Stocking.objects.create(business=self.b, cycle=cycle, date=ago(100), species=self.rui, count=500, cost=D("5000"))
+            Transaction.objects.create(business=self.b, date=ago(5), amount=D("100"), cycle=cycle,
+                                       category=Category.objects.get(business=self.b, name="Daily labour"))
+
+    def test_cycle_report_queries_do_not_grow_with_ponds(self):
+        self._make_ponds(2)
+        few = self._count_queries()
+        self._make_ponds(8)
+        many = self._count_queries()
+        self.assertEqual(few, many, f"queries grew from {few} to {many} when ponds were added")
+
+    def _count_queries(self):
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+
+        with CaptureQueriesContext(connection) as ctx:
+            services.cycle_rows(self.b)
+        return len(ctx.captured_queries)
+
+    def test_pond_report_queries_do_not_grow_with_ponds(self):
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+
+        self._make_ponds(2)
+        with CaptureQueriesContext(connection) as ctx:
+            services.pond_rows(self.b)
+        few = len(ctx.captured_queries)
+        self._make_ponds(8)
+        with CaptureQueriesContext(connection) as ctx:
+            services.pond_rows(self.b)
+        self.assertEqual(few, len(ctx.captured_queries))
+
+    def test_a_summary_still_works_on_its_own(self):
+        """One pond's page doesn't prefetch, so summarize must still fetch."""
+        from apps.business.ponds.services import summarize
+
+        self._make_ponds(1)
+        cycle = CultureCycle.objects.filter(name=f"C{QueryCountTests.made}").get()
+        s = summarize(cycle)
+        self.assertEqual(s.stocked, 500)
+        self.assertEqual(s.other_cost, D("100"))
+
+    def test_prefetched_and_plain_summaries_agree(self):
+        self._make_ponds(1)
+        from apps.business.ponds.services import summarize
+
+        name = f"C{QueryCountTests.made}"
+        plain = summarize(CultureCycle.objects.filter(name=name).get())
+        via_report = next(r for r in services.cycle_rows(self.b) if r.cycle.name == name).summary
+        self.assertEqual((plain.stocked, plain.cost, plain.sales_net),
+                         (via_report.stocked, via_report.cost, via_report.sales_net))

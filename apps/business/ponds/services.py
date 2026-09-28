@@ -84,7 +84,15 @@ class CycleSummary:
         return (self.feed_kg / gained).quantize(Decimal("0.01")) if (self.feed_kg and gained > 0) else None
 
 
-def summarize(cycle):
+def _rows(cycle, name, *related):
+    """The cycle's related rows — already in memory when the caller prefetched
+    them (a report does), otherwise fetched for this one cycle."""
+    if name in getattr(cycle, "_prefetched_objects_cache", {}):
+        return getattr(cycle, name).all()
+    return getattr(cycle, name).select_related(*related)
+
+
+def summarize(cycle, prices=None, cache=None):
     from apps.business.feed.services import cost_per_kg
 
     rows = {}
@@ -95,25 +103,26 @@ def summarize(cycle):
         return rows[sp.pk]
 
     s = CycleSummary(cycle=cycle)
-    for st in cycle.stockings.select_related("species"):
+    for st in _rows(cycle, "stockings", "species"):
         r = row(st.species)
         r.stocked += st.count or 0
         r.stocked_kg += st.weight_kg or ZERO
         s.stocking_cost += st.cost
         s.stocked_kg += st.weight_kg or ZERO
-    for m in cycle.mortalities.select_related("species"):
+    for m in _rows(cycle, "mortalities", "species"):
         if m.species:
             row(m.species).died += m.count
-    for w in cycle.weighings.select_related("species", "unit").order_by("date", "id"):
+    for w in sorted(_rows(cycle, "weighings", "species", "unit"), key=lambda w: (w.date, w.id)):
         r = row(w.species)
         r.avg_g, r.weighed_on = w.avg_g, w.date
-    for h in cycle.harvests.select_related("species"):
+    for h in _rows(cycle, "harvests", "species", "unit"):
         r = row(h.species)
         r.harvested_count += h.fish_count or 0
         if h.unit.unit_type == "weight":
             r.harvested_kg += h.base_quantity
             s.harvest_kg += h.base_quantity
-    prices = cost_per_kg(cycle.business)
+    if prices is None:
+        prices = cost_per_kg(cycle.business)
     for f in cycle.feedings.all():
         s.feed_kg += f.kg
         s.feed_cost += f.kg * prices.get(f.product_id, ZERO)
@@ -121,9 +130,14 @@ def summarize(cycle):
     if apps.is_installed("apps.business.finance"):
         from apps.business.finance.services import cycle_costs
 
-        s.other_cost = cycle_costs(cycle)
-    sales = cycle.sales.aggregate(net=Sum("net"), gross=Sum("gross"))
-    s.sales_net, s.sales_gross = sales["net"] or ZERO, sales["gross"] or ZERO
+        s.other_cost = cycle_costs(cycle, cache=cache)
+    if "sales" in getattr(cycle, "_prefetched_objects_cache", {}):
+        sold = list(cycle.sales.all())
+        s.sales_net = sum((x.net for x in sold), ZERO)
+        s.sales_gross = sum((x.gross for x in sold), ZERO)
+    else:
+        sales = cycle.sales.aggregate(net=Sum("net"), gross=Sum("gross"))
+        s.sales_net, s.sales_gross = sales["net"] or ZERO, sales["gross"] or ZERO
     s.species = sorted(rows.values(), key=lambda r: r.species.order)
     return s
 

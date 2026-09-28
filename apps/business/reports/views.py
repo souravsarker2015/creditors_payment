@@ -7,6 +7,7 @@ from decimal import Decimal
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
+from django.utils.formats import date_format
 from django.utils.translation import gettext as _
 
 from apps.business.core.decorators import business_access_required
@@ -60,7 +61,7 @@ def get_period(request, today=None):
         end = end or today
         if end < start:
             start, end = end, start
-        return Period("custom", _("%(from)s – %(to)s") % {"from": f"{start:%d %b %Y}", "to": f"{end:%d %b %Y}"}, start, end), choices
+        return Period("custom", _("%(from)s – %(to)s") % {"from": date_format(start, "j M Y"), "to": date_format(end, "j M Y")}, start, end), choices
     key = request.GET.get("period", "month")
     found = next((c for c in choices if c[0] == key), choices[0])
     return Period(found[0], found[1], found[2], found[3]), choices

@@ -60,21 +60,23 @@ def _sale_kg(sales):
                                        ).aggregate(kg=Sum("base_quantity"))["kg"] or ZERO
 
 
-def headline(business, start, end):
+def headline(business, start, end, cache=None):
     """Sales, costs and profit for one period, with kg sold."""
     from apps.business.finance.services import statement
 
-    s = statement(business, start, end)
+    s = statement(business, start, end, cache=cache)
     sales = sales_between(business, start, end) if _installed("sales") else None
+    fish = next((l.amount for l in s.income if l.key == "sales"), ZERO)
     return {
         "income": s.total_income, "expense": s.total_expense, "profit": s.profit, "margin": s.margin,
+        "fish": fish, "other_income": s.total_income - fish,
         "kg": _sale_kg(sales) if sales is not None else ZERO,
         "sale_count": sales.count() if sales is not None else 0,
         "statement": s,
     }
 
 
-def monthly_trend(business, months=6, today=None):
+def monthly_trend(business, months=6, today=None, cache=None):
     """Sales against costs for the last few months, for the bar chart."""
     from apps.business.finance.services import statement
 
@@ -82,7 +84,7 @@ def monthly_trend(business, months=6, today=None):
     rows = []
     for i in range(months - 1, -1, -1):
         m = add_months(month_start(today), -i)
-        s = statement(business, m, min(month_end(m), today))
+        s = statement(business, m, min(month_end(m), today), cache=cache)
         rows.append({"month": m, "label": f"{m:%b}", "income": s.total_income, "expense": s.total_expense, "profit": s.profit})
     return rows
 
@@ -128,11 +130,11 @@ def _kg_text(kg):
     return _("%(kg)s kg") % {"kg": num(kg)} if kg else ""
 
 
-def expense_breakdown(business, start, end, scope="business"):
+def expense_breakdown(business, start, end, scope="business", cache=None):
     """Costs by main category, biggest first — for the donut."""
     from apps.business.finance.services import statement
 
-    s = statement(business, start, end, scope=scope)
+    s = statement(business, start, end, scope=scope, cache=cache)
     return [Row(l.label, l.amount, "", l.url) for l in s.expense]
 
 
@@ -157,10 +159,14 @@ class CycleRow:
 
 def cycle_rows(business, start=None, end=None, pond=None, running_only=False):
     """Every season with its own cost, sales, FCR and result."""
+    from apps.business.feed.services import cost_per_kg
     from apps.business.ponds.models import CultureCycle, CycleStatus
     from apps.business.ponds.services import summarize
 
-    qs = CultureCycle.objects.filter(business=business).select_related("pond")
+    # One query per kind of record for the whole page, not per season.
+    qs = (CultureCycle.objects.filter(business=business).select_related("pond")
+          .prefetch_related("stockings__species", "mortalities__species", "weighings__species", "weighings__unit",
+                            "harvests__species", "harvests__unit", "feedings", "sales"))
     if pond is not None:
         qs = qs.filter(pond=pond)
     if running_only:
@@ -170,9 +176,11 @@ def cycle_rows(business, start=None, end=None, pond=None, running_only=False):
     if end:
         qs = qs.filter(start_date__lte=end)
     today = date.today()
+    prices = cost_per_kg(business)   # once for the whole page, not per season
+    cache = {}
     rows = []
     for cycle in qs:
-        s = summarize(cycle)
+        s = summarize(cycle, prices=prices, cache=cache)
         last = cycle.ended_on or today
         rows.append(CycleRow(cycle, cycle.pond, s, (last - cycle.start_date).days))
     rows.sort(key=lambda r: -r.profit)
@@ -268,14 +276,15 @@ def dashboard(business, today=None):
     today = today or date.today()
     month = month_start(today)
     year = today.replace(month=1, day=1)
+    cache = {}   # feed prices and category names, looked up once for the page
     data = {
-        "today": headline(business, today, today),
-        "month": headline(business, month, today),
-        "year": headline(business, year, today),
-        "trend": monthly_trend(business, 6, today),
+        "today": headline(business, today, today, cache),
+        "month": headline(business, month, today, cache),
+        "year": headline(business, year, today, cache),
+        "trend": monthly_trend(business, 6, today, cache),
         "by_species": ranked_rows(sales_by(business, year, today, "species")) if _installed("sales") else [],
         "by_market": ranked_rows(sales_by(business, year, today, "market")) if _installed("sales") else [],
-        "expenses": ranked_rows(expense_breakdown(business, month, today)),
+        "expenses": ranked_rows(expense_breakdown(business, month, today, cache=cache)),
         "running": cycle_rows(business, running_only=True),
         "loans": loan_summary(business),
     }

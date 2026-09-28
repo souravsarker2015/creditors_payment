@@ -339,3 +339,78 @@ class AccessTests(TestCase):
         self.client.force_login(viewer)
         self.assertEqual(self.client.get(reverse("business:statement")).status_code, 200)
         self.assertEqual(self.client.get(reverse("business:transaction_add")).status_code, 403)
+
+
+class DeletedRecordsTests(MoneyBase):
+    """Anything soft-deleted must vanish from every total, everywhere."""
+
+    def setUp(self):
+        super().setUp()
+        from apps.business.ponds.models import CultureCycle, Pond, Stocking
+        from apps.business.species.models import Species
+
+        self.buyer = Party.objects.create(business=self.b, name="Hasan", is_buyer=True)
+        self.supplier = Party.objects.create(business=self.b, name="Mollah", is_supplier=True)
+        self.pond = Pond.objects.create(business=self.b, name="East")
+        self.cycle = CultureCycle.objects.create(business=self.b, pond=self.pond, start_date=ago(60))
+        self.rui = Species.objects.get(business=self.b, name="Rui")
+        self.stocking = Stocking.objects.create(business=self.b, cycle=self.cycle, date=ago(60),
+                                                species=self.rui, count=500, cost=D("5000"))
+        self.sale = FishSale.objects.create(business=self.b, date=ago(5), buyer=self.buyer, gross=D("20000"),
+                                            net=D("20000"), received_now=D("20000"), account=self.cash)
+        self.purchase = FeedPurchase.objects.create(business=self.b, date=ago(10), supplier=self.supplier,
+                                                    subtotal=D("9000"), total=D("9000"), paid_now=D("9000"), account=self.cash)
+        self.txn = self.spend(1000, days=1)
+
+    def _figures(self):
+        s = services.statement(self.b, ago(90), date.today())
+        return {"income": s.total_income, "expense": s.total_expense, "cash": self.cash.balance}
+
+    def test_deleting_each_record_removes_it_from_every_total(self):
+        before = self._figures()
+        self.assertEqual(before["income"], D("20000"))
+        self.sale.soft_delete()
+        self.assertEqual(self._figures()["income"], 0)
+        self.sale.restore()
+
+        with_stocking = self._figures()["expense"]
+        self.stocking.soft_delete()
+        self.assertEqual(self._figures()["expense"], with_stocking - D("5000"))
+        self.stocking.restore()
+
+        cash_before = self._figures()["cash"]
+        self.purchase.soft_delete()
+        self.assertEqual(self._figures()["cash"], cash_before + D("9000"))
+        self.purchase.restore()
+
+        expense_before = self._figures()["expense"]
+        self.txn.soft_delete()
+        self.assertEqual(self._figures()["expense"], expense_before - D("1000"))
+        self.txn.restore()
+        self.assertEqual(self._figures(), before)
+
+    def test_deleting_a_cycle_removes_its_stocking_and_feed(self):
+        before = services.statement(self.b, ago(90), date.today()).total_expense
+        self.cycle.soft_delete()
+        after = services.statement(self.b, ago(90), date.today()).total_expense
+        self.assertEqual(after, before - D("5000"))
+
+
+class BanglaDateTests(MoneyBase):
+    """Dates the user reads must follow the language they chose."""
+
+    def test_month_name_is_translated_on_the_statement(self):
+        r = self.client.get(reverse("business:statement"), headers={"accept-language": "bn"})
+        self.assertNotIn(date.today().strftime("%B"), r.context["label"],
+                         "month name stayed English while reading Bangla")
+
+    def test_budget_message_uses_the_readers_month_name(self):
+        month = date.today().replace(day=1)
+        r = self.client.post(reverse("business:budget_edit") + f"?month={month:%Y-%m}",
+                             {f"c{self.labour.pk}": "5000"}, follow=True, headers={"accept-language": "bn"})
+        text = " ".join(str(m) for m in r.context["messages"])
+        self.assertNotIn(month.strftime("%B"), text)
+
+    def test_english_still_reads_english(self):
+        r = self.client.get(reverse("business:statement"))
+        self.assertIn(date.today().strftime("%B"), r.context["label"])
