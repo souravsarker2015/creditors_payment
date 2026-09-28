@@ -6787,3 +6787,447 @@ msgstr "পরে পাওয়া"
 
 msgid "Choose the buyer who owes the rest, or enter the full amount as received."
 msgstr "বাকি টাকা কার কাছে পাওনা সেই ক্রেতা বাছুন, অথবা পুরো টাকা পাওয়া হিসেবে লিখুন।"
+
+msgid "Cost"
+msgstr "খরচ"
+
+msgid "Reports and exports"
+msgstr "রিপোর্ট ও এক্সপোর্ট"
+
+msgid "Income & expenses"
+msgstr "আয়-ব্যয়"
+
+msgid "Farm income"
+msgstr "খামারের আয়"
+
+msgid "Farm costs"
+msgstr "খামারের খরচ"
+
+msgid "Farm profit"
+msgstr "খামারের লাভ"
+
+msgid "Farm loss"
+msgstr "খামারের লোকসান"
+
+msgid "Household spending"
+msgstr "সংসারের খরচ"
+
+msgid "%(counter)s regular bill is due"
+msgid_plural "%(counter)s regular bills are due"
+msgstr[0] "%(counter)s টি নিয়মিত বিলের সময় হয়েছে"
+msgstr[1] "%(counter)s টি নিয়মিত বিলের সময় হয়েছে"
+
+msgid "see them"
+msgstr "দেখুন"
+
+msgid "Money in & out"
+msgstr "জমা-খরচ"
+
+msgid "Budget"
+msgstr "বাজেট"
+
+msgid "Regular bills"
+msgstr "নিয়মিত বিল"
+
+msgid "New category"
+msgstr "নতুন খাত"
+
+msgid "New account"
+msgstr "নতুন অ্যাকাউন্ট"
+
+msgid "account"
+msgstr "অ্যাকাউন্ট"
+
+msgid "What and how much"
+msgstr "কী খাতে, কত টাকা"
+
+msgid "More (optional)"
+msgstr "আরও (ইচ্ছে হলে)"
+
+msgid "e.g. 3 workers, pond cleaning"
+msgstr "যেমন: ৩ জন শ্রমিক, পুকুর পরিষ্কার"
+
+msgid "Nobody in particular"
+msgstr "নির্দিষ্ট কেউ নয়"
+
+msgid "Only to remember who — it does not create any baki."
+msgstr "শুধু মনে রাখার জন্য — এতে কোনো বাকি তৈরি হয় না।"
+
+msgid "Not for one pond"
+msgstr "কোনো নির্দিষ্ট পুকুরের নয়"
+
+msgid "Put this cost on one pond's season, so its profit is right."
+msgstr "খরচটি কোনো পুকুরের মৌসুমে যোগ করুন, তাহলে ওই পুকুরের লাভ ঠিক থাকবে।"
+
+msgid "Pick a category from this list."
+msgstr "এই তালিকা থেকে একটি খাত বাছুন।"
+
+msgid "Choose an account…"
+msgstr "অ্যাকাউন্ট বাছুন…"
+
+msgid "Choose a different account to send it to."
+msgstr "টাকা পাঠাতে অন্য একটি অ্যাকাউন্ট বাছুন।"
+
+msgid "e.g. Pond lease, school fees"
+msgstr "যেমন: পুকুর লিজ, স্কুলের বেতন"
+
+msgid "Not set"
+msgstr "ঠিক করা নেই"
+
+msgid "It ends before it starts."
+msgstr "শুরুর আগেই শেষ হয়ে যাচ্ছে।"
+
+msgid "Paid from / into"
+msgstr "যে অ্যাকাউন্ট থেকে / যেখানে"
+
+msgid "What for"
+msgstr "কী বাবদ"
+
+msgid "Person / firm"
+msgstr "ব্যক্তি / প্রতিষ্ঠান"
+
+msgid "For which pond"
+msgstr "কোন পুকুরের জন্য"
+
+msgid "Receipt photo"
+msgstr "রসিদের ছবি"
+
+msgid "Charge / fee"
+msgstr "চার্জ / খরচ"
+
+msgid "Cash-out charge, for example. Taken off the sending account."
+msgstr "যেমন ক্যাশআউট চার্জ। যে অ্যাকাউন্ট থেকে পাঠাচ্ছেন সেখান থেকে কাটা হবে।"
+
+msgid "Every week"
+msgstr "প্রতি সপ্তাহে"
+
+msgid "Every month"
+msgstr "প্রতি মাসে"
+
+msgid "Every 3 months"
+msgstr "প্রতি ৩ মাসে"
+
+msgid "Every 6 months"
+msgstr "প্রতি ৬ মাসে"
+
+msgid "Every year"
+msgstr "প্রতি বছরে"
+
+msgid "Usually paid from"
+msgstr "সাধারণত যে অ্যাকাউন্ট থেকে"
+
+msgid "Usual amount"
+msgstr "সাধারণ পরিমাণ"
+
+msgid "Starts on"
+msgstr "শুরু"
+
+msgid "Ends on"
+msgstr "শেষ"
+
+msgid "Leave empty if it goes on."
+msgstr "চলতে থাকলে খালি রাখুন।"
+
+msgid "Next one due"
+msgstr "পরেরটির তারিখ"
+
+msgid "The first day of the month."
+msgstr "মাসের প্রথম দিন।"
+
+msgid "Planned"
+msgstr "পরিকল্পনা"
+
+msgid "%(word)s saved: %(amount)s · %(category)s."
+msgstr "%(word)s লেখা হলো: %(amount)s · %(category)s।"
+
+msgid "Deleted. You can restore it from the deleted list."
+msgstr "মুছে ফেলা হলো। মুছে ফেলা তালিকা থেকে ফিরিয়ে আনতে পারবেন।"
+
+msgid "Restored."
+msgstr "ফিরিয়ে আনা হলো।"
+
+msgid "Moved %(amount)s from %(from)s to %(to)s."
+msgstr "%(from)s থেকে %(to)s-এ %(amount)s সরানো হলো।"
+
+msgid "Transfer deleted."
+msgstr "স্থানান্তর মুছে ফেলা হলো।"
+
+msgid "Budget saved for %(month)s: %(n)s categories."
+msgstr "%(month)s-এর বাজেট সংরক্ষিত: %(n)s টি খাত।"
+
+msgid "Copied %(n)s budgets from %(month)s."
+msgstr "%(month)s থেকে %(n)s টি বাজেট কপি করা হলো।"
+
+msgid "Nothing to copy from %(month)s."
+msgstr "%(month)s-এ কপি করার মতো কিছু নেই।"
+
+msgid "Skipped %(name)s for %(date)s."
+msgstr "%(date)s-এর %(name)s বাদ দেওয়া হলো।"
+
+msgid "Skipped %(name)s."
+msgstr "%(name)s বাদ দেওয়া হলো।"
+
+msgid "“%(name)s” stopped. You can add it again any time."
+msgstr "“%(name)s” বন্ধ করা হলো। যেকোনো সময় আবার যোগ করতে পারবেন।"
+
+msgid "Baki received"
+msgstr "বাকি আদায়"
+
+msgid "Baki paid"
+msgstr "বাকি পরিশোধ"
+
+msgid "Loan money taken"
+msgstr "ঋণের টাকা নেওয়া"
+
+msgid "Loan instalment"
+msgstr "ঋণের কিস্তি"
+
+msgid "Sent to %(name)s"
+msgstr "%(name)s-এ পাঠানো"
+
+msgid "incl. %(amount)s charge"
+msgstr "%(amount)s চার্জসহ"
+
+msgid "From %(name)s"
+msgstr "%(name)s থেকে"
+
+msgid "Fingerlings"
+msgstr "পোনা"
+
+msgid "Loan interest & fees"
+msgstr "ঋণের সুদ ও খরচ"
+
+msgid "(not in a sub-category)"
+msgstr "(কোনো উপ-খাতে নয়)"
+
+msgid "Move money"
+msgstr "টাকা সরান"
+
+msgid "In this account now"
+msgstr "এই অ্যাকাউন্টে এখন"
+
+msgid "%(period)s: %(in_)s in · %(out)s out"
+msgstr "%(period)s: জমা %(in_)s · খরচ %(out)s"
+
+msgid "Account book"
+msgstr "অ্যাকাউন্টের খাতা"
+
+msgid "In"
+msgstr "জমা"
+
+msgid "Out"
+msgstr "খরচ"
+
+msgid "Opening"
+msgstr "শুরুর জের"
+
+msgid "Closing"
+msgstr "শেষ জের"
+
+msgid "%(counter)s older entry not shown — pick a shorter period."
+msgid_plural "%(counter)s older entries not shown — pick a shorter period."
+msgstr[0] "%(counter)s টি পুরোনো লেনদেন দেখানো হয়নি — ছোট সময়সীমা বাছুন।"
+msgstr[1] "%(counter)s টি পুরোনো লেনদেন দেখানো হয়নি — ছোট সময়সীমা বাছুন।"
+
+msgid "Nothing moved through this account in this period."
+msgstr "এই সময়ে এই অ্যাকাউন্টে কোনো লেনদেন হয়নি।"
+
+msgid "Decide what each thing should cost this month, then watch how you're doing."
+msgstr "এই মাসে কোন খাতে কত খরচ হবে ঠিক করুন, তারপর দেখুন কেমন চলছে।"
+
+msgid "Set budget"
+msgstr "বাজেট ঠিক করুন"
+
+msgid "%(spent)s of %(planned)s"
+msgstr "%(planned)s-এর মধ্যে %(spent)s"
+
+msgid "%(amount)s over"
+msgstr "%(amount)s বেশি"
+
+msgid "%(counter)s day left this month"
+msgid_plural "%(counter)s days left this month"
+msgstr[0] "এই মাসে আর %(counter)s দিন বাকি"
+msgstr[1] "এই মাসে আর %(counter)s দিন বাকি"
+
+msgid "By category"
+msgstr "খাত অনুযায়ী"
+
+msgid "over"
+msgstr "বেশি"
+
+msgid "left"
+msgstr "বাকি"
+
+msgid "No budget for this month"
+msgstr "এই মাসের কোনো বাজেট নেই"
+
+msgid "Set what you plan to spend on labour, feed, the bazar and so on. You'll see straight away if something is running over."
+msgstr "শ্রমিক, খাবার, বাজার — কোন খাতে কত খরচ করবেন ঠিক করুন। কোথাও বেশি হয়ে গেলে সঙ্গে সঙ্গে দেখতে পাবেন।"
+
+msgid "Copy from %(m)s"
+msgstr "%(m)s থেকে কপি করুন"
+
+msgid "Spent without a budget"
+msgstr "বাজেট ছাড়া খরচ"
+
+msgid "You spent on these but didn't plan for them."
+msgstr "এই খাতগুলোতে খরচ হয়েছে, কিন্তু বাজেটে ধরা ছিল না।"
+
+msgid "For %(month)s. Leave a box empty for anything you don't want to plan."
+msgstr "%(month)s-এর জন্য। যেটির পরিকল্পনা করতে চান না, সেই ঘরটি খালি রাখুন।"
+
+msgid "Planned in total"
+msgstr "মোট পরিকল্পনা"
+
+msgid "Save budget"
+msgstr "বাজেট সংরক্ষণ"
+
+msgid "Regular bill"
+msgstr "নিয়মিত বিল"
+
+msgid "Edit regular bill"
+msgstr "নিয়মিত বিল বদলান"
+
+msgid "New regular bill"
+msgstr "নতুন নিয়মিত বিল"
+
+msgid "It never records itself — on the day, the app asks you and you confirm."
+msgstr "নিজে থেকে কখনো লেখা হয় না — দিন এলে অ্যাপ জিজ্ঞেস করবে, আপনি নিশ্চিত করবেন।"
+
+msgid "Stop this regular bill? Entries already recorded stay."
+msgstr "এই নিয়মিত বিল বন্ধ করবেন? আগে লেখা হিসাবগুলো থেকে যাবে।"
+
+msgid "Rent, lease, school fees, salaries — things that come back. The app reminds you; nothing is recorded until you say so."
+msgstr "ভাড়া, লিজ, স্কুলের বেতন, বেতন — যেগুলো বারবার আসে। অ্যাপ মনে করিয়ে দেবে; আপনি না বলা পর্যন্ত কিছুই লেখা হবে না।"
+
+msgid "monthly bills added up"
+msgstr "মাসিক বিল সব মিলিয়ে"
+
+msgid "Due now"
+msgstr "এখন দেওয়ার সময়"
+
+msgid "next %(date)s"
+msgstr "পরেরটি %(date)s"
+
+msgid "ended %(date)s"
+msgstr "শেষ হয়েছে %(date)s"
+
+msgid "No regular bills yet"
+msgstr "এখনো কোনো নিয়মিত বিল নেই"
+
+msgid "Add the ones that come back every month — pond lease, school fees, a worker's salary — and the app will remind you."
+msgstr "প্রতি মাসে যেগুলো আসে — পুকুর লিজ, স্কুলের বেতন, শ্রমিকের বেতন — যোগ করুন, অ্যাপ মনে করিয়ে দেবে।"
+
+msgid "What came in, what went out, and what's left — from every part of the app together."
+msgstr "কত টাকা এলো, কত গেল, আর কত থাকল — অ্যাপের সব অংশ মিলিয়ে।"
+
+msgid "Whose money"
+msgstr "কার হিসাব"
+
+msgid "Money left"
+msgstr "থাকল"
+
+msgid "Short by"
+msgstr "ঘাটতি"
+
+msgid "%(income)s came in · %(expense)s went out"
+msgstr "এলো %(income)s · গেল %(expense)s"
+
+#, python-format
+msgid "%(pct)s%% of income"
+msgstr "আয়ের %(pct)s%%"
+
+msgid "Nothing came in."
+msgstr "কিছু আসেনি।"
+
+msgid "Nothing went out."
+msgstr "কিছু যায়নি।"
+
+msgid "Nothing recorded in this period."
+msgstr "এই সময়ে কিছু লেখা হয়নি।"
+
+msgid "Farm figures come from your sales, feed used, fingerlings and loan interest. Feed counts when the fish eat it, not when you buy it, so a pond's cost is right."
+msgstr "খামারের হিসাব আসে আপনার বিক্রি, খাওয়ানো খাবার, পোনা ও ঋণের সুদ থেকে। খাবার কেনার দিন নয়, মাছ যেদিন খায় সেদিন খরচ ধরা হয় — তাই পুকুরের খরচ ঠিক থাকে।"
+
+msgid "Deleted entries"
+msgstr "মুছে ফেলা হিসাব"
+
+msgid "Nothing deleted"
+msgstr "কিছু মুছে ফেলা হয়নি"
+
+msgid "Edit entry"
+msgstr "হিসাব বদলান"
+
+msgid "Money in or out"
+msgstr "জমা বা খরচ"
+
+msgid "Regular bill: %(name)s"
+msgstr "নিয়মিত বিল: %(name)s"
+
+msgid "Delete this entry? You can restore it later."
+msgstr "এই হিসাব মুছবেন? পরে ফিরিয়ে আনতে পারবেন।"
+
+msgid "Everyday costs and income. Fish sales, feed and loan payments come in by themselves from their own pages."
+msgstr "প্রতিদিনের খরচ ও আয়। মাছ বিক্রি, খাবার ও ঋণের কিস্তি নিজ নিজ পাতা থেকে আপনাআপনি যোগ হয়।"
+
+msgid "Skip"
+msgstr "বাদ দিন"
+
+msgid "Came in"
+msgstr "এলো"
+
+msgid "Went out"
+msgstr "গেল"
+
+msgid "What for, category, person…"
+msgstr "কী বাবদ, খাত, ব্যক্তি…"
+
+msgid "Only money in"
+msgstr "শুধু জমা"
+
+msgid "Only money out"
+msgstr "শুধু খরচ"
+
+msgid "receipt"
+msgstr "রসিদ"
+
+msgid "in"
+msgstr "জমা"
+
+msgid "out"
+msgstr "খরচ"
+
+msgid "Nothing recorded in this period"
+msgstr "এই সময়ে কিছু লেখা হয়নি"
+
+msgid "Write down what you spend and earn — labour, electricity, medicine, the bazar. Fish sales and feed purchases are already counted from their own pages."
+msgstr "যা খরচ করেন আর আয় করেন লিখে রাখুন — শ্রমিক, বিদ্যুৎ, ওষুধ, বাজার। মাছ বিক্রি ও খাবার কেনা নিজ নিজ পাতা থেকে এমনিতেই ধরা আছে।"
+
+msgid "%(counter)s deleted entry"
+msgid_plural "%(counter)s deleted entries"
+msgstr[0] "%(counter)s টি মুছে ফেলা হিসাব"
+msgstr[1] "%(counter)s টি মুছে ফেলা হিসাব"
+
+msgid "Edit transfer"
+msgstr "স্থানান্তর বদলান"
+
+msgid "Between your own accounts — cash to bank, bank to bKash. It isn't income or spending."
+msgstr "নিজের অ্যাকাউন্টগুলোর মধ্যে — নগদ থেকে ব্যাংকে, ব্যাংক থেকে বিকাশে। এটি আয়ও নয়, খরচও নয়।"
+
+msgid "Delete this transfer?"
+msgstr "এই স্থানান্তর মুছবেন?"
+
+msgid "Save transfer"
+msgstr "স্থানান্তর সংরক্ষণ"
+
+msgid "Which account"
+msgstr "কোন অ্যাকাউন্ট"
+
+msgid "So the money comes off that account's balance."
+msgstr "যাতে ওই অ্যাকাউন্টের ব্যালান্স থেকে টাকা কাটা যায়।"
+
+msgid "So the money goes into that account's balance."
+msgstr "যাতে ওই অ্যাকাউন্টের ব্যালান্সে টাকা যোগ হয়।"
+
+msgid "other %(o)s"
+msgstr "অন্যান্য %(o)s"

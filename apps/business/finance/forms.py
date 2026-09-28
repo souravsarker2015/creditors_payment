@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 
 from apps.business.core.crud import BusinessForm, money_field
 
-from .models import Account, Category
+from .models import Account, Budget, Category, CategoryType, RecurringTransaction, Scope, Transaction, Transfer
 
 
 class CategoryForm(BusinessForm):
@@ -64,3 +64,208 @@ class AccountForm(BusinessForm):
         data = super().clean()
         data["opening_balance"] = data.get("opening_balance") or 0
         return data
+
+
+class CategoryQuickForm(BusinessForm):
+    """Add a category without leaving the form you're filling in."""
+
+    unique_name = ()
+    layout = [("name",), ("type", "scope"), ("parent",)]
+
+    class Meta:
+        model = Category
+        fields = ["name", "type", "scope", "parent"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["parent"].queryset = Category.objects.filter(business=self.business, parent=None)
+        self.fields["parent"].empty_label = _("— Main category —")
+        self.fields["parent"].label_from_instance = lambda c: c.display_name
+        self.initial.setdefault("type", CategoryType.EXPENSE)
+
+    def clean(self):
+        data = super().clean()
+        parent = data.get("parent")
+        if parent:
+            data["type"], data["scope"] = parent.type, parent.scope
+        name = (data.get("name") or "").strip()
+        if name and Category.objects.filter(business=self.business, type=data.get("type"), scope=data.get("scope"),
+                                            parent=parent, name__iexact=name).exists():
+            self.add_error("name", _("“%(value)s” already exists here.") % {"value": name})
+        return data
+
+
+class AccountQuickForm(BusinessForm):
+    layout = [("name", "kind")]
+
+    class Meta:
+        model = Account
+        fields = ["name", "kind"]
+
+
+class TransactionForm(BusinessForm):
+    """One expense or income. Type is chosen by the category picked."""
+
+    unique_name = ()
+    layout = [("#", _("What and how much")), ("category", "amount"), ("date", "account"), ("description",),
+              ("#", _("More (optional)")), ("party", "cycle"), ("receipt",), ("notes",)]
+
+    class Meta:
+        model = Transaction
+        fields = ["date", "category", "amount", "account", "description", "party", "cycle", "receipt", "notes"]
+        widgets = {"date": forms.DateInput(), "description": forms.TextInput(attrs={"placeholder": _("e.g. 3 workers, pond cleaning")})}
+
+    def __init__(self, *args, scope=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        from apps.business.parties.models import Party
+        from apps.business.ponds.models import CultureCycle, CycleStatus
+
+        b = self.business
+        self.scope = scope or (self.instance.category.scope if self.instance.pk else Scope.BUSINESS)
+        cats = Category.objects.filter(business=b, scope=self.scope)
+        self.fields["category"].queryset = cats.select_related("parent")
+        self.fields["category"].empty_label = _("Choose a category…")
+        self.fields["category"].biz_quick_add = "category"
+        self.fields["account"].queryset = Account.objects.filter(business=b)
+        self.fields["account"].empty_label = _("Not recorded")
+        self.fields["party"].queryset = Party.objects.filter(business=b)
+        self.fields["party"].empty_label = _("Nobody in particular")
+        self.fields["party"].help_text = _("Only to remember who — it does not create any baki.")
+        cycles = CultureCycle.objects.filter(business=b, status=CycleStatus.RUNNING)
+        if self.instance.pk and self.instance.cycle_id:
+            cycles = cycles | CultureCycle.objects.filter(pk=self.instance.cycle_id)
+        self.fields["cycle"].queryset = cycles.distinct().select_related("pond")
+        self.fields["cycle"].empty_label = _("Not for one pond")
+        self.fields["cycle"].help_text = _("Put this cost on one pond's season, so its profit is right.")
+        money_field(self.fields["amount"])
+        if self.scope != Scope.BUSINESS:
+            for name in ("cycle", "party"):
+                self.fields.pop(name)
+        if not self.instance.pk:
+            self.initial.setdefault("date", date.today())
+            self.initial.setdefault("account", Account.objects.filter(business=b, is_default=True).first())
+            last = Transaction.objects.filter(business=b, category__scope=self.scope).order_by("-id").first()
+            if last and not self.initial.get("account"):
+                self.initial["account"] = last.account_id
+
+    def clean_date(self):
+        d = self.cleaned_data["date"]
+        if d and d > date.today():
+            raise forms.ValidationError(_("That date is in the future."))
+        return d
+
+    def clean_category(self):
+        c = self.cleaned_data["category"]
+        if c and c.scope != self.scope:
+            raise forms.ValidationError(_("Pick a category from this list."))
+        return c
+
+
+class TransferForm(BusinessForm):
+    unique_name = ()
+    layout = [("from_account", "to_account"), ("amount", "date"), ("charge", "reference"), ("notes",)]
+
+    class Meta:
+        model = Transfer
+        fields = ["date", "from_account", "to_account", "amount", "charge", "reference", "notes"]
+        widgets = {"date": forms.DateInput()}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        accounts = Account.objects.filter(business=self.business)
+        for name in ("from_account", "to_account"):
+            self.fields[name].queryset = accounts
+            self.fields[name].empty_label = _("Choose an account…")
+        money_field(self.fields["amount"])
+        money_field(self.fields["charge"])
+        self.fields["charge"].required = False
+        if not self.instance.pk:
+            self.initial.setdefault("date", date.today())
+
+    def clean(self):
+        data = super().clean()
+        data["charge"] = data.get("charge") or 0
+        if data.get("from_account") and data.get("from_account") == data.get("to_account"):
+            self.add_error("to_account", _("Choose a different account to send it to."))
+        if data.get("date") and data["date"] > date.today():
+            self.add_error("date", _("That date is in the future."))
+        return data
+
+
+class RecurringForm(BusinessForm):
+    unique_name = ()
+    layout = [("name", "amount"), ("category", "account"), ("repeat", "start_date"), ("end_date",), ("description",), ("notes",)]
+
+    class Meta:
+        model = RecurringTransaction
+        fields = ["name", "amount", "category", "account", "repeat", "start_date", "end_date", "description", "notes"]
+        widgets = {"start_date": forms.DateInput(), "end_date": forms.DateInput(),
+                   "name": forms.TextInput(attrs={"placeholder": _("e.g. Pond lease, school fees")})}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        b = self.business
+        self.fields["category"].queryset = Category.objects.filter(business=b).select_related("parent")
+        self.fields["category"].empty_label = _("Choose a category…")
+        self.fields["account"].queryset = Account.objects.filter(business=b)
+        self.fields["account"].empty_label = _("Not set")
+        money_field(self.fields["amount"])
+        if not self.instance.pk:
+            self.initial.setdefault("start_date", date.today())
+
+    def clean(self):
+        data = super().clean()
+        start, end = data.get("start_date"), data.get("end_date")
+        if start and end and end < start:
+            self.add_error("end_date", _("It ends before it starts."))
+        return data
+
+    def save(self, commit=True):
+        obj = super().save(commit=False)
+        if not obj.next_due or "start_date" in self.changed_data or "repeat" in self.changed_data:
+            obj.next_due = obj.start_date
+        if commit:
+            obj.save()
+        return obj
+
+
+class BudgetForm(forms.Form):
+    """The whole month's budget on one page: one box per main category."""
+
+    def __init__(self, *args, business, month, **kwargs):
+        super().__init__(*args, **kwargs)
+        from .models import Budget
+
+        self.business, self.month = business, month
+        planned = {b.category_id: b.amount for b in Budget.objects.filter(business=business, month=month)}
+        self.categories = list(Category.objects.filter(business=business, type=CategoryType.EXPENSE, parent=None).select_related("parent"))
+        for c in self.categories:
+            f = forms.DecimalField(required=False, min_value=0, max_digits=14, decimal_places=2, label=c.display_name,
+                                   widget=forms.NumberInput(attrs={"class": "form-input", "inputmode": "decimal", "step": "any", "placeholder": "0"}))
+            f.affix = "৳"
+            f.scope_label = c.get_scope_display()
+            self.fields[f"c{c.pk}"] = f
+            value = planned.get(c.pk)
+            if value is not None:
+                self.initial[f"c{c.pk}"] = format(value.normalize(), "f")
+
+    def rows(self):
+        return [(c, self[f"c{c.pk}"]) for c in self.categories]
+
+    def save(self):
+        from .models import Budget
+
+        kept = 0
+        for c in self.categories:
+            amount = self.cleaned_data.get(f"c{c.pk}")
+            row = Budget.all_objects.filter(business=self.business, category=c, month=self.month).first()
+            if amount:
+                kept += 1
+                if row is None:
+                    Budget.objects.create(business=self.business, category=c, month=self.month, amount=amount)
+                else:
+                    row.amount, row.is_deleted, row.deleted_at = amount, False, None
+                    row.save(update_fields=["amount", "is_deleted", "deleted_at", "updated_at", "updated_by"])
+            elif row is not None and not row.is_deleted:
+                row.soft_delete()
+        return kept

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% translate "Move money" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-narrow">
+  <header class="page-header">
+    <div>
+      <a href="{{ back }}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Accounts" %}</a>
+      <h1 class="page-title">{% if obj %}{% translate "Edit transfer" %}{% else %}{% translate "Move money" %}{% endif %}</h1>
+      <p class="page-subtitle">{% translate "Between your own accounts — cash to bank, bank to bKash. It isn't income or spending." %}</p>
+    </div>
+    {% if obj and biz_can.delete %}
+    <div class="page-actions"><form method="post" action="{% url 'business:transfer_delete' obj.pk %}" data-confirm="{% translate 'Delete this transfer?' %}">{% csrf_token %}<button type="submit" class="icon-btn" aria-label="{% translate 'Delete' %}" data-tip="{% translate 'Delete' %}">{% include "partials/icon.html" with name="trash" %}</button></form></div>
+    {% endif %}
+  </header>
+  <form method="post" class="stack" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+    <section class="card"><div class="card-body form-stack">
+      {% for section in form.rows %}{% for row in section.fields %}
+        {% if row|length > 1 %}<div class="form-grid form-grid-2">{% for field in row %}{% include "business/partials/field.html" %}{% endfor %}</div>
+        {% else %}{% for field in row %}{% include "business/partials/field.html" %}{% endfor %}{% endif %}
+      {% endfor %}{% endfor %}
+    </div></section>
+    <div class="form-actions">
+      <a href="{{ back }}" class="btn btn-ghost btn-lg">{% translate "Cancel" %}</a>
+      <button type="submit" class="btn btn-primary btn-lg">{% include "partials/icon.html" with name="check" %}{% translate "Save transfer" %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,4 +1,4 @@
-from django.core.validators import MinValueValidator
+from django.core.validators import FileExtensionValidator, MinValueValidator
 from django.db import models
 from django.utils.translation import get_language, gettext_lazy as _
 
@@ -76,9 +76,129 @@ class Account(BusinessBaseModel):
 
     @property
     def balance(self):
-        """Opening balance for now; transactions and transfers are added in the income/expense phase."""
-        return self.opening_balance
+        """Everything that has passed through this account. Worked out live in
+        services.balances(); a single account falls back to computing its own."""
+        from .services import balances
+
+        return balances(self.business).get(self.pk, self.opening_balance)
 
     @property
     def masked_number(self):
         return f"•••• {self.number[-4:]}" if len(self.number) > 4 else self.number
+
+
+# ── Money in and out ────────────────────────────────────────────────────────
+
+def receipt_path(instance, filename):
+    return f"business/{instance.business_id}/receipts/{instance.pk or 'new'}/{filename}"
+
+
+class Transaction(BusinessBaseModel):
+    """One payment or receipt: farm costs, household spending, other income.
+
+    Fish sales, feed purchases, baki payments and loan payments are NOT stored
+    here — they already live in their own tables. The account balance and the
+    income/expense reports read all of them together (see services.py), so
+    nothing is ever entered twice.
+    """
+
+    date = models.DateField(_("Date"), db_index=True)
+    category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name="transactions", verbose_name=_("Category"))
+    account = models.ForeignKey(Account, on_delete=models.PROTECT, null=True, blank=True, related_name="transactions", verbose_name=_("Paid from / into"))
+    amount = models.DecimalField(_("Amount"), validators=[MinValueValidator(0)], **MONEY)
+    description = models.CharField(_("What for"), max_length=200, blank=True)
+    party = models.ForeignKey("business_parties.Party", on_delete=models.SET_NULL, null=True, blank=True, related_name="transactions", verbose_name=_("Person / firm"))
+    cycle = models.ForeignKey("business_ponds.CultureCycle", on_delete=models.SET_NULL, null=True, blank=True,
+                             related_name="expenses", verbose_name=_("For which pond"))
+    receipt = models.FileField(_("Receipt photo"), upload_to=receipt_path, blank=True,
+                              validators=[FileExtensionValidator(["jpg", "jpeg", "png", "webp", "pdf"])])
+    recurring = models.ForeignKey("RecurringTransaction", on_delete=models.SET_NULL, null=True, blank=True, related_name="entries", editable=False)
+
+    class Meta:
+        ordering = ["-date", "-id"]
+        indexes = [models.Index(fields=["business", "is_deleted", "date"]), models.Index(fields=["category", "date"]),
+                   models.Index(fields=["account", "date"]), models.Index(fields=["cycle", "date"])]
+
+    def __str__(self):
+        return f"{self.category} · {self.amount} · {self.date:%d %b %Y}"
+
+    @property
+    def is_income(self):
+        return self.category.type == CategoryType.INCOME
+
+    @property
+    def signed(self):
+        """+ money in, − money out."""
+        return self.amount if self.is_income else -self.amount
+
+
+class Transfer(BusinessBaseModel):
+    """Money moved between your own accounts (bank → cash, cash → bKash).
+    It is not income or spending, so it has no category."""
+
+    date = models.DateField(_("Date"), db_index=True)
+    from_account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name="transfers_out", verbose_name=_("From"))
+    to_account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name="transfers_in", verbose_name=_("To"))
+    amount = models.DecimalField(_("Amount"), validators=[MinValueValidator(0)], **MONEY)
+    charge = models.DecimalField(_("Charge / fee"), default=0, validators=[MinValueValidator(0)], **MONEY,
+                                 help_text=_("Cash-out charge, for example. Taken off the sending account."))
+    reference = models.CharField(_("Reference"), max_length=60, blank=True)
+
+    class Meta:
+        ordering = ["-date", "-id"]
+        indexes = [models.Index(fields=["business", "is_deleted", "date"])]
+
+    def __str__(self):
+        return f"{self.from_account} → {self.to_account} · {self.amount}"
+
+
+class Repeat(models.TextChoices):
+    WEEKLY = "weekly", _("Every week")
+    MONTHLY = "monthly", _("Every month")
+    QUARTERLY = "quarterly", _("Every 3 months")
+    HALF_YEARLY = "half", _("Every 6 months")
+    YEARLY = "yearly", _("Every year")
+
+
+class RecurringTransaction(BusinessBaseModel):
+    """Something that comes back every month: rent, school fees, a salary.
+    It never posts by itself — the app reminds you and you confirm, so a bill
+    you didn't actually pay is never in your books."""
+
+    name = models.CharField(_("Name"), max_length=100)
+    category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name="recurrings", verbose_name=_("Category"))
+    account = models.ForeignKey(Account, on_delete=models.SET_NULL, null=True, blank=True, related_name="+", verbose_name=_("Usually paid from"))
+    amount = models.DecimalField(_("Usual amount"), validators=[MinValueValidator(0)], **MONEY)
+    repeat = models.CharField(_("How often"), max_length=10, choices=Repeat.choices, default=Repeat.MONTHLY)
+    start_date = models.DateField(_("Starts on"))
+    end_date = models.DateField(_("Ends on"), null=True, blank=True, help_text=_("Leave empty if it goes on."))
+    description = models.CharField(_("What for"), max_length=200, blank=True)
+    next_due = models.DateField(_("Next one due"), null=True, blank=True)
+
+    class Meta:
+        ordering = ["next_due", "name"]
+        indexes = [models.Index(fields=["business", "is_deleted", "next_due"])]
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def is_finished(self):
+        return self.next_due is None or (self.end_date is not None and self.next_due > self.end_date)
+
+
+class Budget(BusinessBaseModel):
+    """A monthly limit for one category: spend against plan."""
+
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="budgets", verbose_name=_("Category"))
+    month = models.DateField(_("Month"), help_text=_("The first day of the month."))
+    amount = models.DecimalField(_("Planned"), validators=[MinValueValidator(0)], **MONEY)
+
+    class Meta:
+        ordering = ["-month", "category__order"]
+        constraints = [models.UniqueConstraint(fields=["business", "category", "month"], condition=models.Q(is_deleted=False),
+                                               name="one_budget_per_category_month")]
+        indexes = [models.Index(fields=["business", "is_deleted", "month"])]
+
+    def __str__(self):
+        return f"{self.category} · {self.month:%b %Y}"

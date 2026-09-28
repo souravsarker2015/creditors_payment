@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% translate "Regular bills" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-narrow stack">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "Regular bills" %}</h1>
+      <p class="page-subtitle">{% translate "Rent, lease, school fees, salaries — things that come back. The app reminds you; nothing is recorded until you say so." %}</p>
+    </div>
+    <div class="page-actions"><a href="{% url 'business:recurring_add' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add" %}</a></div>
+  </header>
+
+  {% if monthly %}<div class="stat-grid"><div class="stat" data-tone="info"><p class="stat-label">{% translate "Every month" %}</p><p class="stat-value">{{ monthly|bdt }}</p><p class="stat-hint">{% translate "monthly bills added up" %}</p></div></div>{% endif %}
+
+  {% if due %}
+  <section class="card">
+    <div class="card-header"><h2 class="card-title">{% translate "Due now" %}</h2></div>
+    <ul class="ledger">
+      {% for r in due %}
+      <li class="ledger-row">
+        <span class="ledger-icon" data-tone="warn">{% include "partials/icon.html" with name="repeat" %}</span>
+        <div class="ledger-main">
+          <p class="ledger-title"><a href="{% url 'business:recurring_edit' r.pk %}" class="hover:underline">{{ r.name }}</a></p>
+          <p class="ledger-meta">{{ r.category }} · {{ r.next_due|date:"j M Y" }}{% with d=r.next_due|days_until %}{% if d < 0 %} · <span class="tone-critical">{% blocktranslate count counter=d|absolute %}{{ counter }} day late{% plural %}{{ counter }} days late{% endblocktranslate %}</span>{% elif d == 0 %} · {% translate "today" %}{% endif %}{% endwith %}</p>
+        </div>
+        <div class="ledger-end">
+          <span class="ledger-amount">{{ r.amount|bdt }}</span>
+          {% if biz_can.enter_data %}
+          <a href="{% url 'business:transaction_add' %}?from={{ r.pk }}&scope={{ r.category.scope }}&category={{ r.category_id }}&amount={{ r.amount|stringformat:'s' }}&description={{ r.description|urlencode }}&next={{ request.path|urlencode }}" class="btn btn-soft btn-sm ml-2">{% translate "Paid" %}</a>
+          <form method="post" action="{% url 'business:recurring_skip' r.pk %}">{% csrf_token %}<button class="btn btn-ghost btn-sm">{% translate "Skip" %}</button></form>
+          {% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% if upcoming %}
+  <section class="card">
+    <div class="card-header"><h2 class="card-title">{% translate "Coming up" %}</h2></div>
+    <ul class="ledger">
+      {% for r in upcoming %}
+      <li class="ledger-row">
+        <span class="ledger-icon" data-tone="muted">{% include "partials/icon.html" with name="repeat" %}</span>
+        <div class="ledger-main">
+          <p class="ledger-title"><a href="{% url 'business:recurring_edit' r.pk %}" class="hover:underline">{{ r.name }}</a></p>
+          <p class="ledger-meta">{{ r.category }} · {{ r.get_repeat_display|lower }} · {% blocktranslate with date=r.next_due|date:"j M Y" %}next {{ date }}{% endblocktranslate %}</p>
+        </div>
+        <div class="ledger-end"><span class="ledger-amount">{{ r.amount|bdt }}</span></div>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% if finished %}
+  <section class="card">
+    <div class="card-header"><h2 class="card-title">{% translate "Finished" %}</h2></div>
+    <ul class="ledger">
+      {% for r in finished %}
+      <li class="ledger-row">
+        <div class="ledger-main"><p class="ledger-title">{{ r.name }}</p><p class="ledger-meta">{{ r.category }}{% if r.end_date %} · {% blocktranslate with date=r.end_date|date:"j M Y" %}ended {{ date }}{% endblocktranslate %}{% endif %}</p></div>
+        <div class="ledger-end"><a href="{% url 'business:recurring_edit' r.pk %}" class="icon-btn" aria-label="{% translate 'Edit' %}">{% include "partials/icon.html" with name="edit" %}</a></div>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% if not due and not upcoming and not finished %}
+  <div class="empty">
+    <div class="empty-icon">{% include "partials/icon.html" with name="repeat" %}</div>
+    <h3 class="empty-title">{% translate "No regular bills yet" %}</h3>
+    <p class="empty-text">{% translate "Add the ones that come back every month — pond lease, school fees, a worker's salary — and the app will remind you." %}</p>
+    <a href="{% url 'business:recurring_add' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add" %}</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{{ account.name }} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-narrow stack">
+  <header class="page-header !mb-0 no-print">
+    <div class="min-w-0">
+      <a href="{% url 'business:accounts' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Accounts" %}</a>
+      <h1 class="page-title">{{ account.name }}</h1>
+      <div class="meta-list">
+        <span class="meta-item">{{ account.get_kind_display }}</span>
+        {% if account.institution %}<span class="meta-item">{{ account.institution }}</span>{% endif %}
+        {% if account.number %}<span class="meta-item">{{ account.masked_number }}</span>{% endif %}
+      </div>
+    </div>
+    <div class="page-actions">
+      <button type="button" class="btn btn-secondary" onclick="window.print()">{% include "partials/icon.html" with name="printer" %}{% translate "Print" %}</button>
+      <a href="{% url 'business:transfer_add' %}?from={{ account.pk }}" class="btn btn-secondary">{% include "business/partials/icon.html" with name="swap" %}{% translate "Move money" %}</a>
+      {% if biz_can.enter_data %}<a href="{% url 'business:transaction_add' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add" %}</a>{% endif %}
+    </div>
+  </header>
+
+  <section class="hero no-print">
+    <div class="hero-inner">
+      <div class="min-w-0">
+        <p class="hero-label">{% translate "In this account now" %}</p>
+        <p class="hero-value">{{ balance|bdt }}</p>
+        <p class="hero-sub">{% blocktranslate with period=period_label|lower in_=money_in|bdt out=money_out|bdt %}{{ period }}: {{ in_ }} in · {{ out }} out{% endblocktranslate %}</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="master-bar no-print">
+    <nav class="seg seg-scroll" aria-label="{% translate 'Period' %}">
+      {% for key, label, s, e in periods %}<a href="?period={{ key }}" class="seg-item {% if period == key %}is-active{% endif %}">{{ label }}</a>{% endfor %}
+    </nav>
+  </div>
+
+  <article class="card memo stmt">
+    <header class="memo-head">
+      <div>
+        <p class="memo-business">{{ business.name }}</p>
+        {% if business.address %}<p class="memo-sub">{{ business.address }}</p>{% endif %}
+      </div>
+      <div class="memo-meta">
+        <p class="memo-kind">{% translate "Account book" %}</p>
+        <p>{{ account.name }} · {{ period_label }}</p>
+      </div>
+    </header>
+
+    {% if rows %}
+    <table class="memo-table stmt-table">
+      <thead><tr><th>{% translate "Date" %}</th><th>{% translate "Details" %}</th><th class="num">{% translate "In" %}</th><th class="num">{% translate "Out" %}</th><th class="num">{% translate "Balance" %}</th></tr></thead>
+      <tbody>
+        {% for m in rows %}
+        <tr>
+          <td class="whitespace-nowrap">{{ m.date|date:"j M y" }}</td>
+          <td><span class="stmt-title">{% if m.url %}<a href="{{ m.url }}" class="hover:underline">{{ m.title }}</a>{% else %}{{ m.title }}{% endif %}</span>{% if m.detail %}<span class="stmt-detail">{{ m.detail }}</span>{% endif %}</td>
+          <td class="num">{% if m.is_in %}{{ m.amount|bdt }}{% endif %}</td>
+          <td class="num">{% if not m.is_in %}{{ m.amount|absolute|bdt }}{% endif %}</td>
+          <td class="num">{{ m.balance|bdt }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr><th colspan="2">{% translate "Opening" %}</th><td class="num" colspan="2"></td><td class="num">{{ opening|bdt }}</td></tr>
+        <tr class="is-total"><th colspan="2">{% translate "Closing" %}</th><td class="num">{{ money_in|bdt }}</td><td class="num">{{ money_out|bdt }}</td><td class="num">{{ closing|bdt }}</td></tr>
+      </tfoot>
+    </table>
+
+    <ol class="stmt-list no-print">
+      {% for m in rows %}
+      <li class="stmt-item">
+        <div class="min-w-0">
+          <p class="stmt-title">{% if m.url %}<a href="{{ m.url }}">{{ m.title }}</a>{% else %}{{ m.title }}{% endif %}</p>
+          <p class="stmt-detail">{{ m.date|date:"j M Y" }}{% if m.detail %} · {{ m.detail }}{% endif %}</p>
+        </div>
+        <div class="stmt-amounts">
+          {% if m.is_in %}<span class="stmt-gave">+ {{ m.amount|bdt }}</span>{% else %}<span class="stmt-got">− {{ m.amount|absolute|bdt }}</span>{% endif %}
+          <span class="stmt-run">{{ m.balance|bdt }}</span>
+        </div>
+      </li>
+      {% endfor %}
+    </ol>
+    {% if more %}<p class="help text-center mt-3 no-print">{% blocktranslate count counter=more %}{{ counter }} older entry not shown — pick a shorter period.{% plural %}{{ counter }} older entries not shown — pick a shorter period.{% endblocktranslate %}</p>{% endif %}
+    {% else %}
+    <p class="empty-text py-8 text-center">{% translate "Nothing moved through this account in this period." %}</p>
+    {% endif %}
+    <p class="memo-foot">{% blocktranslate with date=today|date:"j M Y" %}Printed {{ date }}{% endblocktranslate %}</p>
+  </article>
+</div>
+{% endblock %}

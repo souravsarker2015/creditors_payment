@@ -31,6 +31,11 @@
         </div>
       </div>
       <div class="field">
+        <label class="label" for="top-account">{% translate "Which account" %}<span class="opt">{% translate "(optional)" %}</span></label>
+        <select id="top-account" name="top-account" class="form-input">{% for value, label in topup_form.fields.account.choices %}<option value="{{ value }}" {% if topup_form.initial.account and topup_form.initial.account.pk == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+        <p class="help">{% translate "So the money goes into that account's balance." %}</p>
+      </div>
+      <div class="field">
         <label class="label" for="top-notes">{% translate "Note" %}<span class="opt">{% translate "(optional)" %}</span></label>
         <input id="top-notes" name="top-notes" class="form-input" maxlength="300">
       </div>

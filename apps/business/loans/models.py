@@ -155,6 +155,8 @@ class LoanTransaction(BusinessBaseModel):
     interest = models.DecimalField(_("Interest"), default=0, validators=[MinValueValidator(0)], **MONEY)
     charges = models.DecimalField(_("Fees / fines"), default=0, validators=[MinValueValidator(0)], **MONEY)
     paid_via = models.CharField(_("Paid by"), max_length=8, choices=PaidVia.choices, default=PaidVia.CASH)
+    account = models.ForeignKey("business_finance.Account", on_delete=models.SET_NULL, null=True, blank=True, related_name="+",
+                                verbose_name=_("Account"))
     reference = models.CharField(_("Receipt / reference"), max_length=60, blank=True)
 
     class Meta:

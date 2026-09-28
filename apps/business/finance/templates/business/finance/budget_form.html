@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% translate "Set budget" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-narrow">
+  <header class="page-header">
+    <div>
+      <a href="{{ back }}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Budget" %}</a>
+      <h1 class="page-title">{% translate "Set budget" %}</h1>
+      <p class="page-subtitle">{% blocktranslate with month=month|date:"F Y" %}For {{ month }}. Leave a box empty for anything you don't want to plan.{% endblocktranslate %}</p>
+    </div>
+  </header>
+  <form method="post" class="stack" novalidate x-data="{ total() { var n = 0; this.$root.querySelectorAll('input[type=number]').forEach(function (i) { n += Number(i.value) || 0; }); return n } }">
+    {% csrf_token %}
+    <section class="card">
+      <div class="card-body form-stack">
+        <div class="form-grid form-grid-2">
+          {% for c, field in form.rows %}
+          <div class="field{% if field.errors %} has-error{% endif %}">
+            <label class="label" for="{{ field.id_for_label }}">{{ c.display_name }} <span class="opt">{{ c.get_scope_display }}</span></label>
+            <div class="input-affix has-start"><span class="affix affix-start" aria-hidden="true">৳</span>{{ field }}</div>
+            {% for error in field.errors %}<p class="field-error">{% include "partials/icon.html" with name="alert" %}{{ error }}</p>{% endfor %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="card-footer"><p class="doc-due" data-tone="accent"><span x-text="'{{ _('Planned in total')|escapejs }}: ৳' + total().toLocaleString('en-IN')"></span></p></div>
+    </section>
+    <div class="form-actions">
+      <a href="{{ back }}" class="btn btn-ghost btn-lg">{% translate "Cancel" %}</a>
+      <button type="submit" class="btn btn-primary btn-lg">{% include "partials/icon.html" with name="check" %}{% translate "Save budget" %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1858,3 +1858,30 @@ a.hero-progress:hover .hero-progress-row span { color: var(--text-on-ink); }
     .lg\:pl-64 { padding-left: 0 !important; }
     .app-main > .page[aria-live] { display: none !important; }
 }
+
+/* ── Business: income, expenses, budget ─────────────────────────────────── */
+.month-bar { display: flex; align-items: center; gap: 0.5rem; padding: 0.375rem 0.5rem; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border); }
+.month-bar > strong { font-size: 0.9375rem; font-weight: 700; color: var(--text-primary); }
+.icon-btn.is-off { opacity: 0.35; pointer-events: none; }
+.fin-cols { display: grid; gap: 1.5rem 2.5rem; padding: 1rem 0; }
+@media (min-width: 768px) { .fin-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.fin-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; padding-bottom: 0.5rem; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tone); }
+.fin-head strong { font-size: 1rem; letter-spacing: 0; text-transform: none; font-variant-numeric: tabular-nums; }
+.fin-list { display: grid; gap: 0.875rem; }
+.fin-line-top { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.3125rem; }
+.fin-name { min-width: 0; font-size: 0.875rem; font-weight: 600; color: var(--text-primary); }
+.fin-amount { font-size: 0.875rem; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fin-kids { margin-top: 0.4375rem; padding-left: 0.75rem; display: grid; gap: 0.1875rem; border-left: 2px solid var(--border-soft); }
+.fin-kids li { display: flex; justify-content: space-between; gap: 0.75rem; font-size: 0.75rem; color: var(--text-muted); }
+.fin-kids li span:last-child { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fin-empty { font-size: 0.8125rem; color: var(--text-muted); }
+.fin-total { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; padding-top: 0.875rem; border-top: 2px solid var(--text-primary); }
+.fin-total dt { font-size: 0.9375rem; font-weight: 700; color: var(--text-primary); }
+.fin-total dd { font-size: 1.375rem; font-weight: 780; color: var(--tone); font-variant-numeric: tabular-nums; }
+.budget-row .ledger-main { padding-right: 0.5rem; }
+.budget-row .meter { max-width: 22rem; }
+.rec-due { margin-top: 0.375rem; display: grid; gap: 0.5rem; font-size: 0.8125rem; }
+.rec-due li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.375rem 0.75rem; }
+.rec-due-actions { display: flex; align-items: center; gap: 0.25rem; }
+.budget-row { align-items: flex-start; }
+.budget-name { white-space: normal; padding-right: 0.5rem; }

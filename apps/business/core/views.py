@@ -1,4 +1,5 @@
 import json
+from decimal import Decimal
 
 from django.apps import apps
 from django.contrib import messages
@@ -45,6 +46,7 @@ def home_view(request):
         "has_ponds": _has_ponds(b),
         "low_feed": _low_feed(b),
         "baki": _baki_summary(request),
+        "money": _money_summary(request),
     })
 
 
@@ -78,6 +80,31 @@ def _setup_steps(request):
         (markets and buyers, _("Markets and buyers"), _("%(m)s markets · %(b)s buyers") % {"m": markets, "b": buyers} if markets or buyers else _("Where you sell and who buys your fish."), "business:markets_add" if not markets else "business:buyers"),
     ]
     return [{"no": first + i, "done": bool(done), "title": title, "text": text, "url": reverse(url)} for i, (done, title, text, url) in enumerate(steps)]
+
+
+def _money_summary(request):
+    """This month's money card: in, out, what's left, and account balances."""
+    if not (apps.is_installed("apps.business.finance") and can(request.membership, "view_finance")):
+        return None
+    from datetime import date
+
+    from apps.business.finance.models import Account, Scope
+    from apps.business.finance.services import balances, due_recurring, statement
+
+    b, today = request.business, date.today()
+    month = today.replace(day=1)
+    farm = statement(b, month, today, scope=Scope.BUSINESS)
+    home = statement(b, month, today, scope=Scope.HOUSEHOLD)
+    totals = balances(b)
+    accounts = list(Account.objects.filter(business=b))
+    for a in accounts:
+        a.now = totals.get(a.pk, a.opening_balance)
+    return {
+        "farm": farm, "household": home.total_expense, "month": month,
+        "accounts": sorted(accounts, key=lambda a: -a.now)[:4],
+        "in_hand": sum(totals.values(), Decimal(0)),
+        "due_recurring": due_recurring(b) if can(request.membership, "enter_data") else [],
+    }
 
 
 def _baki_summary(request):

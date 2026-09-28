@@ -28,7 +28,7 @@
     <a href="{% url 'business:feed_usage_bulk' %}" class="quick-action">{% include "business/partials/icon.html" with name="banknotes" %}<span>{% translate "Feeding" %}</span></a>
     <a href="{% url 'business:sale_add' %}" class="quick-action is-primary">{% include "partials/icon.html" with name="cart" %}<span>{% translate "Sale" %}</span></a>
     <a href="{% url 'business:feed_purchases_add' %}" class="quick-action">{% include "business/partials/icon.html" with name="truck" %}<span>{% translate "Buy feed" %}</span></a>
-    <a href="{% url 'business:ponds' %}" class="quick-action">{% include "business/partials/icon.html" with name="fish" %}<span>{% translate "Ponds" %}</span></a>
+    <a href="{% url 'business:transaction_add' %}" class="quick-action">{% include "partials/icon.html" with name="wallet" %}<span>{% translate "Cost" %}</span></a>
   </nav>
   {% endif %}
   {% if low_feed %}
@@ -75,7 +75,7 @@
         {% endfor %}
         <li class="is-next">
           <span class="biz-step-dot">{% include "business/partials/icon.html" with name="fish" %}</span>
-          <div><p class="biz-step-title">{% translate "Income & expenses, budgets and reports" %}</p><p class="biz-step-text">{% translate "Coming next to this dashboard." %}</p></div>
+          <div><p class="biz-step-title">{% translate "Reports and exports" %}</p><p class="biz-step-text">{% translate "Coming next to this dashboard." %}</p></div>
         </li>
       </ol>
     </section>
@@ -90,6 +90,40 @@
       {% include "business/partials/converter.html" %}
     </section>
   </div>
+
+  {% if money is not None %}
+  <section class="card">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title flex items-center gap-2"><span class="h-[1.125rem] w-[1.125rem]" style="color: var(--accent);">{% include "business/partials/icon.html" with name="scale" %}</span>{% translate "This month" %}</h2>
+        <p class="card-subtitle">{{ money.month|date:"F Y" }}</p>
+      </div>
+      {% if biz_can.view_reports %}<a href="{% url 'business:statement' %}" class="btn btn-ghost btn-sm">{% translate "Income & expenses" %}{% include "partials/icon.html" with name="arrow-right" %}</a>{% endif %}
+    </div>
+    <div class="card-body">
+      <div class="stat-grid">
+        <div class="stat" data-tone="good"><p class="stat-label">{% translate "Farm income" %}</p><p class="stat-value">{{ money.farm.total_income|bdt }}</p></div>
+        <div class="stat" data-tone="critical"><p class="stat-label">{% translate "Farm costs" %}</p><p class="stat-value">{{ money.farm.total_expense|bdt }}</p></div>
+        <div class="stat" data-tone="{% if money.farm.profit >= 0 %}accent{% else %}critical{% endif %}"><p class="stat-label">{% if money.farm.profit >= 0 %}{% translate "Farm profit" %}{% else %}{% translate "Farm loss" %}{% endif %}</p><p class="stat-value">{{ money.farm.profit|absolute|bdt }}</p></div>
+        <div class="stat" data-tone="gold"><p class="stat-label">{% translate "Household spending" %}</p><p class="stat-value">{{ money.household|bdt }}</p></div>
+      </div>
+      {% if money.due_recurring %}
+      <div class="callout mt-4" data-tone="info">{% include "partials/icon.html" with name="repeat" %}<p>{% blocktranslate count counter=money.due_recurring|length %}{{ counter }} regular bill is due{% plural %}{{ counter }} regular bills are due{% endblocktranslate %} — <a href="{% url 'business:recurring' %}" class="font-semibold hover:underline">{% translate "see them" %}</a></p></div>
+      {% endif %}
+    </div>
+    {% if money.accounts %}
+    <ul class="ledger">
+      {% for a in money.accounts %}
+      <li class="ledger-row">
+        <span class="ledger-icon" data-tone="{% if a.kind == 'cash' %}good{% elif a.kind == 'bank' %}info{% elif a.kind == 'mobile' %}accent{% else %}muted{% endif %}">{% if a.kind == 'bank' %}{% include "business/partials/icon.html" with name="bank" %}{% elif a.kind == 'mobile' %}{% include "partials/icon.html" with name="phone" %}{% else %}{% include "partials/icon.html" with name="wallet" %}{% endif %}</span>
+        <div class="ledger-main"><p class="ledger-title"><a href="{% url 'business:account_detail' a.pk %}" class="hover:underline">{{ a.name }}</a></p><p class="ledger-meta">{{ a.get_kind_display }}</p></div>
+        <div class="ledger-end"><span class="ledger-amount" {% if a.now < 0 %}data-tone="critical" style="--tone: var(--status-critical)"{% endif %}>{{ a.now|bdt }}</span></div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </section>
+  {% endif %}
 
   {% if baki is not None %}
   <section class="card">

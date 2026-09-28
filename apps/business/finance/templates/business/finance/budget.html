@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% translate "Budget" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-narrow stack">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "Budget" %}</h1>
+      <p class="page-subtitle">{% translate "Decide what each thing should cost this month, then watch how you're doing." %}</p>
+    </div>
+    <div class="page-actions"><a href="{% url 'business:budget_edit' %}?month={{ month|date:'Y-m' }}" class="btn btn-primary">{% include "partials/icon.html" with name="edit" %}{% translate "Set budget" %}</a></div>
+  </header>
+
+  <div class="month-bar">
+    <a href="?month={{ prev|date:'Y-m' }}" class="icon-btn" aria-label="{% translate 'Previous month' %}">{% include "partials/icon.html" with name="chevron-left" %}</a>
+    <strong>{{ month|date:"F Y" }}</strong>
+    <a href="?month={{ next|date:'Y-m' }}" class="icon-btn" aria-label="{% translate 'Next month' %}">{% include "partials/icon.html" with name="chevron-right" %}</a>
+  </div>
+
+  {% if rows %}
+  <section class="card card-body">
+    <div class="meter-row">
+      <span>{% blocktranslate with spent=spent|bdt planned=planned|bdt %}{{ spent }} of {{ planned }}{% endblocktranslate %}</span>
+      <strong class="{% if over %}tone-critical{% endif %}">{% if over %}{% blocktranslate with amount=left|absolute|bdt %}{{ amount }} over{% endblocktranslate %}{% else %}{% blocktranslate with amount=left|bdt %}{{ amount }} left{% endblocktranslate %}{% endif %}</strong>
+    </div>
+    <div class="meter meter-lg" data-tone="{% if over %}critical{% elif pct >= 80 %}warn{% else %}good{% endif %}"><span style="width: {{ pct }}%"></span></div>
+    {% if days_left is not None and days_left > 0 %}<p class="help mt-2">{% blocktranslate count counter=days_left %}{{ counter }} day left this month{% plural %}{{ counter }} days left this month{% endblocktranslate %}</p>{% endif %}
+  </section>
+
+  <section class="card">
+    <div class="card-header"><h2 class="card-title">{% translate "By category" %}</h2></div>
+    <ul class="ledger">
+      {% for r in rows %}
+      <li class="ledger-row budget-row">
+        <div class="ledger-main">
+          <p class="ledger-title budget-name">{{ r.category.display_name }} <span class="muted">· {{ r.category.get_scope_display }}</span></p>
+          <div class="meter mt-1.5" data-tone="{% if r.state == 'over' %}critical{% elif r.state == 'warn' %}warn{% else %}good{% endif %}"><span style="width: {{ r.pct }}%"></span></div>
+          <p class="ledger-meta mt-1">{% blocktranslate with spent=r.spent|bdt planned=r.planned|bdt %}{{ spent }} of {{ planned }}{% endblocktranslate %}</p>
+        </div>
+        <div class="ledger-end">
+          <span class="party-bal" data-tone="{% if r.state == 'over' %}critical{% elif r.state == 'warn' %}warn{% else %}good{% endif %}">
+            <strong>{% if r.left < 0 %}{{ r.left|absolute|bdt }}{% else %}{{ r.left|bdt }}{% endif %}</strong>
+            <span>{% if r.left < 0 %}{% translate "over" %}{% else %}{% translate "left" %}{% endif %}</span>
+          </span>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% else %}
+  <div class="empty">
+    <div class="empty-icon">{% include "partials/icon.html" with name="tag" %}</div>
+    <h3 class="empty-title">{% translate "No budget for this month" %}</h3>
+    <p class="empty-text">{% translate "Set what you plan to spend on labour, feed, the bazar and so on. You'll see straight away if something is running over." %}</p>
+    <div class="flex flex-wrap justify-center gap-2">
+      <a href="{% url 'business:budget_edit' %}?month={{ month|date:'Y-m' }}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Set budget" %}</a>
+      {% if copied_from %}<form method="post" action="{% url 'business:budget_copy' %}">{% csrf_token %}<input type="hidden" name="month" value="{{ month|date:'Y-m' }}"><button class="btn btn-secondary">{% include "partials/icon.html" with name="copy" %}{% blocktranslate with m=copied_from|date:"F" %}Copy from {{ m }}{% endblocktranslate %}</button></form>{% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if extra %}
+  <section class="card">
+    <div class="card-header"><div><h2 class="card-title">{% translate "Spent without a budget" %}</h2><p class="card-subtitle">{% translate "You spent on these but didn't plan for them." %}</p></div></div>
+    <ul class="ledger">
+      {% for r in extra %}
+      <li class="ledger-row">
+        <div class="ledger-main"><p class="ledger-title">{{ r.category.display_name }}</p></div>
+        <div class="ledger-end"><span class="ledger-amount">{{ r.spent|bdt }}</span></div>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

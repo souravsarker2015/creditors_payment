@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
 
+from django.apps import apps
 from django.db import transaction
 from django.db.models import Sum
 
@@ -42,6 +43,7 @@ class CycleSummary:
     species: list = field(default_factory=list)
     feed_kg: Decimal = ZERO
     feed_cost: Decimal = ZERO
+    other_cost: Decimal = ZERO      # labour, medicine… recorded against this pond
     stocking_cost: Decimal = ZERO
     sales_net: Decimal = ZERO
     sales_gross: Decimal = ZERO
@@ -67,8 +69,9 @@ class CycleSummary:
 
     @property
     def cost(self):
-        """Costs recorded so far (other expenses join in the income/expense phase)."""
-        return self.stocking_cost + self.feed_cost
+        """Everything this season has cost: fingerlings, feed eaten, and any
+        labour, medicine or other expense recorded against this pond."""
+        return self.stocking_cost + self.feed_cost + self.other_cost
 
     @property
     def profit(self):
@@ -115,6 +118,10 @@ def summarize(cycle):
         s.feed_kg += f.kg
         s.feed_cost += f.kg * prices.get(f.product_id, ZERO)
     s.feed_cost = s.feed_cost.quantize(Decimal("0.01"))
+    if apps.is_installed("apps.business.finance"):
+        from apps.business.finance.services import cycle_costs
+
+        s.other_cost = cycle_costs(cycle)
     sales = cycle.sales.aggregate(net=Sum("net"), gross=Sum("gross"))
     s.sales_net, s.sales_gross = sales["net"] or ZERO, sales["gross"] or ZERO
     s.species = sorted(rows.values(), key=lambda r: r.species.order)

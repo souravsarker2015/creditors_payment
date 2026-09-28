@@ -41,7 +41,21 @@
   <a href="{% url 'business:loans' %}" class="nav-link {% if '/business/loans/' in p %}is-active{% endif %}" {% if '/business/loans/' in p %}aria-current="page"{% endif %}>
     {% include "business/partials/icon.html" with name="banknotes" %}{% translate "Loans" %}
   </a>
-  <a href="{% url 'business:accounts' %}" class="nav-link {% if '/business/finance/accounts/' in p %}is-active{% endif %}">
+  <a href="{% url 'business:transactions' %}" class="nav-link {% if '/business/finance/money/' in p %}is-active{% endif %}">
+    {% include "partials/icon.html" with name="arrow-down" %}{% translate "Money in & out" %}
+  </a>
+  {% if biz_can.view_reports %}
+  <a href="{% url 'business:statement' %}" class="nav-link {% if '/business/finance/statement/' in p %}is-active{% endif %}">
+    {% include "business/partials/icon.html" with name="scale" %}{% translate "Income & expenses" %}
+  </a>
+  {% endif %}
+  <a href="{% url 'business:budget' %}" class="nav-link {% if '/business/finance/budget/' in p %}is-active{% endif %}">
+    {% include "partials/icon.html" with name="tag" %}{% translate "Budget" %}
+  </a>
+  <a href="{% url 'business:recurring' %}" class="nav-link {% if '/business/finance/recurring/' in p %}is-active{% endif %}">
+    {% include "partials/icon.html" with name="repeat" %}{% translate "Regular bills" %}
+  </a>
+  <a href="{% url 'business:accounts' %}" class="nav-link {% if '/business/finance/accounts/' in p or '/business/finance/transfer/' in p %}is-active{% endif %}">
     {% include "partials/icon.html" with name="wallet" %}{% translate "Accounts" %}
   </a>
 </div>

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% translate "Money in & out" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "Money in & out" %}</h1>
+      <p class="page-subtitle">{% translate "Everyday costs and income. Fish sales, feed and loan payments come in by themselves from their own pages." %}</p>
+    </div>
+    {% if biz_can.enter_data %}
+    <div class="page-actions">
+      <a href="{% url 'business:transaction_add' %}?scope={{ scope }}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add" %}</a>
+    </div>
+    {% endif %}
+  </header>
+
+  <nav class="seg seg-scroll" aria-label="{% translate 'Whose money' %}">
+    {% for value, label in scopes %}<a href="?scope={{ value }}&period={{ period }}" class="seg-item {% if scope == value %}is-active{% endif %}">{{ label }}</a>{% endfor %}
+  </nav>
+
+  {% if due_recurring %}
+  <div class="callout" data-tone="info">
+    {% include "partials/icon.html" with name="repeat" %}
+    <div class="flex-1 min-w-0">
+      <p class="callout-title">{% blocktranslate count counter=due_recurring|length %}{{ counter }} regular bill is due{% plural %}{{ counter }} regular bills are due{% endblocktranslate %}</p>
+      <ul class="rec-due">
+        {% for r in due_recurring %}
+        <li>
+          <span class="min-w-0"><strong>{{ r.name }}</strong> · {{ r.amount|bdt }} · {{ r.next_due|date:"j M" }}</span>
+          {% if biz_can.enter_data %}
+          <span class="rec-due-actions">
+            <a href="{% url 'business:transaction_add' %}?from={{ r.pk }}&scope={{ r.category.scope }}&category={{ r.category_id }}&amount={{ r.amount|stringformat:'s' }}&description={{ r.description|urlencode }}&next={{ request.get_full_path|urlencode }}" class="btn btn-soft btn-sm">{% translate "Paid" %}</a>
+            <form method="post" action="{% url 'business:recurring_skip' r.pk %}"><input type="hidden" name="next" value="{{ request.get_full_path }}">{% csrf_token %}<button class="btn btn-ghost btn-sm">{% translate "Skip" %}</button></form>
+          </span>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="stat-grid">
+    <a href="?scope={{ scope }}&period={{ period }}&kind=income" class="stat" data-tone="good" style="--tone: var(--status-good)"><p class="stat-label">{{ period_label }} · {% translate "Came in" %}</p><p class="stat-value">{{ income|bdt }}</p></a>
+    <a href="?scope={{ scope }}&period={{ period }}&kind=expense" class="stat" data-tone="critical" style="--tone: var(--status-critical)"><p class="stat-label">{{ period_label }} · {% translate "Went out" %}</p><p class="stat-value">{{ expense|bdt }}</p></a>
+  </div>
+
+  <div class="master-bar">
+    <nav class="seg seg-scroll" aria-label="{% translate 'Period' %}">
+      {% for key, label, s, e in periods %}<a href="?scope={{ scope }}&period={{ key }}{% if kind %}&kind={{ kind }}{% endif %}" class="seg-item {% if period == key %}is-active{% endif %}">{{ label }}</a>{% endfor %}
+    </nav>
+    <form method="get" class="master-search" role="search">
+      <input type="hidden" name="scope" value="{{ scope }}"><input type="hidden" name="period" value="{{ period }}">
+      <div class="input-icon">{% include "partials/icon.html" with name="search" %}<input type="search" name="q" value="{{ q }}" class="form-input" placeholder="{% translate 'What for, category, person…' %}" aria-label="{% translate 'Search' %}"></div>
+    </form>
+  </div>
+  {% if kind or category %}
+  <div class="chip-row">
+    {% if kind %}<span class="chip"><span>{% if kind == 'income' %}{% translate "Only money in" %}{% else %}{% translate "Only money out" %}{% endif %}</span><a href="?scope={{ scope }}&period={{ period }}" class="chip-x" aria-label="{% translate 'Show all' %}">{% include "partials/icon.html" with name="x" %}</a></span>{% endif %}
+    {% if category %}<span class="chip"><span>{{ category }}</span><a href="?scope={{ scope }}&period={{ period }}" class="chip-x" aria-label="{% translate 'Show all' %}">{% include "partials/icon.html" with name="x" %}</a></span>{% endif %}
+  </div>
+  {% endif %}
+
+  {% if page_obj.object_list %}
+  <section class="card">
+    <ul class="ledger">
+      {% for t in page_obj %}
+      <li class="ledger-row">
+        <span class="ledger-icon" data-tone="{% if t.is_income %}good{% else %}critical{% endif %}">{% if t.is_income %}{% include "partials/icon.html" with name="arrow-down" %}{% else %}{% include "partials/icon.html" with name="arrow-up" %}{% endif %}</span>
+        <div class="ledger-main">
+          <p class="ledger-title">{% if biz_can.enter_data %}<a href="{% url 'business:transaction_edit' t.pk %}" class="hover:underline">{{ t.category }}</a>{% else %}{{ t.category }}{% endif %}</p>
+          <p class="ledger-meta">{{ t.date|date:"j M Y" }}{% if t.description %} · {{ t.description }}{% endif %}{% if t.account %} · {{ t.account }}{% endif %}{% if t.cycle %} · {{ t.cycle.pond }}{% endif %}{% if t.receipt %} · {% translate "receipt" %}{% endif %}</p>
+        </div>
+        <div class="ledger-end">
+          <span class="party-bal" data-tone="{% if t.is_income %}good{% else %}critical{% endif %}"><strong>{{ t.amount|bdt }}</strong><span>{% if t.is_income %}{% translate "in" %}{% else %}{% translate "out" %}{% endif %}</span></span>
+          {% if biz_can.enter_data %}<a href="{% url 'business:transaction_edit' t.pk %}" class="icon-btn" aria-label="{% translate 'Edit' %}" data-tip="{% translate 'Edit' %}">{% include "partials/icon.html" with name="edit" %}</a>{% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% include "partials/pagination.html" %}
+  {% else %}
+  <div class="empty">
+    <div class="empty-icon">{% include "partials/icon.html" with name="wallet" %}</div>
+    <h3 class="empty-title">{% if q %}{% blocktranslate %}Nothing matches “{{ q }}”.{% endblocktranslate %}{% else %}{% translate "Nothing recorded in this period" %}{% endif %}</h3>
+    <p class="empty-text">{% translate "Write down what you spend and earn — labour, electricity, medicine, the bazar. Fish sales and feed purchases are already counted from their own pages." %}</p>
+    {% if biz_can.enter_data %}<a href="{% url 'business:transaction_add' %}?scope={{ scope }}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add" %}</a>{% endif %}
+  </div>
+  {% endif %}
+  {% if deleted_count %}<p class="text-center"><a href="{% url 'business:transactions_deleted' %}" class="btn btn-ghost btn-sm">{% blocktranslate count counter=deleted_count %}{{ counter }} deleted entry{% plural %}{{ counter }} deleted entries{% endblocktranslate %}</a></p>{% endif %}
+</div>
+{% endblock %}

@@ -36,6 +36,7 @@
     <button type="button" class="quick-action" @click="modal = 'mortality'">{% include "partials/icon.html" with name="alert" %}<span>{% translate "Deaths" %}</span></button>
     <button type="button" class="quick-action" @click="modal = 'stocking'">{% include "business/partials/icon.html" with name="fish" %}<span>{% translate "Stock" %}</span></button>
     <button type="button" class="quick-action" @click="modal = 'harvest'">{% include "partials/icon.html" with name="cart" %}<span>{% translate "Harvest" %}</span></button>
+    <a href="{% url 'business:transaction_add' %}?cycle={{ cycle.pk }}&next={{ request.path|urlencode }}" class="quick-action">{% include "partials/icon.html" with name="wallet" %}<span>{% translate "Cost" %}</span></a>
     <a href="{% url 'business:sale_add' %}?cycle={{ cycle.pk }}" class="quick-action is-primary">{% include "partials/icon.html" with name="check" %}<span>{% translate "Sell" %}</span></a>
   </nav>
   {% endif %}
@@ -54,7 +55,7 @@
     <div class="stat" data-tone="warn">
       <dt class="stat-label">{% translate "Spent so far" %}</dt>
       <dd class="stat-value">{{ s.cost|bdt }}</dd>
-      <dd class="stat-hint">{% blocktranslate with f=s.feed_cost|bdt kg=s.feed_kg|num %}Feed {{ f }} ({{ kg }} kg){% endblocktranslate %} · {% blocktranslate with c=s.stocking_cost|bdt %}fingerlings {{ c }}{% endblocktranslate %}</dd>
+      <dd class="stat-hint">{% blocktranslate with f=s.feed_cost|bdt kg=s.feed_kg|num %}Feed {{ f }} ({{ kg }} kg){% endblocktranslate %} · {% blocktranslate with c=s.stocking_cost|bdt %}fingerlings {{ c }}{% endblocktranslate %}{% if s.other_cost %} · {% blocktranslate with o=s.other_cost|bdt %}other {{ o }}{% endblocktranslate %}{% endif %}</dd>
     </div>
     <div class="stat" data-tone="{% if s.profit >= 0 %}good{% else %}critical{% endif %}">
       <dt class="stat-label inline-flex items-center">{% translate "Sales so far" %}{% translate "Net sales (after market deductions) from this cycle, and the result after fingerling and feed costs. Other expenses join in once income and expenses are added." as info_text %}{% include "partials/info.html" with text=info_text %}</dt>

@@ -62,6 +62,12 @@
         </div>
       </div>
 
+      <div class="field">
+        <label class="label" for="pay-account">{% translate "Which account" %}<span class="opt">{% translate "(optional)" %}</span></label>
+        <select id="pay-account" name="pay-account" class="form-input">{% for value, label in pay_form.fields.account.choices %}<option value="{{ value }}" {% if pay_form.initial.account and pay_form.initial.account.pk == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+        <p class="help">{% translate "So the money comes off that account's balance." %}</p>
+      </div>
+
       <div x-data="{ more: false }">
         <button type="button" class="btn btn-ghost btn-sm !px-0" @click="more = !more" x-show="!more">{% include "partials/icon.html" with name="plus" %}{% translate "Fees, fine, receipt no. or note" %}</button>
         <div class="form-stack" x-show="more" x-cloak>

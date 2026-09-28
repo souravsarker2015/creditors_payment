@@ -100,10 +100,26 @@ class LoanForm(forms.ModelForm):
         return data
 
 
+def _account_field(field, business, empty_label):
+    """Which account the money went out of (or came into). Only when the
+    finance app is there — loans work on their own too."""
+    from apps.business.finance.models import Account
+
+    field.queryset = Account.objects.filter(business=business)
+    field.empty_label = empty_label
+    field.widget.attrs.setdefault("class", "form-input")
+
+
+def _default_account(business):
+    from apps.business.finance.models import Account
+
+    return Account.objects.filter(business=business, is_default=True).first()
+
+
 class PaymentForm(forms.ModelForm):
     class Meta:
         model = LoanTransaction
-        fields = ["date", "interest", "principal", "charges", "paid_via", "reference", "notes"]
+        fields = ["date", "interest", "principal", "charges", "paid_via", "account", "reference", "notes"]
         widgets = {
             "date": _date_input(),
             "interest": _money_input(), "principal": _money_input(), "charges": _money_input(),
@@ -117,8 +133,10 @@ class PaymentForm(forms.ModelForm):
         self.loan = loan
         for name in ("interest", "principal", "charges"):
             self.fields[name].required = False
+        _account_field(self.fields["account"], loan.business, _("Not recorded"))
         if not self.instance.pk:
             self.initial.setdefault("date", date.today())
+            self.initial.setdefault("account", _default_account(loan.business))
 
     def clean(self):
         data = super().clean()
@@ -134,7 +152,7 @@ class PaymentForm(forms.ModelForm):
 class TopUpForm(forms.ModelForm):
     class Meta:
         model = LoanTransaction
-        fields = ["date", "principal", "paid_via", "reference", "notes"]
+        fields = ["date", "principal", "paid_via", "account", "reference", "notes"]
         labels = {"principal": _("Extra amount received"), "paid_via": _("Received by")}
         widgets = {
             "date": _date_input(), "principal": _money_input(min="1"),
@@ -146,8 +164,10 @@ class TopUpForm(forms.ModelForm):
     def __init__(self, *args, loan, **kwargs):
         super().__init__(*args, **kwargs)
         self.loan = loan
+        _account_field(self.fields["account"], loan.business, _("Not recorded"))
         if not self.instance.pk:
             self.initial.setdefault("date", date.today())
+            self.initial.setdefault("account", _default_account(loan.business))
 
     def clean(self):
         data = super().clean()

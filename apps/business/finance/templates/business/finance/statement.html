@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% translate "Income & expenses" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-narrow stack">
+  <header class="page-header !mb-0 no-print">
+    <div>
+      <h1 class="page-title">{% translate "Income & expenses" %}</h1>
+      <p class="page-subtitle">{% translate "What came in, what went out, and what's left — from every part of the app together." %}</p>
+    </div>
+    <div class="page-actions">
+      <button type="button" class="btn btn-secondary" onclick="window.print()">{% include "partials/icon.html" with name="printer" %}{% translate "Print" %}</button>
+    </div>
+  </header>
+
+  <nav class="seg seg-scroll no-print" aria-label="{% translate 'Whose money' %}">
+    {% for value, label in scopes %}<a href="?scope={{ value }}&period={{ period }}&month={{ month|date:'Y-m' }}" class="seg-item {% if scope == value %}is-active{% endif %}">{{ label }}</a>{% endfor %}
+  </nav>
+
+  <div class="month-bar no-print">
+    <a href="?scope={{ scope }}&period={{ period }}&month={{ prev|date:'Y-m' }}" class="icon-btn" aria-label="{% translate 'Previous' %}">{% include "partials/icon.html" with name="chevron-left" %}</a>
+    <strong>{{ label }}</strong>
+    {% if can_go_next %}<a href="?scope={{ scope }}&period={{ period }}&month={{ next|date:'Y-m' }}" class="icon-btn" aria-label="{% translate 'Next' %}">{% include "partials/icon.html" with name="chevron-right" %}</a>{% else %}<span class="icon-btn is-off" aria-hidden="true">{% include "partials/icon.html" with name="chevron-right" %}</span>{% endif %}
+    <span class="seg seg-scroll ml-auto">
+      <a href="?scope={{ scope }}&period=month&month={{ month|date:'Y-m' }}" class="seg-item {% if period == 'month' %}is-active{% endif %}">{% translate "Month" %}</a>
+      <a href="?scope={{ scope }}&period=year&month={{ month|date:'Y-m' }}" class="seg-item {% if period == 'year' %}is-active{% endif %}">{% translate "Year" %}</a>
+    </span>
+  </div>
+
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="min-w-0">
+        <p class="hero-label">{% if s.profit >= 0 %}{% translate "Money left" %}{% else %}{% translate "Short by" %}{% endif %} · {{ label }}</p>
+        <p class="hero-value">{{ s.profit|absolute|bdt }}</p>
+        <p class="hero-sub">{% blocktranslate with income=s.total_income|bdt expense=s.total_expense|bdt %}{{ income }} came in · {{ expense }} went out{% endblocktranslate %}{% if s.margin is not None and s.profit > 0 %} · {% blocktranslate with pct=s.margin %}{{ pct }}% of income{% endblocktranslate %}{% endif %}</p>
+      </div>
+    </div>
+  </section>
+
+  <article class="card memo stmt">
+    <header class="memo-head">
+      <div>
+        <p class="memo-business">{{ business.name }}</p>
+        {% if business.address %}<p class="memo-sub">{{ business.address }}</p>{% endif %}
+      </div>
+      <div class="memo-meta">
+        <p class="memo-kind">{% translate "Income & expenses" %}</p>
+        <p>{{ label }}{% for value, lbl in scopes %}{% if scope == value %} · {{ lbl }}{% endif %}{% endfor %}</p>
+      </div>
+    </header>
+
+    {% if s.income or s.expense %}
+    <div class="fin-cols">
+      <section>
+        <h3 class="fin-head" data-tone="good">{% translate "Money in" %}<strong>{{ s.total_income|bdt }}</strong></h3>
+        <ul class="fin-list">
+          {% for l in s.income %}
+          <li class="fin-line">
+            <div class="fin-line-top">
+              <span class="fin-name">{% if l.url %}<a href="{{ l.url }}" class="hover:underline">{{ l.label }}</a>{% else %}{{ l.label }}{% endif %}</span>
+              <span class="fin-amount">{{ l.amount|bdt }}</span>
+            </div>
+            <div class="meter" data-tone="good"><span style="width: {% widthratio l.amount max_income 100 %}%"></span></div>
+            {% if l.has_children %}<ul class="fin-kids">{% for c in l.children %}<li><span>{{ c.label }}</span><span>{{ c.amount|bdt }}</span></li>{% endfor %}</ul>{% endif %}
+          </li>
+          {% empty %}<li class="fin-empty">{% translate "Nothing came in." %}</li>
+          {% endfor %}
+        </ul>
+      </section>
+      <section>
+        <h3 class="fin-head" data-tone="critical">{% translate "Money out" %}<strong>{{ s.total_expense|bdt }}</strong></h3>
+        <ul class="fin-list">
+          {% for l in s.expense %}
+          <li class="fin-line">
+            <div class="fin-line-top">
+              <span class="fin-name">{% if l.url %}<a href="{{ l.url }}" class="hover:underline">{{ l.label }}</a>{% else %}{{ l.label }}{% endif %}</span>
+              <span class="fin-amount">{{ l.amount|bdt }}</span>
+            </div>
+            <div class="meter" data-tone="critical"><span style="width: {% widthratio l.amount max_expense 100 %}%"></span></div>
+            {% if l.has_children %}<ul class="fin-kids">{% for c in l.children %}<li><span>{{ c.label }}</span><span>{{ c.amount|bdt }}</span></li>{% endfor %}</ul>{% endif %}
+          </li>
+          {% empty %}<li class="fin-empty">{% translate "Nothing went out." %}</li>
+          {% endfor %}
+        </ul>
+      </section>
+    </div>
+    <dl class="fin-total" data-tone="{% if s.profit >= 0 %}good{% else %}critical{% endif %}">
+      <dt>{% if s.profit >= 0 %}{% translate "Money left" %}{% else %}{% translate "Short by" %}{% endif %}</dt>
+      <dd>{{ s.profit|absolute|bdt }}</dd>
+    </dl>
+    {% else %}
+    <p class="empty-text py-8 text-center">{% translate "Nothing recorded in this period." %}</p>
+    {% endif %}
+    <p class="memo-foot">{% blocktranslate with date=today|date:"j M Y" %}Printed {{ date }}{% endblocktranslate %}</p>
+  </article>
+
+  {% if scope == 'business' %}
+  <p class="help no-print">{% translate "Farm figures come from your sales, feed used, fingerlings and loan interest. Feed counts when the fish eat it, not when you buy it, so a pond's cost is right." %}</p>
+  {% endif %}
+</div>
+{% endblock %}
