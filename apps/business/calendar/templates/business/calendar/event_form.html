@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load i18n calendar_tags %}
+{% block title %}{% if obj %}{{ obj.title }}{% else %}{% translate "Add to the calendar" %}{% endif %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-narrow">
+  <header class="page-header">
+    <div>
+      <a href="{{ back }}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Calendar" %}</a>
+      <h1 class="page-title">{% if obj %}{{ obj.title }}{% else %}{% translate "Add to the calendar" %}{% endif %}</h1>
+      {% if obj %}<p class="page-subtitle">{{ obj.date|date:"l, j F Y" }} · {{ obj.date|bangla_date }}</p>{% endif %}
+    </div>
+    {% if obj and biz_can.delete %}
+    <div class="page-actions">
+      <form method="post" action="{% url 'business:calendar_delete' obj.pk %}" data-confirm="{% translate 'Remove this from the calendar?' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ back }}">
+        <button type="submit" class="btn btn-ghost">{% include "partials/icon.html" with name="trash" %}{% translate "Remove" %}</button></form>
+    </div>
+    {% endif %}
+  </header>
+  <form method="post" class="stack" novalidate x-data="{ repeat: '{{ form.repeat.value|default:'' }}' }" @change="if ($event.target.name === 'repeat') repeat = $event.target.value">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ back }}">
+    {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+    {% for section in form.rows %}
+    <section class="card">
+      {% if section.title %}<div class="card-header"><h2 class="card-title">{{ section.title }}</h2></div>{% endif %}
+      <div class="card-body form-stack">
+        {% for row in section.fields %}
+          {% if row|length > 1 %}<div class="form-grid form-grid-2">{% for field in row %}<div {% if field.name == "repeat_until" %}x-show="repeat"{% endif %}>{% include "business/partials/field.html" %}</div>{% endfor %}</div>
+          {% else %}{% with field=row.0 %}<div {% if field.name == "end_date" %}x-show="!repeat"{% endif %}>{% include "business/partials/field.html" %}</div>{% endwith %}{% endif %}
+        {% endfor %}
+      </div>
+    </section>
+    {% endfor %}
+    <div class="form-actions">
+      <a href="{{ back }}" class="btn btn-ghost btn-lg">{% translate "Cancel" %}</a>
+      <button type="submit" class="btn btn-primary btn-lg">{% include "partials/icon.html" with name="check" %}{% translate "Save" %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

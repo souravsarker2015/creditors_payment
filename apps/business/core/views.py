@@ -1,4 +1,5 @@
 import json
+from datetime import date
 from decimal import Decimal
 
 from django.apps import apps
@@ -10,6 +11,7 @@ from django.db import transaction
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils.formats import date_format
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _, ngettext
 from django.views.decorators.http import require_POST
@@ -34,8 +36,9 @@ def _units_json(business):
 def home_view(request):
     b = request.business
     units = Unit.objects.filter(business=b)
-    tasks = _farm_tasks(b)
+    tasks = _farm_tasks(b) + _calendar_tasks(b)
     return render(request, "business/home.html", {
+        "today": date.today(),
         "share_url": _share_url(request, tasks),
         "team_count": b.members.count(),
         "unit_count": units.count(),
@@ -65,6 +68,23 @@ def _farm_tasks(business):
     from apps.business.ponds.services import farm_tasks
 
     return farm_tasks(business)
+
+
+def _calendar_tasks(business):
+    """Today's events from the farm calendar, and to-dos still not ticked."""
+    if not apps.is_installed("apps.business.calendar"):
+        return []
+    from apps.business.calendar.services import todays_events
+    from apps.business.ponds.services import Task
+
+    today = date.today()
+    out = []
+    for i in todays_events(business, today):
+        late = i.date < today
+        detail = " · ".join(x for x in (i.time, i.detail, _("from %(date)s") % {"date": date_format(i.date, "j M")} if late else "") if x)
+        out.append(Task("event", "warn" if late else "info", i.title, detail,
+                        reverse("business:calendar") + f"?day={i.date.isoformat()}", _("Open")))
+    return out
 
 
 def _share_url(request, tasks):

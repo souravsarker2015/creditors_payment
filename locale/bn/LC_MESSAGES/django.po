@@ -8412,3 +8412,279 @@ msgstr "টাকা এসেছে: %(i)s · গেছে: %(o)s"
 
 msgid "Still to do:"
 msgstr "বাকি কাজ:"
+
+msgid "Longer or repeating"
+msgstr "কয়েক দিনের বা বারবার"
+
+msgid "For something that lasts several days, like drying a pond. Leave empty for one day."
+msgstr "কয়েক দিন ধরে চলে এমন কাজের জন্য, যেমন পুকুর শুকানো। এক দিনের হলে খালি রাখুন।"
+
+msgid "“Bangla date” repeats keep the same Bangla day, e.g. every 1 Boishakh, or the 1st of every Bangla month."
+msgstr "“বাংলা তারিখ” অনুযায়ী বারবার হলে একই বাংলা তারিখে হয়, যেমন প্রতি ১ বৈশাখ, বা প্রতি বাংলা মাসের ১ তারিখে।"
+
+msgid "Leave empty to repeat for ever."
+msgstr "সবসময় চলতে থাকলে খালি রাখুন।"
+
+msgid "Sets the colour. “To do” items get a tick box and stay on the home page until they're done."
+msgstr "রং ঠিক করে। “করণীয়” কাজে টিক দেওয়ার ঘর থাকে, আর শেষ না হওয়া পর্যন্ত হোম পাতায় থাকে।"
+
+msgid "e.g. Lime the east pond, Pay pond lease, Eid-ul-Adha"
+msgstr "যেমন পূর্বের পুকুরে চুন দেওয়া, পুকুরের লিজ দেওয়া, ঈদুল আযহা"
+
+msgid "This has to be on or after the start date."
+msgstr "এটা শুরুর তারিখে বা তার পরে হতে হবে।"
+
+msgid "A repeating event can only be one day long."
+msgstr "বারবার হওয়া কাজ শুধু এক দিনের হতে পারে।"
+
+msgid "This has to be after the first date."
+msgstr "এটা প্রথম তারিখের পরে হতে হবে।"
+
+msgid "Farm work"
+msgstr "খামারের কাজ"
+
+msgid "To do"
+msgstr "করণীয়"
+
+msgid "Holiday / festival"
+msgstr "ছুটি / উৎসব"
+
+msgid "Doesn't repeat"
+msgstr "একবারই"
+
+msgid "Every month (English date)"
+msgstr "প্রতি মাসে (ইংরেজি তারিখে)"
+
+msgid "Every month (Bangla date)"
+msgstr "প্রতি মাসে (বাংলা তারিখে)"
+
+msgid "Every year (English date)"
+msgstr "প্রতি বছর (ইংরেজি তারিখে)"
+
+msgid "Every year (Bangla date)"
+msgstr "প্রতি বছর (বাংলা তারিখে)"
+
+msgid "What"
+msgstr "কী"
+
+msgid "Until"
+msgstr "পর্যন্ত"
+
+msgid "Kind"
+msgstr "ধরন"
+
+msgid "Repeat"
+msgstr "বারবার"
+
+msgid "Repeat until"
+msgstr "যে তারিখ পর্যন্ত"
+
+msgid "Fingerlings released · %(pond)s"
+msgstr "পোনা ছাড়া · %(pond)s"
+
+msgid "Harvest · %(pond)s"
+msgstr "মাছ ধরা · %(pond)s"
+
+msgid "%(n)s fish died · %(pond)s"
+msgstr "%(n)sটি মাছ মরেছে · %(pond)s"
+
+msgid "Sample weighing · %(pond)s"
+msgstr "নমুনা ওজন · %(pond)s"
+
+msgid "Water test · %(pond)s"
+msgstr "পানি পরীক্ষা · %(pond)s"
+
+msgid "All readings within your levels"
+msgstr "সব মাপ আপনার সীমার মধ্যে"
+
+msgid "Cycle started · %(pond)s"
+msgstr "চক্র শুরু · %(pond)s"
+
+msgid "Cycle finished · %(pond)s"
+msgstr "চক্র শেষ · %(pond)s"
+
+msgid "Planned harvest · %(pond)s"
+msgstr "মাছ ধরার পরিকল্পনা · %(pond)s"
+
+msgid "Lease ends · %(pond)s"
+msgstr "লিজ শেষ · %(pond)s"
+
+msgid "Sale · %(who)s"
+msgstr "বিক্রি · %(who)s"
+
+msgid "Feed bought · %(who)s"
+msgstr "খাবার কেনা · %(who)s"
+
+msgid "Loan instalment · %(loan)s"
+msgstr "ঋণের কিস্তি · %(loan)s"
+
+msgid "%(name)s due"
+msgstr "%(name)s দেওয়ার দিন"
+
+msgid "Follow up · %(name)s"
+msgstr "তাগাদা · %(name)s"
+
+msgid "Shaheed Day & International Mother Language Day"
+msgstr "শহীদ দিবস ও আন্তর্জাতিক মাতৃভাষা দিবস"
+
+msgid "Independence Day"
+msgstr "স্বাধীনতা দিবস"
+
+msgid "May Day"
+msgstr "মে দিবস"
+
+msgid "Victory Day"
+msgstr "বিজয় দিবস"
+
+msgid "Christmas"
+msgstr "বড়দিন"
+
+msgid "Pohela Boishakh (Bangla New Year)"
+msgstr "পহেলা বৈশাখ (বাংলা নববর্ষ)"
+
+msgid "Pohela Falgun (first day of spring)"
+msgstr "পহেলা ফাল্গুন (বসন্তের প্রথম দিন)"
+
+msgid "Nobanno (harvest festival)"
+msgstr "নবান্ন (নতুন ধানের উৎসব)"
+
+msgid "English and Bangla dates together, with everything happening on the farm."
+msgstr "ইংরেজি আর বাংলা তারিখ একসঙ্গে, সঙ্গে খামারের সব কাজকর্ম।"
+
+msgid "Today"
+msgstr "আজ"
+
+msgid "Add event"
+msgstr "কাজ যোগ করুন"
+
+msgid "Previous year"
+msgstr "আগের বছর"
+
+msgid "Next year"
+msgstr "পরের বছর"
+
+msgid "Which calendar the months follow"
+msgstr "মাস কোন ক্যালেন্ডার অনুযায়ী"
+
+msgid "English"
+msgstr "ইংরেজি"
+
+msgid "“English” shows January, February… months with the Bangla date in each day. “বাংলা” shows Boishakh, Joishtho… months with the English date in each day."
+msgstr "“ইংরেজি” দেখায় জানুয়ারি, ফেব্রুয়ারি… মাস, প্রতিটি দিনে বাংলা তারিখসহ। “বাংলা” দেখায় বৈশাখ, জ্যৈষ্ঠ… মাস, প্রতিটি দিনে ইংরেজি তারিখসহ।"
+
+msgid "View"
+msgstr "দেখুন"
+
+msgid "Agenda"
+msgstr "তালিকা"
+
+msgid "How the calendar works"
+msgstr "ক্যালেন্ডার যেভাবে কাজ করে"
+
+msgid "Every day shows its English and Bangla date. Switch which calendar the months follow with English / বাংলা."
+msgstr "প্রতিটি দিনে ইংরেজি আর বাংলা তারিখ দেখায়। ইংরেজি / বাংলা দিয়ে মাস কোন ক্যালেন্ডার অনুযায়ী হবে তা বদলান।"
+
+msgid "Sales, pond work, feed, loan instalments, bills and Baki follow-ups appear by themselves. Tap the coloured buttons to show or hide each kind."
+msgstr "বিক্রি, পুকুরের কাজ, খাবার, ঋণের কিস্তি, বিল আর বাকির তাগাদা নিজেই চলে আসে। রঙিন বোতামে চেপে প্রতিটি ধরন দেখান বা লুকান।"
+
+msgid "Add your own jobs, reminders and festivals. “To do” items get a tick box and wait on the home page until they're done."
+msgstr "নিজের কাজ, মনে রাখার বিষয় আর উৎসব যোগ করুন। “করণীয়” কাজে টিক দেওয়ার ঘর থাকে, আর শেষ না হওয়া পর্যন্ত হোম পাতায় থাকে।"
+
+msgid "On a phone, swipe left or right on the calendar to change the month."
+msgstr "ফোনে ক্যালেন্ডারের ওপর ডানে-বাঁয়ে টানলে মাস বদলায়।"
+
+msgid "Add on this day"
+msgstr "এই দিনে যোগ করুন"
+
+msgid "repeats"
+msgstr "বারবার"
+
+msgid "Mark as not done"
+msgstr "হয়নি চিহ্ন দিন"
+
+msgid "Mark as done"
+msgstr "হয়েছে চিহ্ন দিন"
+
+msgid "Everything on this day is hidden by the filters above."
+msgstr "ওপরের বোতামগুলো দিয়ে এই দিনের সব লুকানো আছে।"
+
+msgid "Nothing on this day."
+msgstr "এই দিনে কিছু নেই।"
+
+msgid "Nothing this month yet."
+msgstr "এ মাসে এখনো কিছু নেই।"
+
+msgid "{month} has only {n} days."
+msgstr "{month} মাসে মাত্র {n} দিন।"
+
+msgid "Date converter"
+msgstr "তারিখ রূপান্তর"
+
+msgid "English date to Bangla, and back."
+msgstr "ইংরেজি তারিখ থেকে বাংলা, আর বাংলা থেকে ইংরেজি।"
+
+msgid "English date"
+msgstr "ইংরেজি তারিখ"
+
+msgid "Bangla date"
+msgstr "বাংলা তারিখ"
+
+msgid "Day"
+msgstr "দিন"
+
+msgid "Calendar settings"
+msgstr "ক্যালেন্ডারের সেটিংস"
+
+msgid "Week starts on"
+msgstr "সপ্তাহ শুরু"
+
+msgid "Saturday"
+msgstr "শনিবার"
+
+msgid "Sunday"
+msgstr "রবিবার"
+
+msgid "Monday"
+msgstr "সোমবার"
+
+msgid "On your phone's calendar"
+msgstr "ফোনের ক্যালেন্ডারে"
+
+msgid "Download the file and open it: Google Calendar, iPhone and Outlook add your events, planned harvests, holidays and money due for the next 12 months. Download again after big changes."
+msgstr "ফাইলটা ডাউনলোড করে খুলুন: গুগল ক্যালেন্ডার, আইফোন আর আউটলুকে আগামী ১২ মাসের কাজ, মাছ ধরার পরিকল্পনা, ছুটি আর দেনা যোগ হবে। বড় কোনো পরিবর্তনের পরে আবার ডাউনলোড করুন।"
+
+msgid "Download calendar (.ics)"
+msgstr "ক্যালেন্ডার ডাউনলোড (.ics)"
+
+msgid "Eid, Durga Puja and other holidays that follow the moon change every year. Add them as your own events."
+msgstr "ঈদ, দুর্গাপূজা আর চাঁদ দেখে ঠিক হওয়া অন্য ছুটির তারিখ প্রতি বছর বদলায়। এগুলো নিজের কাজ হিসেবে যোগ করুন।"
+
+msgid "Add to the calendar"
+msgstr "ক্যালেন্ডারে যোগ করুন"
+
+msgid "More options: several days, a pond, notes…"
+msgstr "আরও: কয়েক দিন, পুকুর, নোট…"
+
+msgid "Remove this from the calendar?"
+msgstr "ক্যালেন্ডার থেকে এটা সরাবেন?"
+
+msgid "My events"
+msgstr "আমার কাজ"
+
+msgid "Money due"
+msgstr "দেনা-পাওনা"
+
+msgid "Holidays"
+msgstr "ছুটি"
+
+msgid "Saved to the calendar."
+msgstr "ক্যালেন্ডারে রাখা হয়েছে।"
+
+msgid "Removed from the calendar."
+msgstr "ক্যালেন্ডার থেকে সরানো হয়েছে।"
+
+msgid "Calendar"
+msgstr "ক্যালেন্ডার"
+
+msgid "from %(date)s"
+msgstr "%(date)s থেকে"

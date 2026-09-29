@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+{% load i18n business calendar_tags %}
+{% block title %}{% translate "Calendar" %} · {{ title }} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page stack cal-page" x-data="farmCalendar({ selected: '{{ selected }}', today: '{{ today_iso }}', prev: '{{ prev_url|escapejs }}', next: '{{ next_url|escapejs }}', cal: '{{ cal }}', doneUrl: '{% url 'business:calendar_done' 0 %}', csrf: '{{ csrf_token }}' })">
+  {{ items_json|json_script:"cal-items" }}
+  {{ days_json|json_script:"cal-days" }}
+  {{ kind_labels|json_script:"cal-kinds" }}
+
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "Calendar" %}</h1>
+      <p class="page-subtitle">{% translate "English and Bangla dates together, with everything happening on the farm." %}</p>
+    </div>
+    <div class="page-actions">
+      <a href="{{ today_url }}" class="btn btn-secondary">{% include "partials/icon.html" with name="calendar" %}{% translate "Today" %}</a>
+      {% if biz_can.enter_data %}<button type="button" class="btn btn-primary" @click="openAdd()">{% include "partials/icon.html" with name="plus" %}{% translate "Add event" %}</button>{% endif %}
+    </div>
+  </header>
+
+  <section class="cal-toolbar card">
+    <div class="cal-nav">
+      <a href="{{ prev_url }}" class="icon-btn cal-arrow" {% if view == "year" %}aria-label="{% translate 'Previous year' %}" data-tip="{% translate 'Previous year' %}"{% else %}aria-label="{% translate 'Previous month' %}" data-tip="{% translate 'Previous month' %}"{% endif %}>{% include "partials/icon.html" with name="chevron-left" %}</a>
+      <div class="cal-title">
+        <h2>{{ title }}</h2>
+        <p><span>{{ other }}</span>{% if season %}<span class="cal-season">{{ season }}</span>{% endif %}</p>
+      </div>
+      <a href="{{ next_url }}" class="icon-btn cal-arrow" {% if view == "year" %}aria-label="{% translate 'Next year' %}" data-tip="{% translate 'Next year' %}"{% else %}aria-label="{% translate 'Next month' %}" data-tip="{% translate 'Next month' %}"{% endif %}>{% include "partials/icon.html" with name="chevron-right" %}</a>
+    </div>
+    <div class="cal-switches">
+      <nav class="seg" aria-label="{% translate 'Which calendar the months follow' %}">
+        <a href="{{ cal_urls.en }}" class="seg-item {% if cal == 'en' %}is-active{% endif %}" {% if cal == 'en' %}aria-current="page"{% endif %}>{% translate "English" %}</a>
+        <a href="{{ cal_urls.bn }}" class="seg-item {% if cal == 'bn' %}is-active{% endif %}" {% if cal == 'bn' %}aria-current="page"{% endif %}>বাংলা</a>
+      </nav>
+      {% translate "“English” shows January, February… months with the Bangla date in each day. “বাংলা” shows Boishakh, Joishtho… months with the English date in each day." as cal_tip %}{% include "business/partials/tip.html" with text=cal_tip %}
+      <nav class="seg" aria-label="{% translate 'View' %}">
+        <a href="{{ view_urls.month }}" class="seg-item {% if view == 'month' %}is-active{% endif %}">{% translate "Month" %}</a>
+        <a href="{{ view_urls.agenda }}" class="seg-item {% if view == 'agenda' %}is-active{% endif %}">{% translate "Agenda" %}</a>
+        <a href="{{ view_urls.year }}" class="seg-item {% if view == 'year' %}is-active{% endif %}">{% translate "Year" %}</a>
+      </nav>
+    </div>
+    <div class="cal-filters" role="group" aria-label="{% translate 'Show' %}">
+      {% for f in filters %}
+      <button type="button" class="cal-filter" data-kind="{{ f.key }}" :class="on['{{ f.key }}'] ? 'is-on' : ''" :aria-pressed="on['{{ f.key }}'].toString()" @click="toggle('{{ f.key }}')">
+        <span class="cal-dot"></span>{{ f.label }}{% if f.count %}<span class="cal-count">{{ f.count|loc_num }}</span>{% endif %}
+      </button>
+      {% endfor %}
+    </div>
+  </section>
+
+  {% include "business/partials/note.html" with key="calendar" title=_("How the calendar works") p1=_("Every day shows its English and Bangla date. Switch which calendar the months follow with English / বাংলা.") p2=_("Sales, pond work, feed, loan instalments, bills and Baki follow-ups appear by themselves. Tap the coloured buttons to show or hide each kind.") p3=_("Add your own jobs, reminders and festivals. “To do” items get a tick box and wait on the home page until they're done.") p4=_("On a phone, swipe left or right on the calendar to change the month.") %}
+
+  {% if view == "month" %}
+  <div class="cal-layout">
+    <section class="card cal-card" @touchstart.passive="touchStart($event)" @touchend.passive="touchEnd($event)">
+      <div class="cal-weekdays" aria-hidden="true">
+        {% for w in weekdays %}<span class="{% if w.weekend %}is-weekend{% endif %}">{{ w.short }}</span>{% endfor %}
+      </div>
+      <div class="cal-grid" role="grid" aria-label="{{ title }}" @keydown="keys($event)">
+        {% for row in weeks %}
+        <div class="cal-row" role="row">
+          {% for c in row %}
+          <button type="button" role="gridcell" class="cal-cell{% if not c.in_month %} is-out{% endif %}{% if c.today %} is-today{% endif %}{% if c.weekend %} is-weekend{% endif %}{% if c.holiday %} is-holiday{% endif %}"
+                  data-iso="{{ c.iso }}" :class="sel === '{{ c.iso }}' && 'is-selected'" :aria-selected="(sel === '{{ c.iso }}').toString()"
+                  :tabindex="sel === '{{ c.iso }}' ? 0 : -1" @click="pick('{{ c.iso }}')" aria-label="{{ c.aria }}">
+            <span class="cal-num">{{ c.primary }}</span>
+            <span class="cal-sub{% if c.second_start %} is-start{% endif %}">{{ c.second }}</span>
+            <span class="cal-chips">
+              <template x-for="i in visible('{{ c.iso }}').slice(0, 3)"><span class="cal-chip" :class="i.done && 'is-done'" :style="`--c: ${color(i)}`" x-text="(i.time ? num(i.time) + ' ' : '') + i.title"></span></template>
+              <span class="cal-more" x-show="visible('{{ c.iso }}').length > 3" x-text="'+' + num(visible('{{ c.iso }}').length - 3)"></span>
+            </span>
+            <span class="cal-dots" aria-hidden="true">
+              <template x-for="k in kindsOn('{{ c.iso }}')"><span class="cal-dot-sm" :data-kind="k"></span></template>
+            </span>
+          </button>
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <aside class="card cal-day" x-ref="day" aria-live="polite">
+      <div class="cal-day-head">
+        <div class="min-w-0">
+          <p class="cal-day-title" x-text="day().head"></p>
+          <p class="cal-day-sub" x-text="day().sub"></p>
+        </div>
+        {% if biz_can.enter_data %}<button type="button" class="icon-btn" @click="openAdd()" aria-label="{% translate 'Add on this day' %}" data-tip="{% translate 'Add on this day' %}">{% include "partials/icon.html" with name="plus" %}</button>{% endif %}
+      </div>
+      <ul class="cal-items" x-show="visible(sel).length">
+        <template x-for="i in visible(sel)" :key="i.kind + i.pk + i.title + i.time">
+          <li class="cal-item" :style="`--c: ${color(i)}`">
+            <span class="cal-item-icon" x-html="icon(i.icon)"></span>
+            <div class="min-w-0 flex-1">
+              <p class="cal-item-title" :class="i.done && 'is-done'">
+                <template x-if="i.url"><a :href="i.url" x-text="i.title"></a></template>
+                <template x-if="!i.url"><span x-text="i.title"></span></template>
+              </p>
+              <p class="cal-item-meta"><span x-show="i.time" x-text="num(i.time)"></span><span x-show="i.detail" x-text="i.detail"></span><span class="cal-item-kind" x-text="kindLabels[i.kind]"></span><span x-show="i.repeat">{% translate "repeats" %}</span></p>
+            </div>
+            {% if biz_can.enter_data %}
+            <button type="button" class="cal-tick" x-show="i.task && !i.repeat" :class="i.done && 'is-done'" role="checkbox" :aria-checked="i.done.toString()"
+                    :aria-label="i.done ? '{% translate "Mark as not done"|escapejs %}' : '{% translate "Mark as done"|escapejs %}'" @click="tick(i)">{% include "partials/icon.html" with name="check" %}</button>
+            {% endif %}
+          </li>
+        </template>
+      </ul>
+      <div class="cal-empty" x-show="!visible(sel).length">
+        <p x-text="(items[sel] || []).length ? '{% translate "Everything on this day is hidden by the filters above."|escapejs %}' : '{% translate "Nothing on this day."|escapejs %}'"></p>
+        {% if biz_can.enter_data %}<button type="button" class="btn btn-soft btn-sm" @click="openAdd()">{% include "partials/icon.html" with name="plus" %}{% translate "Add on this day" %}</button>{% endif %}
+      </div>
+    </aside>
+  </div>
+  {% elif view == "year" %}
+  <div class="cal-year" @touchstart.passive="touchStart($event)" @touchend.passive="touchEnd($event)">
+    {% for mo in minis %}
+    <section class="card cal-mini{% if mo.current %} is-current{% endif %}">
+      <a href="{{ mo.url }}" class="cal-mini-head"><strong>{{ mo.title }}</strong><span>{{ mo.other }}</span></a>
+      <div class="cal-mini-wd" aria-hidden="true">{% for w in weekdays %}<span class="{% if w.weekend %}is-weekend{% endif %}">{{ w.short }}</span>{% endfor %}</div>
+      <div class="cal-mini-grid">
+        {% for row in mo.weeks %}{% for c in row %}{% if c.in_month %}<a href="{{ month_url }}&amp;day={{ c.iso }}" class="cal-mini-day{% if c.today %} is-today{% endif %}{% if c.holiday %} is-holiday{% endif %}" aria-label="{{ c.aria }}">{{ c.primary }}<span class="cal-mini-dot" x-show="visible('{{ c.iso }}').length" x-cloak></span></a>{% else %}<span aria-hidden="true"></span>{% endif %}{% endfor %}{% endfor %}
+      </div>
+    </section>
+    {% endfor %}
+  </div>
+  {% else %}
+  <section class="card">
+    {% if agenda %}
+    <ol class="cal-agenda">
+      {% for day, list in agenda %}
+      {% with info=days|get_item:day %}
+      <li class="cal-agenda-day" x-show="{% for i in list %}on['{{ i.kind }}']{% if not forloop.last %} || {% endif %}{% endfor %}">
+        <div class="cal-agenda-date{% if day|date:'Y-m-d' == today_iso %} is-today{% endif %}">
+          <p class="cal-day-title">{{ info.head }}</p><p class="cal-day-sub">{{ info.sub }}</p>
+        </div>
+        <ul class="cal-items">
+          {% for i in list %}
+          <li class="cal-item" x-show="on['{{ i.kind }}']" :style="`--c: ${color({kind: '{{ i.kind }}', cat: '{{ i.cat }}', tone: '{{ i.tone }}'})}`">
+            <span class="cal-item-icon" x-html="icon('{{ i.icon }}')"></span>
+            <div class="min-w-0 flex-1">
+              <p class="cal-item-title{% if i.done %} is-done{% endif %}">{% if i.url %}<a href="{{ i.url }}">{{ i.title }}</a>{% else %}{{ i.title }}{% endif %}</p>
+              <p class="cal-item-meta">{% if i.time %}<span>{{ i.time|loc_num }}</span>{% endif %}{% if i.detail %}<span>{{ i.detail }}</span>{% endif %}<span class="cal-item-kind">{{ kind_labels|get_item:i.kind }}</span></p>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </li>
+      {% endwith %}
+      {% endfor %}
+    </ol>
+    {% else %}
+    <div class="empty is-plain"><p class="empty-text">{% translate "Nothing this month yet." %}</p></div>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  <div class="cal-tools">
+    <section class="card" x-data="dateConverter({{ months_bn|safe }}, '{% translate "{month} has only {n} days." as too_short %}{{ too_short|escapejs }}')">
+      <div class="card-header"><div><h2 class="card-title">{% translate "Date converter" %}</h2><p class="card-subtitle">{% translate "English date to Bangla, and back." %}</p></div></div>
+      <div class="card-body form-stack">
+        <div class="field">
+          <label class="label" for="conv-en">{% translate "English date" %}</label>
+          <input id="conv-en" type="date" class="form-input" x-model="en" @input="fromEn()">
+          <p class="conv-out" x-text="bnText"></p>
+        </div>
+        <div class="field">
+          <span class="label" id="conv-bn-label">{% translate "Bangla date" %}</span>
+          <div class="conv-bn" role="group" aria-labelledby="conv-bn-label">
+            <select class="form-input" x-model.number="bd" @change="fromBn()" aria-label="{% translate 'Day' %}"><template x-for="n in 31"><option :value="n" x-text="num(n)" :selected="n === bd"></option></template></select>
+            <select class="form-input" x-model.number="bm" @change="fromBn()" aria-label="{% translate 'Month' %}"><template x-for="(name, i) in months"><option :value="i + 1" x-text="name" :selected="i + 1 === bm"></option></template></select>
+            <input type="number" class="form-input" x-model.number="by" @input="fromBn()" min="1300" max="1600" aria-label="{% translate 'Year' %}">
+          </div>
+          <p class="conv-out" x-text="enText"></p>
+        </div>
+      </div>
+    </section>
+    <section class="card">
+      <div class="card-header"><h2 class="card-title">{% translate "Calendar settings" %}</h2></div>
+      <div class="card-body form-stack">
+        <div class="field">
+          <span class="label">{% translate "Week starts on" %}</span>
+          <nav class="seg">
+            <a href="{{ week_urls.sat }}" class="seg-item {% if week == 'sat' %}is-active{% endif %}">{% translate "Saturday" %}</a>
+            <a href="{{ week_urls.sun }}" class="seg-item {% if week == 'sun' %}is-active{% endif %}">{% translate "Sunday" %}</a>
+            <a href="{{ week_urls.mon }}" class="seg-item {% if week == 'mon' %}is-active{% endif %}">{% translate "Monday" %}</a>
+          </nav>
+        </div>
+        <div class="field">
+          <span class="label">{% translate "On your phone's calendar" %}{% translate "Download the file and open it: Google Calendar, iPhone and Outlook add your events, planned harvests, holidays and money due for the next 12 months. Download again after big changes." as ics_tip %}{% include "business/partials/tip.html" with text=ics_tip %}</span>
+          <a href="{% url 'business:calendar_ics' %}" class="btn btn-secondary">{% include "partials/icon.html" with name="download" %}{% translate "Download calendar (.ics)" %}</a>
+        </div>
+        <p class="help">{% translate "Eid, Durga Puja and other holidays that follow the moon change every year. Add them as your own events." %}</p>
+      </div>
+    </section>
+  </div>
+
+  {% if biz_can.enter_data %}
+  <template x-teleport="body">
+  <div class="modal-root" x-show="adding" x-cloak @keydown.escape.window="adding = false" role="dialog" aria-modal="true" aria-labelledby="cal-add-title">
+    <div class="modal-backdrop" x-show="adding" x-transition.opacity.duration.200ms @click="adding = false"></div>
+    <form method="post" action="{% url 'business:calendar_add' %}" class="modal" x-show="adding" x-trap.noscroll="adding" novalidate
+          x-transition:enter="modal-enter" x-transition:enter-start="modal-enter-start" x-transition:enter-end="modal-enter-end">
+      {% csrf_token %}
+      <input type="hidden" name="next" :value="location.pathname + location.search.replace(/([?&])day=[^&]*/, '$1').replace(/[?&]$/, '') + (location.search ? '&' : '?') + 'day=' + form.date">
+      <div class="modal-header">
+        <span class="modal-icon">{% include "partials/icon.html" with name="calendar" %}</span>
+        <div class="min-w-0 flex-1"><h2 class="modal-title" id="cal-add-title">{% translate "Add to the calendar" %}</h2><p class="modal-subtitle" x-text="(days[form.date] || {}).head || ''"></p></div>
+        <button type="button" class="icon-btn" @click="adding = false" aria-label="{% translate 'Close' %}">{% include "partials/icon.html" with name="x" %}</button>
+      </div>
+      <div class="modal-body form-stack">
+        <div class="field"><label class="label" for="add-title">{% translate "What" %}<span class="req" aria-hidden="true">*</span></label>
+          <input id="add-title" name="title" class="form-input" required maxlength="150" x-ref="title" placeholder="{% translate 'e.g. Lime the east pond, Pay pond lease, Eid-ul-Adha' %}"></div>
+        <div class="form-grid form-grid-2">
+          <div class="field"><label class="label" for="add-date">{% translate "Date" %}</label><input id="add-date" type="date" name="date" class="form-input" x-model="form.date" required></div>
+          <div class="field"><label class="label" for="add-time">{% translate "Time" %}<span class="opt">{% translate "(optional)" %}</span></label><input id="add-time" type="time" name="time" class="form-input"></div>
+        </div>
+        <div class="field"><span class="label" id="add-cat">{% translate "Kind" %}</span>
+          <div class="cal-cats" role="radiogroup" aria-labelledby="add-cat">
+            {% for value, label in categories %}<label class="cal-cat" data-cat="{{ value }}"><input type="radio" name="category" value="{{ value }}" class="sr-only" {% if forloop.first %}checked{% endif %}><span class="cal-dot"></span>{{ label }}</label>{% endfor %}
+          </div>
+        </div>
+        <div class="field"><label class="label" for="add-repeat">{% translate "Repeat" %}</label>
+          <select id="add-repeat" name="repeat" class="form-input">{% for value, label in form.fields.repeat.choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></div>
+        <a :href="'{% url 'business:calendar_add' %}?date=' + form.date" class="help underline">{% translate "More options: several days, a pond, notes…" %}</a>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" @click="adding = false">{% translate "Cancel" %}</button>
+        <button type="submit" class="btn btn-primary">{% include "partials/icon.html" with name="check" %}{% translate "Save" %}</button>
+      </div>
+    </form>
+  </div>
+  </template>
+  {% endif %}
+
+  {# Icons for the items drawn in the browser. #}
+  {% for name in "fish cart alert scale beaker lock calendar banknotes repeat bell truck check flag"|split %}<template data-icon="{{ name }}">{% include "business/partials/icon.html" %}</template>{% endfor %}
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{% asset 'js/calendar.js' %}"></script>{% endblock %}

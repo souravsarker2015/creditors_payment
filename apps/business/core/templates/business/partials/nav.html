@@ -11,6 +11,9 @@
     {% include "business/partials/icon.html" with name="scale" %}{% translate "Business dashboard" %}
   </a>
   {% endif %}
+  <a href="{% url 'business:calendar' %}" class="nav-link {% if '/business/calendar/' in p %}is-active{% endif %}" {% if '/business/calendar/' in p %}aria-current="page"{% endif %}>
+    {% include "partials/icon.html" with name="calendar" %}{% translate "Calendar" %}
+  </a>
   <a href="{% url 'business:ponds' %}" class="nav-link {% if '/business/ponds/' in p %}is-active{% endif %}">
     {% include "business/partials/icon.html" with name="fish" %}{% translate "Ponds" %}
   </a>

@@ -1,11 +1,11 @@
 {% extends "base.html" %}
-{% load i18n business %}
+{% load i18n business calendar_tags %}
 {% block title %}{{ business.name }} | FinTrack{% endblock %}
 {% block content %}
 <div class="page stack">
   <header class="page-header !mb-0">
     <div>
-      <p class="text-sm font-semibold" style="color: var(--text-muted);">{% now "l, j F Y" %}</p>
+      <p class="text-sm font-semibold" style="color: var(--text-muted);">{% now "l, j F Y" %} · <a href="{% url 'business:calendar' %}" class="hover:underline">{{ today|bangla_date }}</a></p>
       <h1 class="page-title">{{ business.name }}</h1>
       <div class="meta-list">
         <span class="meta-item">{% include "business/partials/icon.html" with name="shield" %}{% blocktranslate with role=membership.get_role_display %}You're the {{ role }}{% endblocktranslate %}</span>
