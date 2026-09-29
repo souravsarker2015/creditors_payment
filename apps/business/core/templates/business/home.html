@@ -12,8 +12,10 @@
         {% if business.address %}<span class="meta-item">{% include "partials/icon.html" with name="tag" %}{{ business.address }}</span>{% endif %}
       </div>
     </div>
+    <div class="page-actions">
+    {% if share_url %}<a href="{{ share_url }}" target="_blank" rel="noopener" class="btn btn-secondary" data-tip="{% translate 'Send today’s sales, feed, deaths and to-dos to the owner or your family group on WhatsApp.' %}">{% include "partials/icon.html" with name="chat" %}{% translate "Share today’s report" %}</a>{% endif %}
     {% if other_businesses %}
-    <form method="post" action="{% url 'business:switch_business' %}" class="page-actions">
+    <form method="post" action="{% url 'business:switch_business' %}">
       {% csrf_token %}
       <select name="business" class="form-input input-compact" onchange="this.form.submit()" aria-label="{% translate 'Switch business' %}">
         <option value="{{ business.pk }}" selected>{{ business.name }}</option>
@@ -21,6 +23,7 @@
       </select>
     </form>
     {% endif %}
+    </div>
   </header>
 
   {% if biz_can.enter_data and has_ponds %}
@@ -34,13 +37,13 @@
   {% if tasks %}
   <section class="card">
     <div class="card-header">
-      <div><h2 class="card-title">{% translate "Today on the farm" %}{% include "business/partials/tip.html" with text=_("Worked out from what you've recorded: ponds with no feeding today, cycles due a sample weighing (every 3 weeks), harvests planned within a week, and pond leases ending within a month.") %}</h2>
+      <div><h2 class="card-title">{% translate "Today on the farm" %}{% include "business/partials/tip.html" with text=_("Worked out from what you've recorded: water tests outside your alert levels, many fish dying in the last 3 days, ponds with no feeding today, cycles due a sample weighing (every 3 weeks), harvests planned within a week, and pond leases ending within a month.") %}</h2>
       <p class="card-subtitle">{% blocktranslate count counter=tasks|length %}{{ counter }} thing to do{% plural %}{{ counter }} things to do{% endblocktranslate %}</p></div>
     </div>
     <ul class="ledger">
       {% for t in tasks %}
       <li class="ledger-row">
-        <span class="ledger-icon" data-tone="{{ t.tone }}">{% if t.kind == "feed" %}{% include "business/partials/icon.html" with name="banknotes" %}{% elif t.kind == "weigh" %}{% include "business/partials/icon.html" with name="scale" %}{% elif t.kind == "harvest" %}{% include "partials/icon.html" with name="cart" %}{% else %}{% include "partials/icon.html" with name="calendar" %}{% endif %}</span>
+        <span class="ledger-icon" data-tone="{{ t.tone }}">{% if t.kind == "water" %}{% include "business/partials/icon.html" with name="beaker" %}{% elif t.kind == "deaths" %}{% include "partials/icon.html" with name="alert" %}{% elif t.kind == "feed" %}{% include "business/partials/icon.html" with name="banknotes" %}{% elif t.kind == "weigh" %}{% include "business/partials/icon.html" with name="scale" %}{% elif t.kind == "harvest" %}{% include "partials/icon.html" with name="cart" %}{% else %}{% include "partials/icon.html" with name="calendar" %}{% endif %}</span>
         <div class="ledger-main"><p class="ledger-title">{{ t.title }}</p><p class="ledger-meta">{{ t.detail }}</p></div>
         <div class="ledger-end"><a href="{{ t.url }}" class="btn btn-soft btn-sm">{{ t.action }}</a></div>
       </li>

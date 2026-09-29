@@ -34,7 +34,9 @@ def _units_json(business):
 def home_view(request):
     b = request.business
     units = Unit.objects.filter(business=b)
+    tasks = _farm_tasks(b)
     return render(request, "business/home.html", {
+        "share_url": _share_url(request, tasks),
         "team_count": b.members.count(),
         "unit_count": units.count(),
         "mon": units.filter(symbol="mon").first(),
@@ -44,7 +46,7 @@ def home_view(request):
         "loans": _loans_summary(request),
         "setup_steps": _setup_steps(request),
         "has_ponds": _has_ponds(b),
-        "tasks": _farm_tasks(b),
+        "tasks": tasks,
         "low_feed": _low_feed(b),
         "baki": _baki_summary(request),
         "money": _money_summary(request),
@@ -63,6 +65,18 @@ def _farm_tasks(business):
     from apps.business.ponds.services import farm_tasks
 
     return farm_tasks(business)
+
+
+def _share_url(request, tasks):
+    """WhatsApp link with today's report; money only for people who may see it."""
+    if not apps.is_installed("apps.business.reports"):
+        return ""
+    from urllib.parse import quote
+
+    from apps.business.reports.services import daily_text
+
+    text = daily_text(request.business, show_money=can(request.membership, "view_finance"), tasks=tasks)
+    return "https://wa.me/?text=" + quote(text)
 
 
 def _low_feed(business):
@@ -383,6 +397,8 @@ def setup_hub_view(request):
             tile("business:ponds", "fish", _("Ponds"), _("Size, lease and status of each pond"), Pond.objects.filter(business=b).count()),
             tile("business:species", "fish", _("Fish species"), _("Rui, Katla, Pangas… in English and Bangla"), Species.objects.filter(business=b).count()),
             tile("business:feed_products", "banknotes", _("Feed products"), _("Brand, bag size, price and supplier"), FeedProduct.objects.filter(business=b).count()),
+            tile("business:pond_alerts", "beaker", _("Pond alert levels"), _("Safe ranges for oxygen, pH, ammonia… and deaths"), None,
+                 show=can(request.membership, "manage_settings")),
         ]),
         (_("Buying and selling"), [
             tile("business:suppliers", "truck", _("Suppliers"), _("Feed dealers, hatcheries, medicine shops"), Party.objects.filter(business=b, is_supplier=True).count()),

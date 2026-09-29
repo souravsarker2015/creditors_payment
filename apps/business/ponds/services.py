@@ -209,6 +209,7 @@ def projection(summary, today=None):
 # ── Today's pond work ───────────────────────────────────────────────────────
 
 WEIGH_EVERY_DAYS = 21     # a sample weighing this old is due again
+RECENT_DAYS = 3           # water tests and deaths this recent count as "now"
 FIRST_WEIGH_DAYS = 14     # a new cycle's first weighing
 HARVEST_SOON_DAYS = 7
 LEASE_SOON_DAYS = 30
@@ -216,7 +217,7 @@ LEASE_SOON_DAYS = 30
 
 @dataclass
 class Task:
-    kind: str        # feed | weigh | harvest | lease
+    kind: str        # water | deaths | feed | weigh | harvest | lease
     tone: str        # warn | info | critical
     title: str
     detail: str
@@ -238,6 +239,9 @@ def farm_tasks(business, today=None):
     running = list(CultureCycle.objects.filter(business=business, status=CycleStatus.RUNNING)
                    .select_related("pond").annotate(last_weighed=Max("weighings__date"))
                    .order_by("pond__order", "pond__name"))
+
+    if running:
+        tasks += _water_tasks(business, running, today) + _death_tasks(business, running, today)
 
     if apps.is_installed("apps.business.feed") and running:
         from apps.business.feed.models import FeedUsage
@@ -281,6 +285,59 @@ def farm_tasks(business, today=None):
     order = {"critical": 0, "warn": 1, "info": 2}
     tasks.sort(key=lambda t: order[t.tone])
     return tasks
+
+
+def _water_tasks(business, running, today):
+    """The latest recent water test of each running pond, if it broke a limit."""
+    from django.urls import reverse
+    from django.utils.translation import gettext as _
+
+    from .models import PondAlerts, WaterTest
+
+    limits = PondAlerts.for_business(business)
+    latest = {}
+    for t in WaterTest.objects.filter(business=business, cycle__in=running, date__gte=today - timedelta(days=RECENT_DAYS)).order_by("date", "id"):
+        latest[t.cycle_id] = t
+    out = []
+    for c in running:
+        test = latest.get(c.pk)
+        found = test.problems(limits) if test else []
+        if found:
+            out.append(Task("water", "critical", _("Water problem in %(pond)s") % {"pond": c.pond.name},
+                            " · ".join(f.what for f in found), reverse("business:cycle_detail", args=[c.pk]) + "?tab=water", _("Open")))
+    return out
+
+
+def _death_tasks(business, running, today):
+    """Ponds where more fish died in the last few days than the farm's warning level."""
+    from django.urls import reverse
+    from django.utils.translation import gettext as _, ngettext
+
+    from .models import Harvest, Mortality, PondAlerts, Stocking
+
+    limits = PondAlerts.for_business(business)
+    ids = [c.pk for c in running]
+    since = today - timedelta(days=RECENT_DAYS)
+
+    def totals(qs, field_name):
+        return dict(qs.filter(cycle_id__in=ids).values_list("cycle_id").annotate(n=Sum(field_name)))
+
+    stocked = totals(Stocking.objects.filter(business=business), "count")
+    died = totals(Mortality.objects.filter(business=business), "count")
+    recent = totals(Mortality.objects.filter(business=business, date__gte=since), "count")
+    taken = totals(Harvest.objects.filter(business=business), "fish_count")
+    out = []
+    for c in running:
+        now = recent.get(c.pk) or 0
+        before = (stocked.get(c.pk) or 0) - ((died.get(c.pk) or 0) - now) - (taken.get(c.pk) or 0)
+        if now and before > 0 and Decimal(now) * 100 / before > limits.deaths_pct:
+            pct = (Decimal(now) * 100 / before).quantize(Decimal("0.1"))
+            out.append(Task("deaths", "critical", _("Many fish dying in %(pond)s") % {"pond": c.pond.name},
+                            ngettext("%(n)s fish in the last %(days)s days (%(pct)s%% of the pond). Test the water and check for disease.",
+                                     "%(n)s fish in the last %(days)s days (%(pct)s%% of the pond). Test the water and check for disease.", now)
+                            % {"n": now, "days": RECENT_DAYS, "pct": pct},
+                            reverse("business:cycle_detail", args=[c.pk]) + "?tab=growth", _("Open")))
+    return out
 
 
 def running_cycle(pond):

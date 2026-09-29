@@ -5,7 +5,7 @@ from django.core.validators import FileExtensionValidator, MinValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from apps.business.core.models import MONEY, BusinessBaseModel, Unit
+from apps.business.core.models import MONEY, Business, BusinessBaseModel, Unit
 
 
 class PondStatus(models.TextChoices):
@@ -213,3 +213,71 @@ class Harvest(BusinessBaseModel):
     def save(self, *args, **kwargs):
         self.base_quantity = (self.quantity or 0) * self.unit.factor
         super().save(*args, **kwargs)
+
+
+# ── Water quality ───────────────────────────────────────────────────────────
+
+class TimeOfDay(models.TextChoices):
+    DAWN = "dawn", _("Early morning")
+    DAY = "day", _("Daytime")
+    EVENING = "evening", _("Evening")
+    NIGHT = "night", _("Night")
+
+
+READING = {"max_digits": 6, "decimal_places": 2, "null": True, "blank": True, "validators": [MinValueValidator(0)]}
+
+
+class WaterTest(BusinessBaseModel):
+    """One check of a pond's water. Any reading can be left empty."""
+
+    cycle = models.ForeignKey(CultureCycle, on_delete=models.CASCADE, related_name="water_tests")
+    date = models.DateField(_("Date"))
+    time_of_day = models.CharField(_("Time"), max_length=8, choices=TimeOfDay.choices, blank=True)
+    oxygen = models.DecimalField(_("Dissolved oxygen (mg/L)"), **READING)
+    ph = models.DecimalField(_("pH"), **READING)
+    temperature = models.DecimalField(_("Water temperature (°C)"), **READING)
+    ammonia = models.DecimalField(_("Ammonia (mg/L)"), **READING)
+    transparency = models.DecimalField(_("Transparency (cm)"), **READING)
+
+    READINGS = ("oxygen", "ph", "temperature", "ammonia", "transparency")
+
+    class Meta:
+        ordering = ["-date", "-id"]
+        indexes = [models.Index(fields=["cycle", "is_deleted", "date"])]
+
+    def __str__(self):
+        return f"{self.cycle} · {self.date:%d %b %Y}"
+
+    def problems(self, limits):
+        """[(reading, what's wrong, what to do)] for readings outside the farm's limits."""
+        from .water import check
+
+        return check(self, limits)
+
+
+class PondAlerts(models.Model):
+    """The farm's own warning levels. Filled with common defaults; change them
+    to suit your fish and your water."""
+
+    business = models.OneToOneField(Business, on_delete=models.CASCADE, related_name="pond_alerts")
+    oxygen_min = models.DecimalField(_("Oxygen: warn below (mg/L)"), max_digits=5, decimal_places=2, default=Decimal("4"))
+    ph_min = models.DecimalField(_("pH: warn below"), max_digits=4, decimal_places=2, default=Decimal("6.5"))
+    ph_max = models.DecimalField(_("pH: warn above"), max_digits=4, decimal_places=2, default=Decimal("8.5"))
+    temperature_min = models.DecimalField(_("Temperature: warn below (°C)"), max_digits=5, decimal_places=2, default=Decimal("20"))
+    temperature_max = models.DecimalField(_("Temperature: warn above (°C)"), max_digits=5, decimal_places=2, default=Decimal("32"))
+    ammonia_max = models.DecimalField(_("Ammonia: warn above (mg/L)"), max_digits=5, decimal_places=2, default=Decimal("0.5"))
+    transparency_min = models.DecimalField(_("Transparency: warn below (cm)"), max_digits=5, decimal_places=1, default=Decimal("25"))
+    transparency_max = models.DecimalField(_("Transparency: warn above (cm)"), max_digits=5, decimal_places=1, default=Decimal("40"))
+    deaths_pct = models.DecimalField(_("Deaths: warn when more than this % of the fish die in 3 days"), max_digits=5, decimal_places=2,
+                                     default=Decimal("1"), validators=[MinValueValidator(0)])
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _("pond alert levels")
+
+    def __str__(self):
+        return f"{self.business} alerts"
+
+    @classmethod
+    def for_business(cls, business):
+        return cls.objects.get_or_create(business=business)[0]

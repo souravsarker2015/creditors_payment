@@ -30,9 +30,10 @@
   </header>
 
   {% if cycle.is_running and biz_can.enter_data %}
-  <nav class="quick-actions" aria-label="{% translate 'Record' %}">
+  <nav class="quick-actions quick-actions-8" aria-label="{% translate 'Record' %}">
     <button type="button" class="quick-action" @click="modal = 'feeding'">{% include "business/partials/icon.html" with name="banknotes" %}<span>{% translate "Feed" %}</span></button>
     <button type="button" class="quick-action" @click="modal = 'weighing'">{% include "business/partials/icon.html" with name="scale" %}<span>{% translate "Weigh" %}</span></button>
+    <button type="button" class="quick-action" @click="modal = 'water'">{% include "business/partials/icon.html" with name="beaker" %}<span>{% translate "Water" %}</span></button>
     <button type="button" class="quick-action" @click="modal = 'mortality'">{% include "partials/icon.html" with name="alert" %}<span>{% translate "Deaths" %}</span></button>
     <button type="button" class="quick-action" @click="modal = 'stocking'">{% include "business/partials/icon.html" with name="fish" %}<span>{% translate "Stock" %}</span></button>
     <button type="button" class="quick-action" @click="modal = 'harvest'">{% include "partials/icon.html" with name="cart" %}<span>{% translate "Harvest" %}</span></button>
@@ -41,7 +42,18 @@
   </nav>
   {% endif %}
 
-  {% include "business/partials/note.html" with key="cycle" title=_("How a cycle works") p1=_("A cycle is one round of farming in a pond: from releasing fingerlings to the last harvest. Everything you record here adds up to its cost and profit.") p2=_("Use the buttons above to record feed given, sample weights, deaths, fingerlings, harvests, other costs and sales.") p3=_("Weigh 10–20 fish every 2–3 weeks. That's how the app estimates the fish weight in the pond and the FCR.") p4=_("When the pond is fully harvested, open the Cycle menu and choose “Finish this cycle”.") %}
+  {% if water_now.found and cycle.is_running %}
+  <div class="callout" data-tone="critical">
+    {% include "business/partials/icon.html" with name="beaker" %}
+    <div class="flex-1 min-w-0">
+      <p class="callout-title">{% blocktranslate with date=water_now.date|date:"j M" %}Water problem in the last test ({{ date }}){% endblocktranslate %}</p>
+      <ul class="water-problems">{% for f in water_now.found %}<li><strong>{{ f.what }}</strong> {{ f.todo }}</li>{% endfor %}</ul>
+    </div>
+    <button type="button" class="btn btn-soft btn-sm" @click="tab = 'water'">{% translate "See tests" %}</button>
+  </div>
+  {% endif %}
+
+  {% include "business/partials/note.html" with key="cycle" title=_("How a cycle works") p1=_("A cycle is one round of farming in a pond: from releasing fingerlings to the last harvest. Everything you record here adds up to its cost and profit.") p2=_("Use the buttons above to record feed given, sample weights, water tests, deaths, fingerlings, harvests, other costs and sales.") p3=_("Weigh 10–20 fish every 2–3 weeks. That's how the app estimates the fish weight in the pond and the FCR.") p4=_("When the pond is fully harvested, open the Cycle menu and choose “Finish this cycle”.") %}
 
   <dl class="stat-grid">
     <div class="stat" data-tone="info">
@@ -114,6 +126,7 @@
     <button type="button" role="tab" class="seg-item" :class="tab === 'stocking' && 'is-active'" @click="tab = 'stocking'">{% translate "Stocking" %} <span class="seg-count">{{ stockings|length }}</span></button>
     <button type="button" role="tab" class="seg-item" :class="tab === 'growth' && 'is-active'" @click="tab = 'growth'">{% translate "Growth & deaths" %}</button>
     <button type="button" role="tab" class="seg-item" :class="tab === 'harvest' && 'is-active'" @click="tab = 'harvest'">{% translate "Harvest & sales" %} <span class="seg-count">{{ harvest_sale_count }}</span></button>
+    <button type="button" role="tab" class="seg-item" :class="tab === 'water' && 'is-active'" @click="tab = 'water'">{% translate "Water" %} <span class="seg-count">{{ water|length }}</span></button>
   </nav>
 
   <!-- Fish -->
@@ -253,6 +266,34 @@
       {% else %}<div class="empty is-plain"><p class="empty-text">{% translate "No sales linked to this pond yet." %}</p></div>{% endif %}
     </section>
   </div>
+
+  <!-- Water -->
+  <section class="card" x-show="tab === 'water'" x-cloak>
+    <div class="card-header">
+      <div><h2 class="card-title">{% translate "Water tests" %}{% include "business/partials/tip.html" with text=_("Readings outside your farm's alert levels are shown in red. Change the levels in Farm setup → Pond alert levels.") %}</h2>
+      <p class="card-subtitle">{% translate "Test once or twice a week, and whenever the fish act strangely." %}</p></div>
+      {% if cycle.is_running and biz_can.enter_data %}<button type="button" class="btn btn-ghost btn-sm" @click="modal = 'water'">{% include "partials/icon.html" with name="plus" %}{% translate "Add" %}</button>{% endif %}
+    </div>
+    {% if water %}
+    <ul class="ledger">{% for e in water %}
+      <li class="ledger-row">
+        <span class="ledger-icon" data-tone="{% if e.found %}critical{% else %}good{% endif %}">{% include "business/partials/icon.html" with name="beaker" %}</span>
+        <div class="ledger-main">
+          <p class="ledger-title">{{ e.date|date:"j M Y" }}{% if e.time_of_day %} · {{ e.get_time_of_day_display }}{% endif %}</p>
+          <p class="water-chips">
+            {% if e.oxygen is not None %}<span class="water-chip{% for f in e.found %}{% if f.reading == 'oxygen' %} is-bad{% endif %}{% endfor %}">O₂ {{ e.oxygen|floatformat:"-2" }}</span>{% endif %}
+            {% if e.ph is not None %}<span class="water-chip{% for f in e.found %}{% if f.reading == 'ph' %} is-bad{% endif %}{% endfor %}">pH {{ e.ph|floatformat:"-2" }}</span>{% endif %}
+            {% if e.temperature is not None %}<span class="water-chip{% for f in e.found %}{% if f.reading == 'temperature' %} is-bad{% endif %}{% endfor %}">{{ e.temperature|floatformat:"-1" }} °C</span>{% endif %}
+            {% if e.ammonia is not None %}<span class="water-chip{% for f in e.found %}{% if f.reading == 'ammonia' %} is-bad{% endif %}{% endfor %}">NH₃ {{ e.ammonia|floatformat:"-2" }}</span>{% endif %}
+            {% if e.transparency is not None %}<span class="water-chip{% for f in e.found %}{% if f.reading == 'transparency' %} is-bad{% endif %}{% endfor %}">{{ e.transparency|floatformat:"-1" }} cm</span>{% endif %}
+          </p>
+          {% if e.found %}<p class="ledger-meta tone-critical">{% for f in e.found %}{{ f.what }}{% if not forloop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+        </div>
+        <div class="ledger-end">{% include "business/ponds/entry_menu.html" with kind="water" %}</div>
+      </li>{% endfor %}
+    </ul>
+    {% else %}<div class="empty is-plain"><p class="empty-text">{% translate "No water tests yet. Low oxygen and high ammonia kill fish fast, so a quick test once or twice a week is worth it." %}</p>{% if cycle.is_running and biz_can.enter_data %}<button type="button" class="btn btn-primary" @click="modal = 'water'">{% include "business/partials/icon.html" with name="beaker" %}{% translate "Add a water test" %}</button>{% endif %}</div>{% endif %}
+  </section>
 
   {% if cycle.is_running and biz_can.enter_data %}
     {% for key, kind, form, action in popups %}{% include "business/ponds/entry_modal.html" %}{% endfor %}

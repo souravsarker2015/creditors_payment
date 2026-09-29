@@ -20,7 +20,7 @@
           <span class="setup-tile-title">{{ t.title }}</span>
           <span class="setup-tile-text">{{ t.text }}</span>
         </span>
-        <span class="setup-count{% if not t.count %} is-zero{% endif %}">{{ t.count }}</span>
+        {% if t.count is not None %}<span class="setup-count{% if not t.count %} is-zero{% endif %}">{{ t.count }}</span>{% endif %}
       </a>
       {% endfor %}
     </div>

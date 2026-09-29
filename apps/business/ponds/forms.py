@@ -8,7 +8,7 @@ from apps.business.core.crud import BusinessForm, money_field
 from apps.business.core.models import Unit
 from apps.business.species.models import Species
 
-from .models import CultureCycle, Harvest, Mortality, Ownership, Pond, SampleWeighing, Stocking
+from .models import CultureCycle, Harvest, Mortality, Ownership, Pond, PondAlerts, SampleWeighing, Stocking, TimeOfDay, WaterTest
 
 MAX_PHOTO_MB = 5
 
@@ -221,3 +221,57 @@ class HarvestForm(EntryForm):
         if not self.instance.pk:
             self.initial.setdefault("unit", Unit.objects.filter(business=self.business, symbol="mon").first()
                                     or Unit.objects.filter(business=self.business, symbol="kg").first())
+
+
+class WaterTestForm(EntryForm):
+    layout = [("date", "time_of_day"), ("oxygen", "ph"), ("temperature", "ammonia"), ("transparency",), ("notes",)]
+    tips = {
+        "time_of_day": _("Oxygen is lowest just before sunrise, so an early-morning test shows the worst case."),
+        "oxygen": _("From a DO meter or test kit, in mg/L. Low oxygen is the most common cause of fish dying suddenly."),
+        "ph": _("From a pH kit or paper. It usually rises in the afternoon and falls at night."),
+        "temperature": _("Put the thermometer about a foot under the water for a minute."),
+        "ammonia": _("From an ammonia test kit, in mg/L. It rises with uneaten feed and waste."),
+        "transparency": _("Lower a Secchi disk (a black-and-white plate) until you can't see it, and read the depth in cm."),
+    }
+
+    class Meta:
+        model = WaterTest
+        fields = ["date", "time_of_day", "oxygen", "ph", "temperature", "ammonia", "transparency", "notes"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["time_of_day"].choices = [("", _("Not noted"))] + list(TimeOfDay.choices)
+        for name in WaterTest.READINGS:
+            self.fields[name].widget.attrs["placeholder"] = "—"
+
+    def clean(self):
+        data = super().clean()
+        if all(data.get(n) is None for n in WaterTest.READINGS):
+            raise forms.ValidationError(_("Enter at least one reading."))
+        if data.get("ph") is not None and data["ph"] > 14:
+            self.add_error("ph", _("pH goes from 0 to 14."))
+        return data
+
+
+class PondAlertsForm(BusinessForm):
+    unique_name = ()
+    layout = [
+        ("#", _("Water")), ("oxygen_min",), ("ph_min", "ph_max"), ("temperature_min", "temperature_max"), ("ammonia_max",),
+        ("transparency_min", "transparency_max"),
+        ("#", _("Deaths")), ("deaths_pct",),
+    ]
+    tips = {
+        "oxygen_min": _("Most pond fish get stressed below about 4 mg/L and can die below 2–3."),
+        "deaths_pct": _("E.g. 1 means: warn when more than 1 fish in 100 of those in the pond were recorded dead in the last 3 days."),
+    }
+
+    class Meta:
+        model = PondAlerts
+        exclude = ["business"]
+
+    def clean(self):
+        data = super().clean()
+        for low, high in (("ph_min", "ph_max"), ("temperature_min", "temperature_max"), ("transparency_min", "transparency_max")):
+            if data.get(low) is not None and data.get(high) is not None and data[low] >= data[high]:
+                self.add_error(high, _("This has to be more than the lower level."))
+        return data

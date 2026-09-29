@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% translate "Pond alert levels" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-narrow">
+  <header class="page-header">
+    <div>
+      <a href="{% url 'business:setup_hub' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Farm setup" %}</a>
+      <h1 class="page-title">{% translate "Pond alert levels" %}</h1>
+      <p class="page-subtitle">{% translate "When a water reading or the number of deaths crosses these levels, the cycle page and “Today on the farm” warn you." %}</p>
+    </div>
+  </header>
+  {% include "business/partials/note.html" with key="alerts" title=_("About these levels") p1=_("They start at common guidelines for warm-water pond fish like carps and tilapia.") p2=_("Your fish, your water and your fisheries officer's advice come first: change any level to suit your farm.") %}
+  <form method="post" class="stack mt-5" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+    {% for section in form.rows %}
+    <section class="card">
+      {% if section.title %}<div class="card-header"><h2 class="card-title">{{ section.title }}</h2></div>{% endif %}
+      <div class="card-body form-stack">
+        {% for row in section.fields %}
+          {% if row|length > 1 %}<div class="form-grid form-grid-2">{% for field in row %}{% include "business/partials/field.html" %}{% endfor %}</div>
+          {% else %}{% with field=row.0 %}{% include "business/partials/field.html" %}{% endwith %}{% endif %}
+        {% endfor %}
+      </div>
+    </section>
+    {% endfor %}
+    <div class="form-actions">
+      <a href="{% url 'business:setup_hub' %}" class="btn btn-ghost btn-lg">{% translate "Cancel" %}</a>
+      <button type="submit" class="btn btn-primary btn-lg">{% include "partials/icon.html" with name="check" %}{% translate "Save" %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

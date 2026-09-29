@@ -4,6 +4,7 @@ from datetime import date
 from django import forms as dj_forms
 from django.contrib import messages
 from django.db.models import Q
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext as _g, gettext_lazy as _
@@ -16,8 +17,8 @@ from apps.business.feed.forms import FeedUsageForm
 from apps.business.feed.models import FeedUsage
 
 from . import services
-from .forms import CycleForm, HarvestForm, MortalityForm, PondForm, StockingForm, WeighingForm
-from .models import CultureCycle, Harvest, Mortality, Pond, PondStatus, SampleWeighing, Stocking
+from .forms import CycleForm, HarvestForm, MortalityForm, PondAlertsForm, PondForm, StockingForm, WaterTestForm, WeighingForm
+from .models import CultureCycle, Harvest, Mortality, Pond, PondAlerts, PondStatus, SampleWeighing, Stocking, WaterTest
 
 def _with_cycles(objects, business):
     running = {c.pond_id: c for c in CultureCycle.objects.filter(business=business, status="running", pond__in=objects)}
@@ -59,7 +60,14 @@ ENTRY_KINDS = {k.key: k for k in [
     EntryKind("weighing", SampleWeighing, WeighingForm, _("Sample weighing"), "scale", "growth"),
     EntryKind("mortality", Mortality, MortalityForm, _("Record deaths"), "alert", "growth"),
     EntryKind("harvest", Harvest, HarvestForm, _("Record harvest"), "cart", "harvest"),
+    EntryKind("water", WaterTest, WaterTestForm, _("Water test"), "beaker", "water"),
 ]}
+
+
+def _kind(key):
+    if key not in ENTRY_KINDS:
+        raise Http404
+    return ENTRY_KINDS[key]
 
 
 def _for_popup(form):
@@ -116,6 +124,10 @@ def cycle_detail_view(request, pk):
     harvests = list(cycle.harvests.select_related("species", "unit"))
     sales = list(cycle.sales.select_related("buyer", "market"))
     summary = services.summarize(cycle)
+    limits = PondAlerts.for_business(b)
+    water = list(cycle.water_tests.all()[:40])
+    for w in water:
+        w.found = w.problems(limits)
     mon = Unit.objects.filter(business=b, symbol="mon", unit_type="weight").first()
     return render(request, "business/ponds/cycle_detail.html", {
         "cycle": cycle, "pond": cycle.pond, "s": summary,
@@ -126,6 +138,7 @@ def cycle_detail_view(request, pk):
         "mortalities": cycle.mortalities.select_related("species"),
         "weighings": cycle.weighings.select_related("species", "unit"),
         "harvests": harvests, "sales": sales, "harvest_sale_count": len(harvests) + len(sales),
+        "water": water, "water_now": water[0] if water else None,
         "open": request.GET.get("add") if request.GET.get("add") in ENTRY_KINDS and cycle.is_running else None,
         "tab": request.GET.get("tab") or "overview",
         "today": date.today(),
@@ -189,7 +202,7 @@ def _entry_saved(request, kind, obj, cycle):
 @business_access_required(capability="enter_data")
 def entry_add_view(request, pk, kind):
     cycle = _cycle(request, pk)
-    kind = ENTRY_KINDS[kind]
+    kind = _kind(kind)
     form = kind.form(request.POST or None, business=request.business, cycle=cycle, prefix=kind.key)
     if request.method == "POST" and form.is_valid():
         obj = form.save(commit=False)
@@ -204,7 +217,7 @@ def entry_add_view(request, pk, kind):
 
 @business_access_required(capability="enter_data")
 def entry_edit_view(request, kind, pk):
-    kind = ENTRY_KINDS[kind]
+    kind = _kind(kind)
     obj = get_object_or_404(kind.model, pk=pk, business=request.business)
     form = kind.form(request.POST or None, instance=obj, business=request.business, cycle=obj.cycle)
     if request.method == "POST" and form.is_valid():
@@ -217,8 +230,20 @@ def entry_edit_view(request, kind, pk):
 @business_access_required(capability="delete")
 @require_POST
 def entry_delete_view(request, kind, pk):
-    kind = ENTRY_KINDS[kind]
+    kind = _kind(kind)
     obj = get_object_or_404(kind.model, pk=pk, business=request.business)
     obj.soft_delete()
     messages.success(request, _g("Deleted."))
     return redirect(reverse("business:cycle_detail", args=[obj.cycle_id]) + f"?tab={kind.tab}")
+
+
+@business_access_required(capability="manage_settings")
+def alerts_view(request):
+    """The farm's own warning levels for water readings and deaths."""
+    obj = PondAlerts.for_business(request.business)
+    form = PondAlertsForm(request.POST or None, instance=obj, business=request.business)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, _g("Alert levels saved."))
+        return redirect("business:pond_alerts")
+    return render(request, "business/ponds/alerts.html", {"form": form})

@@ -8166,3 +8166,249 @@ msgstr "নমুনা ওজন করুন"
 
 msgid "Last sold for {rate}/{unit} on {date}"
 msgstr "শেষ বিক্রি {rate}/{unit}, {date}"
+
+msgid "Send today’s sales, feed, deaths and to-dos to the owner or your family group on WhatsApp."
+msgstr "আজকের বিক্রি, খাবার, মাছ মরা আর বাকি কাজ হোয়াটসঅ্যাপে মালিক বা পরিবারের গ্রুপে পাঠান।"
+
+msgid "Share today’s report"
+msgstr "আজকের হিসাব পাঠান"
+
+msgid "Worked out from what you've recorded: water tests outside your alert levels, many fish dying in the last 3 days, ponds with no feeding today, cycles due a sample weighing (every 3 weeks), harvests planned within a week, and pond leases ending within a month."
+msgstr "আপনার লেখা হিসাব থেকে বের করা: সতর্ক-সীমার বাইরে পানির পরীক্ষা, গত ৩ দিনে অনেক মাছ মরা, যে পুকুরে আজ খাবার দেওয়া লেখা হয়নি, যে চক্রে নমুনা ওজন করার সময় হয়েছে (প্রতি ৩ সপ্তাহে), এক সপ্তাহের মধ্যে মাছ ধরার পরিকল্পনা, আর এক মাসের মধ্যে যে পুকুরের লিজ শেষ হচ্ছে।"
+
+msgid "Pond alert levels"
+msgstr "পুকুরের সতর্ক-সীমা"
+
+msgid "Safe ranges for oxygen, pH, ammonia… and deaths"
+msgstr "অক্সিজেন, পিএইচ, অ্যামোনিয়া… আর মাছ মরার নিরাপদ সীমা"
+
+msgid "Oxygen is lowest just before sunrise, so an early-morning test shows the worst case."
+msgstr "সূর্য ওঠার ঠিক আগে অক্সিজেন সবচেয়ে কম থাকে, তাই ভোরের পরীক্ষায় সবচেয়ে খারাপ অবস্থা বোঝা যায়।"
+
+msgid "From a DO meter or test kit, in mg/L. Low oxygen is the most common cause of fish dying suddenly."
+msgstr "ডিও মিটার বা টেস্ট কিট থেকে, মি.গ্রা./লি.-এ। হঠাৎ মাছ মরার সবচেয়ে সাধারণ কারণ অক্সিজেনের অভাব।"
+
+msgid "From a pH kit or paper. It usually rises in the afternoon and falls at night."
+msgstr "পিএইচ কিট বা কাগজ থেকে। সাধারণত বিকেলে বাড়ে আর রাতে কমে।"
+
+msgid "Put the thermometer about a foot under the water for a minute."
+msgstr "থার্মোমিটার পানির প্রায় এক ফুট নিচে এক মিনিট রাখুন।"
+
+msgid "From an ammonia test kit, in mg/L. It rises with uneaten feed and waste."
+msgstr "অ্যামোনিয়া টেস্ট কিট থেকে, মি.গ্রা./লি.-এ। না-খাওয়া খাবার আর বর্জ্যে এটা বাড়ে।"
+
+msgid "Lower a Secchi disk (a black-and-white plate) until you can't see it, and read the depth in cm."
+msgstr "সেকি ডিস্ক (সাদা-কালো থালা) পানিতে নামান যতক্ষণ না আর দেখা যায়, তারপর গভীরতা সে.মি.-তে পড়ুন।"
+
+msgid "Not noted"
+msgstr "লেখা নেই"
+
+msgid "Enter at least one reading."
+msgstr "অন্তত একটা মাপ লিখুন।"
+
+msgid "pH goes from 0 to 14."
+msgstr "পিএইচ ০ থেকে ১৪ পর্যন্ত হয়।"
+
+msgid "Water"
+msgstr "পানি"
+
+msgid "Most pond fish get stressed below about 4 mg/L and can die below 2–3."
+msgstr "বেশিরভাগ পুকুরের মাছ প্রায় ৪ মি.গ্রা./লি.-এর নিচে কষ্ট পায়, আর ২–৩-এর নিচে মারা যেতে পারে।"
+
+msgid "E.g. 1 means: warn when more than 1 fish in 100 of those in the pond were recorded dead in the last 3 days."
+msgstr "যেমন ১ মানে: গত ৩ দিনে পুকুরের প্রতি ১০০টা মাছে ১টার বেশি মরা লেখা হলে সতর্ক করবে।"
+
+msgid "This has to be more than the lower level."
+msgstr "এটা নিচের সীমার চেয়ে বেশি হতে হবে।"
+
+msgid "Early morning"
+msgstr "ভোরে"
+
+msgid "Daytime"
+msgstr "দিনে"
+
+msgid "Evening"
+msgstr "সন্ধ্যায়"
+
+msgid "Night"
+msgstr "রাতে"
+
+msgid "Time"
+msgstr "সময়"
+
+msgid "Dissolved oxygen (mg/L)"
+msgstr "দ্রবীভূত অক্সিজেন (মি.গ্রা./লি.)"
+
+msgid "pH"
+msgstr "পিএইচ"
+
+msgid "Water temperature (°C)"
+msgstr "পানির তাপমাত্রা (°সে.)"
+
+msgid "Ammonia (mg/L)"
+msgstr "অ্যামোনিয়া (মি.গ্রা./লি.)"
+
+msgid "Transparency (cm)"
+msgstr "স্বচ্ছতা (সে.মি.)"
+
+msgid "Oxygen: warn below (mg/L)"
+msgstr "অক্সিজেন: এর নিচে সতর্ক করুন (মি.গ্রা./লি.)"
+
+msgid "pH: warn below"
+msgstr "পিএইচ: এর নিচে সতর্ক করুন"
+
+msgid "pH: warn above"
+msgstr "পিএইচ: এর ওপরে সতর্ক করুন"
+
+msgid "Temperature: warn below (°C)"
+msgstr "তাপমাত্রা: এর নিচে সতর্ক করুন (°সে.)"
+
+msgid "Temperature: warn above (°C)"
+msgstr "তাপমাত্রা: এর ওপরে সতর্ক করুন (°সে.)"
+
+msgid "Ammonia: warn above (mg/L)"
+msgstr "অ্যামোনিয়া: এর ওপরে সতর্ক করুন (মি.গ্রা./লি.)"
+
+msgid "Transparency: warn below (cm)"
+msgstr "স্বচ্ছতা: এর নিচে সতর্ক করুন (সে.মি.)"
+
+msgid "Transparency: warn above (cm)"
+msgstr "স্বচ্ছতা: এর ওপরে সতর্ক করুন (সে.মি.)"
+
+msgid "Deaths: warn when more than this % of the fish die in 3 days"
+msgstr "মাছ মরা: ৩ দিনে মাছের এত %-এর বেশি মরলে সতর্ক করুন"
+
+msgid "pond alert levels"
+msgstr "পুকুরের সতর্ক-সীমা"
+
+msgid "Water problem in %(pond)s"
+msgstr "%(pond)s-এ পানির সমস্যা"
+
+msgid "Many fish dying in %(pond)s"
+msgstr "%(pond)s-এ অনেক মাছ মরছে"
+
+#, python-format
+msgid "%(n)s fish in the last %(days)s days (%(pct)s%% of the pond). Test the water and check for disease."
+msgid_plural "%(n)s fish in the last %(days)s days (%(pct)s%% of the pond). Test the water and check for disease."
+msgstr[0] "গত %(days)s দিনে %(n)sটি মাছ (পুকুরের %(pct)s%%)। পানি পরীক্ষা করুন আর রোগ আছে কিনা দেখুন।"
+msgstr[1] "গত %(days)s দিনে %(n)sটি মাছ (পুকুরের %(pct)s%%)। পানি পরীক্ষা করুন আর রোগ আছে কিনা দেখুন।"
+
+msgid "When a water reading or the number of deaths crosses these levels, the cycle page and “Today on the farm” warn you."
+msgstr "পানির কোনো মাপ বা মাছ মরার সংখ্যা এই সীমা পার হলে চক্রের পাতায় আর “আজ খামারে”-তে সতর্ক করা হবে।"
+
+msgid "About these levels"
+msgstr "এই সীমাগুলো সম্পর্কে"
+
+msgid "They start at common guidelines for warm-water pond fish like carps and tilapia."
+msgstr "শুরুতে রুই-কাতলা, তেলাপিয়ার মতো গরম পানির পুকুরের মাছের সাধারণ নির্দেশনা দেওয়া আছে।"
+
+msgid "Your fish, your water and your fisheries officer's advice come first: change any level to suit your farm."
+msgstr "আপনার মাছ, আপনার পানি আর মৎস্য কর্মকর্তার পরামর্শই আগে: খামার অনুযায়ী যেকোনো সীমা বদলে নিন।"
+
+msgid "Water problem in the last test (%(date)s)"
+msgstr "শেষ পরীক্ষায় পানির সমস্যা (%(date)s)"
+
+msgid "See tests"
+msgstr "পরীক্ষাগুলো দেখুন"
+
+msgid "Use the buttons above to record feed given, sample weights, water tests, deaths, fingerlings, harvests, other costs and sales."
+msgstr "ওপরের বোতামগুলো দিয়ে খাবার দেওয়া, নমুনা ওজন, পানি পরীক্ষা, মাছ মরা, পোনা, মাছ ধরা, অন্য খরচ আর বিক্রি লিখুন।"
+
+msgid "Water tests"
+msgstr "পানি পরীক্ষা"
+
+msgid "Readings outside your farm's alert levels are shown in red. Change the levels in Farm setup → Pond alert levels."
+msgstr "খামারের সতর্ক-সীমার বাইরের মাপ লাল দেখায়। সীমা বদলাতে খামারের সেটআপ → পুকুরের সতর্ক-সীমা-তে যান।"
+
+msgid "Test once or twice a week, and whenever the fish act strangely."
+msgstr "সপ্তাহে এক-দুবার পরীক্ষা করুন, আর মাছ অস্বাভাবিক আচরণ করলেই।"
+
+msgid "No water tests yet. Low oxygen and high ammonia kill fish fast, so a quick test once or twice a week is worth it."
+msgstr "এখনো পানি পরীক্ষা হয়নি। অক্সিজেনের অভাব আর বেশি অ্যামোনিয়া দ্রুত মাছ মেরে ফেলে, তাই সপ্তাহে এক-দুবার ছোট একটা পরীক্ষা লাভজনক।"
+
+msgid "Add a water test"
+msgstr "পানি পরীক্ষা যোগ করুন"
+
+msgid "Water test"
+msgstr "পানি পরীক্ষা"
+
+msgid "Alert levels saved."
+msgstr "সতর্ক-সীমা সংরক্ষণ হয়েছে।"
+
+msgid "Oxygen low: %(v)s mg/L (warn below %(l)s)"
+msgstr "অক্সিজেন কম: %(v)s মি.গ্রা./লি. (সীমা %(l)s)"
+
+msgid "Run the aerator or add fresh water, and feed less until it recovers. Fish gasping at the surface at dawn is a sign."
+msgstr "এয়ারেটর চালান বা নতুন পানি দিন, আর ঠিক না হওয়া পর্যন্ত খাবার কম দিন। ভোরে মাছ ওপরে এসে খাবি খেলে এটাই লক্ষণ।"
+
+msgid "pH low: %(v)s (warn below %(l)s)"
+msgstr "পিএইচ কম: %(v)s (সীমা %(l)s)"
+
+msgid "Water is too acidic. Liming usually brings it up."
+msgstr "পানি বেশি অম্লীয়। চুন দিলে সাধারণত ঠিক হয়।"
+
+msgid "pH high: %(v)s (warn above %(l)s)"
+msgstr "পিএইচ বেশি: %(v)s (সীমা %(l)s)"
+
+msgid "Don't add lime now. Adding fresh water helps; check again in the early morning."
+msgstr "এখন চুন দেবেন না। নতুন পানি দিলে উপকার হয়; ভোরে আবার পরীক্ষা করুন।"
+
+msgid "Water cold: %(v)s °C (warn below %(l)s)"
+msgstr "পানি ঠান্ডা: %(v)s °সে. (সীমা %(l)s)"
+
+msgid "Fish eat less in cold water. Feed less so feed isn't wasted."
+msgstr "ঠান্ডা পানিতে মাছ কম খায়। খাবার কম দিন যাতে নষ্ট না হয়।"
+
+msgid "Water hot: %(v)s °C (warn above %(l)s)"
+msgstr "পানি গরম: %(v)s °সে. (সীমা %(l)s)"
+
+msgid "Hot water holds less oxygen. Feed in the cool of the morning and watch the oxygen."
+msgstr "গরম পানিতে অক্সিজেন কম থাকে। সকালের ঠান্ডায় খাবার দিন আর অক্সিজেনের দিকে নজর রাখুন।"
+
+msgid "Ammonia high: %(v)s mg/L (warn above %(l)s)"
+msgstr "অ্যামোনিয়া বেশি: %(v)s মি.গ্রা./লি. (সীমা %(l)s)"
+
+msgid "Feed less and add fresh water. Uneaten feed and waste raise ammonia."
+msgstr "খাবার কম দিন আর নতুন পানি দিন। না-খাওয়া খাবার আর বর্জ্যে অ্যামোনিয়া বাড়ে।"
+
+msgid "Water too green or muddy: %(v)s cm (warn below %(l)s)"
+msgstr "পানি বেশি সবুজ বা ঘোলা: %(v)s সে.মি. (সীমা %(l)s)"
+
+msgid "Too much plankton or mud. Hold back on fertiliser and add fresh water if you can."
+msgstr "প্ল্যাঙ্কটন বা কাদা বেশি। সার দেওয়া বন্ধ রাখুন আর পারলে নতুন পানি দিন।"
+
+msgid "Water too clear: %(v)s cm (warn above %(l)s)"
+msgstr "পানি বেশি স্বচ্ছ: %(v)s সে.মি. (সীমা %(l)s)"
+
+msgid "Too little natural food (plankton) in the water."
+msgstr "পানিতে প্রাকৃতিক খাবার (প্ল্যাঙ্কটন) কম।"
+
+msgid "Fish sold: %(n)s sale"
+msgid_plural "Fish sold: %(n)s sales"
+msgstr[0] "মাছ বিক্রি: %(n)sটি"
+msgstr[1] "মাছ বিক্রি: %(n)sটি"
+
+msgid "Fish sold: none today"
+msgstr "মাছ বিক্রি: আজ হয়নি"
+
+msgid "Feed given: %(kg)s kg in %(n)s pond"
+msgid_plural "Feed given: %(kg)s kg in %(n)s ponds"
+msgstr[0] "খাবার দেওয়া: %(n)sটি পুকুরে %(kg)s কেজি"
+msgstr[1] "খাবার দেওয়া: %(n)sটি পুকুরে %(kg)s কেজি"
+
+msgid "Feed given: not recorded yet"
+msgstr "খাবার দেওয়া: এখনো লেখা হয়নি"
+
+msgid "Deaths: %(n)s fish"
+msgid_plural "Deaths: %(n)s fish"
+msgstr[0] "মাছ মরা: %(n)sটি"
+msgstr[1] "মাছ মরা: %(n)sটি"
+
+msgid "Deaths: none recorded"
+msgstr "মাছ মরা: লেখা নেই"
+
+msgid "Money in: %(i)s · out: %(o)s"
+msgstr "টাকা এসেছে: %(i)s · গেছে: %(o)s"
+
+msgid "Still to do:"
+msgstr "বাকি কাজ:"

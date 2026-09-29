@@ -309,3 +309,50 @@ def dashboard(business, today=None):
             a.now = found.get(a.pk, a.opening_balance)
         data["accounts"] = sorted(accounts, key=lambda a: -a.now)
     return data
+
+
+# ── The day's report, to send on WhatsApp ───────────────────────────────────
+
+def daily_text(business, today=None, show_money=False, tasks=()):
+    """A short plain-text summary of today: sales, feed, deaths, money, and what's left to do."""
+    from django.utils.formats import date_format
+    from django.utils.translation import ngettext
+
+    from apps.business.core.templatetags.business import bdt, num
+
+    today = today or date.today()
+    lines = [f"*{business.name}* · {date_format(today, 'j F Y')}", ""]
+    if _installed("sales"):
+        sales = sales_between(business, today, today)
+        n = sales.count()
+        if n:
+            kg = _sale_kg(sales)
+            text = ngettext("Fish sold: %(n)s sale", "Fish sold: %(n)s sales", n) % {"n": n}
+            if kg:
+                text += " · " + _("%(kg)s kg") % {"kg": num(kg)}
+            if show_money:
+                text += " · " + bdt(sales.aggregate(v=Sum("net"))["v"] or ZERO)
+            lines.append(text)
+        else:
+            lines.append(_("Fish sold: none today"))
+    if _installed("feed"):
+        from apps.business.feed.models import FeedUsage
+
+        fed = FeedUsage.objects.filter(business=business, date=today, cycle__is_deleted=False).aggregate(kg=Sum("kg"), ponds=Count("cycle", distinct=True))
+        if fed["kg"]:
+            lines.append(ngettext("Feed given: %(kg)s kg in %(n)s pond", "Feed given: %(kg)s kg in %(n)s ponds", fed["ponds"])
+                         % {"kg": num(fed["kg"]), "n": fed["ponds"]})
+        else:
+            lines.append(_("Feed given: not recorded yet"))
+    from apps.business.ponds.models import Mortality
+
+    dead = Mortality.objects.filter(business=business, date=today, cycle__is_deleted=False).aggregate(n=Sum("count"))["n"] or 0
+    lines.append(ngettext("Deaths: %(n)s fish", "Deaths: %(n)s fish", dead) % {"n": num(dead)} if dead else _("Deaths: none recorded"))
+    if show_money and _installed("finance"):
+        from apps.business.finance.services import statement
+
+        s = statement(business, today, today)
+        lines.append(_("Money in: %(i)s · out: %(o)s") % {"i": bdt(s.total_income), "o": bdt(s.total_expense)})
+    if tasks:
+        lines += ["", _("Still to do:")] + [f"• {t.title}" for t in tasks]
+    return "\n".join(lines)
