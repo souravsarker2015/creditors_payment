@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% translate "How the farm works" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page stack guide" x-data="{ lit: null }">
+  <header class="page-header !mb-0 no-print">
+    <div>
+      <h1 class="page-title">{% translate "How the farm works" %}</h1>
+      <p class="page-subtitle">{% translate "The whole system on one page: what you record, in what order, and what it turns into." %}</p>
+    </div>
+    <div class="page-actions">
+      <button type="button" class="btn btn-secondary" onclick="window.print()">{% include "partials/icon.html" with name="printer" %}{% translate "Print" %}</button>
+    </div>
+  </header>
+
+  <p class="guide-lede">{% translate "You record what happens on the farm. Everything else — costs, profit, Baki, stock, FCR, reports — is worked out from it. Nothing is typed twice." %}</p>
+
+  {# ── The map ─────────────────────────────────────────────────────────── #}
+  <section class="guide-map card" aria-label="{% translate 'The farm workflow' %}">
+    <ol class="guide-flow">
+      {% for stage in stages %}
+      <li class="guide-stage" data-tone="{{ stage.tone }}">
+        <div class="guide-stage-head">
+          <span class="guide-num">{{ stage.number|num }}</span>
+          <div class="min-w-0">
+            <h2 class="guide-stage-title">{{ stage.title }}</h2>
+            <p class="guide-stage-text">{{ stage.text }}</p>
+          </div>
+        </div>
+        <ul class="guide-steps">
+          {% for step in stage.steps %}
+          <li>
+            <div class="guide-step" id="step-{{ step.key }}" data-step="{{ step.key }}"
+                 :class="lit && (lit === '{{ step.key }}' || {{ step.feeds|js_list }}.includes(lit)) ? 'is-lit' : (lit ? 'is-dim' : '')"
+                 @mouseenter="lit = '{{ step.key }}'" @mouseleave="lit = null" @focusin="lit = '{{ step.key }}'" @focusout="lit = null">
+              <span class="guide-step-icon">{% include "business/partials/icon.html" with name=step.icon %}</span>
+              <div class="min-w-0 flex-1">
+                <p class="guide-step-title">
+                  {% if step.url %}<a href="{{ step.url }}">{{ step.title }}</a>{% else %}{{ step.title }}{% endif %}
+                </p>
+                <p class="guide-step-what">{{ step.what }}</p>
+                {% if step.note %}<p class="guide-step-note">{% include "partials/icon.html" with name="arrow-right" %}{{ step.note }}</p>{% endif %}
+                {% if step.feeds %}
+                <p class="guide-feeds">
+                  <span class="guide-feeds-label">{% translate "Feeds into" %}</span>
+                  {% for key in step.feeds %}<a href="#step-{{ key }}" class="guide-chip" @click="lit = '{{ key }}'">{{ titles|get_item:key }}</a>{% endfor %}
+                </p>
+                {% endif %}
+              </div>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </li>
+      {% endfor %}
+    </ol>
+  </section>
+
+  {# ── Where each number comes from ────────────────────────────────────── #}
+  <section class="card">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title">{% translate "Where does this number come from?" %}</h2>
+        <p class="card-subtitle">{% translate "Every figure in the app is worked out from what you recorded — these are the sums behind them." %}</p>
+      </div>
+    </div>
+    <ul class="guide-answers">
+      {% for a in answers %}
+      <li>
+        <p class="guide-answer-q">{{ a.question }}</p>
+        <p class="guide-answer-how">{{ a.how }}</p>
+        <p class="guide-answer-from">{% translate "Comes from:" %}{% for t in a.from %}<span class="guide-chip is-plain">{{ t }}</span>{% endfor %}</p>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  {# ── Rules that are easy to get wrong ────────────────────────────────── #}
+  <section class="card">
+    <div class="card-header"><h2 class="card-title">{% translate "Three rules worth remembering" %}</h2></div>
+    <ul class="guide-rules">
+      <li><span class="guide-rule-no">{{ 1|num }}</span><div><p class="guide-rule-title">{% translate "Record each thing once, where it happens." %}</p>
+        <p>{% translate "A fish sale belongs in Fish sales, not also in Money in & out. Feed bought belongs in Feed. Money already counted there is never typed again." %}</p></div></li>
+      <li><span class="guide-rule-no">{{ 2|num }}</span><div><p class="guide-rule-title">{% translate "A cost counts when it's used, not when it's bought." %}</p>
+        <p>{% translate "Feed becomes a cost when a pond eats it. Feed still in the store is stock, not a cost — so a pond's profit stays honest." %}</p></div></li>
+      <li><span class="guide-rule-no">{{ 3|num }}</span><div><p class="guide-rule-title">{% translate "Money owed is not money received." %}</p>
+        <p>{% translate "A sale counts on the day you sold, even unpaid. What's unpaid sits in Baki until the buyer pays, and only then does an account go up." %}</p></div></li>
+    </ul>
+  </section>
+
+  <section class="card no-print">
+    <div class="card-body guide-cta">
+      <p>{% translate "Not sure what to do next? The home page lists today's jobs, and every page has a note explaining it." %}</p>
+      <a href="{% url 'business:home' %}" class="btn btn-primary">{% include "business/partials/icon.html" with name="home" %}{% translate "Go to the farm home page" %}</a>
+    </div>
+  </section>
+</div>
+{% endblock %}

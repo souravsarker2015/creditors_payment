@@ -84,3 +84,21 @@ class SupplierQuickForm(_PartyQuickForm):
 
 class BuyerQuickForm(_PartyQuickForm):
     flag = "is_buyer"
+
+
+class PartyQuickForm(BusinessForm):
+    """"+ New person" on dropdowns that take anyone: a supplier, a buyer, or both."""
+
+    role = forms.ChoiceField(label=_("They are a"), choices=[("supplier", _("Supplier")), ("buyer", _("Buyer")), ("both", _("Both"))],
+                             initial="supplier")
+
+    class Meta:
+        model = Party
+        fields = ["name", "phone"]
+        widgets = {"phone": forms.TextInput(attrs={"inputmode": "tel", "placeholder": "01XXXXXXXXX"})}
+
+    def save(self, commit=True):
+        role = self.cleaned_data.get("role") or "supplier"
+        self.instance.is_supplier = role in ("supplier", "both")
+        self.instance.is_buyer = role in ("buyer", "both")
+        return super().save(commit)

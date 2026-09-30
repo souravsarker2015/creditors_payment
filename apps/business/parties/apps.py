@@ -14,3 +14,4 @@ class BusinessPartiesConfig(AppConfig):
 
         register_quick_add("supplier", QuickAdd("apps.business.parties.forms.SupplierQuickForm", "enter_data", _("New supplier"), _("supplier")))
         register_quick_add("buyer", QuickAdd("apps.business.parties.forms.BuyerQuickForm", "enter_data", _("New buyer"), _("buyer")))
+        register_quick_add("party", QuickAdd("apps.business.parties.forms.PartyQuickForm", "enter_data", _("New person or firm"), _("person")))

@@ -28,7 +28,7 @@
       {% if formset.non_form_errors %}<div class="card-body"><div class="form-errors">{% for e in formset.non_form_errors %}<p>{{ e }}</p>{% endfor %}</div></div>{% endif %}
       <div class="rows-list" x-ref="list">{% for f in formset %}{% include "business/feed/purchase_line.html" %}{% endfor %}</div>
       <template x-ref="tpl">{% with f=formset.empty_form %}{% include "business/feed/purchase_line.html" %}{% endwith %}</template>
-      <div class="card-footer"><button type="button" class="btn btn-secondary btn-sm" @click="add()" x-init="if (!$refs.list.children.length) add()">{% include "partials/icon.html" with name="plus" %}{% translate "Add another feed" %}</button></div>
+      <div class="card-footer flex flex-wrap items-center gap-2"><button type="button" class="btn btn-secondary btn-sm" @click="add()" x-init="if (!$refs.list.children.length) add()">{% include "partials/icon.html" with name="plus" %}{% translate "Add another feed" %}</button>{% include "business/partials/row_quick_add.html" with kind="feed" suffix="product" bound=formset.empty_form.product %}</div>
     </section>
 
     <section class="card">

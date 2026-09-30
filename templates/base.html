@@ -134,11 +134,26 @@
     /* Shared UI helpers — pages call these instead of repeating setup code. */
     window.FT = {
         datePicker: function (el) {
-            return flatpickr(el, {
+            var fp = flatpickr(el, {
                 dateFormat: "Y-m-d", altInput: true, altFormat: "j M Y", allowInput: false,
                 altInputClass: el.className.replace("datepicker", "").trim() || "form-input",
                 disableMobile: true, monthSelectorType: "static",
             });
+            FT.labelAlt(el, fp && fp.altInput);
+            return fp;
+        },
+        /* flatpickr hides the real input and shows a copy; the copy has to carry
+           the same label, or a screen reader announces an unnamed box. */
+        labelAlt: function (el, alt) {
+            if (!alt) return;
+            var label = el.id && document.querySelector('label[for="' + (window.CSS && CSS.escape ? CSS.escape(el.id) : el.id) + '"]');
+            if (label) {
+                if (!label.id) label.id = (el.id || "fp") + "-label";
+                alt.setAttribute("aria-labelledby", label.id);
+            } else if (el.getAttribute("aria-label")) {
+                alt.setAttribute("aria-label", el.getAttribute("aria-label"));
+            }
+            if (el.hasAttribute("required")) alt.setAttribute("aria-required", "true");
         },
         // A visible range picker writing into two hidden inputs (date_from / date_to).
         rangePicker: function (inputId, fromId, toId) {
@@ -149,6 +164,7 @@
                 mode: "range", dateFormat: "Y-m-d", altInput: true, altFormat: "j M Y", disableMobile: true,
                 altInputClass: input.className || "form-input",
                 defaultDate: initial.length ? initial : null,
+                onReady: function (dates, str, fp) { FT.labelAlt(input, fp.altInput); },
                 onChange: function (dates) {
                     from.value = dates[0] ? flatpickr.formatDate(dates[0], "Y-m-d") : "";
                     to.value = dates[1] ? flatpickr.formatDate(dates[1], "Y-m-d") : (dates[0] ? from.value : "");
@@ -219,7 +235,18 @@
                         });
                         sel.add(opt, before || null);
                     }
-                    sel.value = String(data.id);
+                    if (sel.multiple) {       // e.g. a feed's suppliers: add to what's already picked
+                        opt.selected = true;
+                        if (sel.tomselect) { sel.tomselect.addOption({ value: String(data.id), text: data.name }); sel.tomselect.addItem(String(data.id)); }
+                    } else {
+                        sel.value = String(data.id);
+                    }
+                    // Other dropdowns of the same list on this page (e.g. "from" and "to" account) get it too.
+                    var kind = url.replace(/\/$/, "").split("/").pop();
+                    document.querySelectorAll('[data-qa="' + kind + '"] select').forEach(function (other) {
+                        if (other === sel || Array.prototype.some.call(other.options, function (o) { return o.value === String(data.id); })) return;
+                        other.add(new Option(data.name, data.id));
+                    });
                     sel.dispatchEvent(new Event("change", { bubbles: true }));
                     sel.classList.add("just-added");
                     setTimeout(function () { sel.classList.remove("just-added"); }, 1200);
@@ -227,6 +254,8 @@
                 handle: function (data, formEl) {
                     this.busy = false;
                     if (data.ok) {
+                        // Pages that calculate with the new record (e.g. a feed's bag size) hear about it first.
+                        window.dispatchEvent(new CustomEvent("quick-added", { detail: data }));
                         this.select(data);
                         if (formEl) formEl.reset();
                         this.open = false;
@@ -288,6 +317,30 @@
         var msg = e.target.getAttribute && e.target.getAttribute("data-confirm");
         if (msg && !window.confirm(msg)) e.preventDefault();
     }, true);
+
+    /* One submit per form: a second click, tap or Enter while the first is on
+       its way does nothing (no duplicate records). This runs after every other
+       submit handler, so a cancelled confirm or an in-page (fetch) form, which
+       prevents the submit itself, is never locked. */
+    (function () {
+        function unlock(form) {
+            delete form.dataset.submitting;
+            form.removeAttribute("aria-busy");
+            form.querySelectorAll(".is-submitting").forEach(function (b) { b.classList.remove("is-submitting"); });
+        }
+        document.addEventListener("submit", function (e) {
+            var form = e.target;
+            if (!form || form.tagName !== "FORM" || e.defaultPrevented) return;
+            if (form.target && form.target !== "_self") return;     // opens in another tab: this page stays usable
+            if (form.dataset.submitting === "1") { e.preventDefault(); return; }
+            form.dataset.submitting = "1";
+            form.setAttribute("aria-busy", "true");
+            if (e.submitter) e.submitter.classList.add("is-submitting");
+            setTimeout(function () { unlock(form); }, 12000);        // safety net: a download, or no answer
+        });
+        // Coming back with the browser's Back button: forms are usable again.
+        window.addEventListener("pageshow", function () { document.querySelectorAll("form[data-submitting]").forEach(unlock); });
+    })();
     </script>
     {% block extra_js %}{% endblock %}
     <script>

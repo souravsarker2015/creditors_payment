@@ -43,3 +43,7 @@ class SpeciesQuickForm(BusinessForm):
         used = Species.objects.filter(business=self.business).count()
         self.instance.color = COLORS[used % len(COLORS)]
         return super().save(commit)
+
+    def page_data(self, obj):
+        """The sale form picks this unit first for the new fish."""
+        return {"unit": obj.default_unit_id}

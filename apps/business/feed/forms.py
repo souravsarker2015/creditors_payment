@@ -40,7 +40,8 @@ class FeedProductForm(BusinessForm):
         self.fields["bag_unit"].queryset = Unit.objects.filter(business=self.business, unit_type="weight")
         self.fields["bag_unit"].empty_label = None
         self.fields["suppliers"].queryset = Party.objects.filter(business=self.business, is_supplier=True)
-        self.fields["suppliers"].help_text = _("Pick one or more. Add new suppliers under Suppliers.")
+        self.fields["suppliers"].help_text = _("Pick one or more.")
+        self.fields["suppliers"].biz_quick_add = "supplier"
         self.fields["stage"].choices = [("", _("Any / not sure"))] + list(self.fields["stage"].choices)[1:]
         money_field(self.fields["default_price"])
         money_field(self.fields["protein_pct"], "%")
@@ -80,6 +81,7 @@ class FeedPurchaseForm(BusinessForm):
         self.fields["supplier"].biz_quick_add = "supplier"
         self.fields["account"].queryset = Account.objects.filter(business=self.business)
         self.fields["account"].empty_label = _("Not recorded")
+        self.fields["account"].biz_quick_add = "account"
         for name in ("transport", "discount", "paid_now"):
             money_field(self.fields[name])
             self.fields[name].required = False
@@ -145,6 +147,7 @@ class FeedUsageForm(EntryForm):
         super().__init__(*args, **kwargs)
         _bag_or_weight(self.fields["unit"], self.business)
         self.fields["product"].empty_label = _("Choose feed…")
+        self.fields["product"].biz_quick_add = "feed"
         if not self.instance.pk:
             last = FeedUsage.objects.filter(business=self.business).order_by("-date", "-id").first()
             if last:
@@ -169,6 +172,7 @@ class BulkFeedingForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.business = business
         self.fields["product"].queryset = FeedProduct.objects.filter(business=business)
+        self.fields["product"].biz_quick_add = "feed"
         _bag_or_weight(self.fields["unit"], business)
         self.cycles = list(CultureCycle.objects.filter(business=business, status=CycleStatus.RUNNING).select_related("pond").order_by("pond__order", "pond__name"))
         for c in self.cycles:
@@ -199,3 +203,25 @@ class BulkFeedingForm(forms.Form):
             self.add_error("date", _("This date is in the future."))
         data["entries"] = [(c, q, data.get("unit")) for c, q in entries]
         return data
+
+
+class FeedProductQuickForm(BusinessForm):
+    """"+ New feed" from a purchase or a feeding: the name and the bag, the rest later."""
+
+    class Meta:
+        model = FeedProduct
+        fields = ["name", "brand", "bag_size", "default_price"]
+        widgets = {"name": forms.TextInput(attrs={"placeholder": _("e.g. Floating grower 28%")})}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["bag_size"].label = _("Bag size (kg)")
+        money_field(self.fields["default_price"])
+
+    def save(self, commit=True):
+        self.instance.bag_unit = Unit.objects.filter(business=self.business, symbol="kg").first()
+        return super().save(commit)
+
+    def page_data(self, obj):
+        """What a purchase form needs to work out this feed's kg and price."""
+        return {"bag_kg": str(obj.bag_kg), "price": str(obj.default_price or ""), "bag": str(obj.bag_size.normalize())}

@@ -2,7 +2,7 @@
 {% load i18n %}
 {% block title %}{% translate "Team & roles" %} | {{ business.name }}{% endblock %}
 {% block content %}
-<div class="page stack">
+<div class="page stack" x-data="{ pw: null }">
   <header class="page-header !mb-0">
     <div>
       <h1 class="page-title">{% translate "Team & roles" %}</h1>
@@ -19,7 +19,7 @@
           <span class="avatar">{{ m.user.username|first|upper }}</span>
           <div class="ledger-main">
             <p class="ledger-title">{{ m.user.get_full_name|default:m.user.username }}{% if m.user == request.user %} <span class="badge" data-tone="muted">{% translate "You" %}</span>{% endif %}</p>
-            <p class="ledger-meta">@{{ m.user.username }}</p>
+            <p class="ledger-meta">@{{ m.user.username }}{% if m.account_created %} · {% translate "login made here" %}{% endif %}</p>
           </div>
           <div class="ledger-end">
             {% if m.role == "owner" %}
@@ -30,6 +30,9 @@
                   {% for value, label in form.fields.role.choices %}<option value="{{ value }}" {% if m.role == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
                 </select>
               </form>
+              {% if m.account_created %}
+              <button type="button" class="btn btn-ghost btn-sm" @click="pw = {{ m.pk }}" aria-label="{% blocktranslate with name=m.user.username %}Change password for {{ name }}{% endblocktranslate %}">{% include "business/partials/icon.html" with name="lock" %}<span class="hide-sm">{% translate "Password" %}</span></button>
+              {% endif %}
               <form method="post" action="{% url 'business:member_remove' m.pk %}" data-confirm="{% blocktranslate with name=m.user.username %}Remove {{ name }} from the team? They lose access to this farm; nothing they entered is deleted.{% endblocktranslate %}">{% csrf_token %}
                 <button type="submit" class="icon-btn" aria-label="{% translate 'Remove' %}" data-tip="{% translate 'Remove from team' %}">{% include "partials/icon.html" with name="x" %}</button>
               </form>
@@ -40,19 +43,38 @@
       </ul>
     </section>
 
-    <section class="card lg:col-span-2">
+    <section class="card lg:col-span-2" x-data="{ tab: '{{ tab }}' }">
       <div class="card-header">
         <div>
           <h2 class="card-title">{% translate "Add a person" %}</h2>
-          <p class="card-subtitle">{% translate "They need a FinTrack account first. Adding them gives them this farm's dashboard." %}</p>
+          <p class="card-subtitle">{% translate "Make a login for them here, or add an account they already have." %}</p>
         </div>
       </div>
-      <form method="post" class="card-body form-stack" novalidate>
-        {% csrf_token %}
-        {% with field=form.username %}{% include "business/partials/field.html" %}{% endwith %}
-        {% with field=form.role %}{% include "business/partials/field.html" %}{% endwith %}
-        <button type="submit" class="btn btn-primary btn-block">{% include "partials/icon.html" with name="plus" %}{% translate "Add to team" %}</button>
-      </form>
+      <div class="card-body form-stack">
+        <nav class="seg seg-block" role="tablist" aria-label="{% translate 'How to add someone' %}">
+          <button type="button" role="tab" class="seg-item" :class="tab === 'create' && 'is-active'" :aria-selected="(tab === 'create').toString()" @click="tab = 'create'">{% translate "Make a login" %}</button>
+          <button type="button" role="tab" class="seg-item" :class="tab === 'existing' && 'is-active'" :aria-selected="(tab === 'existing').toString()" @click="tab = 'existing'">{% translate "They have one" %}</button>
+        </nav>
+
+        <form method="post" class="form-stack" novalidate x-show="tab === 'create'" {% if tab != "create" %}x-cloak{% endif %}>
+          {% csrf_token %}
+          <input type="hidden" name="tab" value="create">
+          {% if create_form.non_field_errors %}<div class="form-errors">{% for e in create_form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+          {% for field in create_form %}{% include "business/partials/field.html" %}{% endfor %}
+          <p class="help">{% translate "Write the username and password down for them. You can change the password later, but you can't see it again." %}</p>
+          <button type="submit" class="btn btn-primary btn-block">{% include "partials/icon.html" with name="plus" %}{% translate "Make the login" %}</button>
+        </form>
+
+        <form method="post" class="form-stack" novalidate x-show="tab === 'existing'" {% if tab != "existing" %}x-cloak{% endif %}>
+          {% csrf_token %}
+          <input type="hidden" name="tab" value="existing">
+          {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+          <p class="help">{% translate "For someone who already signs in to FinTrack. Ask them for their username." %}</p>
+          {% with field=form.username %}{% include "business/partials/field.html" %}{% endwith %}
+          {% with field=form.role %}{% include "business/partials/field.html" %}{% endwith %}
+          <button type="submit" class="btn btn-primary btn-block">{% include "partials/icon.html" with name="plus" %}{% translate "Add to team" %}</button>
+        </form>
+      </div>
     </section>
   </div>
 
@@ -82,5 +104,33 @@
       </table>
     </div>
   </section>
+
+  {% for m in members %}{% if m.account_created %}
+  <template x-teleport="body">
+  <div class="modal-root" x-show="pw === {{ m.pk }}" x-cloak @keydown.escape.window="pw = null" role="dialog" aria-modal="true" aria-labelledby="pw-title-{{ m.pk }}">
+    <div class="modal-backdrop" x-show="pw === {{ m.pk }}" x-transition.opacity.duration.200ms @click="pw = null"></div>
+    <form method="post" action="{% url 'business:member_password' m.pk %}" class="modal" x-show="pw === {{ m.pk }}" x-trap.noscroll="pw === {{ m.pk }}" novalidate
+          x-transition:enter="modal-enter" x-transition:enter-start="modal-enter-start" x-transition:enter-end="modal-enter-end">
+      {% csrf_token %}
+      <div class="modal-header">
+        <span class="modal-icon">{% include "business/partials/icon.html" with name="lock" %}</span>
+        <div class="min-w-0 flex-1">
+          <h2 class="modal-title" id="pw-title-{{ m.pk }}">{% translate "Change password" %}</h2>
+          <p class="modal-subtitle">@{{ m.user.username }}</p>
+        </div>
+        <button type="button" class="icon-btn" @click="pw = null" aria-label="{% translate 'Close' %}">{% include "partials/icon.html" with name="x" %}</button>
+      </div>
+      <div class="modal-body form-stack">
+        {% for field in password_form %}{% include "business/partials/field.html" %}{% endfor %}
+        <p class="help">{% translate "They'll need this new password the next time they sign in, so tell them what it is." %}</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" @click="pw = null">{% translate "Cancel" %}</button>
+        <button type="submit" class="btn btn-primary">{% include "partials/icon.html" with name="check" %}{% translate "Set password" %}</button>
+      </div>
+    </form>
+  </div>
+  </template>
+  {% endif %}{% endfor %}
 </div>
 {% endblock %}

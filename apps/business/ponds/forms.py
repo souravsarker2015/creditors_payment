@@ -275,3 +275,23 @@ class PondAlertsForm(BusinessForm):
             if data.get(low) is not None and data.get(high) is not None and data[low] >= data[high]:
                 self.add_error(high, _("This has to be more than the lower level."))
         return data
+
+
+class PondQuickForm(BusinessForm):
+    """"+ New pond" from another form: just the name and size."""
+
+    class Meta:
+        model = Pond
+        fields = ["name", "area"]
+        widgets = {"name": forms.TextInput(attrs={"placeholder": _("e.g. Big pond (east)")})}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["area"].label = _("Area (decimal)")
+
+    def save(self, commit=True):
+        from .models import PondStatus
+
+        self.instance.area_unit = Unit.objects.filter(business=self.business, symbol="dec").first()
+        self.instance.status = PondStatus.EMPTY     # no fish until a cycle is started
+        return super().save(commit)

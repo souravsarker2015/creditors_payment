@@ -40,6 +40,7 @@ class PaymentForm(BusinessForm):
         self.fields["party"].empty_label = _("Choose a person or firm…")
         self.fields["account"].queryset = Account.objects.filter(business=b)
         self.fields["account"].empty_label = _("Not recorded")
+        self.fields["account"].biz_quick_add = "account"
         money_field(self.fields["amount"])
         money_field(self.fields["discount"])
         self.fields["discount"].required = False

@@ -19,7 +19,8 @@ from django.views.decorators.http import require_POST
 from .access import (BUSINESS, CAPABILITIES, PERSONAL, ROLE_CAPS, active_membership, can, create_business,
                      dashboard_url, has_dashboard, memberships)
 from .decorators import business_access_required
-from .forms import BusinessProfileForm, BusinessSetupForm, MemberAddForm, RoleForm, UnitForm
+from .forms import (BusinessProfileForm, BusinessSetupForm, MemberAddForm, MemberCreateForm, MemberPasswordForm,
+                    RoleForm, UnitForm)
 from .models import AuditLog, Dashboard, Membership, Role, Unit, UnitType, UserDashboardAccess
 
 
@@ -298,22 +299,80 @@ def unit_restore_view(request, pk):
 
 @business_access_required(capability="manage_team")
 def team_view(request):
+    """The farm's people: make a login for someone, or add an account they already have."""
     b = request.business
-    form = MemberAddForm(request.POST or None, business=b)
-    if request.method == "POST" and form.is_valid():
-        user = form.user
+    posted = request.method == "POST"
+    # Which form was sent: the hidden "tab" says so. Without it, the fields
+    # decide, so a post that predates the tabs still reaches the right form.
+    tab = request.POST.get("tab") or request.GET.get("tab") or ""
+    if tab not in ("create", "existing"):
+        tab = "create" if (not posted or "password1" in request.POST) else "existing"
+    create_form = MemberCreateForm(request.POST if (posted and tab == "create") else None, business=b, auto_id="id_new_%s")
+    add_form = MemberAddForm(request.POST if (posted and tab == "existing") else None, business=b, auto_id="id_has_%s")
+    form = create_form if tab == "create" else add_form
+    if posted and form.is_valid():
+        made = tab == "create"
+        user = form.save() if made else form.user
         with transaction.atomic():
             if not has_dashboard(user, BUSINESS):
-                # Adding someone to your team is what gives them the Business area.
+                # Being on a team is what gives someone the Business area.
                 dash = Dashboard.objects.get(code=BUSINESS)
-                UserDashboardAccess.objects.get_or_create(user=user, dashboard=dash, defaults={"granted_by": request.user})
-            Membership.objects.create(business=b, user=user, role=form.cleaned_data["role"], added_by=request.user)
-        messages.success(request, _("%(name)s added as %(role)s.") % {"name": user.username, "role": Role(form.cleaned_data["role"]).label})
+                UserDashboardAccess.objects.get_or_create(user=user, dashboard=dash,
+                                                          defaults={"granted_by": request.user, "is_default": made})
+            Membership.objects.create(business=b, user=user, role=form.cleaned_data["role"], added_by=request.user,
+                                      account_created=made)
+        role_label = Role(form.cleaned_data["role"]).label
+        if made:
+            messages.success(request, _("Login made for %(name)s as %(role)s. Give them the username and password you just typed.")
+                             % {"name": user.username, "role": role_label})
+        else:
+            messages.success(request, _("%(name)s added as %(role)s.") % {"name": user.username, "role": role_label})
         return redirect("business:team")
     members = b.members.select_related("user").order_by("role", "user__username")
     caps = [(key, CAPABILITIES[key]) for key in CAPABILITIES]
     matrix = [{"role": r, "label": r.label, "caps": {c: c in ROLE_CAPS[r] for c in CAPABILITIES}} for r in Role]
-    return render(request, "business/settings/team.html", {"form": form, "members": members, "caps": caps, "matrix": matrix})
+    return render(request, "business/settings/team.html", {
+        "form": add_form, "create_form": create_form, "tab": tab, "members": members, "caps": caps, "matrix": matrix,
+        "password_form": MemberPasswordForm(user=request.user),
+    })
+
+
+@business_access_required
+def guide_view(request):
+    """How the farm works: the whole system on one page."""
+    from . import guide
+
+    def allowed(cap):
+        return can(request.membership, cap)
+
+    stages = guide.stages_for(allowed)
+    titles = guide.step_titles()
+    return render(request, "business/guide.html", {
+        "stages": stages,
+        "answers": guide.answers_for(titles),
+        "titles": titles,
+    })
+
+
+@business_access_required(capability="manage_team")
+@require_POST
+def member_password_view(request, pk):
+    """Set a new password for a login this farm created (not for accounts people brought)."""
+    m = get_object_or_404(Membership.objects.select_related("user"), pk=pk, business=request.business)
+    if not m.account_created or m.role == Role.OWNER:
+        messages.error(request, _("This account wasn't made here, so its password can only be changed by the person themselves."))
+        return redirect("business:team")
+    form = MemberPasswordForm(request.POST, user=m.user)
+    if form.is_valid():
+        m.user.set_password(form.cleaned_data["password1"])
+        m.user.save(update_fields=["password"])
+        messages.success(request, _("New password set for %(name)s. Tell them what it is; they'll need it next time they sign in.")
+                         % {"name": m.user.username})
+    else:
+        for errors in form.errors.values():
+            for error in errors:
+                messages.error(request, error)
+    return redirect("business:team")
 
 
 @business_access_required(capability="manage_team")

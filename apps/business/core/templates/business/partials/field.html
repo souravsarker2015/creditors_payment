@@ -2,7 +2,7 @@
 A business form field: label with its ⓘ tip (the form's `tips` dict), the
 "+ Add new" popup (field.field.biz_quick_add), ৳ / % affixes
 (field.field.affix), help text and errors.
-{% endcomment %}{% if field.is_hidden %}{{ field }}{% else %}{% if field.field.biz_quick_add %}{% biz_quick_add field.field.biz_quick_add as qa %}{% endif %}{% with tip_text=field|tip %}
+{% endcomment %}{% if field.is_hidden %}{{ field }}{% else %}{% if field.field.biz_quick_add %}{% biz_quick_add field.field.biz_quick_add field.id_for_label as qa %}{% endif %}{% with tip_text=field|tip %}
 {% if field.field.widget.input_type == "checkbox" %}
 <div class="field{% if field.errors %} has-error{% endif %}">
   <div class="label-row">
@@ -34,7 +34,7 @@ A business form field: label with its ⓘ tip (the form's `tips` dict), the
   {% for error in field.errors %}<p class="field-error">{% include "partials/icon.html" with name="alert" %}{{ error }}</p>{% endfor %}
 </div>
 {% else %}
-<div class="field{% if field.errors %} has-error{% endif %}"{% if qa %} x-data="quickAdd('{{ qa.url }}', '{{ field.id_for_label }}')"{% endif %}>
+<div class="field{% if field.errors %} has-error{% endif %}"{% if qa %} x-data="quickAdd('{{ qa.url }}', '{{ field.id_for_label }}')" data-qa="{{ field.field.biz_quick_add }}"{% endif %}>
   <div class="label-row">{% include "business/partials/label.html" %}</div>
   {% if qa %}
   <div class="input-group">

@@ -23,7 +23,16 @@
       <div class="card-body form-stack">
         <div class="field{% if form.party.errors %} has-error{% endif %}">
           <label class="label" for="{{ form.party.id_for_label }}">{% translate "Who" %}<span class="req" aria-hidden="true">*</span></label>
-          <div x-ref="partyWrap">{{ form.party }}</div>
+          {% biz_quick_add "party" as party_qa %}
+          {% if party_qa %}{% with qa=party_qa field=form.party %}
+          <div class="input-group" x-data="quickAdd('{{ qa.url }}', '{{ field.id_for_label }}')" data-qa="party">
+            {{ field }}
+            <button type="button" class="input-addon-btn" @click="show($el)" aria-haspopup="dialog"
+                    aria-label="{% blocktranslate with noun=qa.noun %}Add a new {{ noun }}{% endblocktranslate %}"
+                    data-tip="{% blocktranslate with noun=qa.noun %}Add a new {{ noun }}{% endblocktranslate %}">{% include "partials/icon.html" with name="plus" %}</button>
+            {% include "partials/quick_add_modal.html" %}
+          </div>
+          {% endwith %}{% else %}{{ form.party }}{% endif %}
           {% for error in form.party.errors %}<p class="field-error">{% include "partials/icon.html" with name="alert" %}{{ error }}</p>{% endfor %}
         </div>
 

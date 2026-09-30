@@ -15,10 +15,10 @@
   <div class="card-footer flex flex-wrap items-center gap-2">
     <button type="button" class="btn btn-secondary btn-sm" @click="add()">{% include "partials/icon.html" with name="plus" %}{% translate "Add a deduction" %}</button>
     {% biz_quick_add "deduction_type" as qa %}
-    <span x-data="quickAdd('{{ qa.url }}', 'dt-new')" class="contents">
-      <select id="dt-new" class="hidden" aria-hidden="true" tabindex="-1" @change="$dispatch('new-option', { value: $el.value, text: $el.options[$el.selectedIndex].text })"><option value=""></option></select>
+    {% if qa %}<span x-data="quickAdd('{{ qa.url }}', 'dt-new')" class="contents">
+      <select id="dt-new" class="hidden" aria-hidden="true" tabindex="-1" @change="$dispatch('new-option', { field: 'deduction_type', value: $el.value, text: $el.options[$el.selectedIndex].text })"><option value=""></option></select>
       <button type="button" class="btn btn-ghost btn-sm" @click="show($el)">{% include "partials/icon.html" with name="tag" %}{% translate "New deduction type" %}</button>
       {% with field=formset.empty_form.deduction_type %}{% include "partials/quick_add_modal.html" %}{% endwith %}
-    </span>
+    </span>{% endif %}
   </div>
 </section>

@@ -94,6 +94,9 @@ class Membership(models.Model):
     role = models.CharField(_("Role"), max_length=12, choices=Role.choices, default=Role.DATA_ENTRY)
     added_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
     created_at = models.DateTimeField(auto_now_add=True)
+    # True when this farm made the login itself (Team page). Only then may the
+    # owner set a new password for it: never for an account someone brought along.
+    account_created = models.BooleanField(default=False, editable=False)
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["business", "user"], name="one_membership_per_business")]

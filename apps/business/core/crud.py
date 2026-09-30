@@ -278,10 +278,12 @@ def register_quick_add(kind, spec):
     QUICK_ADD[kind] = spec
 
 
-def quick_add_context(kind, business):
+def quick_add_context(kind, business, target=""):
+    """`target`: the id of the dropdown this popup fills, so its field ids stay unique."""
     spec = QUICK_ADD[kind]
-    return {"url": reverse("business:quick_add", args=[kind]), "title": spec.title, "noun": spec.noun,
-            "form": spec.form_class(prefix=f"qa_{kind}", business=business)}
+    return {"url": reverse("business:quick_add", args=[kind]), "title": spec.title, "noun": spec.noun, "kind": kind,
+            "form": spec.form_class(prefix=f"qa_{kind}", business=business,
+                                    auto_id=f"id_qa_{target or kind}_%s")}
 
 
 @business_access_required
@@ -311,4 +313,6 @@ def quick_add_view(request, kind):
         obj.business = request.business
         obj.save()
         form.save_m2m()
-    return JsonResponse({"ok": True, "id": obj.pk, "name": str(obj), "message": _("'%(name)s' added and selected.") % {"name": obj}}, status=201)
+    extra = form.page_data(obj) if hasattr(form, "page_data") else {}
+    return JsonResponse({"ok": True, "id": obj.pk, "name": str(obj), "kind": kind, "extra": extra,
+                         "message": _("'%(name)s' added and selected.") % {"name": obj}}, status=201)

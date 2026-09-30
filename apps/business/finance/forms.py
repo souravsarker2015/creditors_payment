@@ -114,6 +114,8 @@ class AccountQuickForm(BusinessForm):
 
 
 class TransactionForm(BusinessForm):
+    """One expense or income. Type is chosen by the category picked."""
+
     tips = {
         "category": _("What the money was for. Farm categories count in the farm's profit; household and personal ones don't."),
         "account": _("Which cash box, bank or wallet the money came out of or went into. Its balance changes."),
@@ -121,8 +123,6 @@ class TransactionForm(BusinessForm):
         "cycle": _("Medicine, lime, labour, pond rent… for one pond? Pick its cycle and the cost is added to that pond's profit and loss."),
         "receipt": _("A photo of the memo or receipt, to check later."),
     }
-    """One expense or income. Type is chosen by the category picked."""
-
     unique_name = ()
     layout = [("#", _("What and how much")), ("category", "amount"), ("date", "account"), ("description",),
               ("#", _("More (optional)")), ("party", "cycle"), ("receipt",), ("notes",)]
@@ -145,8 +145,10 @@ class TransactionForm(BusinessForm):
         self.fields["category"].biz_quick_add = "category"
         self.fields["account"].queryset = Account.objects.filter(business=b)
         self.fields["account"].empty_label = _("Not recorded")
+        self.fields["account"].biz_quick_add = "account"
         self.fields["party"].queryset = Party.objects.filter(business=b)
         self.fields["party"].empty_label = _("Nobody in particular")
+        self.fields["party"].biz_quick_add = "party"
         self.fields["party"].help_text = _("Only to remember who — it does not create any baki.")
         cycles = CultureCycle.objects.filter(business=b, status=CycleStatus.RUNNING)
         if self.instance.pk and self.instance.cycle_id:
@@ -197,6 +199,7 @@ class TransferForm(BusinessForm):
         for name in ("from_account", "to_account"):
             self.fields[name].queryset = accounts
             self.fields[name].empty_label = _("Choose an account…")
+            self.fields[name].biz_quick_add = "account"
         money_field(self.fields["amount"])
         money_field(self.fields["charge"])
         self.fields["charge"].required = False
@@ -233,8 +236,10 @@ class RecurringForm(BusinessForm):
         b = self.business
         self.fields["category"].queryset = Category.objects.filter(business=b).select_related("parent")
         self.fields["category"].empty_label = _("Choose a category…")
+        self.fields["category"].biz_quick_add = "category"
         self.fields["account"].queryset = Account.objects.filter(business=b)
         self.fields["account"].empty_label = _("Not set")
+        self.fields["account"].biz_quick_add = "account"
         money_field(self.fields["amount"])
         if not self.instance.pk:
             self.initial.setdefault("start_date", date.today())

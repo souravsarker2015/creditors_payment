@@ -48,6 +48,7 @@ class FishSaleForm(BusinessForm):
         self.fields["cycle"].empty_label = _("Not from a particular pond")
         self.fields["account"].queryset = Account.objects.filter(business=b)
         self.fields["account"].empty_label = _("Not recorded")
+        self.fields["account"].biz_quick_add = "account"
         money_field(self.fields["received_now"])
         self.fields["received_now"].required = False
         if not self.instance.pk:

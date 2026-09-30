@@ -1,0 +1,9 @@
+{% load i18n business %}{% comment %}
+"+ New …" under a table of rows: creates the record and adds it to every row's
+dropdown. Needs: kind (quick-add kind), suffix (the rows' field name), bound (that field on the empty row).
+{% endcomment %}{% biz_quick_add kind as qa %}{% if qa %}
+<span x-data="quickAdd('{{ qa.url }}', 'new-{{ kind }}')" class="contents">
+  <select id="new-{{ kind }}" class="hidden" aria-hidden="true" tabindex="-1" @change="$dispatch('new-option', { field: '{{ suffix }}', value: $el.value, text: $el.options[$el.selectedIndex].text })"><option value=""></option></select>
+  <button type="button" class="btn btn-ghost btn-sm" @click="show($el)">{% include "partials/icon.html" with name="plus" %}{{ qa.title }}</button>
+  {% with field=bound %}{% include "partials/quick_add_modal.html" %}{% endwith %}
+</span>{% endif %}

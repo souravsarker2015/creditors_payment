@@ -2,6 +2,7 @@ from decimal import Decimal, InvalidOperation
 
 from django import template
 from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 
 register = template.Library()
 
@@ -83,13 +84,17 @@ def absolute(value):
 
 
 @register.simple_tag(takes_context=True)
-def biz_quick_add(context, kind):
+def biz_quick_add(context, kind, target=""):
     """Context for a business "+ Add new" popup (see core/crud.py)."""
-    from apps.business.core.crud import quick_add_context
+    from apps.business.core.access import can
+    from apps.business.core.crud import QUICK_ADD, quick_add_context
 
     request = context.get("request")
     business = getattr(request, "business", None) or context.get("business")
-    return quick_add_context(kind, business)
+    spec = QUICK_ADD.get(kind)
+    if spec is None or not can(getattr(request, "membership", None), spec.capability):
+        return None     # no "+" for a list this person may not add to
+    return quick_add_context(kind, business, target)
 
 
 @register.filter
@@ -97,3 +102,19 @@ def tip(field):
     """The ⓘ explainer for a form field: the form's `tips` dict, by field name."""
     tips = getattr(getattr(field, "form", None), "tips", None) or {}
     return tips.get(getattr(field, "name", None), "")
+
+
+@register.filter
+def get_item(mapping, key):
+    """One value out of a dict, for keys a template can't write as an attribute."""
+    return (mapping or {}).get(key, "")
+
+
+@register.filter
+def js_list(value):
+    """A list of plain keys as a JavaScript array literal, for an Alpine attribute.
+    Keys are our own (a-z, _), so quoting with ' keeps it inside a "…" attribute."""
+    import re
+
+    safe = [str(v) for v in value if re.fullmatch(r"[a-z_]+", str(v))]
+    return mark_safe("[" + ", ".join(f"'{v}'" for v in safe) + "]")

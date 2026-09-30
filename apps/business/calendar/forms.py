@@ -32,6 +32,7 @@ class EventForm(BusinessForm):
 
         self.fields["pond"].queryset = Pond.objects.filter(business=self.business)
         self.fields["pond"].empty_label = _("Not for one pond")
+        self.fields["pond"].biz_quick_add = "pond"
         self.fields["repeat"].choices = Repeat.choices
         self.fields["time"].widget.attrs["class"] = "form-input"
 

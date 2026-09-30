@@ -35,7 +35,7 @@
       {% if lines.non_form_errors %}<div class="card-body"><div class="form-errors">{% for e in lines.non_form_errors %}<p>{{ e }}</p>{% endfor %}</div></div>{% endif %}
       <div class="rows-list" x-ref="list">{% for f in lines %}{% include "business/sales/sale_line.html" %}{% endfor %}</div>
       <template x-ref="tpl">{% with f=lines.empty_form %}{% include "business/sales/sale_line.html" %}{% endwith %}</template>
-      <div class="card-footer"><button type="button" class="btn btn-secondary btn-sm" @click="add()" x-init="if (!$refs.list.children.length) { silent = true; add(); silent = false }">{% include "partials/icon.html" with name="plus" %}{% translate "Add another fish" %}</button></div>
+      <div class="card-footer flex flex-wrap items-center gap-2"><button type="button" class="btn btn-secondary btn-sm" @click="add()" x-init="if (!$refs.list.children.length) { silent = true; add(); silent = false }">{% include "partials/icon.html" with name="plus" %}{% translate "Add another fish" %}</button>{% include "business/partials/row_quick_add.html" with kind="species" suffix="species" bound=lines.empty_form.species %}</div>
     </section>
 
     <section class="card" x-data="formRows('{{ deds.prefix }}')" data-rows="ded" @row-added="calc()">
@@ -43,7 +43,7 @@
       {{ deds.management_form }}
       <div class="rows-list" x-ref="list">{% for f in deds %}{% include "business/sales/ded_line.html" %}{% endfor %}</div>
       <template x-ref="tpl">{% with f=deds.empty_form %}{% include "business/sales/ded_line.html" %}{% endwith %}</template>
-      <div class="card-footer"><button type="button" class="btn btn-secondary btn-sm" @click="add()">{% include "partials/icon.html" with name="plus" %}{% translate "Add a deduction" %}</button></div>
+      <div class="card-footer flex flex-wrap items-center gap-2"><button type="button" class="btn btn-secondary btn-sm" @click="add()">{% include "partials/icon.html" with name="plus" %}{% translate "Add a deduction" %}</button>{% include "business/partials/row_quick_add.html" with kind="deduction_type" suffix="deduction_type" bound=deds.empty_form.deduction_type %}</div>
     </section>
 
     <section class="card">

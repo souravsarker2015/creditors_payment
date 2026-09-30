@@ -6,7 +6,7 @@ page's form. Lives inside an element using x-data="quickAdd(...)". Needs: qa (fr
 <template x-teleport="body">
   <div class="modal-root" x-show="open" x-cloak @keydown.escape.window="open && close()" role="dialog" aria-modal="true" aria-labelledby="qa-title-{{ field.auto_id }}">
     <div class="modal-backdrop" x-show="open" x-transition.opacity.duration.200ms @click="close()"></div>
-    <form method="post" action="{{ qa.url }}" class="modal" id="qa-form-{{ field.auto_id }}" x-show="open" novalidate
+    <form method="post" action="{{ qa.url }}" class="modal" id="qa-form-{{ field.auto_id }}" data-qa-form="{{ field.auto_id }}" x-show="open" novalidate
           x-transition:enter="modal-enter" x-transition:enter-start="modal-enter-start" x-transition:enter-end="modal-enter-end"
           x-transition:leave="modal-leave" x-transition:leave-start="modal-enter-end" x-transition:leave-end="modal-enter-start"
           @submit.prevent="save($el)" x-trap.noscroll="open">

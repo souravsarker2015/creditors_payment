@@ -8688,3 +8688,390 @@ msgstr "ক্যালেন্ডার"
 
 msgid "from %(date)s"
 msgstr "%(date)s থেকে"
+
+msgid "Password"
+msgstr "পাসওয়ার্ড"
+
+msgid "At least 8 characters, not only numbers, and not something easy like “password”."
+msgstr "অন্তত ৮ অক্ষর, শুধু সংখ্যা নয়, আর “password”-এর মতো সহজ কিছু নয়।"
+
+msgid "Password again"
+msgstr "পাসওয়ার্ড আবার"
+
+msgid "The two passwords don't match."
+msgstr "দুটি পাসওয়ার্ড মিলছে না।"
+
+msgid "What they type to sign in. Letters, numbers and @ . + - _ only, no spaces. E.g. rahim or rahim.farm"
+msgstr "লগইন করতে তিনি যা লিখবেন। শুধু অক্ষর, সংখ্যা আর @ . + - _ চলবে, ফাঁকা জায়গা নয়। যেমন rahim বা rahim.farm"
+
+msgid "Their name"
+msgstr "তার নাম"
+
+msgid "e.g. Rahim Mia"
+msgstr "যেমন রহিম মিয়া"
+
+msgid "That username is taken. Try another, e.g. with the farm's name after it."
+msgstr "এই ইউজারনেম আগেই নেওয়া আছে। অন্যটা দিন, যেমন শেষে খামারের নাম জুড়ে।"
+
+msgid "Set the farm up once"
+msgstr "খামার একবার সাজিয়ে নিন"
+
+msgid "Lists everything else is built on. Common ones are filled in for you; change them any time."
+msgstr "বাকি সবকিছু এই তালিকাগুলোর ওপর দাঁড়ানো। সাধারণগুলো আগে থেকেই দেওয়া আছে; যেকোনো সময় বদলাতে পারবেন।"
+
+msgid "Every pond or gher: name, size, and whether it's leased."
+msgstr "প্রতিটি পুকুর বা ঘের: নাম, আয়তন, আর লিজ নেওয়া কিনা।"
+
+msgid "Size is what makes “profit per decimal” possible, so different ponds can be compared."
+msgstr "আয়তন থাকলেই “শতাংশপ্রতি লাভ” বের করা যায়, তাই আলাদা আলাদা পুকুর তুলনা করা যায়।"
+
+msgid "The fish you raise, with their Bangla names."
+msgstr "আপনি যে মাছ চাষ করেন, বাংলা নামসহ।"
+
+msgid "Each feed with its bag size and usual price."
+msgstr "প্রতিটি খাবার, বস্তার মাপ আর সাধারণ দামসহ।"
+
+msgid "Suppliers & buyers"
+msgstr "সরবরাহকারী ও ক্রেতা"
+
+msgid "Who you buy from and sell to, with any old balance."
+msgstr "কার কাছ থেকে কেনেন আর কার কাছে বেচেন, আগের বাকিসহ।"
+
+msgid "Markets & deductions"
+msgstr "বাজার ও কর্তন"
+
+msgid "Where you sell, and what each aarot takes off a sale."
+msgstr "কোথায় বিক্রি করেন, আর প্রতিটি আড়ত বিক্রি থেকে কী কাটে।"
+
+msgid "Set the usual commission, labour and khajna once; every sale there starts with them."
+msgstr "কমিশন, শ্রমিক আর খাজনা একবার ঠিক করে দিন; সেখানকার প্রতিটি বিক্রিতে তা নিজেই বসবে।"
+
+msgid "Accounts & categories"
+msgstr "হিসাব ও খাত"
+
+msgid "Cash, bank and bKash, and what to call your income and costs."
+msgstr "নগদ, ব্যাংক আর বিকাশ, আর আপনার আয়-খরচের খাতের নাম।"
+
+msgid "Raise the fish"
+msgstr "মাছ চাষ করুন"
+
+msgid "A cycle is one round of farming in a pond. Everything below is recorded inside it."
+msgstr "চক্র মানে একটা পুকুরে একবারের চাষ। নিচের সবকিছু সেই চক্রের ভেতরেই লেখা হয়।"
+
+msgid "Open the pond and start a cycle when you release fingerlings."
+msgstr "পোনা ছাড়ার সময় পুকুর খুলে একটা চক্র শুরু করুন।"
+
+msgid "The pond is marked “Fish in it” by itself, and “Empty” when you finish the cycle."
+msgstr "পুকুর নিজেই “মাছ আছে” দেখাবে, আর চক্র শেষ করলে “খালি” হয়ে যাবে।"
+
+msgid "Release fingerlings"
+msgstr "পোনা ছাড়ুন"
+
+msgid "How many, from whom, and what they cost."
+msgstr "কতগুলো, কার কাছ থেকে, আর কত দাম পড়ল।"
+
+msgid "Pay part now and the rest becomes Baki owed to that supplier."
+msgstr "কিছু টাকা এখন দিলে বাকিটা সেই সরবরাহকারীর বাকিতে যোগ হবে।"
+
+msgid "Copy the dealer's memo: feeds, bags and rate."
+msgstr "ডিলারের মেমো দেখে লিখুন: কোন খাবার, কত বস্তা আর দর।"
+
+msgid "Stock goes up straight away. What you didn't pay becomes Baki."
+msgstr "মজুদ সঙ্গে সঙ্গে বাড়ে। যা দেননি তা বাকিতে যায়।"
+
+msgid "Feed the ponds"
+msgstr "পুকুরে খাবার দিন"
+
+msgid "What each pond ate today — several ponds in one go."
+msgstr "আজ কোন পুকুর কতটা খেল — কয়েকটা পুকুর একসঙ্গে।"
+
+msgid "Feed becomes a cost when it's eaten, not when it's bought."
+msgstr "খাবার খরচ হয় খাওয়ানোর সময়, কেনার সময় নয়।"
+
+msgid "Test the water"
+msgstr "পানি পরীক্ষা করুন"
+
+msgid "Oxygen, pH, ammonia… against your own alert levels."
+msgstr "অক্সিজেন, পিএইচ, অ্যামোনিয়া… আপনার নিজের সতর্ক-সীমার সঙ্গে মিলিয়ে।"
+
+msgid "A reading outside your levels warns you on the cycle page and the home page."
+msgstr "সীমার বাইরে কোনো মাপ হলে চক্রের পাতায় আর হোম পাতায় সতর্ক করা হবে।"
+
+msgid "Weigh and count losses"
+msgstr "ওজন করুন আর মরা মাছ গুনুন"
+
+msgid "A sample weighing every 2–3 weeks, and any deaths."
+msgstr "প্রতি ২–৩ সপ্তাহে একটা নমুনা ওজন, আর মাছ মরলে তা।"
+
+msgid "Sample weights are how the app estimates the fish in the pond, the FCR and “if you sell now”."
+msgstr "নমুনা ওজন থেকেই অ্যাপ পুকুরের মাছ, এফসিআর আর “এখন বিক্রি করলে” হিসাব করে।"
+
+msgid "Harvest and sell"
+msgstr "মাছ ধরুন আর বিক্রি করুন"
+
+msgid "Fish out of the pond, then the money for it. They're two separate records."
+msgstr "আগে পুকুর থেকে মাছ তোলা, তারপর তার টাকা। এ দুটো আলাদা হিসাব।"
+
+msgid "Record the harvest"
+msgstr "মাছ ধরা লিখুন"
+
+msgid "How much fish came out, by weight or count."
+msgstr "কতটা মাছ উঠল, ওজনে বা সংখ্যায়।"
+
+msgid "Tap “Sell” on a harvest and the sale starts filled in."
+msgstr "ধরা মাছের পাশে “বিক্রি” চাপলে বিক্রির ঘর ভরা অবস্থায় শুরু হয়।"
+
+msgid "Record the sale"
+msgstr "বিক্রি লিখুন"
+
+msgid "The fish, quantity and rate from the aarot's memo."
+msgstr "আড়তের মেমো দেখে মাছ, পরিমাণ আর দর।"
+
+msgid "Market deductions come in by themselves; what the buyer didn't pay becomes Baki."
+msgstr "বাজারের কর্তন নিজেই বসে যায়; ক্রেতা যা দেননি তা বাকিতে যায়।"
+
+msgid "Who owes you and whom you owe, worked out for you."
+msgstr "কে আপনাকে দেবে আর আপনি কাকে দেবেন, নিজেই হিসাব হয়।"
+
+msgid "Record a payment and it settles the oldest bill first, unless you pick one."
+msgstr "পরিশোধ লিখলে সবচেয়ে পুরোনো বিল আগে শোধ হয়, আপনি আলাদা বিল না বাছলে।"
+
+msgid "Keep the money straight"
+msgstr "টাকার হিসাব ঠিক রাখুন"
+
+msgid "Everything else that comes in or goes out, and what you plan to spend."
+msgstr "আর যা কিছু আসে বা যায়, আর আপনি যা খরচ করার পরিকল্পনা করেন।"
+
+msgid "Labour, medicine, lime, electricity, household costs…"
+msgstr "শ্রমিক, ওষুধ, চুন, বিদ্যুৎ, সংসারের খরচ…"
+
+msgid "Put a cost on a pond's cycle and it counts in that pond's profit."
+msgstr "কোনো খরচ পুকুরের চক্রে ধরলে সেটা ওই পুকুরের লাভে গোনা হয়।"
+
+msgid "Instalments, interest and what's still owed."
+msgstr "কিস্তি, সুদ আর এখনো কত বাকি।"
+
+msgid "Only interest and charges are a cost; repaying the loan itself is not."
+msgstr "শুধু সুদ আর চার্জ খরচ; আসল ঋণ ফেরত দেওয়া খরচ নয়।"
+
+msgid "Budget & regular bills"
+msgstr "বাজেট ও নিয়মিত বিল"
+
+msgid "What you plan to spend, and bills that come back."
+msgstr "আপনি যা খরচ করার পরিকল্পনা করেন, আর যে বিল বারবার আসে।"
+
+msgid "See how you're doing"
+msgstr "কেমন চলছে দেখুন"
+
+msgid "Nothing here is typed in: every figure is worked out from the records above."
+msgstr "এখানে কিছুই হাতে লিখতে হয় না: প্রতিটি হিসাব ওপরের তথ্য থেকেই বের হয়।"
+
+msgid "Pond & cycle profit"
+msgstr "পুকুর ও চক্রের লাভ"
+
+msgid "What each cycle cost, sold and made."
+msgstr "প্রতিটি চক্রে কত খরচ, কত বিক্রি আর কত লাভ।"
+
+msgid "FCR & growth"
+msgstr "এফসিআর ও বৃদ্ধি"
+
+msgid "Feed used for each kg the fish grew."
+msgstr "মাছের ওজন প্রতি কেজি বাড়াতে কত খাবার লেগেছে।"
+
+msgid "Feed stock"
+msgstr "খাবারের মজুদ"
+
+msgid "Bought minus eaten, and what it's worth."
+msgstr "কেনা থেকে খাওয়ানো বাদ, আর তার দাম কত।"
+
+msgid "What came in, what went out, what's left."
+msgstr "কত এলো, কত গেল, কত রইল।"
+
+msgid "Water problems, deaths, unfed ponds, weighings due."
+msgstr "পানির সমস্যা, মাছ মরা, খাবার না দেওয়া পুকুর, ওজন করার সময়।"
+
+msgid "Everything on its day, in English and Bangla dates."
+msgstr "প্রতিটি জিনিস তার দিনে, ইংরেজি আর বাংলা তারিখে।"
+
+msgid "Costs add up"
+msgstr "খরচ যোগ হয়"
+
+msgid "Fingerlings, feed eaten and pond costs together."
+msgstr "পোনা, খাওয়ানো খাবার আর পুকুরের খরচ একসঙ্গে।"
+
+msgid "Profit of a cycle"
+msgstr "একটা চক্রের লাভ"
+
+msgid "Fish sold (after market deductions) − fingerlings − feed eaten − costs put on that cycle."
+msgstr "মাছ বিক্রি (বাজারের কর্তনের পরে) − পোনা − খাওয়ানো খাবার − ওই চক্রে ধরা খরচ।"
+
+msgid "Fingerlings released − deaths recorded − fish harvested by count."
+msgstr "ছাড়া পোনা − লেখা মরা মাছ − গুনে ধরা মাছ।"
+
+msgid "Weight in the pond"
+msgstr "পুকুরে মাছের ওজন"
+
+msgid "Fish in the pond × their latest sample weight."
+msgstr "পুকুরের মাছ × তাদের সর্বশেষ নমুনা ওজন।"
+
+msgid "Feed eaten ÷ weight the fish gained (harvest − fingerling weight). Lower is better."
+msgstr "খাওয়ানো খাবার ÷ মাছের বাড়তি ওজন (ধরা মাছ − পোনার ওজন)। যত কম, তত ভালো।"
+
+msgid "Feed cost of a pond"
+msgstr "একটা পুকুরের খাবার খরচ"
+
+msgid "Feed eaten there × the average price per kg you paid for that feed."
+msgstr "সেখানে খাওয়ানো খাবার × ওই খাবারের কেজিপ্রতি গড় দাম।"
+
+msgid "Baki of a person"
+msgstr "একজনের বাকি"
+
+msgid "Their unpaid bills (sales, feed, fingerlings) − what they've paid, oldest first."
+msgstr "তার অপরিশোধিত বিল (বিক্রি, খাবার, পোনা) − তিনি যা দিয়েছেন, পুরোনো আগে।"
+
+msgid "Money in an account"
+msgstr "একাউন্টে টাকা"
+
+msgid "Opening balance + everything in − everything out of that account."
+msgstr "শুরুর ব্যালেন্স + সব জমা − ওই একাউন্ট থেকে সব খরচ।"
+
+msgid "Fish sales + other farm income − feed eaten − fingerlings − farm costs − loan interest."
+msgstr "মাছ বিক্রি + খামারের অন্য আয় − খাওয়ানো খাবার − পোনা − খামারের খরচ − ঋণের সুদ।"
+
+msgid "How the farm works"
+msgstr "খামার যেভাবে চলে"
+
+msgid "The whole system on one page: what you record, in what order, and what it turns into."
+msgstr "পুরো সিস্টেম এক পাতায়: আপনি কী লেখেন, কোন ক্রমে, আর তা থেকে কী তৈরি হয়।"
+
+msgid "You record what happens on the farm. Everything else — costs, profit, Baki, stock, FCR, reports — is worked out from it. Nothing is typed twice."
+msgstr "খামারে যা ঘটে আপনি শুধু তা লেখেন। বাকি সব — খরচ, লাভ, বাকি, মজুদ, এফসিআর, রিপোর্ট — সেখান থেকেই হিসাব হয়। একই জিনিস দুবার লিখতে হয় না।"
+
+msgid "The farm workflow"
+msgstr "খামারের কাজের ধারা"
+
+msgid "Feeds into"
+msgstr "যেখানে যুক্ত হয়"
+
+msgid "Where does this number come from?"
+msgstr "এই হিসাবটা কোথা থেকে আসে?"
+
+msgid "Every figure in the app is worked out from what you recorded — these are the sums behind them."
+msgstr "অ্যাপের প্রতিটি হিসাব আপনার লেখা তথ্য থেকেই বের করা — এগুলোই তার পেছনের অঙ্ক।"
+
+msgid "Comes from:"
+msgstr "যা থেকে আসে:"
+
+msgid "Three rules worth remembering"
+msgstr "মনে রাখার মতো তিনটি নিয়ম"
+
+msgid "Record each thing once, where it happens."
+msgstr "প্রতিটি জিনিস একবারই লিখুন, যেখানে সেটা ঘটে।"
+
+msgid "A fish sale belongs in Fish sales, not also in Money in & out. Feed bought belongs in Feed. Money already counted there is never typed again."
+msgstr "মাছ বিক্রি লিখবেন মাছ বিক্রি পাতায়, জমা-খরচে আবার নয়। খাবার কেনা লিখবেন খাবার পাতায়। সেখানে ধরা টাকা আর কখনো লিখতে হয় না।"
+
+msgid "A cost counts when it's used, not when it's bought."
+msgstr "খরচ ধরা হয় যখন সেটা ব্যবহার হয়, কেনার সময় নয়।"
+
+msgid "Feed becomes a cost when a pond eats it. Feed still in the store is stock, not a cost — so a pond's profit stays honest."
+msgstr "পুকুরে খাওয়ালে তবেই খাবার খরচ হয়। গুদামে থাকা খাবার মজুদ, খরচ নয় — তাই পুকুরের লাভ সঠিক থাকে।"
+
+msgid "Money owed is not money received."
+msgstr "পাওনা টাকা আর হাতে পাওয়া টাকা এক নয়।"
+
+msgid "A sale counts on the day you sold, even unpaid. What's unpaid sits in Baki until the buyer pays, and only then does an account go up."
+msgstr "বিক্রি ধরা হয় বিক্রির দিনেই, টাকা না পেলেও। যা পাননি তা বাকিতে থাকে; ক্রেতা টাকা দিলে তবেই একাউন্টে যোগ হয়।"
+
+msgid "Not sure what to do next? The home page lists today's jobs, and every page has a note explaining it."
+msgstr "পরে কী করবেন বুঝতে পারছেন না? হোম পাতায় আজকের কাজের তালিকা আছে, আর প্রতিটি পাতায় তার ব্যাখ্যা দেওয়া আছে।"
+
+msgid "Go to the farm home page"
+msgstr "খামারের হোম পাতায় যান"
+
+msgid "New here?"
+msgstr "নতুন এসেছেন?"
+
+msgid "See how the whole system works"
+msgstr "পুরো সিস্টেম যেভাবে চলে দেখুন"
+
+msgid "How it works"
+msgstr "যেভাবে চলে"
+
+msgid "Change password for %(name)s"
+msgstr "%(name)s-এর পাসওয়ার্ড বদলান"
+
+msgid "Change password"
+msgstr "পাসওয়ার্ড বদলান"
+
+msgid "Make a login for them here, or add an account they already have."
+msgstr "এখানে তার জন্য লগইন বানান, অথবা তার আগে থেকে থাকা একাউন্ট যোগ করুন।"
+
+msgid "How to add someone"
+msgstr "কীভাবে যোগ করবেন"
+
+msgid "Make a login"
+msgstr "লগইন বানান"
+
+msgid "They have one"
+msgstr "তার একাউন্ট আছে"
+
+msgid "Write the username and password down for them. You can change the password later, but you can't see it again."
+msgstr "ইউজারনেম আর পাসওয়ার্ড তার জন্য লিখে রাখুন। পরে পাসওয়ার্ড বদলাতে পারবেন, কিন্তু আবার দেখতে পারবেন না।"
+
+msgid "Make the login"
+msgstr "লগইন বানান"
+
+msgid "For someone who already signs in to FinTrack. Ask them for their username."
+msgstr "যিনি আগে থেকেই FinTrack-এ লগইন করেন তার জন্য। তার ইউজারনেম জেনে নিন।"
+
+msgid "They'll need this new password the next time they sign in, so tell them what it is."
+msgstr "পরেরবার লগইন করতে তার এই নতুন পাসওয়ার্ড লাগবে, তাই তাকে জানিয়ে দিন।"
+
+msgid "Set password"
+msgstr "পাসওয়ার্ড দিন"
+
+msgid "Login made for %(name)s as %(role)s. Give them the username and password you just typed."
+msgstr "%(name)s-এর জন্য %(role)s হিসেবে লগইন বানানো হয়েছে। এইমাত্র লেখা ইউজারনেম আর পাসওয়ার্ড তাকে দিন।"
+
+msgid "This account wasn't made here, so its password can only be changed by the person themselves."
+msgstr "এই একাউন্ট এখানে বানানো হয়নি, তাই এর পাসওয়ার্ড শুধু তিনি নিজেই বদলাতে পারবেন।"
+
+msgid "New password set for %(name)s. Tell them what it is; they'll need it next time they sign in."
+msgstr "%(name)s-এর নতুন পাসওয়ার্ড দেওয়া হয়েছে। তাকে জানিয়ে দিন; পরেরবার লগইনে লাগবে।"
+
+msgid "New feed"
+msgstr "নতুন খাবার"
+
+msgid "feed"
+msgstr "খাবার"
+
+msgid "Pick one or more."
+msgstr "এক বা একাধিক বেছে নিন।"
+
+msgid "Bag size (kg)"
+msgstr "বস্তার মাপ (কেজি)"
+
+msgid "New person or firm"
+msgstr "নতুন ব্যক্তি বা প্রতিষ্ঠান"
+
+msgid "person"
+msgstr "ব্যক্তি"
+
+msgid "They are a"
+msgstr "তিনি হলেন"
+
+msgid "Both"
+msgstr "দুটোই"
+
+msgid "New pond"
+msgstr "নতুন পুকুর"
+
+msgid "pond"
+msgstr "পুকুর"
+
+msgid "Area (decimal)"
+msgstr "আয়তন (শতাংশ)"
+
+msgid "login made here"
+msgstr "এখানে বানানো লগইন"

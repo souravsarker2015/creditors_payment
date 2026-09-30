@@ -29,15 +29,18 @@ document.addEventListener("alpine:init", function () {
         window.addEventListener("new-option", (e) => {
           var d = e.detail;
           if (!d || !d.value) return;
-          var selects = Array.from(root.querySelectorAll("select[name$='-deduction_type']"));
+          var name = d.field || "deduction_type";      // which dropdown of the rows it belongs in
+          var tpl = this.$refs.tpl, inTpl = new RegExp('(<select[^>]*-' + name + '"[^>]*>)');
+          if (!inTpl.test(tpl.innerHTML)) return;      // these rows have no such dropdown
+          var selects = Array.from(root.querySelectorAll("select[name$='-" + name + "']"));
           selects.forEach(function (sel) {
             if (!Array.from(sel.options).some(function (o) { return o.value === d.value; })) sel.add(new Option(d.text, d.value));
           });
-          var tpl = this.$refs.tpl;
-          tpl.innerHTML = tpl.innerHTML.replace(/(<select[^>]*-deduction_type"[^>]*>)/, '$1<option value="' + d.value + '">' + d.text.replace(/</g, "&lt;") + "</option>");
+          tpl.innerHTML = tpl.innerHTML.replace(inTpl, '$1<option value="' + d.value + '">' + d.text.replace(/</g, "&lt;") + "</option>");
           var empty = selects.filter(function (s) { return !s.value && !s.closest("template"); });
-          if (!empty.length) { this.add(); empty = [this.$refs.list.lastElementChild.querySelector("select[name$='-deduction_type']")]; }
+          if (!empty.length) { this.add(); empty = [this.$refs.list.lastElementChild.querySelector("select[name$='-" + name + "']")]; }
           empty[0].value = d.value;
+          empty[0].dispatchEvent(new Event("change", { bubbles: true }));   // totals, default unit and last price follow
         });
       },
     };
@@ -62,6 +65,12 @@ document.addEventListener("alpine:init", function () {
       gross: 0, deductions: 0, net: 0,
       init() {
         root = this.$el;
+        // A feed created with "+ New feed": remember its bag size and price for the totals.
+        window.addEventListener("quick-added", (e) => {
+          var d = e.detail || {};
+          if (d.kind === "feed" && this.data.products) this.data.products[d.id] = d.extra || {};
+          if (d.kind === "species" && this.data.species) this.data.species[d.id] = d.extra || {};
+        });
         this.$nextTick(() => {
           if (this.mode === "sale") this.rows(".sale-line").forEach((row) => this.autoSaleRate(row));
           this.calc();
