@@ -53,16 +53,17 @@ class ReportBase(TestCase):
 
 class DashboardTests(ReportBase):
     def test_headline_adds_up_sales_and_costs(self):
-        self.sell(10000, days=2)
-        self.spend(3000, days=1)
+        # Dated today: "2 days ago" is last month on the 1st or 2nd, and this month's totals would be 0.
+        self.sell(10000, days=0)
+        self.spend(3000, days=0)
         d = services.dashboard(self.b)
         self.assertEqual(d["month"]["income"], D("10000"))
         self.assertEqual(d["month"]["expense"], D("3000"))
         self.assertEqual(d["month"]["profit"], D("7000"))
 
     def test_fish_income_is_split_from_other_income(self):
-        self.sell(10000, days=2)
-        Transaction.objects.create(business=self.b, date=ago(1), amount=D("4500"), account=self.cash,
+        self.sell(10000, days=0)
+        Transaction.objects.create(business=self.b, date=ago(0), amount=D("4500"), account=self.cash,
                                    category=Category.objects.get(business=self.b, name="Other income"))
         d = services.dashboard(self.b)
         self.assertEqual(d["month"]["fish"], D("10000"))

@@ -43,6 +43,12 @@ Pages are rendered by Django, with three small layers on top:
   a link is being pressed) and cross-fade View Transitions. Links with `?…`, logout, admin and
   downloads are never fetched ahead; mark any other link that changes something on a GET with
   `data-no-prefetch`.
+- **App view on phones**: each person picks *Automatic* (app view when FinTrack is opened from its
+  home-screen icon), *App view* or *Website view* — in the "More" sheet, the top-bar menu or the
+  phone sidebar. App view adds a bottom tab bar, a "+" sheet of quick actions and a "More" sheet
+  (`templates/partials/app_shell.html`); its styles are under "App view" in `static/css/app.css`.
+  The menu sections live in `templates/partials/nav_sections.html`, shared by the sidebar and the
+  "More" sheet, so a new page added there appears in both.
 
 ## Project Structure
 

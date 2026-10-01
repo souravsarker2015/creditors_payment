@@ -9080,3 +9080,96 @@ msgid "%(counter)s result"
 msgid_plural "%(counter)s results"
 msgstr[0] "%(counter)sটি ফলাফল"
 msgstr[1] "%(counter)sটি ফলাফল"
+
+msgid "Automatic"
+msgstr "স্বয়ংক্রিয়"
+
+msgid "App view"
+msgstr "অ্যাপ ভিউ"
+
+msgid "Website view"
+msgstr "ওয়েবসাইট ভিউ"
+
+msgid "Layout on this phone"
+msgstr "এই ফোনে কেমন দেখাবে"
+
+msgid "App view is on"
+msgstr "অ্যাপ ভিউ চালু হয়েছে"
+
+msgid "Website view is on"
+msgstr "ওয়েবসাইট ভিউ চালু হয়েছে"
+
+msgid "App tabs"
+msgstr "অ্যাপের ট্যাব"
+
+msgid "Dues"
+msgstr "দেনা-পাওনা"
+
+msgid "More"
+msgstr "আরও"
+
+msgid "What do you want to add?"
+msgstr "কী যোগ করতে চান?"
+
+msgid "Feed given"
+msgstr "খাবার দেওয়া"
+
+msgid "Feed used in ponds"
+msgstr "পুকুরে যে খাবার দিলেন"
+
+msgid "Bags from a supplier"
+msgstr "সরবরাহকারীর কাছ থেকে বস্তা"
+
+msgid "Baki payment"
+msgstr "বাকি পরিশোধ"
+
+msgid "Paid or received"
+msgstr "দিলেন বা পেলেন"
+
+msgid "Labour, bills, other costs"
+msgstr "মজুরি, বিল, অন্যান্য খরচ"
+
+msgid "Task or reminder"
+msgstr "কাজ বা রিমাইন্ডার"
+
+msgid "On the farm calendar"
+msgstr "খামারের ক্যালেন্ডারে"
+
+msgid "Money spent"
+msgstr "যে টাকা খরচ হলো"
+
+msgid "Money received"
+msgstr "যে টাকা পেলেন"
+
+msgid "Daily shopping"
+msgstr "প্রতিদিনের বাজার"
+
+msgid "New creditor"
+msgstr "নতুন পাওনাদার"
+
+msgid "Someone you borrowed from"
+msgstr "যার কাছ থেকে ধার নিয়েছেন"
+
+msgid "New debtor"
+msgstr "নতুন দেনাদার"
+
+msgid "Someone who owes you"
+msgstr "যার কাছে আপনি টাকা পান"
+
+msgid "New shop"
+msgstr "নতুন দোকান"
+
+msgid "Where you buy on credit"
+msgstr "যেখানে বাকিতে কেনেন"
+
+msgid "Language"
+msgstr "ভাষা"
+
+msgid "App when opened from the home screen"
+msgstr "হোম স্ক্রিনের আইকন থেকে খুললে অ্যাপের মতো"
+
+msgid "Tabs at the bottom, like an app"
+msgstr "নিচে ট্যাব, ঠিক অ্যাপের মতো"
+
+msgid "Menu at the top, like the website"
+msgstr "উপরে মেনু, ওয়েবসাইটের মতো"

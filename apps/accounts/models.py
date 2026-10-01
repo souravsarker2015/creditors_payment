@@ -28,13 +28,23 @@ class BackgroundTheme(models.TextChoices):
     LAVENDER = "lavender", _("Lavender")
 
 
+class ViewMode(models.TextChoices):
+    """How the app is laid out on a phone. "auto" gives the app layout when
+    FinTrack is opened from its home-screen icon, and the website layout in a
+    browser tab."""
+
+    AUTO = "auto", _("Automatic")
+    APP = "app", _("App view")
+    WEB = "web", _("Website view")
+
+
 class Language(models.TextChoices):
     ENGLISH = "en", "English"
     BENGALI = "bn", "বাংলা"
 
 
 class UserProfile(models.Model):
-    """Per-user display preferences: theme mode, accent, background, and language.
+    """Per-user display preferences: theme mode, accent, background, language and phone layout.
 
     Created automatically for every user via the post_save signal below, so
     callers can always assume ``request.user.profile`` exists once the user
@@ -55,6 +65,9 @@ class UserProfile(models.Model):
     )
     language = models.CharField(
         max_length=5, choices=Language.choices, default=Language.ENGLISH
+    )
+    view_mode = models.CharField(
+        max_length=5, choices=ViewMode.choices, default=ViewMode.AUTO
     )
 
     def __str__(self):

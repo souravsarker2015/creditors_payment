@@ -1,10 +1,31 @@
 {% load static i18n %}
 <!DOCTYPE html>
-<html lang="{{ LANGUAGE_CODE }}" class="h-full" data-theme="{{ user_theme_mode }}" data-accent="{{ user_accent }}" data-bg="{{ user_background }}"{% if LANGUAGE_CODE == "bn" %} data-lang="bn"{% endif %}>
+<html lang="{{ LANGUAGE_CODE }}" class="h-full" data-theme="{{ user_theme_mode }}" data-accent="{{ user_accent }}" data-bg="{{ user_background }}" data-view-pref="{{ user_view_mode }}" data-view="web"{% if LANGUAGE_CODE == "bn" %} data-lang="bn"{% endif %}>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#16241f">
+    <script>
+    /* App view or website view, decided before anything is drawn (no flash).
+       "auto" = app view when opened from the home-screen icon. Phones and
+       tablets only: a laptop always gets the sidebar. */
+    (function () {
+        var d = document.documentElement, narrow = matchMedia("(max-width: 1023.98px)");
+        function standalone() {
+            return navigator.standalone === true || ["standalone", "fullscreen", "minimal-ui"].some(function (m) { return matchMedia("(display-mode: " + m + ")").matches; });
+        }
+        function resolve() {
+            var pref = d.getAttribute("data-view-pref") || "web";
+            var app = narrow.matches && (pref === "app" || (pref === "auto" && standalone()));
+            d.setAttribute("data-view", app ? "app" : "web");
+            d.toggleAttribute("data-standalone", standalone());
+            document.dispatchEvent(new CustomEvent("ft:view"));
+        }
+        resolve();
+        if (narrow.addEventListener) narrow.addEventListener("change", resolve);
+        window.FTView = { resolve: resolve, standalone: standalone, isApp: function () { return d.getAttribute("data-view") === "app"; } };
+    })();
+    </script>
     <link rel="manifest" href="{% url 'manifest' %}">
     <link rel="apple-touch-icon" href="{% static 'img/icons/apple-touch-icon.png' %}">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -30,7 +51,7 @@
     <link rel="stylesheet" href="{% asset 'css/tailwind.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
-<body class="h-full" x-data="{ sidebarOpen: false }" @keydown.escape.window="sidebarOpen = false">
+<body class="h-full" x-data="{ sidebarOpen: false, sheet: null }" @keydown.escape.window="sidebarOpen = false" @app-sheet-close.window="sheet = null" @ft:view.document="if (!FTView.isApp()) sheet = null">
     {% if user.is_authenticated %}
     <!-- Off-canvas menu for phones & tablets -->
     <div x-cloak x-show="sidebarOpen" class="relative z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="{% translate 'Navigation' %}">
@@ -58,10 +79,15 @@
     <div class="{% if user.is_authenticated %}lg:pl-64{% endif %} min-h-full">
         {% if user.is_authenticated %}
         <header class="topbar">
-            <button type="button" class="icon-btn -ml-2 lg:hidden" @click="sidebarOpen = true" aria-label="{% translate 'Open sidebar' %}">
+            {# App view: back arrow and the page's title (filled in by the app-view script below). #}
+            <button type="button" class="icon-btn app-back app-only -ml-2" data-app-back data-no-tip aria-label="{% translate 'Back' %}">
+                {% include "partials/icon.html" with name="chevron-left" %}
+            </button>
+            <p class="app-title app-only" data-app-title aria-hidden="true"></p>
+            <button type="button" class="icon-btn web-only -ml-2 lg:hidden" @click="sidebarOpen = true" aria-label="{% translate 'Open sidebar' %}">
                 <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
             </button>
-            <a href="{% url 'networth' %}" class="flex items-center gap-2 lg:hidden">
+            <a href="{% if active_dashboard == 'business' %}{% url 'business:home' %}{% else %}{% url 'networth' %}{% endif %}" class="topbar-logo flex items-center gap-2 lg:hidden">
                 <span class="grid h-8 w-8 place-items-center rounded-lg font-heading text-sm font-bold" style="background: var(--gold); color: #221a06;">৳</span>
                 <span class="font-heading text-base font-bold" style="color: var(--text-primary);">FinTrack</span>
             </a>
@@ -71,10 +97,12 @@
                         data-tip="{% translate 'Calculator — discounts, VAT, profit, splits (Alt+C)' %}" aria-label="{% translate 'Calculator' %}">
                     {% include "partials/icon.html" with name="calculator" %}<span class="hidden xl:inline">{% translate "Calculator" %}</span>
                 </button>
+                <div class="web-only contents">
                 {% include "business/partials/dashboard_switcher.html" %}{# business module hook #}
                 {% include "partials/preferences_switcher.html" %}
+                </div>
 
-                <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
+                <div class="menu-wrap web-only" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
                     <button type="button" class="flex items-center gap-2 rounded-full p-0.5 pr-1 sm:pr-2 hover:bg-[var(--surface-sunken)]" @click="open = !open" :aria-expanded="open" aria-haspopup="true">
                         <span class="avatar h-8 w-8 rounded-full text-xs">{{ user.username|first|upper }}</span>
                         <span class="hidden max-w-[9rem] truncate text-sm font-semibold sm:block" style="color: var(--text-primary);">{{ user.username }}</span>
@@ -89,6 +117,12 @@
                             {% translate "Django Admin" %}
                         </a>
                         {% endif %}
+                        <div class="preferences-switcher menu-view lg:hidden">
+                            {% csrf_token %}
+                            <p class="menu-label">{% translate "Layout on this phone" %}</p>
+                            {% include "partials/view_choice.html" %}
+                            <div class="menu-sep"></div>
+                        </div>
                         <button type="button" class="menu-item" role="menuitem" data-install-app hidden>
                             {% include "partials/icon.html" with name="download" %}{% translate "Install app" %}
                         </button>
@@ -127,6 +161,7 @@
             {% block content %}{% endblock %}
         </main>
     </div>
+    {% if user.is_authenticated %}{% include "partials/app_shell.html" %}{% endif %}
 
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
@@ -295,7 +330,7 @@
     document.addEventListener("DOMContentLoaded", function () {
         if (!window.tippy) return;
         // Icon-only buttons already carry a title/aria-label: reuse it as the tooltip.
-        document.querySelectorAll(".icon-btn:not([data-tip]), .chip[title], .pager-link[aria-label], .pref-swatch[title], .bg-pick[aria-label]").forEach(function (el) {
+        document.querySelectorAll(".icon-btn:not([data-tip]):not([data-no-tip]), .chip[title], .pager-link[aria-label], .pref-swatch[title], .bg-pick[aria-label]").forEach(function (el) {
             var text = el.getAttribute("title") || el.getAttribute("aria-label");
             if (text) { el.setAttribute("data-tip", text); el.removeAttribute("title"); }
         });
@@ -343,18 +378,18 @@
             setTimeout(function () { unlock(form); }, 12000);        // safety net: a download, or no answer
         });
         /* An Export button inside a live-search form downloads the file directly,
-       with the filters as they are now. (HTMX handles that form's own submits,
-       and a download can't be swapped into the page.) */
-    document.addEventListener("click", function (e) {
-        var btn = e.target.closest && e.target.closest('form[hx-get] button[name="export"]');
-        if (!btn) return;
-        e.preventDefault();
-        var form = btn.form, data = new FormData(form);
-        data.set(btn.name, btn.value);
-        var url = (form.getAttribute("hx-get") || form.getAttribute("action") || location.pathname) + "?" + new URLSearchParams(data).toString();
-        window.location.href = url;
-    }, true);
-    // Coming back with the browser's Back button: forms are usable again.
+           with the filters as they are now. (HTMX handles that form's own submits,
+           and a download can't be swapped into the page.) */
+        document.addEventListener("click", function (e) {
+            var btn = e.target.closest && e.target.closest('form[hx-get] button[name="export"]');
+            if (!btn) return;
+            e.preventDefault();
+            var form = btn.form, data = new FormData(form);
+            data.set(btn.name, btn.value);
+            var url = (form.getAttribute("hx-get") || form.getAttribute("action") || location.pathname) + "?" + new URLSearchParams(data).toString();
+            window.location.href = url;
+        }, true);
+        // Coming back with the browser's Back button: forms are usable again.
         window.addEventListener("pageshow", function () { document.querySelectorAll("form[data-submitting]").forEach(unlock); });
     })();
     </script>
@@ -412,6 +447,123 @@
     </script>
     {% if user.is_authenticated %}
     <script>
+    /* App view behaviour (see partials/app_shell.html). Everything here checks
+       FTView.isApp(), so website view is untouched. */
+    (function () {
+        var root = document.documentElement;
+        var main = document.querySelector(".app-main");
+        var tabs = [].slice.call(document.querySelectorAll(".app-tab[data-tab-root]"));
+        var activeTab = document.querySelector(".app-tab.is-active[href]");
+
+        // A tab's own page has no back arrow; any page deeper in gets one.
+        var isRoot = tabs.some(function (a) { return a.pathname === location.pathname; });
+        root.setAttribute("data-app-depth", isRoot ? "root" : "sub");
+
+        // Back arrow: the page's own "← back" link (its parent), else the previous page, else the tab.
+        document.addEventListener("click", function (e) {
+            if (!e.target.closest("[data-app-back]")) return;
+            var up = main && main.querySelector(".back-link[href]");
+            var ref = document.referrer && document.referrer.indexOf(location.origin + "/") === 0 && document.referrer !== location.href;
+            if (up) location.href = up.href;
+            else if (ref && history.length > 1) history.back();
+            else location.href = activeTab ? activeTab.href : "/";
+        });
+
+        // The page's heading moves into the app bar once it scrolls out of sight.
+        var heading = main && main.querySelector(".page-title");
+        var title = document.querySelector("[data-app-title]");
+        if (title) title.textContent = heading ? heading.textContent.trim().replace(/\s+/g, " ") : document.title.split(" | ")[0];
+        if (heading && "IntersectionObserver" in window) {
+            new IntersectionObserver(function (entries) {
+                root.toggleAttribute("data-title-shown", !entries[0].isIntersecting && entries[0].boundingClientRect.top < 80);
+            }, { rootMargin: "-64px 0px 0px 0px" }).observe(heading);
+        } else if (!isRoot) {
+            root.setAttribute("data-title-shown", "");
+        }
+        var ticking = false;
+        window.addEventListener("scroll", function () {
+            if (ticking) return;
+            ticking = true;
+            requestAnimationFrame(function () { root.toggleAttribute("data-scrolled", window.scrollY > 4); ticking = false; });
+        }, { passive: true });
+
+        // A form page: Save / Cancel stay at the bottom of the screen, the tab bar steps aside.
+        var actions = main ? [].filter.call(main.querySelectorAll(".form-actions"), function (el) { return !el.closest(".modal, .modal-root, [role=dialog]"); }) : [];
+        if (actions.length === 1) {
+            actions[0].classList.add("is-app-sticky");
+            root.setAttribute("data-app-form", "");
+        }
+
+        // Typing: hide the tab bar while the keyboard is up.
+        var typing = function (el) { return el && (el.tagName === "TEXTAREA" || el.tagName === "SELECT" || (el.tagName === "INPUT" && !/^(checkbox|radio|button|submit|reset|range|color|file)$/.test(el.type))); };
+        document.addEventListener("focusin", function (e) { if (typing(e.target)) root.setAttribute("data-keyboard", ""); });
+        document.addEventListener("focusout", function () {
+            setTimeout(function () { if (!typing(document.activeElement)) root.removeAttribute("data-keyboard"); }, 80);
+        });
+
+        // Status bar colour: the app bar's, in app view; the brand's otherwise.
+        var meta = document.querySelector('meta[name="theme-color"]');
+        function paint() {
+            if (!meta) return;
+            var c = FTView.isApp() ? getComputedStyle(root).getPropertyValue("--surface-raised").trim() : "";
+            meta.setAttribute("content", c || "#16241f");
+        }
+        paint();
+        document.addEventListener("ft:view", function () { setTimeout(paint, 0); });
+
+        // Back from another page (bfcache): no sheet left open.
+        window.addEventListener("pageshow", function (e) { if (e.persisted) window.dispatchEvent(new CustomEvent("app-sheet-close")); });
+
+        // Swipe a sheet down by its handle or header to close it.
+        var drag = null;
+        document.addEventListener("touchstart", function (e) {
+            var grip = e.target.closest("[data-sheet-grab], .app-sheet-head");
+            if (!grip || e.target.closest("button, a")) return;
+            drag = { sheet: grip.closest(".app-sheet"), y: e.touches[0].clientY, dy: 0 };
+            drag.sheet.style.transition = "none";
+        }, { passive: true });
+        document.addEventListener("touchmove", function (e) {
+            if (!drag) return;
+            drag.dy = Math.max(0, e.touches[0].clientY - drag.y);
+            drag.sheet.style.transform = "translateY(" + drag.dy + "px)";
+        }, { passive: true });
+        document.addEventListener("touchend", function () {
+            if (!drag) return;
+            var d = drag; drag = null;
+            d.sheet.style.transition = "";
+            d.sheet.style.transform = "";
+            if (d.dy > 90) window.dispatchEvent(new CustomEvent("app-sheet-close"));
+        });
+
+        // Pull down at the very top to reload (installed app only: a browser tab already does this).
+        var ptr = document.getElementById("app-ptr"), pull = null, LIMIT = 72;
+        function canPull(e) {
+            return FTView.isApp() && FTView.standalone() && window.scrollY <= 0 && !document.body.style.overflow &&
+                !e.target.closest(".app-sheet-root, .modal-root, [role=dialog], .menu, .calc-panel, input, textarea, select, [data-no-ptr]");
+        }
+        document.addEventListener("touchstart", function (e) {
+            pull = ptr && canPull(e) ? { y: e.touches[0].clientY, d: 0 } : null;
+        }, { passive: true });
+        document.addEventListener("touchmove", function (e) {
+            if (!pull) return;
+            pull.d = Math.max(0, (e.touches[0].clientY - pull.y) * 0.5);
+            if (window.scrollY > 0) { pull.d = 0; }
+            var d = Math.min(pull.d, LIMIT + 16);
+            ptr.style.opacity = Math.min(1, d / LIMIT);
+            ptr.style.transform = "translateY(" + d + "px) rotate(" + (d * 4) + "deg)";
+            ptr.classList.toggle("is-ready", d >= LIMIT);
+        }, { passive: true });
+        document.addEventListener("touchend", function () {
+            if (!pull) return;
+            var go = pull.d >= LIMIT; pull = null;
+            if (go) { ptr.classList.add("is-loading"); location.reload(); return; }
+            ptr.style.transition = "transform .2s, opacity .2s";
+            ptr.style.opacity = 0; ptr.style.transform = "";
+            setTimeout(function () { ptr.style.transition = ""; }, 220);
+        });
+    })();
+    </script>
+    <script>
     (function () {
         // Wires every `.preferences-switcher` instance on the page (the
         // compact topbar one on tablet/desktop, the touch-sized one in the
@@ -462,6 +614,24 @@
                     root.setAttribute("data-theme", mode);
                     document.querySelectorAll(".pref-mode-btn").forEach(function (b) { b.classList.toggle("is-active", b.dataset.mode === mode); });
                     save(csrfToken, "theme_mode", mode);
+                    document.dispatchEvent(new CustomEvent("ft:view"));   // status-bar colour follows the theme
+                });
+            });
+            container.querySelectorAll("[data-view-choice]").forEach(function (btn) {
+                btn.addEventListener("click", function () {
+                    var view = btn.dataset.viewChoice;
+                    root.setAttribute("data-view-pref", view);
+                    document.querySelectorAll("[data-view-choice]").forEach(function (b) {
+                        var on = b.dataset.viewChoice === view;
+                        b.classList.toggle("is-active", on);
+                        b.setAttribute("aria-checked", on ? "true" : "false");
+                    });
+                    save(csrfToken, "view_mode", view);
+                    var before = FTView.isApp();
+                    FTView.resolve();
+                    if (window.FT && FT.toast && before !== FTView.isApp()) {
+                        FT.toast(FTView.isApp() ? "{% translate 'App view is on' %}" : "{% translate 'Website view is on' %}", "good");
+                    }
                 });
             });
         }

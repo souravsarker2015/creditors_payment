@@ -1,4 +1,4 @@
-from .models import AccentTheme, BackgroundTheme, ThemeMode, UserProfile
+from .models import AccentTheme, BackgroundTheme, ThemeMode, UserProfile, ViewMode
 
 
 def user_preferences(request):
@@ -15,10 +15,13 @@ def user_preferences(request):
             "user_accent": profile.accent,
             "user_background": profile.background,
             "background_choices": BackgroundTheme.choices,
+            "user_view_mode": profile.view_mode,
+            "view_mode_choices": ViewMode.choices,
         }
     return {
         "user_theme_mode": ThemeMode.LIGHT,
         "user_accent": AccentTheme.TEAL,
         "user_background": BackgroundTheme.PAPER,
         "background_choices": BackgroundTheme.choices,
+        "user_view_mode": ViewMode.WEB,
     }

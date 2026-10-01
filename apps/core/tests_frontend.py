@@ -140,3 +140,90 @@ class LiveSearchTests(TestCase):
         r = self.client.get(reverse("creditor_list"), {"export": "csv"})
         self.assertEqual(r.status_code, 200)
         self.assertIn("text/csv", r["Content-Type"])
+
+
+class AppViewTests(TestCase):
+    """Phones: app view (bottom tabs, "+" and "More" sheets) or website view,
+    as the person chooses. The choice is applied in the browser before the
+    page is drawn; the server only says what was chosen."""
+
+    def setUp(self):
+        self.user = get_user_model().objects.create_user("app_probe", password="x")
+        self.client.force_login(self.user)
+
+    def html(self, name="creditor_list"):
+        return self.client.get(reverse(name)).content.decode()
+
+    def choose(self, value):
+        return self.client.post(reverse("update_preferences"), {"view_mode": value}, headers={"x-preferences-fetch": "1"})
+
+    def test_automatic_is_the_default(self):
+        self.assertEqual(self.user.profile.view_mode, "auto")
+        self.assertIn('data-view-pref="auto"', self.html())
+
+    def test_the_choice_is_saved(self):
+        self.assertEqual(self.choose("app").status_code, 204)
+        self.user.profile.refresh_from_db()
+        self.assertEqual(self.user.profile.view_mode, "app")
+        self.assertIn('data-view-pref="app"', self.html())
+
+    def test_an_unknown_choice_is_ignored(self):
+        self.choose("tablet")
+        self.user.profile.refresh_from_db()
+        self.assertEqual(self.user.profile.view_mode, "auto")
+
+    def test_the_layout_is_decided_before_the_page_is_drawn(self):
+        """The script that picks app or website view runs in <head>, before any stylesheet, so nothing flashes."""
+        html = self.html()
+        head = html[: html.index("</head>")]
+        self.assertIn("display-mode", head)
+        self.assertLess(head.index("FTView"), head.index("css/app.css"))
+
+    def test_every_page_carries_the_tab_bar_and_both_sheets(self):
+        html = self.html()
+        for part in ('class="app-tabbar', "sheet === 'add'", "sheet === 'more'", 'data-view-choice="web"', 'data-app-back'):
+            self.assertIn(part, html)
+
+    def test_the_choice_is_offered_in_website_view_too(self):
+        """Someone in website view can switch to app view: from the top-bar menu and the phone sidebar."""
+        html = self.html()
+        menu = html.split('class="preferences-switcher menu-view', 1)[1].split("</div>", 1)[0]
+        self.assertIn("Layout on this phone", menu)
+        sidebar = html.split('class="preferences-switcher pref-ink', 1)[1]
+        self.assertLess(sidebar.index('data-view-choice="app"'), sidebar.index("</nav>"))
+
+    def test_signed_out_pages_have_no_app_shell(self):
+        self.client.logout()
+        html = self.client.get(reverse("login")).content.decode()
+        self.assertNotIn("app-tabbar", html)
+
+    def test_more_sheet_lists_the_same_pages_as_the_sidebar(self):
+        html = self.html("networth")
+        more = html.split('class="app-more-nav"', 1)[1].split("app-settings", 1)[0]
+        for name in ("dashboard", "debtor_dashboard", "shop_dashboard", "expense_dashboard", "household_dashboard", "goal_list"):
+            self.assertIn(f'href="{reverse(name)}"', more)
+
+
+class BusinessAppViewTests(TestCase):
+    def setUp(self):
+        from apps.business.core.models import Role
+        from apps.business.core.testing import make_farm
+
+        self.b, self.owner, self.staff = make_farm(staff_role=Role.DATA_ENTRY)
+
+    def sheet(self, user):
+        self.client.force_login(user)
+        html = self.client.get(reverse("business:home")).content.decode()
+        return html.split('aria-labelledby="app-add-title"', 1)[1].split("</section>", 1)[0]
+
+    def test_the_farm_has_its_own_tabs_and_quick_actions(self):
+        add = self.sheet(self.owner)
+        for name in ("sale_add", "feed_usage_bulk", "feed_purchases_add", "payment_add", "transaction_add", "calendar_add"):
+            self.assertIn(reverse("business:" + name), add)
+
+    def test_money_actions_follow_the_role(self):
+        """Data entry can record sales and feed, but money pages are hidden from it in the menu — and here."""
+        add = self.sheet(self.staff)
+        self.assertIn(reverse("business:sale_add"), add)
+        self.assertNotIn(reverse("business:payment_add"), add)
+        self.assertNotIn(reverse("business:transaction_add"), add)

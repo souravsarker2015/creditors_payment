@@ -1,0 +1,199 @@
+{% load i18n %}{% comment %}
+App view (phones, see "App view" in static/css/app.css): a bottom tab bar, a
+"+" sheet of quick actions and a "More" sheet with every page. It is always in
+the page but only shown when <html data-view="app"> — set in base.html from the
+person's choice (Automatic / App view / Website view).
+{% endcomment %}
+{% with p=request.path %}
+<nav class="app-tabbar app-only" aria-label="{% translate 'App tabs' %}">
+    {% if active_dashboard == "business" %}
+    <a href="{% url 'business:home' %}" class="app-tab {% if p == '/business/' or '/business/insights/' == p %}is-active{% endif %}" data-tab-root {% if p == '/business/' %}aria-current="page"{% endif %}>
+        <span class="app-tab-icon">{% include "business/partials/icon.html" with name="home" %}</span><span class="app-tab-label">{% translate "Home" %}</span>
+    </a>
+    {% if business %}
+    <a href="{% url 'business:ponds' %}" class="app-tab {% if '/business/ponds/' in p %}is-active{% endif %}" data-tab-root {% if p == '/business/ponds/' %}aria-current="page"{% endif %}>
+        <span class="app-tab-icon">{% include "business/partials/icon.html" with name="fish" %}</span><span class="app-tab-label">{% translate "Ponds" %}</span>
+    </a>
+    {% if biz_can.enter_data %}
+    <button type="button" class="app-tab app-tab-add" @click="sheet = 'add'" :aria-expanded="sheet === 'add'" aria-haspopup="dialog">
+        <span class="app-tab-fab">{% include "partials/icon.html" with name="plus" %}</span><span class="app-tab-label">{% translate "Add" %}</span>
+    </button>
+    {% endif %}
+    <a href="{% url 'business:sales' %}" class="app-tab {% if '/business/sales/' in p %}is-active{% endif %}" data-tab-root {% if p == '/business/sales/' %}aria-current="page"{% endif %}>
+        <span class="app-tab-icon">{% include "partials/icon.html" with name="cart" %}</span><span class="app-tab-label">{% translate "Sales" %}</span>
+    </a>
+    {% endif %}
+    {% else %}
+    <a href="{% url 'networth' %}" class="app-tab {% if '/networth/' in p %}is-active{% endif %}" data-tab-root {% if '/networth/' in p %}aria-current="page"{% endif %}>
+        <span class="app-tab-icon">{% include "business/partials/icon.html" with name="home" %}</span><span class="app-tab-label">{% translate "Home" %}</span>
+    </a>
+    <a href="{% url 'dashboard' %}" class="app-tab {% if p == '/' or '/creditors/' in p or '/debtors/' in p or '/shops/' in p or '/contributors/' in p or p|slice:':14' == '/transactions/' %}is-active{% endif %}" data-tab-root {% if p == '/' %}aria-current="page"{% endif %}>
+        <span class="app-tab-icon">{% include "business/partials/icon.html" with name="book" %}</span><span class="app-tab-label">{% translate "Dues" %}</span>
+    </a>
+    <button type="button" class="app-tab app-tab-add" @click="sheet = 'add'" :aria-expanded="sheet === 'add'" aria-haspopup="dialog">
+        <span class="app-tab-fab">{% include "partials/icon.html" with name="plus" %}</span><span class="app-tab-label">{% translate "Add" %}</span>
+    </button>
+    <a href="{% url 'expense_dashboard' %}" class="app-tab {% if '/expense/' in p or '/income/' in p or '/budgets/' in p or '/goals/' in p %}is-active{% endif %}" data-tab-root {% if '/expense/dashboard/' in p %}aria-current="page"{% endif %}>
+        <span class="app-tab-icon">{% include "partials/icon.html" with name="wallet" %}</span><span class="app-tab-label">{% translate "Money" %}</span>
+    </a>
+    {% endif %}
+    <button type="button" class="app-tab" @click="sheet = 'more'" :aria-expanded="sheet === 'more'" aria-haspopup="dialog">
+        <span class="app-tab-icon">{% include "business/partials/icon.html" with name="squares" %}</span><span class="app-tab-label">{% translate "More" %}</span>
+    </button>
+</nav>
+
+<div class="app-sheet-root app-only" x-cloak x-show="sheet" @keydown.escape.window="sheet = null">
+    <div class="app-sheet-backdrop" x-show="sheet" x-transition.opacity.duration.200ms @click="sheet = null"></div>
+
+    {# ── "+": quick actions ── #}
+    <section class="app-sheet" x-show="sheet === 'add'" x-trap.inert.noscroll="sheet === 'add'"
+             x-transition:enter="app-sheet-enter" x-transition:enter-start="app-sheet-from" x-transition:leave="app-sheet-leave" x-transition:leave-end="app-sheet-from"
+             role="dialog" aria-modal="true" aria-labelledby="app-add-title">
+        <div class="app-sheet-grab" data-sheet-grab aria-hidden="true"></div>
+        <header class="app-sheet-head">
+            <h2 id="app-add-title" class="app-sheet-title">{% translate "What do you want to add?" %}</h2>
+            <button type="button" class="icon-btn" @click="sheet = null" aria-label="{% translate 'Close' %}" data-no-tip>{% include "partials/icon.html" with name="x" %}</button>
+        </header>
+        <div class="app-actions">
+            {% if active_dashboard == "business" %}
+            <a href="{% url 'business:sale_add' %}" class="app-action" data-tone="good">
+                <span class="app-action-icon">{% include "partials/icon.html" with name="cart" %}</span>
+                <span class="app-action-name">{% translate "New sale" %}</span><span class="app-action-hint">{% translate "Fish sold" %}</span>
+            </a>
+            <a href="{% url 'business:feed_usage_bulk' %}" class="app-action" data-tone="info">
+                <span class="app-action-icon">{% include "business/partials/icon.html" with name="fish" %}</span>
+                <span class="app-action-name">{% translate "Feed given" %}</span><span class="app-action-hint">{% translate "Feed used in ponds" %}</span>
+            </a>
+            <a href="{% url 'business:feed_purchases_add' %}" class="app-action" data-tone="warn">
+                <span class="app-action-icon">{% include "business/partials/icon.html" with name="truck" %}</span>
+                <span class="app-action-name">{% translate "Feed bought" %}</span><span class="app-action-hint">{% translate "Bags from a supplier" %}</span>
+            </a>
+            {% if biz_can.view_finance %}
+            <a href="{% url 'business:payment_add' %}" class="app-action" data-tone="accent">
+                <span class="app-action-icon">{% include "business/partials/icon.html" with name="book" %}</span>
+                <span class="app-action-name">{% translate "Baki payment" %}</span><span class="app-action-hint">{% translate "Paid or received" %}</span>
+            </a>
+            <a href="{% url 'business:transaction_add' %}" class="app-action" data-tone="critical">
+                <span class="app-action-icon">{% include "partials/icon.html" with name="wallet" %}</span>
+                <span class="app-action-name">{% translate "Money in or out" %}</span><span class="app-action-hint">{% translate "Labour, bills, other costs" %}</span>
+            </a>
+            {% endif %}
+            <a href="{% url 'business:calendar_add' %}" class="app-action" data-tone="muted">
+                <span class="app-action-icon">{% include "partials/icon.html" with name="calendar" %}</span>
+                <span class="app-action-name">{% translate "Task or reminder" %}</span><span class="app-action-hint">{% translate "On the farm calendar" %}</span>
+            </a>
+            {% else %}
+            <a href="{% url 'expense_create' %}" class="app-action" data-tone="critical">
+                <span class="app-action-icon">{% include "partials/icon.html" with name="arrow-up" %}</span>
+                <span class="app-action-name">{% translate "New Expense" %}</span><span class="app-action-hint">{% translate "Money spent" %}</span>
+            </a>
+            <a href="{% url 'income_dashboard' %}" class="app-action" data-tone="good">
+                <span class="app-action-icon">{% include "partials/icon.html" with name="arrow-down" %}</span>
+                <span class="app-action-name">{% translate "Income" %}</span><span class="app-action-hint">{% translate "Money received" %}</span>
+            </a>
+            <a href="{% url 'household_dashboard' %}" class="app-action" data-tone="warn">
+                <span class="app-action-icon">{% include "partials/icon.html" with name="cart" %}</span>
+                <span class="app-action-name">{% translate "Household (Bazar)" %}</span><span class="app-action-hint">{% translate "Daily shopping" %}</span>
+            </a>
+            <a href="{% url 'creditor_create' %}" class="app-action" data-tone="accent">
+                <span class="app-action-icon">{% include "partials/icon.html" with name="users" %}</span>
+                <span class="app-action-name">{% translate "New creditor" %}</span><span class="app-action-hint">{% translate "Someone you borrowed from" %}</span>
+            </a>
+            <a href="{% url 'debtor_create' %}" class="app-action" data-tone="info">
+                <span class="app-action-icon">{% include "business/partials/icon.html" with name="person" %}</span>
+                <span class="app-action-name">{% translate "New debtor" %}</span><span class="app-action-hint">{% translate "Someone who owes you" %}</span>
+            </a>
+            <a href="{% url 'shop_create' %}" class="app-action" data-tone="muted">
+                <span class="app-action-icon">{% include "partials/icon.html" with name="tag" %}</span>
+                <span class="app-action-name">{% translate "New shop" %}</span><span class="app-action-hint">{% translate "Where you buy on credit" %}</span>
+            </a>
+            {% endif %}
+        </div>
+    </section>
+
+    {# ── "More": every page, the dashboard switch and settings ── #}
+    <section class="app-sheet app-sheet-tall" x-show="sheet === 'more'" x-trap.inert.noscroll="sheet === 'more'"
+             x-transition:enter="app-sheet-enter" x-transition:enter-start="app-sheet-from" x-transition:leave="app-sheet-leave" x-transition:leave-end="app-sheet-from"
+             role="dialog" aria-modal="true" aria-labelledby="app-more-title">
+        <div class="app-sheet-grab" data-sheet-grab aria-hidden="true"></div>
+        <header class="app-sheet-head">
+            <span class="avatar h-10 w-10 shrink-0 rounded-full text-sm">{{ user.username|first|upper }}</span>
+            <div class="min-w-0 flex-1">
+                <h2 id="app-more-title" class="app-sheet-title truncate">{{ user.get_full_name|default:user.username }}</h2>
+                <p class="truncate text-xs" style="color: var(--text-muted);">{% if active_dashboard == "business" and business %}{{ business.name }}{% else %}{% translate "Ledger & Household" %}{% endif %}</p>
+            </div>
+            <button type="button" class="icon-btn" @click="sheet = null" aria-label="{% translate 'Close' %}" data-no-tip>{% include "partials/icon.html" with name="x" %}</button>
+        </header>
+
+        <div class="app-sheet-body">
+            {% if available_dashboards|length > 1 %}
+            <div class="app-dash-switch" role="group" aria-label="{% translate 'Switch dashboard' %}">
+                {% for d in available_dashboards %}
+                <a href="{% url d.url_name %}" class="app-dash {% if d.code == active_dashboard %}is-active{% endif %}" data-dash="{{ d.code }}" {% if d.code == active_dashboard %}aria-current="true"{% endif %}>
+                    <span class="app-dash-icon">{% include "business/partials/icon.html" with name=d.icon %}</span>
+                    <span class="truncate">{{ d.display_name }}</span>
+                </a>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="app-more-nav">{% include "partials/nav_sections.html" %}</div>
+
+            <div class="app-settings preferences-switcher">
+                {% csrf_token %}
+                <p class="app-settings-label">{% translate "Layout on this phone" %}</p>
+                {% include "partials/view_choice.html" %}
+
+                <p class="app-settings-label">{% translate "Appearance" %}</p>
+                <div class="app-settings-row">
+                    <div class="grid flex-1 grid-cols-2 gap-2">
+                        <button type="button" class="pref-mode-btn {% if user_theme_mode == 'light' %}is-active{% endif %}" data-mode="light" data-pref-field="theme_mode">{% translate "Light" %}</button>
+                        <button type="button" class="pref-mode-btn {% if user_theme_mode == 'dark' %}is-active{% endif %}" data-mode="dark" data-pref-field="theme_mode">{% translate "Dark" %}</button>
+                    </div>
+                    <div class="flex items-center gap-2.5 px-1">
+                        <button type="button" class="pref-swatch {% if user_accent == 'teal' %}is-active{% endif %}" data-swatch="teal" data-pref-field="accent" aria-label="{% translate 'Ledger Teal accent' %}"></button>
+                        <button type="button" class="pref-swatch {% if user_accent == 'indigo' %}is-active{% endif %}" data-swatch="indigo" data-pref-field="accent" aria-label="{% translate 'Indigo Classic accent' %}"></button>
+                        <button type="button" class="pref-swatch {% if user_accent == 'slate' %}is-active{% endif %}" data-swatch="slate" data-pref-field="accent" aria-label="{% translate 'Slate Mono accent' %}"></button>
+                    </div>
+                </div>
+                <div class="mt-2.5 flex flex-wrap items-center gap-1.5">
+                    {% for value, label in background_choices %}
+                    <button type="button" class="bg-pick {% if user_background == value %}is-active{% endif %}" data-bg-choice="{{ value }}" aria-label="{{ label }}" aria-pressed="{% if user_background == value %}true{% else %}false{% endif %}"><span class="bg-swatch" data-bg="{{ value }}"></span></button>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <form method="post" action="{% url 'update_preferences' %}" class="app-settings">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <p class="app-settings-label">{% translate "Language" %}</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <button type="submit" name="language" value="en" class="pref-lang-btn {% if LANGUAGE_CODE == 'en' %}is-active{% endif %}">English</button>
+                    <button type="submit" name="language" value="bn" class="pref-lang-btn {% if LANGUAGE_CODE == 'bn' %}is-active{% endif %}">বাংলা</button>
+                </div>
+            </form>
+
+            <div class="app-list">
+                <button type="button" class="app-list-item" @click="sheet = null; $dispatch('toggle-calculator')">
+                    {% include "partials/icon.html" with name="calculator" %}<span>{% translate "Calculator" %}</span>
+                </button>
+                <button type="button" class="app-list-item" data-install-app hidden>
+                    {% include "partials/icon.html" with name="download" %}<span>{% translate "Install app" %}</span>
+                </button>
+                {% if user.is_superuser %}
+                <a href="/admin/" target="_blank" rel="noopener" class="app-list-item">
+                    {% include "business/partials/icon.html" with name="shield" %}<span>{% translate "Django Admin" %}</span>
+                </a>
+                {% endif %}
+                <a href="{% url 'logout' %}" class="app-list-item is-danger">
+                    <svg fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" /></svg>
+                    <span>{% translate "Log Out" %}</span>
+                </a>
+            </div>
+        </div>
+    </section>
+</div>
+
+{# Pull down at the top of a page to reload it (installed app only — a browser tab has its own). #}
+<div class="app-ptr app-only" id="app-ptr" aria-hidden="true"><span>{% include "partials/icon.html" with name="repeat" %}</span></div>
+{% endwith %}
