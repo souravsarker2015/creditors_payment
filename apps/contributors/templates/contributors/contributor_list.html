@@ -26,6 +26,8 @@
   {% translate "e.g. Sajal Saha" as search_placeholder %}
   {% include "partials/entity_filters.html" with reset_url=reset_url search_placeholder=search_placeholder %}
 
+  <div id="results" class="stack">
+  {% if search_query %}<p class="sr-only" role="status">{% blocktranslate count counter=page_obj.paginator.count %}{{ counter }} result{% plural %}{{ counter }} results{% endblocktranslate %}</p>{% endif %}
   <dl class="stat-grid">
     <div class="stat" data-tone="good">
       <dt class="stat-label">{% translate "Total Funding" %}</dt>
@@ -85,6 +87,7 @@
     <a href="{% url 'contributor_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add Your First Contributor" %}</a>
   </div>
   {% endif %}
+  </div>
 </div>
 {% endblock %}
 

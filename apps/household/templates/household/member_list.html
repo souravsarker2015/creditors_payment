@@ -27,7 +27,7 @@
     <p class="stat-value">{{ total_owed|money }}</p>
   </div>
 
-  <form method="get" class="card card-body flex flex-col gap-3 sm:flex-row sm:items-center">
+  <form method="get" class="card card-body flex flex-col gap-3 sm:flex-row sm:items-center" {% include "partials/live_search.html" %}>
     <input type="hidden" name="status" value="{{ status }}">
     <div class="input-icon flex-1">
       {% include "partials/icon.html" with name="search" %}
@@ -36,7 +36,7 @@
     </div>
     <div class="flex gap-2">
       <label for="sort" class="sr-only">{% translate "Sort by" %}</label>
-      <select id="sort" name="sort" onchange="this.form.submit()" class="form-input flex-1 sm:w-56">
+      <select id="sort" name="sort" onchange="if (!window.htmx) this.form.submit()" class="form-input flex-1 sm:w-56">
         {% for value, label in sort_options %}<option value="{{ value }}"{% if value == sort %} selected{% endif %}>{{ label }}</option>{% endfor %}
       </select>
       <button type="submit" name="export" value="csv" class="btn btn-secondary" title="{% translate 'Export CSV' %}">{% include "partials/icon.html" with name="download" %}<span class="hidden sm:inline">{% translate "Export CSV" %}</span></button>
@@ -45,6 +45,8 @@
 
   {% include "partials/status_tabs.html" %}
 
+  <div id="results" class="stack">
+  {% if search_query %}<p class="sr-only" role="status">{% blocktranslate count counter=page_obj.paginator.count %}{{ counter }} result{% plural %}{{ counter }} results{% endblocktranslate %}</p>{% endif %}
   {% if page_obj.object_list %}
   <div class="card-grid card-grid-3">
     {% for m in page_obj %}
@@ -97,5 +99,6 @@
     <a href="{% url 'household_member_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add Your First Member" %}</a>
   </div>
   {% endif %}
+  </div>
 </div>
 {% endblock %}

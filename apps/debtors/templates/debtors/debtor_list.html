@@ -26,6 +26,8 @@
   {% translate "e.g. Karim" as search_placeholder %}
   {% include "partials/entity_filters.html" with reset_url=reset_url search_placeholder=search_placeholder show_payment=True %}
 
+  <div id="results" class="stack">
+  {% if search_query %}<p class="sr-only" role="status">{% blocktranslate count counter=page_obj.paginator.count %}{{ counter }} result{% plural %}{{ counter }} results{% endblocktranslate %}</p>{% endif %}
   <dl class="stat-grid">
     <div class="stat" data-tone="info">
       <dt class="stat-label inline-flex items-center">{% translate "Remaining to Collect" %}{% translate "These totals follow your search, filters and the Active/Inactive tab below." as info_text %}{% include "partials/info.html" with text=info_text %}</dt>
@@ -106,6 +108,7 @@
     <a href="{% url 'debtor_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add Your First Debtor" %}</a>
   </div>
   {% endif %}
+  </div>
 </div>
 {% endblock %}
 

@@ -23,7 +23,7 @@
     </nav>
     {% endif %}
     {% if total > 6 or q %}
-    <form method="get" class="master-search" role="search">
+    <form method="get" class="master-search" role="search" {% include "partials/live_search.html" %}>
       {% if show %}<input type="hidden" name="show" value="{{ show }}">{% endif %}
       <div class="input-icon">{% include "partials/icon.html" with name="search" %}<input type="search" name="q" value="{{ q }}" class="form-input" placeholder="{% translate 'Search…' %}" aria-label="{% translate 'Search' %}"></div>
     </form>
@@ -31,6 +31,8 @@
   </div>
   {% endif %}
 
+  <div id="results" class="stack">
+  {% if q %}<p class="sr-only" role="status">{% blocktranslate count counter=objects|length %}{{ counter }} result{% plural %}{{ counter }} results{% endblocktranslate %}</p>{% endif %}
   {% if is_deleted_tab and objects %}<p class="help">{% translate "Deleted records don't count in any total. Restore one to bring it back everywhere." %}</p>{% endif %}
 
   {% if objects %}
@@ -58,5 +60,6 @@
     {% if can_edit %}<a href="{{ url_add }}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{{ m.add_label }}</a>{% endif %}
   </div>
   {% endif %}
+  </div>
 </div>
 {% endblock %}

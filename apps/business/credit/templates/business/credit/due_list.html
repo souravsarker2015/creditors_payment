@@ -62,12 +62,14 @@
       <a href="?side={{ side }}&sort=oldest{% if q %}&q={{ q|urlencode }}{% endif %}" class="seg-item {% if sort == 'oldest' %}is-active{% endif %}">{% translate "Oldest first" %}</a>
       <a href="?side={{ side }}&sort=name{% if q %}&q={{ q|urlencode }}{% endif %}" class="seg-item {% if sort == 'name' %}is-active{% endif %}">{% translate "A–Z" %}</a>
     </nav>
-    <form method="get" class="master-search" role="search">
+    <form method="get" class="master-search" role="search" {% include "partials/live_search.html" %}>
       <input type="hidden" name="side" value="{{ side }}"><input type="hidden" name="sort" value="{{ sort }}">
       <div class="input-icon">{% include "partials/icon.html" with name="search" %}<input type="search" name="q" value="{{ q }}" class="form-input" placeholder="{% translate 'Name or phone…' %}" aria-label="{% translate 'Search' %}"></div>
     </form>
   </div>
 
+  <div id="results" class="stack">
+  {% if q %}<p class="sr-only" role="status">{% blocktranslate count counter=rows|length %}{{ counter }} result{% plural %}{{ counter }} results{% endblocktranslate %}</p>{% endif %}
   {% if rows %}
   <section class="card">
     <ul class="ledger">
@@ -103,5 +105,6 @@
     <p class="empty-text">{% translate "Dues appear here by themselves when a sale isn't fully paid, or you buy feed or fingerlings on baki." %}</p>
   </div>
   {% endif %}
+  </div>
 </div>
 {% endblock %}

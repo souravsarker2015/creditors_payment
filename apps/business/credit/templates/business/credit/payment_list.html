@@ -24,13 +24,15 @@
       {% for key, label, s, e in periods %}<a href="?period={{ key }}{% if show %}&show={{ show }}{% endif %}" class="seg-item {% if period == key and show != 'deleted' %}is-active{% endif %}">{{ label }}</a>{% endfor %}
       {% if deleted_count %}<a href="?show=deleted" class="seg-item {% if show == 'deleted' %}is-active{% endif %}">{% translate "Deleted" %} <span class="seg-count">{{ deleted_count }}</span></a>{% endif %}
     </nav>
-    <form method="get" class="master-search" role="search">
+    <form method="get" class="master-search" role="search" {% include "partials/live_search.html" %}>
       <input type="hidden" name="period" value="{{ period }}">{% if show %}<input type="hidden" name="show" value="{{ show }}">{% endif %}
       <div class="input-icon">{% include "partials/icon.html" with name="search" %}<input type="search" name="q" value="{{ q }}" class="form-input" placeholder="{% translate 'Name, receipt no.…' %}" aria-label="{% translate 'Search' %}"></div>
     </form>
   </div>
   {% if show == "in" or show == "out" %}<span class="chip"><span>{% if show == "in" %}{% translate "Only money received" %}{% else %}{% translate "Only money paid" %}{% endif %}</span><a href="?period={{ period }}" class="chip-x" aria-label="{% translate 'Show all' %}">{% include "partials/icon.html" with name="x" %}</a></span>{% endif %}
 
+  <div id="results" class="stack">
+  {% if q %}<p class="sr-only" role="status">{% blocktranslate count counter=page_obj.paginator.count %}{{ counter }} result{% plural %}{{ counter }} results{% endblocktranslate %}</p>{% endif %}
   {% if page_obj.object_list %}
   <section class="card">
     <ul class="ledger">
@@ -59,5 +61,6 @@
     <p class="empty-text">{% translate "When a buyer pays off baki, or you pay a supplier, record it here and their balance updates straight away." %}</p>
   </div>
   {% endif %}
+  </div>
 </div>
 {% endblock %}

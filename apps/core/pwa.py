@@ -58,7 +58,7 @@ def service_worker_view(request):
     config = {
         "version": _version(),
         "offline": reverse("offline"),
-        "precache": [reverse("offline"), asset("css/app.css"), static("img/icons/icon-192.png")],
+        "precache": [reverse("offline"), asset("css/app.css"), asset("css/tailwind.css"), static("img/icons/icon-192.png")],
     }
     script = "const CONFIG = " + json.dumps(config) + ";\n" + SW_BODY
     response = HttpResponse(script, content_type="application/javascript")
@@ -72,7 +72,7 @@ def offline_view(request):
 
 SW_BODY = r"""
 const CACHE = "fintrack-" + CONFIG.version;
-const CDN = ["cdn.jsdelivr.net", "cdn.tailwindcss.com", "fonts.googleapis.com", "fonts.gstatic.com"];
+const CDN = ["cdn.jsdelivr.net", "fonts.googleapis.com", "fonts.gstatic.com"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.addAll(CONFIG.precache)).then(() => self.skipWaiting()));

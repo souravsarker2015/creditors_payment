@@ -52,7 +52,7 @@
     <nav class="seg seg-scroll" aria-label="{% translate 'Period' %}">
       {% for key, label, s, e in periods %}<a href="?scope={{ scope }}&period={{ key }}{% if kind %}&kind={{ kind }}{% endif %}" class="seg-item {% if period == key %}is-active{% endif %}">{{ label }}</a>{% endfor %}
     </nav>
-    <form method="get" class="master-search" role="search">
+    <form method="get" class="master-search" role="search" {% include "partials/live_search.html" %}>
       <input type="hidden" name="scope" value="{{ scope }}"><input type="hidden" name="period" value="{{ period }}">
       <div class="input-icon">{% include "partials/icon.html" with name="search" %}<input type="search" name="q" value="{{ q }}" class="form-input" placeholder="{% translate 'What for, category, person…' %}" aria-label="{% translate 'Search' %}"></div>
     </form>
@@ -64,6 +64,8 @@
   </div>
   {% endif %}
 
+  <div id="results" class="stack">
+  {% if q %}<p class="sr-only" role="status">{% blocktranslate count counter=page_obj.paginator.count %}{{ counter }} result{% plural %}{{ counter }} results{% endblocktranslate %}</p>{% endif %}
   {% if page_obj.object_list %}
   <section class="card">
     <ul class="ledger">
@@ -91,6 +93,7 @@
     {% if biz_can.enter_data %}<a href="{% url 'business:transaction_add' %}?scope={{ scope }}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add" %}</a>{% endif %}
   </div>
   {% endif %}
+  </div>
   {% if deleted_count %}<p class="text-center"><a href="{% url 'business:transactions_deleted' %}" class="btn btn-ghost btn-sm">{% blocktranslate count counter=deleted_count %}{{ counter }} deleted entry{% plural %}{{ counter }} deleted entries{% endblocktranslate %}</a></p>{% endif %}
 </div>
 {% endblock %}

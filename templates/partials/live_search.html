@@ -1,0 +1,10 @@
+{% comment %}
+HTMX attributes for a GET search/filter form, placed inside its <form …> tag:
+
+    <form method="get" class="…" {% include "partials/live_search.html" %}>
+
+Typing in any search box (after a short pause), changing a dropdown, or pressing Enter fetches the
+same page and swaps in only its #results block. The search box keeps its focus,
+the address bar keeps the query (so a refresh or a shared link shows the same
+list), and without JavaScript the form still works the old way.
+{% endcomment %}hx-get="{{ request.path }}" hx-trigger="submit, input[target.type === 'search'] delay:350ms, change[target.tagName === 'SELECT']" hx-target="#results" hx-select="#results" hx-swap="outerHTML" hx-replace-url="true" hx-sync="this:replace" hx-indicator="#results"

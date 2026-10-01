@@ -9075,3 +9075,8 @@ msgstr "আয়তন (শতাংশ)"
 
 msgid "login made here"
 msgstr "এখানে বানানো লগইন"
+
+msgid "%(counter)s result"
+msgid_plural "%(counter)s results"
+msgstr[0] "%(counter)sটি ফলাফল"
+msgstr[1] "%(counter)sটি ফলাফল"

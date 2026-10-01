@@ -13,10 +13,12 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23a9791f'/%3E%3Ctext x='16' y='23' font-size='20' font-family='Georgia,serif' font-weight='700' text-anchor='middle' fill='%23221a06'%3E%E0%A7%B3%3C/text%3E%3C/svg%3E">
     <title>{% block title %}{% translate "Tracker" %}{% endblock %}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3.x.x/dist/cdn.min.js"></script>
     <script defer src="{% asset 'js/calculator.js' %}"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    {# HTMX: search boxes and filters update just the results, without reloading the page. #}
+    <script defer src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.11/dist/htmx.min.js" integrity="sha384-2OatzQy1H+Zd/IIrjr1TcuDGqLXeHhbooAyJY1KdQMKnr4LZ22k31GBLdYKHmVjg" crossorigin="anonymous"></script>
+    <meta name="htmx-config" content='{"historyCacheSize": 0, "refreshOnHistoryMiss": true, "defaultSwapStyle": "outerHTML", "scrollIntoViewOnBoost": false}'>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Hind+Siliguri:wght@400;500;600;700&family=Tiro+Bangla&display=swap" rel="stylesheet">
@@ -24,6 +26,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tippy.js@6/dist/tippy.css">
     <link rel="stylesheet" href="{% asset 'css/app.css' %}">
+    {# Prebuilt Tailwind (python manage.py tailwind). Loaded after app.css, where the old in-browser compiler put it. #}
+    <link rel="stylesheet" href="{% asset 'css/tailwind.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
 <body class="h-full" x-data="{ sidebarOpen: false }" @keydown.escape.window="sidebarOpen = false">
@@ -46,7 +50,7 @@
     </div>
 
     <!-- Static sidebar for desktop -->
-    <div class="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-64 lg:flex-col">
+    <div class="app-sidebar hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-64 lg:flex-col">
         {% include "partials/sidebar_nav.html" %}
     </div>
     {% endif %}
@@ -338,11 +342,48 @@
             if (e.submitter) e.submitter.classList.add("is-submitting");
             setTimeout(function () { unlock(form); }, 12000);        // safety net: a download, or no answer
         });
-        // Coming back with the browser's Back button: forms are usable again.
+        /* An Export button inside a live-search form downloads the file directly,
+       with the filters as they are now. (HTMX handles that form's own submits,
+       and a download can't be swapped into the page.) */
+    document.addEventListener("click", function (e) {
+        var btn = e.target.closest && e.target.closest('form[hx-get] button[name="export"]');
+        if (!btn) return;
+        e.preventDefault();
+        var form = btn.form, data = new FormData(form);
+        data.set(btn.name, btn.value);
+        var url = (form.getAttribute("hx-get") || form.getAttribute("action") || location.pathname) + "?" + new URLSearchParams(data).toString();
+        window.location.href = url;
+    }, true);
+    // Coming back with the browser's Back button: forms are usable again.
         window.addEventListener("pageshow", function () { document.querySelectorAll("form[data-submitting]").forEach(unlock); });
     })();
     </script>
     {% block extra_js %}{% endblock %}
+    {% if user.is_authenticated %}
+    {% comment %}
+    Instant page changes (Chrome, Edge, Android): the next page is fetched while the
+    finger or mouse is on its link, and built in the background once it's pressed.
+    Never for logout, admin, downloads, or links with ?… (some save a preference).
+    {% endcomment %}
+    <script type="speculationrules">
+    {
+      "prefetch": [{
+        "where": {"and": [
+          {"href_matches": "/*"},
+          {"not": {"selector_matches": "a[href*='?'], a[href*='logout'], a[href^='/admin'], a[href$='.ics'], a[download], a[target], [data-no-prefetch], [data-no-prefetch] a"}}
+        ]},
+        "eagerness": "moderate"
+      }],
+      "prerender": [{
+        "where": {"and": [
+          {"href_matches": "/*"},
+          {"not": {"selector_matches": "a[href*='?'], a[href*='logout'], a[href^='/admin'], a[href$='.ics'], a[download], a[target], [data-no-prefetch], [data-no-prefetch] a"}}
+        ]},
+        "eagerness": "conservative"
+      }]
+    }
+    </script>
+    {% endif %}
     <script>
     /* Installable app: register the service worker, and show "Install app"
        only when the browser offers it (Chrome/Edge/Samsung on Android and

@@ -2190,3 +2190,23 @@ a.guide-chip:hover { background: var(--accent-soft); color: var(--accent); }
 /* A button label that gives way to its icon alone on small screens. */
 .hide-sm { display: none; }
 @media (min-width: 480px) { .hide-sm { display: inline; } }
+
+/* ==========================================================================
+   Page changes: the content cross-fades while the sidebar and top bar stay put
+   (browsers with cross-document View Transitions: Chrome, Edge, Safari 18+).
+   ========================================================================== */
+@view-transition { navigation: auto; }
+.app-sidebar { view-transition-name: app-sidebar; }
+.topbar { view-transition-name: app-topbar; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 160ms; animation-timing-function: ease-out; }
+::view-transition-group(app-sidebar), ::view-transition-group(app-topbar) { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+    @view-transition { navigation: none; }
+}
+@media print { .app-sidebar, .topbar { view-transition-name: none; } }
+
+/* ==========================================================================
+   Live search (HTMX): the results fade a little while the new ones load
+   ========================================================================== */
+#results { transition: opacity .15s ease; }
+#results.htmx-request { opacity: 0.55; pointer-events: none; }

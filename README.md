@@ -21,6 +21,29 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
+## Front end
+
+Pages are rendered by Django, with three small layers on top:
+
+- **Tailwind CSS is prebuilt** into `static/css/tailwind.css` (committed). After adding or changing
+  Tailwind classes in a template, rebuild it — no Node or npm needed:
+
+  ```bash
+  python manage.py tailwind          # build once
+  python manage.py tailwind --watch  # rebuild while you edit templates
+  python manage.py tailwind --check  # in CI: fails if the file is out of date
+  ```
+
+  The first run downloads Tailwind's standalone program (v3.4.17) into `~/.cache/fintrack/`.
+- **Alpine.js** handles small interactions inside a page (menus, pop-ups, live totals).
+- **HTMX** makes search boxes and filters update only the list, without reloading the page. A list
+  page opts in with `{% include "partials/live_search.html" %}` inside its search `<form>` and an
+  element with `id="results"` around the list.
+- **Instant page changes**: `templates/base.html` holds Speculation Rules (the next page loads while
+  a link is being pressed) and cross-fade View Transitions. Links with `?…`, logout, admin and
+  downloads are never fetched ahead; mark any other link that changes something on a GET with
+  `data-no-prefetch`.
+
 ## Project Structure
 
 ```

@@ -23,7 +23,7 @@
   </header>
 
   <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-    <form method="get" class="input-icon w-full sm:max-w-xs">
+    <form method="get" class="input-icon w-full sm:max-w-xs" {% include "partials/live_search.html" %}>
       <input type="hidden" name="status" value="{{ status }}">
       {% include "partials/icon.html" with name="search" %}
       <label for="q" class="sr-only">{% translate "Search by name" %}</label>
@@ -32,6 +32,8 @@
     {% include "partials/status_tabs.html" %}
   </div>
 
+  <div id="results" class="stack">
+  {% if request.GET.q %}<p class="sr-only" role="status">{% blocktranslate count counter=categories|length %}{{ counter }} result{% plural %}{{ counter }} results{% endblocktranslate %}</p>{% endif %}
   {% if categories %}
   <div class="card-grid">
     {% for c in categories %}
@@ -72,5 +74,6 @@
     <a href="{% url 'category_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add Category" %}</a>
   </div>
   {% endif %}
+  </div>
 </div>
 {% endblock %}

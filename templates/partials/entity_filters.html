@@ -5,7 +5,7 @@ Needs: reset_url, search_placeholder, category_choices, selected_categories, fil
 sort, sort_options, search_query, status. Optional: show_payment (+ payment_status).
 Phones get a search bar + Filters button; the full panel is always open from lg up.
 {% endcomment %}
-<form method="get" class="card" x-data="{ open: false, filterType: '{{ filter_type|default:"include" }}', paymentStatus: '{{ payment_status|default:"ALL" }}' }">
+<form method="get" class="card" {% include "partials/live_search.html" %} x-data="{ open: false, filterType: '{{ filter_type|default:"include" }}', paymentStatus: '{{ payment_status|default:"ALL" }}' }">
   <input type="hidden" name="filter_type" x-model="filterType">
   {% if show_payment %}<input type="hidden" name="payment_status" x-model="paymentStatus">{% endif %}
   <input type="hidden" name="status" value="{{ status }}">
