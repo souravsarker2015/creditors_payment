@@ -2424,3 +2424,74 @@ a.guide-chip:hover { background: var(--accent-soft); color: var(--accent); }
     .app-tabbar, .app-title, .app-sheet-enter, .app-sheet-leave { transition: none; }
 }
 @media print { .app-tabbar, .app-sheet-root, .app-ptr { display: none !important; } }
+
+/* ==========================================================================
+   Backup & restore (templates/backup/)
+   ========================================================================== */
+.backup-stats { display: grid; gap: 0.75rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 768px) { .backup-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.backup-stat { min-width: 0; padding: 0.875rem 1rem; border-radius: var(--radius-lg); background: var(--surface-raised); border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
+.backup-stat dt { font-size: 0.75rem; font-weight: 500; color: var(--text-secondary); }
+.backup-stat dd { margin-top: 0.25rem; font-size: 1.5rem; font-weight: 750; font-variant-numeric: tabular-nums; color: var(--text-primary); overflow-wrap: anywhere; }
+.backup-stat dd.is-text { font-size: 1.0625rem; font-weight: 650; }
+.backup-stat dd small { font-size: 0.8125rem; font-weight: 500; color: var(--text-muted); }
+.backup-stat.is-total { background: var(--surface-ink); border-color: var(--surface-ink); }
+.backup-stat.is-total dt { color: var(--text-on-ink-muted); }
+.backup-stat.is-total dd { color: var(--text-on-ink); }
+
+.card-header:has(> .backup-icon) { flex-wrap: nowrap; justify-content: flex-start; gap: 0.75rem; }
+.backup-icon { display: grid; place-items: center; flex-shrink: 0; width: 2.5rem; height: 2.5rem; border-radius: 0.75rem; background: var(--tone-bg); color: var(--tone); }
+.backup-icon svg { width: 1.25rem; height: 1.25rem; }
+
+.backup-points { display: grid; gap: 0.625rem; font-size: 0.875rem; line-height: 1.5; color: var(--text-secondary); }
+.backup-points li { display: flex; gap: 0.625rem; }
+.backup-points svg { width: 1.125rem; height: 1.125rem; flex-shrink: 0; margin-top: 0.125rem; color: var(--status-good); }
+
+.backup-drop {
+    display: grid; justify-items: center; gap: 0.25rem; padding: 1.5rem 1rem; text-align: center; cursor: pointer;
+    border: 1.5px dashed var(--border); border-radius: var(--radius-lg); background: var(--surface-sunken);
+    transition: border-color .15s, background-color .15s;
+}
+.backup-drop:hover, .backup-drop:focus-within { border-color: var(--accent); }
+.backup-drop:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.backup-drop.has-file { border-style: solid; border-color: var(--accent); background: var(--accent-soft); }
+.backup-drop-icon { display: grid; place-items: center; width: 2.75rem; height: 2.75rem; margin-bottom: 0.25rem; border-radius: 9999px; background: var(--surface-raised); color: var(--accent); box-shadow: var(--shadow-sm); }
+.backup-drop-icon svg { width: 1.25rem; height: 1.25rem; }
+.backup-drop-text { max-width: 100%; overflow-wrap: anywhere; font-size: 0.9375rem; font-weight: 650; color: var(--text-primary); }
+.backup-drop-hint { font-size: 0.75rem; color: var(--text-muted); }
+
+.backup-steps { counter-reset: step; display: grid; gap: 1rem; list-style: none; }
+.backup-steps li { counter-increment: step; position: relative; display: grid; gap: 0.25rem; padding-left: 2.5rem; font-size: 0.875rem; line-height: 1.5; color: var(--text-secondary); }
+.backup-steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 0; display: grid; place-items: center; width: 1.75rem; height: 1.75rem;
+    border-radius: 9999px; background: var(--accent-soft); color: var(--accent); font-size: 0.8125rem; font-weight: 700;
+}
+.backup-steps strong { color: var(--text-primary); font-weight: 650; }
+.backup-steps code, .backup .help code, .card-footer code {
+    display: inline-block; padding: 0.125rem 0.375rem; border-radius: 0.375rem; background: var(--surface-sunken);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.8125rem; color: var(--text-primary); overflow-wrap: anywhere;
+}
+.backup-steps code { display: block; margin: 0.25rem 0; padding: 0.5rem 0.75rem; line-height: 1.6; }
+
+.backup-row .ledger-end { gap: 0.25rem; }
+.backup-caret svg { width: 1.125rem; height: 1.125rem; color: var(--text-muted); transition: transform .2s; }
+
+.backup-table-wrap { overflow-x: auto; }
+.backup-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.backup-table th, .backup-table td { padding: 0.5rem 1rem; text-align: left; border-bottom: 1px solid var(--border-soft); }
+@media (min-width: 640px) { .backup-table th, .backup-table td { padding-inline: 1.5rem; } }
+.backup-table thead th { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+.backup-table td { width: 1%; white-space: nowrap; text-align: right; font-variant-numeric: tabular-nums; color: var(--text-primary); }
+.backup-table thead th:not(:first-child) { text-align: right; }
+.backup-table tbody th { font-weight: 500; color: var(--text-secondary); }
+.backup-table .backup-area th, .backup-table .backup-area td { background: var(--surface-sunken); font-weight: 700; color: var(--text-primary); }
+.backup-table tr.is-different td:last-child { color: var(--status-info); font-weight: 650; }
+.backup-table tbody:last-child tr:last-child > * { border-bottom: 0; }
+
+.backup-agree { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.875rem 1rem; border-radius: var(--radius); border: 1.5px solid var(--border); cursor: pointer; font-size: 0.875rem; line-height: 1.5; color: var(--text-primary); }
+.backup-agree:has(input:checked) { border-color: var(--status-critical); background: var(--status-critical-bg); }
+.backup-agree input { width: 1.25rem; height: 1.25rem; margin-top: 0.0625rem; flex-shrink: 0; accent-color: var(--status-critical); }
+.backup-table tbody th small { margin-left: 0.25rem; font-size: 0.6875rem; color: var(--text-muted); }
+.backup-more { display: flex; align-items: center; justify-content: center; gap: 0.375rem; width: 100%; min-height: 2.75rem; border-top: 1px solid var(--border-soft); font-size: 0.8125rem; font-weight: 600; color: var(--accent); }
+.backup-more:hover { background: var(--surface-hover); }
+.backup-caret.is-open svg { transform: rotate(180deg); }

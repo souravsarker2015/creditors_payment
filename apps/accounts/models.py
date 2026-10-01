@@ -75,6 +75,7 @@ class UserProfile(models.Model):
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
+def create_user_profile(sender, instance, created, raw=False, **kwargs):
+    # raw: a user loaded from a backup brings its own profile along.
+    if created and not raw:
         UserProfile.objects.get_or_create(user=instance)

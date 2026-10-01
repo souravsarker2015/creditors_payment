@@ -1,0 +1,20 @@
+{% load i18n %}
+<div class="backup-table-wrap" x-data="{ all: false }">
+  <table class="backup-table">
+    <thead>
+      <tr><th scope="col">{% translate "Records" %}</th><th scope="col">{% translate "Now" %}</th>{% if compare %}<th scope="col">{% translate "In the backup" %}</th>{% endif %}</tr>
+    </thead>
+    {% for area in areas %}{% if area.rows %}
+    <tbody>
+      <tr class="backup-area"><th scope="rowgroup">{{ area.title }}</th><td>{{ area.now }}</td>{% if compare %}<td>{{ area.backup }}</td>{% endif %}</tr>
+      {% for r in area.rows %}
+      <tr x-show="all" x-cloak{% if compare and r.now != r.backup %} class="is-different"{% endif %}><th scope="row">{{ r.name }} <small>{{ r.app }}</small></th><td>{{ r.now }}</td>{% if compare %}<td>{{ r.backup }}</td>{% endif %}</tr>
+      {% endfor %}
+    </tbody>
+    {% endif %}{% endfor %}
+  </table>
+  <button type="button" class="backup-more" @click="all = !all" :aria-expanded="all.toString()">
+    <span x-text="all ? '{{ _("Hide the tables")|escapejs }}' : '{{ _("Show every table")|escapejs }}'">{% translate "Show every table" %}</span>
+    <span class="backup-caret" :class="all && 'is-open'">{% include "partials/icon.html" with name="chevron-down" %}</span>
+  </button>
+</div>

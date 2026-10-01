@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% translate "Backup & restore" %} | FinTrack{% endblock %}
+{% block content %}
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "Backup & restore" %}</h1>
+      <p class="page-subtitle">{% translate "Save the whole system in one file, or bring it all back from one — to move FinTrack to a new server, or to go back to an earlier day. Only site admins see this page." %}</p>
+    </div>
+  </header>
+
+  <dl class="backup-stats">
+    <div class="backup-stat is-total">
+      <dt>{% translate "Records now" %}</dt>
+      <dd>{{ total }}</dd>
+    </div>
+    {% for area in areas %}
+    <div class="backup-stat" data-area="{{ area.key }}">
+      <dt>{{ area.title }}</dt>
+      <dd>{{ area.now }}</dd>
+    </div>
+    {% endfor %}
+  </dl>
+
+  <div class="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
+    <section class="card">
+      <div class="card-header">
+        <span class="backup-icon" data-tone="accent">{% include "partials/icon.html" with name="download" %}</span>
+        <div>
+          <h2 class="card-title">{% translate "Download a backup" %}</h2>
+          <p class="card-subtitle">{% translate "One .zip file with everything in this system." %}</p>
+        </div>
+      </div>
+      <div class="card-body stack">
+        <ul class="backup-points">
+          <li>{% include "partials/icon.html" with name="check" %}<span>{% translate "Every user and their sign-in, the personal ledgers, the fish farm, and uploaded photos and receipts." %}</span></li>
+          <li>{% include "partials/icon.html" with name="check" %}<span>{% translate "Restores on any server — SQLite or PostgreSQL — with every record exactly as it is now." %}</span></li>
+          <li>{% include "partials/icon.html" with name="check" %}<span>{% translate "Sealed: a file that was damaged or changed after download is refused when you restore it." %}</span></li>
+        </ul>
+        <div class="callout" data-tone="warn">
+          {% include "business/partials/icon.html" with name="lock" %}
+          <p>{% translate "Keep the file private. It holds everyone's data and sign-ins (passwords are stored scrambled, never readable)." %}</p>
+        </div>
+        <div class="flex flex-col gap-2 sm:flex-row">
+          <form method="post" action="{% url 'backup_download' %}" class="sm:flex-1">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary btn-block">{% include "partials/icon.html" with name="download" %}{% translate "Download backup" %}</button>
+          </form>
+          <form method="post" action="{% url 'backup_save' %}" class="sm:flex-1">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-secondary btn-block">{% include "partials/icon.html" with name="archive" %}{% translate "Save a copy on this server" %}</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" x-data="{ name: '' }">
+      <div class="card-header">
+        <span class="backup-icon" data-tone="critical">{% include "partials/icon.html" with name="upload" %}</span>
+        <div>
+          <h2 class="card-title">{% translate "Restore from a backup" %}</h2>
+          <p class="card-subtitle">{% translate "Nothing changes yet: first you see what's in the file." %}</p>
+        </div>
+      </div>
+      <form method="post" action="{% url 'backup_upload' %}" enctype="multipart/form-data" class="card-body stack">
+        <div class="callout" data-tone="critical">
+          {% include "partials/icon.html" with name="alert" %}
+          <p>{% translate "Restoring replaces all data in this system with the backup's. Nothing is merged, so nothing is ever duplicated. The data from before is saved on this server first, so a restore can be undone." %}</p>
+        </div>
+        <label class="backup-drop" :class="name && 'has-file'">
+          <input type="file" name="backup" accept=".zip,application/zip" required class="sr-only" @change="name = $event.target.files.length ? $event.target.files[0].name : ''">
+          <span class="backup-drop-icon">{% include "partials/icon.html" with name="upload" %}</span>
+          <span class="backup-drop-text" x-text="name || '{{ _("Choose a backup file (.zip)")|escapejs }}'">{% translate "Choose a backup file (.zip)" %}</span>
+          <span class="backup-drop-hint">{% translate "The file you downloaded here, or from your old server" %}</span>
+        </label>
+        <button type="submit" class="btn btn-secondary btn-block" :disabled="!name">{% include "partials/icon.html" with name="search" %}{% translate "Check the file" %}</button>
+        {% csrf_token %}
+      </form>
+    </section>
+  </div>
+
+  <section class="card">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title">{% translate "Backups on this server" %}</h2>
+        <p class="card-subtitle">{% blocktranslate with folder=backup_dir %}Kept in {{ folder }}. Copy them somewhere safe too — a backup on the same server is lost if the server is.{% endblocktranslate %}</p>
+      </div>
+    </div>
+    {% if server_backups %}
+    <ul class="ledger">
+      {% for b in server_backups %}
+      <li class="ledger-row backup-row">
+        <span class="ledger-icon">{% include "partials/icon.html" with name="archive" %}</span>
+        <div class="ledger-main">
+          <p class="ledger-title">{{ b.name }}</p>
+          <p class="ledger-meta">{{ b.when|date:"j M Y, H:i" }} · {{ b.size|filesizeformat }}{% if b.automatic %} · {% translate "saved automatically before a restore" %}{% endif %}</p>
+        </div>
+        <div class="ledger-end">
+          <a href="{% url 'backup_file' b.name %}" class="icon-btn" download aria-label="{% translate 'Download' %}">{% include "partials/icon.html" with name="download" %}</a>
+          <form method="post" action="{% url 'backup_use' b.name %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="restore" %}<span class="hide-sm">{% translate "Restore…" %}</span></button>
+          </form>
+          <form method="post" action="{% url 'backup_delete' b.name %}" data-confirm="{% blocktranslate with name=b.name %}Delete {{ name }} from the server? This can't be undone.{% endblocktranslate %}">
+            {% csrf_token %}
+            <button type="submit" class="icon-btn" aria-label="{% translate 'Delete' %}">{% include "partials/icon.html" with name="trash" %}</button>
+          </form>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="card-body"><p class="help">{% translate "None yet. Use “Save a copy on this server”, and one is also saved automatically before every restore." %}</p></div>
+    {% endif %}
+  </section>
+
+  <section class="card">
+    <div class="card-header">
+      <span class="backup-icon" data-tone="info">{% include "partials/icon.html" with name="arrow-right" %}</span>
+      <div>
+        <h2 class="card-title">{% translate "Moving to a new server" %}</h2>
+        <p class="card-subtitle">{% translate "Everything comes across: every user, every record, every photo — with the same sign-ins." %}</p>
+      </div>
+    </div>
+    <ol class="backup-steps card-body">
+      <li><strong>{% translate "On the old server" %}</strong><span>{% translate "Open this page and press “Download backup”." %}</span></li>
+      <li><strong>{% translate "On the new server" %}</strong><span>{% translate "Install the same version of FinTrack, then run:" %}</span><code>python manage.py migrate<br>python manage.py createsuperuser</code><span class="help">{% translate "That admin is only for this step — the backup brings your own accounts." %}</span></li>
+      <li><strong>{% translate "Restore" %}</strong><span>{% translate "Sign in with that admin, open Backup & restore, choose the file, check it and restore." %}</span></li>
+      <li><strong>{% translate "Done" %}</strong><span>{% translate "Sign in with your usual account. All the old data is there." %}</span></li>
+    </ol>
+    <div class="card-footer">
+      <p class="help">{% translate "Large backup, or no browser? The same works from the command line:" %} <code>python manage.py backup_export</code> · <code>python manage.py backup_restore file.zip</code></p>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-header"><h2 class="card-title">{% translate "What's in the system now" %}</h2></div>
+    {% include "backup/_counts.html" with compare=False %}
+  </section>
+</div>
+{% endblock %}

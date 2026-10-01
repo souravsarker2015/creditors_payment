@@ -50,6 +50,27 @@ Pages are rendered by Django, with three small layers on top:
   The menu sections live in `templates/partials/nav_sections.html`, shared by the sidebar and the
   "More" sheet, so a new page added there appears in both.
 
+## Backup & restore (moving to another server)
+
+Site admins (superusers) have **Backup & restore** in the account menu (`/backup/`). A backup is one
+`.zip` file: every row of every table as JSON (ids kept), the uploaded photos and receipts, and a
+manifest with record counts, the app version (migrations) and a SHA-256 for every file. It loads into
+SQLite or PostgreSQL alike.
+
+Restoring **replaces** all data with the backup's (it never merges, so nothing is duplicated) in one
+transaction: the file is checked first (checksums, version, at least one admin account), then every
+link between records and every table's count is verified before it commits — otherwise nothing
+changes. The current data is saved to `BACKUP_DIR` (default `backups/`, ignored by git) first, and
+everyone signs in again afterwards.
+
+```bash
+python manage.py backup_export [file.zip]     # same file as "Download backup"
+python manage.py backup_restore file.zip      # asks for confirmation; --yes to skip
+```
+
+To move servers: download a backup on the old one; on the new one run `migrate` and
+`createsuperuser` (a temporary admin), sign in, and restore the file. Sign in with your usual account.
+
 ## Project Structure
 
 ```

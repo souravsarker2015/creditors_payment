@@ -147,6 +147,10 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+# Whole-system backups kept on the server (Backup & restore, and the copy
+# made automatically before every restore). Keep this folder out of git.
+BACKUP_DIR = BASE_DIR / "backups"
+
 # ──────────────────────────────────────────────
 # Default primary key field type
 # ──────────────────────────────────────────────

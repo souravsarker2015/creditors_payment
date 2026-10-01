@@ -184,6 +184,9 @@ person's choice (Automatic / App view / Website view).
                 <a href="/admin/" target="_blank" rel="noopener" class="app-list-item">
                     {% include "business/partials/icon.html" with name="shield" %}<span>{% translate "Django Admin" %}</span>
                 </a>
+                <a href="{% url 'backup_home' %}" class="app-list-item">
+                    {% include "partials/icon.html" with name="archive" %}<span>{% translate "Backup & restore" %}</span>
+                </a>
                 {% endif %}
                 <a href="{% url 'logout' %}" class="app-list-item is-danger">
                     <svg fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" /></svg>

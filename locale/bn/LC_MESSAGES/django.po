@@ -9173,3 +9173,249 @@ msgstr "নিচে ট্যাব, ঠিক অ্যাপের মতো"
 
 msgid "Menu at the top, like the website"
 msgstr "উপরে মেনু, ওয়েবসাইটের মতো"
+
+msgid "This is not a FinTrack backup file. Choose the .zip file you downloaded from “Backup & restore”."
+msgstr "এটি FinTrack-এর ব্যাকআপ ফাইল নয়। “ব্যাকআপ ও রিস্টোর” থেকে ডাউনলোড করা .zip ফাইলটি বেছে নিন।"
+
+msgid "This file is too large to restore here (over 2 GB unpacked)."
+msgstr "ফাইলটি এখানে রিস্টোর করার জন্য খুব বড় (খোলার পর ২ GB-এর বেশি)।"
+
+msgid "The backup file is damaged (its contents list can't be read)."
+msgstr "ব্যাকআপ ফাইলটি নষ্ট (এর ভেতরের তালিকা পড়া যাচ্ছে না)।"
+
+msgid "This backup was made by a newer version of FinTrack. Update this server first."
+msgstr "এই ব্যাকআপ FinTrack-এর নতুন সংস্করণে তৈরি। আগে এই সার্ভার আপডেট করুন।"
+
+msgid "The backup file is damaged or was changed: its files don't match its contents list."
+msgstr "ব্যাকআপ ফাইলটি নষ্ট বা বদলানো হয়েছে: ভেতরের ফাইলগুলো তালিকার সঙ্গে মিলছে না।"
+
+msgid "The backup file is damaged or was changed after it was made (%(name)s doesn't match). Download a fresh copy."
+msgstr "ব্যাকআপ ফাইলটি নষ্ট বা তৈরির পরে বদলানো হয়েছে (%(name)s মিলছে না)। নতুন একটি কপি ডাউনলোড করুন।"
+
+msgid "The backup file is damaged (its data can't be read)."
+msgstr "ব্যাকআপ ফাইলটি নষ্ট (এর তথ্য পড়া যাচ্ছে না)।"
+
+msgid "This backup has no active admin account, so nobody could sign in after restoring it."
+msgstr "এই ব্যাকআপে কোনো সক্রিয় অ্যাডমিন অ্যাকাউন্ট নেই, তাই রিস্টোরের পর কেউ লগইন করতে পারবে না।"
+
+msgid "The backup has data this version of FinTrack doesn't know (%(model)s)."
+msgstr "ব্যাকআপে এমন তথ্য আছে যা FinTrack-এর এই সংস্করণ চেনে না (%(model)s)।"
+
+msgid "The backup file is damaged: the number of records doesn't match its contents list."
+msgstr "ব্যাকআপ ফাইলটি নষ্ট: রেকর্ডের সংখ্যা ভেতরের তালিকার সঙ্গে মিলছে না।"
+
+msgid "This backup was made by a newer version of FinTrack. Update this server's code, run “python manage.py migrate”, then restore."
+msgstr "এই ব্যাকআপ FinTrack-এর নতুন সংস্করণে তৈরি। এই সার্ভারের কোড আপডেট করুন, “python manage.py migrate” চালান, তারপর রিস্টোর করুন।"
+
+msgid "This server's database isn't up to date. Run “python manage.py migrate”, then restore."
+msgstr "এই সার্ভারের ডাটাবেস হালনাগাদ নয়। “python manage.py migrate” চালান, তারপর রিস্টোর করুন।"
+
+msgid "This backup is from an older version of FinTrack, and the update since then changed existing data (%(name)s). Restore it on a server with the older version, then update that server."
+msgstr "এই ব্যাকআপ FinTrack-এর পুরনো সংস্করণের, আর এরপরের আপডেটে আগের তথ্য বদলানো হয়েছে (%(name)s)। পুরনো সংস্করণের একটি সার্ভারে রিস্টোর করুন, তারপর সেই সার্ভার আপডেট করুন।"
+
+msgid "This backup was made with an older version of FinTrack. The updates since then only added new things, so it restores safely."
+msgstr "এই ব্যাকআপ FinTrack-এর পুরনো সংস্করণে তৈরি। এরপরের আপডেটে শুধু নতুন জিনিস যোগ হয়েছে, তাই নিরাপদে রিস্টোর হবে।"
+
+msgid "The backup refers to a kind of record this server doesn't have (%(name)s)."
+msgstr "ব্যাকআপে এমন ধরনের রেকর্ডের উল্লেখ আছে যা এই সার্ভারে নেই (%(name)s)।"
+
+msgid "The restore was stopped: the records loaded don't match the backup (%(tables)s). Nothing was changed."
+msgstr "রিস্টোর থামানো হয়েছে: লোড হওয়া রেকর্ড ব্যাকআপের সঙ্গে মিলছে না (%(tables)s)। কিছুই বদলানো হয়নি।"
+
+msgid "The restore was stopped because the backup's records don't fit together (%(error)s). Nothing was changed."
+msgstr "রিস্টোর থামানো হয়েছে, কারণ ব্যাকআপের রেকর্ডগুলো একে অপরের সঙ্গে মিলছে না (%(error)s)। কিছুই বদলানো হয়নি।"
+
+msgid "Users and settings"
+msgstr "ব্যবহারকারী ও সেটিংস"
+
+msgid "Personal ledgers"
+msgstr "ব্যক্তিগত হিসাব"
+
+msgid "Fish farm business"
+msgstr "মাছের খামার ব্যবসা"
+
+msgid "Backup saved on this server: %(name)s"
+msgstr "ব্যাকআপ এই সার্ভারে রাখা হয়েছে: %(name)s"
+
+msgid "Deleted %(name)s."
+msgstr "%(name)s মুছে ফেলা হয়েছে।"
+
+msgid "Choose a backup file first."
+msgstr "আগে একটি ব্যাকআপ ফাইল বেছে নিন।"
+
+msgid "Choose a backup file to restore."
+msgstr "রিস্টোর করতে একটি ব্যাকআপ ফাইল বেছে নিন।"
+
+msgid "Type your own password and tick the box to restore."
+msgstr "রিস্টোর করতে নিজের পাসওয়ার্ড লিখুন এবং বক্সে টিক দিন।"
+
+msgid "Restored %(total)s records from the backup. Sign in with an account from the backup."
+msgstr "ব্যাকআপ থেকে %(total)sটি রেকর্ড রিস্টোর হয়েছে। ব্যাকআপের একটি অ্যাকাউন্ট দিয়ে লগইন করুন।"
+
+msgid "The data from before the restore was saved on the server as %(name)s."
+msgstr "রিস্টোরের আগের তথ্য সার্ভারে %(name)s নামে রাখা হয়েছে।"
+
+msgid "Records"
+msgstr "রেকর্ড"
+
+msgid "Now"
+msgstr "এখন"
+
+msgid "In the backup"
+msgstr "ব্যাকআপে"
+
+msgid "Save the whole system in one file, or bring it all back from one — to move FinTrack to a new server, or to go back to an earlier day. Only site admins see this page."
+msgstr "পুরো সিস্টেম একটি ফাইলে রাখুন, বা একটি ফাইল থেকে সব ফিরিয়ে আনুন — FinTrack নতুন সার্ভারে নিতে, বা আগের কোনো দিনে ফিরে যেতে। শুধু সাইট অ্যাডমিন এই পাতা দেখেন।"
+
+msgid "Records now"
+msgstr "এখনকার রেকর্ড"
+
+msgid "Download a backup"
+msgstr "ব্যাকআপ ডাউনলোড করুন"
+
+msgid "One .zip file with everything in this system."
+msgstr "এই সিস্টেমের সবকিছু একটি .zip ফাইলে।"
+
+msgid "Every user and their sign-in, the personal ledgers, the fish farm, and uploaded photos and receipts."
+msgstr "প্রত্যেক ব্যবহারকারী ও তাঁদের লগইন, ব্যক্তিগত হিসাব, মাছের খামার, আর আপলোড করা ছবি ও রসিদ।"
+
+msgid "Restores on any server — SQLite or PostgreSQL — with every record exactly as it is now."
+msgstr "যেকোনো সার্ভারে রিস্টোর হয় — SQLite বা PostgreSQL — প্রতিটি রেকর্ড ঠিক এখনকার মতো।"
+
+msgid "Sealed: a file that was damaged or changed after download is refused when you restore it."
+msgstr "সিল করা: ডাউনলোডের পরে নষ্ট বা বদলানো ফাইল রিস্টোরের সময় বাতিল হয়।"
+
+msgid "Keep the file private. It holds everyone's data and sign-ins (passwords are stored scrambled, never readable)."
+msgstr "ফাইলটি গোপন রাখুন। এতে সবার তথ্য ও লগইন আছে (পাসওয়ার্ড এলোমেলো করে রাখা, কখনো পড়া যায় না)।"
+
+msgid "Download backup"
+msgstr "ব্যাকআপ ডাউনলোড"
+
+msgid "Save a copy on this server"
+msgstr "এই সার্ভারে একটি কপি রাখুন"
+
+msgid "Restore from a backup"
+msgstr "ব্যাকআপ থেকে রিস্টোর"
+
+msgid "Nothing changes yet: first you see what's in the file."
+msgstr "এখনই কিছু বদলাবে না: আগে দেখবেন ফাইলে কী আছে।"
+
+msgid "Restoring replaces all data in this system with the backup's. Nothing is merged, so nothing is ever duplicated. The data from before is saved on this server first, so a restore can be undone."
+msgstr "রিস্টোর করলে এই সিস্টেমের সব তথ্য ব্যাকআপের তথ্য দিয়ে বদলে যায়। কিছু মেশানো হয় না, তাই কখনো কিছু দুবার হয় না। আগের তথ্য আগেই এই সার্ভারে রাখা হয়, তাই রিস্টোর ফেরানো যায়।"
+
+msgid "Choose a backup file (.zip)"
+msgstr "ব্যাকআপ ফাইল বেছে নিন (.zip)"
+
+msgid "The file you downloaded here, or from your old server"
+msgstr "এখান থেকে বা পুরনো সার্ভার থেকে ডাউনলোড করা ফাইল"
+
+msgid "Check the file"
+msgstr "ফাইলটি যাচাই করুন"
+
+msgid "Backups on this server"
+msgstr "এই সার্ভারের ব্যাকআপ"
+
+msgid "Kept in %(folder)s. Copy them somewhere safe too — a backup on the same server is lost if the server is."
+msgstr "রাখা আছে %(folder)s-এ। অন্য কোথাও নিরাপদে কপিও রাখুন — সার্ভার হারালে একই সার্ভারের ব্যাকআপও হারায়।"
+
+msgid "saved automatically before a restore"
+msgstr "রিস্টোরের আগে নিজে থেকে রাখা"
+
+msgid "Restore…"
+msgstr "রিস্টোর…"
+
+msgid "Delete %(name)s from the server? This can't be undone."
+msgstr "সার্ভার থেকে %(name)s মুছবেন? এটি ফেরানো যাবে না।"
+
+msgid "None yet. Use “Save a copy on this server”, and one is also saved automatically before every restore."
+msgstr "এখনো নেই। “এই সার্ভারে একটি কপি রাখুন” চাপুন; প্রতিটি রিস্টোরের আগেও নিজে থেকে একটি রাখা হয়।"
+
+msgid "Moving to a new server"
+msgstr "নতুন সার্ভারে নেওয়া"
+
+msgid "Everything comes across: every user, every record, every photo — with the same sign-ins."
+msgstr "সবকিছু চলে আসে: প্রত্যেক ব্যবহারকারী, প্রতিটি রেকর্ড, প্রতিটি ছবি — একই লগইনসহ।"
+
+msgid "On the old server"
+msgstr "পুরনো সার্ভারে"
+
+msgid "Open this page and press “Download backup”."
+msgstr "এই পাতা খুলে “ব্যাকআপ ডাউনলোড” চাপুন।"
+
+msgid "On the new server"
+msgstr "নতুন সার্ভারে"
+
+msgid "Install the same version of FinTrack, then run:"
+msgstr "FinTrack-এর একই সংস্করণ ইনস্টল করুন, তারপর চালান:"
+
+msgid "That admin is only for this step — the backup brings your own accounts."
+msgstr "এই অ্যাডমিন শুধু এই ধাপের জন্য — ব্যাকআপ আপনার নিজের অ্যাকাউন্টগুলো নিয়ে আসে।"
+
+msgid "Sign in with that admin, open Backup & restore, choose the file, check it and restore."
+msgstr "সেই অ্যাডমিন দিয়ে লগইন করুন, ব্যাকআপ ও রিস্টোর খুলুন, ফাইল বেছে যাচাই করে রিস্টোর করুন।"
+
+msgid "Sign in with your usual account. All the old data is there."
+msgstr "আপনার আগের অ্যাকাউন্ট দিয়ে লগইন করুন। পুরনো সব তথ্য সেখানে আছে।"
+
+msgid "Large backup, or no browser? The same works from the command line:"
+msgstr "বড় ব্যাকআপ, বা ব্রাউজার নেই? কমান্ড লাইন থেকেও একই কাজ হয়:"
+
+msgid "What's in the system now"
+msgstr "এখন সিস্টেমে যা আছে"
+
+msgid "Check the backup"
+msgstr "ব্যাকআপ যাচাই"
+
+msgid "The file is complete and undamaged. Here is what's in it, next to what this system has now."
+msgstr "ফাইলটি সম্পূর্ণ ও অক্ষত। এতে যা আছে, আর এই সিস্টেমে এখন যা আছে, পাশাপাশি দেখুন।"
+
+msgid "Made on"
+msgstr "তৈরির সময়"
+
+msgid "Made by"
+msgstr "তৈরি করেছেন"
+
+msgid "Records in the backup"
+msgstr "ব্যাকআপের রেকর্ড"
+
+msgid "Photos and receipts"
+msgstr "ছবি ও রসিদ"
+
+msgid "Now and after restoring"
+msgstr "এখন ও রিস্টোরের পরে"
+
+msgid "This system has %(total_now)s records now. After restoring it will have exactly the backup's %(total_backup)s."
+msgstr "এই সিস্টেমে এখন %(total_now)sটি রেকর্ড আছে। রিস্টোরের পরে থাকবে ঠিক ব্যাকআপের %(total_backup)sটি।"
+
+msgid "Replace all data with this backup"
+msgstr "সব তথ্য এই ব্যাকআপ দিয়ে বদলান"
+
+msgid "Everyone is signed out. Sign in again with an account from the backup."
+msgstr "সবাই লগআউট হয়ে যাবেন। ব্যাকআপের একটি অ্যাকাউন্ট দিয়ে আবার লগইন করুন।"
+
+msgid "Your account (%(me)s) is in the backup. Sign in with it afterwards."
+msgstr "আপনার অ্যাকাউন্ট (%(me)s) ব্যাকআপে আছে। পরে এটি দিয়েই লগইন করুন।"
+
+msgid "Your account (%(me)s) is not in this backup. Afterwards, sign in as one of the backup's admins:"
+msgstr "আপনার অ্যাকাউন্ট (%(me)s) এই ব্যাকআপে নেই। পরে ব্যাকআপের এই অ্যাডমিনদের একজন হিসেবে লগইন করুন:"
+
+msgid "I understand: all current data is replaced by the backup's. A copy of the current data is saved on this server first."
+msgstr "আমি বুঝেছি: এখনকার সব তথ্য ব্যাকআপের তথ্য দিয়ে বদলে যাবে। এখনকার তথ্যের একটি কপি আগে এই সার্ভারে রাখা হবে।"
+
+msgid "Your password"
+msgstr "আপনার পাসওয়ার্ড"
+
+msgid "Asked again because this changes everyone's data."
+msgstr "আবার চাওয়া হচ্ছে, কারণ এতে সবার তথ্য বদলায়।"
+
+msgid "Restore now"
+msgstr "এখন রিস্টোর করুন"
+
+msgid "Backup & restore"
+msgstr "ব্যাকআপ ও রিস্টোর"
+
+msgid "Hide the tables"
+msgstr "টেবিল লুকান"
+
+msgid "Show every table"
+msgstr "প্রতিটি টেবিল দেখুন"

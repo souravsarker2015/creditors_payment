@@ -27,6 +27,7 @@ urlpatterns = [
     path("household/", include("apps.household.urls")),
     path("shops/", include("apps.shops.urls")),
     path("core/", include("apps.core.urls")),
+    path("backup/", include("apps.core.backup_urls")),  # whole-system backup & restore (site admins)
     path("budgets/", include("apps.budgets.urls")),
     path("goals/", include("apps.goals.urls")),
     path("business/", include("apps.business.urls")),  # business module
