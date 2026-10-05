@@ -1,5 +1,6 @@
 import json
 from datetime import date, timedelta
+from decimal import Decimal
 
 from django.apps import apps
 from django.contrib import messages
@@ -119,7 +120,16 @@ def usage_list_view(request):
 
 @business_access_required(capability="enter_data")
 def bulk_usage_view(request):
-    form = BulkFeedingForm(request.POST or None, business=request.business)
+    initial = None
+    if request.method != "POST" and request.GET.get("plan"):
+        # "Fill from the feed plan": today's suggested kg for every pond.
+        from .planner import plans
+
+        kg = Unit.objects.filter(business=request.business, symbol="kg").first()
+        initial = {f"c{p.cycle.pk}": format(p.per_day.normalize(), "f") for p in plans(request.business) if p.per_day}
+        if kg:
+            initial["unit"] = kg.pk
+    form = BulkFeedingForm(request.POST or None, business=request.business, initial=initial)
     if not form.cycles:
         messages.info(request, _g("No pond has a running cycle. Start one from the pond's page first."))
         return redirect("business:ponds")
@@ -129,3 +139,21 @@ def bulk_usage_view(request):
         messages.success(request, _g("Feeding saved for %(n)s ponds — %(kg)s kg in all.") % {"n": len(made), "kg": f"{total:,.1f}".rstrip("0").rstrip(".")})
         return redirect("business:feed_usage")
     return render(request, "business/feed/bulk_usage.html", {"form": form, "feed_json": _form_json(request.business)})
+
+
+@business_access_required
+def plan_view(request):
+    """Today's feed for each pond, from the fish in it, their size and the water."""
+    from . import planner
+
+    rows = planner.plans(request.business)
+    stock = planner.stock_days(request.business)
+    total_day = sum((r.per_day for r in rows), Decimal(0))
+    left = sum((max(s.left_kg, Decimal(0)) for s in stock), Decimal(0))
+    used_day = sum((s.per_day for s in stock), Decimal(0))
+    return render(request, "business/feed/plan.html", {
+        "rows": rows, "stock": stock, "total_day": total_day, "out_of_stock": bool(stock) and left <= 0,
+        "stock_days": int(left / used_day) if used_day > 0 else None,
+        "plan_days": int(left / total_day) if total_day > 0 else None,
+        "rates": [(limit, pct) for limit, pct in planner.RATES],
+    })

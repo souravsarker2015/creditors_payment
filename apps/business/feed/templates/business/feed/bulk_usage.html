@@ -7,7 +7,8 @@
     <div>
       <a href="{% url 'business:feed_usage' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Feeding log" %}</a>
       <h1 class="page-title">{% translate "Record feeding" %}</h1>
-      <p class="page-subtitle">{% translate "One feed for all ponds. Last time's amounts are filled in — change what's different and save." %}</p>
+      {% if request.GET.plan %}<p class="page-subtitle">{% translate "Today's amounts from the feed plan are filled in, in kg. Change what's different and save." %}</p>
+      {% else %}<p class="page-subtitle">{% translate "One feed for all ponds. Last time's amounts are filled in — change what's different and save." %} <a href="{% url 'business:feed_plan' %}" class="font-semibold underline">{% translate "How much should each pond get?" %}</a></p>{% endif %}
     </div>
   </header>
   <form method="post" class="stack" novalidate x-data="{ total: 0, sum() { this.total = Array.from($el.querySelectorAll('[data-pond]')).reduce((a, i) => a + (parseFloat(i.value) || 0), 0); } }" x-init="sum()" @input="sum()">

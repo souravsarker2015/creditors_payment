@@ -2540,3 +2540,34 @@ a.guide-chip:hover { background: var(--accent-soft); color: var(--accent); }
 .price-facts > div { display: flex; justify-content: space-between; gap: 0.75rem; font-size: 0.8125rem; }
 .price-facts dt { color: var(--text-muted); }
 .price-facts dd { font-weight: 600; color: var(--text-primary); text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ==========================================================================
+   Feed plan (business/feed/plan.html)
+   ========================================================================== */
+@media (min-width: 768px) { .stat-grid.stat-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } .stat-grid.stat-grid-3 > :first-child:nth-last-child(odd) { grid-column: auto; } }
+.plan-card .card-title a:hover { color: var(--accent); }
+.plan-today { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 0.75rem; padding: 0.875rem; border-radius: var(--radius); background: var(--accent-soft); }
+.plan-label { font-size: 0.6875rem; font-weight: 600; color: var(--text-secondary); }
+.plan-value { margin-top: 0.125rem; font-size: 1.5rem; font-weight: 750; color: var(--accent); font-variant-numeric: tabular-nums; }
+.plan-value.is-sub { font-size: 1.0625rem; color: var(--text-primary); }
+.plan-value small { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); }
+.plan-table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+.plan-table th, .plan-table td { padding: 0.375rem 0.25rem; text-align: right; border-bottom: 1px solid var(--border-soft); font-variant-numeric: tabular-nums; }
+.plan-table th:first-child, .plan-table td:first-child { text-align: left; }
+.plan-table thead th { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
+.plan-table tbody th { font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 0.375rem; }
+.plan-table tbody tr:last-child > * { border-bottom: 0; }
+.species-dot-sm { width: 0.625rem; height: 0.625rem; min-width: 0; border-radius: 9999px; background: var(--c); padding: 0; }
+.plan-flag { margin-left: 0.125rem; color: var(--status-warn); font-weight: 700; cursor: help; }
+.plan-rates > summary { cursor: pointer; list-style: none; border-bottom-color: transparent; }
+.plan-rates > summary::-webkit-details-marker { display: none; }
+.plan-rates > summary svg { width: 1.125rem; height: 1.125rem; color: var(--text-muted); transition: transform .2s; }
+.plan-rates[open] > summary { border-bottom-color: var(--border-soft); }
+.plan-rates[open] > summary svg { transform: rotate(180deg); }
+.lease-figures { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; }
+.lease-figures dt { font-size: 0.75rem; color: var(--text-muted); }
+.lease-figures dd { margin-top: 0.125rem; font-size: 1.0625rem; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.species-dot-sm { display: inline-block; }
+.equip-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.equip-condition { margin-left: auto; }
+@media (max-width: 639.98px) { .equip-actions > * { flex: 1 1 100%; } .equip-condition { margin-left: 0; } .equip-actions .btn { justify-content: center; } }

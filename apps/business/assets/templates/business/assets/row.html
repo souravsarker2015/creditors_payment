@@ -1,0 +1,11 @@
+{% load i18n business %}<li class="ledger-row">
+  <span class="ledger-icon" data-tone="{% if o.condition == 'repair' %}critical{% elif o.condition == 'out' %}muted{% elif o.due_in is not None and o.due_in <= 7 %}warn{% else %}good{% endif %}">{% include "business/partials/icon.html" with name="cog" %}</span>
+  <a href="{% url 'business:equipment_detail' o.pk %}" class="ledger-main">
+    <p class="ledger-title">{{ o.name }}{% if o.condition != 'working' %} <span class="badge" data-tone="{% if o.condition == 'repair' %}critical{% else %}muted{% endif %}">{{ o.get_condition_display }}</span>{% endif %}</p>
+    <p class="ledger-meta">{{ o.get_kind_display }}{% if o.pond %} · {{ o.pond }}{% endif %}{% if o.next_due %} · {% if o.due_in < 0 %}<span class="tone-critical">{% blocktranslate with date=o.next_due|date:"j M" %}service was due {{ date }}{% endblocktranslate %}</span>{% else %}{% blocktranslate with date=o.next_due|date:"j M" %}next service {{ date }}{% endblocktranslate %}{% endif %}{% endif %}</p>
+  </a>
+  <div class="ledger-end">
+    {% if biz_can.view_finance and o.cost or biz_can.view_finance and o.upkeep %}<span class="party-bal"><strong>{{ o.cost|bdt }}</strong><span>{% if o.upkeep %}{% blocktranslate with u=o.upkeep|bdt %}+ {{ u }} upkeep{% endblocktranslate %}{% else %}{% translate "price paid" %}{% endif %}</span></span>{% endif %}
+    {% include "business/master/_actions.html" with up=forloop.last %}
+  </div>
+</li>

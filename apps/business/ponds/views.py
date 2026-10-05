@@ -13,12 +13,13 @@ from django.views.decorators.http import require_POST
 from apps.business.core.crud import Master
 from apps.business.core.decorators import business_access_required
 from apps.business.core.models import Unit
+from apps.business.core.templatetags.business import bdt
 from apps.business.feed.forms import FeedUsageForm
 from apps.business.feed.models import FeedUsage
 
 from . import services
-from .forms import CycleForm, HarvestForm, MortalityForm, PondAlertsForm, PondForm, StockingForm, TreatmentForm, WaterTestForm, WeighingForm
-from .models import CultureCycle, Harvest, Mortality, Pond, PondAlerts, PondStatus, SampleWeighing, Stocking, Treatment, WaterTest
+from .forms import CycleForm, LeasePaymentForm, HarvestForm, MortalityForm, PondAlertsForm, PondForm, StockingForm, TreatmentForm, WaterTestForm, WeighingForm
+from .models import CultureCycle, Harvest, LeasePayment, Mortality, Pond, PondAlerts, PondStatus, SampleWeighing, Stocking, Treatment, WaterTest
 
 def _with_cycles(objects, business):
     running = {c.pond_id: c for c in CultureCycle.objects.filter(business=business, status="running", pond__in=objects)}
@@ -96,7 +97,34 @@ def pond_detail_view(request, pk):
         "summary": services.summarize(current) if current else None,
         "cycle_form": _for_popup(CycleForm(business=request.business, prefix="cycle")),
         "past_summaries": [(c, services.summarize(c)) for c in cycles if not c.is_running][:10],
+        "lease": services.lease_status(pond) if pond.is_leased else None,
     })
+
+
+@business_access_required(capability="view_finance")
+def lease_pay_view(request, pk, payment_pk=None):
+    pond = get_object_or_404(Pond, pk=pk, business=request.business)
+    obj = get_object_or_404(LeasePayment, pk=payment_pk, pond=pond) if payment_pk else None
+    status = services.lease_status(pond)
+    form = LeasePaymentForm(request.POST or None, instance=obj, business=request.business, due=status.due)
+    if request.method == "POST" and form.is_valid():
+        lp = form.save(commit=False)
+        lp.business, lp.pond = request.business, pond
+        lp.save()
+        due = services.lease_status(pond).due
+        messages.success(request, _g("Lease payment saved. Still to pay: %(due)s.") % {"due": bdt(due)} if due > 0 else _g("Lease payment saved. The lease is fully paid."))
+        return redirect("business:pond_detail", pond.pk)
+    return render(request, "business/ponds/entry_form.html", {"form": form, "title": _g("Edit lease payment") if obj else _g("Pay lease"),
+                                                              "back": reverse("business:pond_detail", args=[pond.pk]), "back_label": str(pond)})
+
+
+@business_access_required(capability="delete")
+@require_POST
+def lease_payment_delete_view(request, pk):
+    lp = get_object_or_404(LeasePayment, pk=pk, business=request.business)
+    lp.soft_delete()
+    messages.success(request, _g("Deleted."))
+    return redirect("business:pond_detail", lp.pond_id)
 
 
 @business_access_required(capability="enter_data")

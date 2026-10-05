@@ -37,7 +37,7 @@ def _units_json(business):
 def home_view(request):
     b = request.business
     units = Unit.objects.filter(business=b)
-    tasks = _farm_tasks(b) + _staff_tasks(request) + _calendar_tasks(b)
+    tasks = _farm_tasks(b) + _equipment_tasks(b) + _staff_tasks(request) + _calendar_tasks(b)
     return render(request, "business/home.html", {
         "today": date.today(),
         "share_url": _share_url(request, tasks),
@@ -69,6 +69,24 @@ def _farm_tasks(business):
     from apps.business.ponds.services import farm_tasks
 
     return farm_tasks(business)
+
+
+def _equipment_tasks(business):
+    """Broken machines, and services due this week."""
+    if not apps.is_installed("apps.business.assets"):
+        return []
+    from apps.business.assets.services import needs_attention
+    from apps.business.ponds.services import Task
+
+    broken, due = needs_attention(business)
+    out = [Task("equipment", "critical", _("%(name)s needs repair") % {"name": e.name}, str(e.pond or ""),
+                reverse("business:equipment_detail", args=[e.pk]), _("Open")) for e in broken]
+    for e in due:
+        late = e.next_due < date.today()
+        out.append(Task("equipment", "warn" if late else "info", _("Service %(name)s") % {"name": e.name},
+                        (_("Was due %(date)s") if late else _("Due %(date)s")) % {"date": date_format(e.next_due, "j M")},
+                        reverse("business:equipment_service", args=[e.pk]), _("Record")))
+    return out
 
 
 def _staff_tasks(request):

@@ -93,6 +93,19 @@ def movements(business, account=None):
             amount = t.principal if taken else -t.total
             add(t.date, t.account_id, amount, _("Loan money taken") if taken else _("Loan instalment"),
                 str(t.loan.lender), reverse("business:loan_detail", args=[t.loan_id]), "loan")
+    if _installed("assets"):
+        from apps.business.assets.models import Equipment, Service
+
+        for e in Equipment.objects.filter(business=business, cost__gt=0, account__isnull=False, bought_on__isnull=False):
+            add(e.bought_on, e.account_id, -e.cost, _("Equipment bought"), str(e), reverse("business:equipment_detail", args=[e.pk]), "expense")
+        for sv in Service.objects.filter(business=business, cost__gt=0, account__isnull=False).select_related("equipment"):
+            add(sv.date, sv.account_id, -sv.cost, sv.get_kind_display(), str(sv.equipment), reverse("business:equipment_detail", args=[sv.equipment_id]), "expense")
+    if _installed("ponds"):
+        from apps.business.ponds.models import LeasePayment
+
+        for lp in LeasePayment.objects.filter(business=business).select_related("pond"):
+            add(lp.date, lp.account_id, -lp.amount, _("Pond lease"), str(lp.pond),
+                reverse("business:pond_detail", args=[lp.pond_id]), "expense")
     if _installed("staff"):
         from apps.business.staff.models import WorkerPayment
 
@@ -248,6 +261,20 @@ def statement(business, start, end, scope=Scope.BUSINESS, cycle=None, cache=None
             total = cared.aggregate(c=Sum("cost"))["c"] or ZERO
             if total:
                 s.expense.append(Line("care", _("Lime, medicine & pond care"), total, reverse("business:ponds")))
+        if _installed("assets") and cycle is None:
+            from apps.business.assets.services import costs
+
+            bought, upkeep = costs(business, start, end)
+            if bought:
+                s.expense.append(Line("equipment", _("Equipment bought"), bought, reverse("business:equipment")))
+            if upkeep:
+                s.expense.append(Line("upkeep", _("Repairs & servicing"), upkeep, reverse("business:equipment")))
+        if _installed("ponds") and cycle is None:
+            from apps.business.ponds.models import LeasePayment
+
+            total = LeasePayment.objects.filter(business=business, **in_range).aggregate(t=Sum("amount"))["t"] or ZERO
+            if total:
+                s.expense.append(Line("lease", _("Pond lease"), total, reverse("business:ponds") + "?show=leased"))
         if _installed("staff"):
             from apps.business.staff.services import wages_cost
 

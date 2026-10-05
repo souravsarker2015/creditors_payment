@@ -26,6 +26,9 @@
   <a href="{% url 'business:sales' %}" class="nav-link {% if '/business/sales/' in p %}is-active{% endif %}">
     {% include "partials/icon.html" with name="cart" %}{% translate "Fish sales" %}
   </a>
+  <a href="{% url 'business:equipment' %}" class="nav-link {% if '/business/equipment/' in p %}is-active{% endif %}" {% if '/business/equipment/' in p %}aria-current="page"{% endif %}>
+    {% include "business/partials/icon.html" with name="cog" %}{% translate "Equipment" %}
+  </a>
   {% if biz_can.enter_data and not biz_can.view_finance %}
   <a href="{% url 'business:staff_work' %}" class="nav-link {% if '/business/staff/work/' in p %}is-active{% endif %}">
     {% include "partials/icon.html" with name="users" %}{% translate "Work sheet" %}

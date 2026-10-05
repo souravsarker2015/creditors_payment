@@ -9998,3 +9998,435 @@ msgstr "%(account)s থেকে %(n)s জনকে পরিশোধ করা
 
 msgid "Nothing to write: tick the workers to add."
 msgstr "লেখার কিছু নেই: যাঁদের যোগ করবেন তাঁদের টিক দিন।"
+
+msgid "Mark it “Needs repair” when it breaks; it shows on the farm's to-do list until it's fixed."
+msgstr "নষ্ট হলে “মেরামত দরকার” দিন; ঠিক না হওয়া পর্যন্ত খামারের কাজের তালিকায় থাকবে।"
+
+msgid "Leave empty for something you already owned or haven't paid for yet — no money leaves an account."
+msgstr "আগে থেকেই থাকলে বা এখনো দাম না দিলে খালি রাখুন — কোনো হিসাব থেকে টাকা যাবে না।"
+
+msgid "The app reminds you when a service is due, counting from the last one."
+msgstr "শেষ সার্ভিস থেকে গুনে পরের সার্ভিসের সময় হলে অ্যাপ মনে করিয়ে দেবে।"
+
+msgid "Purchase (optional)"
+msgstr "কেনা (ঐচ্ছিক)"
+
+msgid "Servicing"
+msgstr "সার্ভিসিং"
+
+msgid "Whole farm / moves around"
+msgstr "পুরো খামার / জায়গা বদলায়"
+
+msgid "When was it bought? The money leaves the account on that day."
+msgstr "কবে কেনা হয়েছে? সেদিনই হিসাব থেকে টাকা যাবে।"
+
+msgid "Parts and labour together. It's a farm cost."
+msgstr "যন্ত্রাংশ ও মজুরি মিলিয়ে। এটি খামারের খরচ।"
+
+msgid "Aerator"
+msgstr "এয়ারেটর"
+
+msgid "Water pump"
+msgstr "পানির পাম্প"
+
+msgid "Generator"
+msgstr "জেনারেটর"
+
+msgid "Boat"
+msgstr "নৌকা"
+
+msgid "Van / vehicle"
+msgstr "ভ্যান / গাড়ি"
+
+msgid "Tool / other"
+msgstr "যন্ত্র / অন্যান্য"
+
+msgid "Working"
+msgstr "চালু"
+
+msgid "Out of use"
+msgstr "অচল"
+
+msgid "e.g. Paddle aerator 1, Shallow pump"
+msgstr "যেমন প্যাডেল এয়ারেটর ১, শ্যালো পাম্প"
+
+msgid "Used at"
+msgstr "যেখানে ব্যবহার"
+
+msgid "Condition"
+msgstr "অবস্থা"
+
+msgid "Bought on"
+msgstr "কেনার তারিখ"
+
+msgid "Price paid"
+msgstr "দাম দেওয়া হয়েছে"
+
+msgid "Service every (days)"
+msgstr "কত দিন পরপর সার্ভিস"
+
+msgid "e.g. 90 for an aerator's oil change. Leave empty if it doesn't need servicing."
+msgstr "যেমন এয়ারেটরের তেল বদলাতে ৯০। সার্ভিস না লাগলে খালি রাখুন।"
+
+msgid "Service"
+msgstr "সার্ভিস"
+
+msgid "Repair"
+msgstr "মেরামত"
+
+msgid "New part"
+msgstr "নতুন যন্ত্রাংশ"
+
+msgid "What was done"
+msgstr "কী করা হয়েছে"
+
+msgid "e.g. oil change, new motor winding, net mended"
+msgstr "যেমন তেল বদল, মোটরের নতুন ওয়াইন্ডিং, জাল সেলাই"
+
+msgid "Bought %(date)s"
+msgstr "কেনা %(date)s"
+
+msgid "Next service"
+msgstr "পরের সার্ভিস"
+
+msgid "every %(n)s days"
+msgstr "প্রতি %(n)s দিনে"
+
+msgid "last %(date)s"
+msgstr "শেষ %(date)s"
+
+msgid "no regular service set"
+msgstr "নিয়মিত সার্ভিস ঠিক করা নেই"
+
+msgid "not paid from an account"
+msgstr "কোনো হিসাব থেকে দেওয়া নয়"
+
+msgid "%(counter)s time"
+msgid_plural "%(counter)s times"
+msgstr[0] "%(counter)s বার"
+msgstr[1] "%(counter)s বার"
+
+msgid "Record a service"
+msgstr "সার্ভিস লিখুন"
+
+msgid "Record a repair"
+msgstr "মেরামত লিখুন"
+
+msgid "Service & repair log"
+msgstr "সার্ভিস ও মেরামতের খাতা"
+
+msgid "No services or repairs yet."
+msgstr "এখনো কোনো সার্ভিস বা মেরামত নেই।"
+
+msgid "service was due %(date)s"
+msgstr "সার্ভিসের সময় ছিল %(date)s"
+
+msgid "next service %(date)s"
+msgstr "পরের সার্ভিস %(date)s"
+
+msgid "+ %(u)s upkeep"
+msgstr "+ রক্ষণাবেক্ষণ %(u)s"
+
+msgid "price paid"
+msgstr "দেওয়া দাম"
+
+msgid "Service or repair"
+msgstr "সার্ভিস বা মেরামত"
+
+msgid "It's working again"
+msgstr "আবার চালু হয়েছে"
+
+msgid "Takes it off the “Needs repair” list."
+msgstr "“মেরামত দরকার” তালিকা থেকে সরিয়ে দেয়।"
+
+msgid "Aerators, pumps, generators, nets and boats: what they cost, their repairs, and when each needs a service."
+msgstr "এয়ারেটর, পাম্প, জেনারেটর, জাল ও নৌকা: কত দাম, কী মেরামত হলো, আর কখন সার্ভিস লাগবে।"
+
+msgid "Add equipment"
+msgstr "যন্ত্রপাতি যোগ করুন"
+
+msgid "Needs repair"
+msgstr "মেরামত দরকার"
+
+msgid "Aerators"
+msgstr "এয়ারেটর"
+
+msgid "No equipment yet"
+msgstr "এখনো কোনো যন্ত্রপাতি নেই"
+
+msgid "Add your aerators, pumps and nets. Note each repair, and the app reminds you when a service is due."
+msgstr "আপনার এয়ারেটর, পাম্প ও জাল যোগ করুন। প্রতিটি মেরামত লিখুন, আর সার্ভিসের সময় হলে অ্যাপ মনে করিয়ে দেবে।"
+
+msgid "How equipment works"
+msgstr "যন্ত্রপাতি যেভাবে কাজ করে"
+
+msgid "Each machine keeps its repairs and services. What they cost counts as a farm cost, and comes out of the account you choose."
+msgstr "প্রতিটি যন্ত্রের মেরামত ও সার্ভিস আলাদা লেখা থাকে। এর খরচ খামারের খরচ, আর আপনার বেছে নেওয়া হিসাব থেকে যায়।"
+
+msgid "Set “Service every” (e.g. 90 days for an aerator's oil) and the farm's to-do list tells you when it's due."
+msgstr "“কত দিন পরপর সার্ভিস” দিন (যেমন এয়ারেটরের তেলে ৯০ দিন), সময় হলে খামারের কাজের তালিকা জানাবে।"
+
+msgid "When something breaks, set it to “Needs repair”. It stays on the to-do list until it's fixed."
+msgstr "কিছু নষ্ট হলে “মেরামত দরকার” দিন। ঠিক না হওয়া পর্যন্ত কাজের তালিকায় থাকবে।"
+
+msgid "%(name)s: %(state)s."
+msgstr "%(name)s: %(state)s।"
+
+msgid "Service due · %(name)s"
+msgstr "সার্ভিসের সময় · %(name)s"
+
+msgid "Feed plan"
+msgstr "খাবারের পরিকল্পনা"
+
+msgid "How much each pond should get today, and how long the feed lasts."
+msgstr "আজ কোন পুকুরে কতটা খাবার দেবেন, আর মজুদ কত দিন চলবে।"
+
+msgid "Fish weight × a rate for their size, cut back in cold water or low oxygen."
+msgstr "মাছের ওজন × আকার অনুযায়ী হার; ঠান্ডা পানি বা কম অক্সিজেনে কমানো হয়।"
+
+msgid "Pond lease"
+msgstr "পুকুর লিজ"
+
+msgid "What you pay the owners of leased ponds, and what's still due."
+msgstr "লিজ নেওয়া পুকুরের মালিককে যা দেন, আর কত বাকি।"
+
+msgid "Each cycle carries its share of the lease, by the days it ran."
+msgstr "প্রতিটি চক্র যত দিন চলেছে, লিজের তত অংশ তার খরচে ধরা হয়।"
+
+msgid "Equipment"
+msgstr "যন্ত্রপাতি"
+
+msgid "Aerators, pumps and nets: their price, repairs and services."
+msgstr "এয়ারেটর, পাম্প ও জাল: দাম, মেরামত ও সার্ভিস।"
+
+msgid "A service due or a machine that needs repair shows on today's list."
+msgstr "সার্ভিসের সময় হলে বা যন্ত্র নষ্ট হলে আজকের তালিকায় দেখায়।"
+
+msgid "Fish sold (after market deductions) − fingerlings − feed eaten − lime & medicine − wages, its share of the pond lease and other costs put on that cycle."
+msgstr "বিক্রি করা মাছ (বাজারের কর্তনের পর) − পোনা − খাওয়ানো খাবার − চুন ও ওষুধ − ওই চক্রের মজুরি, পুকুর লিজের অংশ ও অন্যান্য খরচ।"
+
+msgid "Fish sales + other farm income − feed eaten − fingerlings − lime & medicine − staff wages − pond lease − equipment & repairs − farm costs − loan interest."
+msgstr "মাছ বিক্রি + খামারের অন্যান্য আয় − খাওয়ানো খাবার − পোনা − চুন ও ওষুধ − কর্মচারীর মজুরি − পুকুর লিজ − যন্ত্রপাতি ও মেরামত − খামারের খরচ − ঋণের সুদ।"
+
+msgid "%(name)s needs repair"
+msgstr "%(name)s মেরামত দরকার"
+
+msgid "Service %(name)s"
+msgstr "%(name)s সার্ভিস করুন"
+
+msgid "Was due %(date)s"
+msgstr "সময় ছিল %(date)s"
+
+msgid "Low oxygen in the last test: feed half, and run the aerator."
+msgstr "শেষ পরীক্ষায় অক্সিজেন কম: অর্ধেক খাবার দিন, এয়ারেটর চালান।"
+
+msgid "Cold water (%(t)s °C): fish eat little."
+msgstr "ঠান্ডা পানি (%(t)s °সে): মাছ কম খায়।"
+
+msgid "Cool water (%(t)s °C): fish eat less."
+msgstr "শীতল পানি (%(t)s °সে): মাছ কম খায়।"
+
+msgid "Very warm water (%(t)s °C): feed less, in the cool hours."
+msgstr "খুব গরম পানি (%(t)s °সে): কম দিন, ঠান্ডা সময়ে।"
+
+msgid "Warm water (%(t)s °C): feed a little less."
+msgstr "গরম পানি (%(t)s °সে): একটু কম দিন।"
+
+msgid "Today's amounts from the feed plan are filled in, in kg. Change what's different and save."
+msgstr "খাবারের পরিকল্পনা থেকে আজকের পরিমাণ কেজিতে বসানো আছে। যা আলাদা তা বদলে সংরক্ষণ করুন।"
+
+msgid "How much should each pond get?"
+msgstr "কোন পুকুরে কতটা দেবেন?"
+
+msgid "How much to feed each pond today — from the fish in it, their size and the water — and how long your feed will last."
+msgstr "আজ কোন পুকুরে কতটা খাবার দেবেন — মাছ, তাদের আকার আর পানি দেখে — আর মজুদ কত দিন চলবে।"
+
+msgid "Record today's feeding"
+msgstr "আজকের খাওয়ানো লিখুন"
+
+msgid "How the feed plan works"
+msgstr "খাবারের পরিকল্পনা যেভাবে কাজ করে"
+
+msgid "Feed a day = fish weight in the pond × a share of that weight. Small fish eat up to 10% of their weight a day; big fish 1.5–2%."
+msgstr "দিনের খাবার = পুকুরের মাছের ওজন × সেই ওজনের একটি অংশ। ছোট মাছ দিনে ওজনের ১০% পর্যন্ত খায়; বড় মাছ ১.৫–২%।"
+
+msgid "The fish weight comes from your latest sample weighing. Weigh 10–20 fish every 2–3 weeks to keep it right."
+msgstr "মাছের ওজন আসে সর্বশেষ নমুনা ওজন থেকে। ঠিক রাখতে ২–৩ সপ্তাহ পরপর ১০–২০টি মাছ মাপুন।"
+
+msgid "Cold or very warm water and low oxygen cut the amount — fish eat less then, and uneaten feed spoils the water."
+msgstr "ঠান্ডা বা খুব গরম পানি আর কম অক্সিজেনে পরিমাণ কমে — তখন মাছ কম খায়, আর না খাওয়া খাবার পানি নষ্ট করে।"
+
+msgid "It's a guide: if feed is still floating after 15–20 minutes, give less next time."
+msgstr "এটি একটি নির্দেশনা: ১৫–২০ মিনিট পরও খাবার ভাসলে পরের বার কম দিন।"
+
+msgid "All ponds, today"
+msgstr "সব পুকুর, আজ"
+
+msgid "for %(n)s ponds with fish"
+msgstr "মাছসহ %(n)sটি পুকুরের জন্য"
+
+msgid "Feed stock lasts"
+msgstr "মজুদ চলবে"
+
+msgid "Feed in stock ÷ what you've used a day over the last 14 days."
+msgstr "মজুদ খাবার ÷ গত ১৪ দিনে দিনপ্রতি ব্যবহার।"
+
+msgid "at the rate you've been feeding"
+msgstr "যে হারে খাওয়াচ্ছেন"
+
+msgid "At the plan's rate"
+msgstr "পরিকল্পনার হারে"
+
+msgid "Feed in stock ÷ the plan's total for a day."
+msgstr "মজুদ খাবার ÷ পরিকল্পনার দিনের মোট।"
+
+msgid "if you feed exactly the plan"
+msgstr "ঠিক পরিকল্পনা মতো খাওয়ালে"
+
+msgid "≈ %(kg)s kg of fish"
+msgstr "≈ %(kg)s কেজি মাছ"
+
+msgid "No fish weight yet"
+msgstr "এখনো মাছের ওজন নেই"
+
+#, python-format
+msgid "%(n)s%% more than plan"
+msgstr "পরিকল্পনার চেয়ে %(n)s%% বেশি"
+
+#, python-format
+msgid "%(n)s%% less than plan"
+msgstr "পরিকল্পনার চেয়ে %(n)s%% কম"
+
+msgid "On plan"
+msgstr "পরিকল্পনা মতো"
+
+msgid "Feed today"
+msgstr "আজ দিন"
+
+msgid "Each of 2 meals"
+msgstr "২ বেলার প্রতিবার"
+
+msgid "You've given"
+msgstr "আপনি দিয়েছেন"
+
+msgid "kg/day"
+msgstr "কেজি/দিন"
+
+msgid "Fingerling weight — not weighed yet"
+msgstr "পোনার ওজন — এখনো মাপা হয়নি"
+
+msgid "Last weighed %(date)s — weigh a sample so the plan follows the fish's growth."
+msgstr "শেষ মাপা %(date)s — নমুনা মাপুন, যাতে পরিকল্পনা মাছের বৃদ্ধি অনুসরণ করে।"
+
+msgid "* Not weighed yet: the plan uses the fingerlings' weight. Weigh a sample for a true figure."
+msgstr "* এখনো মাপা হয়নি: পরিকল্পনা পোনার ওজন ধরে। সঠিক হিসাবের জন্য নমুনা মাপুন।"
+
+msgid "Weigh now"
+msgstr "এখন মাপুন"
+
+msgid "No fish weight to plan from. Add the fingerlings with their weight, or weigh a sample."
+msgstr "পরিকল্পনার জন্য মাছের ওজন নেই। ওজনসহ পোনা যোগ করুন, বা নমুনা মাপুন।"
+
+msgid "No pond has fish in it"
+msgstr "কোনো পুকুরে মাছ নেই"
+
+msgid "Start a cycle and add the fingerlings you released. The plan then shows how much to feed every day."
+msgstr "একটি চক্র শুরু করে ছাড়া পোনা যোগ করুন। তারপর পরিকল্পনা প্রতিদিন কতটা খাওয়াবেন দেখাবে।"
+
+msgid "Go to ponds"
+msgstr "পুকুরে যান"
+
+msgid "How long each feed lasts"
+msgstr "কোন খাবার কত দিন চলবে"
+
+msgid "At what you've used a day over the last 14 days."
+msgstr "গত ১৪ দিনের দিনপ্রতি ব্যবহারে।"
+
+msgid "%(left)s kg left"
+msgstr "%(left)s কেজি বাকি"
+
+msgid "%(d)s kg a day"
+msgstr "দিনে %(d)s কেজি"
+
+msgid "until about %(date)s"
+msgstr "প্রায় %(date)s পর্যন্ত"
+
+msgid "not used lately"
+msgstr "ইদানীং ব্যবহার হয়নি"
+
+msgid "Feeding rates used"
+msgstr "যে হারে হিসাব"
+
+#, python-format
+msgid "Feed a day (%% of fish weight)"
+msgstr "দিনের খাবার (মাছের ওজনের %%)"
+
+msgid "up to %(g)s g"
+msgstr "%(g)s গ্রাম পর্যন্ত"
+
+msgid "bigger"
+msgstr "এর চেয়ে বড়"
+
+msgid "Equipment bought"
+msgstr "যন্ত্রপাতি কেনা"
+
+msgid "Repairs & servicing"
+msgstr "মেরামত ও সার্ভিসিং"
+
+msgid "not fully paid yet"
+msgstr "এখনো পুরো পরিশোধ হয়নি"
+
+msgid "Lease"
+msgstr "লিজ"
+
+msgid "What you pay the owner for this pond. Each cycle's cost includes its share of the lease, by the days it ran."
+msgstr "এই পুকুরের জন্য মালিককে যা দেন। প্রতিটি চক্রের খরচে, যত দিন চলেছে সেই অনুপাতে লিজের অংশ ধরা হয়।"
+
+msgid "Dates not set"
+msgstr "তারিখ দেওয়া নেই"
+
+msgid "Still to pay"
+msgstr "এখনো দিতে হবে"
+
+#, python-format
+msgid "%(n)s%% paid"
+msgstr "%(n)s%% পরিশোধিত"
+
+msgid "By today the pond has used %(used)s of the lease — %(behind)s more than you've paid."
+msgstr "আজ পর্যন্ত পুকুরটি লিজের %(used)s ব্যবহার করেছে — আপনার পরিশোধের চেয়ে %(behind)s বেশি।"
+
+msgid "Add the lease amount and dates on the pond (Edit pond) to see what's left to pay."
+msgstr "কত বাকি দেখতে পুকুরে (পুকুর সম্পাদনা) লিজের টাকা ও তারিখ দিন।"
+
+msgid "Delete this payment?"
+msgstr "এই পরিশোধ মুছবেন?"
+
+msgid "Lease payment saved. Still to pay: %(due)s."
+msgstr "লিজের টাকা সংরক্ষিত। এখনো দিতে হবে: %(due)s।"
+
+msgid "Lease payment saved. The lease is fully paid."
+msgstr "লিজের টাকা সংরক্ষিত। লিজ পুরো পরিশোধিত।"
+
+msgid "Edit lease payment"
+msgstr "লিজ পরিশোধ সম্পাদনা"
+
+msgid "Pay lease"
+msgstr "লিজের টাকা দিন"
+
+msgid "lease %(l)s"
+msgstr "লিজ %(l)s"
+
+msgid "Feed a day = fish weight in the pond × a share of that weight. Small fish eat up to 10 kg a day for every 100 kg of fish; big fish 1.5–2 kg."
+msgstr "দিনের খাবার = পুকুরের মাছের ওজন × সেই ওজনের একটি অংশ। ছোট মাছ প্রতি ১০০ কেজিতে দিনে ১০ কেজি পর্যন্ত খায়; বড় মাছ ১.৫–২ কেজি।"
+
+msgid "Out of stock"
+msgstr "মজুদ শেষ"
+
+msgid "More feed used than bought. Record your feed purchases."
+msgstr "কেনার চেয়ে বেশি খাবার ব্যবহার হয়েছে। খাবার কেনা লিখে রাখুন।"
+
+msgid "buy before the next feed"
+msgstr "পরের খাওয়ানোর আগে কিনুন"
+
+msgid "Feed a day, per 100 kg of fish"
+msgstr "দিনের খাবার, প্রতি ১০০ কেজি মাছে"

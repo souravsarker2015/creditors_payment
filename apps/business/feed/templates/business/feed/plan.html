@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% translate "Feed plan" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "Feed plan" %}</h1>
+      <p class="page-subtitle">{% translate "How much to feed each pond today — from the fish in it, their size and the water — and how long your feed will last." %}</p>
+    </div>
+    {% if rows and biz_can.enter_data %}<div class="page-actions"><a href="{% url 'business:feed_usage_bulk' %}?plan=1" class="btn btn-primary">{% include "partials/icon.html" with name="check" %}{% translate "Record today's feeding" %}</a></div>{% endif %}
+  </header>
+  {% include "business/feed/feed_tabs.html" %}
+
+  {% include "business/partials/note.html" with key="feedplan" title=_("How the feed plan works") p1=_("Feed a day = fish weight in the pond × a share of that weight. Small fish eat up to 10 kg a day for every 100 kg of fish; big fish 1.5–2 kg.") p2=_("The fish weight comes from your latest sample weighing. Weigh 10–20 fish every 2–3 weeks to keep it right.") p3=_("Cold or very warm water and low oxygen cut the amount — fish eat less then, and uneaten feed spoils the water.") p4=_("It's a guide: if feed is still floating after 15–20 minutes, give less next time.") %}
+
+  {% if rows %}
+  <dl class="stat-grid stat-grid-3">
+    <div class="stat" data-tone="accent">
+      <dt class="stat-label">{% translate "All ponds, today" %}</dt>
+      <dd class="stat-value">{{ total_day|num }} kg</dd>
+      <dd class="stat-hint">{% blocktranslate with n=rows|length %}for {{ n }} ponds with fish{% endblocktranslate %}</dd>
+    </div>
+    <div class="stat" data-tone="{% if out_of_stock or stock_days is not None and stock_days < 7 %}critical{% elif stock_days is not None and stock_days < 15 %}warn{% else %}good{% endif %}">
+      <dt class="stat-label inline-flex items-center">{% translate "Feed stock lasts" %}{% include "business/partials/tip.html" with text=_("Feed in stock ÷ what you've used a day over the last 14 days.") %}</dt>
+      {% if out_of_stock %}
+      <dd class="stat-value tone-critical">{% translate "Out of stock" %}</dd>
+      <dd class="stat-hint">{% translate "More feed used than bought. Record your feed purchases." %}</dd>
+      {% else %}
+      <dd class="stat-value">{% if stock_days is not None %}{% blocktranslate count counter=stock_days %}{{ counter }} day{% plural %}{{ counter }} days{% endblocktranslate %}{% else %}—{% endif %}</dd>
+      <dd class="stat-hint">{% translate "at the rate you've been feeding" %}</dd>
+      {% endif %}
+    </div>
+    <div class="stat" data-tone="info">
+      <dt class="stat-label inline-flex items-center">{% translate "At the plan's rate" %}{% include "business/partials/tip.html" with text=_("Feed in stock ÷ the plan's total for a day.") %}</dt>
+      <dd class="stat-value">{% if out_of_stock %}—{% elif plan_days is not None %}{% blocktranslate count counter=plan_days %}{{ counter }} day{% plural %}{{ counter }} days{% endblocktranslate %}{% else %}—{% endif %}</dd>
+      <dd class="stat-hint">{% translate "if you feed exactly the plan" %}</dd>
+    </div>
+  </dl>
+
+  <div class="card-grid card-grid-2">
+    {% for p in rows %}
+    <article class="card plan-card">
+      <div class="card-header">
+        <div class="min-w-0">
+          <h2 class="card-title truncate"><a href="{% url 'business:cycle_detail' p.cycle.pk %}?tab=feeding">{{ p.cycle.pond }}</a></h2>
+          <p class="card-subtitle">{% if p.fish_kg %}{% blocktranslate with kg=p.fish_kg|num %}≈ {{ kg }} kg of fish{% endblocktranslate %}{% else %}{% translate "No fish weight yet" %}{% endif %}</p>
+        </div>
+        {% if p.verdict == "over" %}<span class="badge" data-tone="warn">{% blocktranslate with n=p.gap_pct %}{{ n }}% more than plan{% endblocktranslate %}</span>
+        {% elif p.verdict == "under" %}<span class="badge" data-tone="info">{% blocktranslate with n=p.gap_pct|absolute %}{{ n }}% less than plan{% endblocktranslate %}</span>
+        {% elif p.verdict == "ok" %}<span class="badge" data-tone="good">{% translate "On plan" %}</span>{% endif %}
+      </div>
+      <div class="card-body stack">
+        {% if p.fish %}
+        <div class="plan-today">
+          <div><p class="plan-label">{% translate "Feed today" %}</p><p class="plan-value">{{ p.per_day|num }} <small>kg</small></p></div>
+          <div><p class="plan-label">{% translate "Each of 2 meals" %}</p><p class="plan-value is-sub">{{ p.per_meal|num }} <small>kg</small></p></div>
+          <div><p class="plan-label">{% translate "You've given" %}</p><p class="plan-value is-sub">{% if p.fed_per_day is not None %}{{ p.fed_per_day|num }} <small>{% translate "kg/day" %}</small>{% else %}—{% endif %}</p></div>
+        </div>
+        {% if p.reason %}<div class="callout" data-tone="warn">{% include "business/partials/icon.html" with name="beaker" %}<p>{{ p.reason }}</p></div>{% endif %}
+        <table class="plan-table">
+          <thead><tr><th>{% translate "Fish" %}</th><th>{% translate "Size" %}</th><th>{% translate "Weight" %}</th><th>{% translate "Rate" %}</th></tr></thead>
+          <tbody>
+          {% for f in p.fish %}
+            <tr>
+              <th scope="row"><span class="species-dot species-dot-sm" style="--c: {{ f.species.color }}"></span>{{ f.species }}</th>
+              <td>{{ f.grams|num }} g{% if not f.from_weighing %}<span class="plan-flag" data-tip="{% translate 'Fingerling weight — not weighed yet' %}">*</span>{% endif %}</td>
+              <td>{{ f.kg|num }} kg</td>
+              <td>{{ f.rate|num }}%</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% if p.stale %}<p class="help">{% if p.weighed_on %}{% blocktranslate with date=p.weighed_on|date:"j M" %}Last weighed {{ date }} — weigh a sample so the plan follows the fish's growth.{% endblocktranslate %}{% else %}{% translate "* Not weighed yet: the plan uses the fingerlings' weight. Weigh a sample for a true figure." %}{% endif %}{% if biz_can.enter_data %} <a href="{% url 'business:cycle_detail' p.cycle.pk %}?add=weighing" class="font-semibold underline">{% translate "Weigh now" %}</a>{% endif %}</p>{% endif %}
+        {% else %}
+        <p class="help">{% translate "No fish weight to plan from. Add the fingerlings with their weight, or weigh a sample." %} <a href="{% url 'business:cycle_detail' p.cycle.pk %}?add=weighing" class="font-semibold underline">{% translate "Weigh a sample" %}</a></p>
+        {% endif %}
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty">
+    <div class="empty-icon">{% include "business/partials/icon.html" with name="fish" %}</div>
+    <h3 class="empty-title">{% translate "No pond has fish in it" %}</h3>
+    <p class="empty-text">{% translate "Start a cycle and add the fingerlings you released. The plan then shows how much to feed every day." %}</p>
+    <a href="{% url 'business:ponds' %}" class="btn btn-primary">{% translate "Go to ponds" %}</a>
+  </div>
+  {% endif %}
+
+  {% if stock %}
+  <section class="card">
+    <div class="card-header"><div><h2 class="card-title">{% translate "How long each feed lasts" %}</h2><p class="card-subtitle">{% translate "At what you've used a day over the last 14 days." %}</p></div></div>
+    <ul class="ledger">
+      {% for s in stock %}
+      <li class="ledger-row">
+        <span class="ledger-icon" data-tone="{% if s.days is not None and s.days < 7 %}critical{% elif s.days is not None and s.days < 15 %}warn{% else %}good{% endif %}">{% include "business/partials/icon.html" with name="banknotes" %}</span>
+        <div class="ledger-main">
+          <p class="ledger-title">{{ s.product }}</p>
+          <p class="ledger-meta">{% blocktranslate with left=s.left_kg|num %}{{ left }} kg left{% endblocktranslate %}{% if s.per_day %} · {% blocktranslate with d=s.per_day|num %}{{ d }} kg a day{% endblocktranslate %}{% endif %}</p>
+        </div>
+        <div class="ledger-end">
+          <span class="party-bal">{% if s.left_kg <= 0 %}<strong class="tone-critical">{% translate "Out of stock" %}</strong><span>{% translate "buy before the next feed" %}</span>{% elif s.days is not None %}<strong>{% blocktranslate count counter=s.days %}{{ counter }} day{% plural %}{{ counter }} days{% endblocktranslate %}</strong><span>{% blocktranslate with date=s.runs_out|date:"j M" %}until about {{ date }}{% endblocktranslate %}</span>{% else %}<strong>—</strong><span>{% translate "not used lately" %}</span>{% endif %}</span>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    <div class="card-footer"><a href="{% url 'business:feed_purchases_add' %}" class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="plus" %}{% translate "Buy feed" %}</a></div>
+  </section>
+  {% endif %}
+
+  <details class="card plan-rates">
+    <summary class="card-header"><h2 class="card-title">{% translate "Feeding rates used" %}</h2>{% include "partials/icon.html" with name="chevron-down" %}</summary>
+    <div class="card-body">
+      <table class="plan-table">
+        <thead><tr><th>{% translate "Fish size" %}</th><th>{% translate "Feed a day, per 100 kg of fish" %}</th></tr></thead>
+        <tbody>{% for limit, pct in rates %}<tr><td>{% if limit %}{% blocktranslate with g=limit %}up to {{ g }} g{% endblocktranslate %}{% else %}{% translate "bigger" %}{% endif %}</td><td>{{ pct|num }} kg</td></tr>{% endfor %}</tbody>
+      </table>
+    </div>
+  </details>
+</div>
+{% endblock %}

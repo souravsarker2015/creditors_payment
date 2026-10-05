@@ -72,6 +72,9 @@ STAGES = [
               Step("feeding", _("Feed the ponds"), _("What each pond ate today — several ponds in one go."),
                    "feed_usage_bulk", "enter_data", ("stock", "cost", "fcr"), "banknotes",
                    _("Feed becomes a cost when it's eaten, not when it's bought.")),
+              Step("feedplan", _("Feed plan"), _("How much each pond should get today, and how long the feed lasts."),
+                   "feed_plan", "", ("feeding",), "banknotes",
+                   _("Fish weight × a rate for their size, cut back in cold water or low oxygen.")),
               Step("water", _("Test the water"), _("Oxygen, pH, ammonia… against your own alert levels."),
                    "", "enter_data", ("alerts",), "beaker",
                    _("A reading outside your levels warns you on the cycle page and the home page.")),
@@ -105,6 +108,12 @@ STAGES = [
               Step("staff", _("Staff & wages"), _("A work sheet for daily workers, a salary sheet for monthly staff, and what you've paid."),
                    "staff", "view_finance", ("cost", "profit"), "users",
                    _("Wages are a cost when they're earned; an advance is simply taken off later pay.")),
+              Step("lease", _("Pond lease"), _("What you pay the owners of leased ponds, and what's still due."),
+                   "ponds", "view_finance", ("cost", "profit"), "calendar",
+                   _("Each cycle carries its share of the lease, by the days it ran.")),
+              Step("equipment", _("Equipment"), _("Aerators, pumps and nets: their price, repairs and services."),
+                   "equipment", "", ("profit", "alerts", "calendar"), "cog",
+                   _("A service due or a machine that needs repair shows on today's list.")),
               Step("loans", _("Loans"), _("Instalments, interest and what's still owed."),
                    "loans", "view_finance", ("profit", "calendar"), "banknotes",
                    _("Only interest and charges are a cost; repaying the loan itself is not.")),
@@ -132,15 +141,15 @@ STAGES = [
 
 # "Where does this number come from?" — the questions farmers actually ask.
 ANSWERS = [
-    (_("Profit of a cycle"), _("Fish sold (after market deductions) − fingerlings − feed eaten − lime & medicine − wages and other costs put on that cycle."),
-     ("sale", "stocking", "feeding", "care", "staff", "money")),
+    (_("Profit of a cycle"), _("Fish sold (after market deductions) − fingerlings − feed eaten − lime & medicine − wages, its share of the pond lease and other costs put on that cycle."),
+     ("sale", "stocking", "feeding", "care", "staff", "lease", "money")),
     (_("Fish in the pond"), _("Fingerlings released − deaths recorded − fish harvested by count."), ("stocking", "growth", "harvest")),
     (_("Weight in the pond"), _("Fish in the pond × their latest sample weight."), ("growth",)),
     (_("FCR"), _("Feed eaten ÷ weight the fish gained (harvest − fingerling weight). Lower is better."), ("feeding", "growth", "harvest")),
     (_("Feed cost of a pond"), _("Feed eaten there × the average price per kg you paid for that feed."), ("feed_buy", "feeding")),
     (_("Baki of a person"), _("Their unpaid bills (sales, feed, fingerlings) − what they've paid, oldest first."), ("sale", "feed_buy", "baki")),
     (_("Money in an account"), _("Opening balance + everything in − everything out of that account."), ("sale", "baki", "money")),
-    (_("Farm profit"), _("Fish sales + other farm income − feed eaten − fingerlings − lime & medicine − staff wages − farm costs − loan interest."), ("sale", "feeding", "care", "staff", "money", "loans")),
+    (_("Farm profit"), _("Fish sales + other farm income − feed eaten − fingerlings − lime & medicine − staff wages − pond lease − equipment & repairs − farm costs − loan interest."), ("sale", "feeding", "care", "staff", "lease", "equipment", "money", "loans")),
     (_("What a worker is owed"), _("Their opening balance + days worked, salaries and bonuses − deductions − what you've paid them. Below zero means they hold an advance."), ("staff",)),
 ]
 

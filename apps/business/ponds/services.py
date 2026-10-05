@@ -46,6 +46,7 @@ class CycleSummary:
     other_cost: Decimal = ZERO      # labour and other costs typed in against this pond
     care_cost: Decimal = ZERO       # lime, fertilizer, medicine put into the pond
     wage_cost: Decimal = ZERO       # staff wages written against this pond
+    lease_cost: Decimal = ZERO      # this cycle's share of a leased pond's rent, by days
     stocking_cost: Decimal = ZERO
     sales_net: Decimal = ZERO
     sales_gross: Decimal = ZERO
@@ -73,7 +74,7 @@ class CycleSummary:
     def cost(self):
         """Everything this season has cost: fingerlings, feed eaten, lime and
         medicine, and any labour or other expense recorded against this pond."""
-        return self.stocking_cost + self.feed_cost + self.care_cost + self.wage_cost + self.other_cost
+        return self.stocking_cost + self.feed_cost + self.care_cost + self.wage_cost + self.lease_cost + self.other_cost
 
     @property
     def profit(self):
@@ -130,6 +131,7 @@ def summarize(cycle, prices=None, cache=None):
         s.feed_cost += f.kg * prices.get(f.product_id, ZERO)
     s.feed_cost = s.feed_cost.quantize(Decimal("0.01"))
     s.care_cost = sum((t.cost for t in _rows(cycle, "treatments")), ZERO)
+    s.lease_cost = cycle.pond.lease_share(cycle.start_date, cycle.ended_on or date.today())
     if apps.is_installed("apps.business.staff"):
         from apps.business.staff.services import cycle_wages
 
@@ -147,6 +149,36 @@ def summarize(cycle, prices=None, cache=None):
         s.sales_net, s.sales_gross = sales["net"] or ZERO, sales["gross"] or ZERO
     s.species = sorted(rows.values(), key=lambda r: r.species.order)
     return s
+
+
+@dataclass
+class LeaseStatus:
+    pond: object
+    total: Decimal
+    paid: Decimal
+    payments: list
+    used_share: Decimal         # the part of the lease used up by today, by days
+
+    @property
+    def due(self):
+        return max(self.total - self.paid, ZERO)
+
+    @property
+    def paid_pct(self):
+        return min(int(self.paid * 100 / self.total), 100) if self.total else 0
+
+    @property
+    def behind(self):
+        """Paid less than the share of the lease already used: worth settling."""
+        return max(self.used_share - self.paid, ZERO)
+
+
+def lease_status(pond, today=None):
+    today = today or date.today()
+    payments = list(pond.lease_payments.select_related("account"))
+    paid = sum((p.amount for p in payments), ZERO)
+    used = pond.lease_share(pond.lease_start, min(today, pond.lease_end)) if pond.lease_per_day else ZERO
+    return LeaseStatus(pond, pond.lease_amount or ZERO, paid, payments, used)
 
 
 def withdrawal(cycle, today=None):
@@ -305,9 +337,12 @@ def farm_tasks(business, today=None):
 
     for pond in Pond.objects.filter(business=business, lease_end__isnull=False,
                                     lease_end__gte=today, lease_end__lte=today + timedelta(days=LEASE_SOON_DAYS)):
-        tasks.append(Task("lease", "warn", _("Lease of %(pond)s ends soon") % {"pond": pond.name},
-                          _("Ends on %(date)s") % {"date": date_format(pond.lease_end, "j M Y")},
-                          reverse("business:pond_detail", args=[pond.pk]), _("Open")))
+        due = lease_status(pond, today).due
+        detail = _("Ends on %(date)s") % {"date": date_format(pond.lease_end, "j M Y")}
+        if due:   # no amount here: everyone on the farm sees today's tasks
+            detail += " · " + _("not fully paid yet")
+        tasks.append(Task("lease", "critical" if due else "warn", _("Lease of %(pond)s ends soon") % {"pond": pond.name},
+                          detail, reverse("business:pond_detail", args=[pond.pk]), _("Open")))
 
     order = {"critical": 0, "warn": 1, "info": 2}
     tasks.sort(key=lambda t: order[t.tone])

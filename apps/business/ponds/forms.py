@@ -9,7 +9,7 @@ from apps.business.core.crud import BusinessForm, money_field
 from apps.business.core.models import Unit
 from apps.business.species.models import Species
 
-from .models import CultureCycle, Harvest, Mortality, Ownership, Pond, PondAlerts, SampleWeighing, Stocking, TimeOfDay, Treatment, TreatmentKind, WaterTest
+from .models import CultureCycle, Harvest, LeasePayment, Mortality, Ownership, Pond, PondAlerts, SampleWeighing, Stocking, TimeOfDay, Treatment, TreatmentKind, WaterTest
 
 MAX_PHOTO_MB = 5
 
@@ -353,3 +353,32 @@ class PondQuickForm(BusinessForm):
         self.instance.area_unit = Unit.objects.filter(business=self.business, symbol="dec").first()
         self.instance.status = PondStatus.EMPTY     # no fish until a cycle is started
         return super().save(commit)
+
+
+class LeasePaymentForm(BusinessForm):
+    unique_name = ()
+    layout = [("date", "amount"), ("account", "reference"), ("notes",)]
+
+    class Meta:
+        model = LeasePayment
+        fields = ["date", "amount", "account", "reference", "notes"]
+        widgets = {"date": forms.DateInput()}
+
+    def __init__(self, *args, due=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        from apps.business.finance.models import Account
+
+        money_field(self.fields["amount"])
+        self.fields["account"].queryset = Account.objects.filter(business=self.business)
+        self.fields["account"].empty_label = None
+        if not self.instance.pk:
+            self.initial.setdefault("date", date.today())
+            self.initial.setdefault("account", Account.objects.filter(business=self.business, is_default=True).first())
+            if due and due > 0:
+                self.initial.setdefault("amount", format(due.normalize(), "f"))
+
+    def clean_date(self):
+        d = self.cleaned_data["date"]
+        if d > date.today():
+            raise forms.ValidationError(_("This date is in the future."))
+        return d

@@ -58,6 +58,26 @@ class Pond(BusinessBaseModel):
         return self.ownership == Ownership.LEASED
 
     @property
+    def lease_days(self):
+        if self.is_leased and self.lease_start and self.lease_end and self.lease_end > self.lease_start:
+            return (self.lease_end - self.lease_start).days + 1
+        return None
+
+    @property
+    def lease_per_day(self):
+        """The lease spread evenly over its days (for a cycle's share of it)."""
+        days = self.lease_days
+        return (self.lease_amount / days) if (days and self.lease_amount) else None
+
+    def lease_share(self, start, end):
+        """The part of the lease that falls between two dates (whole taka)."""
+        per_day = self.lease_per_day
+        if per_day is None:
+            return Decimal(0)
+        a, b = max(start, self.lease_start), min(end, self.lease_end)
+        return (per_day * ((b - a).days + 1)).quantize(Decimal("1")) if b >= a else Decimal(0)
+
+    @property
     def lease_months(self):
         if not (self.lease_start and self.lease_end):
             return None
@@ -253,6 +273,23 @@ class WaterTest(BusinessBaseModel):
         from .water import check
 
         return check(self, limits)
+
+
+class LeasePayment(BusinessBaseModel):
+    """Money paid to the owner of a leased pond. Out of an account; brings the
+    lease's unpaid balance down."""
+
+    pond = models.ForeignKey(Pond, on_delete=models.CASCADE, related_name="lease_payments")
+    date = models.DateField(_("Date"))
+    amount = models.DecimalField(_("Amount"), validators=[MinValueValidator(Decimal("0.01"))], **MONEY)
+    account = models.ForeignKey("business_finance.Account", on_delete=models.PROTECT, related_name="+", verbose_name=_("Paid from"))
+    reference = models.CharField(_("Receipt / reference"), max_length=60, blank=True)
+
+    class Meta:
+        ordering = ["-date", "-id"]
+
+    def __str__(self):
+        return f"{self.pond} · {self.amount} · {self.date:%d %b %Y}"
 
 
 class TreatmentKind(models.TextChoices):

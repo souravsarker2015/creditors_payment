@@ -155,6 +155,14 @@ def pond_items(business, start, end):
         if start <= t.safe_from <= end:
             items.append(Item(t.safe_from, "pond", _("Fish can be sold again · %(pond)s") % {"pond": t.cycle.pond.name},
                               _("Waiting period of %(product)s is over") % {"product": t.product}, cycle_url(t.cycle_id, "water"), "good", "dropper"))
+    if apps.is_installed("apps.business.assets"):
+        from apps.business.assets.models import Equipment
+        from apps.business.assets.services import with_service_dates
+
+        for e in with_service_dates(list(Equipment.objects.filter(business=business, service_every_days__isnull=False))):
+            if e.next_due and start <= e.next_due <= end:
+                items.append(Item(e.next_due, "pond", _("Service due · %(name)s") % {"name": e.name}, str(e.pond or ""),
+                                  reverse("business:equipment_detail", args=[e.pk]), "warn", "cog"))
     cycles = CultureCycle.objects.filter(business=business).select_related("pond")
     for c in cycles.filter(start_date__gte=start, start_date__lte=end):
         items.append(Item(c.start_date, "pond", _("Cycle started · %(pond)s") % {"pond": c.pond.name}, c.label,

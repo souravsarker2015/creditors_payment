@@ -52,6 +52,46 @@
   </section>
   {% endif %}
 
+  {% if lease and biz_can.view_finance %}
+  <section class="card">
+    <div class="card-header">
+      <div><h2 class="card-title">{% translate "Lease" %}{% include "business/partials/tip.html" with text=_("What you pay the owner for this pond. Each cycle's cost includes its share of the lease, by the days it ran.") %}</h2>
+      <p class="card-subtitle">{% if pond.lease_from %}{{ pond.lease_from }} · {% endif %}{% if pond.lease_start and pond.lease_end %}{{ pond.lease_start|date:"j M Y" }} – {{ pond.lease_end|date:"j M Y" }}{% else %}{% translate "Dates not set" %}{% endif %}</p></div>
+      <a href="{% url 'business:lease_pay' pond.pk %}" class="btn btn-primary btn-sm">{% include "partials/icon.html" with name="wallet" %}{% translate "Pay lease" %}</a>
+    </div>
+    <div class="card-body stack">
+      {% if lease.total %}
+      <dl class="lease-figures">
+        <div><dt>{% translate "Lease" %}</dt><dd>{{ lease.total|bdt }}</dd></div>
+        <div><dt>{% translate "Paid" %}</dt><dd class="tone-good">{{ lease.paid|bdt }}</dd></div>
+        <div><dt>{% translate "Still to pay" %}</dt><dd {% if lease.due %}class="tone-critical"{% endif %}>{{ lease.due|bdt }}</dd></div>
+      </dl>
+      <div class="meter" role="img" aria-label="{% blocktranslate with n=lease.paid_pct %}{{ n }}% paid{% endblocktranslate %}"><span style="width: {{ lease.paid_pct }}%"></span></div>
+      {% if lease.behind %}<p class="help">{% blocktranslate with used=lease.used_share|bdt behind=lease.behind|bdt %}By today the pond has used {{ used }} of the lease — {{ behind }} more than you've paid.{% endblocktranslate %}</p>{% endif %}
+      {% else %}
+      <p class="help">{% translate "Add the lease amount and dates on the pond (Edit pond) to see what's left to pay." %}</p>
+      {% endif %}
+    </div>
+    {% if lease.payments %}
+    <ul class="ledger">
+      {% for lp in lease.payments %}
+      <li class="ledger-row">
+        <span class="ledger-icon" data-tone="good">{% include "partials/icon.html" with name="wallet" %}</span>
+        <div class="ledger-main">
+          <p class="ledger-title">{{ lp.amount|bdt }}</p>
+          <p class="ledger-meta">{{ lp.date|date:"j M Y" }} · {{ lp.account }}{% if lp.reference %} · {{ lp.reference }}{% endif %}</p>
+        </div>
+        <div class="ledger-end">
+          {% url 'business:lease_payment_edit' pond.pk lp.pk as edit_url %}{% url 'business:lease_payment_delete' lp.pk as delete_url %}{% translate "Delete this payment?" as confirm_text %}
+          {% if biz_can.delete %}{% include "partials/row_menu.html" with edit_url=edit_url delete_url=delete_url confirm=confirm_text up=forloop.last %}{% else %}<a href="{{ edit_url }}" class="icon-btn" aria-label="{% translate 'Edit' %}">{% include "partials/icon.html" with name="edit" %}</a>{% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </section>
+  {% endif %}
+
   <section class="card">
     <div class="card-header"><div><h2 class="card-title">{% translate "Past cycles" %}</h2><p class="card-subtitle">{% translate "How each cycle in this pond turned out." %}</p></div></div>
     {% if past_summaries %}
