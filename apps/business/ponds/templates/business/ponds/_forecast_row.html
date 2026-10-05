@@ -1,0 +1,31 @@
+{% load i18n business %}{% comment %}One fish's growth forecast. Needs `f` (ponds.forecast.Forecast).{% endcomment %}
+<li class="fc-row">
+  <div class="fc-head">
+    <span class="species-dot species-dot-sm" style="--c: {{ f.species.color }}"></span>
+    <span class="fc-name">{{ f.species }}</span>
+    {% if f.status == "ready" %}<span class="badge" data-tone="good">{% translate "Ready to sell" %}</span>
+    {% elif f.status == "growing" %}{% now "Y" as this_year %}<span class="badge" data-tone="{% if f.far %}warn{% else %}info{% endif %}">{% if f.ready_on|date:"Y" == this_year %}{% blocktranslate with date=f.ready_on|date:"j M" %}≈ {{ date }}{% endblocktranslate %}{% else %}{% blocktranslate with date=f.ready_on|date:"M Y" %}≈ {{ date }}{% endblocktranslate %}{% endif %}</span>
+    {% elif f.status == "slow" %}<span class="badge" data-tone="critical">{% translate "Not growing" %}</span>
+    {% elif f.status == "no_size" %}<span class="badge" data-tone="muted">{% translate "No selling size" %}</span>
+    {% else %}<span class="badge" data-tone="muted">{% if f.status == "one_weighing" %}{% translate "Weigh again" %}{% else %}{% translate "Not weighed yet" %}{% endif %}</span>{% endif %}
+  </div>
+  {% if f.target_g and f.now_g %}
+  <div class="meter" role="img" aria-label="{% blocktranslate with n=f.progress %}{{ n }}% of selling size{% endblocktranslate %}"><span style="width: {{ f.progress }}%; --tone: {% if f.status == 'ready' %}var(--status-good){% elif f.status == 'slow' %}var(--status-critical){% else %}var(--accent){% endif %}"></span></div>
+  {% endif %}
+  <p class="fc-meta">
+    {% if f.now_g %}{% if f.target_g %}{% blocktranslate with now=f.now_g|num target=f.target_g|num %}≈ {{ now }} g each now, selling size {{ target }} g{% endblocktranslate %}{% else %}{% blocktranslate with now=f.now_g|num %}≈ {{ now }} g each now{% endblocktranslate %}{% endif %}{% endif %}
+    {% if f.growth is not None and f.status != "slow" %} · {% blocktranslate with g=f.growth|num %}growing {{ g }} g a day{% endblocktranslate %}{% endif %}
+    {% if f.status == "growing" %} · <strong>{% blocktranslate count counter=f.days_left %}{{ counter }} day to go{% plural %}{{ counter }} days to go{% endblocktranslate %}</strong>{% endif %}
+    {% if f.alive %} · {% blocktranslate with n=f.alive|num %}{{ n }} fish{% endblocktranslate %}{% endif %}
+  </p>
+  {% if biz_can.view_finance and f.kg_at_ready and f.status == "ready" or biz_can.view_finance and f.kg_at_ready and f.status == "growing" %}
+  <p class="fc-money">{% if f.value %}{% blocktranslate with kg=f.kg_at_ready|num value=f.value|bdt %}≈ {{ kg }} kg of fish, worth about {{ value }} at recent prices{% endblocktranslate %}{% else %}{% blocktranslate with kg=f.kg_at_ready|num %}≈ {{ kg }} kg of fish{% endblocktranslate %} · <span class="fc-hint">{% translate "no recent price to value it" %}</span>{% endif %}</p>
+  {% endif %}
+  {% if f.far %}<p class="fc-hint tone-warn">{% translate "At this rate they'd take over a year. They're growing slowly: check the feed, the water and how many fish are in the pond." %}</p>
+  {% elif f.status == "slow" %}<p class="fc-hint tone-critical">{% translate "The last weighings show little or no growth. Check the feed, the water and the fish for disease." %}</p>
+  {% elif f.status == "one_weighing" %}<p class="fc-hint">{% translate "Weigh again a week or more after the last one to see how fast they grow." %}</p>
+  {% elif f.status == "no_weighing" %}<p class="fc-hint">{% translate "Net and weigh 10–20 fish to start the forecast." %}{% if biz_can.enter_data %} <a href="{% url 'business:cycle_detail' f.cycle.pk %}?add=weighing" class="font-semibold underline">{% translate "Weigh a sample" %}</a>{% endif %}</p>
+  {% elif f.status == "no_size" %}<p class="fc-hint">{% translate "Set the size you sell this fish at, and the app shows when they'll reach it." %}{% if biz_can.manage_settings %} <a href="{% url 'business:species_edit' f.species.pk %}" class="font-semibold underline">{% translate "Set selling size" %}</a>{% endif %}</p>
+  {% elif f.stale %}<p class="fc-hint">{% blocktranslate with date=f.last.date|date:"j M" %}Last weighed {{ date }} — weigh again for a closer guess.{% endblocktranslate %}{% if biz_can.enter_data %} <a href="{% url 'business:cycle_detail' f.cycle.pk %}?add=weighing" class="font-semibold underline">{% translate "Weigh now" %}</a>{% endif %}</p>
+  {% endif %}
+</li>

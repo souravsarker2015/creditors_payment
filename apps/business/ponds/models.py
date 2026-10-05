@@ -306,16 +306,21 @@ class Treatment(BusinessBaseModel):
     """Something put into a pond: lime, fertilizer, salt, medicine…
 
     Its cost (when paid from an account) is money out of that account and a
-    cost of the cycle. A medicine can carry a waiting period: fish from the
+    cost of the cycle. Taken from the store (`item`), it was paid for when it
+    was bought: its cost is the store's average price and no money moves now.
+    A medicine can carry a waiting period: fish from the
     pond shouldn't be sold until it's over.
     """
 
     cycle = models.ForeignKey(CultureCycle, on_delete=models.CASCADE, related_name="treatments")
     date = models.DateField(_("Date"))
     kind = models.CharField(_("What kind"), max_length=12, choices=TreatmentKind.choices, default=TreatmentKind.LIME)
+    item = models.ForeignKey("business_supplies.SupplyItem", on_delete=models.PROTECT, null=True, blank=True, related_name="uses",
+                             verbose_name=_("From your store"))
     product = models.CharField(_("Product"), max_length=100, help_text=_("e.g. Dolomite lime, Oxytetracycline, Aquakleen"))
     quantity = models.DecimalField(_("Amount used"), max_digits=12, decimal_places=3, null=True, blank=True, validators=[MinValueValidator(0)])
     unit = models.ForeignKey(Unit, on_delete=models.PROTECT, null=True, blank=True, related_name="+", verbose_name=_("Unit"))
+    base_quantity = models.DecimalField(max_digits=18, decimal_places=3, null=True, blank=True, editable=False)
     reason = models.CharField(_("Why"), max_length=160, blank=True, help_text=_("e.g. pond preparation, red spots on fish, low oxygen"))
     cost = models.DecimalField(_("Cost"), default=0, validators=[MinValueValidator(0)], **MONEY)
     account = models.ForeignKey("business_finance.Account", on_delete=models.PROTECT, null=True, blank=True, related_name="+",
@@ -329,6 +334,10 @@ class Treatment(BusinessBaseModel):
 
     def __str__(self):
         return f"{self.product} · {self.date:%d %b %Y}"
+
+    def save(self, *args, **kwargs):
+        self.base_quantity = self.quantity * self.unit.factor if (self.quantity is not None and self.unit) else None
+        super().save(*args, **kwargs)
 
     @property
     def safe_from(self):

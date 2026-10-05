@@ -1,0 +1,11 @@
+{% load i18n business %}<li class="ledger-row">
+  <span class="ledger-icon" data-tone="accent">{% include "business/partials/icon.html" with name="person" %}</span>
+  <a href="{% url 'business:partner_detail' o.pk %}" class="ledger-main">
+    <p class="ledger-title">{{ o.name }} <span class="badge" data-tone="info">{{ o.share_pct|num }}%</span></p>
+    <p class="ledger-meta">{% blocktranslate with a=o.khata.put_in|bdt b=o.khata.taken_out|bdt %}put in {{ a }} · taken out {{ b }}{% endblocktranslate %}</p>
+  </a>
+  <div class="ledger-end">
+    <span class="party-bal"><strong{% if o.khata.net < 0 %} class="tone-critical"{% endif %}>{{ o.khata.net|bdt }}</strong><span>{% translate "in the farm" %}</span></span>
+    {% include "business/master/_actions.html" with up=forloop.last %}
+  </div>
+</li>

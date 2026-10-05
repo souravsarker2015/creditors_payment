@@ -209,6 +209,16 @@
 
   <!-- Growth & deaths -->
   <div class="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start" x-show="tab === 'growth'" x-cloak>
+    {% if forecasts %}
+    <section class="card lg:col-span-2">
+      <div class="card-header">
+        <div><h2 class="card-title">{% translate "When will they reach selling size?" %}{% include "business/partials/tip.html" with text=_("From your sample weighings: growth so far, carried forward. Weigh every 2–3 weeks to keep the guess close.") %}</h2>
+        <p class="card-subtitle">{% translate "A rough guess from how fast they've grown." %}</p></div>
+        <a href="{% url 'business:harvest_forecast' %}" class="btn btn-ghost btn-sm">{% translate "All ponds" %}{% include "partials/icon.html" with name="chevron-right" %}</a>
+      </div>
+      <ul class="fc-list fc-list-cols">{% for f in forecasts %}{% include "business/ponds/_forecast_row.html" %}{% endfor %}</ul>
+    </section>
+    {% endif %}
     <section class="card">
       <div class="card-header">
         <div><h2 class="card-title">{% translate "Sample weighing" %}{% include "business/partials/tip.html" with text=_("Net a few fish, weigh them together and count them. The average weight per fish shows how fast they're growing.") %}</h2><p class="card-subtitle">{% translate "Average weight per fish over time." %}</p></div>
@@ -322,7 +332,7 @@
           <p class="ledger-meta">{{ e.date|date:"j M Y" }} · {{ e.get_kind_display }}{% if e.reason %} · {{ e.reason }}{% endif %}{% if e.safe_from %} · {% blocktranslate with date=e.safe_from|date:"j M" %}no selling until {{ date }}{% endblocktranslate %}{% endif %}</p>
         </div>
         <div class="ledger-end">
-          {% if e.cost %}<span class="party-bal"><strong>{{ e.cost|bdt }}</strong><span>{% if e.account %}{{ e.account }}{% else %}{% translate "not paid now" %}{% endif %}</span></span>{% endif %}
+          {% if e.cost %}<span class="party-bal"><strong>{{ e.cost|bdt }}</strong><span>{% if e.account %}{{ e.account }}{% elif e.item_id %}{% translate "from store" %}{% else %}{% translate "not paid now" %}{% endif %}</span></span>{% endif %}
           {% include "business/ponds/entry_menu.html" with kind="treatment" %}
         </div>
       </li>{% endfor %}

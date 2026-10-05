@@ -163,6 +163,13 @@ def pond_items(business, start, end):
             if e.next_due and start <= e.next_due <= end:
                 items.append(Item(e.next_due, "pond", _("Service due · %(name)s") % {"name": e.name}, str(e.pond or ""),
                                   reverse("business:equipment_detail", args=[e.pk]), "warn", "cog"))
+    if end >= date.today():
+        from apps.business.ponds.forecast import for_farm
+
+        for f in for_farm(business):
+            if f.status == "growing" and start <= f.ready_on <= end:
+                items.append(Item(f.ready_on, "pond", _("Ready to sell · %(fish)s · %(pond)s") % {"fish": f.species, "pond": f.cycle.pond.name},
+                                  _("≈ %(g)s g each (a guess from weighings)") % {"g": num(f.target_g)}, cycle_url(f.cycle.pk, "growth"), "good", "flag"))
     cycles = CultureCycle.objects.filter(business=business).select_related("pond")
     for c in cycles.filter(start_date__gte=start, start_date__lte=end):
         items.append(Item(c.start_date, "pond", _("Cycle started · %(pond)s") % {"pond": c.pond.name}, c.label,

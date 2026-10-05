@@ -1,6 +1,8 @@
 {% load i18n %}{% comment %}
-Pond care form helpers: product suggestions, and the dose calculator
-(dose per decimal × the pond's size fills "Amount used").
+Pond care form helpers: product suggestions, the dose calculator (dose per
+decimal × the pond's size fills "Amount used"), and "From your store": picking
+a stored supply fills the product, kind, unit, dose and waiting period, shows
+what's left, and hides the cost (it's worked out from what was paid).
 {% endcomment %}
 <span hidden data-pond-area="{{ form.area|default_if_none:''|stringformat:'s' }}"></span>
 <datalist id="treatment-products-{{ form.prefix|default:'x' }}">
@@ -8,7 +10,43 @@ Pond care form helpers: product suggestions, and the dose calculator
   {% for p in form.suggestions %}<option value="{{ p }}">{% endfor %}
 </datalist>
 <p class="help" data-dose-result hidden></p>
+{% if form.store %}{% with sid=form.prefix|default:"x"|add:"-store" %}{{ form.store|json_script:sid }}{% endwith %}<p class="callout" data-tone="info" data-store-note hidden></p>{% endif %}
 <script>
+(function () {
+  if (window.__ftStore) return;
+  window.__ftStore = true;
+  var leftText = "{{ _('In store: {left} left. The cost is worked out from what you paid, and no money leaves an account now.')|escapejs }}";
+  function set(form, suffix, value, onlyEmpty) {
+    var el = form.querySelector('[name$="' + suffix + '"]');
+    if (!el || value === "" || value == null || (onlyEmpty && el.value)) return;
+    el.value = value;
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+    el.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+  document.addEventListener("change", function (e) {
+    var t = e.target;
+    if (!t.matches || !t.matches('select[name$="item"]')) return;
+    var form = t.form, data = form && form.querySelector('script[id$="-store"]');
+    if (!data) return;
+    var items = JSON.parse(data.textContent), item = null;
+    for (var i = 0; i < items.length; i++) if (String(items[i].id) === t.value) item = items[i];
+    var cost = form.querySelector('[name$="cost"]'), money = cost && (cost.closest(".form-grid") || cost.closest(".field"));
+    var note = form.querySelector("[data-store-note]"), field = t.closest(".field");
+    if (note && field && field.nextElementSibling !== note) field.after(note);
+    if (money) money.hidden = !!item;
+    if (note) { note.hidden = !item; if (item) note.textContent = leftText.replace("{left}", item.left + " " + item.symbol); }
+    if (!item) return;
+    var product = form.querySelector('[name$="product"]');
+    if (product && (!product.value || product.dataset.auto)) { product.value = item.name; product.dataset.auto = "1"; }
+    set(form, "kind", item.kind);
+    set(form, "unit", item.unit);
+    set(form, "withdrawal_days", item.wait, true);
+    set(form, "dose", item.dose, true);
+  });
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll('select[name$="item"]').forEach(function (s) { if (s.value) s.dispatchEvent(new Event("change", { bubbles: true })); });
+  });
+})();
 (function () {
   if (window.__ftDose) return;
   window.__ftDose = true;

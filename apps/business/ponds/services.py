@@ -317,7 +317,7 @@ def farm_tasks(business, today=None):
             else:
                 detail = ngettext("Planned in %(n)s day", "Planned in %(n)s days", days) % {"n": days}
             tasks.append(Task("harvest", "critical" if days < 0 else "info", _("Harvest %(pond)s") % {"pond": c.pond.name},
-                              detail, reverse("business:cycle_detail", args=[c.pk]) + "?tab=harvest", _("Open")))
+                              detail, reverse("business:cycle_detail", args=[c.pk]) + "?tab=harvest", _("View")))
 
     for c in running:
         last = c.last_weighed
@@ -333,7 +333,7 @@ def farm_tasks(business, today=None):
         if wait:
             tasks.append(Task("medicine", "warn", _("Don't sell fish from %(pond)s yet") % {"pond": c.pond.name},
                               _("%(product)s · waiting period ends %(date)s") % {"product": wait.product, "date": date_format(wait.safe_from, "j M")},
-                              reverse("business:cycle_detail", args=[c.pk]) + "?tab=water", _("Open")))
+                              reverse("business:cycle_detail", args=[c.pk]) + "?tab=water", _("View")))
 
     for pond in Pond.objects.filter(business=business, lease_end__isnull=False,
                                     lease_end__gte=today, lease_end__lte=today + timedelta(days=LEASE_SOON_DAYS)):
@@ -342,7 +342,7 @@ def farm_tasks(business, today=None):
         if due:   # no amount here: everyone on the farm sees today's tasks
             detail += " · " + _("not fully paid yet")
         tasks.append(Task("lease", "critical" if due else "warn", _("Lease of %(pond)s ends soon") % {"pond": pond.name},
-                          detail, reverse("business:pond_detail", args=[pond.pk]), _("Open")))
+                          detail, reverse("business:pond_detail", args=[pond.pk]), _("View")))
 
     order = {"critical": 0, "warn": 1, "info": 2}
     tasks.sort(key=lambda t: order[t.tone])
@@ -366,7 +366,7 @@ def _water_tasks(business, running, today):
         found = test.problems(limits) if test else []
         if found:
             out.append(Task("water", "critical", _("Water problem in %(pond)s") % {"pond": c.pond.name},
-                            " · ".join(f.what for f in found), reverse("business:cycle_detail", args=[c.pk]) + "?tab=water", _("Open")))
+                            " · ".join(f.what for f in found), reverse("business:cycle_detail", args=[c.pk]) + "?tab=water", _("View")))
     return out
 
 
@@ -398,7 +398,7 @@ def _death_tasks(business, running, today):
                             ngettext("%(n)s fish in the last %(days)s days (%(pct)s%% of the pond). Test the water and check for disease.",
                                      "%(n)s fish in the last %(days)s days (%(pct)s%% of the pond). Test the water and check for disease.", now)
                             % {"n": now, "days": RECENT_DAYS, "pct": pct},
-                            reverse("business:cycle_detail", args=[c.pk]) + "?tab=growth", _("Open")))
+                            reverse("business:cycle_detail", args=[c.pk]) + "?tab=growth", _("View")))
     return out
 
 

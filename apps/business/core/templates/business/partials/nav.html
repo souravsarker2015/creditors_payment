@@ -17,7 +17,7 @@
   <a href="{% url 'business:calendar' %}" class="nav-link {% if '/business/calendar/' in p %}is-active{% endif %}" {% if '/business/calendar/' in p %}aria-current="page"{% endif %}>
     {% include "partials/icon.html" with name="calendar" %}{% translate "Calendar" %}
   </a>
-  <a href="{% url 'business:ponds' %}" class="nav-link {% if '/business/ponds/' in p %}is-active{% endif %}">
+  <a href="{% url 'business:ponds' %}" class="nav-link {% if '/business/ponds/' in p or '/business/supplies/' in p %}is-active{% endif %}">
     {% include "business/partials/icon.html" with name="fish" %}{% translate "Ponds" %}
   </a>
   <a href="{% url 'business:feed_stock' %}" class="nav-link {% if '/business/feed/' in p %}is-active{% endif %}">
@@ -62,6 +62,9 @@
   </a>
   <a href="{% url 'business:staff' %}" class="nav-link {% if '/business/staff/' in p %}is-active{% endif %}" {% if '/business/staff/' in p %}aria-current="page"{% endif %}>
     {% include "partials/icon.html" with name="users" %}{% translate "Staff & wages" %}
+  </a>
+  <a href="{% url 'business:partners' %}" class="nav-link {% if '/business/partners/' in p %}is-active{% endif %}" {% if '/business/partners/' in p %}aria-current="page"{% endif %}>
+    {% include "business/partials/icon.html" with name="group" %}{% translate "Partners" %}
   </a>
   <a href="{% url 'business:loans' %}" class="nav-link {% if '/business/loans/' in p %}is-active{% endif %}" {% if '/business/loans/' in p %}aria-current="page"{% endif %}>
     {% include "business/partials/icon.html" with name="banknotes" %}{% translate "Loans" %}

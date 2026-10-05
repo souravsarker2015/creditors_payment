@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% translate "When to harvest" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "When to harvest" %}</h1>
+      <p class="page-subtitle">{% translate "How big the fish in each pond are now, how fast they grow, and roughly when they reach selling size." %}</p>
+    </div>
+  </header>
+  {% include "business/ponds/tabs.html" %}
+
+  {% include "business/partials/note.html" with key="forecast" title=_("How the forecast works") p1=_("Growth comes from your sample weighings: the latest one against an earlier one (or the fingerlings' weight when they were released).") p2=_("That growth a day is carried forward to guess the size today and the day the fish reach the selling size set for each fish in Farm setup → Fish species.") p3=_("It's a rough guess. Fish grow slower in winter and faster in warm months, so weigh 10–20 fish every 2–3 weeks to keep it close.") p4=_("The money is the fish's weight at selling size × the price you've been getting lately, after market deductions.") %}
+
+  {% if groups %}
+  <dl class="stat-grid stat-grid-3">
+    <div class="stat" data-tone="good">
+      <dt class="stat-label">{% translate "Ready to sell now" %}</dt>
+      <dd class="stat-value">{{ ready|length }}</dd>
+      <dd class="stat-hint">{% if ready %}{% for f in ready|slice:":3" %}{{ f.species }} · {{ f.cycle.pond }}{% if not forloop.last %}, {% endif %}{% endfor %}{% else %}{% translate "none yet" %}{% endif %}</dd>
+    </div>
+    <div class="stat" data-tone="info">
+      <dt class="stat-label">{% translate "Ready in the next 30 days" %}</dt>
+      <dd class="stat-value">{{ soon|length }}</dd>
+      <dd class="stat-hint">{% if soon %}{% blocktranslate with date=soon.0.ready_on|date:"j M" %}first around {{ date }}{% endblocktranslate %}{% else %}—{% endif %}</dd>
+    </div>
+    {% if biz_can.view_finance %}
+    <div class="stat" data-tone="accent">
+      <dt class="stat-label inline-flex items-center">{% translate "Fish worth at selling size" %}{% include "business/partials/tip.html" with text=_("Ready and growing fish only, at the prices you've got lately. Before costs.") %}</dt>
+      <dd class="stat-value">{% if worth %}{{ worth|bdt }}{% else %}—{% endif %}</dd>
+      <dd class="stat-hint">{% if kg %}{% blocktranslate with kg=kg|num %}≈ {{ kg }} kg of fish{% endblocktranslate %}{% else %}{% translate "weigh the fish to see this" %}{% endif %}</dd>
+    </div>
+    {% endif %}
+  </dl>
+
+  <div class="card-grid card-grid-2">
+    {% for cycle, items in groups %}
+    <article class="card">
+      <div class="card-header">
+        <div class="min-w-0">
+          <h2 class="card-title truncate"><a href="{% url 'business:cycle_detail' cycle.pk %}?tab=growth" class="hover:underline">{{ cycle.pond }}</a></h2>
+          <p class="card-subtitle">{{ cycle.label }}{% if cycle.expected_harvest %} · {% blocktranslate with date=cycle.expected_harvest|date:"j M" %}you planned {{ date }}{% endblocktranslate %}{% endif %}</p>
+        </div>
+        {% if biz_can.enter_data %}<a href="{% url 'business:cycle_detail' cycle.pk %}?add=weighing" class="btn btn-ghost btn-sm">{% include "business/partials/icon.html" with name="scale" %}{% translate "Weigh" %}</a>{% endif %}
+      </div>
+      <ul class="fc-list">{% for f in items %}{% include "business/ponds/_forecast_row.html" %}{% endfor %}</ul>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty">
+    <div class="empty-icon">{% include "business/partials/icon.html" with name="fish" %}</div>
+    <h3 class="empty-title">{% translate "No pond has fish in it" %}</h3>
+    <p class="empty-text">{% translate "Start a cycle, add the fingerlings and weigh a sample every few weeks. This page then shows when each pond's fish will be ready." %}</p>
+    <a href="{% url 'business:ponds' %}" class="btn btn-primary">{% translate "Go to ponds" %}</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

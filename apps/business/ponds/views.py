@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import date
+from decimal import Decimal
 
 from django import forms as dj_forms
 from django.contrib import messages
@@ -17,7 +18,7 @@ from apps.business.core.templatetags.business import bdt
 from apps.business.feed.forms import FeedUsageForm
 from apps.business.feed.models import FeedUsage
 
-from . import services
+from . import forecast, services
 from .forms import CycleForm, LeasePaymentForm, HarvestForm, MortalityForm, PondAlertsForm, PondForm, StockingForm, TreatmentForm, WaterTestForm, WeighingForm
 from .models import CultureCycle, Harvest, LeasePayment, Mortality, Pond, PondAlerts, PondStatus, SampleWeighing, Stocking, Treatment, WaterTest
 
@@ -32,6 +33,7 @@ ponds = Master(
     title=_("Ponds"), subtitle=_("Every pond or gher you farm — its size, whether it's leased, and what's in it now."),
     add_label=_("Add pond"), row_template="business/ponds/card.html", cards=True, icon="fish",
     search_fields=("name", "code", "location", "lease_from"), select_related=("area_unit",), decorate=_with_cycles,
+    nav_template="business/ponds/tabs.html",
     filters=[("in_use", _("Fish in it"), Q(status=PondStatus.IN_USE)),
              ("leased", _("Leased"), Q(ownership="leased"))],
     empty_title=_("Add your first pond"), empty_text=_("Give it a name and size. Stocking, feeding and harvests will be recorded per pond, so you'll see what each one earns."),
@@ -171,6 +173,7 @@ def cycle_detail_view(request, pk):
         "water": water, "water_now": water[0] if water else None,
         "treatments": treatments, "water_care_count": len(water) + len(treatments),
         "withdrawal": services.withdrawal(cycle),
+        "forecasts": forecast.for_cycle(cycle) if cycle.is_running else [],
         "open": request.GET.get("add") if request.GET.get("add") in ENTRY_KINDS and cycle.is_running else None,
         "tab": request.GET.get("tab") or "overview",
         "today": date.today(),
@@ -279,3 +282,20 @@ def alerts_view(request):
         messages.success(request, _g("Alert levels saved."))
         return redirect("business:pond_alerts")
     return render(request, "business/ponds/alerts.html", {"form": form})
+
+
+@business_access_required
+def forecast_view(request):
+    """When each running pond's fish should reach selling size."""
+    rows = forecast.for_farm(request.business)
+    groups = {}
+    for f in rows:
+        groups.setdefault(f.cycle.pk, (f.cycle, []))[1].append(f)
+    selling = [f for f in rows if f.status in ("ready", "growing")]
+    return render(request, "business/ponds/forecast.html", {
+        "groups": list(groups.values()),
+        "ready": [f for f in rows if f.status == "ready"],
+        "soon": [f for f in rows if f.status == "growing" and f.days_left <= 30],
+        "worth": sum((f.value for f in selling if f.value), Decimal(0)),
+        "kg": sum((f.kg_at_ready for f in selling if f.kg_at_ready), Decimal(0)),
+    })

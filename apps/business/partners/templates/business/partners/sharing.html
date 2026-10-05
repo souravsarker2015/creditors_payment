@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% translate "Profit sharing" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-medium stack">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "Profit sharing" %}</h1>
+      <p class="page-subtitle">{% translate "The farm's profit split by each partner's share, against what they've already taken out." %}</p>
+    </div>
+  </header>
+  {% include "business/partners/tabs.html" %}
+
+  <section class="card">
+    <div class="card-body share-period">
+      <nav class="seg" aria-label="{% translate 'Period' %}">
+        <a href="?period=year" class="seg-item {% if period == 'year' %}is-active{% endif %}">{% translate "This year" %}</a>
+        <a href="?period=last" class="seg-item {% if period == 'last' %}is-active{% endif %}">{% translate "Last year" %}</a>
+        <a href="?period=all" class="seg-item {% if period == 'all' %}is-active{% endif %}">{% translate "All time" %}</a>
+      </nav>
+      <form method="get" class="share-dates">
+        <label class="sr-only" for="from">{% translate "From" %}</label>
+        <input id="from" type="text" name="from" value="{{ s.start|date:'Y-m-d' }}" class="form-input input-compact datepicker" autocomplete="off">
+        <span aria-hidden="true">–</span>
+        <label class="sr-only" for="to">{% translate "To" %}</label>
+        <input id="to" type="text" name="to" value="{{ s.end|date:'Y-m-d' }}" class="form-input input-compact datepicker" autocomplete="off">
+        <button type="submit" class="btn btn-secondary btn-sm">{% translate "Show" %}</button>
+      </form>
+    </div>
+  </section>
+
+  <dl class="stat-grid stat-grid-3">
+    <div class="stat" data-tone="{% if s.profit < 0 %}critical{% else %}good{% endif %}">
+      <dt class="stat-label">{% if s.profit < 0 %}{% translate "Farm loss" %}{% else %}{% translate "Farm profit" %}{% endif %}</dt>
+      <dd class="stat-value">{{ s.profit|bdt }}</dd>
+      <dd class="stat-hint">{{ s.start|date:"j M Y" }} – {{ s.end|date:"j M Y" }}</dd>
+    </div>
+    <div class="stat" data-tone="info">
+      <dt class="stat-label">{% translate "Income − expenses" %}</dt>
+      <dd class="stat-value">{{ s.income|bdt }}</dd>
+      <dd class="stat-hint">{% blocktranslate with e=s.expense|bdt %}− {{ e }} expenses{% endblocktranslate %}{% if biz_can.view_reports and period == "year" or biz_can.view_reports and period == "last" %} · <a href="{% url 'business:statement' %}?period=year&month={{ s.start|date:'Y-m' }}" class="underline">{% translate "details" %}</a>{% endif %}</dd>
+    </div>
+    <div class="stat" data-tone="warn">
+      <dt class="stat-label">{% translate "Taken out by partners" %}</dt>
+      <dd class="stat-value">{{ s.taken|bdt }}</dd>
+      <dd class="stat-hint">{% translate "in these dates" %}</dd>
+    </div>
+  </dl>
+
+  {% if s.rows and s.total_pct != 100 %}
+  <div class="callout" data-tone="warn">{% include "partials/icon.html" with name="alert" %}<p>{% blocktranslate with n=s.total_pct|num a=s.unshared|bdt %}The shares add up to {{ n }} out of 100, so {{ a }} of this profit isn't in anyone's share. Edit the partners' shares to fix it.{% endblocktranslate %}</p></div>
+  {% endif %}
+
+  {% if s.rows %}
+  <section class="card">
+    <div class="card-header"><div><h2 class="card-title">{% translate "Each partner's share" %}</h2><p class="card-subtitle">{% if s.profit < 0 %}{% translate "A loss is shared the same way. Anything taken out in a loss year comes out of the partner's own money in the farm." %}{% else %}{% translate "Left to take = their share − what they took out in these dates." %}{% endif %}</p></div></div>
+    <ul class="ledger">
+      {% for r in s.rows %}
+      <li><a href="{% url 'business:partner_detail' r.partner.pk %}" class="ledger-row">
+        <span class="ledger-icon" data-tone="accent">{% include "business/partials/icon.html" with name="person" %}</span>
+        <div class="ledger-main">
+          <p class="ledger-title">{{ r.partner.name }} <span class="badge" data-tone="info">{{ r.partner.share_pct|num }}%</span></p>
+          <p class="ledger-meta">{% blocktranslate with a=r.share|bdt b=r.taken|bdt %}share {{ a }} · took out {{ b }}{% endblocktranslate %}{% if r.put_in %} · {% blocktranslate with c=r.put_in|bdt %}put in {{ c }}{% endblocktranslate %}{% endif %}</p>
+        </div>
+        <div class="ledger-end">
+          <span class="party-bal">{% if r.share < 0 %}<strong class="tone-critical">{{ r.share|absolute|bdt }}</strong><span>{% translate "share of the loss" %}</span>{% elif r.left >= 0 %}<strong class="tone-good">{{ r.left|bdt }}</strong><span>{% translate "left to take" %}</span>{% else %}<strong class="tone-critical">{{ r.left|absolute|bdt }}</strong><span>{% translate "taken beyond share" %}</span>{% endif %}</span>
+        </div>
+      </a></li>
+      {% endfor %}
+    </ul>
+  </section>
+  <p class="help">{% translate "Profit here is the farm business only — the same as Income & expenses for these dates, without household or personal spending. Money a partner puts in isn't profit." %}</p>
+  {% else %}
+  <div class="empty">
+    <div class="empty-icon">{% include "business/partials/icon.html" with name="group" %}</div>
+    <h3 class="empty-title">{% translate "No partners yet" %}</h3>
+    <p class="empty-text">{% translate "Add the partners and their shares, and the profit is split here for any dates you choose." %}</p>
+    {% if biz_can.manage_settings %}<a href="{% url 'business:partners_add' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add partner" %}</a>{% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

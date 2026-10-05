@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{{ item.name }} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-narrow">
+  <header class="page-header">
+    <div>
+      <a href="{% url 'business:supply_detail' item.pk %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{{ item.name }}</a>
+      <h1 class="page-title">{% if obj %}{% translate "Edit purchase" %}{% else %}{% blocktranslate with name=item.name %}Buy {{ name }}{% endblocktranslate %}{% endif %}</h1>
+    </div>
+  </header>
+  <form method="post" class="card" novalidate>
+    {% csrf_token %}
+    <div class="card-body form-stack">
+      {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+      {% for section in form.rows %}{% for row in section.fields %}
+        {% if row|length > 1 %}<div class="form-grid form-grid-2">{% for field in row %}{% include "business/partials/field.html" %}{% endfor %}</div>
+        {% else %}{% with field=row.0 %}{% include "business/partials/field.html" %}{% endwith %}{% endif %}
+      {% endfor %}{% endfor %}
+    </div>
+    <div class="card-footer form-actions">
+      <a href="{% url 'business:supply_detail' item.pk %}" class="btn btn-ghost btn-lg">{% translate "Cancel" %}</a>
+      <button type="submit" class="btn btn-primary btn-lg">{% include "partials/icon.html" with name="check" %}{% translate "Save" %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{{ item.name }} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-medium stack">
+  <header class="page-header !mb-0">
+    <div class="min-w-0">
+      <a href="{% url 'business:supplies' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Pond supplies" %}</a>
+      <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <h1 class="page-title">{{ item.name }}</h1>
+        {% if st.is_out %}<span class="badge" data-tone="critical">{% translate "Out of stock" %}</span>{% elif st.is_low %}<span class="badge" data-tone="warn">{% translate "Running low" %}</span>{% endif %}
+      </div>
+      <div class="meta-list">
+        <span class="meta-item">{% include "business/partials/icon.html" with name="dropper" %}{{ item.get_kind_display }}</span>
+        {% if item.dose_per_decimal %}<span class="meta-item">{% blocktranslate with q=item.dose_per_decimal|num unit=item.unit.symbol %}{{ q }} {{ unit }} per decimal{% endblocktranslate %}</span>{% endif %}
+        {% if item.withdrawal_days %}<span class="meta-item">{% include "partials/icon.html" with name="clock" %}{% blocktranslate count counter=item.withdrawal_days %}don't sell fish for {{ counter }} day{% plural %}don't sell fish for {{ counter }} days{% endblocktranslate %}</span>{% endif %}
+      </div>
+    </div>
+    {% if not item.is_deleted %}<div class="page-actions">
+      {% if biz_can.enter_data %}<a href="{% url 'business:supplies_edit' item.pk %}" class="btn btn-ghost">{% include "partials/icon.html" with name="edit" %}{% translate "Edit" %}</a>{% endif %}
+      {% if biz_can.view_finance %}<a href="{% url 'business:supply_buy' item.pk %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Record a purchase" %}</a>{% endif %}
+    </div>{% endif %}
+  </header>
+
+  <dl class="stat-grid stat-grid-3">
+    <div class="stat" data-tone="{% if st.is_out %}critical{% elif st.is_low %}warn{% else %}good{% endif %}">
+      <dt class="stat-label">{% translate "In store" %}</dt>
+      <dd class="stat-value">{{ st.left|num }} {{ item.unit.symbol }}</dd>
+      <dd class="stat-hint">{% if st.is_out %}{% translate "Record the purchase if you bought more." %}{% elif item.low_stock is not None %}{% blocktranslate with q=item.low_stock|num unit=item.unit.symbol %}warns below {{ q }} {{ unit }}{% endblocktranslate %}{% else %}{% translate "no warning level set" %}{% endif %}</dd>
+    </div>
+    <div class="stat" data-tone="info">
+      <dt class="stat-label">{% translate "Used in 30 days" %}</dt>
+      <dd class="stat-value">{{ st.recent|num }} {{ item.unit.symbol }}</dd>
+      <dd class="stat-hint">{% if st.last_used %}{% blocktranslate with date=st.last_used|date:"j M" %}last used {{ date }}{% endblocktranslate %}{% else %}{% translate "not used yet" %}{% endif %}</dd>
+    </div>
+    {% if biz_can.view_finance %}
+    <div class="stat" data-tone="accent">
+      <dt class="stat-label inline-flex items-center">{% translate "Average price" %}{% include "business/partials/tip.html" with text=_("Everything paid for it ÷ everything bought. A pond is charged this much for what it uses.") %}</dt>
+      <dd class="stat-value">{% if st.unit_price %}{{ st.unit_price|bdt }}{% else %}—{% endif %}</dd>
+      <dd class="stat-hint">{% if st.unit_price %}{% blocktranslate with unit=item.unit.symbol %}per {{ unit }}{% endblocktranslate %}{% if st.value %} · {% blocktranslate with v=st.value|bdt %}stock worth {{ v }}{% endblocktranslate %}{% endif %}{% else %}{% translate "not bought yet" %}{% endif %}</dd>
+    </div>
+    {% endif %}
+  </dl>
+
+  <section class="card">
+    <div class="card-header"><div><h2 class="card-title">{% translate "Bought and used" %}</h2><p class="card-subtitle">{% translate "To use it, add “Lime, medicine & care” to a pond and choose it under “From your store”." %}</p></div></div>
+    {% if history %}
+    <ul class="ledger">
+      {% for kind, day, e in history %}
+      <li class="ledger-row">
+        {% if kind == "buy" %}
+        <span class="ledger-icon" data-tone="good">{% include "partials/icon.html" with name="arrow-down" %}</span>
+        <div class="ledger-main">
+          <p class="ledger-title">{% blocktranslate with q=e.quantity|num unit=e.unit.symbol %}Bought {{ q }} {{ unit }}{% endblocktranslate %}{% if e.supplier %} · {{ e.supplier }}{% endif %}</p>
+          <p class="ledger-meta">{{ day|date:"j M Y" }}{% if biz_can.view_finance %}{% if e.account %} · {{ e.account }}{% endif %}{% if e.due %} · <span class="tone-warn">{% blocktranslate with amount=e.due|bdt %}{{ amount }} owed{% endblocktranslate %}</span>{% endif %}{% endif %}</p>
+        </div>
+        <div class="ledger-end">
+          {% if biz_can.view_finance %}{% if e.cost %}<span class="party-bal"><strong>{{ e.cost|bdt }}</strong></span>{% endif %}
+          {% url 'business:supply_purchase_edit' e.pk as edit_url %}{% url 'business:supply_purchase_delete' e.pk as delete_url %}{% translate "Delete this purchase?" as confirm_text %}
+          {% if biz_can.delete %}{% include "partials/row_menu.html" with edit_url=edit_url delete_url=delete_url confirm=confirm_text up=forloop.last %}{% else %}<a href="{{ edit_url }}" class="icon-btn" aria-label="{% translate 'Edit' %}">{% include "partials/icon.html" with name="edit" %}</a>{% endif %}{% endif %}
+        </div>
+        {% else %}
+        <span class="ledger-icon" data-tone="info">{% include "business/partials/icon.html" with name="fish" %}</span>
+        <a href="{% url 'business:cycle_detail' e.cycle_id %}?tab=water" class="ledger-main">
+          <p class="ledger-title">{% blocktranslate with q=e.quantity|num unit=e.unit.symbol pond=e.cycle.pond %}{{ q }} {{ unit }} into {{ pond }}{% endblocktranslate %}</p>
+          <p class="ledger-meta">{{ day|date:"j M Y" }}{% if e.reason %} · {{ e.reason }}{% endif %}</p>
+        </a>
+        <div class="ledger-end">{% if biz_can.view_finance and e.cost %}<span class="party-bal"><strong>{{ e.cost|bdt }}</strong><span>{% translate "pond cost" %}</span></span>{% endif %}</div>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty is-plain"><p class="empty-text">{% translate "Nothing bought or used yet." %}</p></div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

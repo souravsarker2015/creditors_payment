@@ -37,7 +37,7 @@ def _units_json(business):
 def home_view(request):
     b = request.business
     units = Unit.objects.filter(business=b)
-    tasks = _farm_tasks(b) + _equipment_tasks(b) + _staff_tasks(request) + _calendar_tasks(b)
+    tasks = _farm_tasks(b) + _growth_tasks(b) + _equipment_tasks(b) + _supply_tasks(b) + _staff_tasks(request) + _calendar_tasks(b)
     return render(request, "business/home.html", {
         "today": date.today(),
         "share_url": _share_url(request, tasks),
@@ -71,6 +71,26 @@ def _farm_tasks(business):
     return farm_tasks(business)
 
 
+def _growth_tasks(business):
+    """Fish that look ready to sell, and fish that have stopped growing."""
+    from apps.business.core.templatetags.business import num
+    from apps.business.ponds.forecast import for_farm
+    from apps.business.ponds.services import Task
+
+    out = []
+    for f in for_farm(business):
+        url = reverse("business:cycle_detail", args=[f.cycle.pk])
+        names = {"fish": f.species, "pond": f.cycle.pond.name}
+        if f.status == "ready":
+            out.append(Task("ready", "info", _("%(fish)s in %(pond)s look ready to sell") % names,
+                            _("≈ %(now)s g each, selling size %(target)s g. Net a few to check.") % {"now": num(f.now_g), "target": num(f.target_g)},
+                            url + "?tab=harvest", _("Plan harvest")))
+        elif f.status == "slow":
+            out.append(Task("slow", "warn", _("%(fish)s in %(pond)s aren't growing") % names,
+                            _("The last weighings show little or no growth. Check the feed and the water."), url + "?tab=growth", _("View")))
+    return out
+
+
 def _equipment_tasks(business):
     """Broken machines, and services due this week."""
     if not apps.is_installed("apps.business.assets"):
@@ -80,12 +100,32 @@ def _equipment_tasks(business):
 
     broken, due = needs_attention(business)
     out = [Task("equipment", "critical", _("%(name)s needs repair") % {"name": e.name}, str(e.pond or ""),
-                reverse("business:equipment_detail", args=[e.pk]), _("Open")) for e in broken]
+                reverse("business:equipment_detail", args=[e.pk]), _("View")) for e in broken]
     for e in due:
         late = e.next_due < date.today()
         out.append(Task("equipment", "warn" if late else "info", _("Service %(name)s") % {"name": e.name},
                         (_("Was due %(date)s") if late else _("Due %(date)s")) % {"date": date_format(e.next_due, "j M")},
                         reverse("business:equipment_service", args=[e.pk]), _("Record")))
+    return out
+
+
+def _supply_tasks(business):
+    """Lime, medicine… out of stock or below the level set to warn at."""
+    if not apps.is_installed("apps.business.supplies"):
+        return []
+    from apps.business.core.templatetags.business import num
+    from apps.business.ponds.services import Task
+    from apps.business.supplies.services import running_low
+
+    out = []
+    for st in running_low(business):
+        if st.left < 0:
+            left = _("%(q)s %(unit)s more used than bought. Record the purchase.") % {"q": num(-st.left), "unit": st.item.unit.symbol}
+        else:
+            left = _("%(q)s %(unit)s left") % {"q": num(st.left), "unit": st.item.unit.symbol}
+        out.append(Task("supply", "warn" if st.is_out else "info",
+                        (_("%(name)s is out of stock") if st.is_out else _("%(name)s is running low")) % {"name": st.item.name},
+                        left, reverse("business:supply_detail", args=[st.item.pk]), _("View")))
     return out
 
 
@@ -120,7 +160,7 @@ def _calendar_tasks(business):
         late = i.date < today
         detail = " · ".join(x for x in (i.time, i.detail, _("from %(date)s") % {"date": date_format(i.date, "j M")} if late else "") if x)
         out.append(Task("event", "warn" if late else "info", i.title, detail,
-                        reverse("business:calendar") + f"?day={i.date.isoformat()}", _("Open")))
+                        reverse("business:calendar") + f"?day={i.date.isoformat()}", _("View")))
     return out
 
 

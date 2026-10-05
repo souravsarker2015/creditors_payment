@@ -60,7 +60,7 @@
           </div>
           <div class="ledger-end">
             <span class="ledger-amount">{{ e.open|bdt }}</span>
-            {% if biz_can.enter_data and e.kind != "opening" and e.kind != "pay_in" and e.kind != "pay_out" %}<a href="{% url 'business:payment_add' %}?party={{ party.pk }}&dir={% if led.balance > 0 %}in{% else %}out{% endif %}&against={{ e.kind }}:{{ e.pk }}" class="btn btn-soft btn-sm ml-2">{% if led.balance > 0 %}{% translate "Receive" %}{% else %}{% translate "Pay" %}{% endif %}</a>{% endif %}
+            {% if biz_can.enter_data and e.kind != "opening" and e.kind != "pay_in" and e.kind != "pay_out" and e.kind != "supply" %}<a href="{% url 'business:payment_add' %}?party={{ party.pk }}&dir={% if led.balance > 0 %}in{% else %}out{% endif %}&against={{ e.kind }}:{{ e.pk }}" class="btn btn-soft btn-sm ml-2">{% if led.balance > 0 %}{% translate "Receive" %}{% else %}{% translate "Pay" %}{% endif %}</a>{% endif %}
           </div>
         </li>
         {% endfor %}

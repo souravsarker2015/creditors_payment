@@ -1,0 +1,7 @@
+{% load i18n %}{% with p=request.path %}
+<nav class="seg seg-scroll" aria-label="{% translate 'Ponds' %}">
+  <a href="{% url 'business:ponds' %}" class="seg-item {% if p == '/business/ponds/' %}is-active{% endif %}">{% translate "Ponds" %}</a>
+  <a href="{% url 'business:harvest_forecast' %}" class="seg-item {% if '/ponds/forecast/' in p %}is-active{% endif %}">{% translate "When to harvest" %}</a>
+  <a href="{% url 'business:supplies' %}" class="seg-item {% if '/business/supplies/' in p %}is-active{% endif %}">{% translate "Pond supplies" %}</a>
+</nav>
+{% endwith %}

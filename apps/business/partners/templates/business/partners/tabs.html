@@ -1,0 +1,6 @@
+{% load i18n %}{% with p=request.path %}
+<nav class="seg seg-scroll" aria-label="{% translate 'Partners' %}">
+  <a href="{% url 'business:partners' %}" class="seg-item {% if p == '/business/partners/' %}is-active{% endif %}">{% translate "Partners" %}</a>
+  <a href="{% url 'business:partner_sharing' %}" class="seg-item {% if '/partners/sharing/' in p %}is-active{% endif %}">{% translate "Profit sharing" %}</a>
+</nav>
+{% endwith %}

@@ -1,0 +1,11 @@
+{% load i18n business %}{% with st=o.stock %}<li class="ledger-row">
+  <span class="ledger-icon" data-tone="{% if st.is_out %}critical{% elif st.is_low %}warn{% elif not st.bought %}muted{% else %}good{% endif %}">{% include "business/partials/icon.html" with name="dropper" %}</span>
+  <a href="{% url 'business:supply_detail' o.pk %}" class="ledger-main">
+    <p class="ledger-title">{{ o.name }}{% if st.is_out %} <span class="badge" data-tone="critical">{% translate "Out of stock" %}</span>{% elif st.is_low %} <span class="badge" data-tone="warn">{% translate "Running low" %}</span>{% endif %}</p>
+    <p class="ledger-meta">{{ o.get_kind_display }}{% if st.recent %} · {% blocktranslate with q=st.recent|num unit=o.unit.symbol %}{{ q }} {{ unit }} used in 30 days{% endblocktranslate %}{% endif %}</p>
+  </a>
+  <div class="ledger-end">
+    <span class="party-bal"><strong{% if st.is_out %} class="tone-critical"{% endif %}>{{ st.left|num }} {{ o.unit.symbol }}</strong><span>{% if biz_can.view_finance and st.value %}{% blocktranslate with v=st.value|bdt %}worth {{ v }}{% endblocktranslate %}{% else %}{% translate "left" %}{% endif %}</span></span>
+    {% include "business/master/_actions.html" with up=forloop.last %}
+  </div>
+</li>{% endwith %}

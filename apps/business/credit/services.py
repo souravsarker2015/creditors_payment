@@ -6,6 +6,7 @@ For each party it lines up, by date:
   fish sale (buyer)       gave fish worth `net`,  got `received_now`
   feed purchase           got feed worth `total`, gave `paid_now`
   stocking (supplier)     got fingerlings `cost`, gave `paid_now`
+  pond supplies (shop)    got lime/medicine `cost`, gave `paid_now`
   payment in              got money (+ discount)
   payment out             gave money (+ discount)
 
@@ -23,6 +24,7 @@ from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
 
+from django.apps import apps
 from django.db.models import F
 from django.urls import reverse
 from django.utils.translation import gettext as _
@@ -137,6 +139,13 @@ def _entries(business, party_ids=None):
         detail = " · ".join(x for x in (str(st.cycle.pond), f"{st.count:,}" if st.count else "") if x)
         out[st.supplier_id].append(Entry(st.date, "stocking", ("stocking", st.pk), _("Fingerlings: %(fish)s") % {"fish": st.species}, detail,
                                          gave=st.paid_now, got=st.cost, url=reverse("business:cycle_detail", args=[st.cycle_id]) + "?tab=stocking", pk=st.pk))
+    if apps.is_installed("apps.business.supplies"):
+        from apps.business.supplies.models import SupplyPurchase
+
+        for sp in scope(SupplyPurchase.objects.filter(business=business), "supplier").select_related("item", "unit"):
+            out[sp.supplier_id].append(Entry(sp.date, "supply", ("supply", sp.pk), _("Pond supplies: %(item)s") % {"item": sp.item},
+                                             f"{sp.quantity.normalize():f} {sp.unit.symbol}", gave=sp.paid_now, got=sp.cost,
+                                             url=reverse("business:supply_detail", args=[sp.item_id]), pk=sp.pk))
     for pay in scope(PartyPayment.objects.filter(business=business), "party").select_related("account", "sale", "feed_purchase", "stocking"):
         is_in = pay.direction == Direction.IN
         target = (("sale", pay.sale_id) if pay.sale_id else ("feed", pay.feed_purchase_id) if pay.feed_purchase_id

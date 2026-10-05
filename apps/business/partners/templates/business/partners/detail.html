@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{{ p.name }} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-medium stack">
+  <header class="page-header !mb-0">
+    <div class="min-w-0">
+      <a href="{% url 'business:partners' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Partners" %}</a>
+      <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <h1 class="page-title">{{ p.name }}</h1>
+        <span class="badge" data-tone="info">{% blocktranslate with n=p.share_pct|num %}{{ n }}% share{% endblocktranslate %}</span>
+      </div>
+      <div class="meta-list">
+        {% if p.phone %}<a href="tel:{{ p.phone }}" class="meta-item">{% include "partials/icon.html" with name="phone" %}{{ p.phone }}</a>{% endif %}
+        <span class="meta-item">{% include "partials/icon.html" with name="calendar" %}{% blocktranslate with date=p.joined_on|date:"j M Y" %}Partner since {{ date }}{% endblocktranslate %}</span>
+      </div>
+    </div>
+    {% if not p.is_deleted %}<div class="page-actions">
+      {% if biz_can.manage_settings %}<a href="{% url 'business:partners_edit' p.pk %}" class="btn btn-ghost">{% include "partials/icon.html" with name="edit" %}{% translate "Edit" %}</a>{% endif %}
+    </div>{% endif %}
+  </header>
+
+  <dl class="stat-grid stat-grid-3">
+    <div class="stat" data-tone="good">
+      <dt class="stat-label">{% translate "Put in" %}</dt>
+      <dd class="stat-value">{{ khata.put_in|bdt }}</dd>
+      <dd class="stat-hint">{% if p.opening_capital %}{% blocktranslate with a=p.opening_capital|bdt %}incl. {{ a }} from before{% endblocktranslate %}{% else %}{% translate "all time" %}{% endif %}</dd>
+    </div>
+    <div class="stat" data-tone="warn">
+      <dt class="stat-label">{% translate "Taken out" %}</dt>
+      <dd class="stat-value">{{ khata.taken_out|bdt }}</dd>
+      <dd class="stat-hint">{% translate "all time" %}</dd>
+    </div>
+    {% if this_year %}<div class="stat" data-tone="accent">
+      <dt class="stat-label inline-flex items-center">{% if this_year.share < 0 %}{% translate "This year's share of the loss" %}{% else %}{% translate "This year's profit share" %}{% endif %}{% include "business/partials/tip.html" with text=_("Their share of the farm's profit since 1 January, less what they've taken out this year.") %}</dt>
+      <dd class="stat-value{% if this_year.share < 0 %} tone-critical{% endif %}">{{ this_year.share|absolute|bdt }}</dd>
+      <dd class="stat-hint">{% if this_year.share < 0 %}{% blocktranslate with a=this_year.taken|bdt %}took out {{ a }} this year{% endblocktranslate %}{% elif this_year.left >= 0 %}{% blocktranslate with a=this_year.left|bdt %}{{ a }} left to take{% endblocktranslate %}{% else %}{% blocktranslate with a=this_year.left|absolute|bdt %}took {{ a }} more than this{% endblocktranslate %}{% endif %}</dd>
+    </div>{% endif %}
+  </dl>
+
+  {% if not p.is_deleted %}
+  <section class="card">
+    <div class="card-body equip-actions">
+      <a href="{% url 'business:partner_entry' p.pk %}?kind=in" class="btn btn-primary">{% include "partials/icon.html" with name="arrow-down" %}{% translate "Money put in" %}</a>
+      <a href="{% url 'business:partner_entry' p.pk %}?kind=out" class="btn btn-secondary">{% include "partials/icon.html" with name="arrow-up" %}{% translate "Money taken out" %}</a>
+      <a href="{% url 'business:partner_sharing' %}" class="btn btn-ghost">{% include "business/partials/icon.html" with name="percent" %}{% translate "Profit sharing" %}</a>
+    </div>
+  </section>
+  {% endif %}
+
+  <section class="card">
+    <div class="card-header"><div><h2 class="card-title">{% translate "Money in and out" %}</h2><p class="card-subtitle">{% blocktranslate with a=khata.net|bdt %}{{ a }} of theirs is in the farm now.{% endblocktranslate %}</p></div></div>
+    {% if entries %}
+    <ul class="ledger">
+      {% for e in entries %}
+      <li class="ledger-row">
+        <span class="ledger-icon" data-tone="{% if e.is_in %}good{% else %}warn{% endif %}">{% if e.is_in %}{% include "partials/icon.html" with name="arrow-down" %}{% else %}{% include "partials/icon.html" with name="arrow-up" %}{% endif %}</span>
+        <div class="ledger-main">
+          <p class="ledger-title">{{ e.get_kind_display }}{% if e.notes %} · {{ e.notes }}{% endif %}</p>
+          <p class="ledger-meta">{{ e.date|date:"j M Y" }} · {{ e.account }}</p>
+        </div>
+        <div class="ledger-end">
+          <span class="ledger-amount" data-tone="{% if e.is_in %}good{% else %}warn{% endif %}">{% if e.is_in %}+{% else %}−{% endif %}{{ e.amount|bdt }}</span>
+          {% url 'business:partner_entry_edit' e.pk as edit_url %}{% url 'business:partner_entry_delete' e.pk as delete_url %}{% translate "Delete this entry?" as confirm_text %}
+          {% if biz_can.delete %}{% include "partials/row_menu.html" with edit_url=edit_url delete_url=delete_url confirm=confirm_text up=forloop.last %}{% else %}<a href="{{ edit_url }}" class="icon-btn" aria-label="{% translate 'Edit' %}">{% include "partials/icon.html" with name="edit" %}</a>{% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty is-plain"><p class="empty-text">{% translate "No money put in or taken out yet." %}</p></div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

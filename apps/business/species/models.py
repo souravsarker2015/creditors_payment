@@ -14,6 +14,9 @@ class Species(BusinessBaseModel):
     scientific_name = models.CharField(_("Scientific name"), max_length=80, blank=True)
     default_unit = models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True, blank=True, related_name="+",
                                      verbose_name=_("Usually sold by"))
+    market_size_g = models.PositiveIntegerField(_("Selling size (grams per fish)"), null=True, blank=True,
+                                                help_text=_("The size you usually sell this fish at, e.g. 1000 for 1 kg Rui. "
+                                                            "Used to guess when the fish in a pond will be ready."))
     color = models.CharField(_("Colour"), max_length=7, default="#0e7490", help_text=_("Used for this fish in charts."))
     order = models.PositiveSmallIntegerField(default=0)
 

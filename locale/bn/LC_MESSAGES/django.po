@@ -10430,3 +10430,601 @@ msgstr "পরের খাওয়ানোর আগে কিনুন"
 
 msgid "Feed a day, per 100 kg of fish"
 msgstr "দিনের খাবার, প্রতি ১০০ কেজি মাছে"
+
+msgid "Ready to sell · %(fish)s · %(pond)s"
+msgstr "বিক্রির উপযোগী · %(fish)s · %(pond)s"
+
+msgid "≈ %(g)s g each (a guess from weighings)"
+msgstr "প্রতিটি ≈ %(g)s গ্রাম (ওজন থেকে আন্দাজ)"
+
+msgid "Pond supplies"
+msgstr "পুকুরের উপকরণ"
+
+msgid "Lime, fertilizer and medicine you keep in store: bought, used and left."
+msgstr "মজুদে রাখা চুন, সার ও ওষুধ: কত কেনা, কত ব্যবহার, কত বাকি।"
+
+msgid "Take it from the store for a pond and the stock goes down by itself; the pond is charged what that amount cost you."
+msgstr "মজুদ থেকে পুকুরে দিলে মজুদ নিজে থেকেই কমে; ওই পরিমাণের যা দাম পড়েছে, তা পুকুরের খরচে যোগ হয়।"
+
+msgid "When to harvest"
+msgstr "কখন মাছ ধরবেন"
+
+msgid "How big each pond's fish are now, and the day they should reach selling size."
+msgstr "প্রতিটি পুকুরের মাছ এখন কত বড়, আর কবে বিক্রির সাইজে পৌঁছাবে।"
+
+msgid "Growth between your weighings, carried forward to the selling size set for each fish."
+msgstr "আপনার দুই ওজনের মাঝের বৃদ্ধি সামনে টেনে, প্রতিটি মাছের ঠিক করা বিক্রির সাইজ পর্যন্ত হিসাব।"
+
+msgid "Partners"
+msgstr "অংশীদার"
+
+msgid "Each partner's share, the money they put in or took out, and their part of the profit."
+msgstr "প্রত্যেক অংশীদারের অংশ, তাঁরা কত টাকা দিয়েছেন বা তুলেছেন, আর লাভে তাঁদের ভাগ।"
+
+msgid "A partner's money moves an account but isn't income or expense; the profit is split by share."
+msgstr "অংশীদারের টাকা অ্যাকাউন্টে আসে-যায়, কিন্তু তা আয় বা ব্যয় নয়; লাভ ভাগ হয় অংশ অনুযায়ী।"
+
+msgid "Their unpaid bills (sales, feed, fingerlings, pond supplies) − what they've paid, oldest first."
+msgstr "তাঁদের বাকি বিল (বিক্রি, খাবার, পোনা, পুকুরের উপকরণ) − যা পরিশোধ করেছেন, পুরোনোটা আগে।"
+
+msgid "A partner's share"
+msgstr "অংশীদারের ভাগ"
+
+msgid "Farm profit for the dates you choose × their share, minus what they took out in those dates."
+msgstr "আপনার বাছাই করা তারিখের খামারের লাভ × তাঁর অংশ, বাদ ওই সময়ে তিনি যা তুলেছেন।"
+
+msgid "Supplies in store"
+msgstr "মজুদে উপকরণ"
+
+msgid "Bought − used in ponds from the store. A pond is charged the average price you paid."
+msgstr "কেনা − মজুদ থেকে পুকুরে ব্যবহার। পুকুরের খরচ ধরা হয় আপনার দেওয়া গড় দামে।"
+
+msgid "When fish are ready"
+msgstr "মাছ কবে তৈরি"
+
+msgid "Latest sample weight + growth a day (from the weighing before) × days, until the selling size."
+msgstr "সর্বশেষ নমুনা ওজন + দিনে বৃদ্ধি (আগের ওজন থেকে) × দিন, বিক্রির সাইজ পর্যন্ত।"
+
+msgid "Worked out from what you've recorded: water tests outside your alert levels, many fish dying in the last 3 days, ponds with no feeding today, cycles due a sample weighing (every 3 weeks), harvests planned within a week, fish that look ready to sell or have stopped growing, pond leases ending within a month, machines due a service, and pond supplies running low."
+msgstr "আপনার লেখা হিসাব থেকে বের করা: সতর্কসীমার বাইরে পানির পরীক্ষা, গত ৩ দিনে অনেক মাছ মারা যাওয়া, আজ খাবার না দেওয়া পুকুর, নমুনা ওজনের সময় হওয়া চক্র (প্রতি ৩ সপ্তাহ), এক সপ্তাহের মধ্যে পরিকল্পিত মাছ ধরা, বিক্রির উপযোগী বা বাড়ছে না এমন মাছ, এক মাসের মধ্যে শেষ হওয়া পুকুর লিজ, সার্ভিসের সময় হওয়া যন্ত্র, আর ফুরিয়ে আসা পুকুরের উপকরণ।"
+
+msgid "%(fish)s in %(pond)s look ready to sell"
+msgstr "%(pond)s-এর %(fish)s বিক্রির উপযোগী মনে হচ্ছে"
+
+msgid "≈ %(now)s g each, selling size %(target)s g. Net a few to check."
+msgstr "প্রতিটি ≈ %(now)s গ্রাম, বিক্রির সাইজ %(target)s গ্রাম। কয়েকটা জাল টেনে মিলিয়ে নিন।"
+
+msgid "Plan harvest"
+msgstr "মাছ ধরার পরিকল্পনা"
+
+msgid "%(fish)s in %(pond)s aren't growing"
+msgstr "%(pond)s-এর %(fish)s বাড়ছে না"
+
+msgid "The last weighings show little or no growth. Check the feed and the water."
+msgstr "শেষ ওজনগুলোতে বৃদ্ধি সামান্য বা নেই। খাবার আর পানি দেখুন।"
+
+msgid "%(q)s %(unit)s left"
+msgstr "%(q)s %(unit)s বাকি"
+
+msgid "%(name)s is out of stock"
+msgstr "%(name)s মজুদ শেষ"
+
+msgid "%(name)s is running low"
+msgstr "%(name)s ফুরিয়ে আসছে"
+
+msgid "Pond supplies: %(item)s"
+msgstr "পুকুরের উপকরণ: %(item)s"
+
+msgid "Partner put money in"
+msgstr "অংশীদার টাকা দিলেন"
+
+msgid "Partner took money out"
+msgstr "অংশীদার টাকা তুললেন"
+
+msgid "Pond supplies bought"
+msgstr "পুকুরের উপকরণ কেনা"
+
+msgid "Their part of the farm's profit (and loss). All partners' shares together should make 100."
+msgstr "খামারের লাভে (ও লোকসানে) তাঁর অংশ। সব অংশীদারের অংশ মিলে ১০০ হওয়া উচিত।"
+
+msgid "Only when you start using the app: the money they had already put into the farm."
+msgstr "শুধু অ্যাপ শুরুর সময়: খামারে তিনি আগেই যত টাকা দিয়েছিলেন।"
+
+msgid "e.g. Karim Uddin"
+msgstr "যেমন করিম উদ্দিন"
+
+#, python-format
+msgid "Other partners have %(n)s%% between them."
+msgstr "অন্য অংশীদারদের মিলে %(n)s%% আছে।"
+
+msgid "All shares together can't be more than 100. %(n)s is left."
+msgstr "সব অংশ মিলে ১০০-এর বেশি হতে পারে না। বাকি আছে %(n)s।"
+
+msgid "Put money in: capital for the farm. Took money out: their share of profit, or capital taken back."
+msgstr "টাকা দিলেন: খামারের মূলধন। টাকা তুললেন: লাভের ভাগ, বা মূলধন ফেরত নেওয়া।"
+
+msgid "Share of profit (%)"
+msgstr "লাভে অংশ (%)"
+
+msgid "Partner since"
+msgstr "অংশীদার যেদিন থেকে"
+
+msgid "Money already put in"
+msgstr "আগেই দেওয়া টাকা"
+
+msgid "What they had put into the farm before you started using the app. Usually 0."
+msgstr "অ্যাপ ব্যবহার শুরুর আগে খামারে তিনি যত টাকা দিয়েছিলেন। সাধারণত ০।"
+
+msgid "Put money in"
+msgstr "টাকা দিলেন"
+
+msgid "Took money out"
+msgstr "টাকা তুললেন"
+
+msgid "What happened"
+msgstr "কী হলো"
+
+msgid "Where the money went in, or came out of."
+msgstr "টাকা কোথায় জমা হলো, বা কোথা থেকে গেল।"
+
+#, python-format
+msgid "%(n)s%% share"
+msgstr "%(n)s%% অংশ"
+
+msgid "Partner since %(date)s"
+msgstr "%(date)s থেকে অংশীদার"
+
+msgid "Put in"
+msgstr "দিয়েছেন"
+
+msgid "incl. %(a)s from before"
+msgstr "আগের %(a)s সহ"
+
+msgid "all time"
+msgstr "সব সময়"
+
+msgid "Taken out"
+msgstr "তুলেছেন"
+
+msgid "This year's profit share"
+msgstr "এ বছরের লাভের ভাগ"
+
+msgid "Their share of the farm's profit since 1 January, less what they've taken out this year."
+msgstr "১ জানুয়ারি থেকে খামারের লাভে তাঁর ভাগ, বাদ এ বছর তিনি যা তুলেছেন।"
+
+msgid "%(a)s left to take"
+msgstr "আরও %(a)s নিতে পারেন"
+
+msgid "took %(a)s more than this"
+msgstr "এর চেয়ে %(a)s বেশি তুলেছেন"
+
+msgid "Money put in"
+msgstr "টাকা দিলেন"
+
+msgid "Money taken out"
+msgstr "টাকা তুললেন"
+
+msgid "Money in and out"
+msgstr "টাকা দেওয়া-তোলা"
+
+msgid "%(a)s of theirs is in the farm now."
+msgstr "এখন খামারে তাঁর %(a)s আছে।"
+
+msgid "No money put in or taken out yet."
+msgstr "এখনো কোনো টাকা দেওয়া বা তোলা হয়নি।"
+
+msgid "Partner's money"
+msgstr "অংশীদারের টাকা"
+
+msgid "This moves money in the account, but it's not income or expense: the farm's profit stays the same."
+msgstr "এতে অ্যাকাউন্টে টাকা আসে-যায়, কিন্তু এটা আয় বা ব্যয় নয়: খামারের লাভ একই থাকে।"
+
+msgid "put in %(a)s · taken out %(b)s"
+msgstr "দিয়েছেন %(a)s · তুলেছেন %(b)s"
+
+msgid "in the farm"
+msgstr "খামারে আছে"
+
+msgid "The farm's profit split by each partner's share, against what they've already taken out."
+msgstr "প্রত্যেক অংশীদারের অংশ অনুযায়ী খামারের লাভের ভাগ, আর তাঁরা ইতিমধ্যে যা তুলেছেন।"
+
+msgid "Last year"
+msgstr "গত বছর"
+
+msgid "Income − expenses"
+msgstr "আয় − ব্যয়"
+
+msgid "− %(e)s expenses"
+msgstr "− %(e)s ব্যয়"
+
+msgid "details"
+msgstr "বিস্তারিত"
+
+msgid "Taken out by partners"
+msgstr "অংশীদাররা তুলেছেন"
+
+msgid "in these dates"
+msgstr "এই সময়ে"
+
+msgid "The shares add up to %(n)s out of 100, so %(a)s of this profit isn't in anyone's share. Edit the partners' shares to fix it."
+msgstr "অংশগুলো মিলে ১০০-এর মধ্যে %(n)s, তাই এই লাভের %(a)s কারও ভাগে নেই। ঠিক করতে অংশীদারদের অংশ বদলান।"
+
+msgid "Each partner's share"
+msgstr "প্রত্যেক অংশীদারের ভাগ"
+
+msgid "A loss is shared the same way."
+msgstr "লোকসানও একইভাবে ভাগ হয়।"
+
+msgid "Left to take = their share − what they took out in these dates."
+msgstr "নিতে বাকি = তাঁর ভাগ − এই সময়ে যা তুলেছেন।"
+
+msgid "share %(a)s · took out %(b)s"
+msgstr "ভাগ %(a)s · তুলেছেন %(b)s"
+
+msgid "put in %(c)s"
+msgstr "দিয়েছেন %(c)s"
+
+msgid "left to take"
+msgstr "নিতে বাকি"
+
+msgid "taken beyond share"
+msgstr "ভাগের বেশি তুলেছেন"
+
+msgid "Profit here is the farm business only — the same as Income & expenses for these dates, without household or personal spending. Money a partner puts in isn't profit."
+msgstr "এখানে লাভ শুধু খামারের ব্যবসার — এই তারিখের আয়-ব্যয়ের মতোই, সংসার বা ব্যক্তিগত খরচ ছাড়া। অংশীদারের দেওয়া টাকা লাভ নয়।"
+
+msgid "Add the partners and their shares, and the profit is split here for any dates you choose."
+msgstr "অংশীদার ও তাঁদের অংশ যোগ করুন, তাহলে যেকোনো তারিখের লাভ এখানে ভাগ হয়ে যাবে।"
+
+msgid "Profit sharing"
+msgstr "লাভের ভাগ"
+
+msgid "The people who own the farm together: the money each put in or took out, and their share of the profit."
+msgstr "যাঁরা মিলে খামারের মালিক: প্রত্যেকে কত টাকা দিয়েছেন বা তুলেছেন, আর লাভে তাঁদের ভাগ।"
+
+msgid "Add partner"
+msgstr "অংশীদার যোগ করুন"
+
+msgid "No partners yet"
+msgstr "এখনো কোনো অংশীদার নেই"
+
+msgid "Farm with others? Add each partner with their share. Their money in and out is kept here, and the profit is split for you."
+msgstr "অন্যদের সাথে খামার করেন? প্রত্যেক অংশীদারকে তাঁর অংশসহ যোগ করুন। তাঁদের টাকা দেওয়া-তোলার হিসাব এখানে থাকবে, আর লাভ ভাগ করে দেওয়া হবে।"
+
+msgid "How partners work"
+msgstr "অংশীদার হিসাব কীভাবে চলে"
+
+msgid "Record the money each partner puts in or takes out. It moves money in an account, but it isn't income or expense, so the farm's profit stays the same."
+msgstr "প্রত্যেক অংশীদার কত টাকা দেন বা তোলেন লিখুন। এতে অ্যাকাউন্টে টাকা আসে-যায়, কিন্তু এটা আয় বা ব্যয় নয়, তাই খামারের লাভ একই থাকে।"
+
+msgid "“Profit sharing” splits the farm's profit for any period by each partner's share, and shows what each has already taken out."
+msgstr "“লাভের ভাগ” যেকোনো সময়ের খামারের লাভ প্রত্যেকের অংশ অনুযায়ী ভাগ করে, আর কে কত তুলেছেন দেখায়।"
+
+msgid "Run the farm alone? You don't need this page."
+msgstr "একাই খামার চালান? তাহলে এই পাতার দরকার নেই।"
+
+msgid "Taken from what you bought for the store? Choose it: the stock goes down and the cost is worked out from what you paid. No money leaves an account now."
+msgstr "মজুদের জন্য কেনা থেকে নিয়েছেন? সেটা বাছুন: মজুদ কমবে আর খরচ হিসাব হবে আপনার দেওয়া দামে। এখন কোনো অ্যাকাউন্ট থেকে টাকা যাবে না।"
+
+msgid "No — bought for this pond"
+msgstr "না — এই পুকুরের জন্য কেনা"
+
+msgid "What did you put in the pond?"
+msgstr "পুকুরে কী দিলেন?"
+
+msgid "%(name)s is counted in %(unit)s. Use a unit of the same kind."
+msgstr "%(name)s গোনা হয় %(unit)s-এ। একই ধরনের একক দিন।"
+
+msgid "How much did you take from the store?"
+msgstr "মজুদ থেকে কতটা নিলেন?"
+
+msgid "From your store"
+msgstr "আপনার মজুদ থেকে"
+
+msgid "Ready to sell"
+msgstr "বিক্রির উপযোগী"
+
+msgid "≈ %(date)s"
+msgstr "≈ %(date)s"
+
+msgid "Not growing"
+msgstr "বাড়ছে না"
+
+msgid "No selling size"
+msgstr "বিক্রির সাইজ নেই"
+
+msgid "Weigh again"
+msgstr "আবার ওজন করুন"
+
+msgid "Not weighed yet"
+msgstr "এখনো ওজন হয়নি"
+
+#, python-format
+msgid "%(n)s%% of selling size"
+msgstr "বিক্রির সাইজের %(n)s%%"
+
+msgid "≈ %(now)s g each now, selling size %(target)s g"
+msgstr "এখন প্রতিটি ≈ %(now)s গ্রাম, বিক্রির সাইজ %(target)s গ্রাম"
+
+msgid "≈ %(now)s g each now"
+msgstr "এখন প্রতিটি ≈ %(now)s গ্রাম"
+
+msgid "growing %(g)s g a day"
+msgstr "দিনে %(g)s গ্রাম বাড়ছে"
+
+msgid "%(counter)s day to go"
+msgid_plural "%(counter)s days to go"
+msgstr[0] "আর %(counter)s দিন"
+msgstr[1] "আর %(counter)s দিন"
+
+msgid "≈ %(kg)s kg of fish, worth about %(value)s at recent prices"
+msgstr "≈ %(kg)s কেজি মাছ, সাম্প্রতিক দামে প্রায় %(value)s"
+
+msgid "no recent price to value it"
+msgstr "দাম ধরার মতো সাম্প্রতিক দর নেই"
+
+msgid "The last weighings show little or no growth. Check the feed, the water and the fish for disease."
+msgstr "শেষ ওজনগুলোতে বৃদ্ধি সামান্য বা নেই। খাবার, পানি আর মাছের রোগ দেখুন।"
+
+msgid "Weigh again a week or more after the last one to see how fast they grow."
+msgstr "কত দ্রুত বাড়ছে দেখতে আগের ওজনের এক সপ্তাহ বা বেশি পরে আবার ওজন করুন।"
+
+msgid "Net and weigh 10–20 fish to start the forecast."
+msgstr "আন্দাজ শুরু করতে জাল টেনে ১০–২০টি মাছ ওজন করুন।"
+
+msgid "Set the size you sell this fish at, and the app shows when they'll reach it."
+msgstr "এই মাছ কোন সাইজে বিক্রি করেন তা দিন, অ্যাপ দেখাবে কবে সেখানে পৌঁছাবে।"
+
+msgid "Set selling size"
+msgstr "বিক্রির সাইজ দিন"
+
+msgid "Last weighed %(date)s — weigh again for a closer guess."
+msgstr "শেষ ওজন %(date)s — আরও ঠিক আন্দাজের জন্য আবার ওজন করুন।"
+
+msgid "In store: {left} left. The cost is worked out from what you paid, and no money leaves an account now."
+msgstr "মজুদে: {left} বাকি। খরচ হিসাব হবে আপনার দেওয়া দামে, আর এখন কোনো অ্যাকাউন্ট থেকে টাকা যাবে না।"
+
+msgid "When will they reach selling size?"
+msgstr "কবে বিক্রির সাইজে পৌঁছাবে?"
+
+msgid "From your sample weighings: growth so far, carried forward. Weigh every 2–3 weeks to keep the guess close."
+msgstr "আপনার নমুনা ওজন থেকে: এ পর্যন্ত বৃদ্ধি, সামনে টেনে। আন্দাজ ঠিক রাখতে প্রতি ২–৩ সপ্তাহে ওজন করুন।"
+
+msgid "A rough guess from how fast they've grown."
+msgstr "কত দ্রুত বেড়েছে তা থেকে মোটামুটি আন্দাজ।"
+
+msgid "All ponds"
+msgstr "সব পুকুর"
+
+msgid "from store"
+msgstr "মজুদ থেকে"
+
+msgid "How big the fish in each pond are now, how fast they grow, and roughly when they reach selling size."
+msgstr "প্রতিটি পুকুরের মাছ এখন কত বড়, কত দ্রুত বাড়ছে, আর মোটামুটি কবে বিক্রির সাইজে পৌঁছাবে।"
+
+msgid "How the forecast works"
+msgstr "আন্দাজ কীভাবে হয়"
+
+msgid "Growth comes from your sample weighings: the latest one against an earlier one (or the fingerlings' weight when they were released)."
+msgstr "বৃদ্ধি আসে আপনার নমুনা ওজন থেকে: সর্বশেষটা আগের একটার সাথে মিলিয়ে (বা ছাড়ার সময় পোনার ওজনের সাথে)।"
+
+msgid "That growth a day is carried forward to guess the size today and the day the fish reach the selling size set for each fish in Farm setup → Fish species."
+msgstr "দিনে সেই বৃদ্ধি সামনে টেনে আজকের সাইজ আর খামারের সেটআপ → মাছের জাত-এ প্রতিটি মাছের ঠিক করা বিক্রির সাইজে পৌঁছানোর দিন আন্দাজ করা হয়।"
+
+msgid "It's a rough guess. Fish grow slower in winter and faster in warm months, so weigh 10–20 fish every 2–3 weeks to keep it close."
+msgstr "এটা মোটামুটি আন্দাজ। শীতে মাছ ধীরে আর গরমে দ্রুত বাড়ে, তাই ঠিক রাখতে প্রতি ২–৩ সপ্তাহে ১০–২০টি মাছ ওজন করুন।"
+
+msgid "The money is the fish's weight at selling size × the price you've been getting lately, after market deductions."
+msgstr "টাকার হিসাব = বিক্রির সাইজে মাছের ওজন × সম্প্রতি আপনি যে দাম পাচ্ছেন, বাজারের কর্তন বাদে।"
+
+msgid "Ready to sell now"
+msgstr "এখন বিক্রির উপযোগী"
+
+msgid "none yet"
+msgstr "এখনো নেই"
+
+msgid "Ready in the next 30 days"
+msgstr "আগামী ৩০ দিনে উপযোগী"
+
+msgid "first around %(date)s"
+msgstr "প্রথমটি মোটামুটি %(date)s"
+
+msgid "Fish worth at selling size"
+msgstr "বিক্রির সাইজে মাছের দাম"
+
+msgid "Ready and growing fish only, at the prices you've got lately. Before costs."
+msgstr "শুধু উপযোগী ও বাড়ন্ত মাছ, সম্প্রতি পাওয়া দামে। খরচ বাদ দেওয়ার আগে।"
+
+msgid "weigh the fish to see this"
+msgstr "দেখতে মাছ ওজন করুন"
+
+msgid "you planned %(date)s"
+msgstr "আপনার পরিকল্পনা %(date)s"
+
+msgid "Start a cycle, add the fingerlings and weigh a sample every few weeks. This page then shows when each pond's fish will be ready."
+msgstr "চক্র শুরু করুন, পোনা যোগ করুন আর কয়েক সপ্তাহ পরপর নমুনা ওজন করুন। তখন এই পাতা দেখাবে কোন পুকুরের মাছ কবে তৈরি হবে।"
+
+msgid "With sample weighings, the app works out roughly when the fish in each pond reach this size."
+msgstr "নমুনা ওজন থেকে অ্যাপ মোটামুটি হিসাব করে কোন পুকুরের মাছ কবে এই সাইজে পৌঁছাবে।"
+
+msgid "Selling size (grams per fish)"
+msgstr "বিক্রির সাইজ (প্রতি মাছ গ্রাম)"
+
+msgid "The size you usually sell this fish at, e.g. 1000 for 1 kg Rui. Used to guess when the fish in a pond will be ready."
+msgstr "সাধারণত যে সাইজে এই মাছ বিক্রি করেন, যেমন ১ কেজির রুই হলে ১০০০। পুকুরের মাছ কবে তৈরি হবে আন্দাজে কাজে লাগে।"
+
+msgid "Stock is shown in this unit. You can still buy or use it in another unit of the same kind (mon, gram, ml…)."
+msgstr "মজুদ এই এককে দেখানো হয়। একই ধরনের অন্য এককেও (মণ, গ্রাম, মিলি…) কিনতে বা ব্যবহার করতে পারবেন।"
+
+msgid "The farm's to-do list tells you when the stock falls to this."
+msgstr "মজুদ এতে নামলে খামারের কাজের তালিকা জানাবে।"
+
+msgid "Choose the shop if you still owe them something: the rest goes into their baki."
+msgstr "দোকানের কাছে কিছু পাওনা থাকলে দোকানটি বাছুন: বাকিটা তাদের বাকি খাতায় যাবে।"
+
+msgid "Paid today, from the account below. Without a shop, it's taken as fully paid."
+msgstr "আজ নিচের অ্যাকাউন্ট থেকে দেওয়া। দোকান না বাছলে পুরো পরিশোধ ধরা হয়।"
+
+msgid "Paid in full / no shop"
+msgstr "পুরো পরিশোধ / দোকান নেই"
+
+msgid "Not paid from an account"
+msgstr "অ্যাকাউন্ট থেকে দেওয়া নয়"
+
+msgid "Which account was it paid from?"
+msgstr "কোন অ্যাকাউন্ট থেকে দিয়েছেন?"
+
+msgid "e.g. Dolomite lime, Urea, Oxytetracycline"
+msgstr "যেমন ডলোমাইট চুন, ইউরিয়া, অক্সিটেট্রাসাইক্লিন"
+
+msgid "Counted in"
+msgstr "যে এককে গোনা"
+
+msgid "The unit the stock is shown in: kg for lime, litre or bottle for medicine."
+msgstr "যে এককে মজুদ দেখাবে: চুনের জন্য কেজি, ওষুধের জন্য লিটার বা বোতল।"
+
+msgid "Warn me below"
+msgstr "এর নিচে নামলে জানাও"
+
+msgid "In the unit above. Leave empty for no warning."
+msgstr "উপরের এককে। সতর্কতা না চাইলে খালি রাখুন।"
+
+msgid "Usual dose per decimal"
+msgstr "শতাংশপ্রতি সাধারণ মাত্রা"
+
+msgid "Optional, from the bag or bottle, e.g. 1 kg lime per decimal. Fills the dose when you use it."
+msgstr "ইচ্ছা হলে, বস্তা বা বোতল দেখে, যেমন শতাংশপ্রতি ১ কেজি চুন। ব্যবহারের সময় মাত্রা নিজে বসে যাবে।"
+
+msgid "A medicine's waiting period, filled in each time you use it."
+msgstr "ওষুধের অপেক্ষার সময়, প্রতিবার ব্যবহারে নিজে বসে যাবে।"
+
+msgid "Total price"
+msgstr "মোট দাম"
+
+msgid "%(q)s %(unit)s per decimal"
+msgstr "শতাংশপ্রতি %(q)s %(unit)s"
+
+msgid "don't sell fish for %(counter)s day"
+msgid_plural "don't sell fish for %(counter)s days"
+msgstr[0] "%(counter)s দিন মাছ বিক্রি নয়"
+msgstr[1] "%(counter)s দিন মাছ বিক্রি নয়"
+
+msgid "Record a purchase"
+msgstr "কেনা লিখুন"
+
+msgid "In store"
+msgstr "মজুদে"
+
+msgid "Record the purchase if you bought more."
+msgstr "আরও কিনে থাকলে কেনাটা লিখুন।"
+
+msgid "warns below %(q)s %(unit)s"
+msgstr "%(q)s %(unit)s-এর নিচে জানাবে"
+
+msgid "no warning level set"
+msgstr "সতর্কসীমা দেওয়া নেই"
+
+msgid "Used in 30 days"
+msgstr "৩০ দিনে ব্যবহার"
+
+msgid "last used %(date)s"
+msgstr "শেষ ব্যবহার %(date)s"
+
+msgid "not used yet"
+msgstr "এখনো ব্যবহার হয়নি"
+
+msgid "Average price"
+msgstr "গড় দাম"
+
+msgid "Everything paid for it ÷ everything bought. A pond is charged this much for what it uses."
+msgstr "এর জন্য মোট দেওয়া টাকা ÷ মোট কেনা। পুকুরে যতটা যায়, এই দামে খরচ ধরা হয়।"
+
+msgid "per %(unit)s"
+msgstr "প্রতি %(unit)s"
+
+msgid "stock worth %(v)s"
+msgstr "মজুদের দাম %(v)s"
+
+msgid "not bought yet"
+msgstr "এখনো কেনা হয়নি"
+
+msgid "Bought and used"
+msgstr "কেনা ও ব্যবহার"
+
+msgid "To use it, add “Lime, medicine & care” to a pond and choose it under “From your store”."
+msgstr "ব্যবহার করতে পুকুরে “চুন, ওষুধ ও পরিচর্যা” যোগ করুন আর “আপনার মজুদ থেকে”-তে এটি বাছুন।"
+
+msgid "Bought %(q)s %(unit)s"
+msgstr "%(q)s %(unit)s কেনা"
+
+msgid "%(amount)s owed"
+msgstr "%(amount)s বাকি"
+
+msgid "%(q)s %(unit)s into %(pond)s"
+msgstr "%(pond)s-এ %(q)s %(unit)s"
+
+msgid "pond cost"
+msgstr "পুকুরের খরচ"
+
+msgid "Nothing bought or used yet."
+msgstr "এখনো কিছু কেনা বা ব্যবহার হয়নি।"
+
+msgid "Buy %(name)s"
+msgstr "%(name)s কিনুন"
+
+msgid "Running low"
+msgstr "ফুরিয়ে আসছে"
+
+msgid "%(q)s %(unit)s used in 30 days"
+msgstr "৩০ দিনে %(q)s %(unit)s ব্যবহার"
+
+msgid "worth %(v)s"
+msgstr "দাম %(v)s"
+
+msgid "Buy soon"
+msgstr "শিগগির কিনুন"
+
+msgid "In stock"
+msgstr "মজুদ আছে"
+
+msgid "Lime, fertilizer, salt and medicine you keep in store: what's left, and what it cost."
+msgstr "মজুদে রাখা চুন, সার, লবণ ও ওষুধ: কত বাকি, আর কত দাম পড়েছে।"
+
+msgid "Add a supply"
+msgstr "উপকরণ যোগ করুন"
+
+msgid "Nothing in the store yet"
+msgstr "মজুদে এখনো কিছু নেই"
+
+msgid "Add the lime, fertilizer and medicine you buy in bulk. Record each purchase, pick it when you treat a pond, and the stock keeps itself."
+msgstr "যে চুন, সার ও ওষুধ একসাথে বেশি কেনেন তা যোগ করুন। প্রতিটি কেনা লিখুন, পুকুরে দেওয়ার সময় বাছুন, মজুদের হিসাব নিজেই চলবে।"
+
+msgid "How the store works"
+msgstr "মজুদ কীভাবে চলে"
+
+msgid "Record what you buy here. Paying for it is money out, and anything still owed goes into the shop's baki."
+msgstr "যা কেনেন এখানে লিখুন। দাম দেওয়া মানে টাকা খরচ, আর যা বাকি থাকে তা দোকানের বাকি খাতায় যায়।"
+
+msgid "When you put lime or medicine into a pond, choose it under “From your store”. The stock goes down, and the pond's cost goes up by what that amount cost you."
+msgstr "পুকুরে চুন বা ওষুধ দেওয়ার সময় “আপনার মজুদ থেকে”-তে সেটি বাছুন। মজুদ কমবে, আর ওই পরিমাণের দাম পুকুরের খরচে যোগ হবে।"
+
+msgid "Set “Warn me below” and the farm's to-do list tells you before you run out."
+msgstr "“এর নিচে নামলে জানাও” দিন, ফুরিয়ে যাওয়ার আগেই খামারের কাজের তালিকা জানাবে।"
+
+msgid "%(q)s %(unit)s more used than bought. Record the purchase."
+msgstr "কেনার চেয়ে %(q)s %(unit)s বেশি ব্যবহার হয়েছে। কেনাটা লিখুন।"
+
+msgid "This year's share of the loss"
+msgstr "এ বছরের লোকসানে ভাগ"
+
+msgid "took out %(a)s this year"
+msgstr "এ বছর %(a)s তুলেছেন"
+
+msgid "A loss is shared the same way. Anything taken out in a loss year comes out of the partner's own money in the farm."
+msgstr "লোকসানও একইভাবে ভাগ হয়। লোকসানের বছরে যা তোলা হয়, তা খামারে অংশীদারের নিজের টাকা থেকে যায়।"
+
+msgid "share of the loss"
+msgstr "লোকসানে ভাগ"
+
+msgid "At this rate they'd take over a year. They're growing slowly: check the feed, the water and how many fish are in the pond."
+msgstr "এই হারে এক বছরের বেশি লাগবে। মাছ ধীরে বাড়ছে: খাবার, পানি আর পুকুরে মাছের সংখ্যা দেখুন।"

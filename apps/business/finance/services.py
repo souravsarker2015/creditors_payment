@@ -106,6 +106,19 @@ def movements(business, account=None):
         for lp in LeasePayment.objects.filter(business=business).select_related("pond"):
             add(lp.date, lp.account_id, -lp.amount, _("Pond lease"), str(lp.pond),
                 reverse("business:pond_detail", args=[lp.pond_id]), "expense")
+    if _installed("partners"):
+        from apps.business.partners.models import PartnerEntry
+
+        for pe in PartnerEntry.objects.filter(business=business).select_related("partner"):
+            add(pe.date, pe.account_id, pe.amount if pe.is_in else -pe.amount,
+                _("Partner put money in") if pe.is_in else _("Partner took money out"), str(pe.partner),
+                reverse("business:partner_detail", args=[pe.partner_id]), "partner")
+    if _installed("supplies"):
+        from apps.business.supplies.models import SupplyPurchase
+
+        for sp in SupplyPurchase.objects.filter(business=business, paid_now__gt=0, account__isnull=False).select_related("item", "supplier"):
+            add(sp.date, sp.account_id, -sp.paid_now, _("Pond supplies bought"), " · ".join(str(x) for x in (sp.item, sp.supplier) if x),
+                reverse("business:supply_detail", args=[sp.item_id]), "expense")
     if _installed("staff"):
         from apps.business.staff.models import WorkerPayment
 

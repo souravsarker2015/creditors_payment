@@ -266,12 +266,13 @@ class TreatmentForm(EntryForm):
         "withdrawal_days": _("Some medicines stay in the fish for a while. The app warns you if you try to sell fish from this pond before the waiting period is over."),
         "cost": _("What this lot cost. It becomes part of this cycle's cost."),
         "account": _("Leave empty if it was bought earlier or on credit — the cost still counts for the pond, but no money leaves an account today."),
+        "item": _("Taken from what you bought for the store? Choose it: the stock goes down and the cost is worked out from what you paid. No money leaves an account now."),
     }
-    layout = [("date", "kind"), ("product",), ("dose",), ("quantity", "unit"), ("reason",), ("cost", "account"), ("withdrawal_days",), ("notes",)]
+    layout = [("date", "kind"), ("item",), ("product",), ("dose",), ("quantity", "unit"), ("reason",), ("cost", "account"), ("withdrawal_days",), ("notes",)]
 
     class Meta:
         model = Treatment
-        fields = ["date", "kind", "product", "quantity", "unit", "reason", "cost", "account", "withdrawal_days", "notes"]
+        fields = ["date", "kind", "item", "product", "quantity", "unit", "reason", "cost", "account", "withdrawal_days", "notes"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -284,6 +285,9 @@ class TreatmentForm(EntryForm):
         self.fields["cost"].required = False
         money_field(self.fields["cost"])
         self.fields["product"].widget.attrs["list"] = f"treatment-products-{self.prefix or 'x'}"
+        self._store_items()
+        # Picked from the store, the product is filled in from it.
+        self.fields["product"].required = not (self.is_bound and self.data.get(self.add_prefix("item")))
         pond = getattr(self.cycle, "pond", None)
         self.area = pond.area_decimal if pond else None
         if self.area:
@@ -301,14 +305,57 @@ class TreatmentForm(EntryForm):
         """Products used on this farm before, for the suggestions list."""
         return (Treatment.objects.filter(business=self.business).order_by("product").values_list("product", flat=True).distinct()[:60])
 
+    def _store_items(self):
+        """"From your store" lists the farm's supplies; hidden while it has none."""
+        from apps.business.supplies.models import SupplyItem
+
+        items = SupplyItem.objects.filter(business=self.business).select_related("unit")
+        current = self.instance.item_id
+        if current:
+            items = items | SupplyItem.all_objects.filter(pk=current).select_related("unit")
+        items = list(items.distinct())
+        if not items:
+            del self.fields["item"]
+            self.store = []
+            return
+        from apps.business.supplies.services import stock
+
+        self.fields["item"].queryset = SupplyItem.all_objects.filter(pk__in=[i.pk for i in items])
+        self.fields["item"].empty_label = _("No — bought for this pond")
+        self.store = [{"id": st.item.pk, "name": st.item.name, "kind": st.item.kind, "unit": st.item.unit_id,
+                       "left": format(st.left.normalize(), "f"), "symbol": st.item.unit.symbol,
+                       "dose": format(st.item.dose_per_decimal.normalize(), "f") if st.item.dose_per_decimal else "",
+                       "wait": st.item.withdrawal_days or ""} for st in stock(self.business, items)]
+
     def clean(self):
         data = super().clean()
         data["cost"] = data.get("cost") or 0
         if data.get("dose") and not data.get("quantity") and self.area:
             data["quantity"] = (data["dose"] * self.area).quantize(Decimal("0.001"))
+        item = data.get("item")
+        if item:
+            self._clean_from_store(data, item)
         if data["cost"] and not data.get("account"):
             data["account"] = None
         return data
+
+    def _clean_from_store(self, data, item):
+        from apps.business.supplies.services import use_cost
+
+        data["product"] = (data.get("product") or "").strip() or item.name
+        data["kind"] = item.kind
+        unit = data.get("unit")
+        if unit and unit.unit_type != item.unit.unit_type:
+            self.add_error("unit", _("%(name)s is counted in %(unit)s. Use a unit of the same kind.") % {"name": item.name, "unit": item.unit.symbol})
+            return
+        if not data.get("quantity"):
+            self.add_error("quantity", _("How much did you take from the store?"))
+            return
+        if data.get("withdrawal_days") is None and item.withdrawal_days:
+            data["withdrawal_days"] = item.withdrawal_days
+        data["account"] = None  # paid when it was bought
+        # At the store's average price; a typed cost only counts while nothing has been bought yet.
+        data["cost"] = use_cost(item, data["quantity"] * unit.factor) or data["cost"]
 
 
 class PondAlertsForm(BusinessForm):
