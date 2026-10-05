@@ -25,6 +25,19 @@
     </div>
   </section>
 
+  <a href="{% url 'wallet_list' %}" class="card wallet-strip">
+    <span class="ledger-icon" data-tone="accent">{% include "partials/icon.html" with name="wallet" %}</span>
+    {% if wallets %}
+    <span class="min-w-0"><span class="wallet-strip-label">{% translate "In your wallets" %}</span>
+      <span class="wallet-strip-list">{% for w in wallets %}{{ w.name }} {{ w.balance|money }}{% if not forloop.last %} · {% endif %}{% endfor %}</span></span>
+    <strong class="wallet-strip-total">{{ wallets_total|money }}</strong>
+    {% else %}
+    <span class="min-w-0"><span class="wallet-strip-label">{% translate "Where is your money?" %}</span>
+      <span class="wallet-strip-list">{% translate "Add your cash, bank and bKash to see each balance." %}</span></span>
+    <span class="wallet-strip-total">{% include "partials/icon.html" with name="chevron-right" %}</span>
+    {% endif %}
+  </a>
+
   <div>
     <h2 class="section-title">{% blocktranslate with month=today|date:"F Y" %}This month · {{ month }}{% endblocktranslate %}</h2>
     <dl class="stat-grid">

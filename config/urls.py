@@ -10,6 +10,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 from apps.core.pwa import manifest_view, offline_view, service_worker_view
+from apps.core.search import search_view
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -30,6 +31,9 @@ urlpatterns = [
     path("backup/", include("apps.core.backup_urls")),  # whole-system backup & restore (site admins)
     path("budgets/", include("apps.budgets.urls")),
     path("goals/", include("apps.goals.urls")),
+    path("trash/", include("apps.trash.urls")),
+    path("wallets/", include("apps.wallets.urls")),
+    path("search/", search_view, name="search"),
     path("business/", include("apps.business.urls")),  # business module
 ]
 

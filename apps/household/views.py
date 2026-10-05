@@ -4,6 +4,7 @@ import io
 from datetime import date
 
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.http import Http404, HttpResponse
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
@@ -15,6 +16,8 @@ from django.core.paginator import Paginator
 from django.utils import dateformat
 from django.utils.translation import gettext as _, gettext_lazy, ngettext
 
+from apps.core.templatetags.ui import money
+from apps.trash.undo import delete_with_undo
 from .models import HouseholdCategory, HouseholdMember, Purchase, Settlement
 from apps.budgets.models import Budget, BudgetScope
 from apps.budgets.services import status as budget_status
@@ -375,8 +378,9 @@ def purchase_edit_view(request, pk):
 def purchase_delete_view(request, pk):
     purchase = get_object_or_404(Purchase, pk=pk, user=request.user)
     year, month, amount = purchase.date.year, purchase.date.month, purchase.amount
-    purchase.delete()
-    messages.success(request, _("Purchase of ৳%(amount)s deleted.") % {"amount": amount})
+    delete_with_undo(request, purchase, _("Purchase of ৳%(amount)s deleted.") % {"amount": amount},
+                     label=f"{purchase.category or _('No category')} · {money(amount)} · {purchase.date:%d %b %Y}",
+                     back_url=reverse("household_month_detail", kwargs={"year": year, "month": month}))
     return redirect("household_month_detail", year=year, month=month)
 
 
@@ -724,8 +728,8 @@ def settlement_delete_view(request, pk):
     settlement = get_object_or_404(Settlement, pk=pk, member__user=request.user)
     member = settlement.member
     amount = settlement.amount
-    settlement.delete()
-    messages.success(request, _("Settlement of ৳%(amount)s deleted.") % {"amount": amount})
+    delete_with_undo(request, settlement, _("Settlement of ৳%(amount)s deleted.") % {"amount": amount},
+                     label=f"{member.name} · {money(amount)}", back_url=reverse("household_member_detail", args=[member.pk]))
     return redirect("household_member_detail", pk=member.pk)
 
 

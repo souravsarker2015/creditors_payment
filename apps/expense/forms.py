@@ -2,6 +2,7 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 from apps.core.status import active_or_current
 from .models import RecurringFrequency, ExpenseCategory, Expense, RecurringExpense
+from apps.wallets.forms import WalletFieldMixin
 
 
 class ExpenseCategoryForm(forms.ModelForm):
@@ -11,10 +12,10 @@ class ExpenseCategoryForm(forms.ModelForm):
         widgets = {"name": forms.TextInput(attrs={"class": "form-input", "placeholder": _("e.g. Groceries, Rent, Transport")})}
 
 
-class ExpenseForm(forms.ModelForm):
+class ExpenseForm(WalletFieldMixin, forms.ModelForm):
     class Meta:
         model = Expense
-        fields = ["category", "amount", "date", "note"]
+        fields = ["category", "amount", "wallet", "date", "note"]
         widgets = {
             "category": forms.Select(attrs={"class": "form-input"}),
             "amount": forms.NumberInput(attrs={"class": "form-input", "placeholder": "0.00"}),
@@ -34,10 +35,10 @@ class ExpenseForm(forms.ModelForm):
         self.fields["category"].help_text = _("Missing one? Use + to add a category without leaving this form.")
 
 
-class RecurringExpenseForm(forms.ModelForm):
+class RecurringExpenseForm(WalletFieldMixin, forms.ModelForm):
     class Meta:
         model = RecurringExpense
-        fields = ["category", "amount", "frequency", "next_run_date", "skip_weekend", "note"]
+        fields = ["category", "amount", "wallet", "frequency", "next_run_date", "skip_weekend", "note"]
         labels = {
             "next_run_date": _("Next Occurrence"),
             "skip_weekend": _("Move to the previous working day if this date falls on a Friday or Saturday"),

@@ -115,7 +115,18 @@ def networth_view(request):
     out_series = [a + b for a, b in zip(monthly_series(expense_qs, months), monthly_series(bazar_qs, months))]
     net_series = [a - b for a, b in zip(in_series, out_series)]
 
+    from apps.wallets.models import Wallet
+    from apps.wallets.services import balances as wallet_balances
+
+    wallets = list(Wallet.objects.filter(user=user, is_active=True))
+    if wallets:
+        held = wallet_balances(user)
+        for w in wallets:
+            w.balance = held.get(w.pk, w.opening_balance)
+
     context = {
+        "wallets": wallets,
+        "wallets_total": sum((w.balance for w in wallets), ZERO),
         "today": today,
         "in_month": in_month,
         "out_month": out_month,

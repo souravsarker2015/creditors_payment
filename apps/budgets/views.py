@@ -11,6 +11,7 @@ from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
 from apps.core.stats import month_start
+from apps.trash.undo import delete_with_undo
 from .forms import BudgetForm
 from .models import Budget, BudgetScope
 from .services import month_from_param, statuses
@@ -96,6 +97,5 @@ def budget_edit_view(request, pk):
 def budget_delete_view(request, pk):
     budget = get_object_or_404(Budget, pk=pk, user=request.user)
     name = budget.label
-    budget.delete()
-    messages.success(request, _("Budget removed: %(name)s.") % {"name": name})
+    delete_with_undo(request, budget, _("Budget removed: %(name)s.") % {"name": name}, label=str(name), back_url=reverse("budget_list"))
     return redirect("budget_list")

@@ -120,6 +120,8 @@ class Transaction(models.Model):
         default=LEND,
     )
     amount = models.DecimalField(max_digits=12, decimal_places=2)
+    wallet = models.ForeignKey("wallets.Wallet", on_delete=models.SET_NULL, null=True, blank=True, related_name="+",
+                               verbose_name=_("Wallet"))
     date = models.DateField()
     note = models.TextField(blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)

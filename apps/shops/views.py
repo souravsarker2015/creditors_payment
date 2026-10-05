@@ -2,6 +2,7 @@ import csv
 import io
 from decimal import Decimal, InvalidOperation
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.http import HttpResponse
 import django.utils.timezone
 from datetime import date as date_cls, timedelta
@@ -32,6 +33,8 @@ def _csv_response(filename, header, rows):
     writer.writerows(rows)
     return response
 
+from apps.core.templatetags.ui import money
+from apps.trash.undo import delete_with_undo
 from .models import Shop, ShopCategory, Transaction, DUE_SOON_DAYS
 from apps.core.stats import ledger_extras
 from apps.core.status import apply_status_filter, toggle_active
@@ -718,8 +721,8 @@ def transaction_delete_view(request, pk):
     transaction = get_object_or_404(Transaction, pk=pk, shop__user=request.user)
     shop = transaction.shop
     amount = transaction.amount
-    transaction.delete()
-    messages.success(request, _("Transaction of ৳%(amount)s deleted.") % {"amount": amount})
+    delete_with_undo(request, transaction, _("Transaction of ৳%(amount)s deleted.") % {"amount": amount},
+                     label=f"{shop.name} · {money(amount)} · {transaction.get_transaction_type_display()}", back_url=reverse("shop_detail", args=[shop.pk]))
     return redirect("shop_detail", pk=shop.pk)
 
 

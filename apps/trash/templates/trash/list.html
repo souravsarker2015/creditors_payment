@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% translate "Recently deleted" %} | FinTrack{% endblock %}
+{% block content %}
+<div class="page-medium stack">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "Recently deleted" %}</h1>
+      <p class="page-subtitle">{% blocktranslate with n=keep_days %}Anything you delete stays here for {{ n }} days. Restore puts it back exactly as it was, with everything that was deleted along with it.{% endblocktranslate %}</p>
+    </div>
+    {% if items %}
+    <div class="page-actions">
+      <form method="post" action="{% url 'trash_empty' %}" data-confirm="{% translate 'Delete everything here for good? This cannot be undone.' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-ghost">{% include "partials/icon.html" with name="trash" %}{% translate "Empty" %}</button>
+      </form>
+    </div>
+    {% endif %}
+  </header>
+
+  {% if items %}
+  <section class="card">
+    <ul class="ledger">
+      {% for item in items %}
+      <li class="ledger-row">
+        <span class="ledger-icon" data-tone="muted">{% include "partials/icon.html" with name="trash" %}</span>
+        <div class="ledger-main">
+          <p class="ledger-title">{{ item.label }}</p>
+          <p class="ledger-meta">{{ item.kind }} · {% blocktranslate with when=item.deleted_at|timesince %}deleted {{ when }} ago{% endblocktranslate %}{% if item.count > 1 %} · {% blocktranslate count counter=item.count|add:"-1" %}with {{ counter }} related entry{% plural %}with {{ counter }} related entries{% endblocktranslate %}{% endif %}</p>
+        </div>
+        <div class="ledger-end trash-actions">
+          <form method="post" action="{% url 'trash_restore' item.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-soft btn-sm">{% include "partials/icon.html" with name="restore" %}{% translate "Restore" %}</button>
+          </form>
+          <form method="post" action="{% url 'trash_forget' item.pk %}" data-confirm="{% translate 'Delete this for good? This cannot be undone.' %}">
+            {% csrf_token %}
+            <button type="submit" class="icon-btn" aria-label="{% translate 'Delete for good' %}" data-tip="{% translate 'Delete for good' %}">{% include "partials/icon.html" with name="x" %}</button>
+          </form>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% else %}
+  <div class="empty">
+    <div class="empty-icon">{% include "partials/icon.html" with name="trash" %}</div>
+    <h3 class="empty-title">{% translate "Nothing deleted lately" %}</h3>
+    <p class="empty-text">{% translate "When you delete an expense, a payment or a goal, it waits here in case you change your mind." %}</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

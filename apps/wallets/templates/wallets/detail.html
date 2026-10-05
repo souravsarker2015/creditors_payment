@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{{ w.name }} | FinTrack{% endblock %}
+{% block content %}
+<div class="page-medium stack">
+  <header class="page-header !mb-0">
+    <div class="min-w-0">
+      <a href="{% url 'wallet_list' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Wallets" %}</a>
+      <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <h1 class="page-title">{{ w.name }}</h1>
+        {% if w.is_default %}<span class="badge" data-tone="info">{% translate "Default" %}</span>{% endif %}
+        {% if not w.is_active %}<span class="badge" data-tone="muted">{% translate "Not in use" %}</span>{% endif %}
+      </div>
+      <p class="page-subtitle">{{ w.get_kind_display }}{% if w.number %} · {{ w.number }}{% endif %} · {% blocktranslate with date=w.opening_date|date:"j M Y" amount=w.opening_balance|money %}counting from {{ date }} ({{ amount }}){% endblocktranslate %}</p>
+    </div>
+    <div class="page-actions">
+      <a href="{% url 'wallet_edit' w.pk %}" class="btn btn-ghost">{% include "partials/icon.html" with name="edit" %}{% translate "Edit" %}</a>
+      {% if w.is_active %}<a href="{% url 'wallet_transfer' %}?from={{ w.pk }}" class="btn btn-secondary">{% include "business/partials/icon.html" with name="swap" %}{% translate "Move money" %}</a>{% endif %}
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="min-w-0">
+        <p class="hero-label">{% translate "Balance now" %}</p>
+        <p class="hero-value">{{ balance|money }}</p>
+        <p class="hero-sub">{% blocktranslate with a=money_in|money b=money_out|money %}{{ a }} in · {{ b }} out since you started{% endblocktranslate %}</p>
+      </div>
+    </div>
+  </section>
+
+  <details class="card wallet-correct">
+    <summary class="card-header"><div><h2 class="card-title">{% translate "Correct the balance" %}</h2><p class="card-subtitle">{% translate "Counted the cash or checked the app, and it's different? Type what it really holds." %}</p></div>{% include "partials/icon.html" with name="chevron-down" %}</summary>
+    <form method="post" action="{% url 'wallet_correct' w.pk %}" class="card-body form-stack">
+      {% csrf_token %}
+      {% with form=correct_form %}{% for field in form %}{% include "partials/field.html" %}{% endfor %}{% endwith %}
+      <p class="help">{% translate "The difference is saved as a correction, so the history still adds up." %}</p>
+      <div><button type="submit" class="btn btn-primary">{% include "partials/icon.html" with name="check" %}{% translate "Save the real balance" %}</button></div>
+    </form>
+  </details>
+
+  <section class="card">
+    <div class="card-header"><h2 class="card-title">{% translate "Money in and out" %}</h2></div>
+    {% if rows %}
+    <ul class="ledger">
+      {% for m in rows %}
+      <li>{% if m.url %}<a href="{{ m.url }}" class="ledger-row">{% else %}<div class="ledger-row">{% endif %}
+        <span class="ledger-icon" data-tone="{% if m.kind == 'adjust' %}muted{% elif m.kind == 'transfer' %}info{% elif m.amount > 0 %}good{% else %}warn{% endif %}">{% if m.kind == 'transfer' %}{% include "business/partials/icon.html" with name="swap" %}{% elif m.amount > 0 %}{% include "partials/icon.html" with name="arrow-down" %}{% else %}{% include "partials/icon.html" with name="arrow-up" %}{% endif %}</span>
+        <div class="ledger-main"><p class="ledger-title">{{ m.title }}</p><p class="ledger-meta">{{ m.date|date:"j M Y" }}{% if m.detail %} · {{ m.detail }}{% endif %}</p></div>
+        <div class="ledger-end"><span class="party-bal"><strong class="{% if m.amount > 0 %}tone-good{% endif %}">{{ m.amount|signed_money }}</strong><span>{{ m.balance|money }}</span></span></div>
+      {% if m.url %}</a>{% else %}</div>{% endif %}</li>
+      {% endfor %}
+    </ul>
+    {% if more %}<p class="help px-5 pb-4">{% translate "Showing the latest 300." %}</p>{% endif %}
+    {% else %}
+    <div class="empty is-plain"><p class="empty-text">{% translate "Nothing yet. Pick this wallet when you record an expense, income or payment." %}</p></div>
+    {% endif %}
+  </section>
+
+  <div class="wallet-manage">
+    <form method="post" action="{% url 'wallet_toggle' w.pk %}">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-ghost btn-sm">{% if w.is_active %}{% include "partials/icon.html" with name="pause" %}{% translate "Stop using this wallet" %}{% else %}{% include "partials/icon.html" with name="play" %}{% translate "Use this wallet again" %}{% endif %}</button>
+    </form>
+    <form method="post" action="{% url 'wallet_delete' w.pk %}" data-confirm="{% translate 'Delete this wallet? Its entries are kept, without a wallet. You can undo this from Recently deleted.' %}">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-ghost btn-sm is-danger">{% include "partials/icon.html" with name="trash" %}{% translate "Delete wallet" %}</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

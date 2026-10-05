@@ -2,6 +2,7 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 from apps.core.status import active_or_current
 from .models import RecurringFrequency, IncomeSource, IncomeTransaction, RecurringIncome
+from apps.wallets.forms import WalletFieldMixin
 
 
 class IncomeSourceForm(forms.ModelForm):
@@ -14,20 +15,20 @@ class IncomeSourceForm(forms.ModelForm):
         }
 
 
-class IncomeTransactionForm(forms.ModelForm):
+class IncomeTransactionForm(WalletFieldMixin, forms.ModelForm):
     class Meta:
         model = IncomeTransaction
-        fields = ["amount", "date", "note"]
+        fields = ["amount", "wallet", "date", "note"]
         widgets = {
             "date": forms.DateInput(attrs={"class": "form-input datepicker", "placeholder": _("Select Date")}),
             "note": forms.Textarea(attrs={"class": "form-input", "rows": 2, "placeholder": _("Additional details...")}),
         }
 
 
-class RecurringIncomeForm(forms.ModelForm):
+class RecurringIncomeForm(WalletFieldMixin, forms.ModelForm):
     class Meta:
         model = RecurringIncome
-        fields = ["source", "amount", "frequency", "next_run_date", "skip_weekend", "note"]
+        fields = ["source", "amount", "wallet", "frequency", "next_run_date", "skip_weekend", "note"]
         labels = {
             "next_run_date": _("Next Occurrence"),
             "skip_weekend": _("Move to the previous working day if this date falls on a Friday or Saturday"),

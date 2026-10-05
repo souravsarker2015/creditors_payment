@@ -1,0 +1,22 @@
+{% load i18n %}<div id="search-results" class="search-results">
+{% if groups %}
+  <p class="sr-only" role="status">{% blocktranslate count counter=count %}{{ counter }} result{% plural %}{{ counter }} results{% endblocktranslate %}</p>
+  {% for g in groups %}
+  <section class="search-group">
+    <h2 class="search-group-title">{{ g.title }}</h2>
+    <ul>
+      {% for h in g.hits %}
+      <li><a href="{{ h.url }}" class="search-hit">
+        <span class="search-hit-icon">{% include "business/partials/icon.html" with name=h.icon %}</span>
+        <span class="min-w-0"><span class="search-hit-title">{{ h.title }}</span><span class="search-hit-meta">{{ h.meta }}</span></span>
+      </a></li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endfor %}
+{% elif q and not too_short %}
+  <p class="search-empty">{% blocktranslate %}Nothing found for “{{ q }}”.{% endblocktranslate %}</p>
+{% else %}
+  <p class="search-empty">{% translate "Type a name, phone number, pond, memo number or page — at least 2 letters." %}</p>
+{% endif %}
+</div>

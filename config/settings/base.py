@@ -51,6 +51,8 @@ LOCAL_APPS = [
     "apps.overview",
     "apps.budgets",
     "apps.goals",
+    "apps.trash",
+    "apps.wallets",
     # ── Business module (fully separate; see apps/business/) ──
     "apps.business.core",
     "apps.business.loans",

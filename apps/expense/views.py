@@ -12,6 +12,8 @@ from django.core.paginator import Paginator
 from django.utils.translation import gettext as _, gettext_lazy, ngettext
 from datetime import date as date_cls
 
+from apps.core.templatetags.ui import money
+from apps.trash.undo import delete_with_undo
 from .models import ExpenseCategory, Expense, RecurringExpense, generate_due_recurring_expense
 from django.urls import reverse
 from django.utils import timezone
@@ -401,8 +403,8 @@ def expense_edit_view(request, pk):
 def expense_delete_view(request, pk):
     expense = get_object_or_404(Expense, pk=pk, user=request.user)
     amt = expense.amount
-    expense.delete()
-    messages.success(request, _("Expense of ৳%(amount)s deleted.") % {"amount": amt})
+    delete_with_undo(request, expense, _("Expense of ৳%(amount)s deleted.") % {"amount": amt},
+                     label=f"{expense.category or _('No category')} · {money(amt)} · {expense.date:%d %b %Y}", back_url=reverse("expense_list"))
     return redirect("expense_list")
 
 
@@ -586,8 +588,8 @@ def recurring_expense_toggle_view(request, pk):
 @require_POST
 def recurring_expense_delete_view(request, pk):
     schedule = get_object_or_404(RecurringExpense, pk=pk, user=request.user)
-    schedule.delete()
-    messages.success(request, _("Recurring expense deleted."))
+    delete_with_undo(request, schedule, _("Recurring expense deleted."), label=f"{schedule.category or _('No category')} · {money(schedule.amount)}",
+                     back_url=reverse("recurring_expense_list"))
     return redirect("recurring_expense_list")
 
 

@@ -181,6 +181,14 @@ person's choice (Automatic / App view / Website view).
                 <button type="button" class="app-list-item" @click="sheet = null; $dispatch('toggle-calculator')">
                     {% include "partials/icon.html" with name="calculator" %}<span>{% translate "Calculator" %}</span>
                 </button>
+                <button type="button" class="app-list-item" @click="sheet = null; $dispatch('open-search')">
+                    {% include "partials/icon.html" with name="search" %}<span>{% translate "Search everything" %}</span>
+                </button>
+                {% if active_dashboard != "business" %}
+                <a href="{% url 'trash_list' %}" class="app-list-item">
+                    {% include "partials/icon.html" with name="trash" %}<span>{% translate "Recently deleted" %}</span>
+                </a>
+                {% endif %}
                 <button type="button" class="app-list-item" data-install-app hidden>
                     {% include "partials/icon.html" with name="download" %}<span>{% translate "Install app" %}</span>
                 </button>

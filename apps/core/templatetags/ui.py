@@ -112,3 +112,12 @@ def reminder(name, amount, due_date=None, phone=""):
         "sms": f"sms:{phone}?&body={quote(text)}",
         "has_phone": bool(number),
     }
+
+
+@register.filter
+def undo_id(message):
+    """The Recently deleted id carried by a "deleted" message (extra_tags "undo:12"), or ""."""
+    for tag in (getattr(message, "extra_tags", "") or "").split():
+        if tag.startswith("undo:") and tag[5:].isdigit():
+            return tag[5:]
+    return ""

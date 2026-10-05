@@ -93,6 +93,10 @@
             </a>
 
             <div class="ml-auto flex items-center gap-2 sm:gap-3">
+                <button type="button" class="calc-trigger" @click="$dispatch('open-search')" aria-keyshortcuts="Control+K"
+                        data-tip="{% translate 'Search everything (Ctrl+K)' %}" aria-label="{% translate 'Search everything' %}">
+                    {% include "partials/icon.html" with name="search" %}<span class="hidden xl:inline">{% translate "Search" %}</span>
+                </button>
                 <button type="button" class="calc-trigger" @click="$dispatch('toggle-calculator')" aria-keyshortcuts="Alt+C"
                         data-tip="{% translate 'Calculator — discounts, VAT, profit, splits (Alt+C)' %}" aria-label="{% translate 'Calculator' %}">
                     {% include "partials/icon.html" with name="calculator" %}<span class="hidden xl:inline">{% translate "Calculator" %}</span>
@@ -126,6 +130,11 @@
                             {% include "partials/view_choice.html" %}
                             <div class="menu-sep"></div>
                         </div>
+                        {% if active_dashboard != "business" %}
+                        <a href="{% url 'trash_list' %}" class="menu-item" role="menuitem">
+                            {% include "partials/icon.html" with name="trash" %}{% translate "Recently deleted" %}
+                        </a>
+                        {% endif %}
                         <button type="button" class="menu-item" role="menuitem" data-install-app hidden>
                             {% include "partials/icon.html" with name="download" %}{% translate "Install app" %}
                         </button>
@@ -144,15 +153,21 @@
             <div class="page mb-5 space-y-2.5" aria-live="polite">
                 {% for message in messages %}
                 <div class="flash" x-data="{ show: true }" x-show="show" x-transition.opacity
-                     data-tone="{% if message.tags == 'success' %}good{% elif message.tags == 'error' %}critical{% elif message.tags == 'warning' %}warn{% else %}info{% endif %}">
-                    {% if message.tags == 'success' %}
+                     data-tone="{% if message.level_tag == 'success' %}good{% elif message.level_tag == 'error' %}critical{% elif message.level_tag == 'warning' %}warn{% else %}info{% endif %}">
+                    {% if message.level_tag == 'success' %}
                     <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
-                    {% elif message.tags == 'error' or message.tags == 'warning' %}
+                    {% elif message.level_tag == 'error' or message.level_tag == 'warning' %}
                     <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" /></svg>
                     {% else %}
                     <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" /></svg>
                     {% endif %}
                     <p>{{ message }}</p>
+                    {% with undo=message|undo_id %}{% if undo %}
+                    <form method="post" action="{% url 'trash_restore' undo %}" class="flash-undo">
+                        {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button type="submit" class="btn btn-soft btn-sm">{% include "partials/icon.html" with name="restore" %}{% translate "Undo" %}</button>
+                    </form>
+                    {% endif %}{% endwith %}
                     <button type="button" class="icon-btn" @click="show = false" aria-label="{% translate 'Dismiss' %}">
                         <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
@@ -170,7 +185,7 @@
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tippy.js@6/dist/tippy-bundle.umd.min.js"></script>
-    {% if user.is_authenticated %}{% include "partials/calculator.html" %}{% endif %}
+    {% if user.is_authenticated %}{% include "partials/calculator.html" %}{% include "partials/search_modal.html" %}{% endif %}
     <div id="toast-root" class="toast-root" aria-live="polite" aria-atomic="true"></div>
     <script>
     /* Shared UI helpers — pages call these instead of repeating setup code. */

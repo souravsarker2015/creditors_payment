@@ -11028,3 +11028,326 @@ msgstr "লোকসানে ভাগ"
 
 msgid "At this rate they'd take over a year. They're growing slowly: check the feed, the water and how many fish are in the pond."
 msgstr "এই হারে এক বছরের বেশি লাগবে। মাছ ধীরে বাড়ছে: খাবার, পানি আর পুকুরে মাছের সংখ্যা দেখুন।"
+
+msgid "Contributor deleted: %(name)s."
+msgstr "অবদানকারী মুছে ফেলা হয়েছে: %(name)s।"
+
+msgid "Contribution of ৳%(amount)s deleted."
+msgstr "৳%(amount)s-এর অবদান মুছে ফেলা হয়েছে।"
+
+msgid "Wallets"
+msgstr "ওয়ালেট"
+
+msgid "Recently deleted"
+msgstr "সম্প্রতি মুছে ফেলা"
+
+msgid "People & shops"
+msgstr "মানুষ ও দোকান"
+
+msgid "Creditor — you owe them"
+msgstr "পাওনাদার — আপনি তাঁদের কাছে ঋণী"
+
+msgid "Debtor — they owe you"
+msgstr "দেনাদার — তাঁরা আপনার কাছে ঋণী"
+
+msgid "Household member"
+msgstr "পরিবারের সদস্য"
+
+msgid "Income, spending & goals"
+msgstr "আয়, খরচ ও লক্ষ্য"
+
+msgid "Wallet"
+msgstr "ওয়ালেট"
+
+msgid "Income source"
+msgstr "আয়ের উৎস"
+
+msgid "Savings goal"
+msgstr "সঞ্চয়ের লক্ষ্য"
+
+msgid "Farm: %(name)s"
+msgstr "খামার: %(name)s"
+
+msgid "Pond supply"
+msgstr "পুকুরের উপকরণ"
+
+msgid "Worker"
+msgstr "কর্মচারী"
+
+msgid "Partner"
+msgstr "অংশীদার"
+
+msgid "Pages"
+msgstr "পাতা"
+
+msgid "The wallet you paid from. Leave it when someone else paid — you'll owe them instead."
+msgstr "যে ওয়ালেট থেকে দিয়েছেন। অন্য কেউ দিলে খালি রাখুন — তখন আপনি তাঁর কাছে ঋণী হবেন।"
+
+msgid "In your wallets"
+msgstr "আপনার ওয়ালেটে"
+
+msgid "Where is your money?"
+msgstr "আপনার টাকা কোথায়?"
+
+msgid "Add your cash, bank and bKash to see each balance."
+msgstr "প্রতিটির ব্যালান্স দেখতে নগদ, ব্যাংক ও বিকাশ যোগ করুন।"
+
+msgid "For a payment: the wallet you paid from. A purchase on credit doesn't move money."
+msgstr "পরিশোধের জন্য: যে ওয়ালেট থেকে দিয়েছেন। বাকিতে কেনায় টাকা নড়ে না।"
+
+msgid "Anything you delete stays here for %(n)s days. Restore puts it back exactly as it was, with everything that was deleted along with it."
+msgstr "যা মুছবেন তা এখানে %(n)s দিন থাকবে। ফিরিয়ে আনলে ঠিক আগের মতো ফিরে আসবে, সাথে মুছে যাওয়া সবকিছুসহ।"
+
+msgid "Delete everything here for good? This cannot be undone."
+msgstr "এখানকার সবকিছু চিরতরে মুছবেন? এটা আর ফেরানো যাবে না।"
+
+msgid "Empty"
+msgstr "খালি করুন"
+
+msgid "deleted %(when)s ago"
+msgstr "%(when)s আগে মুছেছেন"
+
+msgid "with %(counter)s related entry"
+msgid_plural "with %(counter)s related entries"
+msgstr[0] "সাথে %(counter)sটি সংশ্লিষ্ট এন্ট্রি"
+msgstr[1] "সাথে %(counter)sটি সংশ্লিষ্ট এন্ট্রি"
+
+msgid "Delete this for good? This cannot be undone."
+msgstr "এটা চিরতরে মুছবেন? এটা আর ফেরানো যাবে না।"
+
+msgid "Delete for good"
+msgstr "চিরতরে মুছুন"
+
+msgid "Nothing deleted lately"
+msgstr "সম্প্রতি কিছু মোছা হয়নি"
+
+msgid "When you delete an expense, a payment or a goal, it waits here in case you change your mind."
+msgstr "খরচ, পরিশোধ বা লক্ষ্য মুছলে মত বদলানোর জন্য তা এখানে অপেক্ষা করে।"
+
+msgid "“%(what)s” can't be put back: something it belonged to has been removed for good."
+msgstr "“%(what)s” ফেরানো যাচ্ছে না: এটি যার অংশ ছিল তা চিরতরে মুছে গেছে।"
+
+msgid "Restored: %(what)s"
+msgstr "ফিরিয়ে আনা হয়েছে: %(what)s"
+
+msgid "Deleted for good."
+msgstr "চিরতরে মুছে ফেলা হয়েছে।"
+
+msgid "Recently deleted is empty."
+msgstr "সম্প্রতি মুছে ফেলা খালি করা হয়েছে।"
+
+msgid "Which of your wallets the money went through. Leave empty if you don't track it."
+msgstr "টাকা আপনার কোন ওয়ালেট দিয়ে গেছে। হিসাব না রাখলে খালি রাখুন।"
+
+msgid "Not from a wallet"
+msgstr "ওয়ালেট থেকে নয়"
+
+msgid "e.g. Cash, bKash, Sonali Bank"
+msgstr "যেমন নগদ, বিকাশ, সোনালী ব্যাংক"
+
+msgid "What it holds on the date below. Everything you record from then on moves it."
+msgstr "নিচের তারিখে এতে যা আছে। এরপর যা লিখবেন তাতে এটা বাড়বে-কমবে।"
+
+msgid "Usually today."
+msgstr "সাধারণত আজ।"
+
+msgid "You already have a wallet called “%(name)s”."
+msgstr "“%(name)s” নামে আপনার একটি ওয়ালেট আগেই আছে।"
+
+msgid "Choose a different wallet to send to."
+msgstr "পাঠানোর জন্য অন্য একটি ওয়ালেট বাছুন।"
+
+msgid "Enter an amount above zero."
+msgstr "শূন্যের বেশি পরিমাণ দিন।"
+
+msgid "The fee can't be below zero."
+msgstr "চার্জ শূন্যের কম হতে পারে না।"
+
+msgid "What it really holds now"
+msgstr "এখন আসলে কত আছে"
+
+msgid "e.g. counted the cash box"
+msgstr "যেমন ক্যাশবাক্স গুনেছি"
+
+msgid "Cash in hand"
+msgstr "হাতে নগদ"
+
+msgid "Fee / charge"
+msgstr "চার্জ / ফি"
+
+msgid "e.g. the bKash cash-out charge. It comes out of the “From” wallet."
+msgstr "যেমন বিকাশের ক্যাশআউট চার্জ। এটা “থেকে” ওয়ালেট থেকে কাটা যায়।"
+
+msgid "Borrowed from %(name)s"
+msgstr "%(name)s-এর কাছ থেকে ধার"
+
+msgid "Repaid %(name)s"
+msgstr "%(name)s-কে শোধ"
+
+msgid "Lent to %(name)s"
+msgstr "%(name)s-কে ধার দেওয়া"
+
+msgid "Received from %(name)s"
+msgstr "%(name)s-এর কাছ থেকে পাওয়া"
+
+msgid "Paid %(name)s"
+msgstr "%(name)s-কে পরিশোধ"
+
+msgid "Bazar: %(what)s"
+msgstr "বাজার: %(what)s"
+
+msgid "Paid back %(name)s"
+msgstr "%(name)s-কে ফেরত দেওয়া"
+
+msgid "incl. %(fee)s fee"
+msgstr "%(fee)s চার্জসহ"
+
+msgid "Balance corrected"
+msgstr "ব্যালান্স ঠিক করা হয়েছে"
+
+msgid "counting from %(date)s (%(amount)s)"
+msgstr "%(date)s থেকে হিসাব (%(amount)s)"
+
+msgid "Balance now"
+msgstr "এখনকার ব্যালান্স"
+
+msgid "%(a)s in · %(b)s out since you started"
+msgstr "শুরু থেকে %(a)s এসেছে · %(b)s গেছে"
+
+msgid "Correct the balance"
+msgstr "ব্যালান্স ঠিক করুন"
+
+msgid "Counted the cash or checked the app, and it's different? Type what it really holds."
+msgstr "টাকা গুনে বা অ্যাপ দেখে অমিল পেয়েছেন? আসলে যা আছে তা লিখুন।"
+
+msgid "The difference is saved as a correction, so the history still adds up."
+msgstr "পার্থক্যটা সংশোধন হিসেবে রাখা হয়, তাই আগের হিসাবও মিলে যায়।"
+
+msgid "Save the real balance"
+msgstr "আসল ব্যালান্স রাখুন"
+
+msgid "Showing the latest 300."
+msgstr "সর্বশেষ ৩০০টি দেখানো হচ্ছে।"
+
+msgid "Nothing yet. Pick this wallet when you record an expense, income or payment."
+msgstr "এখনো কিছু নেই। খরচ, আয় বা পরিশোধ লেখার সময় এই ওয়ালেট বাছুন।"
+
+msgid "Stop using this wallet"
+msgstr "এই ওয়ালেট ব্যবহার বন্ধ করুন"
+
+msgid "Use this wallet again"
+msgstr "আবার এই ওয়ালেট ব্যবহার করুন"
+
+msgid "Delete this wallet? Its entries are kept, without a wallet. You can undo this from Recently deleted."
+msgstr "এই ওয়ালেট মুছবেন? এর এন্ট্রিগুলো থাকবে, ওয়ালেট ছাড়া। সম্প্রতি মুছে ফেলা থেকে ফেরাতে পারবেন।"
+
+msgid "Delete wallet"
+msgstr "ওয়ালেট মুছুন"
+
+msgid "Delete this transfer"
+msgstr "এই স্থানান্তর মুছুন"
+
+msgid "Cash in hand, bank and bKash: how much is in each, worked out from what you record."
+msgstr "হাতে নগদ, ব্যাংক ও বিকাশ: প্রতিটিতে কত আছে, আপনার লেখা হিসাব থেকে বের করা।"
+
+msgid "All your wallets"
+msgstr "আপনার সব ওয়ালেট"
+
+msgid "Recent transfers"
+msgstr "সাম্প্রতিক স্থানান্তর"
+
+msgid "%(fee)s fee"
+msgstr "%(fee)s চার্জ"
+
+msgid "How wallets work"
+msgstr "ওয়ালেট কীভাবে চলে"
+
+msgid "When you record an expense, income, a payment to a creditor or shop, or money lent or received, choose the wallet it went through."
+msgstr "খরচ, আয়, পাওনাদার বা দোকানকে পরিশোধ, অথবা ধার দেওয়া বা ফেরত পাওয়া লেখার সময় টাকা কোন ওয়ালেট দিয়ে গেছে তা বাছুন।"
+
+msgid "Each wallet's balance = what it held when you started + money in − money out. Entries without a wallet still count everywhere else."
+msgstr "প্রতিটি ওয়ালেটের ব্যালান্স = শুরুতে যা ছিল + আসা টাকা − যাওয়া টাকা। ওয়ালেট ছাড়া এন্ট্রিও অন্য সব জায়গায় গোনা হয়।"
+
+msgid "If the real balance is different, open the wallet and use “Correct the balance”."
+msgstr "আসল ব্যালান্স আলাদা হলে ওয়ালেট খুলে “ব্যালান্স ঠিক করুন” ব্যবহার করুন।"
+
+msgid "Know where your money is"
+msgstr "জানুন আপনার টাকা কোথায়"
+
+msgid "Add your cash in hand, bank account and bKash with what each holds today. Then pick the wallet when you record money in or out, and every balance keeps itself."
+msgstr "হাতে নগদ, ব্যাংক অ্যাকাউন্ট ও বিকাশ — আজ প্রতিটিতে কত আছে তা দিয়ে যোগ করুন। তারপর টাকা আসা-যাওয়া লেখার সময় ওয়ালেট বাছুন, প্রতিটি ব্যালান্স নিজেই হিসাব হবে।"
+
+msgid "Not in use"
+msgstr "ব্যবহারে নেই"
+
+msgid "Edit wallet"
+msgstr "ওয়ালেট বদলান"
+
+msgid "Add a wallet"
+msgstr "ওয়ালেট যোগ করুন"
+
+msgid "Cash in hand, a bank account or bKash — wherever you keep money."
+msgstr "হাতে নগদ, ব্যাংক অ্যাকাউন্ট বা বিকাশ — যেখানে টাকা রাখেন।"
+
+msgid "Balance corrected by %(amount)s. %(name)s now shows %(balance)s."
+msgstr "ব্যালান্স %(amount)s ঠিক করা হয়েছে। %(name)s-এ এখন %(balance)s দেখাচ্ছে।"
+
+msgid "That's what the app shows already — nothing to correct."
+msgstr "অ্যাপে আগে থেকেই এটা দেখাচ্ছে — ঠিক করার কিছু নেই।"
+
+msgid "Enter the amount the wallet really holds."
+msgstr "ওয়ালেটে আসলে কত আছে তা লিখুন।"
+
+msgid "%(name)s is in use again."
+msgstr "%(name)s আবার ব্যবহারে আছে।"
+
+msgid "%(name)s is no longer offered for new entries."
+msgstr "নতুন এন্ট্রিতে %(name)s আর দেখানো হবে না।"
+
+msgid "Wallet deleted: %(name)s. Its entries are kept, without a wallet."
+msgstr "ওয়ালেট মুছে ফেলা হয়েছে: %(name)s। এর এন্ট্রিগুলো ওয়ালেট ছাড়া রাখা হয়েছে।"
+
+msgid "Moved %(amount)s from %(a)s to %(b)s."
+msgstr "%(a)s থেকে %(b)s-এ %(amount)s সরানো হয়েছে।"
+
+msgid "Move money between wallets"
+msgstr "এক ওয়ালেট থেকে অন্যটায় টাকা সরান"
+
+msgid "e.g. cash out from bKash, or put cash in the bank."
+msgstr "যেমন বিকাশ থেকে ক্যাশআউট, বা নগদ টাকা ব্যাংকে জমা।"
+
+msgid "Transfer of %(amount)s deleted."
+msgstr "%(amount)s-এর স্থানান্তর মুছে ফেলা হয়েছে।"
+
+msgid "Search everything (Ctrl+K)"
+msgstr "সবকিছুতে খুঁজুন (Ctrl+K)"
+
+msgid "Search everything"
+msgstr "সবকিছুতে খুঁজুন"
+
+msgid "Undo"
+msgstr "ফিরিয়ে আনুন"
+
+msgid "People, shops, ponds, sales, entries and pages — in your personal ledgers and the farm."
+msgstr "মানুষ, দোকান, পুকুর, বিক্রি, এন্ট্রি ও পাতা — আপনার ব্যক্তিগত খাতা আর খামারে।"
+
+msgid "e.g. Karim, 01711…, East pond, lime"
+msgstr "যেমন করিম, ০১৭১১…, পূর্ব পুকুর, চুন"
+
+msgid "Nothing found for “%(q)s”."
+msgstr "“%(q)s”-এর জন্য কিছু পাওয়া যায়নি।"
+
+msgid "Type a name, phone number, pond, memo number or page — at least 2 letters."
+msgstr "নাম, ফোন নম্বর, পুকুর, মেমো নম্বর বা পাতার নাম লিখুন — অন্তত ২ অক্ষর।"
+
+msgid "Search people, ponds, sales, pages…"
+msgstr "মানুষ, পুকুর, বিক্রি, পাতা খুঁজুন…"
+
+msgid "opens the first result"
+msgstr "প্রথম ফলাফল খোলে"
+
+msgid "closes"
+msgstr "বন্ধ করে"
+
+msgid "opens search"
+msgstr "খোঁজা খোলে"

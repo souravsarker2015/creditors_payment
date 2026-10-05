@@ -7,6 +7,8 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
+from apps.core.templatetags.ui import money
+from apps.trash.undo import delete_with_undo
 from .forms import AutoSaveForm, EntryForm, GoalForm
 from .models import AutoSave, GoalEntry, SavingsGoal
 from .services import TONES, goal_rows, last_12, monthly_net, progress, run_due_autosaves, sync_reached, totals
@@ -144,9 +146,8 @@ def entry_edit_view(request, pk):
 def entry_delete_view(request, pk):
     entry = get_object_or_404(GoalEntry, pk=pk, goal__user=request.user)
     goal = entry.goal
-    entry.delete()
+    delete_with_undo(request, entry, _("Entry deleted."), label=f"{goal.name} · {money(entry.amount)}", back_url=reverse("goal_detail", args=[goal.pk]))
     sync_reached(goal)
-    messages.success(request, _("Entry deleted."))
     return redirect("goal_detail", pk=goal.pk)
 
 
@@ -165,8 +166,7 @@ def goal_toggle_active_view(request, pk):
 def goal_delete_view(request, pk):
     goal = get_object_or_404(SavingsGoal, pk=pk, user=request.user)
     name = goal.name
-    goal.delete()
-    messages.success(request, _("Goal deleted: %(name)s.") % {"name": name})
+    delete_with_undo(request, goal, _("Goal deleted: %(name)s.") % {"name": name}, label=name, back_url=reverse("goal_detail", args=[goal.pk]))
     return redirect("goal_list")
 
 
@@ -216,6 +216,6 @@ def autosave_toggle_view(request, pk):
 @require_POST
 def autosave_delete_view(request, pk):
     schedule = get_object_or_404(AutoSave, goal__pk=pk, goal__user=request.user)
-    schedule.delete()
-    messages.success(request, _("Auto-save removed. Deposits it already made are kept."))
+    delete_with_undo(request, schedule, _("Auto-save removed. Deposits it already made are kept."),
+                     label=f"{schedule.goal.name} · {money(schedule.amount)}", back_url=reverse("goal_detail", args=[pk]))
     return redirect("goal_detail", pk=pk)

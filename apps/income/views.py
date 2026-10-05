@@ -14,6 +14,8 @@ from django.utils import dateformat
 from django.utils.translation import gettext as _, gettext_lazy, ngettext
 from datetime import date as date_cls
 
+from apps.core.templatetags.ui import money
+from apps.trash.undo import delete_with_undo
 from .models import IncomeSource, IncomeTransaction, RecurringIncome, generate_due_recurring_income
 from django.urls import reverse
 from django.utils import timezone
@@ -631,8 +633,8 @@ def transaction_delete_view(request, pk):
     tx = get_object_or_404(IncomeTransaction, pk=pk, source__user=request.user)
     source = tx.source
     amt = tx.amount
-    tx.delete()
-    messages.success(request, _("Income entry of ৳%(amount)s deleted.") % {"amount": amt})
+    delete_with_undo(request, tx, _("Income entry of ৳%(amount)s deleted.") % {"amount": amt},
+                     label=f"{source.name} · {money(amt)}", back_url=reverse("income_source_detail", args=[source.pk]))
     return redirect("income_source_detail", pk=source.pk)
 
 
@@ -703,8 +705,8 @@ def recurring_income_toggle_view(request, pk):
 def recurring_income_delete_view(request, pk):
     schedule = get_object_or_404(RecurringIncome, pk=pk, source__user=request.user)
     name = schedule.source.name
-    schedule.delete()
-    messages.success(request, _("Recurring income for '%(name)s' deleted.") % {"name": name})
+    delete_with_undo(request, schedule, _("Recurring income for '%(name)s' deleted.") % {"name": name},
+                     label=f"{name} · {money(schedule.amount)}", back_url=reverse("recurring_income_list"))
     return redirect("recurring_income_list")
 
 

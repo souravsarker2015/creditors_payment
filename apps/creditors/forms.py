@@ -1,6 +1,7 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 from .models import Creditor, InterestBasis, InterestType, Transaction
+from apps.wallets.forms import WalletFieldMixin
 
 class CreditorForm(forms.ModelForm):
     class Meta:
@@ -90,10 +91,10 @@ class CreditorForm(forms.ModelForm):
 
         return cleaned_data
 
-class TransactionForm(forms.ModelForm):
+class TransactionForm(WalletFieldMixin, forms.ModelForm):
     class Meta:
         model = Transaction
-        fields = ["transaction_type", "amount", "date", "note"]
+        fields = ["transaction_type", "amount", "wallet", "date", "note"]
         widgets = {
             "transaction_type": forms.Select(attrs={"class": "form-input"}),
             "amount": forms.NumberInput(attrs={"class": "form-input", "placeholder": "0.00"}),

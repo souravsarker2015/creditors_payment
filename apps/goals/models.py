@@ -63,6 +63,12 @@ class GoalEntry(models.Model):
     class Meta:
         ordering = ["-date", "-created_at"]
 
+    def after_restore(self):
+        """Put back from Recently deleted: the goal may be reached again."""
+        from .services import sync_reached
+
+        sync_reached(self.goal)
+
     @property
     def signed_amount(self):
         return self.amount if self.kind == self.DEPOSIT else -self.amount

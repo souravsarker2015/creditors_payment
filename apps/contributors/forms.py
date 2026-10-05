@@ -1,6 +1,7 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 from .models import Contributor, Contribution
+from apps.wallets.forms import WalletFieldMixin
 
 class ContributorForm(forms.ModelForm):
     class Meta:
@@ -17,10 +18,10 @@ class ContributorForm(forms.ModelForm):
             }),
         }
 
-class ContributionForm(forms.ModelForm):
+class ContributionForm(WalletFieldMixin, forms.ModelForm):
     class Meta:
         model = Contribution
-        fields = ["amount", "date", "note"]
+        fields = ["amount", "wallet", "date", "note"]
         widgets = {
             "amount": forms.NumberInput(attrs={"class": "form-input", "placeholder": "0.00"}),
             "date": forms.DateInput(attrs={"class": "form-input datepicker", "placeholder": _("Select Date")}),

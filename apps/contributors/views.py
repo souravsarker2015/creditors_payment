@@ -13,6 +13,8 @@ from django.db.models.functions import Coalesce, TruncMonth
 from django.core.paginator import Paginator
 from django.utils import dateformat
 from django.utils.translation import gettext as _, gettext_lazy
+from apps.core.templatetags.ui import money
+from apps.trash.undo import delete_with_undo
 from .models import Contributor, ContributorCategory, Contribution
 from django.urls import reverse
 from apps.core.stats import month_compare, ranked, trend_summary
@@ -411,7 +413,8 @@ def contributor_update(request, pk):
 def contributor_delete(request, pk):
     contributor = get_object_or_404(Contributor, pk=pk, user=request.user)
     if request.method == 'POST':
-        contributor.delete()
+        delete_with_undo(request, contributor, _("Contributor deleted: %(name)s.") % {"name": contributor.name},
+                         label=contributor.name, back_url=reverse("contributor_detail", args=[contributor.pk]))
         return redirect('contributor_list')
     return render(request, 'contributors/contributor_confirm_delete.html', {'contributor': contributor})
 
@@ -525,7 +528,8 @@ def contribution_update(request, pk):
 def contribution_delete(request, pk):
     contribution = get_object_or_404(Contribution, pk=pk, contributor__user=request.user)
     contributor_pk = contribution.contributor.pk
-    contribution.delete()
+    delete_with_undo(request, contribution, _("Contribution of ৳%(amount)s deleted.") % {"amount": contribution.amount},
+                     label=f"{contribution.contributor.name} · {money(contribution.amount)}", back_url=reverse("contributor_detail", args=[contributor_pk]))
     return redirect('contributor_detail', pk=contributor_pk)
 
 

@@ -15,6 +15,8 @@ from django.core.paginator import Paginator
 from django.utils import dateformat
 from django.utils.translation import gettext as _, gettext_lazy
 
+from apps.core.templatetags.ui import money
+from apps.trash.undo import delete_with_undo
 from .models import Debtor, DebtorCategory, Transaction, DUE_SOON_DAYS
 from apps.core.stats import ledger_extras
 from apps.core.status import apply_status_filter, toggle_active
@@ -642,8 +644,8 @@ def transaction_delete_view(request, pk):
     transaction = get_object_or_404(Transaction, pk=pk, debtor__user=request.user)
     debtor = transaction.debtor
     amount = transaction.amount
-    transaction.delete()
-    messages.success(request, _("Transaction of ৳%(amount)s deleted.") % {"amount": amount})
+    delete_with_undo(request, transaction, _("Transaction of ৳%(amount)s deleted.") % {"amount": amount},
+                     label=f"{debtor.name} · {money(amount)} · {transaction.get_transaction_type_display()}", back_url=reverse("debtor_detail", args=[debtor.pk]))
     return redirect("debtor_detail", pk=debtor.pk)
 
 

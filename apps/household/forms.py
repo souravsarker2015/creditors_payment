@@ -2,6 +2,7 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 from apps.core.status import active_or_current
 from .models import HouseholdCategory, HouseholdMember, Purchase, Settlement
+from apps.wallets.forms import WalletFieldMixin
 
 
 class HouseholdCategoryForm(forms.ModelForm):
@@ -37,10 +38,12 @@ class HouseholdMemberForm(forms.ModelForm):
         }
 
 
-class PurchaseForm(forms.ModelForm):
+class PurchaseForm(WalletFieldMixin, forms.ModelForm):
+    wallet_help = _("The wallet you paid from. Leave it when someone else paid — you'll owe them instead.")
+
     class Meta:
         model = Purchase
-        fields = ["amount", "date", "category", "buyer", "description"]
+        fields = ["amount", "date", "category", "buyer", "wallet", "description"]
         widgets = {
             "amount": forms.NumberInput(attrs={"class": "form-input", "placeholder": "0.00"}),
             "date": forms.DateInput(attrs={"class": "form-input datepicker", "placeholder": _("Select Date")}),
@@ -71,11 +74,17 @@ class PurchaseForm(forms.ModelForm):
                 HouseholdMember.objects.filter(user=user), self.instance.buyer_id
             )
 
+    def clean(self):
+        data = super().clean()
+        if data.get("buyer"):
+            data["wallet"] = None   # a member fronted it: your wallet didn't move
+        return data
 
-class SettlementForm(forms.ModelForm):
+
+class SettlementForm(WalletFieldMixin, forms.ModelForm):
     class Meta:
         model = Settlement
-        fields = ["amount", "date", "note"]
+        fields = ["amount", "wallet", "date", "note"]
         widgets = {
             "amount": forms.NumberInput(attrs={"class": "form-input", "placeholder": "0.00"}),
             "date": forms.DateInput(attrs={"class": "form-input datepicker", "placeholder": _("Select Date")}),

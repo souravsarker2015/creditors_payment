@@ -1,0 +1,24 @@
+{% load i18n %}{% comment %}
+Search everything: opened by the top bar's search button, "/" or Ctrl+K.
+Results come from /search/ as you type (HTMX); Enter opens the first one.
+{% endcomment %}
+<div x-data="{ open: false }" x-cloak
+     @open-search.window="open = true; $nextTick(() => { $refs.q.focus(); $refs.q.select() })"
+     @keydown.window="if ((($event.ctrlKey || $event.metaKey) && $event.key.toLowerCase() === 'k') || ($event.key === '/' && !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName) && !document.activeElement.isContentEditable)) { $event.preventDefault(); open = true; $nextTick(() => { $refs.q.focus(); $refs.q.select() }) }">
+  <div class="search-modal" x-show="open" x-transition.opacity.duration.150ms @keydown.escape="open = false" role="dialog" aria-modal="true" aria-label="{% translate 'Search everything' %}">
+    <div class="search-backdrop" @click="open = false"></div>
+    <div class="search-panel" x-trap.inert.noscroll="open">
+      <form method="get" action="{% url 'search' %}" class="search-bar" role="search"
+            @submit="const a = $el.closest('.search-panel').querySelector('.search-hit'); if (a) { $event.preventDefault(); window.location = a.href }">
+        {% include "partials/icon.html" with name="search" %}
+        <label class="sr-only" for="global-search-q">{% translate "Search everything" %}</label>
+        <input id="global-search-q" x-ref="q" type="search" name="q" autocomplete="off" enterkeyhint="search"
+               placeholder="{% translate 'Search people, ponds, sales, pages…' %}"
+               hx-get="{% url 'search' %}" hx-trigger="input changed delay:250ms, search" hx-target="#search-results" hx-swap="outerHTML">
+        <button type="button" class="icon-btn" @click="open = false" aria-label="{% translate 'Close' %}">{% include "partials/icon.html" with name="x" %}</button>
+      </form>
+      {% include "core/search_results.html" with groups=None q="" %}
+      <p class="search-foot"><kbd>Enter</kbd> {% translate "opens the first result" %} · <kbd>Esc</kbd> {% translate "closes" %} · <kbd>Ctrl</kbd>+<kbd>K</kbd> {% translate "opens search" %}</p>
+    </div>
+  </div>
+</div>

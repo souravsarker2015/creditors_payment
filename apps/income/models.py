@@ -47,6 +47,8 @@ class IncomeTransaction(models.Model):
         related_name="transactions",
     )
     amount = models.DecimalField(max_digits=12, decimal_places=2)
+    wallet = models.ForeignKey("wallets.Wallet", on_delete=models.SET_NULL, null=True, blank=True, related_name="+",
+                               verbose_name=_("Wallet"))
     date = models.DateField()
     note = models.TextField(blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -99,6 +101,8 @@ class RecurringIncome(models.Model):
         related_name="recurring_incomes",
     )
     amount = models.DecimalField(max_digits=12, decimal_places=2)
+    wallet = models.ForeignKey("wallets.Wallet", on_delete=models.SET_NULL, null=True, blank=True, related_name="+",
+                               verbose_name=_("Wallet"))
     frequency = models.CharField(max_length=10, choices=RecurringFrequency.choices)
     next_run_date = models.DateField()
     skip_weekend = models.BooleanField(default=False)
@@ -152,6 +156,7 @@ class RecurringIncome(models.Model):
                 amount=self.amount,
                 date=effective_date,
                 note=self.note,
+                wallet=self.wallet,
                 recurring_source=self,
             )
             self.next_run_date = self._advance(self.next_run_date)

@@ -14,7 +14,8 @@ from .access import BUSINESS, PERSONAL, dashboard_url, default_dashboard, has_da
 from .audit import reset_current_user, set_current_user
 
 EXEMPT = ("/accounts/", "/admin/", "/static/", "/media/", "/i18n/", "/__debug__/",
-          "/sw.js", "/manifest.webmanifest", "/offline/", "/favicon.ico")
+          "/sw.js", "/manifest.webmanifest", "/offline/", "/favicon.ico",
+          "/search/")  # search covers both areas and checks access itself
 
 
 class DashboardMiddleware:
