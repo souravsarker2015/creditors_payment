@@ -30,16 +30,27 @@
   </header>
 
   {% if cycle.is_running and biz_can.enter_data %}
-  <nav class="quick-actions quick-actions-8" aria-label="{% translate 'Record' %}">
+  <nav class="quick-actions quick-actions-9" aria-label="{% translate 'Record' %}">
     <button type="button" class="quick-action" @click="modal = 'feeding'">{% include "business/partials/icon.html" with name="banknotes" %}<span>{% translate "Feed" %}</span></button>
     <button type="button" class="quick-action" @click="modal = 'weighing'">{% include "business/partials/icon.html" with name="scale" %}<span>{% translate "Weigh" %}</span></button>
     <button type="button" class="quick-action" @click="modal = 'water'">{% include "business/partials/icon.html" with name="beaker" %}<span>{% translate "Water" %}</span></button>
     <button type="button" class="quick-action" @click="modal = 'mortality'">{% include "partials/icon.html" with name="alert" %}<span>{% translate "Deaths" %}</span></button>
+    <button type="button" class="quick-action" @click="modal = 'treatment'">{% include "business/partials/icon.html" with name="dropper" %}<span>{% translate "Care" %}</span></button>
     <button type="button" class="quick-action" @click="modal = 'stocking'">{% include "business/partials/icon.html" with name="fish" %}<span>{% translate "Stock" %}</span></button>
     <button type="button" class="quick-action" @click="modal = 'harvest'">{% include "partials/icon.html" with name="cart" %}<span>{% translate "Harvest" %}</span></button>
     <a href="{% url 'business:transaction_add' %}?cycle={{ cycle.pk }}&next={{ request.path|urlencode }}" class="quick-action">{% include "partials/icon.html" with name="wallet" %}<span>{% translate "Cost" %}</span></a>
     <a href="{% url 'business:sale_add' %}?cycle={{ cycle.pk }}" class="quick-action is-primary">{% include "partials/icon.html" with name="check" %}<span>{% translate "Sell" %}</span></a>
   </nav>
+  {% endif %}
+
+  {% if withdrawal %}
+  <div class="callout" data-tone="warn" role="status">
+    {% include "business/partials/icon.html" with name="dropper" %}
+    <div class="flex-1 min-w-0">
+      <p class="callout-title">{% blocktranslate with date=withdrawal.safe_from|date:"j M" %}Don't sell fish from this pond before {{ date }}{% endblocktranslate %}</p>
+      <p>{% blocktranslate with product=withdrawal.product given=withdrawal.date|date:"j M" days=withdrawal.withdrawal_days %}{{ product }} was given on {{ given }}; its waiting period is {{ days }} days. Fish sold earlier may still carry the medicine.{% endblocktranslate %}</p>
+    </div>
+  </div>
   {% endif %}
 
   {% if water_now.found and cycle.is_running %}
@@ -67,9 +78,9 @@
       <dd class="stat-hint">{% if s.biomass_kg %}{% translate "estimated, from sample weighing" %}{% else %}{% translate "Weigh a sample to see this" %}{% endif %}</dd>
     </div>
     <div class="stat" data-tone="warn">
-      <dt class="stat-label inline-flex items-center">{% translate "Spent so far" %}{% include "business/partials/tip.html" with text=_("Fingerlings bought + feed eaten (at the average price you paid for it) + any other cost you put on this cycle, like medicine or labour.") %}</dt>
+      <dt class="stat-label inline-flex items-center">{% translate "Spent so far" %}{% include "business/partials/tip.html" with text=_("Fingerlings bought + feed eaten (at the average price you paid for it) + lime and medicine + any other cost you put on this cycle, like labour.") %}</dt>
       <dd class="stat-value">{{ s.cost|bdt }}</dd>
-      <dd class="stat-hint">{% blocktranslate with f=s.feed_cost|bdt kg=s.feed_kg|num %}Feed {{ f }} ({{ kg }} kg){% endblocktranslate %} · {% blocktranslate with c=s.stocking_cost|bdt %}fingerlings {{ c }}{% endblocktranslate %}{% if s.other_cost %} · {% blocktranslate with o=s.other_cost|bdt %}other {{ o }}{% endblocktranslate %}{% endif %}</dd>
+      <dd class="stat-hint">{% blocktranslate with f=s.feed_cost|bdt kg=s.feed_kg|num %}Feed {{ f }} ({{ kg }} kg){% endblocktranslate %} · {% blocktranslate with c=s.stocking_cost|bdt %}fingerlings {{ c }}{% endblocktranslate %}{% if s.care_cost %} · {% blocktranslate with c=s.care_cost|bdt %}care {{ c }}{% endblocktranslate %}{% endif %}{% if s.wage_cost %} · {% blocktranslate with w=s.wage_cost|bdt %}wages {{ w }}{% endblocktranslate %}{% endif %}{% if s.other_cost %} · {% blocktranslate with o=s.other_cost|bdt %}other {{ o }}{% endblocktranslate %}{% endif %}</dd>
     </div>
     <div class="stat" data-tone="{% if s.profit >= 0 %}good{% else %}critical{% endif %}">
       <dt class="stat-label inline-flex items-center">{% translate "Sales so far" %}{% translate "Money from fish sold out of this cycle, after market deductions. Below it: how far ahead of (or behind) all this cycle's costs you are." as info_text %}{% include "partials/info.html" with text=info_text %}</dt>
@@ -126,7 +137,7 @@
     <button type="button" role="tab" class="seg-item" :class="tab === 'stocking' && 'is-active'" @click="tab = 'stocking'">{% translate "Stocking" %} <span class="seg-count">{{ stockings|length }}</span></button>
     <button type="button" role="tab" class="seg-item" :class="tab === 'growth' && 'is-active'" @click="tab = 'growth'">{% translate "Growth & deaths" %}</button>
     <button type="button" role="tab" class="seg-item" :class="tab === 'harvest' && 'is-active'" @click="tab = 'harvest'">{% translate "Harvest & sales" %} <span class="seg-count">{{ harvest_sale_count }}</span></button>
-    <button type="button" role="tab" class="seg-item" :class="tab === 'water' && 'is-active'" @click="tab = 'water'">{% translate "Water" %} <span class="seg-count">{{ water|length }}</span></button>
+    <button type="button" role="tab" class="seg-item" :class="tab === 'water' && 'is-active'" @click="tab = 'water'">{% translate "Water & care" %} <span class="seg-count">{{ water_care_count }}</span></button>
   </nav>
 
   <!-- Fish -->
@@ -293,6 +304,30 @@
       </li>{% endfor %}
     </ul>
     {% else %}<div class="empty is-plain"><p class="empty-text">{% translate "No water tests yet. Low oxygen and high ammonia kill fish fast, so a quick test once or twice a week is worth it." %}</p>{% if cycle.is_running and biz_can.enter_data %}<button type="button" class="btn btn-primary" @click="modal = 'water'">{% include "business/partials/icon.html" with name="beaker" %}{% translate "Add a water test" %}</button>{% endif %}</div>{% endif %}
+  </section>
+
+  <!-- Lime, medicine & care -->
+  <section class="card" x-show="tab === 'water'" x-cloak>
+    <div class="card-header">
+      <div><h2 class="card-title">{% translate "Lime, medicine & care" %}{% include "business/partials/tip.html" with text=_("Everything put into the pond: lime, fertilizer, salt, potash, medicine, probiotics. The cost counts towards this cycle.") %}</h2>
+      <p class="card-subtitle">{% translate "What went into the pond, how much, and why." %}</p></div>
+      {% if cycle.is_running and biz_can.enter_data %}<button type="button" class="btn btn-ghost btn-sm" @click="modal = 'treatment'">{% include "partials/icon.html" with name="plus" %}{% translate "Add" %}</button>{% endif %}
+    </div>
+    {% if treatments %}
+    <ul class="ledger">{% for e in treatments %}
+      <li class="ledger-row">
+        <span class="ledger-icon" data-tone="{% if e.kind == 'medicine' %}warn{% elif e.kind == 'lime' or e.kind == 'fertilizer' %}accent{% else %}info{% endif %}">{% include "business/partials/icon.html" with name="dropper" %}</span>
+        <div class="ledger-main">
+          <p class="ledger-title">{{ e.product }}{% if e.quantity %} · {% qty e.quantity e.unit %}{% endif %}</p>
+          <p class="ledger-meta">{{ e.date|date:"j M Y" }} · {{ e.get_kind_display }}{% if e.reason %} · {{ e.reason }}{% endif %}{% if e.safe_from %} · {% blocktranslate with date=e.safe_from|date:"j M" %}no selling until {{ date }}{% endblocktranslate %}{% endif %}</p>
+        </div>
+        <div class="ledger-end">
+          {% if e.cost %}<span class="party-bal"><strong>{{ e.cost|bdt }}</strong><span>{% if e.account %}{{ e.account }}{% else %}{% translate "not paid now" %}{% endif %}</span></span>{% endif %}
+          {% include "business/ponds/entry_menu.html" with kind="treatment" %}
+        </div>
+      </li>{% endfor %}
+    </ul>
+    {% else %}<div class="empty is-plain"><p class="empty-text">{% translate "Nothing recorded yet. Note lime, fertilizer and medicine here so you know what each pond got — and what it cost." %}</p>{% if cycle.is_running and biz_can.enter_data %}<button type="button" class="btn btn-primary" @click="modal = 'treatment'">{% include "business/partials/icon.html" with name="dropper" %}{% translate "Add lime or medicine" %}</button>{% endif %}</div>{% endif %}
   </section>
 
   {% if cycle.is_running and biz_can.enter_data %}

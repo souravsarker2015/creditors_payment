@@ -255,6 +255,52 @@ class WaterTest(BusinessBaseModel):
         return check(self, limits)
 
 
+class TreatmentKind(models.TextChoices):
+    LIME = "lime", _("Lime (chun)")
+    FERTILIZER = "fertilizer", _("Fertilizer (urea, TSP, dung)")
+    SALT = "salt", _("Salt")
+    POTASH = "potash", _("Potash")
+    MEDICINE = "medicine", _("Medicine / antibiotic")
+    PROBIOTIC = "probiotic", _("Probiotic / water care")
+    OTHER = "other", _("Other")
+
+
+class Treatment(BusinessBaseModel):
+    """Something put into a pond: lime, fertilizer, salt, medicine…
+
+    Its cost (when paid from an account) is money out of that account and a
+    cost of the cycle. A medicine can carry a waiting period: fish from the
+    pond shouldn't be sold until it's over.
+    """
+
+    cycle = models.ForeignKey(CultureCycle, on_delete=models.CASCADE, related_name="treatments")
+    date = models.DateField(_("Date"))
+    kind = models.CharField(_("What kind"), max_length=12, choices=TreatmentKind.choices, default=TreatmentKind.LIME)
+    product = models.CharField(_("Product"), max_length=100, help_text=_("e.g. Dolomite lime, Oxytetracycline, Aquakleen"))
+    quantity = models.DecimalField(_("Amount used"), max_digits=12, decimal_places=3, null=True, blank=True, validators=[MinValueValidator(0)])
+    unit = models.ForeignKey(Unit, on_delete=models.PROTECT, null=True, blank=True, related_name="+", verbose_name=_("Unit"))
+    reason = models.CharField(_("Why"), max_length=160, blank=True, help_text=_("e.g. pond preparation, red spots on fish, low oxygen"))
+    cost = models.DecimalField(_("Cost"), default=0, validators=[MinValueValidator(0)], **MONEY)
+    account = models.ForeignKey("business_finance.Account", on_delete=models.PROTECT, null=True, blank=True, related_name="+",
+                                verbose_name=_("Paid from"))
+    withdrawal_days = models.PositiveSmallIntegerField(_("Don't sell fish for (days)"), null=True, blank=True,
+                                                       help_text=_("The waiting period on the medicine's label. Leave empty if there is none."))
+
+    class Meta:
+        ordering = ["-date", "-id"]
+        indexes = [models.Index(fields=["cycle", "is_deleted", "date"])]
+
+    def __str__(self):
+        return f"{self.product} · {self.date:%d %b %Y}"
+
+    @property
+    def safe_from(self):
+        """The first day fish from this pond can be sold again, or None."""
+        from datetime import timedelta
+
+        return self.date + timedelta(days=self.withdrawal_days) if self.withdrawal_days else None
+
+
 class PondAlerts(models.Model):
     """The farm's own warning levels. Filled with common defaults; change them
     to suit your fish and your water."""

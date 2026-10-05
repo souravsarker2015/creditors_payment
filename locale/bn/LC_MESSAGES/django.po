@@ -9419,3 +9419,582 @@ msgstr "টেবিল লুকান"
 
 msgid "Show every table"
 msgstr "প্রতিটি টেবিল দেখুন"
+
+msgid "%(product)s · %(pond)s"
+msgstr "%(product)s · %(pond)s"
+
+msgid "Fish can be sold again · %(pond)s"
+msgstr "আবার মাছ বিক্রি করা যাবে · %(pond)s"
+
+msgid "Waiting period of %(product)s is over"
+msgstr "%(product)s-এর অপেক্ষার সময় শেষ"
+
+msgid "Lime, medicine & care"
+msgstr "চুন, ওষুধ ও পরিচর্যা"
+
+msgid "What went into each pond, how much, and why — with a dose calculator."
+msgstr "কোন পুকুরে কী, কতটা আর কেন দেওয়া হলো — মাত্রা হিসাবের সুবিধাসহ।"
+
+msgid "A medicine's waiting period warns you before fish from that pond are sold."
+msgstr "ওষুধের অপেক্ষার সময় চলাকালে সেই পুকুরের মাছ বিক্রির আগে সতর্ক করে।"
+
+msgid "Fish prices"
+msgstr "মাছের বাজারদর"
+
+msgid "What each fish is fetching: your own sale rates and prices you note at the aarot."
+msgstr "কোন মাছ কত দামে যাচ্ছে: আপনার নিজের বিক্রির দর আর আড়তে টুকে রাখা দাম।"
+
+msgid "Every rate becomes a price per kg, so mon and kg rates compare directly."
+msgstr "সব দর কেজিপ্রতি দামে বদলে যায়, তাই মণ আর কেজির দর সরাসরি মেলানো যায়।"
+
+msgid "Staff & wages"
+msgstr "কর্মচারী ও মজুরি"
+
+msgid "A work sheet for daily workers, a salary sheet for monthly staff, and what you've paid."
+msgstr "দিনমজুরদের হাজিরা খাতা, মাসিক কর্মচারীদের বেতন খাতা, আর যা পরিশোধ করেছেন।"
+
+msgid "Wages are a cost when they're earned; an advance is simply taken off later pay."
+msgstr "মজুরি অর্জিত হলেই খরচ; অগ্রিম পরের পাওনা থেকে কেটে যায়।"
+
+msgid "Fish sold (after market deductions) − fingerlings − feed eaten − lime & medicine − wages and other costs put on that cycle."
+msgstr "বিক্রি করা মাছ (বাজারের কর্তনের পর) − পোনা − খাওয়ানো খাবার − চুন ও ওষুধ − ওই চক্রে ধরা মজুরি ও অন্যান্য খরচ।"
+
+msgid "Fish sales + other farm income − feed eaten − fingerlings − lime & medicine − staff wages − farm costs − loan interest."
+msgstr "মাছ বিক্রি + খামারের অন্যান্য আয় − খাওয়ানো খাবার − পোনা − চুন ও ওষুধ − কর্মচারীর মজুরি − খামারের খরচ − ঋণের সুদ।"
+
+msgid "What a worker is owed"
+msgstr "কর্মচারীর পাওনা"
+
+msgid "Their opening balance + days worked, salaries and bonuses − deductions − what you've paid them. Below zero means they hold an advance."
+msgstr "শুরুর ব্যালেন্স + কাজের দিন, বেতন ও বোনাস − কর্তন − যা দিয়েছেন। শূন্যের নিচে মানে তাঁর কাছে অগ্রিম আছে।"
+
+msgid "Work sheet"
+msgstr "হাজিরা খাতা"
+
+msgid "%(month)s salaries not written yet"
+msgstr "%(month)s মাসের বেতন এখনো লেখা হয়নি"
+
+msgid "Write"
+msgstr "লিখুন"
+
+msgid "Advance to staff"
+msgstr "কর্মচারীকে অগ্রিম"
+
+msgid "Staff pay"
+msgstr "কর্মচারীর বেতন"
+
+msgid "Pond care"
+msgstr "পুকুর পরিচর্যা"
+
+msgid "Lime, medicine & pond care"
+msgstr "চুন, ওষুধ ও পুকুর পরিচর্যা"
+
+msgid "Staff wages"
+msgstr "কর্মচারীর মজুরি"
+
+msgid "The price the aarot or buyers are giving, before commission — the same way the market quotes it."
+msgstr "আড়ত বা ক্রেতারা যে দাম দিচ্ছে, কমিশনের আগে — বাজার যেভাবে দর বলে।"
+
+msgid "Bigger fish fetch more per kg, so note the size if prices differ by size."
+msgstr "বড় মাছের কেজিপ্রতি দাম বেশি, তাই আকারভেদে দাম আলাদা হলে আকার লিখুন।"
+
+msgid "Not at a market"
+msgstr "বাজারে নয়"
+
+msgid "Fish size"
+msgstr "মাছের আকার"
+
+msgid "e.g. 1–1.5 kg, big, medium"
+msgstr "যেমন ১–১.৫ কেজি, বড়, মাঝারি"
+
+msgid "What each fish is fetching — from your own sales and the prices you note at the aarot — so you can choose when and where to sell."
+msgstr "কোন মাছ কত দামে যাচ্ছে — আপনার বিক্রি আর আড়তে টুকে রাখা দাম থেকে — যাতে কখন আর কোথায় বেচবেন ঠিক করতে পারেন।"
+
+msgid "Note a price"
+msgstr "দাম লিখুন"
+
+msgid "How fish prices work"
+msgstr "বাজারদর যেভাবে কাজ করে"
+
+msgid "Every sale you record by weight adds its rate here automatically. Note other prices you hear at the aarot to see more of the market."
+msgstr "ওজনে লেখা প্রতিটি বিক্রির দর নিজে থেকে এখানে আসে। বাজারের আরও ছবি পেতে আড়তে শোনা অন্য দামগুলোও লিখুন।"
+
+msgid "All prices are turned into a price per kg, so a mon rate and a kg rate can be compared. They're before commission, the way the market quotes them."
+msgstr "সব দাম কেজিপ্রতি দামে বদলানো হয়, তাই মণ আর কেজির দর মেলানো যায়। দামগুলো কমিশনের আগের, বাজার যেভাবে বলে।"
+
+msgid "The arrow compares the last 7 days with the month before. “Best market” is where this fish fetched the most in the last 30 days."
+msgstr "তীরচিহ্ন গত ৭ দিনকে তার আগের মাসের সঙ্গে তুলনা করে। “সেরা বাজার” হলো গত ৩০ দিনে যেখানে এই মাছের দাম সবচেয়ে বেশি পাওয়া গেছে।"
+
+msgid "A price you saw or heard today."
+msgstr "আজ যে দাম দেখেছেন বা শুনেছেন।"
+
+msgid "Save price"
+msgstr "দাম সংরক্ষণ"
+
+msgid "Last 7 days compared with the month before"
+msgstr "গত ৭ দিন, আগের মাসের তুলনায়"
+
+msgid "steady"
+msgstr "স্থির"
+
+msgid "your sale"
+msgstr "আপনার বিক্রি"
+
+msgid "noted"
+msgstr "টুকে রাখা"
+
+msgid "Price over the last %(n)s weeks"
+msgstr "গত %(n)s সপ্তাহের দাম"
+
+msgid "%(n)s-day range"
+msgstr "%(n)s দিনের সীমা"
+
+msgid "Best market"
+msgstr "সেরা বাজার"
+
+msgid "No prices yet"
+msgstr "এখনো কোনো দাম নেই"
+
+msgid "Prices appear here from your fish sales by weight, and from the prices you note at the aarot."
+msgstr "ওজনে মাছ বিক্রি আর আড়তে টুকে রাখা দাম থেকে এখানে দাম দেখা যাবে।"
+
+msgid "Prices you noted"
+msgstr "আপনার টুকে রাখা দাম"
+
+msgid "Delete this price?"
+msgstr "এই দাম মুছবেন?"
+
+msgid "Dose per decimal"
+msgstr "শতাংশপ্রতি মাত্রা"
+
+msgid "Optional. Type the dose on the bag (e.g. 1 kg lime per decimal) and the amount is worked out from the pond's size."
+msgstr "ঐচ্ছিক। বস্তায় লেখা মাত্রা লিখুন (যেমন শতাংশে ১ কেজি চুন), পুকুরের আয়তন থেকে মোট পরিমাণ হিসাব হয়ে যাবে।"
+
+msgid "Lime and fertilizer are usually given when preparing the pond and every few weeks; salt, potash and medicine when fish are sick."
+msgstr "চুন ও সার সাধারণত পুকুর প্রস্তুতির সময় আর কয়েক সপ্তাহ পরপর দেওয়া হয়; লবণ, পটাশ ও ওষুধ মাছ অসুস্থ হলে।"
+
+msgid "Some medicines stay in the fish for a while. The app warns you if you try to sell fish from this pond before the waiting period is over."
+msgstr "কিছু ওষুধ কিছুদিন মাছের শরীরে থাকে। অপেক্ষার সময় শেষ হওয়ার আগে এই পুকুরের মাছ বিক্রি করতে গেলে অ্যাপ সতর্ক করবে।"
+
+msgid "What this lot cost. It becomes part of this cycle's cost."
+msgstr "এই দফার দাম। এটি এই চক্রের খরচে যোগ হয়।"
+
+msgid "Leave empty if it was bought earlier or on credit — the cost still counts for the pond, but no money leaves an account today."
+msgstr "আগে কেনা বা বাকিতে কেনা হলে খালি রাখুন — খরচ পুকুরে ধরা হবে, কিন্তু আজ কোনো হিসাব থেকে টাকা যাবে না।"
+
+msgid "Not paid now"
+msgstr "এখন পরিশোধ নয়"
+
+msgid "Optional. The pond is %(area)s decimal: the amount is worked out for you."
+msgstr "ঐচ্ছিক। পুকুরটি %(area)s শতাংশ: মোট পরিমাণ হিসাব হয়ে যাবে।"
+
+msgid "Lime (chun)"
+msgstr "চুন"
+
+msgid "Fertilizer (urea, TSP, dung)"
+msgstr "সার (ইউরিয়া, টিএসপি, গোবর)"
+
+msgid "Salt"
+msgstr "লবণ"
+
+msgid "Potash"
+msgstr "পটাশ"
+
+msgid "Medicine / antibiotic"
+msgstr "ওষুধ / অ্যান্টিবায়োটিক"
+
+msgid "Probiotic / water care"
+msgstr "প্রোবায়োটিক / পানি পরিচর্যা"
+
+msgid "What kind"
+msgstr "ধরন"
+
+msgid "Product"
+msgstr "পণ্য"
+
+msgid "e.g. Dolomite lime, Oxytetracycline, Aquakleen"
+msgstr "যেমন ডলোমাইট চুন, অক্সিটেট্রাসাইক্লিন, অ্যাকুয়াক্লিন"
+
+msgid "Amount used"
+msgstr "ব্যবহৃত পরিমাণ"
+
+msgid "Why"
+msgstr "কেন"
+
+msgid "e.g. pond preparation, red spots on fish, low oxygen"
+msgstr "যেমন পুকুর প্রস্তুতি, মাছের গায়ে লাল দাগ, অক্সিজেন কম"
+
+msgid "Don't sell fish for (days)"
+msgstr "কত দিন মাছ বিক্রি নয়"
+
+msgid "The waiting period on the medicine's label. Leave empty if there is none."
+msgstr "ওষুধের লেবেলে লেখা অপেক্ষার সময়। না থাকলে খালি রাখুন।"
+
+msgid "Don't sell fish from %(pond)s yet"
+msgstr "%(pond)s-এর মাছ এখনই বিক্রি করবেন না"
+
+msgid "%(product)s · waiting period ends %(date)s"
+msgstr "%(product)s · অপেক্ষা শেষ %(date)s"
+
+msgid "Care"
+msgstr "পরিচর্যা"
+
+msgid "Don't sell fish from this pond before %(date)s"
+msgstr "%(date)s-এর আগে এই পুকুরের মাছ বিক্রি করবেন না"
+
+msgid "%(product)s was given on %(given)s; its waiting period is %(days)s days. Fish sold earlier may still carry the medicine."
+msgstr "%(given)s তারিখে %(product)s দেওয়া হয়েছে; এর অপেক্ষার সময় %(days)s দিন। আগে বিক্রি করা মাছে ওষুধ থেকে যেতে পারে।"
+
+msgid "Fingerlings bought + feed eaten (at the average price you paid for it) + lime and medicine + any other cost you put on this cycle, like labour."
+msgstr "কেনা পোনা + খাওয়ানো খাবার (আপনার দেওয়া গড় দামে) + চুন ও ওষুধ + এই চক্রে ধরা অন্য যেকোনো খরচ, যেমন মজুরি।"
+
+msgid "care %(c)s"
+msgstr "পরিচর্যা %(c)s"
+
+msgid "wages %(w)s"
+msgstr "মজুরি %(w)s"
+
+msgid "Water & care"
+msgstr "পানি ও পরিচর্যা"
+
+msgid "Everything put into the pond: lime, fertilizer, salt, potash, medicine, probiotics. The cost counts towards this cycle."
+msgstr "পুকুরে যা দেওয়া হয়েছে: চুন, সার, লবণ, পটাশ, ওষুধ, প্রোবায়োটিক। এর খরচ এই চক্রে ধরা হয়।"
+
+msgid "What went into the pond, how much, and why."
+msgstr "পুকুরে কী, কতটা আর কেন দেওয়া হলো।"
+
+msgid "no selling until %(date)s"
+msgstr "%(date)s পর্যন্ত বিক্রি নয়"
+
+msgid "not paid now"
+msgstr "এখন পরিশোধ নয়"
+
+msgid "Nothing recorded yet. Note lime, fertilizer and medicine here so you know what each pond got — and what it cost."
+msgstr "এখনো কিছু লেখা হয়নি। চুন, সার ও ওষুধ এখানে লিখুন, যাতে জানা থাকে কোন পুকুর কী পেল — আর কত খরচ হলো।"
+
+msgid "Add lime or medicine"
+msgstr "চুন বা ওষুধ যোগ করুন"
+
+msgid "Medicine waiting period"
+msgstr "ওষুধের অপেক্ষার সময়"
+
+msgid "%(product)s was given to %(pond)s on %(given)s. Its waiting period ends %(date)s — fish sold before then may still carry the medicine."
+msgstr "%(given)s তারিখে %(pond)s-এ %(product)s দেওয়া হয়েছে। অপেক্ষার সময় শেষ হবে %(date)s — তার আগে বিক্রি করা মাছে ওষুধ থেকে যেতে পারে।"
+
+msgid "Whole farm"
+msgstr "পুরো খামার"
+
+msgid "Monthly: a fixed salary each month. Daily: paid for the days they work (mark them on the work sheet)."
+msgstr "মাসিক: প্রতি মাসে নির্দিষ্ট বেতন। দৈনিক: যত দিন কাজ করেন তত দিনের মজুরি (হাজিরা খাতায় চিহ্ন দিন)।"
+
+msgid "Only when you start using the app: wages you already owed them (+), or an advance they already had (− in front)."
+msgstr "শুধু অ্যাপ ব্যবহার শুরুর সময়: আগে থেকে তাঁর পাওনা মজুরি (+), বা তাঁর কাছে থাকা অগ্রিম (সামনে −)।"
+
+msgid "This is before they started."
+msgstr "এটি তাঁর কাজ শুরুর আগের তারিখ।"
+
+msgid "Days worked: for daily workers (the work sheet does this for everyone at once). Monthly salary: one per month. Bonus: Eid bonus, overtime. Deduction: a fine or damage taken off their pay."
+msgstr "কাজের দিন: দিনমজুরদের জন্য (হাজিরা খাতা সবার জন্য একসঙ্গে করে)। মাসিক বেতন: মাসে একবার। বোনাস: ঈদ বোনাস, ওভারটাইম। কর্তন: জরিমানা বা ক্ষতি, যা পাওনা থেকে কাটা হয়।"
+
+msgid "Work for one pond? Pick its cycle, and the wage counts towards that pond's cost."
+msgstr "একটি পুকুরের কাজ? তার চক্র বেছে নিন, মজুরি সেই পুকুরের খরচে ধরা হবে।"
+
+msgid "Per day. Filled with their usual wage."
+msgstr "দিনপ্রতি। তাঁর সাধারণ মজুরি বসানো থাকে।"
+
+msgid "For days worked it's days × rate, worked out for you."
+msgstr "কাজের দিনের জন্য এটি দিন × হার, নিজে থেকে হিসাব হয়।"
+
+msgid "How many days?"
+msgstr "কত দিন?"
+
+msgid "This month's salary is already written. Edit that one instead."
+msgstr "এই মাসের বেতন আগেই লেখা হয়েছে। সেটিই সম্পাদনা করুন।"
+
+msgid "Wages / salary: paying what they've earned. Advance: money given before the work is done — it's taken off later pay automatically."
+msgstr "মজুরি / বেতন: অর্জিত পাওনা পরিশোধ। অগ্রিম: কাজের আগে দেওয়া টাকা — পরের পাওনা থেকে নিজে থেকে কাটা যায়।"
+
+msgid "Monthly salary"
+msgstr "মাসিক বেতন"
+
+msgid "Daily wage"
+msgstr "দৈনিক মজুরি"
+
+msgid "Work"
+msgstr "কাজ"
+
+msgid "e.g. guard, feeder, manager, net puller"
+msgstr "যেমন পাহারাদার, খাবার দেওয়ার লোক, ম্যানেজার, জাল টানার লোক"
+
+msgid "Salary or wage"
+msgstr "বেতন বা মজুরি"
+
+msgid "Per month for a monthly salary, per day for a daily wage."
+msgstr "মাসিক বেতনে মাসপ্রতি, দৈনিক মজুরিতে দিনপ্রতি।"
+
+msgid "Left on"
+msgstr "কাজ ছেড়েছেন"
+
+msgid "Leave empty while they still work here."
+msgstr "এখনো কাজ করলে খালি রাখুন।"
+
+msgid "Wages you already owed them (+), or an advance they already had (−). Usually 0."
+msgstr "আগে থেকে তাঁর পাওনা মজুরি (+), বা তাঁর কাছে থাকা অগ্রিম (−)। সাধারণত ০।"
+
+msgid "Days worked"
+msgstr "কাজের দিন"
+
+msgid "Bonus / extra"
+msgstr "বোনাস / অতিরিক্ত"
+
+msgid "Deduction / fine"
+msgstr "কর্তন / জরিমানা"
+
+msgid "Optional: work done for one pond counts towards that pond's cost."
+msgstr "ঐচ্ছিক: একটি পুকুরের কাজ সেই পুকুরের খরচে ধরা হয়।"
+
+msgid "Wages / salary"
+msgstr "মজুরি / বেতন"
+
+msgid "Advance"
+msgstr "অগ্রিম"
+
+msgid "%(days)s day(s) × %(rate)s"
+msgstr "%(days)s দিন × %(rate)s"
+
+msgid "You owe %(name)s %(a)s right now."
+msgstr "এই মুহূর্তে %(name)s আপনার কাছে %(a)s পান।"
+
+msgid "They already hold an advance of %(a)s."
+msgstr "তাঁর কাছে আগে থেকেই %(a)s অগ্রিম আছে।"
+
+msgid "Nothing is owed right now, so this would be an advance."
+msgstr "এখন কোনো পাওনা নেই, তাই এটি অগ্রিম হবে।"
+
+msgid "advance with them"
+msgstr "তাঁর কাছে অগ্রিম"
+
+msgid "settled"
+msgstr "পরিশোধিত"
+
+msgid "Write a month's salary for all monthly staff at once — and pay it, if you're paying now."
+msgstr "সব মাসিক কর্মচারীর এক মাসের বেতন একসঙ্গে লিখুন — এখনই দিলে পরিশোধও করুন।"
+
+msgid "Write salary for %(name)s"
+msgstr "%(name)s-এর বেতন লিখুন"
+
+msgid "Written: %(a)s"
+msgstr "লেখা হয়েছে: %(a)s"
+
+msgid "Part of the month (full: %(full)s)"
+msgstr "মাসের কিছু অংশ (পুরো: %(full)s)"
+
+msgid "owed %(a)s now"
+msgstr "এখন পাওনা %(a)s"
+
+msgid "Salary"
+msgstr "বেতন"
+
+msgid "Pay them now too"
+msgstr "এখনই পরিশোধও করুন"
+
+msgid "Pays each one what they're owed after this salary (any advance is taken off)."
+msgstr "এই বেতনের পর প্রত্যেকের যা পাওনা তা পরিশোধ করে (অগ্রিম থাকলে কেটে নেয়)।"
+
+msgid "Write & pay salaries"
+msgstr "বেতন লিখুন ও পরিশোধ করুন"
+
+msgid "Write salaries"
+msgstr "বেতন লিখুন"
+
+msgid "All %(month)s salaries are written (%(t)s). Pay from each worker's page."
+msgstr "%(month)s মাসের সব বেতন লেখা হয়েছে (%(t)s)। প্রত্যেক কর্মচারীর পাতা থেকে পরিশোধ করুন।"
+
+msgid "No monthly staff this month"
+msgstr "এই মাসে কোনো মাসিক কর্মচারী নেই"
+
+msgid "Add the workers you pay a monthly salary (choose “Monthly salary”), and they'll appear here."
+msgstr "যাঁদের মাসিক বেতন দেন তাঁদের যোগ করুন (“মাসিক বেতন” বেছে নিন), তাঁরা এখানে দেখা যাবেন।"
+
+msgid "Workers"
+msgstr "কর্মচারী"
+
+msgid "Salary sheet"
+msgstr "বেতন খাতা"
+
+msgid "Tick who worked on the day. Their day's wage is written for you."
+msgstr "সেদিন কে কাজ করেছেন টিক দিন। তাঁদের দিনের মজুরি নিজে থেকে লেখা হবে।"
+
+msgid "Previous day"
+msgstr "আগের দিন"
+
+msgid "Next day"
+msgstr "পরের দিন"
+
+msgid "Who worked on %(date)s"
+msgstr "%(date)s কে কাজ করেছেন"
+
+msgid "Daily-wage workers only. Monthly staff get their salary from the Salary sheet."
+msgstr "শুধু দিনমজুর। মাসিক কর্মচারীরা বেতন খাতা থেকে বেতন পান।"
+
+msgid "All full day"
+msgstr "সবাই পুরো দিন"
+
+msgid "Did %(name)s work?"
+msgstr "%(name)s কি কাজ করেছেন?"
+
+msgid "Off"
+msgstr "ছুটি"
+
+msgid "Half"
+msgstr "অর্ধেক"
+
+msgid "Full"
+msgstr "পুরো"
+
+msgid "Wages written for this day: %(t)s"
+msgstr "এই দিনের লেখা মজুরি: %(t)s"
+
+msgid "Save work sheet"
+msgstr "হাজিরা সংরক্ষণ"
+
+msgid "No daily workers"
+msgstr "কোনো দিনমজুর নেই"
+
+msgid "Add the workers you pay by the day (choose “Daily wage”), and they'll appear here."
+msgstr "যাঁদের দিনভিত্তিক মজুরি দেন তাঁদের যোগ করুন (“দৈনিক মজুরি” বেছে নিন), তাঁরা এখানে দেখা যাবেন।"
+
+msgid "Left %(date)s"
+msgstr "কাজ ছেড়েছেন %(date)s"
+
+msgid "%(r)s a month"
+msgstr "মাসে %(r)s"
+
+msgid "%(r)s a day"
+msgstr "দিনে %(r)s"
+
+msgid "Since %(date)s"
+msgstr "%(date)s থেকে"
+
+msgid "Advance they hold"
+msgstr "তাঁর কাছে অগ্রিম"
+
+msgid "Last 12 months: earned %(e)s · paid %(p)s"
+msgstr "গত ১২ মাস: অর্জন %(e)s · পরিশোধ %(p)s"
+
+msgid "Give advance"
+msgstr "অগ্রিম দিন"
+
+msgid "Add salary or bonus"
+msgstr "বেতন বা বোনাস যোগ"
+
+msgid "Add days worked"
+msgstr "কাজের দিন যোগ"
+
+msgid "%(month)s salary not written yet"
+msgstr "%(month)s মাসের বেতন এখনো লেখা হয়নি"
+
+msgid "Write it so the balance shows what you owe."
+msgstr "লিখে রাখুন, যাতে ব্যালেন্সে আপনার দেনা দেখা যায়।"
+
+msgid "Write salary"
+msgstr "বেতন লিখুন"
+
+msgid "Khata"
+msgstr "খাতা"
+
+msgid "Earned adds to what you owe them; paid takes it off. The last column is the balance after each line."
+msgstr "অর্জন আপনার দেনা বাড়ায়; পরিশোধ কমায়। শেষ কলামে প্রতিটি লাইনের পরের ব্যালেন্স।"
+
+msgid "Newest first."
+msgstr "নতুনগুলো আগে।"
+
+msgid "advance %(a)s"
+msgstr "অগ্রিম %(a)s"
+
+msgid "owed %(a)s"
+msgstr "পাওনা %(a)s"
+
+msgid "Delete this line?"
+msgstr "এই লাইন মুছবেন?"
+
+msgid "Nothing yet. Write their salary at the end of each month, and record what you pay them."
+msgstr "এখনো কিছু নেই। প্রতি মাসের শেষে বেতন লিখুন, আর যা দেন তা লিখে রাখুন।"
+
+msgid "Nothing yet. Mark the days they work on the Work sheet, and record what you pay them."
+msgstr "এখনো কিছু নেই। হাজিরা খাতায় কাজের দিন চিহ্নিত করুন, আর যা দেন তা লিখে রাখুন।"
+
+msgid "Balance when you started: %(a)s"
+msgstr "শুরুর ব্যালেন্স: %(a)s"
+
+msgid "The people who work on the farm: what each one earns, what you've paid, and who holds an advance."
+msgstr "খামারে যাঁরা কাজ করেন: কে কত পান, কত দিয়েছেন, আর কার কাছে অগ্রিম আছে।"
+
+msgid "Add worker"
+msgstr "কর্মচারী যোগ করুন"
+
+msgid "Daily"
+msgstr "দৈনিক"
+
+msgid "Left"
+msgstr "কাজ ছেড়েছেন"
+
+msgid "No workers yet"
+msgstr "এখনো কোনো কর্মচারী নেই"
+
+msgid "Add the guard, feeders and others you pay. Each gets a khata: what they earned, what you paid, and any advance."
+msgstr "পাহারাদার, খাবার দেওয়ার লোকসহ যাঁদের বেতন দেন তাঁদের যোগ করুন। প্রত্যেকের একটি খাতা থাকবে: কত অর্জন, কত পরিশোধ, আর কোনো অগ্রিম।"
+
+msgid "How staff pay works"
+msgstr "কর্মচারীর বেতন যেভাবে কাজ করে"
+
+msgid "Each worker has a khata: what they earned minus what you paid them. The balance shows whether you still owe them, or they hold an advance."
+msgstr "প্রত্যেক কর্মচারীর একটি খাতা: অর্জন বিয়োগ পরিশোধ। ব্যালেন্স দেখায় আপনার কাছে তাঁর পাওনা আছে, নাকি তাঁর কাছে অগ্রিম।"
+
+msgid "Daily workers: mark who worked on the Work sheet. Monthly staff: write the month's salary from the Salary sheet, usually at the end of the month."
+msgstr "দিনমজুর: হাজিরা খাতায় কে কাজ করেছেন চিহ্ন দিন। মাসিক কর্মচারী: সাধারণত মাসের শেষে বেতন খাতা থেকে মাসের বেতন লিখুন।"
+
+msgid "Wages count as the farm's labour cost in reports — and in a pond's cost when you pick the pond. Don't also add them in Money in & out."
+msgstr "মজুরি রিপোর্টে খামারের শ্রমিক খরচ হিসেবে ধরা হয় — আর পুকুর বেছে নিলে সেই পুকুরের খরচে। জমা-খরচে আবার যোগ করবেন না।"
+
+msgid "An advance is simply a payment made before the work is done: it's taken off what they earn later."
+msgstr "অগ্রিম হলো কাজের আগে দেওয়া টাকা: পরে যা অর্জন করেন তা থেকে কেটে যায়।"
+
+msgid "Who worked today"
+msgstr "আজ কে কাজ করেছেন"
+
+msgid "Price noted: %(fish)s %(rate)s/%(unit)s."
+msgstr "দাম লেখা হয়েছে: %(fish)s %(rate)s/%(unit)s।"
+
+msgid "Saved. %(name)s's balance is now %(balance)s."
+msgstr "সংরক্ষিত। %(name)s-এর ব্যালেন্স এখন %(balance)s।"
+
+msgid "Edit earning"
+msgstr "অর্জন সম্পাদনা"
+
+msgid "Add to %(name)s's pay"
+msgstr "%(name)s-এর পাওনায় যোগ"
+
+msgid "Paid %(amount)s to %(name)s. They now hold an advance of %(adv)s."
+msgstr "%(name)s-কে %(amount)s দেওয়া হয়েছে। এখন তাঁর কাছে %(adv)s অগ্রিম।"
+
+msgid "Paid %(amount)s to %(name)s. Still owed: %(owed)s."
+msgstr "%(name)s-কে %(amount)s দেওয়া হয়েছে। এখনো পাওনা: %(owed)s।"
+
+msgid "Pay %(name)s"
+msgstr "%(name)s-কে পরিশোধ"
+
+msgid "Work sheet saved for %(date)s: %(n)s worked."
+msgstr "%(date)s-এর হাজিরা সংরক্ষিত: %(n)s জন কাজ করেছেন।"
+
+msgid "Choose the account the salaries are paid from."
+msgstr "কোন হিসাব থেকে বেতন দেওয়া হবে বেছে নিন।"
+
+msgid "%(n)s salaries written for %(month)s."
+msgstr "%(month)s মাসের %(n)sটি বেতন লেখা হয়েছে।"
+
+msgid "%(n)s paid from %(account)s."
+msgstr "%(account)s থেকে %(n)s জনকে পরিশোধ করা হয়েছে।"
+
+msgid "Nothing to write: tick the workers to add."
+msgstr "লেখার কিছু নেই: যাঁদের যোগ করবেন তাঁদের টিক দিন।"

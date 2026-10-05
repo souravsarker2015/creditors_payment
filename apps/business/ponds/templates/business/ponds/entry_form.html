@@ -17,6 +17,7 @@
         {% if row|length > 1 %}<div class="form-grid form-grid-2">{% for field in row %}{% include "business/partials/field.html" %}{% endfor %}</div>
         {% else %}{% with field=row.0 %}{% include "business/partials/field.html" %}{% endwith %}{% endif %}
       {% endfor %}{% endfor %}
+      {% if form.is_treatment %}{% include "business/ponds/_treatment_extras.html" %}{% endif %}
     </div>
     <div class="card-footer form-actions">
       <a href="{{ back }}" class="btn btn-ghost btn-lg">{% translate "Cancel" %}</a>

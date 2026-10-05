@@ -25,7 +25,14 @@
           <div @change="if ($event.target.name === 'market') applyMarket($event.target.value)">{% with field=form.market %}{% include "business/partials/field.html" %}{% endwith %}</div>
           <div @change="if ($event.target.name === 'buyer') applyBuyer($event.target.value)">{% with field=form.buyer %}{% include "business/partials/field.html" %}{% endwith %}</div>
         </div>
-        {% with field=form.cycle %}{% include "business/partials/field.html" %}{% endwith %}
+        {{ waits|json_script:"medicine-waits" }}
+        <div x-data="{ c: '{{ form.cycle.value|default_if_none:''|stringformat:'s'|escapejs }}', waits: JSON.parse(document.getElementById('medicine-waits').textContent) }" @change="if ($event.target.name === 'cycle') c = $event.target.value">
+          {% with field=form.cycle %}{% include "business/partials/field.html" %}{% endwith %}
+          <div class="callout mt-3" data-tone="warn" role="alert" x-show="waits[c]" x-cloak>
+            {% include "business/partials/icon.html" with name="dropper" %}
+            <p><strong>{% translate "Medicine waiting period" %}</strong> · <span x-text="waits[c]"></span></p>
+          </div>
+        </div>
       </div>
     </section>
 

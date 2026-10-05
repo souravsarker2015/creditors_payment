@@ -43,7 +43,9 @@ class CycleSummary:
     species: list = field(default_factory=list)
     feed_kg: Decimal = ZERO
     feed_cost: Decimal = ZERO
-    other_cost: Decimal = ZERO      # labour, medicine… recorded against this pond
+    other_cost: Decimal = ZERO      # labour and other costs typed in against this pond
+    care_cost: Decimal = ZERO       # lime, fertilizer, medicine put into the pond
+    wage_cost: Decimal = ZERO       # staff wages written against this pond
     stocking_cost: Decimal = ZERO
     sales_net: Decimal = ZERO
     sales_gross: Decimal = ZERO
@@ -69,9 +71,9 @@ class CycleSummary:
 
     @property
     def cost(self):
-        """Everything this season has cost: fingerlings, feed eaten, and any
-        labour, medicine or other expense recorded against this pond."""
-        return self.stocking_cost + self.feed_cost + self.other_cost
+        """Everything this season has cost: fingerlings, feed eaten, lime and
+        medicine, and any labour or other expense recorded against this pond."""
+        return self.stocking_cost + self.feed_cost + self.care_cost + self.wage_cost + self.other_cost
 
     @property
     def profit(self):
@@ -127,6 +129,11 @@ def summarize(cycle, prices=None, cache=None):
         s.feed_kg += f.kg
         s.feed_cost += f.kg * prices.get(f.product_id, ZERO)
     s.feed_cost = s.feed_cost.quantize(Decimal("0.01"))
+    s.care_cost = sum((t.cost for t in _rows(cycle, "treatments")), ZERO)
+    if apps.is_installed("apps.business.staff"):
+        from apps.business.staff.services import cycle_wages
+
+        s.wage_cost = cycle_wages(cycle)
     if apps.is_installed("apps.business.finance"):
         from apps.business.finance.services import cycle_costs
 
@@ -140,6 +147,19 @@ def summarize(cycle, prices=None, cache=None):
         s.sales_net, s.sales_gross = sales["net"] or ZERO, sales["gross"] or ZERO
     s.species = sorted(rows.values(), key=lambda r: r.species.order)
     return s
+
+
+def withdrawal(cycle, today=None):
+    """The medicine whose waiting period is still running in this cycle (the
+    one that ends last), or None. Fish shouldn't be sold before `safe_from`."""
+    today = today or date.today()
+    from .models import Treatment
+
+    latest = None
+    for t in Treatment.objects.filter(cycle=cycle, withdrawal_days__gt=0):
+        if t.safe_from > today and (latest is None or t.safe_from > latest.safe_from):
+            latest = t
+    return latest
 
 
 PRICE_DAYS = 90   # how far back "the price you usually get" looks
@@ -217,7 +237,7 @@ LEASE_SOON_DAYS = 30
 
 @dataclass
 class Task:
-    kind: str        # water | deaths | feed | weigh | harvest | lease
+    kind: str        # water | deaths | feed | weigh | harvest | lease | medicine
     tone: str        # warn | info | critical
     title: str
     detail: str
@@ -275,6 +295,13 @@ def farm_tasks(business, today=None):
                       else ngettext("Not weighed yet · day %(n)s of the cycle", "Not weighed yet · day %(n)s of the cycle", age) % {"n": age})
             tasks.append(Task("weigh", "info", _("Weigh a sample in %(pond)s") % {"pond": c.pond.name},
                               detail, reverse("business:cycle_detail", args=[c.pk]) + "?add=weighing", _("Weigh")))
+
+    for c in running:
+        wait = withdrawal(c, today)
+        if wait:
+            tasks.append(Task("medicine", "warn", _("Don't sell fish from %(pond)s yet") % {"pond": c.pond.name},
+                              _("%(product)s · waiting period ends %(date)s") % {"product": wait.product, "date": date_format(wait.safe_from, "j M")},
+                              reverse("business:cycle_detail", args=[c.pk]) + "?tab=water", _("Open")))
 
     for pond in Pond.objects.filter(business=business, lease_end__isnull=False,
                                     lease_end__gte=today, lease_end__lte=today + timedelta(days=LEASE_SOON_DAYS)):

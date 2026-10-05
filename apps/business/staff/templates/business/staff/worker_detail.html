@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{{ worker.name }} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-medium stack">
+  <header class="page-header !mb-0">
+    <div class="min-w-0">
+      <a href="{% url 'business:staff' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Staff & wages" %}</a>
+      <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <h1 class="page-title">{{ worker.name }}</h1>
+        {% if worker.is_deleted %}<span class="badge" data-tone="muted">{% translate "Deleted" %}</span>{% elif worker.left_on %}<span class="badge" data-tone="muted">{% blocktranslate with date=worker.left_on|date:"j M Y" %}Left {{ date }}{% endblocktranslate %}</span>{% endif %}
+      </div>
+      <div class="meta-list">
+        {% if worker.job %}<span class="meta-item">{% include "partials/icon.html" with name="tag" %}{{ worker.job }}</span>{% endif %}
+        <span class="meta-item">{% include "partials/icon.html" with name="wallet" %}{% if worker.is_monthly %}{% blocktranslate with r=worker.rate|bdt %}{{ r }} a month{% endblocktranslate %}{% else %}{% blocktranslate with r=worker.rate|bdt %}{{ r }} a day{% endblocktranslate %}{% endif %}</span>
+        <span class="meta-item">{% include "partials/icon.html" with name="calendar" %}{% blocktranslate with date=worker.started_on|date:"j M Y" %}Since {{ date }}{% endblocktranslate %}</span>
+        {% if worker.phone %}<a href="tel:{{ worker.phone }}" class="meta-item">{% include "partials/icon.html" with name="phone" %}{{ worker.phone }}</a>{% endif %}
+      </div>
+    </div>
+    {% if not worker.is_deleted %}
+    <div class="page-actions">
+      <a href="{% url 'business:staff_edit' worker.pk %}" class="btn btn-ghost">{% include "partials/icon.html" with name="edit" %}{% translate "Edit" %}</a>
+    </div>
+    {% endif %}
+  </header>
+
+  <section class="hero worker-hero" data-tone="{% if balance > 0 %}critical{% elif balance < 0 %}good{% else %}muted{% endif %}">
+    <p class="hero-label">{% if balance > 0 %}{% translate "You owe them" %}{% elif balance < 0 %}{% translate "Advance they hold" %}{% else %}{% translate "All settled" %}{% endif %}</p>
+    <p class="hero-value">{{ balance|absolute|bdt }}</p>
+    <p class="hero-sub">{% blocktranslate with e=earned_year|bdt p=paid_year|bdt %}Last 12 months: earned {{ e }} · paid {{ p }}{% endblocktranslate %}</p>
+    {% if not worker.is_deleted %}
+    <div class="worker-actions">
+      <a href="{% url 'business:staff_pay' worker.pk %}" class="btn btn-primary">{% include "partials/icon.html" with name="wallet" %}{% if balance > 0 %}{% translate "Pay" %}{% else %}{% translate "Give advance" %}{% endif %}</a>
+      <a href="{% url 'business:staff_earn' worker.pk %}" class="btn btn-secondary">{% include "partials/icon.html" with name="plus" %}{% if worker.is_monthly %}{% translate "Add salary or bonus" %}{% else %}{% translate "Add days worked" %}{% endif %}</a>
+    </div>
+    {% endif %}
+  </section>
+
+  {% if salary_missing %}
+  <div class="callout" data-tone="warn">
+    {% include "partials/icon.html" with name="clock" %}
+    <div class="flex-1 min-w-0"><p class="callout-title">{% blocktranslate with month=salary_missing|date:"F" %}{{ month }} salary not written yet{% endblocktranslate %}</p>
+    <p>{% translate "Write it so the balance shows what you owe." %}</p></div>
+    <a href="{% url 'business:staff_earn' worker.pk %}?month={{ salary_missing|date:'Y-m' }}" class="btn btn-soft btn-sm">{% translate "Write salary" %}</a>
+  </div>
+  {% endif %}
+
+  <section class="card">
+    <div class="card-header">
+      <div><h2 class="card-title">{% translate "Khata" %}{% include "business/partials/tip.html" with text=_("Earned adds to what you owe them; paid takes it off. The last column is the balance after each line.") %}</h2>
+      <p class="card-subtitle">{% translate "Newest first." %}</p></div>
+    </div>
+    {% if lines %}
+    <ul class="ledger">
+      {% for l in lines %}
+      <li class="ledger-row">
+        <span class="ledger-icon" data-tone="{% if l.kind == 'payment' %}info{% elif l.earned < 0 %}critical{% else %}good{% endif %}">{% if l.kind == 'payment' %}{% include "partials/icon.html" with name="wallet" %}{% else %}{% include "partials/icon.html" with name="plus" %}{% endif %}</span>
+        <div class="ledger-main">
+          <p class="ledger-title">{{ l.title }}</p>
+          <p class="ledger-meta">{{ l.date|date:"j M Y" }}{% if l.detail %} · {{ l.detail }}{% endif %}</p>
+        </div>
+        <div class="ledger-end">
+          <span class="party-bal">
+            {% if l.kind == 'payment' %}<strong>−{{ l.paid|bdt }}</strong>{% elif l.earned < 0 %}<strong class="tone-critical">−{{ l.earned|absolute|bdt }}</strong>{% else %}<strong class="tone-good">+{{ l.earned|bdt }}</strong>{% endif %}
+            <span>{% if l.balance < 0 %}{% blocktranslate with a=l.balance|absolute|bdt %}advance {{ a }}{% endblocktranslate %}{% else %}{% blocktranslate with a=l.balance|bdt %}owed {{ a }}{% endblocktranslate %}{% endif %}</span>
+          </span>
+          {% if not worker.is_deleted %}
+          {% if l.kind == 'payment' %}{% url 'business:staff_payment_edit' l.obj.pk as edit_url %}{% url 'business:staff_entry_delete' 'payment' l.obj.pk as delete_url %}
+          {% else %}{% url 'business:staff_earning_edit' l.obj.pk as edit_url %}{% url 'business:staff_entry_delete' 'earning' l.obj.pk as delete_url %}{% endif %}
+          {% translate "Delete this line?" as confirm_text %}
+          {% if biz_can.delete %}{% include "partials/row_menu.html" with edit_url=edit_url delete_url=delete_url confirm=confirm_text up=forloop.last %}{% else %}<a href="{{ edit_url }}" class="icon-btn" aria-label="{% translate 'Edit' %}">{% include "partials/icon.html" with name="edit" %}</a>{% endif %}
+          {% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty is-plain"><p class="empty-text">{% if worker.is_monthly %}{% translate "Nothing yet. Write their salary at the end of each month, and record what you pay them." %}{% else %}{% translate "Nothing yet. Mark the days they work on the Work sheet, and record what you pay them." %}{% endif %}</p></div>
+    {% endif %}
+    {% if worker.opening_balance %}<div class="card-footer"><p class="help">{% blocktranslate with a=worker.opening_balance|bdt %}Balance when you started: {{ a }}{% endblocktranslate %}</p></div>{% endif %}
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% translate "Fish prices" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page stack" x-data="{ adding: {% if open_form %}true{% else %}false{% endif %} }">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "Fish prices" %}</h1>
+      <p class="page-subtitle">{% translate "What each fish is fetching — from your own sales and the prices you note at the aarot — so you can choose when and where to sell." %}</p>
+    </div>
+    {% if form %}<div class="page-actions"><button type="button" class="btn btn-primary" @click="adding = !adding; $nextTick(() => adding && document.getElementById('price-form').scrollIntoView({ behavior: 'smooth', block: 'start' }))">{% include "partials/icon.html" with name="plus" %}{% translate "Note a price" %}</button></div>{% endif %}
+  </header>
+
+  {% include "business/partials/note.html" with key="prices" title=_("How fish prices work") p1=_("Every sale you record by weight adds its rate here automatically. Note other prices you hear at the aarot to see more of the market.") p2=_("All prices are turned into a price per kg, so a mon rate and a kg rate can be compared. They're before commission, the way the market quotes them.") p3=_("The arrow compares the last 7 days with the month before. “Best market” is where this fish fetched the most in the last 30 days.") %}
+
+  {% if form %}
+  <section class="card" id="price-form" x-show="adding" {% if not open_form %}x-cloak{% endif %}>
+    <div class="card-header"><div><h2 class="card-title">{% translate "Note a price" %}</h2><p class="card-subtitle">{% translate "A price you saw or heard today." %}</p></div></div>
+    <form method="post" class="card-body form-stack" novalidate>
+      {% csrf_token %}
+      {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+      {% for section in form.rows %}{% for row in section.fields %}
+        {% if row|length > 1 %}<div class="form-grid form-grid-2">{% for field in row %}{% include "business/partials/field.html" %}{% endfor %}</div>
+        {% else %}{% with field=row.0 %}{% include "business/partials/field.html" %}{% endwith %}{% endif %}
+      {% endfor %}{% endfor %}
+      <div class="form-actions">
+        <button type="button" class="btn btn-ghost" @click="adding = false">{% translate "Cancel" %}</button>
+        <button type="submit" class="btn btn-primary">{% include "partials/icon.html" with name="check" %}{% translate "Save price" %}</button>
+      </div>
+    </form>
+  </section>
+  {% endif %}
+
+  {% if board %}
+  <div class="card-grid card-grid-3">
+    {% for b in board %}
+    <article class="card price-card">
+      <div class="card-body">
+        <div class="price-head">
+          <span class="species-dot" style="--c: {{ b.species.color }}">{% include "business/partials/icon.html" with name="fish" %}</span>
+          <h2 class="price-fish">{{ b.species }}</h2>
+          {% if b.change_pct is not None %}
+          <span class="badge" data-tone="{% if b.change_pct > 0 %}good{% elif b.change_pct < 0 %}critical{% else %}muted{% endif %}" data-tip="{% translate 'Last 7 days compared with the month before' %}">
+            {% if b.change_pct > 0 %}▲ {{ b.change_pct }}%{% elif b.change_pct < 0 %}▼ {{ b.change_pct|absolute }}%{% else %}{% translate "steady" %}{% endif %}
+          </span>
+          {% endif %}
+        </div>
+        <p class="price-now">{{ b.latest.per_kg|bdt }}<small>/kg</small></p>
+        {% if mon %}<p class="price-alt">{% widthratio b.latest.per_kg 1 mon.factor as per_mon %}= {{ per_mon|bdt }}/{{ mon.symbol }}</p>{% endif %}
+        <p class="price-meta">
+          {{ b.latest.date|date:"j M" }}
+          {% if b.latest_market %}· {{ b.latest_market }}{% endif %}
+          · {% if b.latest.source == "sale" %}{% translate "your sale" %}{% else %}{% translate "noted" %}{% endif %}{% if b.latest.size %} · {{ b.latest.size }}{% endif %}
+        </p>
+        {% if b.spark_path %}
+        <svg class="price-spark" viewBox="0 0 120 32" preserveAspectRatio="none" role="img" aria-label="{% blocktranslate with n=weeks %}Price over the last {{ n }} weeks{% endblocktranslate %}">
+          <polyline points="{{ b.spark_path }}" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+        </svg>
+        {% endif %}
+        <dl class="price-facts">
+          {% if b.low %}<div><dt>{% blocktranslate with n=window %}{{ n }}-day range{% endblocktranslate %}</dt><dd>{{ b.low|bdt }} – {{ b.high|bdt }}</dd></div>{% endif %}
+          {% if b.best_market %}<div><dt>{% translate "Best market" %}</dt><dd>{{ b.best_market }} · {{ b.best_market_avg|bdt }}/kg</dd></div>{% endif %}
+        </dl>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty">
+    <div class="empty-icon">{% include "partials/icon.html" with name="arrow-up" %}</div>
+    <h3 class="empty-title">{% translate "No prices yet" %}</h3>
+    <p class="empty-text">{% translate "Prices appear here from your fish sales by weight, and from the prices you note at the aarot." %}</p>
+    {% if form %}<button type="button" class="btn btn-primary" @click="adding = true">{% include "partials/icon.html" with name="plus" %}{% translate "Note a price" %}</button>{% endif %}
+  </div>
+  {% endif %}
+
+  {% if recent %}
+  <section class="card">
+    <div class="card-header"><h2 class="card-title">{% translate "Prices you noted" %}</h2><span class="seg-count">{{ recent|length }}</span></div>
+    <ul class="ledger">
+      {% for p in recent %}
+      <li class="ledger-row">
+        <span class="species-dot" style="--c: {{ p.species.color }}">{% include "business/partials/icon.html" with name="fish" %}</span>
+        <div class="ledger-main">
+          <p class="ledger-title">{{ p.species }} · {{ p.rate|bdt }}/{{ p.unit.symbol }}</p>
+          <p class="ledger-meta">{{ p.date|date:"j M Y" }}{% if p.market %} · {{ p.market }}{% endif %}{% if p.size %} · {{ p.size }}{% endif %}{% if p.unit.symbol != "kg" %} · {{ p.rate_kg|bdt }}/kg{% endif %}</p>
+        </div>
+        <div class="ledger-end">
+          {% if biz_can.enter_data %}
+          <form method="post" action="{% url 'business:price_delete' p.pk %}" data-confirm="{% translate 'Delete this price?' %}">{% csrf_token %}
+            <button type="submit" class="icon-btn" aria-label="{% translate 'Delete' %}">{% include "partials/icon.html" with name="trash" %}</button>
+          </form>
+          {% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

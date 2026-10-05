@@ -1,0 +1,32 @@
+{% load i18n %}{% comment %}
+Pond care form helpers: product suggestions, and the dose calculator
+(dose per decimal × the pond's size fills "Amount used").
+{% endcomment %}
+<span hidden data-pond-area="{{ form.area|default_if_none:''|stringformat:'s' }}"></span>
+<datalist id="treatment-products-{{ form.prefix|default:'x' }}">
+  {% for p in form.known_products %}<option value="{{ p }}">{% endfor %}
+  {% for p in form.suggestions %}<option value="{{ p }}">{% endfor %}
+</datalist>
+<p class="help" data-dose-result hidden></p>
+<script>
+(function () {
+  if (window.__ftDose) return;
+  window.__ftDose = true;
+  document.addEventListener("input", function (e) {
+    if (!e.target.matches || !e.target.matches('input[name$="dose"]')) return;
+    var form = e.target.form, holder = form && form.querySelector("[data-pond-area]");
+    var area = holder ? parseFloat(holder.getAttribute("data-pond-area")) : NaN;
+    var dose = parseFloat(e.target.value), qty = form.querySelector('input[name$="quantity"]');
+    var out = form.querySelector("[data-dose-result]");
+    if (!qty || isNaN(area) || !area) return;
+    if (isNaN(dose) || dose <= 0) { if (out) out.hidden = true; return; }
+    var total = Math.round(dose * area * 1000) / 1000;
+    qty.value = total;
+    qty.dispatchEvent(new Event("change", { bubbles: true }));
+    if (out) {
+      out.hidden = false;
+      out.textContent = "{{ _('Amount used')|escapejs }}: " + dose + " × " + area + " = " + total;
+    }
+  });
+})();
+</script>

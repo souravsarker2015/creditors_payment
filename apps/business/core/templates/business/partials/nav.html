@@ -26,6 +26,11 @@
   <a href="{% url 'business:sales' %}" class="nav-link {% if '/business/sales/' in p %}is-active{% endif %}">
     {% include "partials/icon.html" with name="cart" %}{% translate "Fish sales" %}
   </a>
+  {% if biz_can.enter_data and not biz_can.view_finance %}
+  <a href="{% url 'business:staff_work' %}" class="nav-link {% if '/business/staff/work/' in p %}is-active{% endif %}">
+    {% include "partials/icon.html" with name="users" %}{% translate "Work sheet" %}
+  </a>
+  {% endif %}
   {% endif %}
 </div>
 
@@ -38,8 +43,11 @@
   <a href="{% url 'business:buyers' %}" class="nav-link {% if '/business/people/buyers/' in p %}is-active{% endif %}">
     {% include "partials/icon.html" with name="users" %}{% translate "Buyers" %}
   </a>
-  <a href="{% url 'business:markets' %}" class="nav-link {% if '/business/markets/' in p and 'deduction' not in p %}is-active{% endif %}">
+  <a href="{% url 'business:markets' %}" class="nav-link {% if '/business/markets/' in p and 'deduction' not in p and '/prices/' not in p %}is-active{% endif %}">
     {% include "partials/icon.html" with name="cart" %}{% translate "Markets & aarots" %}
+  </a>
+  <a href="{% url 'business:prices' %}" class="nav-link {% if '/business/markets/prices/' in p %}is-active{% endif %}" {% if '/business/markets/prices/' in p %}aria-current="page"{% endif %}>
+    {% include "partials/icon.html" with name="arrow-up" %}{% translate "Fish prices" %}
   </a>
 </div>
 
@@ -48,6 +56,9 @@
   <p class="nav-section-label">{% translate "Money" %}</p>
   <a href="{% url 'business:dues' %}" class="nav-link {% if '/business/baki/' in p %}is-active{% endif %}" {% if '/business/baki/' in p %}aria-current="page"{% endif %}>
     {% include "business/partials/icon.html" with name="book" %}{% translate "Baki (dues)" %}
+  </a>
+  <a href="{% url 'business:staff' %}" class="nav-link {% if '/business/staff/' in p %}is-active{% endif %}" {% if '/business/staff/' in p %}aria-current="page"{% endif %}>
+    {% include "partials/icon.html" with name="users" %}{% translate "Staff & wages" %}
   </a>
   <a href="{% url 'business:loans' %}" class="nav-link {% if '/business/loans/' in p %}is-active{% endif %}" {% if '/business/loans/' in p %}aria-current="page"{% endif %}>
     {% include "business/partials/icon.html" with name="banknotes" %}{% translate "Loans" %}

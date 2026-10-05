@@ -17,8 +17,8 @@ from apps.business.feed.forms import FeedUsageForm
 from apps.business.feed.models import FeedUsage
 
 from . import services
-from .forms import CycleForm, HarvestForm, MortalityForm, PondAlertsForm, PondForm, StockingForm, WaterTestForm, WeighingForm
-from .models import CultureCycle, Harvest, Mortality, Pond, PondAlerts, PondStatus, SampleWeighing, Stocking, WaterTest
+from .forms import CycleForm, HarvestForm, MortalityForm, PondAlertsForm, PondForm, StockingForm, TreatmentForm, WaterTestForm, WeighingForm
+from .models import CultureCycle, Harvest, Mortality, Pond, PondAlerts, PondStatus, SampleWeighing, Stocking, Treatment, WaterTest
 
 def _with_cycles(objects, business):
     running = {c.pond_id: c for c in CultureCycle.objects.filter(business=business, status="running", pond__in=objects)}
@@ -61,6 +61,7 @@ ENTRY_KINDS = {k.key: k for k in [
     EntryKind("mortality", Mortality, MortalityForm, _("Record deaths"), "alert", "growth"),
     EntryKind("harvest", Harvest, HarvestForm, _("Record harvest"), "cart", "harvest"),
     EntryKind("water", WaterTest, WaterTestForm, _("Water test"), "beaker", "water"),
+    EntryKind("treatment", Treatment, TreatmentForm, _("Lime, medicine & care"), "dropper", "water"),
 ]}
 
 
@@ -129,6 +130,7 @@ def cycle_detail_view(request, pk):
     for w in water:
         w.found = w.problems(limits)
     mon = Unit.objects.filter(business=b, symbol="mon", unit_type="weight").first()
+    treatments = list(cycle.treatments.select_related("unit", "account"))
     return render(request, "business/ponds/cycle_detail.html", {
         "cycle": cycle, "pond": cycle.pond, "s": summary,
         "p": services.projection(summary) if cycle.is_running else None, "mon": mon,
@@ -139,6 +141,8 @@ def cycle_detail_view(request, pk):
         "weighings": cycle.weighings.select_related("species", "unit"),
         "harvests": harvests, "sales": sales, "harvest_sale_count": len(harvests) + len(sales),
         "water": water, "water_now": water[0] if water else None,
+        "treatments": treatments, "water_care_count": len(water) + len(treatments),
+        "withdrawal": services.withdrawal(cycle),
         "open": request.GET.get("add") if request.GET.get("add") in ENTRY_KINDS and cycle.is_running else None,
         "tab": request.GET.get("tab") or "overview",
         "today": date.today(),

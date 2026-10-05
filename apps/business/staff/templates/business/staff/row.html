@@ -1,0 +1,17 @@
+{% load i18n business %}<li class="ledger-row">
+  <span class="avatar">{{ o.name|first|upper }}</span>
+  <a href="{% url 'business:staff_worker' o.pk %}" class="ledger-main">
+    <p class="ledger-title">{{ o.name }}{% if o.has_left %} <span class="badge" data-tone="muted">{% translate "Left" %}</span>{% endif %}</p>
+    <p class="ledger-meta">{% if o.job %}{{ o.job }} · {% endif %}{% if o.is_monthly %}{% blocktranslate with r=o.rate|bdt %}{{ r }} a month{% endblocktranslate %}{% else %}{% blocktranslate with r=o.rate|bdt %}{{ r }} a day{% endblocktranslate %}{% endif %}{% if o.phone %} · {{ o.phone }}{% endif %}</p>
+  </a>
+  <div class="ledger-end">
+    {% if not is_deleted_tab %}
+    <span class="party-bal">
+      {% if o.balance > 0 %}<strong class="tone-critical">{{ o.balance|bdt }}</strong><span>{% translate "you owe" %}</span>
+      {% elif o.balance < 0 %}<strong class="tone-good">{{ o.balance|absolute|bdt }}</strong><span>{% translate "advance with them" %}</span>
+      {% else %}<strong>৳0</strong><span>{% translate "settled" %}</span>{% endif %}
+    </span>
+    {% endif %}
+    {% include "business/master/_actions.html" with up=forloop.last %}
+  </div>
+</li>

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{{ title }} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-narrow">
+  <header class="page-header">
+    <div>
+      <a href="{% url 'business:staff_worker' worker.pk %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{{ worker.name }}</a>
+      <h1 class="page-title">{{ title }}</h1>
+      {% if is_payment and not obj %}<p class="page-subtitle">{% if owed > 0 %}{% blocktranslate with a=owed|bdt name=worker.name %}You owe {{ name }} {{ a }} right now.{% endblocktranslate %}{% elif owed < 0 %}{% blocktranslate with a=owed|absolute|bdt %}They already hold an advance of {{ a }}.{% endblocktranslate %}{% else %}{% translate "Nothing is owed right now, so this would be an advance." %}{% endif %}</p>{% endif %}
+    </div>
+  </header>
+  <form method="post" class="card" novalidate {% if not is_payment %}x-data="{ kind: '{{ form.kind.value|default_if_none:''|escapejs }}' }" @change="if ($event.target.name === 'kind') kind = $event.target.value"{% endif %}>
+    {% csrf_token %}
+    <div class="card-body form-stack">
+      {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+      {% for section in form.rows %}{% for row in section.fields %}
+        {% if not is_payment and row.0.name == "days" %}<div class="form-grid form-grid-2" x-show="kind === 'work'">{% for field in row %}{% include "business/partials/field.html" %}{% endfor %}</div>
+        {% elif not is_payment and row.0.name == "amount" %}<div x-show="kind !== 'work'">{% with field=row.0 %}{% include "business/partials/field.html" %}{% endwith %}</div>
+        {% elif row|length > 1 %}<div class="form-grid form-grid-2">{% for field in row %}{% include "business/partials/field.html" %}{% endfor %}</div>
+        {% else %}{% with field=row.0 %}{% include "business/partials/field.html" %}{% endwith %}{% endif %}
+      {% endfor %}{% endfor %}
+    </div>
+    <div class="card-footer form-actions">
+      <a href="{% url 'business:staff_worker' worker.pk %}" class="btn btn-ghost btn-lg">{% translate "Cancel" %}</a>
+      <button type="submit" class="btn btn-primary btn-lg">{% include "partials/icon.html" with name="check" %}{% translate "Save" %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

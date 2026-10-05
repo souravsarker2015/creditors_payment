@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% translate "Salary sheet" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "Salary sheet" %}</h1>
+      <p class="page-subtitle">{% translate "Write a month's salary for all monthly staff at once — and pay it, if you're paying now." %}</p>
+    </div>
+  </header>
+  {% include "business/staff/tabs.html" %}
+
+  <section class="card">
+    <div class="card-body worksheet-day">
+      <a href="?month={{ prev|date:'Y-m' }}" class="icon-btn" aria-label="{% translate 'Previous month' %}">{% include "partials/icon.html" with name="chevron-left" %}</a>
+      <p class="flex-1 text-center text-lg font-bold">{{ month|date:"F Y" }}</p>
+      {% if next %}<a href="?month={{ next|date:'Y-m' }}" class="icon-btn" aria-label="{% translate 'Next month' %}">{% include "partials/icon.html" with name="chevron-right" %}</a>{% else %}<span class="w-9"></span>{% endif %}
+    </div>
+  </section>
+
+  {% if rows %}
+  <form method="post" class="card" novalidate x-data="{ pay: false }">
+    {% csrf_token %}
+    <input type="hidden" name="month" value="{{ month|date:'Y-m' }}">
+    <ul class="ledger">
+      {% for r in rows %}
+      <li class="ledger-row salary-row">
+        {% if r.added %}
+        <span class="ledger-icon" data-tone="good">{% include "partials/icon.html" with name="check" %}</span>
+        {% else %}
+        <input type="checkbox" name="w{{ r.worker.pk }}" value="1" class="salary-tick" {% if r.amount > 0 %}checked{% endif %} aria-label="{% blocktranslate with name=r.worker.name %}Write salary for {{ name }}{% endblocktranslate %}">
+        {% endif %}
+        <a href="{% url 'business:staff_worker' r.worker.pk %}" class="ledger-main">
+          <p class="ledger-title">{{ r.worker.name }}</p>
+          <p class="ledger-meta">{% if r.added %}{% blocktranslate with a=r.added.amount|bdt %}Written: {{ a }}{% endblocktranslate %}{% else %}{% if r.is_partial %}{% blocktranslate with full=r.worker.rate|bdt %}Part of the month (full: {{ full }}){% endblocktranslate %}{% else %}{{ r.worker.job|default:_("Monthly salary") }}{% endif %}{% endif %}
+          · {% if r.balance > 0 %}{% blocktranslate with a=r.balance|bdt %}owed {{ a }} now{% endblocktranslate %}{% elif r.balance < 0 %}{% blocktranslate with a=r.balance|absolute|bdt %}advance {{ a }}{% endblocktranslate %}{% else %}{% translate "settled" %}{% endif %}</p>
+        </a>
+        <div class="ledger-end">
+          {% if not r.added %}<div class="input-affix has-start salary-amount"><span class="affix affix-start" aria-hidden="true">৳</span><input type="number" name="a{{ r.worker.pk }}" value="{{ r.amount|stringformat:'s' }}" min="0" step="any" inputmode="decimal" class="form-input input-compact" aria-label="{% translate 'Salary' %}"></div>{% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% if to_write %}
+    <div class="card-body form-stack border-t border-[var(--border-soft)]">
+      <label class="check">
+        <span><span class="check-label">{% translate "Pay them now too" %}</span><span class="help mt-0.5 block">{% translate "Pays each one what they're owed after this salary (any advance is taken off)." %}</span></span>
+        <input type="checkbox" name="pay" value="1" x-model="pay">
+      </label>
+      <div class="field" x-show="pay" x-cloak>
+        <label class="label" for="id_account">{% translate "Paid from" %}</label>
+        <select name="account" id="id_account" class="form-input">{% for a in accounts %}<option value="{{ a.pk }}" {% if a == default_account %}selected{% endif %}>{{ a }}</option>{% endfor %}</select>
+      </div>
+    </div>
+    <div class="card-footer form-actions">
+      <button type="submit" class="btn btn-primary btn-lg">{% include "partials/icon.html" with name="check" %}<span x-text="pay ? '{{ _('Write & pay salaries')|escapejs }}' : '{{ _('Write salaries')|escapejs }}'">{% translate "Write salaries" %}</span></button>
+    </div>
+    {% else %}
+    <div class="card-footer"><p class="help">{% blocktranslate with month=month|date:"F" t=written_total|bdt %}All {{ month }} salaries are written ({{ t }}). Pay from each worker's page.{% endblocktranslate %}</p></div>
+    {% endif %}
+  </form>
+  {% else %}
+  <div class="empty">
+    <div class="empty-icon">{% include "partials/icon.html" with name="users" %}</div>
+    <h3 class="empty-title">{% translate "No monthly staff this month" %}</h3>
+    <p class="empty-text">{% translate "Add the workers you pay a monthly salary (choose “Monthly salary”), and they'll appear here." %}</p>
+    <a href="{% url 'business:staff_add' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add worker" %}</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

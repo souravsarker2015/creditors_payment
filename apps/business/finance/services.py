@@ -47,7 +47,7 @@ class Movement:
     title: str
     detail: str = ""
     url: str = ""
-    kind: str = "other"      # sale | feed | baki_in | baki_out | loan | expense | income | transfer
+    kind: str = "other"      # sale | feed | baki_in | baki_out | loan | expense | income | transfer | staff
     balance: Decimal = ZERO  # running, after this movement
 
     @property
@@ -93,6 +93,18 @@ def movements(business, account=None):
             amount = t.principal if taken else -t.total
             add(t.date, t.account_id, amount, _("Loan money taken") if taken else _("Loan instalment"),
                 str(t.loan.lender), reverse("business:loan_detail", args=[t.loan_id]), "loan")
+    if _installed("staff"):
+        from apps.business.staff.models import WorkerPayment
+
+        for p in WorkerPayment.objects.filter(business=business).select_related("worker"):
+            add(p.date, p.account_id, -p.amount, _("Advance to staff") if p.kind == "advance" else _("Staff pay"), str(p.worker),
+                reverse("business:staff_worker", args=[p.worker_id]), "staff")
+    if _installed("ponds"):
+        from apps.business.ponds.models import Treatment
+
+        for t in Treatment.objects.filter(business=business, cost__gt=0, account__isnull=False, cycle__is_deleted=False).select_related("cycle__pond"):
+            add(t.date, t.account_id, -t.cost, _("Pond care"), f"{t.product} · {t.cycle.pond}",
+                reverse("business:entry_edit", args=["treatment", t.pk]), "expense")
     for t in Transaction.objects.filter(business=business).select_related("category", "party"):
         add(t.date, t.account_id, t.signed, str(t.category), t.description or (str(t.party) if t.party else ""),
             reverse("business:transaction_edit", args=[t.pk]), "income" if t.is_income else "expense")
@@ -227,6 +239,21 @@ def statement(business, start, end, scope=Scope.BUSINESS, cycle=None, cache=None
             total = stocked.aggregate(c=Sum("cost"))["c"] or ZERO
             if total:
                 s.expense.append(Line("stocking", _("Fingerlings"), total, reverse("business:ponds")))
+        if _installed("ponds"):
+            from apps.business.ponds.models import Treatment
+
+            cared = Treatment.objects.filter(business=business, cycle__is_deleted=False, **in_range)
+            if cycle is not None:
+                cared = cared.filter(cycle=cycle)
+            total = cared.aggregate(c=Sum("cost"))["c"] or ZERO
+            if total:
+                s.expense.append(Line("care", _("Lime, medicine & pond care"), total, reverse("business:ponds")))
+        if _installed("staff"):
+            from apps.business.staff.services import wages_cost
+
+            total = wages_cost(business, start, end, cycle)
+            if total:
+                s.expense.append(Line("wages", _("Staff wages"), total, reverse("business:staff")))
         if _installed("loans") and cycle is None:
             from apps.business.loans.models import LoanTransaction
 

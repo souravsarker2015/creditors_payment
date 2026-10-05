@@ -143,8 +143,24 @@ def sale_form_view(request, pk=None):
             return _saved(request, obj)
     return render(request, "business/sales/sale_form.html", {
         "form": form, "lines": lines, "deds": deds, "obj": sale, "harvest": harvest or (sale.harvest if sale else None),
-        "sale_json": _form_json(b, sale),
+        "sale_json": _form_json(b, sale), "waits": _medicine_waits(b),
     })
+
+
+def _medicine_waits(business):
+    """{cycle id: warning} for ponds still in a medicine's waiting period."""
+    from django.utils.formats import date_format
+
+    from apps.business.ponds.models import CultureCycle, CycleStatus
+    from apps.business.ponds.services import withdrawal
+
+    out = {}
+    for c in CultureCycle.objects.filter(business=business, status=CycleStatus.RUNNING).select_related("pond"):
+        t = withdrawal(c)
+        if t:
+            out[str(c.pk)] = _("%(product)s was given to %(pond)s on %(given)s. Its waiting period ends %(date)s — fish sold before then may still carry the medicine.") % {
+                "product": t.product, "pond": c.pond.name, "given": date_format(t.date, "j M"), "date": date_format(t.safe_from, "j M")}
+    return out
 
 
 class _NoBuyerForDue(Exception):

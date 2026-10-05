@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils.translation import get_language, gettext_lazy as _
@@ -68,3 +70,31 @@ class MarketDeduction(BusinessBaseModel):
         if self.method == DeductionMethod.PER_UNIT:
             return f"{bdt(self.value)}/{self.unit.symbol if self.unit else '?'}"
         return bdt(self.value)
+
+
+class PriceCheck(BusinessBaseModel):
+    """A fish price seen at a market (asked at the aarot, heard from a buyer…).
+
+    With the farm's own sales, these make the Fish prices board: what each
+    fish is fetching, where it's best, and whether it's going up or down.
+    """
+
+    date = models.DateField(_("Date"))
+    species = models.ForeignKey("business_species.Species", on_delete=models.PROTECT, related_name="+", verbose_name=_("Fish"))
+    market = models.ForeignKey(Market, on_delete=models.SET_NULL, null=True, blank=True, related_name="price_checks", verbose_name=_("Market"))
+    rate = models.DecimalField(_("Price"), validators=[MinValueValidator(0)], max_digits=14, decimal_places=2)
+    unit = models.ForeignKey(Unit, on_delete=models.PROTECT, related_name="+", verbose_name=_("Per"))
+    size = models.CharField(_("Fish size"), max_length=40, blank=True, help_text=_("e.g. 1–1.5 kg, big, medium"))
+    rate_kg = models.DecimalField(max_digits=14, decimal_places=2, editable=False, default=0)
+
+    class Meta:
+        ordering = ["-date", "-id"]
+        indexes = [models.Index(fields=["business", "is_deleted", "date"])]
+
+    def __str__(self):
+        return f"{self.species} {self.rate}/{self.unit.symbol} · {self.date:%d %b}"
+
+    def save(self, *args, **kwargs):
+        factor = self.unit.factor or 1
+        self.rate_kg = (self.rate / factor).quantize(Decimal("0.01"))
+        super().save(*args, **kwargs)

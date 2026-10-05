@@ -117,7 +117,7 @@ def farm_events(business, start, end):
 
 def pond_items(business, start, end):
     from apps.business.ponds.models import (CultureCycle, CycleStatus, Harvest, Mortality, Pond, PondAlerts,
-                                            SampleWeighing, Stocking, WaterTest)
+                                            SampleWeighing, Stocking, Treatment, WaterTest)
     from apps.business.core.templatetags.business import num
 
     items = []
@@ -145,6 +145,16 @@ def pond_items(business, start, end):
         items.append(Item(t.date, "pond", _("Water test · %(pond)s") % {"pond": t.cycle.pond.name},
                           " · ".join(f.what for f in found) if found else _("All readings within your levels"),
                           cycle_url(t.cycle_id, "water"), "critical" if found else "good", "beaker"))
+    for t in Treatment.objects.filter(**alive).select_related("cycle__pond", "unit"):
+        amount = f"{num(t.quantity)} {t.unit.symbol}" if t.quantity and t.unit else ""
+        items.append(Item(t.date, "pond", _("%(product)s · %(pond)s") % {"product": t.product, "pond": t.cycle.pond.name},
+                          " · ".join(x for x in (str(t.get_kind_display()), amount, t.reason) if x), cycle_url(t.cycle_id, "water"),
+                          "warn" if t.kind == "medicine" else "info", "dropper"))
+    waits = Treatment.objects.filter(business=business, cycle__is_deleted=False, withdrawal_days__gt=0).select_related("cycle__pond")
+    for t in waits:
+        if start <= t.safe_from <= end:
+            items.append(Item(t.safe_from, "pond", _("Fish can be sold again · %(pond)s") % {"pond": t.cycle.pond.name},
+                              _("Waiting period of %(product)s is over") % {"product": t.product}, cycle_url(t.cycle_id, "water"), "good", "dropper"))
     cycles = CultureCycle.objects.filter(business=business).select_related("pond")
     for c in cycles.filter(start_date__gte=start, start_date__lte=end):
         items.append(Item(c.start_date, "pond", _("Cycle started · %(pond)s") % {"pond": c.pond.name}, c.label,

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% translate "Work sheet" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "Work sheet" %}</h1>
+      <p class="page-subtitle">{% translate "Tick who worked on the day. Their day's wage is written for you." %}</p>
+    </div>
+  </header>
+  {% include "business/staff/tabs.html" %}
+
+  <form method="post" class="stack" novalidate>
+    {% csrf_token %}
+    <section class="card">
+      <div class="card-body worksheet-day">
+        <a href="?date={{ prev|date:'Y-m-d' }}" class="icon-btn" aria-label="{% translate 'Previous day' %}">{% include "partials/icon.html" with name="chevron-left" %}</a>
+        <div class="field flex-1">
+          <label class="label" for="id_date">{% translate "Date" %}</label>
+          <input type="text" name="date" id="id_date" value="{{ day|date:'Y-m-d' }}" class="form-input datepicker" autocomplete="off" onchange="if (this.value) location.href = '?date=' + this.value">
+        </div>
+        {% if next %}<a href="?date={{ next|date:'Y-m-d' }}" class="icon-btn" aria-label="{% translate 'Next day' %}">{% include "partials/icon.html" with name="chevron-right" %}</a>{% else %}<span class="w-9"></span>{% endif %}
+      </div>
+    </section>
+
+    {% if rows %}
+    <section class="card" x-data="{ all(v) { this.$root.querySelectorAll('input[type=radio][value=\'' + v + '\']').forEach(function (r) { r.checked = true; }); } }">
+      <div class="card-header">
+        <div><h2 class="card-title">{% blocktranslate with date=day|date:"l, j M" %}Who worked on {{ date }}{% endblocktranslate %}</h2>
+        <p class="card-subtitle">{% translate "Daily-wage workers only. Monthly staff get their salary from the Salary sheet." %}</p></div>
+        <div class="flex gap-1">
+          <button type="button" class="btn btn-ghost btn-sm" @click="all('1')">{% translate "All full day" %}</button>
+          <button type="button" class="btn btn-ghost btn-sm" @click="all('0')">{% translate "Clear" %}</button>
+        </div>
+      </div>
+      <ul class="ledger">
+        {% for r in rows %}
+        <li class="ledger-row worksheet-row">
+          <span class="avatar">{{ r.w.name|first|upper }}</span>
+          <div class="ledger-main">
+            <p class="ledger-title">{{ r.w.name }}</p>
+            <p class="ledger-meta">{% if r.w.job %}{{ r.w.job }}{% endif %}{% if show_money %}{% if r.w.job %} · {% endif %}{% blocktranslate with r=r.w.rate|bdt %}{{ r }} a day{% endblocktranslate %}{% endif %}</p>
+          </div>
+          <div class="worksheet-pick">
+            <div class="seg" role="radiogroup" aria-label="{% blocktranslate with name=r.w.name %}Did {{ name }} work?{% endblocktranslate %}">
+              <label class="seg-item"><input type="radio" class="sr-only" name="d{{ r.w.pk }}" value="0" {% if not r.e %}checked{% endif %}>{% translate "Off" %}</label>
+              <label class="seg-item"><input type="radio" class="sr-only" name="d{{ r.w.pk }}" value="0.5" {% if r.e and r.e.days < 1 %}checked{% endif %}>{% translate "Half" %}</label>
+              <label class="seg-item" data-tone="good"><input type="radio" class="sr-only" name="d{{ r.w.pk }}" value="1" {% if r.e and r.e.days >= 1 %}checked{% endif %}>{% translate "Full" %}</label>
+            </div>
+            {% if cycles %}
+            <select name="c{{ r.w.pk }}" class="form-input input-compact" aria-label="{% translate 'Pond' %}">
+              <option value="">{% translate "Whole farm" %}</option>
+              {% for c in cycles %}<option value="{{ c.pk }}" {% if r.e and r.e.cycle_id == c.pk %}selected{% endif %}>{{ c.pond }}</option>{% endfor %}
+            </select>
+            {% endif %}
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      <div class="card-footer form-actions">
+        {% if show_money and total %}<p class="help mr-auto self-center">{% blocktranslate with t=total|bdt %}Wages written for this day: {{ t }}{% endblocktranslate %}</p>{% endif %}
+        <button type="submit" class="btn btn-primary btn-lg">{% include "partials/icon.html" with name="check" %}{% translate "Save work sheet" %}</button>
+      </div>
+    </section>
+    {% else %}
+    <div class="empty">
+      <div class="empty-icon">{% include "partials/icon.html" with name="users" %}</div>
+      <h3 class="empty-title">{% translate "No daily workers" %}</h3>
+      <p class="empty-text">{% translate "Add the workers you pay by the day (choose “Daily wage”), and they'll appear here." %}</p>
+      {% if biz_can.view_finance %}<a href="{% url 'business:staff_add' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add worker" %}</a>{% endif %}
+    </div>
+    {% endif %}
+  </form>
+</div>
+{% endblock %}

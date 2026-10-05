@@ -1,0 +1,7 @@
+{% load i18n %}{% with p=request.path %}
+<nav class="seg seg-scroll" aria-label="{% translate 'Staff & wages' %}">
+  {% if biz_can.view_finance %}<a href="{% url 'business:staff' %}" class="seg-item {% if p == '/business/staff/' %}is-active{% endif %}">{% translate "Workers" %}</a>{% endif %}
+  <a href="{% url 'business:staff_work' %}" class="seg-item {% if '/staff/work/' in p %}is-active{% endif %}">{% translate "Work sheet" %}</a>
+  {% if biz_can.view_finance %}<a href="{% url 'business:staff_salaries' %}" class="seg-item {% if '/staff/salaries/' in p %}is-active{% endif %}">{% translate "Salary sheet" %}</a>{% endif %}
+</nav>
+{% endwith %}

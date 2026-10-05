@@ -78,6 +78,10 @@ person's choice (Automatic / App view / Website view).
                 <span class="app-action-name">{% translate "Money in or out" %}</span><span class="app-action-hint">{% translate "Labour, bills, other costs" %}</span>
             </a>
             {% endif %}
+            <a href="{% url 'business:staff_work' %}" class="app-action" data-tone="accent">
+                <span class="app-action-icon">{% include "partials/icon.html" with name="users" %}</span>
+                <span class="app-action-name">{% translate "Work sheet" %}</span><span class="app-action-hint">{% translate "Who worked today" %}</span>
+            </a>
             <a href="{% url 'business:calendar_add' %}" class="app-action" data-tone="muted">
                 <span class="app-action-icon">{% include "partials/icon.html" with name="calendar" %}</span>
                 <span class="app-action-name">{% translate "Task or reminder" %}</span><span class="app-action-hint">{% translate "On the farm calendar" %}</span>

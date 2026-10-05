@@ -233,7 +233,7 @@
   {% endif %}
 
   {# Icons for the items drawn in the browser. #}
-  {% for name in "fish cart alert scale beaker lock calendar banknotes repeat bell truck check flag"|split %}<template data-icon="{{ name }}">{% include "business/partials/icon.html" %}</template>{% endfor %}
+  {% for name in "fish cart alert scale beaker dropper lock calendar banknotes repeat bell truck check flag"|split %}<template data-icon="{{ name }}">{% include "business/partials/icon.html" %}</template>{% endfor %}
 </div>
 {% endblock %}
 {% block extra_js %}<script src="{% asset 'js/calendar.js' %}"></script>{% endblock %}

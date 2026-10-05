@@ -75,6 +75,9 @@ STAGES = [
               Step("water", _("Test the water"), _("Oxygen, pH, ammonia… against your own alert levels."),
                    "", "enter_data", ("alerts",), "beaker",
                    _("A reading outside your levels warns you on the cycle page and the home page.")),
+              Step("care", _("Lime, medicine & care"), _("What went into each pond, how much, and why — with a dose calculator."),
+                   "", "enter_data", ("cost", "alerts", "calendar"), "dropper",
+                   _("A medicine's waiting period warns you before fish from that pond are sold.")),
               Step("growth", _("Weigh and count losses"), _("A sample weighing every 2–3 weeks, and any deaths."),
                    "", "enter_data", ("fcr", "alerts"), "scale",
                    _("Sample weights are how the app estimates the fish in the pond, the FCR and “if you sell now”.")),
@@ -87,6 +90,9 @@ STAGES = [
               Step("sale", _("Record the sale"), _("The fish, quantity and rate from the aarot's memo."),
                    "sale_add", "enter_data", ("baki", "money", "cycle_profit"), "cart",
                    _("Market deductions come in by themselves; what the buyer didn't pay becomes Baki.")),
+              Step("prices", _("Fish prices"), _("What each fish is fetching: your own sale rates and prices you note at the aarot."),
+                   "prices", "", (), "arrow-up",
+                   _("Every rate becomes a price per kg, so mon and kg rates compare directly.")),
               Step("baki", _("Baki (dues)"), _("Who owes you and whom you owe, worked out for you."),
                    "dues", "view_finance", ("money",), "book",
                    _("Record a payment and it settles the oldest bill first, unless you pick one.")),
@@ -96,6 +102,9 @@ STAGES = [
               Step("money", _("Money in & out"), _("Labour, medicine, lime, electricity, household costs…"),
                    "transactions", "view_finance", ("cost", "profit"), "wallet",
                    _("Put a cost on a pond's cycle and it counts in that pond's profit.")),
+              Step("staff", _("Staff & wages"), _("A work sheet for daily workers, a salary sheet for monthly staff, and what you've paid."),
+                   "staff", "view_finance", ("cost", "profit"), "users",
+                   _("Wages are a cost when they're earned; an advance is simply taken off later pay.")),
               Step("loans", _("Loans"), _("Instalments, interest and what's still owed."),
                    "loans", "view_finance", ("profit", "calendar"), "banknotes",
                    _("Only interest and charges are a cost; repaying the loan itself is not.")),
@@ -123,15 +132,16 @@ STAGES = [
 
 # "Where does this number come from?" — the questions farmers actually ask.
 ANSWERS = [
-    (_("Profit of a cycle"), _("Fish sold (after market deductions) − fingerlings − feed eaten − costs put on that cycle."),
-     ("sale", "stocking", "feeding", "money")),
+    (_("Profit of a cycle"), _("Fish sold (after market deductions) − fingerlings − feed eaten − lime & medicine − wages and other costs put on that cycle."),
+     ("sale", "stocking", "feeding", "care", "staff", "money")),
     (_("Fish in the pond"), _("Fingerlings released − deaths recorded − fish harvested by count."), ("stocking", "growth", "harvest")),
     (_("Weight in the pond"), _("Fish in the pond × their latest sample weight."), ("growth",)),
     (_("FCR"), _("Feed eaten ÷ weight the fish gained (harvest − fingerling weight). Lower is better."), ("feeding", "growth", "harvest")),
     (_("Feed cost of a pond"), _("Feed eaten there × the average price per kg you paid for that feed."), ("feed_buy", "feeding")),
     (_("Baki of a person"), _("Their unpaid bills (sales, feed, fingerlings) − what they've paid, oldest first."), ("sale", "feed_buy", "baki")),
     (_("Money in an account"), _("Opening balance + everything in − everything out of that account."), ("sale", "baki", "money")),
-    (_("Farm profit"), _("Fish sales + other farm income − feed eaten − fingerlings − farm costs − loan interest."), ("sale", "feeding", "money", "loans")),
+    (_("Farm profit"), _("Fish sales + other farm income − feed eaten − fingerlings − lime & medicine − staff wages − farm costs − loan interest."), ("sale", "feeding", "care", "staff", "money", "loans")),
+    (_("What a worker is owed"), _("Their opening balance + days worked, salaries and bonuses − deductions − what you've paid them. Below zero means they hold an advance."), ("staff",)),
 ]
 
 

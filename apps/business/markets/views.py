@@ -1,10 +1,19 @@
+from datetime import date, timedelta
+
+from django.contrib import messages
 from django.db.models import Count, Q
-from django.utils.translation import gettext_lazy as _
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.translation import gettext as _g, gettext_lazy as _
+from django.views.decorators.http import require_POST
 
+from apps.business.core.access import can
 from apps.business.core.crud import Master
+from apps.business.core.decorators import business_access_required
+from apps.business.core.models import Unit
 
-from .forms import DeductionTypeForm, MarketDeductionFormSet, MarketForm
-from .models import DeductionType, Market, MarketDeduction
+from . import prices
+from .forms import DeductionTypeForm, MarketDeductionFormSet, MarketForm, PriceCheckForm
+from .models import DeductionType, Market, MarketDeduction, PriceCheck
 
 
 def _deductions(objects, business):
@@ -42,3 +51,32 @@ deduction_types = Master(
           _("These are the names of charges a market can take off a sale. Add any your markets use."),
           _("Set the actual amount on each market (Markets & aarots), or on a single sale.")),
 )
+
+
+@business_access_required
+def prices_view(request):
+    """Fish prices: the board, and a form to note a price seen today."""
+    b = request.business
+    allowed = can(request.membership, "enter_data")
+    form = PriceCheckForm(request.POST or None, business=b) if allowed else None
+    if request.method == "POST" and allowed and form.is_valid():
+        p = form.save(commit=False)
+        p.business = b
+        p.save()
+        messages.success(request, _g("Price noted: %(fish)s %(rate)s/%(unit)s.") % {"fish": p.species, "rate": format(p.rate.normalize(), "f"), "unit": p.unit.symbol})
+        return redirect("business:prices")
+    return render(request, "business/markets/prices.html", {
+        "form": form, "board": prices.board(b),
+        "recent": PriceCheck.objects.filter(business=b, date__gte=date.today() - timedelta(days=60)).select_related("species", "market", "unit")[:15],
+        "mon": Unit.objects.filter(business=b, symbol="mon", unit_type="weight").first(),
+        "window": prices.WINDOW_DAYS, "weeks": prices.WEEKS,
+        "open_form": request.method == "POST",
+    })
+
+
+@business_access_required(capability="enter_data")
+@require_POST
+def price_delete_view(request, pk):
+    get_object_or_404(PriceCheck, pk=pk, business=request.business).soft_delete()
+    messages.success(request, _g("Deleted."))
+    return redirect("business:prices")

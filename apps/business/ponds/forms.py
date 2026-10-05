@@ -1,4 +1,5 @@
 from datetime import date
+from decimal import Decimal
 
 from django import forms
 from django.utils.formats import date_format
@@ -8,7 +9,7 @@ from apps.business.core.crud import BusinessForm, money_field
 from apps.business.core.models import Unit
 from apps.business.species.models import Species
 
-from .models import CultureCycle, Harvest, Mortality, Ownership, Pond, PondAlerts, SampleWeighing, Stocking, TimeOfDay, WaterTest
+from .models import CultureCycle, Harvest, Mortality, Ownership, Pond, PondAlerts, SampleWeighing, Stocking, TimeOfDay, Treatment, TreatmentKind, WaterTest
 
 MAX_PHOTO_MB = 5
 
@@ -250,6 +251,63 @@ class WaterTestForm(EntryForm):
             raise forms.ValidationError(_("Enter at least one reading."))
         if data.get("ph") is not None and data["ph"] > 14:
             self.add_error("ph", _("pH goes from 0 to 14."))
+        return data
+
+
+class TreatmentForm(EntryForm):
+    """Lime, fertilizer, medicine… put into the pond. `dose` is only a helper:
+    an amount per decimal of water, multiplied by the pond's size."""
+
+    dose = forms.DecimalField(label=_("Dose per decimal"), required=False, min_value=0, max_digits=10, decimal_places=3,
+                              widget=forms.NumberInput(attrs={"placeholder": "—"}),
+                              help_text=_("Optional. Type the dose on the bag (e.g. 1 kg lime per decimal) and the amount is worked out from the pond's size."))
+    tips = {
+        "kind": _("Lime and fertilizer are usually given when preparing the pond and every few weeks; salt, potash and medicine when fish are sick."),
+        "withdrawal_days": _("Some medicines stay in the fish for a while. The app warns you if you try to sell fish from this pond before the waiting period is over."),
+        "cost": _("What this lot cost. It becomes part of this cycle's cost."),
+        "account": _("Leave empty if it was bought earlier or on credit — the cost still counts for the pond, but no money leaves an account today."),
+    }
+    layout = [("date", "kind"), ("product",), ("dose",), ("quantity", "unit"), ("reason",), ("cost", "account"), ("withdrawal_days",), ("notes",)]
+
+    class Meta:
+        model = Treatment
+        fields = ["date", "kind", "product", "quantity", "unit", "reason", "cost", "account", "withdrawal_days", "notes"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from apps.business.finance.models import Account
+
+        self.fields["unit"].queryset = _units(self.business, ["weight", "volume", "count"])
+        self.fields["unit"].empty_label = None
+        self.fields["account"].queryset = Account.objects.filter(business=self.business)
+        self.fields["account"].empty_label = _("Not paid now")
+        self.fields["cost"].required = False
+        money_field(self.fields["cost"])
+        self.fields["product"].widget.attrs["list"] = f"treatment-products-{self.prefix or 'x'}"
+        pond = getattr(self.cycle, "pond", None)
+        self.area = pond.area_decimal if pond else None
+        if self.area:
+            self.fields["dose"].help_text = _("Optional. The pond is %(area)s decimal: the amount is worked out for you.") % {"area": format(self.area.normalize(), "f")}
+        if not self.instance.pk:
+            self.initial.setdefault("unit", Unit.objects.filter(business=self.business, symbol="kg").first())
+            self.initial.setdefault("account", Account.objects.filter(business=self.business, is_default=True).first())
+            self.initial["cost"] = None
+
+    is_treatment = True
+    suggestions = ("Dolomite lime", "Quick lime (chun)", "Urea", "TSP", "Cow dung", "Salt", "Potash (KMnO₄)",
+                   "Zeolite", "Oxytetracycline", "Probiotic")
+
+    def known_products(self):
+        """Products used on this farm before, for the suggestions list."""
+        return (Treatment.objects.filter(business=self.business).order_by("product").values_list("product", flat=True).distinct()[:60])
+
+    def clean(self):
+        data = super().clean()
+        data["cost"] = data.get("cost") or 0
+        if data.get("dose") and not data.get("quantity") and self.area:
+            data["quantity"] = (data["dose"] * self.area).quantize(Decimal("0.001"))
+        if data["cost"] and not data.get("account"):
+            data["account"] = None
         return data
 
 

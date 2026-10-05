@@ -1,5 +1,5 @@
 import json
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 from django.apps import apps
@@ -37,7 +37,7 @@ def _units_json(business):
 def home_view(request):
     b = request.business
     units = Unit.objects.filter(business=b)
-    tasks = _farm_tasks(b) + _calendar_tasks(b)
+    tasks = _farm_tasks(b) + _staff_tasks(request) + _calendar_tasks(b)
     return render(request, "business/home.html", {
         "today": date.today(),
         "share_url": _share_url(request, tasks),
@@ -69,6 +69,24 @@ def _farm_tasks(business):
     from apps.business.ponds.services import farm_tasks
 
     return farm_tasks(business)
+
+
+def _staff_tasks(request):
+    """Last month's salaries not written yet (only for people who see money)."""
+    from .access import can
+
+    if not apps.is_installed("apps.business.staff") or not can(request.membership, "view_finance"):
+        return []
+    from apps.business.ponds.services import Task
+    from apps.business.staff.services import missing_salaries
+
+    last_month = (date.today().replace(day=1) - timedelta(days=1)).replace(day=1)
+    missing = missing_salaries(request.business, last_month)
+    if not missing:
+        return []
+    names = ", ".join(r.worker.name for r in missing[:3])
+    return [Task("salary", "warn", _("%(month)s salaries not written yet") % {"month": date_format(last_month, "F")}, names,
+                 reverse("business:staff_salaries") + f"?month={last_month:%Y-%m}", _("Write"))]
 
 
 def _calendar_tasks(business):

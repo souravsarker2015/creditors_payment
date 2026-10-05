@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from apps.business.core.crud import BusinessForm
 from apps.business.core.models import Unit
 
-from .models import DeductionMethod, DeductionType, Market, MarketDeduction
+from .models import DeductionMethod, DeductionType, Market, MarketDeduction, PriceCheck
 
 
 class MarketForm(BusinessForm):
@@ -80,3 +80,45 @@ class MarketDeductionForm(BusinessForm):
 
 
 MarketDeductionFormSet = inlineformset_factory(Market, MarketDeduction, form=MarketDeductionForm, extra=0, can_delete=True)
+
+
+class PriceCheckForm(BusinessForm):
+    """A price seen at a market today."""
+
+    unique_name = ()
+    tips = {
+        "rate": _("The price the aarot or buyers are giving, before commission — the same way the market quotes it."),
+        "size": _("Bigger fish fetch more per kg, so note the size if prices differ by size."),
+    }
+    layout = [("species", "date"), ("rate", "unit"), ("market",), ("size",)]
+
+    class Meta:
+        model = PriceCheck
+        fields = ["species", "date", "rate", "unit", "market", "size"]
+        widgets = {"date": forms.DateInput()}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from datetime import date
+
+        from apps.business.core.crud import money_field
+
+        money_field(self.fields["rate"])
+        self.fields["unit"].queryset = Unit.objects.filter(business=self.business, unit_type="weight")
+        self.fields["unit"].empty_label = None
+        self.fields["species"].empty_label = _("Choose fish…")
+        self.fields["species"].biz_quick_add = "species"
+        self.fields["market"].empty_label = _("Not at a market")
+        self.fields["market"].biz_quick_add = "market"
+        if not self.instance.pk:
+            self.initial.setdefault("date", date.today())
+            self.initial.setdefault("unit", Unit.objects.filter(business=self.business, symbol="mon").first()
+                                    or Unit.objects.filter(business=self.business, symbol="kg").first())
+
+    def clean_date(self):
+        from datetime import date
+
+        d = self.cleaned_data["date"]
+        if d > date.today():
+            raise forms.ValidationError(_("This date is in the future."))
+        return d
