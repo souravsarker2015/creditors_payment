@@ -10,6 +10,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 from apps.core.pwa import manifest_view, offline_view, service_worker_view
+from apps.core.receipts import receipt_view
 from apps.core.search import search_view
 
 urlpatterns = [
@@ -33,7 +34,10 @@ urlpatterns = [
     path("goals/", include("apps.goals.urls")),
     path("trash/", include("apps.trash.urls")),
     path("wallets/", include("apps.wallets.urls")),
+    path("plans/", include("apps.plans.urls")),
+    path("zakat/", include("apps.zakat.urls")),
     path("search/", search_view, name="search"),
+    path("receipts/<slug:kind>/<int:pk>/", receipt_view, name="receipt_view"),
     path("business/", include("apps.business.urls")),  # business module
 ]
 

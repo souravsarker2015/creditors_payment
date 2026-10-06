@@ -1,0 +1,9 @@
+{% load i18n %}<li class="ledger-row zk-line"{% if l.auto %} :class="!line('{{ l.key }}').on && 'is-off'"{% endif %}>
+  {% if l.auto %}
+  <label class="zk-check"><input type="checkbox" name="count_{{ l.key }}" value="1" x-model="line('{{ l.key }}').on"{% if l.key not in sheet.settings.skip %} checked{% endif %}><span class="sr-only">{% translate "Count this" %}</span></label>
+  {% else %}
+  <span class="ledger-icon" data-tone="muted">{% include "partials/icon.html" with name="edit" %}</span>
+  {% endif %}
+  <div class="ledger-main"><p class="ledger-title">{{ l.label }}</p>{% if l.hint %}<p class="ledger-meta">{{ l.hint }}</p>{% endif %}</div>
+  <div class="ledger-end"><span class="ledger-amount" {% if l.auto %}x-text="fmt(amount(line('{{ l.key }}')))"{% else %}x-text="fmt(typed('{{ l.key }}'))"{% endif %}>{{ l.amount|money }}</span></div>
+</li>

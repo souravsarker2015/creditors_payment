@@ -70,16 +70,18 @@ class Creditor(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="creditors")
 
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=200, verbose_name=_("Name"))
     category = models.CharField(
         max_length=32,
         choices=CreditorCategory.choices,
         default=CreditorCategory.OTHER,
+        verbose_name=_("Category"),
     )
-    phone = models.CharField(max_length=20, blank=True, default="")
-    note = models.TextField(blank=True, default="")
+    phone = models.CharField(max_length=20, blank=True, default="", verbose_name=_("Phone"))
+    note = models.TextField(blank=True, default="", verbose_name=_("Note"))
     due_date = models.DateField(
-        null=True, blank=True, help_text=_("Next payment due date (optional).")
+        null=True, blank=True, help_text=_("Next payment due date (optional)."),
+        verbose_name=_("Due date"),
     )
     interest_type = models.CharField(
         max_length=16,
@@ -87,6 +89,7 @@ class Creditor(models.Model):
         null=True,
         blank=True,
         help_text=_("How interest is charged (optional). Leave blank for interest-free debt."),
+        verbose_name=_("Interest type"),
     )
     interest_basis = models.CharField(
         max_length=16,
@@ -94,6 +97,7 @@ class Creditor(models.Model):
         null=True,
         blank=True,
         help_text=_("For Monthly/Every 3 Months/Every 6 Months/Yearly: charge a percentage of the balance, or a flat amount each period."),
+        verbose_name=_("Interest basis"),
     )
     interest_rate = models.DecimalField(
         max_digits=5,
@@ -102,6 +106,7 @@ class Creditor(models.Model):
         blank=True,
         validators=[MinValueValidator(0)],
         help_text=_("Interest rate per period, %% — used when the basis is Percentage."),
+        verbose_name=_("Interest rate"),
     )
     interest_fixed_amount = models.DecimalField(
         max_digits=12,
@@ -110,10 +115,12 @@ class Creditor(models.Model):
         blank=True,
         validators=[MinValueValidator(0)],
         help_text=_("A flat interest amount (৳) — used for a one-time Fixed Amount type, or a Fixed Amount basis charged every period."),
+        verbose_name=_("Fixed interest amount"),
     )
     is_active = models.BooleanField(
         default=True,
         help_text=_("Inactive records are hidden from lists and pickers but still count in totals."),
+        verbose_name=_("Active"),
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -280,17 +287,19 @@ class Transaction(models.Model):
         Creditor,
         on_delete=models.CASCADE,
         related_name="transactions",
+        verbose_name=_("Creditor"),
     )
     transaction_type = models.CharField(
         max_length=10,
         choices=TYPE_CHOICES,
         default=BORROW,
+        verbose_name=_("Type"),
     )
-    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name=_("Amount"))
     wallet = models.ForeignKey("wallets.Wallet", on_delete=models.SET_NULL, null=True, blank=True, related_name="+",
                                verbose_name=_("Wallet"))
-    date = models.DateField()
-    note = models.TextField(blank=True, default="")
+    date = models.DateField(verbose_name=_("Date"))
+    note = models.TextField(blank=True, default="", verbose_name=_("Note"))
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

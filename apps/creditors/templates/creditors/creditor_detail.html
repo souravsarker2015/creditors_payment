@@ -56,6 +56,8 @@
     </div>
   </dl>
 
+  {% include "plans/_card.html" with party=creditor kind="creditor" remaining=remaining %}
+
   {% if creditor.interest_type %}
   <section class="card">
     <div class="card-header">
@@ -129,7 +131,7 @@
           <div class="ledger-end">
             <span class="ledger-amount" data-tone="{% if tx.transaction_type == 'BORROW' %}critical{% else %}good{% endif %}">{{ tx.amount|money }}</span>
             {% url 'transaction_edit' tx.pk as edit_url %}{% url 'transaction_delete' tx.pk as delete_url %}
-            {% translate "Delete this record? This action cannot be undone." as confirm_text %}
+            {% translate "Delete this record? You can bring it back from Recently deleted." as confirm_text %}
             {% include "partials/row_menu.html" with edit_url=edit_url delete_url=delete_url confirm=confirm_text up=forloop.last %}
           </div>
         </li>

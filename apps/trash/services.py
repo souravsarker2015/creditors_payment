@@ -16,11 +16,34 @@ class CannotRestore(Exception):
     pass
 
 
+FILE_FIELDS = ("receipt",)
+
+
+def drop_files(items):
+    """Remove the photos kept only for these deleted items (deleting for good means the receipt too)."""
+    import json
+
+    from django.core.files.storage import default_storage
+
+    for item in items:
+        for row in json.loads(item.data or "[]"):
+            for name in FILE_FIELDS:
+                path = (row.get("fields") or {}).get(name)
+                if path and default_storage.exists(path):
+                    default_storage.delete(path)
+
+
+def forget(items):
+    items = list(items)
+    drop_files(items)
+    DeletedItem.objects.filter(pk__in=[i.pk for i in items]).delete()
+
+
 def purge_old(user=None):
     old = DeletedItem.objects.filter(deleted_at__lt=timezone.now() - timedelta(days=KEEP_DAYS))
     if user is not None:
         old = old.filter(user=user)
-    old.delete()
+    forget(old)
 
 
 def _instances(collector):

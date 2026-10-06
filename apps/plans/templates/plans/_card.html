@@ -1,0 +1,49 @@
+{% load i18n plans %}{% comment %}
+Installment plan card on a creditor / debtor / shop page.
+Needs: party, kind ("creditor" | "debtor" | "shop"), remaining.
+{% endcomment %}{% plan_status party as st %}
+{% if st %}
+<section class="card plan-box">
+  <div class="card-header">
+    <div class="min-w-0">
+      <h2 class="card-title">{% translate "Installment plan" %}</h2>
+      <p class="card-subtitle">{% if kind == "debtor" %}{% blocktranslate with name=party.name amount=st.plan.amount|money how=st.plan.get_frequency_display|lower %}{{ name }} pays you {{ amount }} {{ how }}{% endblocktranslate %}{% else %}{% blocktranslate with amount=st.plan.amount|money how=st.plan.get_frequency_display|lower %}You pay {{ amount }} {{ how }}{% endblocktranslate %}{% endif %}{% if st.plan.note %} · {{ st.plan.note }}{% endif %}</p>
+    </div>
+    <a href="{% url 'plan_form' kind party.pk %}" class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="edit" %}{% translate "Change" %}</a>
+  </div>
+  <div class="card-body stack">
+    {% if st.done %}
+    <div class="callout" data-tone="good">{% include "partials/icon.html" with name="check" %}<p>{% translate "Paid off — every installment is in." %}</p></div>
+    {% else %}
+    <div class="plan-now">
+      <div>
+        <p class="plan-now-label">{% if st.behind %}{% translate "Late" %}{% else %}{% translate "Next installment" %}{% endif %}</p>
+        <p class="plan-now-value{% if st.behind %} tone-critical{% endif %}">{{ st.next_amount|money }}</p>
+        <p class="plan-now-hint">{% if st.behind %}{% blocktranslate count counter=st.missed %}{{ counter }} installment missed{% plural %}{{ counter }} installments missed{% endblocktranslate %}{% elif st.next_date %}{% blocktranslate with date=st.next_date|date:"j M Y" %}on {{ date }}{% endblocktranslate %}{% endif %}</p>
+      </div>
+      <div>
+        <p class="plan-now-label">{% translate "Paid" %}</p>
+        <p class="plan-now-value is-sub">{% blocktranslate with a=st.paid_count b=st.count %}{{ a }} of {{ b }}{% endblocktranslate %}</p>
+        <p class="plan-now-hint">{% blocktranslate with date=st.last_date|date:"j M Y" %}last on {{ date }}{% endblocktranslate %}</p>
+      </div>
+    </div>
+    {% endif %}
+    <div class="meter" role="img" aria-label="{% blocktranslate with n=st.pct %}{{ n }}% paid{% endblocktranslate %}"><span style="width: {{ st.pct }}%"></span></div>
+    {% if not st.done %}
+    <ol class="plan-dates">
+      {% for d, state in st.upcoming %}
+      <li class="is-{{ state }}"><span>{{ d|date:"j M" }}</span><span>{% if state == "late" %}{% translate "late" %}{% elif state == "today" %}{% translate "today" %}{% elif state == "next" %}{% translate "next" %}{% else %}{{ st.plan.amount|money }}{% endif %}</span></li>
+      {% endfor %}
+    </ol>
+    <p class="help">{% translate "Payments you record here count toward the plan. The due date and reminders follow the next installment." %}</p>
+    {% endif %}
+  </div>
+</section>
+{% elif remaining > 0 %}
+<a href="{% url 'plan_form' kind party.pk %}" class="card plan-offer">
+  <span class="ledger-icon" data-tone="accent">{% include "partials/icon.html" with name="calendar" %}</span>
+  <span class="min-w-0"><span class="plan-offer-title">{% translate "Paying in installments (কিস্তি)?" %}</span>
+    <span class="plan-offer-text">{% translate "Set a plan: the app tracks each installment, shows what's late, and moves the due date for you." %}</span></span>
+  {% include "partials/icon.html" with name="chevron-right" %}
+</a>
+{% endif %}

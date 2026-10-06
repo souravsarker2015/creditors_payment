@@ -1,6 +1,8 @@
 from datetime import date
 
 from django import forms
+
+from apps.core.receipts import ReceiptInput, attach_viewer
 from django.utils.translation import gettext_lazy as _
 
 from apps.business.core.crud import BusinessForm, money_field
@@ -130,10 +132,12 @@ class TransactionForm(BusinessForm):
     class Meta:
         model = Transaction
         fields = ["date", "category", "amount", "account", "description", "party", "cycle", "receipt", "notes"]
-        widgets = {"date": forms.DateInput(), "description": forms.TextInput(attrs={"placeholder": _("e.g. 3 workers, pond cleaning")})}
+        widgets = {"date": forms.DateInput(), "description": forms.TextInput(attrs={"placeholder": _("e.g. 3 workers, pond cleaning")}),
+                   "receipt": ReceiptInput()}
 
     def __init__(self, *args, scope=None, **kwargs):
         super().__init__(*args, **kwargs)
+        attach_viewer(self, "farm")
         from apps.business.parties.models import Party
         from apps.business.ponds.models import CultureCycle, CycleStatus
 

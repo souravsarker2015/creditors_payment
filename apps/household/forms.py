@@ -2,6 +2,7 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 from apps.core.status import active_or_current
 from .models import HouseholdCategory, HouseholdMember, Purchase, Settlement
+from apps.core.receipts import ReceiptInput, attach_viewer
 from apps.wallets.forms import WalletFieldMixin
 
 
@@ -43,8 +44,9 @@ class PurchaseForm(WalletFieldMixin, forms.ModelForm):
 
     class Meta:
         model = Purchase
-        fields = ["amount", "date", "category", "buyer", "wallet", "description"]
+        fields = ["amount", "date", "category", "buyer", "wallet", "description", "receipt"]
         widgets = {
+            "receipt": ReceiptInput(),
             "amount": forms.NumberInput(attrs={"class": "form-input", "placeholder": "0.00"}),
             "date": forms.DateInput(attrs={"class": "form-input datepicker", "placeholder": _("Select Date")}),
             "category": forms.Select(attrs={"class": "form-input"}),
@@ -73,6 +75,7 @@ class PurchaseForm(WalletFieldMixin, forms.ModelForm):
             self.fields["buyer"].queryset = active_or_current(
                 HouseholdMember.objects.filter(user=user), self.instance.buyer_id
             )
+        attach_viewer(self, "bazar")
 
     def clean(self):
         data = super().clean()

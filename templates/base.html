@@ -185,7 +185,7 @@
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tippy.js@6/dist/tippy-bundle.umd.min.js"></script>
-    {% if user.is_authenticated %}{% include "partials/calculator.html" %}{% include "partials/search_modal.html" %}{% endif %}
+    {% if user.is_authenticated %}{% include "partials/calculator.html" %}{% include "partials/search_modal.html" %}{% include "partials/photo_shrink.html" %}{% include "partials/form_guard.html" %}{% endif %}
     <div id="toast-root" class="toast-root" aria-live="polite" aria-atomic="true"></div>
     <script>
     /* Shared UI helpers — pages call these instead of repeating setup code. */

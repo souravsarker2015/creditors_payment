@@ -306,7 +306,7 @@ def month_detail_view(request, year, month):
     today = timezone.now().date()
 
     if request.method == "POST":
-        form = PurchaseForm(request.POST, user=request.user)
+        form = PurchaseForm(request.POST, request.FILES, user=request.user)
         if form.is_valid():
             purchase = form.save(commit=False)
             purchase.user = request.user
@@ -354,7 +354,7 @@ def month_detail_view(request, year, month):
 def purchase_edit_view(request, pk):
     purchase = get_object_or_404(Purchase, pk=pk, user=request.user)
     if request.method == "POST":
-        form = PurchaseForm(request.POST, instance=purchase, user=request.user)
+        form = PurchaseForm(request.POST, request.FILES, instance=purchase, user=request.user)
         if form.is_valid():
             form.save()
             messages.success(request, _("Purchase updated."))

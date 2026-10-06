@@ -182,6 +182,7 @@ def _bar_percent(value, *comparison_values):
 def _attention(user, today):
     """Overdue and due-soon balances across every ledger with due dates,
     most urgent first — so one list answers "what needs doing?"."""
+    from apps.plans.services import status as plan_status
     from apps.creditors.models import Creditor
     from apps.debtors.models import Debtor
     from apps.shops.models import Shop
@@ -198,11 +199,14 @@ def _attention(user, today):
             out=Coalesce(Sum("transactions__amount", filter=Q(transactions__transaction_type=out_type)), Value(0, output_field=DecimalField())),
             back=Coalesce(Sum("transactions__amount", filter=Q(transactions__transaction_type=in_type)), Value(0, output_field=DecimalField())),
         )
-        for r in rows:
+        for r in rows.select_related("plan"):
             remaining = r.out - r.back
             if remaining > 0:
+                plan = getattr(r, "plan", None)
                 items.append({
-                    "name": r.name, "amount": remaining, "due_date": r.due_date, "kind": kind,
+                    # On an installment plan, what's due is the installment (and anything late), not the whole balance.
+                    "name": r.name, "amount": plan_status(plan).next_amount if plan else remaining, "due_date": r.due_date, "kind": kind,
+                    "installment": plan is not None,
                     "overdue": r.due_date < today, "days": (r.due_date - today).days, "late": (today - r.due_date).days,
                     "url": reverse(urlname, args=[r.pk]),
                 })

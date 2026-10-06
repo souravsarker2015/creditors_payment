@@ -28,20 +28,23 @@ class Debtor(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="debtors")
 
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=200, verbose_name=_("Name"))
     category = models.CharField(
         max_length=32,
         choices=DebtorCategory.choices,
         default=DebtorCategory.OTHER,
+        verbose_name=_("Category"),
     )
-    phone = models.CharField(max_length=20, blank=True, default="")
-    note = models.TextField(blank=True, default="")
+    phone = models.CharField(max_length=20, blank=True, default="", verbose_name=_("Phone"))
+    note = models.TextField(blank=True, default="", verbose_name=_("Note"))
     due_date = models.DateField(
-        null=True, blank=True, help_text=_("Next expected repayment date (optional).")
+        null=True, blank=True, help_text=_("Next expected repayment date (optional)."),
+        verbose_name=_("Due date"),
     )
     is_active = models.BooleanField(
         default=True,
         help_text=_("Inactive records are hidden from lists and pickers but still count in totals."),
+        verbose_name=_("Active"),
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -113,17 +116,19 @@ class Transaction(models.Model):
         Debtor,
         on_delete=models.CASCADE,
         related_name="transactions",
+        verbose_name=_("Debtor"),
     )
     transaction_type = models.CharField(
         max_length=10,
         choices=TYPE_CHOICES,
         default=LEND,
+        verbose_name=_("Type"),
     )
-    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name=_("Amount"))
     wallet = models.ForeignKey("wallets.Wallet", on_delete=models.SET_NULL, null=True, blank=True, related_name="+",
                                verbose_name=_("Wallet"))
-    date = models.DateField()
-    note = models.TextField(blank=True, default="")
+    date = models.DateField(verbose_name=_("Date"))
+    note = models.TextField(blank=True, default="", verbose_name=_("Note"))
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

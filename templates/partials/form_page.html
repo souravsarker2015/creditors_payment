@@ -11,7 +11,7 @@ sticky-feeling action row. Needs: form, title, back. Optional: subtitle, submit_
       {% if subtitle %}<p class="page-subtitle">{{ subtitle }}</p>{% endif %}
     </div>
   </header>
-  <form method="post" class="card" novalidate>
+  <form method="post" class="card" novalidate{% if form.is_multipart %} enctype="multipart/form-data"{% endif %}>
     {% csrf_token %}
     <div class="card-body form-stack">
       {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}

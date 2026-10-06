@@ -74,7 +74,7 @@
         <span class="ledger-icon" data-tone="{% if t.is_income %}good{% else %}critical{% endif %}">{% if t.is_income %}{% include "partials/icon.html" with name="arrow-down" %}{% else %}{% include "partials/icon.html" with name="arrow-up" %}{% endif %}</span>
         <div class="ledger-main">
           <p class="ledger-title">{% if biz_can.enter_data %}<a href="{% url 'business:transaction_edit' t.pk %}" class="hover:underline">{{ t.category }}</a>{% else %}{{ t.category }}{% endif %}</p>
-          <p class="ledger-meta">{{ t.date|date:"j M Y" }}{% if t.description %} · {{ t.description }}{% endif %}{% if t.account %} · {{ t.account }}{% endif %}{% if t.cycle %} · {{ t.cycle.pond }}{% endif %}{% if t.receipt %} · {% translate "receipt" %}{% endif %}</p>
+          <p class="ledger-meta">{{ t.date|date:"j M Y" }}{% if t.description %} · {{ t.description }}{% endif %}{% if t.account %} · {{ t.account }}{% endif %}{% if t.cycle %} · {{ t.cycle.pond }}{% endif %}{% if t.receipt %} · <a href="{% url 'receipt_view' 'farm' t.pk %}" target="_blank" rel="noopener" class="receipt-link">{% translate "receipt" %}</a>{% endif %}</p>
         </div>
         <div class="ledger-end">
           <span class="party-bal" data-tone="{% if t.is_income %}good{% else %}critical{% endif %}"><strong>{{ t.amount|bdt }}</strong><span>{% if t.is_income %}{% translate "in" %}{% else %}{% translate "out" %}{% endif %}</span></span>

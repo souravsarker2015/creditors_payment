@@ -23,7 +23,7 @@
         {% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}">
         <button type="submit" class="btn btn-ghost">{% if goal.is_active %}{% include "partials/icon.html" with name="archive" %}{% translate "Archive" %}{% else %}{% include "partials/icon.html" with name="restore" %}{% translate "Unarchive" %}{% endif %}</button>
       </form>
-      <form method="post" action="{% url 'goal_delete' goal.pk %}" data-confirm="{% translate 'Delete this goal and all its entries? This cannot be undone. To keep the history, archive it instead.' %}">
+      <form method="post" action="{% url 'goal_delete' goal.pk %}" data-confirm="{% translate 'Delete this goal and all its entries? You can bring it back from Recently deleted for 30 days. To keep the history, archive it instead.' %}">
         {% csrf_token %}
         <button type="submit" class="icon-btn" aria-label="{% translate 'Delete goal' %}" data-tip="{% translate 'Delete goal' %}">{% include "partials/icon.html" with name="trash" %}</button>
       </form>

@@ -37,12 +37,12 @@
           <span class="ledger-icon" data-tone="gold">{{ p.date|date:"j" }}</span>
           <div class="ledger-main">
             <p class="ledger-title">{% if p.category %}{{ p.category.name }}{% else %}{% translate "Uncategorized" %}{% endif %}</p>
-            <p class="ledger-meta">{{ p.date|date:"j M" }}{% if p.buyer %} · {% blocktranslate with name=p.buyer.name %}by {{ name }}{% endblocktranslate %}{% endif %}{% if p.description %} · {{ p.description }}{% endif %}</p>
+            <p class="ledger-meta">{{ p.date|date:"j M" }}{% if p.buyer %} · {% blocktranslate with name=p.buyer.name %}by {{ name }}{% endblocktranslate %}{% endif %}{% if p.description %} · {{ p.description }}{% endif %}{% if p.receipt %} · <a href="{% url 'receipt_view' 'bazar' p.pk %}" target="_blank" rel="noopener" class="receipt-link">{% translate "receipt" %}</a>{% endif %}</p>
           </div>
           <div class="ledger-end">
             <span class="ledger-amount">{{ p.amount|money }}</span>
             {% url 'household_purchase_edit' p.pk as edit_url %}{% url 'household_purchase_delete' p.pk as delete_url %}
-            {% translate "Delete this purchase? This action cannot be undone." as confirm_text %}
+            {% translate "Delete this purchase? You can bring it back from Recently deleted." as confirm_text %}
             {% include "partials/row_menu.html" with edit_url=edit_url delete_url=delete_url confirm=confirm_text up=forloop.last %}
           </div>
         </li>
@@ -61,7 +61,7 @@
         </button>
         <div class="collapse-body" :class="open && 'is-open'">
           <div class="card-header hidden lg:flex"><h2 class="card-title">{% translate "Log a Purchase" %}</h2></div>
-          <form method="post" class="card-body form-stack">
+          <form method="post" class="card-body form-stack" enctype="multipart/form-data">
             {% csrf_token %}
             {% for field in form %}{% include "partials/field.html" %}{% endfor %}
             <button type="submit" class="btn btn-primary btn-lg btn-block">{% translate "Save Purchase" %}</button>

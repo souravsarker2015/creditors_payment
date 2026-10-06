@@ -8,7 +8,7 @@ from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils.formats import date_format
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext as _, gettext_lazy as _lazy
 
 from apps.business.core.decorators import business_access_required
 
@@ -80,13 +80,13 @@ def dashboard_view(request):
 # ── Reports index ───────────────────────────────────────────────────────────
 
 REPORTS = [
-    ("pond", _("Pond profit & loss"), _("Every pond: what it cost, what it sold, what it made."), "fish"),
-    ("cycle", _("Cycle by cycle"), _("Each batch with its FCR, cost and result."), "fish"),
-    ("species", _("Sales by fish"), _("Which fish brings in the most money."), "cart"),
-    ("market", _("Sales by market"), _("Which aarot or buyer you sell most through."), "cart"),
-    ("feed", _("Feed use"), _("Bought against eaten, and what it cost."), "truck"),
-    ("dues", _("Baki & ageing"), _("Who owes you, whom you owe, and for how long."), "book"),
-    ("money", _("Income & expenses"), _("Everything in and out, by category."), "scale"),
+    ("pond", _lazy("Pond profit & loss"), _lazy("Every pond: what it cost, what it sold, what it made."), "fish"),
+    ("cycle", _lazy("Cycle by cycle"), _lazy("Each batch with its FCR, cost and result."), "fish"),
+    ("species", _lazy("Sales by fish"), _lazy("Which fish brings in the most money."), "cart"),
+    ("market", _lazy("Sales by market"), _lazy("Which aarot or buyer you sell most through."), "cart"),
+    ("feed", _lazy("Feed use"), _lazy("Bought against eaten, and what it cost."), "truck"),
+    ("dues", _lazy("Baki & ageing"), _lazy("Who owes you, whom you owe, and for how long."), "book"),
+    ("money", _lazy("Income & expenses"), _lazy("Everything in and out, by category."), "scale"),
 ]
 
 

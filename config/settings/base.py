@@ -39,6 +39,7 @@ DJANGO_APPS = [
 THIRD_PARTY_APPS = []
 
 LOCAL_APPS = [
+    "django.forms",  # lets form widgets use templates from templates/ (the receipt picker)
     "apps.core",
     "apps.creditors",
     "apps.accounts",
@@ -53,6 +54,8 @@ LOCAL_APPS = [
     "apps.goals",
     "apps.trash",
     "apps.wallets",
+    "apps.plans",
+    "apps.zakat",
     # ── Business module (fully separate; see apps/business/) ──
     "apps.business.core",
     "apps.business.loans",
@@ -164,3 +167,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 LOGIN_REDIRECT_URL = "dashboard"
 LOGOUT_REDIRECT_URL = "login"
+
+# Widgets render with the project's own template settings, so a custom
+# widget template (templates/partials/receipt_input.html) is found.
+FORM_RENDERER = "django.forms.renderers.TemplatesSetting"

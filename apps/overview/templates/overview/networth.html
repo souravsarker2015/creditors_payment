@@ -93,7 +93,7 @@
             <span class="date-chip" data-tone="{% if a.overdue %}critical{% else %}warn{% endif %}"><b>{{ a.due_date|date:"j" }}</b><small>{{ a.due_date|date:"M" }}</small></span>
             <div class="ledger-main">
               <p class="ledger-title">{{ a.name }}</p>
-              <p class="ledger-meta" style="color: {% if a.overdue %}var(--status-critical){% else %}var(--status-warn){% endif %};">{% if a.kind == "collect" %}{% translate "To collect" %}{% else %}{% translate "To pay" %}{% endif %} · {% if a.overdue %}{% blocktranslate count counter=a.late %}{{ counter }} day overdue{% plural %}{{ counter }} days overdue{% endblocktranslate %}{% elif a.days == 0 %}{% translate "due today" %}{% else %}{% blocktranslate count counter=a.days %}in {{ counter }} day{% plural %}in {{ counter }} days{% endblocktranslate %}{% endif %}</p>
+              <p class="ledger-meta" style="color: {% if a.overdue %}var(--status-critical){% else %}var(--status-warn){% endif %};">{% if a.kind == "collect" %}{% translate "To collect" %}{% else %}{% translate "To pay" %}{% endif %}{% if a.installment %} · {% translate "installment" %}{% endif %} · {% if a.overdue %}{% blocktranslate count counter=a.late %}{{ counter }} day overdue{% plural %}{{ counter }} days overdue{% endblocktranslate %}{% elif a.days == 0 %}{% translate "due today" %}{% else %}{% blocktranslate count counter=a.days %}in {{ counter }} day{% plural %}in {{ counter }} days{% endblocktranslate %}{% endif %}</p>
             </div>
             <span class="ledger-amount" data-tone="{% if a.kind == 'collect' %}good{% else %}critical{% endif %}">{{ a.amount|money }}</span>
           </a>

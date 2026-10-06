@@ -14,11 +14,12 @@ class IncomeSource(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="income_sources"
     )
-    name = models.CharField(max_length=200)
-    description = models.TextField(blank=True, default="")
+    name = models.CharField(max_length=200, verbose_name=_("Name"))
+    description = models.TextField(blank=True, default="", verbose_name=_("Description"))
     is_active = models.BooleanField(
         default=True,
         help_text=_("Inactive records are hidden from lists and pickers but still count in totals."),
+        verbose_name=_("Active"),
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -45,12 +46,13 @@ class IncomeTransaction(models.Model):
         IncomeSource,
         on_delete=models.CASCADE,
         related_name="transactions",
+        verbose_name=_("Source"),
     )
-    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name=_("Amount"))
     wallet = models.ForeignKey("wallets.Wallet", on_delete=models.SET_NULL, null=True, blank=True, related_name="+",
                                verbose_name=_("Wallet"))
-    date = models.DateField()
-    note = models.TextField(blank=True, default="")
+    date = models.DateField(verbose_name=_("Date"))
+    note = models.TextField(blank=True, default="", verbose_name=_("Note"))
     created_at = models.DateTimeField(auto_now_add=True)
     recurring_source = models.ForeignKey(
         "RecurringIncome",
@@ -99,15 +101,16 @@ class RecurringIncome(models.Model):
         IncomeSource,
         on_delete=models.CASCADE,
         related_name="recurring_incomes",
+        verbose_name=_("Source"),
     )
-    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name=_("Amount"))
     wallet = models.ForeignKey("wallets.Wallet", on_delete=models.SET_NULL, null=True, blank=True, related_name="+",
                                verbose_name=_("Wallet"))
-    frequency = models.CharField(max_length=10, choices=RecurringFrequency.choices)
-    next_run_date = models.DateField()
-    skip_weekend = models.BooleanField(default=False)
-    note = models.TextField(blank=True, default="")
-    is_active = models.BooleanField(default=True)
+    frequency = models.CharField(max_length=10, choices=RecurringFrequency.choices, verbose_name=_("How often"))
+    next_run_date = models.DateField(verbose_name=_("Next date"))
+    skip_weekend = models.BooleanField(default=False, verbose_name=_("Skip weekends"))
+    note = models.TextField(blank=True, default="", verbose_name=_("Note"))
+    is_active = models.BooleanField(default=True, verbose_name=_("Active"))
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

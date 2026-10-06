@@ -11,7 +11,7 @@
     </div>
     <h1 class="page-title mt-4">{% translate "Delete Profile" %}</h1>
     <p class="mx-auto mt-2 max-w-md text-sm leading-relaxed" style="color: var(--text-secondary);">
-      {% blocktranslate with name=contributor.name %}Are you sure you want to permanently delete <strong>{{ name }}</strong> and all their contribution records? This action cannot be undone.{% endblocktranslate %}
+      {% blocktranslate with name=contributor.name %}Delete <strong>{{ name }}</strong> and all their contribution records? You can bring them back from Recently deleted for 30 days.{% endblocktranslate %}
     </p>
     <div class="callout mx-auto mt-4 max-w-md text-left" data-tone="info">
       {% include "partials/icon.html" with name="archive" %}

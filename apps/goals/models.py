@@ -35,6 +35,7 @@ class SavingsGoal(models.Model):
     note = models.TextField(_("Note"), blank=True, default="")
     is_active = models.BooleanField(
         default=True, help_text=_("Archived goals are hidden from the main list; their history is kept."),
+        verbose_name=_("Active"),
     )
     reached_at = models.DateField(null=True, blank=True, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -52,7 +53,7 @@ class GoalEntry(models.Model):
     WITHDRAW = "WITHDRAW"
     KIND_CHOICES = [(DEPOSIT, _("Add money")), (WITHDRAW, _("Take out"))]
 
-    goal = models.ForeignKey(SavingsGoal, on_delete=models.CASCADE, related_name="entries")
+    goal = models.ForeignKey(SavingsGoal, on_delete=models.CASCADE, related_name="entries", verbose_name=_("Goal"))
     kind = models.CharField(_("Type"), max_length=10, choices=KIND_CHOICES, default=DEPOSIT)
     amount = models.DecimalField(_("Amount"), max_digits=12, decimal_places=2, validators=[MinValueValidator(1)])
     date = models.DateField(_("Date"))
@@ -83,14 +84,14 @@ class AutoSave(models.Model):
     the following ones. It never overfills a goal and stops once it's reached.
     """
 
-    goal = models.OneToOneField(SavingsGoal, on_delete=models.CASCADE, related_name="autosave")
+    goal = models.OneToOneField(SavingsGoal, on_delete=models.CASCADE, related_name="autosave", verbose_name=_("Goal"))
     amount = models.DecimalField(_("Amount each time"), max_digits=12, decimal_places=2, validators=[MinValueValidator(1)])
     frequency = models.CharField(_("How often"), max_length=10, choices=RecurringFrequency.choices, default=RecurringFrequency.MONTHLY)
     next_run_date = models.DateField(_("Next deposit on"))
     skip_weekend = models.BooleanField(
         _("Move to the previous working day if it falls on a Friday or Saturday"), default=False,
     )
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True, verbose_name=_("Active"))
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

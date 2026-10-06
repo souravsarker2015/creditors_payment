@@ -11351,3 +11351,282 @@ msgstr "বন্ধ করে"
 
 msgid "opens search"
 msgstr "খোঁজা খোলে"
+
+msgid "Interest type"
+msgstr "সুদের ধরন"
+
+msgid "Interest basis"
+msgstr "সুদ যেভাবে"
+
+msgid "Fixed interest amount"
+msgstr "নির্দিষ্ট সুদের পরিমাণ"
+
+msgid "Member"
+msgstr "সদস্য"
+
+msgid "Next date"
+msgstr "পরের তারিখ"
+
+msgid "Skip weekends"
+msgstr "সাপ্তাহিক ছুটি বাদ"
+
+msgid "Delete <strong>%(name)s</strong> and all their contribution records? You can bring them back from Recently deleted for 30 days."
+msgstr "<strong>%(name)s</strong> ও তাঁর সব অবদানের হিসাব মুছবেন? ৩০ দিনের মধ্যে সম্প্রতি মুছে ফেলা থেকে ফেরাতে পারবেন।"
+
+msgid "The photo is too big (over %(mb)s MB). Try a smaller one."
+msgstr "ছবিটা খুব বড় (%(mb)s MB-এর বেশি)। ছোট একটা দিন।"
+
+msgid "Zakat helper"
+msgstr "যাকাত হিসাব"
+
+msgid "Optional: a photo of the memo or receipt."
+msgstr "ইচ্ছা হলে: মেমো বা রসিদের ছবি।"
+
+msgid "Delete this expense? You can bring it back from Recently deleted."
+msgstr "এই খরচ মুছবেন? সম্প্রতি মুছে ফেলা থেকে ফেরাতে পারবেন।"
+
+msgid "Delete this goal and all its entries? You can bring it back from Recently deleted for 30 days. To keep the history, archive it instead."
+msgstr "এই লক্ষ্য ও এর সব এন্ট্রি মুছবেন? ৩০ দিনের মধ্যে সম্প্রতি মুছে ফেলা থেকে ফেরাতে পারবেন। হিসাব রাখতে চাইলে বরং আর্কাইভ করুন।"
+
+msgid "Delete this purchase? You can bring it back from Recently deleted."
+msgstr "এই কেনাকাটা মুছবেন? সম্প্রতি মুছে ফেলা থেকে ফেরাতে পারবেন।"
+
+msgid "Delete this income record? You can bring it back from Recently deleted."
+msgstr "এই আয়ের হিসাব মুছবেন? সম্প্রতি মুছে ফেলা থেকে ফেরাতে পারবেন।"
+
+msgid "installment"
+msgstr "কিস্তি"
+
+msgid "Or: how many installments"
+msgstr "অথবা: কয়টি কিস্তি"
+
+msgid "e.g. 10"
+msgstr "যেমন ১০"
+
+msgid "Leave the amount empty and type the number of installments: the amount is worked out from what's still owed."
+msgstr "পরিমাণ খালি রেখে কিস্তির সংখ্যা লিখুন: বাকি টাকা থেকে প্রতি কিস্তির পরিমাণ হিসাব হবে।"
+
+msgid "e.g. agreed on the phone, after Eid"
+msgstr "যেমন ফোনে কথা হয়েছে, ঈদের পর থেকে"
+
+msgid "Nothing is owed now, so there's nothing to split."
+msgstr "এখন কোনো বাকি নেই, তাই ভাগ করার কিছু নেই।"
+
+msgid "Enter the amount of each installment, or how many installments."
+msgstr "প্রতি কিস্তির পরিমাণ, অথবা কয়টি কিস্তি তা লিখুন।"
+
+msgid "Check the date."
+msgstr "তারিখটা দেখুন।"
+
+msgid "Every 2 weeks"
+msgstr "প্রতি ২ সপ্তাহে"
+
+msgid "Each installment"
+msgstr "প্রতি কিস্তি"
+
+msgid "First installment on"
+msgstr "প্রথম কিস্তির তারিখ"
+
+msgid "Installment plan"
+msgstr "কিস্তির পরিকল্পনা"
+
+msgid "%(name)s pays you %(amount)s %(how)s"
+msgstr "%(name)s আপনাকে %(how)s %(amount)s দেন"
+
+msgid "You pay %(amount)s %(how)s"
+msgstr "আপনি %(how)s %(amount)s দেন"
+
+msgid "Paid off — every installment is in."
+msgstr "শোধ হয়ে গেছে — সব কিস্তি এসেছে।"
+
+msgid "Late"
+msgstr "বাকি পড়েছে"
+
+msgid "Next installment"
+msgstr "পরের কিস্তি"
+
+msgid "%(counter)s installment missed"
+msgid_plural "%(counter)s installments missed"
+msgstr[0] "%(counter)sটি কিস্তি বাকি পড়েছে"
+msgstr[1] "%(counter)sটি কিস্তি বাকি পড়েছে"
+
+msgid "on %(date)s"
+msgstr "%(date)s তারিখে"
+
+msgid "%(a)s of %(b)s"
+msgstr "%(b)sটির মধ্যে %(a)sটি"
+
+msgid "last on %(date)s"
+msgstr "শেষটি %(date)s"
+
+msgid "late"
+msgstr "বাকি"
+
+msgid "next"
+msgstr "পরের"
+
+msgid "Payments you record here count toward the plan. The due date and reminders follow the next installment."
+msgstr "এখানে লেখা পরিশোধ পরিকল্পনায় গোনা হয়। পরিশোধের তারিখ আর রিমাইন্ডার পরের কিস্তি অনুযায়ী চলে।"
+
+msgid "Paying in installments (কিস্তি)?"
+msgstr "কিস্তিতে দেওয়া-নেওয়া?"
+
+msgid "Set a plan: the app tracks each installment, shows what's late, and moves the due date for you."
+msgstr "পরিকল্পনা দিন: অ্যাপ প্রতিটি কিস্তির হিসাব রাখবে, কোনটা বাকি পড়েছে দেখাবে, আর পরিশোধের তারিখ নিজেই বদলাবে।"
+
+msgid "%(name)s still owes you %(amount)s."
+msgstr "%(name)s-এর কাছে এখনো আপনার %(amount)s পাওনা।"
+
+msgid "You still owe %(name)s %(amount)s."
+msgstr "%(name)s-কে আপনার এখনো %(amount)s দেওয়া বাকি।"
+
+msgid "Remove this installment plan? Payments already recorded stay."
+msgstr "কিস্তির পরিকল্পনা বাদ দেবেন? লেখা পরিশোধগুলো থাকবে।"
+
+msgid "Remove the plan"
+msgstr "পরিকল্পনা বাদ দিন"
+
+msgid "Plan saved: %(amount)s %(how)s, %(n)s installments, the last on %(date)s."
+msgstr "পরিকল্পনা রাখা হয়েছে: %(how)s %(amount)s, %(n)sটি কিস্তি, শেষটি %(date)s।"
+
+msgid "Installment plan removed. The due date stays as it was."
+msgstr "কিস্তির পরিকল্পনা বাদ দেওয়া হয়েছে। পরিশোধের তারিখ আগের মতো থাকবে।"
+
+msgid "Delete this record? You can bring it back from Recently deleted."
+msgstr "এই হিসাব মুছবেন? সম্প্রতি মুছে ফেলা থেকে ফেরাতে পারবেন।"
+
+msgid "Silver (52.5 tola) — the lower, safer line"
+msgstr "রুপা (৫২.৫ তোলা) — কম, নিরাপদ সীমা"
+
+msgid "Gold (7.5 tola)"
+msgstr "সোনা (৭.৫ তোলা)"
+
+msgid "Nisab by"
+msgstr "নিসাব যা দিয়ে"
+
+msgid "Gold price per gram"
+msgstr "প্রতি গ্রাম সোনার দাম"
+
+msgid "Silver price per gram"
+msgstr "প্রতি গ্রাম রুপার দাম"
+
+msgid "Gold you own (grams)"
+msgstr "আপনার সোনা (গ্রাম)"
+
+msgid "Silver you own (grams)"
+msgstr "আপনার রুপা (গ্রাম)"
+
+msgid "Your share of the farm (%)"
+msgstr "খামারে আপনার অংশ (%)"
+
+msgid "Cash, bank & bKash (your wallets)"
+msgstr "নগদ, ব্যাংক ও বিকাশ (আপনার ওয়ালেট)"
+
+msgid "Add your wallets to count cash and bank instead."
+msgstr "এর বদলে নগদ ও ব্যাংক গুনতে আপনার ওয়ালেট যোগ করুন।"
+
+msgid "Money others owe you"
+msgstr "অন্যদের কাছে আপনার পাওনা"
+
+msgid "Debts you expect to get back."
+msgstr "যে পাওনা ফেরত পাবেন বলে আশা করেন।"
+
+msgid "Gold you own"
+msgstr "আপনার সোনা"
+
+msgid "%(g)s g × price per gram"
+msgstr "%(g)s গ্রাম × প্রতি গ্রামের দাম"
+
+msgid "Silver you own"
+msgstr "আপনার রুপা"
+
+msgid "Other savings & investments"
+msgstr "অন্যান্য সঞ্চয় ও বিনিয়োগ"
+
+msgid "Typed in below."
+msgstr "নিচে লেখা।"
+
+msgid "What you owe creditors"
+msgstr "পাওনাদারদের কাছে আপনার দেনা"
+
+msgid "Shop dues"
+msgstr "দোকানের বাকি"
+
+msgid "Owed to family for bazar"
+msgstr "বাজারের জন্য পরিবারের কাছে দেনা"
+
+msgid "Other debts due now"
+msgstr "এখন দিতে হবে এমন অন্যান্য দেনা"
+
+#, python-format
+msgid "%(farm)s, at your %(pct)s%% share"
+msgstr "%(farm)s, আপনার %(pct)s%% অংশে"
+
+msgid "Farm cash & bank"
+msgstr "খামারের নগদ ও ব্যাংক"
+
+msgid "Farm baki to collect"
+msgstr "খামারের পাওনা বাকি"
+
+msgid "Farm baki to pay"
+msgstr "খামারের দেনা বাকি"
+
+msgid "Count this"
+msgstr "এটা গুনুন"
+
+msgid "Adds up what you own and what you owe from your records, checks it against the nisab, and works out 2.5 in every 100."
+msgstr "আপনার হিসাব থেকে সম্পদ ও দেনা যোগ করে, নিসাবের সাথে মিলিয়ে দেখে, আর প্রতি ১০০-তে ২.৫ হিসাব করে।"
+
+msgid "This is a helper for your own calculation, not a religious ruling. Zakat is due on wealth you have held for a full lunar year. Untick anything that doesn't apply to you, and ask a scholar about your situation — especially farm assets, loans and business stock."
+msgstr "এটা আপনার নিজের হিসাবের সহায়ক, কোনো ফতোয়া নয়। পূর্ণ এক চান্দ্র বছর ধরে থাকা সম্পদে যাকাত ফরজ হয়। যা আপনার ক্ষেত্রে প্রযোজ্য নয় তা বাদ দিন, আর আপনার অবস্থা নিয়ে একজন আলেমের পরামর্শ নিন — বিশেষ করে খামারের সম্পদ, ঋণ ও ব্যবসার মালামাল নিয়ে।"
+
+msgid "Zakat to pay"
+msgstr "দেওয়ার যাকাত"
+
+msgid "Not due"
+msgstr "ফরজ নয়"
+
+msgid "Wealth for zakat"
+msgstr "যাকাতযোগ্য সম্পদ"
+
+msgid "Nisab"
+msgstr "নিসাব"
+
+msgid "Type today's gold or silver price below to see the nisab."
+msgstr "নিসাব দেখতে নিচে আজকের সোনা বা রুপার দাম লিখুন।"
+
+msgid "Your wealth is below the nisab, so no zakat is due on it."
+msgstr "আপনার সম্পদ নিসাবের কম, তাই এতে যাকাত ফরজ নয়।"
+
+msgid "What you own"
+msgstr "আপনার সম্পদ"
+
+msgid "What you owe now"
+msgstr "এখনকার দেনা"
+
+msgid "Only debts you must pay now (or within the year) — not the whole of a long loan."
+msgstr "শুধু যে দেনা এখন (বা এ বছরের মধ্যে) দিতে হবে — লম্বা ঋণের পুরোটা নয়।"
+
+msgid "Prices and what you hold"
+msgstr "দাম ও আপনার কাছে যা আছে"
+
+msgid "Use today's price from your jeweller or the BAJUS rate. The helper remembers it."
+msgstr "আপনার স্বর্ণকার বা বাজুসের আজকের দাম দিন। সহায়কটি তা মনে রাখবে।"
+
+msgid "Silver: %(s)s g. Gold: %(g)s g. Many scholars advise the silver line, so more people give."
+msgstr "রুপা: %(s)s গ্রাম। সোনা: %(g)s গ্রাম। অনেক আলেম রুপার সীমা ধরতে বলেন, যাতে বেশি মানুষ যাকাত দেন।"
+
+msgid "Saved. The helper remembers your prices and choices for next time."
+msgstr "রাখা হয়েছে। সহায়কটি পরের বারের জন্য আপনার দাম ও পছন্দ মনে রাখবে।"
+
+msgid "See the receipt"
+msgstr "রসিদ দেখুন"
+
+msgid "Remove it"
+msgstr "বাদ দিন"
+
+msgid "Replace with another photo"
+msgstr "অন্য ছবি দিন"
+
+msgid "Take or choose a photo"
+msgstr "ছবি তুলুন বা বাছুন"

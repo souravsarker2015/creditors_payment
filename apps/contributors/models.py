@@ -20,17 +20,19 @@ class ContributorCategory(models.TextChoices):
 
 class Contributor(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="contributors")
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, verbose_name=_("Name"))
     category = models.CharField(
         max_length=32,
         choices=ContributorCategory.choices,
         default=ContributorCategory.OTHER,
+        verbose_name=_("Category"),
     )
-    phone = models.CharField(max_length=20, blank=True, null=True)
-    note = models.TextField(blank=True, null=True)
+    phone = models.CharField(max_length=20, blank=True, null=True, verbose_name=_("Phone"))
+    note = models.TextField(blank=True, null=True, verbose_name=_("Note"))
     is_active = models.BooleanField(
         default=True,
         help_text=_("Inactive records are hidden from lists and pickers but still count in totals."),
+        verbose_name=_("Active"),
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -42,12 +44,12 @@ class Contributor(models.Model):
         return self.name
 
 class Contribution(models.Model):
-    contributor = models.ForeignKey(Contributor, on_delete=models.CASCADE, related_name="contributions")
-    amount = models.DecimalField(max_digits=15, decimal_places=2)
+    contributor = models.ForeignKey(Contributor, on_delete=models.CASCADE, related_name="contributions", verbose_name=_("Contributor"))
+    amount = models.DecimalField(max_digits=15, decimal_places=2, verbose_name=_("Amount"))
     wallet = models.ForeignKey("wallets.Wallet", on_delete=models.SET_NULL, null=True, blank=True, related_name="+",
                                verbose_name=_("Wallet"))
-    date = models.DateField()
-    note = models.TextField(blank=True, null=True)
+    date = models.DateField(verbose_name=_("Date"))
+    note = models.TextField(blank=True, null=True, verbose_name=_("Note"))
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

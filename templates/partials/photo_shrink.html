@@ -1,0 +1,32 @@
+{% load i18n %}<script>
+/* Big phone photos are shrunk in the browser before upload (longest side
+   ≤ data-shrink px, JPEG), so receipts upload fast on mobile data and take
+   little space. PDFs and small images go up as they are. */
+(function () {
+  if (window.__ftShrink) return; window.__ftShrink = true;
+  document.addEventListener("change", function (e) {
+    var input = e.target;
+    if (!input.matches || !input.matches('input[type="file"][data-shrink]') || !input.files.length) return;
+    var file = input.files[0], label = input.closest(".receipt-pick"), name = label && label.querySelector("[data-receipt-name]");
+    if (name) name.textContent = file.name;
+    var max = parseInt(input.dataset.shrink, 10) || 1600;
+    if (!/^image\/(jpeg|png|webp)$/.test(file.type) || file.size < 400 * 1024 || !window.DataTransfer) return;
+    var img = new Image(), url = URL.createObjectURL(file);
+    img.onload = function () {
+      var scale = Math.min(1, max / Math.max(img.width, img.height));
+      var c = document.createElement("canvas");
+      c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      c.toBlob(function (blob) {
+        if (!blob || blob.size >= file.size) return;
+        var dt = new DataTransfer();
+        dt.items.add(new File([blob], file.name.replace(/\.\w+$/, "") + ".jpg", { type: "image/jpeg" }));
+        input.files = dt.files;
+        if (name) name.textContent = input.files[0].name + " · " + Math.round(blob.size / 1024) + " KB";
+      }, "image/jpeg", 0.8);
+    };
+    img.src = url;
+  });
+})();
+</script>

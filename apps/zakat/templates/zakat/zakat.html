@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% translate "Zakat helper" %} | FinTrack{% endblock %}
+{% block content %}
+{{ auto_lines|json_script:"zakat-lines" }}
+<div class="page-medium stack" x-data="zakatSheet({ basis: '{{ form.instance.basis }}', gold_price: {{ form.instance.gold_price|stringformat:'s' }}, silver_price: {{ form.instance.silver_price|stringformat:'s' }},
+     gold_grams: {{ form.instance.gold_grams|stringformat:'s' }}, silver_grams: {{ form.instance.silver_grams|stringformat:'s' }}, other_assets: {{ form.instance.other_assets|stringformat:'s' }},
+     other_debts: {{ form.instance.other_debts|stringformat:'s' }}, farm_share: {{ form.instance.farm_share }} })">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "Zakat helper" %}</h1>
+      <p class="page-subtitle">{% translate "Adds up what you own and what you owe from your records, checks it against the nisab, and works out 2.5 in every 100." %}</p>
+    </div>
+  </header>
+
+  <div class="callout" data-tone="info">{% include "partials/icon.html" with name="note" %}<p>{% translate "This is a helper for your own calculation, not a religious ruling. Zakat is due on wealth you have held for a full lunar year. Untick anything that doesn't apply to you, and ask a scholar about your situation — especially farm assets, loans and business stock." %}</p></div>
+
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="min-w-0">
+        <p class="hero-label">{% translate "Zakat to pay" %}</p>
+        <p class="hero-value" x-text="due() > 0 ? fmt(due()) : '{{ _('Not due')|escapejs }}'">{% if sheet.due %}{{ sheet.due|money }}{% else %}{% translate "Not due" %}{% endif %}</p>
+        <p class="hero-sub">
+          <span>{% translate "Wealth for zakat" %} <strong x-text="fmt(net())">{{ sheet.net|money }}</strong></span> ·
+          <span>{% translate "Nisab" %} <strong x-text="nisab() ? fmt(nisab()) : '—'">{{ sheet.nisab|money }}</strong></span>
+        </p>
+      </div>
+    </div>
+  </section>
+  <p class="help" x-show="!nisab()" x-cloak>{% translate "Type today's gold or silver price below to see the nisab." %}</p>
+  <p class="help" x-show="nisab() && net() < nisab()" x-cloak>{% translate "Your wealth is below the nisab, so no zakat is due on it." %}</p>
+
+  <form method="post" class="stack" novalidate>
+    {% csrf_token %}
+    <div class="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
+      <section class="card">
+        <div class="card-header"><h2 class="card-title">{% translate "What you own" %}</h2><strong class="zk-total" x-text="fmt(own())">{{ sheet.own|money }}</strong></div>
+        <ul class="ledger">
+          {% for l in sheet.lines %}{% if l.side == "own" %}{% include "zakat/_line.html" %}{% endif %}{% endfor %}
+        </ul>
+      </section>
+      <section class="card">
+        <div class="card-header"><h2 class="card-title">{% translate "What you owe now" %}</h2><strong class="zk-total" x-text="fmt(owe())">{{ sheet.owe|money }}</strong></div>
+        <ul class="ledger">
+          {% for l in sheet.lines %}{% if l.side == "owe" %}{% include "zakat/_line.html" %}{% endif %}{% endfor %}
+        </ul>
+        <p class="help px-5 pb-4">{% translate "Only debts you must pay now (or within the year) — not the whole of a long loan." %}</p>
+      </section>
+    </div>
+
+    <section class="card">
+      <div class="card-header"><div><h2 class="card-title">{% translate "Prices and what you hold" %}</h2><p class="card-subtitle">{% translate "Use today's price from your jeweller or the BAJUS rate. The helper remembers it." %}</p></div></div>
+      <div class="card-body form-stack">
+        <div class="field">
+          <span class="label">{% translate "Nisab by" %}</span>
+          <div class="seg seg-block" role="radiogroup">
+            {% for value, label in form.fields.basis.choices %}
+            <label class="seg-item" :class="basis === '{{ value }}' && 'is-active'"><input type="radio" name="basis" value="{{ value }}" x-model="basis" class="sr-only">{{ label }}</label>
+            {% endfor %}
+          </div>
+          <p class="help">{% blocktranslate with s=silver_nisab_g g=gold_nisab_g %}Silver: {{ s }} g. Gold: {{ g }} g. Many scholars advise the silver line, so more people give.{% endblocktranslate %}</p>
+        </div>
+        <div class="form-grid form-grid-2">{% with field=form.silver_price %}{% include "partials/field.html" %}{% endwith %}{% with field=form.gold_price %}{% include "partials/field.html" %}{% endwith %}</div>
+        <div class="form-grid form-grid-2">{% with field=form.gold_grams %}{% include "partials/field.html" %}{% endwith %}{% with field=form.silver_grams %}{% include "partials/field.html" %}{% endwith %}</div>
+        <div class="form-grid form-grid-2">{% with field=form.other_assets %}{% include "partials/field.html" %}{% endwith %}{% with field=form.other_debts %}{% include "partials/field.html" %}{% endwith %}</div>
+        {% if has_farm %}{% with field=form.farm_share %}{% include "partials/field.html" %}{% endwith %}{% else %}<input type="hidden" name="farm_share" value="{{ form.instance.farm_share }}">{% endif %}
+      </div>
+      <div class="card-footer form-actions">
+        <button type="submit" class="btn btn-primary btn-lg">{% include "partials/icon.html" with name="check" %}{% translate "Save" %}</button>
+      </div>
+    </section>
+  </form>
+</div>
+<script>
+document.addEventListener("alpine:init", function () {
+  Alpine.data("zakatSheet", function (start) {
+    var lines = JSON.parse(document.getElementById("zakat-lines").textContent);
+    var n = function (v) { v = parseFloat(v); return isNaN(v) ? 0 : v; };
+    var sheet = {
+      lines: lines,
+      line: function (key) { return this.lines.find(function (l) { return l.key === key; }); },
+      amount: function (l) { return l.farm ? l.amount * n(this.farm_share) / 100 : l.amount; },
+      sum: function (side) {
+        var self = this;
+        return this.lines.filter(function (l) { return l.side === side && l.on; }).reduce(function (t, l) { return t + self.amount(l); }, 0);
+      },
+      typed: function (key) {
+        return key === "gold" ? n(this.gold_grams) * n(this.gold_price) : key === "silver" ? n(this.silver_grams) * n(this.silver_price)
+             : key === "other_assets" ? n(this.other_assets) : key === "other_debts" ? n(this.other_debts) : 0;
+      },
+      own: function () { return this.sum("own") + this.typed("gold") + this.typed("silver") + this.typed("other_assets"); },
+      owe: function () { return this.sum("owe") + this.typed("other_debts"); },
+      net: function () { return this.own() - this.owe(); },
+      nisab: function () { return this.basis === "gold" ? {{ gold_nisab_g }} * n(this.gold_price) : {{ silver_nisab_g }} * n(this.silver_price); },
+      due: function () { return this.nisab() > 0 && this.net() >= this.nisab() ? this.net() * 0.025 : 0; },
+      fmt: function (v) { var r = Math.round(v); return (r < 0 ? "−" : "") + "৳" + Math.abs(r).toLocaleString("en-US"); }
+    };
+    Object.keys(start).forEach(function (k) { sheet[k] = start[k]; });
+    return sheet;
+  });
+});
+</script>
+{% endblock %}

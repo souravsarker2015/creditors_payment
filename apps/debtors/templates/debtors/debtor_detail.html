@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load plans i18n %}
 
 {% block title %}{{ debtor.name }} | FinTrack{% endblock %}
 
@@ -28,7 +28,7 @@
       </div>
     </div>
     <div class="page-actions">
-      {% if remaining > 0 %}{% include "partials/reminder_menu.html" with name=debtor.name amount=remaining due_date=debtor.due_date phone=debtor.phone %}{% endif %}
+      {% if remaining > 0 %}{% plan_status debtor as st %}{% include "partials/reminder_menu.html" with name=debtor.name amount=st.next_amount|default:remaining due_date=debtor.due_date phone=debtor.phone %}{% endif %}
       <a href="{% url 'debtor_edit' debtor.pk %}" class="btn btn-secondary">{% include "partials/icon.html" with name="edit" %}{% translate "Edit Profile" %}</a>
       {% url 'debtor_toggle_active' debtor.pk as toggle_url %}
       {% include "partials/toggle_active_item.html" with url=toggle_url active=debtor.is_active as_button=True %}
@@ -56,6 +56,8 @@
       <dd class="stat-value">{{ received|money }}</dd>
     </div>
   </dl>
+
+  {% include "plans/_card.html" with party=debtor kind="debtor" remaining=remaining %}
 
   <div class="detail-grid">
     <section class="card">
@@ -85,7 +87,7 @@
           <div class="ledger-end">
             <span class="ledger-amount" data-tone="{% if tx.transaction_type == 'LEND' %}info{% else %}good{% endif %}">{{ tx.amount|money }}</span>
             {% url 'debtor_transaction_edit' tx.pk as edit_url %}{% url 'debtor_transaction_delete' tx.pk as delete_url %}
-            {% translate "Delete this record? This action cannot be undone." as confirm_text %}
+            {% translate "Delete this record? You can bring it back from Recently deleted." as confirm_text %}
             {% include "partials/row_menu.html" with edit_url=edit_url delete_url=delete_url confirm=confirm_text up=forloop.last %}
           </div>
         </li>

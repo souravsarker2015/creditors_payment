@@ -20,6 +20,7 @@ data is saved to a file on the server first, so a restore can itself be undone.
 """
 import hashlib
 import json
+import re
 from datetime import datetime
 import os
 import shutil
@@ -115,6 +116,13 @@ def current_counts():
 
 # ── Export ──────────────────────────────────────────────────────────────────
 
+# Django's JSON keeps times to the millisecond and writes ".000" when the
+# leftover microseconds round to nothing — but the same time read back (now
+# exactly on the second) is written without it. Dropping an empty ".000"
+# makes a backup of restored data identical to the original.
+_ZERO_MS = re.compile(r"(\d{2}:\d{2}:\d{2})\.000(?=Z|[+-]\d{2}:\d{2}|$)")
+
+
 def _dump_rows():
     """Every row as a list of Django-serialized dicts, in a fixed order (table, then id),
     so two exports of the same data are identical."""
@@ -122,9 +130,14 @@ def _dump_rows():
     for model in backup_models():
         objs = json.loads(serializers.serialize("json", model._base_manager.order_by("pk")))
         m2m = [f.name for f in model._meta.many_to_many]
+        times = [f.name for f in model._meta.concrete_fields if f.get_internal_type() in ("DateTimeField", "TimeField")]
         for o in objs:
             for name in m2m:
                 o["fields"][name] = sorted(o["fields"].get(name) or [])
+            for name in times:
+                value = o["fields"].get(name)
+                if isinstance(value, str):
+                    o["fields"][name] = _ZERO_MS.sub(r"\1", value)
         counts[model._meta.label_lower] = len(objs)
         rows += objs
     return rows, counts

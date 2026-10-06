@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% translate "Installment plan" %} | FinTrack{% endblock %}
+{% block content %}
+{% if kind == "debtor" %}{% blocktranslate with name=party.name amount=remaining|money asvar subtitle %}{{ name }} still owes you {{ amount }}.{% endblocktranslate %}{% else %}{% blocktranslate with name=party.name amount=remaining|money asvar subtitle %}You still owe {{ name }} {{ amount }}.{% endblocktranslate %}{% endif %}
+{% translate "Installment plan" as title %}
+{% include "partials/form_page.html" %}
+{% if plan %}
+<div class="page-narrow mt-4">
+  <form method="post" action="{% url 'plan_delete' kind party.pk %}" data-confirm="{% translate 'Remove this installment plan? Payments already recorded stay.' %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-ghost is-danger">{% include "partials/icon.html" with name="trash" %}{% translate "Remove the plan" %}</button>
+  </form>
+</div>
+{% endif %}
+{% endblock %}

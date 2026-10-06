@@ -6,7 +6,7 @@ from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
 from .models import DeletedItem
-from .services import KEEP_DAYS, CannotRestore, purge_old, restore
+from .services import KEEP_DAYS, CannotRestore, forget, purge_old, restore
 
 
 @login_required
@@ -41,7 +41,7 @@ def restore_view(request, pk):
 @require_POST
 def forget_view(request, pk):
     item = get_object_or_404(DeletedItem, pk=pk, user=request.user)
-    item.delete()
+    forget([item])
     messages.success(request, _("Deleted for good."))
     return redirect("trash_list")
 
@@ -49,6 +49,6 @@ def forget_view(request, pk):
 @login_required
 @require_POST
 def empty_view(request):
-    n, _detail = DeletedItem.objects.filter(user=request.user).delete()
+    forget(DeletedItem.objects.filter(user=request.user))
     messages.success(request, _("Recently deleted is empty."))
     return redirect("trash_list")

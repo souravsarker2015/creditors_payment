@@ -2,6 +2,7 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 from apps.core.status import active_or_current
 from .models import RecurringFrequency, ExpenseCategory, Expense, RecurringExpense
+from apps.core.receipts import ReceiptInput, attach_viewer
 from apps.wallets.forms import WalletFieldMixin
 
 
@@ -15,8 +16,9 @@ class ExpenseCategoryForm(forms.ModelForm):
 class ExpenseForm(WalletFieldMixin, forms.ModelForm):
     class Meta:
         model = Expense
-        fields = ["category", "amount", "wallet", "date", "note"]
+        fields = ["category", "amount", "wallet", "date", "note", "receipt"]
         widgets = {
+            "receipt": ReceiptInput(),
             "category": forms.Select(attrs={"class": "form-input"}),
             "amount": forms.NumberInput(attrs={"class": "form-input", "placeholder": "0.00"}),
             "date": forms.DateInput(attrs={"class": "form-input datepicker", "placeholder": _("Select Date")}),
@@ -32,6 +34,7 @@ class ExpenseForm(WalletFieldMixin, forms.ModelForm):
             )
         self.fields["category"].empty_label = _("General (no category)")
         self.fields["category"].quick_add = "expense_category"
+        attach_viewer(self, "expense")
         self.fields["category"].help_text = _("Missing one? Use + to add a category without leaving this form.")
 
 

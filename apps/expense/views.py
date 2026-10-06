@@ -370,7 +370,7 @@ def _budget_alert(request, expense):
 @login_required
 def expense_create_view(request):
     if request.method == "POST":
-        form = ExpenseForm(request.POST, user=request.user)
+        form = ExpenseForm(request.POST, request.FILES, user=request.user)
         if form.is_valid():
             expense = form.save(commit=False)
             expense.user = request.user
@@ -387,7 +387,7 @@ def expense_create_view(request):
 def expense_edit_view(request, pk):
     expense = get_object_or_404(Expense, pk=pk, user=request.user)
     if request.method == "POST":
-        form = ExpenseForm(request.POST, instance=expense, user=request.user)
+        form = ExpenseForm(request.POST, request.FILES, instance=expense, user=request.user)
         if form.is_valid():
             expense = form.save()
             messages.success(request, _("Expense updated."))
@@ -537,7 +537,7 @@ def recurring_expense_list_view(request):
 @login_required
 def recurring_expense_create_view(request):
     if request.method == "POST":
-        form = RecurringExpenseForm(request.POST, user=request.user)
+        form = RecurringExpenseForm(request.POST, request.FILES, user=request.user)
         if form.is_valid():
             schedule = form.save(commit=False)
             schedule.user = request.user
@@ -557,7 +557,7 @@ def recurring_expense_create_view(request):
 def recurring_expense_edit_view(request, pk):
     schedule = get_object_or_404(RecurringExpense, pk=pk, user=request.user)
     if request.method == "POST":
-        form = RecurringExpenseForm(request.POST, instance=schedule, user=request.user)
+        form = RecurringExpenseForm(request.POST, request.FILES, instance=schedule, user=request.user)
         if form.is_valid():
             form.save()
             messages.success(request, _("Recurring expense schedule updated."))

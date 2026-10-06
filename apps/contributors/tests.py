@@ -73,7 +73,7 @@ class ContributorCategoryTests(TestCase):
             {"category": ContributorCategory.NGO, "filter_type": "include"},
         )
         self.assertEqual(response.status_code, 200)
-        contributors = list(response.context["contributors"])
+        contributors = list(response.context["page_obj"])
         self.assertEqual(len(contributors), 1)
         self.assertEqual(contributors[0].name, "NGO Contributor")
         self.assertEqual(response.context["total_contributors"], 1)
@@ -93,13 +93,13 @@ class ContributorCategoryTests(TestCase):
         self.assertEqual(response.context["total_contributors"], 0)
         self.assertEqual(response.context["total_contribution_amount"], Decimal("0"))
         self.assertEqual(response.context["avg_contribution"], 0)
-        self.assertEqual(list(response.context["contributors"]), [])
+        self.assertEqual(list(response.context["page_obj"]), [])
 
     def test_list_search_by_name_is_case_insensitive(self):
         response = self.client.get(reverse("contributor_list"), {"q": "ngo"})
         self.assertEqual(response.status_code, 200)
 
-        contributors = list(response.context["contributors"])
+        contributors = list(response.context["page_obj"])
         self.assertEqual(len(contributors), 1)
         self.assertEqual(contributors[0].name, "NGO Contributor")
         self.assertEqual(response.context["search_query"], "ngo")
@@ -110,4 +110,4 @@ class ContributorCategoryTests(TestCase):
             {"q": "family", "category": ContributorCategory.NGO},
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(list(response.context["contributors"]), [])
+        self.assertEqual(list(response.context["page_obj"]), [])

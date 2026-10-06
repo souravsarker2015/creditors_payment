@@ -1,4 +1,6 @@
 from django.db import models
+
+from apps.core.receipts import RECEIPT_VALIDATORS, personal_receipt_path
 from django.utils.translation import gettext_lazy as _
 from django.db.models import DecimalField, OuterRef, Subquery, Sum, Value
 from django.db.models.functions import Coalesce
@@ -11,10 +13,11 @@ class HouseholdCategory(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="household_categories"
     )
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, verbose_name=_("Name"))
     is_active = models.BooleanField(
         default=True,
         help_text=_("Inactive records are hidden from lists and pickers but still count in totals."),
+        verbose_name=_("Active"),
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -51,12 +54,13 @@ class HouseholdMember(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="household_members"
     )
-    name = models.CharField(max_length=200)
-    phone = models.CharField(max_length=20, blank=True, default="")
-    note = models.TextField(blank=True, default="")
+    name = models.CharField(max_length=200, verbose_name=_("Name"))
+    phone = models.CharField(max_length=20, blank=True, default="", verbose_name=_("Phone"))
+    note = models.TextField(blank=True, default="", verbose_name=_("Note"))
     is_active = models.BooleanField(
         default=True,
         help_text=_("Inactive records are hidden from lists and pickers but still count in totals."),
+        verbose_name=_("Active"),
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -113,6 +117,7 @@ class Purchase(models.Model):
         null=True,
         blank=True,
         related_name="purchases",
+        verbose_name=_("Paid by"),
     )
     category = models.ForeignKey(
         HouseholdCategory,
@@ -120,12 +125,15 @@ class Purchase(models.Model):
         null=True,
         blank=True,
         related_name="purchases",
+        verbose_name=_("Category"),
     )
-    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name=_("Amount"))
     wallet = models.ForeignKey("wallets.Wallet", on_delete=models.SET_NULL, null=True, blank=True, related_name="+",
                                verbose_name=_("Wallet"))
-    date = models.DateField()
-    description = models.TextField(blank=True, default="")
+    receipt = models.FileField(_("Receipt photo"), upload_to=personal_receipt_path, blank=True, validators=RECEIPT_VALIDATORS,
+                               help_text=_("Optional: a photo of the memo or receipt."))
+    date = models.DateField(verbose_name=_("Date"))
+    description = models.TextField(blank=True, default="", verbose_name=_("Description"))
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -139,13 +147,14 @@ class Settlement(models.Model):
     """Giving back the accumulated amount to a member who fronted money."""
 
     member = models.ForeignKey(
-        HouseholdMember, on_delete=models.CASCADE, related_name="settlements"
+        HouseholdMember, on_delete=models.CASCADE, related_name="settlements",
+        verbose_name=_("Member"),
     )
-    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name=_("Amount"))
     wallet = models.ForeignKey("wallets.Wallet", on_delete=models.SET_NULL, null=True, blank=True, related_name="+",
                                verbose_name=_("Wallet"))
-    date = models.DateField()
-    note = models.TextField(blank=True, default="")
+    date = models.DateField(verbose_name=_("Date"))
+    note = models.TextField(blank=True, default="", verbose_name=_("Note"))
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

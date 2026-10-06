@@ -1,0 +1,24 @@
+<script>
+/* "Leave without saving?" — asks before a page with typed-in, unsaved form
+   changes is closed or left. Only forms you actually changed count; saving,
+   or a form marked data-no-guard, never asks. */
+(function () {
+  if (window.__ftGuard) return; window.__ftGuard = true;
+  var dirty = new Set();
+  function watched(form) {
+    return form && form.method && form.method.toLowerCase() === "post" && !form.hasAttribute("data-no-guard") && !form.closest("[data-no-guard]");
+  }
+  document.addEventListener("input", function (e) {
+    var t = e.target, form = t.form;
+    if (!watched(form) || t.type === "hidden" || t.type === "search" || !t.name) return;
+    if (!e.isTrusted) return;            // values filled in by the page itself don't count
+    dirty.add(form);
+  }, true);
+  document.addEventListener("submit", function (e) { dirty.delete(e.target); }, true);
+  window.addEventListener("beforeunload", function (e) {
+    for (var form of dirty) {
+      if (document.body.contains(form)) { e.preventDefault(); e.returnValue = ""; return ""; }
+    }
+  });
+})();
+</script>

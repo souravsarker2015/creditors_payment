@@ -2,6 +2,8 @@ import calendar
 from datetime import timedelta
 
 from django.db import models
+
+from apps.core.receipts import RECEIPT_VALIDATORS, personal_receipt_path
 from django.db.models import Sum, Q
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -14,10 +16,11 @@ class ExpenseCategory(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="expense_categories"
     )
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, verbose_name=_("Name"))
     is_active = models.BooleanField(
         default=True,
         help_text=_("Inactive records are hidden from lists and pickers but still count in totals."),
+        verbose_name=_("Active"),
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -48,12 +51,15 @@ class Expense(models.Model):
         null=True,
         blank=True,
         related_name="expenses",
+        verbose_name=_("Category"),
     )
-    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name=_("Amount"))
     wallet = models.ForeignKey("wallets.Wallet", on_delete=models.SET_NULL, null=True, blank=True, related_name="+",
                                verbose_name=_("Wallet"))
-    date = models.DateField()
-    note = models.TextField(blank=True, default="")
+    receipt = models.FileField(_("Receipt photo"), upload_to=personal_receipt_path, blank=True, validators=RECEIPT_VALIDATORS,
+                               help_text=_("Optional: a photo of the memo or receipt."))
+    date = models.DateField(verbose_name=_("Date"))
+    note = models.TextField(blank=True, default="", verbose_name=_("Note"))
     created_at = models.DateTimeField(auto_now_add=True)
     recurring_source = models.ForeignKey(
         "RecurringExpense",
@@ -107,15 +113,16 @@ class RecurringExpense(models.Model):
         null=True,
         blank=True,
         related_name="recurring_expenses",
+        verbose_name=_("Category"),
     )
-    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name=_("Amount"))
     wallet = models.ForeignKey("wallets.Wallet", on_delete=models.SET_NULL, null=True, blank=True, related_name="+",
                                verbose_name=_("Wallet"))
-    frequency = models.CharField(max_length=10, choices=RecurringFrequency.choices)
-    next_run_date = models.DateField()
-    skip_weekend = models.BooleanField(default=False)
-    note = models.TextField(blank=True, default="")
-    is_active = models.BooleanField(default=True)
+    frequency = models.CharField(max_length=10, choices=RecurringFrequency.choices, verbose_name=_("How often"))
+    next_run_date = models.DateField(verbose_name=_("Next date"))
+    skip_weekend = models.BooleanField(default=False, verbose_name=_("Skip weekends"))
+    note = models.TextField(blank=True, default="", verbose_name=_("Note"))
+    is_active = models.BooleanField(default=True, verbose_name=_("Active"))
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
