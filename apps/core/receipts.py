@@ -40,10 +40,12 @@ class ReceiptInput(forms.ClearableFileInput):
     def __init__(self, attrs=None):
         super().__init__({"accept": "image/*,application/pdf", "data-shrink": "1600", **(attrs or {})})
         self.view_url = ""
+        self.view_label = ""
 
     def get_context(self, name, value, attrs):
         ctx = super().get_context(name, value, attrs)
         ctx["widget"]["view_url"] = self.view_url
+        ctx["widget"]["view_label"] = self.view_label
         return ctx
 
 

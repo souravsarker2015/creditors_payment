@@ -1,0 +1,1 @@
+{% load i18n %}{% if o.file %}<a href="{% url 'business:paper_file' o.pk %}" target="_blank" rel="noopener" class="menu-item" role="menuitem">{% include "partials/icon.html" with name="download" %}{% translate "Open the photo" %}</a>{% endif %}

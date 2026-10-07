@@ -1,7 +1,7 @@
 {% load i18n %}<div class="receipt-input">
   {% if widget.is_initial %}
   <div class="receipt-current">
-    {% if widget.view_url %}<a href="{{ widget.view_url }}" target="_blank" rel="noopener" class="btn btn-soft btn-sm">{% include "partials/icon.html" with name="note" %}{% translate "See the receipt" %}</a>{% endif %}
+    {% if widget.view_url %}<a href="{{ widget.view_url }}" target="_blank" rel="noopener" class="btn btn-soft btn-sm">{% include "partials/icon.html" with name="note" %}{% if widget.view_label %}{{ widget.view_label }}{% else %}{% translate "See the receipt" %}{% endif %}</a>{% endif %}
     {% if not widget.required %}<label class="receipt-clear"><input type="checkbox" name="{{ widget.checkbox_name }}" id="{{ widget.checkbox_id }}"{% if widget.attrs.disabled %} disabled{% endif %}> {% translate "Remove it" %}</label>{% endif %}
   </div>
   {% endif %}

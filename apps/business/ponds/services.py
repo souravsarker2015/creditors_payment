@@ -22,19 +22,119 @@ class SpeciesRow:
     stocked_kg: Decimal = ZERO
     avg_g: Decimal | None = None       # latest sample weighing
     weighed_on: date | None = None
+    moved_in: int = 0                  # fish brought in from another pond
+    moved_out: int = 0                 # fish taken to another pond
+    estimated: bool = False            # some harvested fish were counted by weight ÷ size
+    mixed_died: int = 0                # this fish's share of deaths noted without a species
+
+    @property
+    def put_in(self):
+        """Every fish that went into this pond: released here or brought from another pond."""
+        return self.stocked + self.moved_in
 
     @property
     def alive(self):
-        return max(self.stocked - self.died - self.harvested_count, 0)
+        return max(self.put_in - self.died - self.mixed_died - self.harvested_count - self.moved_out, 0)
 
     @property
     def survival(self):
-        return round((self.stocked - self.died) * 100 / self.stocked) if self.stocked else None
+        return round(max(self.put_in - self.died - self.mixed_died, 0) * 100 / self.put_in) if self.put_in else None
 
     @property
     def biomass_kg(self):
         """Estimated fish still in the pond, by weight."""
         return (self.alive * self.avg_g / 1000).quantize(Decimal("0.1")) if (self.avg_g and self.alive) else None
+
+
+def _size_on(points, day):
+    """The fish's average weight (g) on `day`: the latest size known by then,
+    else the first one known after it."""
+    known = [g for d, g in points if d <= day]
+    if known:
+        return known[-1]
+    return points[0][1] if points else None
+
+
+def harvest_count(harvest, sizes):
+    """How many fish a harvest took out, and whether that's an estimate.
+
+    The number typed in wins. A harvest measured in pieces is its own count.
+    One measured by weight is divided by the fish's average size at the time
+    (from the sample weighings, or the fingerlings' size), so the fish left in
+    the pond still go down when nobody counted.
+    """
+    if harvest.fish_count:
+        return harvest.fish_count, False
+    if harvest.unit.unit_type == "count":
+        return int(harvest.base_quantity), False
+    if harvest.unit.unit_type == "weight":
+        g = _size_on(sizes.get(harvest.species_id, []), harvest.date)
+        if g:
+            return int((harvest.base_quantity * 1000 / g).to_integral_value()), True
+    return 0, False
+
+
+def _sizes(stockings, moves_in, weighings):
+    """{species id: [(date, average g)]}, oldest first."""
+    sizes = {}
+    for x in list(stockings) + list(moves_in):
+        if x.avg_g:
+            sizes.setdefault(x.species_id, []).append((x.date, x.avg_g))
+    for w in weighings:
+        sizes.setdefault(w.species_id, []).append((w.date, w.avg_g))
+    for pts in sizes.values():
+        pts.sort(key=lambda p: p[0])
+    return sizes
+
+
+def count_fish(cycle):
+    """{species id: SpeciesRow} — the fish put into a cycle, lost, taken out,
+    and still in it (stockings, moves, deaths, harvests, weighings)."""
+    rows = {}
+
+    def row(sp):
+        if sp.pk not in rows:
+            rows[sp.pk] = SpeciesRow(species=sp)
+        return rows[sp.pk]
+
+    stockings = list(_rows(cycle, "stockings", "species"))
+    moves_in = [m for m in _rows(cycle, "moves_in", "species", "cycle__pond") if not m.cycle.is_deleted]
+    moves_out = [m for m in _rows(cycle, "moves_out", "species", "to_cycle__pond") if not m.to_cycle.is_deleted]
+    weighings = sorted(_rows(cycle, "weighings", "species", "unit"), key=lambda w: (w.date, w.id))
+    for st in stockings:
+        r = row(st.species)
+        r.stocked += st.count or 0
+        r.stocked_kg += st.weight_kg or ZERO
+    for m in moves_in:
+        r = row(m.species)
+        r.moved_in += m.count
+        r.stocked_kg += m.weight_kg or ZERO
+    for m in moves_out:
+        row(m.species).moved_out += m.count
+    mixed = 0
+    for m in _rows(cycle, "mortalities", "species"):
+        if m.species:
+            row(m.species).died += m.count
+        else:
+            mixed += m.count
+    for w in weighings:
+        r = row(w.species)
+        r.avg_g, r.weighed_on = w.avg_g, w.date
+    sizes = _sizes(stockings, moves_in, weighings)
+    for h in _rows(cycle, "harvests", "species", "unit"):
+        r = row(h.species)
+        n, guessed = harvest_count(h, sizes)
+        r.harvested_count += n
+        r.estimated = r.estimated or guessed
+        if h.unit.unit_type == "weight":
+            r.harvested_kg += h.base_quantity
+    if mixed:   # "Mixed / not sure": shared out by how many of each fish are left
+        alive = {pk: r.alive for pk, r in rows.items()}
+        total = sum(alive.values())
+        for pk, r in rows.items():
+            if total:
+                r.mixed_died = min(round(mixed * alive[pk] / total), alive[pk])
+    return rows
 
 
 @dataclass
@@ -48,6 +148,9 @@ class CycleSummary:
     wage_cost: Decimal = ZERO       # staff wages written against this pond
     lease_cost: Decimal = ZERO      # this cycle's share of a leased pond's rent, by days
     stocking_cost: Decimal = ZERO
+    moved_in_value: Decimal = ZERO  # fish brought from another pond, at what they'd cost there
+    moved_out_value: Decimal = ZERO # fish taken to another pond: their cost goes with them
+    moved_out_kg: Decimal = ZERO
     sales_net: Decimal = ZERO
     sales_gross: Decimal = ZERO
     harvest_kg: Decimal = ZERO
@@ -74,16 +177,35 @@ class CycleSummary:
     def cost(self):
         """Everything this season has cost: fingerlings, feed eaten, lime and
         medicine, and any labour or other expense recorded against this pond."""
-        return self.stocking_cost + self.feed_cost + self.care_cost + self.wage_cost + self.lease_cost + self.other_cost
+        return (self.stocking_cost + self.moved_in_value + self.feed_cost + self.care_cost + self.wage_cost
+                + self.lease_cost + self.other_cost)
+
+    @property
+    def earned(self):
+        """Sales, plus the value of fish moved on to another pond."""
+        return self.sales_net + self.moved_out_value
 
     @property
     def profit(self):
-        return self.sales_net - self.cost
+        return self.earned - self.cost
+
+    @property
+    def moved_in(self):
+        return sum(s.moved_in for s in self.species)
+
+    @property
+    def moved_out(self):
+        return sum(s.moved_out for s in self.species)
+
+    @property
+    def estimated(self):
+        return any(s.estimated for s in self.species)
 
     @property
     def fcr(self):
-        """Feed conversion ratio: kg of feed per kg of fish grown (lower is better)."""
-        gained = self.harvest_kg - self.stocked_kg
+        """Feed conversion ratio: kg of feed per kg of fish grown (lower is better).
+        Fish moved on to another pond grew here too."""
+        gained = self.harvest_kg + self.moved_out_kg - self.stocked_kg
         return (self.feed_kg / gained).quantize(Decimal("0.01")) if (self.feed_kg and gained > 0) else None
 
 
@@ -98,32 +220,20 @@ def _rows(cycle, name, *related):
 def summarize(cycle, prices=None, cache=None):
     from apps.business.feed.services import cost_per_kg
 
-    rows = {}
-
-    def row(sp):
-        if sp.pk not in rows:
-            rows[sp.pk] = SpeciesRow(species=sp)
-        return rows[sp.pk]
-
+    rows = count_fish(cycle)
     s = CycleSummary(cycle=cycle)
     for st in _rows(cycle, "stockings", "species"):
-        r = row(st.species)
-        r.stocked += st.count or 0
-        r.stocked_kg += st.weight_kg or ZERO
         s.stocking_cost += st.cost
         s.stocked_kg += st.weight_kg or ZERO
-    for m in _rows(cycle, "mortalities", "species"):
-        if m.species:
-            row(m.species).died += m.count
-    for w in sorted(_rows(cycle, "weighings", "species", "unit"), key=lambda w: (w.date, w.id)):
-        r = row(w.species)
-        r.avg_g, r.weighed_on = w.avg_g, w.date
-    for h in _rows(cycle, "harvests", "species", "unit"):
-        r = row(h.species)
-        r.harvested_count += h.fish_count or 0
-        if h.unit.unit_type == "weight":
-            r.harvested_kg += h.base_quantity
-            s.harvest_kg += h.base_quantity
+    for m in _rows(cycle, "moves_in", "cycle"):
+        if not m.cycle.is_deleted:
+            s.moved_in_value += m.value
+            s.stocked_kg += m.weight_kg or ZERO
+    for m in _rows(cycle, "moves_out", "to_cycle"):
+        if not m.to_cycle.is_deleted:
+            s.moved_out_value += m.value
+            s.moved_out_kg += m.weight_kg or ZERO
+    s.harvest_kg = sum((r.harvested_kg for r in rows.values()), ZERO)
     if prices is None:
         prices = cost_per_kg(cycle.business)
     for f in cycle.feedings.all():
@@ -253,8 +363,8 @@ def projection(summary, today=None):
     cycle = summary.cycle
     fish_kg = summary.biomass_kg
     species_ids = [r.species.pk for r in summary.species]
-    return Projection(fish_kg=fish_kg, cost=summary.cost, sold=summary.sales_net,
-                      produced_kg=summary.harvest_kg + (fish_kg or ZERO),
+    return Projection(fish_kg=fish_kg, cost=summary.cost, sold=summary.earned,
+                      produced_kg=summary.harvest_kg + summary.moved_out_kg + (fish_kg or ZERO),
                       usual_price=usual_price_per_kg(cycle.business, species_ids, today) if species_ids else None)
 
 
@@ -375,24 +485,19 @@ def _death_tasks(business, running, today):
     from django.urls import reverse
     from django.utils.translation import gettext as _, ngettext
 
-    from .models import Harvest, Mortality, PondAlerts, Stocking
+    from .models import Mortality, PondAlerts
 
     limits = PondAlerts.for_business(business)
-    ids = [c.pk for c in running]
     since = today - timedelta(days=RECENT_DAYS)
-
-    def totals(qs, field_name):
-        return dict(qs.filter(cycle_id__in=ids).values_list("cycle_id").annotate(n=Sum(field_name)))
-
-    stocked = totals(Stocking.objects.filter(business=business), "count")
-    died = totals(Mortality.objects.filter(business=business), "count")
-    recent = totals(Mortality.objects.filter(business=business, date__gte=since), "count")
-    taken = totals(Harvest.objects.filter(business=business), "fish_count")
+    recent = dict(Mortality.objects.filter(business=business, cycle__in=running, date__gte=since)
+                  .values_list("cycle_id").annotate(n=Sum("count")))
     out = []
     for c in running:
         now = recent.get(c.pk) or 0
-        before = (stocked.get(c.pk) or 0) - ((died.get(c.pk) or 0) - now) - (taken.get(c.pk) or 0)
-        if now and before > 0 and Decimal(now) * 100 / before > limits.deaths_pct:
+        if not now:
+            continue
+        before = sum(r.alive for r in count_fish(c).values()) + now   # fish in the pond before these deaths
+        if before > 0 and Decimal(now) * 100 / before > limits.deaths_pct:
             pct = (Decimal(now) * 100 / before).quantize(Decimal("0.1"))
             out.append(Task("deaths", "critical", _("Many fish dying in %(pond)s") % {"pond": c.pond.name},
                             ngettext("%(n)s fish in the last %(days)s days (%(pct)s%% of the pond). Test the water and check for disease.",

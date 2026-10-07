@@ -87,6 +87,9 @@ STAGES = [
               Step("growth", _("Weigh and count losses"), _("A sample weighing every 2–3 weeks, and any deaths."),
                    "", "enter_data", ("fcr", "alerts"), "scale",
                    _("Sample weights are how the app estimates the fish in the pond, the FCR and “if you sell now”.")),
+              Step("move", _("Move fish between ponds"), _("Nursery fish to a grow-out pond, or a crowded pond thinned out."),
+                   "", "enter_data", ("cycle_profit", "fcr"), "swap",
+                   _("Their value moves with them: off one pond's cost, onto the other's. No money changes hands.")),
               Step("forecast", _("When to harvest"), _("How big each pond's fish are now, and the day they should reach selling size."),
                    "harvest_forecast", "", ("harvest", "alerts", "calendar"), "flag",
                    _("Growth between your weighings, carried forward to the selling size set for each fish.")),
@@ -128,6 +131,9 @@ STAGES = [
                    _("Only interest and charges are a cost; repaying the loan itself is not.")),
               Step("budget", _("Budget & regular bills"), _("What you plan to spend, and bills that come back."),
                    "budget", "view_finance", ("calendar",), "tag"),
+              Step("papers", _("Farm papers"), _("Trade licence, farm registration, lease and land papers, with a photo of each."),
+                   "papers", "manage_settings", ("alerts",), "note",
+                   _("Today's list reminds you before a paper runs out.")),
           ]),
     Stage("see", 5, _("See how you're doing"),
           _("Nothing here is typed in: every figure is worked out from the records above."), "warn", [
@@ -150,9 +156,9 @@ STAGES = [
 
 # "Where does this number come from?" — the questions farmers actually ask.
 ANSWERS = [
-    (_("Profit of a cycle"), _("Fish sold (after market deductions) − fingerlings − feed eaten − lime & medicine − wages, its share of the pond lease and other costs put on that cycle."),
-     ("sale", "stocking", "feeding", "care", "staff", "lease", "money")),
-    (_("Fish in the pond"), _("Fingerlings released − deaths recorded − fish harvested by count."), ("stocking", "growth", "harvest")),
+    (_("Profit of a cycle"), _("Fish sold (after market deductions) + fish moved to other ponds − fingerlings and fish moved in − feed eaten − lime & medicine − wages, its share of the pond lease and other costs put on that cycle."),
+     ("sale", "stocking", "move", "feeding", "care", "staff", "lease", "money")),
+    (_("Fish in the pond"), _("Fingerlings released + fish moved in − deaths recorded − fish harvested − fish moved out. A harvest without a count is counted by its weight ÷ the fish's size then."), ("stocking", "move", "growth", "harvest")),
     (_("Weight in the pond"), _("Fish in the pond × their latest sample weight."), ("growth",)),
     (_("FCR"), _("Feed eaten ÷ weight the fish gained (harvest − fingerling weight). Lower is better."), ("feeding", "growth", "harvest")),
     (_("Feed cost of a pond"), _("Feed eaten there × the average price per kg you paid for that feed."), ("feed_buy", "feeding")),

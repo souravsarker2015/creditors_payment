@@ -165,7 +165,7 @@ def cycle_rows(business, start=None, end=None, pond=None, running_only=False):
 
     # One query per kind of record for the whole page, not per season.
     qs = (CultureCycle.objects.filter(business=business).select_related("pond")
-          .prefetch_related("stockings__species", "treatments", "staff_earnings", "mortalities__species", "weighings__species", "weighings__unit",
+          .prefetch_related("stockings__species", "treatments", "moves_in__species", "moves_in__cycle", "moves_out__species", "moves_out__to_cycle", "staff_earnings", "mortalities__species", "weighings__species", "weighings__unit",
                             "harvests__species", "harvests__unit", "feedings", "sales"))
     if pond is not None:
         qs = qs.filter(pond=pond)
@@ -193,9 +193,11 @@ def pond_rows(business, start=None, end=None):
 
     by_pond = {}
     for row in cycle_rows(business, start, end):
-        got = by_pond.setdefault(row.pond.pk, {"pond": row.pond, "sales": ZERO, "cost": ZERO, "cycles": 0,
-                                               "feed_kg": ZERO, "harvest_kg": ZERO, "stocked_kg": ZERO})
+        got = by_pond.setdefault(row.pond.pk, {"pond": row.pond, "sales": ZERO, "cost": ZERO, "cycles": 0, "moved": ZERO,
+                                               "feed_kg": ZERO, "harvest_kg": ZERO, "stocked_kg": ZERO, "moved_kg": ZERO})
         got["sales"] += row.summary.sales_net
+        got["moved"] += row.summary.moved_out_value     # fish passed on to another pond, at their value
+        got["moved_kg"] += row.summary.moved_out_kg
         got["cost"] += row.summary.cost
         got["cycles"] += 1
         got["feed_kg"] += row.summary.feed_kg
@@ -203,13 +205,13 @@ def pond_rows(business, start=None, end=None):
         got["stocked_kg"] += row.summary.stocked_kg
     for pond in Pond.objects.filter(business=business):
         by_pond.setdefault(pond.pk, {"pond": pond, "sales": ZERO, "cost": ZERO, "cycles": 0, "feed_kg": ZERO, "harvest_kg": ZERO,
-                                     "stocked_kg": ZERO})
+                                     "stocked_kg": ZERO, "moved": ZERO, "moved_kg": ZERO})
     rows = list(by_pond.values())
     for r in rows:
-        r["profit"] = r["sales"] - r["cost"]
+        r["profit"] = r["sales"] + r["moved"] - r["cost"]
         area = r["pond"].area_decimal
         r["per_decimal"] = (r["profit"] / area).quantize(Decimal("1")) if area else None
-        gained = r["harvest_kg"] - r["stocked_kg"]   # same rule as a cycle's own FCR
+        gained = r["harvest_kg"] + r["moved_kg"] - r["stocked_kg"]   # same rule as a cycle's own FCR
         r["fcr"] = (r["feed_kg"] / gained).quantize(Decimal("0.01")) if (r["feed_kg"] and gained > 0) else None
     rows.sort(key=lambda r: -r["profit"])
     return rows

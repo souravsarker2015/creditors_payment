@@ -23,7 +23,8 @@ FAR_DAYS = 365
 
 
 def _prefetch():
-    return ("stockings__species", "mortalities", "harvests",
+    return ("stockings__species", "mortalities__species", "harvests__species", "harvests__unit",
+            "moves_in__species", "moves_in__cycle", "moves_out__species", "moves_out__to_cycle",
             Prefetch("weighings", queryset=SampleWeighing.objects.select_related("species", "unit")))
 
 
@@ -90,11 +91,12 @@ class Forecast:
 
 
 def _points(cycle, species):
-    """The fingerlings' average weight, then each weighing — oldest first."""
+    """The fingerlings' average weight (released here or moved in), then each weighing — oldest first."""
     pts = []
     count = weight = 0
     first = None
-    for st in cycle.stockings.all():
+    moved_in = [m for m in cycle.moves_in.all() if not m.cycle.is_deleted]
+    for st in list(cycle.stockings.all()) + moved_in:
         if st.species_id == species.pk and st.count and st.weight_kg:
             count += st.count
             weight += st.weight_kg
@@ -108,20 +110,9 @@ def _points(cycle, species):
 
 def _alive(cycle):
     """{species id: (species, fish still in the pond)} — fish all taken out are left off."""
-    alive = {}
-    species = {}
-    for st in cycle.stockings.all():
-        alive[st.species_id] = alive.get(st.species_id, 0) + (st.count or 0)
-        species[st.species_id] = st.species
-    for m in cycle.mortalities.all():
-        if m.species_id:
-            alive[m.species_id] = alive.get(m.species_id, 0) - m.count
-    for h in cycle.harvests.all():
-        alive[h.species_id] = alive.get(h.species_id, 0) - (h.fish_count or 0)
-    for w in cycle.weighings.all():
-        species.setdefault(w.species_id, w.species)
-    stocked = {st.species_id for st in cycle.stockings.all() if st.count}
-    return {pk: (species[pk], max(alive.get(pk, 0), 0)) for pk in species if alive.get(pk, 0) > 0 or pk not in stocked}
+    from .services import count_fish
+
+    return {pk: (r.species, r.alive) for pk, r in count_fish(cycle).items() if r.alive > 0 or not r.put_in}
 
 
 def _price(business, species_id, today):

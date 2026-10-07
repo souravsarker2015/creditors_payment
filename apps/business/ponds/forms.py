@@ -9,7 +9,7 @@ from apps.business.core.crud import BusinessForm, money_field
 from apps.business.core.models import Unit
 from apps.business.species.models import Species
 
-from .models import CultureCycle, Harvest, LeasePayment, Mortality, Ownership, Pond, PondAlerts, SampleWeighing, Stocking, TimeOfDay, Treatment, TreatmentKind, WaterTest
+from .models import CultureCycle, FishMove, Harvest, LeasePayment, Mortality, Ownership, Pond, PondAlerts, SampleWeighing, Stocking, TimeOfDay, Treatment, TreatmentKind, WaterTest
 
 MAX_PHOTO_MB = 5
 
@@ -178,9 +178,17 @@ class MortalityForm(EntryForm):
         model = Mortality
         fields = ["date", "species", "count", "cause", "notes"]
 
+    causes = (_("Low oxygen"), _("Disease / sores"), _("Ammonia or bad water"), _("Too hot or too cold"), _("Birds"),
+              _("Snake, otter or frog"), _("Stolen"), _("Escaped in flood or rain"), _("Poisoned"), _("Netting injury"), _("Not known"))
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["species"].empty_label = _("Mixed / not sure")
+        self.fields["count"].label = _("Number of fish lost")
+        self.fields["count"].help_text = _("Dead fish found, or fish stolen or washed out — anything that's no longer in the pond.")
+        list_id = f"death-causes-{self.prefix or 'x'}"
+        self.fields["cause"].widget.attrs.update({"list": list_id, "autocomplete": "off"})
+        self.datalist = (list_id, [str(c) for c in self.causes])
 
 
 class WeighingForm(EntryForm):
@@ -206,7 +214,7 @@ class WeighingForm(EntryForm):
 class HarvestForm(EntryForm):
     tips = {
         "quantity": _("How much fish came out. A mon is the weight set in Farm setup → Units (usually 40 kg)."),
-        "fish_count": _("If you counted the fish, the pond's fish count goes down by this many."),
+        "fish_count": _("If you counted the fish, the pond's fish count goes down by this many. Left empty, it's worked out from the weight and the fish's latest sample size."),
         "is_final": _("Tick only for the last harvest: the cycle is finished and the pond is marked empty. You can reopen it later."),
     }
     layout = [("date", "species"), ("quantity", "unit"), ("fish_count",), ("is_final",), ("notes",)]
@@ -222,6 +230,86 @@ class HarvestForm(EntryForm):
         if not self.instance.pk:
             self.initial.setdefault("unit", Unit.objects.filter(business=self.business, symbol="mon").first()
                                     or Unit.objects.filter(business=self.business, symbol="kg").first())
+
+
+class FishMoveForm(EntryForm):
+    """Fish netted out of this pond and released into another one."""
+
+    to_pond = forms.ModelChoiceField(label=_("Move them to"), queryset=Pond.objects.none(),
+                                     help_text=_("If that pond has no running cycle, one is started there on this date."))
+    tips = {
+        "count": _("How many fish you moved. This pond's fish count goes down and the other pond's goes up."),
+        "weight": _("Total weight of the fish moved, if you weighed them. It gives their size in the new pond."),
+        "value": _("What these fish have cost to raise so far. It comes off this pond's cost and goes onto the other pond's, so neither pond's profit is wrong. No money moves."),
+    }
+    layout = [("date", "species"), ("to_pond",), ("count",), ("weight", "weight_unit"), ("value",), ("notes",)]
+
+    class Meta:
+        model = FishMove
+        fields = ["date", "species", "count", "weight", "weight_unit", "value", "notes"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        pond = getattr(self.cycle, "pond", None)
+        self.fields["to_pond"].queryset = Pond.objects.filter(business=self.business).exclude(pk=getattr(pond, "pk", None))
+        self.fields["to_pond"].empty_label = _("Choose a pond…")
+        self.fields["weight_unit"].queryset = _units(self.business, ["weight"])
+        self.fields["weight_unit"].empty_label = None
+        self.fields["value"].required = False
+        money_field(self.fields["value"])
+        self.counts = {}
+        self.per_fish = None
+        if self.cycle:
+            from .services import summarize
+
+            summary = summarize(self.cycle)
+            self.counts = {r.species.pk: r for r in summary.species}
+            alive = summary.alive + (self.instance.count if self.instance.pk else 0)
+            left = summary.cost - summary.earned + (self.instance.value if self.instance.pk else 0)
+            if alive and left > 0:
+                self.per_fish = (left / alive).quantize(Decimal("0.01"))
+                self.fields["value"].help_text = _("About %(amount)s a fish: what this pond has cost so far, less what it has brought in, over the fish in it.") % {
+                    "amount": f"৳{self.per_fish:,}"}
+                value = self.add_prefix("value")
+                self.fields["count"].widget.attrs["x-on:input"] = (
+                    f"const v = $el.form.elements['{value}']; if (v && !v.dataset.touched) v.value = Math.round(($el.value || 0) * {self.per_fish}) || ''")
+                self.fields["value"].widget.attrs["x-on:input"] = "$el.dataset.touched = 1"
+        if self.instance.pk:
+            self.initial.setdefault("to_pond", self.instance.to_cycle.pond_id)
+        else:
+            self.initial.setdefault("weight_unit", Unit.objects.filter(business=self.business, symbol="kg").first())
+            self.initial["value"] = None
+
+    def clean(self):
+        data = super().clean()
+        data["value"] = data.get("value") or 0
+        species, count, pond, day = data.get("species"), data.get("count"), data.get("to_pond"), data.get("date")
+        if species and count:
+            row = self.counts.get(species.pk)
+            have = (row.alive if row else 0) + (self.instance.count if self.instance.pk and self.instance.species_id == species.pk else 0)
+            if row and row.put_in and count > have:
+                self.add_error("count", _("Only about %(n)s of these fish are left in this pond.") % {"n": f"{have:,}"})
+        if pond and day:
+            from .services import running_cycle
+
+            target = running_cycle(pond)
+            if self.instance.pk and self.instance.to_cycle.pond_id == pond.pk:
+                target = self.instance.to_cycle
+            if target and target.start_date > day:
+                self.add_error("date", _("The cycle in %(pond)s started on %(date)s, after this date.") % {
+                    "pond": pond.name, "date": date_format(target.start_date, "j M Y")})
+            self.target = target
+        return data
+
+    def before_save(self, obj):
+        """Point the move at the other pond's running cycle, starting one if it's empty."""
+        from .services import start_cycle
+
+        target = getattr(self, "target", None)
+        if target is None:
+            pond = self.cleaned_data["to_pond"]
+            target = start_cycle(CultureCycle(business=self.business, pond=pond, start_date=obj.date))
+        obj.to_cycle = target
 
 
 class WaterTestForm(EntryForm):

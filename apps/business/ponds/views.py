@@ -19,8 +19,8 @@ from apps.business.feed.forms import FeedUsageForm
 from apps.business.feed.models import FeedUsage
 
 from . import forecast, services
-from .forms import CycleForm, LeasePaymentForm, HarvestForm, MortalityForm, PondAlertsForm, PondForm, StockingForm, TreatmentForm, WaterTestForm, WeighingForm
-from .models import CultureCycle, Harvest, LeasePayment, Mortality, Pond, PondAlerts, PondStatus, SampleWeighing, Stocking, Treatment, WaterTest
+from .forms import CycleForm, FishMoveForm, LeasePaymentForm, HarvestForm, MortalityForm, PondAlertsForm, PondForm, StockingForm, TreatmentForm, WaterTestForm, WeighingForm
+from .models import CultureCycle, FishMove, Harvest, LeasePayment, Mortality, Pond, PondAlerts, PondStatus, SampleWeighing, Stocking, Treatment, WaterTest
 
 def _with_cycles(objects, business):
     running = {c.pond_id: c for c in CultureCycle.objects.filter(business=business, status="running", pond__in=objects)}
@@ -63,6 +63,7 @@ ENTRY_KINDS = {k.key: k for k in [
     EntryKind("weighing", SampleWeighing, WeighingForm, _("Sample weighing"), "scale", "growth"),
     EntryKind("mortality", Mortality, MortalityForm, _("Record deaths"), "alert", "growth"),
     EntryKind("harvest", Harvest, HarvestForm, _("Record harvest"), "cart", "harvest"),
+    EntryKind("move", FishMove, FishMoveForm, _("Move fish to another pond"), "swap", "stocking"),
     EntryKind("water", WaterTest, WaterTestForm, _("Water test"), "beaker", "water"),
     EntryKind("treatment", Treatment, TreatmentForm, _("Lime, medicine & care"), "dropper", "water"),
 ]}
@@ -161,15 +162,21 @@ def cycle_detail_view(request, pk):
         w.found = w.problems(limits)
     mon = Unit.objects.filter(business=b, symbol="mon", unit_type="weight").first()
     treatments = list(cycle.treatments.select_related("unit", "account"))
+    sold_kg = _sold_kg(cycle)
+    moves_in = [m for m in cycle.moves_in.select_related("species", "weight_unit", "cycle__pond") if not m.cycle.is_deleted]
+    moves_out = [m for m in cycle.moves_out.select_related("species", "weight_unit", "to_cycle__pond") if not m.to_cycle.is_deleted]
+    stockings = list(cycle.stockings.select_related("species", "supplier", "weight_unit"))
     return render(request, "business/ponds/cycle_detail.html", {
         "cycle": cycle, "pond": cycle.pond, "s": summary,
         "p": services.projection(summary) if cycle.is_running else None, "mon": mon,
         "popups": popups,
-        "stockings": list(cycle.stockings.select_related("species", "supplier", "weight_unit")),
+        "stockings": stockings, "moves_in": moves_in, "moves_out": moves_out,
+        "stocking_count": len(stockings) + len(moves_in) + len(moves_out),
         "feedings": feedings, "feed_by_product": _feed_by_product(cycle),
         "mortalities": cycle.mortalities.select_related("species"),
         "weighings": cycle.weighings.select_related("species", "unit"),
-        "harvests": harvests, "sales": sales, "harvest_sale_count": len(harvests) + len(sales),
+        "harvests": harvests, "sales": sales, "sold_kg": sold_kg,
+        "unsold_kg": (summary.harvest_kg - sold_kg) if harvests and summary.harvest_kg - sold_kg >= 1 else None, "harvest_sale_count": len(harvests) + len(sales),
         "water": water, "water_now": water[0] if water else None,
         "treatments": treatments, "water_care_count": len(water) + len(treatments),
         "withdrawal": services.withdrawal(cycle),
@@ -178,6 +185,16 @@ def cycle_detail_view(request, pk):
         "tab": request.GET.get("tab") or "overview",
         "today": date.today(),
     })
+
+
+def _sold_kg(cycle):
+    """Fish sold out of this cycle, by weight (sales in pieces aren't counted)."""
+    from django.db.models import Sum
+
+    from apps.business.sales.models import FishSaleLine
+
+    return (FishSaleLine.objects.filter(sale__cycle=cycle, sale__is_deleted=False, unit__unit_type="weight")
+            .aggregate(kg=Sum("base_quantity"))["kg"] or Decimal(0))
 
 
 def _feed_by_product(cycle):
@@ -226,10 +243,17 @@ def cycle_delete_view(request, pk):
     return redirect("business:pond_detail", cycle.pond_id)
 
 
+def _before_save(form, obj):
+    if hasattr(form, "before_save"):
+        form.before_save(obj)
+
+
 def _entry_saved(request, kind, obj, cycle):
     if kind.key == "harvest" and obj.is_final and cycle.is_running:
         services.finish_cycle(cycle, obj.date)
         messages.success(request, _g("Harvest saved and the cycle is finished."))
+    elif kind.key == "move":
+        messages.success(request, _g("%(n)s fish moved to %(pond)s.") % {"n": f"{obj.count:,}", "pond": obj.to_cycle.pond.name})
     else:
         messages.success(request, _g("Saved."))
 
@@ -242,6 +266,7 @@ def entry_add_view(request, pk, kind):
     if request.method == "POST" and form.is_valid():
         obj = form.save(commit=False)
         obj.business, obj.cycle = request.business, cycle
+        _before_save(form, obj)
         obj.save()
         _entry_saved(request, kind, obj, cycle)
         if kind.key == "harvest" and request.POST.get("then") == "sell":
@@ -256,7 +281,9 @@ def entry_edit_view(request, kind, pk):
     obj = get_object_or_404(kind.model, pk=pk, business=request.business)
     form = kind.form(request.POST or None, instance=obj, business=request.business, cycle=obj.cycle)
     if request.method == "POST" and form.is_valid():
-        form.save()
+        obj = form.save(commit=False)
+        _before_save(form, obj)
+        obj.save()
         _entry_saved(request, kind, obj, obj.cycle)
         return redirect(reverse("business:cycle_detail", args=[obj.cycle_id]) + f"?tab={kind.tab}")
     return render(request, "business/ponds/entry_form.html", {"form": form, "title": kind.title, "back": reverse("business:cycle_detail", args=[obj.cycle_id]), "back_label": str(obj.cycle)})

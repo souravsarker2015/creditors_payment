@@ -37,7 +37,7 @@ def _units_json(business):
 def home_view(request):
     b = request.business
     units = Unit.objects.filter(business=b)
-    tasks = _farm_tasks(b) + _growth_tasks(b) + _equipment_tasks(b) + _supply_tasks(b) + _staff_tasks(request) + _calendar_tasks(b)
+    tasks = _farm_tasks(b) + _growth_tasks(b) + _equipment_tasks(b) + _supply_tasks(b) + _staff_tasks(request) + _paper_tasks(request) + _calendar_tasks(b)
     return render(request, "business/home.html", {
         "today": date.today(),
         "share_url": _share_url(request, tasks),
@@ -145,6 +145,30 @@ def _staff_tasks(request):
     names = ", ".join(r.worker.name for r in missing[:3])
     return [Task("salary", "warn", _("%(month)s salaries not written yet") % {"month": date_format(last_month, "F")}, names,
                  reverse("business:staff_salaries") + f"?month={last_month:%Y-%m}", _("Write"))]
+
+
+def _paper_tasks(request):
+    """Licences and other papers that have run out or are about to (owners and managers only)."""
+    from .access import can
+
+    if not apps.is_installed("apps.business.papers") or not can(request.membership, "manage_settings"):
+        return []
+    from apps.business.papers.views import due_papers
+    from apps.business.ponds.services import Task
+
+    out = []
+    for p in due_papers(request.business):
+        left = p.days_left
+        if left < 0:
+            detail = ngettext("Ran out %(n)s day ago", "Ran out %(n)s days ago", -left) % {"n": -left}
+        elif left == 0:
+            detail = _("Runs out today")
+        else:
+            detail = ngettext("Runs out in %(n)s day", "Runs out in %(n)s days", left) % {"n": left}
+        detail += " · " + date_format(p.expires_on, "j M Y")
+        out.append(Task("paper", "critical" if left < 0 else "warn", _("Renew: %(paper)s") % {"paper": p.title}, detail,
+                        reverse("business:papers_edit", args=[p.pk]), _("Update")))
+    return out
 
 
 def _calendar_tasks(business):
@@ -567,5 +591,27 @@ def setup_hub_view(request):
             tile("business:units", "scale", _("Units"), _("kg, mon, piece, decimal, bigha…"), Unit.objects.filter(business=b).count()),
         ]),
     ]
+    if apps.is_installed("apps.business.papers"):
+        from apps.business.papers.models import FarmPaper
+
+        papers = FarmPaper.objects.filter(business=b).count()
+    else:
+        papers = None
+    sections.append((_("Papers and records"), [
+        tile("business:papers", "note", _("Farm papers"), _("Licences, registrations, lease and land papers, with reminders"), papers,
+             show=papers is not None and can(request.membership, "manage_settings")),
+        tile("business:export", "download", _("Download all records"), _("Every record of this farm as Excel-ready files"), None,
+             show=can(request.membership, "manage_team")),
+    ]))
     sections = [(title, [t for t in tiles if t]) for title, tiles in sections]
-    return render(request, "business/settings/setup_hub.html", {"sections": sections})
+    return render(request, "business/settings/setup_hub.html", {"sections": [s for s in sections if s[1]]})
+
+
+@business_access_required(capability="manage_team")
+def export_view(request):
+    """The owner's copy of every farm record (one CSV per kind, zipped)."""
+    from .export import zip_response
+
+    AuditLog.objects.create(business=request.business, user=request.user, action=AuditLog.Action.UPDATE, model="export",
+                            object_id="-", object_repr="Downloaded all records")
+    return zip_response(request.business)

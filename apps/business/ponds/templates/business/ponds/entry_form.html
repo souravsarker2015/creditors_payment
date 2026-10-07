@@ -9,7 +9,7 @@
       <h1 class="page-title">{{ title }}</h1>
     </div>
   </header>
-  <form method="post" class="card" novalidate>
+  <form method="post" class="card" novalidate x-data>
     {% csrf_token %}
     <div class="card-body form-stack">
       {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
@@ -18,6 +18,7 @@
         {% else %}{% with field=row.0 %}{% include "business/partials/field.html" %}{% endwith %}{% endif %}
       {% endfor %}{% endfor %}
       {% if form.is_treatment %}{% include "business/ponds/_treatment_extras.html" %}{% endif %}
+      {% if form.datalist %}<datalist id="{{ form.datalist.0 }}">{% for c in form.datalist.1 %}<option value="{{ c }}"></option>{% endfor %}</datalist>{% endif %}
     </div>
     <div class="card-footer form-actions">
       <a href="{{ back }}" class="btn btn-ghost btn-lg">{% translate "Cancel" %}</a>

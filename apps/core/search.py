@@ -77,6 +77,7 @@ PAGES = [
     (gettext_noop("Markets & aarots"), "business:markets", "business", ""),
     (gettext_noop("Fish prices"), "business:prices", "business", ""),
     (gettext_noop("How it works"), "business:guide", "business", ""),
+    (gettext_noop("Farm papers"), "business:papers", "business", "manage_settings"),
     (gettext_noop("Baki (dues)"), "business:dues", "business", "view_finance"),
     (gettext_noop("Staff & wages"), "business:staff", "business", "view_finance"),
     (gettext_noop("Partners"), "business:partners", "business", "view_finance"),
@@ -178,6 +179,11 @@ def _business(request, text):
 
         for ev in CalendarEvent.objects.filter(_q(text, "title", "notes"), business=b).order_by("-date")[:PER_GROUP]:
             add(ev.title, " · ".join((_("Calendar"), f"{ev.date:%d %b %Y}")), _url("business:calendar", query=f"?day={ev.date.isoformat()}"), "calendar")
+    if apps.is_installed("apps.business.papers") and can(m, "manage_settings"):
+        from apps.business.papers.models import FarmPaper
+
+        for p in FarmPaper.objects.filter(_q(text, "title", "number", "issued_by"), business=b)[:PER_GROUP]:
+            add(p.title, " · ".join(x for x in (_("Farm paper"), p.number) if x), _url("business:papers_edit", p.pk), "note")
     if money:
         if apps.is_installed("apps.business.staff"):
             from apps.business.staff.models import Worker

@@ -21,6 +21,7 @@ urlpatterns = [
     path("settings/team/<int:pk>/password/", views.member_password_view, name="member_password"),
     path("settings/activity/", views.activity_view, name="activity"),
     path("quick-add/<slug:kind>/", quick_add_view, name="quick_add"),
+    path("settings/export/", views.export_view, name="export"),
     path("settings/", views.setup_hub_view, name="setup_hub"),
     path("admin/access/", views.access_admin_view, name="access_admin"),
     path("admin/access/<int:user_id>/", views.access_update_view, name="access_update"),

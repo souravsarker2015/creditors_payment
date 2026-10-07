@@ -116,7 +116,7 @@ def farm_events(business, start, end):
 # ── From the rest of the farm ───────────────────────────────────────────────
 
 def pond_items(business, start, end):
-    from apps.business.ponds.models import (CultureCycle, CycleStatus, Harvest, Mortality, Pond, PondAlerts,
+    from apps.business.ponds.models import (CultureCycle, CycleStatus, FishMove, Harvest, Mortality, Pond, PondAlerts,
                                             SampleWeighing, Stocking, Treatment, WaterTest)
     from apps.business.core.templatetags.business import num
 
@@ -130,6 +130,9 @@ def pond_items(business, start, end):
         items.append(Item(s.date, "pond", _("Fingerlings released · %(pond)s") % {"pond": s.cycle.pond.name},
                           " ".join(x for x in (f"{num(s.count)}" if s.count else "", str(s.species)) if x), cycle_url(s.cycle_id, "stocking"),
                           "info", "fish"))
+    for m in FishMove.objects.filter(**alive, to_cycle__is_deleted=False).select_related("species", "cycle__pond", "to_cycle__pond"):
+        items.append(Item(m.date, "pond", _("Fish moved · %(from)s → %(to)s") % {"from": m.cycle.pond.name, "to": m.to_cycle.pond.name},
+                          f"{num(m.count)} {m.species}", cycle_url(m.cycle_id, "stocking"), "info", "swap"))
     for h in Harvest.objects.filter(**alive).select_related("species", "unit", "cycle__pond"):
         items.append(Item(h.date, "pond", _("Harvest · %(pond)s") % {"pond": h.cycle.pond.name},
                           f"{num(h.quantity)} {h.unit.symbol} {h.species}", cycle_url(h.cycle_id, "harvest"), "good", "cart"))

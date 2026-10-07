@@ -34,6 +34,14 @@ class SearchTests(TestCase):
         self.assertContains(r, reverse("business:pond_detail", args=[Pond.objects.get().pk]))
         self.assertContains(self.find("feed plan"), reverse("business:feed_plan"))
 
+    def test_farm_papers_for_owners_only(self):
+        from apps.business.papers.models import FarmPaper
+
+        FarmPaper.objects.create(business=self.b, title="Trade licence", number="TL-778")
+        self.assertContains(self.find("TL-778"), "Trade licence")
+        self.client.force_login(self.staff)
+        self.assertNotContains(self.find("TL-778"), "Trade licence")
+
     def test_staff_do_not_find_money_records(self):
         Partner.objects.create(business=self.b, name="Halim Partner", share_pct=50)
         self.assertContains(self.find("halim"), "Halim Partner")

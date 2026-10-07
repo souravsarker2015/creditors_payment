@@ -20,6 +20,7 @@
         {% else %}{% with field=row.0 %}{% include "business/partials/field.html" %}{% endwith %}{% endif %}
       {% endfor %}{% endfor %}
       {% if form.is_treatment %}{% include "business/ponds/_treatment_extras.html" %}{% endif %}
+      {% if form.datalist %}<datalist id="{{ form.datalist.0 }}">{% for c in form.datalist.1 %}<option value="{{ c }}"></option>{% endfor %}</datalist>{% endif %}
       {% if key == "feeding" %}<p class="help">{% translate "Feeding several ponds today?" %} <a href="{% url 'business:feed_usage_bulk' %}" class="font-semibold underline">{% translate "Enter all ponds at once" %}</a></p>{% endif %}
     </div>
     <div class="modal-footer">

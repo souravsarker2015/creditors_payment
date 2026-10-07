@@ -11654,3 +11654,320 @@ msgstr "শেষ হয়েছে"
 
 msgid "no end date"
 msgstr "শেষ তারিখ নেই"
+
+msgid "Fish moved · %(from)s → %(to)s"
+msgstr "মাছ সরানো · %(from)s → %(to)s"
+
+msgid "Move fish between ponds"
+msgstr "এক পুকুর থেকে আরেক পুকুরে মাছ সরানো"
+
+msgid "Nursery fish to a grow-out pond, or a crowded pond thinned out."
+msgstr "নার্সারির মাছ বড় পুকুরে, বা ঘন পুকুর পাতলা করা।"
+
+msgid "Their value moves with them: off one pond's cost, onto the other's. No money changes hands."
+msgstr "মাছের সঙ্গে তাদের দামও যায়: এক পুকুরের খরচ থেকে কমে, অন্যটির খরচে যোগ হয়। কোনো টাকা লেনদেন হয় না।"
+
+msgid "Trade licence, farm registration, lease and land papers, with a photo of each."
+msgstr "ট্রেড লাইসেন্স, খামার নিবন্ধন, লিজ ও জমির কাগজ — প্রতিটির ছবিসহ।"
+
+msgid "Today's list reminds you before a paper runs out."
+msgstr "কোনো কাগজের মেয়াদ শেষ হওয়ার আগে আজকের তালিকা আপনাকে মনে করিয়ে দেয়।"
+
+msgid "Fish sold (after market deductions) + fish moved to other ponds − fingerlings and fish moved in − feed eaten − lime & medicine − wages, its share of the pond lease and other costs put on that cycle."
+msgstr "বিক্রি করা মাছ (বাজারের কাটতির পরে) + অন্য পুকুরে সরানো মাছ − পোনা ও আনা মাছ − খাওয়ানো খাদ্য − চুন ও ওষুধ − মজুরি, পুকুর লিজের ভাগ ও ওই সাইকেলে ধরা অন্যান্য খরচ।"
+
+msgid "Fingerlings released + fish moved in − deaths recorded − fish harvested − fish moved out. A harvest without a count is counted by its weight ÷ the fish's size then."
+msgstr "ছাড়া পোনা + আনা মাছ − লেখা মৃত্যু − ধরা মাছ − সরানো মাছ। সংখ্যা ছাড়া আহরণ হলে তার ওজন ÷ তখনকার মাছের আকার দিয়ে গোনা হয়।"
+
+msgid "Downloaded all records"
+msgstr "সব হিসাব ডাউনলোড করেছেন"
+
+msgid "Ran out %(n)s day ago"
+msgid_plural "Ran out %(n)s days ago"
+msgstr[0] "%(n)s দিন আগে মেয়াদ শেষ"
+msgstr[1] "%(n)s দিন আগে মেয়াদ শেষ"
+
+msgid "Runs out today"
+msgstr "আজ মেয়াদ শেষ"
+
+msgid "Runs out in %(n)s day"
+msgid_plural "Runs out in %(n)s days"
+msgstr[0] "%(n)s দিন পরে মেয়াদ শেষ"
+msgstr[1] "%(n)s দিন পরে মেয়াদ শেষ"
+
+msgid "Renew: %(paper)s"
+msgstr "নবায়ন করুন: %(paper)s"
+
+msgid "Update"
+msgstr "হালনাগাদ"
+
+msgid "Papers and records"
+msgstr "কাগজপত্র ও হিসাব"
+
+msgid "Licences, registrations, lease and land papers, with reminders"
+msgstr "লাইসেন্স, নিবন্ধন, লিজ ও জমির কাগজ, রিমাইন্ডারসহ"
+
+msgid "Download all records"
+msgstr "সব হিসাব ডাউনলোড"
+
+msgid "Every record of this farm as Excel-ready files"
+msgstr "এই খামারের সব হিসাব, Excel-এ খোলার মতো ফাইলে"
+
+msgid "Received: a buyer paid you. Paid: you paid a supplier. It's chosen for you from who owes whom. An advance (dadon) from an aratdar before any sale is “Received” too: the fish you sell them later pay it back."
+msgstr "পেলাম: ক্রেতা আপনাকে টাকা দিয়েছেন। দিলাম: আপনি সরবরাহকারীকে দিয়েছেন। কে কার কাছে পাবে তা দেখে নিজেই বেছে নেওয়া হয়। বিক্রির আগে আড়তদারের দেওয়া দাদনও “পেলাম”: পরে তাঁকে যে মাছ বিক্রি করবেন তা দিয়ে শোধ হবে।"
+
+msgid "The farm's to-do list reminds you before this date, so there's time to renew."
+msgstr "এই তারিখের আগে খামারের কাজের তালিকা মনে করিয়ে দেবে, যাতে নবায়নের সময় থাকে।"
+
+msgid "How early to start reminding you. Renewals that need an office visit may need 30–60 days."
+msgstr "কত আগে থেকে মনে করানো শুরু হবে। অফিসে যেতে হলে ৩০–৬০ দিন লাগতে পারে।"
+
+msgid "A photo of the paper (or a PDF). Only owners and managers of this farm can open it."
+msgstr "কাগজের ছবি (বা PDF)। শুধু এই খামারের মালিক ও ম্যানেজার এটি খুলতে পারবেন।"
+
+msgid "The whole farm"
+msgstr "পুরো খামার"
+
+msgid "See the paper"
+msgstr "কাগজটি দেখুন"
+
+msgid "This is before the day it was issued."
+msgstr "এটি ইস্যুর তারিখের আগে।"
+
+msgid "Trade licence"
+msgstr "ট্রেড লাইসেন্স"
+
+msgid "Fish farm registration"
+msgstr "মৎস্য খামার নিবন্ধন"
+
+msgid "Pond lease agreement"
+msgstr "পুকুর লিজের চুক্তি"
+
+msgid "Land papers (dolil, khatian, porcha)"
+msgstr "জমির কাগজ (দলিল, খতিয়ান, পর্চা)"
+
+msgid "Tax, TIN or VAT"
+msgstr "কর, TIN বা ভ্যাট"
+
+msgid "Bank or loan papers"
+msgstr "ব্যাংক বা ঋণের কাগজ"
+
+msgid "Insurance"
+msgstr "বিমা"
+
+msgid "e.g. Trade licence 2026–27"
+msgstr "যেমন ট্রেড লাইসেন্স ২০২৬–২৭"
+
+msgid "Number"
+msgstr "নম্বর"
+
+msgid "Licence, registration or deed number."
+msgstr "লাইসেন্স, নিবন্ধন বা দলিল নম্বর।"
+
+msgid "Issued by"
+msgstr "যে অফিস দিয়েছে"
+
+msgid "e.g. Union Parishad, Upazila Fisheries Office"
+msgstr "যেমন ইউনিয়ন পরিষদ, উপজেলা মৎস্য অফিস"
+
+msgid "For pond"
+msgstr "কোন পুকুরের"
+
+msgid "Issued on"
+msgstr "ইস্যুর তারিখ"
+
+msgid "Valid until"
+msgstr "মেয়াদ আছে"
+
+msgid "Leave empty if it never runs out."
+msgstr "মেয়াদ শেষ না হলে খালি রাখুন।"
+
+msgid "Remind me (days before)"
+msgstr "কত দিন আগে মনে করাবে"
+
+msgid "Photo or PDF"
+msgstr "ছবি বা PDF"
+
+msgid "Open the photo"
+msgstr "ছবিটি খুলুন"
+
+msgid "photo saved"
+msgstr "ছবি রাখা আছে"
+
+msgid "%(counter)s day ago"
+msgid_plural "%(counter)s days ago"
+msgstr[0] "%(counter)s দিন আগে"
+msgstr[1] "%(counter)s দিন আগে"
+
+msgid "runs out today"
+msgstr "আজ মেয়াদ শেষ"
+
+msgid "%(counter)s day left"
+msgid_plural "%(counter)s days left"
+msgstr[0] "আর %(counter)s দিন"
+msgstr[1] "আর %(counter)s দিন"
+
+msgid "Expired"
+msgstr "মেয়াদ শেষ"
+
+msgid "Renew soon"
+msgstr "শিগগির নবায়ন করুন"
+
+msgid "Valid"
+msgstr "মেয়াদ আছে"
+
+msgid "Licences, registrations, lease and land papers: a copy of each, and a reminder before it runs out."
+msgstr "লাইসেন্স, নিবন্ধন, লিজ ও জমির কাগজ: প্রতিটির একটি কপি, আর মেয়াদ শেষের আগে রিমাইন্ডার।"
+
+msgid "Add a paper"
+msgstr "কাগজ যোগ করুন"
+
+msgid "Keep the farm's papers safe here"
+msgstr "খামারের কাগজপত্র এখানে নিরাপদে রাখুন"
+
+msgid "Add the trade licence, fish farm registration, lease agreements and land papers with a photo of each. You'll be reminded before any of them runs out."
+msgstr "ট্রেড লাইসেন্স, মৎস্য খামার নিবন্ধন, লিজের চুক্তি ও জমির কাগজ প্রতিটির ছবিসহ যোগ করুন। কোনোটির মেয়াদ শেষের আগে আপনাকে মনে করানো হবে।"
+
+msgid "How farm papers work"
+msgstr "খামারের কাগজপত্র যেভাবে কাজ করে"
+
+msgid "Take a photo of each paper and add it with its number and the day it runs out."
+msgstr "প্রতিটি কাগজের ছবি তুলে তার নম্বর ও মেয়াদ শেষের তারিখসহ যোগ করুন।"
+
+msgid "The farm's to-do list warns you before a paper expires, so there's time to renew it."
+msgstr "কাগজের মেয়াদ শেষের আগে খামারের কাজের তালিকা সতর্ক করে, যাতে নবায়নের সময় থাকে।"
+
+msgid "Only the owner and managers can see these papers."
+msgstr "শুধু মালিক ও ম্যানেজার এই কাগজগুলো দেখতে পারেন।"
+
+msgid "Low oxygen"
+msgstr "অক্সিজেনের অভাব"
+
+msgid "Disease / sores"
+msgstr "রোগ / ঘা"
+
+msgid "Ammonia or bad water"
+msgstr "অ্যামোনিয়া বা খারাপ পানি"
+
+msgid "Too hot or too cold"
+msgstr "বেশি গরম বা ঠান্ডা"
+
+msgid "Birds"
+msgstr "পাখি"
+
+msgid "Snake, otter or frog"
+msgstr "সাপ, ভোঁদড় বা ব্যাঙ"
+
+msgid "Stolen"
+msgstr "চুরি"
+
+msgid "Escaped in flood or rain"
+msgstr "বন্যা বা বৃষ্টিতে বেরিয়ে গেছে"
+
+msgid "Poisoned"
+msgstr "বিষ প্রয়োগ"
+
+msgid "Netting injury"
+msgstr "জাল টানার আঘাত"
+
+msgid "Not known"
+msgstr "জানা নেই"
+
+msgid "Number of fish lost"
+msgstr "হারানো মাছের সংখ্যা"
+
+msgid "Dead fish found, or fish stolen or washed out — anything that's no longer in the pond."
+msgstr "মরা মাছ, বা চুরি হওয়া বা ভেসে যাওয়া মাছ — যা আর পুকুরে নেই।"
+
+msgid "If you counted the fish, the pond's fish count goes down by this many. Left empty, it's worked out from the weight and the fish's latest sample size."
+msgstr "মাছ গুনে থাকলে পুকুরের মাছের সংখ্যা এতটা কমবে। খালি রাখলে ওজন আর সর্বশেষ নমুনার আকার থেকে হিসাব করা হয়।"
+
+msgid "Move them to"
+msgstr "কোথায় সরাবেন"
+
+msgid "If that pond has no running cycle, one is started there on this date."
+msgstr "ওই পুকুরে চলতি সাইকেল না থাকলে এই তারিখে একটি শুরু হবে।"
+
+msgid "How many fish you moved. This pond's fish count goes down and the other pond's goes up."
+msgstr "কতগুলো মাছ সরিয়েছেন। এই পুকুরের মাছ কমবে, অন্যটির বাড়বে।"
+
+msgid "Total weight of the fish moved, if you weighed them. It gives their size in the new pond."
+msgstr "সরানো মাছের মোট ওজন, যদি মেপে থাকেন। এতে নতুন পুকুরে তাদের আকার জানা যায়।"
+
+msgid "What these fish have cost to raise so far. It comes off this pond's cost and goes onto the other pond's, so neither pond's profit is wrong. No money moves."
+msgstr "এই মাছ বড় করতে এ পর্যন্ত যা খরচ হয়েছে। এটি এই পুকুরের খরচ থেকে কমে অন্য পুকুরের খরচে যায়, তাই কোনো পুকুরের লাভ ভুল হয় না। কোনো টাকা লেনদেন হয় না।"
+
+msgid "Choose a pond…"
+msgstr "পুকুর বাছুন…"
+
+msgid "About %(amount)s a fish: what this pond has cost so far, less what it has brought in, over the fish in it."
+msgstr "মাছ প্রতি প্রায় %(amount)s: এই পুকুরে এ পর্যন্ত খরচ থেকে আয় বাদ দিয়ে, পুকুরের মাছ দিয়ে ভাগ।"
+
+msgid "Only about %(n)s of these fish are left in this pond."
+msgstr "এই পুকুরে এই মাছ আছে মাত্র প্রায় %(n)sটি।"
+
+msgid "The cycle in %(pond)s started on %(date)s, after this date."
+msgstr "%(pond)s-এর সাইকেল শুরু হয়েছে %(date)s তারিখে, এই তারিখের পরে।"
+
+msgid "Their value"
+msgstr "তাদের দাম"
+
+msgid "Fish released or moved in, minus deaths, fish harvested and fish moved to other ponds. A harvest without a count is counted by its weight ÷ the fish's size then. An estimate — unrecorded losses aren't included."
+msgstr "ছাড়া বা আনা মাছ থেকে মৃত্যু, ধরা মাছ ও অন্য পুকুরে সরানো মাছ বাদ। সংখ্যা ছাড়া আহরণ হলে তার ওজন ÷ তখনকার মাছের আকার দিয়ে গোনা হয়। এটি আনুমানিক — না লেখা ক্ষতি এতে নেই।"
+
+msgid "%(n)s moved out"
+msgstr "%(n)sটি সরানো হয়েছে"
+
+msgid "fish moved in %(c)s"
+msgstr "আনা মাছ %(c)s"
+
+msgid "+ %(v)s of fish moved to other ponds"
+msgstr "+ অন্য পুকুরে সরানো %(v)s-এর মাছ"
+
+msgid "%(n)s moved in"
+msgstr "%(n)sটি আনা হয়েছে"
+
+msgid "%(n)s fish taken out"
+msgstr "%(n)sটি মাছ ধরা হয়েছে"
+
+msgid "%(n)s left"
+msgstr "%(n)sটি বাকি"
+
+msgid "Fish moved between ponds"
+msgstr "পুকুর বদল করা মাছ"
+
+msgid "Nursery fish moved to a grow-out pond, or a crowded pond thinned out. The fish's value goes with them: off one pond's cost, onto the other's. No money moves."
+msgstr "নার্সারির মাছ বড় পুকুরে সরানো, বা ঘন পুকুর পাতলা করা। মাছের দামও সঙ্গে যায়: এক পুকুরের খরচ থেকে কমে অন্যটিতে যোগ হয়। কোনো টাকা লেনদেন হয় না।"
+
+msgid "From a nursery to a bigger pond, or to thin out a crowded one."
+msgstr "নার্সারি থেকে বড় পুকুরে, বা ঘন পুকুর পাতলা করতে।"
+
+msgid "Move fish"
+msgstr "মাছ সরান"
+
+msgid "came from %(pond)s"
+msgstr "%(pond)s থেকে এসেছে"
+
+msgid "moved to %(pond)s"
+msgstr "%(pond)s-এ সরানো"
+
+msgid "No fish moved in or out of this pond."
+msgstr "এই পুকুরে কোনো মাছ আনা বা সরানো হয়নি।"
+
+msgid "Move fish to another pond"
+msgstr "অন্য পুকুরে মাছ সরান"
+
+msgid "%(n)s fish moved to %(pond)s."
+msgstr "%(n)sটি মাছ %(pond)s-এ সরানো হয়েছে।"
+
+msgid "Farm papers"
+msgstr "খামারের কাগজপত্র"
+
+msgid "Farm paper"
+msgstr "খামারের কাগজ"
+
+msgid "%(h)s kg harvested · %(sold)s kg sold"
+msgstr "%(h)s কেজি ধরা হয়েছে · %(sold)s কেজি বিক্রি"
+
+msgid "%(kg)s kg harvested but not sold. Eaten at home, given away, or a sale not written down yet? Tap “Sell” on the harvest to record it."
+msgstr "%(kg)s কেজি ধরা হয়েছে কিন্তু বিক্রি হয়নি। বাড়িতে খাওয়া, কাউকে দেওয়া, নাকি বিক্রি এখনো লেখা হয়নি? লিখতে আহরণের পাশে “বিক্রি” চাপুন।"

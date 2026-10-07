@@ -235,6 +235,44 @@ class Harvest(BusinessBaseModel):
         super().save(*args, **kwargs)
 
 
+class FishMove(BusinessBaseModel):
+    """Fish netted out of one pond and released into another: nursery fry
+    moved to a grow-out pond, or a crowded pond thinned out.
+
+    No money changes hands. The fish leave one cycle and join the other, and
+    so does their value (what they've cost to raise so far): it is taken off
+    the first cycle's cost and added to the second's, so each pond's profit
+    stays honest. `cycle` is where they came from.
+    """
+
+    cycle = models.ForeignKey(CultureCycle, on_delete=models.CASCADE, related_name="moves_out", verbose_name=_("From"))
+    to_cycle = models.ForeignKey(CultureCycle, on_delete=models.CASCADE, related_name="moves_in", verbose_name=_("To"))
+    date = models.DateField(_("Date"))
+    species = models.ForeignKey("business_species.Species", on_delete=models.PROTECT, related_name="+", verbose_name=_("Fish"))
+    count = models.PositiveIntegerField(_("Number of fish"), validators=[MinValueValidator(1)])
+    weight = models.DecimalField(_("Total weight"), max_digits=12, decimal_places=3, null=True, blank=True, validators=[MinValueValidator(0)])
+    weight_unit = models.ForeignKey(Unit, on_delete=models.PROTECT, null=True, blank=True, related_name="+", verbose_name=_("Weight unit"))
+    weight_kg = models.DecimalField(max_digits=14, decimal_places=3, null=True, blank=True, editable=False)
+    value = models.DecimalField(_("Their value"), default=0, validators=[MinValueValidator(0)], **MONEY)
+
+    class Meta:
+        ordering = ["-date", "-id"]
+        indexes = [models.Index(fields=["cycle", "is_deleted", "date"]), models.Index(fields=["to_cycle", "is_deleted", "date"])]
+
+    def __str__(self):
+        return f"{self.species} · {self.count} · {self.date:%d %b %Y}"
+
+    def save(self, *args, **kwargs):
+        self.weight_kg = self.weight * self.weight_unit.factor if (self.weight and self.weight_unit) else None
+        super().save(*args, **kwargs)
+
+    @property
+    def avg_g(self):
+        if self.weight_kg and self.count:
+            return (self.weight_kg * 1000 / self.count).quantize(Decimal("0.1"))
+        return None
+
+
 # ── Water quality ───────────────────────────────────────────────────────────
 
 class TimeOfDay(models.TextChoices):
