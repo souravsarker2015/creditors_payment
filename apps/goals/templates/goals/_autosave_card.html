@@ -9,8 +9,10 @@
   {% if s %}
   <div class="card-body !pt-3" x-show="!editing">
     <p class="autosave-amount">{{ s.amount|money }} <span>{{ s.get_frequency_display|lower }}</span></p>
-    {% if s.is_active %}
-      <p class="help">{% blocktranslate with date=s.next_effective_date|date:"l, j M Y" %}Next deposit: {{ date }}{% endblocktranslate %}</p>
+    {% if s.has_ended %}
+      <p class="help">{% blocktranslate with date=s.end_date|date:"j M Y" %}Ended on {{ date }}. Change the end date to carry on.{% endblocktranslate %}</p>
+    {% elif s.is_active %}
+      <p class="help">{% blocktranslate with date=s.next_effective_date|date:"l, j M Y" %}Next deposit: {{ date }}{% endblocktranslate %}{% if s.end_date %} · {% blocktranslate with date=s.end_date|date:"j M Y" %}until {{ date }}{% endblocktranslate %}{% endif %}</p>
       {% if p.needed_per_month %}
         {% if s.per_month >= p.needed_per_month %}
           <p class="autosave-note" data-tone="good">{% include "partials/icon.html" with name="check" %}{% blocktranslate with plan=p.needed_per_month|money %}Covers your monthly plan of {{ plan }}.{% endblocktranslate %}</p>
@@ -50,6 +52,10 @@
     {% with field=autosave_form.amount %}{% include "partials/field.html" %}{% endwith %}
     <div class="form-grid form-grid-2">
       {% with field=autosave_form.frequency %}{% include "partials/field.html" %}{% endwith %}
+      {% with field=autosave_form.start_date %}{% include "partials/field.html" %}{% endwith %}
+    </div>
+    <div class="form-grid form-grid-2">
+      {% with field=autosave_form.end_date %}{% include "partials/field.html" %}{% endwith %}
       {% with field=autosave_form.next_run_date %}{% include "partials/field.html" %}{% endwith %}
     </div>
     {% with field=autosave_form.skip_weekend %}{% include "partials/field.html" %}{% endwith %}

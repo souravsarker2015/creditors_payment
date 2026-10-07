@@ -7,7 +7,7 @@ import django.utils.timezone
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.contrib import messages
-from django.db.models import Sum, Q, DecimalField, Value
+from django.db.models import F, Sum, Q, DecimalField, Value
 from django.db.models.functions import Coalesce, TruncMonth
 from django.core.paginator import Paginator
 from django.utils import dateformat
@@ -266,7 +266,7 @@ def dashboard_view(request):
         "today": today,
         "upcoming": RecurringIncome.objects.filter(
             source__user=request.user, is_active=True, next_run_date__lte=today + timedelta(days=30)
-        ).select_related("source").order_by("next_run_date")[:5],
+        ).filter(Q(end_date__isnull=True) | Q(end_date__gte=F("next_run_date"))).select_related("source").order_by("next_run_date")[:5],
         "is_filtered": bool(filters["selected_source_ids"] or filters["selected_year"] or filters["date_from"] or filters["date_to"]),
         "source_labels": source_labels,
         "source_data": source_data,

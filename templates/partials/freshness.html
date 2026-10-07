@@ -1,0 +1,35 @@
+{% comment %}
+Stale-copy check (apps/core/freshness.py): this page was built from data
+version {{ request.data_version }}. If the "ftv" cookie says something has
+changed since, this is an old copy (back button, prefetch, cache): reload it
+once. Coming back to a tab whose data changed elsewhere does the same, unless
+a form on it has unsaved typing.
+{% endcomment %}<script>
+(function () {
+  var page = "{{ request.data_version|escapejs }}";
+  function now() { var m = document.cookie.match(/(?:^|; )ftv=([^;]*)/); return m ? decodeURIComponent(m[1]) : ""; }
+  function stale() { return now() !== page; }
+  function reload() {
+    var key = "ft-fresh:" + now() + ":" + location.pathname + location.search;
+    try { if (sessionStorage.getItem(key)) return; sessionStorage.setItem(key, "1"); } catch (e) {}
+    location.reload();
+  }
+  // Changes this page makes itself in the background (quick-add, toggles…) don't make it stale.
+  function adopt() { page = now(); }
+  var fetch0 = window.fetch;
+  if (fetch0) window.fetch = function (input, init) {
+    var method = ((init && init.method) || (input && input.method) || "GET").toUpperCase();
+    var p = fetch0.apply(this, arguments);
+    return method === "GET" || method === "HEAD" ? p : p.then(function (r) { adopt(); return r; });
+  };
+  document.addEventListener("htmx:afterRequest", function (e) {
+    var verb = (e.detail && e.detail.requestConfig && e.detail.requestConfig.verb || "get").toLowerCase();
+    if (verb !== "get") adopt();
+  });
+  window.addEventListener("pageshow", function () { if (stale()) reload(); });
+  document.addEventListener("prerenderingchange", function () { if (stale()) reload(); });
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "visible" && stale() && !(window.FT && FT.hasUnsavedChanges && FT.hasUnsavedChanges())) reload();
+  });
+})();
+</script>

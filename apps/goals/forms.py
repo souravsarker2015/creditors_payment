@@ -1,4 +1,6 @@
 from django import forms
+
+from apps.core.schedule_forms import ScheduleDatesMixin
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -59,10 +61,10 @@ class EntryForm(forms.ModelForm):
         return data
 
 
-class AutoSaveForm(forms.ModelForm):
+class AutoSaveForm(ScheduleDatesMixin, forms.ModelForm):
     class Meta:
         model = AutoSave
-        fields = ["amount", "frequency", "next_run_date", "skip_weekend"]
+        fields = ["amount", "frequency", "start_date", "end_date", "next_run_date", "skip_weekend"]
         labels = {"next_run_date": _("First deposit on")}
         widgets = {
             "amount": forms.NumberInput(attrs={"class": "form-input", "placeholder": "0", "min": "1", "step": "1"}),
@@ -86,9 +88,15 @@ class AutoSaveForm(forms.ModelForm):
             from .services import month_start
             self.initial.setdefault("amount", plan)
             self.initial.setdefault("next_run_date", month_start(timezone.localdate(), 1))
+        self.setup_schedule_dates()
+        self.fields["start_date"].label = _("First deposit on")
+        if self.instance.pk:
+            self.fields["next_run_date"].label = _("Next deposit on")
 
-    def clean_next_run_date(self):
-        d = self.cleaned_data["next_run_date"]
-        if d < timezone.localdate():
-            raise forms.ValidationError(_("Pick today or a later date. Past deposits can be added by hand."))
-        return d
+    def clean(self):
+        data = self.clean_schedule_dates(super().clean())
+        # Auto-save only puts money in from now on; past deposits are added by hand.
+        field = "next_run_date" if self.instance.pk else "start_date"
+        if data.get(field) and data[field] < timezone.localdate() and field not in self.errors:
+            self.add_error(field, _("Pick today or a later date. Past deposits can be added by hand."))
+        return data

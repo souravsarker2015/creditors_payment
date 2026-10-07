@@ -88,6 +88,8 @@ class AutoSave(models.Model):
     amount = models.DecimalField(_("Amount each time"), max_digits=12, decimal_places=2, validators=[MinValueValidator(1)])
     frequency = models.CharField(_("How often"), max_length=10, choices=RecurringFrequency.choices, default=RecurringFrequency.MONTHLY)
     next_run_date = models.DateField(_("Next deposit on"))
+    start_date = models.DateField(_("Starts on"), null=True, blank=True)
+    end_date = models.DateField(_("Ends on"), null=True, blank=True, help_text=_("Leave empty if it goes on. Nothing is created after this date."))
     skip_weekend = models.BooleanField(
         _("Move to the previous working day if it falls on a Friday or Saturday"), default=False,
     )
@@ -98,15 +100,28 @@ class AutoSave(models.Model):
     def __str__(self):
         return f"{self.goal} · {self.get_frequency_display()} · ৳{self.amount}"
 
+    @property
+    def has_ended(self):
+        """Past its end date: nothing more will be created."""
+        return bool(self.end_date and self.next_run_date and self.next_run_date > self.end_date)
+
     def advance(self, d):
+        import calendar
+
         from .services import add_months
+
+        def months(step):
+            st = self.start_date   # stay on the start date's day after short months
+            if st and st.day > 28 and d.day == min(st.day, calendar.monthrange(d.year, d.month)[1]):
+                return add_months(st, (d.year - st.year) * 12 + d.month - st.month + step)
+            return add_months(d, step)
 
         return {
             RecurringFrequency.WEEKLY: lambda: d + timedelta(days=7),
             RecurringFrequency.BIWEEKLY: lambda: d + timedelta(days=14),
-            RecurringFrequency.MONTHLY: lambda: add_months(d, 1),
-            RecurringFrequency.QUARTERLY: lambda: add_months(d, 3),
-        }.get(self.frequency, lambda: add_months(d, 12))()
+            RecurringFrequency.MONTHLY: lambda: months(1),
+            RecurringFrequency.QUARTERLY: lambda: months(3),
+        }.get(self.frequency, lambda: months(12))()
 
     def effective_date(self, d):
         while self.skip_weekend and d.weekday() in WEEKEND_WEEKDAYS:

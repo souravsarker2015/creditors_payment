@@ -186,6 +186,8 @@ def run_autosave(schedule, today=None):
     created = 0
     remaining = goal.target_amount - saved_amount(goal)
     while schedule.is_active and goal.is_active and created < RECURRING_CATCHUP_LIMIT:
+        if schedule.end_date and schedule.next_run_date > schedule.end_date:
+            break  # the schedule has ended
         when = schedule.effective_date(schedule.next_run_date)
         if when > today:
             break

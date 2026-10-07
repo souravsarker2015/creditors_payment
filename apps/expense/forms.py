@@ -3,6 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from apps.core.status import active_or_current
 from .models import RecurringFrequency, ExpenseCategory, Expense, RecurringExpense
 from apps.core.receipts import ReceiptInput, attach_viewer
+from apps.core.schedule_forms import ScheduleDatesMixin
 from apps.wallets.forms import WalletFieldMixin
 
 
@@ -38,10 +39,10 @@ class ExpenseForm(WalletFieldMixin, forms.ModelForm):
         self.fields["category"].help_text = _("Missing one? Use + to add a category without leaving this form.")
 
 
-class RecurringExpenseForm(WalletFieldMixin, forms.ModelForm):
+class RecurringExpenseForm(ScheduleDatesMixin, WalletFieldMixin, forms.ModelForm):
     class Meta:
         model = RecurringExpense
-        fields = ["category", "amount", "wallet", "frequency", "next_run_date", "skip_weekend", "note"]
+        fields = ["category", "amount", "wallet", "frequency", "start_date", "end_date", "next_run_date", "skip_weekend", "note"]
         labels = {
             "next_run_date": _("Next Occurrence"),
             "skip_weekend": _("Move to the previous working day if this date falls on a Friday or Saturday"),
@@ -61,6 +62,7 @@ class RecurringExpenseForm(WalletFieldMixin, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
+        self.setup_schedule_dates()
         self.fields["frequency"].choices = [("", _("Choose how often…"))] + list(RecurringFrequency.choices)
         if user:
             self.fields["category"].queryset = active_or_current(
@@ -70,3 +72,7 @@ class RecurringExpenseForm(WalletFieldMixin, forms.ModelForm):
         self.fields["category"].quick_add = "expense_category"
         self.fields["category"].help_text = _("Missing one? Use + to add a category without leaving this form.")
         self.fields["category"].required = False
+
+    def clean(self):
+        return self.clean_schedule_dates(super().clean())
+

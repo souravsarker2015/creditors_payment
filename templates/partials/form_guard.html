@@ -15,6 +15,11 @@
     dirty.add(form);
   }, true);
   document.addEventListener("submit", function (e) { dirty.delete(e.target); }, true);
+  window.FT = window.FT || {};
+  FT.hasUnsavedChanges = function () {
+    for (var form of dirty) { if (document.body.contains(form)) return true; }
+    return false;
+  };
   window.addEventListener("beforeunload", function (e) {
     for (var form of dirty) {
       if (document.body.contains(form)) { e.preventDefault(); e.returnValue = ""; return ""; }

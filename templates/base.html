@@ -3,6 +3,7 @@
 <html lang="{{ LANGUAGE_CODE }}" class="h-full" data-theme="{{ user_theme_mode }}" data-accent="{{ user_accent }}" data-bg="{{ user_background }}" data-view-pref="{{ user_view_mode }}" data-view="web"{% if LANGUAGE_CODE == "bn" %} data-lang="bn"{% endif %}>
 <head>
     <meta charset="UTF-8">
+    {% include "partials/freshness.html" %}
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#16241f">
     <script>
@@ -189,7 +190,7 @@
     <div id="toast-root" class="toast-root" aria-live="polite" aria-atomic="true"></div>
     <script>
     /* Shared UI helpers — pages call these instead of repeating setup code. */
-    window.FT = {
+    window.FT = Object.assign(window.FT || {}, {
         datePicker: function (el) {
             var fp = flatpickr(el, {
                 dateFormat: "Y-m-d", altInput: true, altFormat: "j M Y", allowInput: false,
@@ -233,7 +234,7 @@
             if (!el) return;
             new TomSelect(el, { plugins: ["remove_button"], placeholder: placeholder, closeAfterSelect: false, hideSelected: true });
         },
-    };
+    });
 
     document.addEventListener("DOMContentLoaded", function () {
         document.querySelectorAll(".datepicker").forEach(FT.datePicker);

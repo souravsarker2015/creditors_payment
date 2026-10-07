@@ -11630,3 +11630,27 @@ msgstr "অন্য ছবি দিন"
 
 msgid "Take or choose a photo"
 msgstr "ছবি তুলুন বা বাছুন"
+
+msgid "No end date"
+msgstr "শেষ তারিখ নেই"
+
+msgid "Ends on (optional)"
+msgstr "শেষ হবে (ঐচ্ছিক)"
+
+msgid "Leave empty if it goes on. Nothing is created after this date."
+msgstr "চলতে থাকলে খালি রাখুন। এই তারিখের পরে আর কিছু তৈরি হবে না।"
+
+msgid "The next one is created on this date. You rarely need to change it."
+msgstr "পরেরটি এই তারিখে তৈরি হবে। সাধারণত বদলানোর দরকার হয় না।"
+
+msgid "The end date is before the start date."
+msgstr "শেষের তারিখ শুরুর তারিখের আগে পড়েছে।"
+
+msgid "Ended on %(date)s. Change the end date to carry on."
+msgstr "%(date)s তারিখে শেষ হয়েছে। চালু রাখতে শেষের তারিখ বদলান।"
+
+msgid "Ended"
+msgstr "শেষ হয়েছে"
+
+msgid "no end date"
+msgstr "শেষ তারিখ নেই"

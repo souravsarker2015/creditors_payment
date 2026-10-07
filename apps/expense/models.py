@@ -120,6 +120,8 @@ class RecurringExpense(models.Model):
                                verbose_name=_("Wallet"))
     frequency = models.CharField(max_length=10, choices=RecurringFrequency.choices, verbose_name=_("How often"))
     next_run_date = models.DateField(verbose_name=_("Next date"))
+    start_date = models.DateField(_("Starts on"), null=True, blank=True)
+    end_date = models.DateField(_("Ends on"), null=True, blank=True, help_text=_("Leave empty if it goes on. Nothing is created after this date."))
     skip_weekend = models.BooleanField(default=False, verbose_name=_("Skip weekends"))
     note = models.TextField(blank=True, default="", verbose_name=_("Note"))
     is_active = models.BooleanField(default=True, verbose_name=_("Active"))
@@ -133,16 +135,29 @@ class RecurringExpense(models.Model):
         label = self.category.name if self.category else _("General")
         return f"{label} · {self.get_frequency_display()} · ৳{self.amount}"
 
+    @property
+    def has_ended(self):
+        """Past its end date: nothing more will be created."""
+        return bool(self.end_date and self.next_run_date and self.next_run_date > self.end_date)
+
+    def _anchored_months(self, from_date, step):
+        """Month-based steps stay on the start date's day: from the 31st, Jan 31 → Feb 28 → Mar 31 (not Mar 28)."""
+        s = self.start_date
+        if s and s.day > 28 and from_date.day == min(s.day, calendar.monthrange(from_date.year, from_date.month)[1]):
+            months = (from_date.year - s.year) * 12 + from_date.month - s.month
+            return _add_months(s, months + step)
+        return _add_months(from_date, step)
+
     def _advance(self, from_date):
         if self.frequency == RecurringFrequency.WEEKLY:
             return from_date + timedelta(days=7)
         if self.frequency == RecurringFrequency.BIWEEKLY:
             return from_date + timedelta(days=14)
         if self.frequency == RecurringFrequency.MONTHLY:
-            return _add_months(from_date, 1)
+            return self._anchored_months(from_date, 1)
         if self.frequency == RecurringFrequency.QUARTERLY:
-            return _add_months(from_date, 3)
-        return _add_months(from_date, 12)  # YEARLY
+            return self._anchored_months(from_date, 3)
+        return self._anchored_months(from_date, 12)  # YEARLY
 
     def _effective_date(self, scheduled_date):
         """The actual date a charge lands on. The schedule stays anchored to `scheduled_date`
@@ -164,6 +179,8 @@ class RecurringExpense(models.Model):
 
         created = 0
         while self.is_active and created < RECURRING_CATCHUP_LIMIT:
+            if self.end_date and self.next_run_date > self.end_date:
+                break  # the schedule has ended
             effective_date = self._effective_date(self.next_run_date)
             if effective_date > today:
                 break
