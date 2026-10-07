@@ -76,7 +76,7 @@ STAGES = [
                    "feed_plan", "", ("feeding",), "banknotes",
                    _("Fish weight × a rate for their size, cut back in cold water or low oxygen.")),
               Step("water", _("Test the water"), _("Oxygen, pH, ammonia… against your own alert levels."),
-                   "", "enter_data", ("alerts",), "beaker",
+                   "water_check", "enter_data", ("alerts",), "beaker",
                    _("A reading outside your levels warns you on the cycle page and the home page.")),
               Step("care", _("Lime, medicine & care"), _("What went into each pond, how much, and why — with a dose calculator."),
                    "", "enter_data", ("cost", "alerts", "calendar"), "dropper",
@@ -151,6 +151,8 @@ STAGES = [
                    "calendar", "", (), "calendar"),
               Step("cost", _("Costs add up"), _("Fingerlings, feed eaten and pond costs together."),
                    "dashboard", "view_reports", (), "scale"),
+              Step("worth", _("What the farm is worth"), _("Cash, fish, feed and machines, less baki, loans and wages owed."),
+                   "worth", "view_finance", (), "bank"),
           ]),
 ]
 

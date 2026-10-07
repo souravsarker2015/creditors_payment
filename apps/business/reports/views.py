@@ -10,6 +10,7 @@ from django.urls import reverse
 from django.utils.formats import date_format
 from django.utils.translation import gettext as _, gettext_lazy as _lazy
 
+from apps.business.core.periods import fy_start, last_fy
 from apps.business.core.decorators import business_access_required
 
 from . import services
@@ -34,6 +35,8 @@ def period_choices(today):
         ("last", _("Last month"), last_end.replace(day=1), last_end),
         ("3m", _("Last 3 months"), services.add_months(first, -2), today),
         ("year", _("This year"), today.replace(month=1, day=1), today),
+        ("fy", _("This financial year"), fy_start(today), today),
+        ("lastfy", _("Last financial year"), *last_fy(today)),
         ("all", _("All time"), date(2000, 1, 1), today),
     ]
 
@@ -85,6 +88,7 @@ REPORTS = [
     ("species", _lazy("Sales by fish"), _lazy("Which fish brings in the most money."), "cart"),
     ("market", _lazy("Sales by market"), _lazy("Which aarot or buyer you sell most through."), "cart"),
     ("feed", _lazy("Feed use"), _lazy("Bought against eaten, and what it cost."), "truck"),
+    ("fingerlings", _lazy("Fingerling sellers"), _lazy("Which hatchery's fish survived and grew best, and at what price."), "fish"),
     ("dues", _lazy("Baki & ageing"), _lazy("Who owes you, whom you owe, and for how long."), "book"),
     ("money", _lazy("Income & expenses"), _lazy("Everything in and out, by category."), "scale"),
 ]
@@ -96,6 +100,28 @@ def report_index_view(request):
     return render(request, "business/reports/index.html", {
         "reports": [{"key": k, "title": t, "text": x, "icon": i, "url": reverse("business:report", args=[k])} for k, t, x, i in REPORTS],
         "period": period, "periods": choices,
+    })
+
+
+# ── What the farm is worth ──────────────────────────────────────────────────
+
+@business_access_required(capability="view_finance")
+def worth_view(request):
+    from .worth import farm_worth
+
+    b = request.business
+    today = date.today()
+    w = farm_worth(b, today)
+    title = _("What the farm is worth")
+    period = Period("today", _("On %(date)s") % {"date": date_format(today, "j M Y")}, today, today)
+    if request.GET.get("export") == "csv":
+        rows = [[_("Owns"), l.label, _n(l.amount), l.detail] for l in w.owns] + [[_("Owes"), l.label, _n(l.amount), l.detail] for l in w.owes]
+        report = {"title": title, "columns": [_("Owns or owes"), _("What"), _("Amount"), _("Details")], "rows": rows,
+                  "total": [_("Worth"), "", _n(w.net)]}
+        return _csv(f"farm-worth-{today:%Y%m%d}.csv", report, b, period)
+    return render(request, "business/reports/worth.html", {
+        "w": w, "title": title, "period": period, "today": today, "export_url": "?export=csv",
+        "subtitle": _("Everything the farm owns, less everything it owes, today. Handy for partners and for a bank loan."),
     })
 
 
@@ -216,6 +242,18 @@ def _feed_report(business, period, request):
     }
 
 
+def _fingerling_report(business, period, request):
+    rows = services.fingerling_rows(business, period.start, period.end)
+    own = _("Own nursery / not bought")
+    return {
+        "title": _("Fingerling sellers"), "template": "business/reports/fingerlings.html", "objects": rows, "own": own,
+        "columns": [_("Seller"), _("Fish"), _("Fingerlings bought"), _("Cost"), _("Per 1,000"), _("Still alive %"), _("Growth g/day"), _("Cycles")],
+        "rows": [[str(r["supplier"] or own), r["species"], r["fish"], _n(r["cost"]), _n(r["per_1000"]), _n(r["survival"]), _n(r["growth"]), r["cycles"]]
+                 for r in rows],
+        "total": [_("Total"), "", sum(r["fish"] for r in rows), _n(sum((r["cost"] for r in rows), ZERO))],
+    }
+
+
 def _dues_report(business, period, request):
     rows = services.party_summary(business)
     receivable = sum((led.balance for led in rows if led.balance > 0), ZERO)
@@ -254,5 +292,5 @@ def _money_report(business, period, request):
 
 _BUILDERS = {
     "pond": _pond_report, "cycle": _cycle_report, "species": _species_report, "market": _market_report,
-    "feed": _feed_report, "dues": _dues_report, "money": _money_report,
+    "feed": _feed_report, "fingerlings": _fingerling_report, "dues": _dues_report, "money": _money_report,
 }

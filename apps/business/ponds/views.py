@@ -19,7 +19,7 @@ from apps.business.feed.forms import FeedUsageForm
 from apps.business.feed.models import FeedUsage
 
 from . import forecast, services
-from .forms import CycleForm, FishMoveForm, LeasePaymentForm, HarvestForm, MortalityForm, PondAlertsForm, PondForm, StockingForm, TreatmentForm, WaterTestForm, WeighingForm
+from .forms import BulkWaterForm, CycleForm, FishMoveForm, LeasePaymentForm, HarvestForm, MortalityForm, PondAlertsForm, PondForm, StockingForm, TreatmentForm, WaterTestForm, WeighingForm
 from .models import CultureCycle, FishMove, Harvest, LeasePayment, Mortality, Pond, PondAlerts, PondStatus, SampleWeighing, Stocking, Treatment, WaterTest
 
 def _with_cycles(objects, business):
@@ -326,3 +326,28 @@ def forecast_view(request):
         "worth": sum((f.value for f in selling if f.value), Decimal(0)),
         "kg": sum((f.kg_at_ready for f in selling if f.kg_at_ready), Decimal(0)),
     })
+
+
+@business_access_required(capability="enter_data")
+def water_check_view(request):
+    """Test the water of every pond in one go — the morning oxygen check."""
+    form = BulkWaterForm(request.POST or None, business=request.business)
+    if not form.cycles:
+        messages.info(request, _g("No pond has a running cycle. Start one from the pond's page first."))
+        return redirect("business:ponds")
+    if request.method == "POST" and form.is_valid():
+        limits = PondAlerts.for_business(request.business)
+        trouble = []
+        for cycle, values in form.cleaned_data["entries"]:
+            test = WaterTest.objects.create(business=request.business, cycle=cycle, date=form.cleaned_data["date"],
+                                            time_of_day=form.cleaned_data["time_of_day"] or "", **values)
+            found = test.problems(limits)
+            if found:
+                trouble.append(_g("%(pond)s: %(what)s") % {"pond": cycle.pond.name, "what": ", ".join(f.what for f in found)})
+        n = len(form.cleaned_data["entries"])
+        if trouble:
+            messages.warning(request, _g("Saved for %(n)s ponds. Needs attention — %(list)s") % {"n": n, "list": "; ".join(trouble)})
+        else:
+            messages.success(request, _g("Saved for %(n)s ponds. All readings are within your levels.") % {"n": n})
+        return redirect("business:home")
+    return render(request, "business/ponds/water_check.html", {"form": form, "limits": PondAlerts.for_business(request.business)})

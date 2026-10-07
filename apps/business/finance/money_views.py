@@ -14,6 +14,7 @@ from django.utils.formats import date_format
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
+from apps.business.core.periods import fy_end, fy_label, fy_start
 from apps.business.core.decorators import business_access_required
 from apps.business.core.templatetags.business import bdt
 
@@ -50,6 +51,7 @@ def _periods(today):
         ("last", _("Last month"), last_end.replace(day=1), last_end),
         ("3m", _("Last 3 months"), today - timedelta(days=90), today),
         ("year", _("This year"), today.replace(month=1, day=1), today),
+        ("fy", _("This financial year"), fy_start(today), today),
         ("all", _("All"), None, None),
     ]
 
@@ -217,6 +219,8 @@ def statement_view(request):
     period = request.GET.get("period", "month")
     if period == "year":
         start, end, label = date(month.year, 1, 1), min(date(month.year, 12, 31), today), str(month.year)
+    elif period == "fy":
+        start, end, label = fy_start(month), min(fy_end(month), today), fy_label(month)
     else:
         period = "month"
         start, end = month, min(_month_end(month), today)
@@ -224,8 +228,8 @@ def statement_view(request):
     s = services.statement(b, start, end, scope=scope)
     return render(request, "business/finance/statement.html", {
         "s": s, "scope": scope, "scopes": Scope.choices, "period": period, "label": label, "month": month,
-        "prev": _add_months(month, -1) if period == "month" else date(month.year - 1, 1, 1),
-        "next": _add_months(month, 1) if period == "month" else date(month.year + 1, 1, 1),
+        "prev": _add_months(month, -1) if period == "month" else _add_months(start, -12),
+        "next": _add_months(month, 1) if period == "month" else _add_months(start, 12),
         "can_go_next": (end < today),
         "max_expense": max((l.amount for l in s.expense), default=ZERO),
         "max_income": max((l.amount for l in s.income), default=ZERO), "today": today,

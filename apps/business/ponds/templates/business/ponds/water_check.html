@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% translate "Water check" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-narrow">
+  <header class="page-header">
+    <div>
+      <a href="{% url 'business:home' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Today on the farm" %}</a>
+      <h1 class="page-title">{% translate "Water check" %}</h1>
+      <p class="page-subtitle">{% translate "Test every pond in one go. Fill in what you measured and leave the rest empty. Oxygen is lowest just before sunrise, so that's the best time." %}</p>
+    </div>
+  </header>
+  <form method="post" class="stack" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+    <section class="card">
+      <div class="card-body form-grid form-grid-2">
+        {% with field=form.date %}{% include "business/partials/field.html" %}{% endwith %}
+        {% with field=form.time_of_day %}{% include "business/partials/field.html" %}{% endwith %}
+      </div>
+    </section>
+    {% for cycle, fields in form.pond_rows %}
+    <section class="card">
+      <div class="card-header">
+        <div><h2 class="card-title">{{ cycle.pond }}</h2><p class="card-subtitle">{{ cycle.label }}</p></div>
+      </div>
+      <div class="card-body water-grid">
+        {% for field in fields %}
+        <div class="field{% if field.errors %} has-error{% endif %}">
+          <label class="label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    {% endfor %}
+    <p class="help">{% blocktranslate with o=limits.oxygen_min|num lo=limits.ph_min|num hi=limits.ph_max|num a=limits.ammonia_max|num %}Your warning levels: oxygen below {{ o }} mg/L, pH outside {{ lo }}–{{ hi }}, ammonia above {{ a }} mg/L.{% endblocktranslate %}{% if biz_can.manage_settings %} <a href="{% url 'business:pond_alerts' %}" class="font-semibold underline">{% translate "Change them" %}</a>{% endif %}</p>
+    <div class="form-actions">
+      <a href="{% url 'business:home' %}" class="btn btn-ghost btn-lg">{% translate "Cancel" %}</a>
+      <button type="submit" class="btn btn-primary btn-lg">{% include "partials/icon.html" with name="check" %}{% translate "Save water check" %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -217,6 +217,51 @@ def pond_rows(business, start=None, end=None):
     return rows
 
 
+def fingerling_rows(business, start, end):
+    """Each hatchery or seller of fingerlings released in the period: how many,
+    what they cost, and how they did — the share still alive (deaths recorded)
+    and how fast they grew. When one pond got fish of the same kind from two
+    sellers, both share that pond's result."""
+    from apps.business.ponds.models import Stocking
+    from apps.business.ponds.services import count_fish
+
+    stockings = list(Stocking.objects.filter(business=business, cycle__is_deleted=False, date__gte=start, date__lte=end)
+                     .select_related("supplier", "species", "cycle"))
+    counts = {}
+    rows = {}
+    for st in stockings:
+        if st.cycle_id not in counts:
+            counts[st.cycle_id] = count_fish(st.cycle)
+        fish = counts[st.cycle_id].get(st.species_id)
+        key = st.supplier_id or 0
+        r = rows.setdefault(key, {"supplier": st.supplier, "fish": 0, "cost": ZERO, "priced": 0, "cycles": set(), "species": set(),
+                                  "alive_w": ZERO, "alive_n": 0, "growth_w": ZERO, "growth_n": 0})
+        n = st.count or 0
+        r["fish"] += n
+        r["cycles"].add(st.cycle_id)
+        r["species"].add(str(st.species))
+        if st.cost and n:
+            r["cost"] += st.cost
+            r["priced"] += n
+        if fish and fish.survival is not None and n:
+            r["alive_w"] += Decimal(fish.survival) * n
+            r["alive_n"] += n
+        if fish and fish.avg_g and fish.weighed_on and st.avg_g and fish.weighed_on > st.date and n:
+            r["growth_w"] += (fish.avg_g - st.avg_g) / (fish.weighed_on - st.date).days * n
+            r["growth_n"] += n
+    out = []
+    for r in rows.values():
+        out.append({
+            "supplier": r["supplier"], "fish": r["fish"], "cost": r["cost"], "cycles": len(r["cycles"]),
+            "species": ", ".join(sorted(r["species"])),
+            "per_1000": (r["cost"] * 1000 / r["priced"]).quantize(Decimal("1")) if r["priced"] else None,
+            "survival": round(r["alive_w"] / r["alive_n"]) if r["alive_n"] else None,
+            "growth": (r["growth_w"] / r["growth_n"]).quantize(Decimal("0.1")) if r["growth_n"] else None,
+        })
+    out.sort(key=lambda r: (r["survival"] is None, -(r["survival"] or 0), -r["fish"]))
+    return out
+
+
 def feed_report(business, start, end):
     """Feed bought and eaten, by feed, with what it cost."""
     from apps.business.feed.models import FeedPurchaseLine, FeedUsage

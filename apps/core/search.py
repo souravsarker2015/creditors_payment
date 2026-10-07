@@ -87,6 +87,7 @@ PAGES = [
     (gettext_noop("Accounts"), "business:accounts", "business", "view_finance"),
     (gettext_noop("Income & expenses"), "business:statement", "business", "view_reports"),
     (gettext_noop("All reports"), "business:reports", "business", "view_reports"),
+    (gettext_noop("What the farm is worth"), "business:worth", "business", "view_finance"),
 ]
 
 

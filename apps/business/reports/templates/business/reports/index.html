@@ -12,6 +12,13 @@
   </header>
 
   <div class="tile-grid">
+    {% if biz_can.view_finance %}
+    <a href="{% url 'business:worth' %}" class="tile">
+      <span class="tile-icon">{% include "business/partials/icon.html" with name="bank" %}</span>
+      <span class="tile-body"><strong class="tile-title">{% translate "What the farm is worth" %}</strong><span class="tile-text">{% translate "What it owns, less what it owes, today." %}</span></span>
+      {% include "partials/icon.html" with name="chevron-right" %}
+    </a>
+    {% endif %}
     {% for r in reports %}
     <a href="{{ r.url }}?{{ period.query }}" class="tile">
       <span class="tile-icon">{% include "business/partials/icon.html" with name=r.icon %}</span>

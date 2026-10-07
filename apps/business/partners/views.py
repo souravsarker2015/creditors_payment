@@ -6,6 +6,7 @@ from django.utils.translation import gettext as _g, gettext_lazy as _
 from django.views.decorators.http import require_POST
 
 from apps.business.core.crud import Master
+from apps.business.core.periods import fy_start, last_fy
 from apps.business.core.decorators import business_access_required
 
 from . import services
@@ -86,6 +87,10 @@ def _period(request):
             pass
     if key == "last":
         return key, date(today.year - 1, 1, 1), date(today.year - 1, 12, 31)
+    if key == "fy":
+        return key, fy_start(today), today
+    if key == "lastfy":
+        return (key, *last_fy(today))
     if key == "all":
         first = Partner.objects.filter(business=request.business).order_by("joined_on").values_list("joined_on", flat=True).first()
         return key, min(first or today, date(today.year, 1, 1)), today

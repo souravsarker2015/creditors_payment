@@ -517,3 +517,51 @@ class LeasePaymentForm(BusinessForm):
         if d > date.today():
             raise forms.ValidationError(_("This date is in the future."))
         return d
+
+
+class BulkWaterForm(forms.Form):
+    """The morning water check: one date and time, a row of readings per pond."""
+
+    date = forms.DateField(label=_("Date"), widget=forms.DateInput(attrs={"class": "form-input datepicker", "autocomplete": "off"}, format="%Y-%m-%d"))
+    time_of_day = forms.ChoiceField(label=_("Time"), required=False, widget=forms.Select(attrs={"class": "form-input"}))
+    READINGS = (("oxygen", _("Oxygen"), "mg/L"), ("ph", _("pH"), ""), ("temperature", _("Temp"), "°C"),
+                ("ammonia", _("Ammonia"), "mg/L"), ("transparency", _("Clearness"), "cm"))
+
+    def __init__(self, *args, business, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.business = business
+        self.fields["time_of_day"].choices = [("", _("Not noted"))] + list(TimeOfDay.choices)
+        self.cycles = list(CultureCycle.objects.filter(business=business, status="running").select_related("pond")
+                           .order_by("pond__order", "pond__name"))
+        for c in self.cycles:
+            for key, label, unit in self.READINGS:
+                self.fields[f"c{c.pk}_{key}"] = forms.DecimalField(
+                    label=label, required=False, min_value=0, max_digits=6, decimal_places=2,
+                    widget=forms.NumberInput(attrs={"class": "form-input", "inputmode": "decimal", "step": "any", "placeholder": unit or "—"}))
+        if not self.is_bound:
+            self.initial.setdefault("date", date.today())
+            self.initial.setdefault("time_of_day", TimeOfDay.DAWN)
+
+    def pond_rows(self):
+        return [(c, [self[f"c{c.pk}_{key}"] for key, _l, _u in self.READINGS]) for c in self.cycles]
+
+    def clean(self):
+        data = super().clean()
+        d = data.get("date")
+        if d and d > date.today():
+            self.add_error("date", _("This date is in the future."))
+        entries = []
+        for c in self.cycles:
+            values = {key: data.get(f"c{c.pk}_{key}") for key, _l, _u in self.READINGS}
+            if values["ph"] is not None and values["ph"] > 14:
+                self.add_error(f"c{c.pk}_ph", _("pH goes from 0 to 14."))
+            if d and d < c.start_date:
+                if any(v is not None for v in values.values()):
+                    self.add_error(None, _("%(pond)s: this is before its cycle started.") % {"pond": c.pond.name})
+                continue
+            if any(v is not None for v in values.values()):
+                entries.append((c, values))
+        if not entries and not self.errors:
+            raise forms.ValidationError(_("Enter at least one reading for one pond."))
+        data["entries"] = entries
+        return data

@@ -29,9 +29,11 @@
   {% if biz_can.enter_data and has_ponds %}
   <nav class="quick-actions home-actions" aria-label="{% translate 'Record' %}">
     <a href="{% url 'business:feed_usage_bulk' %}" class="quick-action">{% include "business/partials/icon.html" with name="banknotes" %}<span>{% translate "Feeding" %}</span></a>
+    <a href="{% url 'business:water_check' %}" class="quick-action">{% include "business/partials/icon.html" with name="beaker" %}<span>{% translate "Water" %}</span></a>
     <a href="{% url 'business:sale_add' %}" class="quick-action is-primary">{% include "partials/icon.html" with name="cart" %}<span>{% translate "Sale" %}</span></a>
     <a href="{% url 'business:feed_purchases_add' %}" class="quick-action">{% include "business/partials/icon.html" with name="truck" %}<span>{% translate "Buy feed" %}</span></a>
     <a href="{% url 'business:transaction_add' %}" class="quick-action">{% include "partials/icon.html" with name="wallet" %}<span>{% translate "Cost" %}</span></a>
+    <a href="{% url 'business:calendar_add' %}" class="quick-action">{% include "partials/icon.html" with name="check" %}<span>{% translate "To-do" %}</span></a>
   </nav>
   {% endif %}
   {% if tasks %}

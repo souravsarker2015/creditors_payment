@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{{ title }} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-narrow stack">
+  {% include "business/reports/_head.html" %}
+  <article class="card memo stmt">
+    {% include "business/reports/_memo_head.html" %}
+    <div class="fin-cols">
+      <section>
+        <h3 class="fin-head" data-tone="good">{% translate "What the farm owns" %}<strong>{{ w.total_owns|bdt }}</strong></h3>
+        <ul class="fin-list">
+          {% for l in w.owns %}
+          <li class="fin-line">
+            <div class="fin-line-top"><span class="fin-name">{% if l.url %}<a href="{{ l.url }}" class="hover:underline">{{ l.label }}</a>{% else %}{{ l.label }}{% endif %}</span><span class="fin-amount">{{ l.amount|bdt }}</span></div>
+            {% if l.detail %}<p class="stmt-detail">{{ l.detail }}</p>{% endif %}
+          </li>
+          {% empty %}<li class="fin-empty">{% translate "Nothing recorded yet." %}</li>
+          {% endfor %}
+        </ul>
+      </section>
+      <section>
+        <h3 class="fin-head" data-tone="critical">{% translate "What the farm owes" %}<strong>{{ w.total_owes|bdt }}</strong></h3>
+        <ul class="fin-list">
+          {% for l in w.owes %}
+          <li class="fin-line">
+            <div class="fin-line-top"><span class="fin-name">{% if l.url %}<a href="{{ l.url }}" class="hover:underline">{{ l.label }}</a>{% else %}{{ l.label }}{% endif %}</span><span class="fin-amount">{{ l.amount|bdt }}</span></div>
+            {% if l.detail %}<p class="stmt-detail">{{ l.detail }}</p>{% endif %}
+          </li>
+          {% empty %}<li class="fin-empty">{% translate "The farm owes nothing." %}</li>
+          {% endfor %}
+        </ul>
+      </section>
+    </div>
+    <dl class="fin-total" data-tone="{% if w.net >= 0 %}good{% else %}critical{% endif %}">
+      <dt>{% if w.net >= 0 %}{% translate "The farm is worth" %}{% else %}{% translate "The farm owes more than it owns, by" %}{% endif %}</dt>
+      <dd>{{ w.net|absolute|bdt }}</dd>
+    </dl>
+    {% if w.fish_at_price is not None %}
+    <p class="memo-foot">{% blocktranslate with price=w.fish_at_price|bdt %}At recent sale prices, the fish in the ponds would bring about {{ price }}.{% endblocktranslate %}
+      {% if w.fish_gain > 0 %}{% blocktranslate with gain=w.fish_gain|bdt %}Sold today, the farm would be worth about {{ gain }} more.{% endblocktranslate %}{% endif %}</p>
+    {% endif %}
+    <p class="memo-foot">{% translate "Fish are counted at what they've cost to raise so far, less what they've already brought in. Feed, supplies and machines at the price paid. Land and ponds you own aren't included." %}</p>
+    <p class="memo-foot">{% blocktranslate with date=today|date:"j M Y" %}Printed {{ date }}{% endblocktranslate %}</p>
+  </article>
+</div>
+{% endblock %}

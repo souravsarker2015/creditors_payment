@@ -16,6 +16,8 @@
       <nav class="seg" aria-label="{% translate 'Period' %}">
         <a href="?period=year" class="seg-item {% if period == 'year' %}is-active{% endif %}">{% translate "This year" %}</a>
         <a href="?period=last" class="seg-item {% if period == 'last' %}is-active{% endif %}">{% translate "Last year" %}</a>
+        <a href="?period=fy" class="seg-item {% if period == 'fy' %}is-active{% endif %}">{% translate "This financial year" %}</a>
+        <a href="?period=lastfy" class="seg-item {% if period == 'lastfy' %}is-active{% endif %}">{% translate "Last financial year" %}</a>
         <a href="?period=all" class="seg-item {% if period == 'all' %}is-active{% endif %}">{% translate "All time" %}</a>
       </nav>
       <form method="get" class="share-dates">

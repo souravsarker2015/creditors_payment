@@ -24,6 +24,7 @@
     <span class="seg seg-scroll ml-auto">
       <a href="?scope={{ scope }}&period=month&month={{ month|date:'Y-m' }}" class="seg-item {% if period == 'month' %}is-active{% endif %}">{% translate "Month" %}</a>
       <a href="?scope={{ scope }}&period=year&month={{ month|date:'Y-m' }}" class="seg-item {% if period == 'year' %}is-active{% endif %}">{% translate "Year" %}</a>
+      <a href="?scope={{ scope }}&period=fy&month={{ month|date:'Y-m' }}" class="seg-item {% if period == 'fy' %}is-active{% endif %}" data-tip="{% translate 'July to June, for income tax' %}">{% translate "Financial year" %}</a>
     </span>
   </div>
 

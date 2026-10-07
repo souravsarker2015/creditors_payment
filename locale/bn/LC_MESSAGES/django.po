@@ -11971,3 +11971,235 @@ msgstr "%(h)s কেজি ধরা হয়েছে · %(sold)s কেজি
 
 msgid "%(kg)s kg harvested but not sold. Eaten at home, given away, or a sale not written down yet? Tap “Sell” on the harvest to record it."
 msgstr "%(kg)s কেজি ধরা হয়েছে কিন্তু বিক্রি হয়নি। বাড়িতে খাওয়া, কাউকে দেওয়া, নাকি বিক্রি এখনো লেখা হয়নি? লিখতে আহরণের পাশে “বিক্রি” চাপুন।"
+
+msgid "Cash, fish, feed and machines, less baki, loans and wages owed."
+msgstr "নগদ, মাছ, খাদ্য ও যন্ত্রপাতি, থেকে বাকি, ঋণ ও পাওনা মজুরি বাদ।"
+
+msgid "FY %(from)s–%(to)s"
+msgstr "অর্থবছর %(from)s–%(to)s"
+
+msgid "To-do"
+msgstr "করণীয়"
+
+msgid "July to June, for income tax"
+msgstr "জুলাই থেকে জুন, আয়করের জন্য"
+
+msgid "Financial year"
+msgstr "অর্থবছর"
+
+msgid "This financial year"
+msgstr "এই অর্থবছর"
+
+msgid "Last financial year"
+msgstr "গত অর্থবছর"
+
+msgid "Oxygen"
+msgstr "অক্সিজেন"
+
+msgid "Temp"
+msgstr "তাপমাত্রা"
+
+msgid "Ammonia"
+msgstr "অ্যামোনিয়া"
+
+msgid "Clearness"
+msgstr "স্বচ্ছতা"
+
+msgid "%(pond)s: this is before its cycle started."
+msgstr "%(pond)s: এটি সাইকেল শুরুর আগের তারিখ।"
+
+msgid "Enter at least one reading for one pond."
+msgstr "অন্তত একটি পুকুরের একটি মাপ লিখুন।"
+
+msgid "Testing every pond this morning?"
+msgstr "আজ সকালে সব পুকুর পরীক্ষা করছেন?"
+
+msgid "Water check"
+msgstr "পানি পরীক্ষা"
+
+msgid "Test every pond in one go. Fill in what you measured and leave the rest empty. Oxygen is lowest just before sunrise, so that's the best time."
+msgstr "সব পুকুর একবারে পরীক্ষা করুন। যা মেপেছেন তা লিখুন, বাকিটা খালি রাখুন। সূর্য ওঠার ঠিক আগে অক্সিজেন সবচেয়ে কম থাকে, তাই সেটাই সবচেয়ে ভালো সময়।"
+
+msgid "Your warning levels: oxygen below %(o)s mg/L, pH outside %(lo)s–%(hi)s, ammonia above %(a)s mg/L."
+msgstr "আপনার সতর্কতার মাত্রা: অক্সিজেন %(o)s mg/L-এর নিচে, pH %(lo)s–%(hi)s-এর বাইরে, অ্যামোনিয়া %(a)s mg/L-এর বেশি।"
+
+msgid "Change them"
+msgstr "বদলান"
+
+msgid "Save water check"
+msgstr "পানি পরীক্ষা সংরক্ষণ করুন"
+
+msgid "%(pond)s: %(what)s"
+msgstr "%(pond)s: %(what)s"
+
+msgid "Saved for %(n)s ponds. Needs attention — %(list)s"
+msgstr "%(n)sটি পুকুরের জন্য সংরক্ষিত। নজর দিন — %(list)s"
+
+msgid "Saved for %(n)s ponds. All readings are within your levels."
+msgstr "%(n)sটি পুকুরের জন্য সংরক্ষিত। সব মাপ আপনার মাত্রার মধ্যে আছে।"
+
+msgid "Still alive"
+msgstr "বেঁচে আছে"
+
+msgid "Growth"
+msgstr "বৃদ্ধি"
+
+msgid "%(counter)s cycle"
+msgid_plural "%(counter)s cycles"
+msgstr[0] "%(counter)sটি সাইকেল"
+msgstr[1] "%(counter)sটি সাইকেল"
+
+msgid "%(g)s g/day"
+msgstr "দিনে %(g)s গ্রাম"
+
+msgid "%(n)s fingerlings"
+msgstr "%(n)sটি পোনা"
+
+msgid "%(p)s per 1,000"
+msgstr "প্রতি ১,০০০টি %(p)s"
+
+msgid "still alive"
+msgstr "বেঁচে আছে"
+
+msgid "“Still alive” counts the deaths you've recorded, so it's only as good as those records. Growth is from release to the latest sample weighing."
+msgstr "“বেঁচে আছে” আপনার লেখা মৃত্যু থেকে হিসাব হয়, তাই লেখা যত ঠিক, এটাও তত ঠিক। বৃদ্ধি হিসাব হয় ছাড়ার দিন থেকে সর্বশেষ নমুনা ওজন পর্যন্ত।"
+
+msgid "No fingerlings released in this period."
+msgstr "এই সময়ে কোনো পোনা ছাড়া হয়নি।"
+
+msgid "What it owns, less what it owes, today."
+msgstr "আজ যা আছে, তা থেকে দেনা বাদ দিয়ে।"
+
+msgid "What the farm owns"
+msgstr "খামারের যা আছে"
+
+msgid "What the farm owes"
+msgstr "খামারের দেনা"
+
+msgid "The farm owes nothing."
+msgstr "খামারের কোনো দেনা নেই।"
+
+msgid "The farm is worth"
+msgstr "খামারের মোট মূল্য"
+
+msgid "The farm owes more than it owns, by"
+msgstr "খামারের দেনা সম্পদের চেয়ে বেশি, যত"
+
+msgid "At recent sale prices, the fish in the ponds would bring about %(price)s."
+msgstr "সাম্প্রতিক বিক্রির দামে পুকুরের মাছের দাম হবে প্রায় %(price)s।"
+
+msgid "Sold today, the farm would be worth about %(gain)s more."
+msgstr "আজ বিক্রি করলে খামারের মূল্য প্রায় %(gain)s বেশি হবে।"
+
+msgid "Fish are counted at what they've cost to raise so far, less what they've already brought in. Feed, supplies and machines at the price paid. Land and ponds you own aren't included."
+msgstr "মাছ ধরা হয়েছে এ পর্যন্ত বড় করার খরচে, যা আয় হয়েছে তা বাদ দিয়ে। খাদ্য, সরঞ্জাম ও যন্ত্রপাতি কেনা দামে। নিজের জমি ও পুকুর এতে নেই।"
+
+msgid "Fingerling sellers"
+msgstr "পোনা বিক্রেতা"
+
+msgid "Which hatchery's fish survived and grew best, and at what price."
+msgstr "কোন হ্যাচারির পোনা বেশি বেঁচেছে ও ভালো বেড়েছে, আর কত দামে।"
+
+msgid "On %(date)s"
+msgstr "%(date)s তারিখে"
+
+msgid "Owns"
+msgstr "সম্পদ"
+
+msgid "Owes"
+msgstr "দেনা"
+
+msgid "Owns or owes"
+msgstr "সম্পদ না দেনা"
+
+msgid "Worth"
+msgstr "মূল্য"
+
+msgid "Everything the farm owns, less everything it owes, today. Handy for partners and for a bank loan."
+msgstr "আজ খামারের সব সম্পদ থেকে সব দেনা বাদ দিয়ে। অংশীদার ও ব্যাংক ঋণের জন্য কাজে লাগে।"
+
+msgid "Own nursery / not bought"
+msgstr "নিজের নার্সারি / কেনা নয়"
+
+msgid "Seller"
+msgstr "বিক্রেতা"
+
+msgid "Fingerlings bought"
+msgstr "কেনা পোনা"
+
+msgid "Per 1,000"
+msgstr "প্রতি ১,০০০টি"
+
+msgid "Still alive %"
+msgstr "বেঁচে আছে %"
+
+msgid "Growth g/day"
+msgstr "বৃদ্ধি গ্রাম/দিন"
+
+msgid "Cash, bank and mobile money"
+msgstr "নগদ, ব্যাংক ও মোবাইল টাকা"
+
+msgid "%(n)s account"
+msgid_plural "%(n)s accounts"
+msgstr[0] "%(n)sটি হিসাব"
+msgstr[1] "%(n)sটি হিসাব"
+
+msgid "%(kg)s kg, at the price paid"
+msgstr "%(kg)s কেজি, কেনা দামে"
+
+msgid "Lime, medicine and supplies in store"
+msgstr "মজুদে চুন, ওষুধ ও সরঞ্জাম"
+
+msgid "at the price paid"
+msgstr "কেনা দামে"
+
+msgid "%(n)s machine or net, at the price paid"
+msgid_plural "%(n)s machines and nets, at the price paid"
+msgstr[0] "%(n)sটি যন্ত্র ও জাল, কেনা দামে"
+msgstr[1] "%(n)sটি যন্ত্র ও জাল, কেনা দামে"
+
+msgid "Baki: buyers owe you"
+msgstr "বাকি: ক্রেতাদের কাছে পাবেন"
+
+msgid "%(n)s person"
+msgid_plural "%(n)s people"
+msgstr[0] "%(n)s জন"
+msgstr[1] "%(n)s জন"
+
+msgid "Baki: you owe suppliers"
+msgstr "বাকি: সরবরাহকারীদের দেবেন"
+
+msgid "Wages owed to workers"
+msgstr "শ্রমিকদের পাওনা মজুরি"
+
+msgid "Advances with workers"
+msgstr "শ্রমিকদের অগ্রিম"
+
+msgid "taken off their later pay"
+msgstr "পরের বেতন থেকে কাটা হবে"
+
+msgid "Loans still to repay"
+msgstr "শোধ বাকি ঋণ"
+
+msgid "%(n)s loan"
+msgid_plural "%(n)s loans"
+msgstr[0] "%(n)sটি ঋণ"
+msgstr[1] "%(n)sটি ঋণ"
+
+msgid "Fish in the ponds"
+msgstr "পুকুরের মাছ"
+
+msgid "at what they've cost so far"
+msgstr "এ পর্যন্ত খরচে"
+
+msgid "Pond lease used but not paid"
+msgstr "ব্যবহৃত কিন্তু অপরিশোধিত পুকুর লিজ"
+
+msgid "What the farm is worth"
+msgstr "খামারের মোট মূল্য"
+
+msgid "Accounts below zero"
+msgstr "শূন্যের নিচে থাকা হিসাব"
+
+msgid "More money recorded going out than coming in. Check each account's starting balance."
+msgstr "আসার চেয়ে যাওয়ার টাকা বেশি লেখা আছে। প্রতিটি হিসাবের শুরুর টাকা দেখে নিন।"

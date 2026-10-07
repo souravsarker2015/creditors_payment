@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{{ title }} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-narrow stack">
+  {% include "business/reports/_head.html" %}
+  {% include "business/reports/_bar.html" %}
+  <article class="card memo stmt">
+    {% include "business/reports/_memo_head.html" %}
+    {% if r.objects %}
+    <table class="memo-table stmt-table">
+      <thead><tr><th>{% translate "Seller" %}</th><th class="num">{% translate "Fingerlings bought" %}</th><th class="num">{% translate "Per 1,000" %}</th><th class="num">{% translate "Still alive" %}</th><th class="num">{% translate "Growth" %}</th></tr></thead>
+      <tbody>
+        {% for o in r.objects %}
+        <tr>
+          <td><span class="stmt-title">{{ o.supplier|default:r.own }}</span><span class="stmt-detail">{{ o.species }} · {% blocktranslate count counter=o.cycles %}{{ counter }} cycle{% plural %}{{ counter }} cycles{% endblocktranslate %}</span></td>
+          <td class="num">{{ o.fish|num }}</td>
+          <td class="num">{% if o.per_1000 %}{{ o.per_1000|bdt }}{% else %}—{% endif %}</td>
+          <td class="num">{% if o.survival is not None %}{{ o.survival }}%{% else %}—{% endif %}</td>
+          <td class="num">{% if o.growth is not None %}{% blocktranslate with g=o.growth|num %}{{ g }} g/day{% endblocktranslate %}{% else %}—{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <ol class="stmt-list no-print">
+      {% for o in r.objects %}
+      <li class="stmt-item">
+        <div class="min-w-0"><p class="stmt-title">{{ o.supplier|default:r.own }}</p>
+          <p class="stmt-detail">{{ o.species }} · {% blocktranslate with n=o.fish|num %}{{ n }} fingerlings{% endblocktranslate %}{% if o.per_1000 %} · {% blocktranslate with p=o.per_1000|bdt %}{{ p }} per 1,000{% endblocktranslate %}{% endif %}{% if o.growth is not None %} · {% blocktranslate with g=o.growth|num %}{{ g }} g/day{% endblocktranslate %}{% endif %}</p></div>
+        <div class="stmt-amounts"><span class="stmt-run">{% if o.survival is not None %}{{ o.survival }}%{% else %}—{% endif %}</span><span class="stmt-detail">{% translate "still alive" %}</span></div>
+      </li>
+      {% endfor %}
+    </ol>
+    <p class="memo-foot">{% translate "“Still alive” counts the deaths you've recorded, so it's only as good as those records. Growth is from release to the latest sample weighing." %}</p>
+    {% else %}<p class="empty-text py-8 text-center">{% translate "No fingerlings released in this period." %}</p>{% endif %}
+    <p class="memo-foot">{% blocktranslate with date=today|date:"j M Y" %}Printed {{ date }}{% endblocktranslate %}</p>
+  </article>
+</div>
+{% endblock %}
