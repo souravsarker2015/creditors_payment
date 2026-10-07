@@ -3,5 +3,6 @@
   <a href="{% url 'business:ponds' %}" class="seg-item {% if p == '/business/ponds/' %}is-active{% endif %}">{% translate "Ponds" %}</a>
   <a href="{% url 'business:harvest_forecast' %}" class="seg-item {% if '/ponds/forecast/' in p %}is-active{% endif %}">{% translate "When to harvest" %}</a>
   <a href="{% url 'business:supplies' %}" class="seg-item {% if '/business/supplies/' in p %}is-active{% endif %}">{% translate "Pond supplies" %}</a>
+  <a href="{% url 'business:fish_health' %}" class="seg-item {% if '/ponds/health/' in p %}is-active{% endif %}">{% translate "Fish health" %}</a>
 </nav>
 {% endwith %}

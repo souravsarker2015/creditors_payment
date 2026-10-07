@@ -17,6 +17,10 @@ class Species(BusinessBaseModel):
     market_size_g = models.PositiveIntegerField(_("Selling size (grams per fish)"), null=True, blank=True,
                                                 help_text=_("The size you usually sell this fish at, e.g. 1000 for 1 kg Rui. "
                                                             "Used to guess when the fish in a pond will be ready."))
+    stock_per_decimal = models.PositiveIntegerField(
+        _("Usual fingerlings per decimal"), null=True, blank=True,
+        help_text=_("How many of this fish farmers usually release in one decimal of water. Carps are counted as their share of a mixed pond. "
+                    "Used to suggest how many to buy and to warn when a pond is too crowded."))
     color = models.CharField(_("Colour"), max_length=7, default="#0e7490", help_text=_("Used for this fish in charts."))
     order = models.PositiveSmallIntegerField(default=0)
 

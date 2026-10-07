@@ -153,6 +153,29 @@ class StockingForm(EntryForm):
         if not self.instance.pk:
             self.initial.setdefault("weight_unit", Unit.objects.filter(business=self.business, symbol="kg").first())
             self.initial["cost"] = self.initial["paid_now"] = None
+        self._stocking_guide()
+
+    def _stocking_guide(self):
+        """Under “Number of fish”: the usual number for this pond's size, for the fish picked."""
+        import json
+
+        from django.utils.html import escape
+
+        area = getattr(getattr(self.cycle, "pond", None), "area_decimal", None)
+        if not area:
+            return
+        hints = {}
+        for sp in self.fields["species"].queryset:
+            if sp.stock_per_decimal:
+                total = int(sp.stock_per_decimal * area)
+                hints[str(sp.pk)] = str(_("Usual for this pond (%(area)s decimal): about %(n)s %(fish)s — %(per)s per decimal.") % {
+                    "area": f"{area.normalize():f}", "n": f"{total:,}", "fish": sp, "per": sp.stock_per_decimal})
+        if not hints:
+            return
+        current = str(self.initial.get("species") or getattr(self.instance, "species_id", "") or "")
+        self.fields["count"].help_text = f'<span data-stock-hint>{escape(hints.get(current, ""))}</span>'
+        self.fields["species"].widget.attrs["x-on:change"] = (
+            "const h = $el.form.querySelector('[data-stock-hint]'); if (h) h.textContent = (" + json.dumps(hints) + ")[$el.value] || ''")
 
     def clean(self):
         data = super().clean()

@@ -67,6 +67,7 @@ PAGES = [
     (gettext_noop("Ponds"), "business:ponds", "business", ""),
     (gettext_noop("When to harvest"), "business:harvest_forecast", "business", ""),
     (gettext_noop("Pond supplies"), "business:supplies", "business", ""),
+    (gettext_noop("Fish health"), "business:fish_health", "business", ""),
     (gettext_noop("Feed"), "business:feed_stock", "business", ""),
     (gettext_noop("Feed plan"), "business:feed_plan", "business", ""),
     (gettext_noop("Fish sales"), "business:sales", "business", ""),

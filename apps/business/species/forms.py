@@ -12,12 +12,13 @@ class SpeciesForm(BusinessForm):
         "name_bn": _("Shown instead of the English name when the app is in Bangla, e.g. রুই."),
         "default_unit": _("How you usually sell this fish. Picked first on a sale; you can still change it."),
         "market_size_g": _("With sample weighings, the app works out roughly when the fish in each pond reach this size."),
+        "stock_per_decimal": _("A rough guide, filled in for common fish. Your own water, aeration and feed decide what's right — change it to what works for you."),
     }
-    layout = [("name", "name_bn"), ("default_unit", "market_size_g"), ("scientific_name",), ("color",), ("notes",)]
+    layout = [("name", "name_bn"), ("default_unit", "market_size_g"), ("stock_per_decimal",), ("scientific_name",), ("color",), ("notes",)]
 
     class Meta:
         model = Species
-        fields = ["name", "name_bn", "default_unit", "market_size_g", "scientific_name", "color", "notes"]
+        fields = ["name", "name_bn", "default_unit", "market_size_g", "stock_per_decimal", "scientific_name", "color", "notes"]
         widgets = {
             "name": forms.TextInput(attrs={"placeholder": _("e.g. Rui")}),
             "name_bn": forms.TextInput(attrs={"placeholder": _("e.g. রুই")}),

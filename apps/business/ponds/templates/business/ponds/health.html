@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% translate "Fish health" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-narrow stack">
+  <header class="page-header !mb-0">
+    <div>
+      <a href="{% url 'business:ponds' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Ponds" %}</a>
+      <h1 class="page-title">{% translate "Fish health" %}</h1>
+      <p class="page-subtitle">{% translate "The problems pond farmers meet most: how to spot them and what to do first. Tap one to open it." %}</p>
+    </div>
+  </header>
+  {% include "business/ponds/tabs.html" %}
+
+  <div class="callout" data-tone="warn">{% include "partials/icon.html" with name="alert" %}
+    <p>{% translate "This is a first-aid guide, not a prescription. For any medicine, follow the dose and waiting period on its label, and ask your upazila fisheries officer when fish keep dying." %}</p>
+  </div>
+
+  <section class="card">
+    {% for p in problems %}
+    <details class="health-item" id="{{ p.key }}"{% if open == p.key %} open{% endif %}>
+      <summary class="health-head">
+        <span class="ledger-icon" data-tone="{% if p.urgent %}critical{% else %}warn{% endif %}">{% include "partials/icon.html" with name="alert" %}</span>
+        <span class="min-w-0 flex-1"><span class="ledger-title block">{{ p.name }}</span><span class="health-signs">{{ p.signs }}</span></span>
+      </summary>
+      <div class="health-body">
+        {% if p.urgent %}<p class="tone-critical">{% translate "Act today — fish can die within hours." %}</p>{% endif %}
+        <p><strong>{% translate "Why it happens" %}:</strong> {{ p.why }}</p>
+        {% if p.when %}<p><strong>{% translate "Most common" %}:</strong> {{ p.when }}</p>{% endif %}
+        <p><strong>{% translate "What to do" %}</strong></p>
+        <ol class="health-steps">{% for step in p.do %}<li>{{ step }}</li>{% endfor %}</ol>
+      </div>
+    </details>
+    {% endfor %}
+  </section>
+
+  <section class="card">
+    <div class="card-header"><h2 class="card-title">{% translate "Keeping fish healthy" %}</h2></div>
+    <div class="card-body"><ul class="health-steps">{% for line in prevent %}<li>{{ line }}</li>{% endfor %}</ul></div>
+  </section>
+
+  {% if biz_can.enter_data %}
+  <p class="help">{% translate "Write down deaths and what you put in the pond on the pond's page — the app warns you when deaths rise and when fish can't be sold yet." %} <a href="{% url 'business:ponds' %}" class="font-semibold underline">{% translate "Go to ponds" %}</a></p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -15,6 +15,10 @@ The menu sections: the sidebar shows them as a list, and the app view's
         {% include "business/partials/icon.html" with name="percent" %}
         {% translate "Zakat helper" %}
     </a>
+    <a href="{% url 'my_data' %}" class="nav-link" download data-tip="{% translate 'All your records as Excel-ready files, to keep a copy.' %}">
+        {% include "partials/icon.html" with name="download" %}
+        {% translate "Download my data" %}
+    </a>
 </div>
 
 <div class="space-y-0.5">

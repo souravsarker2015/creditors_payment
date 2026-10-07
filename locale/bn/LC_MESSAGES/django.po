@@ -12221,3 +12221,219 @@ msgstr[1] "%(counter)sটি পরীক্ষা"
 
 msgid "Less"
 msgstr "কম দেখান"
+
+msgid "Usual for this pond (%(area)s decimal): about %(n)s %(fish)s — %(per)s per decimal."
+msgstr "এই পুকুরে (%(area)s শতাংশ) সাধারণত প্রায় %(n)sটি %(fish)s — শতাংশে %(per)sটি।"
+
+msgid "Fish gasp at the surface in the early morning, crowd near the inlet, and the big ones die first."
+msgstr "ভোরে মাছ পানির ওপরে খাবি খায়, পানি ঢোকার মুখে ভিড় করে, আর বড় মাছ আগে মরে।"
+
+msgid "Cloudy, hot, still weather; too many fish; thick green water; rotting feed on the bottom."
+msgstr "মেঘলা, গরম, বাতাসহীন আবহাওয়া; বেশি মাছ; ঘন সবুজ পানি; তলায় পচা খাবার।"
+
+msgid "Run the aerator or pump in fresh water at once, and beat the water surface."
+msgstr "এখনই এয়ারেটর চালান বা পাম্পে নতুন পানি দিন, আর পানির ওপর বাড়ি দিন।"
+
+msgid "Don't feed until the fish behave normally again."
+msgstr "মাছ স্বাভাবিক না হওয়া পর্যন্ত খাবার দেবেন না।"
+
+msgid "Test the oxygen just before sunrise for the next few days."
+msgstr "পরের কয়েক দিন সূর্য ওঠার ঠিক আগে অক্সিজেন মাপুন।"
+
+msgid "If it keeps happening, the pond holds more fish than its water can carry: harvest some or thin it out."
+msgstr "বারবার হলে পুকুরে পানির তুলনায় মাছ বেশি: কিছু ধরে ফেলুন বা অন্য পুকুরে সরান।"
+
+msgid "Cloudy and hot days, before dawn"
+msgstr "মেঘলা ও গরম দিনে, ভোরের আগে"
+
+msgid "Red sores / ulcer disease (EUS)"
+msgstr "লাল ঘা / ক্ষত রোগ (ইইউএস)"
+
+msgid "Red spots that turn into open sores on the body and head; fish swim slowly and stop eating."
+msgstr "শরীর ও মাথায় লাল দাগ, পরে খোলা ঘা হয়; মাছ ধীরে সাঁতরায় ও খাওয়া ছেড়ে দেয়।"
+
+msgid "Cold water in winter, a sudden drop in temperature, dirty or acidic water."
+msgstr "শীতের ঠান্ডা পানি, হঠাৎ তাপমাত্রা কমে যাওয়া, নোংরা বা অম্লীয় পানি।"
+
+msgid "Spread lime (about 1 kg per decimal) to settle and freshen the water."
+msgstr "পানি পরিষ্কার ও ভালো রাখতে চুন দিন (শতাংশে প্রায় ১ কেজি)।"
+
+msgid "Take out sick and dead fish, and keep netting and handling to a minimum."
+msgstr "অসুস্থ ও মরা মাছ তুলে ফেলুন, জাল টানা ও হাত দেওয়া কমিয়ে রাখুন।"
+
+msgid "Ask the upazila fisheries office before using any medicine, and note its waiting period here."
+msgstr "কোনো ওষুধ দেওয়ার আগে উপজেলা মৎস্য অফিসে জিজ্ঞেস করুন, আর এখানে তার অপেক্ষার সময় লিখে রাখুন।"
+
+msgid "November to February"
+msgstr "নভেম্বর থেকে ফেব্রুয়ারি"
+
+msgid "Gill rot"
+msgstr "ফুলকা পচা"
+
+msgid "Gills pale, grey or rotting; fish breathe fast and hang near the surface."
+msgstr "ফুলকা ফ্যাকাশে, ধূসর বা পচা; মাছ দ্রুত শ্বাস নেয় ও ওপরে ভাসে।"
+
+msgid "A dirty bottom, too much feed, high ammonia."
+msgstr "নোংরা তলা, বেশি খাবার, অ্যামোনিয়া বেশি।"
+
+msgid "Change part of the water and cut the feed for a few days."
+msgstr "কিছু পানি বদলান আর কয়েক দিন খাবার কমিয়ে দিন।"
+
+msgid "Lime the pond; zeolite helps take up ammonia."
+msgstr "পুকুরে চুন দিন; জিওলাইট অ্যামোনিয়া কমাতে সাহায্য করে।"
+
+msgid "Test the ammonia and the oxygen."
+msgstr "অ্যামোনিয়া ও অক্সিজেন মাপুন।"
+
+msgid "White spots"
+msgstr "সাদা দাগ রোগ"
+
+msgid "Tiny white grains on the skin and fins; fish rub against the sides and bottom."
+msgstr "চামড়া ও পাখনায় ছোট সাদা দানা; মাছ পাড়ে ও তলায় গা ঘষে।"
+
+msgid "A small parasite that spreads in cool, crowded water."
+msgstr "ছোট এক পরজীবী, ঠান্ডা ও ঘন পুকুরে ছড়ায়।"
+
+msgid "Raise water exchange and lower crowding."
+msgstr "পানি বদল বাড়ান আর মাছের ঘনত্ব কমান।"
+
+msgid "A salt bath or a pond treatment from the dealer helps — follow the label for the dose."
+msgstr "লবণ পানিতে গোসল বা ডিলারের কাছ থেকে পুকুরের চিকিৎসা কাজে দেয় — মাত্রা লেবেল দেখে দিন।"
+
+msgid "Fish lice (Argulus)"
+msgstr "মাছের উকুন (আর্গুলাস)"
+
+msgid "Small flat lice visible on the body, red spots where they bite; fish jump and rub."
+msgstr "শরীরে চ্যাপ্টা ছোট উকুন দেখা যায়, কামড়ের জায়গায় লাল দাগ; মাছ লাফায় ও গা ঘষে।"
+
+msgid "Lice that build up in ponds not dried between cycles."
+msgstr "দুই চাষের মাঝে না শুকানো পুকুরে উকুন বাড়ে।"
+
+msgid "Use an approved lice treatment from a reliable dealer, at the label's dose."
+msgstr "বিশ্বস্ত ডিলারের অনুমোদিত উকুনের ওষুধ লেবেলের মাত্রায় দিন।"
+
+msgid "Dry the pond and lime the bottom before the next cycle."
+msgstr "পরের চাষের আগে পুকুর শুকিয়ে তলায় চুন দিন।"
+
+msgid "Swollen belly (dropsy)"
+msgstr "পেট ফোলা রোগ (ড্রপসি)"
+
+msgid "The belly swells, scales stand out like a pine cone, eyes may bulge."
+msgstr "পেট ফুলে যায়, আঁশ খাড়া হয়ে ওঠে, চোখ বেরিয়ে আসতে পারে।"
+
+msgid "A bacterial infection, usually in stressed fish in poor water or on stale feed."
+msgstr "ব্যাকটেরিয়ার সংক্রমণ, সাধারণত খারাপ পানি বা বাসি খাবারে দুর্বল মাছে হয়।"
+
+msgid "Take sick fish out at once so it doesn't spread."
+msgstr "ছড়ানো ঠেকাতে অসুস্থ মাছ সঙ্গে সঙ্গে তুলে ফেলুন।"
+
+msgid "Improve the water and use fresh feed, stored dry."
+msgstr "পানি ভালো করুন, শুকনো জায়গায় রাখা টাটকা খাবার দিন।"
+
+msgid "Ask the fisheries office before giving any antibiotic."
+msgstr "কোনো অ্যান্টিবায়োটিক দেওয়ার আগে মৎস্য অফিসে জিজ্ঞেস করুন।"
+
+msgid "Fin and tail rot"
+msgstr "লেজ ও পাখনা পচা"
+
+msgid "Fin and tail edges ragged, white or bloody."
+msgstr "পাখনা ও লেজের কিনারা ছেঁড়া, সাদা বা রক্তাক্ত।"
+
+msgid "Injuries from netting or crowding, then infection in dirty water."
+msgstr "জাল টানা বা ঘনত্বের আঘাত, পরে নোংরা পানিতে সংক্রমণ।"
+
+msgid "Handle fish gently and don't over-stock."
+msgstr "মাছ যত্ন করে ধরুন আর বেশি মাছ ছাড়বেন না।"
+
+msgid "Clean water and lime usually let them heal."
+msgstr "পরিষ্কার পানি আর চুনে সাধারণত সেরে যায়।"
+
+msgid "Bad water / ammonia"
+msgstr "খারাপ পানি / অ্যামোনিয়া"
+
+msgid "Fish are slow and don't eat; the water smells or turns dark; deaths after feeding."
+msgstr "মাছ ঝিমায় ও খায় না; পানিতে গন্ধ বা কালচে রং; খাবার দেওয়ার পর মাছ মরে।"
+
+msgid "Too much feed or manure, a dirty bottom, algae dying off."
+msgstr "বেশি খাবার বা সার, নোংরা তলা, শেওলা মরে যাওয়া।"
+
+msgid "Stop feeding for a day or two."
+msgstr "এক-দুই দিন খাবার বন্ধ রাখুন।"
+
+msgid "Change some water; probiotics or zeolite help clean the bottom."
+msgstr "কিছু পানি বদলান; প্রোবায়োটিক বা জিওলাইট তলা পরিষ্কারে সাহায্য করে।"
+
+msgid "Then feed by the feed plan, not more."
+msgstr "তারপর খাবার পরিকল্পনা অনুযায়ী দিন, বেশি নয়।"
+
+msgid "Dry the pond, remove the black mud and lime it before stocking."
+msgstr "পোনা ছাড়ার আগে পুকুর শুকিয়ে কালো কাদা তুলে চুন দিন।"
+
+msgid "Buy healthy, lively fingerlings from a known hatchery, and don't over-stock."
+msgstr "চেনা হ্যাচারি থেকে সুস্থ, চঞ্চল পোনা কিনুন, আর বেশি ছাড়বেন না।"
+
+msgid "Feed by the plan, and less on cloudy, cold or very hot days."
+msgstr "পরিকল্পনা মেনে খাবার দিন; মেঘলা, ঠান্ডা বা খুব গরম দিনে কম দিন।"
+
+msgid "Test the water every week — oxygen just before sunrise."
+msgstr "প্রতি সপ্তাহে পানি পরীক্ষা করুন — অক্সিজেন সূর্য ওঠার ঠিক আগে।"
+
+msgid "Take dead fish out every day and note them, so trouble shows early."
+msgstr "প্রতিদিন মরা মাছ তুলুন ও লিখে রাখুন, তাতে সমস্যা আগে ধরা পড়ে।"
+
+msgid "Wait out a medicine's waiting period before you sell fish from that pond."
+msgstr "ওই পুকুরের মাছ বিক্রির আগে ওষুধের অপেক্ষার সময় পার হতে দিন।"
+
+msgid "Usually about %(usual)s per decimal. Crowded ponds run short of oxygen sooner — keep an aerator ready and watch the dawn oxygen."
+msgstr "সাধারণত শতাংশে প্রায় %(usual)sটি। ঘন পুকুরে অক্সিজেন তাড়াতাড়ি কমে — এয়ারেটর তৈরি রাখুন আর ভোরের অক্সিজেন দেখুন।"
+
+msgid "%(n)s per decimal"
+msgstr "শতাংশে %(n)sটি"
+
+msgid "Not sure what's wrong?"
+msgstr "কী সমস্যা বুঝতে পারছেন না?"
+
+msgid "Signs of common fish diseases"
+msgstr "মাছের সাধারণ রোগের লক্ষণ"
+
+msgid "The problems pond farmers meet most: how to spot them and what to do first. Tap one to open it."
+msgstr "পুকুরে চাষিরা যে সমস্যায় সবচেয়ে বেশি পড়েন: কীভাবে চিনবেন আর প্রথমে কী করবেন। খুলতে একটিতে চাপুন।"
+
+msgid "This is a first-aid guide, not a prescription. For any medicine, follow the dose and waiting period on its label, and ask your upazila fisheries officer when fish keep dying."
+msgstr "এটি প্রাথমিক সহায়তার নির্দেশিকা, ব্যবস্থাপত্র নয়। যেকোনো ওষুধের মাত্রা ও অপেক্ষার সময় তার লেবেল দেখে মানুন, আর মাছ মরতে থাকলে উপজেলা মৎস্য কর্মকর্তাকে জিজ্ঞেস করুন।"
+
+msgid "Act today — fish can die within hours."
+msgstr "আজই ব্যবস্থা নিন — কয়েক ঘণ্টায় মাছ মরতে পারে।"
+
+msgid "Why it happens"
+msgstr "কেন হয়"
+
+msgid "Most common"
+msgstr "বেশি দেখা যায়"
+
+msgid "What to do"
+msgstr "কী করবেন"
+
+msgid "Keeping fish healthy"
+msgstr "মাছ সুস্থ রাখতে"
+
+msgid "Write down deaths and what you put in the pond on the pond's page — the app warns you when deaths rise and when fish can't be sold yet."
+msgstr "পুকুরের পাতায় মাছ মরা ও পুকুরে কী দিয়েছেন লিখে রাখুন — মৃত্যু বাড়লে আর মাছ এখনো বিক্রি করা না গেলে অ্যাপ সতর্ক করবে।"
+
+msgid "A rough guide, filled in for common fish. Your own water, aeration and feed decide what's right — change it to what works for you."
+msgstr "সাধারণ মাছের জন্য আনুমানিক হিসাব দেওয়া আছে। আপনার পানি, বাতাস দেওয়া ও খাবারই ঠিক করে কোনটা ঠিক — আপনার মতো করে বদলে নিন।"
+
+msgid "Usual fingerlings per decimal"
+msgstr "শতাংশে সাধারণ পোনার সংখ্যা"
+
+msgid "How many of this fish farmers usually release in one decimal of water. Carps are counted as their share of a mixed pond. Used to suggest how many to buy and to warn when a pond is too crowded."
+msgstr "এক শতাংশ পানিতে চাষিরা সাধারণত এই মাছের কতটি পোনা ছাড়েন। কার্প মিশ্র চাষে তার ভাগ ধরা হয়েছে। কতগুলো কিনবেন তা বলতে আর পুকুর বেশি ঘন হলে সতর্ক করতে ব্যবহার হয়।"
+
+msgid "Fish health"
+msgstr "মাছের স্বাস্থ্য"
+
+msgid "All your records as Excel-ready files, to keep a copy."
+msgstr "আপনার সব হিসাব Excel-এ খোলার মতো ফাইলে, কপি রেখে দিতে।"
+
+msgid "Download my data"
+msgstr "আমার তথ্য ডাউনলোড"

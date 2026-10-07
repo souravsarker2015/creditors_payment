@@ -156,6 +156,7 @@ def cycle_detail_view(request, pk):
     harvests = list(cycle.harvests.select_related("species", "unit"))
     sales = list(cycle.sales.select_related("buyer", "market"))
     summary = services.summarize(cycle)
+    _density(summary, cycle.pond)
     limits = PondAlerts.for_business(b)
     water = list(cycle.water_tests.all())
     for w in water:
@@ -185,6 +186,18 @@ def cycle_detail_view(request, pk):
         "tab": request.GET.get("tab") or "overview",
         "today": date.today(),
     })
+
+
+CROWDED = Decimal("1.5")   # this many times the usual density is worth a warning
+
+
+def _density(summary, pond):
+    """Each fish's fingerlings per decimal of water, against the usual number for it."""
+    area = pond.area_decimal
+    for r in summary.species:
+        r.density = (Decimal(r.put_in) / area).quantize(Decimal("1")) if (area and r.put_in) else None
+        usual = r.species.stock_per_decimal
+        r.crowded = bool(r.density and usual and r.density > usual * CROWDED)
 
 
 def _sold_kg(cycle):
@@ -351,3 +364,12 @@ def water_check_view(request):
             messages.success(request, _g("Saved for %(n)s ponds. All readings are within your levels.") % {"n": n})
         return redirect("business:home")
     return render(request, "business/ponds/water_check.html", {"form": form, "limits": PondAlerts.for_business(request.business)})
+
+
+@business_access_required
+def health_view(request):
+    """Common fish diseases: signs, causes, safe first steps."""
+    from .health import PREVENT, PROBLEMS
+
+    return render(request, "business/ponds/health.html", {"problems": PROBLEMS, "prevent": PREVENT,
+                                                          "open": request.GET.get("p", "")})

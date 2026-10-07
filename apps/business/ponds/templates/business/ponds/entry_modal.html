@@ -21,6 +21,7 @@
       {% endfor %}{% endfor %}
       {% if form.is_treatment %}{% include "business/ponds/_treatment_extras.html" %}{% endif %}
       {% if form.datalist %}<datalist id="{{ form.datalist.0 }}">{% for c in form.datalist.1 %}<option value="{{ c }}"></option>{% endfor %}</datalist>{% endif %}
+      {% if key == "mortality" or key == "treatment" %}<p class="help">{% translate "Not sure what's wrong?" %} <a href="{% url 'business:fish_health' %}" class="font-semibold underline" target="_blank" rel="noopener">{% translate "Signs of common fish diseases" %}</a></p>{% endif %}
       {% if key == "water" %}<p class="help">{% translate "Testing every pond this morning?" %} <a href="{% url 'business:water_check' %}" class="font-semibold underline">{% translate "Enter all ponds at once" %}</a></p>{% endif %}
       {% if key == "feeding" %}<p class="help">{% translate "Feeding several ponds today?" %} <a href="{% url 'business:feed_usage_bulk' %}" class="font-semibold underline">{% translate "Enter all ponds at once" %}</a></p>{% endif %}
     </div>

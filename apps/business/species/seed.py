@@ -32,6 +32,17 @@ MARKET_SIZE_G = {
 }
 
 
+# A rough, common stocking guide in Bangladesh (fingerlings per decimal of water).
+# Carps are usually raised together (about 30–40 per decimal in all), so each
+# carp's figure is its usual share of that mix; the others are raised alone.
+# Every farm can change these under Fish species.
+STOCK_PER_DECIMAL = {
+    "Rui": 10, "Katla": 4, "Mrigal": 8, "Kalibaus": 3, "Silver carp": 6, "Grass carp": 3, "Common carp": 4, "Bighead carp": 2,
+    "Pangas": 120, "Tilapia": 150, "Koi": 400, "Shing": 400, "Magur": 200, "Pabda": 250, "Gulsha": 300, "Sarpunti": 60,
+    "Golda prawn": 40, "Bagda shrimp": 60,
+}
+
+
 def seed_species(business):
     have = {n.lower() for n in Species.all_objects.filter(business=business).values_list("name", flat=True)}
     kg = Unit.objects.filter(business=business, symbol="kg").first()
@@ -40,6 +51,7 @@ def seed_species(business):
         if name.lower() in have:
             continue
         Species.all_objects.create(business=business, name=name, name_bn=name_bn, scientific_name=sci,
-                                   default_unit=kg, market_size_g=MARKET_SIZE_G.get(name), color=COLORS[order % len(COLORS)], order=order)
+                                   default_unit=kg, market_size_g=MARKET_SIZE_G.get(name),
+                                   stock_per_decimal=STOCK_PER_DECIMAL.get(name), color=COLORS[order % len(COLORS)], order=order)
         added += 1
     return added
