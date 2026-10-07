@@ -1,0 +1,62 @@
+"""Django's own messages that people see — a wrong password at sign-in, the
+password rules, number and length limits… Django has no Bangla for them, so
+the Bangla is in locale/bn. Listing them here keeps ``makemessages`` from
+dropping those entries; nothing imports this module."""
+from django.utils.translation import gettext_noop, ngettext_lazy
+
+MESSAGES = [
+    gettext_noop('Please enter a correct %(username)s and password. Note that both fields may be case-sensitive.'),
+    gettext_noop('Enter the same password as before, for verification.'),
+    gettext_noop('Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.'),
+    gettext_noop('The password is too similar to the %(verbose_name)s.'),
+    gettext_noop('Your password can’t be too similar to your other personal information.'),
+    gettext_noop('This password is too common.'),
+    gettext_noop('Your password can’t be a commonly used password.'),
+    gettext_noop('This password is entirely numeric.'),
+    gettext_noop('Your password can’t be entirely numeric.'),
+    gettext_noop('Enter a valid username. This value may contain only unaccented lowercase a-z and uppercase A-Z letters, numbers, and @/./+/-/_ characters.'),
+    gettext_noop('Enter a valid username. This value may contain only letters, numbers, and @/./+/-/_ characters.'),
+    gettext_noop('Enter a valid integer.'),
+    gettext_noop('File extension “%(extension)s” is not allowed. Allowed extensions are: %(allowed_extensions)s.'),
+    gettext_noop('Null characters are not allowed.'),
+    gettext_noop('%(model_name)s with this %(field_labels)s already exists.'),
+    gettext_noop('Value %(value)r is not a valid choice.'),
+    gettext_noop('“%(value)s” value must be a decimal number.'),
+    gettext_noop('“%(value)s” value must be an integer.'),
+    gettext_noop('“%(value)s” value must be a float.'),
+    gettext_noop('“%(value)s” value has an invalid date format. It must be in YYYY-MM-DD format.'),
+    gettext_noop('“%(value)s” value has the correct format (YYYY-MM-DD) but it is an invalid date.'),
+    gettext_noop('“%(value)s” value has an invalid format. It must be in HH:MM[:ss[.uuuuuu]] format.'),
+    gettext_noop('“%(value)s” value has the correct format (HH:MM[:ss[.uuuuuu]]) but it is an invalid time.'),
+    gettext_noop('“%(pk)s” is not a valid value.'),
+    gettext_noop('Enter a valid duration.'),
+    gettext_noop('The number of days must be between {min_days} and {max_days}.'),
+    gettext_noop('Enter a complete value.'),
+    gettext_noop('Please correct the duplicate data for %(field)s.'),
+    gettext_noop('Please correct the duplicate data for %(field)s, which must be unique.'),
+    gettext_noop('Please correct the duplicate values below.'),
+    gettext_noop('%(datetime)s couldn’t be interpreted in time zone %(current_timezone)s; it may be ambiguous or it may not exist.'),
+    gettext_noop('Date out of range'),
+    gettext_noop('Forbidden'),
+    gettext_noop('CSRF verification failed. Request aborted.'),
+    gettext_noop('Email'),
+]
+
+PLURALS = [
+    ngettext_lazy('This password is too short. It must contain at least %(min_length)d character.', 'This password is too short. It must contain at least %(min_length)d characters.', "n"),
+    ngettext_lazy('Your password must contain at least %(min_length)d character.', 'Your password must contain at least %(min_length)d characters.', "n"),
+    ngettext_lazy('Ensure this value has at least %(limit_value)d character (it has %(show_value)d).', 'Ensure this value has at least %(limit_value)d characters (it has %(show_value)d).', "n"),
+    ngettext_lazy('Ensure this value has at most %(limit_value)d character (it has %(show_value)d).', 'Ensure this value has at most %(limit_value)d characters (it has %(show_value)d).', "n"),
+    ngettext_lazy('Ensure that there are no more than %(max)s digit in total.', 'Ensure that there are no more than %(max)s digits in total.', "n"),
+    ngettext_lazy('Ensure that there are no more than %(max)s decimal place.', 'Ensure that there are no more than %(max)s decimal places.', "n"),
+    ngettext_lazy('Ensure that there are no more than %(max)s digit before the decimal point.', 'Ensure that there are no more than %(max)s digits before the decimal point.', "n"),
+    ngettext_lazy('Ensure this filename has at most %(max)d character (it has %(length)d).', 'Ensure this filename has at most %(max)d characters (it has %(length)d).', "n"),
+    ngettext_lazy('Please submit at most %(num)d form.', 'Please submit at most %(num)d forms.', "n"),
+    ngettext_lazy('Please submit at least %(num)d form.', 'Please submit at least %(num)d forms.', "n"),
+    ngettext_lazy('%(num)d year', '%(num)d years', "n"),
+    ngettext_lazy('%(num)d month', '%(num)d months', "n"),
+    ngettext_lazy('%(num)d week', '%(num)d weeks', "n"),
+    ngettext_lazy('%(num)d day', '%(num)d days', "n"),
+    ngettext_lazy('%(num)d hour', '%(num)d hours', "n"),
+    ngettext_lazy('%(num)d minute', '%(num)d minutes', "n"),
+]

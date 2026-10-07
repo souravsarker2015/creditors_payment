@@ -21,7 +21,6 @@ from apps.creditors.models import Creditor
 
 from . import backup as bk
 
-TMP = Path(tempfile.mkdtemp(prefix="fintrack-backup-tests-"))
 
 
 def data_of(path):
@@ -45,21 +44,31 @@ def rewrite(src, dst, change):
     return dst
 
 
-@override_settings(BACKUP_DIR=TMP / "backups", MEDIA_ROOT=TMP / "media")
 class BackupTestBase(TestCase):
+    # A folder of its own for each test class: tests running side by side
+    # (--parallel) never see or remove each other's files.
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = Path(tempfile.mkdtemp(prefix="fintrack-backup-tests-"))
+        cls._dirs = override_settings(BACKUP_DIR=cls.tmp / "backups", MEDIA_ROOT=cls.tmp / "media")
+        cls._dirs.enable()
+        super().setUpClass()
+
     @classmethod
     def tearDownClass(cls):
         super().tearDownClass()
-        shutil.rmtree(TMP, ignore_errors=True)
+        cls._dirs.disable()
+        shutil.rmtree(cls.tmp, ignore_errors=True)
 
     def setUp(self):
+        shutil.rmtree(self.tmp / "backups", ignore_errors=True)   # each test starts with no server copies
         User = get_user_model()
         self.admin = User.objects.create_superuser("boss", password="pw-boss-1")
         self.creditor = Creditor.objects.create(user=self.admin, name="Dutch-Bangla Bank")
         self.b, self.owner, self.staff = make_farm()
         self.pond = Pond.objects.create(business=self.b, name="East pond", area=D("60"))
         self.pond.photo.save("east.jpg", ContentFile(b"\xff\xd8 pond photo"), save=True)
-        self.dir = Path(tempfile.mkdtemp(dir=TMP))
+        self.dir = Path(tempfile.mkdtemp(dir=self.tmp))
 
     def export(self, name="a.zip"):
         path = self.dir / name

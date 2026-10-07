@@ -36,7 +36,7 @@ def manifest_view(request):
         "short_name": "FinTrack",
         "description": _("Loans, dues, income, spending and household bazar in one place."),
         "lang": request.LANGUAGE_CODE,
-        "start_url": reverse("networth") + "?source=app",
+        "start_url": reverse("home") + "?source=app",
         "scope": "/",
         "display": "standalone",
         "background_color": "#f7f6f1",
@@ -161,7 +161,8 @@ async function page(event) {
   const req = event.request;
   const network = fetch(req);
   event.waitUntil(network.then((res) => remember(req, res.clone())).catch(() => {}));
-  const kept = await savedCopy(req);
+  // A download (?export=…) is never answered with the page it was asked from.
+  const kept = new URL(req.url).searchParams.has("export") ? null : await savedCopy(req);
   if (!kept) return network.catch(offlineScreen);
   // Weak signal: don't keep someone waiting when a copy is on the phone.
   const quick = await Promise.race([network.catch(() => null), wait(7000)]);

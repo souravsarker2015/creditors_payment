@@ -100,6 +100,9 @@ class KeptPagesTests(TestCase):
             self.assertIn(reverse(name), more)
         for name in ("logout", "creditor_import", "my_data", "trash_empty", "backup_home"):
             self.assertNotIn(reverse(name), more + everyday)
+        # The installed app opens at Home; it's always kept (for farm-only people it leads to the farm).
+        self.assertEqual(data["start"], reverse("home"))
+        self.assertTrue(self.client.get(reverse("manifest")).json()["start_url"].startswith(reverse("home") + "?"))
         # No farm pages for someone without the farm.
         self.assertFalse([u for u in more if u.startswith("/business/")])
         # Every page on the list opens and may be kept.
@@ -133,7 +136,7 @@ class KeptPagesTests(TestCase):
 
     def test_service_worker_keeps_pages_and_the_outbox(self):
         sw = self.client.get(reverse("service_worker")).content.decode()
-        for part in ("ftpages-v1", "fintrack-offline", "Response.redirect", "X-FT-Offline", "ft-cached", "warm"):
+        for part in ("ftpages-v1", "fintrack-offline", "Response.redirect", "X-FT-Offline", "ft-cached", "warm", 'searchParams.has("export")'):
             self.assertIn(part, sw)
         page = self.client.get(reverse("home")).content.decode()
         self.assertIn("js/offline.js", page)

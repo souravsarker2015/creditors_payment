@@ -75,6 +75,10 @@
     d.addEventListener("submit", function (e) { if (!e.defaultPrevented) mark(e.target); });
     var nativeSubmit = HTMLFormElement.prototype.submit;
     HTMLFormElement.prototype.submit = function () { mark(this); return nativeSubmit.apply(this, arguments); };
+    // Back to a page the browser kept in memory: a new save there is a new entry, not a repeat.
+    window.addEventListener("pageshow", function (e) {
+        if (e.persisted) d.querySelectorAll("form").forEach(function (f) { if (!f._ftFixKey) f._ftKey = null; });
+    });
     d.addEventListener("formdata", function (e) {
         var form = e.target;
         if (form !== submitting) return;
@@ -365,6 +369,7 @@
         warming = fetch("/core/offline-pages/", { credentials: "same-origin" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (data) {
             if (!data) return null;
             var urls = data.pages.map(function (p) { return p.url; });
+            if (data.start && urls.indexOf(data.start) === -1) urls.push(data.start);
             if (data.fallback) urls.push(data.fallback);
             if (needAll) urls = urls.concat(data.more || []);
             return navigator.serviceWorker.ready.then(function (reg) {

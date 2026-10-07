@@ -13070,3 +13070,256 @@ msgstr "১টি এন্ট্রি এই ফোনে রাখা আছ�
 
 msgid "{n} entries are saved on this phone, waiting to send."
 msgstr "{n}টি এন্ট্রি এই ফোনে রাখা আছে, পাঠানোর অপেক্ষায়।"
+
+msgid "This page isn't open to you"
+msgstr "এই পাতাটি আপনার জন্য খোলা নয়"
+
+msgid "Your account doesn't have access to it. If you need it, ask the owner to give you access."
+msgstr "আপনার অ্যাকাউন্টে এটি দেখার অনুমতি নেই। দরকার হলে মালিককে অনুমতি দিতে বলুন।"
+
+msgid "Please try again"
+msgstr "আবার চেষ্টা করুন"
+
+msgid "That wasn't saved — please try again"
+msgstr "এটি সংরক্ষণ হয়নি — আবার চেষ্টা করুন"
+
+msgid "The page was open for a long time, or you signed in again since. Go back, refresh the page, and save once more."
+msgstr "পাতাটি অনেকক্ষণ খোলা ছিল, অথবা এর মধ্যে আবার লগ ইন করেছেন। পেছনে যান, পাতাটি রিফ্রেশ করুন, তারপর আবার সংরক্ষণ করুন।"
+
+msgid "Page not found"
+msgstr "পাতা পাওয়া যায়নি"
+
+msgid "We couldn't find that page"
+msgstr "পাতাটি খুঁজে পাওয়া যায়নি"
+
+msgid "It may have been removed, or the link has a mistake in it. Nothing of yours was changed."
+msgstr "হয়তো এটি মুছে ফেলা হয়েছে, অথবা লিংকে ভুল আছে। আপনার কোনো কিছু বদলায়নি।"
+
+msgid "Go back"
+msgstr "পেছনে যান"
+
+msgid "Something went wrong"
+msgstr "কিছু একটা সমস্যা হয়েছে"
+
+msgid "Something went wrong on our side"
+msgstr "আমাদের দিকে কিছু একটা সমস্যা হয়েছে"
+
+msgid "It's not your fault. If you were saving something, go back and check whether it's there before saving again."
+msgstr "এতে আপনার কোনো ভুল নেই। কিছু সংরক্ষণ করছিলেন হলে, আবার সংরক্ষণের আগে পেছনে গিয়ে দেখে নিন সেটি আছে কি না।"
+
+#, python-format
+msgid "Please enter a correct %(username)s and password. Note that both fields may be case-sensitive."
+msgstr "সঠিক %(username)s ও পাসওয়ার্ড দিন। খেয়াল রাখুন, দুটিতেই ছোট-বড় হাতের অক্ষর আলাদা ধরা হয়।"
+
+msgid "Enter the same password as before, for verification."
+msgstr "যাচাইয়ের জন্য একই পাসওয়ার্ড আবার লিখুন।"
+
+msgid "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only."
+msgstr "আবশ্যক। 150 অক্ষর বা তার কম। শুধু অক্ষর, সংখ্যা এবং @/./+/-/_ চলবে।"
+
+#, python-format
+msgid "The password is too similar to the %(verbose_name)s."
+msgstr "পাসওয়ার্ডটি %(verbose_name)s-এর সঙ্গে খুব বেশি মিলে যায়।"
+
+msgid "Your password can’t be too similar to your other personal information."
+msgstr "পাসওয়ার্ড আপনার অন্য ব্যক্তিগত তথ্যের সঙ্গে খুব বেশি মিলতে পারবে না।"
+
+msgid "This password is too common."
+msgstr "এই পাসওয়ার্ডটি খুব সাধারণ, সহজে আন্দাজ করা যায়।"
+
+msgid "Your password can’t be a commonly used password."
+msgstr "খুব প্রচলিত কোনো পাসওয়ার্ড দেওয়া যাবে না।"
+
+msgid "This password is entirely numeric."
+msgstr "পাসওয়ার্ডটিতে শুধু সংখ্যা আছে।"
+
+msgid "Your password can’t be entirely numeric."
+msgstr "পাসওয়ার্ড শুধু সংখ্যা দিয়ে হতে পারবে না।"
+
+msgid "Enter a valid username. This value may contain only unaccented lowercase a-z and uppercase A-Z letters, numbers, and @/./+/-/_ characters."
+msgstr "সঠিক ইউজারনেম দিন। এতে শুধু ইংরেজি ছোট-বড় অক্ষর (a-z, A-Z), সংখ্যা এবং @/./+/-/_ চিহ্ন থাকতে পারে।"
+
+msgid "Enter a valid username. This value may contain only letters, numbers, and @/./+/-/_ characters."
+msgstr "সঠিক ইউজারনেম দিন। এতে শুধু অক্ষর, সংখ্যা এবং @/./+/-/_ চিহ্ন থাকতে পারে।"
+
+msgid "Enter a valid integer."
+msgstr "একটি পূর্ণসংখ্যা লিখুন।"
+
+#, python-format
+msgid "File extension “%(extension)s” is not allowed. Allowed extensions are: %(allowed_extensions)s."
+msgstr "“%(extension)s” ধরনের ফাইল চলবে না। যে ধরন চলবে: %(allowed_extensions)s।"
+
+msgid "Null characters are not allowed."
+msgstr "লেখায় অচল (null) চিহ্ন রাখা যাবে না।"
+
+#, python-format
+msgid "%(model_name)s with this %(field_labels)s already exists."
+msgstr "এই %(field_labels)s দিয়ে একটি %(model_name)s আগে থেকেই আছে।"
+
+#, python-format
+msgid "Value %(value)r is not a valid choice."
+msgstr "%(value)r সঠিক বিকল্প নয়।"
+
+#, python-format
+msgid "“%(value)s” value must be a decimal number."
+msgstr "“%(value)s” একটি সংখ্যা হতে হবে।"
+
+#, python-format
+msgid "“%(value)s” value must be an integer."
+msgstr "“%(value)s” একটি পূর্ণসংখ্যা হতে হবে।"
+
+#, python-format
+msgid "“%(value)s” value must be a float."
+msgstr "“%(value)s” একটি সংখ্যা হতে হবে।"
+
+#, python-format
+msgid "“%(value)s” value has an invalid date format. It must be in YYYY-MM-DD format."
+msgstr "“%(value)s” তারিখের ধরন ঠিক নেই। YYYY-MM-DD ধরনে হতে হবে।"
+
+#, python-format
+msgid "“%(value)s” value has the correct format (YYYY-MM-DD) but it is an invalid date."
+msgstr "“%(value)s”: ধরন ঠিক আছে (YYYY-MM-DD), কিন্তু এমন কোনো তারিখ নেই।"
+
+#, python-format
+msgid "“%(value)s” value has an invalid format. It must be in HH:MM[:ss[.uuuuuu]] format."
+msgstr "“%(value)s” সময়ের ধরন ঠিক নেই। HH:MM ধরনে লিখুন।"
+
+#, python-format
+msgid "“%(value)s” value has the correct format (HH:MM[:ss[.uuuuuu]]) but it is an invalid time."
+msgstr "“%(value)s”: এমন কোনো সময় নেই।"
+
+#, python-format
+msgid "“%(pk)s” is not a valid value."
+msgstr "“%(pk)s” সঠিক মান নয়।"
+
+msgid "Enter a valid duration."
+msgstr "সঠিক সময়কাল লিখুন।"
+
+msgid "The number of days must be between {min_days} and {max_days}."
+msgstr "দিনের সংখ্যা {min_days} থেকে {max_days}-এর মধ্যে হতে হবে।"
+
+msgid "Enter a complete value."
+msgstr "পুরো মানটি লিখুন।"
+
+#, python-format
+msgid "Please correct the duplicate data for %(field)s."
+msgstr "%(field)s-এ একই তথ্য দুবার আছে, ঠিক করুন।"
+
+#, python-format
+msgid "Please correct the duplicate data for %(field)s, which must be unique."
+msgstr "%(field)s-এ একই তথ্য দুবার আছে; এটি একবারই থাকতে পারে।"
+
+msgid "Please correct the duplicate values below."
+msgstr "নিচে একই তথ্য দুবার আছে, ঠিক করুন।"
+
+#, python-format
+msgid "%(datetime)s couldn’t be interpreted in time zone %(current_timezone)s; it may be ambiguous or it may not exist."
+msgstr "%(current_timezone)s সময় অঞ্চলে %(datetime)s বোঝা যায়নি; সময়টি অস্পষ্ট বা অস্তিত্বহীন হতে পারে।"
+
+msgid "Date out of range"
+msgstr "তারিখটি সীমার বাইরে"
+
+msgid "Forbidden"
+msgstr "অনুমতি নেই"
+
+msgid "CSRF verification failed. Request aborted."
+msgstr "নিরাপত্তা যাচাই ব্যর্থ হয়েছে। পাতাটি রিফ্রেশ করে আবার চেষ্টা করুন।"
+
+msgid "Email"
+msgstr "ইমেইল"
+
+#, python-format
+msgid "This password is too short. It must contain at least %(min_length)d character."
+msgid_plural "This password is too short. It must contain at least %(min_length)d characters."
+msgstr[0] "পাসওয়ার্ডটি খুব ছোট। অন্তত %(min_length)d অক্ষর হতে হবে।"
+msgstr[1] "পাসওয়ার্ডটি খুব ছোট। অন্তত %(min_length)d অক্ষর হতে হবে।"
+
+#, python-format
+msgid "Your password must contain at least %(min_length)d character."
+msgid_plural "Your password must contain at least %(min_length)d characters."
+msgstr[0] "পাসওয়ার্ডে অন্তত %(min_length)d অক্ষর থাকতে হবে।"
+msgstr[1] "পাসওয়ার্ডে অন্তত %(min_length)d অক্ষর থাকতে হবে।"
+
+#, python-format
+msgid "Ensure this value has at least %(limit_value)d character (it has %(show_value)d)."
+msgid_plural "Ensure this value has at least %(limit_value)d characters (it has %(show_value)d)."
+msgstr[0] "অন্তত %(limit_value)d অক্ষর লিখুন (এখন আছে %(show_value)d)।"
+msgstr[1] "অন্তত %(limit_value)d অক্ষর লিখুন (এখন আছে %(show_value)d)।"
+
+#, python-format
+msgid "Ensure this value has at most %(limit_value)d character (it has %(show_value)d)."
+msgid_plural "Ensure this value has at most %(limit_value)d characters (it has %(show_value)d)."
+msgstr[0] "সর্বোচ্চ %(limit_value)d অক্ষর লেখা যাবে (এখন আছে %(show_value)d)।"
+msgstr[1] "সর্বোচ্চ %(limit_value)d অক্ষর লেখা যাবে (এখন আছে %(show_value)d)।"
+
+#, python-format
+msgid "Ensure that there are no more than %(max)s digit in total."
+msgid_plural "Ensure that there are no more than %(max)s digits in total."
+msgstr[0] "মোট %(max)s অঙ্কের বেশি লেখা যাবে না।"
+msgstr[1] "মোট %(max)s অঙ্কের বেশি লেখা যাবে না।"
+
+#, python-format
+msgid "Ensure that there are no more than %(max)s decimal place."
+msgid_plural "Ensure that there are no more than %(max)s decimal places."
+msgstr[0] "দশমিকের পরে %(max)s ঘরের বেশি লেখা যাবে না।"
+msgstr[1] "দশমিকের পরে %(max)s ঘরের বেশি লেখা যাবে না।"
+
+#, python-format
+msgid "Ensure that there are no more than %(max)s digit before the decimal point."
+msgid_plural "Ensure that there are no more than %(max)s digits before the decimal point."
+msgstr[0] "দশমিকের আগে %(max)s অঙ্কের বেশি লেখা যাবে না।"
+msgstr[1] "দশমিকের আগে %(max)s অঙ্কের বেশি লেখা যাবে না।"
+
+#, python-format
+msgid "Ensure this filename has at most %(max)d character (it has %(length)d)."
+msgid_plural "Ensure this filename has at most %(max)d characters (it has %(length)d)."
+msgstr[0] "ফাইলের নাম সর্বোচ্চ %(max)d অক্ষরের হতে পারে (এখন আছে %(length)d)।"
+msgstr[1] "ফাইলের নাম সর্বোচ্চ %(max)d অক্ষরের হতে পারে (এখন আছে %(length)d)।"
+
+#, python-format
+msgid "Please submit at most %(num)d form."
+msgid_plural "Please submit at most %(num)d forms."
+msgstr[0] "সর্বোচ্চ %(num)dটি ফর্ম জমা দিন।"
+msgstr[1] "সর্বোচ্চ %(num)dটি ফর্ম জমা দিন।"
+
+#, python-format
+msgid "Please submit at least %(num)d form."
+msgid_plural "Please submit at least %(num)d forms."
+msgstr[0] "অন্তত %(num)dটি ফর্ম জমা দিন।"
+msgstr[1] "অন্তত %(num)dটি ফর্ম জমা দিন।"
+
+#, python-format
+msgid "%(num)d year"
+msgid_plural "%(num)d years"
+msgstr[0] "%(num)d বছর"
+msgstr[1] "%(num)d বছর"
+
+#, python-format
+msgid "%(num)d month"
+msgid_plural "%(num)d months"
+msgstr[0] "%(num)d মাস"
+msgstr[1] "%(num)d মাস"
+
+#, python-format
+msgid "%(num)d week"
+msgid_plural "%(num)d weeks"
+msgstr[0] "%(num)d সপ্তাহ"
+msgstr[1] "%(num)d সপ্তাহ"
+
+#, python-format
+msgid "%(num)d day"
+msgid_plural "%(num)d days"
+msgstr[0] "%(num)d দিন"
+msgstr[1] "%(num)d দিন"
+
+#, python-format
+msgid "%(num)d hour"
+msgid_plural "%(num)d hours"
+msgstr[0] "%(num)d ঘণ্টা"
+msgstr[1] "%(num)d ঘণ্টা"
+
+#, python-format
+msgid "%(num)d minute"
+msgid_plural "%(num)d minutes"
+msgstr[0] "%(num)d মিনিট"
+msgstr[1] "%(num)d মিনিট"

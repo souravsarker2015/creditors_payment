@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% translate "No access" %} | FinTrack{% endblock %}
+{% block content %}
+<div class="page-narrow">
+  <div class="empty">
+    <div class="empty-icon">{% include "partials/icon.html" with name="alert" %}</div>
+    <h1 class="empty-title">{% translate "This page isn't open to you" %}</h1>
+    <p class="empty-text">{% translate "Your account doesn't have access to it. If you need it, ask the owner to give you access." %}</p>
+    <div class="flex flex-wrap justify-center gap-2">
+      <button type="button" class="btn btn-secondary" onclick="history.length > 1 ? history.back() : location.assign('/')">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Go back" %}</button>
+      <a href="{% if user.is_authenticated %}{% url 'home' %}{% else %}{% url 'login' %}{% endif %}" class="btn btn-primary">{% translate "Home" %}</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

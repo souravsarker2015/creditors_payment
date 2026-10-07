@@ -194,8 +194,9 @@ def offline_pages_view(request):
     add(_("Use without internet"), "offline_settings")
     more = [u for u in _every_page(personal, m is not None) + _detail_pages(user, personal, m) if u not in seen]
     more = list(dict.fromkeys(more))[:MORE_LIMIT]
-    # The "You're offline" screen, in this person's language.
-    return JsonResponse({"pages": pages, "more": more, "fallback": reverse("offline")})
+    # "start": where the installed app opens (for someone with only the farm it leads to the farm).
+    # "fallback": the "You're offline" screen, in this person's language.
+    return JsonResponse({"pages": pages, "more": more, "start": reverse("home"), "fallback": reverse("offline")})
 
 
 def _every_page(personal, business):
