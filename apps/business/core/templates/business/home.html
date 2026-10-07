@@ -58,14 +58,15 @@
   {% endif %}
 
   <div class="grid grid-cols-1 gap-5 lg:grid-cols-5 lg:items-start">
-    <section class="card lg:col-span-3">
-      <div class="card-header">
-        <div>
-          <h2 class="card-title">{% translate "Getting started" %}</h2>
-          <p class="card-subtitle">{% translate "New here?" %} <a href="{% url 'business:guide' %}" class="font-semibold underline">{% translate "See how the whole system works" %}</a></p>
-          <p class="card-subtitle">{% translate "A few quick steps to get your farm ready." %}</p>
-        </div>
-      </div>
+    <details class="card fold-card lg:col-span-3"{% if not setup_done %} open{% endif %}>
+      <summary class="fold-head">
+        <span class="min-w-0">
+          <span class="card-title block">{% if setup_done %}{% translate "Your farm is set up" %}{% else %}{% translate "Getting started" %}{% endif %}</span>
+          <span class="card-subtitle block">{% if setup_done %}{% translate "Every step is done. Tap to review or change anything." %}{% else %}{% translate "A few quick steps to get your farm ready." %}{% endif %}</span>
+        </span>
+        {% include "partials/icon.html" with name="chevron-down" %}
+      </summary>
+      <p class="px-4 pb-1 text-sm sm:px-6" style="color: var(--text-secondary);">{% translate "New here?" %} <a href="{% url 'business:guide' %}" class="font-semibold underline">{% translate "See how the whole system works" %}</a></p>
       <ol class="biz-steps">
         <li class="is-done">
           <span class="biz-step-dot">{% include "partials/icon.html" with name="check" %}</span>
@@ -96,12 +97,15 @@
           <a href="{{ step.url }}" class="btn {% if step.done %}btn-ghost{% else %}btn-primary{% endif %} btn-sm">{% if step.done %}{% translate "Manage" %}{% else %}{% translate "Add" %}{% endif %}</a>
         </li>
         {% endfor %}
-        <li class="is-next">
+        {% if biz_can.view_reports %}
+        <li>
           <span class="biz-step-dot">{% include "business/partials/icon.html" with name="fish" %}</span>
-          <div><p class="biz-step-title">{% translate "Reports and exports" %}</p><p class="biz-step-text">{% translate "Coming next to this dashboard." %}</p></div>
+          <div class="min-w-0 flex-1"><p class="biz-step-title">{% translate "Reports" %}</p><p class="biz-step-text">{% translate "Profit per pond, sales, feed, dues — ready to print or send." %}</p></div>
+          <a href="{% url 'business:reports' %}" class="btn btn-ghost btn-sm">{% translate "Open" %}</a>
         </li>
+        {% endif %}
       </ol>
-    </section>
+    </details>
 
     <section class="card lg:col-span-2" x-data="unitConverter({{ units_json }})">
       <div class="card-header">

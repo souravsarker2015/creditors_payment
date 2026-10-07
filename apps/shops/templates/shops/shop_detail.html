@@ -88,7 +88,7 @@
       {% endif %}
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
         <div class="min-w-0" style="container-type: inline-size;">
-          <p class="stat-label inline-flex items-center">{% translate "Current Due" %}{% translate "What you owe this shop right now: all purchases on credit minus all payments. The period filter doesn't change it." as info_text %}{% include "partials/info.html" with text=info_text %}</p>
+          <p class="stat-label inline-flex items-center">{% translate "You owe this shop" %}{% translate "What you owe this shop right now: all purchases on credit minus all payments. The period filter doesn't change it." as info_text %}{% include "partials/info.html" with text=info_text %}</p>
           <p class="hero-value !mt-1" style="color: {% if remaining > 0 %}var(--status-critical){% else %}var(--status-good){% endif %}; font-size: clamp(1.75rem, 9cqi, 2.5rem);">{{ remaining|money }}</p>
           <p class="stat-hint">{% translate "Outstanding balance, as of today" %}</p>
         </div>
@@ -157,17 +157,17 @@
     </section>
 
     <aside class="detail-side">
-      <section class="card" x-data="{ open: {{ form.errors|yesno:'true,false' }} }">
+      <section class="card" id="record" x-data="{ open: {{ form.errors|yesno:'true,false' }} || location.hash === '#record' }" x-init="if (location.hash === '#record') $nextTick(() => { $el.scrollIntoView({ block: 'start' }); const a = $el.querySelector('[name=amount]'); if (a) a.focus({ preventScroll: true }); })">
         <button type="button" class="collapse-toggle" @click="open = !open" :aria-expanded="open.toString()">
-          <span class="flex items-center gap-2"><span class="h-5 w-5" style="color: var(--accent);">{% include "partials/icon.html" with name="plus" %}</span>{% translate "Record New Activity" %}</span>
+          <span class="flex items-center gap-2"><span class="h-5 w-5" style="color: var(--accent);">{% include "partials/icon.html" with name="plus" %}</span>{% translate "Bought on baki, or paid the shop?" %}</span>
           {% include "partials/icon.html" with name="chevron-down" %}
         </button>
         <div class="collapse-body" :class="open && 'is-open'">
-          <div class="card-header hidden lg:flex"><h2 class="card-title">{% translate "Record New Activity" %}</h2></div>
+          <div class="card-header hidden lg:flex"><h2 class="card-title">{% translate "Bought on baki, or paid the shop?" %}</h2></div>
           <form method="post" class="card-body form-stack">
             {% csrf_token %}
             {% for field in form %}{% include "partials/field.html" %}{% endfor %}
-            <button type="submit" class="btn btn-primary btn-lg btn-block">{% translate "Post Transaction" %}</button>
+            <button type="submit" class="btn btn-primary btn-lg btn-block">{% translate "Save" %}</button>
           </form>
         </div>
       </section>

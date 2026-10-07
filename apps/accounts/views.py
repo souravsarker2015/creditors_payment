@@ -19,7 +19,7 @@ def signup_view(request):
             user = form.save()
             login(request, user)
             messages.success(request, _("Account created successfully!"))
-            return redirect("dashboard")
+            return redirect("home")
     else:
         form = UserCreationForm()
     return render(request, "accounts/signup.html", {"form": form})
@@ -33,7 +33,7 @@ def login_view(request):
             profile, _created = UserProfile.objects.get_or_create(user=user)
             translation.activate(profile.language)
             messages.success(request, _("Welcome back, %(username)s!") % {"username": user.username})
-            response = redirect("dashboard")
+            response = redirect("home")
             response.set_cookie(settings.LANGUAGE_COOKIE_NAME, profile.language)
             return response
     else:
@@ -85,7 +85,7 @@ def update_preferences_view(request):
     if request.headers.get("X-Preferences-Fetch") == "1" and language not in Language.values:
         return HttpResponse(status=204)
 
-    next_url = request.POST.get("next") or request.META.get("HTTP_REFERER") or reverse("dashboard")
+    next_url = request.POST.get("next") or request.META.get("HTTP_REFERER") or reverse("home")
     response = HttpResponseRedirect(next_url)
     if language in Language.values:
         response.set_cookie(settings.LANGUAGE_COOKIE_NAME, language)

@@ -102,17 +102,17 @@
     </section>
 
     <aside class="detail-side">
-      <section class="card" x-data="{ open: {{ form.errors|yesno:'true,false' }} }">
+      <section class="card" id="record" x-data="{ open: {{ form.errors|yesno:'true,false' }} || location.hash === '#record' }" x-init="if (location.hash === '#record') $nextTick(() => { $el.scrollIntoView({ block: 'start' }); const a = $el.querySelector('[name=amount]'); if (a) a.focus({ preventScroll: true }); })">
         <button type="button" class="collapse-toggle" @click="open = !open" :aria-expanded="open.toString()">
-          <span class="flex items-center gap-2"><span class="h-5 w-5" style="color: var(--accent);">{% include "partials/icon.html" with name="plus" %}</span>{% translate "Record New Activity" %}</span>
+          <span class="flex items-center gap-2"><span class="h-5 w-5" style="color: var(--accent);">{% include "partials/icon.html" with name="plus" %}</span>{% translate "Lent more, or got money back?" %}</span>
           {% include "partials/icon.html" with name="chevron-down" %}
         </button>
         <div class="collapse-body" :class="open && 'is-open'">
-          <div class="card-header hidden lg:flex"><h2 class="card-title">{% translate "Record New Activity" %}</h2></div>
+          <div class="card-header hidden lg:flex"><h2 class="card-title">{% translate "Lent more, or got money back?" %}</h2></div>
           <form method="post" class="card-body form-stack">
             {% csrf_token %}
             {% for field in form %}{% include "partials/field.html" %}{% endfor %}
-            <button type="submit" class="btn btn-primary btn-lg btn-block">{% translate "Post Transaction" %}</button>
+            <button type="submit" class="btn btn-primary btn-lg btn-block">{% translate "Save" %}</button>
           </form>
         </div>
       </section>

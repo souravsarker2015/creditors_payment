@@ -2729,3 +2729,57 @@ a.guide-chip:hover { background: var(--accent-soft); color: var(--accent); }
 @media (min-width: 640px) { .health-head { padding-inline: 1.5rem; } .health-body { padding-right: 1.5rem; } }
 .health-steps { margin: 0; padding-left: 1.25rem; display: grid; gap: 0.375rem; font-size: 0.875rem; line-height: 1.55; color: var(--text-secondary); list-style: decimal; }
 ul.health-steps { list-style: disc; }
+/* ── Personal Home ── */
+.home-money { display: grid; gap: 1.125rem; }
+.home-money-top { position: relative; z-index: 1; min-width: 0; }
+.home-wallets { display: flex; flex-wrap: wrap; gap: 0.375rem; margin-top: 0.75rem; }
+.home-wallets span { padding: 0.25rem 0.625rem; border-radius: 9999px; background: rgba(255, 255, 255, 0.08); font-size: 0.75rem; color: var(--text-on-ink-muted); }
+.home-wallets b { font-weight: 650; color: var(--text-on-ink); font-variant-numeric: tabular-nums; }
+.home-wallets:hover span { background: rgba(255, 255, 255, 0.13); }
+.home-sum { position: relative; z-index: 1; display: grid; gap: 0.125rem; margin: 0; padding-top: 0.875rem; border-top: 1px solid rgba(255, 255, 255, 0.12); }
+.home-sum > div { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.25rem 0; font-size: 0.875rem; }
+.home-sum dt { display: inline-flex; align-items: center; color: var(--text-on-ink-muted); }
+.home-sum dt a:hover { color: var(--text-on-ink); text-decoration: underline; }
+.home-sum dd { margin: 0; font-weight: 650; font-variant-numeric: tabular-nums; color: var(--text-on-ink); }
+.home-sum .is-good { color: #8fe0b0; }
+.home-sum .is-bad { color: #f2a597; }
+.home-sum .home-sum-total { margin-top: 0.25rem; padding-top: 0.5rem; border-top: 1px dashed rgba(255, 255, 255, 0.16); font-size: 0.9375rem; }
+.home-sum .home-sum-total dt { color: var(--text-on-ink); font-weight: 600; }
+.home-sum .home-sum-total dd { font-size: 1.0625rem; }
+/* Quick buttons: a soft colour per kind so they're easy to tell apart */
+.quick-action[data-tone="good"] svg { color: var(--status-good); }
+.home-quick .quick-action span { text-align: center; line-height: 1.25; }
+/* Cards that open on tap */
+.fold-card > .fold-head { display: flex; align-items: center; gap: 0.75rem; padding: 1rem; cursor: pointer; list-style: none; }
+@media (min-width: 640px) { .fold-card > .fold-head { padding-inline: 1.5rem; } }
+.fold-card > .fold-head::-webkit-details-marker { display: none; }
+.fold-card > .fold-head > svg { width: 1.25rem; height: 1.25rem; margin-left: auto; flex-shrink: 0; color: var(--text-muted); transition: transform .15s; }
+.fold-card[open] > .fold-head > svg { transform: rotate(180deg); }
+.fold-card > .fold-body { padding: 0 1rem 1rem; }
+@media (min-width: 640px) { .fold-card > .fold-body { padding: 0 1.5rem 1.5rem; } }
+/* "Everything in this app": each part named and explained in one line */
+.guide-tiles { display: grid; gap: 0.5rem; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 640px) { .guide-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .guide-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.guide-tile { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 0.875rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-raised); box-shadow: var(--shadow-sm); transition: border-color .15s, transform .1s; }
+.guide-tile:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
+.guide-tile:active { transform: scale(0.99); }
+.guide-tile > svg { width: 2.25rem; height: 2.25rem; flex-shrink: 0; padding: 0.5rem; border-radius: 0.625rem; color: var(--accent); background: var(--accent-soft, color-mix(in srgb, var(--accent) 12%, transparent)); }
+.guide-tile[data-tone="good"] > svg { color: var(--status-good); background: color-mix(in srgb, var(--status-good) 12%, transparent); }
+.guide-tile[data-tone="critical"] > svg { color: var(--status-critical); background: color-mix(in srgb, var(--status-critical) 12%, transparent); }
+.guide-tile > span { display: grid; min-width: 0; flex: 1; }
+.guide-tile b { font-size: 0.875rem; font-weight: 650; color: var(--text-primary); }
+.guide-tile small { font-size: 0.75rem; line-height: 1.4; color: var(--text-muted); }
+.guide-tile em { font-style: normal; font-size: 0.8125rem; font-weight: 650; color: var(--text-secondary); font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* "Who was it with?" picker */
+.pick-row { display: flex; align-items: center; gap: 0.75rem; }
+.pick-row .avatar { width: 2.5rem; height: 2.5rem; flex-shrink: 0; border-radius: 9999px; font-size: 0.9375rem; }
+.help-body { padding: 0 1rem 1rem; font-size: 0.875rem; line-height: 1.6; color: var(--text-secondary); }
+@media (min-width: 640px) { .help-body { padding-inline: 1.5rem; } }
+.pick-row > svg { width: 1.25rem; height: 1.25rem; flex-shrink: 0; color: var(--text-muted); }
+.guide-tile em { display: grid; justify-items: end; }
+.guide-tile em small { font-size: 0.625rem; font-weight: 500; color: var(--text-muted); }
+/* "All clear" — one quiet line instead of a big empty box */
+.all-clear { display: flex; align-items: center; gap: 0.5rem; padding: 0.875rem 1rem; font-size: 0.875rem; color: var(--text-secondary); }
+@media (min-width: 640px) { .all-clear { padding-inline: 1.5rem; } }
+.all-clear svg { width: 1.125rem; height: 1.125rem; flex-shrink: 0; padding: 0.1875rem; border-radius: 9999px; color: #fff; background: var(--status-good); }

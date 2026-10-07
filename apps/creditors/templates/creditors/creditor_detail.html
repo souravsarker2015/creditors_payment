@@ -43,7 +43,7 @@
 
   <dl class="stat-grid">
     <div class="stat" data-tone="{% if remaining > 0 %}critical{% else %}good{% endif %}">
-      <dt class="stat-label inline-flex items-center">{% translate "Outstanding Balance" %}{% translate "Total borrowed minus total repaid. Estimated interest isn't included until you post it." as info_text %}{% include "partials/info.html" with text=info_text %}</dt>
+      <dt class="stat-label inline-flex items-center">{% translate "You still owe" %}{% translate "Total borrowed minus total repaid. Estimated interest isn't included until you post it." as info_text %}{% include "partials/info.html" with text=info_text %}</dt>
       <dd class="stat-value is-tone">{{ remaining|money }}</dd>
     </div>
     <div class="stat">
@@ -146,17 +146,17 @@
     </section>
 
     <aside class="detail-side">
-      <section class="card" x-data="{ open: {{ form.errors|yesno:'true,false' }} }">
+      <section class="card" id="record" x-data="{ open: {{ form.errors|yesno:'true,false' }} || location.hash === '#record' }" x-init="if (location.hash === '#record') $nextTick(() => { $el.scrollIntoView({ block: 'start' }); const a = $el.querySelector('[name=amount]'); if (a) a.focus({ preventScroll: true }); })">
         <button type="button" class="collapse-toggle" @click="open = !open" :aria-expanded="open.toString()">
-          <span class="flex items-center gap-2"><span class="h-5 w-5" style="color: var(--accent);">{% include "partials/icon.html" with name="plus" %}</span>{% translate "Record New Activity" %}</span>
+          <span class="flex items-center gap-2"><span class="h-5 w-5" style="color: var(--accent);">{% include "partials/icon.html" with name="plus" %}</span>{% translate "Borrowed more, or paid back?" %}</span>
           {% include "partials/icon.html" with name="chevron-down" %}
         </button>
         <div class="collapse-body" :class="open && 'is-open'">
-          <div class="card-header hidden lg:flex"><h2 class="card-title">{% translate "Record New Activity" %}</h2></div>
+          <div class="card-header hidden lg:flex"><h2 class="card-title">{% translate "Borrowed more, or paid back?" %}</h2></div>
           <form method="post" class="card-body form-stack">
             {% csrf_token %}
             {% for field in form %}{% include "partials/field.html" %}{% endfor %}
-            <button type="submit" class="btn btn-primary btn-lg btn-block">{% translate "Post Transaction" %}</button>
+            <button type="submit" class="btn btn-primary btn-lg btn-block">{% translate "Save" %}</button>
           </form>
         </div>
       </section>
@@ -164,7 +164,7 @@
       {% if borrowed > 0 %}
       <section class="card card-body">
         {% widthratio paid borrowed 100 as repaid_pct %}
-        <div class="meter-row"><span class="font-semibold" style="color: var(--text-primary);">{% translate "Repayment Percentage" %}</span><span class="num">{{ repaid_pct }}%</span></div>
+        <div class="meter-row"><span class="font-semibold" style="color: var(--text-primary);">{% translate "How much you have paid back" %}</span><span class="num">{{ repaid_pct }}%</span></div>
         <div class="meter meter-lg" data-tone="good"><span style="width: {% if repaid_pct|add:0 > 100 %}100{% else %}{{ repaid_pct }}{% endif %}%"></span></div>
         <div class="mt-3 flex justify-between gap-2 text-xs" style="color: var(--text-muted);">
           <span>{% translate "Repaid" %} <strong class="num" style="color: var(--status-good);">{{ paid|money }}</strong></span>

@@ -24,10 +24,10 @@ person's choice (Automatic / App view / Website view).
     </a>
     {% endif %}
     {% else %}
-    <a href="{% url 'networth' %}" class="app-tab {% if '/networth/' in p %}is-active{% endif %}" data-tab-root {% if '/networth/' in p %}aria-current="page"{% endif %}>
+    <a href="{% url 'home' %}" class="app-tab {% if p == '/' or '/networth/' in p %}is-active{% endif %}" data-tab-root {% if p == '/' or '/networth/' in p %}aria-current="page"{% endif %}>
         <span class="app-tab-icon">{% include "business/partials/icon.html" with name="home" %}</span><span class="app-tab-label">{% translate "Home" %}</span>
     </a>
-    <a href="{% url 'dashboard' %}" class="app-tab {% if p == '/' or '/creditors/' in p or '/debtors/' in p or '/shops/' in p or '/contributors/' in p or p|slice:':14' == '/transactions/' %}is-active{% endif %}" data-tab-root {% if p == '/' %}aria-current="page"{% endif %}>
+    <a href="{% url 'dashboard' %}" class="app-tab {% if '/creditors/' in p or '/debtors/' in p or '/shops/' in p or '/contributors/' in p or p|slice:':14' == '/transactions/' %}is-active{% endif %}" data-tab-root {% if p == '/creditors/overview/' %}aria-current="page"{% endif %}>
         <span class="app-tab-icon">{% include "business/partials/icon.html" with name="book" %}</span><span class="app-tab-label">{% translate "Dues" %}</span>
     </a>
     <button type="button" class="app-tab app-tab-add" @click="sheet = 'add'" :aria-expanded="sheet === 'add'" aria-haspopup="dialog">

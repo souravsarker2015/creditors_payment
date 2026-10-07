@@ -88,7 +88,7 @@
             <button type="button" class="icon-btn web-only -ml-2 lg:hidden" @click="sidebarOpen = true" aria-label="{% translate 'Open sidebar' %}">
                 <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
             </button>
-            <a href="{% if active_dashboard == 'business' %}{% url 'business:home' %}{% else %}{% url 'networth' %}{% endif %}" class="topbar-logo flex items-center gap-2 lg:hidden">
+            <a href="{% if active_dashboard == 'business' %}{% url 'business:home' %}{% else %}{% url 'home' %}{% endif %}" class="topbar-logo flex items-center gap-2 lg:hidden">
                 <span class="grid h-8 w-8 place-items-center rounded-lg font-heading text-sm font-bold" style="background: var(--gold); color: #221a06;">৳</span>
                 <span class="font-heading text-base font-bold" style="color: var(--text-primary);">FinTrack</span>
             </a>

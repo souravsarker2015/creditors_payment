@@ -9,6 +9,8 @@ from datetime import date as date_cls, timedelta
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.contrib import messages
+
+from apps.core.flow import record_initial, record_next
 from django.db.models import Sum, Q, F, DecimalField, Value
 from django.db.models.functions import Coalesce, TruncMonth
 from django.core.paginator import Paginator
@@ -263,7 +265,7 @@ def debtor_create_view(request):
             debtor.user = request.user
             debtor.save()
             messages.success(request, _("Debtor '%(name)s' added successfully.") % {"name": debtor.name})
-            return redirect("debtor_list")
+            return record_next(request, "debtor_detail", debtor.pk) or redirect("debtor_list")
     else:
         form = DebtorForm()
     return render(request, "debtors/debtor_form.html", {"form": form, "title": _("Add New Debtor")})
@@ -297,7 +299,7 @@ def debtor_detail_view(request, pk):
             messages.success(request, _("Transaction of ৳%(amount)s added.") % {"amount": transaction.amount})
             return redirect("debtor_detail", pk=pk)
     else:
-        form = TransactionForm(initial={"date": django.utils.timezone.now().date()})
+        form = TransactionForm(initial=record_initial(request, Transaction.TYPE_CHOICES, {"date": django.utils.timezone.now().date()}))
 
     # Calculate all-time totals for this specific debtor (never period-filtered —
     # outstanding balance only makes sense as a current, running snapshot).

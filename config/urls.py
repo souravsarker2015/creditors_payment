@@ -12,6 +12,7 @@ from django.conf.urls.static import static
 from apps.core.pwa import manifest_view, offline_view, service_worker_view
 from apps.core.receipts import receipt_view
 from apps.core.search import search_view
+from apps.overview import views as overview_views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -19,6 +20,9 @@ urlpatterns = [
     path("manifest.webmanifest", manifest_view, name="manifest"),
     path("sw.js", service_worker_view, name="service_worker"),
     path("offline/", offline_view, name="offline"),
+    path("", overview_views.networth_view, name="home"),  # Home: the personal side starts here
+    path("record/<slug:kind>/", overview_views.pick_view, name="pick"),
+    path("help/", overview_views.help_view, name="help"),
     path("", include("apps.creditors.urls")),
     path("networth/", include("apps.overview.urls")),
     path("debtors/", include("apps.debtors.urls")),

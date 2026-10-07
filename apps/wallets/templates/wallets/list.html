@@ -34,6 +34,7 @@
           <div class="min-w-0"><p class="wallet-name">{{ w.name }}{% if w.is_default %} <span class="badge" data-tone="info">{% translate "Default" %}</span>{% endif %}</p><p class="wallet-kind">{{ w.get_kind_display }}{% if w.number %} · {{ w.number }}{% endif %}</p></div>
         </div>
         <p class="wallet-balance{% if w.balance < 0 %} tone-critical{% endif %}">{{ w.balance|money }}</p>
+        {% if w.balance < 0 %}<p class="mt-1 text-xs" style="color: var(--status-warn);">{% translate "Below zero — probably some money coming in wasn't written down. Open it and use “Correct the balance”." %}</p>{% endif %}
       </div>
     </a>
     {% endfor %}

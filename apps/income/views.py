@@ -7,6 +7,8 @@ import django.utils.timezone
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.contrib import messages
+
+from apps.core.flow import record_next
 from django.db.models import F, Sum, Q, DecimalField, Value
 from django.db.models.functions import Coalesce, TruncMonth
 from django.core.paginator import Paginator
@@ -467,7 +469,7 @@ def income_source_create_view(request):
             source.user = request.user
             source.save()
             messages.success(request, _("Income source '%(name)s' created.") % {"name": source.name})
-            return redirect("income_source_list")
+            return record_next(request, "income_source_detail", source.pk) or redirect("income_source_list")
     else:
         form = IncomeSourceForm()
     return render(request, "income/source_form.html", {"form": form, "title": _("Add Income Source")})

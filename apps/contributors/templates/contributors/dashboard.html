@@ -8,7 +8,7 @@
   <header class="page-header !mb-0">
     <div>
       <h1 class="page-title">{% translate "Contributors Overview" %}</h1>
-      <p class="page-subtitle">{% translate "A detailed summary of voluntary contributions and external funding." %}</p>
+      <p class="page-subtitle">{% translate "Family or friends who help you with money. You don't pay this back." %}</p>
     </div>
     <div class="page-actions">
       <a href="{% url 'contributor_list' %}" class="btn btn-secondary">{% include "partials/icon.html" with name="list" %}{% translate "View All Contributors" %}</a>
@@ -22,7 +22,7 @@
   <section class="hero">
     <div class="hero-inner">
       <div class="min-w-0">
-        <p class="hero-label">{% translate "Total Funding" %}</p>
+        <p class="hero-label">{% translate "Received from supporters" %}</p>
         <p class="hero-value">{{ total_contribution_amount|money }}</p>
         <p class="hero-sub">{% blocktranslate count counter=contribution_count %}{{ counter }} contribution{% plural %}{{ counter }} contributions{% endblocktranslate %} · {% blocktranslate count counter=giving_count %}from {{ counter }} contributor{% plural %}from {{ counter }} contributors{% endblocktranslate %}</p>
       </div>

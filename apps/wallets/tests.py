@@ -95,7 +95,7 @@ class WalletTests(TestCase):
         self.assertEqual(self.bal(self.bkash), D("5400"))
         self.assertContains(self.client.get(reverse("wallet_list")), "৳6,000")
         self.assertContains(self.client.get(reverse("wallet_detail", args=[self.cash.pk])), "Sent to bKash")
-        self.assertContains(self.client.get(reverse("networth")), "In your wallets")
+        self.assertContains(self.client.get(reverse("home")), "Money you have now")
 
     def test_only_one_default_and_names_are_unique(self):
         self.client.post(reverse("wallet_create"), {"name": "Bank", "kind": "bank", "opening_balance": "0", "opening_date": TODAY.isoformat(), "is_default": "on"})

@@ -8,10 +8,12 @@
   <header class="page-header !mb-0">
     <div>
       <h1 class="page-title">{% translate "Debtors Overview" %}</h1>
-      <p class="page-subtitle">{% translate "Money you have lent out and how much is still to be collected." %}</p>
+      <p class="page-subtitle">{% translate "People you lent money to, and how much they still have to give back." %}</p>
     </div>
     <div class="page-actions">
       <a href="{% url 'debtor_list' %}" class="btn btn-secondary">{% include "partials/icon.html" with name="list" %}{% translate "View All Debtors" %}</a>
+      <a href="{% url 'pick' 'lend' %}" class="btn btn-secondary">{% translate "I lent" %}</a>
+      <a href="{% url 'pick' 'collect' %}" class="btn btn-secondary">{% translate "I got it back" %}</a>
       <a href="{% url 'debtor_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add Debtor" %}</a>
     </div>
   </header>
@@ -22,7 +24,7 @@
   <section class="hero">
     <div class="hero-inner">
       <div class="min-w-0">
-        <p class="hero-label inline-flex items-center">{% translate "Remaining to Collect" %}{% translate "Everything you lent minus everything you've received back, across all debtors." as info_text %}{% include "partials/info.html" with text=info_text %}</p>
+        <p class="hero-label inline-flex items-center">{% translate "Others still owe you" %}{% translate "Everything you lent minus everything you've received back, across all debtors." as info_text %}{% include "partials/info.html" with text=info_text %}</p>
         <p class="hero-value">{{ remaining|money }}</p>
         <p class="hero-sub">{% translate "Lent" %} {{ total_lent|money }} · {% translate "Received" %} {{ total_received|money }}</p>
       </div>

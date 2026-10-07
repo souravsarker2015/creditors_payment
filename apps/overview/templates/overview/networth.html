@@ -1,42 +1,69 @@
 {% extends "base.html" %}
-{% load static i18n %}
+{% load static i18n calendar_tags %}
 
-{% block title %}{% translate "Net Worth" %} | FinTrack{% endblock %}
+{% block title %}{% translate "Home" %} | FinTrack{% endblock %}
 
 {% block content %}
 <div class="page-medium stack">
   <header class="page-header !mb-0">
     <div>
-      <h1 class="page-title">{% translate "Net Worth" %}</h1>
-      <p class="page-subtitle">{% translate "Your whole financial picture in one place — what you're owed, what you owe, and what you've earned and spent, across every ledger." %}</p>
+      <p class="text-sm font-semibold" style="color: var(--text-muted);">{% now "l, j F Y" %} · {{ today|bangla_date }}</p>
+      <h1 class="page-title">{{ greeting }}, {{ user.first_name|default:user.username }}</h1>
+      <p class="page-subtitle">{% translate "Here is your money at a glance. Tap a button below to write down anything new." %}</p>
     </div>
   </header>
 
-  <section class="hero">
-    <div class="hero-inner">
-      <div class="min-w-0">
-        <p class="hero-label inline-flex items-center">{% translate "Overall Net Position" %}{% translate "Net Balance plus Lifetime Net Cash Flow — your overall standing across every ledger." as info_text %}{% include "partials/info.html" with text=info_text %}</p>
-        <p class="hero-value" style="color: {% if net_position >= 0 %}#8fe0b0{% else %}#f2a597{% endif %};">{{ net_position|money }}</p>
-        <p class="hero-sub">{% translate "Net Balance" %} {{ net_balance|money }} + {% translate "Lifetime Net Cash Flow" %} {{ net_cash_flow|money }}</p>
-      </div>
-      <span class="badge !bg-white/10 {% if net_position >= 0 %}!text-[#8fe0b0]{% else %}!text-[#f2a597]{% endif %}">
-        {% if net_position >= 0 %}{% include "partials/icon.html" with name="arrow-up" %}{% translate "In the green" %}{% else %}{% include "partials/icon.html" with name="arrow-down" %}{% translate "In the red" %}{% endif %}
-      </span>
+  {# The one number most people want: how much money do I have? #}
+  <section class="hero home-money" aria-labelledby="home-money-title">
+    <div class="home-money-top">
+      <p class="hero-label inline-flex items-center" id="home-money-title">{% translate "Money you have now" %}{% translate "The total in all your wallets: cash in hand, bank, bKash and so on." as info_text %}{% include "partials/info.html" with text=info_text %}</p>
+      {% if wallets %}
+      <p class="hero-value">{{ wallets_total|money }}</p>
+      <a href="{% url 'wallet_list' %}" class="home-wallets">{% for w in wallets %}<span>{{ w.name }} <b>{{ w.balance|money }}</b></span>{% endfor %}</a>
+      {% else %}
+      <p class="hero-sub">{% translate "Tell the app where you keep money — cash, bank, bKash — and it will keep each balance for you." %}</p>
+      <a href="{% url 'wallet_create' %}" class="btn btn-on-ink btn-sm mt-3">{% include "partials/icon.html" with name="plus" %}{% translate "Add a wallet" %}</a>
+      {% endif %}
     </div>
+    <dl class="home-sum">
+      <div><dt><a href="{% url 'debtor_dashboard' %}">{% translate "Others owe you" %}</a></dt><dd class="is-good">+{{ receivables|money }}</dd></div>
+      <div><dt><a href="{% url 'dashboard' %}">{% translate "You owe others" %}</a></dt><dd class="is-bad">−{{ payables|money }}</dd></div>
+      {% if wallets %}<div class="home-sum-total"><dt>{% translate "If everyone settled up today" %}{% translate "Money you have now, plus what others owe you, minus what you owe. This is what you would have left if every loan and due were cleared today." as info_text %}{% include "partials/info.html" with text=info_text %}</dt><dd class="{% if settled >= 0 %}is-good{% else %}is-bad{% endif %}">{{ settled|money }}</dd></div>{% endif %}
+    </dl>
   </section>
 
-  <a href="{% url 'wallet_list' %}" class="card wallet-strip">
-    <span class="ledger-icon" data-tone="accent">{% include "partials/icon.html" with name="wallet" %}</span>
-    {% if wallets %}
-    <span class="min-w-0"><span class="wallet-strip-label">{% translate "In your wallets" %}</span>
-      <span class="wallet-strip-list">{% for w in wallets %}{{ w.name }} {{ w.balance|money }}{% if not forloop.last %} · {% endif %}{% endfor %}</span></span>
-    <strong class="wallet-strip-total">{{ wallets_total|money }}</strong>
-    {% else %}
-    <span class="min-w-0"><span class="wallet-strip-label">{% translate "Where is your money?" %}</span>
-      <span class="wallet-strip-list">{% translate "Add your cash, bank and bKash to see each balance." %}</span></span>
-    <span class="wallet-strip-total">{% include "partials/icon.html" with name="chevron-right" %}</span>
-    {% endif %}
-  </a>
+  <nav class="quick-actions quick-actions-8 home-quick" aria-label="{% translate 'Write down' %}">
+    <a href="{% url 'expense_create' %}" class="quick-action is-primary">{% include "partials/icon.html" with name="arrow-up" %}<span>{% translate "I spent" %}</span></a>
+    <a href="{% url 'pick' 'income' %}" class="quick-action" data-tone="good">{% include "partials/icon.html" with name="arrow-down" %}<span>{% translate "I got money" %}</span></a>
+    <a href="{% url 'household_month_detail' today.year today.month %}#record" class="quick-action">{% include "partials/icon.html" with name="cart" %}<span>{% translate "Bazar" %}</span></a>
+    <a href="{% url 'wallet_transfer' %}" class="quick-action">{% include "business/partials/icon.html" with name="swap" %}<span>{% translate "Move money" %}</span></a>
+    <a href="{% url 'pick' 'borrow' %}" class="quick-action">{% include "partials/icon.html" with name="users" %}<span>{% translate "I borrowed" %}</span></a>
+    <a href="{% url 'pick' 'repay' %}" class="quick-action">{% include "partials/icon.html" with name="check" %}<span>{% translate "I paid back" %}</span></a>
+    <a href="{% url 'pick' 'lend' %}" class="quick-action">{% include "business/partials/icon.html" with name="person" %}<span>{% translate "I lent" %}</span></a>
+    <a href="{% url 'pick' 'collect' %}" class="quick-action">{% include "partials/icon.html" with name="wallet" %}<span>{% translate "I got it back" %}</span></a>
+  </nav>
+
+  {% if starter %}
+  <section class="card" x-data="{ hidden: (() => { try { return localStorage.getItem('ft-starter-hidden') === '1' } catch (e) { return false } })() }" x-show="!hidden">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title">{% translate "Start here" %}</h2>
+        <p class="card-subtitle">{% blocktranslate with done=starter.done total=starter.total %}{{ done }} of {{ total }} done. Five small steps and the app can show you the full picture.{% endblocktranslate %} <a href="{% url 'help' %}" class="font-semibold underline">{% translate "How this app works" %}</a></p>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm" @click="hidden = true; try { localStorage.setItem('ft-starter-hidden', '1') } catch (e) {}">{% translate "Hide" %}</button>
+    </div>
+    <div class="px-4 sm:px-6"><div class="meter" data-tone="good"><span style="width: {% widthratio starter.done starter.total 100 %}%"></span></div></div>
+    <ol class="biz-steps">
+      {% for step in starter.steps %}
+      <li class="{% if step.done %}is-done{% endif %}">
+        <span class="biz-step-dot">{% if step.done %}{% include "partials/icon.html" with name="check" %}{% else %}{{ step.no }}{% endif %}</span>
+        <div class="min-w-0 flex-1"><p class="biz-step-title">{{ step.title }}</p><p class="biz-step-text">{{ step.text }}</p></div>
+        {% if not step.done %}<a href="{{ step.url }}" class="btn btn-primary btn-sm">{% translate "Start" %}</a>{% endif %}
+      </li>
+      {% endfor %}
+    </ol>
+  </section>
+  {% endif %}
 
   <div>
     <h2 class="section-title">{% blocktranslate with month=today|date:"F Y" %}This month · {{ month }}{% endblocktranslate %}</h2>
@@ -101,13 +128,38 @@
         {% endfor %}
       </ul>
       {% else %}
-      <div class="empty is-plain">
-        <div class="empty-icon">{% include "partials/icon.html" with name="check" %}</div>
-        <p class="empty-text">{% translate "Nothing overdue or due this week." %}</p>
-      </div>
+      <p class="all-clear">{% include "partials/icon.html" with name="check" %}{% translate "Nothing overdue or due this week." %}</p>
       {% endif %}
     </section>
   </div>
+
+  <div class="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
+  <section class="card">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title">{% translate "Recently written down" %}</h2>
+        <p class="card-subtitle">{% translate "The last few things you recorded, so you don't write the same thing twice." %}</p>
+      </div>
+    </div>
+    {% if recent %}
+    <ul class="ledger">
+      {% for r in recent %}
+      <li>
+        <a href="{{ r.url }}" class="ledger-row">
+          <span class="date-chip"><b>{{ r.date|date:"j" }}</b><small>{{ r.date|date:"M" }}</small></span>
+          <div class="ledger-main"><p class="ledger-title">{{ r.title }}</p><p class="ledger-meta">{{ r.kind }}</p></div>
+          <span class="ledger-amount" data-tone="{{ r.tone }}">{{ r.amount|signed_money }}</span>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty is-plain">
+      <div class="empty-icon">{% include "partials/icon.html" with name="note" %}</div>
+      <p class="empty-text">{% translate "Nothing written down yet. Use the buttons at the top — start with something you spent today." %}</p>
+    </div>
+    {% endif %}
+  </section>
 
   <section class="card">
     <div class="card-header">
@@ -134,75 +186,93 @@
     </ul>
     {% endif %}
   </section>
-
-  <div class="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
-    <section class="card">
-      <div class="card-header">
-        <div>
-          <h2 class="card-title">{% translate "Balances (as of today)" %}</h2>
-          <p class="card-subtitle">{% translate "What would settle up if everyone paid what they owe, right now." %}</p>
-        </div>
-      </div>
-      <div class="card-body !pt-2">
-        <dl>
-          <div class="kv"><dt><a href="{% url 'debtor_dashboard' %}" class="kv-label">{% translate "Owed to you (Debtors)" %}</a></dt><dd class="kv-value" data-tone="good">{{ receivables|signed_money }}</dd></div>
-          <div class="kv"><dt><a href="{% url 'dashboard' %}" class="kv-label">{% translate "You owe (Creditors)" %}</a></dt><dd class="kv-value" data-tone="critical">−{{ creditors_payable|money }}</dd></div>
-          <div class="kv"><dt><a href="{% url 'shop_dashboard' %}" class="kv-label">{% translate "You owe (Shop Dues)" %}</a></dt><dd class="kv-value" data-tone="critical">−{{ shops_payable|money }}</dd></div>
-          <div class="kv"><dt><a href="{% url 'household_member_list' %}" class="kv-label">{% translate "You owe (Household Members)" %}</a></dt><dd class="kv-value" data-tone="critical">−{{ household_payable|money }}</dd></div>
-        </dl>
-        <div class="mt-3 space-y-1.5" aria-hidden="true">
-          <div class="meter" data-tone="good"><span style="width: {{ receivables_pct }}%"></span></div>
-          <div class="meter" data-tone="critical"><span style="width: {{ payables_pct }}%"></span></div>
-        </div>
-        <div class="kv kv-total mt-2">
-          <span class="kv-label inline-flex items-center">{% translate "Net Balance" %}{% translate "What people owe you minus what you owe, as of today." as info_text %}{% include "partials/info.html" with text=info_text %}</span>
-          <span class="kv-value" data-tone="{% if net_balance >= 0 %}good{% else %}critical{% endif %}">{{ net_balance|money }}</span>
-        </div>
-      </div>
-    </section>
-
-    <section class="card">
-      <div class="card-header">
-        <div>
-          <h2 class="card-title">{% translate "Lifetime Cash Flow" %}</h2>
-          <p class="card-subtitle">{% translate "Everything ever earned vs. everything ever spent — all-time totals, not a current balance." %}</p>
-        </div>
-      </div>
-      <div class="card-body !pt-2">
-        <dl>
-          <div class="kv"><dt><a href="{% url 'income_dashboard' %}" class="kv-label">{% translate "Earned (Income)" %}</a></dt><dd class="kv-value" data-tone="good">{{ income_earned|signed_money }}</dd></div>
-          <div class="kv"><dt><a href="{% url 'contributor_dashboard' %}" class="kv-label">{% translate "Received (Contributors)" %}</a></dt><dd class="kv-value" data-tone="good">{{ contributions_received|signed_money }}</dd></div>
-          <div class="kv"><dt><a href="{% url 'expense_dashboard' %}" class="kv-label">{% translate "Spent (Expense Log)" %}</a></dt><dd class="kv-value" data-tone="critical">−{{ expense_spent|money }}</dd></div>
-          <div class="kv"><dt><a href="{% url 'household_dashboard' %}" class="kv-label">{% translate "Spent (Household, by you)" %}</a></dt><dd class="kv-value" data-tone="critical">−{{ household_spent_by_you|money }}</dd></div>
-        </dl>
-        <div class="mt-3 space-y-1.5" aria-hidden="true">
-          <div class="meter" data-tone="good"><span style="width: {{ income_pct }}%"></span></div>
-          <div class="meter" data-tone="critical"><span style="width: {{ expense_pct }}%"></span></div>
-        </div>
-        <div class="kv kv-total mt-2">
-          <span class="kv-label inline-flex items-center">{% translate "Net Cash Flow" %}{% translate "Everything earned or received minus everything spent, all time." as info_text %}{% include "partials/info.html" with text=info_text %}</span>
-          <span class="kv-value" data-tone="{% if net_cash_flow >= 0 %}good{% else %}critical{% endif %}">{{ net_cash_flow|money }}</span>
-        </div>
-      </div>
-    </section>
   </div>
 
-  <div class="callout">
-    {% include "partials/icon.html" with name="alert" %}
-    <p class="text-xs leading-relaxed" style="color: var(--text-secondary);">
-      <strong style="color: var(--text-primary);">{% translate "How this is calculated:" %}</strong>
-      {% translate "Household purchases fronted by a member are counted once, as that member's balance — not counted again as spending, to avoid double-counting the same taka. Interest that has accrued but not yet been posted to a creditor's balance is not included here; check that creditor's page for the estimate." %}
-    </p>
-  </div>
+  <details class="card fold-card">
+    <summary class="fold-head">
+      <span class="min-w-0"><span class="card-title block">{% translate "The full picture" %}</span><span class="card-subtitle block">{% translate "Every due, and everything earned and spent since you started." %}</span></span>
+      {% include "partials/icon.html" with name="chevron-down" %}
+    </summary>
+    <div class="fold-body stack">
+    <div class="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
+      <section class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">{% translate "Dues as of today" %}</h2>
+            <p class="card-subtitle">{% translate "What would settle up if everyone paid what they owe, right now." %}</p>
+          </div>
+        </div>
+        <div class="card-body !pt-2">
+          <dl>
+            <div class="kv"><dt><a href="{% url 'debtor_dashboard' %}" class="kv-label">{% translate "Owed to you (Debtors)" %}</a></dt><dd class="kv-value" data-tone="good">{{ receivables|signed_money }}</dd></div>
+            <div class="kv"><dt><a href="{% url 'dashboard' %}" class="kv-label">{% translate "You owe (Creditors)" %}</a></dt><dd class="kv-value" data-tone="critical">−{{ creditors_payable|money }}</dd></div>
+            <div class="kv"><dt><a href="{% url 'shop_dashboard' %}" class="kv-label">{% translate "You owe (Shop Dues)" %}</a></dt><dd class="kv-value" data-tone="critical">−{{ shops_payable|money }}</dd></div>
+            <div class="kv"><dt><a href="{% url 'household_member_list' %}" class="kv-label">{% translate "You owe (Household Members)" %}</a></dt><dd class="kv-value" data-tone="critical">−{{ household_payable|money }}</dd></div>
+          </dl>
+          <div class="mt-3 space-y-1.5" aria-hidden="true">
+            <div class="meter" data-tone="good"><span style="width: {{ receivables_pct }}%"></span></div>
+            <div class="meter" data-tone="critical"><span style="width: {{ payables_pct }}%"></span></div>
+          </div>
+          <div class="kv kv-total mt-2">
+            <span class="kv-label inline-flex items-center">{% translate "Net Balance" %}{% translate "What people owe you minus what you owe, as of today." as info_text %}{% include "partials/info.html" with text=info_text %}</span>
+            <span class="kv-value" data-tone="{% if net_balance >= 0 %}good{% else %}critical{% endif %}">{{ net_balance|money }}</span>
+          </div>
+        </div>
+      </section>
 
-  <nav class="ledger-tiles" aria-label="{% translate 'Ledgers' %}">
-    <a href="{% url 'dashboard' %}" class="ledger-tile" data-tone="critical"><span class="ledger-tile-head">{% include "partials/icon.html" with name="arrow-down" %}{% translate "Creditors" %}<span class="arrow">{% include "partials/icon.html" with name="chevron-right" %}</span></span><span class="ledger-tile-value">{{ creditors_payable|money }}</span><span class="ledger-tile-hint">{% translate "You owe" %}</span></a>
-    <a href="{% url 'debtor_dashboard' %}" class="ledger-tile" data-tone="good"><span class="ledger-tile-head">{% include "partials/icon.html" with name="arrow-up" %}{% translate "Debtors" %}<span class="arrow">{% include "partials/icon.html" with name="chevron-right" %}</span></span><span class="ledger-tile-value">{{ receivables|money }}</span><span class="ledger-tile-hint">{% translate "Owed to you" %}</span></a>
-    <a href="{% url 'shop_dashboard' %}" class="ledger-tile" data-tone="critical"><span class="ledger-tile-head">{% include "partials/icon.html" with name="cart" %}{% translate "Shop Dues" %}<span class="arrow">{% include "partials/icon.html" with name="chevron-right" %}</span></span><span class="ledger-tile-value">{{ shops_payable|money }}</span><span class="ledger-tile-hint">{% translate "Current Due" %}</span></a>
-    <a href="{% url 'income_dashboard' %}" class="ledger-tile" data-tone="good"><span class="ledger-tile-head">{% include "partials/icon.html" with name="wallet" %}{% translate "Income" %}<span class="arrow">{% include "partials/icon.html" with name="chevron-right" %}</span></span><span class="ledger-tile-value">{{ income_earned|money }}</span><span class="ledger-tile-hint">{% translate "All time" %}</span></a>
-    <a href="{% url 'expense_dashboard' %}" class="ledger-tile"><span class="ledger-tile-head">{% include "partials/icon.html" with name="list" %}{% translate "Expense" %}<span class="arrow">{% include "partials/icon.html" with name="chevron-right" %}</span></span><span class="ledger-tile-value">{{ expense_spent|money }}</span><span class="ledger-tile-hint">{% translate "All time" %}</span></a>
-    <a href="{% url 'household_dashboard' %}" class="ledger-tile" data-tone="warn"><span class="ledger-tile-head">{% include "partials/icon.html" with name="tag" %}{% translate "Household" %}<span class="arrow">{% include "partials/icon.html" with name="chevron-right" %}</span></span><span class="ledger-tile-value">{{ household_payable|money }}</span><span class="ledger-tile-hint">{% translate "Owed to members" %}</span></a>
-  </nav>
+      <section class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">{% translate "Lifetime Cash Flow" %}</h2>
+            <p class="card-subtitle">{% translate "Everything ever earned vs. everything ever spent — all-time totals, not a current balance." %}</p>
+          </div>
+        </div>
+        <div class="card-body !pt-2">
+          <dl>
+            <div class="kv"><dt><a href="{% url 'income_dashboard' %}" class="kv-label">{% translate "Earned (Income)" %}</a></dt><dd class="kv-value" data-tone="good">{{ income_earned|signed_money }}</dd></div>
+            <div class="kv"><dt><a href="{% url 'contributor_dashboard' %}" class="kv-label">{% translate "Received (Contributors)" %}</a></dt><dd class="kv-value" data-tone="good">{{ contributions_received|signed_money }}</dd></div>
+            <div class="kv"><dt><a href="{% url 'expense_dashboard' %}" class="kv-label">{% translate "Spent (Expense Log)" %}</a></dt><dd class="kv-value" data-tone="critical">−{{ expense_spent|money }}</dd></div>
+            <div class="kv"><dt><a href="{% url 'household_dashboard' %}" class="kv-label">{% translate "Spent (Household, by you)" %}</a></dt><dd class="kv-value" data-tone="critical">−{{ household_spent_by_you|money }}</dd></div>
+          </dl>
+          <div class="mt-3 space-y-1.5" aria-hidden="true">
+            <div class="meter" data-tone="good"><span style="width: {{ income_pct }}%"></span></div>
+            <div class="meter" data-tone="critical"><span style="width: {{ expense_pct }}%"></span></div>
+          </div>
+          <div class="kv kv-total mt-2">
+            <span class="kv-label inline-flex items-center">{% translate "Net Cash Flow" %}{% translate "Everything earned or received minus everything spent, all time." as info_text %}{% include "partials/info.html" with text=info_text %}</span>
+            <span class="kv-value" data-tone="{% if net_cash_flow >= 0 %}good{% else %}critical{% endif %}">{{ net_cash_flow|money }}</span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="callout">
+      {% include "partials/icon.html" with name="alert" %}
+      <p class="text-xs leading-relaxed" style="color: var(--text-secondary);">
+        <strong style="color: var(--text-primary);">{% translate "How this is calculated:" %}</strong>
+        {% translate "Household purchases fronted by a member are counted once, as that member's balance — not counted again as spending, to avoid double-counting the same taka. Interest that has accrued but not yet been posted to a creditor's balance is not included here; check that creditor's page for the estimate." %}
+      </p>
+    </div>
+    </div>
+  </details>
+
+  <section aria-labelledby="home-guide">
+    <h2 class="section-title" id="home-guide">{% translate "Everything in this app" %}</h2>
+    <nav class="guide-tiles">
+      <a href="{% url 'wallet_list' %}" class="guide-tile">{% include "partials/icon.html" with name="wallet" %}<span><b>{% translate "Wallets" %}</b><small>{% translate "Where your money is: cash, bank, bKash." %}</small></span><em>{{ wallets_total|money }}<small>{% translate "now" %}</small></em></a>
+      <a href="{% url 'expense_dashboard' %}" class="guide-tile">{% include "partials/icon.html" with name="arrow-up" %}<span><b>{% translate "Expense" %}</b><small>{% translate "Everything you spend money on." %}</small></span><em>{{ out_month|money }}<small>{% translate "this month" %}</small></em></a>
+      <a href="{% url 'income_dashboard' %}" class="guide-tile">{% include "partials/icon.html" with name="arrow-down" %}<span><b>{% translate "Income" %}</b><small>{% translate "Money you earn: salary, business, rent." %}</small></span><em>{{ in_month|money }}<small>{% translate "this month" %}</small></em></a>
+      <a href="{% url 'household_dashboard' %}" class="guide-tile">{% include "partials/icon.html" with name="cart" %}<span><b>{% translate "Household (Bazar)" %}</b><small>{% translate "Daily shopping, and who in the family paid for it." %}</small></span><em>{{ household_payable|money }}<small>{% translate "owed to family" %}</small></em></a>
+      <a href="{% url 'dashboard' %}" class="guide-tile" data-tone="critical">{% include "partials/icon.html" with name="arrow-down" %}<span><b>{% translate "Creditors" %}</b><small>{% translate "People you borrowed money from." %}</small></span><em>{{ creditors_payable|money }}<small>{% translate "you owe" %}</small></em></a>
+      <a href="{% url 'debtor_dashboard' %}" class="guide-tile" data-tone="good">{% include "partials/icon.html" with name="arrow-up" %}<span><b>{% translate "Debtors" %}</b><small>{% translate "People who borrowed money from you." %}</small></span><em>{{ receivables|money }}<small>{% translate "owed to you" %}</small></em></a>
+      <a href="{% url 'shop_dashboard' %}" class="guide-tile" data-tone="critical">{% include "partials/icon.html" with name="tag" %}<span><b>{% translate "Shop Dues" %}</b><small>{% translate "Shops where you buy now and pay later (baki)." %}</small></span><em>{{ shops_payable|money }}<small>{% translate "you owe" %}</small></em></a>
+      <a href="{% url 'budget_list' %}" class="guide-tile">{% include "partials/icon.html" with name="target" %}<span><b>{% translate "Budgets" %}</b><small>{% translate "A spending limit for each month, with a warning before you cross it." %}</small></span></a>
+      <a href="{% url 'goal_list' %}" class="guide-tile">{% include "business/partials/icon.html" with name="flag" %}<span><b>{% translate "Savings Goals" %}</b><small>{% translate "Save up for something, step by step." %}</small></span><em>{{ goal_totals.saved|money }}<small>{% translate "saved" %}</small></em></a>
+      <a href="{% url 'contributor_dashboard' %}" class="guide-tile">{% include "partials/icon.html" with name="heart" %}<span><b>{% translate "Contributors" %}</b><small>{% translate "Family or friends who help you with money." %}</small></span><em>{{ contributions_received|money }}<small>{% translate "received" %}</small></em></a>
+      <a href="{% url 'zakat' %}" class="guide-tile">{% include "business/partials/icon.html" with name="percent" %}<span><b>{% translate "Zakat helper" %}</b><small>{% translate "Works out how much zakat you owe this year." %}</small></span></a>
+      <a href="{% url 'help' %}" class="guide-tile">{% include "partials/icon.html" with name="info" %}<span><b>{% translate "How this app works" %}</b><small>{% translate "Simple answers to common questions." %}</small></span></a>
+    </nav>
+  </section>
 </div>
 {% endblock %}
 

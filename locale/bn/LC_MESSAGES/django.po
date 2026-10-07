@@ -12437,3 +12437,432 @@ msgstr "আপনার সব হিসাব Excel-এ খোলার মত�
 
 msgid "Download my data"
 msgstr "আমার তথ্য ডাউনলোড"
+
+msgid "Your farm is set up"
+msgstr "আপনার খামার সাজানো হয়ে গেছে"
+
+msgid "Every step is done. Tap to review or change anything."
+msgstr "সব ধাপ শেষ। দেখতে বা কিছু বদলাতে চাপুন।"
+
+msgid "Profit per pond, sales, feed, dues — ready to print or send."
+msgstr "পুকুরভিত্তিক লাভ, বিক্রি, খাবার, বাকি — প্রিন্ট বা পাঠানোর জন্য তৈরি।"
+
+msgid "Family or friends who help you with money. You don't pay this back."
+msgstr "যে আত্মীয় বা বন্ধু টাকা দিয়ে সাহায্য করেন। এটা ফেরত দিতে হয় না।"
+
+msgid "Received from supporters"
+msgstr "সাহায্যকারীদের কাছ থেকে পাওয়া"
+
+msgid "How this app works"
+msgstr "অ্যাপটি কীভাবে কাজ করে"
+
+msgid "You still owe"
+msgstr "আপনার এখনও দেনা"
+
+msgid "Borrowed more, or paid back?"
+msgstr "আরও ধার নিলেন, নাকি শোধ করলেন?"
+
+msgid "How much you have paid back"
+msgstr "কতটা শোধ করেছেন"
+
+msgid "People you borrowed money from, and how much you still have to pay back."
+msgstr "যাদের কাছ থেকে ধার নিয়েছেন, আর এখনও কত শোধ করা বাকি।"
+
+msgid "People you lent money to, and how much they still have to give back."
+msgstr "যাদের ধার দিয়েছেন, আর তাদের এখনও কত ফেরত দেওয়া বাকি।"
+
+msgid "Others still owe you"
+msgstr "অন্যদের কাছে এখনও পাওনা"
+
+msgid "Lent more, or got money back?"
+msgstr "আরও ধার দিলেন, নাকি টাকা ফেরত পেলেন?"
+
+msgid "Where your money goes, grouped by what you spent it on."
+msgstr "আপনার টাকা কোথায় যায় — কীসে খরচ করেছেন সেই অনুযায়ী ভাগ করা।"
+
+msgid "Daily family shopping. If a family member paid, it shows what you owe them."
+msgstr "পরিবারের প্রতিদিনের বাজার। পরিবারের কেউ টাকা দিলে, তাকে আপনার কত দিতে হবে তা দেখায়।"
+
+msgid "You owe family members"
+msgstr "পরিবারের সদস্যদের আপনার দেনা"
+
+msgid "Money you earned or received, and where it came from."
+msgstr "আপনার আয় বা পাওয়া টাকা, আর তা কোথা থেকে এসেছে।"
+
+msgid "You write down money when it moves. The app does the adding up and tells you where you stand."
+msgstr "টাকা আসা-যাওয়া হলেই লিখে রাখুন। যোগ-বিয়োগ অ্যাপ নিজেই করে, আর আপনার অবস্থা জানিয়ে দেয়।"
+
+msgid "Four steps"
+msgstr "চারটি ধাপ"
+
+msgid "What the words mean"
+msgstr "শব্দগুলোর মানে"
+
+msgid "Tap a word to see what it means."
+msgstr "মানে দেখতে শব্দে চাপুন।"
+
+msgid "Common questions"
+msgstr "সাধারণ প্রশ্ন"
+
+msgid "Here is your money at a glance. Tap a button below to write down anything new."
+msgstr "এক নজরে আপনার টাকার হিসাব। নতুন কিছু লিখতে নিচের বোতামে চাপুন।"
+
+msgid "Money you have now"
+msgstr "এখন আপনার কাছে আছে"
+
+msgid "The total in all your wallets: cash in hand, bank, bKash and so on."
+msgstr "আপনার সব ওয়ালেটের মোট: হাতে নগদ, ব্যাংক, বিকাশ ইত্যাদি।"
+
+msgid "Tell the app where you keep money — cash, bank, bKash — and it will keep each balance for you."
+msgstr "টাকা কোথায় রাখেন — নগদ, ব্যাংক, বিকাশ — অ্যাপকে জানান, প্রতিটির ব্যালান্স অ্যাপই রাখবে।"
+
+msgid "Others owe you"
+msgstr "অন্যদের কাছে পাওনা"
+
+msgid "You owe others"
+msgstr "অন্যদের কাছে দেনা"
+
+msgid "Money you have now, plus what others owe you, minus what you owe. This is what you would have left if every loan and due were cleared today."
+msgstr "এখন যা আছে, তার সাথে অন্যদের কাছে পাওনা যোগ, আর আপনার দেনা বাদ। আজ সব ধার-বাকি মিটে গেলে আপনার হাতে এটাই থাকত।"
+
+msgid "Write down"
+msgstr "লিখে রাখুন"
+
+msgid "I spent"
+msgstr "খরচ করলাম"
+
+msgid "I got money"
+msgstr "টাকা পেলাম"
+
+msgid "I borrowed"
+msgstr "ধার নিলাম"
+
+msgid "I paid back"
+msgstr "ধার শোধ"
+
+msgid "I lent"
+msgstr "ধার দিলাম"
+
+msgid "I got it back"
+msgstr "ফেরত পেলাম"
+
+msgid "Start here"
+msgstr "এখান থেকে শুরু করুন"
+
+msgid "%(done)s of %(total)s done. Five small steps and the app can show you the full picture."
+msgstr "%(total)sটির মধ্যে %(done)sটি শেষ। পাঁচটি ছোট ধাপ, তারপর অ্যাপ পুরো হিসাব দেখাতে পারবে।"
+
+msgid "Start"
+msgstr "শুরু"
+
+msgid "Recently written down"
+msgstr "সম্প্রতি লেখা"
+
+msgid "The last few things you recorded, so you don't write the same thing twice."
+msgstr "শেষ কয়েকটি এন্ট্রি, যাতে একই জিনিস দুবার না লেখেন।"
+
+msgid "Nothing written down yet. Use the buttons at the top — start with something you spent today."
+msgstr "এখনও কিছু লেখা হয়নি। ওপরের বোতামগুলো ব্যবহার করুন — আজ যা খরচ করেছেন তা দিয়ে শুরু করুন।"
+
+msgid "The full picture"
+msgstr "পুরো হিসাব"
+
+msgid "Every due, and everything earned and spent since you started."
+msgstr "সব দেনা-পাওনা, আর শুরু থেকে মোট আয় ও খরচ।"
+
+msgid "Dues as of today"
+msgstr "আজ পর্যন্ত দেনা-পাওনা"
+
+msgid "Everything in this app"
+msgstr "এই অ্যাপে যা যা আছে"
+
+msgid "Where your money is: cash, bank, bKash."
+msgstr "আপনার টাকা কোথায় আছে: নগদ, ব্যাংক, বিকাশ।"
+
+msgid "now"
+msgstr "এখন"
+
+msgid "Everything you spend money on."
+msgstr "যা কিছুতে টাকা খরচ করেন।"
+
+msgid "this month"
+msgstr "এই মাসে"
+
+msgid "Money you earn: salary, business, rent."
+msgstr "আপনার আয়: বেতন, ব্যবসা, ভাড়া।"
+
+msgid "Daily shopping, and who in the family paid for it."
+msgstr "প্রতিদিনের বাজার, আর পরিবারের কে টাকা দিয়েছে।"
+
+msgid "owed to family"
+msgstr "পরিবারের পাওনা"
+
+msgid "People you borrowed money from."
+msgstr "যাদের কাছ থেকে ধার নিয়েছেন।"
+
+msgid "People who borrowed money from you."
+msgstr "যারা আপনার কাছ থেকে ধার নিয়েছে।"
+
+msgid "owed to you"
+msgstr "আপনার পাওনা"
+
+msgid "Shops where you buy now and pay later (baki)."
+msgstr "যে দোকানে এখন কিনে পরে টাকা দেন (বাকি)।"
+
+msgid "A spending limit for each month, with a warning before you cross it."
+msgstr "প্রতি মাসের খরচের সীমা, পার হওয়ার আগেই সতর্কবার্তা।"
+
+msgid "Save up for something, step by step."
+msgstr "কোনো কিছুর জন্য ধাপে ধাপে টাকা জমান।"
+
+msgid "saved"
+msgstr "জমেছে"
+
+msgid "Family or friends who help you with money."
+msgstr "যে আত্মীয় বা বন্ধু টাকা দিয়ে সাহায্য করেন।"
+
+msgid "Works out how much zakat you owe this year."
+msgstr "এ বছর কত যাকাত দিতে হবে তা হিসাব করে।"
+
+msgid "Simple answers to common questions."
+msgstr "সাধারণ প্রশ্নের সহজ উত্তর।"
+
+msgid "Search by name…"
+msgstr "নাম দিয়ে খুঁজুন…"
+
+msgid "%(v)s so far"
+msgstr "এ পর্যন্ত %(v)s"
+
+msgid "Owes you %(v)s"
+msgstr "আপনার পাওনা %(v)s"
+
+msgid "You owe %(v)s"
+msgstr "আপনার দেনা %(v)s"
+
+msgid "Nothing due"
+msgstr "কিছু বাকি নেই"
+
+msgid "Nobody here yet. Add the first one — it takes a few seconds."
+msgstr "এখানে এখনও কেউ নেই। প্রথমজনকে যোগ করুন — কয়েক সেকেন্ড লাগবে।"
+
+msgid "Good morning"
+msgstr "শুভ সকাল"
+
+msgid "Good afternoon"
+msgstr "শুভ দুপুর"
+
+msgid "Good evening"
+msgstr "শুভ সন্ধ্যা"
+
+msgid "Add where you keep money"
+msgstr "টাকা কোথায় রাখেন যোগ করুন"
+
+msgid "Cash in hand, bank account, bKash or Nagad."
+msgstr "হাতে নগদ, ব্যাংক অ্যাকাউন্ট, বিকাশ বা নগদ।"
+
+msgid "Record money you got"
+msgstr "যে টাকা পেয়েছেন লিখুন"
+
+msgid "Salary, business income, rent or a gift."
+msgstr "বেতন, ব্যবসার আয়, ভাড়া বা উপহার।"
+
+msgid "Record something you spent"
+msgstr "কোনো খরচ লিখুন"
+
+msgid "Rent, bills, food, transport…"
+msgstr "ভাড়া, বিল, খাবার, যাতায়াত…"
+
+msgid "Add a loan or a due"
+msgstr "একটি ধার বা বাকি যোগ করুন"
+
+msgid "Money you borrowed, lent, or owe a shop."
+msgstr "যে টাকা ধার নিয়েছেন, ধার দিয়েছেন, বা দোকানে বাকি আছে।"
+
+msgid "Plan ahead"
+msgstr "আগে থেকে পরিকল্পনা"
+
+msgid "A monthly spending limit or a savings goal."
+msgstr "মাসিক খরচের সীমা বা সঞ্চয়ের লক্ষ্য।"
+
+msgid "Paid back"
+msgstr "শোধ করেছেন"
+
+msgid "Got back"
+msgstr "ফেরত পেয়েছেন"
+
+msgid "Who did you borrow from?"
+msgstr "কার কাছ থেকে ধার নিলেন?"
+
+msgid "Pick the person. If they're new, add them first."
+msgstr "মানুষটিকে বেছে নিন। নতুন হলে আগে যোগ করুন।"
+
+msgid "Add a new person"
+msgstr "নতুন মানুষ যোগ করুন"
+
+msgid "Who are you paying back?"
+msgstr "কাকে ধার শোধ করছেন?"
+
+msgid "People you still owe come first."
+msgstr "যাদের এখনও দেনা আছে তারা আগে।"
+
+msgid "Who did you lend money to?"
+msgstr "কাকে ধার দিলেন?"
+
+msgid "Who paid you back?"
+msgstr "কে টাকা ফেরত দিল?"
+
+msgid "People who still owe you come first."
+msgstr "যাদের কাছে এখনও পাওনা আছে তারা আগে।"
+
+msgid "Which shop?"
+msgstr "কোন দোকান?"
+
+msgid "Buying on credit (baki) or paying the shop back."
+msgstr "বাকিতে কেনা, অথবা দোকানের বাকি শোধ।"
+
+msgid "Add a new shop"
+msgstr "নতুন দোকান যোগ করুন"
+
+msgid "Where did the money come from?"
+msgstr "টাকা কোথা থেকে এল?"
+
+msgid "Salary, business, rent, a gift… pick where it came from."
+msgstr "বেতন, ব্যবসা, ভাড়া, উপহার… কোথা থেকে এল বেছে নিন।"
+
+msgid "Add a new source"
+msgstr "নতুন উৎস যোগ করুন"
+
+msgid "Add your wallets"
+msgstr "আপনার ওয়ালেট যোগ করুন"
+
+msgid "A wallet is anywhere you keep money: cash in hand, a bank account, bKash, Nagad. Add each one with how much is in it today."
+msgstr "ওয়ালেট মানে যেখানে টাকা রাখেন: হাতে নগদ, ব্যাংক অ্যাকাউন্ট, বিকাশ, নগদ। প্রতিটিতে আজ কত আছে তা দিয়ে যোগ করুন।"
+
+msgid "Write down money when it moves"
+msgstr "টাকা আসা-যাওয়া হলেই লিখুন"
+
+msgid "Spent something? Tap “I spent”. Got paid? Tap “I got money”. It takes a few seconds, and the app does all the adding up."
+msgstr "কিছু খরচ করলেন? “খরচ করলাম” চাপুন। টাকা পেলেন? “টাকা পেলাম” চাপুন। কয়েক সেকেন্ড লাগে, যোগ-বিয়োগ অ্যাপই করে।"
+
+msgid "Write down loans and dues"
+msgstr "ধার ও বাকি লিখে রাখুন"
+
+msgid "Borrowed from a friend, lent to a cousin, bought on baki at a shop — write it down once, then add each payment as it happens."
+msgstr "বন্ধুর কাছ থেকে ধার, আত্মীয়কে ধার দেওয়া, দোকানে বাকিতে কেনা — একবার লিখুন, তারপর প্রতিটি লেনদেন হলে যোগ করুন।"
+
+msgid "Look at Home"
+msgstr "হোম দেখুন"
+
+msgid "Home shows how much money you have, who owes you, who you owe, and what is due soon. Red means it needs attention."
+msgstr "হোমে দেখায় আপনার কত টাকা আছে, কার কাছে পাওনা, কাকে দেনা, আর শিগগির কী দিতে হবে। লাল মানে মনোযোগ দরকার।"
+
+msgid "A place you keep money — cash, bank, bKash. Every entry can say which wallet the money came from or went to, so each balance stays right."
+msgstr "যেখানে টাকা রাখেন — নগদ, ব্যাংক, বিকাশ। প্রতিটি এন্ট্রিতে কোন ওয়ালেট থেকে টাকা এল বা গেল তা বলা যায়, তাই প্রতিটির ব্যালান্স ঠিক থাকে।"
+
+msgid "Money you spent and won't get back: food, rent, bills, travel."
+msgstr "যে টাকা খরচ করেছেন আর ফেরত পাবেন না: খাবার, ভাড়া, বিল, যাতায়াত।"
+
+msgid "Money you earned or received: salary, business profit, rent, a gift."
+msgstr "যে টাকা আয় করেছেন বা পেয়েছেন: বেতন, ব্যবসার লাভ, ভাড়া, উপহার।"
+
+msgid "Someone you borrowed money from. You owe them."
+msgstr "যার কাছ থেকে ধার নিয়েছেন। তাকে আপনার দিতে হবে।"
+
+msgid "Someone who borrowed money from you. They owe you."
+msgstr "যে আপনার কাছ থেকে ধার নিয়েছে। সে আপনাকে দেবে।"
+
+msgid "Shop dues (baki)"
+msgstr "দোকানের বাকি"
+
+msgid "A shop where you take things now and pay later. The app keeps the running total."
+msgstr "যে দোকান থেকে এখন জিনিস নেন, পরে টাকা দেন। মোট বাকি অ্যাপ হিসাব রাখে।"
+
+msgid "Daily family shopping. If a family member paid, the app remembers that you owe them."
+msgstr "পরিবারের প্রতিদিনের বাজার। পরিবারের কেউ টাকা দিলে, অ্যাপ মনে রাখে যে তাকে আপনার দিতে হবে।"
+
+msgid "A relative or friend who supports you with money — not a loan, you don't pay it back."
+msgstr "যে আত্মীয় বা বন্ধু টাকা দিয়ে সাহায্য করেন — ধার নয়, ফেরত দিতে হয় না।"
+
+msgid "A limit you set for a month, like “food: ৳8,000”. The app warns you before you cross it."
+msgstr "এক মাসের জন্য আপনার ঠিক করা সীমা, যেমন “খাবার: ৳৮,০০০”। পার হওয়ার আগেই অ্যাপ সতর্ক করে।"
+
+msgid "Something you are saving for, like Eid or a motorbike. Put money aside step by step and see how close you are."
+msgstr "যার জন্য টাকা জমাচ্ছেন, যেমন ঈদ বা মোটরসাইকেল। ধাপে ধাপে টাকা রাখুন, আর দেখুন কতটা কাছে এসেছেন।"
+
+msgid "An entry that repeats by itself, like monthly rent or salary, so you don't have to type it every time."
+msgstr "যে এন্ট্রি নিজে থেকে বারবার হয়, যেমন মাসিক ভাড়া বা বেতন — প্রতিবার লিখতে হয় না।"
+
+msgid "If everyone settled up today"
+msgstr "আজ সবাই হিসাব মিটিয়ে দিলে"
+
+msgid "Your money now, plus what others owe you, minus what you owe. What you would really have if every loan and due were cleared."
+msgstr "এখন যা আছে, তার সাথে অন্যদের কাছে পাওনা যোগ, আর আপনার দেনা বাদ। সব ধার-বাকি মিটে গেলে আসলে যা থাকত।"
+
+msgid "I made a mistake. How do I fix it?"
+msgstr "ভুল করে ফেলেছি। কীভাবে ঠিক করব?"
+
+msgid "Tap the entry, then the ⋯ button, and choose Edit or Delete. Deleted things stay in “Recently deleted” for 30 days, so you can bring them back."
+msgstr "এন্ট্রিতে চাপুন, তারপর ⋯ বোতাম, আর সম্পাদনা বা মুছুন বেছে নিন। মুছে ফেলা জিনিস ৩০ দিন “সম্প্রতি মুছে ফেলা”-তে থাকে, তাই ফিরিয়ে আনা যায়।"
+
+msgid "I moved money from bKash to cash. What do I write?"
+msgstr "বিকাশ থেকে নগদে টাকা তুলেছি। কী লিখব?"
+
+msgid "Tap “Move money” on Home. It is not spending, so it won't show as an expense — it only changes the two wallet balances."
+msgstr "হোমে “টাকা সরান” চাপুন। এটা খরচ নয়, তাই খরচ হিসেবে দেখাবে না — শুধু দুই ওয়ালেটের ব্যালান্স বদলায়।"
+
+msgid "Someone paid back only part of a loan."
+msgstr "কেউ ধারের কিছু অংশ ফেরত দিয়েছে।"
+
+msgid "Open that person and add a payment for the amount they gave. The app shows what is still left."
+msgstr "সেই মানুষটিকে খুলে যত টাকা দিয়েছে তত টাকার একটি এন্ট্রি দিন। বাকি কত আছে অ্যাপ দেখাবে।"
+
+msgid "Can I get a reminder before something is due?"
+msgstr "কিছু দেওয়ার তারিখের আগে কি মনে করিয়ে দেবে?"
+
+msgid "Yes. Give a loan or a shop due a “due date”. It shows on Home in “Needs attention” a week before, and in red once it is late."
+msgstr "হ্যাঁ। ধার বা দোকানের বাকিতে একটি “শেষ তারিখ” দিন। এক সপ্তাহ আগে হোমের “মনোযোগ প্রয়োজন”-এ দেখাবে, আর দেরি হলে লাল হবে।"
+
+msgid "How do I find an old entry?"
+msgstr "পুরনো এন্ট্রি কীভাবে খুঁজব?"
+
+msgid "Use the search button at the top (the magnifying glass). Type a name, an amount or a note."
+msgstr "ওপরের খোঁজার বোতাম (আতশ কাচ) ব্যবহার করুন। নাম, টাকার অঙ্ক বা নোট লিখুন।"
+
+msgid "Is my data safe? Can I keep a copy?"
+msgstr "আমার তথ্য কি নিরাপদ? কপি রাখা যায়?"
+
+msgid "Only you can see your personal records. Use “Download my data” in the menu any time to save everything as Excel-ready files."
+msgstr "আপনার ব্যক্তিগত হিসাব শুধু আপনিই দেখতে পান। মেনুর “আমার তথ্য ডাউনলোড” দিয়ে যেকোনো সময় সব কিছু এক্সেলে খোলার মতো ফাইলে রাখুন।"
+
+msgid "Can I use the app in Bangla?"
+msgstr "অ্যাপটি কি বাংলায় চালানো যায়?"
+
+msgid "Yes. Open the menu and pick বাংলা under Language. You can switch back any time."
+msgstr "হ্যাঁ। মেনু খুলে ভাষা থেকে বাংলা বেছে নিন। যেকোনো সময় আবার বদলাতে পারবেন।"
+
+msgid "Can I put it on my phone like an app?"
+msgstr "ফোনে কি অ্যাপের মতো রাখা যায়?"
+
+msgid "Yes. In Chrome, open the menu and tap “Add to Home screen” (or “Install app”). It then opens full-screen like any other app."
+msgstr "হ্যাঁ। ক্রোমে মেনু খুলে “হোম স্ক্রিনে যোগ করুন” (বা “অ্যাপ ইনস্টল করুন”) চাপুন। তারপর অন্য অ্যাপের মতোই পুরো স্ক্রিনে খুলবে।"
+
+msgid "Shops where you buy now and pay later (baki), and how much you still owe each one."
+msgstr "যে দোকানে এখন কিনে পরে টাকা দেন (বাকি), আর প্রতিটিতে এখনও কত দেনা।"
+
+msgid "You owe shops"
+msgstr "দোকানে আপনার দেনা"
+
+msgid "You owe this shop"
+msgstr "এই দোকানে আপনার দেনা"
+
+msgid "Bought on baki, or paid the shop?"
+msgstr "বাকিতে কিনলেন, নাকি দোকানে টাকা দিলেন?"
+
+msgid "Below zero — probably some money coming in wasn't written down. Open it and use “Correct the balance”."
+msgstr "শূন্যের নিচে — সম্ভবত কিছু আসা টাকা লেখা হয়নি। খুলে “ব্যালান্স ঠিক করুন” ব্যবহার করুন।"
+
+msgid "Write down income"
+msgstr "আয় লিখুন"
+
+msgid "Bought or paid"
+msgstr "কেনা বা শোধ"

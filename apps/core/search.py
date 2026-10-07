@@ -51,7 +51,9 @@ def _url(name, *args, query=""):
 # Pages anyone could be looking for by name ("feed plan", "বাকি"…):
 # (title, url name, area, capability or "").
 PAGES = [
+    (gettext_noop("Home"), "home", "personal", ""),
     (gettext_noop("Net Worth"), "networth", "personal", ""),
+    (gettext_noop("How this app works"), "help", "personal", ""),
     (gettext_noop("Creditors"), "dashboard", "personal", ""),
     (gettext_noop("Debtors"), "debtor_dashboard", "personal", ""),
     (gettext_noop("Shop Dues"), "shop_dashboard", "personal", ""),

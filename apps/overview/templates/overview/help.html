@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "How this app works" %} | FinTrack{% endblock %}
+
+{% block content %}
+<div class="page-narrow stack">
+  <header class="page-header !mb-0">
+    <div>
+      <a href="{% url 'home' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Home" %}</a>
+      <h1 class="page-title">{% translate "How this app works" %}</h1>
+      <p class="page-subtitle">{% translate "You write down money when it moves. The app does the adding up and tells you where you stand." %}</p>
+    </div>
+  </header>
+
+  <section class="card">
+    <div class="card-header"><h2 class="card-title">{% translate "Four steps" %}</h2></div>
+    <ol class="biz-steps">
+      {% for title, text, url in steps %}
+      <li>
+        <span class="biz-step-dot">{{ forloop.counter }}</span>
+        <div class="min-w-0 flex-1"><p class="biz-step-title">{{ title }}</p><p class="biz-step-text">{{ text }}</p></div>
+        <a href="{{ url }}" class="btn btn-ghost btn-sm">{% translate "Go" %}</a>
+      </li>
+      {% endfor %}
+    </ol>
+  </section>
+
+  <section class="card">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title">{% translate "What the words mean" %}</h2>
+        <p class="card-subtitle">{% translate "Tap a word to see what it means." %}</p>
+      </div>
+    </div>
+    <div>
+      {% for word, meaning in words %}
+      <details class="health-item">
+        <summary class="health-head"><span class="min-w-0 flex-1 font-semibold" style="color: var(--text-primary);">{{ word }}</span></summary>
+        <div class="help-body">{{ meaning }}</div>
+      </details>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-header"><h2 class="card-title">{% translate "Common questions" %}</h2></div>
+    <div>
+      {% for q, a in faqs %}
+      <details class="health-item">
+        <summary class="health-head"><span class="min-w-0 flex-1 font-semibold" style="color: var(--text-primary);">{{ q }}</span></summary>
+        <div class="help-body">{{ a }}</div>
+      </details>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}

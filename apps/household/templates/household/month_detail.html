@@ -54,7 +54,7 @@
     </section>
 
     <aside class="detail-side">
-      <section class="card" x-data="{ open: {{ form.errors|yesno:'true,false' }} }">
+      <section class="card" id="record" x-data="{ open: {{ form.errors|yesno:'true,false' }} || location.hash === '#record' }" x-init="if (location.hash === '#record') $nextTick(() => { $el.scrollIntoView({ block: 'start' }); const a = $el.querySelector('[name=amount]'); if (a) a.focus({ preventScroll: true }); })">
         <button type="button" class="collapse-toggle" @click="open = !open" :aria-expanded="open.toString()">
           <span class="flex items-center gap-2"><span class="h-5 w-5" style="color: var(--accent);">{% include "partials/icon.html" with name="plus" %}</span>{% translate "Log a Purchase" %}</span>
           {% include "partials/icon.html" with name="chevron-down" %}

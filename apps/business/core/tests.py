@@ -22,10 +22,10 @@ class ExistingUsersUnaffectedTests(TestCase):
         u = User.objects.create_user("alice", password="pw12345!")
         self.assertEqual(list(u.dashboard_access.values_list("dashboard__code", "is_default")), [("personal", True)])
 
-    def test_login_still_lands_on_creditors_dashboard(self):
+    def test_login_lands_on_home(self):
         User.objects.create_user("alice", password="pw12345!")
         r = self.client.post(reverse("login"), {"username": "alice", "password": "pw12345!"}, follow=True)
-        self.assertEqual(r.redirect_chain[-1][0], reverse("dashboard"))
+        self.assertEqual(r.redirect_chain[-1][0], reverse("home"))
         self.assertEqual(r.status_code, 200)
 
     def test_personal_pages_and_topbar_unchanged(self):

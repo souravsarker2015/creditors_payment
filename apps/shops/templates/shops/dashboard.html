@@ -8,10 +8,11 @@
   <header class="page-header !mb-0">
     <div>
       <h1 class="page-title">{% translate "Shop Dues (বাকি)" %}</h1>
-      <p class="page-subtitle">{% translate "What you owe local shops for goods bought on credit, and what you've paid off." %}</p>
+      <p class="page-subtitle">{% translate "Shops where you buy now and pay later (baki), and how much you still owe each one." %}</p>
     </div>
     <div class="page-actions">
       <a href="{% url 'shop_list' %}" class="btn btn-secondary">{% include "partials/icon.html" with name="list" %}{% translate "View All Shops" %}</a>
+      <a href="{% url 'pick' 'shop' %}" class="btn btn-secondary">{% translate "Bought or paid" %}</a>
       <a href="{% url 'shop_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add Shop" %}</a>
     </div>
   </header>
@@ -22,7 +23,7 @@
   <section class="hero">
     <div class="hero-inner">
       <div class="min-w-0">
-        <p class="hero-label inline-flex items-center">{% translate "Current Due" %}{% translate "What you owe all shops right now: purchases on credit minus payments." as info_text %}{% include "partials/info.html" with text=info_text %}</p>
+        <p class="hero-label inline-flex items-center">{% translate "You owe shops" %}{% translate "What you owe all shops right now: purchases on credit minus payments." as info_text %}{% include "partials/info.html" with text=info_text %}</p>
         <p class="hero-value">{{ remaining|money }}</p>
         <p class="hero-sub">{% translate "Total Due" %} {{ total_due|money }} · {% translate "Paid" %} {{ total_paid|money }}</p>
       </div>

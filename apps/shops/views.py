@@ -9,6 +9,8 @@ from datetime import date as date_cls, timedelta
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.contrib import messages
+
+from apps.core.flow import record_initial, record_next
 from django.db.models import Sum, Q, F, DecimalField, Value
 from django.db.models.functions import Coalesce, TruncMonth
 from django.core.paginator import Paginator
@@ -316,7 +318,7 @@ def shop_create_view(request):
             shop.user = request.user
             shop.save()
             messages.success(request, _("Shop '%(name)s' added successfully.") % {"name": shop.name})
-            return redirect("shop_list")
+            return record_next(request, "shop_detail", shop.pk) or redirect("shop_list")
     else:
         form = ShopForm()
     return render(request, "shops/shop_form.html", {"form": form, "title": _("Add New Shop")})
@@ -350,7 +352,7 @@ def shop_detail_view(request, pk):
             messages.success(request, _("Transaction of ৳%(amount)s added.") % {"amount": transaction.amount})
             return redirect("shop_detail", pk=pk)
     else:
-        form = TransactionForm(initial={"date": django.utils.timezone.now().date()})
+        form = TransactionForm(initial=record_initial(request, Transaction.TYPE_CHOICES, {"date": django.utils.timezone.now().date()}))
 
     # Calculate all-time totals for this specific shop (never period-filtered —
     # Current Due / Outstanding Balance are a running snapshot and stay this way

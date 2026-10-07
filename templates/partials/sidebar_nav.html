@@ -1,7 +1,7 @@
 {% load i18n %}
 {% with p=request.path %}
 <div class="sidebar">
-    <a href="{% if active_dashboard == 'business' %}{% url 'business:home' %}{% else %}{% url 'networth' %}{% endif %}" class="flex h-16 shrink-0 items-center gap-2.5 px-2">
+    <a href="{% if active_dashboard == 'business' %}{% url 'business:home' %}{% else %}{% url 'home' %}{% endif %}" class="flex h-16 shrink-0 items-center gap-2.5 px-2">
         <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg font-heading text-base font-bold" style="background: var(--gold); color: #221a06;">৳</span>
         <span>
             <span class="block font-heading text-lg font-bold leading-tight" style="color: var(--text-on-ink);">FinTrack</span>

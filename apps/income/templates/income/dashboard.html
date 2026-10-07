@@ -8,12 +8,12 @@
   <header class="page-header !mb-0">
     <div>
       <h1 class="page-title">{% translate "Income Overview" %}</h1>
-      <p class="page-subtitle">{% translate "Track all your revenue streams and total earnings performance." %}</p>
+      <p class="page-subtitle">{% translate "Money you earned or received, and where it came from." %}</p>
     </div>
     <div class="page-actions">
       <a href="{% url 'recurring_income_list' %}" class="btn btn-secondary">{% include "partials/icon.html" with name="repeat" %}{% translate "Recurring" %}</a>
       <a href="{% url 'income_source_list' %}" class="btn btn-secondary">{% include "partials/icon.html" with name="list" %}{% translate "Sources" %}</a>
-      <a href="{% url 'income_source_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add Income Source" %}</a>
+      <a href="{% url 'pick' 'income' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Write down income" %}</a>
     </div>
   </header>
 

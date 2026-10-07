@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{{ title }} | FinTrack{% endblock %}
+
+{% block content %}
+<div class="page-narrow stack" x-data="{ q: '' }">
+  <header class="page-header !mb-0">
+    <div>
+      <a href="{% url 'home' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Home" %}</a>
+      <h1 class="page-title">{{ title }}</h1>
+      <p class="page-subtitle">{{ help_text }}</p>
+    </div>
+  </header>
+
+  {% if items %}
+  <section class="card">
+    {% if items|length > 6 %}
+    <div class="card-body !pb-0">
+      <label class="sr-only" for="pick-q">{% translate "Search by name" %}</label>
+      <input id="pick-q" type="search" class="form-input" x-model="q" placeholder="{% translate 'Search by name…' %}" autocomplete="off">
+    </div>
+    {% endif %}
+    <ul class="ledger">
+      {% for i in items %}
+      <li data-name="{{ i.name|lower }}" x-show="!q || $el.dataset.name.includes(q.trim().toLowerCase())">
+        <a href="{{ i.url }}" class="ledger-row pick-row">
+          <span class="avatar">{{ i.name|first|upper }}</span>
+          <div class="ledger-main">
+            <p class="ledger-title">{{ i.name }}</p>
+            <p class="ledger-meta">{% if side == "income" %}{% blocktranslate with v=i.amount|money %}{{ v }} so far{% endblocktranslate %}{% elif i.amount > 0 %}{% if side == "owed" %}{% blocktranslate with v=i.amount|money %}Owes you {{ v }}{% endblocktranslate %}{% else %}{% blocktranslate with v=i.amount|money %}You owe {{ v }}{% endblocktranslate %}{% endif %}{% else %}{% translate "Nothing due" %}{% endif %}</p>
+          </div>
+          {% include "partials/icon.html" with name="chevron-right" %}
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  <a href="{{ create_url }}" class="btn btn-secondary btn-lg btn-block">{% include "partials/icon.html" with name="plus" %}{{ add_label }}</a>
+  {% else %}
+  <div class="empty">
+    <div class="empty-icon">{% include "partials/icon.html" with name="users" %}</div>
+    <p class="empty-text">{% translate "Nobody here yet. Add the first one — it takes a few seconds." %}</p>
+    <a href="{{ create_url }}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{{ add_label }}</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

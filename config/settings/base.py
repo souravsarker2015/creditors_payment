@@ -140,6 +140,7 @@ AUTH_PASSWORD_VALIDATORS = [
 LANGUAGE_CODE = "en"
 TIME_ZONE = "Asia/Dhaka"
 USE_I18N = True
+FORMAT_MODULE_PATH = ["config.formats"]  # Bangla form dates stay 2026-10-07 for the date picker
 USE_TZ = True
 
 LANGUAGES = [
@@ -167,7 +168,7 @@ BACKUP_DIR = BASE_DIR / "backups"
 # ──────────────────────────────────────────────
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-LOGIN_REDIRECT_URL = "dashboard"
+LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "login"
 
 # Widgets render with the project's own template settings, so a custom
