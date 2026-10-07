@@ -18,6 +18,7 @@ from django.views.decorators.http import require_POST
 
 from .access import (BUSINESS, CAPABILITIES, PERSONAL, ROLE_CAPS, active_membership, can, create_business,
                      dashboard_url, has_dashboard, memberships)
+from .audit_display import describe
 from .decorators import business_access_required
 from .forms import (BusinessProfileForm, BusinessSetupForm, MemberAddForm, MemberCreateForm, MemberPasswordForm,
                     RoleForm, UnitForm)
@@ -45,7 +46,7 @@ def home_view(request):
         "unit_count": units.count(),
         "mon": units.filter(symbol="mon").first(),
         "units_json": _units_json(b),
-        "recent_activity": AuditLog.objects.filter(business=b).select_related("user")[:5],
+        "recent_activity": describe(list(AuditLog.objects.filter(business=b).select_related("user")[:5])),
         "other_businesses": memberships(request.user).exclude(business=b),
         "loans": _loans_summary(request),
         "setup_steps": _setup_steps(request),
@@ -505,6 +506,7 @@ def member_remove_view(request, pk):
 def activity_view(request):
     qs = AuditLog.objects.filter(business=request.business).select_related("user")
     page = Paginator(qs, 30).get_page(request.GET.get("page"))
+    page.object_list = describe(list(page.object_list))
     return render(request, "business/settings/activity.html", {"page_obj": page})
 
 

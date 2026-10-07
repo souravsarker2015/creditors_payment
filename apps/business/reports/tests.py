@@ -263,7 +263,7 @@ class ReportPageTests(ReportBase):
 
     def test_reports_index_loads(self):
         r = self.client.get(reverse("business:reports"))
-        self.assertEqual(len(r.context["reports"]), 7)
+        self.assertEqual(len(r.context["reports"]), 8)
 
     def test_other_farms_see_nothing(self):
         _b2, owner2, _s = make_farm("other")

@@ -50,7 +50,7 @@
     <div class="stat" data-tone="warn">
       <dt class="stat-label">{% translate "Largest expense" %}</dt>
       <dd class="stat-value">{% if largest %}{{ largest.amount|money }}{% else %}—{% endif %}</dd>
-      <dd class="stat-hint truncate">{% if largest %}{% if largest.category %}{{ largest.category.name }}{% else %}{% translate "General" %}{% endif %} · {{ largest.date|date:"j M Y" }}{% else %}{% translate "Nothing yet" %}{% endif %}</dd>
+      <dd class="stat-hint" data-clamp="2">{% if largest %}{% if largest.category %}{{ largest.category.name }}{% else %}{% translate "General" %}{% endif %} · {{ largest.date|date:"j M Y" }}{% else %}{% translate "Nothing yet" %}{% endif %}</dd>
     </div>
   </dl>
 

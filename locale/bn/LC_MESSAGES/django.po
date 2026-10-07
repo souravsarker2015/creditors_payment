@@ -12203,3 +12203,21 @@ msgstr "শূন্যের নিচে থাকা হিসাব"
 
 msgid "More money recorded going out than coming in. Check each account's starting balance."
 msgstr "আসার চেয়ে যাওয়ার টাকা বেশি লেখা আছে। প্রতিটি হিসাবের শুরুর টাকা দেখে নিন।"
+
+msgid "%(counter)s change"
+msgid_plural "%(counter)s changes"
+msgstr[0] "%(counter)sটি পরিবর্তন"
+msgstr[1] "%(counter)sটি পরিবর্তন"
+
+msgid "%(counter)s feeding"
+msgid_plural "%(counter)s feedings"
+msgstr[0] "%(counter)s বার খাবার"
+msgstr[1] "%(counter)s বার খাবার"
+
+msgid "%(counter)s test"
+msgid_plural "%(counter)s tests"
+msgstr[0] "%(counter)sটি পরীক্ষা"
+msgstr[1] "%(counter)sটি পরীক্ষা"
+
+msgid "Less"
+msgstr "কম দেখান"

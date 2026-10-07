@@ -50,7 +50,7 @@ def item_detail_view(request, pk):
     uses = list(item.uses.filter(cycle__is_deleted=False).select_related("unit", "cycle__pond"))
     history = sorted([("buy", p.date, p) for p in purchases] + [("use", u.date, u) for u in uses],
                      key=lambda row: (row[1], row[2].pk), reverse=True)
-    return render(request, "business/supplies/detail.html", {"item": item, "st": st, "history": history[:100]})
+    return render(request, "business/supplies/detail.html", {"item": item, "st": st, "history": history})
 
 
 @business_access_required(capability="view_finance")

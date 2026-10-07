@@ -2,7 +2,7 @@
   <span class="avatar party-avatar" data-kind="{% if o.is_supplier %}supplier{% else %}buyer{% endif %}" aria-hidden="true">{{ o.name|slice:":1"|upper }}</span>
   <div class="ledger-main">
     <p class="ledger-title">{% if biz_can.view_finance and not is_deleted_tab %}<a href="{% url 'business:party_statement' o.pk %}" class="hover:underline">{{ o.name }}</a>{% else %}{{ o.name }}{% endif %}{% if o.is_supplier and o.is_buyer %} <span class="badge badge-outline">{% translate "Supplier & buyer" %}</span>{% endif %}</p>
-    <p class="ledger-meta">{% if o.buyer_type %}{{ o.get_buyer_type_display }}{% endif %}{% if o.market %}{% if o.buyer_type %} · {% endif %}{{ o.market }}{% endif %}{% if o.phone %}{% if o.buyer_type or o.market %} · {% endif %}<a href="tel:{{ o.phone }}" class="hover:underline">{{ o.phone }}</a>{% endif %}{% if not o.buyer_type and not o.market and not o.phone %}{{ o.address }}{% endif %}</p>
+    <p class="ledger-meta">{% if o.buyer_type %}{{ o.get_buyer_type_display }}{% endif %}{% if o.market %}{% if o.buyer_type %} · {% endif %}{{ o.market }}{% endif %}{% if o.phone %}{% if o.buyer_type or o.market %} · {% endif %}<a href="tel:{{ o.phone }}" class="hover:underline">{{ o.phone }}</a>{% endif %}{% if not o.buyer_type and not o.market and not o.phone %}{{ o.address }}{% endif %}</p>{% include "business/partials/row_note.html" with note=o.notes %}
   </div>
   <div class="ledger-end">
     {% if o.balance and biz_can.view_finance %}

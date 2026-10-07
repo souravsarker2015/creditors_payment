@@ -2,7 +2,7 @@
   <span class="ledger-icon" data-tone="{% if not o.due_now %}good{% elif o.due_now < o.total %}warn{% else %}critical{% endif %}">{% include "business/partials/icon.html" with name="truck" %}</span>
   <div class="ledger-main">
     <p class="ledger-title">{% if m %}<a href="{% url 'business:feed_purchases_edit' o.pk %}" class="hover:underline">{{ o.supplier }}</a>{% else %}{{ o.supplier }}{% endif %}</p>
-    <p class="ledger-meta">{{ o.date|date:"j M Y" }}{% if o.invoice_no %} · #{{ o.invoice_no }}{% endif %}{% for l in o.lines.all %}{% if forloop.first %} · {% else %}, {% endif %}{{ l.product.name }}{% endfor %}</p>
+    <p class="ledger-meta">{{ o.date|date:"j M Y" }}{% if o.invoice_no %} · #{{ o.invoice_no }}{% endif %}{% for l in o.lines.all %}{% if forloop.first %} · {% else %}, {% endif %}{{ l.product.name }}{% endfor %}</p>{% include "business/partials/row_note.html" with note=o.notes %}
   </div>
   <div class="ledger-end">
     <span class="party-bal" data-tone="{% if o.due_now %}critical{% endif %}"><strong>{{ o.total|bdt }}</strong><span>{% if o.due_now %}{% blocktranslate with amount=o.due_now|bdt %}{{ amount }} on baki{% endblocktranslate %}{% else %}{% translate "paid" %}{% endif %}</span></span>

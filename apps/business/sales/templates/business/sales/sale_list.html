@@ -51,7 +51,7 @@
         <span class="ledger-icon" data-tone="{% if not sale.due_now %}good{% elif sale.due_now < sale.net %}warn{% else %}critical{% endif %}">{% include "partials/icon.html" with name="cart" %}</span>
         <div class="ledger-main">
           <p class="ledger-title">{{ sale.buyer|default:sale.market|default:_("Cash sale") }}</p>
-          <p class="ledger-meta">{{ sale.date|date:"j M" }}{% if sale.market and sale.buyer %} · {{ sale.market }}{% endif %}{% for l in sale.lines.all %}{% if forloop.first %} · {% else %}, {% endif %}{{ l.species }} {{ l.quantity|num }} {{ l.unit.symbol }}{% endfor %}</p>
+          <p class="ledger-meta">{{ sale.date|date:"j M" }}{% if sale.market and sale.buyer %} · {{ sale.market }}{% endif %}{% for l in sale.lines.all %}{% if forloop.first %} · {% else %}, {% endif %}{{ l.species }} {{ l.quantity|num }} {{ l.unit.symbol }}{% endfor %}</p>{% include "business/partials/row_note.html" with note=sale.notes %}
         </div>
         <div class="ledger-end">
           <span class="party-bal" data-tone="good"><strong>{{ sale.net|bdt }}</strong><span>{% if sale.due_now %}{% blocktranslate with amount=sale.due_now|bdt %}{{ amount }} due{% endblocktranslate %}{% else %}{% translate "received" %}{% endif %}</span></span>

@@ -64,7 +64,7 @@
         <span class="ledger-icon" data-tone="{% if s.kind == 'repair' %}critical{% elif s.kind == 'part' %}info{% else %}good{% endif %}">{% include "business/partials/icon.html" with name="cog" %}</span>
         <div class="ledger-main">
           <p class="ledger-title">{{ s.get_kind_display }}{% if s.description %} · {{ s.description }}{% endif %}</p>
-          <p class="ledger-meta">{{ s.date|date:"j M Y" }}{% if s.account and biz_can.view_finance %} · {{ s.account }}{% endif %}</p>
+          <p class="ledger-meta">{{ s.date|date:"j M Y" }}{% if s.account and biz_can.view_finance %} · {{ s.account }}{% endif %}</p>{% include "business/partials/row_note.html" with note=s.notes %}
         </div>
         <div class="ledger-end">
           {% if s.cost and biz_can.view_finance %}<span class="party-bal"><strong>{{ s.cost|bdt }}</strong></span>{% endif %}

@@ -121,3 +121,27 @@ def undo_id(message):
         if tag.startswith("undo:") and tag[5:].isdigit():
             return tag[5:]
     return ""
+
+
+@register.filter
+def by_month(items, attr="date"):
+    """Rows (newest first) in month groups: [{"month": date, "items": [...]}].
+    `attr` is the date's attribute name, or its index for tuples."""
+    groups = []
+    for item in items:
+        day = item[int(attr)] if isinstance(item, (tuple, list)) else getattr(item, attr)
+        if not groups or (groups[-1]["month"].year, groups[-1]["month"].month) != (day.year, day.month):
+            groups.append({"month": day.replace(day=1), "items": []})
+        groups[-1]["items"].append(item)
+    return groups
+
+
+@register.filter
+def sum_attr(items, attr):
+    """Adds up one attribute over rows (skips empty ones)."""
+    total = Decimal(0)
+    for item in items:
+        value = getattr(item, attr, None)
+        if value is not None:
+            total += Decimal(value)
+    return total

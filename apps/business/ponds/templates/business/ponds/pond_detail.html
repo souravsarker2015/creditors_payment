@@ -79,7 +79,7 @@
         <span class="ledger-icon" data-tone="good">{% include "partials/icon.html" with name="wallet" %}</span>
         <div class="ledger-main">
           <p class="ledger-title">{{ lp.amount|bdt }}</p>
-          <p class="ledger-meta">{{ lp.date|date:"j M Y" }} · {{ lp.account }}{% if lp.reference %} · {{ lp.reference }}{% endif %}</p>
+          <p class="ledger-meta">{{ lp.date|date:"j M Y" }} · {{ lp.account }}{% if lp.reference %} · {{ lp.reference }}{% endif %}</p>{% include "business/partials/row_note.html" with note=lp.notes %}
         </div>
         <div class="ledger-end">
           {% url 'business:lease_payment_edit' pond.pk lp.pk as edit_url %}{% url 'business:lease_payment_delete' lp.pk as delete_url %}{% translate "Delete this payment?" as confirm_text %}
@@ -100,7 +100,7 @@
         <span class="ledger-icon" data-tone="{% if ps.profit >= 0 %}good{% else %}critical{% endif %}">{% include "business/partials/icon.html" with name="fish" %}</span>
         <div class="ledger-main">
           <p class="ledger-title">{{ c.label }}</p>
-          <p class="ledger-meta">{{ c.start_date|date:"M Y" }} – {{ c.ended_on|date:"M Y" }} · {% blocktranslate count counter=c.days %}{{ counter }} day{% plural %}{{ counter }} days{% endblocktranslate %}{% if ps.harvest_kg %} · {{ ps.harvest_kg|num }} kg{% endif %}{% if ps.fcr %} · FCR {{ ps.fcr }}{% endif %}</p>
+          <p class="ledger-meta">{{ c.start_date|date:"M Y" }} – {{ c.ended_on|date:"M Y" }} · {% blocktranslate count counter=c.days %}{{ counter }} day{% plural %}{{ counter }} days{% endblocktranslate %}{% if ps.harvest_kg %} · {{ ps.harvest_kg|num }} kg{% endif %}{% if ps.fcr %} · FCR {{ ps.fcr }}{% endif %}</p>{% include "business/partials/row_note.html" with note=lp.notes %}
         </div>
         <div class="ledger-end"><span class="party-bal" data-tone="{% if ps.profit >= 0 %}good{% else %}critical{% endif %}"><strong>{{ ps.profit|bdt }}</strong><span>{% translate "sales − costs" %}</span></span></div>
       </a></li>{% endfor %}

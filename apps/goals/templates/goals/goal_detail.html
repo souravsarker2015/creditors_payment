@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static i18n %}
+{% load static i18n ui %}
 
 {% block title %}{{ goal.name }} | FinTrack{% endblock %}
 
@@ -14,7 +14,7 @@
       </div>
       <div class="meta-list">
         <span class="meta-item">{% include "partials/icon.html" with name="calendar" %}{% if goal.target_date %}{% blocktranslate with date=goal.target_date|date:"j M Y" %}Target date {{ date }}{% endblocktranslate %}{% else %}{% translate "No deadline" %}{% endif %}</span>
-        {% if goal.note %}<span class="meta-item">{% include "partials/icon.html" with name="note" %}<span class="truncate">{{ goal.note }}</span></span>{% endif %}
+        {% if goal.note %}<span class="meta-item">{% include "partials/icon.html" with name="note" %}<span data-clamp="2">{{ goal.note }}</span></span>{% endif %}
       </div>
     </div>
     <div class="page-actions">
@@ -73,8 +73,11 @@
       <section class="card">
         <div class="card-header"><h2 class="card-title">{% translate "History" %}</h2></div>
         {% if entries %}
+        {% for g in entries|by_month %}
+        <details class="month-group"{% if forloop.first %} open{% endif %}>
+          <summary class="month-head"><span>{{ g.month|date:"F Y" }}</span><span class="month-head-end">{% blocktranslate count counter=g.items|length %}{{ counter }} entry{% plural %}{{ counter }} entries{% endblocktranslate %}</span></summary>
         <ul class="ledger">
-          {% for e in entries %}
+          {% for e in g.items %}
           <li class="ledger-row">
             {% if e.kind == 'DEPOSIT' %}<span class="ledger-icon" data-tone="good">{% include "partials/icon.html" with name="plus" %}</span>
             {% else %}<span class="ledger-icon" data-tone="warn">{% include "partials/icon.html" with name="arrow-up" %}</span>{% endif %}
@@ -91,6 +94,8 @@
           </li>
           {% endfor %}
         </ul>
+        </details>
+        {% endfor %}
         {% else %}
         <div class="empty is-plain"><p class="empty-text">{% translate "Nothing added yet. Every amount you put aside shows up here." %}</p></div>
         {% endif %}

@@ -20,7 +20,7 @@
       </div>
       <div class="meta-list">
         {% if member.phone %}<a href="tel:{{ member.phone }}" class="meta-item">{% include "partials/icon.html" with name="phone" %}{{ member.phone }}</a>{% endif %}
-        {% if member.note %}<span class="meta-item">{% include "partials/icon.html" with name="note" %}<span class="truncate">{{ member.note }}</span></span>{% endif %}
+        {% if member.note %}<span class="meta-item">{% include "partials/icon.html" with name="note" %}<span data-clamp="2">{{ member.note }}</span></span>{% endif %}
       </div>
     </div>
     <div class="page-actions">

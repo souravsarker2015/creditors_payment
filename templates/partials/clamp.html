@@ -1,0 +1,56 @@
+{% load i18n %}{% comment %}
+Long text in a list row (a row's details, a note) shows a few lines and then
+"More", which opens the rest. Only text that is actually cut gets the button,
+checked when it first comes into view (so rows inside hidden tabs work too).
+{% endcomment %}<script>
+(function () {
+  var MORE = "{% translate 'More' %}", LESS = "{% translate 'Less' %}";
+  var SEL = ".ledger-meta, .entity-meta, [data-clamp]";
+
+  function cut(el) { return el.scrollHeight > el.clientHeight + 2; }
+
+  function toggle(btn, el) {
+    var open = el.classList.toggle("is-open");
+    btn.textContent = open ? LESS : MORE;
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+
+  function check(el) {
+    if (el.dataset.clampChecked || !el.offsetParent) return;
+    el.dataset.clampChecked = "1";
+    if (!cut(el)) return;
+    // A span, not a button: these rows are often links, and a button can't sit inside one.
+    var btn = document.createElement("span");
+    btn.className = "clamp-more";
+    btn.setAttribute("role", "button");
+    btn.setAttribute("tabindex", "0");
+    btn.setAttribute("aria-expanded", "false");
+    btn.textContent = MORE;
+    btn.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); toggle(btn, el); });
+    btn.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); toggle(btn, el); }
+    });
+    el.insertAdjacentElement("afterend", btn);
+  }
+
+  var seen = ("IntersectionObserver" in window) ? new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) { if (en.isIntersecting) { check(en.target); seen.unobserve(en.target); } });
+  }) : null;
+
+  function scan(root) {
+    (root || document).querySelectorAll(SEL).forEach(function (el) {
+      if (el.dataset.clampChecked) return;
+      if (el.offsetParent || !seen) check(el); else seen.observe(el);   // hidden now (a closed tab): checked when it shows
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", function () { scan(); });
+  document.addEventListener("htmx:afterSettle", function (e) { scan(e.target); });
+  // Text shown later (a tab or a folded section opened) is checked when it appears.
+  document.addEventListener("click", function () { setTimeout(function () {
+    document.querySelectorAll(SEL).forEach(function (el) {
+      if (!el.dataset.clampChecked && el.offsetParent) check(el);
+    });
+  }, 60); }, true);
+})();
+</script>

@@ -91,7 +91,7 @@ def goal_detail_view(request, pk):
     months = last_12()
     return render(request, "goals/goal_detail.html", {
         "goal": goal, "p": info, "form": form, "autosave_form": autosave_form,
-        "entries": goal.entries.all()[:100],
+        "entries": goal.entries.all(),
         "months": months, "monthly": monthly_net(goal, months),
     })
 

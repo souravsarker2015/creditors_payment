@@ -57,7 +57,7 @@
         <span class="ledger-icon" data-tone="{% if e.is_in %}good{% else %}warn{% endif %}">{% if e.is_in %}{% include "partials/icon.html" with name="arrow-down" %}{% else %}{% include "partials/icon.html" with name="arrow-up" %}{% endif %}</span>
         <div class="ledger-main">
           <p class="ledger-title">{{ e.get_kind_display }}{% if e.notes %} · {{ e.notes }}{% endif %}</p>
-          <p class="ledger-meta">{{ e.date|date:"j M Y" }} · {{ e.account }}</p>
+          <p class="ledger-meta">{{ e.date|date:"j M Y" }} · {{ e.account }}</p>{% include "business/partials/row_note.html" with note=e.notes %}
         </div>
         <div class="ledger-end">
           <span class="ledger-amount" data-tone="{% if e.is_in %}good{% else %}warn{% endif %}">{% if e.is_in %}+{% else %}−{% endif %}{{ e.amount|bdt }}</span>

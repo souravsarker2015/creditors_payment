@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n business %}
+{% load i18n business ui %}
 {% block title %}{{ item.name }} | {{ business.name }}{% endblock %}
 {% block content %}
 <div class="page-medium stack">
@@ -45,14 +45,17 @@
   <section class="card">
     <div class="card-header"><div><h2 class="card-title">{% translate "Bought and used" %}</h2><p class="card-subtitle">{% translate "To use it, add “Lime, medicine & care” to a pond and choose it under “From your store”." %}</p></div></div>
     {% if history %}
+    {% for g in history|by_month:1 %}
+    <details class="month-group"{% if forloop.first %} open{% endif %}>
+      <summary class="month-head"><span>{{ g.month|date:"F Y" }}</span><span class="month-head-end">{% blocktranslate count counter=g.items|length %}{{ counter }} entry{% plural %}{{ counter }} entries{% endblocktranslate %}</span></summary>
     <ul class="ledger">
-      {% for kind, day, e in history %}
+      {% for kind, day, e in g.items %}
       <li class="ledger-row">
         {% if kind == "buy" %}
         <span class="ledger-icon" data-tone="good">{% include "partials/icon.html" with name="arrow-down" %}</span>
         <div class="ledger-main">
           <p class="ledger-title">{% blocktranslate with q=e.quantity|num unit=e.unit.symbol %}Bought {{ q }} {{ unit }}{% endblocktranslate %}{% if e.supplier %} · {{ e.supplier }}{% endif %}</p>
-          <p class="ledger-meta">{{ day|date:"j M Y" }}{% if biz_can.view_finance %}{% if e.account %} · {{ e.account }}{% endif %}{% if e.due %} · <span class="tone-warn">{% blocktranslate with amount=e.due|bdt %}{{ amount }} owed{% endblocktranslate %}</span>{% endif %}{% endif %}</p>
+          <p class="ledger-meta">{{ day|date:"j M Y" }}{% if biz_can.view_finance %}{% if e.account %} · {{ e.account }}{% endif %}{% if e.due %} · <span class="tone-warn">{% blocktranslate with amount=e.due|bdt %}{{ amount }} owed{% endblocktranslate %}</span>{% endif %}{% endif %}</p>{% include "business/partials/row_note.html" with note=e.notes %}
         </div>
         <div class="ledger-end">
           {% if biz_can.view_finance %}{% if e.cost %}<span class="party-bal"><strong>{{ e.cost|bdt }}</strong></span>{% endif %}
@@ -63,13 +66,15 @@
         <span class="ledger-icon" data-tone="info">{% include "business/partials/icon.html" with name="fish" %}</span>
         <a href="{% url 'business:cycle_detail' e.cycle_id %}?tab=water" class="ledger-main">
           <p class="ledger-title">{% blocktranslate with q=e.quantity|num unit=e.unit.symbol pond=e.cycle.pond %}{{ q }} {{ unit }} into {{ pond }}{% endblocktranslate %}</p>
-          <p class="ledger-meta">{{ day|date:"j M Y" }}{% if e.reason %} · {{ e.reason }}{% endif %}</p>
+          <p class="ledger-meta">{{ day|date:"j M Y" }}{% if e.reason %} · {{ e.reason }}{% endif %}</p>{% include "business/partials/row_note.html" with note=e.notes %}
         </a>
         <div class="ledger-end">{% if biz_can.view_finance and e.cost %}<span class="party-bal"><strong>{{ e.cost|bdt }}</strong><span>{% translate "pond cost" %}</span></span>{% endif %}</div>
         {% endif %}
       </li>
       {% endfor %}
     </ul>
+    </details>
+    {% endfor %}
     {% else %}
     <div class="empty is-plain"><p class="empty-text">{% translate "Nothing bought or used yet." %}</p></div>
     {% endif %}

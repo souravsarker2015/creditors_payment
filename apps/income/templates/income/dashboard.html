@@ -49,7 +49,7 @@
     </div>
     <div class="stat" data-tone="accent">
       <dt class="stat-label">{% translate "Top source" %}</dt>
-      <dd class="stat-value truncate">{% if top_source %}{{ top_source.label }}{% else %}—{% endif %}</dd>
+      <dd class="stat-value" data-clamp="2">{% if top_source %}{{ top_source.label }}{% else %}—{% endif %}</dd>
       <dd class="stat-hint">{% if top_source %}{% blocktranslate with pct=top_source.pct|floatformat:0 amount=top_source.value|money %}{{ amount }} · {{ pct }}% of earnings{% endblocktranslate %}{% else %}{% translate "Nothing yet" %}{% endif %}</dd>
     </div>
   </dl>

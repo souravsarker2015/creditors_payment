@@ -1,11 +1,20 @@
 {% load i18n %}
 <ul class="ledger">
   {% for a in rows %}
-  <li class="ledger-row">
+  <li class="ledger-row activity-row">
     <span class="ledger-icon" data-tone="{% if a.model == 'export' %}info{% elif a.action == 'create' %}good{% elif a.action == 'delete' %}critical{% elif a.action == 'restore' %}info{% else %}accent{% endif %}">{% if a.model == 'export' %}{% include "partials/icon.html" with name="download" %}{% elif a.action == 'create' %}{% include "partials/icon.html" with name="plus" %}{% elif a.action == 'delete' %}{% include "partials/icon.html" with name="trash" %}{% elif a.action == 'restore' %}{% include "partials/icon.html" with name="restore" %}{% else %}{% include "partials/icon.html" with name="edit" %}{% endif %}</span>
     <div class="ledger-main">
-      <p class="ledger-title">{% if a.model == 'export' %}{% translate "Downloaded all records" %}{% else %}{{ a.get_action_display }} · {{ a.object_repr }}{% endif %}</p>
-      <p class="ledger-meta">{% if a.user %}{{ a.user.username }}{% else %}{% translate "System" %}{% endif %} · {{ a.at|date:"j M Y, g:i A" }}{% if a.changes and a.action == 'update' %} · {% for k, v in a.changes.items %}{{ k }}: {{ v.0|default:"—" }} → {{ v.1|default:"—" }}{% if not forloop.last %}, {% endif %}{% endfor %}{% endif %}</p>
+      <p class="ledger-title">{% if a.model == 'export' %}{% translate "Downloaded all records" %}{% else %}{{ a.get_action_display }} · {{ a.title|default:a.object_repr }}{% endif %}</p>
+      <p class="ledger-meta">{% if a.user %}{{ a.user.username }}{% else %}{% translate "System" %}{% endif %} · {{ a.at|date:"j M Y, g:i A" }}</p>
+      {% if a.action == 'update' and a.change_list %}
+        {% if a.change_list|length == 1 %}{% with c=a.change_list.0 %}<p class="activity-change" data-clamp="2"><span>{{ c.0 }}:</span> {{ c.1 }} → <strong>{{ c.2 }}</strong></p>{% endwith %}
+        {% else %}
+        <details class="activity-details">
+          <summary>{% blocktranslate count counter=a.change_list|length %}{{ counter }} change{% plural %}{{ counter }} changes{% endblocktranslate %}</summary>
+          <ul>{% for c in a.change_list %}<li class="activity-change"><span>{{ c.0 }}:</span> {{ c.1 }} → <strong>{{ c.2 }}</strong></li>{% endfor %}</ul>
+        </details>
+        {% endif %}
+      {% endif %}
     </div>
   </li>
   {% endfor %}

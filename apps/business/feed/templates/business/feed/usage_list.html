@@ -20,7 +20,7 @@
     <ul class="ledger">{% for e in day.rows %}
       <li class="ledger-row">
         <span class="ledger-icon" data-tone="gold">{% include "business/partials/icon.html" with name="fish" %}</span>
-        <div class="ledger-main"><p class="ledger-title"><a href="{% url 'business:cycle_detail' e.cycle_id %}?tab=feeding" class="hover:underline">{{ e.cycle.pond }}</a></p><p class="ledger-meta">{{ e.product }}</p></div>
+        <div class="ledger-main"><p class="ledger-title"><a href="{% url 'business:cycle_detail' e.cycle_id %}?tab=feeding" class="hover:underline">{{ e.cycle.pond }}</a></p><p class="ledger-meta">{{ e.product }}</p>{% include "business/partials/row_note.html" with note=e.notes %}</div>
         <div class="ledger-end">
           <span class="ledger-amount">{% if e.unit %}{% qty e.quantity e.unit %}{% else %}{% blocktranslate with n=e.quantity|num %}{{ n }} bags{% endblocktranslate %}{% endif %}</span>
           {% if biz_can.enter_data %}{% url 'business:entry_edit' 'feeding' e.pk as edit_url %}{% url 'business:entry_delete' 'feeding' e.pk as delete_url %}{% translate "Delete this entry?" as confirm_text %}{% include "partials/row_menu.html" with edit_url=edit_url delete_url=delete_url confirm=confirm_text up=forloop.last %}{% endif %}

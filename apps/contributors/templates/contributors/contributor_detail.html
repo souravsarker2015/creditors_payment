@@ -18,7 +18,7 @@
       <div class="meta-list">
         <span class="meta-item">{% include "partials/icon.html" with name="tag" %}{{ contributor.get_category_display }}</span>
         {% if contributor.phone %}<a href="tel:{{ contributor.phone }}" class="meta-item">{% include "partials/icon.html" with name="phone" %}{{ contributor.phone }}</a>{% endif %}
-        {% if contributor.note %}<span class="meta-item">{% include "partials/icon.html" with name="note" %}<span class="truncate">{{ contributor.note }}</span></span>{% endif %}
+        {% if contributor.note %}<span class="meta-item">{% include "partials/icon.html" with name="note" %}<span data-clamp="2">{{ contributor.note }}</span></span>{% endif %}
       </div>
     </div>
     <div class="page-actions">

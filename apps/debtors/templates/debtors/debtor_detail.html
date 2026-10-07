@@ -24,7 +24,7 @@
         <span class="meta-item">{% include "partials/icon.html" with name="tag" %}{{ debtor.get_category_display }}</span>
         {% if debtor.phone %}<a href="tel:{{ debtor.phone }}" class="meta-item">{% include "partials/icon.html" with name="phone" %}{{ debtor.phone }}</a>{% endif %}
         {% if debtor.due_date %}<span class="meta-item" {% if due_status == 'overdue' %}style="color: var(--status-critical);"{% endif %}>{% include "partials/icon.html" with name="calendar" %}{% blocktranslate with date=debtor.due_date|date:"j M Y" %}Due {{ date }}{% endblocktranslate %}</span>{% endif %}
-        {% if debtor.note %}<span class="meta-item">{% include "partials/icon.html" with name="note" %}<span class="truncate">{{ debtor.note }}</span></span>{% endif %}
+        {% if debtor.note %}<span class="meta-item">{% include "partials/icon.html" with name="note" %}<span data-clamp="2">{{ debtor.note }}</span></span>{% endif %}
       </div>
     </div>
     <div class="page-actions">

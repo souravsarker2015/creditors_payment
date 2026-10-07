@@ -99,7 +99,7 @@ def pond_detail_view(request, pk):
         "pond": pond, "current": current, "past": [c for c in cycles if not c.is_running],
         "summary": services.summarize(current) if current else None,
         "cycle_form": _for_popup(CycleForm(business=request.business, prefix="cycle")),
-        "past_summaries": [(c, services.summarize(c)) for c in cycles if not c.is_running][:10],
+        "past_summaries": [(c, services.summarize(c)) for c in cycles if not c.is_running],
         "lease": services.lease_status(pond) if pond.is_leased else None,
     })
 
@@ -152,12 +152,12 @@ def cycle_detail_view(request, pk):
     b = request.business
     popups = [(k, kind, _for_popup(kind.form(business=b, cycle=cycle, prefix=k)), reverse("business:entry_add", args=[cycle.pk, k]))
               for k, kind in ENTRY_KINDS.items()]
-    feedings = list(cycle.feedings.select_related("product", "unit")[:60])
+    feedings = list(cycle.feedings.select_related("product", "unit"))
     harvests = list(cycle.harvests.select_related("species", "unit"))
     sales = list(cycle.sales.select_related("buyer", "market"))
     summary = services.summarize(cycle)
     limits = PondAlerts.for_business(b)
-    water = list(cycle.water_tests.all()[:40])
+    water = list(cycle.water_tests.all())
     for w in water:
         w.found = w.problems(limits)
     mon = Unit.objects.filter(business=b, symbol="mon", unit_type="weight").first()
