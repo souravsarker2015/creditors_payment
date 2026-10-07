@@ -19,6 +19,10 @@ The menu sections: the sidebar shows them as a list, and the app view's
         {% include "partials/icon.html" with name="info" %}
         {% translate "How this app works" %}
     </a>
+    <a href="{% url 'offline_settings' %}" class="nav-link {% if p == '/core/offline/' %}is-active{% endif %}">
+        {% include "partials/icon.html" with name="cloud" %}
+        {% translate "Use without internet" %}
+    </a>
     <a href="{% url 'my_data' %}" class="nav-link" download data-tip="{% translate 'All your records as Excel-ready files, to keep a copy.' %}">
         {% include "partials/icon.html" with name="download" %}
         {% translate "Download my data" %}

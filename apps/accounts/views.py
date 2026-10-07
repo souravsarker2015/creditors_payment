@@ -43,7 +43,10 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     messages.info(request, _("You have been logged out."))
-    return redirect("login")
+    response = redirect("login")
+    # Pages kept on the phone for working offline hold this person's figures.
+    response["Clear-Site-Data"] = '"cache"'
+    return response
 
 
 @login_required

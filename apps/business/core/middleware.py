@@ -15,7 +15,7 @@ from .audit import reset_current_user, set_current_user
 
 EXEMPT = ("/accounts/", "/admin/", "/static/", "/media/", "/i18n/", "/__debug__/",
           "/sw.js", "/manifest.webmanifest", "/offline/", "/favicon.ico",
-          "/search/", "/receipts/")  # search covers both areas and checks access itself
+          "/search/", "/receipts/", "/core/offline-pages/", "/core/offline/")  # search covers both areas and checks access itself
 
 
 class DashboardMiddleware:

@@ -13,15 +13,53 @@
     .logo { width: 4rem; height: 4rem; margin: 0 auto 1.25rem; border-radius: 1rem; display: grid; place-items: center; background: var(--gold); color: #221a06; font: 700 2rem Georgia, serif; }
     h1 { font: 700 1.5rem/1.3 var(--font-display); color: var(--text-primary); }
     p { margin: 0.625rem 0 1.5rem; color: var(--text-secondary); line-height: 1.55; }
+    .waiting { margin-top: -0.75rem; font-weight: 600; color: var(--status-warn); }
+    .ready { margin: 0 0 1.5rem; text-align: left; }
+    .ready h2 { margin-bottom: 0.625rem; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); text-align: center; }
+    #ready-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
+    #ready-list .btn { justify-content: center; white-space: normal; text-align: center; min-height: 2.75rem; }
   </style>
 </head>
 <body>
   <main class="box">
     <div class="logo" aria-hidden="true">৳</div>
     <h1>{% translate "You're offline" %}</h1>
-    <p>{% translate "FinTrack needs an internet connection to show your latest figures. Nothing you entered is lost — try again once you're back online." %}</p>
+    <p>{% translate "This page isn't saved on the phone yet. Nothing you entered is lost — what you save with no signal is kept here and sent when you're back online." %}</p>
+    <p class="waiting" id="waiting" hidden></p>
+    <nav class="ready" id="ready" hidden aria-labelledby="ready-title">
+      <h2 id="ready-title">{% translate "Ready to use without signal" %}</h2>
+      <div id="ready-list"></div>
+    </nav>
     <button type="button" class="btn btn-primary btn-lg" onclick="location.reload()">{% translate "Try again" %}</button>
   </main>
-  <script>window.addEventListener("online", function () { location.reload(); });</script>
+  <script>
+  (function () {
+    window.addEventListener("online", function () { location.reload(); });
+    try {
+      var info = JSON.parse(localStorage.getItem("ft-offline-index") || "{}");
+      if (info.pages && info.pages.length) {
+        var list = document.getElementById("ready-list");
+        info.pages.forEach(function (p) {
+          var a = document.createElement("a");
+          a.href = p.url; a.className = "btn btn-secondary"; a.textContent = p.label;
+          list.appendChild(a);
+        });
+        document.getElementById("ready").hidden = false;
+      }
+    } catch (e) {}
+    if (!window.indexedDB) return;
+    var open = indexedDB.open("fintrack-offline", 1);
+    open.onupgradeneeded = function () { open.result.createObjectStore("outbox", { keyPath: "key" }); };
+    open.onsuccess = function () {
+      var r = open.result.transaction("outbox").objectStore("outbox").count();
+      r.onsuccess = function () {
+        if (!r.result) return;
+        var w = document.getElementById("waiting");
+        w.textContent = r.result === 1 ? "{% translate '1 entry is saved on this phone, waiting to send.' %}" : "{% translate '{n} entries are saved on this phone, waiting to send.' %}".replace("{n}", r.result);
+        w.hidden = false;
+      };
+    };
+  })();
+  </script>
 </body>
 </html>

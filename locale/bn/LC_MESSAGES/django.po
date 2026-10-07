@@ -12902,3 +12902,171 @@ msgstr "গত ৭ দিন"
 
 msgid "Last 30 days"
 msgstr "গত ৩০ দিন"
+
+msgid "No signal: the plan will show once you’re online. You can still save the loan."
+msgstr "নেটওয়ার্ক নেই: অনলাইনে এলে কিস্তির হিসাব দেখাবে। ঋণটি এখনও সংরক্ষণ করতে পারবেন।"
+
+msgid "That entry was made by another account on this phone, so it wasn't saved here."
+msgstr "এই এন্ট্রিটি এই ফোনের অন্য একটি অ্যাকাউন্ট থেকে করা, তাই এখানে সংরক্ষণ করা হয়নি।"
+
+msgid "Use without internet"
+msgstr "ইন্টারনেট ছাড়া ব্যবহার"
+
+msgid "No signal: a new one can’t be added right now. Pick one from the list, or add it when you’re back online."
+msgstr "নেটওয়ার্ক নেই: এখন নতুন যোগ করা যাবে না। তালিকা থেকে একটি বেছে নিন, অথবা অনলাইনে এলে যোগ করুন।"
+
+msgid "Saved on this phone"
+msgstr "এই ফোনে রাখা আছে"
+
+msgid "These were saved while there was no signal. They are sent by themselves when you’re online."
+msgstr "নেটওয়ার্ক না থাকার সময় এগুলো রাখা হয়েছে। অনলাইনে এলে নিজে থেকেই পাঠানো হবে।"
+
+msgid "Saved on this phone. It will be sent when you’re online."
+msgstr "এই ফোনে রাখা হলো। অনলাইনে এলে পাঠানো হবে।"
+
+msgid "1 entry waiting to send"
+msgstr "১টি এন্ট্রি পাঠানোর অপেক্ষায়"
+
+msgid "{n} entries waiting to send"
+msgstr "{n}টি এন্ট্রি পাঠানোর অপেক্ষায়"
+
+msgid "1 entry needs a look"
+msgstr "১টি এন্ট্রি দেখে নিতে হবে"
+
+msgid "{n} entries need a look"
+msgstr "{n}টি এন্ট্রি দেখে নিতে হবে"
+
+msgid "Sign in to send what’s saved"
+msgstr "রাখা এন্ট্রি পাঠাতে লগ ইন করুন"
+
+msgid "Sending…"
+msgstr "পাঠানো হচ্ছে…"
+
+msgid "1 saved entry was sent."
+msgstr "রাখা ১টি এন্ট্রি পাঠানো হয়েছে।"
+
+msgid "{n} saved entries were sent."
+msgstr "রাখা {n}টি এন্ট্রি পাঠানো হয়েছে।"
+
+msgid "Show the new figures"
+msgstr "নতুন হিসাব দেখুন"
+
+msgid "Waiting for signal"
+msgstr "নেটওয়ার্কের অপেক্ষায়"
+
+msgid "Not saved: something in it needs fixing"
+msgstr "সংরক্ষণ হয়নি: কিছু একটা ঠিক করতে হবে"
+
+msgid "Couldn’t be saved. Open it to check."
+msgstr "সংরক্ষণ করা যায়নি। খুলে দেখুন।"
+
+msgid "Sign in again to send it"
+msgstr "পাঠাতে আবার লগ ইন করুন"
+
+msgid "Made by another account on this phone"
+msgstr "এই ফোনের অন্য অ্যাকাউন্ট থেকে করা"
+
+msgid "Saved {when}"
+msgstr "রাখা হয়েছে {when}"
+
+msgid "Remove this entry from the phone? It hasn’t been saved in the app."
+msgstr "এই এন্ট্রিটি ফোন থেকে মুছবেন? এটি এখনও অ্যাপে সংরক্ষণ হয়নি।"
+
+msgid "Send now"
+msgstr "এখনই পাঠান"
+
+msgid "No signal yet"
+msgstr "এখনও নেটওয়ার্ক নেই"
+
+msgid "Your saved entry is filled in. Check it and save again."
+msgstr "আপনার রাখা এন্ট্রিটি ভরে দেওয়া হয়েছে। দেখে নিয়ে আবার সংরক্ষণ করুন।"
+
+msgid "No signal. This is the page as it was {when}. You can still add entries: they’re kept on this phone and sent later."
+msgstr "নেটওয়ার্ক নেই। এটি {when}-এর পাতা। তবুও এন্ট্রি যোগ করতে পারবেন: সেগুলো এই ফোনে থাকবে এবং পরে পাঠানো হবে।"
+
+msgid "You’re offline. Keep going: what you save is kept on this phone and sent when the signal is back."
+msgstr "আপনি অফলাইনে। চালিয়ে যান: যা সংরক্ষণ করবেন তা এই ফোনে থাকবে, নেটওয়ার্ক এলে পাঠানো হবে।"
+
+msgid "No signal. This list needs the internet the first time you open it."
+msgstr "নেটওয়ার্ক নেই। এই তালিকা প্রথমবার খুলতে ইন্টারনেট লাগে।"
+
+msgid "At the pond or in the village with no signal, the app still opens and still saves. Everything is sent by itself when the signal comes back."
+msgstr "পুকুরপাড়ে বা গ্রামে নেটওয়ার্ক না থাকলেও অ্যাপ খোলে, এন্ট্রিও রাখা যায়। নেটওয়ার্ক ফিরলে সব নিজে থেকেই পাঠানো হয়।"
+
+msgid "pages, last updated"
+msgstr "পাতা, শেষ হালনাগাদ"
+
+msgid "pages"
+msgstr "পাতা"
+
+msgid "Keep everything ready"
+msgstr "সব কিছু তৈরি রাখুন"
+
+msgid "Every page of the app, and the pages of your people, ponds and loans. Pages saved in the last hour are skipped."
+msgstr "অ্যাপের সব পাতা, আর আপনার মানুষ, পুকুর ও ঋণের পাতা। গত এক ঘণ্টায় রাখা পাতা বাদ যায়।"
+
+msgid "Needs signal"
+msgstr "নেটওয়ার্ক দরকার"
+
+msgid "Saving pages…"
+msgstr "পাতা রাখা হচ্ছে…"
+
+msgid "Save everything now"
+msgstr "এখনই সব রাখুন"
+
+msgid "Keep everything up to date on Wi-Fi"
+msgstr "ওয়াই-ফাইতে সব হালনাগাদ রাখুন"
+
+msgid "Once a day, only on Wi-Fi. On mobile data just the everyday forms are kept fresh, to save your data."
+msgstr "দিনে একবার, শুধু ওয়াই-ফাইতে। মোবাইল ডেটায় শুধু প্রতিদিনের ফর্মগুলো হালনাগাদ হয়, যাতে ডেটা কম খরচ হয়।"
+
+msgid "Waiting to send"
+msgstr "পাঠানোর অপেক্ষায়"
+
+msgid "Nothing waiting. Everything you saved has reached the app."
+msgstr "কিছু অপেক্ষায় নেই। যা রেখেছিলেন সব অ্যাপে পৌঁছেছে।"
+
+msgid "See them"
+msgstr "দেখুন"
+
+msgid "Pages you open are kept on this phone. With no signal you see the kept page, with a note saying when it was saved."
+msgstr "যে পাতা খোলেন তা এই ফোনে থেকে যায়। নেটওয়ার্ক না থাকলে রাখা পাতাটি দেখবেন, কখন রাখা হয়েছিল সেই লেখা সহ।"
+
+msgid "Save as usual. If there's no signal, the entry stays on the phone and the form is ready for the next one."
+msgstr "যেমন সংরক্ষণ করেন তেমনই করুন। নেটওয়ার্ক না থাকলে এন্ট্রিটি ফোনে থাকবে, আর ফর্মটি পরের এন্ট্রির জন্য তৈরি থাকবে।"
+
+msgid "When the signal is back — even hours later — everything waiting is sent by itself, in the order you saved it. Nothing is ever saved twice."
+msgstr "নেটওয়ার্ক ফিরলে — কয়েক ঘণ্টা পরে হলেও — অপেক্ষায় থাকা সব নিজে থেকেই, যে ক্রমে রেখেছিলেন সেই ক্রমে পাঠানো হয়। কোনো কিছু দুবার সংরক্ষণ হয় না।"
+
+msgid "If something can't be saved (for example a box was left empty), it's marked “needs a look”. Open it, fix it and save again."
+msgstr "কিছু সংরক্ষণ না হলে (যেমন কোনো ঘর খালি থাকলে) সেটিতে “দেখে নিতে হবে” লেখা থাকে। খুলে ঠিক করে আবার সংরক্ষণ করুন।"
+
+msgid "Signing out removes the kept pages from the phone. Entries waiting to send stay until you sign in again."
+msgstr "লগ আউট করলে রাখা পাতাগুলো ফোন থেকে মুছে যায়। পাঠানোর অপেক্ষায় থাকা এন্ট্রি আবার লগ ইন করা পর্যন্ত থাকে।"
+
+msgid "Remove saved pages from this phone"
+msgstr "এই ফোন থেকে রাখা পাতা মুছুন"
+
+msgid "This browser can't keep pages. Use Chrome, or add the app to your home screen."
+msgstr "এই ব্রাউজারে পাতা রাখা যায় না। ক্রোম ব্যবহার করুন, অথবা অ্যাপটি হোম স্ক্রিনে যোগ করুন।"
+
+msgid "Done: {n} pages are ready to use without signal."
+msgstr "হয়ে গেছে: {n}টি পাতা নেটওয়ার্ক ছাড়া ব্যবহারের জন্য তৈরি।"
+
+msgid "Stopped: the signal went. Try again when it’s back."
+msgstr "থেমে গেছে: নেটওয়ার্ক চলে গেছে। ফিরলে আবার চেষ্টা করুন।"
+
+msgid "Remove the saved pages from this phone? Entries waiting to send are kept."
+msgstr "এই ফোন থেকে রাখা পাতাগুলো মুছবেন? পাঠানোর অপেক্ষায় থাকা এন্ট্রি থেকে যাবে।"
+
+msgid "This page isn't saved on the phone yet. Nothing you entered is lost — what you save with no signal is kept here and sent when you're back online."
+msgstr "এই পাতাটি এখনও ফোনে রাখা হয়নি। আপনার কোনো এন্ট্রি হারায়নি — নেটওয়ার্ক ছাড়া যা সংরক্ষণ করেন তা এখানে থাকে, অনলাইনে এলে পাঠানো হয়।"
+
+msgid "Ready to use without signal"
+msgstr "নেটওয়ার্ক ছাড়া ব্যবহারের জন্য তৈরি"
+
+msgid "1 entry is saved on this phone, waiting to send."
+msgstr "১টি এন্ট্রি এই ফোনে রাখা আছে, পাঠানোর অপেক্ষায়।"
+
+msgid "{n} entries are saved on this phone, waiting to send."
+msgstr "{n}টি এন্ট্রি এই ফোনে রাখা আছে, পাঠানোর অপেক্ষায়।"

@@ -60,14 +60,14 @@ class Shop(models.Model):
         """True if there's an unpaid balance and the due date has passed."""
         if not self.due_date or self.remaining <= 0:
             return False
-        return self.due_date < timezone.now().date()
+        return self.due_date < timezone.localdate()
 
     @property
     def is_due_soon(self):
         """True if there's an unpaid balance due within DUE_SOON_DAYS, but not yet overdue."""
         if not self.due_date or self.remaining <= 0 or self.is_overdue:
             return False
-        return self.due_date <= timezone.now().date() + datetime.timedelta(days=DUE_SOON_DAYS)
+        return self.due_date <= timezone.localdate() + datetime.timedelta(days=DUE_SOON_DAYS)
 
     @property
     def total_due(self):

@@ -72,7 +72,7 @@ def _build_pagination_window(page_obj, window=2):
 
 
 def _last_12_month_starts():
-    today = django.utils.timezone.now().date()
+    today = django.utils.timezone.localdate()
     starts = []
     for i in range(11, -1, -1):
         month_index = today.month - i
@@ -410,7 +410,7 @@ def income_source_import_view(request):
         return redirect("income_source_list")
 
     existing_names = {n.lower() for n in request.user.income_sources.values_list("name", flat=True)}
-    today = django.utils.timezone.now().date()
+    today = django.utils.timezone.localdate()
 
     created = 0
     skipped_duplicate = 0
@@ -520,7 +520,7 @@ def income_source_detail_view(request, pk):
             messages.success(request, _("Income of ৳%(amount)s recorded.") % {"amount": tx.amount})
             return redirect("income_source_detail", pk=pk)
     else:
-        form = IncomeTransactionForm(initial={"date": django.utils.timezone.now().date()})
+        form = IncomeTransactionForm(initial={"date": django.utils.timezone.localdate()})
 
     # All-time cumulative revenue (never period-filtered, a true running total).
     total_source_income = all_transactions.aggregate(
@@ -663,7 +663,7 @@ def recurring_income_create_view(request):
             messages.success(request, _("Recurring income '%(name)s' scheduled.") % {"name": schedule.source.name})
             return redirect("recurring_income_list")
     else:
-        form = RecurringIncomeForm(user=request.user, initial={"next_run_date": django.utils.timezone.now().date()})
+        form = RecurringIncomeForm(user=request.user, initial={"next_run_date": django.utils.timezone.localdate()})
     return render(request, "income/source_form.html", {
         "form": form,
         "title": _("New Recurring Income"),

@@ -306,7 +306,7 @@ class CreditorCategoryTests(TestCase):
 class CreditorDueDateTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="duedate_user", password="secret123")
-        self.today = timezone.now().date()
+        self.today = timezone.localdate()
 
     def _creditor_with_balance(self, due_date=None, borrowed=Decimal("1000.00"), repaid=Decimal("0.00")):
         creditor = Creditor.objects.create(
@@ -352,7 +352,7 @@ class CreditorDueDateTests(TestCase):
 class CreditorInterestTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="interest_user", password="secret123")
-        self.today = timezone.now().date()
+        self.today = timezone.localdate()
 
     def _borrow(self, creditor, amount, days_ago):
         Transaction.objects.create(

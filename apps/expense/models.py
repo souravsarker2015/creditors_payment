@@ -175,7 +175,7 @@ class RecurringExpense(models.Model):
     def generate_due_transactions(self, *, today=None):
         """Creates an expense for every missed occurrence up to today. Returns the count created."""
         if today is None:
-            today = timezone.now().date()
+            today = timezone.localdate()
 
         created = 0
         while self.is_active and created < RECURRING_CATCHUP_LIMIT:
@@ -203,7 +203,7 @@ class RecurringExpense(models.Model):
 
 def generate_due_recurring_expense(user):
     """Catches up every active recurring expense schedule for this user. Returns the total transactions created."""
-    today = timezone.now().date()
+    today = timezone.localdate()
     due = RecurringExpense.objects.filter(
         user=user, is_active=True, next_run_date__lte=today
     ).select_related("category")

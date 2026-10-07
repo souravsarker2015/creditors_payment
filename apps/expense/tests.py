@@ -91,7 +91,7 @@ class RecurringExpenseTests(TestCase):
         self.user = User.objects.create_user(username="recurring_expense_user", password="secret123")
         self.other_user = User.objects.create_user(username="recurring_expense_other", password="secret123")
         self.category = ExpenseCategory.objects.create(user=self.user, name="Rent")
-        self.today = timezone.now().date()
+        self.today = timezone.localdate()
 
     def test_catches_up_all_missed_monthly_occurrences(self):
         schedule = RecurringExpense.objects.create(

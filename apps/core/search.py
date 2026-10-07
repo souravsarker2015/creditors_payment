@@ -54,6 +54,7 @@ PAGES = [
     (gettext_noop("Home"), "home", "personal", ""),
     (gettext_noop("Net Worth"), "networth", "personal", ""),
     (gettext_noop("How this app works"), "help", "personal", ""),
+    (gettext_noop("Use without internet"), "offline_settings", "personal", ""),
     (gettext_noop("Creditors"), "dashboard", "personal", ""),
     (gettext_noop("Debtors"), "debtor_dashboard", "personal", ""),
     (gettext_noop("Shop Dues"), "shop_dashboard", "personal", ""),

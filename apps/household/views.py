@@ -45,7 +45,7 @@ def _row_value(row, fieldnames, key):
 
 
 def _last_12_month_starts():
-    today = timezone.now().date()
+    today = timezone.localdate()
     starts = []
     for i in range(11, -1, -1):
         month_index = today.month - i
@@ -174,7 +174,7 @@ def dashboard_view(request):
         0,
     )
 
-    today = timezone.now().date()
+    today = timezone.localdate()
     this_month_spent = purchases.filter(date__year=today.year, date__month=today.month).aggregate(
         total=Coalesce(Sum("amount"), Value(0, output_field=DecimalField()))
     )["total"]
@@ -277,7 +277,7 @@ def purchase_list_view(request):
         0,
     )
 
-    today = timezone.now().date()
+    today = timezone.localdate()
 
     base_query = request.GET.copy()
     base_query.pop("page", None)
@@ -303,7 +303,7 @@ def month_detail_view(request, year, month):
     if not 1 <= month <= 12:
         raise Http404("Invalid month.")
 
-    today = timezone.now().date()
+    today = timezone.localdate()
 
     if request.method == "POST":
         form = PurchaseForm(request.POST, request.FILES, user=request.user)
@@ -575,7 +575,7 @@ def member_detail_view(request, pk):
             messages.success(request, _("Gave back ৳%(amount)s to %(name)s.") % {"amount": settlement.amount, "name": member.name})
             return redirect("household_member_detail", pk=pk)
     else:
-        form = SettlementForm(initial={"date": timezone.now().date()})
+        form = SettlementForm(initial={"date": timezone.localdate()})
 
     all_purchases = member.purchases.select_related("category")
     all_settlements = member.settlements.all()

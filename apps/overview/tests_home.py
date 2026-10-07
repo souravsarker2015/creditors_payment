@@ -134,3 +134,13 @@ class HelpAndDatesTests(TestCase):
         with translation.override("bn"):
             self.assertEqual(forms.DateField().clean("07/10/2026"), date(2026, 10, 7))
             self.assertEqual(forms.DateField().clean("2026-10-07"), date(2026, 10, 7))
+
+    def test_forms_use_bangladesh_date_after_midnight(self):
+        # 2 AM in Dhaka is still the day before in UTC: forms must suggest the Dhaka date.
+        from datetime import datetime, timezone as dt_timezone
+        from unittest import mock
+
+        early = datetime(2026, 10, 7, 20, 0, tzinfo=dt_timezone.utc)   # 8 Oct, 02:00 in Dhaka
+        with mock.patch("django.utils.timezone.now", return_value=early):
+            r = self.client.get(reverse("expense_create"))
+        self.assertEqual(r.context["form"].initial["date"], date(2026, 10, 8))

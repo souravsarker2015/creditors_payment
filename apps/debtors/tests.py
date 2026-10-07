@@ -216,7 +216,7 @@ class DebtorCategoryTests(TestCase):
 class DebtorDueDateTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="debtor_duedate_user", password="secret123")
-        self.today = timezone.now().date()
+        self.today = timezone.localdate()
 
     def _debtor_with_balance(self, due_date=None, lent=Decimal("1000.00"), received=Decimal("0.00")):
         debtor = Debtor.objects.create(

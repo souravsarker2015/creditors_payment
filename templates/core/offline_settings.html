@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Use without internet" %} | FinTrack{% endblock %}
+
+{% block content %}
+<div class="page-narrow stack" x-data="offlineSettings()" x-init="load()">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "Use without internet" %}</h1>
+      <p class="page-subtitle">{% translate "At the pond or in the village with no signal, the app still opens and still saves. Everything is sent by itself when the signal comes back." %}</p>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="min-w-0">
+        <p class="hero-label">{% translate "Saved on this phone" %}</p>
+        <p class="hero-value" x-text="kept === null ? '…' : kept"></p>
+        <p class="hero-sub" x-text="kept === null ? '' : (updated ? '{{ _("pages, last updated")|escapejs }} ' + updated : '{{ _("pages")|escapejs }}')"></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title">{% translate "Keep everything ready" %}</h2>
+        <p class="card-subtitle">{% translate "Every page of the app, and the pages of your people, ponds and loans. Pages saved in the last hour are skipped." %}</p>
+      </div>
+    </div>
+    <div class="card-body stack !gap-3">
+      <button type="button" class="btn btn-primary btn-lg btn-block" @click="saveAll()" :disabled="busy || !online">
+        {% include "partials/icon.html" with name="download" %}
+        <span x-text="!online ? '{{ _("Needs signal")|escapejs }}' : (busy ? '{{ _("Saving pages…")|escapejs }}' : '{{ _("Save everything now")|escapejs }}')"></span>
+      </button>
+      <div x-show="busy || done" x-cloak>
+        <div class="meter" data-tone="good"><span :style="`width: ${total ? Math.round(progress / total * 100) : 0}%`"></span></div>
+        <p class="mt-1.5 text-sm" style="color: var(--text-secondary);" x-text="busy ? progress + ' / ' + total : doneText"></p>
+      </div>
+      <label class="check">
+        <input type="checkbox" :checked="auto" @change="setAuto($event.target.checked)">
+        <span><span class="check-label">{% translate "Keep everything up to date on Wi-Fi" %}</span>
+          <span class="help mt-0.5 block">{% translate "Once a day, only on Wi-Fi. On mobile data just the everyday forms are kept fresh, to save your data." %}</span></span>
+      </label>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title">{% translate "Waiting to send" %}</h2>
+        <p class="card-subtitle" x-text="waiting ? waitingText : '{{ _("Nothing waiting. Everything you saved has reached the app.")|escapejs }}'"></p>
+      </div>
+      <button type="button" class="btn btn-secondary btn-sm" x-show="waiting" x-cloak @click="FT.offlineList()">{% translate "See them" %}</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-header"><h2 class="card-title">{% translate "How it works" %}</h2></div>
+    <ul class="card-body help-steps">
+      <li>{% translate "Pages you open are kept on this phone. With no signal you see the kept page, with a note saying when it was saved." %}</li>
+      <li>{% translate "Save as usual. If there's no signal, the entry stays on the phone and the form is ready for the next one." %}</li>
+      <li>{% translate "When the signal is back — even hours later — everything waiting is sent by itself, in the order you saved it. Nothing is ever saved twice." %}</li>
+      <li>{% translate "If something can't be saved (for example a box was left empty), it's marked “needs a look”. Open it, fix it and save again." %}</li>
+      <li>{% translate "Signing out removes the kept pages from the phone. Entries waiting to send stay until you sign in again." %}</li>
+    </ul>
+  </section>
+
+  <button type="button" class="btn btn-ghost btn-block" @click="forget()" :disabled="busy">{% translate "Remove saved pages from this phone" %}</button>
+  <p class="text-center text-xs" style="color: var(--text-muted);" x-show="!supported" x-cloak>{% translate "This browser can't keep pages. Use Chrome, or add the app to your home screen." %}</p>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener("alpine:init", function () {
+    Alpine.data("offlineSettings", function () {
+      return {
+        kept: null, updated: "", waiting: 0, busy: false, done: false, progress: 0, total: 0, doneText: "",
+        online: navigator.onLine, supported: "serviceWorker" in navigator && "caches" in window,
+        auto: (function () { try { return localStorage.getItem("ft-offline-auto") !== "off"; } catch (e) { return true; } })(),
+        get waitingText() {
+          return this.waiting === 1 ? "{{ _('1 entry is saved on this phone, waiting to send.')|escapejs }}" : "{{ _('{n} entries are saved on this phone, waiting to send.')|escapejs }}".replace("{n}", this.waiting);
+        },
+        load() {
+          var self = this;
+          window.addEventListener("online", function () { self.online = true; });
+          window.addEventListener("offline", function () { self.online = false; });
+          if (!window.FT || !FT.offlineKept) return;
+          FT.offlineKept().then(function (n) { self.kept = n; });
+          FT.offlineOutbox().then(function (list) { self.waiting = list.filter(function (e) { return !e.user || e.user === document.documentElement.dataset.user; }).length; });
+          try {
+            var info = JSON.parse(localStorage.getItem("ft-offline-index") || "{}");
+            var at = Math.max(info.at || 0, info.allAt || 0);
+            if (at) self.updated = new Date(at).toLocaleString(document.documentElement.lang === "bn" ? "bn-BD" : "en-GB", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+          } catch (e) {}
+        },
+        saveAll() {
+          var self = this;
+          self.busy = true; self.done = false; self.progress = 0; self.total = 0;
+          FT.offlineWarm({ all: true, force: true, onProgress: function (d, t) { self.progress = d; self.total = t; } }).then(function (r) {
+            self.busy = false; self.done = true;
+            self.doneText = r && r.type === "warmed" ? "{{ _('Done: {n} pages are ready to use without signal.')|escapejs }}".replace("{n}", r.ok)
+              : "{{ _('Stopped: the signal went. Try again when it’s back.')|escapejs }}";
+            self.load();
+          });
+        },
+        setAuto(on) { this.auto = on; try { localStorage.setItem("ft-offline-auto", on ? "on" : "off"); } catch (e) {} },
+        forget() {
+          var self = this;
+          if (!confirm("{{ _('Remove the saved pages from this phone? Entries waiting to send are kept.')|escapejs }}")) return;
+          try { var info = JSON.parse(localStorage.getItem("ft-offline-index") || "{}"); localStorage.setItem("ft-offline-index", JSON.stringify({ user: info.user })); } catch (e) {}
+          (window.caches ? caches.delete("ftpages-v1") : Promise.resolve()).then(function () { self.kept = 0; self.updated = ""; });
+        },
+      };
+    });
+  });
+</script>
+{% endblock %}

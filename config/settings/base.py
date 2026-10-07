@@ -90,6 +90,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "apps.core.offline.OfflineMiddleware",  # entries saved with no signal are sent later, never twice
     "apps.business.core.middleware.DashboardMiddleware",  # business module: dashboard access
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]

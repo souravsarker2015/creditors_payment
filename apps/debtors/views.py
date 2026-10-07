@@ -79,7 +79,7 @@ def _csv_response(filename, header, rows):
 
 
 def _last_12_month_starts():
-    today = django.utils.timezone.now().date()
+    today = django.utils.timezone.localdate()
     starts = []
     for i in range(11, -1, -1):
         month_index = today.month - i
@@ -185,7 +185,7 @@ def dashboard_view(request):
 
     # Debtors needing attention: an outstanding balance with a due date that
     # has passed or is coming up within DUE_SOON_DAYS.
-    today = django.utils.timezone.now().date()
+    today = django.utils.timezone.localdate()
     due_soon_cutoff = today + timedelta(days=DUE_SOON_DAYS)
     overdue_debtors = []
     due_soon_debtors = []
@@ -299,7 +299,7 @@ def debtor_detail_view(request, pk):
             messages.success(request, _("Transaction of ৳%(amount)s added.") % {"amount": transaction.amount})
             return redirect("debtor_detail", pk=pk)
     else:
-        form = TransactionForm(initial=record_initial(request, Transaction.TYPE_CHOICES, {"date": django.utils.timezone.now().date()}))
+        form = TransactionForm(initial=record_initial(request, Transaction.TYPE_CHOICES, {"date": django.utils.timezone.localdate()}))
 
     # Calculate all-time totals for this specific debtor (never period-filtered —
     # outstanding balance only makes sense as a current, running snapshot).
@@ -337,7 +337,7 @@ def debtor_detail_view(request, pk):
 
     due_status = None
     if debtor.due_date and remaining > 0:
-        today = django.utils.timezone.now().date()
+        today = django.utils.timezone.localdate()
         if debtor.due_date < today:
             due_status = "overdue"
         elif debtor.due_date <= today + timedelta(days=DUE_SOON_DAYS):
@@ -489,7 +489,7 @@ def debtor_list_view(request):
     page_obj = paginator.get_page(page_number)
 
     # Calculate progress percentage
-    today = django.utils.timezone.now().date()
+    today = django.utils.timezone.localdate()
     due_soon_cutoff = today + timedelta(days=DUE_SOON_DAYS)
     for dr in page_obj:
         if dr.total_lent_amt > 0:
@@ -570,7 +570,7 @@ def debtor_import_view(request):
         category_lookup[str(label).lower()] = value
 
     existing_names = {n.lower() for n in request.user.debtors.values_list("name", flat=True)}
-    today = django.utils.timezone.now().date()
+    today = django.utils.timezone.localdate()
 
     created = 0
     skipped_duplicate = 0

@@ -639,6 +639,7 @@
         multiSelect: function (id, placeholder) { enhanceMulti(d.getElementById(id), placeholder); },
         enhancePickers: scan,
         closePicker: closeSheet,
+        sheet: showSheet,
     });
 
     function start() {

@@ -224,7 +224,7 @@ class ShopCategoryTests(TestCase):
 class ShopDueDateTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="shop_duedate_user", password="secret123")
-        self.today = timezone.now().date()
+        self.today = timezone.localdate()
 
     def _shop_with_balance(self, due_date=None, purchased=Decimal("500.00"), paid=Decimal("0.00")):
         shop = Shop.objects.create(

@@ -87,7 +87,7 @@ def _parse_year_month(request):
 
 
 def _last_12_month_starts():
-    today = django.utils.timezone.now().date()
+    today = django.utils.timezone.localdate()
     starts = []
     for i in range(11, -1, -1):
         month_index = today.month - i
@@ -330,7 +330,7 @@ def contributor_import_view(request):
         category_lookup[str(label).lower()] = value
 
     existing_names = {n.lower() for n in Contributor.objects.filter(user=request.user).values_list("name", flat=True)}
-    today = django.utils.timezone.now().date()
+    today = django.utils.timezone.localdate()
 
     created = 0
     skipped_duplicate = 0

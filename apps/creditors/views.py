@@ -82,7 +82,7 @@ def _row_value(row, fieldnames, key):
 
 def _last_12_month_starts():
     """List of 12 date(y, m, 1), oldest first, ending at the first of this month."""
-    today = django.utils.timezone.now().date()
+    today = django.utils.timezone.localdate()
     starts = []
     for i in range(11, -1, -1):
         month_index = today.month - i
@@ -186,7 +186,7 @@ def dashboard_view(request):
 
     # Creditors needing attention: an unpaid balance with a due date that has
     # passed or is coming up within DUE_SOON_DAYS.
-    today = django.utils.timezone.now().date()
+    today = django.utils.timezone.localdate()
     due_soon_cutoff = today + timedelta(days=DUE_SOON_DAYS)
     overdue_creditors = []
     due_soon_creditors = []
@@ -303,7 +303,7 @@ def creditor_detail_view(request, pk):
             messages.success(request, _("Transaction of ৳%(amount)s added.") % {"amount": transaction.amount})
             return redirect("creditor_detail", pk=pk)
     else:
-        form = TransactionForm(initial=record_initial(request, Transaction.TYPE_CHOICES, {"date": django.utils.timezone.now().date()}))
+        form = TransactionForm(initial=record_initial(request, Transaction.TYPE_CHOICES, {"date": django.utils.timezone.localdate()}))
 
     # Calculate all-time totals for this specific creditor (never period-filtered —
     # outstanding balance only makes sense as a current, running snapshot).
@@ -342,7 +342,7 @@ def creditor_detail_view(request, pk):
 
     due_status = None
     if creditor.due_date and remaining > 0:
-        today = django.utils.timezone.now().date()
+        today = django.utils.timezone.localdate()
         if creditor.due_date < today:
             due_status = "overdue"
         elif creditor.due_date <= today + timedelta(days=DUE_SOON_DAYS):
@@ -527,7 +527,7 @@ def creditor_list_view(request):
     page_obj = paginator.get_page(page_number)
 
     # Calculate progress percentage manually to avoid complex template logic
-    today = django.utils.timezone.now().date()
+    today = django.utils.timezone.localdate()
     due_soon_cutoff = today + timedelta(days=DUE_SOON_DAYS)
     for cr in page_obj:
         if cr.total_borrowed_amt > 0:
@@ -608,7 +608,7 @@ def creditor_import_view(request):
         category_lookup[str(label).lower()] = value
 
     existing_names = {n.lower() for n in request.user.creditors.values_list("name", flat=True)}
-    today = django.utils.timezone.now().date()
+    today = django.utils.timezone.localdate()
 
     created = 0
     skipped_duplicate = 0

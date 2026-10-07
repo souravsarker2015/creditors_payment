@@ -6,7 +6,8 @@
   if (window.__ftGuard) return; window.__ftGuard = true;
   var dirty = new Set();
   function watched(form) {
-    return form && form.method && form.method.toLowerCase() === "post" && !form.hasAttribute("data-no-guard") && !form.closest("[data-no-guard]");
+    // The attribute, not form.method: a field named "method" (the loan form's interest method) would hide it.
+    return form && (form.getAttribute("method") || "").toLowerCase() === "post" && !form.hasAttribute("data-no-guard") && !form.closest("[data-no-guard]");
   }
   document.addEventListener("input", function (e) {
     var t = e.target, form = t.form;

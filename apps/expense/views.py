@@ -56,7 +56,7 @@ def _row_value(row, fieldnames, key):
 
 
 def _last_12_month_starts():
-    today = django.utils.timezone.now().date()
+    today = django.utils.timezone.localdate()
     starts = []
     for i in range(11, -1, -1):
         month_index = today.month - i
@@ -379,7 +379,7 @@ def expense_create_view(request):
             _budget_alert(request, expense)
             return redirect("expense_list")
     else:
-        form = ExpenseForm(user=request.user, initial={"date": django.utils.timezone.now().date()})
+        form = ExpenseForm(user=request.user, initial={"date": django.utils.timezone.localdate()})
     return render(request, "expense/expense_form.html", {"form": form, "title": _("Add New Expense")})
 
 
@@ -545,7 +545,7 @@ def recurring_expense_create_view(request):
             messages.success(request, _("Recurring expense scheduled."))
             return redirect("recurring_expense_list")
     else:
-        form = RecurringExpenseForm(user=request.user, initial={"next_run_date": django.utils.timezone.now().date()})
+        form = RecurringExpenseForm(user=request.user, initial={"next_run_date": django.utils.timezone.localdate()})
     return render(request, "expense/expense_form.html", {
         "form": form,
         "title": _("New Recurring Expense"),

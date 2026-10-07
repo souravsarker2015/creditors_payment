@@ -306,7 +306,11 @@ document.addEventListener("alpine:init", function () {
           this.busy = true;
           fetch(url, { method: "POST", body: body, credentials: "same-origin", headers: { "X-Requested-With": "XMLHttpRequest" } })
             .then(r => r.json()).then(data => { this.p = data; this.busy = false; })
-            .catch(() => { this.busy = false; });
+            .catch(() => {
+              this.busy = false;
+              // The plan is worked out on the server; with no signal the loan can still be saved and the plan shows later.
+              if (!navigator.onLine) this.p = { ok: false, errors: { _: ["{{ _('No signal: the plan will show once you’re online. You can still save the loan.')|escapejs }}"] } };
+            });
         }, 150);
       },
     };

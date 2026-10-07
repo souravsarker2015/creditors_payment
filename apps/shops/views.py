@@ -117,7 +117,7 @@ def _parse_balance_summary_filter(request):
 
 
 def _last_12_month_starts():
-    today = django.utils.timezone.now().date()
+    today = django.utils.timezone.localdate()
     starts = []
     for i in range(11, -1, -1):
         month_index = today.month - i
@@ -238,7 +238,7 @@ def dashboard_view(request):
 
     # Shops needing attention: an unpaid balance with a due date that has
     # passed or is coming up within DUE_SOON_DAYS.
-    today = django.utils.timezone.now().date()
+    today = django.utils.timezone.localdate()
     due_soon_cutoff = today + timedelta(days=DUE_SOON_DAYS)
     overdue_shops = []
     due_soon_shops = []
@@ -352,7 +352,7 @@ def shop_detail_view(request, pk):
             messages.success(request, _("Transaction of ৳%(amount)s added.") % {"amount": transaction.amount})
             return redirect("shop_detail", pk=pk)
     else:
-        form = TransactionForm(initial=record_initial(request, Transaction.TYPE_CHOICES, {"date": django.utils.timezone.now().date()}))
+        form = TransactionForm(initial=record_initial(request, Transaction.TYPE_CHOICES, {"date": django.utils.timezone.localdate()}))
 
     # Calculate all-time totals for this specific shop (never period-filtered —
     # Current Due / Outstanding Balance are a running snapshot and stay this way
@@ -411,7 +411,7 @@ def shop_detail_view(request, pk):
 
     due_status = None
     if shop.due_date and remaining > 0:
-        today = django.utils.timezone.now().date()
+        today = django.utils.timezone.localdate()
         if shop.due_date < today:
             due_status = "overdue"
         elif shop.due_date <= today + timedelta(days=DUE_SOON_DAYS):
@@ -566,7 +566,7 @@ def shop_list_view(request):
     page_obj = paginator.get_page(page_number)
 
     # Calculate progress percentage manually to avoid complex template logic
-    today = django.utils.timezone.now().date()
+    today = django.utils.timezone.localdate()
     due_soon_cutoff = today + timedelta(days=DUE_SOON_DAYS)
     for sh in page_obj:
         if sh.total_due_amt > 0:
@@ -647,7 +647,7 @@ def shop_import_view(request):
         category_lookup[str(label).lower()] = value
 
     existing_names = {n.lower() for n in request.user.shops.values_list("name", flat=True)}
-    today = django.utils.timezone.now().date()
+    today = django.utils.timezone.localdate()
 
     created = 0
     skipped_duplicate = 0

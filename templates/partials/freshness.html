@@ -8,7 +8,9 @@ a form on it has unsaved typing.
 (function () {
   var page = "{{ request.data_version|escapejs }}";
   function now() { var m = document.cookie.match(/(?:^|; )ftv=([^;]*)/); return m ? decodeURIComponent(m[1]) : ""; }
-  function stale() { return now() !== page; }
+  // A copy kept on the phone for when there's no signal (apps/core/pwa.py) is old on purpose.
+  var kept = !!document.querySelector('meta[name="ft-cached"]');
+  function stale() { return !kept && now() !== page; }
   function reload() {
     var key = "ft-fresh:" + now() + ":" + location.pathname + location.search;
     try { if (sessionStorage.getItem(key)) return; sessionStorage.setItem(key, "1"); } catch (e) {}

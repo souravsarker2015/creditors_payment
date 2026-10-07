@@ -82,7 +82,13 @@ document.addEventListener("alpine:init", function () {
           .then(function (d) {
             Object.keys(items).forEach(function (k) { items[k].forEach(function (x) { if (x.kind === "mine" && x.pk === i.pk) x.done = d.done; }); });
           })
-          .catch(function () { /* stays as it was; the page still works after a reload */ });
+          .catch(function () {
+            // No signal: keep the tick on the phone and send it later.
+            if (navigator.onLine || !(window.FT && FT.offlineQueue)) return;
+            var done = !i.done;
+            FT.offlineQueue(o.doneUrl.replace("/0/", "/" + i.pk + "/"), {}, (done ? "✓ " : "↺ ") + (i.title || ""));
+            Object.keys(items).forEach(function (k) { items[k].forEach(function (x) { if (x.kind === "mine" && x.pk === i.pk) x.done = done; }); });
+          });
       },
     };
   });

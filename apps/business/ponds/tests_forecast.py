@@ -86,7 +86,7 @@ class ForecastTests(TestCase):
         r = self.client.get(reverse("business:cycle_detail", args=[self.cycle.pk]))
         self.assertContains(r, "When will they reach selling size?")
         ready = TODAY + timedelta(days=30)
-        r = self.client.get(reverse("business:calendar") + f"?month={ready:%Y-%m}")
+        r = self.client.get(reverse("business:calendar"), {"cal": "en", "view": "month", "y": ready.year, "m": ready.month})
         self.assertContains(r, "Ready to sell")
 
     def test_data_entry_sees_no_money(self):

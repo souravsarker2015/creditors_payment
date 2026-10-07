@@ -41,5 +41,6 @@ class DataVersionMiddleware:
         if changed_data(request, response):
             version = str(time.time_ns())
             response.set_cookie(COOKIE, version, max_age=365 * 24 * 3600, samesite="Lax", secure=request.is_secure())
-            response["Clear-Site-Data"] = '"prefetchCache", "prerenderCache"'
+            already = response.get("Clear-Site-Data")
+            response["Clear-Site-Data"] = (already + ", " if already else "") + '"prefetchCache", "prerenderCache"'
         return response

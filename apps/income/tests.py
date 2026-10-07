@@ -93,7 +93,7 @@ class RecurringIncomeTests(TestCase):
         self.user = User.objects.create_user(username="recurring_income_user", password="secret123")
         self.other_user = User.objects.create_user(username="recurring_income_other", password="secret123")
         self.source = IncomeSource.objects.create(user=self.user, name="Salary")
-        self.today = timezone.now().date()
+        self.today = timezone.localdate()
 
     def test_catches_up_all_missed_monthly_occurrences(self):
         schedule = RecurringIncome.objects.create(

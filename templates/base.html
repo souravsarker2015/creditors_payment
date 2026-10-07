@@ -1,6 +1,6 @@
 {% load static i18n %}
 <!DOCTYPE html>
-<html lang="{{ LANGUAGE_CODE }}" class="h-full" data-theme="{{ user_theme_mode }}" data-accent="{{ user_accent }}" data-bg="{{ user_background }}" data-view-pref="{{ user_view_mode }}" data-view="web"{% if LANGUAGE_CODE == "bn" %} data-lang="bn"{% endif %}>
+<html lang="{{ LANGUAGE_CODE }}" class="h-full"{% if user.is_authenticated %} data-user="{{ user.pk }}" data-today="{% now 'Y-m-d' %}"{% endif %} data-theme="{{ user_theme_mode }}" data-accent="{{ user_accent }}" data-bg="{{ user_background }}" data-view-pref="{{ user_view_mode }}" data-view="web"{% if LANGUAGE_CODE == "bn" %} data-lang="bn"{% endif %}>
 <head>
     <meta charset="UTF-8">
     {% include "partials/freshness.html" %}
@@ -294,7 +294,11 @@
                     self.busy = true; self.errors = {}; self.reactivate = null;
                     self.post(new FormData(formEl))
                         .then(function (data) { self.handle(data, formEl); })
-                        .catch(function () { self.busy = false; self.errors = { __all__: ["{% translate 'Could not save. Check your connection and try again.' %}"] }; });
+                        .catch(function () {
+                            self.busy = false;
+                            // A new item needs the server to give it a number, so it can't wait on the phone.
+                            self.errors = { __all__: [navigator.onLine ? "{% translate 'Could not save. Check your connection and try again.' %}" : "{% translate 'No signal: a new one can’t be added right now. Pick one from the list, or add it when you’re back online.' %}"] };
+                        });
                 },
                 doReactivate: function () {
                     var self = this, body = new FormData();
@@ -376,6 +380,28 @@
         window.addEventListener("pageshow", function () { document.querySelectorAll("form[data-submitting]").forEach(unlock); });
     })();
     </script>
+    <script>
+    /* Words for working without internet (static/js/offline.js). */
+    window.FT_OFFLINE_TEXT = {
+        title: "{% translate 'Saved on this phone' %}", intro: "{% translate 'These were saved while there was no signal. They are sent by themselves when you’re online.' %}",
+        saved: "{% translate 'Saved on this phone. It will be sent when you’re online.' %}",
+        waitingOne: "{% translate '1 entry waiting to send' %}", waitingMany: "{% translate '{n} entries waiting to send' %}",
+        fixOne: "{% translate '1 entry needs a look' %}", fixMany: "{% translate '{n} entries need a look' %}",
+        signin: "{% translate 'Sign in to send what’s saved' %}", sending: "{% translate 'Sending…' %}",
+        sentOne: "{% translate '1 saved entry was sent.' %}", sentMany: "{% translate '{n} saved entries were sent.' %}", refresh: "{% translate 'Show the new figures' %}",
+        waitingStatus: "{% translate 'Waiting for signal' %}", fixStatus: "{% translate 'Not saved: something in it needs fixing' %}",
+        errorStatus: "{% translate 'Couldn’t be saved. Open it to check.' %}", signinStatus: "{% translate 'Sign in again to send it' %}",
+        otherStatus: "{% translate 'Made by another account on this phone' %}", savedAt: "{% translate 'Saved {when}' %}",
+        open: "{% translate 'Open' %}", signinBtn: "{% translate 'Sign in' %}", remove: "{% translate 'Remove' %}",
+        removeAsk: "{% translate 'Remove this entry from the phone? It hasn’t been saved in the app.' %}",
+        sendNow: "{% translate 'Send now' %}", noSignal: "{% translate 'No signal yet' %}",
+        refilled: "{% translate 'Your saved entry is filled in. Check it and save again.' %}",
+        copy: "{% translate 'No signal. This is the page as it was {when}. You can still add entries: they’re kept on this phone and sent later.' %}",
+        offlineNow: "{% translate 'You’re offline. Keep going: what you save is kept on this phone and sent when the signal is back.' %}",
+        settings: "{% translate 'Use without internet' %}", listOffline: "{% translate 'No signal. This list needs the internet the first time you open it.' %}"
+    };
+    </script>
+    <script src="{% asset 'js/offline.js' %}"></script>
     {% block extra_js %}{% endblock %}
     {% if user.is_authenticated %}
     {% comment %}

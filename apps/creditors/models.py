@@ -138,14 +138,14 @@ class Creditor(models.Model):
         """True if there's an unpaid balance and the due date has passed."""
         if not self.due_date or self.remaining <= 0:
             return False
-        return self.due_date < timezone.now().date()
+        return self.due_date < timezone.localdate()
 
     @property
     def is_due_soon(self):
         """True if there's an unpaid balance due within DUE_SOON_DAYS, but not yet overdue."""
         if not self.due_date or self.remaining <= 0 or self.is_overdue:
             return False
-        return self.due_date <= timezone.now().date() + datetime.timedelta(days=DUE_SOON_DAYS)
+        return self.due_date <= timezone.localdate() + datetime.timedelta(days=DUE_SOON_DAYS)
 
     @property
     def total_borrowed(self):
@@ -231,7 +231,7 @@ class Creditor(models.Model):
         if not last_date:
             return Decimal("0.00")
 
-        days_elapsed = (timezone.now().date() - last_date).days
+        days_elapsed = (timezone.localdate() - last_date).days
         if days_elapsed <= 0:
             return Decimal("0.00")
 
@@ -261,7 +261,7 @@ class Creditor(models.Model):
         transaction = self.transactions.create(
             transaction_type=Transaction.BORROW,
             amount=amount,
-            date=timezone.now().date(),
+            date=timezone.localdate(),
             note=str(_("Accrued interest (posted)")),
         )
         if self.interest_type == InterestType.FIXED:
