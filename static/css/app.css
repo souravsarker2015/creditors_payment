@@ -658,56 +658,112 @@ input[type="number"] { -moz-appearance: textfield; }
 .chip-clear:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 /* ==========================================================================
-   Tom Select (multi-selects), themed to match .form-input
+   Pickers (static/js/pickers.js): dropdowns, multi-selects and dates open as
+   a bottom sheet on phones, a panel under the box on computers.
    ========================================================================== */
-.ts-wrapper.form-input, .ts-wrapper.form-control { padding: 0; border: 0; box-shadow: none; background: none; min-height: 0; }
-.ts-wrapper .ts-control {
-    min-height: 2.75rem; padding: 0.375rem 2.25rem 0.375rem 0.625rem; border: 1px solid var(--border); border-radius: 0.75rem;
-    background-color: var(--surface-raised) !important; color: var(--text-primary);
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none'%3e%3cpath stroke='%238a9086' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.7' d='M6.5 8l3.5 3.5L13.5 8'/%3e%3c/svg%3e") !important;
-    background-repeat: no-repeat !important; background-position: right 0.75rem center !important; background-size: 1.125rem !important;
-    box-shadow: 0 1px 2px rgba(16, 24, 20, 0.04); font-size: 0.9375rem; line-height: 1.5; cursor: pointer;
-    transition: border-color .15s, box-shadow .15s; gap: 0.25rem;
-}
-.ts-wrapper .ts-control:hover { border-color: color-mix(in srgb, var(--border) 55%, var(--text-muted)); }
-.ts-wrapper.focus .ts-control { border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent); }
-.ts-wrapper .ts-control input { color: var(--text-primary); font-size: 0.9375rem; min-width: 5rem; }
-.ts-wrapper .ts-control input::placeholder { color: var(--text-muted); opacity: .85; }
-.ts-wrapper.multi .ts-control > .item {
-    display: inline-flex; align-items: center; margin: 0.0625rem 0; padding: 0.125rem 0.125rem 0.125rem 0.625rem;
-    border: 0; border-radius: 9999px; background: var(--accent-soft); color: var(--accent);
-    font-size: 0.8125rem; font-weight: 600; line-height: 1.25rem;
-}
-.ts-wrapper.plugin-remove_button .item .remove {
-    display: grid; place-items: center; width: 1.25rem; height: 1.25rem; margin-left: 0.25rem; padding: 0;
-    border-left: 0 !important; border-radius: 9999px; color: inherit; font-size: 1rem; line-height: 1; opacity: .7;
-}
-.ts-wrapper.plugin-remove_button .item .remove:hover { background: color-mix(in srgb, var(--accent) 18%, transparent); opacity: 1; }
-.ts-dropdown {
-    margin-top: 0.375rem; z-index: 60; overflow: hidden; padding: 0.3125rem;
-    border: 1px solid var(--border); border-radius: 0.875rem;
-    background: var(--surface-raised); color: var(--text-primary); box-shadow: var(--shadow-lg);
-    animation: ts-pop .14s ease-out;
-}
-@keyframes ts-pop { from { opacity: 0; transform: translateY(-4px) scale(.98); } to { opacity: 1; transform: none; } }
-.ts-dropdown .ts-dropdown-content { max-height: 16rem; }
-.ts-dropdown .option, .ts-dropdown .no-results, .ts-dropdown .create {
-    padding: 0.5rem 0.75rem; border-radius: 0.5625rem; font-size: 0.875rem; cursor: pointer;
-}
-.ts-dropdown .active { background: var(--surface-sunken); color: var(--text-primary); }
-.ts-dropdown .option.selected { color: var(--accent); font-weight: 600; }
-.ts-dropdown .no-results { color: var(--text-muted); }
+html.ft-touch select.ftp-native, select.ftp-native.is-multi { display: none !important; }
+html:not(.ft-touch) .ftp-trigger:not(.ftp-multi) { display: none !important; }
+.ftp-trigger[hidden] { display: none !important; }
+.ftp-trigger { display: flex; align-items: center; gap: 0.5rem; width: 100%; text-align: left; cursor: pointer; background-image: none !important; padding-right: 0.75rem !important; }
+.ftp-trigger-text { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ftp-trigger > svg { width: 1.125rem; height: 1.125rem; flex-shrink: 0; color: var(--text-muted); transition: transform .15s; }
+.ftp-trigger[aria-expanded="true"] > svg { transform: rotate(180deg); }
+.ftp-trigger.is-placeholder .ftp-trigger-text, .ftp-ph { color: var(--text-muted); }
+.ftp-trigger:disabled { opacity: .6; cursor: not-allowed; }
+.ftp-trigger:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent); }
+.ftp-multi { height: auto !important; min-height: 2.75rem; padding-top: 0.375rem !important; padding-bottom: 0.375rem !important; }
+.ftp-chips { flex: 1 1 auto; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem; }
+.ftp-chip { max-width: 11rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0.125rem 0.625rem; border-radius: 9999px; background: var(--accent-soft); color: var(--accent); font-size: 0.8125rem; font-weight: 600; line-height: 1.375rem; }
+.ftp-chip.is-more { background: var(--surface-sunken); color: var(--text-secondary); }
+.input-group > .ftp-trigger { flex: 1; min-width: 0; border-top-right-radius: 0 !important; border-bottom-right-radius: 0 !important; }
 
-/* Flatpickr */
+/* The sheet */
+.ftp-root { position: fixed; inset: 0; z-index: 95; display: flex; align-items: flex-end; justify-content: center; }
+.ftp-backdrop { position: absolute; inset: 0; background: rgba(10, 18, 15, 0.45); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); animation: ftp-fade .2s ease; transition: opacity .18s; }
+.ftp-sheet { max-height: 86dvh; animation: ftp-up .28s cubic-bezier(.2, .9, .3, 1); }
+.ftp-root.is-leaving .ftp-backdrop { opacity: 0; }
+.ftp-sheet.is-leaving { transform: translateY(100%); transition: transform .18s ease-in; }
+@keyframes ftp-up { from { transform: translateY(100%); } }
+@keyframes ftp-fade { from { opacity: 0; } }
+.ftp-head { padding-bottom: 0.5rem; }
+.ftp-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 0.75rem 0.75rem; }
+.ftp-foot { display: flex; gap: 0.5rem; padding: 0.75rem 1rem; border-top: 1px solid var(--border-soft); }
+.ftp-foot > .btn { flex: 1 1 0; min-height: 2.875rem; }
+.ftp-search { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; gap: 0.5rem; height: 2.875rem; margin: 0 0.25rem 0.5rem; padding: 0 0.875rem;
+    border: 1px solid var(--border); border-radius: 0.875rem; background: var(--surface-sunken); box-shadow: 0 -0.5rem 0 var(--surface); }
+.ftp-search:focus-within { border-color: var(--accent); }
+.ftp-search svg { width: 1.125rem; height: 1.125rem; flex-shrink: 0; color: var(--text-muted); }
+.ftp-search input { flex: 1; min-width: 0; height: 100%; border: 0; outline: 0; background: transparent; font-size: 1rem; color: var(--text-primary); }
+.ftp-list { display: grid; gap: 0.125rem; }
+.ftp-opt { display: flex; align-items: center; gap: 0.75rem; width: 100%; min-height: 3.125rem; padding: 0.625rem 0.875rem; border-radius: 0.875rem;
+    text-align: left; font-size: 0.9375rem; line-height: 1.35; color: var(--text-primary); transition: background .12s; -webkit-tap-highlight-color: transparent; }
+.ftp-opt:focus-visible { background: var(--surface-sunken); outline: none; }
+@media (hover: hover) { .ftp-opt:hover { background: var(--surface-sunken); } .ftp-opt.is-on:hover { background: var(--accent-soft); } }
+.ftp-opt:active { background: color-mix(in srgb, var(--accent) 10%, var(--surface-sunken)); }
+.ftp-opt.is-on { background: var(--accent-soft); color: var(--accent); font-weight: 650; }
+.ftp-opt.is-blank .ftp-opt-text { color: var(--text-muted); }
+.ftp-opt:disabled { opacity: .45; }
+.ftp-opt-text { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.ftp-tick { display: grid; place-items: center; width: 1.375rem; height: 1.375rem; flex-shrink: 0; border-radius: 9999px; color: transparent; transition: background .12s, border-color .12s; }
+.ftp-tick svg { width: 0.875rem; height: 0.875rem; }
+.ftp-opt.is-on .ftp-tick { background: var(--accent); color: var(--accent-on); }
+[aria-multiselectable] .ftp-tick { border: 2px solid var(--border); border-radius: 0.4375rem; }
+[aria-multiselectable] .ftp-opt.is-on .ftp-tick { border-color: var(--accent); }
+.ftp-group { display: grid; gap: 0.125rem; }
+.ftp-group + .ftp-group, .ftp-opt + .ftp-group { margin-top: 0.5rem; }
+.ftp-group-label { padding: 0.5rem 0.875rem 0.25rem; font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
+.ftp-empty { padding: 1.5rem 1rem; text-align: center; font-size: 0.875rem; color: var(--text-muted); }
+
+/* The panel under the box (computers) */
+.ftp-panel { position: fixed; z-index: 95; display: flex; flex-direction: column; max-width: min(24rem, calc(100vw - 1rem)); overflow: hidden;
+    border: 1px solid var(--border); border-radius: 0.875rem; background: var(--surface-raised); box-shadow: var(--shadow-lg); animation: ftp-fade .12s ease-out; }
+.ftp-panel .ftp-body { padding: 0.375rem; }
+.ftp-panel .ftp-search { height: 2.5rem; margin: 0 0 0.375rem; box-shadow: 0 -0.375rem 0 var(--surface-raised); }
+.ftp-panel .ftp-opt { min-height: 2.5rem; padding: 0.4375rem 0.75rem; border-radius: 0.5625rem; font-size: 0.875rem; }
+.ftp-panel .ftp-foot { padding: 0.5rem; }
+.ftp-panel .ftp-foot > .btn { min-height: 2.25rem; }
+
+/* Quick choices: Today, Yesterday, This month… */
+.ftp-chiprow { display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0.125rem 0.25rem 0.75rem; }
+.ftp-chiprow::-webkit-scrollbar { display: none; }
+.ftp-quick { flex-shrink: 0; padding: 0.5rem 0.9375rem; border: 1px solid var(--border); border-radius: 9999px; background: var(--surface-raised);
+    font-size: 0.8125rem; font-weight: 650; white-space: nowrap; color: var(--text-primary); transition: border-color .12s, background .12s; }
+@media (hover: hover) { .ftp-quick:hover { border-color: var(--accent); color: var(--accent); } }
+.ftp-quick:active { transform: scale(.97); background: var(--accent-soft); }
+.ftp-quick:disabled { opacity: .4; pointer-events: none; }
+.ftp-range-sum { padding: 0 0.25rem 0.5rem; font-size: 0.875rem; font-weight: 650; color: var(--text-secondary); }
+
+/* Calendars, themed for light and dark */
 .flatpickr-calendar {
+    background: var(--surface-raised) !important; color: var(--text-primary);
     border: 1px solid var(--border) !important; border-radius: var(--radius-lg) !important;
     box-shadow: var(--shadow-lg) !important; overflow: hidden !important;
 }
-.flatpickr-calendar.arrowTop::before, .flatpickr-calendar.arrowTop::after { display: none !important; }
-.flatpickr-day { border-radius: 0.625rem !important; }
+.flatpickr-calendar.arrowTop::before, .flatpickr-calendar.arrowTop::after, .flatpickr-calendar.arrowBottom::before, .flatpickr-calendar.arrowBottom::after { display: none !important; }
+.flatpickr-months .flatpickr-month, .flatpickr-current-month input.cur-year, span.flatpickr-weekday { color: var(--text-primary) !important; fill: var(--text-primary) !important; background: transparent !important; }
+span.flatpickr-weekday { color: var(--text-muted) !important; font-weight: 600; }
+.flatpickr-months .flatpickr-prev-month, .flatpickr-months .flatpickr-next-month { color: var(--text-secondary) !important; fill: var(--text-secondary) !important; }
+.flatpickr-months .flatpickr-prev-month:hover svg, .flatpickr-months .flatpickr-next-month:hover svg { fill: var(--accent) !important; }
+.flatpickr-day { border-radius: 0.625rem !important; color: var(--text-primary); }
+.flatpickr-day:focus-visible { background: var(--surface-sunken) !important; border-color: transparent !important; }
+@media (hover: hover) { .flatpickr-day:hover { background: var(--surface-sunken) !important; border-color: transparent !important; } }
+@media (hover: none) { .flatpickr-day:hover:not(.selected):not(.startRange):not(.endRange):not(.inRange) { background: transparent !important; border-color: transparent !important; } .flatpickr-day.today:hover { border-color: var(--accent) !important; } }
+.flatpickr-day.prevMonthDay, .flatpickr-day.nextMonthDay, .flatpickr-day.flatpickr-disabled, .flatpickr-day.flatpickr-disabled:hover { color: var(--text-muted) !important; opacity: .55; }
 .flatpickr-day.today { border-color: var(--accent) !important; }
-.flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange { background: var(--accent) !important; border-color: var(--accent) !important; color: var(--accent-on) !important; }
+.flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange, .flatpickr-day.selected:hover, .flatpickr-day.startRange:hover, .flatpickr-day.endRange:hover { background: var(--accent) !important; border-color: var(--accent) !important; color: var(--accent-on) !important; }
 .flatpickr-day.inRange { background: var(--accent-soft) !important; border-color: transparent !important; box-shadow: -5px 0 0 var(--accent-soft), 5px 0 0 var(--accent-soft) !important; border-radius: 0 !important; }
+.ftp-fp-today { display: block; width: calc(100% - 1rem); margin: 0 0.5rem 0.5rem; padding: 0.4375rem; border-radius: 0.625rem; background: var(--surface-sunken); font-size: 0.8125rem; font-weight: 650; color: var(--accent); }
+.ftp-fp-today:hover { background: var(--accent-soft); }
+.flatpickr-calendar .ftp-fp-presets { flex-wrap: wrap; gap: 0.375rem; padding: 0.625rem; border-top: 1px solid var(--border-soft); }
+.flatpickr-calendar .ftp-fp-presets .ftp-quick { padding: 0.3125rem 0.625rem; font-size: 0.75rem; }
+/* In the sheet: full width, big days */
+.ftp-cal .flatpickr-calendar.inline { width: 100% !important; max-width: none; margin: 0; border: 0 !important; box-shadow: none !important; background: transparent !important; }
+.ftp-cal .flatpickr-rContainer, .ftp-cal .flatpickr-days, .ftp-cal .dayContainer, .ftp-cal .flatpickr-weekdays, .ftp-cal .flatpickr-weekdaycontainer { width: 100% !important; min-width: 0 !important; max-width: none !important; }
+.ftp-cal .flatpickr-day { max-width: none !important; flex-basis: 14.2857% !important; height: 2.875rem; line-height: 2.75rem; font-size: 1rem; }
+.ftp-cal .flatpickr-months { margin-bottom: 0.25rem; }
+.ftp-cal .flatpickr-current-month { font-size: 1.0625rem; }
+.ftp-cal .flatpickr-months .flatpickr-prev-month, .ftp-cal .flatpickr-months .flatpickr-next-month { padding: 0.625rem 1rem; }
+.ftp-cal .flatpickr-weekdays { height: 2rem; }
 
 /* ==========================================================================
    Ledger rows (transactions, recent activity, …)
@@ -2783,3 +2839,5 @@ ul.health-steps { list-style: disc; }
 .all-clear { display: flex; align-items: center; gap: 0.5rem; padding: 0.875rem 1rem; font-size: 0.875rem; color: var(--text-secondary); }
 @media (min-width: 640px) { .all-clear { padding-inline: 1.5rem; } }
 .all-clear svg { width: 1.125rem; height: 1.125rem; flex-shrink: 0; padding: 0.1875rem; border-radius: 9999px; color: #fff; background: var(--status-good); }
+.ftp-cal > input { display: none !important; }
+html.ft-touch .ftp-trigger:focus, html.ft-touch .ftp-trigger:focus-visible { box-shadow: none; }

@@ -128,11 +128,7 @@ document.addEventListener("alpine:init", function () {
           r.addEventListener("change", function () { self.direction = r.value; self.touchedDir = true; self.calc(); });
         });
         this.setParty(sel.value, true);
-        if (window.TomSelect) {
-          new TomSelect(sel, { maxOptions: 1000, allowEmptyOption: true, onChange: function (v) { self.setParty(v, false); } });
-        } else {
-          sel.addEventListener("change", function () { self.setParty(sel.value, false); });
-        }
+        sel.addEventListener("change", function () { self.setParty(sel.value, false); });
         this.$watch("amount", function (v) { if (String(amt.value) !== String(v)) amt.value = v; self.calc(); });
         this.$watch("discount", function (v) { if (String(disc.value) !== String(v)) disc.value = v; self.calc(); });
         this.$watch("against", function (v) { form.querySelector("[name=against]").value = v || ""; });

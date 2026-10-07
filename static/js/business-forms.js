@@ -161,7 +161,6 @@ document.addEventListener("alpine:init", function () {
         if (!market || !sel || sel.value) return;
         sel.value = String(market);
         if (sel.value !== String(market)) return;   // that market is no longer in the list
-        if (sel.tomselect) sel.tomselect.setValue(String(market), true);
         this.applyMarket(String(market));
         this.rows(".sale-line").forEach((row) => this.autoSaleRate(row));   // prices can differ by market
       },

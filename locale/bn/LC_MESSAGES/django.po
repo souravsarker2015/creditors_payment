@@ -12866,3 +12866,39 @@ msgstr "আয় লিখুন"
 
 msgid "Bought or paid"
 msgstr "কেনা বা শোধ"
+
+msgid "Nothing matches."
+msgstr "কিছু মেলেনি।"
+
+msgid "None"
+msgstr "কোনোটি নয়"
+
+msgid "none chosen"
+msgstr "কিছু বাছাই করা হয়নি"
+
+msgid "Done ({n})"
+msgstr "হয়ে গেছে ({n})"
+
+msgid "Yesterday"
+msgstr "গতকাল"
+
+msgid "Pick a date"
+msgstr "তারিখ বাছুন"
+
+msgid "No date"
+msgstr "তারিখ নেই"
+
+msgid "Pick dates"
+msgstr "তারিখ বাছুন"
+
+msgid "Tap the first day, then the last day."
+msgstr "প্রথম দিনে চাপুন, তারপর শেষ দিনে।"
+
+msgid "pick the last day"
+msgstr "শেষ দিন বাছুন"
+
+msgid "Last 7 days"
+msgstr "গত ৭ দিন"
+
+msgid "Last 30 days"
+msgstr "গত ৩০ দিন"
