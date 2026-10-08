@@ -1,16 +1,16 @@
 {% extends "base.html" %}
 {% load i18n business %}
-{% block title %}{% if obj %}{% translate "Edit entry" %}{% else %}{% translate "Money in or out" %}{% endif %} | {{ business.name }}{% endblock %}
+{% block title %}{% if heading %}{{ heading }}{% elif obj %}{% translate "Edit entry" %}{% else %}{% translate "Money in or out" %}{% endif %} | {{ business.name }}{% endblock %}
 {% block content %}
 <div class="page-narrow">
   <header class="page-header">
     <div>
-      <a href="{{ back }}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Money in & out" %}</a>
-      <h1 class="page-title">{% if obj %}{% translate "Edit entry" %}{% else %}{% translate "Money in or out" %}{% endif %}</h1>
+      <a href="{{ back }}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% if back_label %}{{ back_label }}{% else %}{% translate "Money in & out" %}{% endif %}</a>
+      <h1 class="page-title">{% if heading %}{{ heading }}{% elif obj %}{% translate "Edit entry" %}{% else %}{% translate "Money in or out" %}{% endif %}</h1>
       <p class="page-subtitle">{{ scope_label }}{% if recurring %} · {% blocktranslate with name=recurring.name %}Regular bill: {{ name }}{% endblocktranslate %}{% endif %}</p>
     </div>
     {% if obj and biz_can.delete %}
-    <div class="page-actions"><form method="post" action="{% url 'business:transaction_delete' obj.pk %}" data-confirm="{% translate 'Delete this entry? You can restore it later.' %}">{% csrf_token %}<button type="submit" class="icon-btn" aria-label="{% translate 'Delete' %}" data-tip="{% translate 'Delete' %}">{% include "partials/icon.html" with name="trash" %}</button></form></div>
+    <div class="page-actions"><form method="post" action="{% url 'business:transaction_delete' obj.pk %}" data-confirm="{% translate 'Delete this entry? You can restore it later.' %}">{% csrf_token %}{% if back_label %}<input type="hidden" name="next" value="{{ back }}">{% endif %}<button type="submit" class="icon-btn" aria-label="{% translate 'Delete' %}" data-tip="{% translate 'Delete' %}">{% include "partials/icon.html" with name="trash" %}</button></form></div>
     {% endif %}
   </header>
 

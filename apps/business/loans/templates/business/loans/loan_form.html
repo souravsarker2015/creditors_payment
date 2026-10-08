@@ -53,6 +53,7 @@
           </div>
           {% endwith %}
           {% with field=form.taken_on %}{% include "business/partials/field.html" %}{% endwith %}
+          <div class="sm:col-span-2">{% with field=form.account %}{% include "business/partials/field.html" %}{% endwith %}</div>
         </div>
       </section>
 
@@ -164,7 +165,8 @@
     <button type="button" class="loan-plan-bar" x-show="p.ok && !planVisible" x-cloak x-transition.opacity
             @click="$refs.plan.scrollIntoView({ behavior: 'smooth', block: 'start' })">
       <span>{% translate "Your payment plan" %}</span>
-      <strong><span x-text="p.instalment"></span> <small x-text="(p.frequency || '').toLowerCase()"></small></strong>
+      <strong x-show="!p.flexible"><span x-text="p.instalment"></span> <small x-text="(p.frequency || '').toLowerCase()"></small></strong>
+      <strong x-show="p.flexible">{% translate "No interest" %}</strong>
       {% include "partials/icon.html" with name="chevron-down" %}
     </button>
 
@@ -176,7 +178,14 @@
           <template x-if="!p.ok">
             <p class="loan-preview-empty">{% include "business/partials/icon.html" with name="banknotes" %}<span x-text="hint()"></span></p>
           </template>
-          <template x-if="p.ok">
+          <template x-if="p.ok && p.flexible">
+            <div>
+              <p class="loan-preview-label">{% translate "No interest, no fixed date" %}</p>
+              <p class="loan-preview-big">{% translate "Pay back whenever you can" %}</p>
+              <p class="loan-preview-sub">{% translate "Record each payment on the loan's page; what you still owe goes down. Agreed a date? Pick it under “For how long?”." %}</p>
+            </div>
+          </template>
+          <template x-if="p.ok && !p.flexible">
             <div>
               <p class="loan-preview-label" x-text="repayment === 'end' ? '{{ _('Interest each time')|escapejs }}' : '{{ _('Each payment')|escapejs }}'"></p>
               <p class="loan-preview-big"><span x-text="p.instalment"></span> <small x-text="(p.frequency || '').toLowerCase()"></small></p>
@@ -207,6 +216,7 @@
 {% endblock %}
 
 {% block extra_js %}
+{{ form.lender_kinds|json_script:"lender-kinds" }}
 <script>
 document.addEventListener("alpine:init", function () {
   Alpine.data("loanForm", function (url) {
@@ -245,6 +255,18 @@ document.addEventListener("alpine:init", function () {
         document.getElementById("{{ form.taken_on.id_for_label }}").addEventListener("change", () => { if (this.duration) this.setDuration(this.duration); });
         this.$watch("repayment", v => { if (v !== "end" && this.openEnded) { this.openEnded = false; this.setDuration(12); } });
         this.describeAmount(); this.describeRate();
+        {% if not loan %}
+        // A loan from a relative usually has no interest and no fixed date: start it that way.
+        var kinds = JSON.parse(document.getElementById("lender-kinds").textContent);
+        window.addEventListener("quick-added", e => { if (e.detail && e.detail.kind) kinds[String(e.detail.id)] = e.detail.kind; });
+        var lenderEl = document.getElementById("{{ form.lender.id_for_label }}"), informal = {{ informal_kinds|safe }};
+        var relative = () => {
+          if (informal.indexOf(kinds[lenderEl.value]) === -1 || parseFloat(this.rate)) return;
+          this.setRate(0); this.repayment = "end"; this.setDuration(0);
+        };
+        lenderEl.addEventListener("change", relative);
+        if (lenderEl.value && !document.querySelector(".field-error")) relative();
+        {% endif %}
         if ("IntersectionObserver" in window) {
           new IntersectionObserver(e => { this.planVisible = e[0].isIntersecting; }).observe(this.$refs.plan);
         }

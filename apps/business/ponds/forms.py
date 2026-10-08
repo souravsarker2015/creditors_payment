@@ -130,12 +130,13 @@ class StockingForm(EntryForm):
         "weight": _("Total weight of all these fingerlings. With the count, it gives the starting size of each fish."),
         "supplier": _("Who sold you the fingerlings. Choose “Own / not bought” if they came from your own nursery."),
         "cost": _("The total price of these fingerlings. It becomes part of this cycle's cost."),
+        "account": _("Which account you paid from: cash, bank or bKash/Nagad. Choose “Not paid from an account” for your own fingerlings."),
     }
-    layout = [("date", "species"), ("count", "size"), ("weight", "weight_unit"), ("supplier",), ("cost", "paid_now"), ("notes",)]
+    layout = [("date", "species"), ("count", "size"), ("weight", "weight_unit"), ("supplier",), ("cost", "paid_now"), ("account",), ("notes",)]
 
     class Meta:
         model = Stocking
-        fields = ["date", "species", "count", "size", "weight", "weight_unit", "supplier", "cost", "paid_now", "notes"]
+        fields = ["date", "species", "count", "size", "weight", "weight_unit", "supplier", "cost", "paid_now", "account", "notes"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -150,9 +151,15 @@ class StockingForm(EntryForm):
         money_field(self.fields["paid_now"])
         self.fields["cost"].required = self.fields["paid_now"].required = False
         self.fields["paid_now"].help_text = _("The rest is recorded as owed to the supplier.")
+        from apps.business.finance.models import Account
+
+        self.fields["account"].queryset = Account.objects.filter(business=self.business)
+        self.fields["account"].empty_label = _("Not paid from an account")
+        self.fields["account"].biz_quick_add = "account"
         if not self.instance.pk:
             self.initial.setdefault("weight_unit", Unit.objects.filter(business=self.business, symbol="kg").first())
             self.initial["cost"] = self.initial["paid_now"] = None
+            self.initial.setdefault("account", Account.objects.filter(business=self.business, is_default=True).first())
         self._stocking_guide()
 
     def _stocking_guide(self):
@@ -187,6 +194,8 @@ class StockingForm(EntryForm):
             self.add_error("paid_now", _("That's more than the cost."))
         if not data.get("supplier"):  # nobody to owe: own fingerlings or paid on the spot
             data["paid_now"] = data["cost"]
+        if not data["paid_now"]:
+            data["account"] = None   # nothing paid: no money leaves an account
         return data
 
 

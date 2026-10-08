@@ -1,0 +1,11 @@
+{% load i18n business %}<li class="ledger-row">
+  <span class="ledger-icon" data-tone="good">{% include "partials/icon.html" with name="users" %}</span>
+  <div class="ledger-main">
+    <p class="ledger-title"><a href="{% url 'business:family_income_add' %}?member={{ o.pk }}" class="hover:underline">{{ o.name }}</a></p>
+    <p class="ledger-meta">{% if o.relation %}{{ o.relation }}{% endif %}{% if o.relation and o.phone %} · {% endif %}{% if o.phone %}{{ o.phone }}{% endif %}</p>
+  </div>
+  <div class="ledger-end">
+    {% if o.year_total %}<span class="party-bal" data-tone="good"><strong>{{ o.year_total|bdt }}</strong><span>{% translate "this year" %}</span></span>{% endif %}
+    {% include "business/master/_actions.html" with up=forloop.last %}
+  </div>
+</li>

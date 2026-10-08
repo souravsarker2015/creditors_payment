@@ -5,6 +5,19 @@ from .models import Account, AccountKind, Category, CategoryType, Scope
 E, I = CategoryType.EXPENSE, CategoryType.INCOME
 B, H = Scope.BUSINESS, Scope.HOUSEHOLD
 
+# The family's money from outside the farm (Family income page). Household
+# income: it never counts in the farm's profit.
+FAMILY_INCOME = [
+    ("Job / salary", "চাকরি / বেতন"),
+    ("Money from abroad", "প্রবাসী আয় (রেমিট্যান্স)"),
+    ("Crops & farming", "ফসল ও কৃষি"),
+    ("Cows, goats & poultry", "গরু-ছাগল ও হাঁস-মুরগি"),
+    ("Rent received", "ভাড়া আয়"),
+    ("Shop / other business", "দোকান / অন্য ব্যবসা"),
+    ("Help from relatives", "আত্মীয়স্বজনের সাহায্য"),
+    ("Other family income", "পরিবারের অন্যান্য আয়"),
+]
+
 # (name, Bangla, type, scope, [(child, child Bangla)], system)
 DEFAULT_CATEGORIES = [
     ("Labour", "শ্রমিক", E, B, [("Daily labour", "দিনমজুর"), ("Salaries", "বেতন")], False),
@@ -24,7 +37,7 @@ DEFAULT_CATEGORIES = [
     ("House rent", "বাসা ভাড়া", E, H, [], False),
     ("Medical", "চিকিৎসা", E, H, [], False),
     ("Children", "সন্তান", E, H, [("School fees", "স্কুলের বেতন"), ("Tuition", "প্রাইভেট / টিউশন"), ("Books", "বই-খাতা"), ("Clothing", "জামাকাপড়")], False),
-]
+] + [(name, name_bn, I, H, [], False) for name, name_bn in FAMILY_INCOME]
 
 
 def seed_categories(business):

@@ -152,6 +152,8 @@ class Stocking(BusinessBaseModel):
     supplier = models.ForeignKey("business_parties.Party", on_delete=models.PROTECT, null=True, blank=True, related_name="+", verbose_name=_("Bought from"))
     cost = models.DecimalField(_("Total cost"), default=0, validators=[MinValueValidator(0)], **MONEY)
     paid_now = models.DecimalField(_("Paid now"), default=0, validators=[MinValueValidator(0)], **MONEY)
+    account = models.ForeignKey("business_finance.Account", on_delete=models.SET_NULL, null=True, blank=True, related_name="+",
+                                verbose_name=_("Paid from"))
 
     class Meta:
         ordering = ["-date", "-id"]

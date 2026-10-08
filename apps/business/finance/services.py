@@ -86,8 +86,11 @@ def movements(business, account=None):
                 _("Baki received") if is_in else _("Baki paid"), str(pay.party),
                 reverse("business:party_statement", args=[pay.party_id]), "baki_in" if is_in else "baki_out")
     if _installed("loans"):
-        from apps.business.loans.models import LoanTransaction, LoanTxnKind
+        from apps.business.loans.models import Loan, LoanTransaction, LoanTxnKind
 
+        for loan in Loan.objects.filter(business=business, account__isnull=False).select_related("lender"):
+            add(loan.taken_on, loan.account_id, loan.principal, _("Loan received"), str(loan.lender),
+                reverse("business:loan_detail", args=[loan.pk]), "loan")
         for t in LoanTransaction.objects.filter(business=business).select_related("loan__lender"):
             taken = t.kind == LoanTxnKind.TOP_UP
             amount = t.principal if taken else -t.total
@@ -126,7 +129,11 @@ def movements(business, account=None):
             add(p.date, p.account_id, -p.amount, _("Advance to staff") if p.kind == "advance" else _("Staff pay"), str(p.worker),
                 reverse("business:staff_worker", args=[p.worker_id]), "staff")
     if _installed("ponds"):
-        from apps.business.ponds.models import Treatment
+        from apps.business.ponds.models import Stocking, Treatment
+
+        for st in Stocking.objects.filter(business=business, paid_now__gt=0, account__isnull=False, cycle__is_deleted=False).select_related("species", "cycle__pond"):
+            add(st.date, st.account_id, -st.paid_now, _("Fingerlings bought"), f"{st.species} · {st.cycle.pond}",
+                reverse("business:cycle_detail", args=[st.cycle_id]) + "?tab=stocking", "expense")
 
         for t in Treatment.objects.filter(business=business, cost__gt=0, account__isnull=False, cycle__is_deleted=False).select_related("cycle__pond"):
             add(t.date, t.account_id, -t.cost, _("Pond care"), f"{t.product} · {t.cycle.pond}",

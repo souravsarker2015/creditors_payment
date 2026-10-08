@@ -7,7 +7,7 @@ from django.utils.translation import gettext_lazy as _
 
 from apps.business.core.crud import BusinessForm, money_field
 
-from .models import Account, Budget, Category, CategoryType, RecurringTransaction, Scope, Transaction, Transfer
+from .models import Account, Budget, Category, CategoryType, FamilyMember, RecurringTransaction, Scope, Transaction, Transfer
 
 
 class CategoryForm(BusinessForm):
@@ -131,7 +131,7 @@ class TransactionForm(BusinessForm):
 
     class Meta:
         model = Transaction
-        fields = ["date", "category", "amount", "account", "description", "party", "cycle", "receipt", "notes"]
+        fields = ["date", "category", "amount", "account", "description", "party", "member", "cycle", "receipt", "notes"]
         widgets = {"date": forms.DateInput(), "description": forms.TextInput(attrs={"placeholder": _("e.g. 3 workers, pond cleaning")}),
                    "receipt": ReceiptInput()}
 
@@ -164,6 +164,14 @@ class TransactionForm(BusinessForm):
         if self.scope != Scope.BUSINESS:
             for name in ("cycle", "party"):
                 self.fields.pop(name)
+            self.fields["member"].queryset = FamilyMember.objects.filter(business=b)
+            self.fields["member"].empty_label = _("Not one person")
+            self.fields["member"].biz_quick_add = "family_member"
+            self.fields["member"].help_text = _("Who earned it (or spent it). The Family income page adds up each person's share.")
+            self.layout = [("#", _("What and how much")), ("category", "amount"), ("date", "account"), ("member",), ("description",),
+                           ("#", _("More (optional)")), ("receipt",), ("notes",)]
+        else:
+            self.fields.pop("member")
         if not self.instance.pk:
             self.initial.setdefault("date", date.today())
             self.initial.setdefault("account", Account.objects.filter(business=b, is_default=True).first())
@@ -182,6 +190,50 @@ class TransactionForm(BusinessForm):
         if c and c.scope != self.scope:
             raise forms.ValidationError(_("Pick a category from this list."))
         return c
+
+
+class FamilyIncomeForm(TransactionForm):
+    """Money the family brings home from outside the farm: a salary, money sent
+    from abroad, crops, rent… Household income, so the farm's profit is untouched."""
+
+    tips = {
+        "category": _("Where the money came from. Add your own with the + if it isn't listed."),
+        "member": _("Who in the family earned or sent it."),
+        "account": _("Which cash box, bank or wallet it went into. Its balance goes up."),
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, scope=Scope.HOUSEHOLD, **kwargs)
+        self.fields["category"].queryset = self.fields["category"].queryset.filter(type=CategoryType.INCOME)
+        self.fields["category"].label = _("Source")
+        self.fields["account"].label = _("Received into")
+        self.fields["category"].empty_label = _("Choose where it came from…")
+        self.fields["description"].widget.attrs["placeholder"] = _("e.g. October salary, sent by bKash")
+        self.layout = [("category", "amount"), ("member",), ("date", "account"), ("description",),
+                       ("#", _("More (optional)")), ("receipt",), ("notes",)]
+        if not self.instance.pk and not self.initial.get("member"):
+            last = Transaction.objects.filter(business=self.business, category__scope=Scope.HOUSEHOLD,
+                                              category__type=CategoryType.INCOME).order_by("-id").first()
+            if last:   # the same person usually sends it again
+                self.initial.setdefault("category", last.category_id)
+                self.initial["member"] = last.member_id
+
+
+class FamilyMemberForm(BusinessForm):
+    tips = {"relation": _("How they're related to you: son, brother, wife…")}
+    layout = [("name", "relation"), ("phone",), ("notes",)]
+
+    class Meta:
+        model = FamilyMember
+        fields = ["name", "relation", "phone", "notes"]
+
+
+class FamilyMemberQuickForm(BusinessForm):
+    layout = [("name", "relation")]
+
+    class Meta:
+        model = FamilyMember
+        fields = ["name", "relation"]
 
 
 class TransferForm(BusinessForm):

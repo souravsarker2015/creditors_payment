@@ -1,7 +1,7 @@
 from django.urls import include, path
 
 from . import money_views as m
-from .views import accounts, categories
+from .views import accounts, categories, family_members
 
 urlpatterns = [
     path("categories/", include(categories.urls())),
@@ -16,6 +16,10 @@ urlpatterns = [
     path("money/<int:pk>/edit/", m.transaction_form_view, name="transaction_edit"),
     path("money/<int:pk>/delete/", m.transaction_delete_view, name="transaction_delete"),
     path("money/<int:pk>/restore/", m.transaction_restore_view, name="transaction_restore"),
+    path("family/", m.family_income_view, name="family_income"),
+    path("family/add/", m.family_income_form_view, name="family_income_add"),
+    path("family/<int:pk>/edit/", m.family_income_form_view, name="family_income_edit"),
+    path("family/people/", include(family_members.urls())),
     path("statement/", m.statement_view, name="statement"),
     path("budget/", m.budget_view, name="budget"),
     path("budget/edit/", m.budget_edit_view, name="budget_edit"),

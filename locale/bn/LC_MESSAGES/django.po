@@ -13323,3 +13323,143 @@ msgid "%(num)d minute"
 msgid_plural "%(num)d minutes"
 msgstr[0] "%(num)d মিনিট"
 msgstr[1] "%(num)d মিনিট"
+
+msgid "Add a salary, money sent from abroad, a crop sold or rent received. Pick who earned it to see each person's share."
+msgstr "বেতন, বিদেশ থেকে পাঠানো টাকা, ফসল বিক্রি বা ভাড়ার টাকা যোগ করুন। কে আয় করেছেন তা বাছলে প্রত্যেকের ভাগ দেখা যাবে।"
+
+msgid "Add family income"
+msgstr "পরিবারের আয় যোগ করুন"
+
+msgid "Add family member"
+msgstr "পরিবারের সদস্য যোগ করুন"
+
+msgid "Add the people who send or bring money home: a son abroad, a brother with a job…"
+msgstr "যাঁরা বাড়িতে টাকা পাঠান বা আনেন তাঁদের যোগ করুন: বিদেশে থাকা ছেলে, চাকরিজীবী ভাই…"
+
+msgid "Borrowed money isn't income: record it under Loans, so you know what's still to pay back."
+msgstr "ধার করা টাকা আয় নয়: এটি ঋণ-এ লিখুন, তাহলে জানবেন আর কত শোধ বাকি।"
+
+msgid "Choose where it came from…"
+msgstr "কোথা থেকে এসেছে বাছুন…"
+
+msgid "Edit family income"
+msgstr "পরিবারের আয় বদলান"
+
+msgid "Family income"
+msgstr "পরিবারের আয়"
+
+#, python-format
+msgid "Family income saved: %(amount)s · %(source)s%(who)s."
+msgstr "পরিবারের আয় সংরক্ষণ হয়েছে: %(amount)s · %(source)s%(who)s।"
+
+msgid "Family member"
+msgstr "পরিবারের সদস্য"
+
+msgid "Family members"
+msgstr "পরিবারের সদস্য"
+
+msgid "How they're related to you: son, brother, wife…"
+msgstr "আপনার সঙ্গে সম্পর্ক: ছেলে, ভাই, স্ত্রী…"
+
+msgid "It goes into the cash box, bank or bKash you pick, so balances stay right. It never counts as farm income."
+msgstr "টাকাটি আপনার বাছাই করা ক্যাশ, ব্যাংক বা বিকাশে জমা হয়, তাই ব্যালান্স ঠিক থাকে। এটি কখনো খামারের আয় হিসেবে ধরা হয় না।"
+
+msgid "Left over"
+msgstr "হাতে থাকল"
+
+msgid "Money that comes into the family from outside the fish farm — a job, a son working abroad, rice or jute, cows, shop or house rent."
+msgstr "মাছের খামারের বাইরে থেকে পরিবারে যে টাকা আসে — চাকরি, বিদেশে কাজ করা ছেলে, ধান বা পাট, গরু, দোকান বা বাড়ি ভাড়া।"
+
+msgid "Money the family earns outside the farm. It doesn't change the farm's profit."
+msgstr "খামারের বাইরে পরিবারের আয়। এতে খামারের লাভ বদলায় না।"
+
+msgid "Money the family earns outside the farm: a salary, money sent from abroad, crops, rent… It's kept apart, so the farm's profit stays true."
+msgstr "খামারের বাইরে পরিবারের আয়: বেতন, বিদেশ থেকে পাঠানো টাকা, ফসল, ভাড়া… এটি আলাদা রাখা হয়, তাই খামারের লাভের হিসাব সঠিক থাকে।"
+
+msgid "New family member"
+msgstr "নতুন পরিবারের সদস্য"
+
+msgid "No family income in this period"
+msgstr "এই সময়ে পরিবারের কোনো আয় নেই"
+
+msgid "No family members yet"
+msgstr "এখনও পরিবারের কোনো সদস্য নেই"
+
+msgid "Not one person"
+msgstr "নির্দিষ্ট কেউ নয়"
+
+msgid "Pick a family member when you add income to see who earned what."
+msgstr "কে কত আয় করেছেন দেখতে, আয় যোগ করার সময় পরিবারের সদস্য বাছুন।"
+
+msgid "Relation"
+msgstr "সম্পর্ক"
+
+msgid "Relative / family"
+msgstr "আত্মীয় / পরিবার"
+
+msgid "Spent more than came in"
+msgstr "আয়ের চেয়ে খরচ বেশি"
+
+msgid "The family's money"
+msgstr "পরিবারের টাকার হিসাব"
+
+msgid "The people whose earnings you record on the Family income page."
+msgstr "যাঁদের আয় আপনি পরিবারের আয় পাতায় লেখেন।"
+
+msgid "Where it came from"
+msgstr "কোথা থেকে এসেছে"
+
+msgid "Where the borrowed money went: cash, bank or bKash. It's added to that account's balance on the date received."
+msgstr "ধারের টাকা কোথায় জমা হলো: ক্যাশ, ব্যাংক বা বিকাশ। টাকা পাওয়ার তারিখে সেই অ্যাকাউন্টের ব্যালান্সে যোগ হবে।"
+
+msgid "Where the money came from. Add your own with the + if it isn't listed."
+msgstr "টাকা কোথা থেকে এসেছে। তালিকায় না থাকলে + দিয়ে নিজে যোগ করুন।"
+
+msgid "Which account you paid from: cash, bank or bKash/Nagad. Choose “Not paid from an account” for your own fingerlings."
+msgstr "কোন অ্যাকাউন্ট থেকে টাকা দিয়েছেন: ক্যাশ, ব্যাংক বা বিকাশ/নগদ। নিজের পোনা হলে “অ্যাকাউন্ট থেকে দেওয়া নয়” বাছুন।"
+
+msgid "Which cash box, bank or wallet it went into. Its balance goes up."
+msgstr "কোন ক্যাশ, ব্যাংক বা ওয়ালেটে জমা হয়েছে। সেটির ব্যালান্স বাড়বে।"
+
+msgid "Who brought it home"
+msgstr "কে এনেছেন"
+
+msgid "Who earned it (or spent it). The Family income page adds up each person's share."
+msgstr "কে আয় (বা খরচ) করেছেন। পরিবারের আয় পাতায় প্রত্যেকের ভাগ যোগ করে দেখানো হয়।"
+
+msgid "Who in the family earned or sent it."
+msgstr "পরিবারের কে আয় করেছেন বা পাঠিয়েছেন।"
+
+msgid "e.g. October salary, sent by bKash"
+msgstr "যেমন: অক্টোবরের বেতন, বিকাশে পাঠানো"
+
+msgid "e.g. Son, Brother, Wife"
+msgstr "যেমন: ছেলে, ভাই, স্ত্রী"
+
+msgid "family member"
+msgstr "পরিবারের সদস্য"
+
+msgid "the farm, other income and the home together"
+msgstr "খামার, অন্য আয় আর সংসার একসঙ্গে"
+
+msgid "this year"
+msgstr "এ বছর"
+
+#, python-format
+msgid "It was received before %(account)s's starting balance, so it's already counted there and wasn't added again."
+msgstr "এটি %(account)s-এর শুরুর ব্যালান্সের আগে পাওয়া, তাই সেখানে আগেই ধরা আছে, আবার যোগ করা হয়নি।"
+
+msgid "Interest-free: only the loan amount is paid back"
+msgstr "সুদমুক্ত: শুধু ঋণের টাকাটাই ফেরত দিতে হবে"
+
+msgid "No interest"
+msgstr "সুদ নেই"
+
+msgid "No interest, no fixed date"
+msgstr "সুদ নেই, নির্দিষ্ট তারিখ নেই"
+
+msgid "Pay back whenever you can"
+msgstr "যখন পারবেন তখন শোধ করুন"
+
+msgid "Record each payment on the loan's page; what you still owe goes down. Agreed a date? Pick it under “For how long?”."
+msgstr "প্রতিটি শোধ ঋণের পাতায় লিখুন; বাকি থাকা টাকা কমতে থাকবে। কোনো তারিখ ঠিক করেছেন? “কত দিনের জন্য?”-এ বেছে নিন।"

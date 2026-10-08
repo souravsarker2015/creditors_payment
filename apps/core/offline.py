@@ -185,6 +185,7 @@ def offline_pages_view(request):
         if can(m, "view_finance"):
             add(_("Money in or out"), "business:transaction_add")
             add(_("Baki payment"), "business:payment_add")
+            add(_("Family income"), "business:family_income_add")
         from apps.business.ponds.models import CultureCycle, CycleStatus
 
         for c in (CultureCycle.objects.filter(business=m.business, status=CycleStatus.RUNNING)

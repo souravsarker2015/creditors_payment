@@ -80,6 +80,9 @@
   <a href="{% url 'business:transactions' %}" class="nav-link {% if '/business/finance/money/' in p %}is-active{% endif %}">
     {% include "partials/icon.html" with name="arrow-down" %}{% translate "Money in & out" %}
   </a>
+  <a href="{% url 'business:family_income' %}" class="nav-link {% if '/business/finance/family/' in p %}is-active{% endif %}" {% if '/business/finance/family/' in p %}aria-current="page"{% endif %}>
+    {% include "partials/icon.html" with name="heart" %}{% translate "Family income" %}
+  </a>
   {% if biz_can.view_reports %}
   <a href="{% url 'business:statement' %}" class="nav-link {% if '/business/finance/statement/' in p %}is-active{% endif %}">
     {% include "business/partials/icon.html" with name="scale" %}{% translate "Income & expenses" %}

@@ -87,6 +87,24 @@ class Account(BusinessBaseModel):
         return f"•••• {self.number[-4:]}" if len(self.number) > 4 else self.number
 
 
+class FamilyMember(BusinessBaseModel):
+    """Someone in the family who brings money home from outside the farm: a son
+    working abroad, a brother with a salary, a wife's tailoring… Their income
+    is household money, kept apart from the farm's profit (Scope.HOUSEHOLD)."""
+
+    name = models.CharField(_("Name"), max_length=80)
+    relation = models.CharField(_("Relation"), max_length=40, blank=True, help_text=_("e.g. Son, Brother, Wife"))
+    phone = models.CharField(_("Phone"), max_length=30, blank=True)
+
+    class Meta:
+        ordering = ["name"]
+        constraints = [models.UniqueConstraint(fields=["business", "name"], condition=models.Q(is_deleted=False),
+                                               name="family_member_name_unique_per_business")]
+
+    def __str__(self):
+        return f"{self.name} ({self.relation})" if self.relation else self.name
+
+
 # ── Money in and out ────────────────────────────────────────────────────────
 
 def receipt_path(instance, filename):
@@ -108,6 +126,8 @@ class Transaction(BusinessBaseModel):
     amount = models.DecimalField(_("Amount"), validators=[MinValueValidator(0)], **MONEY)
     description = models.CharField(_("What for"), max_length=200, blank=True)
     party = models.ForeignKey("business_parties.Party", on_delete=models.SET_NULL, null=True, blank=True, related_name="transactions", verbose_name=_("Person / firm"))
+    member = models.ForeignKey(FamilyMember, on_delete=models.SET_NULL, null=True, blank=True, related_name="transactions",
+                               verbose_name=_("Family member"))
     cycle = models.ForeignKey("business_ponds.CultureCycle", on_delete=models.SET_NULL, null=True, blank=True,
                              related_name="expenses", verbose_name=_("For which pond"))
     receipt = models.FileField(_("Receipt photo"), upload_to=receipt_path, blank=True,

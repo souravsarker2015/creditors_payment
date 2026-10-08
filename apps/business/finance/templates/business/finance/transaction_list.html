@@ -32,7 +32,7 @@
           <span class="min-w-0"><strong>{{ r.name }}</strong> · {{ r.amount|bdt }} · {{ r.next_due|date:"j M" }}</span>
           {% if biz_can.enter_data %}
           <span class="rec-due-actions">
-            <a href="{% url 'business:transaction_add' %}?from={{ r.pk }}&scope={{ r.category.scope }}&category={{ r.category_id }}&amount={{ r.amount|stringformat:'s' }}&description={{ r.description|urlencode }}&next={{ request.get_full_path|urlencode }}" class="btn btn-soft btn-sm">{% translate "Paid" %}</a>
+            <a href="{% url 'business:transaction_add' %}?from={{ r.pk }}&scope={{ r.category.scope }}&category={{ r.category_id }}&amount={{ r.amount|stringformat:'s' }}&description={{ r.description|urlencode }}&next={{ request.get_full_path|urlencode }}" class="btn btn-soft btn-sm">{% if r.category.type == 'income' %}{% translate "Received" %}{% else %}{% translate "Paid" %}{% endif %}</a>
             <form method="post" action="{% url 'business:recurring_skip' r.pk %}"><input type="hidden" name="next" value="{{ request.get_full_path }}">{% csrf_token %}<button class="btn btn-ghost btn-sm">{% translate "Skip" %}</button></form>
           </span>
           {% endif %}

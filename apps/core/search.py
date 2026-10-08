@@ -88,6 +88,8 @@ PAGES = [
     (gettext_noop("Profit sharing"), "business:partner_sharing", "business", "view_finance"),
     (gettext_noop("Loans"), "business:loans", "business", "view_finance"),
     (gettext_noop("Money in & out"), "business:transactions", "business", "view_finance"),
+    (gettext_noop("Family income"), "business:family_income", "business", "view_finance"),
+    (gettext_noop("Family members"), "business:family_members", "business", "view_finance"),
     (gettext_noop("Accounts"), "business:accounts", "business", "view_finance"),
     (gettext_noop("Income & expenses"), "business:statement", "business", "view_reports"),
     (gettext_noop("All reports"), "business:reports", "business", "view_reports"),

@@ -29,7 +29,7 @@
         <div class="ledger-end">
           <span class="ledger-amount">{{ r.amount|bdt }}</span>
           {% if biz_can.enter_data %}
-          <a href="{% url 'business:transaction_add' %}?from={{ r.pk }}&scope={{ r.category.scope }}&category={{ r.category_id }}&amount={{ r.amount|stringformat:'s' }}&description={{ r.description|urlencode }}&next={{ request.path|urlencode }}" class="btn btn-soft btn-sm ml-2">{% translate "Paid" %}</a>
+          <a href="{% url 'business:transaction_add' %}?from={{ r.pk }}&scope={{ r.category.scope }}&category={{ r.category_id }}&amount={{ r.amount|stringformat:'s' }}&description={{ r.description|urlencode }}&next={{ request.path|urlencode }}" class="btn btn-soft btn-sm ml-2">{% if r.category.type == 'income' %}{% translate "Received" %}{% else %}{% translate "Paid" %}{% endif %}</a>
           <form method="post" action="{% url 'business:recurring_skip' r.pk %}">{% csrf_token %}<button class="btn btn-ghost btn-sm">{% translate "Skip" %}</button></form>
           {% endif %}
         </div>

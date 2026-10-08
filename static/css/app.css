@@ -1609,6 +1609,17 @@ a.hero-progress:hover .hero-progress-row span { color: var(--text-on-ink); }
 .loan-preview-dl > div { padding: 0.625rem 0.75rem; border-radius: var(--radius-sm); background: var(--surface-sunken); min-width: 0; }
 .loan-preview-dl dt { font-size: 0.6875rem; font-weight: 600; color: var(--text-muted); }
 .loan-preview-dl dd { margin-top: 0.125rem; font-size: 0.9375rem; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+/* Family income: farm profit + family income − household spending = left over */
+.family-sum { display: grid; gap: 0; }
+.family-sum > div { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; padding: 0.5625rem 0; border-top: 1px solid var(--border-soft); }
+.family-sum > div:first-child { border-top: 0; padding-top: 0; }
+.family-sum dt { font-size: 0.875rem; color: var(--text-secondary); min-width: 0; }
+.family-sum dd { font-size: 0.9375rem; font-weight: 650; color: var(--text-primary); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.family-sum dd[data-tone="good"] { color: var(--status-good); }
+.family-sum dd[data-tone="critical"] { color: var(--status-critical); }
+.family-sum .family-sum-total { margin-top: 0.25rem; padding-top: 0.75rem; border-top: 2px solid var(--border); }
+.family-sum .family-sum-total dt { font-weight: 700; color: var(--text-primary); }
+.family-sum .family-sum-total dd { font-size: 1.125rem; font-weight: 800; }
 .loan-mini { width: 100%; margin-top: 1rem; border-collapse: collapse; font-size: 0.75rem; font-variant-numeric: tabular-nums; }
 .loan-mini th { padding: 0 0 0.375rem; font-size: 0.625rem; font-weight: 650; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted); text-align: right; }
 .loan-mini td { padding: 0.4375rem 0 0.4375rem 0.5rem; border-top: 1px solid var(--border-soft); color: var(--text-secondary); text-align: right; white-space: nowrap; }

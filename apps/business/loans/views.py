@@ -16,7 +16,7 @@ from apps.business.core.templatetags.business import bdt
 
 from . import services
 from .forms import CloseForm, LenderForm, LenderQuickForm, LoanForm, PaymentForm, RateChangeForm, TopUpForm
-from .models import Lender, Loan, LoanRateChange, LoanTransaction, LoanTxnKind, frequency_label
+from .models import INFORMAL_KINDS, Lender, Loan, LoanRateChange, LoanTransaction, LoanTxnKind, frequency_label
 
 FINANCE = "view_finance"
 
@@ -65,9 +65,12 @@ def loan_form_view(request, pk=None):
         obj.business = b
         obj.save()
         messages.success(request, _("Loan saved. Its payment schedule is ready below.") if not loan else _("Loan updated — the schedule has been worked out again."))
+        if form.already_in_balance:
+            messages.info(request, _("It was received before %(account)s's starting balance, so it's already counted there and wasn't added again.") % {
+                "account": form.already_in_balance.name})
         return redirect("business:loan_detail", obj.pk)
     return render(request, "business/loans/loan_form.html", {
-        "form": form, "loan": loan,
+        "form": form, "loan": loan, "informal_kinds": json.dumps([str(k) for k in INFORMAL_KINDS]),
         "lender_qa": {"url": reverse("business:lender_quick_add"), "title": _("New lender"), "noun": _("lender"),
                       "form": LenderQuickForm(prefix="qa_lender", business=b)},
     })
@@ -94,6 +97,8 @@ def loan_preview_view(request):
         "interest": bdt(p["interest"]),
         "total": bdt(p["total"]),
         "open_ended": p["open_ended"],
+        # No interest, no dates: a relative's loan, paid back whenever you can.
+        "flexible": p["open_ended"] and not d["rate"] and d["repayment"] == "end",
         "first_due": p["first"].due.strftime("%-d %b %Y") if p["first"] else "",
         "last_due": p["last"].due.strftime("%-d %b %Y") if p["last"] else "",
         "rows": [{"due": r.due.strftime("%-d %b %Y"), "interest": bdt(r.interest), "principal": bdt(r.principal), "total": bdt(r.total)} for r in p["periods"]],
@@ -305,7 +310,8 @@ def lender_quick_add_view(request):
         obj = form.save(commit=False)
         obj.business = request.business
         obj.save()
-    return JsonResponse({"ok": True, "id": obj.pk, "name": obj.name, "message": _("“%(name)s” added and selected.") % {"name": obj.name}}, status=201)
+    return JsonResponse({"ok": True, "id": obj.pk, "name": obj.name, "kind": obj.kind,
+                         "message": _("“%(name)s” added and selected.") % {"name": obj.name}}, status=201)
 
 
 @business_access_required(capability="delete")

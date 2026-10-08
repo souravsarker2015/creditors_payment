@@ -114,7 +114,7 @@
       {% else %}
       <dt class="stat-label">{% translate "Interest owed now" %}</dt>
       <dd class="stat-value">{{ s.unpaid_interest|bdt }}</dd>
-      <dd class="stat-hint">{% translate "No end date — interest runs until it's paid back" %}</dd>
+      <dd class="stat-hint">{% if loan.rate %}{% translate "No end date — interest runs until it's paid back" %}{% else %}{% translate "Interest-free: only the loan amount is paid back" %}{% endif %}</dd>
       {% endif %}
     </div>
     <div class="stat" data-tone="muted">
@@ -215,7 +215,7 @@
       {% endfor %}
       <li class="ledger-row">
         <span class="ledger-icon" data-tone="info">{% include "business/partials/icon.html" with name="banknotes" %}</span>
-        <div class="ledger-main"><p class="ledger-title">{% translate "Loan received" %} · {{ loan.taken_on|date:"j M Y" }}</p><p class="ledger-meta">{{ loan.lender.name }}</p></div>
+        <div class="ledger-main"><p class="ledger-title">{% translate "Loan received" %} · {{ loan.taken_on|date:"j M Y" }}</p><p class="ledger-meta">{{ loan.lender.name }}{% if loan.account %} → {{ loan.account.name }}{% endif %}</p></div>
         <div class="ledger-end"><span class="ledger-amount" data-tone="warn">{{ loan.principal|bdt }}</span></div>
       </li>
     </ul>
@@ -229,6 +229,7 @@
         <div><dt>{% translate "Lender" %}</dt><dd>{{ loan.lender.name }} <span class="muted">· {{ loan.lender.get_kind_display }}</span></dd></div>
         <div><dt>{% translate "Amount borrowed" %}</dt><dd>{{ loan.principal|bdt }}</dd></div>
         <div><dt>{% translate "Date received" %}</dt><dd>{{ loan.taken_on|date:"j M Y" }}</dd></div>
+        <div><dt>{% translate "Received into" %}</dt><dd>{% if loan.account %}<a href="{% url 'business:account_detail' loan.account_id %}" class="font-semibold underline">{{ loan.account.name }}</a>{% else %}{% translate "Not recorded" %}{% endif %}</dd></div>
         <div><dt>{% translate "Interest" %}</dt><dd>{% if loan.rate %}{{ loan.rate|num }}% {{ loan.get_rate_period_display }} · {{ loan.get_method_display|lower }}{% else %}{% translate "Interest-free" %}{% endif %}</dd></div>
         <div><dt>{% translate "Payments" %}</dt><dd>{{ loan.frequency_label }}</dd></div>
         <div><dt>{% translate "Loan amount is paid back" %}</dt><dd>{{ loan.get_repayment_display }}</dd></div>

@@ -3,8 +3,8 @@ from django.utils.translation import gettext_lazy as _
 
 from apps.business.core.crud import Master
 
-from .forms import AccountForm, CategoryForm
-from .models import Account, Category, CategoryType, Scope
+from .forms import AccountForm, CategoryForm, FamilyMemberForm
+from .models import Account, Category, CategoryType, FamilyMember, Scope
 
 
 def _tree(objects):
@@ -63,4 +63,25 @@ accounts = Master(
           _("An account is where money sits: cash in hand, a bank account, bKash or Nagad."),
           _("Balances update on their own from sales, purchases, Baki payments, loans and every money in or out."),
           _("Moved money between accounts (e.g. cash into the bank)? Use “Move money”, so it isn't counted as income or spending.")),
+)
+
+
+def _member_totals(objects, business):
+    """What each person has brought home this year (Family income)."""
+    from datetime import date
+
+    year = date.today().replace(month=1, day=1)
+    sums = dict(FamilyMember.objects.filter(business=business, transactions__is_deleted=False,
+                                            transactions__category__type=CategoryType.INCOME, transactions__date__gte=year)
+                .values_list("pk").annotate(t=Sum("transactions__amount")))
+    for m in objects:
+        m.year_total = sums.get(m.pk) or 0
+
+
+family_members = Master(
+    name="family_members", model=FamilyMember, form_class=FamilyMemberForm, view_cap="view_finance", edit_cap="view_finance",
+    title=_("Family members"), subtitle=_("The people whose earnings you record on the Family income page."),
+    add_label=_("Add family member"), row_template="business/finance/family_member_row.html", icon="users",
+    search_fields=("name", "relation", "phone"), decorate=_member_totals,
+    empty_title=_("No family members yet"), empty_text=_("Add the people who send or bring money home: a son abroad, a brother with a job…"),
 )

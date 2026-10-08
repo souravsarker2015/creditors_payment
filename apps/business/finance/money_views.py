@@ -19,8 +19,8 @@ from apps.business.core.decorators import business_access_required
 from apps.business.core.templatetags.business import bdt
 
 from . import services
-from .forms import BudgetForm, RecurringForm, TransactionForm, TransferForm
-from .models import Account, Budget, Category, CategoryType, RecurringTransaction, Scope, Transaction, Transfer
+from .forms import BudgetForm, FamilyIncomeForm, RecurringForm, TransactionForm, TransferForm
+from .models import Account, Budget, Category, CategoryType, FamilyMember, RecurringTransaction, Scope, Transaction, Transfer
 
 ZERO = Decimal(0)
 
@@ -143,7 +143,76 @@ def transaction_delete_view(request, pk):
     scope = obj.category.scope
     obj.soft_delete()
     messages.success(request, _("Deleted. You can restore it from the deleted list."))
+    nxt = request.POST.get("next")
+    if nxt and url_has_allowed_host_and_scheme(nxt, {request.get_host()}):
+        return redirect(nxt)
     return redirect(reverse("business:transactions") + f"?scope={scope}")
+
+
+# ── Family income: the family's money from outside the farm ────────────────
+
+def _family_income(business):
+    return (Transaction.objects.filter(business=business, category__scope=Scope.HOUSEHOLD, category__type=CategoryType.INCOME)
+            .select_related("category__parent", "account", "member"))
+
+
+@business_access_required(capability="view_finance")
+def family_income_view(request):
+    """Salary, money from abroad, crops, rent… what the family earns outside
+    the farm, and how the family's money stands with the farm and the home."""
+    from apps.core.stats import ranked
+
+    b = request.business
+    today = date.today()
+    periods, key, label, start, end = _range(request, today)
+    qs = _family_income(b)
+    if start:
+        qs = qs.filter(date__gte=start, date__lte=end)
+    rows = list(qs)
+    total = sum((t.amount for t in rows), ZERO)
+    by_source, by_person = {}, {}
+    for t in rows:
+        main = t.category.parent or t.category
+        by_source[main] = by_source.get(main, ZERO) + t.amount
+        by_person[t.member] = by_person.get(t.member, ZERO) + t.amount
+    list_url = reverse("business:transactions") + "?scope=" + Scope.HOUSEHOLD
+    sources = ranked([(c.display_name, v, f"{list_url}&category={c.pk}&period={key}") for c, v in by_source.items()])
+    people = ranked([(m.name if m else _("Not one person"), v, None) for m, v in by_person.items()]) if any(by_person) else []
+
+    # The family's money in this period: the farm's profit, plus what the family
+    # earned outside it, less what the home spent.
+    first = start or date(2000, 1, 1)
+    farm = services.statement(b, first, end or today).profit
+    home = services.statement(b, first, end or today, scope=Scope.HOUSEHOLD).total_expense
+    return render(request, "business/finance/family_income.html", {
+        "periods": periods, "period": key, "period_label": label,
+        "total": total, "count": len(rows), "sources": sources, "people": people,
+        "farm": farm, "home": home, "left": farm + total - home,
+        "page_obj": Paginator(rows, 40).get_page(request.GET.get("page")),
+        "members": FamilyMember.objects.filter(business=b).count(),
+    })
+
+
+@business_access_required(capability="view_finance")   # the family's earnings are private
+def family_income_form_view(request, pk=None):
+    b = request.business
+    obj = get_object_or_404(_family_income(b), pk=pk) if pk else None
+    initial = {k: int(request.GET[k]) for k in ("member", "category") if request.GET.get(k, "").isdigit()}
+    form = FamilyIncomeForm(request.POST or None, request.FILES or None, instance=obj, business=b, initial=initial or None)
+    back = reverse("business:family_income")
+    if request.method == "POST" and form.is_valid():
+        item = form.save(commit=False)
+        item.business = b
+        item.save()
+        who = f" · {item.member.name}" if item.member else ""
+        messages.success(request, _("Family income saved: %(amount)s · %(source)s%(who)s.") % {
+            "amount": bdt(item.amount), "source": item.category, "who": who})
+        return redirect(back)
+    return render(request, "business/finance/transaction_form.html", {
+        "form": form, "obj": obj, "scope": Scope.HOUSEHOLD, "back": back,
+        "heading": _("Edit family income") if obj else _("Add family income"), "back_label": _("Family income"),
+        "scope_label": _("Money the family earns outside the farm. It doesn't change the farm's profit."),
+    })
 
 
 @business_access_required(capability="delete")

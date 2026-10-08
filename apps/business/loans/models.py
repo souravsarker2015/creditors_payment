@@ -20,7 +20,12 @@ class LenderKind(models.TextChoices):
     NGO = "ngo", _("NGO / microfinance")
     SAMITY = "samity", _("Samity / co-operative")
     PERSON = "person", _("Person")
+    FAMILY = "family", _("Relative / family")
     OTHER = "other", _("Other")
+
+
+# Usually lend without interest and without a fixed date: the loan form starts that way.
+INFORMAL_KINDS = (LenderKind.FAMILY,)
 
 
 class Lender(BusinessBaseModel):
@@ -64,6 +69,8 @@ class Loan(BusinessBaseModel):
     account_no = models.CharField(_("Loan / account number"), max_length=60, blank=True)
     principal = models.DecimalField(_("Amount borrowed"), validators=[MinValueValidator(Decimal("1"))], **MONEY)
     taken_on = models.DateField(_("Date received"))
+    account = models.ForeignKey("business_finance.Account", on_delete=models.SET_NULL, null=True, blank=True, related_name="+",
+                                verbose_name=_("Received into"))
     rate = models.DecimalField(_("Interest rate"), max_digits=7, decimal_places=4, default=0,
                                validators=[MinValueValidator(0), MaxValueValidator(100)])
     rate_period = models.CharField(_("Rate is"), max_length=5, choices=RatePeriod.choices, default=RatePeriod.YEAR)

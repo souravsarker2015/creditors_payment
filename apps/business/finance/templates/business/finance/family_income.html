@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% translate "Family income" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "Family income" %}</h1>
+      <p class="page-subtitle">{% translate "Money the family earns outside the farm: a salary, money sent from abroad, crops, rent… It's kept apart, so the farm's profit stays true." %}</p>
+    </div>
+    {% if biz_can.enter_data %}
+    <div class="page-actions">
+      <a href="{% url 'business:family_income_add' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add family income" %}</a>
+    </div>
+    {% endif %}
+  </header>
+
+  {% include "business/partials/note.html" with key="family_income" title=_("What to record here") p1=_("Money that comes into the family from outside the fish farm — a job, a son working abroad, rice or jute, cows, shop or house rent.") p2=_("It goes into the cash box, bank or bKash you pick, so balances stay right. It never counts as farm income.") p3=_("Borrowed money isn't income: record it under Loans, so you know what's still to pay back.") %}
+
+  <nav class="seg seg-scroll" aria-label="{% translate 'Period' %}">
+    {% for key, label, s, e in periods %}<a href="?period={{ key }}" class="seg-item {% if period == key %}is-active{% endif %}">{{ label }}</a>{% endfor %}
+  </nav>
+
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="min-w-0">
+        <p class="hero-label">{{ period_label }} · {% translate "Family income" %}</p>
+        <p class="hero-value">{{ total|bdt }}</p>
+        <p class="hero-sub">{% blocktranslate count counter=count %}{{ counter }} entry{% plural %}{{ counter }} entries{% endblocktranslate %}</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title">{% translate "The family's money" %}</h2>
+        <p class="card-subtitle">{{ period_label }} · {% translate "the farm, other income and the home together" %}</p>
+      </div>
+    </div>
+    <dl class="card-body family-sum">
+      <div><dt>{% if farm < 0 %}{% translate "Farm loss" %}{% else %}{% translate "Farm profit" %}{% endif %}</dt><dd data-tone="{% if farm < 0 %}critical{% endif %}">{{ farm|bdt }}</dd></div>
+      <div><dt>+ {% translate "Family income" %}</dt><dd data-tone="good">{{ total|bdt }}</dd></div>
+      <div><dt>− {% translate "Household spending" %}</dt><dd data-tone="critical">{{ home|bdt }}</dd></div>
+      <div class="family-sum-total"><dt>{% if left < 0 %}{% translate "Spent more than came in" %}{% else %}{% translate "Left over" %}{% endif %}</dt><dd data-tone="{% if left < 0 %}critical{% else %}good{% endif %}">{{ left|bdt }}</dd></div>
+    </dl>
+  </section>
+
+  {% if sources %}
+  <div class="grid gap-4 lg:grid-cols-2">
+    <section class="card">
+      <div class="card-header"><h2 class="card-title">{% translate "Where it came from" %}</h2></div>
+      <div class="card-body">{% include "business/partials/ranked_list.html" with rows=sources %}</div>
+    </section>
+    <section class="card">
+      <div class="card-header">
+        <h2 class="card-title">{% translate "Who brought it home" %}</h2>
+        <a href="{% url 'business:family_members' %}" class="btn btn-ghost btn-sm">{% translate "Family members" %}</a>
+      </div>
+      <div class="card-body">
+        {% if people %}{% include "business/partials/ranked_list.html" with rows=people %}
+        {% else %}<p class="help">{% translate "Pick a family member when you add income to see who earned what." %}</p>{% endif %}
+      </div>
+    </section>
+  </div>
+  {% endif %}
+
+  {% if page_obj.object_list %}
+  <section class="card">
+    <ul class="ledger">
+      {% for t in page_obj %}
+      <li class="ledger-row">
+        <span class="ledger-icon" data-tone="good">{% include "partials/icon.html" with name="arrow-down" %}</span>
+        <div class="ledger-main">
+          <p class="ledger-title">{% if biz_can.enter_data %}<a href="{% url 'business:family_income_edit' t.pk %}" class="hover:underline">{{ t.category.display_name }}</a>{% else %}{{ t.category.display_name }}{% endif %}{% if t.member %} · {{ t.member.name }}{% endif %}</p>
+          <p class="ledger-meta">{{ t.date|date:"j M Y" }}{% if t.description %} · {{ t.description }}{% endif %}{% if t.account %} · {{ t.account }}{% endif %}{% if t.receipt %} · <a href="{% url 'receipt_view' 'farm' t.pk %}" target="_blank" rel="noopener" class="receipt-link">{% translate "receipt" %}</a>{% endif %}</p>{% include "business/partials/row_note.html" with note=t.notes %}
+        </div>
+        <div class="ledger-end">
+          <span class="party-bal" data-tone="good"><strong>{{ t.amount|bdt }}</strong><span>{% translate "in" %}</span></span>
+          {% if biz_can.enter_data %}<a href="{% url 'business:family_income_edit' t.pk %}" class="icon-btn" aria-label="{% translate 'Edit' %}" data-tip="{% translate 'Edit' %}">{% include "partials/icon.html" with name="edit" %}</a>{% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% include "partials/pagination.html" %}
+  {% else %}
+  <div class="empty">
+    <div class="empty-icon">{% include "partials/icon.html" with name="wallet" %}</div>
+    <h3 class="empty-title">{% translate "No family income in this period" %}</h3>
+    <p class="empty-text">{% translate "Add a salary, money sent from abroad, a crop sold or rent received. Pick who earned it to see each person's share." %}</p>
+    {% if biz_can.enter_data %}<a href="{% url 'business:family_income_add' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add family income" %}</a>{% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

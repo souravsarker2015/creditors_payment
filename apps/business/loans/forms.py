@@ -51,7 +51,7 @@ class LenderQuickForm(LenderForm):
 class LoanForm(forms.ModelForm):
     class Meta:
         model = Loan
-        fields = ["lender", "name", "account_no", "principal", "taken_on", "rate", "rate_period", "method",
+        fields = ["lender", "name", "account_no", "principal", "taken_on", "account", "rate", "rate_period", "method",
                   "every", "every_unit", "repayment", "first_due", "maturity", "notes"]
         widgets = {
             "lender": forms.Select(attrs={"class": "form-input"}),
@@ -78,8 +78,13 @@ class LoanForm(forms.ModelForm):
             qs = qs | Lender.all_objects.filter(pk=self.instance.lender_id)
         self.fields["lender"].queryset = qs.distinct().order_by("name")
         self.fields["lender"].empty_label = _("Choose who lent the money…")
+        # The page starts a relative's loan as interest-free with no fixed end (see INFORMAL_KINDS).
+        self.lender_kinds = {str(pk): kind for pk, kind in self.fields["lender"].queryset.values_list("pk", "kind")}
+        _account_field(self.fields["account"], business, _("Not recorded"))
+        self.fields["account"].help_text = _("Where the borrowed money went: cash, bank or bKash. It's added to that account's balance on the date received.")
         if not self.instance.pk:
             self.initial.setdefault("taken_on", date.today())
+            self.initial.setdefault("account", _default_account(business))
         else:  # "12" and "500000" rather than "12.0000" and "500000.00"
             self.initial["rate"] = plain(self.instance.rate)
             self.initial["principal"] = plain(self.instance.principal)
@@ -97,6 +102,13 @@ class LoanForm(forms.ModelForm):
             self.add_error("maturity", _("Pick an end date so the loan can be split into payments."))
         if not data.get("rate"):
             data["rate"] = Decimal("0")
+        account = data.get("account")
+        self.already_in_balance = None
+        if account and taken and account.opening_date and taken < account.opening_date:
+            # Received before the account's starting balance: that money is already
+            # inside it, so it isn't added again (an old loan entered at setup).
+            self.already_in_balance = account
+            data["account"] = None
         return data
 
 

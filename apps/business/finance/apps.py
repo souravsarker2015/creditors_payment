@@ -19,3 +19,4 @@ class BusinessFinanceConfig(AppConfig):
         register("accounts", seed_accounts)
         register_quick_add("category", QuickAdd("apps.business.finance.forms.CategoryQuickForm", "enter_data", _("New category"), _("category")))
         register_quick_add("account", QuickAdd("apps.business.finance.forms.AccountQuickForm", "view_finance", _("New account"), _("account")))
+        register_quick_add("family_member", QuickAdd("apps.business.finance.forms.FamilyMemberQuickForm", "view_finance", _("New family member"), _("family member")))
