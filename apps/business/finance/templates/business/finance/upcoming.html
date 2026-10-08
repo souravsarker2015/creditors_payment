@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% translate "Upcoming money" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-narrow stack">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "Upcoming money" %}</h1>
+      <p class="page-subtitle">{% translate "Loan instalments, regular bills, baki promises and wages, day by day — and whether the farm's accounts will cover them." %}</p>
+    </div>
+  </header>
+
+  {% translate "In the accounts now" as now_label %}
+  {% translate "Loan instalments, regular bills and income, a baki follow-up date, and wages owed show here on their day." as empty_text %}
+  {% include "partials/forecast.html" with now_label=now_label empty_text=empty_text %}
+
+  {% include "business/partials/note.html" with key="upcoming" title=_("What's counted") p1=_("Loan instalments from each loan's schedule, and bills and income on the Regular bills page, every time they come round.") p2=_("Baki: a buyer's promised date to pay you, or the date you said you'd pay a supplier (set it on their statement).") p3=_("Wages already owed today, and monthly salaries at each month's end. Fish sales you haven't made yet aren't counted.") %}
+</div>
+{% endblock %}

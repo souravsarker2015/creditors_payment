@@ -23,6 +23,7 @@ urlpatterns = [
     path("", overview_views.networth_view, name="home"),  # Home: the personal side starts here
     path("record/<slug:kind>/", overview_views.pick_view, name="pick"),
     path("help/", overview_views.help_view, name="help"),
+    path("upcoming/", overview_views.upcoming_view, name="upcoming"),
     path("", include("apps.creditors.urls")),
     path("networth/", include("apps.overview.urls")),
     path("debtors/", include("apps.debtors.urls")),

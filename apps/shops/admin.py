@@ -2,6 +2,8 @@ from django.contrib import admin
 from django.db.models import Sum, Q, DecimalField, Value
 from django.db.models.functions import Coalesce
 
+from apps.core.templatetags.ui import bd_number
+
 from .models import Shop, Transaction
 
 
@@ -52,16 +54,16 @@ class ShopAdmin(admin.ModelAdmin):
 
     @admin.display(description="Total Due", ordering="_total_due")
     def get_total_due(self, obj):
-        return f"৳{obj._total_due:,.2f}"
+        return "৳" + bd_number(obj._total_due)
 
     @admin.display(description="Total Paid", ordering="_total_paid")
     def get_total_paid(self, obj):
-        return f"৳{obj._total_paid:,.2f}"
+        return "৳" + bd_number(obj._total_paid)
 
     @admin.display(description="Remaining")
     def get_remaining(self, obj):
         remaining = obj._total_due - obj._total_paid
-        return f"৳{remaining:,.2f}"
+        return "৳" + bd_number(remaining)
 
     @admin.display(description="Is Paid", boolean=True)
     def get_is_paid(self, obj):

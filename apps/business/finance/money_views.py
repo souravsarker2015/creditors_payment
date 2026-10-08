@@ -149,6 +149,20 @@ def transaction_delete_view(request, pk):
     return redirect(reverse("business:transactions") + f"?scope={scope}")
 
 
+# ── Upcoming money: will the accounts cover what's coming? ─────────────────
+
+@business_access_required(capability="view_finance")
+def upcoming_view(request):
+    from apps.core.forecast import PERIODS, window
+
+    from .upcoming import forecast
+
+    days = window(request)
+    return render(request, "business/finance/upcoming.html", {
+        "f": forecast(request.business, date.today(), days), "days": days, "periods": PERIODS,
+    })
+
+
 # ── Family income: the family's money from outside the farm ────────────────
 
 def _family_income(business):

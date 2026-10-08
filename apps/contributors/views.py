@@ -13,7 +13,7 @@ from django.db.models.functions import Coalesce, TruncMonth
 from django.core.paginator import Paginator
 from django.utils import dateformat
 from django.utils.translation import gettext as _, gettext_lazy
-from apps.core.templatetags.ui import money
+from apps.core.templatetags.ui import bd_number, money
 from apps.trash.undo import delete_with_undo
 from .models import Contributor, ContributorCategory, Contribution
 from django.urls import reverse
@@ -489,7 +489,7 @@ def contributor_statement_view(request, pk):
     total_amount = all_contributions.aggregate(Sum('amount'))['amount__sum'] or 0
     period_amount = contributions.aggregate(Sum('amount'))['amount__sum'] or 0
 
-    rows = [(c.date.strftime("%d %b %Y"), c.note or "-", f"{c.amount:,.2f}") for c in contributions]
+    rows = [(c.date.strftime("%d %b %Y"), c.note or "-", bd_number(c.amount)) for c in contributions]
 
     return _render_statement(
         request,
@@ -498,8 +498,8 @@ def contributor_statement_view(request, pk):
         entity_meta=[(_("Phone"), contributor.phone), (_("Category"), contributor.get_category_display())],
         period_label=_period_label(selected_year, selected_month),
         summary_rows=[
-            (_("Total Given"), f"{total_amount:,.2f}", "positive"),
-            (_("Given This Period"), f"{period_amount:,.2f}", ""),
+            (_("Total Given"), bd_number(total_amount), "positive"),
+            (_("Given This Period"), bd_number(period_amount), ""),
         ],
         columns=[_("Date"), _("Note"), _("Amount (৳)")],
         rows=rows,

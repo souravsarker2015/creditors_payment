@@ -16,7 +16,7 @@ from django.core.paginator import Paginator
 from django.utils import dateformat
 from django.utils.translation import gettext as _, gettext_lazy, ngettext
 
-from apps.core.templatetags.ui import money
+from apps.core.templatetags.ui import bd_number, money
 from apps.trash.undo import delete_with_undo
 from .models import HouseholdCategory, HouseholdMember, Purchase, Settlement
 from apps.budgets.models import Budget, BudgetScope
@@ -681,7 +681,7 @@ def member_statement_view(request, pk):
             item.date.strftime("%d %b %Y"),
             _("Fronted (Bazar)") if item.kind == "purchase" else _("Given Back"),
             (item.category.name if item.kind == "purchase" and item.category else item.note or "-"),
-            f"{item.amount:,.2f}",
+            bd_number(item.amount),
         )
         for item in activity
     ]
@@ -693,9 +693,9 @@ def member_statement_view(request, pk):
         entity_meta=[(_("Phone"), member.phone)],
         period_label=_period_label(selected_year, selected_month),
         summary_rows=[
-            (_("Total Fronted"), f"{member.total_spent:,.2f}", ""),
-            (_("Given Back"), f"{member.total_settled:,.2f}", "positive"),
-            (_("Balance Due"), f"{member.balance_due:,.2f}", "negative" if member.balance_due > 0 else "positive"),
+            (_("Total Fronted"), bd_number(member.total_spent), ""),
+            (_("Given Back"), bd_number(member.total_settled), "positive"),
+            (_("Balance Due"), bd_number(member.balance_due), "negative" if member.balance_due > 0 else "positive"),
         ],
         columns=[_("Date"), _("Type"), _("Note"), _("Amount (৳)")],
         rows=rows,

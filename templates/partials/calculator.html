@@ -148,7 +148,7 @@ only, per user, and is cleared on logout.
                             <li class="calc-hist-item">
                                 <button type="button" class="calc-hist-main" @click="reuse(h)" data-tip="{% translate 'Tap to edit this again' %}">
                                     <span class="calc-hist-expr" x-text="h.label ? h.expr + ' · ' + h.label : h.expr"></span>
-                                    <span class="calc-hist-val num" x-text="'= ' + Number(h.value).toLocaleString('en-US', { maximumFractionDigits: 6 })"></span>
+                                    <span class="calc-hist-val num" x-text="'= ' + Number(h.value).toLocaleString('en-IN', { maximumFractionDigits: 6 })"></span>
                                     <span class="calc-hist-time" x-text="when(h.at)"></span>
                                 </button>
                                 <div class="calc-hist-act">

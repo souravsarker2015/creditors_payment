@@ -32,6 +32,8 @@
     </dl>
   </section>
 
+  {% url 'upcoming' as upcoming_url %}{% include "partials/forecast_peek.html" with f=upcoming url=upcoming_url %}
+
   <nav class="quick-actions quick-actions-8 home-quick" aria-label="{% translate 'Write down' %}">
     <a href="{% url 'expense_create' %}" class="quick-action is-primary">{% include "partials/icon.html" with name="arrow-up" %}<span>{% translate "I spent" %}</span></a>
     <a href="{% url 'pick' 'income' %}" class="quick-action" data-tone="good">{% include "partials/icon.html" with name="arrow-down" %}<span>{% translate "I got money" %}</span></a>

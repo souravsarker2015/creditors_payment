@@ -109,7 +109,7 @@
             <div class="input-affix has-start"><span class="affix affix-start" aria-hidden="true">৳</span>
               <input id="qa-amount" x-ref="amount" x-model="amount" name="amount" type="number" inputmode="decimal" min="1" step="any" required class="form-input" placeholder="0"></div>
             <div class="chip-row mt-2">
-              <button type="button" class="chip" x-show="goal.need" @click="amount = goal.need" x-text="'{{ monthly_plan_label|escapejs }} ৳' + Number(goal.need).toLocaleString('en-US')"></button>
+              <button type="button" class="chip" x-show="goal.need" @click="amount = goal.need" x-text="'{{ monthly_plan_label|escapejs }} ৳' + Number(goal.need).toLocaleString('en-IN')"></button>
               <button type="button" class="chip" @click="amount = 500">৳500</button>
               <button type="button" class="chip" @click="amount = 1000">৳1,000</button>
               <button type="button" class="chip" @click="amount = 5000">৳5,000</button>

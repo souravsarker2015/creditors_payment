@@ -119,6 +119,7 @@
   </div>
 
   {% if money is not None %}
+  {% url 'business:upcoming' as upcoming_url %}{% include "partials/forecast_peek.html" with f=money.upcoming url=upcoming_url %}
   <section class="card">
     <div class="card-header">
       <div>

@@ -36,7 +36,7 @@
 
   function formatAmount(value, currency) {
     var rounded = Math.round(value);
-    return currency + rounded.toLocaleString('en-US');
+    return currency + rounded.toLocaleString('en-IN');
   }
 
   function buildSlices(labels, data) {

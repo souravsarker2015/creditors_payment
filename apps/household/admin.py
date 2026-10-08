@@ -1,6 +1,9 @@
 from django.contrib import admin
 from django.db.models import Sum, DecimalField, Value
 from django.db.models.functions import Coalesce
+
+from apps.core.templatetags.ui import bd_number
+
 from .models import HouseholdCategory, HouseholdMember, Purchase, Settlement
 
 
@@ -26,7 +29,7 @@ class HouseholdCategoryAdmin(admin.ModelAdmin):
     @admin.display(description="Total Spent")
     def get_total_spent(self, obj):
         total = obj.purchases.aggregate(total=Sum("amount"))["total"] or 0
-        return f"৳{total:,.2f}"
+        return "৳" + bd_number(total)
 
 
 @admin.register(HouseholdMember)
@@ -48,15 +51,15 @@ class HouseholdMemberAdmin(admin.ModelAdmin):
 
     @admin.display(description="Total Spent", ordering="_total_spent")
     def get_total_spent(self, obj):
-        return f"৳{obj._total_spent:,.2f}"
+        return "৳" + bd_number(obj._total_spent)
 
     @admin.display(description="Total Settled", ordering="_total_settled")
     def get_total_settled(self, obj):
-        return f"৳{obj._total_settled:,.2f}"
+        return "৳" + bd_number(obj._total_settled)
 
     @admin.display(description="Balance Due")
     def get_balance_due(self, obj):
-        return f"৳{obj._total_spent - obj._total_settled:,.2f}"
+        return "৳" + bd_number(obj._total_spent - obj._total_settled)
 
     @admin.display(description="Settled", boolean=True)
     def get_is_settled(self, obj):

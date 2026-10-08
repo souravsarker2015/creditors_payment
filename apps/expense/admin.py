@@ -1,5 +1,8 @@
 from django.contrib import admin
 from django.db.models import Sum
+
+from apps.core.templatetags.ui import bd_number
+
 from .models import ExpenseCategory, Expense, RecurringExpense
 
 
@@ -19,7 +22,7 @@ class ExpenseCategoryAdmin(admin.ModelAdmin):
     @admin.display(description="Total Spent")
     def get_total_spent(self, obj):
         total = obj.expenses.aggregate(total=Sum("amount"))["total"] or 0
-        return f"৳{total:,.2f}"
+        return "৳" + bd_number(total)
 
 
 @admin.register(Expense)

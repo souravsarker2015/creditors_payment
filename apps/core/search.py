@@ -52,6 +52,7 @@ def _url(name, *args, query=""):
 # (title, url name, area, capability or "").
 PAGES = [
     (gettext_noop("Home"), "home", "personal", ""),
+    (gettext_noop("Upcoming money"), "upcoming", "personal", ""),
     (gettext_noop("Net Worth"), "networth", "personal", ""),
     (gettext_noop("How this app works"), "help", "personal", ""),
     (gettext_noop("Use without internet"), "offline_settings", "personal", ""),
@@ -89,6 +90,7 @@ PAGES = [
     (gettext_noop("Loans"), "business:loans", "business", "view_finance"),
     (gettext_noop("Money in & out"), "business:transactions", "business", "view_finance"),
     (gettext_noop("Family income"), "business:family_income", "business", "view_finance"),
+    (gettext_noop("Upcoming money"), "business:upcoming", "business", "view_finance"),
     (gettext_noop("Family members"), "business:family_members", "business", "view_finance"),
     (gettext_noop("Accounts"), "business:accounts", "business", "view_finance"),
     (gettext_noop("Income & expenses"), "business:statement", "business", "view_reports"),

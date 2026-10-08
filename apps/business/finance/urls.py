@@ -16,6 +16,7 @@ urlpatterns = [
     path("money/<int:pk>/edit/", m.transaction_form_view, name="transaction_edit"),
     path("money/<int:pk>/delete/", m.transaction_delete_view, name="transaction_delete"),
     path("money/<int:pk>/restore/", m.transaction_restore_view, name="transaction_restore"),
+    path("upcoming/", m.upcoming_view, name="upcoming"),
     path("family/", m.family_income_view, name="family_income"),
     path("family/add/", m.family_income_form_view, name="family_income_add"),
     path("family/<int:pk>/edit/", m.family_income_form_view, name="family_income_edit"),

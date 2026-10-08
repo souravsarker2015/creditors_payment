@@ -1,0 +1,16 @@
+{% load i18n %}{% comment %}One line on a home page: the next days in short, linking to Upcoming money. Needs: f (Forecast), url.{% endcomment %}
+{% if f.days %}{% with short=f.short %}
+<a href="{{ url }}" class="fc-peek" data-tone="{% if short %}critical{% else %}info{% endif %}">
+  <span class="fc-peek-icon">{% if short %}{% include "partials/icon.html" with name="alert" %}{% else %}{% include "partials/icon.html" with name="calendar" %}{% endif %}</span>
+  <span class="fc-peek-text">
+    {% if short %}
+    <strong>{% blocktranslate with date=short.0.date|date:"j M" %}Money may run short on {{ date }}{% endblocktranslate %}</strong>
+    <small>{% blocktranslate with amount=short.1|money %}About {{ amount }} short. See what's coming.{% endblocktranslate %}</small>
+    {% else %}
+    <strong>{% blocktranslate count counter=f.days_ahead with amount=f.end_balance|money %}In {{ counter }} day: about {{ amount }}{% plural %}In {{ counter }} days: about {{ amount }}{% endblocktranslate %}</strong>
+    <small><span>+{{ f.coming_in|money }} {% translate "coming in" %}</span> · <span>−{{ f.going_out|money }} {% translate "going out" %}</span></small>
+    {% endif %}
+  </span>
+  {% include "partials/icon.html" with name="chevron-right" %}
+</a>
+{% endwith %}{% endif %}

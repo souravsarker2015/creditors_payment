@@ -7,7 +7,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
-from apps.core.templatetags.ui import money
+from apps.core.templatetags.ui import bd_number, money
 from apps.trash.undo import delete_with_undo
 from .forms import AutoSaveForm, EntryForm, GoalForm
 from .models import AutoSave, GoalEntry, SavingsGoal
@@ -104,11 +104,11 @@ def _save_entry(request, goal, form):
     sync_reached(goal)
     if goal.reached_at and not was_reached:
         messages.success(request, _("🎉 Goal reached: %(name)s! You saved the full %(amount)s.") % {
-            "name": goal.name, "amount": f"৳{goal.target_amount:,.0f}"})
+            "name": goal.name, "amount": "৳" + bd_number(goal.target_amount, 0)})
     elif entry.kind == GoalEntry.DEPOSIT:
-        messages.success(request, _("৳%(amount)s added to %(name)s.") % {"amount": f"{entry.amount:,.0f}", "name": goal.name})
+        messages.success(request, _("৳%(amount)s added to %(name)s.") % {"amount": bd_number(entry.amount, 0), "name": goal.name})
     else:
-        messages.success(request, _("৳%(amount)s taken out of %(name)s.") % {"amount": f"{entry.amount:,.0f}", "name": goal.name})
+        messages.success(request, _("৳%(amount)s taken out of %(name)s.") % {"amount": bd_number(entry.amount, 0), "name": goal.name})
 
 
 @login_required
@@ -183,7 +183,7 @@ def autosave_save_view(request, pk):
         obj.is_active = True
         obj.save()
         messages.success(request, _("Auto-save set: ৳%(amount)s %(freq)s, next on %(date)s.") % {
-            "amount": f"{obj.amount:,.0f}", "freq": obj.get_frequency_display().lower(),
+            "amount": bd_number(obj.amount, 0), "freq": obj.get_frequency_display().lower(),
             "date": obj.next_effective_date.strftime("%d %b %Y")})
         catch_up_autosaves(request)  # a schedule starting today posts right away
     else:

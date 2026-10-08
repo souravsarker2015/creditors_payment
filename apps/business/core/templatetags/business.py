@@ -4,19 +4,9 @@ from django import template
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
+from apps.core.templatetags.ui import group_bd  # noqa: F401  (shared with the personal side)
+
 register = template.Library()
-
-
-def group_bd(digits):
-    """'12500000' → '1,25,00,000' (last three, then pairs)."""
-    if len(digits) <= 3:
-        return digits
-    head, tail = digits[:-3], digits[-3:]
-    pairs = []
-    while len(head) > 2:
-        pairs.insert(0, head[-2:])
-        head = head[:-2]
-    return ",".join(([head] if head else []) + pairs + [tail])
 
 
 def _dec(value):

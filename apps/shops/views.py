@@ -35,7 +35,7 @@ def _csv_response(filename, header, rows):
     writer.writerows(rows)
     return response
 
-from apps.core.templatetags.ui import money
+from apps.core.templatetags.ui import bd_number, money
 from apps.trash.undo import delete_with_undo
 from .models import Shop, ShopCategory, Transaction, DUE_SOON_DAYS
 from apps.core.stats import ledger_extras
@@ -461,7 +461,7 @@ def shop_statement_view(request, pk):
     remaining = stats["due"] - stats["paid"]
 
     rows = [
-        (tx.date.strftime("%d %b %Y"), tx.get_transaction_type_display(), tx.note or "-", f"{tx.amount:,.2f}")
+        (tx.date.strftime("%d %b %Y"), tx.get_transaction_type_display(), tx.note or "-", bd_number(tx.amount))
         for tx in transactions
     ]
 
@@ -472,9 +472,9 @@ def shop_statement_view(request, pk):
         entity_meta=[(_("Phone"), shop.phone), (_("Category"), shop.get_category_display())],
         period_label=_period_label(selected_year, selected_month),
         summary_rows=[
-            (_("Total Due"), f"{stats['due']:,.2f}", ""),
-            (_("Total Paid"), f"{stats['paid']:,.2f}", "positive"),
-            (_("Remaining Due"), f"{remaining:,.2f}", "negative" if remaining > 0 else "positive"),
+            (_("Total Due"), bd_number(stats['due']), ""),
+            (_("Total Paid"), bd_number(stats['paid']), "positive"),
+            (_("Remaining Due"), bd_number(remaining), "negative" if remaining > 0 else "positive"),
         ],
         columns=[_("Date"), _("Type"), _("Note"), _("Amount (৳)")],
         rows=rows,

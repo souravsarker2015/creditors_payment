@@ -17,7 +17,7 @@ from django.core.paginator import Paginator
 from django.utils import dateformat
 from django.utils.translation import gettext as _, gettext_lazy
 
-from apps.core.templatetags.ui import money
+from apps.core.templatetags.ui import bd_number, money
 from apps.trash.undo import delete_with_undo
 from .models import Creditor, CreditorCategory, Transaction, DUE_SOON_DAYS
 from apps.core.stats import ledger_extras
@@ -422,7 +422,7 @@ def creditor_statement_view(request, pk):
     period_label = _period_label(selected_year, selected_month)
 
     rows = [
-        (tx.date.strftime("%d %b %Y"), tx.get_transaction_type_display(), tx.note or "-", f"{tx.amount:,.2f}")
+        (tx.date.strftime("%d %b %Y"), tx.get_transaction_type_display(), tx.note or "-", bd_number(tx.amount))
         for tx in transactions
     ]
 
@@ -433,9 +433,9 @@ def creditor_statement_view(request, pk):
         entity_meta=[(_("Phone"), creditor.phone), (_("Category"), creditor.get_category_display())],
         period_label=period_label,
         summary_rows=[
-            (_("Total Borrowed"), f"{stats['borrowed']:,.2f}", ""),
-            (_("Total Repaid"), f"{stats['paid']:,.2f}", "positive"),
-            (_("Outstanding Balance"), f"{remaining:,.2f}", "negative" if remaining > 0 else "positive"),
+            (_("Total Borrowed"), bd_number(stats['borrowed']), ""),
+            (_("Total Repaid"), bd_number(stats['paid']), "positive"),
+            (_("Outstanding Balance"), bd_number(remaining), "negative" if remaining > 0 else "positive"),
         ],
         columns=[_("Date"), _("Type"), _("Note"), _("Amount (৳)")],
         rows=rows,

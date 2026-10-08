@@ -5,6 +5,30 @@ from django import template
 register = template.Library()
 
 
+def group_bd(digits):
+    """'12500000' → '1,25,00,000': the last three digits, then pairs (lakh, crore)."""
+    if len(digits) <= 3:
+        return digits
+    head, tail = digits[:-3], digits[-3:]
+    pairs = []
+    while len(head) > 2:
+        pairs.insert(0, head[-2:])
+        head = head[:-2]
+    return ",".join(([head] if head else []) + pairs + [tail])
+
+
+def bd_number(value, places=2):
+    """Plain figure with Bangladeshi grouping, for statements and exports:
+    12345678.5 → '1,23,45,678.50'."""
+    try:
+        amount = Decimal(value)
+    except (InvalidOperation, TypeError, ValueError):
+        return value
+    sign = "-" if amount < 0 else ""
+    whole, _, frac = f"{abs(amount):.{places}f}".partition(".")
+    return sign + group_bd(whole) + (f".{frac}" if frac else "")
+
+
 def _format(value, force_sign=False):
     try:
         amount = Decimal(value)
@@ -18,14 +42,15 @@ def _format(value, force_sign=False):
     else:
         sign = ""
     amount = abs(amount)
+    # Lakh and crore grouping (৳1,25,000), the way amounts are read in Bangladesh.
     # Whole amounts drop the ".00" to keep figures short on small screens.
-    body = f"{amount:,.0f}" if amount == amount.to_integral_value() else f"{amount:,.2f}"
+    body = bd_number(amount, 0 if amount == amount.to_integral_value() else 2)
     return f"{sign}৳{body}"
 
 
 @register.filter
 def money(value):
-    """৳ amount with thousands separators, e.g. 1234567.5 -> ৳1,234,567.50."""
+    """৳ amount with Bangladeshi grouping, e.g. 1234567.5 -> ৳12,34,567.50."""
     return _format(value)
 
 

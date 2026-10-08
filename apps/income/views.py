@@ -16,7 +16,7 @@ from django.utils import dateformat
 from django.utils.translation import gettext as _, gettext_lazy, ngettext
 from datetime import date as date_cls
 
-from apps.core.templatetags.ui import money
+from apps.core.templatetags.ui import bd_number, money
 from apps.trash.undo import delete_with_undo
 from .models import IncomeSource, IncomeTransaction, RecurringIncome, generate_due_recurring_income
 from django.urls import reverse
@@ -596,7 +596,7 @@ def income_source_statement_view(request, pk):
     else:
         period_label = _period_label(selected_year, selected_month)
 
-    rows = [(tx.date.strftime("%d %b %Y"), tx.note or "-", f"{tx.amount:,.2f}") for tx in transactions]
+    rows = [(tx.date.strftime("%d %b %Y"), tx.note or "-", bd_number(tx.amount)) for tx in transactions]
 
     return _render_statement(
         request,
@@ -605,8 +605,8 @@ def income_source_statement_view(request, pk):
         entity_meta=[(_("Description"), source.description)],
         period_label=period_label,
         summary_rows=[
-            (_("Total Earned"), f"{total_source_income:,.2f}", "positive"),
-            (_("Earned This Period"), f"{period_income:,.2f}", ""),
+            (_("Total Earned"), bd_number(total_source_income), "positive"),
+            (_("Earned This Period"), bd_number(period_income), ""),
         ],
         columns=[_("Date"), _("Note"), _("Amount (৳)")],
         rows=rows,

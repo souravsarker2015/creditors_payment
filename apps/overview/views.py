@@ -151,6 +151,7 @@ def networth_view(request):
         "net_12": sum(net_series, ZERO),
         "positive_months": sum(1 for v in net_series if v > 0),
         "attention": _attention(user, today),
+        "upcoming": _upcoming(user, today),
         "goals": goal_rows(user, "active", today)[:3],
         "goal_totals": goal_totals(user),
         "receivables": receivables,
@@ -243,6 +244,12 @@ def _bar_percent(value, *comparison_values):
     if scale <= 0 or value <= 0:
         return 0
     return min(100, int((value / scale) * 100))
+
+
+def _upcoming(user, today):
+    from .upcoming import forecast
+
+    return forecast(user, today, 30)
 
 
 def _attention(user, today):
@@ -371,6 +378,20 @@ def _help_content():
         (_("Can I put it on my phone like an app?"), _("Yes. In Chrome, open the menu and tap “Add to Home screen” (or “Install app”). It then opens full-screen like any other app.")),
     ]
     return steps, words, faqs
+
+
+@login_required
+def upcoming_view(request):
+    """Upcoming money: dues, installments and regular income/spending over the
+    next days, against what's in the wallets — and the day it would run short."""
+    from apps.core.forecast import PERIODS, window
+
+    from .upcoming import forecast
+
+    days = window(request)
+    return render(request, "overview/upcoming.html", {
+        "f": forecast(request.user, timezone.localdate(), days), "days": days, "periods": PERIODS,
+    })
 
 
 @login_required

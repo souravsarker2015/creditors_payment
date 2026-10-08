@@ -102,7 +102,7 @@
 
   function fmt(n, dp) {
     if (n === null || n === undefined || !isFinite(n)) return "";
-    return Number(n).toLocaleString("en-US", { maximumFractionDigits: dp === undefined ? 6 : dp });
+    return Number(n).toLocaleString("en-IN", { maximumFractionDigits: dp === undefined ? 6 : dp });
   }
   function money(n) { return "৳" + fmt(n, 2); }
 

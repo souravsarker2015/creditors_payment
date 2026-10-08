@@ -19,10 +19,10 @@ from apps.shops.models import Shop
 
 class MoneyFilterTests(TestCase):
     def test_groups_thousands_and_keeps_cents(self):
-        self.assertEqual(money(Decimal("1234567.5")), "৳1,234,567.50")
+        self.assertEqual(money(Decimal("1234567.5")), "৳12,34,567.50")
 
     def test_drops_zero_cents(self):
-        self.assertEqual(money(Decimal("12450000.00")), "৳12,450,000")
+        self.assertEqual(money(Decimal("12450000.00")), "৳1,24,50,000")
 
     def test_negative_uses_minus_sign(self):
         self.assertEqual(money(Decimal("-500")), "−৳500")

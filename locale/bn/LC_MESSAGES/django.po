@@ -13463,3 +13463,139 @@ msgstr "যখন পারবেন তখন শোধ করুন"
 
 msgid "Record each payment on the loan's page; what you still owe goes down. Agreed a date? Pick it under “For how long?”."
 msgstr "প্রতিটি শোধ ঋণের পাতায় লিখুন; বাকি থাকা টাকা কমতে থাকবে। কোনো তারিখ ঠিক করেছেন? “কত দিনের জন্য?”-এ বেছে নিন।"
+
+#, python-format
+msgid "%(collect)s to collect and %(pay)s to pay aren't counted above. Open the person or shop and set a due date (or an installment plan) to see them here."
+msgstr "আদায়ের %(collect)s আর দেওয়ার %(pay)s ওপরের হিসাবে ধরা হয়নি। এখানে দেখতে, সেই ব্যক্তি বা দোকান খুলে পরিশোধের তারিখ (বা কিস্তির পরিকল্পনা) দিন।"
+
+#, python-format
+msgid "%(counter)s balance has no date"
+msgid_plural "%(counter)s balances have no date"
+msgstr[0] "%(counter)sটি বাকির কোনো তারিখ নেই"
+msgstr[1] "%(counter)sটি বাকির কোনো তারিখ নেই"
+
+#, python-format
+msgid "About %(amount)s short. See what's coming."
+msgstr "প্রায় %(amount)s কম পড়বে। সামনে কী আছে দেখুন।"
+
+#, python-format
+msgid "At its lowest, you'd still have %(amount)s."
+msgstr "সবচেয়ে কম হলেও আপনার কাছে %(amount)s থাকবে।"
+
+msgid "Baki"
+msgstr "বাকি"
+
+msgid "Baki: a buyer's promised date to pay you, or the date you said you'd pay a supplier (set it on their statement)."
+msgstr "বাকি: ক্রেতা যে তারিখে টাকা দেওয়ার কথা দিয়েছেন, বা আপনি সরবরাহকারীকে যে তারিখে দেবেন বলেছেন (তাঁদের হিসাবের পাতায় তারিখ দিন)।"
+
+msgid "Coming in"
+msgstr "আসবে"
+
+#, python-format
+msgid "Enough money for everything in the next %(counter)s day"
+msgid_plural "Enough money for everything in the next %(counter)s days"
+msgstr[0] "সামনের %(counter)s দিনের সব খরচের জন্য যথেষ্ট টাকা আছে"
+msgstr[1] "সামনের %(counter)s দিনের সব খরচের জন্য যথেষ্ট টাকা আছে"
+
+#, python-format
+msgid "Expected on %(date)s"
+msgstr "%(date)s তারিখে আনুমানিক"
+
+msgid "Give a loan or a due a date, add an installment plan, or set up regular income and spending — they'll show here on their day."
+msgstr "ঋণ বা বাকির একটি তারিখ দিন, কিস্তির পরিকল্পনা যোগ করুন, বা নিয়মিত আয়-খরচ ঠিক করুন — সেগুলো তাদের দিনে এখানে দেখাবে।"
+
+msgid "Going out"
+msgstr "যাবে"
+
+msgid "How far ahead"
+msgstr "কত দিন সামনে"
+
+#, python-format
+msgid "In %(counter)s day: about %(amount)s"
+msgid_plural "In %(counter)s days: about %(amount)s"
+msgstr[0] "%(counter)s দিন পর: প্রায় %(amount)s"
+msgstr[1] "%(counter)s দিন পর: প্রায় %(amount)s"
+
+msgid "In the accounts now"
+msgstr "এখন হিসাবগুলোতে আছে"
+
+msgid "Installment"
+msgstr "কিস্তি"
+
+msgid "Loan instalments from each loan's schedule, and bills and income on the Regular bills page, every time they come round."
+msgstr "প্রতিটি ঋণের সূচি থেকে কিস্তি, আর নিয়মিত বিল পাতার বিল ও আয় — যতবার আসে ততবার।"
+
+msgid "Loan instalments, regular bills and income, a baki follow-up date, and wages owed show here on their day."
+msgstr "ঋণের কিস্তি, নিয়মিত বিল ও আয়, বাকির তাগাদার তারিখ আর পাওনা মজুরি তাদের দিনে এখানে দেখাবে।"
+
+msgid "Loan instalments, regular bills, baki promises and wages, day by day — and whether the farm's accounts will cover them."
+msgstr "ঋণের কিস্তি, নিয়মিত বিল, বাকির প্রতিশ্রুতি আর মজুরি, দিন ধরে ধরে — আর খামারের হিসাবে সেগুলোর টাকা হবে কি না।"
+
+msgid "Money in your wallets now"
+msgstr "এখন আপনার ওয়ালেটে আছে"
+
+#, python-format
+msgid "Money may run short on %(date)s"
+msgstr "%(date)s তারিখে টাকা কম পড়তে পারে"
+
+#, python-format
+msgid "Money may run short on %(date)s — about %(amount)s short"
+msgstr "%(date)s তারিখে টাকা কম পড়তে পারে — প্রায় %(amount)s কম"
+
+msgid "Monthly salaries"
+msgstr "মাসিক বেতন"
+
+msgid "Move money in before then, collect something early, or agree a later date for a payment."
+msgstr "তার আগে টাকা জমা করুন, কোনো পাওনা আগে আদায় করুন, বা কোনো পরিশোধের তারিখ পিছিয়ে নিন।"
+
+#, python-format
+msgid "Nothing expected in the next %(counter)s day"
+msgid_plural "Nothing expected in the next %(counter)s days"
+msgstr[0] "সামনের %(counter)s দিনে কিছু আসা-যাওয়ার কথা নেই"
+msgstr[1] "সামনের %(counter)s দিনে কিছু আসা-যাওয়ার কথা নেই"
+
+msgid "Pay back"
+msgstr "শোধ করতে হবে"
+
+msgid "Promised to pay"
+msgstr "দেওয়ার কথা দিয়েছেন"
+
+msgid "Regular income"
+msgstr "নিয়মিত আয়"
+
+msgid "Regular spending"
+msgstr "নিয়মিত খরচ"
+
+msgid "Shop due"
+msgstr "দোকানের বাকি"
+
+msgid "Upcoming money"
+msgstr "সামনের টাকার হিসাব"
+
+msgid "Usually paid at the month's end"
+msgstr "সাধারণত মাসের শেষে দেওয়া হয়"
+
+msgid "Wages already owed today, and monthly salaries at each month's end. Fish sales you haven't made yet aren't counted."
+msgstr "আজ পর্যন্ত পাওনা মজুরি, আর প্রতি মাসের শেষে মাসিক বেতন। যে মাছ এখনও বিক্রি হয়নি তা ধরা হয় না।"
+
+msgid "Wages still owed"
+msgstr "পাওনা মজুরি"
+
+msgid "What's coming in and going out, day by day, and whether the money in your wallets will last."
+msgstr "দিন ধরে ধরে কী আসবে আর কী যাবে, আর ওয়ালেটের টাকায় চলবে কি না।"
+
+msgid "What's counted"
+msgstr "কী কী ধরা হয়েছে"
+
+msgid "You said you'd pay"
+msgstr "আপনি দেবেন বলেছেন"
+
+msgid "coming in"
+msgstr "আসবে"
+
+msgid "going out"
+msgstr "যাবে"
+
+#, python-format
+msgid "was due %(date)s"
+msgstr "%(date)s তারিখে দেওয়ার কথা ছিল"

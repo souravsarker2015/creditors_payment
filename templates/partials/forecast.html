@@ -1,0 +1,74 @@
+{% load i18n %}{% comment %}
+Upcoming money (apps/core/forecast.py). Needs: f (Forecast), days, periods,
+now_label ("Money in your wallets now" / "In the accounts now"), empty_text.
+{% endcomment %}
+<section class="hero fc-hero">
+  <div class="hero-inner">
+    <div class="min-w-0">
+      <p class="hero-label">{% blocktranslate with date=f.end|date:"j M" %}Expected on {{ date }}{% endblocktranslate %}</p>
+      <p class="hero-value"{% if f.end_balance < 0 %} data-tone="critical"{% endif %}>{{ f.end_balance|money }}</p>
+      <dl class="fc-sum">
+        <div><dt>{{ now_label }}</dt><dd>{{ f.now|money }}</dd></div>
+        <div><dt>{% translate "Coming in" %}</dt><dd class="is-in">+{{ f.coming_in|money }}</dd></div>
+        <div><dt>{% translate "Going out" %}</dt><dd class="is-out">−{{ f.going_out|money }}</dd></div>
+      </dl>
+    </div>
+  </div>
+</section>
+
+{% with short=f.short %}
+{% if short %}
+<div class="callout" data-tone="critical" role="status">
+  {% include "partials/icon.html" with name="alert" %}
+  <div class="min-w-0">
+    <p class="callout-title">{% blocktranslate with date=short.0.date|date:"l, j M" amount=short.1|money %}Money may run short on {{ date }} — about {{ amount }} short{% endblocktranslate %}</p>
+    <p class="callout-text">{% translate "Move money in before then, collect something early, or agree a later date for a payment." %}</p>
+  </div>
+</div>
+{% elif f.days %}
+<div class="callout" data-tone="good" role="status">
+  {% include "partials/icon.html" with name="check" %}
+  <div class="min-w-0">
+    <p class="callout-title">{% blocktranslate count counter=f.days_ahead %}Enough money for everything in the next {{ counter }} day{% plural %}Enough money for everything in the next {{ counter }} days{% endblocktranslate %}</p>
+    <p class="callout-text">{% blocktranslate with amount=f.lowest|money %}At its lowest, you'd still have {{ amount }}.{% endblocktranslate %}</p>
+  </div>
+</div>
+{% endif %}
+{% endwith %}
+
+<nav class="seg" aria-label="{% translate 'How far ahead' %}">
+  {% for n in periods %}<a href="?days={{ n }}" class="seg-item {% if n == days %}is-active{% endif %}" {% if n == days %}aria-current="page"{% endif %}>{% blocktranslate count counter=n %}{{ counter }} day{% plural %}{{ counter }} days{% endblocktranslate %}</a>{% endfor %}
+</nav>
+
+{% if f.days %}
+<section class="card fc-list">
+  {% for d in f.days %}
+  <div class="fc-day">
+    <h3 class="fc-day-head">
+      <span>{% if d.offset == 0 %}{% translate "Today" %}{% elif d.offset == 1 %}{% translate "Tomorrow" %}{% else %}{{ d.date|date:"l, j M" }}{% endif %}</span>
+      <span class="fc-day-bal{% if d.balance < 0 %} is-short{% endif %}">{% translate "Balance" %} {{ d.balance|money }}</span>
+    </h3>
+    <ul class="ledger">
+      {% for i in d.items %}
+      <li>
+        {% if i.url %}<a href="{{ i.url }}" class="ledger-row">{% else %}<div class="ledger-row">{% endif %}
+          <span class="ledger-icon" data-tone="{% if i.is_in %}good{% else %}critical{% endif %}">{% if i.is_in %}{% include "partials/icon.html" with name="arrow-down" %}{% else %}{% include "partials/icon.html" with name="arrow-up" %}{% endif %}</span>
+          <div class="ledger-main">
+            <p class="ledger-title">{{ i.title }}{% if i.late %} <span class="badge" data-tone="critical">{% translate "Late" %}</span>{% endif %}</p>
+            <p class="ledger-meta">{{ i.detail }}{% if i.late %} · {% blocktranslate with date=i.date|date:"j M" %}was due {{ date }}{% endblocktranslate %}{% endif %}</p>
+          </div>
+          <span class="ledger-amount" data-tone="{% if i.is_in %}good{% else %}critical{% endif %}">{% if i.is_in %}+{{ i.amount|money }}{% else %}{{ i.amount|money }}{% endif %}</span>
+        {% if i.url %}</a>{% else %}</div>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endfor %}
+</section>
+{% else %}
+<div class="empty">
+  <div class="empty-icon">{% include "partials/icon.html" with name="calendar" %}</div>
+  <h3 class="empty-title">{% blocktranslate count counter=days %}Nothing expected in the next {{ counter }} day{% plural %}Nothing expected in the next {{ counter }} days{% endblocktranslate %}</h3>
+  <p class="empty-text">{{ empty_text }}</p>
+</div>
+{% endif %}

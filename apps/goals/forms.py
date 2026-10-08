@@ -1,6 +1,7 @@
 from django import forms
 
 from apps.core.schedule_forms import ScheduleDatesMixin
+from apps.core.templatetags.ui import bd_number
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -57,7 +58,7 @@ class EntryForm(forms.ModelForm):
             elif self.instance.pk:
                 available -= self.instance.amount
             if data["amount"] > available:
-                self.add_error("amount", _("Only %(amount)s is in this goal.") % {"amount": f"৳{available:,.0f}"})
+                self.add_error("amount", _("Only %(amount)s is in this goal.") % {"amount": "৳" + bd_number(available, 0)})
         return data
 
 

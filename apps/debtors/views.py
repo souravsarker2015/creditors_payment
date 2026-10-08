@@ -17,7 +17,7 @@ from django.core.paginator import Paginator
 from django.utils import dateformat
 from django.utils.translation import gettext as _, gettext_lazy
 
-from apps.core.templatetags.ui import money
+from apps.core.templatetags.ui import bd_number, money
 from apps.trash.undo import delete_with_undo
 from .models import Debtor, DebtorCategory, Transaction, DUE_SOON_DAYS
 from apps.core.stats import ledger_extras
@@ -384,7 +384,7 @@ def debtor_statement_view(request, pk):
     remaining = stats["lent"] - stats["received"]
 
     rows = [
-        (tx.date.strftime("%d %b %Y"), tx.get_transaction_type_display(), tx.note or "-", f"{tx.amount:,.2f}")
+        (tx.date.strftime("%d %b %Y"), tx.get_transaction_type_display(), tx.note or "-", bd_number(tx.amount))
         for tx in transactions
     ]
 
@@ -395,9 +395,9 @@ def debtor_statement_view(request, pk):
         entity_meta=[(_("Phone"), debtor.phone), (_("Category"), debtor.get_category_display())],
         period_label=_period_label(selected_year, selected_month),
         summary_rows=[
-            (_("Total Lent"), f"{stats['lent']:,.2f}", ""),
-            (_("Total Received"), f"{stats['received']:,.2f}", "positive"),
-            (_("Remaining to Collect"), f"{remaining:,.2f}", "negative" if remaining > 0 else "positive"),
+            (_("Total Lent"), bd_number(stats['lent']), ""),
+            (_("Total Received"), bd_number(stats['received']), "positive"),
+            (_("Remaining to Collect"), bd_number(remaining), "negative" if remaining > 0 else "positive"),
         ],
         columns=[_("Date"), _("Type"), _("Note"), _("Amount (৳)")],
         rows=rows,

@@ -1,5 +1,8 @@
 from django.contrib import admin
 from django.db.models import Sum
+
+from apps.core.templatetags.ui import bd_number
+
 from .models import IncomeSource, IncomeTransaction, RecurringIncome
 
 
@@ -19,7 +22,7 @@ class IncomeSourceAdmin(admin.ModelAdmin):
     @admin.display(description="Total Generated Income")
     def get_total_income(self, obj):
         total = obj.transactions.aggregate(total=Sum("amount"))["total"] or 0
-        return f"৳{total:,.2f}"
+        return "৳" + bd_number(total)
 
 
 @admin.register(IncomeTransaction)

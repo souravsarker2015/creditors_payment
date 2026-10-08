@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% translate "Upcoming money" %} | FinTrack{% endblock %}
+{% block content %}
+<div class="page-narrow stack">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "Upcoming money" %}</h1>
+      <p class="page-subtitle">{% translate "What's coming in and going out, day by day, and whether the money in your wallets will last." %}</p>
+    </div>
+  </header>
+
+  {% translate "Money in your wallets now" as now_label %}
+  {% translate "Give a loan or a due a date, add an installment plan, or set up regular income and spending — they'll show here on their day." as empty_text %}
+  {% include "partials/forecast.html" with now_label=now_label empty_text=empty_text %}
+
+  {% if f.undated.count %}
+  <div class="callout" data-tone="info">
+    {% include "partials/icon.html" with name="info" %}
+    <div class="min-w-0">
+      <p class="callout-title">{% blocktranslate count counter=f.undated.count %}{{ counter }} balance has no date{% plural %}{{ counter }} balances have no date{% endblocktranslate %}</p>
+      <p class="callout-text">{% blocktranslate with collect=f.undated.in|money pay=f.undated.out|money %}{{ collect }} to collect and {{ pay }} to pay aren't counted above. Open the person or shop and set a due date (or an installment plan) to see them here.{% endblocktranslate %}</p>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

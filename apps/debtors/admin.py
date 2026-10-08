@@ -1,6 +1,9 @@
 from django.contrib import admin
 from django.db.models import Sum, Q, DecimalField, Value
 from django.db.models.functions import Coalesce
+
+from apps.core.templatetags.ui import bd_number
+
 from .models import Debtor, Transaction
 
 
@@ -49,16 +52,16 @@ class DebtorAdmin(admin.ModelAdmin):
 
     @admin.display(description="Total Lent", ordering="_total_lent")
     def get_total_lent(self, obj):
-        return f"৳{obj._total_lent:,.2f}"
+        return "৳" + bd_number(obj._total_lent)
 
     @admin.display(description="Total Received", ordering="_total_received")
     def get_total_received(self, obj):
-        return f"৳{obj._total_received:,.2f}"
+        return "৳" + bd_number(obj._total_received)
 
     @admin.display(description="Remaining")
     def get_remaining(self, obj):
         remaining = obj._total_lent - obj._total_received
-        return f"৳{remaining:,.2f}"
+        return "৳" + bd_number(remaining)
 
     @admin.display(description="Is Paid", boolean=True)
     def get_is_paid(self, obj):

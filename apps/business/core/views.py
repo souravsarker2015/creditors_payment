@@ -236,6 +236,7 @@ def _money_summary(request):
 
     from apps.business.finance.models import Account, Scope
     from apps.business.finance.services import balances, due_recurring, statement
+    from apps.business.finance.upcoming import forecast
 
     b, today = request.business, date.today()
     month = today.replace(day=1)
@@ -250,6 +251,7 @@ def _money_summary(request):
         "accounts": sorted(accounts, key=lambda a: -a.now)[:4],
         "in_hand": sum(totals.values(), Decimal(0)),
         "due_recurring": due_recurring(b) if can(request.membership, "enter_data") else [],
+        "upcoming": forecast(b, today, 30),
     }
 
 
