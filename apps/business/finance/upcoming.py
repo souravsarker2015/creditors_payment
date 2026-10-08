@@ -1,6 +1,6 @@
 """Upcoming money on the farm: loan instalments, regular bills and income,
-baki people promised to pay (or that you promised), and wages — against the
-money in the accounts."""
+baki people promised to pay (or that you promised), wages and pond lease —
+against the money in the accounts."""
 import calendar
 from datetime import date, timedelta
 from decimal import Decimal
@@ -92,8 +92,31 @@ def wage_items(business, today, until):
     return items
 
 
+def lease_items(business, today, until):
+    """Pond lease: the part already used but not paid is owed now; the rest is
+    counted when the lease ends, if that's inside the window."""
+    if not _installed("ponds"):
+        return []
+    from apps.business.ponds.models import Ownership, Pond
+    from apps.business.ponds.services import lease_status
+
+    items = []
+    for pond in Pond.objects.filter(business=business, ownership=Ownership.LEASED, lease_amount__gt=0):
+        st = lease_status(pond, today)
+        url = reverse("business:pond_detail", args=[pond.pk])
+        title = _("Lease of %(pond)s") % {"pond": pond.name}
+        behind = st.behind if pond.lease_per_day else ZERO
+        if behind:
+            items.append(Item(today, -behind, title, _("Already used, not paid yet"), url, "lease"))
+        rest = st.due - behind
+        if rest > 0 and pond.lease_end and today <= pond.lease_end <= until:
+            items.append(Item(pond.lease_end, -rest, title, _("The rest, by the end of the lease"), url, "lease"))
+    return items
+
+
 def forecast(business, today, days):
     until = today + timedelta(days=days)
     now = sum(services.balances(business).values(), ZERO)
-    items = loan_items(business, today, until) + bill_items(business, today, until) + baki_items(business, today, until) + wage_items(business, today, until)
+    items = (loan_items(business, today, until) + bill_items(business, today, until) + baki_items(business, today, until)
+             + wage_items(business, today, until) + lease_items(business, today, until))
     return build(now, items, today, days)

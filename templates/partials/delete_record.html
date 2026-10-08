@@ -1,0 +1,6 @@
+{% load i18n %}
+{% comment %}Deletes a person/shop/source with all its entries into Recently deleted. Needs: url.{% endcomment %}
+<form method="post" action="{{ url }}" data-confirm="{% translate 'Delete this and all its entries? You can bring it all back from Recently deleted for 30 days. To keep the history and totals, mark it inactive instead.' %}">
+  {% csrf_token %}
+  <button type="submit" class="icon-btn" aria-label="{% translate 'Delete' %}" data-tip="{% translate 'Delete' %}">{% include "partials/icon.html" with name="trash" %}</button>
+</form>

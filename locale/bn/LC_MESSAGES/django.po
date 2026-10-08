@@ -13599,3 +13599,39 @@ msgstr "যাবে"
 #, python-format
 msgid "was due %(date)s"
 msgstr "%(date)s তারিখে দেওয়ার কথা ছিল"
+
+msgid "Add your wallets to see if the money will last"
+msgstr "টাকা টিকবে কিনা দেখতে আপনার ওয়ালেট যোগ করুন"
+
+msgid "Already used, not paid yet"
+msgstr "ব্যবহার হয়ে গেছে, এখনো দেওয়া হয়নি"
+
+#, python-format
+msgid "Coming in minus going out, up to %(date)s"
+msgstr "%(date)s পর্যন্ত আসবে বাদ যাবে"
+
+msgid "Delete this and all its entries? You can bring it all back from Recently deleted for 30 days. To keep the history and totals, mark it inactive instead."
+msgstr "এটি ও এর সব হিসাব মুছে ফেলবেন? ৩০ দিনের মধ্যে \"সম্প্রতি মুছে ফেলা\" থেকে সব ফিরিয়ে আনতে পারবেন। ইতিহাস ও মোট হিসাব রাখতে চাইলে বরং নিষ্ক্রিয় করুন।"
+
+#, python-format
+msgid "Deleted: %(name)s, with all their entries."
+msgstr "মুছে ফেলা হয়েছে: %(name)s, সব হিসাবসহ।"
+
+#, python-format
+msgid "Lease of %(pond)s"
+msgstr "%(pond)s-এর লিজ"
+
+#, python-format
+msgid "Next %(counter)s day"
+msgid_plural "Next %(counter)s days"
+msgstr[0] "সামনের %(counter)s দিন"
+msgstr[1] "সামনের %(counter)s দিন"
+
+msgid "Put in the cash, bank and bKash/Nagad you keep, with how much is in each. Then this page shows your balance day by day and warns you before money runs short."
+msgstr "আপনার নগদ, ব্যাংক ও বিকাশ/নগদ যোগ করুন, প্রতিটিতে কত আছে তা সহ। তখন এই পাতা দিনে দিনে ব্যালেন্স দেখাবে এবং টাকা কম পড়ার আগেই জানাবে।"
+
+msgid "The rest, by the end of the lease"
+msgstr "বাকিটা, লিজ শেষ হওয়ার মধ্যে"
+
+msgid "Wages already owed today, monthly salaries at each month's end, and pond lease you've used but not paid. Fish sales you haven't made yet aren't counted."
+msgstr "আজ পর্যন্ত বাকি মজুরি, প্রতি মাসের শেষে মাসিক বেতন, আর পুকুর লিজের যে অংশ ব্যবহার হয়েছে কিন্তু দেওয়া হয়নি। যে মাছ এখনো বিক্রি হয়নি তা ধরা হয় না।"

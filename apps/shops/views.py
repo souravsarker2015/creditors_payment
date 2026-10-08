@@ -39,7 +39,7 @@ from apps.core.templatetags.ui import bd_number, money
 from apps.trash.undo import delete_with_undo
 from .models import Shop, ShopCategory, Transaction, DUE_SOON_DAYS
 from apps.core.stats import ledger_extras
-from apps.core.status import apply_status_filter, toggle_active
+from apps.core.status import apply_status_filter, delete_record, toggle_active
 
 MONTH_CHOICES = [(i, date_cls(2000, i, 1)) for i in range(1, 13)]
 
@@ -733,3 +733,10 @@ def transaction_delete_view(request, pk):
 def shop_toggle_active_view(request, pk):
     obj = get_object_or_404(Shop, pk=pk, user=request.user)
     return toggle_active(request, obj, "shop_list")
+
+
+@login_required
+@require_POST
+def shop_delete_view(request, pk):
+    obj = get_object_or_404(Shop, pk=pk, user=request.user)
+    return delete_record(request, obj, "shop_list", reverse("shop_detail", args=[pk]))

@@ -31,6 +31,8 @@
       <a href="{% url 'shop_edit' shop.pk %}" class="btn btn-secondary">{% include "partials/icon.html" with name="edit" %}{% translate "Edit Shop" %}</a>
       {% url 'shop_toggle_active' shop.pk as toggle_url %}
       {% include "partials/toggle_active_item.html" with url=toggle_url active=shop.is_active as_button=True %}
+      {% url 'shop_delete' shop.pk as delete_url %}
+      {% include "partials/delete_record.html" with url=delete_url %}
     </div>
   </header>
 

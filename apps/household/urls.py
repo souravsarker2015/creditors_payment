@@ -13,6 +13,7 @@ urlpatterns = [
     path("members/import/template/", views.member_import_template_view, name="household_member_import_template"),
     path("members/<int:pk>/", views.member_detail_view, name="household_member_detail"),
     path("members/<int:pk>/toggle-active/", views.member_toggle_active_view, name="household_member_toggle_active"),
+    path("members/<int:pk>/delete/", views.member_delete_view, name="household_member_delete"),
     path("members/<int:pk>/edit/", views.member_edit_view, name="household_member_edit"),
     path("members/<int:pk>/statement/", views.member_statement_view, name="household_member_statement"),
     path("settlements/<int:pk>/edit/", views.settlement_edit_view, name="household_settlement_edit"),

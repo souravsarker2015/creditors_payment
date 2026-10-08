@@ -87,9 +87,12 @@ def forecast(user, today, days):
     generate_due_recurring_income(user)
     generate_due_recurring_expense(user)
     held = balances(user)
-    now = sum((held.get(w.pk, w.opening_balance) for w in Wallet.objects.filter(user=user, is_active=True)), ZERO)
+    wallets = list(Wallet.objects.filter(user=user, is_active=True))
+    now = sum((held.get(w.pk, w.opening_balance) for w in wallets), ZERO)
     until = today + timedelta(days=days)
     dues, undated = ledger_items(user, today, until)
-    f = build(now, dues + recurring_items(user, today, until), today, days)
+    # Wallets are optional: without one there's no "money now", so only the
+    # coming and going is shown, not a warning that it will run out.
+    f = build(now, dues + recurring_items(user, today, until), today, days, tracked=bool(wallets))
     f.undated = undated
     return f

@@ -71,3 +71,14 @@ def toggle_active(request, obj, fallback_url):
     ):
         return redirect(next_url)
     return redirect(fallback_url)
+
+
+def delete_record(request, obj, list_url, back_url):
+    """Deletes a person/shop/source and every entry under it into Recently
+    deleted (kept 30 days, restorable as it was), for one added by mistake.
+    Archiving stays the way to hide one whose history should keep counting."""
+    from apps.trash.undo import delete_with_undo
+
+    name = str(obj)
+    delete_with_undo(request, obj, _("Deleted: %(name)s, with all their entries.") % {"name": name}, label=name, back_url=back_url)
+    return redirect(list_url)

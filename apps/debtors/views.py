@@ -21,7 +21,7 @@ from apps.core.templatetags.ui import bd_number, money
 from apps.trash.undo import delete_with_undo
 from .models import Debtor, DebtorCategory, Transaction, DUE_SOON_DAYS
 from apps.core.stats import ledger_extras
-from apps.core.status import apply_status_filter, toggle_active
+from apps.core.status import apply_status_filter, delete_record, toggle_active
 
 
 def _row_value(row, fieldnames, key):
@@ -656,3 +656,10 @@ def transaction_delete_view(request, pk):
 def debtor_toggle_active_view(request, pk):
     obj = get_object_or_404(Debtor, pk=pk, user=request.user)
     return toggle_active(request, obj, "debtor_list")
+
+
+@login_required
+@require_POST
+def debtor_delete_view(request, pk):
+    obj = get_object_or_404(Debtor, pk=pk, user=request.user)
+    return delete_record(request, obj, "debtor_list", reverse("debtor_detail", args=[pk]))

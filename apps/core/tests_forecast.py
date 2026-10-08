@@ -128,3 +128,47 @@ class FarmUpcomingTests(TestCase):
     def test_staff_cant_see_it(self):
         self.client.force_login(self.staff)
         self.assertEqual(self.client.get(reverse("business:upcoming")).status_code, 403)
+
+
+class NoWalletTests(TestCase):
+    def test_without_wallets_no_false_alarm(self):
+        from apps.creditors.models import Creditor, Transaction as CT
+
+        user = User.objects.create_user("fc_nowallet", password="x")
+        self.client.force_login(user)
+        t = timezone.localdate()
+        c = Creditor.objects.create(user=user, name="Rahim", due_date=t + timedelta(days=3))
+        CT.objects.create(creditor=c, transaction_type="BORROW", amount=D("5000"), date=t - timedelta(days=10))
+        r = self.client.get(reverse("upcoming"))
+        f = r.context["f"]
+        self.assertFalse(f.tracked)
+        self.assertIsNone(f.short)
+        self.assertEqual(f.net, D("-5000"))
+        self.assertNotContains(r, "Money may run short")
+        self.assertContains(r, "Add your wallets to see if the money will last")
+        home = self.client.get(reverse("home"))
+        self.assertNotContains(home, "Money may run short")
+        self.assertContains(home, "Next 30 days")
+
+
+class FarmLeaseTests(TestCase):
+    def test_lease_used_but_unpaid_is_owed_today(self):
+        from apps.business.core.testing import make_farm
+        from apps.business.ponds.models import LeasePayment, Pond
+
+        b, owner, _ = make_farm()
+        self.client.force_login(owner)
+        t = date.today()
+        # ৳36,500 for a year that's 100 days in: ৳10,000 used, ৳4,000 paid.
+        pond = Pond.objects.create(business=b, name="Leased pond", ownership="leased", lease_amount=D("36500"),
+                                   lease_start=t - timedelta(days=99), lease_end=t - timedelta(days=99) + timedelta(days=364))
+        from apps.business.finance.models import Account
+
+        LeasePayment.objects.create(business=b, pond=pond, date=t - timedelta(days=50), amount=D("4000"),
+                                    account=Account.objects.get(business=b, name="Cash"))
+        f = self.client.get(reverse("business:upcoming")).context["f"]
+        lease = [i for i in f.items if i.kind == "lease"]
+        self.assertEqual([(i.date, i.amount) for i in lease], [(t, D("-6000"))])
+        # 90 days ahead doesn't reach the end of the lease either.
+        f = self.client.get(reverse("business:upcoming") + "?days=90").context["f"]
+        self.assertEqual(len([i for i in f.items if i.kind == "lease"]), 1)

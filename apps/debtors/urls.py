@@ -9,6 +9,7 @@ urlpatterns = [
     path("debtors/import/template/", views.debtor_import_template_view, name="debtor_import_template"),
     path("debtors/<int:pk>/", views.debtor_detail_view, name="debtor_detail"),
     path("debtors/<int:pk>/toggle-active/", views.debtor_toggle_active_view, name="debtor_toggle_active"),
+    path("debtors/<int:pk>/delete/", views.debtor_delete_view, name="debtor_delete"),
     path("debtors/<int:pk>/edit/", views.debtor_edit_view, name="debtor_edit"),
     path("debtors/<int:pk>/statement/", views.debtor_statement_view, name="debtor_statement"),
     path("transactions/<int:pk>/edit/", views.transaction_edit_view, name="debtor_transaction_edit"),

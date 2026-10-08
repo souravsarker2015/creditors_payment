@@ -22,7 +22,7 @@ from .models import HouseholdCategory, HouseholdMember, Purchase, Settlement
 from apps.budgets.models import Budget, BudgetScope
 from apps.budgets.services import status as budget_status
 from apps.core.stats import month_compare, month_start, ranked, total, trend_summary
-from apps.core.status import apply_status_filter, toggle_active
+from apps.core.status import apply_status_filter, delete_record, toggle_active
 from .forms import HouseholdCategoryForm, HouseholdMemberForm, PurchaseForm, SettlementForm
 
 
@@ -680,7 +680,8 @@ def member_statement_view(request, pk):
         (
             item.date.strftime("%d %b %Y"),
             _("Fronted (Bazar)") if item.kind == "purchase" else _("Given Back"),
-            (item.category.name if item.kind == "purchase" and item.category else item.note or "-"),
+            (" · ".join(x for x in (item.category.name if item.category else "", item.description) if x) or "-")
+            if item.kind == "purchase" else (item.note or "-"),
             bd_number(item.amount),
         )
         for item in activity
@@ -912,3 +913,10 @@ def member_toggle_active_view(request, pk):
 def category_toggle_active_view(request, pk):
     obj = get_object_or_404(HouseholdCategory, pk=pk, user=request.user)
     return toggle_active(request, obj, "household_category_list")
+
+
+@login_required
+@require_POST
+def member_delete_view(request, pk):
+    obj = get_object_or_404(HouseholdMember, pk=pk, user=request.user)
+    return delete_record(request, obj, "household_member_list", reverse("household_member_detail", args=[pk]))

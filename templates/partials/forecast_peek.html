@@ -6,6 +6,9 @@
     {% if short %}
     <strong>{% blocktranslate with date=short.0.date|date:"j M" %}Money may run short on {{ date }}{% endblocktranslate %}</strong>
     <small>{% blocktranslate with amount=short.1|money %}About {{ amount }} short. See what's coming.{% endblocktranslate %}</small>
+    {% elif not f.tracked %}
+    <strong>{% blocktranslate count counter=f.days_ahead %}Next {{ counter }} day{% plural %}Next {{ counter }} days{% endblocktranslate %}</strong>
+    <small><span>+{{ f.coming_in|money }} {% translate "coming in" %}</span> · <span>−{{ f.going_out|money }} {% translate "going out" %}</span></small>
     {% else %}
     <strong>{% blocktranslate count counter=f.days_ahead with amount=f.end_balance|money %}In {{ counter }} day: about {{ amount }}{% plural %}In {{ counter }} days: about {{ amount }}{% endblocktranslate %}</strong>
     <small><span>+{{ f.coming_in|money }} {% translate "coming in" %}</span> · <span>−{{ f.going_out|money }} {% translate "going out" %}</span></small>

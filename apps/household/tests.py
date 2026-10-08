@@ -130,3 +130,15 @@ class HouseholdViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         categories = {c["name"]: c for c in response.context["categories"]}
         self.assertEqual(categories["Vegetables"]["total_amt"], Decimal("200.00"))
+
+
+class MemberStatementTests(TestCase):
+    def test_statement_with_an_uncategorised_purchase(self):
+        user = User.objects.create_user(username="stmtuser", password="x")
+        self.client.force_login(user)
+        m = HouseholdMember.objects.create(user=user, name="Mother")
+        Purchase.objects.create(user=user, buyer=m, amount=Decimal("80"), date=date(2026, 8, 1), description="Fish and rice")
+        Settlement.objects.create(member=m, amount=Decimal("30"), date=date(2026, 8, 2), note="Cash back")
+        r = self.client.get(reverse("household_member_statement", args=[m.pk]))
+        self.assertContains(r, "Fish and rice")
+        self.assertContains(r, "Cash back")

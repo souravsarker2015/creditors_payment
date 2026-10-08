@@ -23,7 +23,7 @@ from django.urls import reverse
 from django.utils import timezone
 from datetime import timedelta
 from apps.core.stats import month_compare, ranked, trend_summary
-from apps.core.status import apply_status_filter, toggle_active
+from apps.core.status import apply_status_filter, delete_record, toggle_active
 from .forms import IncomeSourceForm, IncomeTransactionForm, RecurringIncomeForm
 
 
@@ -717,3 +717,10 @@ def recurring_income_delete_view(request, pk):
 def income_source_toggle_active_view(request, pk):
     obj = get_object_or_404(IncomeSource, pk=pk, user=request.user)
     return toggle_active(request, obj, "income_source_list")
+
+
+@login_required
+@require_POST
+def income_source_delete_view(request, pk):
+    obj = get_object_or_404(IncomeSource, pk=pk, user=request.user)
+    return delete_record(request, obj, "income_source_list", reverse("income_source_detail", args=[pk]))

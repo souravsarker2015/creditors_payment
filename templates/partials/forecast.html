@@ -5,10 +5,15 @@ now_label ("Money in your wallets now" / "In the accounts now"), empty_text.
 <section class="hero fc-hero">
   <div class="hero-inner">
     <div class="min-w-0">
+      {% if f.tracked %}
       <p class="hero-label">{% blocktranslate with date=f.end|date:"j M" %}Expected on {{ date }}{% endblocktranslate %}</p>
       <p class="hero-value"{% if f.end_balance < 0 %} data-tone="critical"{% endif %}>{{ f.end_balance|money }}</p>
+      {% else %}
+      <p class="hero-label">{% blocktranslate with date=f.end|date:"j M" %}Coming in minus going out, up to {{ date }}{% endblocktranslate %}</p>
+      <p class="hero-value"{% if f.net < 0 %} data-tone="critical"{% endif %}>{% if f.net > 0 %}+{% endif %}{{ f.net|money }}</p>
+      {% endif %}
       <dl class="fc-sum">
-        <div><dt>{{ now_label }}</dt><dd>{{ f.now|money }}</dd></div>
+        {% if f.tracked %}<div><dt>{{ now_label }}</dt><dd>{{ f.now|money }}</dd></div>{% endif %}
         <div><dt>{% translate "Coming in" %}</dt><dd class="is-in">+{{ f.coming_in|money }}</dd></div>
         <div><dt>{% translate "Going out" %}</dt><dd class="is-out">−{{ f.going_out|money }}</dd></div>
       </dl>
@@ -25,7 +30,7 @@ now_label ("Money in your wallets now" / "In the accounts now"), empty_text.
     <p class="callout-text">{% translate "Move money in before then, collect something early, or agree a later date for a payment." %}</p>
   </div>
 </div>
-{% elif f.days %}
+{% elif f.days and f.tracked %}
 <div class="callout" data-tone="good" role="status">
   {% include "partials/icon.html" with name="check" %}
   <div class="min-w-0">
@@ -46,7 +51,7 @@ now_label ("Money in your wallets now" / "In the accounts now"), empty_text.
   <div class="fc-day">
     <h3 class="fc-day-head">
       <span>{% if d.offset == 0 %}{% translate "Today" %}{% elif d.offset == 1 %}{% translate "Tomorrow" %}{% else %}{{ d.date|date:"l, j M" }}{% endif %}</span>
-      <span class="fc-day-bal{% if d.balance < 0 %} is-short{% endif %}">{% translate "Balance" %} {{ d.balance|money }}</span>
+      {% if f.tracked %}<span class="fc-day-bal{% if d.balance < 0 %} is-short{% endif %}">{% translate "Balance" %} {{ d.balance|money }}</span>{% endif %}
     </h3>
     <ul class="ledger">
       {% for i in d.items %}

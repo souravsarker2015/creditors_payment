@@ -14,6 +14,17 @@
   {% translate "Give a loan or a due a date, add an installment plan, or set up regular income and spending — they'll show here on their day." as empty_text %}
   {% include "partials/forecast.html" with now_label=now_label empty_text=empty_text %}
 
+  {% if not f.tracked %}
+  <div class="callout" data-tone="info">
+    {% include "partials/icon.html" with name="wallet" %}
+    <div class="min-w-0">
+      <p class="callout-title">{% translate "Add your wallets to see if the money will last" %}</p>
+      <p class="callout-text">{% translate "Put in the cash, bank and bKash/Nagad you keep, with how much is in each. Then this page shows your balance day by day and warns you before money runs short." %}</p>
+      <a href="{% url 'wallet_create' %}" class="btn btn-soft btn-sm mt-2">{% include "partials/icon.html" with name="plus" %}{% translate "Add a wallet" %}</a>
+    </div>
+  </div>
+  {% endif %}
+
   {% if f.undated.count %}
   <div class="callout" data-tone="info">
     {% include "partials/icon.html" with name="info" %}

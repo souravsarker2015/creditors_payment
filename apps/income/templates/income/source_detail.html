@@ -21,6 +21,8 @@
       <a href="{% url 'income_source_edit' source.pk %}" class="btn btn-secondary">{% include "partials/icon.html" with name="edit" %}{% translate "Edit" %}</a>
       {% url 'income_source_toggle_active' source.pk as toggle_url %}
       {% include "partials/toggle_active_item.html" with url=toggle_url active=source.is_active as_button=True %}
+      {% url 'income_source_delete' source.pk as delete_url %}
+      {% include "partials/delete_record.html" with url=delete_url %}
     </div>
   </header>
 

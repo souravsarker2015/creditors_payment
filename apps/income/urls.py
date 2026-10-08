@@ -9,6 +9,7 @@ urlpatterns = [
     path("sources/import/template/", views.income_source_import_template_view, name="income_source_import_template"),
     path("sources/<int:pk>/", views.income_source_detail_view, name="income_source_detail"),
     path("sources/<int:pk>/toggle-active/", views.income_source_toggle_active_view, name="income_source_toggle_active"),
+    path("sources/<int:pk>/delete/", views.income_source_delete_view, name="income_source_delete"),
     path("sources/<int:pk>/edit/", views.income_source_edit_view, name="income_source_edit"),
     path("sources/<int:pk>/statement/", views.income_source_statement_view, name="income_source_statement"),
     path("transactions/<int:pk>/edit/", views.transaction_edit_view, name="income_transaction_edit"),

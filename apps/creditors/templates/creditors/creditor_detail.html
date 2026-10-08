@@ -31,6 +31,8 @@
       <a href="{% url 'creditor_edit' creditor.pk %}" class="btn btn-secondary">{% include "partials/icon.html" with name="edit" %}{% translate "Edit Profile" %}</a>
       {% url 'creditor_toggle_active' creditor.pk as toggle_url %}
       {% include "partials/toggle_active_item.html" with url=toggle_url active=creditor.is_active as_button=True %}
+      {% url 'creditor_delete' creditor.pk as delete_url %}
+      {% include "partials/delete_record.html" with url=delete_url %}
     </div>
   </header>
 

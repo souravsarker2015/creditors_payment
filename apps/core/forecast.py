@@ -53,6 +53,7 @@ class Forecast:
     days_ahead: int
     now: Decimal
     days: list = field(default_factory=list)
+    tracked: bool = True     # False: there's no wallet to hold `now`, so whether money lasts can't be told
 
     @property
     def items(self):
@@ -67,6 +68,10 @@ class Forecast:
         return -sum((i.amount for i in self.items if i.amount < 0), ZERO)
 
     @property
+    def net(self):
+        return self.coming_in - self.going_out
+
+    @property
     def end_balance(self):
         return self.now + self.coming_in - self.going_out
 
@@ -77,6 +82,8 @@ class Forecast:
     @property
     def short(self):
         """The first day the money would run out: (day, how much short), or None."""
+        if not self.tracked:
+            return None
         for d in self.days:
             if d.balance < 0:
                 return d, -d.balance
@@ -87,9 +94,10 @@ class Forecast:
         return min((d.balance for d in self.days), default=self.now)
 
 
-def build(now, items, today=None, days=30):
+def build(now, items, today=None, days=30, tracked=True):
     """`now`: money there is today. `items`: Item list (any dates; ones after
-    the window are left out, late ones are counted today)."""
+    the window are left out, late ones are counted today). `tracked=False`
+    when there's nowhere the money is kept track of (no wallets)."""
     today = today or date.today()
     end = today + timedelta(days=days)
     by_day = {}
@@ -100,7 +108,7 @@ def build(now, items, today=None, days=30):
             item.late = True
         when = max(item.date, today)
         by_day.setdefault(when, []).append(item)
-    f = Forecast(today=today, end=end, days_ahead=days, now=now)
+    f = Forecast(today=today, end=end, days_ahead=days, now=now, tracked=tracked)
     running = now
     for when in sorted(by_day):
         # Within a day, money in before money out — the way a khata reads.
