@@ -14,4 +14,8 @@ def dashboards(request):
         ctx["membership"] = m
         ctx["business"] = m.business if m else None
         ctx["biz_can"] = {cap: can(m, cap) for cap in ("enter_data", "delete", "view_reports", "view_finance", "manage_settings", "manage_team")}
+        if m:   # the calculator's mon, as this farm counts it (40 kg in most places)
+            from .models import Unit
+
+            ctx["calc_mon_kg"] = Unit.objects.filter(business=m.business, symbol="mon").values_list("factor", flat=True).first()
     return ctx

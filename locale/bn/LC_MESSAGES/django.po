@@ -13635,3 +13635,156 @@ msgstr "বাকিটা, লিজ শেষ হওয়ার মধ্য�
 
 msgid "Wages already owed today, monthly salaries at each month's end, and pond lease you've used but not paid. Fish sales you haven't made yet aren't counted."
 msgstr "আজ পর্যন্ত বাকি মজুরি, প্রতি মাসের শেষে মাসিক বেতন, আর পুকুর লিজের যে অংশ ব্যবহার হয়েছে কিন্তু দেওয়া হয়নি। যে মাছ এখনো বিক্রি হয়নি তা ধরা হয় না।"
+
+msgid "1 bigha = 20 katha = 33 decimal; 1 acre = 100 decimal. Some areas count a bigha differently."
+msgstr "১ বিঘা = ২০ কাঠা = ৩৩ শতাংশ; ১ একর = ১০০ শতাংশ। কিছু এলাকায় বিঘা অন্যভাবে ধরা হয়।"
+
+msgid "1 mon ="
+msgstr "১ মণ ="
+
+msgid "Acre"
+msgstr "একর"
+
+msgid "All tools"
+msgstr "সব টুল"
+
+msgid "Amount in words"
+msgstr "কথায় টাকার অঙ্ক"
+
+msgid "An estimate: banks add profit a little differently, and tax and charges are taken out."
+msgstr "আনুমানিক হিসাব: ব্যাংক মুনাফা একটু ভিন্নভাবে যোগ করে, আর কর ও চার্জ কেটে নেয়।"
+
+msgid "At maturity"
+msgstr "মেয়াদ শেষে"
+
+msgid "Bazar & farm"
+msgstr "বাজার ও খামার"
+
+msgid "Bigha"
+msgstr "বিঘা"
+
+msgid "Cash count"
+msgstr "নগদ গোনা"
+
+msgid "Decimal (shotok)"
+msgstr "শতাংশ (শতক)"
+
+msgid "Each month"
+msgstr "প্রতি মাসে"
+
+msgid "For writing a cheque or a money receipt, in lakh and crore."
+msgstr "চেক বা টাকার রসিদ লেখার জন্য, লক্ষ ও কোটিতে।"
+
+msgid "Gram"
+msgstr "গ্রাম"
+
+msgid "Hectare"
+msgstr "হেক্টর"
+
+msgid "Interest on the balance still owed, paid every month, the way banks work out a term loan. For a flat rate (as many NGOs charge), use Simple interest."
+msgstr "বাকি থাকা টাকার উপর সুদ, প্রতি মাসে কিস্তি — ব্যাংক যেভাবে মেয়াদি ঋণ হিসাব করে। ফ্ল্যাট হারের জন্য (অনেক এনজিও যেমন নেয়) সরল সুদ ব্যবহার করুন।"
+
+msgid "Katha"
+msgstr "কাঠা"
+
+msgid "Kilogram"
+msgstr "কিলোগ্রাম"
+
+msgid "Kilograms in one mon"
+msgstr "এক মণে কত কেজি"
+
+msgid "Land"
+msgstr "জমি"
+
+msgid "Loan EMI"
+msgstr "ঋণের কিস্তি (EMI)"
+
+msgid "Loan amount"
+msgstr "ঋণের পরিমাণ"
+
+msgid "Loans & savings"
+msgstr "ঋণ ও সঞ্চয়"
+
+msgid "Mon"
+msgstr "মণ"
+
+msgid "Monthly instalment"
+msgstr "মাসিক কিস্তি"
+
+msgid "Notes and coins"
+msgstr "নোট ও কয়েন"
+
+msgid "Profit %% / year"
+msgstr "মুনাফা %% / বছর"
+
+msgid "Profit earned"
+msgstr "মুনাফা পাবেন"
+
+msgid "Rate per"
+msgstr "দর প্রতি"
+
+msgid "Rate per kg"
+msgstr "প্রতি কেজির দর"
+
+msgid "Rate per mon"
+msgstr "প্রতি মণের দর"
+
+msgid "Rate × quantity"
+msgstr "দর × পরিমাণ"
+
+msgid "Savings (DPS)"
+msgstr "সঞ্চয় (ডিপিএস)"
+
+msgid "Seer"
+msgstr "সের"
+
+msgid "Square feet"
+msgstr "বর্গফুট"
+
+msgid "Ton"
+msgstr "টন"
+
+msgid "Tools"
+msgstr "টুল"
+
+msgid "Total cash"
+msgstr "মোট নগদ"
+
+msgid "Years"
+msgstr "বছর"
+
+msgid "You deposit"
+msgstr "আপনি জমা দেবেন"
+
+msgid "acre"
+msgstr "একর"
+
+msgid "bigha"
+msgstr "বিঘা"
+
+msgid "decimal"
+msgstr "শতাংশ"
+
+msgid "g"
+msgstr "গ্রাম"
+
+msgid "hectare"
+msgstr "হেক্টর"
+
+msgid "katha"
+msgstr "কাঠা"
+
+msgid "kg"
+msgstr "কেজি"
+
+msgid "mon"
+msgstr "মণ"
+
+msgid "seer"
+msgstr "সের"
+
+msgid "sq ft"
+msgstr "বর্গফুট"
+
+msgid "ton"
+msgstr "টন"

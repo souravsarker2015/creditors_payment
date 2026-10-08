@@ -254,6 +254,22 @@ class CalculatorTests(TestCase):
                 self.assertContains(response, 'x-data="calculator(window.FTCalcConfig)"')
                 self.assertContains(response, f'user: "{self.user.pk}"')
 
+    def test_tools_and_the_farms_mon(self):
+        from decimal import Decimal
+
+        from apps.business.core.models import Unit
+        from apps.business.core.testing import make_farm
+
+        b, owner, _staff = make_farm("calc_farmer")
+        Unit.objects.filter(business=b, symbol="mon").update(factor=Decimal("37.5"))
+        self.client.force_login(owner)
+        farm = self.client.get(reverse("business:home"))
+        self.assertContains(farm, 'monKg: "37.5')
+        for tool in ("emi", "dps", "rate", "units", "cash", "words", "discount", "vat", "profit", "split", "interest"):
+            self.assertContains(farm, f"pick('{tool}')")
+        # Off the farm pages there's no farm mon: the calculator uses its own (40 kg).
+        self.assertContains(self.client.get(reverse("home")), 'monKg: ""')
+
     def test_not_rendered_for_anonymous_visitors(self):
         response = self.client.get(reverse("login"))
         self.assertNotContains(response, "calc-trigger")
@@ -263,7 +279,7 @@ class CalculatorTests(TestCase):
         self.client.login(username="owner", password="pw12345!")
         self.client.post(reverse("update_preferences"), {"language": "bn"})
         response = self.client.get(reverse("dashboard"))
-        self.assertContains(response, "ব্যবসার টুল")
+        self.assertContains(response, ">টুল</button>")
         self.assertContains(response, "ছাড় %")  # literal % in a translated label
         self.assertContains(response, "৳{value} বসানো হয়েছে: {field}")
 
