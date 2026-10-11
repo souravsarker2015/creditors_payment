@@ -1,0 +1,9 @@
+{% load i18n %}{% comment %}Keyboard shortcuts sheet (press ?).{% endcomment %}
+<div x-data="{ open: false }" @work:help.document="open = !open" x-cloak>
+  <div class="wc-backdrop" x-show="open" x-transition.opacity @click="open = false"></div>
+  <section class="wc wk-keys" x-show="open" x-transition.scale.98 @keydown.escape.window="open = false" role="dialog" aria-modal="true" aria-labelledby="wk-title">
+    <header class="flex items-center justify-between"><h2 id="wk-title" class="card-title">{% translate "Keyboard shortcuts" %}</h2>
+      <button type="button" class="icon-btn" @click="open = false" aria-label="{% translate 'Close' %}">{% include "partials/icon.html" with name="x" %}</button></header>
+    {% include "work/partials/shortcut_list.html" %}
+  </section>
+</div>

@@ -1,0 +1,34 @@
+{% extends "work/base.html" %}
+{% load i18n %}
+
+{% block title %}{% if entry %}{% translate "Edit time" %}{% else %}{% translate "Add time" %}{% endif %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+<div class="page-narrow">
+  <header class="wp-head"><div><a href="{% url 'work:time' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Time" %}</a>
+    <h1 class="wp-title">{% if entry %}{% translate "Edit time" %}{% else %}{% translate "Add time" %}{% endif %}</h1></div></header>
+  <form method="post" class="card" novalidate>
+    {% csrf_token %}
+    <div class="card-body form-stack">
+      {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+      {% with field=form.description %}{% include "partials/field.html" %}{% endwith %}
+      <div class="form-grid form-grid-2">
+        {% with field=form.task %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.project %}{% include "partials/field.html" %}{% endwith %}
+      </div>
+      <div class="form-grid form-grid-2">
+        {% with field=form.day %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.start %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.end %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.minutes %}{% include "partials/field.html" %}{% endwith %}
+      </div>
+      {% with field=form.tags_text %}{% include "partials/field.html" %}{% endwith %}
+      {% with field=form.billable %}{% include "partials/field.html" %}{% endwith %}
+    </div>
+    <div class="card-footer form-actions">
+      <a href="{% url 'work:time' %}" class="btn btn-ghost">{% translate "Cancel" %}</a>
+      <button type="submit" class="btn btn-primary">{% include "partials/icon.html" with name="check" %}{% translate "Save" %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

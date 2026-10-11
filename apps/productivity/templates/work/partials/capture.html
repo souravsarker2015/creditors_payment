@@ -1,0 +1,37 @@
+{% load i18n %}{% comment %}Quick capture: c / t = task, n = note, s = timer. Shift+Enter on a task also starts its timer.{% endcomment %}
+<div x-data="workCapture" x-cloak>
+  <div class="wc-backdrop" x-show="open" x-transition.opacity @click="hide()"></div>
+  <section class="wc" x-show="open" x-transition.scale.98.origin.top x-trap.noscroll="open" @keydown.escape.stop="hide()" role="dialog" aria-modal="true" aria-label="{% translate 'Quick add' %}">
+    <nav class="seg seg-block seg-sm" role="tablist">
+      <button type="button" class="seg-item" :class="mode === 'task' && 'is-active'" @click="show('task')" role="tab">{% translate "Task" %}</button>
+      <button type="button" class="seg-item" :class="mode === 'note' && 'is-active'" @click="show('note')" role="tab">{% translate "Note" %}</button>
+      <button type="button" class="seg-item" :class="mode === 'time' && 'is-active'" @click="show('time')" role="tab">{% translate "Timer" %}</button>
+    </nav>
+    <div x-show="mode === 'task'">
+      <input x-ref="task" x-model="text" class="wc-input" placeholder="{% translate 'Fix login bug #auth @api !high tomorrow ~45m' %}" autocomplete="off"
+             @keydown.enter.prevent="save($event.shiftKey)" aria-label="{% translate 'New task' %}" enterkeyhint="done">
+      <div class="wc-chips" x-show="chips.length">
+        <template x-for="c in chips" :key="c.k + c.v"><span class="wc-chip" :data-k="c.k" x-text="c.v"></span></template>
+      </div>
+      <label class="wc-check"><input type="checkbox" x-model="myDay"> {% translate "Add to My Day" %}</label>
+      <p class="wc-hint">{% translate "#tag  @project  !high  ~30m  tomorrow / friday / +3d  ·  Enter to add, Shift+Enter to add and start the timer" %}</p>
+    </div>
+    <div x-show="mode === 'note'">
+      <textarea x-ref="note" x-model="text" class="wc-input wc-area" rows="5" placeholder="{% translate 'Write it down before it slips away… (Markdown works)' %}"
+                @keydown.ctrl.enter.prevent="save()" @keydown.meta.enter.prevent="save()" aria-label="{% translate 'New note' %}"></textarea>
+      <p class="wc-hint">{% translate "Ctrl+Enter to save. The first line becomes the title." %}</p>
+    </div>
+    <div x-show="mode === 'time'">
+      <input x-ref="time" x-model="text" class="wc-input" placeholder="{% translate 'What are you working on?' %}" @keydown.enter.prevent="save()" aria-label="{% translate 'What are you working on?' %}">
+      <p class="wc-hint">{% translate "Starts the timer now. Anything already running stops." %}</p>
+    </div>
+    <footer class="wc-foot">
+      <label class="wc-check"><input type="checkbox" x-model="keepOpen"> {% translate "Keep open" %}</label>
+      <span class="spacer"></span>
+      <button type="button" class="btn btn-ghost btn-sm" @click="hide()">{% translate "Close" %}</button>
+      <button type="button" class="btn btn-primary btn-sm" @click="save()" :disabled="!text.trim() || busy">
+        <span x-show="mode === 'task'">{% translate "Add task" %}</span><span x-show="mode === 'note'">{% translate "Save note" %}</span><span x-show="mode === 'time'">{% translate "Start" %}</span>
+      </button>
+    </footer>
+  </section>
+</div>

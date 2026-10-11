@@ -4,7 +4,7 @@ The menu sections: the sidebar shows them as a list, and the app view's
 {% endcomment %}
 {% with p=request.path %}
 {# ── business module hook: its own menu inside /business/ ── #}
-{% if active_dashboard == "business" %}{% include "business/partials/nav.html" %}{% else %}
+{% if active_dashboard == "business" %}{% include "business/partials/nav.html" %}{% elif active_dashboard == "productivity" %}{% include "work/partials/nav.html" %}{% else %}
 <div>
     <p class="nav-section-label">{% translate "Overview" %}</p>
     <a href="{% url 'home' %}" class="nav-link {% if p == '/' or '/networth/' in p %}is-active{% endif %}" {% if p == '/' or '/networth/' in p %}aria-current="page"{% endif %}>

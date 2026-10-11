@@ -1,0 +1,32 @@
+{% extends "work/base.html" %}
+{% load i18n %}
+
+{% block title %}{% if project %}{{ project.name }}{% else %}{% translate "New project" %}{% endif %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+<div class="page-narrow">
+  <header class="wp-head">
+    <div><a href="{% if project %}{% url 'work:project' project.pk %}{% else %}{% url 'work:projects' %}{% endif %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Projects" %}</a>
+      <h1 class="wp-title">{% if project %}{% translate "Edit project" %}{% else %}{% translate "New project" %}{% endif %}</h1></div>
+  </header>
+  <form method="post" class="card" novalidate>
+    {% csrf_token %}
+    <div class="card-body form-stack">
+      {% with field=form.name %}{% include "partials/field.html" %}{% endwith %}
+      <fieldset><legend class="label">{{ form.color.label }}</legend>
+        <div class="w-swatches">{% for radio in form.color %}<label class="w-swatch" data-color="{{ radio.data.value }}" title="{{ radio.choice_label }}">{{ radio.tag }}<span class="sr-only">{{ radio.choice_label }}</span></label>{% endfor %}</div></fieldset>
+      {% with field=form.client %}{% include "partials/field.html" %}{% endwith %}
+      <div class="form-grid form-grid-2">
+        {% with field=form.estimate_hours %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.hourly_rate %}{% include "partials/field.html" %}{% endwith %}
+      </div>
+      {% with field=form.description %}{% include "partials/field.html" %}{% endwith %}
+      {% if project %}{% with field=form.is_archived %}{% include "partials/field.html" %}{% endwith %}{% endif %}
+    </div>
+    <div class="card-footer form-actions">
+      <a href="{% if project %}{% url 'work:project' project.pk %}{% else %}{% url 'work:projects' %}{% endif %}" class="btn btn-ghost">{% translate "Cancel" %}</a>
+      <button type="submit" class="btn btn-primary">{% include "partials/icon.html" with name="check" %}{% translate "Save" %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

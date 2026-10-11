@@ -97,7 +97,9 @@ def restore(item):
                 model = type(d.object)
                 if model._base_manager.filter(pk=d.object.pk).exists():
                     raise CannotRestore("already there")
-                d.save()
+                # Links to tags and the like come back as their own rows (they were
+                # kept with the rest), so they aren't set a second time here.
+                d.save(save_m2m=False)
                 restored.append(d.object)
                 tables.add(model._meta.db_table)
             # Something it belonged to may be gone for good (e.g. a deleted category).

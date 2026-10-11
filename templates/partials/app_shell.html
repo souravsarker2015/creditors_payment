@@ -6,7 +6,20 @@ person's choice (Automatic / App view / Website view).
 {% endcomment %}
 {% with p=request.path %}
 <nav class="app-tabbar app-only" aria-label="{% translate 'App tabs' %}">
-    {% if active_dashboard == "business" %}
+    {% if active_dashboard == "productivity" %}
+    <a href="{% url 'work:today' %}" class="app-tab {% if p == '/work/' %}is-active{% endif %}" data-tab-root {% if p == '/work/' %}aria-current="page"{% endif %}>
+        <span class="app-tab-icon">{% include "partials/icon.html" with name="sun" %}</span><span class="app-tab-label">{% translate "Today" %}</span>
+    </a>
+    <a href="{% url 'work:tasks' %}" class="app-tab {% if '/work/tasks/' in p or '/work/projects/' in p %}is-active{% endif %}" data-tab-root {% if p == '/work/tasks/' %}aria-current="page"{% endif %}>
+        <span class="app-tab-icon">{% include "partials/icon.html" with name="check" %}</span><span class="app-tab-label">{% translate "Tasks" %}</span>
+    </a>
+    <button type="button" class="app-tab app-tab-add" @click="sheet = 'add'" :aria-expanded="sheet === 'add'" aria-haspopup="dialog">
+        <span class="app-tab-fab">{% include "partials/icon.html" with name="plus" %}</span><span class="app-tab-label">{% translate "Add" %}</span>
+    </button>
+    <a href="{% url 'work:time' %}" class="app-tab {% if '/work/time/' in p or '/work/focus/' in p %}is-active{% endif %}" data-tab-root {% if p == '/work/time/' %}aria-current="page"{% endif %}>
+        <span class="app-tab-icon">{% include "partials/icon.html" with name="timer" %}</span><span class="app-tab-label">{% translate "Time" %}</span>
+    </a>
+    {% elif active_dashboard == "business" %}
     <a href="{% url 'business:home' %}" class="app-tab {% if p == '/business/' or '/business/insights/' == p %}is-active{% endif %}" data-tab-root {% if p == '/business/' %}aria-current="page"{% endif %}>
         <span class="app-tab-icon">{% include "business/partials/icon.html" with name="home" %}</span><span class="app-tab-label">{% translate "Home" %}</span>
     </a>
@@ -55,7 +68,32 @@ person's choice (Automatic / App view / Website view).
             <button type="button" class="icon-btn" @click="sheet = null" aria-label="{% translate 'Close' %}" data-no-tip>{% include "partials/icon.html" with name="x" %}</button>
         </header>
         <div class="app-actions">
-            {% if active_dashboard == "business" %}
+            {% if active_dashboard == "productivity" %}
+            <button type="button" class="app-action" data-tone="accent" @click="sheet = null; $dispatch('work:capture', 'task')">
+                <span class="app-action-icon">{% include "partials/icon.html" with name="check" %}</span>
+                <span class="app-action-name">{% translate "Task" %}</span><span class="app-action-hint">{% translate "Something to do" %}</span>
+            </button>
+            <button type="button" class="app-action" data-tone="warn" @click="sheet = null; $dispatch('work:capture', 'note')">
+                <span class="app-action-icon">{% include "partials/icon.html" with name="note" %}</span>
+                <span class="app-action-name">{% translate "Note" %}</span><span class="app-action-hint">{% translate "Write it down" %}</span>
+            </button>
+            <button type="button" class="app-action" data-tone="good" @click="sheet = null; $dispatch('work:capture', 'time')">
+                <span class="app-action-icon">{% include "partials/icon.html" with name="timer" %}</span>
+                <span class="app-action-name">{% translate "Start timer" %}</span><span class="app-action-hint">{% translate "Track what you're doing" %}</span>
+            </button>
+            <a href="{% url 'work:focus' %}" class="app-action" data-tone="critical">
+                <span class="app-action-icon">{% include "partials/icon.html" with name="bolt" %}</span>
+                <span class="app-action-name">{% translate "Focus" %}</span><span class="app-action-hint">{% translate "Pomodoro session" %}</span>
+            </a>
+            <a href="{% url 'work:entry_new' %}" class="app-action" data-tone="info">
+                <span class="app-action-icon">{% include "partials/icon.html" with name="clock" %}</span>
+                <span class="app-action-name">{% translate "Time by hand" %}</span><span class="app-action-hint">{% translate "Work already done" %}</span>
+            </a>
+            <a href="{% url 'work:journal' %}" class="app-action" data-tone="muted">
+                <span class="app-action-icon">{% include "partials/icon.html" with name="journal" %}</span>
+                <span class="app-action-name">{% translate "Journal" %}</span><span class="app-action-hint">{% translate "Today's log & standup" %}</span>
+            </a>
+            {% elif active_dashboard == "business" %}
             <a href="{% url 'business:sale_add' %}" class="app-action" data-tone="good">
                 <span class="app-action-icon">{% include "partials/icon.html" with name="cart" %}</span>
                 <span class="app-action-name">{% translate "New sale" %}</span><span class="app-action-hint">{% translate "Fish sold" %}</span>
@@ -124,7 +162,7 @@ person's choice (Automatic / App view / Website view).
             <span class="avatar h-10 w-10 shrink-0 rounded-full text-sm">{{ user.username|first|upper }}</span>
             <div class="min-w-0 flex-1">
                 <h2 id="app-more-title" class="app-sheet-title truncate">{{ user.get_full_name|default:user.username }}</h2>
-                <p class="truncate text-xs" style="color: var(--text-muted);">{% if active_dashboard == "business" and business %}{{ business.name }}{% else %}{% translate "Ledger & Household" %}{% endif %}</p>
+                <p class="truncate text-xs" style="color: var(--text-muted);">{% if active_dashboard == "business" and business %}{{ business.name }}{% elif active_dashboard == "productivity" %}{% translate "Productivity" %}{% else %}{% translate "Ledger & Household" %}{% endif %}</p>
             </div>
             <button type="button" class="icon-btn" @click="sheet = null" aria-label="{% translate 'Close' %}" data-no-tip>{% include "partials/icon.html" with name="x" %}</button>
         </header>
@@ -201,8 +239,13 @@ person's choice (Automatic / App view / Website view).
                 </a>
                 {% endif %}
                 <a href="{% url 'account_settings' %}" class="app-list-item">
-                    {% include "partials/icon.html" with name="key" %}<span>{% translate "Account & password" %}</span>
+                    {% include "partials/icon.html" with name="key" %}<span>{% translate "Account & security" %}</span>
                 </a>
+                {% if user.is_superuser %}
+                <a href="{% url 'user_list' %}" class="app-list-item">
+                    {% include "partials/icon.html" with name="users" %}<span>{% translate "People & access" %}</span>
+                </a>
+                {% endif %}
                 <a href="{% url 'logout' %}" class="app-list-item is-danger">
                     <svg fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" /></svg>
                     <span>{% translate "Log Out" %}</span>

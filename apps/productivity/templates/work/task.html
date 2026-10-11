@@ -1,0 +1,84 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% if task %}{{ task.title }}{% else %}{% translate "New task" %}{% endif %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+<header class="wp-head">
+  <div class="min-w-0">
+    <a href="{% url 'work:tasks' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Tasks" %}</a>
+    <h1 class="wp-title">{% if task %}{{ task.title }}{% else %}{% translate "New task" %}{% endif %}</h1>
+    {% if task %}<p class="wp-sub">{{ task.get_status_display }}{% if task.project %} · <a href="{% url 'work:project' task.project_id %}" class="wt-proj"><span class="wt-dot" data-color="{{ task.project.color }}"></span>{{ task.project.name }}</a>{% endif %}{% if task.completed_at %} · {% blocktranslate with when=task.completed_at|date:"j M, H:i" %}done {{ when }}{% endblocktranslate %}{% endif %}</p>{% endif %}
+  </div>
+  {% if task %}
+  <div class="wp-actions" x-data="workTasks">
+    {% if not task.is_done %}
+    <button type="button" class="btn" :class="$store.timer.isFor({{ task.pk }}) ? 'btn-danger' : 'btn-primary'" @click="$store.timer.toggle({ task: {{ task.pk }}, label: '{{ task.title|escapejs }}', project: '{{ task.project_id|default:'' }}' })">
+      <span x-show="!$store.timer.isFor({{ task.pk }})" class="contents">{% include "partials/icon.html" with name="play" %}{% translate "Start timer" %}</span>
+      <span x-show="$store.timer.isFor({{ task.pk }})" x-cloak class="contents">{% include "partials/icon.html" with name="stop" %}<span x-text="$store.timer.text"></span></span>
+    </button>
+    <a href="{% url 'work:focus' %}?task={{ task.pk }}" class="btn btn-secondary">{% include "partials/icon.html" with name="bolt" %}{% translate "Focus" %}</a>
+    {% endif %}
+    <button type="button" class="icon-btn" aria-label="{% translate 'Delete task' %}" data-tip="{% translate 'Delete task' %}" @click="if (confirm('{% translate "Delete this task? You can bring it back from Recently deleted." %}')) Work.api(Work.cfg.urls.taskBase + '{{ task.pk }}/delete/').then(r => { Work.undoable('{% translate "Task deleted" %}', r.undo, () => location.reload()); setTimeout(() => location.href = '{% url 'work:tasks' %}', 600); })">{% include "partials/icon.html" with name="trash" %}</button>
+  </div>
+  {% endif %}
+</header>
+
+<div class="wtd">
+  <form method="post" class="card wtd-form" novalidate>
+    {% csrf_token %}
+    <div class="card-body form-stack">
+      {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+      {% with field=form.title %}{% include "partials/field.html" %}{% endwith %}
+      <div class="form-grid form-grid-2">
+        {% with field=form.status %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.priority %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.project %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.due_date %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.estimate_minutes %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.repeat %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.remind_at %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.tags_text %}{% include "partials/field.html" %}{% endwith %}
+      </div>
+      <div class="field" x-data="{ preview: false, text: $refs.notes ? $refs.notes.value : '' }">
+        <div class="field-head"><label class="label" for="{{ form.notes.id_for_label }}">{{ form.notes.label }}</label>
+          <div class="seg seg-sm"><button type="button" class="seg-item" :class="!preview && 'is-active'" @click="preview = false">{% translate "Write" %}</button><button type="button" class="seg-item" :class="preview && 'is-active'" @click="text = $refs.notes.value; preview = true">{% translate "Preview" %}</button></div></div>
+        <textarea x-ref="notes" x-show="!preview" name="{{ form.notes.html_name }}" id="{{ form.notes.id_for_label }}" rows="8" class="form-input code-ish">{{ form.notes.value|default:'' }}</textarea>
+        <div x-show="preview" x-cloak class="wn-md wtd-preview" x-html="Work.markdown(text)"></div>
+        <p class="help">{{ form.notes.help_text }}</p>
+      </div>
+    </div>
+    <div class="card-footer form-actions">
+      <a href="{% url 'work:tasks' %}" class="btn btn-ghost">{% translate "Cancel" %}</a>
+      <button type="submit" class="btn btn-primary">{% include "partials/icon.html" with name="check" %}{% translate "Save" %}</button>
+    </div>
+  </form>
+
+  {% if task %}
+  <aside class="wtd-side">
+    <section class="card" x-data="workChecklist({{ task.pk }})">
+      <header class="card-header"><h2 class="card-title">{% translate "Checklist" %}</h2><span class="wtd-progress" data-progress></span></header>
+      <ul class="work-checks" x-ref="list">
+        {% for item in checklist %}<li class="work-check{% if item.done %} is-done{% endif %}" data-item="{{ item.pk }}"><label><input type="checkbox"{% if item.done %} checked{% endif %}><span>{{ item.text }}</span></label><button type="button" class="icon-btn" aria-label="{% translate 'Remove' %}">×</button></li>{% endfor %}
+      </ul>
+      <form class="work-check-add" @submit.prevent="add()"><input x-model="text" class="form-input input-compact" placeholder="{% translate 'Add a step…' %}" aria-label="{% translate 'Add a step' %}"><button type="submit" class="btn btn-secondary btn-sm">{% translate "Add" %}</button></form>
+    </section>
+
+    <section class="card">
+      <header class="card-header"><h2 class="card-title">{% translate "Time" %}</h2><a href="{% url 'work:entry_new' %}?task={{ task.pk }}" class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="plus" %}{% translate "Add" %}</a></header>
+      <div class="card-body !pt-0">
+        <p class="wtd-spent"><strong class="num">{{ spent|hm }}</strong>{% if task.estimate_minutes %} <span>{% blocktranslate with est=task.estimate_minutes|minutes_hm %}of ~{{ est }} planned{% endblocktranslate %}</span>{% endif %}</p>
+        {% if estimate_pct is not None %}<div class="wtd-meter{% if estimate_pct > 100 %} is-over{% endif %}"><span style="width: {% if estimate_pct > 100 %}100{% else %}{{ estimate_pct }}{% endif %}%"></span></div>{% endif %}
+      </div>
+      {% if entries %}<ul class="we-list">{% for e in entries %}{% include "work/partials/entry_row.html" %}{% endfor %}</ul>{% endif %}
+    </section>
+    <p class="wtd-dates">{% blocktranslate with c=task.created_at|date:"j M Y" u=task.updated_at|timesince %}Added {{ c }} · changed {{ u }} ago{% endblocktranslate %}</p>
+  </aside>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block work_libs %}
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+{% endblock %}

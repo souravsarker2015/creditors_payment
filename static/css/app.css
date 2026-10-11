@@ -1150,6 +1150,36 @@ select.just-added, input.just-added { animation: just-added 1.2s ease; }
 .bg-pick .bg-swatch { width: 100%; height: 100%; }
 .bg-pick.is-active { border-color: var(--text-on-ink); }
 
+/* Account & security, two-step sign-in */
+.acct-avatar { display: grid; place-items: center; flex-shrink: 0; width: 3rem; height: 3rem; border-radius: 9999px; background: var(--accent-soft); color: var(--accent); font: 700 1.25rem/1 var(--font-heading); }
+.otp-input { font: 600 1.375rem/1.2 var(--font-body) !important; letter-spacing: 0.3em; text-align: center; font-variant-numeric: tabular-nums; }
+.otp-input::placeholder { letter-spacing: 0.3em; opacity: 0.35; }
+.input-compact.otp-input { font-size: 1rem !important; letter-spacing: 0.18em; max-width: 9rem; }
+.tfa-steps { counter-reset: tfa; display: flex; flex-direction: column; gap: 1.5rem; }
+.tfa-steps > li { counter-increment: tfa; position: relative; padding-left: 2.5rem; }
+.tfa-steps > li::before { content: counter(tfa); position: absolute; left: 0; top: -0.125rem; display: grid; place-items: center; width: 1.75rem; height: 1.75rem; border-radius: 9999px; background: var(--accent); color: var(--accent-on); font-size: 0.8125rem; font-weight: 700; }
+.tfa-step-title { font-weight: 650; color: var(--text-primary); }
+.tfa-step-text { margin-top: 0.25rem; font-size: 0.8125rem; line-height: 1.55; color: var(--text-secondary); }
+.tfa-qr-wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem 1.25rem; margin-top: 0.75rem; }
+.tfa-qr { width: 11rem; height: 11rem; flex-shrink: 0; padding: 0.25rem; border-radius: 0.875rem; background: #fff; border: 1px solid var(--border); }
+.tfa-qr svg { width: 100%; height: 100%; display: block; }
+.tfa-key { flex: 1 1 12rem; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+.tfa-secret { display: flex; align-items: center; gap: 0.25rem; max-width: 100%; }
+.tfa-secret code { display: flex; flex-wrap: wrap; gap: 0.125rem 0.5rem; padding: 0.375rem 0.625rem; border-radius: 0.625rem; background: var(--surface-sunken); font: 600 0.875rem/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--text-primary); letter-spacing: 0.04em; }
+.tfa-codes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
+.tfa-codes code { display: block; padding: 0.5rem 0.625rem; border-radius: 0.625rem; background: var(--surface-sunken); text-align: center; font: 600 0.9375rem/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: 0.06em; color: var(--text-primary); }
+.tfa-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
+.tfa-facts dt { font-size: 0.75rem; color: var(--text-muted); }
+.tfa-facts dd { font-weight: 650; color: var(--text-primary); }
+.tfa-facts dd[data-tone="critical"] { color: var(--status-critical); }
+.tfa-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.tfa-inline-form { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0.375rem; }
+.choice-list { display: flex; flex-direction: column; gap: 0.375rem; margin-top: 0.375rem; }
+.choice { display: flex; align-items: center; gap: 0.625rem; padding: 0.625rem 0.75rem; border: 1px solid var(--border-soft); border-radius: 0.75rem; background: var(--surface); font-size: 0.875rem; color: var(--text-primary); cursor: pointer; }
+.choice:has(input:checked) { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); background: var(--accent-soft); }
+.choice input { accent-color: var(--accent); width: 1.0625rem; height: 1.0625rem; flex-shrink: 0; }
+@media print { .tfa-codes { grid-template-columns: repeat(2, 1fr); } }
+
 /* Sign-in: "Forgot password?" under the password box */
 .auth-forgot { margin-top: 0.125rem; text-align: right; font-size: 0.8125rem; line-height: 1.5; }
 /* Django's password rules arrive as a list */

@@ -7,7 +7,7 @@ def dashboards(request):
     user = getattr(request, "user", None)
     if not user or not user.is_authenticated:
         return {}
-    active = BUSINESS if request.path.startswith("/business/") else "personal"
+    active = BUSINESS if request.path.startswith("/business/") else ("productivity" if request.path.startswith("/work/") else "personal")
     ctx = {"available_dashboards": request_dashboards(request), "active_dashboard": active}
     if active == BUSINESS:
         m = getattr(request, "membership", None) or active_membership(request)

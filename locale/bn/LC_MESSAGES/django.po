@@ -13984,3 +13984,1614 @@ msgstr "%(total)s-এর মধ্যে %(start)s–%(end)s দেখানো 
 
 msgid "No purchases match your filters"
 msgstr "আপনার বাছাইয়ের সাথে কোনো কেনাকাটা মেলেনি"
+
+msgid "Letters, digits and @ . + - _ only. You sign in with it."
+msgstr "শুধু অক্ষর, সংখ্যা ও @ . + - _। এটি দিয়ে সাইন ইন করবেন।"
+
+msgid "From your authenticator app, or one of your recovery codes."
+msgstr "অথেনটিকেটর অ্যাপ থেকে, অথবা আপনার একটি রিকভারি কোড।"
+
+msgid "Untick to stop this person signing in. Nothing they recorded is deleted."
+msgstr "টিক তুলে দিলে এই ব্যক্তি আর সাইন ইন করতে পারবেন না। তাদের কোনো হিসাব মুছবে না।"
+
+msgid "Code"
+msgstr "কোড"
+
+msgid "Don't ask again on this device for 30 days"
+msgstr "এই ডিভাইসে ৩০ দিন আর জিজ্ঞেস করবে না"
+
+msgid "Admins can open every part of the app, manage people and change security settings."
+msgstr "অ্যাডমিন অ্যাপের সব অংশ খুলতে, মানুষ পরিচালনা করতে ও নিরাপত্তা সেটিংস বদলাতে পারেন।"
+
+msgid "Can open"
+msgstr "খুলতে পারবেন"
+
+msgid "New password"
+msgstr "নতুন পাসওয়ার্ড"
+
+msgid "New password again"
+msgstr "নতুন পাসওয়ার্ড আবার"
+
+msgid "That username is taken."
+msgstr "এই ইউজারনেম আগেই নেওয়া হয়েছে।"
+
+msgid "You can't change this for your own account."
+msgstr "নিজের অ্যাকাউন্টের জন্য এটি বদলানো যাবে না।"
+
+msgid "I'll set it now"
+msgstr "আমি এখনই দিচ্ছি"
+
+msgid "Email them a link to choose their own"
+msgstr "নিজে পাসওয়ার্ড দেওয়ার লিংক ইমেইলে পাঠান"
+
+msgid "Needed to email the link."
+msgstr "লিংক ইমেইল করতে এটি লাগবে।"
+
+msgid "Type a password, or choose to email a link."
+msgstr "একটি পাসওয়ার্ড লিখুন, অথবা লিংক ইমেইল করা বেছে নিন।"
+
+msgid "Optional — each person decides"
+msgstr "ঐচ্ছিক — প্রত্যেকে নিজে ঠিক করবেন"
+
+msgid "Required for admins"
+msgstr "অ্যাডমিনদের জন্য বাধ্যতামূলক"
+
+msgid "Required for everyone"
+msgstr "সবার জন্য বাধ্যতামূলক"
+
+msgid "Two-step sign-in"
+msgstr "দুই ধাপের সাইন ইন"
+
+msgid "Security settings"
+msgstr "নিরাপত্তা সেটিংস"
+
+msgid "Account & security"
+msgstr "অ্যাকাউন্ট ও নিরাপত্তা"
+
+msgid "On this page"
+msgstr "এই পাতায়"
+
+msgid "Profile"
+msgstr "প্রোফাইল"
+
+msgid "People & access"
+msgstr "ব্যবহারকারী ও অনুমতি"
+
+msgid "Two-step sign-in is required for your account"
+msgstr "আপনার অ্যাকাউন্টে দুই ধাপের সাইন ইন বাধ্যতামূলক"
+
+msgid "Set it up now"
+msgstr "এখনই চালু করুন"
+
+msgid "Your name and how you sign in."
+msgstr "আপনার নাম এবং যেভাবে সাইন ইন করেন।"
+
+msgid "Save profile"
+msgstr "প্রোফাইল সংরক্ষণ করুন"
+
+msgid "A code from an authenticator app on your phone, asked after your password."
+msgstr "পাসওয়ার্ডের পরে ফোনের অথেনটিকেটর অ্যাপ থেকে একটি কোড চাওয়া হবে।"
+
+msgid "Turned on"
+msgstr "চালু হয়েছে"
+
+msgid "Last used"
+msgstr "শেষ ব্যবহার"
+
+msgid "Recovery codes left"
+msgstr "বাকি রিকভারি কোড"
+
+msgid "New recovery codes"
+msgstr "নতুন রিকভারি কোড"
+
+msgid "Code from your app"
+msgstr "অ্যাপের কোড"
+
+msgid "Make new codes"
+msgstr "নতুন কোড তৈরি করুন"
+
+msgid "Ask for a code again on every device, including ones you said to trust?"
+msgstr "বিশ্বস্ত বলা ডিভাইসসহ সব ডিভাইসে আবার কোড চাইবে?"
+
+msgid "Forget trusted devices"
+msgstr "বিশ্বস্ত ডিভাইস ভুলে যান"
+
+msgid "Turn off"
+msgstr "বন্ধ করুন"
+
+msgid "Someone who learns your password still can't sign in without your phone. Recommended for admins."
+msgstr "কেউ পাসওয়ার্ড জেনে গেলেও আপনার ফোন ছাড়া সাইন ইন করতে পারবে না। অ্যাডমিনদের জন্য সুপারিশকৃত।"
+
+msgid "Turn on two-step sign-in"
+msgstr "দুই ধাপের সাইন ইন চালু করুন"
+
+msgid "For everyone who uses this app."
+msgstr "এই অ্যাপের সব ব্যবহারকারীর জন্য।"
+
+msgid "When it's required, people without it are asked to set it up right after signing in."
+msgstr "বাধ্যতামূলক হলে যাদের চালু নেই তাদের সাইন ইনের পরপরই চালু করতে বলা হবে।"
+
+msgid "Your FinTrack account is ready"
+msgstr "আপনার FinTrack অ্যাকাউন্ট প্রস্তুত"
+
+msgid "That code isn't right, so no new recovery codes were made."
+msgstr "কোডটি সঠিক নয়, তাই নতুন রিকভারি কোড তৈরি হয়নি।"
+
+msgid "Please sign in again."
+msgstr "অনুগ্রহ করে আবার সাইন ইন করুন।"
+
+msgid "That code isn't right. Check the time on your phone, and use the newest code."
+msgstr "কোডটি সঠিক নয়। ফোনের সময় ঠিক আছে কিনা দেখুন, আর সবচেয়ে নতুন কোডটি দিন।"
+
+msgid "Done. Every device will ask for a code at the next sign-in."
+msgstr "হয়েছে। পরের সাইন ইনে সব ডিভাইস কোড চাইবে।"
+
+msgid "Two-step sign-in is required for your account, so it can't be turned off."
+msgstr "আপনার অ্যাকাউন্টে দুই ধাপের সাইন ইন বাধ্যতামূলক, তাই বন্ধ করা যাবে না।"
+
+msgid "That code isn't right."
+msgstr "কোডটি সঠিক নয়।"
+
+msgid "Too many wrong codes. Sign in again."
+msgstr "অনেকবার ভুল কোড। আবার সাইন ইন করুন।"
+
+msgid "That code isn't right. Scan the QR code again, and type the newest code from the app."
+msgstr "কোডটি সঠিক নয়। QR কোড আবার স্ক্যান করুন, আর অ্যাপের সবচেয়ে নতুন কোডটি লিখুন।"
+
+msgid "Two-step sign-in is on for your FinTrack account"
+msgstr "আপনার FinTrack অ্যাকাউন্টে দুই ধাপের সাইন ইন চালু হয়েছে"
+
+msgid "Two-step sign-in is on."
+msgstr "দুই ধাপের সাইন ইন চালু হয়েছে।"
+
+msgid "Two-step sign-in is off for your FinTrack account"
+msgstr "আপনার FinTrack অ্যাকাউন্টে দুই ধাপের সাইন ইন বন্ধ হয়েছে"
+
+msgid "Two-step sign-in is off."
+msgstr "দুই ধাপের সাইন ইন বন্ধ হয়েছে।"
+
+msgid "A recovery code was used on your FinTrack account"
+msgstr "আপনার FinTrack অ্যাকাউন্টে একটি রিকভারি কোড ব্যবহার হয়েছে"
+
+msgid "Profile saved."
+msgstr "প্রোফাইল সংরক্ষিত হয়েছে।"
+
+#, python-format
+msgid "Two-step sign-in was turned on for your FinTrack account on %(when)s. From now on, signing in also needs a code from your authenticator app."
+msgstr "%(when)s-এ আপনার FinTrack অ্যাকাউন্টে দুই ধাপের সাইন ইন চালু হয়েছে। এখন থেকে সাইন ইনে অথেনটিকেটর অ্যাপের কোডও লাগবে।"
+
+#, python-format
+msgid "Two-step sign-in was turned off for your FinTrack account on %(when)s. Signing in now needs only the password."
+msgstr "%(when)s-এ আপনার FinTrack অ্যাকাউন্টে দুই ধাপের সাইন ইন বন্ধ হয়েছে। এখন সাইন ইনে শুধু পাসওয়ার্ড লাগবে।"
+
+#, python-format
+msgid "%(name)s added. They can sign in now."
+msgstr "%(name)s যোগ হয়েছেন। এখন সাইন ইন করতে পারবেন।"
+
+#, python-format
+msgid "You signed in with a recovery code. %(left)s left — make new ones from Account & security if you're running low."
+msgstr "আপনি রিকভারি কোড দিয়ে সাইন ইন করেছেন। বাকি %(left)sটি — কমে এলে অ্যাকাউন্ট ও নিরাপত্তা থেকে নতুন বানান।"
+
+#, python-format
+msgid "Someone signed in to your FinTrack account with a recovery code on %(when)s. %(left)s codes are left."
+msgstr "%(when)s-এ কেউ রিকভারি কোড দিয়ে আপনার FinTrack অ্যাকাউন্টে সাইন ইন করেছেন। বাকি %(left)sটি কোড।"
+
+#, python-format
+msgid "%(name)s added. A link to choose a password was emailed to %(email)s."
+msgstr "%(name)s যোগ হয়েছেন। পাসওয়ার্ড দেওয়ার লিংক %(email)s-এ ইমেইল করা হয়েছে।"
+
+#, python-format
+msgid "%(name)s added, but the email couldn't be sent. Set a password for them below."
+msgstr "%(name)s যোগ হয়েছেন, কিন্তু ইমেইল পাঠানো যায়নি। নিচে তাদের জন্য পাসওয়ার্ড দিন।"
+
+msgid "This is the last admin. Make someone else an admin first."
+msgstr "ইনিই শেষ অ্যাডমিন। আগে অন্য কাউকে অ্যাডমিন করুন।"
+
+#, python-format
+msgid "Saved %(name)s."
+msgstr "%(name)s সংরক্ষিত হয়েছে।"
+
+#, python-format
+msgid "New password set for %(name)s. Tell them in person or by phone."
+msgstr "%(name)s-এর নতুন পাসওয়ার্ড দেওয়া হয়েছে। সরাসরি বা ফোনে জানিয়ে দিন।"
+
+msgid "Security settings saved."
+msgstr "নিরাপত্তা সেটিংস সংরক্ষিত হয়েছে।"
+
+#, python-format
+msgid "%(name)s has no email. Add one first."
+msgstr "%(name)s-এর ইমেইল নেই। আগে একটি যোগ করুন।"
+
+msgid "The email couldn't be sent. Try again, or set a password here."
+msgstr "ইমেইল পাঠানো যায়নি। আবার চেষ্টা করুন, অথবা এখানে পাসওয়ার্ড দিন।"
+
+#, python-format
+msgid "An admin turned off two-step sign-in for your FinTrack account on %(when)s (for example after a lost phone). Turn it on again from Account & security."
+msgstr "%(when)s-এ একজন অ্যাডমিন আপনার FinTrack অ্যাকাউন্টের দুই ধাপের সাইন ইন বন্ধ করেছেন (যেমন ফোন হারালে)। অ্যাকাউন্ট ও নিরাপত্তা থেকে আবার চালু করুন।"
+
+#, python-format
+msgid "Two-step sign-in reset for %(name)s. They sign in with only the password now."
+msgstr "%(name)s-এর দুই ধাপের সাইন ইন রিসেট হয়েছে। এখন শুধু পাসওয়ার্ড দিয়ে সাইন ইন করবেন।"
+
+#, python-format
+msgid "A link to choose a new password was emailed to %(email)s."
+msgstr "নতুন পাসওয়ার্ড দেওয়ার লিংক %(email)s-এ ইমেইল করা হয়েছে।"
+
+msgid "Tasks"
+msgstr "টাস্ক"
+
+msgid "Task"
+msgstr "টাস্ক"
+
+msgid "Something to do"
+msgstr "যা করতে হবে"
+
+msgid "Write it down"
+msgstr "লিখে রাখুন"
+
+msgid "Start timer"
+msgstr "টাইমার শুরু"
+
+msgid "Track what you're doing"
+msgstr "যা করছেন তার সময় রাখুন"
+
+msgid "Focus"
+msgstr "ফোকাস"
+
+msgid "Pomodoro session"
+msgstr "পোমোডোরো সেশন"
+
+msgid "Time by hand"
+msgstr "হাতে সময় যোগ"
+
+msgid "Work already done"
+msgstr "আগে করা কাজ"
+
+msgid "Journal"
+msgstr "জার্নাল"
+
+msgid "Today's log & standup"
+msgstr "আজকের লগ ও স্ট্যান্ডআপ"
+
+msgid "Productivity"
+msgstr "প্রোডাক্টিভিটি"
+
+msgid "Your sign-in and security settings:"
+msgstr "আপনার সাইন ইন ও নিরাপত্তা সেটিংস:"
+
+msgid "An account on FinTrack was made for you. To start, choose your password with this link:"
+msgstr "FinTrack-এ আপনার জন্য একটি অ্যাকাউন্ট খোলা হয়েছে। শুরু করতে এই লিংক দিয়ে পাসওয়ার্ড দিন:"
+
+msgid "An admin sent you a link to choose a new FinTrack password:"
+msgstr "একজন অ্যাডমিন আপনাকে নতুন FinTrack পাসওয়ার্ড দেওয়ার লিংক পাঠিয়েছেন:"
+
+msgid "Sign in here:"
+msgstr "এখানে সাইন ইন করুন:"
+
+msgid "Recovery codes"
+msgstr "রিকভারি কোড"
+
+msgid "Two-step sign-in is on"
+msgstr "দুই ধাপের সাইন ইন চালু"
+
+msgid "Save these recovery codes somewhere safe — on paper, or in a password manager. If you lose your phone, each one lets you sign in once."
+msgstr "এই রিকভারি কোডগুলো নিরাপদে রাখুন — কাগজে বা পাসওয়ার্ড ম্যানেজারে। ফোন হারালে প্রতিটি দিয়ে একবার সাইন ইন করা যাবে।"
+
+msgid "You'll see them only now"
+msgstr "এগুলো শুধু এখনই দেখবেন"
+
+msgid "We keep only a scrambled copy, so they can't be shown again. You can make new ones any time."
+msgstr "আমরা শুধু একটি এলোমেলো কপি রাখি, তাই আর দেখানো যাবে না। যেকোনো সময় নতুন বানাতে পারবেন।"
+
+msgid "Your old recovery codes don't work any more."
+msgstr "আপনার পুরনো রিকভারি কোড আর কাজ করবে না।"
+
+msgid "I've saved my recovery codes"
+msgstr "আমি রিকভারি কোড সংরক্ষণ করেছি"
+
+msgid "Turn off two-step sign-in"
+msgstr "দুই ধাপের সাইন ইন বন্ধ করুন"
+
+msgid "Turn off two-step sign-in?"
+msgstr "দুই ধাপের সাইন ইন বন্ধ করবেন?"
+
+msgid "Signing in will need only your password again. Confirm it's you."
+msgstr "সাইন ইনে আবার শুধু পাসওয়ার্ড লাগবে। নিশ্চিত করুন যে এটি আপনি।"
+
+msgid "Changed your mind?"
+msgstr "মত বদলেছেন?"
+
+msgid "Keep it on"
+msgstr "চালু রাখুন"
+
+msgid "After your password, you'll also type a code from an app on your phone. Someone who learns your password still can't get in."
+msgstr "পাসওয়ার্ডের পরে ফোনের একটি অ্যাপের কোডও লিখবেন। কেউ পাসওয়ার্ড জেনে গেলেও ঢুকতে পারবে না।"
+
+msgid "Your admin requires two-step sign-in"
+msgstr "আপনার অ্যাডমিন দুই ধাপের সাইন ইন বাধ্যতামূলক করেছেন"
+
+msgid "Set it up to keep using the app. It takes about a minute."
+msgstr "অ্যাপ ব্যবহার চালিয়ে যেতে এটি চালু করুন। প্রায় এক মিনিট লাগবে।"
+
+msgid "Get an authenticator app"
+msgstr "একটি অথেনটিকেটর অ্যাপ নিন"
+
+msgid "Google Authenticator, Microsoft Authenticator, Authy, 1Password or Bitwarden — any of them works."
+msgstr "Google Authenticator, Microsoft Authenticator, Authy, 1Password বা Bitwarden — যেকোনোটি চলবে।"
+
+msgid "Scan this QR code with the app"
+msgstr "অ্যাপ দিয়ে এই QR কোড স্ক্যান করুন"
+
+msgid "QR code for your authenticator app"
+msgstr "আপনার অথেনটিকেটর অ্যাপের QR কোড"
+
+msgid "Can't scan? Choose “Enter a setup key” in the app and type:"
+msgstr "স্ক্যান করতে পারছেন না? অ্যাপে “Enter a setup key” বেছে নিয়ে লিখুন:"
+
+msgid "Copy setup key"
+msgstr "সেটআপ কী কপি করুন"
+
+msgid "Open in authenticator app"
+msgstr "অথেনটিকেটর অ্যাপে খুলুন"
+
+msgid "Type the 6-digit code the app shows"
+msgstr "অ্যাপে দেখানো ৬ অঙ্কের কোড লিখুন"
+
+msgid "Turn on"
+msgstr "চালু করুন"
+
+msgid "Enter your code"
+msgstr "আপনার কোড দিন"
+
+#, python-format
+msgid "Open your authenticator app and type the 6-digit code for FinTrack (%(name)s)."
+msgstr "অথেনটিকেটর অ্যাপ খুলে FinTrack (%(name)s)-এর ৬ অঙ্কের কোড লিখুন।"
+
+msgid "Type one of the recovery codes you saved when you turned on two-step sign-in. Each works once."
+msgstr "দুই ধাপের সাইন ইন চালুর সময় রাখা রিকভারি কোডগুলোর একটি লিখুন। প্রতিটি একবারই কাজ করে।"
+
+msgid "Verify and sign in"
+msgstr "যাচাই করে সাইন ইন"
+
+msgid "Lost your phone? Use a recovery code"
+msgstr "ফোন হারিয়েছেন? রিকভারি কোড ব্যবহার করুন"
+
+msgid "Add person"
+msgstr "ব্যবহারকারী যোগ করুন"
+
+#, python-format
+msgid "last signed in %(ago)s ago"
+msgstr "শেষ সাইন ইন %(ago)s আগে"
+
+msgid "hasn't signed in yet"
+msgstr "এখনো সাইন ইন করেননি"
+
+msgid "They get a one-day link to choose their own password. Fill in the email above."
+msgstr "নিজের পাসওয়ার্ড দেওয়ার জন্য তারা এক দিনের একটি লিংক পাবেন। উপরে ইমেইল দিন।"
+
+msgid "Locked out?"
+msgstr "ঢুকতে পারছেন না?"
+
+msgid "Help them get back in."
+msgstr "আবার ঢুকতে সাহায্য করুন।"
+
+msgid "Add an email first"
+msgstr "আগে একটি ইমেইল যোগ করুন"
+
+msgid "Email a password link"
+msgstr "পাসওয়ার্ড লিংক ইমেইল করুন"
+
+msgid "Turn off two-step sign-in for this person (for example after a lost phone)? They can turn it on again."
+msgstr "এই ব্যক্তির দুই ধাপের সাইন ইন বন্ধ করবেন (যেমন ফোন হারালে)? তারা আবার চালু করতে পারবেন।"
+
+msgid "Reset two-step sign-in"
+msgstr "দুই ধাপের সাইন ইন রিসেট করুন"
+
+msgid "Set a new password for them"
+msgstr "তাদের জন্য নতুন পাসওয়ার্ড দিন"
+
+msgid "Everyone who can sign in: add people (and other admins), choose what each can open, and help someone who's locked out."
+msgstr "যারা সাইন ইন করতে পারেন সবাই: মানুষ (ও অন্য অ্যাডমিন) যোগ করুন, কে কী খুলতে পারবে ঠিক করুন, আর আটকে পড়া কাউকে সাহায্য করুন।"
+
+msgid "Name, username or email"
+msgstr "নাম, ইউজারনেম বা ইমেইল"
+
+msgid "Can't sign in"
+msgstr "সাইন ইন বন্ধ"
+
+msgid "Everything"
+msgstr "সবকিছু"
+
+msgid "No one matches that search."
+msgstr "এই খোঁজার সাথে কেউ মেলেনি।"
+
+msgid "No timer is running."
+msgstr "কোনো টাইমার চলছে না।"
+
+msgid "Type what needs doing."
+msgstr "কী করতে হবে লিখুন।"
+
+#, python-format
+msgid "Task: %(title)s"
+msgstr "টাস্ক: %(title)s"
+
+msgid "Type the step."
+msgstr "ধাপটি লিখুন।"
+
+msgid "The note is empty."
+msgstr "নোটটি ফাঁকা।"
+
+msgid "That day hasn't come yet."
+msgstr "সেই দিন এখনো আসেনি।"
+
+#, python-format
+msgid "Time: %(what)s · %(time)s"
+msgstr "সময়: %(what)s · %(time)s"
+
+#, python-format
+msgid "Snippet: %(title)s"
+msgstr "স্নিপেট: %(title)s"
+
+msgid "A task needs a title."
+msgstr "টাস্কের একটি শিরোনাম লাগবে।"
+
+#, python-format
+msgid "Note: %(title)s"
+msgstr "নোট: %(title)s"
+
+msgid "Tue"
+msgstr "মঙ্গল"
+
+msgid "Wed"
+msgstr "বুধ"
+
+msgid "Thu"
+msgstr "বৃহঃ"
+
+msgid "Fri"
+msgstr "শুক্র"
+
+msgid "Sat"
+msgstr "শনি"
+
+msgid "Sun"
+msgstr "রবি"
+
+msgid "Tags"
+msgstr "ট্যাগ"
+
+msgid "Separate with commas or spaces."
+msgstr "কমা বা স্পেস দিয়ে আলাদা করুন।"
+
+msgid "End"
+msgstr "শেষ"
+
+msgid "Or leave empty and give the length."
+msgstr "অথবা ফাঁকা রেখে সময়ের দৈর্ঘ্য দিন।"
+
+msgid "Length (minutes)"
+msgstr "দৈর্ঘ্য (মিনিট)"
+
+msgid "On these days"
+msgstr "এই দিনগুলোতে"
+
+msgid "Work days"
+msgstr "কাজের দিন"
+
+msgid "Daily target (hours)"
+msgstr "দৈনিক লক্ষ্য (ঘণ্টা)"
+
+msgid "Tracked time you aim for on a work day."
+msgstr "কাজের দিনে যত সময় কাজ করতে চান।"
+
+msgid "You already have a project with this name."
+msgstr "এই নামে আপনার একটি প্রজেক্ট আগেই আছে।"
+
+msgid "One entry can't be longer than 24 hours."
+msgstr "একটি এন্ট্রি ২৪ ঘণ্টার বেশি হতে পারে না।"
+
+msgid "That start time is in the future."
+msgstr "শুরুর সময়টি ভবিষ্যতে।"
+
+msgid "Give an end time or how many minutes."
+msgstr "শেষের সময় বা কত মিনিট তা দিন।"
+
+msgid "Slate"
+msgstr "স্লেট"
+
+msgid "Lime"
+msgstr "লেবু সবুজ"
+
+msgid "Amber"
+msgstr "অ্যাম্বার"
+
+msgid "Red"
+msgstr "লাল"
+
+msgid "Purple"
+msgstr "বেগুনি"
+
+msgid "Client / team"
+msgstr "ক্লায়েন্ট / টিম"
+
+msgid "Time budget (hours)"
+msgstr "সময় বাজেট (ঘণ্টা)"
+
+msgid "Hourly rate"
+msgstr "ঘণ্টাপ্রতি রেট"
+
+msgid "Backlog"
+msgstr "ব্যাকলগ"
+
+msgid "In progress"
+msgstr "চলছে"
+
+msgid "No priority"
+msgstr "অগ্রাধিকার নেই"
+
+msgid "Low"
+msgstr "কম"
+
+msgid "Medium"
+msgstr "মাঝারি"
+
+msgid "High"
+msgstr "বেশি"
+
+msgid "Urgent"
+msgstr "জরুরি"
+
+msgid "Every day"
+msgstr "প্রতিদিন"
+
+msgid "Every work day"
+msgstr "প্রতি কাজের দিন"
+
+msgid "Title"
+msgstr "শিরোনাম"
+
+msgid "Priority"
+msgstr "অগ্রাধিকার"
+
+msgid "Due"
+msgstr "শেষ তারিখ"
+
+msgid "Remind me"
+msgstr "মনে করিয়ে দিন"
+
+msgid "Estimate (minutes)"
+msgstr "আনুমানিক সময় (মিনিট)"
+
+msgid "In My Day"
+msgstr "আমার দিনে"
+
+msgid "Timer"
+msgstr "টাইমার"
+
+msgid "Added by hand"
+msgstr "হাতে যোগ করা"
+
+msgid "Focus session"
+msgstr "ফোকাস সেশন"
+
+msgid "What you worked on"
+msgstr "কী কাজ করেছেন"
+
+msgid "Billable"
+msgstr "বিলযোগ্য"
+
+msgid "Pinned"
+msgstr "পিন করা"
+
+msgid "When to use it"
+msgstr "কখন ব্যবহার করবেন"
+
+msgid "Favourite"
+msgstr "প্রিয়"
+
+msgid "Habit"
+msgstr "অভ্যাস"
+
+msgid "Emoji"
+msgstr "ইমোজি"
+
+msgid "Plan for the day"
+msgstr "দিনের পরিকল্পনা"
+
+msgid "Done & learnt"
+msgstr "যা করেছি ও শিখেছি"
+
+msgid "Blockers"
+msgstr "বাধা"
+
+msgid "Mood"
+msgstr "মেজাজ"
+
+msgid "Energy"
+msgstr "এনার্জি"
+
+msgid "Chime"
+msgstr "চাইম"
+
+msgid "Bell"
+msgstr "ঘণ্টা"
+
+msgid "Digital"
+msgstr "ডিজিটাল"
+
+msgid "Soft"
+msgstr "নরম"
+
+msgid "Daily target (minutes)"
+msgstr "দৈনিক লক্ষ্য (মিনিট)"
+
+msgid "Focus length (minutes)"
+msgstr "ফোকাসের দৈর্ঘ্য (মিনিট)"
+
+msgid "Short break (minutes)"
+msgstr "ছোট বিরতি (মিনিট)"
+
+msgid "Long break (minutes)"
+msgstr "লম্বা বিরতি (মিনিট)"
+
+msgid "Long break after every"
+msgstr "প্রতি কতটির পর লম্বা বিরতি"
+
+msgid "Start breaks by themselves"
+msgstr "বিরতি নিজে থেকে শুরু হবে"
+
+msgid "Start the next focus by itself"
+msgstr "পরের ফোকাস নিজে থেকে শুরু হবে"
+
+msgid "Sounds"
+msgstr "শব্দ"
+
+msgid "Sound"
+msgstr "শব্দ"
+
+msgid "Ticking during focus"
+msgstr "ফোকাসের সময় টিক টিক শব্দ"
+
+msgid "Notifications"
+msgstr "নোটিফিকেশন"
+
+msgid "Remind me when a timer runs over (hours)"
+msgstr "টাইমার এত ঘণ্টা পেরোলে মনে করিয়ে দিন"
+
+msgid "Optional: how many hours this should take."
+msgstr "ঐচ্ছিক: এতে কত ঘণ্টা লাগার কথা।"
+
+msgid "Optional: for billable work."
+msgstr "ঐচ্ছিক: বিলযোগ্য কাজের জন্য।"
+
+msgid "Project"
+msgstr "প্রজেক্ট"
+
+msgid "Markdown works: **bold**, `code`, lists, links."
+msgstr "Markdown চলে: **বোল্ড**, `কোড`, তালিকা, লিংক।"
+
+msgid "Focus sessions."
+msgstr "ফোকাস সেশন পর।"
+
+msgid "When a focus session or break ends, a reminder is due, or a timer runs very long."
+msgstr "ফোকাস সেশন বা বিরতি শেষ হলে, রিমাইন্ডারের সময় হলে, বা টাইমার অনেকক্ষণ চললে।"
+
+msgid "Default project"
+msgstr "ডিফল্ট প্রজেক্ট"
+
+msgid "Untitled note"
+msgstr "শিরোনামহীন নোট"
+
+msgid "Nothing logged"
+msgstr "কিছু লেখা নেই"
+
+msgid "Planning the day"
+msgstr "দিনের পরিকল্পনা চলছে"
+
+msgid "Other work"
+msgstr "অন্যান্য কাজ"
+
+msgid "Edit time"
+msgstr "সময় সম্পাদনা"
+
+msgid "Add time"
+msgstr "সময় যোগ করুন"
+
+msgid "Session"
+msgstr "সেশন"
+
+msgid "Short break"
+msgstr "ছোট বিরতি"
+
+msgid "Long break"
+msgstr "লম্বা বিরতি"
+
+msgid "Sessions done"
+msgstr "সেশন শেষ"
+
+msgid "Skip to next"
+msgstr "পরেরটিতে যান"
+
+msgid "Space to start or pause. Focus time is added to your timesheet."
+msgstr "শুরু বা থামাতে স্পেস চাপুন। ফোকাসের সময় টাইমশিটে যোগ হয়।"
+
+msgid "Focusing on"
+msgstr "যাতে ফোকাস করছেন"
+
+msgid "— Nothing in particular —"
+msgstr "— নির্দিষ্ট কিছু না —"
+
+msgid "Sessions today"
+msgstr "আজকের সেশন"
+
+msgid "Focused today"
+msgstr "আজ ফোকাস"
+
+msgid "Lengths"
+msgstr "দৈর্ঘ্য"
+
+msgid "Sound and notifications are on"
+msgstr "শব্দ ও নোটিফিকেশন চালু"
+
+msgid "This is how a finished session will sound."
+msgstr "সেশন শেষ হলে এমন শব্দ হবে।"
+
+msgid "Test sound & notifications"
+msgstr "শব্দ ও নোটিফিকেশন পরীক্ষা করুন"
+
+msgid "Productivity isn't turned on for you"
+msgstr "আপনার জন্য প্রোডাক্টিভিটি চালু নেই"
+
+msgid "An admin can give you access from People & access."
+msgstr "একজন অ্যাডমিন “ব্যবহারকারী ও অনুমতি” থেকে আপনাকে অনুমতি দিতে পারেন।"
+
+msgid "Back home"
+msgstr "হোমে ফিরুন"
+
+msgid "New habit"
+msgstr "নতুন অভ্যাস"
+
+msgid "Habits"
+msgstr "অভ্যাস"
+
+msgid "Edit habit"
+msgstr "অভ্যাস সম্পাদনা"
+
+msgid "Bring back"
+msgstr "ফিরিয়ে আনুন"
+
+msgid "Delete this habit and its history? You can undo this from Recently deleted."
+msgstr "এই অভ্যাস ও এর ইতিহাস মুছবেন? \"সম্প্রতি মুছে ফেলা\" থেকে ফিরিয়ে আনতে পারবেন।"
+
+msgid "Small things, every day: read, exercise, practise, review. Tap a day to tick it."
+msgstr "প্রতিদিনের ছোট কাজ: পড়া, ব্যায়াম, অনুশীলন, রিভিউ। টিক দিতে দিনে চাপুন।"
+
+msgid "2 weeks"
+msgstr "২ সপ্তাহ"
+
+msgid "4 weeks"
+msgstr "৪ সপ্তাহ"
+
+msgid "Streak"
+msgstr "ধারাবাহিকতা"
+
+msgid "Start a habit"
+msgstr "একটি অভ্যাস শুরু করুন"
+
+msgid "Like “Read 20 pages”, “LeetCode problem”, “Walk 30 minutes”. Tick it off each day and watch the streak grow."
+msgstr "যেমন “২০ পৃষ্ঠা পড়া”, “LeetCode সমস্যা”, “৩০ মিনিট হাঁটা”। প্রতিদিন টিক দিন আর ধারাবাহিকতা বাড়তে দেখুন।"
+
+msgid "Shortcuts & tips"
+msgstr "শর্টকাট ও টিপস"
+
+msgid "Everything here works from the keyboard."
+msgstr "এখানে সবকিছু কিবোর্ড দিয়ে চলে।"
+
+msgid "Quick add, one line"
+msgstr "এক লাইনে দ্রুত যোগ"
+
+msgid "Adds a tag (made if new)."
+msgstr "ট্যাগ যোগ করে (নতুন হলে তৈরি হয়)।"
+
+msgid "Puts it in a project (first letters are enough; use _ for spaces)."
+msgstr "প্রজেক্টে রাখে (প্রথম কয়েক অক্ষরই যথেষ্ট; স্পেসের জায়গায় _ দিন)।"
+
+msgid "Priority (or !4 … !1)."
+msgstr "অগ্রাধিকার (বা !4 … !1)।"
+
+msgid "Due date."
+msgstr "শেষ তারিখ।"
+
+msgid "Time estimate."
+msgstr "আনুমানিক সময়।"
+
+msgid "Add to My Day."
+msgstr "আমার দিনে যোগ করে।"
+
+msgid "Good to know"
+msgstr "জেনে রাখুন"
+
+msgid "No signal? Keep working: changes wait on this device and sync when you're back online. The timer keeps the right time."
+msgstr "নেটওয়ার্ক নেই? কাজ চালিয়ে যান: পরিবর্তন এই ডিভাইসে থাকে, অনলাইনে ফিরলে সিঙ্ক হয়। টাইমার সঠিক সময় রাখে।"
+
+msgid "The focus timer runs by the clock, so it stays right when the phone sleeps. When it ends you get a sound and a notification."
+msgstr "ফোকাস টাইমার ঘড়ি ধরে চলে, তাই ফোন ঘুমিয়ে গেলেও ঠিক থাকে। শেষ হলে শব্দ ও নোটিফিকেশন পাবেন।"
+
+msgid "Deleted something by mistake? Undo it from the message, or from Recently deleted for 30 days."
+msgstr "ভুল করে কিছু মুছেছেন? বার্তা থেকে ফিরিয়ে আনুন, বা ৩০ দিনের মধ্যে \"সম্প্রতি মুছে ফেলা\" থেকে।"
+
+msgid "Install the app (menu → Install app) for a full-screen tracker with notifications on your phone."
+msgstr "ফোনে নোটিফিকেশনসহ পূর্ণ স্ক্রিন ট্র্যাকারের জন্য অ্যাপ ইনস্টল করুন (মেনু → অ্যাপ ইনস্টল)।"
+
+msgid "Your tracker is private: nobody else can see it, admins included."
+msgstr "আপনার ট্র্যাকার ব্যক্তিগত: অ্যাডমিনসহ আর কেউ দেখতে পারেন না।"
+
+msgid "Today's journal"
+msgstr "আজকের জার্নাল"
+
+#, python-format
+msgid "%(t)s tracked · %(n)s tasks done"
+msgstr "%(t)s সময় · %(n)sটি টাস্ক শেষ"
+
+msgid "Day before"
+msgstr "আগের দিন"
+
+msgid "Day after"
+msgstr "পরের দিন"
+
+msgid "Log"
+msgstr "লগ"
+
+msgid "Saving…"
+msgstr "সংরক্ষণ হচ্ছে…"
+
+msgid "Saved on this device"
+msgstr "এই ডিভাইসে সংরক্ষিত"
+
+msgid "Not saved"
+msgstr "সংরক্ষিত হয়নি"
+
+msgid "Plan"
+msgstr "পরিকল্পনা"
+
+msgid "What will make today a success?"
+msgstr "কী হলে আজকের দিন সফল হবে?"
+
+msgid "Shipped, fixed, figured out…"
+msgstr "যা শেষ করেছি, ঠিক করেছি, বুঝেছি…"
+
+msgid "Waiting on review, unclear spec… (one per line — they go in the standup)"
+msgstr "রিভিউর অপেক্ষা, অস্পষ্ট স্পেক… (প্রতি লাইনে একটি — স্ট্যান্ডআপে যাবে)"
+
+msgid "Standup"
+msgstr "স্ট্যান্ডআপ"
+
+msgid "Made from your tasks, time and blockers — ready to paste."
+msgstr "আপনার টাস্ক, সময় ও বাধা থেকে তৈরি — পেস্ট করার জন্য প্রস্তুত।"
+
+#, python-format
+msgid "Yesterday (%(d)s)"
+msgstr "গতকাল (%(d)s)"
+
+msgid "Add tasks to My Day"
+msgstr "আমার দিনে টাস্ক যোগ করুন"
+
+msgid "Copied for Slack / Teams (Markdown)"
+msgstr "Slack / Teams-এর জন্য কপি হয়েছে (Markdown)"
+
+msgid "Copy Markdown"
+msgstr "Markdown কপি করুন"
+
+msgid "Copy plain text"
+msgstr "সাধারণ লেখা কপি করুন"
+
+msgid "Done this day"
+msgstr "এই দিনে শেষ"
+
+msgid "Earlier entries"
+msgstr "আগের এন্ট্রি"
+
+msgid "Search notes  ( / )"
+msgstr "নোট খুঁজুন  ( / )"
+
+msgid "Search notes"
+msgstr "নোট খুঁজুন"
+
+msgid "No notes match."
+msgstr "কোনো নোট মেলেনি।"
+
+msgid "No notes yet. Press n anywhere to jot one down."
+msgstr "এখনো কোনো নোট নেই। যেকোনো জায়গায় n চেপে লিখে ফেলুন।"
+
+msgid "All notes"
+msgstr "সব নোট"
+
+msgid "Preview"
+msgstr "প্রিভিউ"
+
+msgid "Bold"
+msgstr "বোল্ড"
+
+msgid "To-do item"
+msgstr "করণীয়"
+
+msgid "Code block"
+msgstr "কোড ব্লক"
+
+msgid "Editing…"
+msgstr "লিখছেন…"
+
+msgid "Unpin"
+msgstr "পিন সরান"
+
+msgid "Pin to top"
+msgstr "উপরে পিন করুন"
+
+msgid "Turn into a task"
+msgstr "টাস্কে পরিণত করুন"
+
+msgid "No project"
+msgstr "প্রজেক্ট নেই"
+
+msgid "tags: idea, backend…"
+msgstr "ট্যাগ: idea, backend…"
+
+msgid "Start writing… Markdown works: # heading, **bold**, `code`, - [ ] to-do, ``` code blocks."
+msgstr "লেখা শুরু করুন… Markdown চলে: # শিরোনাম, **বোল্ড**, `কোড`, - [ ] করণীয়, ``` কোড ব্লক।"
+
+msgid "Pick a note, or start a new one."
+msgstr "একটি নোট বেছে নিন, বা নতুন শুরু করুন।"
+
+msgid "New note"
+msgstr "নতুন নোট"
+
+msgid "Tip: press n on any Productivity page to jot something down."
+msgstr "টিপ: প্রোডাক্টিভিটির যেকোনো পাতায় n চেপে কিছু লিখে রাখুন।"
+
+msgid "Quick add"
+msgstr "দ্রুত যোগ"
+
+msgid "Fix login bug #auth @api !high tomorrow ~45m"
+msgstr "Fix login bug #auth @api !high tomorrow ~45m"
+
+msgid "New task"
+msgstr "নতুন টাস্ক"
+
+msgid "Add to My Day"
+msgstr "আমার দিনে যোগ করুন"
+
+msgid "#tag  @project  !high  ~30m  tomorrow / friday / +3d  ·  Enter to add, Shift+Enter to add and start the timer"
+msgstr "#ট্যাগ  @প্রজেক্ট  !high  ~30m  tomorrow / friday / +3d  ·  যোগ করতে Enter, যোগ করে টাইমার শুরু করতে Shift+Enter"
+
+msgid "Write it down before it slips away… (Markdown works)"
+msgstr "ভুলে যাওয়ার আগে লিখে রাখুন… (Markdown চলে)"
+
+msgid "Ctrl+Enter to save. The first line becomes the title."
+msgstr "সংরক্ষণ করতে Ctrl+Enter। প্রথম লাইন শিরোনাম হবে।"
+
+msgid "What are you working on?"
+msgstr "কী কাজ করছেন?"
+
+msgid "Starts the timer now. Anything already running stops."
+msgstr "এখনই টাইমার শুরু হবে। আগে চালু থাকা টাইমার থামবে।"
+
+msgid "Keep open"
+msgstr "খোলা রাখুন"
+
+msgid "Add task"
+msgstr "টাস্ক যোগ করুন"
+
+msgid "Save note"
+msgstr "নোট সংরক্ষণ"
+
+msgid "Continue — start again"
+msgstr "চালিয়ে যান — আবার শুরু"
+
+msgid "Continue"
+msgstr "চালিয়ে যান"
+
+msgid "Time entry deleted"
+msgstr "সময়ের এন্ট্রি মুছে ফেলা হয়েছে"
+
+msgid "Plan & do"
+msgstr "পরিকল্পনা ও কাজ"
+
+msgid "Projects"
+msgstr "প্রজেক্ট"
+
+msgid "Focus timer"
+msgstr "ফোকাস টাইমার"
+
+msgid "Track & review"
+msgstr "হিসাব ও পর্যালোচনা"
+
+msgid "Journal & standup"
+msgstr "জার্নাল ও স্ট্যান্ডআপ"
+
+msgid "Know-how"
+msgstr "জ্ঞানভান্ডার"
+
+msgid "Snippets"
+msgstr "স্নিপেট"
+
+msgid "Timer, focus & sounds"
+msgstr "টাইমার, ফোকাস ও শব্দ"
+
+msgid "Anywhere"
+msgstr "যেকোনো জায়গায়"
+
+msgid "Quick add a task"
+msgstr "দ্রুত টাস্ক যোগ"
+
+msgid "Quick note"
+msgstr "দ্রুত নোট"
+
+msgid "Start / stop the timer"
+msgstr "টাইমার শুরু / বন্ধ"
+
+msgid "Search this page"
+msgstr "এই পাতায় খুঁজুন"
+
+msgid "These shortcuts"
+msgstr "এই শর্টকাটগুলো"
+
+msgid "Board"
+msgstr "বোর্ড"
+
+msgid "Focus & notes"
+msgstr "ফোকাস ও নোট"
+
+msgid "Start / pause focus"
+msgstr "ফোকাস শুরু / বিরতি"
+
+msgid "Save the note now"
+msgstr "এখনই নোট সংরক্ষণ"
+
+msgid "Add a task and start its timer"
+msgstr "টাস্ক যোগ করে টাইমার শুরু"
+
+msgid "Keyboard shortcuts"
+msgstr "কিবোর্ড শর্টকাট"
+
+msgid "Stop the timer"
+msgstr "টাইমার বন্ধ করুন"
+
+msgid "Start the timer"
+msgstr "টাইমার শুরু করুন"
+
+msgid "Remove from My Day"
+msgstr "আমার দিন থেকে সরান"
+
+msgid "Due today"
+msgstr "আজ শেষ তারিখ"
+
+msgid "Mark in progress"
+msgstr "চলছে হিসেবে চিহ্নিত"
+
+msgid "Add time by hand"
+msgstr "হাতে সময় যোগ"
+
+msgid "Focus on this"
+msgstr "এতে ফোকাস করুন"
+
+msgid "Change what you’re working on"
+msgstr "কী কাজ করছেন তা বদলান"
+
+msgid "Stop the timer (s)"
+msgstr "টাইমার বন্ধ (s)"
+
+msgid "Stop (s)"
+msgstr "বন্ধ (s)"
+
+msgid "Start (s)"
+msgstr "শুরু (s)"
+
+msgid "Tracked today"
+msgstr "আজকের সময়"
+
+msgid "Changes waiting for a connection"
+msgstr "সংযোগের অপেক্ষায় থাকা পরিবর্তন"
+
+msgid "Quick add (c)"
+msgstr "দ্রুত যোগ (c)"
+
+msgid "Quick add — task, note or time (c)"
+msgstr "দ্রুত যোগ — টাস্ক, নোট বা সময় (c)"
+
+msgid "Delete this project? Its tasks, time and notes are kept, without a project. You can undo this from Recently deleted."
+msgstr "এই প্রজেক্ট মুছবেন? এর টাস্ক, সময় ও নোট প্রজেক্ট ছাড়া থেকে যাবে। \"সম্প্রতি মুছে ফেলা\" থেকে ফিরিয়ে আনতে পারবেন।"
+
+msgid "Delete project"
+msgstr "প্রজেক্ট মুছুন"
+
+msgid "This week"
+msgstr "এই সপ্তাহ"
+
+msgid "Time budget used"
+msgstr "সময় বাজেট ব্যবহৃত"
+
+msgid "Worth at your rate"
+msgstr "আপনার রেটে মূল্য"
+
+msgid "Open tasks"
+msgstr "বাকি টাস্ক"
+
+msgid "Add a task to this project…"
+msgstr "এই প্রজেক্টে টাস্ক যোগ করুন…"
+
+#, python-format
+msgid "%(counter)s done"
+msgid_plural "%(counter)s done"
+msgstr[0] "%(counter)sটি শেষ"
+msgstr[1] "%(counter)sটি শেষ"
+
+msgid "Recent time"
+msgstr "সাম্প্রতিক সময়"
+
+msgid "No time tracked on this project yet."
+msgstr "এই প্রজেক্টে এখনো কোনো সময় হিসাব হয়নি।"
+
+msgid "New project"
+msgstr "নতুন প্রজেক্ট"
+
+msgid "Edit project"
+msgstr "প্রজেক্ট সম্পাদনা"
+
+#, python-format
+msgid "Time this week is since %(d)s."
+msgstr "এই সপ্তাহের সময় %(d)s থেকে।"
+
+msgid "Active projects"
+msgstr "চালু প্রজেক্ট"
+
+#, python-format
+msgid "%(pct)s%% of the time budget"
+msgstr "সময় বাজেটের %(pct)s%%"
+
+#, python-format
+msgid "%(pct)s%% of tasks done"
+msgstr "%(pct)s%% টাস্ক শেষ"
+
+msgid "No archived projects"
+msgstr "আর্কাইভে কোনো প্রজেক্ট নেই"
+
+msgid "No projects yet"
+msgstr "এখনো কোনো প্রজেক্ট নেই"
+
+msgid "Group tasks, time and notes by project — a client, a product, or a side project."
+msgstr "টাস্ক, সময় ও নোট প্রজেক্ট ধরে সাজান — একটি ক্লায়েন্ট, পণ্য বা সাইড প্রজেক্ট।"
+
+msgid "Custom…"
+msgstr "নিজে বাছাই…"
+
+msgid "Tracked"
+msgstr "হিসাবকৃত সময়"
+
+msgid "Of target"
+msgstr "লক্ষ্যের"
+
+msgid "Average work day"
+msgstr "গড় কাজের দিন"
+
+msgid "Tasks done"
+msgstr "শেষ টাস্ক"
+
+msgid "added"
+msgstr "যোগ হয়েছে"
+
+msgid "Focus sessions"
+msgstr "ফোকাস সেশন"
+
+msgid "By day"
+msgstr "দিন অনুযায়ী"
+
+#, python-format
+msgid "Best: %(d)s, %(h)s"
+msgstr "সেরা: %(d)s, %(h)s"
+
+msgid "By project"
+msgstr "প্রজেক্ট অনুযায়ী"
+
+msgid "When you work"
+msgstr "কখন কাজ করেন"
+
+msgid "Time started in each hour"
+msgstr "প্রতি ঘণ্টায় শুরু হওয়া সময়"
+
+msgid "By tag"
+msgstr "ট্যাগ অনুযায়ী"
+
+msgid "Top tasks"
+msgstr "শীর্ষ টাস্ক"
+
+msgid "Estimates vs. actual"
+msgstr "আনুমানিক বনাম আসল"
+
+#, python-format
+msgid "Your estimates are %(a)s%% accurate."
+msgstr "আপনার অনুমান %(a)s%% সঠিক।"
+
+msgid "No time in this period"
+msgstr "এই সময়ে কোনো হিসাব নেই"
+
+msgid "Track some time and come back — the charts fill in as you work."
+msgstr "কিছু সময় হিসাব করে ফিরে আসুন — কাজের সাথে চার্ট ভরে উঠবে।"
+
+msgid "Only for your own tracker."
+msgstr "শুধু আপনার নিজের ট্র্যাকারের জন্য।"
+
+msgid "Your work week"
+msgstr "আপনার কাজের সপ্তাহ"
+
+msgid "Focus timer (Pomodoro)"
+msgstr "ফোকাস টাইমার (পোমোডোরো)"
+
+msgid "Sounds & notifications"
+msgstr "শব্দ ও নোটিফিকেশন"
+
+msgid "This browser will show notifications."
+msgstr "এই ব্রাউজার নোটিফিকেশন দেখাবে।"
+
+msgid "Allow notifications on this device"
+msgstr "এই ডিভাইসে নোটিফিকেশনের অনুমতি দিন"
+
+msgid "Notifications are blocked for this site — allow them in the browser's site settings."
+msgstr "এই সাইটের নোটিফিকেশন বন্ধ — ব্রাউজারের সাইট সেটিংসে অনুমতি দিন।"
+
+msgid "This browser can't show notifications. Sounds still work."
+msgstr "এই ব্রাউজার নোটিফিকেশন দেখাতে পারে না। শব্দ কাজ করবে।"
+
+msgid "They appear while the app or a tab is open (also in the background). Install the app for the best experience on a phone."
+msgstr "অ্যাপ বা ট্যাব খোলা থাকলে (পেছনে থাকলেও) দেখা যাবে। ফোনে সেরা অভিজ্ঞতার জন্য অ্যাপ ইনস্টল করুন।"
+
+msgid "Notifications work"
+msgstr "নোটিফিকেশন কাজ করছে"
+
+msgid "You will see one like this when a focus session ends."
+msgstr "ফোকাস সেশন শেষ হলে এমন একটি দেখবেন।"
+
+msgid "Allow & test"
+msgstr "অনুমতি দিন ও পরীক্ষা করুন"
+
+msgid "Save settings"
+msgstr "সেটিংস সংরক্ষণ"
+
+msgid "Rename or recolour a tag everywhere at once."
+msgstr "একবারে সব জায়গায় ট্যাগের নাম বা রং বদলান।"
+
+msgid "Tag name"
+msgstr "ট্যাগের নাম"
+
+msgid "Remove tag"
+msgstr "ট্যাগ সরান"
+
+msgid "Remove this tag from everything?"
+msgstr "সবকিছু থেকে এই ট্যাগ সরাবেন?"
+
+msgid "Numbers: tasks · notes · time entries"
+msgstr "সংখ্যা: টাস্ক · নোট · সময়ের এন্ট্রি"
+
+msgid "No tags yet. Type #something when adding a task."
+msgstr "এখনো কোনো ট্যাগ নেই। টাস্ক যোগের সময় #কিছু লিখুন।"
+
+msgid "New snippet"
+msgstr "নতুন স্নিপেট"
+
+msgid "Edit snippet"
+msgstr "স্নিপেট সম্পাদনা"
+
+msgid "Commands, queries and code you reach for again and again — one tap to copy."
+msgstr "বারবার লাগে এমন কমান্ড, কোয়েরি ও কোড — এক চাপে কপি।"
+
+msgid "Snippet"
+msgstr "স্নিপেট"
+
+msgid "Search title or code  ( / )"
+msgstr "শিরোনাম বা কোড খুঁজুন  ( / )"
+
+msgid "Search snippets"
+msgstr "স্নিপেট খুঁজুন"
+
+msgid "All languages"
+msgstr "সব ভাষা"
+
+msgid "Tag"
+msgstr "ট্যাগ"
+
+msgid "Any tag"
+msgstr "যেকোনো ট্যাগ"
+
+msgid "Remove from favourites"
+msgstr "প্রিয় থেকে সরান"
+
+msgid "Add to favourites"
+msgstr "প্রিয়তে যোগ করুন"
+
+msgid "Snippet deleted"
+msgstr "স্নিপেট মুছে ফেলা হয়েছে"
+
+#, python-format
+msgid "copied %(counter)s time"
+msgid_plural "copied %(counter)s times"
+msgstr[0] "%(counter)s বার কপি হয়েছে"
+msgstr[1] "%(counter)s বার কপি হয়েছে"
+
+msgid "No snippets match"
+msgstr "কোনো স্নিপেট মেলেনি"
+
+msgid "Your code library is empty"
+msgstr "আপনার কোড লাইব্রেরি ফাঁকা"
+
+msgid "Save the docker command, the SQL query, the git trick — find it in a second next time."
+msgstr "docker কমান্ড, SQL কোয়েরি, git কৌশল রেখে দিন — পরের বার এক সেকেন্ডে খুঁজে পাবেন।"
+
+msgid "Add a snippet"
+msgstr "একটি স্নিপেট যোগ করুন"
+
+#, python-format
+msgid "done %(when)s"
+msgstr "শেষ %(when)s"
+
+msgid "Delete task"
+msgstr "টাস্ক মুছুন"
+
+msgid "Delete this task? You can bring it back from Recently deleted."
+msgstr "এই টাস্ক মুছবেন? \"সম্প্রতি মুছে ফেলা\" থেকে ফিরিয়ে আনতে পারবেন।"
+
+msgid "Task deleted"
+msgstr "টাস্ক মুছে ফেলা হয়েছে"
+
+msgid "Checklist"
+msgstr "চেকলিস্ট"
+
+msgid "Add a step…"
+msgstr "একটি ধাপ যোগ করুন…"
+
+msgid "Add a step"
+msgstr "ধাপ যোগ করুন"
+
+#, python-format
+msgid "of ~%(est)s planned"
+msgstr "পরিকল্পিত ~%(est)s-এর মধ্যে"
+
+#, python-format
+msgid "Added %(c)s · changed %(u)s ago"
+msgstr "যোগ %(c)s · বদলানো %(u)s আগে"
+
+#, python-format
+msgid "%(counter)s open"
+msgid_plural "%(counter)s open"
+msgstr[0] "%(counter)sটি বাকি"
+msgstr[1] "%(counter)sটি বাকি"
+
+msgid "Show as"
+msgstr "যেভাবে দেখাবে"
+
+msgid "List"
+msgstr "তালিকা"
+
+msgid "Full form"
+msgstr "পূর্ণ ফর্ম"
+
+msgid "Search tasks  ( / )"
+msgstr "টাস্ক খুঁজুন  ( / )"
+
+msgid "Search tasks"
+msgstr "টাস্ক খুঁজুন"
+
+msgid "All projects"
+msgstr "সব প্রজেক্ট"
+
+msgid "Any date"
+msgstr "যেকোনো তারিখ"
+
+msgid "Next 7 days"
+msgstr "সামনের ৭ দিন"
+
+msgid "Any priority"
+msgstr "যেকোনো অগ্রাধিকার"
+
+msgid "High and up"
+msgstr "বেশি ও তার উপরে"
+
+msgid "Medium and up"
+msgstr "মাঝারি ও তার উপরে"
+
+msgid "Add a task here"
+msgstr "এখানে টাস্ক যোগ করুন"
+
+msgid "Task title, then Enter"
+msgstr "টাস্কের শিরোনাম, তারপর Enter"
+
+msgid "No tasks match"
+msgstr "কোনো টাস্ক মেলেনি"
+
+msgid "Nothing to do. Nice."
+msgstr "করার কিছু নেই। চমৎকার।"
+
+msgid "Press c to add a task. Try: Fix login bug #auth @api !high tomorrow ~45m"
+msgstr "টাস্ক যোগ করতে c চাপুন। চেষ্টা করুন: Fix login bug #auth @api !high tomorrow ~45m"
+
+#, python-format
+msgid "Show %(counter)s done task"
+msgid_plural "Show %(counter)s done tasks"
+msgstr[0] "শেষ হওয়া %(counter)sটি টাস্ক দেখুন"
+msgstr[1] "শেষ হওয়া %(counter)sটি টাস্ক দেখুন"
+
+msgid "Week"
+msgstr "সপ্তাহ"
+
+msgid "Previous week"
+msgstr "আগের সপ্তাহ"
+
+msgid "Next week"
+msgstr "পরের সপ্তাহ"
+
+msgid "Target"
+msgstr "লক্ষ্য"
+
+msgid "Daily average"
+msgstr "দৈনিক গড়"
+
+msgid "Timesheet"
+msgstr "টাইমশিট"
+
+msgid "Nothing yet today."
+msgstr "আজ এখনো কিছু নেই।"
+
+msgid "No time this week"
+msgstr "এই সপ্তাহে কোনো সময় নেই"
+
+msgid "Start the timer at the top, or add time you already worked."
+msgstr "উপরে টাইমার শুরু করুন, বা আগে করা কাজের সময় যোগ করুন।"
+
+#, python-format
+msgid "of %(goal)s"
+msgstr "%(goal)s-এর মধ্যে"
+
+#, python-format
+msgid "%(counter)s day streak"
+msgid_plural "%(counter)s day streak"
+msgstr[0] "টানা %(counter)s দিন"
+msgstr[1] "টানা %(counter)s দিন"
+
+msgid "Hit your daily target to start a streak."
+msgstr "ধারাবাহিকতা শুরু করতে দৈনিক লক্ষ্য পূরণ করুন।"
+
+msgid "My Day"
+msgstr "আমার দিন"
+
+msgid "In progress, due today or late, and what you picked for today."
+msgstr "চলমান, আজ শেষ তারিখ বা দেরি হওয়া, আর আজকের জন্য বেছে নেওয়া কাজ।"
+
+msgid "All tasks"
+msgstr "সব টাস্ক"
+
+msgid "Add to My Day… (try #tag !high ~30m)"
+msgstr "আমার দিনে যোগ করুন… (চেষ্টা করুন #tag !high ~30m)"
+
+msgid "Add a task to My Day"
+msgstr "আমার দিনে টাস্ক যোগ করুন"
+
+msgid "A clear day. Pick a few things to do — they'll show here."
+msgstr "দিন ফাঁকা। কয়েকটি কাজ বেছে নিন — এখানে দেখাবে।"
+
+msgid "From your list"
+msgstr "আপনার তালিকা থেকে"
+
+#, python-format
+msgid "%(counter)s done today"
+msgid_plural "%(counter)s done today"
+msgstr[0] "আজ %(counter)sটি শেষ"
+msgstr[1] "আজ %(counter)sটি শেষ"
+
+msgid "Habits today"
+msgstr "আজকের অভ্যাস"
+
+msgid "Today's time"
+msgstr "আজকের সময়"
+
+msgid "Nothing tracked yet. Start the timer above, or press s."
+msgstr "এখনো কিছু হিসাব হয়নি। উপরে টাইমার শুরু করুন, বা s চাপুন।"
+
+msgid "Plan for today"
+msgstr "আজকের পরিকল্পনা"
+
+msgid "The one thing that would make today a good day…"
+msgstr "যে একটি কাজ আজকের দিনকে ভালো করবে…"
+
+msgid "Open the journal & standup"
+msgstr "জার্নাল ও স্ট্যান্ডআপ খুলুন"
+
+msgid "Recent notes"
+msgstr "সাম্প্রতিক নোট"
+
+msgid "Saved on this device — it will sync when you're online."
+msgstr "এই ডিভাইসে সংরক্ষিত — অনলাইনে এলে সিঙ্ক হবে।"
+
+msgid "Synced changes made offline."
+msgstr "অফলাইনে করা পরিবর্তন সিঙ্ক হয়েছে।"
+
+msgid "Reminder"
+msgstr "রিমাইন্ডার"
+
+msgid "Still working on this?"
+msgstr "এখনো এই কাজ করছেন?"
+
+msgid "Not saved."
+msgstr "সংরক্ষিত হয়নি।"
+
+msgid "Task added"
+msgstr "টাস্ক যোগ হয়েছে"
+
+msgid "Note saved"
+msgstr "নোট সংরক্ষিত"
+
+msgid "Next one added"
+msgstr "পরেরটি যোগ হয়েছে"
+
+msgid "Note deleted"
+msgstr "নোট মুছে ফেলা হয়েছে"
+
+msgid "Focus session done"
+msgstr "ফোকাস সেশন শেষ"
+
+msgid "Time for a break."
+msgstr "এখন বিরতির সময়।"
+
+msgid "Break's over"
+msgstr "বিরতি শেষ"
+
+msgid "Ready to focus again?"
+msgstr "আবার ফোকাসের জন্য প্রস্তুত?"
+
+msgid "Not allowed."
+msgstr "অনুমতি নেই।"
+
+msgid "Task saved."
+msgstr "টাস্ক সংরক্ষিত হয়েছে।"
+
+msgid "Project saved."
+msgstr "প্রজেক্ট সংরক্ষিত হয়েছে।"
+
+#, python-format
+msgid "Project deleted: %(name)s. Its tasks, time and notes are kept, without a project."
+msgstr "প্রজেক্ট মুছে ফেলা হয়েছে: %(name)s। এর টাস্ক, সময় ও নোট প্রজেক্ট ছাড়া থেকে গেছে।"
+
+msgid "Snippet saved."
+msgstr "স্নিপেট সংরক্ষিত হয়েছে।"
+
+#, python-format
+msgid "Time saved: %(time)s."
+msgstr "সময় সংরক্ষিত: %(time)s।"
+
+msgid "Habit saved."
+msgstr "অভ্যাস সংরক্ষিত হয়েছে।"
+
+msgid "Hours"
+msgstr "ঘণ্টা"
+
+msgid "Settings saved."
+msgstr "সেটিংস সংরক্ষিত হয়েছে।"
+
+msgid "Habit archived."
+msgstr "অভ্যাস আর্কাইভ হয়েছে।"
+
+msgid "Habit is back."
+msgstr "অভ্যাস ফিরে এসেছে।"
+
+#, python-format
+msgid "Habit deleted: %(name)s."
+msgstr "অভ্যাস মুছে ফেলা হয়েছে: %(name)s।"
+
+msgid "Last week"
+msgstr "গত সপ্তাহ"
+
+msgid "Tag removed from everything."
+msgstr "সবকিছু থেকে ট্যাগ সরানো হয়েছে।"
+
+msgid "Tag saved."
+msgstr "ট্যাগ সংরক্ষিত হয়েছে।"
+
+msgid "That tag name is empty or already used."
+msgstr "ট্যাগের নাম ফাঁকা বা আগেই ব্যবহৃত।"

@@ -1,0 +1,29 @@
+{% load i18n %}{% comment %}The running timer, on every Productivity page ($store.timer in static/js/work.js).{% endcomment %}
+<section class="wt-bar" x-data="{ what: '', edit: false }" :class="$store.timer.running && 'is-running'" aria-label="{% translate 'Timer' %}">
+  <template x-if="$store.timer.running">
+    <div class="wt-run">
+      <span class="wt-pulse" aria-hidden="true"></span>
+      <div class="wt-what">
+        <button type="button" class="wt-label" x-show="!edit" @click="edit = true; what = $store.timer.running.description || ''; $nextTick(() => $refs.rename.focus())" data-tip="{% translate 'Change what you’re working on' %}">
+          <span x-text="$store.timer.running.label"></span>
+        </button>
+        <input x-ref="rename" x-show="edit" x-cloak x-model="what" class="wt-input" @keydown.enter.prevent="$store.timer.rename(what); edit = false" @keydown.escape="edit = false" @blur="if (edit) { $store.timer.rename(what); edit = false }" aria-label="{% translate 'What are you working on?' %}">
+        <a x-show="$store.timer.running.project_name" :href="$store.timer.running.task_url || '#'" class="wt-meta" x-cloak><span class="wt-dot" :data-color="$store.timer.running.color"></span><span x-text="$store.timer.running.project_name"></span></a>
+      </div>
+      <span class="wt-clock num" x-text="$store.timer.text" aria-live="off"></span>
+      <button type="button" class="wt-stop" @click="$store.timer.stop()" aria-label="{% translate 'Stop the timer (s)' %}" data-tip="{% translate 'Stop (s)' %}">{% include "partials/icon.html" with name="stop" %}</button>
+    </div>
+  </template>
+  <template x-if="!$store.timer.running">
+    <form class="wt-idle" @submit.prevent="$store.timer.start({ description: what, label: what }); what = ''">
+      <span class="wt-idle-icon" aria-hidden="true">{% include "partials/icon.html" with name="timer" %}</span>
+      <input x-model="what" class="wt-input" placeholder="{% translate 'What are you working on?' %}" aria-label="{% translate 'What are you working on?' %}" enterkeyhint="go">
+      <button type="submit" class="wt-start" aria-label="{% translate 'Start the timer' %}" data-tip="{% translate 'Start (s)' %}">{% include "partials/icon.html" with name="play" %}<span class="hidden sm:inline">{% translate "Start" %}</span></button>
+    </form>
+  </template>
+  <div class="wt-side">
+    <span class="wt-today" data-tip="{% translate 'Tracked today' %}">{% include "partials/icon.html" with name="clock" %}<span class="num" x-text="$store.timer.todayText"></span></span>
+    <span class="wt-outbox" data-work-outbox hidden data-tip="{% translate 'Changes waiting for a connection' %}">{% include "partials/icon.html" with name="cloud" %}<b>0</b></span>
+    <button type="button" class="wt-add" @click="$dispatch('work:capture', 'task')" aria-label="{% translate 'Quick add (c)' %}" data-tip="{% translate 'Quick add — task, note or time (c)' %}">{% include "partials/icon.html" with name="plus" %}</button>
+  </div>
+</section>

@@ -1,0 +1,71 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% translate "Journal" %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+<header class="wp-head">
+  <div class="min-w-0">
+    <h1 class="wp-title">{% if day == today %}{% translate "Today's journal" %}{% else %}{{ day|date:"l, j F Y" }}{% endif %}</h1>
+    <p class="wp-sub">{% blocktranslate with t=tracked.seconds|hm n=done|length %}{{ t }} tracked · {{ n }} tasks done{% endblocktranslate %}</p>
+  </div>
+  <div class="wp-actions">
+    <nav class="wpg">
+      <a href="?date={{ prev|date:'Y-m-d' }}" class="icon-btn" aria-label="{% translate 'Day before' %}">{% include "partials/icon.html" with name="chevron-left" %}</a>
+      {% if next %}<a href="{% url 'work:journal' %}" class="btn btn-ghost btn-sm">{% translate "Today" %}</a><a href="?date={{ next|date:'Y-m-d' }}" class="icon-btn" aria-label="{% translate 'Day after' %}">{% include "partials/icon.html" with name="chevron-right" %}</a>{% endif %}
+    </nav>
+  </div>
+</header>
+
+<div class="wj">
+  <section class="card wj-entry" x-data="workJournal('{{ day|date:"Y-m-d" }}')">
+    <header class="card-header"><h2 class="card-title">{% translate "Log" %}</h2>
+      <span class="wn-state" x-text="{ saving: '{% translate "Saving…" %}', saved: '{% translate "Saved" %}', offline: '{% translate "Saved on this device" %}', dirty: '…', error: '{% translate "Not saved" %}' }[state] || ''"></span></header>
+    <div class="card-body form-stack">
+      <div class="field"><label class="label" for="j-plan">{% translate "Plan" %}</label>
+        <textarea id="j-plan" rows="3" class="form-input" placeholder="{% translate 'What will make today a success?' %}" @input="save('plan', $event.target.value)">{{ entry.plan }}</textarea></div>
+      <div class="field"><label class="label" for="j-wins">{% translate "Done & learnt" %}</label>
+        <textarea id="j-wins" rows="4" class="form-input" placeholder="{% translate 'Shipped, fixed, figured out…' %}" @input="save('wins', $event.target.value)">{{ entry.wins }}</textarea></div>
+      <div class="field"><label class="label" for="j-block">{% translate "Blockers" %}</label>
+        <textarea id="j-block" rows="2" class="form-input" placeholder="{% translate 'Waiting on review, unclear spec… (one per line — they go in the standup)' %}" @input="save('blockers', $event.target.value)">{{ entry.blockers }}</textarea></div>
+      <div class="field"><label class="label" for="j-notes">{% translate "Notes" %}</label>
+        <textarea id="j-notes" rows="3" class="form-input" @input="save('notes', $event.target.value)">{{ entry.notes }}</textarea></div>
+      <div class="wj-scales">
+        <div x-data="{ v: {{ entry.mood|default:0 }} }"><p class="label">{% translate "Mood" %}</p>
+          <div class="wj-scale">{% for i in moods %}<button type="button" :class="v === {{ i }} && 'is-on'" @click="v = v === {{ i }} ? 0 : {{ i }}; save('mood', v ? String(v) : '')" aria-label="{{ i }}/5">{% cycle '😞' '😕' '😐' '🙂' '😄' %}</button>{% endfor %}</div></div>
+        <div x-data="{ v: {{ entry.energy|default:0 }} }"><p class="label">{% translate "Energy" %}</p>
+          <div class="wj-scale is-energy">{% for i in moods %}<button type="button" :class="v >= {{ i }} && 'is-on'" @click="v = v === {{ i }} ? 0 : {{ i }}; save('energy', v ? String(v) : '')" aria-label="{{ i }}/5"></button>{% endfor %}</div></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="wd-side">
+    <section class="card" x-data="{ md: true }">
+      <header class="card-header"><div><h2 class="card-title">{% translate "Standup" %}</h2><p class="card-subtitle">{% translate "Made from your tasks, time and blockers — ready to paste." %}</p></div></header>
+      <div class="card-body !pt-0">
+        <div class="wj-standup">
+          <h3>{% blocktranslate with d=standup.since|date:"D j M" %}Yesterday ({{ d }}){% endblocktranslate %}</h3>
+          <ul>{% for x in standup.yesterday %}<li>{{ x }}</li>{% empty %}<li class="wd-muted">{% translate "Nothing logged" %}</li>{% endfor %}</ul>
+          <h3>{% translate "Today" %}</h3>
+          <ul>{% for x in standup.today %}<li>{{ x }}</li>{% empty %}<li class="wd-muted">{% translate "Add tasks to My Day" %}</li>{% endfor %}</ul>
+          <h3>{% translate "Blockers" %}</h3>
+          <ul>{% for x in standup.blockers %}<li>{{ x }}</li>{% empty %}<li class="wd-muted">{% translate "None" %}</li>{% endfor %}</ul>
+        </div>
+        {{ standup_md|json_script:"standup-md" }}{{ standup_plain|json_script:"standup-plain" }}
+        <div class="form-actions !justify-start mt-3">
+          <button type="button" class="btn btn-primary btn-sm" @click="navigator.clipboard.writeText(JSON.parse(document.getElementById('standup-md').textContent)).then(() => Work.toast('{% translate "Copied for Slack / Teams (Markdown)" %}'))">{% include "partials/icon.html" with name="copy" %}{% translate "Copy Markdown" %}</button>
+          <button type="button" class="btn btn-secondary btn-sm" @click="navigator.clipboard.writeText(JSON.parse(document.getElementById('standup-plain').textContent)).then(() => Work.toast('{% translate "Copied" %}'))">{% translate "Copy plain text" %}</button>
+        </div>
+      </div>
+    </section>
+    {% if done %}
+    <section class="card"><header class="card-header"><h2 class="card-title">{% translate "Done this day" %}</h2></header>
+      <ul class="wd-notes">{% for t in done %}<li><a href="{% url 'work:task' t.pk %}"><span class="truncate">✓ {{ t.title }}</span><time>{{ t.completed_at|local_time }}</time></a></li>{% endfor %}</ul></section>
+    {% endif %}
+    {% if recent %}
+    <section class="card"><header class="card-header"><h2 class="card-title">{% translate "Earlier entries" %}</h2></header>
+      <ul class="wd-notes">{% for j in recent %}<li><a href="?date={{ j.date|date:'Y-m-d' }}"><span class="truncate">{{ j.date|date:"D j M" }} · {{ j.plan|default:j.wins|truncatechars:50 }}</span></a></li>{% endfor %}</ul></section>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

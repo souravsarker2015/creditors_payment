@@ -235,6 +235,21 @@ self.addEventListener("fetch", (event) => {
 });
 
 /* ── Messages from the page ── */
+/* ── Notifications (Productivity: focus ends, reminders): a tap opens the page ── */
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = new URL((event.notification.data && event.notification.data.url) || "/work/", self.location.origin).href;
+  event.waitUntil((async () => {
+    const open = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    for (const c of open) {
+      if (c.url === target && "focus" in c) return c.focus();
+    }
+    const any = open.find((c) => c.url.startsWith(self.location.origin) && "navigate" in c);
+    if (any) { await any.navigate(target); return any.focus(); }
+    return self.clients.openWindow(target);
+  })());
+});
+
 self.addEventListener("message", (event) => {
   const msg = event.data || {};
   if (msg.type === "warm") {

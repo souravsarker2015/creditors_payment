@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Two-step sign-in" %} | FinTrack{% endblock %}
+
+{% block content %}
+<div class="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center py-6" x-data="{ recovery: false }">
+  <div class="w-full max-w-sm">
+    <div class="mb-6 text-center">
+      <span class="mx-auto grid h-12 w-12 place-items-center rounded-xl shadow-sm" style="background: var(--accent-soft); color: var(--accent);"><span class="h-6 w-6">{% include "partials/icon.html" with name="key" %}</span></span>
+      <h1 class="page-title mt-5">{% translate "Enter your code" %}</h1>
+      <p class="page-subtitle mx-auto" x-show="!recovery">{% blocktranslate with name=pending_user.get_username %}Open your authenticator app and type the 6-digit code for FinTrack ({{ name }}).{% endblocktranslate %}</p>
+      <p class="page-subtitle mx-auto" x-show="recovery" x-cloak>{% translate "Type one of the recovery codes you saved when you turned on two-step sign-in. Each works once." %}</p>
+    </div>
+    <form method="post" class="card card-body form-stack !p-6" novalidate>
+      {% csrf_token %}
+      {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+      {% for field in form %}{% include "partials/field.html" %}{% endfor %}
+      <button type="submit" class="btn btn-primary btn-block !mt-6">{% translate "Verify and sign in" %}</button>
+    </form>
+    <div class="mt-5 flex flex-col items-center gap-2 text-sm">
+      <button type="button" class="font-semibold" style="color: var(--accent);" x-show="!recovery" @click="recovery = true; $nextTick(() => { const i = document.querySelector('[name=code]'); i.inputMode = 'text'; i.placeholder = 'abcde-fghjk'; i.focus(); })">{% translate "Lost your phone? Use a recovery code" %}</button>
+      <a href="{% url 'login' %}" style="color: var(--text-secondary);">{% translate "Back to sign in" %}</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

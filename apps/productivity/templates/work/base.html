@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% comment %}
+Every Productivity page: the timer bar, quick capture (c / n / s), the
+keyboard-shortcut sheet (?) and the settings the page script needs.
+{% endcomment %}
+{% block extra_css %}<link rel="stylesheet" href="{% asset 'css/work.css' %}">{% endblock %}
+
+{% block content %}
+<div class="work">
+  {% include "work/partials/timer_bar.html" %}
+  {% block work %}{% endblock %}
+  {% include "work/partials/capture.html" %}
+  {% include "work/partials/shortcuts.html" %}
+</div>
+{{ work_config|json_script:"work-config" }}
+{% endblock %}
+
+{% block extra_js %}
+{% block work_libs %}{% endblock %}
+<script src="{% asset 'js/work.js' %}"></script>
+{% block work_js %}{% endblock %}
+{% endblock %}

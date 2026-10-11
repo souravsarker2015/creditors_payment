@@ -1,0 +1,12 @@
+{% load i18n work %}{% comment %}A task on the board. Needs: t.{% endcomment %}
+<article class="wb-card{% if t.is_done %} is-done{% endif %}" data-task="{{ t.pk }}" data-p="{{ t.priority }}">
+  <a href="{% url 'work:task' t.pk %}" class="wb-card-title">{{ t.title }}</a>
+  <div class="wt-task-meta">
+    {% if t.priority >= 3 %}<span class="wt-prio" data-p="{{ t.priority }}">{{ t.get_priority_display }}</span>{% endif %}
+    {% if t.project %}<span class="wt-proj"><span class="wt-dot" data-color="{{ t.project.color }}"></span>{{ t.project.name }}</span>{% endif %}
+    {% if t.due_date %}<span class="wt-due" data-tone="{{ t|due_tone }}">{% include "partials/icon.html" with name="calendar" %}{{ t.due_date|due_label }}</span>{% endif %}
+    {% with c=t|checklist_counts %}{% if c %}<span class="wt-est">{% include "partials/icon.html" with name="check" %}{{ c }}</span>{% endif %}{% endwith %}
+    {% if t.estimate_minutes %}<span class="wt-est">~{{ t.estimate_minutes|minutes_hm }}</span>{% endif %}
+    {% for tag in t.tags.all %}<span class="wt-tag">#{{ tag.name }}</span>{% endfor %}
+  </div>
+</article>

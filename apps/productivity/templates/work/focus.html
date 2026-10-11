@@ -1,0 +1,48 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% translate "Focus" %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+<div class="wfo" x-data="workFocus({ task: '{{ task.pk|default:'' }}', taskTitle: '{{ task.title|default:''|escapejs }}' })" data-focus-page :data-mode="mode">
+  <nav class="seg seg-block wfo-modes" aria-label="{% translate 'Session' %}">
+    <button type="button" class="seg-item" :class="mode === 'focus' && 'is-active'" @click="set('focus')">{% translate "Focus" %}</button>
+    <button type="button" class="seg-item" :class="mode === 'short' && 'is-active'" @click="set('short')">{% translate "Short break" %}</button>
+    <button type="button" class="seg-item" :class="mode === 'long' && 'is-active'" @click="set('long')">{% translate "Long break" %}</button>
+  </nav>
+
+  <div class="wfo-ring" :style="'--p:' + pct" role="timer" :aria-label="text">
+    <svg viewBox="0 0 220 220" aria-hidden="true"><circle cx="110" cy="110" r="100" class="wfo-ring-bg"/><circle cx="110" cy="110" r="100" class="wfo-ring-fg" pathLength="100"/></svg>
+    <div class="wfo-center">
+      <p class="wfo-time num" x-text="text">{{ ws.focus_minutes }}:00</p>
+      <p class="wfo-mode" x-text="{ focus: '{% translate "Focus" %}', short: '{% translate "Short break" %}', long: '{% translate "Long break" %}' }[mode]"></p>
+      <p class="wfo-dots" aria-label="{% translate 'Sessions done' %}"><template x-for="i in {{ ws.long_break_every }}" :key="i"><span :class="(done % {{ ws.long_break_every }}) >= i || (done && done % {{ ws.long_break_every }} === 0 && mode === 'long') ? 'is-on' : ''"></span></template></p>
+    </div>
+  </div>
+
+  <div class="wfo-controls">
+    <button type="button" class="wfo-small" @click="reset()" aria-label="{% translate 'Reset' %}" data-tip="{% translate 'Reset' %}">{% include "partials/icon.html" with name="restore" %}</button>
+    <button type="button" class="wfo-main" @click="toggle()" :aria-label="running ? '{% translate "Pause" %}' : '{% translate "Start" %}'">
+      <span x-show="!running">{% include "partials/icon.html" with name="play" %}</span><span x-show="running" x-cloak>{% include "partials/icon.html" with name="pause" %}</span>
+    </button>
+    <button type="button" class="wfo-small" @click="skip()" aria-label="{% translate 'Skip to next' %}" data-tip="{% translate 'Skip' %}">{% include "partials/icon.html" with name="chevron-right" %}</button>
+  </div>
+  <p class="wfo-hint">{% translate "Space to start or pause. Focus time is added to your timesheet." %}</p>
+
+  <section class="card wfo-task">
+    <label class="label" for="focus-task">{% translate "Focusing on" %}</label>
+    <select id="focus-task" data-native class="form-input" @change="pick($event)" x-init="$el.value = task">
+      <option value="">{% translate "— Nothing in particular —" %}</option>
+      {% for t in tasks %}<option value="{{ t.pk }}">{{ t.title }}</option>{% endfor %}
+      {% if task and task not in tasks %}<option value="{{ task.pk }}">{{ task.title }}</option>{% endif %}
+    </select>
+  </section>
+
+  <dl class="wfo-today">
+    <div><dt>{% translate "Sessions today" %}</dt><dd class="num" x-text="{{ sessions }} + 0">{{ sessions }}</dd></div>
+    <div><dt>{% translate "Focused today" %}</dt><dd class="num">{{ focus_seconds|hm }}</dd></div>
+    <div><dt>{% translate "Lengths" %}</dt><dd>{{ ws.focus_minutes }} / {{ ws.short_break_minutes }} / {{ ws.long_break_minutes }} <a href="{% url 'work:settings' %}" class="wd-link">{% translate "Change" %}</a></dd></div>
+  </dl>
+  <button type="button" class="btn btn-ghost btn-sm wfo-test" @click="Work.askNotify().then(p => { Work.play(Work.cfg.sound || 'chime', true); Work.notify('{% translate "Sound and notifications are on" %}', '{% translate "This is how a finished session will sound." %}'); })">{% include "partials/icon.html" with name="bell" %}{% translate "Test sound & notifications" %}</button>
+</div>
+{% endblock %}

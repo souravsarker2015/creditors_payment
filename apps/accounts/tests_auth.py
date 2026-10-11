@@ -87,7 +87,7 @@ class AccountPageTests(TestCase):
         self.user.save()
         new = "N3w-pass-456!"
         r = self.client.post(reverse("account_settings"), {"action": "password", "pw-old_password": PW, "pw-new_password1": new, "pw-new_password2": new})
-        self.assertRedirects(r, reverse("account_settings"), fetch_redirect_response=False)
+        self.assertRedirects(r, reverse("account_settings") + "#password", fetch_redirect_response=False)
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password(new))
         self.assertEqual(self.client.get(reverse("account_settings")).status_code, 200)   # still signed in

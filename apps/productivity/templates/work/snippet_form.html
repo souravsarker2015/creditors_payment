@@ -1,0 +1,33 @@
+{% extends "work/base.html" %}
+{% load i18n %}
+
+{% block title %}{% if snippet %}{{ snippet.title }}{% else %}{% translate "New snippet" %}{% endif %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+<div class="page-medium">
+  <header class="wp-head"><div><a href="{% url 'work:snippets' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Snippets" %}</a>
+    <h1 class="wp-title">{% if snippet %}{% translate "Edit snippet" %}{% else %}{% translate "New snippet" %}{% endif %}</h1></div></header>
+  <form method="post" class="card" novalidate>
+    {% csrf_token %}
+    <div class="card-body form-stack">
+      <div class="form-grid form-grid-2">
+        {% with field=form.title %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.language %}{% include "partials/field.html" %}{% endwith %}
+      </div>
+      <div class="field{% if form.code.errors %} has-error{% endif %}">
+        <label class="label" for="{{ form.code.id_for_label }}">{{ form.code.label }}<span class="req">*</span></label>
+        <textarea name="{{ form.code.html_name }}" id="{{ form.code.id_for_label }}" rows="16" class="form-input code-input" spellcheck="false" autocapitalize="off" autocomplete="off"
+                  @keydown.tab.prevent="const t = $el, s = t.selectionStart; t.value = t.value.slice(0, s) + '    ' + t.value.slice(t.selectionEnd); t.selectionStart = t.selectionEnd = s + 4">{{ form.code.value|default:'' }}</textarea>
+        {% for e in form.code.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+      </div>
+      {% with field=form.description %}{% include "partials/field.html" %}{% endwith %}
+      {% with field=form.tags_text %}{% include "partials/field.html" %}{% endwith %}
+      {% with field=form.is_favorite %}{% include "partials/field.html" %}{% endwith %}
+    </div>
+    <div class="card-footer form-actions">
+      <a href="{% url 'work:snippets' %}" class="btn btn-ghost">{% translate "Cancel" %}</a>
+      <button type="submit" class="btn btn-primary">{% include "partials/icon.html" with name="check" %}{% translate "Save" %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

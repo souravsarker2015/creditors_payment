@@ -91,3 +91,195 @@ class ThrottledPasswordResetForm(PasswordResetForm):
         cache.set(key, sent + 1, RESET_WINDOW)
         super().save(*args, **kwargs)
 
+
+
+class ProfileForm(forms.ModelForm):
+    """Name, username and phone. Email has its own form (it asks for the password)."""
+
+    phone = forms.CharField(label=_("Phone"), max_length=20, required=False,
+                            widget=forms.TextInput(attrs={"inputmode": "tel", "autocomplete": "tel"}))
+
+    class Meta:
+        model = User
+        fields = ("first_name", "last_name", "username")
+        widgets = {
+            "first_name": forms.TextInput(attrs={"autocomplete": "given-name"}),
+            "last_name": forms.TextInput(attrs={"autocomplete": "family-name"}),
+            "username": forms.TextInput(attrs={"autocomplete": "username", "autocapitalize": "none"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["username"].help_text = _("Letters, digits and @ . + - _ only. You sign in with it.")
+        profile = getattr(self.instance, "profile", None)
+        if profile is not None:
+            self.fields["phone"].initial = profile.phone
+
+    def clean_username(self):
+        username = self.cleaned_data["username"].strip()
+        if User.objects.filter(username__iexact=username).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError(_("That username is taken."))
+        return username
+
+    def save(self, commit=True):
+        user = super().save(commit)
+        from .models import UserProfile
+
+        profile, _created = UserProfile.objects.get_or_create(user=user)
+        profile.phone = self.cleaned_data.get("phone", "").strip()
+        profile.save(update_fields=["phone"])
+        return user
+
+
+class CodeForm(forms.Form):
+    """The 6-digit code from the authenticator app (or a recovery code)."""
+
+    code = forms.CharField(
+        label=_("Code"), max_length=20, strip=True,
+        widget=forms.TextInput(attrs={"inputmode": "numeric", "autocomplete": "one-time-code", "autocapitalize": "none",
+                                      "autofocus": True, "placeholder": "123456", "class": "otp-input"}),
+    )
+
+
+class TwoFactorVerifyForm(CodeForm):
+    trust = forms.BooleanField(label=_("Don't ask again on this device for 30 days"), required=False)
+
+
+class PasswordAndCodeForm(CodeForm):
+    """Turning two-step sign-in off: the password and a current code."""
+
+    password = forms.CharField(label=_("Your password"), strip=False, widget=forms.PasswordInput(attrs={"autocomplete": "current-password"}))
+
+    def __init__(self, user, *args, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+        self.fields["code"].widget.attrs.pop("autofocus", None)
+        self.fields["code"].help_text = _("From your authenticator app, or one of your recovery codes.")
+        self.order_fields(["password", "code"])
+
+    def clean_password(self):
+        password = self.cleaned_data["password"]
+        if not self.user.check_password(password):
+            raise forms.ValidationError(_("That password isn't right."))
+        return password
+
+
+class SecuritySettingsForm(forms.ModelForm):
+    class Meta:
+        from .models import SecuritySettings
+
+        model = SecuritySettings
+        fields = ("two_factor",)
+        widgets = {"two_factor": forms.RadioSelect}
+
+
+# ── Admin: people who use this app ────────────────────────────────────────
+def dashboard_choices():
+    from apps.business.core.models import Dashboard
+
+    return [(d.code, d.display_name) for d in Dashboard.objects.filter(is_active=True).order_by("order", "name")]
+
+
+class UserAdminForm(forms.ModelForm):
+    """An admin adding or editing a person: who they are, whether they're an
+    admin, and which parts of the app (dashboards) they can open."""
+
+    email = forms.EmailField(label=_("Email"), required=False, max_length=254)
+    is_admin = forms.BooleanField(label=_("Admin"), required=False,
+                                  help_text=_("Admins can open every part of the app, manage people and change security settings."))
+    dashboards = forms.MultipleChoiceField(label=_("Can open"), required=False, widget=forms.CheckboxSelectMultiple)
+
+    class Meta:
+        model = User
+        fields = ("username", "first_name", "last_name", "email", "is_active")
+
+    def __init__(self, *args, editor=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.editor = editor
+        self.fields["dashboards"].choices = dashboard_choices()
+        self.fields["is_active"].help_text = _("Untick to stop this person signing in. Nothing they recorded is deleted.")
+        if self.instance.pk:
+            self.fields["is_admin"].initial = self.instance.is_superuser
+            self.fields["dashboards"].initial = list(self.instance.dashboard_access.values_list("dashboard__code", flat=True))
+            if editor is not None and editor.pk == self.instance.pk:   # you can't lock yourself out
+                for name in ("is_admin", "is_active"):
+                    self.fields[name].disabled = True
+                    self.fields[name].help_text = _("You can't change this for your own account.")
+        else:
+            self.fields["dashboards"].initial = [c for c, _label in self.fields["dashboards"].choices if c == "personal"]
+
+    def clean_username(self):
+        username = self.cleaned_data["username"].strip()
+        if User.objects.filter(username__iexact=username).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError(_("That username is taken."))
+        return username
+
+    def clean_email(self):
+        email = self.cleaned_data.get("email", "").strip()
+        if email and email_taken(email, exclude=self.instance if self.instance.pk else None):
+            raise forms.ValidationError(_("Another account already uses this email."))
+        return email
+
+    def save_access(self, user, granted_by):
+        from apps.business.core.models import Dashboard, UserDashboardAccess
+
+        chosen = set(self.cleaned_data.get("dashboards") or [])
+        for dash in Dashboard.objects.filter(is_active=True):
+            if dash.code in chosen:
+                UserDashboardAccess.objects.get_or_create(user=user, dashboard=dash, defaults={"granted_by": granted_by})
+            else:
+                UserDashboardAccess.objects.filter(user=user, dashboard=dash).delete()
+        if not UserDashboardAccess.objects.filter(user=user, is_default=True).exists():
+            first = UserDashboardAccess.objects.filter(user=user).order_by("dashboard__order").first()
+            if first:
+                first.is_default = True
+                first.save(update_fields=["is_default"])
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        if "is_admin" in self.changed_data or not user.pk:
+            user.is_superuser = user.is_staff = bool(self.cleaned_data.get("is_admin"))
+        if commit:
+            user.save()
+        return user
+
+
+class UserCreateForm(UserAdminForm):
+    PASSWORD_SET = "set"
+    PASSWORD_EMAIL = "email"
+    password_mode = forms.ChoiceField(
+        label=_("Password"), widget=forms.RadioSelect, initial=PASSWORD_SET,
+        choices=[(PASSWORD_SET, _("I'll set it now")), (PASSWORD_EMAIL, _("Email them a link to choose their own"))],
+    )
+    password1 = forms.CharField(label=_("New password"), required=False, strip=False, widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}))
+    password2 = forms.CharField(label=_("New password again"), required=False, strip=False, widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}))
+
+    def clean(self):
+        data = super().clean()
+        if data.get("password_mode") == self.PASSWORD_EMAIL:
+            if not data.get("email"):
+                self.add_error("email", _("Needed to email the link."))
+        else:
+            p1, p2 = data.get("password1"), data.get("password2")
+            if not p1:
+                self.add_error("password1", _("Type a password, or choose to email a link."))
+            elif p1 != p2:
+                self.add_error("password2", _("The two passwords don't match."))
+            else:
+                from django.contrib.auth import password_validation
+
+                try:
+                    password_validation.validate_password(p1, User(username=data.get("username", ""), email=data.get("email", "")))
+                except forms.ValidationError as e:
+                    self.add_error("password1", e)
+        return data
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        if self.cleaned_data.get("password_mode") == self.PASSWORD_EMAIL:
+            user.set_unusable_password()
+        else:
+            user.set_password(self.cleaned_data["password1"])
+        if commit:
+            user.save()
+        return user

@@ -1,11 +1,11 @@
 {% load i18n %}
 {% with p=request.path %}
 <div class="sidebar">
-    <a href="{% if active_dashboard == 'business' %}{% url 'business:home' %}{% else %}{% url 'home' %}{% endif %}" class="flex h-16 shrink-0 items-center gap-2.5 px-2">
+    <a href="{% if active_dashboard == 'business' %}{% url 'business:home' %}{% elif active_dashboard == 'productivity' %}{% url 'work:today' %}{% else %}{% url 'home' %}{% endif %}" class="flex h-16 shrink-0 items-center gap-2.5 px-2">
         <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg font-heading text-base font-bold" style="background: var(--gold); color: #221a06;">৳</span>
         <span>
             <span class="block font-heading text-lg font-bold leading-tight" style="color: var(--text-on-ink);">FinTrack</span>
-            <span class="block text-[10px] font-semibold uppercase tracking-[0.14em]" style="color: var(--text-on-ink-muted);">{% if active_dashboard == 'business' %}{% translate "Fish Farm Business" %}{% else %}{% translate "Ledger & Household" %}{% endif %}</span>
+            <span class="block text-[10px] font-semibold uppercase tracking-[0.14em]" style="color: var(--text-on-ink-muted);">{% if active_dashboard == 'business' %}{% translate "Fish Farm Business" %}{% elif active_dashboard == 'productivity' %}{% translate "Productivity" %}{% else %}{% translate "Ledger & Household" %}{% endif %}</span>
         </span>
     </a>
 
@@ -41,7 +41,7 @@
             </div>
             <a href="{% url 'account_settings' %}" class="nav-link">
                 {% include "partials/icon.html" with name="key" %}
-                {% translate "Account & password" %}
+                {% translate "Account & security" %}
             </a>
             <a href="{% url 'logout' %}" class="nav-link">
                 <svg fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" /></svg>

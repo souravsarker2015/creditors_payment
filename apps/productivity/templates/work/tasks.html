@@ -1,0 +1,102 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% translate "Tasks" %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+<header class="wp-head">
+  <div class="min-w-0">
+    <h1 class="wp-title">{% translate "Tasks" %}</h1>
+    {% if view == "list" %}<p class="wp-sub">{% blocktranslate count counter=open_count %}{{ counter }} open{% plural %}{{ counter }} open{% endblocktranslate %}{% if done_count %} · {% blocktranslate count counter=done_count %}{{ counter }} done{% plural %}{{ counter }} done{% endblocktranslate %}{% endif %}</p>{% endif %}
+  </div>
+  <div class="wp-actions">
+    <nav class="seg seg-sm" aria-label="{% translate 'Show as' %}">
+      <a href="{% query_with view='list' %}" class="seg-item{% if view == 'list' %} is-active{% endif %}">{% include "partials/icon.html" with name="list" %}{% translate "List" %}</a>
+      <a href="{% query_with view='board' %}" class="seg-item{% if view == 'board' %} is-active{% endif %}">{% include "partials/icon.html" with name="board" %}{% translate "Board" %}</a>
+    </nav>
+    <a href="{% url 'work:task_new' %}" class="btn btn-secondary">{% translate "Full form" %}</a>
+    <button type="button" class="btn btn-primary" @click="$dispatch('work:capture', 'task')">{% include "partials/icon.html" with name="plus" %}{% translate "Task" %}<kbd class="wp-kbd">c</kbd></button>
+  </div>
+</header>
+
+<form method="get" class="wf-bar" x-data @change="$el.requestSubmit()">
+  <input type="hidden" name="view" value="{{ view }}">
+  <div class="input-icon wf-search">
+    {% include "partials/icon.html" with name="search" %}
+    <input type="search" name="q" value="{{ f.q }}" class="form-input input-compact" placeholder="{% translate 'Search tasks  ( / )' %}" data-work-search aria-label="{% translate 'Search tasks' %}">
+  </div>
+  <select name="project" class="form-input input-compact" aria-label="{% translate 'Project' %}">
+    <option value="">{% translate "All projects" %}</option>
+    {% for p in projects %}<option value="{{ p.pk }}"{% if f.project == p.pk|stringformat:'s' %} selected{% endif %}>{{ p.name }}</option>{% endfor %}
+    <option value="none"{% if f.project == 'none' %} selected{% endif %}>{% translate "No project" %}</option>
+  </select>
+  <select name="due" class="form-input input-compact" aria-label="{% translate 'Due' %}">
+    <option value="">{% translate "Any date" %}</option>
+    <option value="overdue"{% if f.due == 'overdue' %} selected{% endif %}>{% translate "Late" %}</option>
+    <option value="today"{% if f.due == 'today' %} selected{% endif %}>{% translate "Due today" %}</option>
+    <option value="week"{% if f.due == 'week' %} selected{% endif %}>{% translate "Next 7 days" %}</option>
+    <option value="none"{% if f.due == 'none' %} selected{% endif %}>{% translate "No date" %}</option>
+  </select>
+  <select name="priority" class="form-input input-compact" aria-label="{% translate 'Priority' %}">
+    <option value="">{% translate "Any priority" %}</option>
+    <option value="4"{% if f.priority == '4' %} selected{% endif %}>{% translate "Urgent" %}</option>
+    <option value="3"{% if f.priority == '3' %} selected{% endif %}>{% translate "High and up" %}</option>
+    <option value="2"{% if f.priority == '2' %} selected{% endif %}>{% translate "Medium and up" %}</option>
+  </select>
+  {% if tags %}
+  <select name="tag" class="form-input input-compact" aria-label="{% translate 'Tag' %}">
+    <option value="">{% translate "Any tag" %}</option>
+    {% for tg in tags %}<option value="{{ tg.name }}"{% if f.tag == tg.name %} selected{% endif %}>#{{ tg.name }}</option>{% endfor %}
+  </select>
+  {% endif %}
+  {% if filtered %}<a href="{% url 'work:tasks' %}?view={{ view }}" class="btn btn-ghost btn-sm">{% translate "Clear" %}</a>{% endif %}
+</form>
+
+{% if view == "board" %}
+<div class="wb" x-data="workBoard" data-work-refresh>
+  {% for col in columns %}
+  <section class="wb-col" data-status="{{ col.status }}" x-data="{ adding: false, text: '' }">
+    <header class="wb-col-head"><span class="wb-col-dot" data-status="{{ col.status }}"></span><h2>{{ col.label }}</h2><span class="wb-count" data-count>{{ col.tasks|length }}</span>
+      {% if col.status != "done" %}<button type="button" class="icon-btn" aria-label="{% translate 'Add a task here' %}" @click="adding = true; $nextTick(() => $refs.add.focus())">{% include "partials/icon.html" with name="plus" %}</button>{% endif %}</header>
+    <div class="wb-cards" data-column="{{ col.status }}">
+      {% for t in col.tasks %}{% include "work/partials/task_card.html" %}{% endfor %}
+    </div>
+    {% if col.status != "done" %}
+    <form class="wb-add" x-show="adding" x-cloak @submit.prevent="if (!text.trim()) return; const cards = $el.previousElementSibling; Work.api(Work.cfg.urls.taskAdd, { text: text, status: '{{ col.status }}' }).then(r => { if (r.card) { cards.insertAdjacentHTML('beforeend', r.card); count(); } else if (!r.ok) Work.toast(r.error, 'warn'); }); text = ''">
+      <input x-ref="add" x-model="text" class="form-input input-compact" placeholder="{% translate 'Task title, then Enter' %}" aria-label="{% translate 'New task' %}" @keydown.escape="adding = false; text = ''" @blur="if (!text) adding = false">
+    </form>
+    <button type="button" class="wb-add-btn" x-show="!adding" @click="adding = true; $nextTick(() => $refs.add.focus())">{% include "partials/icon.html" with name="plus" %}{% translate "Add task" %}</button>
+    {% endif %}
+  </section>
+  {% endfor %}
+</div>
+{% else %}
+<div x-data="workTasks" class="wt-groups" data-work-refresh>
+  <ul class="wt-list" data-new-tasks></ul>
+  {% for key, label, items in groups %}
+  <section class="wt-group" data-group="{{ key }}">
+    <h2 class="wt-group-head"><span>{{ label }}</span><span class="wt-group-count">{{ items|length }}</span></h2>
+    <ul class="wt-list card">{% for t in items %}{% include "work/partials/task_row.html" %}{% endfor %}</ul>
+  </section>
+  {% empty %}
+  <div class="empty">
+    <div class="empty-icon">{% include "partials/icon.html" with name="check" %}</div>
+    <h3 class="empty-title">{% if filtered %}{% translate "No tasks match" %}{% else %}{% translate "Nothing to do. Nice." %}{% endif %}</h3>
+    <p class="empty-text">{% translate "Press c to add a task. Try: Fix login bug #auth @api !high tomorrow ~45m" %}</p>
+  </div>
+  {% endfor %}
+  {% if done_count %}
+  <section class="wt-group">
+    {% if show_done %}
+    <h2 class="wt-group-head"><span>{% translate "Done" %}</span><a href="{% query_with done='' %}" class="btn btn-ghost btn-sm">{% translate "Hide" %}</a></h2>
+    <ul class="wt-list card">{% for t in done %}{% include "work/partials/task_row.html" %}{% endfor %}</ul>
+    {% else %}
+    <a href="{% query_with done='1' %}" class="wt-show-done">{% blocktranslate count counter=done_count %}Show {{ counter }} done task{% plural %}Show {{ counter }} done tasks{% endblocktranslate %}</a>
+    {% endif %}
+  </section>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block work_libs %}{% if view == "board" %}<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>{% endif %}{% endblock %}

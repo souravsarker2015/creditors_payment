@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Turn off two-step sign-in" %} | FinTrack{% endblock %}
+
+{% block content %}
+{% translate "Turn off two-step sign-in?" as heading %}{% translate "Signing in will need only your password again. Confirm it's you." as subheading %}{% translate "Turn off" as submit_label %}
+{% translate "Changed your mind?" as alt_text %}{% translate "Keep it on" as alt_link_text %}{% url 'account_settings' as alt_url %}
+{% include "accounts/_auth_card.html" %}
+{% endblock %}

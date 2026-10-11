@@ -130,7 +130,7 @@ def _drop_messages(request):
 SKIP_NAMES = re.compile(
     r"(^admin:|^djdt:|import|template|login|logout|signup|password|account_settings|preferences|my_data|offline|backup|"
     r"^search$|manifest|service_worker|switch_business|default_dashboard|export|_ics$|^business:setup$|"
-    r"preview|quick|empty|copy|cancel|access_admin|budget_edit)"
+    r"preview|quick|empty|copy|cancel|access_admin|budget_edit|two_factor|^user_|:api_)"
 )
 MORE_LIMIT = 400
 
@@ -193,14 +193,16 @@ def offline_pages_view(request):
             add(c.pond.name, "business:cycle_detail", c.pk)
 
     add(_("Use without internet"), "offline_settings")
-    more = [u for u in _every_page(personal, m is not None) + _detail_pages(user, personal, m) if u not in seen]
+    from apps.productivity.access import can_use as can_use_work
+
+    more = [u for u in _every_page(personal, m is not None, can_use_work(user)) + _detail_pages(user, personal, m) if u not in seen]
     more = list(dict.fromkeys(more))[:MORE_LIMIT]
     # "start": where the installed app opens (for someone with only the farm it leads to the farm).
     # "fallback": the "You're offline" screen, in this person's language.
     return JsonResponse({"pages": pages, "more": more, "start": reverse("home"), "fallback": reverse("offline")})
 
 
-def _every_page(personal, business):
+def _every_page(personal, business, work=False):
     """Every page of the app that needs nothing but its address."""
     from django.urls import URLPattern, URLResolver, get_resolver
 
@@ -220,7 +222,10 @@ def _every_page(personal, business):
             continue
         if name.startswith("business:") and not business:
             continue
-        if not name.startswith("business:") and not personal:
+        if name.startswith("work:"):   # Productivity: only for people who can open it
+            if not work:
+                continue
+        elif not name.startswith("business:") and not personal:
             continue
         try:
             urls.append(reverse(name))

@@ -69,9 +69,61 @@ class UserProfile(models.Model):
     view_mode = models.CharField(
         max_length=5, choices=ViewMode.choices, default=ViewMode.AUTO
     )
+    phone = models.CharField(_("Phone"), max_length=20, blank=True, default="")
 
     def __str__(self):
         return f"Preferences for {self.user.username}"
+
+
+class TwoFactorPolicy(models.TextChoices):
+    OPTIONAL = "optional", _("Optional — each person decides")
+    ADMINS = "admins", _("Required for admins")
+    EVERYONE = "everyone", _("Required for everyone")
+
+
+class SecuritySettings(models.Model):
+    """Site-wide security choices, set by an admin. There is only one row."""
+
+    two_factor = models.CharField(_("Two-step sign-in"), max_length=10, choices=TwoFactorPolicy.choices, default=TwoFactorPolicy.OPTIONAL)
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+
+    class Meta:
+        verbose_name = _("Security settings")
+        verbose_name_plural = _("Security settings")
+
+    def __str__(self):
+        return "Security settings"
+
+    @classmethod
+    def load(cls):
+        obj, _created = cls.objects.get_or_create(pk=1)
+        return obj
+
+    def requires_two_factor(self, user):
+        if self.two_factor == TwoFactorPolicy.EVERYONE:
+            return True
+        return self.two_factor == TwoFactorPolicy.ADMINS and user.is_superuser
+
+
+class TwoFactor(models.Model):
+    """Two-step sign-in with an authenticator app (see totp.py)."""
+
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="two_factor")
+    secret = models.CharField(max_length=64)
+    enabled = models.BooleanField(default=False)
+    enabled_at = models.DateTimeField(null=True, blank=True)
+    last_step = models.BigIntegerField(default=0, help_text="The last code's time step; a code can't be used twice.")
+    recovery_codes = models.JSONField(default=list, blank=True, help_text="Hashes of the unused recovery codes.")
+    generation = models.PositiveIntegerField(default=1, help_text="Raised to forget every trusted device.")
+    last_used_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Two-step sign-in for {self.user}"
+
+    @property
+    def recovery_left(self):
+        return len(self.recovery_codes)
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)

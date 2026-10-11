@@ -68,7 +68,7 @@ PAGES = [
     (gettext_noop("All bazar purchases"), "household_purchase_all", "personal", ""),
     (gettext_noop("Wallets"), "wallet_list", "personal", ""),
     (gettext_noop("Recently deleted"), "trash_list", "personal", ""),
-    (gettext_noop("Account & password"), "account_settings", "personal", ""),
+    (gettext_noop("Account & security"), "account_settings", "personal", ""),
     (gettext_noop("Zakat helper"), "zakat", "personal", ""),
     (gettext_noop("Ponds"), "business:ponds", "business", ""),
     (gettext_noop("When to harvest"), "business:harvest_forecast", "business", ""),

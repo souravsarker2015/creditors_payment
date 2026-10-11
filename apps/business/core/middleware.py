@@ -35,12 +35,13 @@ class DashboardMiddleware:
         if not user or not user.is_authenticated or request.path.startswith(EXEMPT):
             return None
         in_business = request.path.startswith("/business/")
-        area = BUSINESS if in_business else PERSONAL
+        in_work = request.path.startswith("/work/")
+        area = BUSINESS if in_business else ("productivity" if in_work else PERSONAL)
         if request.session.get("active_dashboard") != area:
             request.session["active_dashboard"] = area
-        if in_business:
+        if in_business or in_work:
             request.session.pop("dashboard_after_login", None)
-            return None  # business views check access themselves (403 page)
+            return None  # business and productivity views check access themselves (403 page)
 
         just_logged_in = request.session.pop("dashboard_after_login", False)
         if not has_dashboard(user, PERSONAL):

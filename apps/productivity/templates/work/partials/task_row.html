@@ -1,0 +1,47 @@
+{% load i18n work %}{% comment %}One task in a list (inside x-data="workTasks"). Needs: t.{% endcomment %}
+<li class="wt-task{% if t.is_done %} is-done{% endif %}" data-task="{{ t.pk }}" data-title="{{ t.title }}" data-project="{{ t.project_id|default:'' }}" data-priority="{{ t.priority }}" {% if hide_done %}data-hide-done{% endif %}>
+  <button type="button" class="wt-check" @click="done({{ t.pk }}, $el)" aria-label="{% translate 'Done' %}" data-p="{{ t.priority }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+  </button>
+  <div class="wt-task-main">
+    <a href="{% url 'work:task' t.pk %}" class="wt-task-title">{{ t.title }}</a>
+    <div class="wt-task-meta">
+      {% if t.priority >= 3 %}<span class="wt-prio" data-p="{{ t.priority }}">{{ t.get_priority_display }}</span>{% endif %}
+      {% if t.project %}<span class="wt-proj"><span class="wt-dot" data-color="{{ t.project.color }}"></span>{{ t.project.name }}</span>{% endif %}
+      {% if t.due_date %}<span class="wt-due" data-tone="{{ t|due_tone }}">{% include "partials/icon.html" with name="calendar" %}{{ t.due_date|due_label }}</span>{% endif %}
+      {% if t.estimate_minutes %}<span class="wt-est">~{{ t.estimate_minutes|minutes_hm }}</span>{% endif %}
+      {% with c=t|checklist_counts %}{% if c %}<span class="wt-est">{% include "partials/icon.html" with name="check" %}{{ c }}</span>{% endif %}{% endwith %}
+      {% if t.repeat %}<span class="wt-est" data-tip="{{ t.get_repeat_display }}">{% include "partials/icon.html" with name="repeat" %}</span>{% endif %}
+      {% for tag in t.tags.all %}<a href="{% url 'work:tasks' %}?tag={{ tag.name|urlencode }}" class="wt-tag">#{{ tag.name }}</a>{% endfor %}
+    </div>
+  </div>
+  <div class="wt-task-act">
+    {% if not t.is_done %}
+    <button type="button" class="wt-play" :class="$store.timer.isFor({{ t.pk }}) && 'is-on'" @click="timer({{ t.pk }}, $el.closest('[data-task]').dataset.title, $el.closest('[data-task]').dataset.project)"
+            :aria-label="$store.timer.isFor({{ t.pk }}) ? '{% translate "Stop the timer" %}' : '{% translate "Start the timer" %}'">
+      <span x-show="!$store.timer.isFor({{ t.pk }})">{% include "partials/icon.html" with name="play" %}</span>
+      <span x-show="$store.timer.isFor({{ t.pk }})" x-cloak>{% include "partials/icon.html" with name="stop" %}</span>
+    </button>
+    {% endif %}
+    <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
+      <button type="button" class="icon-btn" @click="open = !open" :aria-expanded="open" aria-haspopup="true" aria-label="{% translate 'More actions' %}">{% include "partials/icon.html" with name="dots" %}</button>
+      <div class="menu" x-show="open" x-cloak x-transition.opacity.scale.95.duration.100ms role="menu">
+        <button type="button" class="menu-item" role="menuitem" @click="open = false; update({{ t.pk }}, 'my_day', '{% if t.my_day == today %}0{% else %}1{% endif %}', $el)">{% include "partials/icon.html" with name="sun" %}{% if t.my_day == today %}{% translate "Remove from My Day" %}{% else %}{% translate "Add to My Day" %}{% endif %}</button>
+        <button type="button" class="menu-item" role="menuitem" @click="open = false; update({{ t.pk }}, 'due_date', '{{ today|date:"Y-m-d" }}', $el)">{% include "partials/icon.html" with name="calendar" %}{% translate "Due today" %}</button>
+        <button type="button" class="menu-item" role="menuitem" @click="open = false; update({{ t.pk }}, 'status', '{% if t.status == "doing" %}todo{% else %}doing{% endif %}', $el)">{% include "partials/icon.html" with name="play" %}{% if t.status == "doing" %}{% translate "Not started" %}{% else %}{% translate "Mark in progress" %}{% endif %}</button>
+        <div class="menu-sep"></div>
+        <p class="menu-label">{% translate "Priority" %}</p>
+        <div class="wt-prio-pick">
+          <button type="button" data-p="4" @click="open = false; update({{ t.pk }}, 'priority', '4', $el)" aria-label="{% translate 'Urgent' %}">!!!</button>
+          <button type="button" data-p="3" @click="open = false; update({{ t.pk }}, 'priority', '3', $el)" aria-label="{% translate 'High' %}">!!</button>
+          <button type="button" data-p="2" @click="open = false; update({{ t.pk }}, 'priority', '2', $el)" aria-label="{% translate 'Medium' %}">!</button>
+          <button type="button" data-p="0" @click="open = false; update({{ t.pk }}, 'priority', '0', $el)" aria-label="{% translate 'No priority' %}">—</button>
+        </div>
+        <div class="menu-sep"></div>
+        <a href="{% url 'work:entry_new' %}?task={{ t.pk }}" class="menu-item" role="menuitem">{% include "partials/icon.html" with name="clock" %}{% translate "Add time by hand" %}</a>
+        <a href="{% url 'work:focus' %}?task={{ t.pk }}" class="menu-item" role="menuitem">{% include "partials/icon.html" with name="bolt" %}{% translate "Focus on this" %}</a>
+        <button type="button" class="menu-item is-danger" role="menuitem" @click="open = false; remove({{ t.pk }}, $el)">{% include "partials/icon.html" with name="trash" %}{% translate "Delete" %}</button>
+      </div>
+    </div>
+  </div>
+</li>

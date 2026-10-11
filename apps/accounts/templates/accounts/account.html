@@ -1,16 +1,27 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% translate "Account & password" %} | FinTrack{% endblock %}
+{% block title %}{% translate "Account & security" %} | FinTrack{% endblock %}
 
 {% block content %}
 <div class="page-narrow stack">
   <header class="page-header !mb-0">
-    <div>
-      <h1 class="page-title">{% translate "Account & password" %}</h1>
-      <p class="page-subtitle">{% blocktranslate with name=user.get_username %}Signed in as {{ name }}.{% endblocktranslate %}</p>
+    <div class="flex min-w-0 items-center gap-3.5">
+      <span class="acct-avatar" aria-hidden="true">{{ user.get_full_name|default:user.get_username|first|upper }}</span>
+      <div class="min-w-0">
+        <h1 class="page-title">{% translate "Account & security" %}</h1>
+        <p class="page-subtitle">{% if user.get_full_name %}{{ user.get_full_name }} · {% endif %}@{{ user.get_username }}{% if user.is_superuser %} · <span class="badge" data-tone="accent">{% translate "Admin" %}</span>{% endif %}</p>
+      </div>
     </div>
   </header>
+
+  <nav class="chip-row" aria-label="{% translate 'On this page' %}">
+    <a href="#profile" class="chip">{% translate "Profile" %}</a>
+    <a href="#email" class="chip">{% translate "Email" %}</a>
+    <a href="#password" class="chip">{% translate "Password" %}</a>
+    <a href="#two-factor" class="chip">{% translate "Two-step sign-in" %}</a>
+    {% if user.is_superuser %}<a href="#policy" class="chip">{% translate "Security settings" %}</a><a href="{% url 'user_list' %}" class="chip">{% translate "People & access" %}</a>{% endif %}
+  </nav>
 
   {% if not user.email %}
   <div class="callout" data-tone="warn">
@@ -21,6 +32,35 @@
     </div>
   </div>
   {% endif %}
+  {% if two_factor_required and not tf %}
+  <div class="callout" data-tone="critical">
+    {% include "partials/icon.html" with name="key" %}
+    <div class="min-w-0">
+      <p class="callout-title">{% translate "Two-step sign-in is required for your account" %}</p>
+      <a href="{% url 'two_factor_setup' %}" class="btn btn-primary btn-sm mt-2">{% translate "Set it up now" %}</a>
+    </div>
+  </div>
+  {% endif %}
+
+  <section class="card" id="profile">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title inline-flex items-center gap-2"><span class="h-5 w-5" style="color: var(--accent);">{% include "partials/icon.html" with name="users" %}</span>{% translate "Profile" %}</h2>
+        <p class="card-subtitle">{% translate "Your name and how you sign in." %}</p>
+      </div>
+    </div>
+    <form method="post" class="card-body form-stack" novalidate>
+      {% csrf_token %}
+      <input type="hidden" name="action" value="profile">
+      <div class="form-grid form-grid-2">
+        {% with field=profile_form.first_name %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=profile_form.last_name %}{% include "partials/field.html" %}{% endwith %}
+      </div>
+      {% with field=profile_form.username %}{% include "partials/field.html" %}{% endwith %}
+      {% with field=profile_form.phone %}{% include "partials/field.html" %}{% endwith %}
+      <div class="form-actions"><button type="submit" class="btn btn-primary">{% include "partials/icon.html" with name="check" %}{% translate "Save profile" %}</button></div>
+    </form>
+  </section>
 
   <section class="card" id="email">
     <div class="card-header">
@@ -52,5 +92,70 @@
       <div class="form-actions"><button type="submit" class="btn btn-primary">{% include "partials/icon.html" with name="key" %}{% translate "Change password" %}</button></div>
     </form>
   </section>
+
+  <section class="card" id="two-factor">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title inline-flex items-center gap-2"><span class="h-5 w-5" style="color: var(--accent);">{% include "partials/icon.html" with name="shield" %}</span>{% translate "Two-step sign-in" %}
+          {% if tf %}<span class="badge" data-tone="good">{% translate "On" %}</span>{% else %}<span class="badge">{% translate "Off" %}</span>{% endif %}</h2>
+        <p class="card-subtitle">{% translate "A code from an authenticator app on your phone, asked after your password." %}</p>
+      </div>
+    </div>
+    <div class="card-body">
+      {% if tf %}
+      <dl class="tfa-facts">
+        <div><dt>{% translate "Turned on" %}</dt><dd>{{ tf.enabled_at|date:"j M Y" }}</dd></div>
+        <div><dt>{% translate "Last used" %}</dt><dd>{% if tf.last_used_at %}{{ tf.last_used_at|timesince }}{% else %}—{% endif %}</dd></div>
+        <div><dt>{% translate "Recovery codes left" %}</dt><dd{% if tf.recovery_left < 3 %} data-tone="critical"{% endif %}>{{ tf.recovery_left }}</dd></div>
+      </dl>
+      <div class="tfa-actions">
+        <form method="post" action="{% url 'two_factor_recovery' %}" class="tfa-inline" x-data="{ open: false }">
+          {% csrf_token %}
+          <button type="button" class="btn btn-secondary btn-sm" x-show="!open" @click="open = true; $nextTick(() => $refs.c.focus())">{% include "partials/icon.html" with name="restore" %}{% translate "New recovery codes" %}</button>
+          <span class="tfa-inline-form" x-show="open" x-cloak>
+            <input x-ref="c" name="code" class="form-input input-compact otp-input" inputmode="numeric" autocomplete="one-time-code" placeholder="123456" aria-label="{% translate 'Code from your app' %}">
+            <button type="submit" class="btn btn-primary btn-sm">{% translate "Make new codes" %}</button>
+          </span>
+        </form>
+        <form method="post" action="{% url 'two_factor_forget_devices' %}" data-confirm="{% translate 'Ask for a code again on every device, including ones you said to trust?' %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="x" %}{% translate "Forget trusted devices" %}</button>
+        </form>
+        {% if not two_factor_required %}<a href="{% url 'two_factor_disable' %}" class="btn btn-ghost btn-sm" style="color: var(--status-critical);">{% translate "Turn off" %}</a>{% endif %}
+      </div>
+      {% else %}
+      <p class="text-sm leading-relaxed" style="color: var(--text-secondary);">{% translate "Someone who learns your password still can't sign in without your phone. Recommended for admins." %}</p>
+      <a href="{% url 'two_factor_setup' %}" class="btn btn-primary mt-4">{% include "partials/icon.html" with name="shield" %}{% translate "Turn on two-step sign-in" %}</a>
+      {% endif %}
+    </div>
+  </section>
+
+  {% if policy_form %}
+  <section class="card" id="policy">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title inline-flex items-center gap-2"><span class="h-5 w-5" style="color: var(--accent);">{% include "partials/icon.html" with name="shield" %}</span>{% translate "Security settings" %} <span class="badge" data-tone="accent">{% translate "Admin" %}</span></h2>
+        <p class="card-subtitle">{% translate "For everyone who uses this app." %}</p>
+      </div>
+    </div>
+    <form method="post" class="card-body form-stack" novalidate>
+      {% csrf_token %}
+      <input type="hidden" name="action" value="policy">
+      <fieldset>
+        <legend class="label">{{ policy_form.two_factor.label }}</legend>
+        <div class="choice-list">
+          {% for radio in policy_form.two_factor %}
+          <label class="choice">{{ radio.tag }}<span>{{ radio.choice_label }}</span></label>
+          {% endfor %}
+        </div>
+        <p class="help mt-2">{% translate "When it's required, people without it are asked to set it up right after signing in." %}</p>
+      </fieldset>
+      <div class="form-actions"><button type="submit" class="btn btn-primary">{% include "partials/icon.html" with name="check" %}{% translate "Save" %}</button></div>
+    </form>
+    <div class="card-body !pt-0">
+      <a href="{% url 'user_list' %}" class="btn btn-secondary">{% include "partials/icon.html" with name="users" %}{% translate "People & access" %}</a>
+    </div>
+  </section>
+  {% endif %}
 </div>
 {% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "People & access" %} | FinTrack{% endblock %}
+
+{% block content %}
+<div class="page-medium stack">
+  <header class="page-header !mb-0">
+    <div>
+      <a href="{% url 'account_settings' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Account & security" %}</a>
+      <h1 class="page-title">{% translate "People & access" %}</h1>
+      <p class="page-subtitle">{% translate "Everyone who can sign in: add people (and other admins), choose what each can open, and help someone who's locked out." %}</p>
+    </div>
+    <div class="page-actions">
+      <a href="{% url 'user_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add person" %}</a>
+    </div>
+  </header>
+
+  <form method="get" class="search-row">
+    <div class="input-icon min-w-0 flex-1">
+      {% include "partials/icon.html" with name="search" %}
+      <input type="search" name="q" value="{{ q }}" class="form-input" placeholder="{% translate 'Name, username or email' %}" aria-label="{% translate 'Search' %}">
+    </div>
+    <button type="submit" class="btn btn-secondary">{% translate "Search" %}</button>
+  </form>
+
+  {% if page_obj.object_list %}
+  <section class="card">
+    <ul class="ledger">
+      {% for u in page_obj %}
+      <li>
+        <a href="{% url 'user_edit' u.pk %}" class="ledger-row">
+          <span class="ledger-icon" data-tone="{% if u.is_superuser %}accent{% elif not u.is_active %}muted{% else %}gold{% endif %}">{{ u.get_full_name|default:u.username|first|upper }}</span>
+          <div class="ledger-main">
+            <p class="ledger-title">{{ u.get_full_name|default:u.username }}
+              {% if u.is_superuser %}<span class="badge" data-tone="accent">{% translate "Admin" %}</span>{% endif %}
+              {% if not u.is_active %}<span class="badge">{% translate "Can't sign in" %}</span>{% endif %}
+              {% if u.pk == user.pk %}<span class="badge badge-outline">{% translate "You" %}</span>{% endif %}
+            </p>
+            <p class="ledger-meta">@{{ u.username }}{% if u.email %} · {{ u.email }}{% endif %} · {% for g in u.dashboard_access.all %}{{ g.dashboard.display_name }}{% if not forloop.last %}, {% endif %}{% empty %}{% if u.is_superuser %}{% translate "Everything" %}{% else %}{% translate "Nothing yet" %}{% endif %}{% endfor %}</p>
+          </div>
+          <span class="ledger-end">
+            {% if u.two_factor and u.two_factor.enabled %}<span class="badge" data-tone="good" data-tip="{% translate 'Two-step sign-in is on' %}">{% include "partials/icon.html" with name="shield" %}2FA</span>{% endif %}
+            <span class="h-4 w-4" style="color: var(--text-muted);">{% include "partials/icon.html" with name="chevron-right" %}</span>
+          </span>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% include "partials/pagination.html" %}
+  {% else %}
+  <div class="empty"><p class="empty-text">{% translate "No one matches that search." %}</p></div>
+  {% endif %}
+</div>
+{% endblock %}

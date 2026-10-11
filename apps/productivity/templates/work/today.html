@@ -1,0 +1,116 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% translate "Today" %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+<header class="wp-head">
+  <div class="min-w-0">
+    <p class="wp-kicker">{{ today|date:"l, j F" }}</p>
+    <h1 class="wp-title">{{ greeting }}{% if user.first_name %}, {{ user.first_name }}{% endif %}</h1>
+  </div>
+  <div class="wp-actions">
+    <a href="{% url 'work:focus' %}" class="btn btn-secondary">{% include "partials/icon.html" with name="bolt" %}{% translate "Focus" %}</a>
+    <button type="button" class="btn btn-primary" @click="$dispatch('work:capture', 'task')">{% include "partials/icon.html" with name="plus" %}{% translate "Task" %}<kbd class="wp-kbd">c</kbd></button>
+  </div>
+</header>
+
+<section class="wd-stats">
+  <div class="wd-ring-card">
+    <div class="wd-ring" style="--p: {{ target_pct }};" x-data :style="'--p:' + Math.min(100, Math.round(100 * ($store.timer.today + $store.timer.elapsedToday()) / {{ target_seconds|default:1 }}))">
+      <svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="52" class="wd-ring-bg"/><circle cx="60" cy="60" r="52" class="wd-ring-fg" pathLength="100"/></svg>
+      <div class="wd-ring-text"><strong class="num" x-text="$store.timer.todayText">{{ today_seconds|hm }}</strong><span>{% blocktranslate with goal=target_seconds|hm %}of {{ goal }}{% endblocktranslate %}</span></div>
+    </div>
+    <div class="min-w-0">
+      <p class="wd-stat-label">{% translate "Tracked today" %}</p>
+      <p class="wd-stat-sub">{% if streak %}<span class="wd-streak">{% include "partials/icon.html" with name="flame" %}{% blocktranslate count counter=streak %}{{ counter }} day streak{% plural %}{{ counter }} day streak{% endblocktranslate %}</span>{% else %}{% translate "Hit your daily target to start a streak." %}{% endif %}</p>
+    </div>
+  </div>
+  <div class="wd-week" aria-label="{% translate 'Last 7 days' %}">
+    <div class="wd-week-head"><p class="wd-stat-label">{% translate "Last 7 days" %}</p><p class="wd-week-total num">{{ week_total|hm }}</p></div>
+    <div class="wd-bars">
+      {% for b in week_bars %}
+      <a href="{% url 'work:time' %}?week={{ b.day|date:'Y-m-d' }}" class="wd-bar{% if b.today %} is-today{% endif %}" data-tip="{{ b.day|date:'D j M' }} · {{ b.secs|hm }}">
+        <span class="wd-bar-fill" style="height: {{ b.pct }}%;"></span><span class="wd-bar-day">{{ b.day|date:"D" }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<div class="wd-grid">
+  <section class="card wd-tasks{% if open_tasks %} has-items{% endif %}" x-data="workTasks" data-empty-wrap>
+    <header class="card-header">
+      <div><h2 class="card-title">{% translate "My Day" %}</h2><p class="card-subtitle">{% translate "In progress, due today or late, and what you picked for today." %}</p></div>
+      <a href="{% url 'work:tasks' %}" class="btn btn-ghost btn-sm">{% translate "All tasks" %}{% include "partials/icon.html" with name="arrow-right" %}</a>
+    </header>
+    <form class="wd-quick" @submit.prevent="const box = $refs.q; if (!box.value.trim()) return; Work.api(Work.cfg.urls.taskAdd, { text: box.value, my_day: '1' }).then(r => { if (r.ok && r.html) { $refs.list.insertAdjacentHTML('afterbegin', r.html); $root.classList.add('has-items'); } else if (!r.ok) Work.toast(r.error, 'warn'); }); box.value = ''">
+      <span class="wd-quick-icon" aria-hidden="true">{% include "partials/icon.html" with name="plus" %}</span>
+      <input x-ref="q" class="wd-quick-input" placeholder="{% translate 'Add to My Day… (try #tag !high ~30m)' %}" aria-label="{% translate 'Add a task to My Day' %}" autocomplete="off" enterkeyhint="done">
+    </form>
+    <ul class="wt-list" x-ref="list" data-new-tasks>
+      {% for t in open_tasks %}{% include "work/partials/task_row.html" %}{% endfor %}
+    </ul>
+    <div class="wd-empty">
+      <span class="wd-empty-icon">{% include "partials/icon.html" with name="sun" %}</span>
+      <p>{% translate "A clear day. Pick a few things to do — they'll show here." %}</p>
+      {% if suggest %}
+      <div class="wd-suggest">
+        <p class="wd-suggest-label">{% translate "From your list" %}</p>
+        {% for s in suggest %}<button type="button" class="chip" @click="Work.api(Work.cfg.urls.taskBase + '{{ s.pk }}/update/', { my_day: '1' }).then(r => { if (r.html) { $refs.list.insertAdjacentHTML('beforeend', r.html); $root.classList.add('has-items'); $el.remove(); } })">{% include "partials/icon.html" with name="plus" %}{{ s.title|truncatechars:40 }}</button>{% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    {% if done_today %}
+    <details class="wd-done">
+      <summary>{% blocktranslate count counter=done_today|length %}{{ counter }} done today{% plural %}{{ counter }} done today{% endblocktranslate %}</summary>
+      <ul class="wt-list">{% for t in done_today %}{% include "work/partials/task_row.html" %}{% endfor %}</ul>
+    </details>
+    {% endif %}
+  </section>
+
+  <div class="wd-side">
+    {% if habits %}
+    <section class="card">
+      <header class="card-header"><h2 class="card-title">{% translate "Habits today" %}</h2><a href="{% url 'work:habits' %}" class="btn btn-ghost btn-sm">{% translate "All" %}</a></header>
+      <ul class="wh-today">
+        {% for row in habits %}
+        <li x-data="{ on: {{ row.done_today|yesno:'true,false' }}, streak: {{ row.streak }} }">
+          <button type="button" class="wh-pill" :class="on && 'is-on'" data-color="{{ row.habit.color }}"
+                  @click="on = !on; if (on) Work.play(Work.cfg.sound ? 'soft' : ''); Work.api('{% url 'work:api_habit_check' row.habit.pk %}', { date: '{{ today|date:"Y-m-d" }}', done: on ? '1' : '0' }).then(r => { if (r.streak != null) streak = r.streak; })">
+            <span class="wh-emoji">{{ row.habit.emoji }}</span><span class="wh-name">{{ row.habit.name }}</span>
+            <span class="wh-streak" x-show="streak" x-cloak>{% include "partials/icon.html" with name="flame" %}<span x-text="streak"></span></span>
+          </button>
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+
+    <section class="card">
+      <header class="card-header"><h2 class="card-title">{% translate "Today's time" %}</h2><a href="{% url 'work:time' %}" class="btn btn-ghost btn-sm">{% translate "Timesheet" %}</a></header>
+      {% if timeline %}
+      <ul class="we-list">{% for e in timeline reversed %}{% include "work/partials/entry_row.html" %}{% endfor %}</ul>
+      {% else %}
+      <p class="wd-muted">{% translate "Nothing tracked yet. Start the timer above, or press s." %}</p>
+      {% endif %}
+    </section>
+
+    <section class="card" x-data="workJournal('{{ today|date:"Y-m-d" }}')">
+      <header class="card-header"><h2 class="card-title">{% translate "Plan for today" %}</h2>
+        <span class="wn-state" x-text="{ saving: '{% translate "Saving…" %}', saved: '{% translate "Saved" %}', offline: '{% translate "Saved on this device" %}', dirty: '…' }[state] || ''"></span></header>
+      <div class="card-body !pt-0">
+        <textarea class="form-input wd-plan" rows="4" placeholder="{% translate 'The one thing that would make today a good day…' %}" @input="save('plan', $event.target.value)">{{ journal.plan }}</textarea>
+        <a href="{% url 'work:journal' %}" class="wd-link">{% translate "Open the journal & standup" %}{% include "partials/icon.html" with name="arrow-right" %}</a>
+      </div>
+    </section>
+
+    {% if notes %}
+    <section class="card">
+      <header class="card-header"><h2 class="card-title">{% translate "Recent notes" %}</h2><a href="{% url 'work:notes' %}" class="btn btn-ghost btn-sm">{% translate "All" %}</a></header>
+      <ul class="wd-notes">{% for n in notes %}<li><a href="{% url 'work:note' n.pk %}">{% if n.is_pinned %}<span class="wd-pin">{% include "partials/icon.html" with name="pin" %}</span>{% endif %}<span class="truncate">{{ n.display_title }}</span><time>{{ n.updated_at|timesince }}</time></a></li>{% endfor %}</ul>
+    </section>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

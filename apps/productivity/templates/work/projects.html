@@ -1,0 +1,42 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% translate "Projects" %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+<header class="wp-head">
+  <div class="min-w-0">
+    <h1 class="wp-title">{% translate "Projects" %}</h1>
+    <p class="wp-sub">{% blocktranslate with d=week_first|date:"j M" %}Time this week is since {{ d }}.{% endblocktranslate %}</p>
+  </div>
+  <div class="wp-actions">
+    <a href="{% if archived %}{% url 'work:projects' %}{% else %}?archived=1{% endif %}" class="btn btn-ghost">{% if archived %}{% translate "Active projects" %}{% else %}{% translate "Archived" %}{% endif %}</a>
+    <a href="{% url 'work:project_new' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Project" %}</a>
+  </div>
+</header>
+
+{% if rows %}
+<div class="wpj-grid">
+  {% for r in rows %}
+  <a href="{% url 'work:project' r.p.pk %}" class="wpj-card" data-color="{{ r.p.color }}">
+    <div class="wpj-top"><span class="wpj-swatch" data-color="{{ r.p.color }}"></span><h2 class="wpj-name">{{ r.p.name }}</h2></div>
+    {% if r.p.client %}<p class="wpj-client">{{ r.p.client }}</p>{% endif %}
+    <dl class="wpj-stats">
+      <div><dt>{% translate "This week" %}</dt><dd class="num">{{ r.week|hm }}</dd></div>
+      <div><dt>{% translate "All time" %}</dt><dd class="num">{{ r.total|hm }}</dd></div>
+      <div><dt>{% translate "Open tasks" %}</dt><dd class="num">{{ r.p.open_tasks }}</dd></div>
+    </dl>
+    {% if r.budget_pct is not None %}<div class="wpj-meter{% if r.budget_pct > 100 %} is-over{% endif %}" data-tip="{% blocktranslate with pct=r.budget_pct %}{{ pct }}% of the time budget{% endblocktranslate %}"><span style="width: {% if r.budget_pct > 100 %}100{% else %}{{ r.budget_pct }}{% endif %}%"></span></div>{% endif %}
+    {% if r.progress is not None %}<p class="wpj-progress">{% blocktranslate with pct=r.progress %}{{ pct }}% of tasks done{% endblocktranslate %}</p>{% endif %}
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty">
+  <div class="empty-icon">{% include "partials/icon.html" with name="folder" %}</div>
+  <h3 class="empty-title">{% if archived %}{% translate "No archived projects" %}{% else %}{% translate "No projects yet" %}{% endif %}</h3>
+  <p class="empty-text">{% translate "Group tasks, time and notes by project — a client, a product, or a side project." %}</p>
+  {% if not archived %}<a href="{% url 'work:project_new' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "New project" %}</a>{% endif %}
+</div>
+{% endif %}
+{% endblock %}

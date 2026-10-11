@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Productivity" %}{% endblock %}
+
+{% block content %}
+<div class="page-narrow">
+  <div class="card card-body text-center">
+    <div class="mx-auto grid h-12 w-12 place-items-center rounded-full" style="background: var(--accent-soft); color: var(--accent);"><span class="h-6 w-6">{% include "business/partials/icon.html" with name="lock" %}</span></div>
+    <h1 class="page-title mt-4">{% translate "Productivity isn't turned on for you" %}</h1>
+    <p class="mx-auto mt-2 max-w-md text-sm leading-relaxed" style="color: var(--text-secondary);">{% translate "An admin can give you access from People & access." %}</p>
+    <a href="{% url 'home' %}" class="btn btn-secondary mt-6">{% translate "Back home" %}</a>
+  </div>
+</div>
+{% endblock %}

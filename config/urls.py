@@ -12,9 +12,11 @@ from django.conf.urls.static import static
 from apps.core.pwa import manifest_view, offline_view, service_worker_view
 from apps.core.receipts import receipt_view
 from apps.core.search import search_view
+from apps.accounts import views as account_views
 from apps.overview import views as overview_views
 
 urlpatterns = [
+    path("admin/login/", account_views.admin_login_redirect),  # sign in through the app (two-step sign-in)
     path("admin/", admin.site.urls),
     # Installable app: must live at the root so the service worker covers every page.
     path("manifest.webmanifest", manifest_view, name="manifest"),
@@ -44,6 +46,7 @@ urlpatterns = [
     path("search/", search_view, name="search"),
     path("receipts/<slug:kind>/<int:pk>/", receipt_view, name="receipt_view"),
     path("business/", include("apps.business.urls")),  # business module
+    path("work/", include("apps.productivity.urls")),  # productivity: time tracker, tasks, notes…
 ]
 
 # Serve media files in development

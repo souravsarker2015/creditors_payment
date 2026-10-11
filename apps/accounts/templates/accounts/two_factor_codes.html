@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Recovery codes" %} | FinTrack{% endblock %}
+
+{% block content %}
+<div class="page-narrow stack" x-data="{ saved: false }">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% if first_time %}{% translate "Two-step sign-in is on" %}{% else %}{% translate "New recovery codes" %}{% endif %}</h1>
+      <p class="page-subtitle">{% translate "Save these recovery codes somewhere safe — on paper, or in a password manager. If you lose your phone, each one lets you sign in once." %}</p>
+    </div>
+  </header>
+  <div class="callout" data-tone="warn">
+    {% include "partials/icon.html" with name="alert" %}
+    <div class="min-w-0">
+      <p class="callout-title">{% translate "You'll see them only now" %}</p>
+      <p class="callout-text">{% if first_time %}{% translate "We keep only a scrambled copy, so they can't be shown again. You can make new ones any time." %}{% else %}{% translate "Your old recovery codes don't work any more." %}{% endif %}</p>
+    </div>
+  </div>
+  <section class="card card-body">
+    <ol class="tfa-codes" id="recovery-codes">{% for c in codes %}<li><code>{{ c }}</code></li>{% endfor %}</ol>
+    <div class="form-actions mt-4 !justify-start">
+      <button type="button" class="btn btn-secondary btn-sm" @click="navigator.clipboard && navigator.clipboard.writeText([...document.querySelectorAll('#recovery-codes code')].map(c => c.textContent).join('\n')).then(() => { saved = true; FT.toast('{% translate "Copied" %}'); })">{% include "partials/icon.html" with name="copy" %}{% translate "Copy" %}</button>
+      <button type="button" class="btn btn-secondary btn-sm" @click="const t = 'FinTrack recovery codes ({{ user.get_username }})\n\n' + [...document.querySelectorAll('#recovery-codes code')].map(c => c.textContent).join('\n') + '\n'; const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([t], { type: 'text/plain' })); a.download = 'fintrack-recovery-codes.txt'; a.click(); saved = true;">{% include "partials/icon.html" with name="download" %}{% translate "Download" %}</button>
+      <button type="button" class="btn btn-secondary btn-sm" @click="window.print(); saved = true;">{% include "partials/icon.html" with name="printer" %}{% translate "Print" %}</button>
+    </div>
+  </section>
+  <label class="check"><input type="checkbox" x-model="saved"><span><span class="check-label">{% translate "I've saved my recovery codes" %}</span></span></label>
+  <a href="{% url 'account_settings' %}#two-factor" class="btn btn-primary" :class="!saved && 'is-disabled'" :aria-disabled="(!saved).toString()" @click="if (!saved) $event.preventDefault()">{% translate "Done" %}</a>
+</div>
+{% endblock %}

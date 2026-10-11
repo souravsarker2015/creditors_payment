@@ -1,0 +1,55 @@
+"""Productivity lives under /work/ in the "work" namespace."""
+from django.urls import path
+
+from . import api, views
+
+app_name = "work"
+
+urlpatterns = [
+    path("", views.today_view, name="today"),
+    path("tasks/", views.tasks_view, name="tasks"),
+    path("tasks/new/", views.task_view, name="task_new"),
+    path("tasks/<int:pk>/", views.task_view, name="task"),
+    path("projects/", views.projects_view, name="projects"),
+    path("projects/new/", views.project_form_view, name="project_new"),
+    path("projects/<int:pk>/", views.project_view, name="project"),
+    path("projects/<int:pk>/edit/", views.project_form_view, name="project_edit"),
+    path("projects/<int:pk>/delete/", views.project_delete_view, name="project_delete"),
+    path("time/", views.time_view, name="time"),
+    path("time/add/", views.entry_form_view, name="entry_new"),
+    path("time/<int:pk>/", views.entry_form_view, name="entry"),
+    path("focus/", views.focus_view, name="focus"),
+    path("notes/", views.notes_view, name="notes"),
+    path("notes/<int:pk>/", views.notes_view, name="note"),
+    path("snippets/", views.snippets_view, name="snippets"),
+    path("snippets/new/", views.snippet_form_view, name="snippet_new"),
+    path("snippets/<int:pk>/", views.snippet_form_view, name="snippet"),
+    path("habits/", views.habits_view, name="habits"),
+    path("habits/new/", views.habit_form_view, name="habit_new"),
+    path("habits/<int:pk>/", views.habit_form_view, name="habit"),
+    path("journal/", views.journal_view, name="journal"),
+    path("reports/", views.reports_view, name="reports"),
+    path("settings/", views.settings_view, name="settings"),
+    path("shortcuts/", views.help_view, name="help"),
+    # Background saves (static/js/work.js)
+    path("api/timer/start/", api.timer_start, name="api_timer_start"),
+    path("api/timer/stop/", api.timer_stop, name="api_timer_stop"),
+    path("api/timer/", api.timer_state, name="api_timer_state"),
+    path("api/timer/update/", api.timer_update, name="api_timer_update"),
+    path("api/tasks/add/", api.task_add, name="api_task_add"),
+    path("api/tasks/<int:pk>/done/", api.task_done, name="api_task_done"),
+    path("api/tasks/<int:pk>/move/", api.task_move, name="api_task_move"),
+    path("api/tasks/<int:pk>/update/", api.task_update, name="api_task_update"),
+    path("api/tasks/<int:pk>/delete/", api.task_delete, name="api_task_delete"),
+    path("api/tasks/<int:pk>/checklist/", api.checklist_add, name="api_checklist_add"),
+    path("api/checklist/<int:pk>/", api.checklist_item, name="api_checklist_item"),
+    path("api/notes/save/", api.note_save, name="api_note_save"),
+    path("api/notes/<int:pk>/", api.note_action, name="api_note_action"),
+    path("api/habits/<int:pk>/check/", api.habit_check, name="api_habit_check"),
+    path("api/journal/", api.journal_save, name="api_journal_save"),
+    path("api/focus/", api.focus_log, name="api_focus_log"),
+    path("api/entries/<int:pk>/delete/", api.entry_delete, name="api_entry_delete"),
+    path("api/entries/<int:pk>/continue/", api.entry_continue, name="api_entry_continue"),
+    path("api/snippets/<int:pk>/", api.snippet_action, name="api_snippet_action"),
+    path("api/search/", api.search, name="api_search"),
+]

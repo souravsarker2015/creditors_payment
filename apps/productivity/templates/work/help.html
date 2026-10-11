@@ -1,0 +1,31 @@
+{% extends "work/base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Shortcuts & tips" %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+<div class="page-medium stack">
+  <header class="wp-head"><div><h1 class="wp-title">{% translate "Shortcuts & tips" %}</h1><p class="wp-sub">{% translate "Everything here works from the keyboard." %}</p></div></header>
+  <section class="card card-body">{% include "work/partials/shortcut_list.html" %}</section>
+  <section class="card card-body wk-tips">
+    <h2 class="card-title">{% translate "Quick add, one line" %}</h2>
+    <p><code>Fix login bug #auth @api !high tomorrow ~45m *</code></p>
+    <dl>
+      <div><dt><code>#tag</code></dt><dd>{% translate "Adds a tag (made if new)." %}</dd></div>
+      <div><dt><code>@project</code></dt><dd>{% translate "Puts it in a project (first letters are enough; use _ for spaces)." %}</dd></div>
+      <div><dt><code>!urgent !high !medium !low</code></dt><dd>{% translate "Priority (or !4 … !1)." %}</dd></div>
+      <div><dt><code>today tomorrow friday +3d +2w 2026-10-20 due:25/12</code></dt><dd>{% translate "Due date." %}</dd></div>
+      <div><dt><code>~30m ~2h</code></dt><dd>{% translate "Time estimate." %}</dd></div>
+      <div><dt><code>*</code></dt><dd>{% translate "Add to My Day." %}</dd></div>
+    </dl>
+    <h2 class="card-title mt-6">{% translate "Good to know" %}</h2>
+    <ul class="wk-list">
+      <li>{% translate "No signal? Keep working: changes wait on this device and sync when you're back online. The timer keeps the right time." %}</li>
+      <li>{% translate "The focus timer runs by the clock, so it stays right when the phone sleeps. When it ends you get a sound and a notification." %}</li>
+      <li>{% translate "Deleted something by mistake? Undo it from the message, or from Recently deleted for 30 days." %}</li>
+      <li>{% translate "Install the app (menu → Install app) for a full-screen tracker with notifications on your phone." %}</li>
+      <li>{% translate "Your tracker is private: nobody else can see it, admins included." %}</li>
+    </ul>
+  </section>
+</div>
+{% endblock %}

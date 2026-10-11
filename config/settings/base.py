@@ -74,6 +74,8 @@ LOCAL_APPS = [
     "apps.wallets",
     "apps.plans",
     "apps.zakat",
+    # ── Productivity (time tracker, tasks, notes…; admins and people they allow) ──
+    "apps.productivity",
     # ── Business module (fully separate; see apps/business/) ──
     "apps.business.core",
     "apps.business.loans",
@@ -108,6 +110,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "apps.accounts.middleware.TwoFactorPolicyMiddleware",  # two-step sign-in, when an admin requires it
     "apps.core.offline.OfflineMiddleware",  # entries saved with no signal are sent later, never twice
     "apps.business.core.middleware.DashboardMiddleware",  # business module: dashboard access
     "django.middleware.clickjacking.XFrameOptionsMiddleware",

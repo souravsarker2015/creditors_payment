@@ -1,0 +1,61 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% translate "Time" %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+<header class="wp-head">
+  <div class="min-w-0">
+    <h1 class="wp-title">{% translate "Time" %}</h1>
+    <p class="wp-sub">{{ first|date:"j M" }} – {{ last|date:"j M Y" }}</p>
+  </div>
+  <div class="wp-actions">
+    <nav class="wpg" aria-label="{% translate 'Week' %}">
+      <a href="?week={{ prev_week|date:'Y-m-d' }}" class="icon-btn" aria-label="{% translate 'Previous week' %}">{% include "partials/icon.html" with name="chevron-left" %}</a>
+      {% if next_week %}<a href="{% url 'work:time' %}" class="btn btn-ghost btn-sm">{% translate "This week" %}</a><a href="?week={{ next_week|date:'Y-m-d' }}" class="icon-btn" aria-label="{% translate 'Next week' %}">{% include "partials/icon.html" with name="chevron-right" %}</a>{% endif %}
+    </nav>
+    <a href="{% url 'work:entry_new' %}" class="btn btn-secondary">{% include "partials/icon.html" with name="plus" %}{% translate "Add time" %}</a>
+  </div>
+</header>
+
+<dl class="stat-grid">
+  <div class="stat" data-tone="accent"><dt class="stat-label">{% translate "This week" %}</dt><dd class="stat-value num">{{ week.seconds|hm }}</dd></div>
+  <div class="stat"><dt class="stat-label">{% translate "Target" %}</dt><dd class="stat-value num">{{ target_week|hm }}</dd></div>
+  <div class="stat"><dt class="stat-label">{% translate "Daily average" %}</dt><dd class="stat-value num">{{ week.daily_average|hm }}</dd></div>
+  <div class="stat" data-tone="good"><dt class="stat-label">{% translate "Billable" %}</dt><dd class="stat-value num">{{ week.billable_seconds|hm }}</dd></div>
+</dl>
+
+{% if sheet %}
+<section class="card">
+  <header class="card-header"><h2 class="card-title">{% translate "Timesheet" %}</h2>
+    <a href="{% url 'work:reports' %}?range=custom&from={{ first|date:'Y-m-d' }}&to={{ last|date:'Y-m-d' }}&export=csv" class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="download" %}CSV</a></header>
+  <div class="ws-scroll">
+    <table class="ws-table">
+      <thead><tr><th>{% translate "Project" %}</th>{% for d in weekdays %}<th class="{% if d == today %}is-today{% endif %}">{{ d|date:"D" }}<small>{{ d|date:"j" }}</small></th>{% endfor %}<th>{% translate "Total" %}</th></tr></thead>
+      <tbody>
+        {% for row in sheet %}
+        <tr><th>{% if row.project %}<span class="wt-dot" data-color="{{ row.project.color }}"></span>{{ row.project.name }}{% else %}<span class="ws-none">{% translate "No project" %}</span>{% endif %}</th>
+          {% for secs in row.days %}<td class="num">{% if secs %}{{ secs|hm }}{% else %}<span class="ws-zero">·</span>{% endif %}</td>{% endfor %}<td class="num ws-total">{{ row.total|hm }}</td></tr>
+        {% endfor %}
+      </tbody>
+      <tfoot><tr><th>{% translate "Total" %}</th>{% for d, secs in week.by_day.items %}<td class="num">{% if secs %}{{ secs|hm }}{% else %}·{% endif %}</td>{% endfor %}<td class="num ws-total">{{ week.seconds|hm }}</td></tr></tfoot>
+    </table>
+  </div>
+</section>
+{% endif %}
+
+<div class="wtm-days">
+  {% for day in days %}{% if day.entries or day.today %}
+  <section class="card wtm-day">
+    <header class="card-header"><h2 class="card-title">{% if day.today %}{% translate "Today" %}{% else %}{{ day.date|date:"l, j M" }}{% endif %}</h2><span class="wtm-total num">{{ day.secs|hm }}</span></header>
+    {% if day.entries %}<ul class="we-list">{% for e in day.entries %}{% include "work/partials/entry_row.html" %}{% endfor %}</ul>
+    {% else %}<p class="wd-muted">{% translate "Nothing yet today." %}</p>{% endif %}
+  </section>
+  {% endif %}{% endfor %}
+  {% if not week.entries %}
+  <div class="empty"><div class="empty-icon">{% include "partials/icon.html" with name="timer" %}</div>
+    <h3 class="empty-title">{% translate "No time this week" %}</h3>
+    <p class="empty-text">{% translate "Start the timer at the top, or add time you already worked." %}</p></div>
+  {% endif %}
+</div>
+{% endblock %}

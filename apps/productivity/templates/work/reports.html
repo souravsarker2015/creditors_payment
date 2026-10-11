@@ -1,0 +1,73 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% translate "Reports" %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+<header class="wp-head">
+  <div class="min-w-0"><h1 class="wp-title">{% translate "Reports" %}</h1><p class="wp-sub">{{ start|date:"j M Y" }} – {{ end|date:"j M Y" }}</p></div>
+  <div class="wp-actions"><a href="{% query_with export='csv' %}" class="btn btn-secondary">{% include "partials/icon.html" with name="download" %}{% translate "Export CSV" %}</a></div>
+</header>
+
+<form method="get" class="wf-bar" x-data="{ custom: '{{ preset }}' === 'custom' }">
+  <nav class="chip-row">{% for v, l in presets %}<a href="?range={{ v }}" class="chip{% if preset == v %} is-active{% endif %}">{{ l }}</a>{% endfor %}
+    <button type="button" class="chip{% if preset == 'custom' %} is-active{% endif %}" @click="custom = !custom">{% translate "Custom…" %}</button></nav>
+  <div class="wr-custom" x-show="custom" x-cloak>
+    <input type="hidden" name="range" value="custom">
+    <input type="date" name="from" value="{{ start|date:'Y-m-d' }}" class="form-input input-compact" aria-label="{% translate 'From' %}">
+    <input type="date" name="to" value="{{ end|date:'Y-m-d' }}" class="form-input input-compact" aria-label="{% translate 'To' %}">
+    <button type="submit" class="btn btn-primary btn-sm">{% translate "Show" %}</button>
+  </div>
+</form>
+
+<dl class="stat-grid">
+  <div class="stat" data-tone="accent"><dt class="stat-label">{% translate "Tracked" %}</dt><dd class="stat-value num">{{ t.seconds|hm }}</dd></div>
+  <div class="stat"{% if target_pct is not None and target_pct >= 100 %} data-tone="good"{% endif %}><dt class="stat-label">{% translate "Of target" %}</dt><dd class="stat-value num">{% if target_pct is not None %}{{ target_pct }}%{% else %}—{% endif %}</dd></div>
+  <div class="stat"><dt class="stat-label">{% translate "Average work day" %}</dt><dd class="stat-value num">{{ t.daily_average|hm }}</dd></div>
+  <div class="stat" data-tone="good"><dt class="stat-label">{% translate "Tasks done" %}</dt><dd class="stat-value num">{{ completed }}<small class="wr-of"> / {{ created }} {% translate "added" %}</small></dd></div>
+  <div class="stat"><dt class="stat-label">{% translate "Focus sessions" %}</dt><dd class="stat-value num">{{ t.focus_sessions }}</dd></div>
+  <div class="stat"><dt class="stat-label">{% translate "Billable" %}</dt><dd class="stat-value num">{{ t.billable_seconds|hm }}</dd></div>
+</dl>
+
+{% if t.seconds %}
+<section class="card">
+  <header class="card-header"><h2 class="card-title">{% translate "By day" %}</h2>{% if t.best_day %}<p class="card-subtitle">{% blocktranslate with d=t.best_day.0|date:"D j M" h=t.best_day.1|hm %}Best: {{ d }}, {{ h }}{% endblocktranslate %}</p>{% endif %}</header>
+  <div class="card-body !pt-0">
+    <div class="wr-bars{% if bars|length > 31 %} is-dense{% endif %}">
+      {% for b in bars %}<div class="wr-bar{% if b.weekend %} is-off{% endif %}" data-tip="{{ b.day|date:'D j M' }} · {{ b.secs|hm }}"><span style="height: {{ b.pct }}%"></span>{% if bars|length <= 31 %}<small>{{ b.day|date:"j" }}</small>{% endif %}</div>{% endfor %}
+    </div>
+  </div>
+</section>
+
+<div class="wr-grid">
+  <section class="card">
+    <header class="card-header"><h2 class="card-title">{% translate "By project" %}</h2></header>
+    <ul class="wr-rank">{% for r in projects %}<li><span class="wr-rank-name">{% if r.p %}<span class="wt-dot" data-color="{{ r.p.color }}"></span>{{ r.p.name }}{% else %}<span class="ws-none">{% translate "No project" %}</span>{% endif %}</span><span class="wr-rank-val num">{{ r.secs|hm }} · {{ r.pct }}%</span><span class="wr-rank-bar" data-color="{{ r.p.color|default:'slate' }}"><i style="width: {{ r.pct }}%"></i></span></li>{% endfor %}</ul>
+  </section>
+  <section class="card">
+    <header class="card-header"><h2 class="card-title">{% translate "When you work" %}</h2><p class="card-subtitle">{% translate "Time started in each hour" %}</p></header>
+    <div class="card-body !pt-0"><div class="wr-hours">{% for h in hours %}<div class="wr-hour" data-tip="{{ h.h }}:00 · {{ h.secs|hm }}"><span style="opacity: {% if h.secs %}{{ h.pct|add:15 }}{% else %}6{% endif %}%"></span><small>{% if h.h|divisibleby:3 %}{{ h.h }}{% endif %}</small></div>{% endfor %}</div></div>
+  </section>
+  {% if tags %}
+  <section class="card">
+    <header class="card-header"><h2 class="card-title">{% translate "By tag" %}</h2></header>
+    <ul class="wr-rank">{% for r in tags %}<li><span class="wr-rank-name">#{{ r.tag.name }}</span><span class="wr-rank-val num">{{ r.secs|hm }} · {{ r.pct }}%</span><span class="wr-rank-bar" data-color="{{ r.tag.color }}"><i style="width: {{ r.pct }}%"></i></span></li>{% endfor %}</ul>
+  </section>
+  {% endif %}
+  {% if tasks %}
+  <section class="card">
+    <header class="card-header"><h2 class="card-title">{% translate "Top tasks" %}</h2></header>
+    <ul class="wd-notes">{% for task, secs in tasks %}<li><a href="{% url 'work:task' task.pk %}"><span class="truncate">{{ task.title }}</span><time class="num">{{ secs|hm }}</time></a></li>{% endfor %}</ul>
+  </section>
+  {% endif %}
+  {% if estimated %}
+  <section class="card">
+    <header class="card-header"><div><h2 class="card-title">{% translate "Estimates vs. actual" %}</h2>{% if accuracy is not None %}<p class="card-subtitle">{% blocktranslate with a=accuracy %}Your estimates are {{ a }}% accurate.{% endblocktranslate %}</p>{% endif %}</div></header>
+    <ul class="wd-notes">{% for r in estimated %}<li><a href="{% url 'work:task' r.task.pk %}"><span class="truncate">{{ r.task.title }}</span><time class="num" data-tone="{% if r.ratio > 120 %}late{% elif r.ratio < 80 %}early{% endif %}">{{ r.spent|hm }} / {{ r.estimate|hm }}</time></a></li>{% endfor %}</ul>
+  </section>
+  {% endif %}
+</div>
+{% else %}
+<div class="empty"><div class="empty-icon">{% include "partials/icon.html" with name="chart" %}</div><h3 class="empty-title">{% translate "No time in this period" %}</h3><p class="empty-text">{% translate "Track some time and come back — the charts fill in as you work." %}</p></div>
+{% endif %}
+{% endblock %}

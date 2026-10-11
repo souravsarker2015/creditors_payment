@@ -87,7 +87,7 @@
             <button type="button" class="icon-btn web-only -ml-2 lg:hidden" @click="sidebarOpen = true" aria-label="{% translate 'Open sidebar' %}">
                 <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
             </button>
-            <a href="{% if active_dashboard == 'business' %}{% url 'business:home' %}{% else %}{% url 'home' %}{% endif %}" class="topbar-logo flex items-center gap-2 lg:hidden">
+            <a href="{% if active_dashboard == 'business' %}{% url 'business:home' %}{% elif active_dashboard == 'productivity' %}{% url 'work:today' %}{% else %}{% url 'home' %}{% endif %}" class="topbar-logo flex items-center gap-2 lg:hidden">
                 <span class="grid h-8 w-8 place-items-center rounded-lg font-heading text-sm font-bold" style="background: var(--gold); color: #221a06;">৳</span>
                 <span class="font-heading text-base font-bold" style="color: var(--text-primary);">FinTrack</span>
             </a>
@@ -139,8 +139,13 @@
                             {% include "partials/icon.html" with name="download" %}{% translate "Install app" %}
                         </button>
                         <a href="{% url 'account_settings' %}" class="menu-item" role="menuitem">
-                            {% include "partials/icon.html" with name="key" %}{% translate "Account & password" %}
+                            {% include "partials/icon.html" with name="key" %}{% translate "Account & security" %}
                         </a>
+                        {% if user.is_superuser %}
+                        <a href="{% url 'user_list' %}" class="menu-item" role="menuitem">
+                            {% include "partials/icon.html" with name="users" %}{% translate "People & access" %}
+                        </a>
+                        {% endif %}
                         <a href="{% url 'logout' %}" class="menu-item is-danger" role="menuitem">
                             <svg fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" /></svg>
                             {% translate "Log Out" %}

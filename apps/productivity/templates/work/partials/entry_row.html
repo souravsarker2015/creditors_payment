@@ -1,0 +1,19 @@
+{% load i18n work %}{% comment %}One time entry. Needs: e.{% endcomment %}
+<li class="we-row{% if e.is_running %} is-running{% endif %}" data-entry="{{ e.pk }}">
+  <span class="we-bar" data-color="{{ e.project.color|default:'slate' }}" aria-hidden="true"></span>
+  <div class="we-main">
+    <p class="we-title">{% if e.task %}<a href="{% url 'work:task' e.task_id %}">{{ e.label }}</a>{% else %}{{ e.label }}{% endif %}
+      {% if e.kind == "focus" %}<span class="badge" data-tone="accent">{% translate "Focus" %}</span>{% endif %}{% if e.billable %}<span class="badge" data-tone="good">৳</span>{% endif %}</p>
+    <p class="we-meta">{% if e.project %}<span class="wt-proj"><span class="wt-dot" data-color="{{ e.project.color }}"></span>{{ e.project.name }}</span> · {% endif %}{{ e.started_at|local_time }}–{% if e.ended_at %}{{ e.ended_at|local_time }}{% else %}{% translate "now" %}{% endif %}{% for tag in e.tags.all %} · #{{ tag.name }}{% endfor %}</p>
+  </div>
+  <span class="we-len num">{% if e.is_running %}<span x-text="$store.timer.text"></span>{% else %}{{ e.seconds|hm }}{% endif %}</span>
+  {% if not e.is_running %}
+  <div class="we-act">
+    <button type="button" class="icon-btn" data-tip="{% translate 'Continue — start again' %}" aria-label="{% translate 'Continue' %}"
+            @click="Work.api('{% url 'work:api_entry_continue' e.pk %}', { at: new Date().toISOString() }).then(r => { if (r.running) { $store.timer.running = r.running; $store.timer.share(); } })">{% include "partials/icon.html" with name="play" %}</button>
+    <a href="{% url 'work:entry' e.pk %}" class="icon-btn" aria-label="{% translate 'Edit' %}" data-tip="{% translate 'Edit' %}">{% include "partials/icon.html" with name="edit" %}</a>
+    <button type="button" class="icon-btn" aria-label="{% translate 'Delete' %}" data-tip="{% translate 'Delete' %}"
+            @click="const row = $el.closest('[data-entry]'); row.classList.add('is-leaving'); Work.api('{% url 'work:api_entry_delete' e.pk %}').then(r => { setTimeout(() => row.remove(), 250); Work.undoable('{% translate "Time entry deleted" %}', r.undo); })">{% include "partials/icon.html" with name="trash" %}</button>
+  </div>
+  {% endif %}
+</li>

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Turn on two-step sign-in" %} | FinTrack{% endblock %}
+
+{% block content %}
+<div class="page-narrow stack">
+  <header class="page-header !mb-0">
+    <div>
+      <a href="{% url 'account_settings' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Account & security" %}</a>
+      <h1 class="page-title">{% translate "Turn on two-step sign-in" %}</h1>
+      <p class="page-subtitle">{% translate "After your password, you'll also type a code from an app on your phone. Someone who learns your password still can't get in." %}</p>
+    </div>
+  </header>
+
+  {% if required %}
+  <div class="callout" data-tone="warn">
+    {% include "partials/icon.html" with name="alert" %}
+    <div class="min-w-0">
+      <p class="callout-title">{% translate "Your admin requires two-step sign-in" %}</p>
+      <p class="callout-text">{% translate "Set it up to keep using the app. It takes about a minute." %}</p>
+    </div>
+  </div>
+  {% endif %}
+
+  <section class="card">
+    <div class="card-body">
+      <ol class="tfa-steps">
+        <li>
+          <p class="tfa-step-title">{% translate "Get an authenticator app" %}</p>
+          <p class="tfa-step-text">{% translate "Google Authenticator, Microsoft Authenticator, Authy, 1Password or Bitwarden — any of them works." %}</p>
+        </li>
+        <li>
+          <p class="tfa-step-title">{% translate "Scan this QR code with the app" %}</p>
+          <div class="tfa-qr-wrap">
+            <div class="tfa-qr" x-data x-init="
+              const draw = () => { if (!window.qrcode) return setTimeout(draw, 60); const q = qrcode(0, 'M'); q.addData($el.dataset.uri); q.make(); $el.innerHTML = q.createSvgTag({ cellSize: 5, margin: 3, scalable: true }); };
+              draw();" data-uri="{{ uri }}" role="img" aria-label="{% translate 'QR code for your authenticator app' %}"></div>
+            <div class="tfa-key">
+              <p class="tfa-step-text">{% translate "Can't scan? Choose “Enter a setup key” in the app and type:" %}</p>
+              <p class="tfa-secret" x-data><code>{% for g in secret_groups %}<span>{{ g }}</span>{% endfor %}</code>
+                <button type="button" class="icon-btn" data-tip="{% translate 'Copy' %}" aria-label="{% translate 'Copy setup key' %}" @click="navigator.clipboard && navigator.clipboard.writeText('{{ secret }}').then(() => FT.toast('{% translate "Copied" %}'))">{% include "partials/icon.html" with name="copy" %}</button>
+              </p>
+              <a href="{{ uri }}" class="btn btn-ghost btn-sm lg:hidden">{% translate "Open in authenticator app" %}</a>
+            </div>
+          </div>
+        </li>
+        <li>
+          <p class="tfa-step-title">{% translate "Type the 6-digit code the app shows" %}</p>
+          <form method="post" class="form-stack mt-2" novalidate>
+            {% csrf_token %}
+            {% for field in form %}{% include "partials/field.html" %}{% endfor %}
+            <div class="form-actions !justify-start">
+              <button type="submit" class="btn btn-primary">{% include "partials/icon.html" with name="check" %}{% translate "Turn on" %}</button>
+              {% if not required %}<a href="{% url 'account_settings' %}" class="btn btn-ghost">{% translate "Cancel" %}</a>{% endif %}
+            </div>
+          </form>
+        </li>
+      </ol>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+{% endblock %}

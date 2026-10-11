@@ -1,0 +1,52 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{{ project.name }} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+<header class="wp-head">
+  <div class="min-w-0">
+    <a href="{% url 'work:projects' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Projects" %}</a>
+    <h1 class="wp-title"><span class="wpj-swatch is-lg" data-color="{{ project.color }}"></span>{{ project.name }}{% if project.is_archived %} <span class="badge">{% translate "Archived" %}</span>{% endif %}</h1>
+    {% if project.client or project.description %}<p class="wp-sub">{% if project.client %}{{ project.client }}{% endif %}{% if project.client and project.description %} · {% endif %}{{ project.description|truncatechars:160 }}</p>{% endif %}
+  </div>
+  <div class="wp-actions">
+    <button type="button" class="btn btn-primary" @click="$store.timer.start({ project: {{ project.pk }}, label: '{{ project.name|escapejs }}', description: '' })">{% include "partials/icon.html" with name="play" %}{% translate "Start timer" %}</button>
+    <a href="{% url 'work:project_edit' project.pk %}" class="btn btn-secondary">{% include "partials/icon.html" with name="edit" %}{% translate "Edit" %}</a>
+    <form method="post" action="{% url 'work:project_delete' project.pk %}" data-confirm="{% translate 'Delete this project? Its tasks, time and notes are kept, without a project. You can undo this from Recently deleted.' %}">{% csrf_token %}
+      <button type="submit" class="icon-btn" aria-label="{% translate 'Delete project' %}" data-tip="{% translate 'Delete project' %}">{% include "partials/icon.html" with name="trash" %}</button></form>
+  </div>
+</header>
+
+<dl class="stat-grid">
+  <div class="stat"><dt class="stat-label">{% translate "This week" %}</dt><dd class="stat-value num">{{ week|hm }}</dd></div>
+  <div class="stat"><dt class="stat-label">{% translate "All time" %}</dt><dd class="stat-value num">{{ total|hm }}</dd></div>
+  {% if budget_pct is not None %}<div class="stat"{% if budget_pct > 100 %} data-tone="critical"{% endif %}><dt class="stat-label">{% translate "Time budget used" %}</dt><dd class="stat-value num">{{ budget_pct }}%</dd></div>{% endif %}
+  {% if earned is not None %}<div class="stat" data-tone="good"><dt class="stat-label">{% translate "Worth at your rate" %}</dt><dd class="stat-value">{{ earned|money }}</dd></div>{% endif %}
+</dl>
+
+<div class="wd-grid">
+  <section class="card" x-data="workTasks">
+    <header class="card-header"><h2 class="card-title">{% translate "Open tasks" %}</h2>
+      <a href="{% url 'work:tasks' %}?project={{ project.pk }}&view=board" class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="board" %}{% translate "Board" %}</a></header>
+    <form class="wd-quick" @submit.prevent="const box = $refs.q; if (!box.value.trim()) return; Work.api(Work.cfg.urls.taskAdd, { text: box.value, project: '{{ project.pk }}' }).then(r => { if (r.html) $refs.list.insertAdjacentHTML('afterbegin', r.html); }); box.value = ''">
+      <span class="wd-quick-icon" aria-hidden="true">{% include "partials/icon.html" with name="plus" %}</span>
+      <input x-ref="q" class="wd-quick-input" placeholder="{% translate 'Add a task to this project…' %}" aria-label="{% translate 'New task' %}" autocomplete="off">
+    </form>
+    <ul class="wt-list" x-ref="list">{% for t in open_tasks %}{% include "work/partials/task_row.html" %}{% endfor %}</ul>
+    {% if done_tasks %}<details class="wd-done"><summary>{% blocktranslate count counter=done_tasks|length %}{{ counter }} done{% plural %}{{ counter }} done{% endblocktranslate %}</summary><ul class="wt-list">{% for t in done_tasks %}{% include "work/partials/task_row.html" %}{% endfor %}</ul></details>{% endif %}
+  </section>
+  <div class="wd-side">
+    <section class="card">
+      <header class="card-header"><h2 class="card-title">{% translate "Recent time" %}</h2><a href="{% url 'work:reports' %}" class="btn btn-ghost btn-sm">{% translate "Reports" %}</a></header>
+      {% if entries %}<ul class="we-list">{% for e in entries %}{% include "work/partials/entry_row.html" %}{% endfor %}</ul>{% else %}<p class="wd-muted">{% translate "No time tracked on this project yet." %}</p>{% endif %}
+    </section>
+    {% if notes %}
+    <section class="card">
+      <header class="card-header"><h2 class="card-title">{% translate "Notes" %}</h2></header>
+      <ul class="wd-notes">{% for n in notes %}<li><a href="{% url 'work:note' n.pk %}"><span class="truncate">{{ n.display_title }}</span><time>{{ n.updated_at|timesince }}</time></a></li>{% endfor %}</ul>
+    </section>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
