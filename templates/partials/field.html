@@ -43,7 +43,7 @@ selects with only a couple of choices render as a segmented toggle.
     {% else %}
       {{ field }}
     {% endif %}
-    {% if field.help_text %}<p class="help">{{ field.help_text|safe }}</p>{% endif %}
+    {% if field.help_text %}{% if "<ul" in field.help_text %}<div class="help help-list">{{ field.help_text|safe }}</div>{% else %}<p class="help">{{ field.help_text|safe }}</p>{% endif %}{% endif %}
   {% endif %}
   {% for error in field.errors %}
     <p class="field-error">{% include "partials/icon.html" with name="alert" %}{{ error }}</p>

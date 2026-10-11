@@ -645,6 +645,9 @@ input[type="number"] { -moz-appearance: textfield; }
     .filter-foot .spacer { display: none; }
 }
 
+.search-row { display: flex; align-items: center; gap: 0.5rem; }
+.list-range { padding: 0.625rem 1rem 0; font-size: 0.75rem; color: var(--text-muted); }
+
 .chip-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
 .chip-row-label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); }
 .chip {
@@ -1146,6 +1149,14 @@ select.just-added, input.just-added { animation: just-added 1.2s ease; }
 }
 .bg-pick .bg-swatch { width: 100%; height: 100%; }
 .bg-pick.is-active { border-color: var(--text-on-ink); }
+
+/* Sign-in: "Forgot password?" under the password box */
+.auth-forgot { margin-top: 0.125rem; text-align: right; font-size: 0.8125rem; line-height: 1.5; }
+/* Django's password rules arrive as a list */
+.help-list ul { margin: 0; padding-left: 1.125rem; list-style: disc; }
+.help-list li + li { margin-top: 0.125rem; }
+.auth-forgot a { font-weight: 600; color: var(--accent); }
+.auth-forgot a:hover { text-decoration: underline; }
 
 /* ==========================================================================
    Calculator (partials/calculator.html + js/calculator.js)

@@ -111,3 +111,16 @@ Switch by setting `DJANGO_SETTINGS_MODULE`:
 ```bash
 export DJANGO_SETTINGS_MODULE=config.settings.prod
 ```
+## Secrets and email (`.env`)
+
+Secrets go in a `.env` file at the project root (git-ignored; copy `.env.example`).
+Real environment variables win over it. The Gmail settings there send password-reset
+links and "your password was changed" notices:
+
+```bash
+EMAIL_HOST_USER=you@gmail.com
+EMAIL_HOST_PASSWORD=your-16-letter-app-password   # a Gmail App Password, not the account password
+DEFAULT_FROM_EMAIL=FinTrack <you@gmail.com>
+```
+
+Without them, emails are printed to the console instead. Tests never send real mail.

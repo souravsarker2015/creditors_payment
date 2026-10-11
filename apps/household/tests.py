@@ -142,3 +142,77 @@ class MemberStatementTests(TestCase):
         r = self.client.get(reverse("household_member_statement", args=[m.pk]))
         self.assertContains(r, "Fish and rice")
         self.assertContains(r, "Cash back")
+
+
+class AllPurchasesTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="allbazar", password="x")
+        self.client.force_login(self.user)
+        self.fish = HouseholdCategory.objects.create(user=self.user, name="Fish")
+        self.rice = HouseholdCategory.objects.create(user=self.user, name="Rice")
+        self.mother = HouseholdMember.objects.create(user=self.user, name="Mother")
+        for i in range(45):   # 45 purchases over three months
+            Purchase.objects.create(user=self.user, amount=Decimal(100 + i), date=date(2026, 7 + i % 3, 1 + i % 28),
+                                    category=self.fish if i % 2 else self.rice, buyer=self.mother if i % 5 == 0 else None,
+                                    description="Hilsa" if i == 7 else "")
+        other = User.objects.create_user(username="someone", password="x")
+        Purchase.objects.create(user=other, amount=Decimal("999"), date=date(2026, 7, 1))
+        self.url = reverse("household_purchase_all")
+
+    def test_pages_of_twenty_on_the_server(self):
+        r = self.client.get(self.url)
+        self.assertEqual(len(r.context["page_obj"].object_list), 20)
+        self.assertEqual(r.context["page_obj"].paginator.num_pages, 3)
+        self.assertEqual(r.context["count"], 45)
+        self.assertEqual(r.context["total"], sum(Decimal(100 + i) for i in range(45)))
+        last = self.client.get(self.url + "?page=3")
+        self.assertEqual(len(last.context["page_obj"].object_list), 5)
+        dates = [p.date for p in r.context["page_obj"].object_list]
+        self.assertEqual(dates, sorted(dates, reverse=True))   # newest first
+        self.assertContains(r, "Showing 1–20 of 45")
+
+    def test_filters_and_search(self):
+        r = self.client.get(self.url, {"category": self.fish.pk})
+        self.assertEqual(r.context["count"], 22)
+        r = self.client.get(self.url, {"paid": "me"})
+        self.assertEqual(r.context["count"], 36)
+        r = self.client.get(self.url, {"paid": self.mother.pk})
+        self.assertEqual(r.context["count"], 9)
+        r = self.client.get(self.url, {"date_from": "2026-08-01", "date_to": "2026-08-31"})
+        self.assertEqual(r.context["count"], 15)
+        r = self.client.get(self.url, {"q": "hilsa"})
+        self.assertEqual(r.context["count"], 1)
+        r = self.client.get(self.url, {"q": "mother"})
+        self.assertEqual(r.context["count"], 9)
+        r = self.client.get(self.url, {"sort": "-amount"})
+        self.assertEqual(r.context["page_obj"].object_list[0].amount, Decimal("144"))
+        # Pages keep the filters.
+        r = self.client.get(self.url, {"paid": "me"})
+        self.assertContains(r, "?paid=me&page=2")
+
+    def test_someone_elses_category_is_ignored(self):
+        other = User.objects.create_user(username="other2", password="x")
+        theirs = HouseholdCategory.objects.create(user=other, name="Theirs")
+        r = self.client.get(self.url, {"category": theirs.pk})
+        self.assertEqual(r.context["count"], 45)
+
+    def test_csv_of_what_is_filtered(self):
+        r = self.client.get(self.url, {"category": self.fish.pk, "export": "csv"})
+        self.assertEqual(r["Content-Type"], "text/csv")
+        self.assertEqual(len(r.content.decode().strip().splitlines()), 23)   # header + 22
+
+    def test_edit_and_delete_come_back_to_the_list(self):
+        back = self.url + "?paid=me&page=2"
+        p = Purchase.objects.filter(user=self.user, buyer__isnull=True).first()
+        edit = reverse("household_purchase_edit", args=[p.pk]) + "?next=" + back.replace("&", "%26").replace("?", "%3F")
+        data = {"amount": "123", "date": p.date.isoformat(), "category": p.category_id or "", "buyer": "", "description": ""}
+        r = self.client.post(edit, data)
+        self.assertRedirects(r, back, fetch_redirect_response=False)
+        r = self.client.post(reverse("household_purchase_delete", args=[p.pk]), {"next": back})
+        self.assertRedirects(r, back, fetch_redirect_response=False)
+        r = self.client.post(reverse("household_purchase_delete", args=[Purchase.objects.filter(user=self.user).first().pk]), {"next": "https://evil.example/"})
+        self.assertNotIn("evil", r["Location"])
+
+    def test_both_views_link_to_each_other(self):
+        self.assertContains(self.client.get(reverse("household_list")), self.url)
+        self.assertContains(self.client.get(self.url), reverse("household_list"))

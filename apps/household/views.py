@@ -10,10 +10,11 @@ from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.contrib import messages
-from django.db.models import Sum, Count, DecimalField, Value
+from django.db.models import Q, Sum, Count, DecimalField, Value
 from django.db.models.functions import Coalesce, TruncMonth
 from django.core.paginator import Paginator
 from django.utils import dateformat
+from django.utils.dateparse import parse_date
 from django.utils.translation import gettext as _, gettext_lazy, ngettext
 
 from apps.core.templatetags.ui import bd_number, money
@@ -298,6 +299,109 @@ def purchase_list_view(request):
     return render(request, "household/purchase_list.html", context)
 
 
+ALL_PURCHASES_PAGE_SIZE = 20
+ALL_PURCHASES_SORT_OPTIONS = [
+    ("-date", gettext_lazy("Newest first")),
+    ("date", gettext_lazy("Oldest first")),
+    ("-amount", gettext_lazy("Amount (High to Low)")),
+    ("amount", gettext_lazy("Amount (Low to High)")),
+]
+ALL_PURCHASES_SORT_FIELDS = {
+    "-date": ["-date", "-created_at"],
+    "date": ["date", "created_at"],
+    "-amount": ["-amount", "-date"],
+    "amount": ["amount", "-date"],
+}
+
+
+def _back_to(request):
+    """A `next` page on this site to return to after editing or deleting, if given."""
+    from django.utils.http import url_has_allowed_host_and_scheme
+
+    nxt = request.POST.get("next") or request.GET.get("next") or ""
+    if nxt and url_has_allowed_host_and_scheme(nxt, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+        return nxt
+    return ""
+
+
+def _iso_date(raw):
+    try:
+        return parse_date((raw or "").strip())
+    except ValueError:
+        return None
+
+
+@login_required
+def purchase_all_view(request):
+    """Every bazar purchase in one list, filtered and paged on the server."""
+    user = request.user
+    q = request.GET.get("q", "").strip()
+    category = request.GET.get("category", "").strip()
+    paid = request.GET.get("paid", "").strip()
+    date_from, date_to = _iso_date(request.GET.get("date_from")), _iso_date(request.GET.get("date_to"))
+    if date_from and date_to and date_from > date_to:
+        date_from, date_to = date_to, date_from
+    sort = request.GET.get("sort", "-date")
+    if sort not in ALL_PURCHASES_SORT_FIELDS:
+        sort = "-date"
+
+    categories = user.household_categories.order_by("name")
+    members = user.household_members.order_by("name")
+    purchases = user.household_purchases.select_related("buyer", "category", "wallet")
+    if q:
+        purchases = purchases.filter(Q(description__icontains=q) | Q(category__name__icontains=q) | Q(buyer__name__icontains=q))
+    if category == "none":
+        purchases = purchases.filter(category__isnull=True)
+    elif category.isdigit() and categories.filter(pk=category).exists():
+        purchases = purchases.filter(category_id=int(category))
+    else:
+        category = ""
+    if paid == "me":
+        purchases = purchases.filter(buyer__isnull=True)
+    elif paid.isdigit() and members.filter(pk=paid).exists():
+        purchases = purchases.filter(buyer_id=int(paid))
+    else:
+        paid = ""
+    if date_from:
+        purchases = purchases.filter(date__gte=date_from)
+    if date_to:
+        purchases = purchases.filter(date__lte=date_to)
+    purchases = purchases.order_by(*ALL_PURCHASES_SORT_FIELDS[sort])
+
+    if request.GET.get("export") == "csv":
+        rows = [
+            (p.date.isoformat(), p.category.name if p.category else "", p.buyer.name if p.buyer else _("Me"),
+             p.wallet.name if p.wallet else "", p.amount, p.description)
+            for p in purchases
+        ]
+        return _csv_response("bazar_purchases.csv", [_("Date"), _("Category"), _("Paid by"), _("Wallet"), _("Amount"), _("Description")], rows)
+
+    summary = purchases.aggregate(total=Coalesce(Sum("amount"), Value(0, output_field=DecimalField())), count=Count("id"))
+    page_obj = Paginator(purchases, ALL_PURCHASES_PAGE_SIZE).get_page(request.GET.get("page"))
+    base_query = request.GET.copy()
+    base_query.pop("page", None)
+    today = timezone.localdate()
+    filtered = bool(q or category or paid or date_from or date_to)
+    return render(request, "household/purchase_all.html", {
+        "page_obj": page_obj,
+        "pagination_window": _build_pagination_window(page_obj),
+        "base_query_string": base_query.urlencode(),
+        "total": summary["total"],
+        "count": summary["count"],
+        "average": summary["total"] / summary["count"] if summary["count"] else 0,
+        "q": q, "category": category, "paid": paid,
+        "date_from": date_from.isoformat() if date_from else "",
+        "date_to": date_to.isoformat() if date_to else "",
+        "sort": sort, "sort_options": ALL_PURCHASES_SORT_OPTIONS,
+        "categories": categories, "members": members,
+        "selected_category": next((c for c in categories if str(c.pk) == category), None),
+        "selected_member": next((m for m in members if str(m.pk) == paid), None),
+        "filtered": filtered,
+        "has_filters": bool(category or paid or date_from or date_to),
+        "current_year": today.year, "current_month": today.month,
+    })
+
+
 @login_required
 def month_detail_view(request, year, month):
     if not 1 <= month <= 12:
@@ -359,7 +463,7 @@ def purchase_edit_view(request, pk):
             form.save()
             messages.success(request, _("Purchase updated."))
             _budget_alert(request, form.instance)
-            return redirect("household_month_detail", year=purchase.date.year, month=purchase.date.month)
+            return redirect(_back_to(request) or reverse("household_month_detail", kwargs={"year": purchase.date.year, "month": purchase.date.month}))
     else:
         form = PurchaseForm(instance=purchase, user=request.user)
     return render(
@@ -368,7 +472,7 @@ def purchase_edit_view(request, pk):
         {
             "form": form,
             "title": _("Edit Purchase"),
-            "back_url": f"/household/purchases/{purchase.date.year}/{purchase.date.month}/",
+            "back_url": _back_to(request) or f"/household/purchases/{purchase.date.year}/{purchase.date.month}/",
         },
     )
 
@@ -381,7 +485,7 @@ def purchase_delete_view(request, pk):
     delete_with_undo(request, purchase, _("Purchase of ৳%(amount)s deleted.") % {"amount": amount},
                      label=f"{purchase.category or _('No category')} · {money(amount)} · {purchase.date:%d %b %Y}",
                      back_url=reverse("household_month_detail", kwargs={"year": year, "month": month}))
-    return redirect("household_month_detail", year=year, month=month)
+    return redirect(_back_to(request) or reverse("household_month_detail", kwargs={"year": year, "month": month}))
 
 
 @login_required

@@ -109,7 +109,7 @@
     <section class="card lg:col-span-2">
       <div class="card-header">
         <h2 class="card-title">{% translate "Recent Purchases" %}</h2>
-        <a href="{% url 'household_list' %}" class="btn btn-ghost btn-sm">{% translate "View all" %}{% include "partials/icon.html" with name="arrow-right" %}</a>
+        <a href="{% url 'household_purchase_all' %}" class="btn btn-ghost btn-sm">{% translate "View all" %}{% include "partials/icon.html" with name="arrow-right" %}</a>
       </div>
       {% if recent_purchases %}
       <ul class="ledger">

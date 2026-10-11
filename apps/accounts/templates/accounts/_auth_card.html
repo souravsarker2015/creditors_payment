@@ -1,5 +1,6 @@
 {% load i18n %}
-{% comment %}Centered auth card. Needs: form, heading, subheading, submit_label, alt_text, alt_link_text, alt_url.{% endcomment %}
+{% comment %}Centered auth card. Needs: form, heading, subheading, submit_label, alt_text, alt_link_text, alt_url.
+Optional: intro (a line above the form), next (page to return to), show_forgot (a "Forgot password?" link).{% endcomment %}
 <div class="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center py-6">
   <div class="w-full max-w-sm">
     <div class="mb-6 text-center">
@@ -10,11 +11,18 @@
     <form method="post" class="card card-body form-stack !p-6" novalidate>
       {% csrf_token %}
       {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
-      {% for field in form %}{% include "partials/field.html" %}{% endfor %}
+      {% if intro %}<p class="text-sm" style="color: var(--text-secondary);">{{ intro }}</p>{% endif %}
+      {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+      {% for field in form %}
+        {% include "partials/field.html" %}
+        {% if show_forgot and field.name == "password" %}<p class="auth-forgot"><a href="{% url 'password_reset' %}">{% translate "Forgot password?" %}</a></p>{% endif %}
+      {% endfor %}
       <button type="submit" class="btn btn-primary btn-block !mt-6">{{ submit_label }}</button>
     </form>
+    {% if alt_url %}
     <p class="mt-6 text-center text-sm" style="color: var(--text-secondary);">
       {{ alt_text }} <a href="{{ alt_url }}" class="font-semibold" style="color: var(--accent);">{{ alt_link_text }}</a>
     </p>
+    {% endif %}
   </div>
 </div>

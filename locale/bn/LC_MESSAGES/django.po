@@ -13788,3 +13788,199 @@ msgstr "বর্গফুট"
 
 msgid "ton"
 msgstr "টন"
+
+msgid "Forgot password?"
+msgstr "পাসওয়ার্ড ভুলে গেছেন?"
+
+msgid "Your FinTrack password was changed"
+msgstr "আপনার FinTrack পাসওয়ার্ড বদলানো হয়েছে"
+
+#, python-format
+msgid "Email saved. If you forget your password, a reset link will go to %(email)s."
+msgstr "ইমেইল সংরক্ষিত হয়েছে। পাসওয়ার্ড ভুলে গেলে রিসেট লিংক যাবে %(email)s-এ।"
+
+msgid "Password changed."
+msgstr "পাসওয়ার্ড বদলানো হয়েছে।"
+
+msgid "All bazar purchases"
+msgstr "বাজারের সব কেনাকাটা"
+
+msgid "Account & password"
+msgstr "অ্যাকাউন্ট ও পাসওয়ার্ড"
+
+msgid "Me"
+msgstr "আমি"
+
+msgid "Username or email"
+msgstr "ইউজারনেম বা ইমেইল"
+
+msgid "Remember me"
+msgstr "আমাকে মনে রাখুন"
+
+msgid "Stay signed in on this device for 30 days. Untick on a shared phone or computer."
+msgstr "এই ডিভাইসে ৩০ দিন সাইন ইন থাকুন। অন্যের সাথে ভাগ করা ফোন বা কম্পিউটারে টিক তুলে দিন।"
+
+msgid "Used only to reset your password if you forget it."
+msgstr "শুধু পাসওয়ার্ড ভুলে গেলে রিসেট করার জন্য ব্যবহার হবে।"
+
+msgid "An account with this email already exists. Sign in, or reset its password."
+msgstr "এই ইমেইলে আগে থেকেই একটি অ্যাকাউন্ট আছে। সাইন ইন করুন, অথবা পাসওয়ার্ড রিসেট করুন।"
+
+msgid "Another account already uses this email."
+msgstr "এই ইমেইল অন্য একটি অ্যাকাউন্টে ব্যবহার হচ্ছে।"
+
+msgid "That password isn't right."
+msgstr "পাসওয়ার্ডটি সঠিক নয়।"
+
+#, python-format
+msgid "Signed in as %(name)s."
+msgstr "%(name)s হিসেবে সাইন ইন করা আছে।"
+
+msgid "Add your email"
+msgstr "আপনার ইমেইল যোগ করুন"
+
+msgid "Without one, a forgotten password can't be reset by email. It's only used for that and for security notices."
+msgstr "ইমেইল না থাকলে ভুলে যাওয়া পাসওয়ার্ড ইমেইলে রিসেট করা যাবে না। এটি শুধু এই কাজে আর নিরাপত্তা-সংক্রান্ত নোটিশের জন্য ব্যবহার হয়।"
+
+#, python-format
+msgid "Password reset links go to %(email)s. You can also sign in with it."
+msgstr "পাসওয়ার্ড রিসেটের লিংক যায় %(email)s-এ। এটি দিয়ে সাইন ইনও করতে পারবেন।"
+
+msgid "For resetting your password, and signing in with your email."
+msgstr "পাসওয়ার্ড রিসেট করার জন্য, আর ইমেইল দিয়ে সাইন ইনের জন্য।"
+
+msgid "Change email"
+msgstr "ইমেইল বদলান"
+
+msgid "Save email"
+msgstr "ইমেইল সংরক্ষণ করুন"
+
+msgid "You stay signed in on this device."
+msgstr "এই ডিভাইসে আপনি সাইন ইন থাকবেন।"
+
+msgid "We'll email you to confirm the change."
+msgstr "পরিবর্তনটি নিশ্চিত করতে আমরা আপনাকে ইমেইল করব।"
+
+#, python-format
+msgid "Hello %(name)s,"
+msgstr "প্রিয় %(name)s,"
+
+#, python-format
+msgid "The password of your FinTrack account was changed on %(when)s."
+msgstr "আপনার FinTrack অ্যাকাউন্টের পাসওয়ার্ড %(when)s-এ বদলানো হয়েছে।"
+
+msgid "If that was you, there's nothing to do."
+msgstr "এটি আপনি করে থাকলে কিছু করার দরকার নেই।"
+
+msgid "If it wasn't, reset your password now and tell the person who runs this app:"
+msgstr "আপনি না করে থাকলে এখনই পাসওয়ার্ড রিসেট করুন এবং যিনি এই অ্যাপ চালান তাকে জানান:"
+
+msgid "Reset your password"
+msgstr "আপনার পাসওয়ার্ড রিসেট করুন"
+
+msgid "Someone asked to reset the password of your FinTrack account. To choose a new password, press the button:"
+msgstr "কেউ আপনার FinTrack অ্যাকাউন্টের পাসওয়ার্ড রিসেট করতে চেয়েছেন। নতুন পাসওয়ার্ড দিতে বোতামটি চাপুন:"
+
+msgid "Set a new password"
+msgstr "নতুন পাসওয়ার্ড দিন"
+
+msgid "The link works once, for one day."
+msgstr "লিংকটি একবারই কাজ করবে, এক দিনের জন্য।"
+
+#, python-format
+msgid "Your username is: %(name)s"
+msgstr "আপনার ইউজারনেম: %(name)s"
+
+msgid "Didn't ask for this? Ignore this email. Your password stays the same."
+msgstr "আপনি চাননি? এই ইমেইলটি উপেক্ষা করুন। আপনার পাসওয়ার্ড আগের মতোই থাকবে।"
+
+msgid "If the button doesn't work, copy this link into your browser:"
+msgstr "বোতাম কাজ না করলে এই লিংকটি ব্রাউজারে কপি করে খুলুন:"
+
+msgid "Someone asked to reset the password of your FinTrack account. To choose a new password, open this link:"
+msgstr "কেউ আপনার FinTrack অ্যাকাউন্টের পাসওয়ার্ড রিসেট করতে চেয়েছেন। নতুন পাসওয়ার্ড দিতে এই লিংকটি খুলুন:"
+
+msgid "Reset your FinTrack password"
+msgstr "আপনার FinTrack পাসওয়ার্ড রিসেট করুন"
+
+msgid "Forgot password"
+msgstr "পাসওয়ার্ড ভুলে গেছি"
+
+msgid "Forgot your password?"
+msgstr "পাসওয়ার্ড ভুলে গেছেন?"
+
+msgid "We'll email you a link to set a new one."
+msgstr "নতুন পাসওয়ার্ড দেওয়ার একটি লিংক আমরা আপনাকে ইমেইল করব।"
+
+msgid "Send reset link"
+msgstr "রিসেট লিংক পাঠান"
+
+msgid "Remembered it?"
+msgstr "মনে পড়েছে?"
+
+msgid "Enter the email address on your account. If you never added one, ask the person who runs this app to reset your password."
+msgstr "আপনার অ্যাকাউন্টের ইমেইল ঠিকানা লিখুন। কখনো ইমেইল যোগ না করে থাকলে যিনি এই অ্যাপ চালান তাকে পাসওয়ার্ড রিসেট করে দিতে বলুন।"
+
+msgid "Password changed"
+msgstr "পাসওয়ার্ড বদলানো হয়েছে"
+
+msgid "You can sign in with your new password now."
+msgstr "এখন নতুন পাসওয়ার্ড দিয়ে সাইন ইন করতে পারবেন।"
+
+msgid "Choose a password you don't use anywhere else."
+msgstr "এমন পাসওয়ার্ড দিন যা আর কোথাও ব্যবহার করেন না।"
+
+msgid "Save new password"
+msgstr "নতুন পাসওয়ার্ড সংরক্ষণ করুন"
+
+msgid "This link doesn't work any more"
+msgstr "এই লিংকটি আর কাজ করে না"
+
+msgid "It was already used, or it's more than a day old. Ask for a new one."
+msgstr "এটি আগেই ব্যবহার হয়েছে, অথবা এক দিনের বেশি পুরনো। নতুন লিংক চান।"
+
+msgid "Send a new link"
+msgstr "নতুন লিংক পাঠান"
+
+msgid "Check your email"
+msgstr "আপনার ইমেইল দেখুন"
+
+msgid "If that email belongs to an account, a link to set a new password is on its way. It works for one day."
+msgstr "এই ইমেইলে কোনো অ্যাকাউন্ট থাকলে নতুন পাসওয়ার্ড দেওয়ার লিংক পাঠানো হচ্ছে। এটি এক দিন কাজ করবে।"
+
+msgid "Nothing after a few minutes? Look in Spam, and check the address you typed."
+msgstr "কয়েক মিনিটেও না এলে স্প্যাম ফোল্ডার দেখুন, আর লেখা ঠিকানাটি যাচাই করুন।"
+
+msgid "Back to sign in"
+msgstr "সাইন ইনে ফিরে যান"
+
+msgid "How to show the bazar log"
+msgstr "বাজারের লগ কীভাবে দেখাবে"
+
+msgid "All purchases"
+msgstr "সব কেনাকাটা"
+
+msgid "Every purchase in one list. Search, filter by category, who paid or dates, and export what you see."
+msgstr "সব কেনাকাটা এক তালিকায়। খুঁজুন, ক্যাটাগরি, কে দিয়েছেন বা তারিখ দিয়ে বাছাই করুন, আর যা দেখছেন তা এক্সপোর্ট করুন।"
+
+msgid "Search note, category or person"
+msgstr "নোট, ক্যাটাগরি বা ব্যক্তি খুঁজুন"
+
+msgid "All categories"
+msgstr "সব ক্যাটাগরি"
+
+msgid "Anyone"
+msgstr "যে কেউ"
+
+msgid "Total (filtered)"
+msgstr "মোট (বাছাই করা)"
+
+msgid "Average purchase"
+msgstr "গড় কেনাকাটা"
+
+#, python-format
+msgid "Showing %(start)s–%(end)s of %(total)s"
+msgstr "%(total)s-এর মধ্যে %(start)s–%(end)s দেখানো হচ্ছে"
+
+msgid "No purchases match your filters"
+msgstr "আপনার বাছাইয়ের সাথে কোনো কেনাকাটা মেলেনি"

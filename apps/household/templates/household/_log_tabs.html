@@ -1,0 +1,5 @@
+{% load i18n %}{% comment %}The bazar log two ways: totals by month, or every purchase. Needs: active ("month" | "all").{% endcomment %}
+<nav class="seg seg-block" aria-label="{% translate 'How to show the bazar log' %}">
+  <a href="{% url 'household_list' %}" class="seg-item{% if active == 'month' %} is-active{% endif %}"{% if active == 'month' %} aria-current="page"{% endif %}>{% translate "By month" %}</a>
+  <a href="{% url 'household_purchase_all' %}" class="seg-item{% if active == 'all' %} is-active{% endif %}"{% if active == 'all' %} aria-current="page"{% endif %}>{% translate "All purchases" %}</a>
+</nav>

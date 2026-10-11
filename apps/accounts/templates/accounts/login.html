@@ -6,5 +6,5 @@
 {% block content %}
 {% translate "Welcome back" as heading %}{% translate "Sign in to your account" as subheading %}{% translate "Sign in" as submit_label %}
 {% translate "Not a member?" as alt_text %}{% translate "Create account" as alt_link_text %}{% url 'signup' as alt_url %}
-{% include "accounts/_auth_card.html" %}
+{% include "accounts/_auth_card.html" with show_forgot=True %}
 {% endblock %}

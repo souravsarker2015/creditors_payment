@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "All bazar purchases" %} | FinTrack{% endblock %}
+
+{% block content %}
+<div class="page-medium stack">
+  <header class="page-header !mb-0">
+    <div>
+      <a href="{% url 'household_dashboard' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Household" %}</a>
+      <h1 class="page-title">{% translate "Household (Bazar) Log" %}</h1>
+      <p class="page-subtitle">{% translate "Every purchase in one list. Search, filter by category, who paid or dates, and export what you see." %}</p>
+    </div>
+    <div class="page-actions">
+      <a href="{% query_with export='csv' %}" class="btn btn-secondary" data-tip="{% translate 'Download what you see (with the current filters) as a spreadsheet.' %}">{% include "partials/icon.html" with name="download" %}{% translate "Export CSV" %}</a>
+      <a href="{% url 'household_month_detail' current_year current_month %}#record" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add Purchase" %}</a>
+    </div>
+  </header>
+
+  {% include "household/_log_tabs.html" with active="all" %}
+
+  <form method="get" class="card" x-data="{ open: {{ has_filters|yesno:'true,false' }} }">
+    <div class="card-body">
+      <div class="search-row">
+        <div class="input-icon min-w-0 flex-1">
+          {% include "partials/icon.html" with name="search" %}
+          <input type="search" name="q" value="{{ q }}" class="form-input" placeholder="{% translate 'Search note, category or person' %}" aria-label="{% translate 'Search' %}" enterkeyhint="search">
+        </div>
+        <button type="button" class="btn btn-secondary" @click="open = !open" :aria-expanded="open.toString()" aria-controls="bazar-filters">{% include "partials/icon.html" with name="filter" %}<span class="hidden sm:inline">{% translate "Filters" %}</span>{% if has_filters %}<span class="btn-dot" aria-label="{% translate 'Filters applied' %}"></span>{% endif %}</button>
+      </div>
+    </div>
+    <div id="bazar-filters" class="collapse-body" :class="open && 'is-open'">
+      <div class="card-body !pt-0">
+        <div class="form-grid form-grid-4">
+          <div class="field">
+            <label for="f-category" class="label">{% translate "Category" %}</label>
+            <select id="f-category" name="category" class="form-input">
+              <option value="">{% translate "All categories" %}</option>
+              {% for c in categories %}<option value="{{ c.pk }}"{% if category == c.pk|stringformat:"s" %} selected{% endif %}>{{ c.name }}{% if not c.is_active %} ({% translate "inactive" %}){% endif %}</option>{% endfor %}
+              <option value="none"{% if category == "none" %} selected{% endif %}>{% translate "Uncategorized" %}</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="f-paid" class="label">{% translate "Paid by" %}</label>
+            <select id="f-paid" name="paid" class="form-input">
+              <option value="">{% translate "Anyone" %}</option>
+              <option value="me"{% if paid == "me" %} selected{% endif %}>{% translate "Me" %}</option>
+              {% for m in members %}<option value="{{ m.pk }}"{% if paid == m.pk|stringformat:"s" %} selected{% endif %}>{{ m.name }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="field">
+            <label for="date-range-filter" class="label">{% translate "Date Range" %}</label>
+            <div class="input-icon">
+              {% include "partials/icon.html" with name="calendar" %}
+              <input id="date-range-filter" type="text" placeholder="{% translate 'Select range...' %}" class="form-input" autocomplete="off">
+            </div>
+            <input id="date-from-hidden" type="hidden" name="date_from" value="{{ date_from }}">
+            <input id="date-to-hidden" type="hidden" name="date_to" value="{{ date_to }}">
+          </div>
+          <div class="field">
+            <label for="f-sort" class="label">{% translate "Sort by" %}</label>
+            <select id="f-sort" name="sort" class="form-input">
+              {% for value, label in sort_options %}<option value="{{ value }}"{% if value == sort %} selected{% endif %}>{{ label }}</option>{% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="filter-foot">
+          <span class="spacer"></span>
+          <a href="{% url 'household_purchase_all' %}" class="btn btn-secondary btn-sm">{% translate "Reset" %}</a>
+          <button type="submit" class="btn btn-primary btn-sm">{% include "partials/icon.html" with name="check" %}{% translate "Apply Filters" %}</button>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  {% if filtered %}
+  <div class="chip-row" aria-label="{% translate 'Active filters' %}">
+    {% if q %}<a href="{% query_with q='' %}" class="chip" title="{% translate 'Remove filter' %}"><span><b>{% translate "Search" %}:</b> {{ q }}</span><span class="chip-x">{% include "partials/icon.html" with name="x" %}</span></a>{% endif %}
+    {% if category %}<a href="{% query_with category='' %}" class="chip" title="{% translate 'Remove filter' %}"><span><b>{% translate "Category" %}:</b> {% if category == "none" %}{% translate "Uncategorized" %}{% else %}{{ selected_category.name }}{% endif %}</span><span class="chip-x">{% include "partials/icon.html" with name="x" %}</span></a>{% endif %}
+    {% if paid %}<a href="{% query_with paid='' %}" class="chip" title="{% translate 'Remove filter' %}"><span><b>{% translate "Paid by" %}:</b> {% if paid == "me" %}{% translate "Me" %}{% else %}{{ selected_member.name }}{% endif %}</span><span class="chip-x">{% include "partials/icon.html" with name="x" %}</span></a>{% endif %}
+    {% if date_from or date_to %}<a href="{% query_with date_from='' date_to='' %}" class="chip" title="{% translate 'Remove filter' %}"><span><b>{% translate "Dates" %}:</b> {{ date_from|default:"…" }} → {{ date_to|default:"…" }}</span><span class="chip-x">{% include "partials/icon.html" with name="x" %}</span></a>{% endif %}
+    <a href="{% url 'household_purchase_all' %}" class="chip-clear">{% translate "Clear all" %}</a>
+  </div>
+  {% endif %}
+
+  <dl class="stat-grid">
+    <div class="stat" data-tone="accent">
+      <dt class="stat-label">{% if filtered %}{% translate "Total (filtered)" %}{% else %}{% translate "Total Spent" %}{% endif %}</dt>
+      <dd class="stat-value">{{ total|money }}</dd>
+    </div>
+    <div class="stat">
+      <dt class="stat-label">{% translate "Purchases" %}</dt>
+      <dd class="stat-value">{{ count }}</dd>
+    </div>
+    <div class="stat" data-tone="warn">
+      <dt class="stat-label">{% translate "Average purchase" %}</dt>
+      <dd class="stat-value">{{ average|money }}</dd>
+    </div>
+  </dl>
+
+  {% if page_obj.object_list %}
+  <section class="card">
+    {% if page_obj.paginator.num_pages > 1 %}<p class="list-range">{% blocktranslate with start=page_obj.start_index end=page_obj.end_index total=page_obj.paginator.count %}Showing {{ start }}–{{ end }} of {{ total }}{% endblocktranslate %}</p>{% endif %}
+    <ul class="ledger">
+      {% for p in page_obj %}
+      <li class="ledger-row">
+        <span class="ledger-icon" data-tone="gold">{{ p.date|date:"j" }}</span>
+        <div class="ledger-main">
+          <p class="ledger-title">{% if p.category %}{{ p.category.name }}{% else %}{% translate "Uncategorized" %}{% endif %}</p>
+          <p class="ledger-meta">{{ p.date|date:"j M Y" }}{% if p.buyer %} · {% blocktranslate with name=p.buyer.name %}by {{ name }}{% endblocktranslate %}{% elif p.wallet %} · {{ p.wallet.name }}{% endif %}{% if p.description %} · {{ p.description }}{% endif %}{% if p.receipt %} · <a href="{% url 'receipt_view' 'bazar' p.pk %}" target="_blank" rel="noopener" class="receipt-link">{% translate "receipt" %}</a>{% endif %}</p>
+        </div>
+        <div class="ledger-end">
+          <span class="ledger-amount">{{ p.amount|money }}</span>
+          {% url 'household_purchase_edit' p.pk as edit_url %}{% url 'household_purchase_delete' p.pk as delete_url %}
+          {% translate "Delete this purchase? You can bring it back from Recently deleted." as confirm_text %}
+          {% include "partials/row_menu.html" with edit_url=edit_url delete_url=delete_url confirm=confirm_text up=forloop.last next=request.get_full_path %}
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% include "partials/pagination.html" %}
+  {% elif filtered %}
+  <div class="empty">
+    <div class="empty-icon">{% include "partials/icon.html" with name="search" %}</div>
+    <h3 class="empty-title">{% translate "No purchases match your filters" %}</h3>
+    <p class="empty-text">{% translate "Try a wider date range, or reset the filters." %}</p>
+    <a href="{% url 'household_purchase_all' %}" class="btn btn-secondary">{% translate "Reset Filters" %}</a>
+  </div>
+  {% else %}
+  <div class="empty">
+    <div class="empty-icon">{% include "partials/icon.html" with name="cart" %}</div>
+    <h3 class="empty-title">{% translate "No bazar purchases yet" %}</h3>
+    <p class="empty-text">{% translate "Start logging your daily household shopping to keep track of spending by month." %}</p>
+    <a href="{% url 'household_month_detail' current_year current_month %}#record" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add Your First Purchase" %}</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    FT.rangePicker('date-range-filter', 'date-from-hidden', 'date-to-hidden');
+  });
+</script>
+{% endblock %}

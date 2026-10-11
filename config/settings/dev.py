@@ -44,7 +44,4 @@ try:
 except ImportError:
     pass
 
-# ──────────────────────────────────────────────
-# Email — console backend for development
-# ──────────────────────────────────────────────
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+# Email: real Gmail SMTP when .env has the account (see base.py), else the console.

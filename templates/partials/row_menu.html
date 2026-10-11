@@ -1,13 +1,13 @@
 {% load i18n %}
-{% comment %}Kebab menu for a row. Needs: edit_url, delete_url, confirm (text). Optional: up (open upwards).{% endcomment %}
+{% comment %}Kebab menu for a row. Needs: edit_url, delete_url, confirm (text). Optional: up (open upwards), next (page to come back to after editing or deleting).{% endcomment %}
 <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
   <button type="button" class="icon-btn" @click="open = !open" :aria-expanded="open" aria-haspopup="true" aria-label="{% translate 'More actions' %}">
     <span class="h-[1.125rem] w-[1.125rem]">{% include "partials/icon.html" with name="dots" %}</span>
   </button>
   <div class="menu{% if up %} menu-up{% endif %}" x-show="open" x-cloak x-transition.opacity.scale.95.duration.100ms role="menu">
-    <a href="{{ edit_url }}" class="menu-item" role="menuitem">{% include "partials/icon.html" with name="edit" %}{% translate "Edit" %}</a>
+    <a href="{{ edit_url }}{% if next %}?next={{ next|urlencode }}{% endif %}" class="menu-item" role="menuitem">{% include "partials/icon.html" with name="edit" %}{% translate "Edit" %}</a>
     <form method="post" action="{{ delete_url }}" data-confirm="{{ confirm }}">
-      {% csrf_token %}
+      {% csrf_token %}{% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
       <button type="submit" class="menu-item is-danger" role="menuitem">{% include "partials/icon.html" with name="trash" %}{% translate "Delete" %}</button>
     </form>
   </div>

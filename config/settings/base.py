@@ -15,6 +15,24 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 APPS_DIR = BASE_DIR / "apps"
 
+
+def _load_env_file(path):
+    """Secrets (email password, keys) live in a git-ignored .env file:
+    KEY=value lines. Real environment variables win over the file."""
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return
+    for line in lines:
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+
+_load_env_file(BASE_DIR / ".env")
+
 # ──────────────────────────────────────────────
 # Security
 # ──────────────────────────────────────────────
@@ -171,6 +189,35 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "login"
+
+# Sign in with a username or an email address.
+AUTHENTICATION_BACKENDS = ["apps.accounts.backends.UsernameOrEmailBackend"]
+
+# "Remember me": stay signed in for 30 days. Unticked, the sign-in ends
+# when the browser is closed (see accounts.views.login_view).
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 30
+
+# A password-reset link works for one day.
+PASSWORD_RESET_TIMEOUT = 60 * 60 * 24
+
+# ──────────────────────────────────────────────
+# Email — for password reset and account notices.
+# Set EMAIL_HOST_USER / EMAIL_HOST_PASSWORD in .env (see .env.example);
+# without them, emails are printed to the console instead of sent.
+# ──────────────────────────────────────────────
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
+EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True") == "True"
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+EMAIL_TIMEOUT = 15
+EMAIL_BACKEND = (
+    "django.core.mail.backends.smtp.EmailBackend"
+    if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD
+    else "django.core.mail.backends.console.EmailBackend"
+)
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", f"FinTrack <{EMAIL_HOST_USER}>" if EMAIL_HOST_USER else "FinTrack <noreply@localhost>")
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
 
 # Widgets render with the project's own template settings, so a custom
 # widget template (templates/partials/receipt_input.html) is found.
