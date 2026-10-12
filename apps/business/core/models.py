@@ -67,6 +67,9 @@ class Business(models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="owned_businesses")
     phone = models.CharField(_("Phone"), max_length=30, blank=True)
     address = models.CharField(_("Address"), max_length=255, blank=True)
+    # Where the farm is, for the weather: hot, cloudy, still nights starve ponds of oxygen.
+    latitude = models.DecimalField(_("Latitude"), max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(_("Longitude"), max_digits=9, decimal_places=6, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -97,6 +100,8 @@ class Membership(models.Model):
     # True when this farm made the login itself (Team page). Only then may the
     # owner set a new password for it: never for an account someone brought along.
     account_created = models.BooleanField(default=False, editable=False)
+    daily_summary = models.BooleanField(_("Email me an evening summary"), default=False)
+    summary_sent_on = models.DateField(null=True, blank=True, editable=False)
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["business", "user"], name="one_membership_per_business")]

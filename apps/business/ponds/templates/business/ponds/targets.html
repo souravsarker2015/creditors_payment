@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% translate "Cycle targets" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-narrow">
+  <header class="page-header">
+    <div>
+      <a href="{% url 'business:cycle_detail' cycle.pk %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{{ cycle }}</a>
+      <h1 class="page-title">{% translate "Cycle targets" %}</h1>
+      <p class="page-subtitle">{% if first_time %}{% translate "Usual values are filled in from your fish and recent prices. Change them to what you're aiming for." %}{% else %}{% translate "What this cycle should achieve. The cycle page shows how it's going against these." %}{% endif %}</p>
+    </div>
+  </header>
+  <form method="post" class="stack" novalidate
+        x-data="{ put: {{ put_in|stringformat:'d' }}, stockedKg: {{ stocked_kg|stringformat:'s' }}, feedPrice: {% if feed_price %}{{ feed_price|stringformat:'s' }}{% else %}0{% endif %},
+          v: {}, read() { this.$root.querySelectorAll('[data-plan]').forEach(i => this.v[i.dataset.plan] = parseFloat(i.value)); },
+          get kg() { var v = this.v; return (v.target_survival > 0 && v.target_size_g > 0) ? this.put * v.target_survival / 100 * v.target_size_g / 1000 : 0; },
+          get feedKg() { return this.v.target_fcr > 0 ? Math.max(this.kg - this.stockedKg, 0) * this.v.target_fcr : 0; },
+          get income() { return this.v.target_price > 0 ? this.kg * this.v.target_price : 0; },
+          get profit() { return this.v.budget >= 0 && this.income ? this.income - this.v.budget : null; },
+          n(x) { return Math.round(x).toLocaleString('en-IN'); }, tk(x) { return (x < 0 ? '−' : '') + '৳' + this.n(Math.abs(x)); } }"
+        x-init="read()" @input="read()">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+    <section class="card"><div class="card-body form-stack">
+      <div class="form-grid form-grid-2">
+        {% with field=form.target_size_g %}{% include "business/partials/field.html" %}{% endwith %}
+        {% with field=form.target_survival %}{% include "business/partials/field.html" %}{% endwith %}
+      </div>
+      <div class="form-grid form-grid-2">
+        {% with field=form.target_fcr %}{% include "business/partials/field.html" %}{% endwith %}
+        {% with field=form.target_price %}{% include "business/partials/field.html" %}{% endwith %}
+      </div>
+      <div class="form-grid form-grid-2">
+        {% with field=form.budget %}{% include "business/partials/field.html" %}{% endwith %}
+        {% with field=form.expected_harvest %}{% include "business/partials/field.html" %}{% endwith %}
+      </div>
+    </div></section>
+
+    <section class="card" data-plan-preview>
+      <div class="card-header"><div><h2 class="card-title">{% translate "What this plan means" %}</h2>
+        <p class="card-subtitle">{% if put_in %}{% blocktranslate with n=put_in|num %}For the {{ n }} fish released in this cycle.{% endblocktranslate %}{% else %}{% translate "Record the fingerlings released to see this." %}{% endif %}</p></div></div>
+      <div class="card-body"><dl class="doc-totals">
+        <div><dt>{% translate "Fish to harvest" %}</dt><dd x-text="kg ? '≈ ' + n(kg) + ' kg' : '—'"></dd></div>
+        <div><dt>{% translate "Feed needed" %}</dt><dd x-text="feedKg ? '≈ ' + n(feedKg) + ' kg' + (feedPrice ? ' · ' + tk(feedKg * feedPrice) : '') : '—'"></dd></div>
+        <div><dt>{% translate "Fish would bring in" %}</dt><dd x-text="income ? tk(income) : '—'"></dd></div>
+        <div class="is-total"><dt>{% translate "Planned profit" %}</dt><dd x-text="profit === null ? '—' : tk(profit)" :class="profit !== null && profit < 0 ? 'tone-critical' : ''"></dd></div>
+      </dl>
+      <p class="help mt-3" x-show="feedPrice && feedKg && v.budget >= 0 && feedKg * feedPrice > v.budget" x-cloak>{% translate "The feed alone costs more than this budget — raise the budget or aim for a better FCR." %}</p></div>
+    </section>
+
+    <div class="form-actions">
+      <a href="{% url 'business:cycle_detail' cycle.pk %}" class="btn btn-ghost btn-lg">{% translate "Cancel" %}</a>
+      <button type="submit" class="btn btn-primary btn-lg">{% include "partials/icon.html" with name="check" %}{% translate "Save targets" %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

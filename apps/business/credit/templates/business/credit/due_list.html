@@ -10,6 +10,7 @@
     </div>
     <div class="page-actions">
       <a href="{% url 'business:payments' %}" class="btn btn-secondary">{% include "partials/icon.html" with name="list" %}{% translate "Payments" %}</a>
+      {% if biz_can.enter_data %}<a href="{% url 'business:advance_add' %}" class="btn btn-secondary">{% include "partials/icon.html" with name="arrow-down" %}{% translate "Advance (dadon)" %}</a>{% endif %}
       {% if biz_can.enter_data %}<a href="{% url 'business:payment_add' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Record payment" %}</a>{% endif %}
     </div>
   </header>
@@ -28,6 +29,29 @@
   </div>
 
   {% include "business/partials/note.html" with key="baki" title=_("How Baki works") p1=_("Baki is worked out for you: a sale not paid in full, or a purchase you didn't pay in full, shows up here by itself.") p2=_("When someone pays you, or you pay a supplier, tap “Record payment”. It settles their oldest bill first unless you choose a bill.") p3=_("Tap a name to see their statement: every bill and payment. From there you can send a WhatsApp reminder or set a follow-up date.") %}
+
+  {% if advances %}
+  <section class="card" id="advances">
+    <div class="card-header"><div><h2 class="card-title">{% translate "Advances (dadon) to pay back in fish" %}{% include "business/partials/tip.html" with text=_("Money buyers paid before the harvest. Fish you sell them pays it back, oldest advance first. It's part of “To pay” until then.") %}</h2>
+      <p class="card-subtitle">{% blocktranslate count counter=advances|length %}{{ counter }} advance still open{% plural %}{{ counter }} advances still open{% endblocktranslate %}</p></div></div>
+    <ul class="ledger">
+      {% for a in advances %}
+      <li class="ledger-row adv-row" data-advance="{{ a.payment.pk }}">
+        <span class="ledger-icon" data-tone="{% if a.overdue %}critical{% elif a.days_left is not None and a.days_left <= 7 %}warn{% else %}info{% endif %}">{% include "partials/icon.html" with name="arrow-down" %}</span>
+        <div class="ledger-main">
+          <p class="ledger-title"><a href="{% url 'business:advance_edit' a.payment.pk %}" class="hover:underline">{{ a.party.name }}</a>{% if a.cycle %} · {{ a.cycle.pond }}{% endif %}</p>
+          <div class="meter adv-meter" data-tone="good" title="{% blocktranslate with pct=a.settled_pct %}{{ pct }}% paid back{% endblocktranslate %}"><span style="width: {{ a.settled_pct }}%"></span></div>
+          <p class="ledger-meta">{{ a.payment.date|date:"j M" }}{% if a.payment.agreed_rate %} · {% blocktranslate with r=a.payment.agreed_rate|bdt %}{{ r }}/kg agreed{% endblocktranslate %}{% endif %}{% if a.kg_left %} · {% blocktranslate with kg=a.kg_left|num %}≈ {{ kg }} kg of fish owed{% endblocktranslate %}{% endif %}{% if a.payment.expected_on %} · {% if a.overdue %}<span class="tone-critical">{% blocktranslate with d=a.payment.expected_on|date:"j M" %}harvest was due {{ d }}{% endblocktranslate %}</span>{% else %}{% blocktranslate with d=a.payment.expected_on|date:"j M" %}harvest by {{ d }}{% endblocktranslate %}{% endif %}{% endif %}</p>
+        </div>
+        <div class="ledger-end">
+          <span class="party-bal" data-tone="critical"><strong>{{ a.open|bdt }}</strong><span>{% blocktranslate with all=a.amount|bdt %}of {{ all }}{% endblocktranslate %}</span></span>
+          {% if biz_can.enter_data %}<a href="{% url 'business:sale_add' %}?advance={{ a.payment.pk }}" class="btn btn-soft btn-sm">{% translate "Sell" %}</a>{% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
 
   {% if follow_ups %}
   <section class="callout" data-tone="warn">

@@ -31,10 +31,30 @@ class BusinessSetupForm(forms.ModelForm):
 
 
 class BusinessProfileForm(forms.ModelForm):
+    # Any number of decimals (Google Maps gives 7+); kept to 6, about 10 cm.
+    latitude = forms.DecimalField(label=_("Latitude"), required=False)
+    longitude = forms.DecimalField(label=_("Longitude"), required=False)
+
     class Meta:
         model = Business
-        fields = ["name", "phone", "address"]
-        widgets = BusinessSetupForm.Meta.widgets
+        fields = ["name", "phone", "address", "latitude", "longitude"]
+        widgets = {**BusinessSetupForm.Meta.widgets,
+                   "latitude": forms.NumberInput(attrs={"class": "form-input", "step": "any", "inputmode": "decimal", "placeholder": "23.17"}),
+                   "longitude": forms.NumberInput(attrs={"class": "form-input", "step": "any", "inputmode": "decimal", "placeholder": "89.21"})}
+
+    def clean(self):
+        data = super().clean()
+        lat, lon = data.get("latitude"), data.get("longitude")
+        if (lat is None) != (lon is None):
+            raise forms.ValidationError(_("Give both latitude and longitude, or leave both empty."))
+        if lat is not None and not -90 <= lat <= 90:
+            self.add_error("latitude", _("Latitude is between −90 and 90."))
+        if lon is not None and not -180 <= lon <= 180:
+            self.add_error("longitude", _("Longitude is between −180 and 180."))
+        for name in ("latitude", "longitude"):
+            if data.get(name) is not None and not self.has_error(name):
+                data[name] = round(data[name], 6)
+        return data
 
 
 class UnitForm(forms.ModelForm):

@@ -30,6 +30,13 @@ class PartyPayment(BusinessBaseModel):
     sale = models.ForeignKey("business_sales.FishSale", on_delete=models.SET_NULL, null=True, blank=True, related_name="later_payments")
     feed_purchase = models.ForeignKey("business_feed.FeedPurchase", on_delete=models.SET_NULL, null=True, blank=True, related_name="later_payments")
     stocking = models.ForeignKey("business_ponds.Stocking", on_delete=models.SET_NULL, null=True, blank=True, related_name="later_payments")
+    # An advance (dadon): money a buyer pays before the harvest, to be paid back in fish.
+    is_advance = models.BooleanField(_("Advance (dadon)"), default=False)
+    advance_cycle = models.ForeignKey("business_ponds.CultureCycle", on_delete=models.SET_NULL, null=True, blank=True, related_name="advances",
+                                      verbose_name=_("For the fish of"))
+    agreed_rate = models.DecimalField(_("Agreed price per kg"), null=True, blank=True, validators=[MinValueValidator(0)], **MONEY)
+    expected_kg = models.DecimalField(_("Fish promised (kg)"), max_digits=12, decimal_places=3, null=True, blank=True, validators=[MinValueValidator(0)])
+    expected_on = models.DateField(_("Harvest by"), null=True, blank=True)
 
     class Meta:
         ordering = ["-date", "-id"]

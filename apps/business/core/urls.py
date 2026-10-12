@@ -20,6 +20,7 @@ urlpatterns = [
     path("settings/team/<int:pk>/remove/", views.member_remove_view, name="member_remove"),
     path("settings/team/<int:pk>/password/", views.member_password_view, name="member_password"),
     path("settings/activity/", views.activity_view, name="activity"),
+    path("settings/evening-summary/", views.day_summary_view, name="day_summary"),
     path("quick-add/<slug:kind>/", quick_add_view, name="quick_add"),
     path("settings/export/", views.export_view, name="export"),
     path("settings/", views.setup_hub_view, name="setup_hub"),

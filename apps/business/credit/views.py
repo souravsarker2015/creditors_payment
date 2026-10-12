@@ -19,7 +19,7 @@ from apps.business.core.templatetags.business import bdt
 from apps.business.parties.models import Party
 
 from . import services
-from .forms import FollowUpForm, PaymentForm
+from .forms import AdvanceForm, FollowUpForm, PaymentForm
 from .models import Direction, PartyPayment
 
 ZERO = Decimal(0)
@@ -53,7 +53,7 @@ def due_list_view(request):
     return render(request, "business/credit/due_list.html", {
         "t": t, "side": side, "rows": rows, "q": request.GET.get("q", ""), "sort": sort, "total": total,
         "ageing": [(label, amount, round(amount * 100 / total) if total else 0) for label, amount in zip(services.bucket_labels(), buckets)],
-        "follow_ups": follow,
+        "follow_ups": follow, "advances": services.advances(b),
     })
 
 
@@ -177,6 +177,8 @@ def _payment_data(business, form, payment=None):
 def payment_form_view(request, pk=None):
     b = request.business
     payment = get_object_or_404(PartyPayment, pk=pk, business=b) if pk else None
+    if payment is not None and payment.is_advance:
+        return redirect("business:advance_edit", payment.pk)
     initial = {}
     if not payment:
         if request.GET.get("party", "").isdigit():
@@ -260,4 +262,59 @@ def payment_list_view(request):
         "page_obj": Paginator(qs, 40).get_page(request.GET.get("page")), "periods": periods, "period": key, "period_label": label,
         "show": show, "q": q, "received": by_dir.get("in", {}).get("total") or 0, "paid": by_dir.get("out", {}).get("total") or 0,
         "deleted_count": PartyPayment.all_objects.filter(business=b, is_deleted=True).count(),
+    })
+
+
+# ── Advances (dadon) ────────────────────────────────────────────────────────
+
+@business_access_required(capability="enter_data")
+def advance_form_view(request, pk=None):
+    """A buyer pays now for fish they'll get at harvest."""
+    from apps.business.ponds.models import CultureCycle
+
+    b = request.business
+    adv = get_object_or_404(PartyPayment, pk=pk, business=b, is_advance=True) if pk else None
+    initial = {}
+    if adv is None:
+        if request.GET.get("party", "").isdigit():
+            initial["party"] = int(request.GET["party"])
+        if request.GET.get("cycle", "").isdigit() and CultureCycle.objects.filter(business=b, pk=request.GET["cycle"]).exists():
+            initial["advance_cycle"] = int(request.GET["cycle"])
+    form = AdvanceForm(request.POST or None, instance=adv, business=b, initial=initial or None)
+    if request.method == "POST" and form.is_valid():
+        obj = form.save(commit=False)
+        obj.business = b
+        obj.save()
+        status = next((a for a in services.advances(b, open_only=False, party=obj.party) if a.payment.pk == obj.pk), None)
+        held = status.open if status else ZERO
+        if held < obj.amount:
+            # They already owed us: the money settles that first.
+            owed_before = obj.amount - held
+            if held:
+                msg = _("%(name)s owed you %(owed)s, so this settles that first. %(held)s is left as an advance to pay back in fish.") % {
+                    "name": obj.party, "owed": bdt(owed_before), "held": bdt(held)}
+            else:
+                led = services.ledger(obj.party)
+                msg = _("%(name)s owed you more than this, so it all goes to settle that. Nothing is left as an advance; they still owe %(left)s.") % {
+                    "name": obj.party, "left": bdt(max(led.balance, ZERO))}
+            messages.warning(request, msg)
+        elif obj.advance_cycle_id:
+            msg = _("Advance of %(amount)s from %(name)s saved. Sell them the fish of %(pond)s and it's paid back by itself.") % {
+                "amount": bdt(obj.amount), "name": obj.party, "pond": obj.advance_cycle.pond}
+        else:
+            msg = _("Advance of %(amount)s from %(name)s saved. Fish you sell them pays it back by itself.") % {"amount": bdt(obj.amount), "name": obj.party}
+        if held >= obj.amount:
+            messages.success(request, msg)
+        nxt = request.GET.get("next")
+        if nxt and url_has_allowed_host_and_scheme(nxt, {request.get_host()}):
+            return redirect(nxt)
+        if can(request.membership, "view_finance"):
+            return redirect(reverse("business:dues") + "#advances")
+        return redirect("business:home")
+    status = None
+    if adv is not None:
+        status = next((a for a in services.advances(b, open_only=False, party=adv.party) if a.payment.pk == adv.pk), None)
+    return render(request, "business/credit/advance_form.html", {
+        "form": form, "obj": adv, "status": status,
+        "back": request.GET.get("next") or (reverse("business:party_statement", args=[adv.party_id]) if adv else reverse("business:dues")),
     })

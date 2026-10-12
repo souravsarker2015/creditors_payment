@@ -1,0 +1,27 @@
+{% load i18n business %}<!doctype html>
+<html><body style="margin:0;padding:24px;background:#f5f3ee;font-family:Arial,Helvetica,sans-serif;color:#1f2a24;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;">
+<tr><td style="padding:24px 24px 8px;">
+  <p style="margin:0;font-size:13px;color:#6b7280;">{{ s.day|date:"l, j F Y" }}</p>
+  <h1 style="margin:4px 0 0;font-size:22px;">{{ s.business.name }}</h1>
+  <p style="margin:6px 0 0;font-size:15px;color:#374151;">{{ s.headline }}</p>
+</td></tr>
+{% if s.night and s.night.is_risky %}<tr><td style="padding:12px 24px 0;"><div style="padding:12px 14px;border-radius:8px;background:{% if s.night.level == 'high' %}#fdecea{% else %}#fff6e0{% endif %};font-size:14px;">
+  <strong>{% if s.night.level == "high" %}{% translate "High risk of low oxygen tonight" %}{% else %}{% translate "Some risk of low oxygen tonight" %}{% endif %}</strong><br>{{ s.night.reasons|join:", " }}</div></td></tr>{% endif %}
+{% if s.quiet %}<tr><td style="padding:12px 24px 0;"><div style="padding:12px 14px;border-radius:8px;background:#fff6e0;font-size:14px;"><strong>{% translate "Nothing was recorded on this day" %}</strong></div></td></tr>{% endif %}
+<tr><td style="padding:16px 24px 0;"><h2 style="margin:0 0 8px;font-size:16px;">{% translate "Pond by pond" %}</h2>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;">
+{% for p in s.ponds %}<tr><td style="padding:8px 0;border-top:1px solid #eee;"><strong>{{ p.name }}</strong><br>
+<span style="color:{% if p.fed %}#374151{% else %}#b45309{% endif %};">{% if p.fed %}{% blocktranslate with kg=p.fed_kg|num %}fed {{ kg }} kg{% endblocktranslate %}{% else %}{% translate "not fed" %}{% endif %}</span>{% if p.deaths %} · <span style="color:#b91c1c;">{% blocktranslate count counter=p.deaths %}{{ counter }} fish died{% plural %}{{ counter }} fish died{% endblocktranslate %}</span>{% endif %}{% if p.water %} · <span style="color:#b91c1c;">{{ p.water|join:", " }}</span>{% endif %}{% if p.weighed_g %} · {% blocktranslate with g=p.weighed_g|num %}weighed: {{ g }} g each{% endblocktranslate %}{% endif %}{% for h in p.harvested %} · {% blocktranslate %}harvested {{ h }}{% endblocktranslate %}{% endfor %}
+</td></tr>{% endfor %}
+</table></td></tr>
+<tr><td style="padding:16px 24px 0;font-size:14px;"><h2 style="margin:0 0 8px;font-size:16px;">{% translate "Fish sold" %}</h2>
+{% blocktranslate count counter=s.sales_count %}{{ counter }} sale{% plural %}{{ counter }} sales{% endblocktranslate %}{% if s.sales_kg %} · {{ s.sales_kg|num }} kg{% endif %}{% if s.show_money %} · <strong>{{ s.sales_net|bdt }}</strong><br>
+{% translate "Money received" %}: {{ s.received|bdt }} · {% translate "Paid to suppliers" %}: {{ s.paid|bdt }}{% if s.costs %} · {% translate "Other farm costs" %}: {{ s.costs|bdt }}{% endif %}{% endif %}</td></tr>
+<tr><td style="padding:16px 24px 0;font-size:14px;"><h2 style="margin:0 0 8px;font-size:16px;">{% translate "Who recorded" %}</h2>
+{% for name, n in s.people %}{{ name }} ({{ n }}){% if not forloop.last %}, {% endif %}{% empty %}{% translate "Nobody recorded anything." %}{% endfor %}</td></tr>
+{% if s.tasks %}<tr><td style="padding:16px 24px 0;font-size:14px;"><h2 style="margin:0 0 8px;font-size:16px;">{% translate "Still to do" %}</h2>
+<ul style="margin:0;padding-left:18px;">{% for t in s.tasks %}<li style="margin:2px 0;">{{ t.title }}</li>{% endfor %}</ul></td></tr>{% endif %}
+<tr><td style="padding:20px 24px 24px;">{% if base %}<a href="{{ base }}{{ page }}?date={{ s.day|date:'Y-m-d' }}" style="display:inline-block;padding:10px 16px;border-radius:8px;background:#0f5c4d;color:#ffffff;text-decoration:none;font-weight:bold;">{% translate "Open the full summary" %}</a>{% endif %}
+<p style="margin:16px 0 0;font-size:12px;color:#9ca3af;">{% translate "You get this because you turned on the evening summary. Turn it off on the summary page." %}</p></td></tr>
+</table></body></html>

@@ -1,7 +1,7 @@
 from datetime import date
 from decimal import Decimal
 
-from django.core.validators import FileExtensionValidator, MinValueValidator
+from django.core.validators import FileExtensionValidator, MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -112,6 +112,13 @@ class CultureCycle(BusinessBaseModel):
     expected_harvest = models.DateField(_("Expected harvest"), null=True, blank=True)
     status = models.CharField(_("Status"), max_length=10, choices=CycleStatus.choices, default=CycleStatus.RUNNING)
     ended_on = models.DateField(_("Finished on"), null=True, blank=True)
+    # Targets set at stocking, to track the cycle against.
+    target_size_g = models.PositiveIntegerField(_("Selling size (g each)"), null=True, blank=True, validators=[MinValueValidator(1)])
+    target_survival = models.PositiveSmallIntegerField(_("Fish that should survive (%)"), null=True, blank=True,
+                                                       validators=[MinValueValidator(1), MaxValueValidator(100)])
+    target_fcr = models.DecimalField(_("FCR target"), max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(Decimal("0.3"))])
+    target_price = models.DecimalField(_("Expected price per kg"), null=True, blank=True, validators=[MinValueValidator(0)], **MONEY)
+    budget = models.DecimalField(_("Cost budget"), null=True, blank=True, validators=[MinValueValidator(0)], **MONEY)
 
     class Meta:
         ordering = ["-start_date", "-id"]

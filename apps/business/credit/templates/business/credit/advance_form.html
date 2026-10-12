@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% if obj %}{% translate "Edit advance" %}{% else %}{% translate "Advance (dadon) from a buyer" %}{% endif %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-narrow">
+  <header class="page-header">
+    <div>
+      <a href="{{ back }}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Back" %}</a>
+      <h1 class="page-title">{% if obj %}{% translate "Edit advance" %}{% else %}{% translate "Advance (dadon) from a buyer" %}{% endif %}</h1>
+      <p class="page-subtitle">{% translate "A paikar or aratdar pays now for fish they'll get at harvest. When you sell them the fish, the sale is set against the advance by itself." %}</p>
+    </div>
+    {% if obj and biz_can.delete %}
+    <div class="page-actions"><form method="post" action="{% url 'business:payment_delete' obj.pk %}" data-confirm="{% translate 'Delete this advance? You can restore it later from Payments.' %}">{% csrf_token %}<button type="submit" class="icon-btn" aria-label="{% translate 'Delete' %}" data-tip="{% translate 'Delete' %}">{% include "partials/icon.html" with name="trash" %}</button></form></div>
+    {% endif %}
+  </header>
+
+  {% if status %}
+  <div class="callout" data-tone="{% if status.open %}{% if status.overdue %}warn{% else %}info{% endif %}{% else %}good{% endif %}">{% include "partials/icon.html" with name="info" %}
+    <div><p class="callout-title">{% if status.open %}{% blocktranslate with left=status.open|bdt %}{{ left }} still to be paid back in fish{% endblocktranslate %}{% else %}{% translate "Paid back in full by fish sold" %}{% endif %}</p>
+    <p>{% blocktranslate with done=status.settled|bdt all=status.amount|bdt %}{{ done }} of {{ all }} paid back by sales so far.{% endblocktranslate %}{% if status.kg_left %} {% blocktranslate with kg=status.kg_left|num %}About {{ kg }} kg of fish still owed.{% endblocktranslate %}{% endif %}</p></div></div>
+  {% endif %}
+
+  <form method="post" class="stack" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+    <section class="card"><div class="card-body form-stack">
+      {% with field=form.party %}{% include "business/partials/field.html" %}{% endwith %}
+      <div class="form-grid form-grid-2">
+        {% with field=form.amount %}{% include "business/partials/field.html" %}{% endwith %}
+        {% with field=form.date %}{% include "business/partials/field.html" %}{% endwith %}
+      </div>
+      <div class="form-grid form-grid-2">
+        {% with field=form.account %}{% include "business/partials/field.html" %}{% endwith %}
+        {% with field=form.reference %}{% include "business/partials/field.html" %}{% endwith %}
+      </div>
+    </div></section>
+    <section class="card">
+      <div class="card-header"><div><h2 class="card-title">{% translate "For which harvest" %}</h2><p class="card-subtitle">{% translate "All optional — fill in what you agreed." %}</p></div></div>
+      <div class="card-body form-stack">
+        <div class="form-grid form-grid-2">
+          {% with field=form.advance_cycle %}{% include "business/partials/field.html" %}{% endwith %}
+          {% with field=form.expected_on %}{% include "business/partials/field.html" %}{% endwith %}
+        </div>
+        <div class="form-grid form-grid-2">
+          {% with field=form.agreed_rate %}{% include "business/partials/field.html" %}{% endwith %}
+          {% with field=form.expected_kg %}{% include "business/partials/field.html" %}{% endwith %}
+        </div>
+        {% with field=form.notes %}{% include "business/partials/field.html" %}{% endwith %}
+      </div>
+    </section>
+    <div class="form-actions">
+      <a href="{{ back }}" class="btn btn-ghost btn-lg">{% translate "Cancel" %}</a>
+      <button type="submit" class="btn btn-primary btn-lg">{% include "partials/icon.html" with name="check" %}{% translate "Save advance" %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

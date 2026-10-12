@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% translate "Evening summary" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <a href="{% url 'business:home' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Dashboard" %}</a>
+      <h1 class="page-title">{% translate "Evening summary" %}</h1>
+      <p class="page-subtitle">{% translate "What was recorded on the farm, pond by pond, and who recorded it — for the days you can't be there." %}</p>
+    </div>
+    <div class="page-actions">
+      <a href="?date={{ prev|date:'Y-m-d' }}" class="icon-btn" aria-label="{% translate 'Day before' %}">{% include "partials/icon.html" with name="chevron-left" %}</a>
+      {% if next %}<a href="{% if next == today %}?{% else %}?date={{ next|date:'Y-m-d' }}{% endif %}" class="icon-btn" aria-label="{% translate 'Next day' %}">{% include "partials/icon.html" with name="chevron-right" %}</a>{% endif %}
+    </div>
+  </header>
+
+  <section class="card sum-mail" data-summary-mail="{{ membership.daily_summary|yesno:'on,off' }}">
+    <span class="ledger-icon" data-tone="{% if membership.daily_summary %}good{% else %}info{% endif %}">{% include "partials/icon.html" with name="mail" %}</span>
+    <div class="min-w-0 flex-1">
+      <p class="sum-mail-title">{% if membership.daily_summary %}{% blocktranslate with h=hour %}Emailed to you every evening at {{ h }}:00{% endblocktranslate %}{% else %}{% translate "Get this by email every evening" %}{% endif %}</p>
+      <p class="sum-mail-meta">{% if email %}{{ email }}{% else %}{% translate "Your account has no email address yet." %} <a href="{% url 'account_settings' %}" class="underline">{% translate "Add one" %}</a>{% endif %}</p>
+    </div>
+    <form method="post" class="sum-mail-actions">{% csrf_token %}
+      {% if membership.daily_summary %}<button name="action" value="off" class="btn btn-ghost btn-sm">{% translate "Turn off" %}</button>{% else %}<button name="action" value="on" class="btn btn-primary btn-sm">{% translate "Turn on" %}</button>{% endif %}
+      {% if email %}<button name="action" value="send" class="btn btn-secondary btn-sm">{% translate "Send this now" %}</button>{% endif %}
+    </form>
+  </section>
+
+  {% include "business/summary/_body.html" %}
+</div>
+{% endblock %}

@@ -37,8 +37,9 @@ def _units_json(business):
 @business_access_required
 def home_view(request):
     b = request.business
+    _catch_up_summaries(request)
     units = Unit.objects.filter(business=b)
-    tasks = _farm_tasks(b) + _growth_tasks(b) + _equipment_tasks(b) + _supply_tasks(b) + _staff_tasks(request) + _paper_tasks(request) + _calendar_tasks(b)
+    tasks = _farm_tasks(b) + _advance_tasks(request) + _growth_tasks(b) + _equipment_tasks(b) + _supply_tasks(b) + _staff_tasks(request) + _paper_tasks(request) + _calendar_tasks(b)
     return render(request, "business/home.html", {
         "today": date.today(),
         "share_url": _share_url(request, tasks),
@@ -57,6 +58,19 @@ def home_view(request):
         "baki": _baki_summary(request),
         "money": _money_summary(request),
     })
+
+
+def _catch_up_summaries(request):
+    """No scheduled task on this server? The evening emails still go out the
+    first time anyone opens the farm after 8 pm (or, before that, for yesterday)."""
+    from . import summary
+
+    try:
+        summary.send_due(request.business, request)
+    except Exception:   # an email problem must never stop the farm page opening
+        import logging
+
+        logging.getLogger(__name__).exception("evening summary catch-up")
 
 
 def _has_ponds(business):
@@ -170,6 +184,35 @@ def _paper_tasks(request):
         detail += " · " + date_format(p.expires_on, "j M Y")
         out.append(Task("paper", "critical" if left < 0 else "warn", _("Renew: %(paper)s") % {"paper": p.title}, detail,
                         reverse("business:papers_edit", args=[p.pk]), _("Update")))
+    return out
+
+
+ADVANCE_SOON_DAYS = 7
+
+
+def _advance_tasks(request):
+    """Fish promised to a buyer who paid in advance, due within a week or late."""
+    if not apps.is_installed("apps.business.credit"):
+        return []
+    from apps.business.core.templatetags.business import bdt, num
+    from apps.business.credit.services import advances
+    from apps.business.ponds.services import Task
+
+    money = can(request.membership, "view_finance")
+    out = []
+    for a in advances(request.business):
+        days = a.days_left
+        if days is None or days > ADVANCE_SOON_DAYS:
+            continue
+        bits = [str(a.cycle.pond)] if a.cycle else []
+        if a.kg_left:
+            bits.append(_("≈ %(kg)s kg") % {"kg": num(a.kg_left)})
+        if money:
+            bits.append(_("%(amount)s advance") % {"amount": bdt(a.open)})
+        bits.append(_("was due %(date)s") % {"date": date_format(a.payment.expected_on, "j M")} if days < 0
+                    else _("due %(date)s") % {"date": date_format(a.payment.expected_on, "j M")})
+        out.append(Task("advance", "critical" if days < 0 else "warn", _("Fish promised to %(name)s") % {"name": a.party.name},
+                        " · ".join(bits), reverse("business:sale_add") + f"?advance={a.payment.pk}", _("Sell")))
     return out
 
 
@@ -620,3 +663,47 @@ def export_view(request):
     AuditLog.objects.create(business=request.business, user=request.user, action=AuditLog.Action.UPDATE, model="export",
                             object_id="-", object_repr="Downloaded all records")
     return zip_response(request.business)
+
+
+# ── Evening summary ─────────────────────────────────────────────────────────
+
+@business_access_required
+def day_summary_view(request):
+    """What was recorded on one day, and the switch for the evening email."""
+    from django.utils import timezone
+
+    from . import summary
+
+    m = request.membership
+    today = timezone.localdate()
+    try:
+        day = min(date.fromisoformat(request.GET.get("date", "")), today)
+    except ValueError:
+        day = today
+    if request.method == "POST":
+        action = request.POST.get("action")
+        if action == "on":
+            m.daily_summary, m.summary_sent_on = True, summary.due_day()
+            m.save(update_fields=["daily_summary", "summary_sent_on"])
+            if request.user.email:
+                messages.success(request, _("Every evening at 8 pm this summary goes to %(email)s.") % {"email": request.user.email})
+            else:
+                messages.warning(request, _("Turned on — but your account has no email address yet. Add one in your account settings."))
+        elif action == "off":
+            m.daily_summary = False
+            m.save(update_fields=["daily_summary"])
+            messages.success(request, _("The evening email is off."))
+        elif action == "send":
+            if not request.user.email:
+                messages.error(request, _("Your account has no email address. Add one in your account settings first."))
+            elif summary.send(m, day, request):
+                messages.success(request, _("Sent to %(email)s.") % {"email": request.user.email})
+            else:
+                messages.error(request, _("The email couldn't be sent just now. Try again later."))
+        url = reverse("business:day_summary")
+        return redirect(url + (f"?date={day.isoformat()}" if day != today else ""))
+    s = summary.build(request.business, day, show_money=can(m, "view_finance"))
+    return render(request, "business/summary/day.html", {
+        "s": s, "today": today, "prev": day - timedelta(days=1), "next": day + timedelta(days=1) if day < today else None,
+        "membership": m, "email": request.user.email, "hour": summary.SUMMARY_HOUR,
+    })

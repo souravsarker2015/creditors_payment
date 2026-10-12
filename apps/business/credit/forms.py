@@ -1,13 +1,14 @@
 from datetime import date
 
 from django import forms
+from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 
 from apps.business.core.crud import BusinessForm, money_field
 from apps.business.feed.models import FeedPurchase
 from apps.business.finance.models import Account
 from apps.business.parties.models import Party
-from apps.business.ponds.models import Stocking
+from apps.business.ponds.models import CultureCycle, CycleStatus, Stocking
 from apps.business.sales.models import FishSale
 
 from .models import Direction, PartyPayment
@@ -91,6 +92,72 @@ class PaymentForm(BusinessForm):
         return obj
 
 
+class AdvanceForm(BusinessForm):
+    """An advance (dadon): a buyer pays now for fish they'll get at harvest.
+    Fish sold to them later pays it back, so nothing more needs entering."""
+
+    unique_name = ()
+    layout = [("party",), ("amount", "date"), ("account", "reference"), ("advance_cycle", "expected_on"), ("agreed_rate", "expected_kg"), ("notes",)]
+    tips = {
+        "advance_cycle": _("The pond whose fish this buyer will get. The pond's page then reminds you."),
+        "agreed_rate": _("The price per kg you agreed, if you did. The sale starts with it."),
+        "expected_kg": _("Roughly how much fish you promised."),
+        "expected_on": _("When you said you'd harvest. Today's list reminds you a week before."),
+    }
+
+    class Meta:
+        model = PartyPayment
+        fields = ["party", "date", "amount", "account", "advance_cycle", "agreed_rate", "expected_kg", "expected_on", "reference", "notes"]
+        widgets = {"date": forms.DateInput(), "expected_on": forms.DateInput()}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        b = self.business
+        self.fields["party"].label = _("Buyer / aratdar")
+        self.fields["party"].queryset = Party.objects.filter(business=b, is_buyer=True)
+        self.fields["party"].empty_label = _("Choose who gave the advance…")
+        self.fields["party"].biz_quick_add = "buyer"
+        self.fields["account"].queryset = Account.objects.filter(business=b)
+        self.fields["account"].empty_label = _("Not recorded")
+        self.fields["account"].label = _("Money went into")
+        cycles = CultureCycle.objects.filter(business=b).select_related("pond")
+        if self.instance.pk and self.instance.advance_cycle_id:
+            cycles = cycles.filter(Q(status=CycleStatus.RUNNING) | Q(pk=self.instance.advance_cycle_id))
+        else:
+            cycles = cycles.filter(status=CycleStatus.RUNNING)
+        self.fields["advance_cycle"].queryset = cycles.order_by("pond__name")
+        self.fields["advance_cycle"].empty_label = _("Not tied to a pond")
+        money_field(self.fields["amount"])
+        money_field(self.fields["agreed_rate"])
+        if not self.instance.pk:
+            self.initial.setdefault("date", date.today())
+            self.initial.setdefault("account", Account.objects.filter(business=b, is_default=True).first())
+            if not self.initial.get("amount"):
+                self.initial["amount"] = None
+
+    def clean_date(self):
+        d = self.cleaned_data["date"]
+        if d and d > date.today():
+            raise forms.ValidationError(_("That date is in the future."))
+        return d
+
+    def clean(self):
+        data = super().clean()
+        if not data.get("amount"):
+            self.add_error("amount", _("Enter the amount."))
+        if data.get("expected_on") and data.get("date") and data["expected_on"] < data["date"]:
+            self.add_error("expected_on", _("The harvest can't be before the advance."))
+        return data
+
+    def save(self, commit=True):
+        obj = super().save(commit=False)
+        obj.direction, obj.is_advance, obj.discount = Direction.IN, True, 0
+        obj.sale = obj.feed_purchase = obj.stocking = None
+        if commit:
+            obj.save()
+        return obj
+
+
 class FollowUpForm(forms.ModelForm):
     class Meta:
         model = Party
@@ -99,4 +166,4 @@ class FollowUpForm(forms.ModelForm):
                    "follow_up_note": forms.TextInput(attrs={"class": "form-input", "placeholder": _("e.g. Said he'll pay after Friday's market")})}
 
 
-__all__ = ["PaymentForm", "FollowUpForm", "Direction"]
+__all__ = ["PaymentForm", "AdvanceForm", "FollowUpForm", "Direction"]

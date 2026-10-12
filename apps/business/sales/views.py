@@ -98,11 +98,44 @@ def _initial(request, form):
         lines.append({"species": harvest.species_id, "quantity": format(harvest.quantity.normalize(), "f"), "unit": harvest.unit_id})
     elif request.GET.get("cycle", "").isdigit() and CultureCycle.objects.filter(business=b, pk=request.GET["cycle"]).exists():
         form.initial["cycle"] = int(request.GET["cycle"])
+    if request.GET.get("advance", "").isdigit() and apps.is_installed("apps.business.credit"):
+        _from_advance(b, int(request.GET["advance"]), form, lines, harvest)
     market = form.initial.get("market")
     if market:
         for d in MarketDeduction.objects.filter(market_id=market, business=b):
             deductions.append({"deduction_type": d.deduction_type_id, "method": d.method, "value": format(d.value.normalize(), "f"), "unit": d.unit_id})
     return harvest, lines, deductions
+
+
+def _from_advance(business, pk, form, lines, harvest):
+    """"Sell" on an advance: their name, the pond, and the agreed price."""
+    from apps.business.credit.models import PartyPayment
+    from apps.business.credit.services import advances
+
+    pay = PartyPayment.objects.filter(business=business, pk=pk, is_advance=True).select_related("party", "advance_cycle").first()
+    if pay is None:
+        return
+    form.initial["buyer"] = pay.party_id
+    if pay.party.market_id:
+        form.initial["market"] = pay.party.market_id
+    form.initial["received_now"] = 0          # it's set against the advance
+    if pay.advance_cycle_id and not harvest:
+        form.initial["cycle"] = pay.advance_cycle_id
+    if harvest or not pay.advance_cycle_id:
+        return
+    from apps.business.ponds.services import count_fish
+
+    rows = [r for r in count_fish(pay.advance_cycle).values() if r.put_in]
+    kg = Unit.objects.filter(business=business, symbol="kg").first()
+    if rows and kg:
+        status = next((a for a in advances(business, party=pay.party) if a.payment.pk == pay.pk), None)
+        qty = (status.kg_left if status and status.kg_left else pay.expected_kg)
+        line = {"species": max(rows, key=lambda r: r.put_in).species.pk, "unit": kg.pk}
+        if qty:
+            line["quantity"] = format(qty.normalize(), "f")
+        if pay.agreed_rate:
+            line["rate"] = format(pay.agreed_rate.normalize(), "f")
+        lines.append(line)
 
 
 @business_access_required(capability="enter_data")
@@ -145,8 +178,21 @@ def sale_form_view(request, pk=None):
             return _saved(request, obj)
     return render(request, "business/sales/sale_form.html", {
         "form": form, "lines": lines, "deds": deds, "obj": sale, "harvest": harvest or (sale.harvest if sale else None),
-        "sale_json": _form_json(b, sale), "waits": _medicine_waits(b),
+        "sale_json": _form_json(b, sale), "waits": _medicine_waits(b), "buyer_advances": _buyer_advances(b),
     })
+
+
+def _buyer_advances(business):
+    """{buyer id: a line saying they paid in advance} for the sale form."""
+    if not apps.is_installed("apps.business.credit"):
+        return {}
+    from apps.business.credit.services import advances
+
+    left = {}
+    for a in advances(business):
+        left[a.party.pk] = left.get(a.party.pk, 0) + a.open
+    return {str(pk): _("They have %(amount)s of advance (dadon) with you. This sale is set against it — leave “Received now” empty unless they pay more.") % {"amount": bdt(v)}
+            for pk, v in left.items()}
 
 
 def _medicine_waits(business):
@@ -185,13 +231,23 @@ def sale_detail_view(request, pk):
     deductions = list(sale.deductions.select_related("deduction_type", "unit"))
     return render(request, "business/sales/sale_detail.html", {
         "sale": sale, "lines": lines, "deductions": deductions,
-        "wa": None if sale.is_deleted else memo_whatsapp(request.business, sale, lines, deductions, due_now),
+        "wa": None if sale.is_deleted else memo_whatsapp(request.business, sale, lines, deductions, due_now, _advance_left(request.business, sale)),
         "later_payments": sale.later_payments.select_related("account") if apps.is_installed("apps.business.credit") else [],
         "due_now": due_now, "settled_later": sale.due - due_now if due_now is not None else None,
     })
 
 
-def memo_text(business, sale, lines, deductions, due_now=None):
+def _advance_left(business, sale):
+    """What's left of the buyer's advances (dadon), or None if they never gave one."""
+    if not sale.buyer_id or not apps.is_installed("apps.business.credit"):
+        return None
+    from apps.business.credit.services import advances
+
+    rows = advances(business, open_only=False, party=sale.buyer)
+    return sum((a.open for a in rows), 0) if rows else None
+
+
+def memo_text(business, sale, lines, deductions, due_now=None, advance_left=None):
     """The sale memo as a plain message, for the buyer's phone."""
     out = [_("%(farm)s — fish sale memo") % {"farm": business.name},
            date_format(sale.date, "j M Y") + (f" · #{sale.memo_no}" if sale.memo_no else "")]
@@ -211,11 +267,14 @@ def memo_text(business, sale, lines, deductions, due_now=None):
     due = sale.due if due_now is None else due_now
     if due and due > 0:
         out.append(_("Still to pay: %(amount)s") % {"amount": bdt(due)})
+    if advance_left is not None:
+        out.append(_("Your advance (dadon) left with us: %(amount)s") % {"amount": bdt(advance_left)} if advance_left
+                   else _("Your advance (dadon) is fully paid back."))
     out += ["", _("Thank you.")]
     return "\n".join(out)
 
 
-def memo_whatsapp(business, sale, lines, deductions, due_now=None):
+def memo_whatsapp(business, sale, lines, deductions, due_now=None, advance_left=None):
     """wa.me link with the memo filled in: straight to the buyer when we have
     their number, otherwise WhatsApp asks who to send it to."""
     number = ""
@@ -223,7 +282,7 @@ def memo_whatsapp(business, sale, lines, deductions, due_now=None):
         from apps.business.credit.services import whatsapp_number
 
         number = whatsapp_number(sale.buyer.phone)
-    text = quote(memo_text(business, sale, lines, deductions, due_now))
+    text = quote(memo_text(business, sale, lines, deductions, due_now, advance_left))
     return f"https://wa.me/{number}?text={text}" if number else f"https://wa.me/?text={text}"
 
 

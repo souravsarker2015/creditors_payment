@@ -597,3 +597,35 @@ class BulkWaterForm(forms.Form):
             raise forms.ValidationError(_("Enter at least one reading for one pond."))
         data["entries"] = entries
         return data
+
+
+class CycleTargetsForm(BusinessForm):
+    """What this cycle should do: track it against these on the cycle page."""
+
+    unique_name = ()
+    tips = {
+        "target_size_g": _("The weight each fish should reach before you sell. Starts at the selling size set for the fish."),
+        "target_survival": _("Out of 100 fish released, how many you expect to harvest. 80 is usual for carp."),
+        "target_fcr": _("Kg of feed for each kg the fish grow. Carp usually 1.5–2, pangas and tilapia 1.3–1.8. Lower is better."),
+        "target_price": _("What you expect to get per kg at harvest, after market deductions."),
+        "budget": _("Everything you plan to spend on this cycle: fingerlings, feed, medicine, labour, lease."),
+        "expected_harvest": _("When you plan to harvest. The size line warns you if the fish won't be ready by then."),
+    }
+
+    class Meta:
+        model = CultureCycle
+        fields = ["target_size_g", "target_survival", "target_fcr", "target_price", "budget", "expected_harvest"]
+        widgets = {"expected_harvest": forms.DateInput()}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        money_field(self.fields["target_price"])
+        money_field(self.fields["budget"])
+        for name in ("target_size_g", "target_survival", "target_fcr", "target_price", "budget"):
+            self.fields[name].widget.attrs["data-plan"] = name
+
+    def clean(self):
+        data = super().clean()
+        if data.get("expected_harvest") and data["expected_harvest"] <= self.instance.start_date:
+            self.add_error("expected_harvest", _("The harvest must come after the cycle starts."))
+        return data

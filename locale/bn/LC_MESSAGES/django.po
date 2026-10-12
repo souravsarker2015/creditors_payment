@@ -17442,3 +17442,589 @@ msgstr "মিলেছে"
 
 msgid "Remove this count? The stock goes back to what the records say."
 msgstr "এই গণনা মুছবেন? মজুদ আবার হিসাব অনুযায়ী হবে।"
+
+msgid "Latitude"
+msgstr "অক্ষাংশ (Latitude)"
+
+msgid "Longitude"
+msgstr "দ্রাঘিমাংশ (Longitude)"
+
+msgid "Give both latitude and longitude, or leave both empty."
+msgstr "অক্ষাংশ ও দ্রাঘিমাংশ দুটোই দিন, অথবা দুটোই খালি রাখুন।"
+
+msgid "Latitude is between −90 and 90."
+msgstr "অক্ষাংশ −৯০ থেকে ৯০-এর মধ্যে হয়।"
+
+msgid "Longitude is between −180 and 180."
+msgstr "দ্রাঘিমাংশ −১৮০ থেকে ১৮০-এর মধ্যে হয়।"
+
+msgid "Email me an evening summary"
+msgstr "সন্ধ্যার সারসংক্ষেপ আমাকে ইমেইল করুন"
+
+msgid "Everything recorded today, pond by pond — and an evening email if you want one."
+msgstr "আজ যা লেখা হয়েছে, পুকুর ধরে — চাইলে সন্ধ্যায় ইমেইলেও।"
+
+msgid "Evening summary"
+msgstr "সন্ধ্যার সারসংক্ষেপ"
+
+msgid "This phone or browser can't share its location. Type it in instead."
+msgstr "এই ফোন বা ব্রাউজার অবস্থান জানাতে পারে না। নিজে লিখে দিন।"
+
+msgid "Couldn't get the location. Allow location for this site, or type it in."
+msgstr "অবস্থান পাওয়া যায়নি। এই সাইটকে অবস্থান দেখার অনুমতি দিন, অথবা লিখে দিন।"
+
+msgid "Farm location"
+msgstr "খামারের অবস্থান"
+
+msgid "Used only for the weather, to warn you on nights when ponds may run short of oxygen."
+msgstr "শুধু আবহাওয়ার জন্য — যে রাতে পুকুরে অক্সিজেন কমে যেতে পারে সে রাতে সতর্ক করতে।"
+
+msgid "Finding you…"
+msgstr "অবস্থান খোঁজা হচ্ছে…"
+
+msgid "Use my current location"
+msgstr "আমার এখনকার অবস্থান নিন"
+
+msgid "Easiest standing at the farm. Or copy the two numbers from Google Maps: press and hold on the farm."
+msgstr "খামারে দাঁড়িয়ে করলে সবচেয়ে সহজ। অথবা Google Maps-এ খামারের উপর চেপে ধরে দুটো সংখ্যা কপি করুন।"
+
+#, python-format
+msgid "≈ %(kg)s kg"
+msgstr "≈ %(kg)s কেজি"
+
+#, python-format
+msgid "%(amount)s advance"
+msgstr "%(amount)s দাদন"
+
+#, python-format
+msgid "due %(date)s"
+msgstr "%(date)s তারিখে"
+
+#, python-format
+msgid "Fish promised to %(name)s"
+msgstr "%(name)s-কে মাছ দেওয়ার কথা"
+
+msgid "Turned on — but your account has no email address yet. Add one in your account settings."
+msgstr "চালু হয়েছে — কিন্তু আপনার অ্যাকাউন্টে এখনো ইমেইল নেই। অ্যাকাউন্ট সেটিংসে যোগ করুন।"
+
+msgid "The evening email is off."
+msgstr "সন্ধ্যার ইমেইল বন্ধ।"
+
+#, python-format
+msgid "Every evening at 8 pm this summary goes to %(email)s."
+msgstr "প্রতি সন্ধ্যা ৮টায় এই সারসংক্ষেপ %(email)s-এ যাবে।"
+
+msgid "Your account has no email address. Add one in your account settings first."
+msgstr "আপনার অ্যাকাউন্টে ইমেইল নেই। আগে অ্যাকাউন্ট সেটিংসে যোগ করুন।"
+
+msgid "The email couldn't be sent just now. Try again later."
+msgstr "এখন ইমেইল পাঠানো গেল না। পরে আবার চেষ্টা করুন।"
+
+#, python-format
+msgid "Sent to %(email)s."
+msgstr "%(email)s-এ পাঠানো হয়েছে।"
+
+msgid "The pond whose fish this buyer will get. The pond's page then reminds you."
+msgstr "যে পুকুরের মাছ এই ক্রেতা পাবেন। পুকুরের পাতায় তখন মনে করিয়ে দেবে।"
+
+msgid "The price per kg you agreed, if you did. The sale starts with it."
+msgstr "কেজিপ্রতি যে দামে রাজি হয়েছেন (যদি হয়ে থাকেন)। বিক্রি এই দাম দিয়ে শুরু হবে।"
+
+msgid "Roughly how much fish you promised."
+msgstr "মোটামুটি কত মাছ দেওয়ার কথা।"
+
+msgid "When you said you'd harvest. Today's list reminds you a week before."
+msgstr "কবে মাছ ধরবেন বলেছেন। এক সপ্তাহ আগে আজকের তালিকা মনে করিয়ে দেবে।"
+
+msgid "Buyer / aratdar"
+msgstr "ক্রেতা / আড়তদার"
+
+msgid "Choose who gave the advance…"
+msgstr "কে দাদন দিয়েছেন বেছে নিন…"
+
+msgid "Money went into"
+msgstr "টাকা যেখানে জমা হলো"
+
+msgid "Not tied to a pond"
+msgstr "কোনো পুকুরের সাথে নয়"
+
+msgid "The harvest can't be before the advance."
+msgstr "মাছ ধরা দাদনের আগে হতে পারে না।"
+
+msgid "Advance (dadon)"
+msgstr "দাদন"
+
+msgid "Agreed price per kg"
+msgstr "কেজিপ্রতি ঠিক করা দাম"
+
+msgid "Fish promised (kg)"
+msgstr "দেওয়ার কথা মাছ (কেজি)"
+
+msgid "Harvest by"
+msgstr "মাছ ধরার তারিখ"
+
+msgid "For the fish of"
+msgstr "যে পুকুরের মাছের জন্য"
+
+msgid "Advance (dadon) received"
+msgstr "দাদন পাওয়া গেছে"
+
+#, python-format
+msgid "for the fish of %(pond)s"
+msgstr "%(pond)s-এর মাছের জন্য"
+
+#, python-format
+msgid "at %(rate)s/kg"
+msgstr "কেজিপ্রতি %(rate)s"
+
+msgid "Advances (dadon) to pay back in fish"
+msgstr "মাছ দিয়ে শোধ করার দাদন"
+
+msgid "Money buyers paid before the harvest. Fish you sell them pays it back, oldest advance first. It's part of “To pay” until then."
+msgstr "মাছ ধরার আগে ক্রেতারা যে টাকা দিয়েছেন। তাঁদের কাছে মাছ বিক্রি করলে শোধ হয়, আগের দাদন আগে। ততদিন এটি “দিতে হবে”-র অংশ।"
+
+#, python-format
+msgid "%(counter)s advance still open"
+msgid_plural "%(counter)s advances still open"
+msgstr[0] "%(counter)sটি দাদন এখনো বাকি"
+msgstr[1] "%(counter)sটি দাদন এখনো বাকি"
+
+#, python-format
+msgid "%(r)s/kg agreed"
+msgstr "কেজিপ্রতি %(r)s ঠিক হয়েছে"
+
+#, python-format
+msgid "≈ %(kg)s kg of fish owed"
+msgstr "≈ %(kg)s কেজি মাছ দেওয়া বাকি"
+
+#, python-format
+msgid "harvest was due %(d)s"
+msgstr "মাছ ধরার কথা ছিল %(d)s"
+
+#, python-format
+msgid "harvest by %(d)s"
+msgstr "মাছ ধরা %(d)s-এর মধ্যে"
+
+#, python-format
+msgid "of %(all)s"
+msgstr "%(all)s-এর মধ্যে"
+
+#, python-format
+msgid "Advance of %(amount)s from %(name)s saved. Sell them the fish of %(pond)s and it's paid back by itself."
+msgstr "%(name)s-এর %(amount)s দাদন সেভ হয়েছে। তাঁকে %(pond)s-এর মাছ বিক্রি করলে নিজেই শোধ হবে।"
+
+#, python-format
+msgid "Advance of %(amount)s from %(name)s saved. Fish you sell them pays it back by itself."
+msgstr "%(name)s-এর %(amount)s দাদন সেভ হয়েছে। তাঁকে মাছ বিক্রি করলে নিজেই শোধ হবে।"
+
+msgid "The weight each fish should reach before you sell. Starts at the selling size set for the fish."
+msgstr "বিক্রির আগে প্রতিটি মাছের যে ওজন হওয়া উচিত। মাছের বিক্রির সাইজ দিয়ে শুরু হয়।"
+
+msgid "Out of 100 fish released, how many you expect to harvest. 80 is usual for carp."
+msgstr "১০০টি পোনা ছাড়লে কতটি ধরতে পারবেন বলে আশা করেন। কার্পে সাধারণত ৮০।"
+
+msgid "Kg of feed for each kg the fish grow. Carp usually 1.5–2, pangas and tilapia 1.3–1.8. Lower is better."
+msgstr "মাছ ১ কেজি বাড়তে কত কেজি খাবার লাগে। কার্প সাধারণত ১.৫–২, পাঙ্গাস ও তেলাপিয়া ১.৩–১.৮। কম হলে ভালো।"
+
+msgid "What you expect to get per kg at harvest, after market deductions."
+msgstr "মাছ ধরার সময় বাজারের কর্তনের পরে কেজিপ্রতি কত পাবেন বলে আশা করেন।"
+
+msgid "Everything you plan to spend on this cycle: fingerlings, feed, medicine, labour, lease."
+msgstr "এই চক্রে যা খরচ করার পরিকল্পনা: পোনা, খাবার, ওষুধ, শ্রমিক, ইজারা।"
+
+msgid "When you plan to harvest. The size line warns you if the fish won't be ready by then."
+msgstr "কবে মাছ ধরার পরিকল্পনা। এর মধ্যে মাছ তৈরি না হলে সাইজের লাইন সতর্ক করবে।"
+
+msgid "The harvest must come after the cycle starts."
+msgstr "মাছ ধরা চক্র শুরুর পরে হতে হবে।"
+
+msgid "Selling size (g each)"
+msgstr "বিক্রির সাইজ (প্রতিটি গ্রাম)"
+
+msgid "Fish that should survive (%)"
+msgstr "যত মাছ বাঁচার কথা (%)"
+
+msgid "FCR target"
+msgstr "এফসিআর লক্ষ্য"
+
+msgid "Expected price per kg"
+msgstr "কেজিপ্রতি আশা করা দাম"
+
+msgid "Cost budget"
+msgstr "খরচের বাজেট"
+
+msgid "Set targets"
+msgstr "লক্ষ্য ঠিক করুন"
+
+msgid "Fish promised from this pond"
+msgstr "এই পুকুর থেকে মাছ দেওয়ার কথা"
+
+#, python-format
+msgid "%(left)s advance (dadon) to pay back"
+msgstr "%(left)s দাদন শোধ বাকি"
+
+#, python-format
+msgid "by %(d)s"
+msgstr "%(d)s-এর মধ্যে"
+
+msgid "Sell to them"
+msgstr "তাঁকে বিক্রি করুন"
+
+msgid "Plan vs now"
+msgstr "পরিকল্পনা বনাম এখন"
+
+msgid "The targets you set for this cycle, against where it stands. Green is on track, amber is slipping, red is well off."
+msgstr "এই চক্রের জন্য যে লক্ষ্য ঠিক করেছেন, আর এখন কোথায় আছে। সবুজ মানে ঠিক পথে, হলুদ মানে পিছিয়ে পড়ছে, লাল মানে অনেক দূরে।"
+
+msgid "How the cycle is going against its targets."
+msgstr "লক্ষ্যের তুলনায় চক্র কেমন চলছে।"
+
+msgid "Set targets for this cycle"
+msgstr "এই চক্রের লক্ষ্য ঠিক করুন"
+
+msgid "Selling size, survival, FCR, price and a budget — then see at a glance whether the pond is on track."
+msgstr "বিক্রির সাইজ, বাঁচার হার, এফসিআর, দাম আর বাজেট — তারপর এক নজরে দেখুন পুকুর ঠিক পথে আছে কিনা।"
+
+msgid "Targets saved. The cycle page now shows how it's going against them."
+msgstr "লক্ষ্য সেভ হয়েছে। চক্রের পাতায় এখন দেখাবে লক্ষ্যের তুলনায় কেমন চলছে।"
+
+#, python-format
+msgid "They have %(amount)s of advance (dadon) with you. This sale is set against it — leave “Received now” empty unless they pay more."
+msgstr "আপনার কাছে তাঁর %(amount)s দাদন আছে। এই বিক্রি সেখান থেকে কাটা যাবে — বাড়তি টাকা না দিলে “এখন পাওয়া” খালি রাখুন।"
+
+msgid "Your advance (dadon) is fully paid back."
+msgstr "আপনার দাদন পুরো শোধ হয়েছে।"
+
+#, python-format
+msgid "Your advance (dadon) left with us: %(amount)s"
+msgstr "আমাদের কাছে আপনার দাদন বাকি: %(amount)s"
+
+msgid "Advance (dadon) from a buyer"
+msgstr "ক্রেতার কাছ থেকে দাদন"
+
+#, python-format
+msgid "%(farm)s — %(date)s: %(headline)s"
+msgstr "%(farm)s — %(date)s: %(headline)s"
+
+msgid "nothing recorded"
+msgstr "কিছুই লেখা হয়নি"
+
+#, python-format
+msgid "%(fed)s of %(all)s ponds fed"
+msgstr "%(all)sটির মধ্যে %(fed)sটি পুকুরে খাবার দেওয়া হয়েছে"
+
+#, python-format
+msgid "%(n)s to look at"
+msgstr "%(n)sটি দেখার বিষয়"
+
+#, python-format
+msgid "%(n)s kg sold"
+msgstr "%(n)s কেজি বিক্রি"
+
+#, python-format
+msgid "%(v)s sold"
+msgstr "%(v)s বিক্রি"
+
+msgid "Ponds fed"
+msgstr "খাবার পাওয়া পুকুর"
+
+#, python-format
+msgid "not fed: %(names)s"
+msgstr "খাবার দেওয়া হয়নি: %(names)s"
+
+msgid "every running pond"
+msgstr "চালু সব পুকুরে"
+
+msgid "Fish died"
+msgstr "মাছ মারা গেছে"
+
+msgid "see the ponds below"
+msgstr "নিচে পুকুরগুলো দেখুন"
+
+msgid "none recorded"
+msgstr "কিছু লেখা হয়নি"
+
+msgid "Water problems"
+msgstr "পানির সমস্যা"
+
+msgid "none found"
+msgstr "কিছু পাওয়া যায়নি"
+
+msgid "High risk of low oxygen tonight"
+msgstr "আজ রাতে অক্সিজেন কমার ঝুঁকি বেশি"
+
+msgid "Some risk of low oxygen tonight"
+msgstr "আজ রাতে অক্সিজেন কমার কিছু ঝুঁকি আছে"
+
+msgid "Tonight looks safe for the ponds"
+msgstr "আজ রাত পুকুরের জন্য নিরাপদ মনে হচ্ছে"
+
+#, python-format
+msgid "%(c)s%% cloud"
+msgstr "%(c)s%% মেঘ"
+
+#, python-format
+msgid "wind %(w)s km/h"
+msgstr "বাতাস %(w)s কিমি/ঘণ্টা"
+
+msgid "Nothing was recorded on this day"
+msgstr "এই দিনে কিছুই লেখা হয়নি"
+
+msgid "No feeding, water tests, sales or anything else. If work was done, ask for it to be written down."
+msgstr "খাবার, পানি পরীক্ষা, বিক্রি — কিছুই না। কাজ হয়ে থাকলে লিখে রাখতে বলুন।"
+
+msgid "Pond by pond"
+msgstr "পুকুর ধরে"
+
+msgid "Every pond with fish in it."
+msgstr "মাছ আছে এমন সব পুকুর।"
+
+#, python-format
+msgid "fed %(kg)s kg"
+msgstr "খাবার %(kg)s কেজি"
+
+msgid "not fed"
+msgstr "খাবার দেওয়া হয়নি"
+
+#, python-format
+msgid "%(counter)s fish died"
+msgid_plural "%(counter)s fish died"
+msgstr[0] "%(counter)sটি মাছ মারা গেছে"
+msgstr[1] "%(counter)sটি মাছ মারা গেছে"
+
+#, python-format
+msgid "oxygen %(o)s mg/L"
+msgstr "অক্সিজেন %(o)s মিগ্রা/লি"
+
+#, python-format
+msgid "weighed: %(g)s g each"
+msgstr "ওজন: প্রতিটি %(g)s গ্রাম"
+
+#, python-format
+msgid "harvested %(h)s"
+msgstr "ধরা হয়েছে %(h)s"
+
+msgid "Fish sold (after deductions)"
+msgstr "মাছ বিক্রি (কর্তনের পরে)"
+
+msgid "of it, advances (dadon)"
+msgstr "এর মধ্যে দাদন"
+
+msgid "Paid to suppliers"
+msgstr "সরবরাহকারীকে দেওয়া"
+
+msgid "Other farm costs"
+msgstr "খামারের অন্য খরচ"
+
+msgid "Feed short at the store count"
+msgstr "গুদাম গণনায় খাবার কম"
+
+msgid "Who recorded"
+msgstr "কে লিখেছেন"
+
+msgid "Records added, changed or deleted on this day."
+msgstr "এই দিনে যোগ, পরিবর্তন বা মোছা রেকর্ড।"
+
+#, python-format
+msgid "%(counter)s record"
+msgid_plural "%(counter)s records"
+msgstr[0] "%(counter)sটি রেকর্ড"
+msgstr[1] "%(counter)sটি রেকর্ড"
+
+msgid "See every change"
+msgstr "সব পরিবর্তন দেখুন"
+
+msgid "Nobody recorded anything."
+msgstr "কেউ কিছু লেখেননি।"
+
+msgid "Still to do"
+msgstr "এখনো করার বাকি"
+
+msgid "From today on the farm."
+msgstr "আজ খামারে থেকে।"
+
+msgid "What was recorded on the farm, pond by pond, and who recorded it — for the days you can't be there."
+msgstr "খামারে কী লেখা হয়েছে, পুকুর ধরে, আর কে লিখেছেন — যেদিন আপনি থাকতে পারেন না সেদিনের জন্য।"
+
+#, python-format
+msgid "Emailed to you every evening at %(h)s:00"
+msgstr "প্রতি সন্ধ্যা %(h)s:০০-টায় আপনাকে ইমেইল করা হয়"
+
+msgid "Get this by email every evening"
+msgstr "প্রতি সন্ধ্যায় ইমেইলে পান"
+
+msgid "Your account has no email address yet."
+msgstr "আপনার অ্যাকাউন্টে এখনো ইমেইল নেই।"
+
+msgid "Add one"
+msgstr "যোগ করুন"
+
+msgid "Send this now"
+msgstr "এখনই পাঠান"
+
+msgid "Open the full summary"
+msgstr "পুরো সারসংক্ষেপ খুলুন"
+
+msgid "You get this because you turned on the evening summary. Turn it off on the summary page."
+msgstr "আপনি সন্ধ্যার সারসংক্ষেপ চালু করেছেন বলে এটি পাচ্ছেন। সারসংক্ষেপের পাতা থেকে বন্ধ করতে পারেন।"
+
+msgid "Edit advance"
+msgstr "দাদন সম্পাদনা"
+
+msgid "A paikar or aratdar pays now for fish they'll get at harvest. When you sell them the fish, the sale is set against the advance by itself."
+msgstr "পাইকার বা আড়তদার এখন টাকা দেন, মাছ ধরার সময় মাছ পাবেন। তাঁকে মাছ বিক্রি করলে বিক্রিটি নিজেই দাদন থেকে কাটা যায়।"
+
+msgid "Delete this advance? You can restore it later from Payments."
+msgstr "এই দাদন মুছবেন? পরে পেমেন্ট থেকে ফিরিয়ে আনতে পারবেন।"
+
+#, python-format
+msgid "%(left)s still to be paid back in fish"
+msgstr "%(left)s এখনো মাছ দিয়ে শোধ বাকি"
+
+msgid "Paid back in full by fish sold"
+msgstr "মাছ বিক্রি দিয়ে পুরো শোধ হয়েছে"
+
+#, python-format
+msgid "%(done)s of %(all)s paid back by sales so far."
+msgstr "এ পর্যন্ত বিক্রি দিয়ে %(all)s-এর মধ্যে %(done)s শোধ হয়েছে।"
+
+#, python-format
+msgid "About %(kg)s kg of fish still owed."
+msgstr "প্রায় %(kg)s কেজি মাছ দেওয়া বাকি।"
+
+msgid "For which harvest"
+msgstr "কোন মাছ ধরার জন্য"
+
+msgid "All optional — fill in what you agreed."
+msgstr "সবই ঐচ্ছিক — যা ঠিক হয়েছে তা লিখুন।"
+
+msgid "Save advance"
+msgstr "দাদন সেভ করুন"
+
+msgid "Fish surviving"
+msgstr "বেঁচে থাকা মাছ"
+
+msgid "lower is better"
+msgstr "কম হলে ভালো"
+
+msgid "weigh a sample to see it"
+msgstr "দেখতে নমুনা ওজন করুন"
+
+#, python-format
+msgid "reaches it about %(date)s"
+msgstr "প্রায় %(date)s-এ পৌঁছাবে"
+
+msgid "Fish to harvest"
+msgstr "ধরার মতো মাছ"
+
+#, python-format
+msgid "%(spent)s%% spent, %(time)s%% of the time gone"
+msgstr "%(spent)s%% খরচ হয়েছে, সময়ের %(time)s%% পার হয়েছে"
+
+#, python-format
+msgid "%(spent)s%% of the budget"
+msgstr "বাজেটের %(spent)s%%"
+
+#, python-format
+msgid "%(n)s died so far"
+msgstr "এ পর্যন্ত %(n)sটি মারা গেছে"
+
+msgid "at selling size, with the fish alive now"
+msgstr "বিক্রির সাইজে, এখন বেঁচে থাকা মাছ নিয়ে"
+
+msgid "harvested"
+msgstr "ধরা হয়েছে"
+
+msgid "at the expected price, once the fish reach selling size"
+msgstr "আশা করা দামে, মাছ বিক্রির সাইজে পৌঁছালে"
+
+#, python-format
+msgid "reaches it about %(date)s — %(n)s days after the planned harvest"
+msgstr "প্রায় %(date)s-এ পৌঁছাবে — পরিকল্পিত মাছ ধরার %(n)s দিন পরে"
+
+msgid "Ponds lose oxygen at night. It runs lowest before dawn after a cloudy day, on hot nights, when there's no wind, and after heavy rain. From the weather forecast for your farm's location, with this morning's oxygen tests."
+msgstr "রাতে পুকুরে অক্সিজেন কমে। মেঘলা দিনের পরে, গরম রাতে, বাতাস না থাকলে আর ভারী বৃষ্টির পরে ভোরের আগে সবচেয়ে কমে। আপনার খামারের অবস্থানের আবহাওয়া পূর্বাভাস আর আজ সকালের অক্সিজেন পরীক্ষা থেকে।"
+
+#, python-format
+msgid "rain %(r)s mm"
+msgstr "বৃষ্টি %(r)s মিমি"
+
+msgid "Why:"
+msgstr "কেন:"
+
+msgid "Get low-oxygen warnings"
+msgstr "অক্সিজেন কমার সতর্কতা পান"
+
+msgid "Add your farm's location and the app warns you on hot, cloudy, still nights when ponds run short of oxygen."
+msgstr "খামারের অবস্থান দিন — গরম, মেঘলা, বাতাসহীন রাতে পুকুরে অক্সিজেন কমলে অ্যাপ সতর্ক করবে।"
+
+msgid "Cycle targets"
+msgstr "চক্রের লক্ষ্য"
+
+msgid "Usual values are filled in from your fish and recent prices. Change them to what you're aiming for."
+msgstr "আপনার মাছ আর সাম্প্রতিক দাম থেকে সাধারণ মান বসানো আছে। আপনার লক্ষ্য অনুযায়ী বদলে নিন।"
+
+msgid "What this cycle should achieve. The cycle page shows how it's going against these."
+msgstr "এই চক্রে যা অর্জন করা উচিত। চক্রের পাতায় দেখাবে এর তুলনায় কেমন চলছে।"
+
+msgid "What this plan means"
+msgstr "এই পরিকল্পনার মানে"
+
+#, python-format
+msgid "For the %(n)s fish released in this cycle."
+msgstr "এই চক্রে ছাড়া %(n)sটি মাছের জন্য।"
+
+msgid "Record the fingerlings released to see this."
+msgstr "এটি দেখতে ছাড়া পোনা লিখে রাখুন।"
+
+msgid "Feed needed"
+msgstr "খাবার লাগবে"
+
+msgid "Fish would bring in"
+msgstr "মাছ থেকে আসবে"
+
+msgid "Planned profit"
+msgstr "পরিকল্পিত লাভ"
+
+msgid "The feed alone costs more than this budget — raise the budget or aim for a better FCR."
+msgstr "শুধু খাবারের খরচই এই বাজেটের বেশি — বাজেট বাড়ান অথবা আরও ভালো এফসিআর ধরুন।"
+
+msgid "Save targets"
+msgstr "লক্ষ্য সেভ করুন"
+
+msgid "Nothing special tonight."
+msgstr "আজ রাতে বিশেষ কিছু নেই।"
+
+msgid "Run the aerators from midnight until after sunrise, feed less this evening, and check the fish at dawn — gulping at the surface means they need air now."
+msgstr "মাঝরাত থেকে সূর্য ওঠার পর পর্যন্ত এরেটর চালান, আজ সন্ধ্যায় খাবার কম দিন, আর ভোরে মাছ দেখুন — মাছ উপরে এসে খাবি খেলে এখনই বাতাস দরকার।"
+
+msgid "Keep the aerators ready for the early hours and watch the fish at dawn. Feed a little less this evening."
+msgstr "শেষ রাতের জন্য এরেটর তৈরি রাখুন আর ভোরে মাছ দেখুন। আজ সন্ধ্যায় একটু কম খাবার দিন।"
+
+#, python-format
+msgid "a hot night (%(t)s°C)"
+msgstr "গরম রাত (%(t)s°সে)"
+
+#, python-format
+msgid "cloudy (%(c)s%%), so little oxygen made in the day"
+msgstr "মেঘলা (%(c)s%%), তাই দিনে কম অক্সিজেন তৈরি হয়েছে"
+
+#, python-format
+msgid "little wind (%(w)s km/h)"
+msgstr "বাতাস কম (%(w)s কিমি/ঘণ্টা)"
+
+#, python-format
+msgid "heavy rain (%(r)s mm)"
+msgstr "ভারী বৃষ্টি (%(r)s মিমি)"
+
+#, python-format
+msgid "oxygen already low this morning in %(ponds)s"
+msgstr "আজ সকালেই %(ponds)s-এ অক্সিজেন কম ছিল"
+
+#, python-format
+msgid "%(name)s owed you %(owed)s, so this settles that first. %(held)s is left as an advance to pay back in fish."
+msgstr "%(name)s-এর কাছে আপনার %(owed)s পাওনা ছিল, তাই আগে সেটা শোধ হলো। %(held)s মাছ দিয়ে শোধ করার দাদন হিসেবে রইল।"
+
+#, python-format
+msgid "%(name)s owed you more than this, so it all goes to settle that. Nothing is left as an advance; they still owe %(left)s."
+msgstr "%(name)s-এর কাছে এর চেয়ে বেশি পাওনা ছিল, তাই পুরোটাই সেটা শোধে গেল। দাদন হিসেবে কিছু রইল না; এখনো %(left)s পাওনা।"

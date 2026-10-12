@@ -2,8 +2,53 @@
 {% load i18n %}
 {% block title %}{% translate "Business details" %} | {{ business.name }}{% endblock %}
 {% block content %}
-{% url 'business:home' as back %}
-{% translate "Business details" as title %}
-{% translate "Shown on invoices and statements." as subtitle %}
-{% include "partials/form_page.html" %}
+<div class="page-narrow">
+  <header class="page-header">
+    <div>
+      <a href="{% url 'business:home' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Back" %}</a>
+      <h1 class="page-title">{% translate "Business details" %}</h1>
+      <p class="page-subtitle">{% translate "Shown on invoices and statements." %}</p>
+    </div>
+  </header>
+  <form method="post" class="stack" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+    <section class="card"><div class="card-body form-stack">
+      {% with field=form.name %}{% include "partials/field.html" %}{% endwith %}
+      {% with field=form.phone %}{% include "partials/field.html" %}{% endwith %}
+      {% with field=form.address %}{% include "partials/field.html" %}{% endwith %}
+    </div></section>
+    <section class="card" id="location" x-data="{ busy: false, err: '', locate() {
+        if (!navigator.geolocation) { this.err = '{{ _("This phone or browser can't share its location. Type it in instead.")|escapejs }}'; return; }
+        this.busy = true; this.err = '';
+        navigator.geolocation.getCurrentPosition((p) => {
+          this.$refs.lat.value = p.coords.latitude.toFixed(5); this.$refs.lon.value = p.coords.longitude.toFixed(5); this.busy = false;
+        }, () => { this.busy = false; this.err = '{{ _("Couldn't get the location. Allow location for this site, or type it in.")|escapejs }}'; }, { enableHighAccuracy: false, timeout: 15000 });
+      } }">
+      <div class="card-header"><div><h2 class="card-title">{% translate "Farm location" %}</h2>
+        <p class="card-subtitle">{% translate "Used only for the weather, to warn you on nights when ponds may run short of oxygen." %}</p></div></div>
+      <div class="card-body form-stack">
+        <div><button type="button" class="btn btn-secondary" @click="locate()" :disabled="busy">{% include "partials/icon.html" with name="pin" %}<span x-text="busy ? '{{ _("Finding you…")|escapejs }}' : '{{ _("Use my current location")|escapejs }}'"></span></button>
+          <p class="help mt-2">{% translate "Easiest standing at the farm. Or copy the two numbers from Google Maps: press and hold on the farm." %}</p>
+          <p class="field-error" x-show="err" x-cloak x-text="err"></p></div>
+        <div class="form-grid form-grid-2">
+          <div class="field{% if form.latitude.errors %} has-error{% endif %}">
+            <label class="label" for="{{ form.latitude.id_for_label }}">{{ form.latitude.label }}<span class="opt">{% translate "(optional)" %}</span></label>
+            <input type="number" step="any" inputmode="decimal" class="form-input" name="{{ form.latitude.html_name }}" id="{{ form.latitude.id_for_label }}" value="{{ form.latitude.value|default_if_none:''|stringformat:'s' }}" placeholder="23.17" x-ref="lat">
+            {% for e in form.latitude.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+          </div>
+          <div class="field{% if form.longitude.errors %} has-error{% endif %}">
+            <label class="label" for="{{ form.longitude.id_for_label }}">{{ form.longitude.label }}<span class="opt">{% translate "(optional)" %}</span></label>
+            <input type="number" step="any" inputmode="decimal" class="form-input" name="{{ form.longitude.html_name }}" id="{{ form.longitude.id_for_label }}" value="{{ form.longitude.value|default_if_none:''|stringformat:'s' }}" placeholder="89.21" x-ref="lon">
+            {% for e in form.longitude.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+          </div>
+        </div>
+      </div>
+    </section>
+    <div class="form-actions">
+      <a href="{% url 'business:home' %}" class="btn btn-ghost btn-lg">{% translate "Cancel" %}</a>
+      <button type="submit" class="btn btn-primary btn-lg">{% include "partials/icon.html" with name="check" %}{% translate "Save" %}</button>
+    </div>
+  </form>
+</div>
 {% endblock %}

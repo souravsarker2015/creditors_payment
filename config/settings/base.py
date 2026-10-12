@@ -221,6 +221,8 @@ EMAIL_BACKEND = (
 )
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", f"FinTrack <{EMAIL_HOST_USER}>" if EMAIL_HOST_USER else "FinTrack <noreply@localhost>")
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
+# The site's own address, for links in emails sent by scheduled tasks (no request to read it from).
+SITE_URL = os.environ.get("SITE_URL", "")
 
 # Widgets render with the project's own template settings, so a custom
 # widget template (templates/partials/receipt_input.html) is found.

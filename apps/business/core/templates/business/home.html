@@ -13,6 +13,7 @@
       </div>
     </div>
     <div class="page-actions">
+    <a href="{% url 'business:day_summary' %}" class="btn btn-ghost" data-tip="{% translate 'Everything recorded today, pond by pond — and an evening email if you want one.' %}">{% include "partials/icon.html" with name="mail" %}<span class="hidden sm:inline">{% translate "Evening summary" %}</span></a>
     {% if share_url %}<a href="{{ share_url }}" target="_blank" rel="noopener" class="btn btn-secondary" data-tip="{% translate 'Send today’s sales, feed, deaths and to-dos to the owner or your family group on WhatsApp.' %}">{% include "partials/icon.html" with name="chat" %}{% translate "Share today’s report" %}</a>{% endif %}
     {% if other_businesses %}
     <form method="post" action="{% url 'business:switch_business' %}">
@@ -36,6 +37,7 @@
     <a href="{% url 'business:calendar_add' %}" class="quick-action">{% include "partials/icon.html" with name="check" %}<span>{% translate "To-do" %}</span></a>
   </nav>
   {% endif %}
+  {% if has_ponds %}<div hx-get="{% url 'business:pond_weather' %}" hx-trigger="load" hx-swap="outerHTML" aria-live="polite"></div>{% endif %}
   {% if tasks %}
   <section class="card">
     <div class="card-header">
@@ -45,7 +47,7 @@
     <ul class="ledger">
       {% for t in tasks %}
       <li class="ledger-row">
-        <span class="ledger-icon" data-tone="{{ t.tone }}">{% if t.kind == "water" %}{% include "business/partials/icon.html" with name="beaker" %}{% elif t.kind == "deaths" %}{% include "partials/icon.html" with name="alert" %}{% elif t.kind == "feed" %}{% include "business/partials/icon.html" with name="banknotes" %}{% elif t.kind == "weigh" %}{% include "business/partials/icon.html" with name="scale" %}{% elif t.kind == "harvest" or t.kind == "ready" %}{% include "partials/icon.html" with name="cart" %}{% elif t.kind == "slow" %}{% include "business/partials/icon.html" with name="scale" %}{% elif t.kind == "equipment" %}{% include "business/partials/icon.html" with name="cog" %}{% elif t.kind == "supply" or t.kind == "medicine" %}{% include "business/partials/icon.html" with name="dropper" %}{% elif t.kind == "lease" %}{% include "business/partials/icon.html" with name="banknotes" %}{% elif t.kind == "salary" %}{% include "partials/icon.html" with name="users" %}{% elif t.kind == "paper" %}{% include "partials/icon.html" with name="note" %}{% else %}{% include "partials/icon.html" with name="calendar" %}{% endif %}</span>
+        <span class="ledger-icon" data-tone="{{ t.tone }}">{% if t.kind == "water" %}{% include "business/partials/icon.html" with name="beaker" %}{% elif t.kind == "deaths" %}{% include "partials/icon.html" with name="alert" %}{% elif t.kind == "feed" %}{% include "business/partials/icon.html" with name="banknotes" %}{% elif t.kind == "weigh" %}{% include "business/partials/icon.html" with name="scale" %}{% elif t.kind == "harvest" or t.kind == "ready" or t.kind == "advance" %}{% include "partials/icon.html" with name="cart" %}{% elif t.kind == "slow" %}{% include "business/partials/icon.html" with name="scale" %}{% elif t.kind == "equipment" %}{% include "business/partials/icon.html" with name="cog" %}{% elif t.kind == "supply" or t.kind == "medicine" %}{% include "business/partials/icon.html" with name="dropper" %}{% elif t.kind == "lease" %}{% include "business/partials/icon.html" with name="banknotes" %}{% elif t.kind == "salary" %}{% include "partials/icon.html" with name="users" %}{% elif t.kind == "paper" %}{% include "partials/icon.html" with name="note" %}{% else %}{% include "partials/icon.html" with name="calendar" %}{% endif %}</span>
         <div class="ledger-main"><p class="ledger-title">{{ t.title }}</p><p class="ledger-meta">{{ t.detail }}</p></div>
         <div class="ledger-end"><a href="{{ t.url }}" class="btn btn-soft btn-sm">{{ t.action }}</a></div>
       </li>

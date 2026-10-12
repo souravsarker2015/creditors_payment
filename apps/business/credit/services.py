@@ -146,7 +146,7 @@ def _entries(business, party_ids=None):
             out[sp.supplier_id].append(Entry(sp.date, "supply", ("supply", sp.pk), _("Pond supplies: %(item)s") % {"item": sp.item},
                                              f"{sp.quantity.normalize():f} {sp.unit.symbol}", gave=sp.paid_now, got=sp.cost,
                                              url=reverse("business:supply_detail", args=[sp.item_id]), pk=sp.pk))
-    for pay in scope(PartyPayment.objects.filter(business=business), "party").select_related("account", "sale", "feed_purchase", "stocking"):
+    for pay in scope(PartyPayment.objects.filter(business=business), "party").select_related("account", "sale", "feed_purchase", "stocking", "advance_cycle__pond"):
         is_in = pay.direction == Direction.IN
         target = (("sale", pay.sale_id) if pay.sale_id else ("feed", pay.feed_purchase_id) if pay.feed_purchase_id
                   else ("stocking", pay.stocking_id) if pay.stocking_id else None)
@@ -155,10 +155,16 @@ def _entries(business, party_ids=None):
             bits.append(_("incl. %(amount)s discount") % {"amount": _money(pay.discount)})
         if pay.bill:
             bits.append(_("for %(bill)s") % {"bill": _bill_label(pay.bill)})
-        out[pay.party_id].append(Entry(pay.date, "pay_in" if is_in else "pay_out", ("pay", pay.pk),
-                                       _("Payment received") if is_in else _("Payment made"), " · ".join(b for b in bits if b),
+        if pay.is_advance:
+            if pay.advance_cycle_id:
+                bits.insert(0, _("for the fish of %(pond)s") % {"pond": pay.advance_cycle.pond})
+            if pay.agreed_rate:
+                bits.insert(1, _("at %(rate)s/kg") % {"rate": _money(pay.agreed_rate)})
+        title = (_("Advance (dadon) received") if pay.is_advance else _("Payment received")) if is_in else _("Payment made")
+        out[pay.party_id].append(Entry(pay.date, "pay_in" if is_in else "pay_out", ("pay", pay.pk), title, " · ".join(b for b in bits if b),
                                        gave=ZERO if is_in else pay.settled, got=pay.settled if is_in else ZERO,
-                                       url=reverse("business:payment_edit", args=[pay.pk]), rank=2, target=target, pk=pay.pk))
+                                       url=reverse("business:advance_edit" if pay.is_advance else "business:payment_edit", args=[pay.pk]),
+                                       rank=2, target=target, pk=pay.pk))
     return out
 
 
@@ -280,3 +286,75 @@ def whatsapp_number(phone):
     if digits.startswith("0") and len(digits) == 11:
         return "88" + digits
     return digits if len(digits) >= 10 else ""
+
+
+
+# ── Advances (dadon) ────────────────────────────────────────────────────────
+
+@dataclass
+class Advance:
+    """Money a buyer paid before the harvest, and how much of it is still to be
+    paid back in fish. Fish sold to them pays back the oldest advance first."""
+
+    payment: PartyPayment
+    open: Decimal = ZERO
+
+    @property
+    def party(self):
+        return self.payment.party
+
+    @property
+    def amount(self):
+        return self.payment.amount
+
+    @property
+    def cycle(self):
+        return self.payment.advance_cycle
+
+    @property
+    def settled(self):
+        return self.amount - self.open
+
+    @property
+    def settled_pct(self):
+        return min(int(self.settled * 100 / self.amount), 100) if self.amount else 100
+
+    @property
+    def kg_left(self):
+        """The fish still owed, at the agreed price."""
+        return (self.open / self.payment.agreed_rate).quantize(Decimal("1")) if (self.payment.agreed_rate and self.open) else None
+
+    @property
+    def days_left(self):
+        return (self.payment.expected_on - date.today()).days if self.payment.expected_on else None
+
+    @property
+    def overdue(self):
+        return self.open > 0 and self.days_left is not None and self.days_left < 0
+
+
+def advances(business, open_only=True, party=None, cycle=None):
+    """Every advance with what is still owed on it, oldest first."""
+    qs = (PartyPayment.objects.filter(business=business, is_advance=True, direction=Direction.IN)
+          .select_related("party", "advance_cycle__pond", "account").order_by("date", "id"))
+    if party is not None:
+        qs = qs.filter(party=party)
+    by_party = defaultdict(list)
+    for p in qs:
+        by_party[p.party_id].append(Advance(p))
+    if not by_party:
+        return []
+    ledgers = build(business, list(by_party))
+    out = []
+    for pk, rows in by_party.items():
+        led = ledgers.get(pk)
+        owed = max(-(led.balance if led else ZERO), ZERO)          # what we still owe them
+        left = min(owed, sum((a.amount for a in rows), ZERO))
+        for a in reversed(rows):                                    # newest still open, oldest paid back first
+            a.open = min(a.amount, left)
+            left -= a.open
+        out += rows
+    if cycle is not None:     # worked out across all their advances first, then just this pond's
+        out = [a for a in out if a.payment.advance_cycle_id == cycle.pk]
+    out.sort(key=lambda a: (a.payment.expected_on or date.max, a.payment.date))
+    return [a for a in out if a.open > 0] if open_only else out

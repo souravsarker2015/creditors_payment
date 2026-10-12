@@ -1,0 +1,20 @@
+{% load i18n business %}{% autoescape off %}{{ s.business.name }} — {{ s.day|date:"l, j F Y" }}
+{{ s.headline }}
+{% if s.night and s.night.is_risky %}
+{% if s.night.level == "high" %}{% translate "High risk of low oxygen tonight" %}{% else %}{% translate "Some risk of low oxygen tonight" %}{% endif %}: {{ s.night.reasons|join:", " }}
+{% endif %}{% if s.quiet %}
+{% translate "Nothing was recorded on this day" %}
+{% endif %}
+{% translate "Pond by pond" %}
+{% for p in s.ponds %}- {{ p.name }}: {% if p.fed %}{% blocktranslate with kg=p.fed_kg|num %}fed {{ kg }} kg{% endblocktranslate %}{% else %}{% translate "not fed" %}{% endif %}{% if p.deaths %}, {% blocktranslate count counter=p.deaths %}{{ counter }} fish died{% plural %}{{ counter }} fish died{% endblocktranslate %}{% endif %}{% if p.water %}, {{ p.water|join:", " }}{% endif %}{% if p.weighed_g %}, {% blocktranslate with g=p.weighed_g|num %}weighed: {{ g }} g each{% endblocktranslate %}{% endif %}{% for h in p.harvested %}, {% blocktranslate %}harvested {{ h }}{% endblocktranslate %}{% endfor %}
+{% endfor %}
+{% translate "Fish sold" %}: {% blocktranslate count counter=s.sales_count %}{{ counter }} sale{% plural %}{{ counter }} sales{% endblocktranslate %}{% if s.sales_kg %}, {{ s.sales_kg|num }} kg{% endif %}{% if s.show_money %}, {{ s.sales_net|bdt }}
+{% translate "Money received" %}: {{ s.received|bdt }} · {% translate "Paid to suppliers" %}: {{ s.paid|bdt }}{% if s.costs %} · {% translate "Other farm costs" %}: {{ s.costs|bdt }}{% endif %}{% endif %}
+
+{% translate "Who recorded" %}: {% for name, n in s.people %}{{ name }} ({{ n }}){% if not forloop.last %}, {% endif %}{% empty %}{% translate "Nobody recorded anything." %}{% endfor %}
+{% if s.tasks %}
+{% translate "Still to do" %}
+{% for t in s.tasks %}- {{ t.title }}
+{% endfor %}{% endif %}{% if base %}
+{{ base }}{{ page }}?date={{ s.day|date:"Y-m-d" }}{% endif %}
+{% endautoescape %}

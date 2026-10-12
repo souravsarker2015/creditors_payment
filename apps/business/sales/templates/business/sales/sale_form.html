@@ -23,7 +23,10 @@
         </div>
         <div class="form-grid form-grid-2">
           <div @change="if ($event.target.name === 'market') applyMarket($event.target.value)">{% with field=form.market %}{% include "business/partials/field.html" %}{% endwith %}</div>
-          <div @change="if ($event.target.name === 'buyer') applyBuyer($event.target.value)">{% with field=form.buyer %}{% include "business/partials/field.html" %}{% endwith %}</div>
+          {{ buyer_advances|json_script:"buyer-advances" }}
+          <div x-data="{ b: '{{ form.buyer.value|default_if_none:''|stringformat:'s'|escapejs }}', adv: JSON.parse(document.getElementById('buyer-advances').textContent) }"
+               @change="if ($event.target.name === 'buyer') { b = $event.target.value; applyBuyer(b) }">{% with field=form.buyer %}{% include "business/partials/field.html" %}{% endwith %}
+            <p class="help adv-hint" x-show="adv[b]" x-cloak x-text="adv[b]" data-adv-hint></p></div>
         </div>
         {{ waits|json_script:"medicine-waits" }}
         <div x-data="{ c: '{{ form.cycle.value|default_if_none:''|stringformat:'s'|escapejs }}', waits: JSON.parse(document.getElementById('medicine-waits').textContent) }" @change="if ($event.target.name === 'cycle') c = $event.target.value">

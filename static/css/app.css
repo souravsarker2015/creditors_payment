@@ -3091,3 +3091,49 @@ a.rp-mrow:hover { background: var(--surface-hover); }
 .count-diff[data-tone="critical"] { color: var(--status-critical); }
 .count-diff[data-tone="info"] { color: var(--status-info); }
 .count-diff[data-tone="good"] { color: var(--status-good); }
+
+/* Tonight's weather on the farm home page */
+.weather-card { padding: 1rem 1.25rem; }
+.weather-head { display: flex; align-items: flex-start; gap: 0.75rem; }
+.weather-facts { margin-top: 0.25rem; font-size: 0.8125rem; color: var(--text-secondary); }
+.weather-body { margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border); font-size: 0.875rem; color: var(--text-secondary); }
+.weather-body p + p { margin-top: 0.375rem; color: var(--text-primary); font-weight: 600; }
+.weather-card[data-weather="high"] { box-shadow: inset 4px 0 0 var(--status-critical); }
+.weather-card[data-weather="medium"] { box-shadow: inset 4px 0 0 var(--status-warn); }
+.weather-card .badge[data-tone="critical"] { background: color-mix(in srgb, var(--status-critical) 14%, transparent); color: var(--status-critical); }
+.weather-card .badge[data-tone="warn"] { background: color-mix(in srgb, var(--status-warn) 16%, transparent); color: var(--status-warn); }
+.weather-setup { text-decoration: none; align-items: center; }
+
+/* Evening summary */
+.sum-mail { display: flex; align-items: center; gap: 0.875rem; padding: 1rem 1.25rem; flex-wrap: wrap; }
+.sum-mail-title { font-weight: 650; color: var(--text-primary); }
+.sum-mail-meta { font-size: 0.8125rem; color: var(--text-secondary); }
+.sum-mail-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.sum-date { font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); }
+.sum-pond .ledger-meta { white-space: normal; }
+.sum-facts { display: flex; flex-wrap: wrap; gap: 0.25rem 0.75rem; }
+
+/* Cycle targets: plan vs now */
+.tgt-wrap { overflow-x: auto; }
+.tgt-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.tgt-table th { text-align: left; font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); padding: 0.625rem 1.25rem; border-bottom: 1px solid var(--border); }
+.tgt-table td { padding: 0.75rem 1.25rem; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--text-primary); }
+.tgt-table tr:last-child td { border-bottom: 0; }
+.tgt-table .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tgt-dot { display: inline-block; width: 0.5rem; height: 0.5rem; border-radius: 9999px; margin-right: 0.5rem; vertical-align: middle; background: var(--border); }
+.tgt-dot[data-tone="good"] { background: var(--status-good); }
+.tgt-dot[data-tone="warn"] { background: var(--status-warn); }
+.tgt-dot[data-tone="critical"] { background: var(--status-critical); }
+.tgt-note { display: block; margin: 0.125rem 0 0 1rem; font-size: 0.75rem; color: var(--text-muted); font-weight: 400; }
+.tgt-table tr[data-state="good"] .tgt-now { color: var(--status-good); font-weight: 650; }
+.tgt-table tr[data-state="warn"] .tgt-now { color: var(--status-warn); font-weight: 650; }
+.tgt-table tr[data-state="critical"] .tgt-now { color: var(--status-critical); font-weight: 650; }
+.tgt-invite { text-decoration: none; align-items: center; }
+@media (max-width: 639px) { .tgt-table th, .tgt-table td { padding-left: 1rem; padding-right: 1rem; } }
+
+/* Advances (dadon) */
+.adv-row .ledger-meta { white-space: normal; }
+.adv-meter { margin: 0.375rem 0 0.25rem; max-width: 16rem; }
+.adv-row .ledger-end { display: flex; align-items: center; gap: 0.625rem; }
+.adv-hint { color: var(--status-info); font-weight: 600; }
+.adv-list li + li { margin-top: 0.375rem; } .adv-list li { line-height: 1.6; }

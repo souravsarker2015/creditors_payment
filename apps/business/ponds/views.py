@@ -18,7 +18,7 @@ from apps.business.core.templatetags.business import bdt
 from apps.business.feed.forms import FeedUsageForm
 from apps.business.feed.models import FeedUsage
 
-from . import forecast, services
+from . import forecast, plan, services
 from .forms import BulkWaterForm, CycleForm, FishMoveForm, LeasePaymentForm, HarvestForm, MortalityForm, PondAlertsForm, PondForm, StockingForm, TreatmentForm, WaterTestForm, WeighingForm
 from .models import CultureCycle, FishMove, Harvest, LeasePayment, Mortality, Pond, PondAlerts, PondStatus, SampleWeighing, Stocking, Treatment, WaterTest
 
@@ -182,11 +182,24 @@ def cycle_detail_view(request, pk):
         "water": water, "water_now": water[0] if water else None,
         "treatments": treatments, "water_care_count": len(water) + len(treatments),
         "withdrawal": services.withdrawal(cycle),
-        "forecasts": forecasts, "wait": services.wait_plan(summary, forecasts) if cycle.is_running else None,
+        "forecasts": forecasts, "wait": (wait := services.wait_plan(summary, forecasts) if cycle.is_running else None),
+        "targets": plan.compare(cycle, summary, forecasts, wait),
+        "advances": _cycle_advances(cycle),
         "open": request.GET.get("add") if request.GET.get("add") in ENTRY_KINDS and cycle.is_running else None,
         "tab": request.GET.get("tab") or "overview",
         "today": date.today(),
     })
+
+
+def _cycle_advances(cycle):
+    """Buyers who paid in advance for this pond's fish, still owed."""
+    from django.apps import apps
+
+    if not apps.is_installed("apps.business.credit"):
+        return []
+    from apps.business.credit.services import advances
+
+    return advances(cycle.business, cycle=cycle)
 
 
 CROWDED = Decimal("1.5")   # this many times the usual density is worth a warning
@@ -374,3 +387,51 @@ def health_view(request):
 
     return render(request, "business/ponds/health.html", {"problems": PROBLEMS, "prevent": PREVENT,
                                                           "open": request.GET.get("p", "")})
+
+
+@business_access_required
+def weather_view(request):
+    """Tonight's low-oxygen risk, loaded into the home page after it opens so
+    a slow forecast never holds the page up."""
+    from apps.business.core.access import can
+
+    from . import weather
+
+    b = request.business
+    night = weather.tonight(b)
+    return render(request, "business/ponds/_weather.html", {
+        "night": night, "advice": weather.advice(night) if night else "",
+        "no_location": not weather.has_location(b), "can_set": can(request.membership, "manage_settings"),
+    })
+
+
+@business_access_required(capability="enter_data")
+def cycle_targets_view(request, pk):
+    """Set what this cycle should achieve; the cycle page tracks it."""
+    from apps.business.feed.services import cost_per_kg
+
+    from . import plan
+    from .forms import CycleTargetsForm
+
+    cycle = _cycle(request, pk)
+    b = request.business
+    summary = services.summarize(cycle)
+    if summary.feed_kg:
+        feed_price = summary.feed_cost / summary.feed_kg
+    else:
+        prices = list(cost_per_kg(b).values())
+        feed_price = sum(prices) / len(prices) if prices else None
+    species_ids = [r.species.pk for r in summary.species]
+    usual = services.usual_price_per_kg(b, species_ids) if species_ids else None
+    initial = None
+    if request.method != "POST":
+        initial = {k: v for k, v in plan.suggestions(cycle, summary, feed_price, usual).items() if v is not None and getattr(cycle, k) is None}
+    form = CycleTargetsForm(request.POST or None, instance=cycle, business=b, initial=initial)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, _g("Targets saved. The cycle page now shows how it's going against them."))
+        return redirect("business:cycle_detail", cycle.pk)
+    return render(request, "business/ponds/targets.html", {
+        "form": form, "cycle": cycle, "put_in": summary.stocked + summary.moved_in, "stocked_kg": summary.stocked_kg,
+        "feed_price": feed_price, "first_time": not plan.has_targets(cycle),
+    })

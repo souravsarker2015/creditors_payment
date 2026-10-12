@@ -1,0 +1,73 @@
+{% load i18n business %}
+<p class="sum-date">{{ s.day|date:"l, j F Y" }}{% if s.day == today %} · {% translate "Today" %}{% endif %}</p>
+<dl class="stat-grid">
+  <div class="stat" data-tone="{% if s.unfed_ponds %}warn{% else %}good{% endif %}"><dt class="stat-label">{% translate "Ponds fed" %}</dt><dd class="stat-value">{{ s.fed_ponds|length }} / {{ s.ponds|length }}</dd>
+    <dd class="stat-hint">{% if s.unfed_ponds %}{% blocktranslate with names=s.unfed_names|join:", " %}not fed: {{ names }}{% endblocktranslate %}{% else %}{% translate "every running pond" %}{% endif %}</dd></div>
+  <div class="stat" data-tone="{% if s.deaths %}critical{% else %}good{% endif %}"><dt class="stat-label">{% translate "Fish died" %}</dt><dd class="stat-value">{{ s.deaths|num }}</dd><dd class="stat-hint">{% if s.deaths %}{% translate "see the ponds below" %}{% else %}{% translate "none recorded" %}{% endif %}</dd></div>
+  <div class="stat" data-tone="{% if s.water_problems %}critical{% else %}good{% endif %}"><dt class="stat-label">{% translate "Water problems" %}</dt><dd class="stat-value">{{ s.water_problems|length }}</dd><dd class="stat-hint">{% if s.water_problems %}{% for p in s.water_problems %}{{ p.name }}{% if not forloop.last %}, {% endif %}{% endfor %}{% else %}{% translate "none found" %}{% endif %}</dd></div>
+  <div class="stat" data-tone="accent"><dt class="stat-label">{% translate "Fish sold" %}</dt><dd class="stat-value">{% if s.show_money %}{{ s.sales_net|bdt }}{% else %}{{ s.sales_kg|num }} kg{% endif %}</dd>
+    <dd class="stat-hint">{% blocktranslate count counter=s.sales_count %}{{ counter }} sale{% plural %}{{ counter }} sales{% endblocktranslate %}{% if s.show_money and s.sales_kg %} · {{ s.sales_kg|num }} kg{% endif %}</dd></div>
+</dl>
+
+{% if s.night %}{% with night=s.night %}
+<div class="callout" data-tone="{{ night.tone }}">{% include "partials/icon.html" with name="cloud" %}<div><p class="callout-title">{% if night.level == "high" %}{% translate "High risk of low oxygen tonight" %}{% elif night.level == "medium" %}{% translate "Some risk of low oxygen tonight" %}{% else %}{% translate "Tonight looks safe for the ponds" %}{% endif %}</p>
+  <p>{{ night.temp }}°C · {% blocktranslate with c=night.cloud %}{{ c }}% cloud{% endblocktranslate %} · {% blocktranslate with w=night.wind %}wind {{ w }} km/h{% endblocktranslate %}{% if night.reasons and night.is_risky %} — {{ night.reasons|join:", " }}{% endif %}</p></div></div>
+{% endwith %}{% endif %}
+
+{% if s.quiet %}
+<div class="callout" data-tone="warn">{% include "partials/icon.html" with name="alert" %}<div><p class="callout-title">{% translate "Nothing was recorded on this day" %}</p><p>{% translate "No feeding, water tests, sales or anything else. If work was done, ask for it to be written down." %}</p></div></div>
+{% endif %}
+
+{% if s.ponds %}
+<section class="card">
+  <div class="card-header"><div><h2 class="card-title">{% translate "Pond by pond" %}</h2><p class="card-subtitle">{% translate "Every pond with fish in it." %}</p></div></div>
+  <ul class="ledger">
+    {% for p in s.ponds %}
+    <li class="ledger-row sum-pond">
+      <span class="ledger-icon" data-tone="{% if p.water or p.deaths %}critical{% elif not p.fed %}warn{% else %}good{% endif %}">{% include "business/partials/icon.html" with name="fish" %}</span>
+      <div class="ledger-main">
+        <p class="ledger-title"><a href="{{ p.url }}" class="hover:underline">{{ p.name }}</a></p>
+        <p class="ledger-meta sum-facts">
+          {% if p.fed %}<span>{% blocktranslate with kg=p.fed_kg|num %}fed {{ kg }} kg{% endblocktranslate %}</span>{% else %}<span class="tone-warn">{% translate "not fed" %}</span>{% endif %}
+          {% if p.deaths %}<span class="tone-critical">{% blocktranslate count counter=p.deaths %}{{ counter }} fish died{% plural %}{{ counter }} fish died{% endblocktranslate %}</span>{% endif %}
+          {% if p.water %}<span class="tone-critical">{{ p.water|join:", " }}</span>{% elif p.oxygen is not None %}<span>{% blocktranslate with o=p.oxygen|num %}oxygen {{ o }} mg/L{% endblocktranslate %}</span>{% endif %}
+          {% if p.weighed_g %}<span>{% blocktranslate with g=p.weighed_g|num %}weighed: {{ g }} g each{% endblocktranslate %}</span>{% endif %}
+          {% for h in p.harvested %}<span>{% blocktranslate %}harvested {{ h }}{% endblocktranslate %}</span>{% endfor %}
+          {% for c in p.care %}<span>{{ c }}</span>{% endfor %}
+        </p>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% if s.show_money %}
+<section class="card">
+  <div class="card-header"><h2 class="card-title">{% translate "Money" %}</h2></div>
+  <div class="card-body"><dl class="doc-totals">
+    <div><dt>{% translate "Fish sold (after deductions)" %}</dt><dd>{{ s.sales_net|bdt }}</dd></div>
+    <div><dt>{% translate "Money received" %}</dt><dd>{{ s.received|bdt }}</dd></div>
+    {% if s.advances %}<div><dt>{% translate "of it, advances (dadon)" %}</dt><dd>{{ s.advances|bdt }}</dd></div>{% endif %}
+    <div><dt>{% translate "Paid to suppliers" %}</dt><dd>{{ s.paid|bdt }}</dd></div>
+    {% if s.feed_bought %}<div><dt>{% translate "Feed bought" %}</dt><dd>{{ s.feed_bought|bdt }}</dd></div>{% endif %}
+    {% if s.costs %}<div><dt>{% translate "Other farm costs" %}</dt><dd>{{ s.costs|bdt }}</dd></div>{% endif %}
+    {% if s.store_short %}<div><dt>{% translate "Feed short at the store count" %}</dt><dd class="tone-critical">{{ s.store_short|bdt }}</dd></div>{% endif %}
+  </dl></div>
+</section>
+{% endif %}
+
+<div class="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
+  <section class="card">
+    <div class="card-header"><div><h2 class="card-title">{% translate "Who recorded" %}</h2><p class="card-subtitle">{% translate "Records added, changed or deleted on this day." %}</p></div></div>
+    {% if s.people %}<ul class="ledger">{% for name, n in s.people %}<li class="ledger-row"><span class="ledger-icon" data-tone="info">{% include "business/partials/icon.html" with name="person" %}</span><div class="ledger-main"><p class="ledger-title">{{ name }}</p></div><div class="ledger-end"><span class="num">{% blocktranslate count counter=n %}{{ counter }} record{% plural %}{{ counter }} records{% endblocktranslate %}</span></div></li>{% endfor %}</ul>
+    <div class="card-body !pt-0"><a href="{% url 'business:activity' %}" class="btn btn-ghost btn-sm">{% translate "See every change" %}{% include "partials/icon.html" with name="arrow-right" %}</a></div>
+    {% else %}<div class="card-body"><p class="help">{% translate "Nobody recorded anything." %}</p></div>{% endif %}
+  </section>
+  {% if s.tasks %}
+  <section class="card">
+    <div class="card-header"><div><h2 class="card-title">{% translate "Still to do" %}</h2><p class="card-subtitle">{% translate "From today on the farm." %}</p></div></div>
+    <ul class="ledger">{% for t in s.tasks %}<li class="ledger-row"><span class="ledger-icon" data-tone="{{ t.tone }}">{% include "partials/icon.html" with name="alert" %}</span><div class="ledger-main"><p class="ledger-title">{{ t.title }}</p><p class="ledger-meta">{{ t.detail }}</p></div><div class="ledger-end"><a href="{{ t.url }}" class="btn btn-soft btn-sm">{{ t.action }}</a></div></li>{% endfor %}</ul>
+  </section>
+  {% endif %}
+</div>

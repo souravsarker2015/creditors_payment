@@ -21,6 +21,7 @@
         <button type="button" class="btn btn-secondary" @click="open = !open" :aria-expanded="open">{% translate "Cycle" %}{% include "partials/icon.html" with name="chevron-down" %}</button>
         <div class="menu" x-show="open" x-cloak x-transition.opacity.scale.95.duration.100ms role="menu">
           {% if biz_can.enter_data %}<a href="{% url 'business:cycle_edit' cycle.pk %}" class="menu-item" role="menuitem">{% include "partials/icon.html" with name="edit" %}{% translate "Edit dates and name" %}</a>{% endif %}
+          {% if biz_can.enter_data %}<a href="{% url 'business:cycle_targets' cycle.pk %}" class="menu-item" role="menuitem">{% include "partials/icon.html" with name="target" %}{% translate "Set targets" %}</a>{% endif %}
           {% if biz_can.enter_data and cycle.is_running %}<button type="button" class="menu-item" role="menuitem" @click="open = false; modal = 'move'">{% include "business/partials/icon.html" with name="swap" %}{% translate "Move fish to another pond" %}</button>{% endif %}
           {% if biz_can.enter_data and cycle.is_running %}<button type="button" class="menu-item" role="menuitem" @click="open = false; modal = 'finish'">{% include "business/partials/icon.html" with name="lock" %}{% translate "Finish this cycle" %}</button>{% endif %}
           {% if biz_can.enter_data and not cycle.is_running %}<form method="post" action="{% url 'business:cycle_finish' cycle.pk %}">{% csrf_token %}<button type="submit" class="menu-item" role="menuitem">{% include "partials/icon.html" with name="restore" %}{% translate "Reopen cycle" %}</button></form>{% endif %}
@@ -91,6 +92,39 @@
       <dd class="stat-hint">{% if s.profit >= 0 %}{% blocktranslate with amount=s.profit|bdt %}{{ amount }} ahead of costs{% endblocktranslate %}{% else %}{% blocktranslate with amount=s.profit|absolute|bdt %}{{ amount }} still to recover{% endblocktranslate %}{% endif %}{% if s.fcr and not cycle.is_running %} · FCR {{ s.fcr }}{% include "business/partials/tip.html" with text=_("FCR (feed conversion ratio): kg of feed eaten for each 1 kg the fish grew (harvest weight minus fingerling weight). Lower is better: less feed for the same fish.") %}{% endif %}</dd>
     </div>
   </dl>
+
+  {% if advances %}
+  <div class="callout" data-tone="info" data-cycle-advances>{% include "partials/icon.html" with name="arrow-down" %}
+    <div class="flex-1 min-w-0"><p class="callout-title">{% translate "Fish promised from this pond" %}</p>
+      <ul class="adv-list">{% for a in advances %}<li><strong>{{ a.party.name }}</strong>{% if biz_can.view_finance %} · {% blocktranslate with left=a.open|bdt %}{{ left }} advance (dadon) to pay back{% endblocktranslate %}{% endif %}{% if a.payment.agreed_rate %} · {% blocktranslate with r=a.payment.agreed_rate|bdt %}{{ r }}/kg agreed{% endblocktranslate %}{% endif %}{% if a.kg_left %} · {% blocktranslate with kg=a.kg_left|num %}≈ {{ kg }} kg{% endblocktranslate %}{% endif %}{% if a.payment.expected_on %} · <span class="{% if a.overdue %}tone-critical{% endif %}">{% blocktranslate with d=a.payment.expected_on|date:"j M" %}by {{ d }}{% endblocktranslate %}</span>{% endif %}
+        {% if biz_can.enter_data and cycle.is_running %}<a href="{% url 'business:sale_add' %}?advance={{ a.payment.pk }}" class="btn btn-soft btn-sm ml-2">{% translate "Sell to them" %}</a>{% endif %}</li>{% endfor %}</ul></div></div>
+  {% endif %}
+
+  {% if targets %}
+  <section class="card" data-targets>
+    <div class="card-header">
+      <div><h2 class="card-title">{% translate "Plan vs now" %}{% include "business/partials/tip.html" with text=_("The targets you set for this cycle, against where it stands. Green is on track, amber is slipping, red is well off.") %}</h2>
+        <p class="card-subtitle">{% translate "How the cycle is going against its targets." %}</p></div>
+      {% if biz_can.enter_data %}<a href="{% url 'business:cycle_targets' cycle.pk %}" class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="edit" %}{% translate "Change" %}</a>{% endif %}
+    </div>
+    <div class="tgt-wrap">
+      <table class="tgt-table">
+        <thead><tr><th>{% translate "Target" %}</th><th class="num">{% translate "Plan" %}</th><th class="num">{% translate "Now" %}</th></tr></thead>
+        <tbody>
+          {% for t in targets %}
+          <tr data-plan-line="{{ t.key }}" data-state="{{ t.tone }}">
+            <td><span class="tgt-dot" data-tone="{{ t.tone }}" aria-hidden="true"></span>{{ t.label }}{% if t.note %}<span class="tgt-note">{{ t.note }}</span>{% endif %}</td>
+            <td class="num">{{ t.target }}</td>
+            <td class="num tgt-now">{{ t.now }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  {% elif cycle.is_running and biz_can.enter_data %}
+  <a href="{% url 'business:cycle_targets' cycle.pk %}" class="callout tgt-invite" data-tone="info">{% include "partials/icon.html" with name="target" %}<div class="flex-1"><p class="callout-title">{% translate "Set targets for this cycle" %}</p><p>{% translate "Selling size, survival, FCR, price and a budget — then see at a glance whether the pond is on track." %}</p></div>{% include "partials/icon.html" with name="chevron-right" %}</a>
+  {% endif %}
 
   {% if p %}
   <section class="card" x-data="{ price: '{% if p.usual_price %}{{ p.usual_price|stringformat:'s' }}{% endif %}', kg: {{ p.fish_kg|default:0|stringformat:'s' }},

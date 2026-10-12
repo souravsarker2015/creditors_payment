@@ -1,0 +1,20 @@
+{% load i18n business %}{% if night %}
+<section class="card weather-card" data-weather="{{ night.level }}">
+  <div class="weather-head">
+    <span class="ledger-icon" data-tone="{{ night.tone }}">{% if night.cloud >= 70 %}{% include "partials/icon.html" with name="cloud" %}{% else %}{% include "partials/icon.html" with name="sun" %}{% endif %}</span>
+    <div class="min-w-0 flex-1">
+      <h2 class="card-title">{% if night.level == "high" %}{% translate "High risk of low oxygen tonight" %}{% elif night.level == "medium" %}{% translate "Some risk of low oxygen tonight" %}{% else %}{% translate "Tonight looks safe for the ponds" %}{% endif %}{% include "business/partials/tip.html" with text=_("Ponds lose oxygen at night. It runs lowest before dawn after a cloudy day, on hot nights, when there's no wind, and after heavy rain. From the weather forecast for your farm's location, with this morning's oxygen tests.") %}</h2>
+      <p class="weather-facts num">{{ night.temp }}°C · {% blocktranslate with c=night.cloud %}{{ c }}% cloud{% endblocktranslate %} · {% blocktranslate with w=night.wind %}wind {{ w }} km/h{% endblocktranslate %}{% if night.rain %} · {% blocktranslate with r=night.rain %}rain {{ r }} mm{% endblocktranslate %}{% endif %}</p>
+    </div>
+    {% if night.is_risky %}<span class="badge" data-tone="{{ night.tone }}">{% if night.level == "high" %}{% translate "High" %}{% else %}{% translate "Medium" %}{% endif %}</span>{% endif %}
+  </div>
+  {% if night.is_risky %}
+  <div class="weather-body">
+    <p><strong>{% translate "Why:" %}</strong> {{ night.reasons|join:", " }}</p>
+    <p>{{ advice }}</p>
+  </div>
+  {% endif %}
+</section>
+{% elif no_location and can_set %}
+<a href="{% url 'business:profile' %}#location" class="callout weather-setup" data-tone="info">{% include "partials/icon.html" with name="cloud" %}<div class="flex-1"><p class="callout-title">{% translate "Get low-oxygen warnings" %}</p><p>{% translate "Add your farm's location and the app warns you on hot, cloudy, still nights when ponds run short of oxygen." %}</p></div>{% include "partials/icon.html" with name="chevron-right" %}</a>
+{% else %}<div hidden></div>{% endif %}
