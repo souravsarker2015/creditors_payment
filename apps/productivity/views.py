@@ -53,6 +53,7 @@ def _urls():
         "help": r("work:help"), "entry_new": r("work:entry_new"), "task_new": r("work:task_new"), "goal_new": r("work:goal_new"),
         "learning_new": r("work:learning_new"), "snippet_new": r("work:snippet_new"), "export": r("work:export"),
         "learningBase": "/work/api/learning/", "goalBase": "/work/api/goals/",
+        "plan": r("work:plan"), "planAction": r("work:api_plan"),
     }
 
 
@@ -70,6 +71,9 @@ def _texts():
         "addTask": _("Add task"), "addNote": _("Save as a note"), "trackThis": _("Start the timer for"),
         "selected": _("Selected"), "changed": _("Updated"), "confirmBulkDelete": _("Delete the selected tasks? You can bring them back from Recently deleted."),
         "pickSome": _("Select some tasks first."),
+        "clearPlan": _("Take every open task off the timeline? They stay on the day's list."), "planned": _("Planned"),
+        "noRoom": _("no room for"), "dayFull": _("No free time left in your work day."), "nothingToPlan": _("Nothing left to plan."), "planTomorrow": _("Plan tomorrow"),
+        "error": _("Couldn't save. Try again."), "later": _("Moved to"),
         "kinds": {"task": _("Task"), "note": _("Note"), "project": _("Project"), "goal": _("Goal"), "learning": _("Learning"),
                   "snippet": _("Snippet")},
     }
@@ -80,6 +84,7 @@ def _commands():
     r = reverse
     go = [
         ("today", _("Today"), "sun", "work:today", "g h", "home my day"),
+        ("plan", _("Plan my day"), "clock", "work:plan", "g d", "time blocking schedule timeline day planner calendar hours"),
         ("tasks", _("Tasks"), "check", "work:tasks", "g t", "todo list"),
         ("board", _("Board"), "board", None, "g b", "kanban"),
         ("calendar", _("Calendar"), "calendar", "work:calendar", "g c", "month due"),
@@ -174,6 +179,7 @@ def today_view(request):
     return render_work(request, "work/today.html", {
         "today": today, "greeting": greeting, "hour_late": hour >= 16,
         "open_tasks": open_tasks, "done_today": done_today, "more_tasks": more, "cap": cap,
+        "next_block": services.next_block(user), "now": timezone.now(),
         "leftovers": services.leftovers(user, today), "waiting": services.waiting_tasks(user)[:6],
         "goals": services.with_progress(Goal.objects.filter(owner=user, status=GoalStatus.ACTIVE)[:3]),
         "reading": LearningItem.objects.filter(owner=user, status=LearningStatus.ACTIVE)[:3],
@@ -245,6 +251,10 @@ def tasks_view(request):
         open_ = list(qs.exclude(status=Status.DONE))
         waiting = [t for t in open_ if t.waiting_for]
         open_ = [t for t in open_ if not t.waiting_for]
+        later = sorted([t for t in open_ if t.my_day and t.my_day > today and t.status != Status.DOING
+                        and not (t.due_date and t.due_date <= t.my_day)], key=lambda t: t.my_day)
+        later_ids = {t.pk for t in later}
+        open_ = [t for t in open_ if t.pk not in later_ids]
         groups = [
             ("doing", _("In progress"), [t for t in open_ if t.status == Status.DOING]),
             ("waiting", _("Waiting on others"), waiting),
@@ -253,6 +263,7 @@ def tasks_view(request):
             ("upcoming", _("Coming up"), sorted([t for t in open_ if t.status != Status.DOING and t.due_date and t.due_date > today], key=lambda t: t.due_date)),
             ("todo", _("To do"), [t for t in open_ if t.status == Status.TODO and not t.due_date and t.my_day != today]),
             ("backlog", _("Backlog"), [t for t in open_ if t.status == Status.BACKLOG and not t.due_date and t.my_day != today]),
+            ("later", _("Later"), later),
         ]
         groups = [(key, label, items) for key, label, items in groups if items and (not one or key == one)]
         shown, page = [], None
@@ -270,7 +281,7 @@ def tasks_view(request):
             base = request.GET.copy()
             base.pop("page", None)
             ctx.update({"base_query_string": base.urlencode(), "pagination_window": _page_window(page)})
-        ctx["open_count"] = len(open_) + len(waiting)
+        ctx["open_count"] = len(open_) + len(waiting) + len(later)
         ctx["done"] = list(qs.filter(status=Status.DONE).order_by("-completed_at")[:50]) if show_done and not one else []
         ctx["done_count"] = qs.filter(status=Status.DONE).count()
         prefetch_related_objects(shown + ctx["done"], *ROW_RELATED)
@@ -298,6 +309,10 @@ def task_view(request, pk=None):
             obj.completed_at = timezone.now()
         elif obj.status != Status.DONE:
             obj.completed_at = None
+        if obj.scheduled_at:              # planned for a day: it's on that day's list too
+            day = timezone.localtime(obj.scheduled_at).date()
+            if obj.my_day != day and obj.due_date != day:
+                obj.my_day = day
         obj.save()
         form.save_tags(obj)
         messages.success(request, _("Task saved."))
@@ -619,14 +634,7 @@ def reports_view(request):
     work_days = sum(1 for i in range(t.days) if s.is_work_day(start + timedelta(days=i)))
     lo, hi = services.day_bounds(start)[0], services.day_bounds(end)[1]
     completed = Task.objects.filter(owner=user, status=Status.DONE, completed_at__gte=lo, completed_at__lt=hi)
-    estimated = []
-    for task in completed.filter(estimate_minutes__isnull=False).prefetch_related("entries")[:30]:
-        spent = services.task_seconds(task)
-        estimated.append({"task": task, "estimate": task.estimate_minutes * 60, "spent": spent,
-                          "ratio": round(100 * spent / (task.estimate_minutes * 60)) if task.estimate_minutes else 0})
-    accuracy = None
-    if estimated:
-        accuracy = round(100 * sum(min(r["estimate"], r["spent"]) / max(r["estimate"], r["spent"], 1) for r in estimated) / len(estimated))
+    est = services.estimate_accuracy(user, start, end)
     hours = t.by_hour
     hpeak = max(hours) or 1
     year = services.daily_seconds(user, today - timedelta(days=364), today)
@@ -638,7 +646,7 @@ def reports_view(request):
         "projects": [{"p": p, "secs": secs, "pct": round(100 * secs / t.seconds) if t.seconds else 0} for p, secs in t.by_project],
         "tags": [{"tag": tg, "secs": secs, "pct": round(100 * secs / t.seconds) if t.seconds else 0} for tg, secs in t.by_tag[:12]],
         "tasks": t.by_task, "completed": completed.count(), "created": Task.objects.filter(owner=user, created_at__gte=lo, created_at__lt=hi).count(),
-        "estimated": estimated, "accuracy": accuracy,
+        "est": est,
         "hours": [{"h": h, "secs": v, "pct": round(100 * v / hpeak)} for h, v in enumerate(hours)],
         "heat": services.heatmap(year, today, s.week_start), "year_total": sum(year.values()),
         "year_days": sum(1 for v in year.values() if v),
@@ -708,7 +716,8 @@ def _restore(request):
     try:
         if zipfile.is_zipfile(upload):
             with zipfile.ZipFile(upload) as z:
-                rows = json.loads(z.read("data.json").decode("utf-8"))
+                names = set(z.namelist())     # this page's download, or "My data & backup"'s
+                rows = json.loads(z.read("data.json" if "data.json" in names else "backup/data.json").decode("utf-8"))
         else:
             upload.seek(0)
             rows = json.loads(upload.read().decode("utf-8"))
@@ -908,6 +917,60 @@ def calendar_view(request):
         "month_secs": sum(v for d, v in secs.items() if d.month == month.month),
         "month_due": sum(len(v) for d, v in due.items() if d.month == month.month),
         "moods": {1: "😞", 2: "😕", 3: "😐", 4: "🙂", 5: "😄"},
+    })
+
+
+# ── Day planner ───────────────────────────────────────────────────────────
+PLAN_PPM = 1.2     # pixels per minute on the timeline (the same in work.js)
+
+
+def _minute(when, day):
+    """Minutes from the start of `day` (local time), clamped to the day."""
+    local = timezone.localtime(when)
+    if local.date() < day:
+        return 0
+    if local.date() > day:
+        return 24 * 60
+    return local.hour * 60 + local.minute
+
+
+def plan_data(user, day):
+    """Everything the planner draws, as plain data (also sent back after "Fill my day")."""
+    blocks, unplanned, entries = services.plan_day(user, day)
+    now = timezone.now()
+
+    def task_dict(t):
+        return {"id": t.pk, "title": t.title, "url": reverse("work:task", args=[t.pk]), "priority": t.priority,
+                "done": t.is_done, "estimate": t.estimate_minutes or 0, "length": t.block_minutes,
+                "project": t.project.name if t.project else "", "color": t.project.color if t.project else "",
+                "waiting": t.waiting_for, "link": t.link}
+
+    return {
+        "date": day.isoformat(),
+        "blocks": [{**task_dict(t), "start": _minute(t.scheduled_at, day)} for t in blocks],
+        "unplanned": [task_dict(t) for t in unplanned],
+        "entries": [{"start": _minute(e.started_at, day), "end": _minute(e.ended_at or now, day), "running": e.is_running,
+                     "title": (e.task.title if e.task else e.description) or (e.project.name if e.project else ""),
+                     "color": e.project.color if e.project else ""} for e in entries],
+    }
+
+
+@work_required
+def plan_view(request):
+    """Time blocking: drag the day's tasks onto its hours."""
+    user, today = request.user, _today()
+    day = _day(request, default=today)
+    s = WorkSettings.for_user(user)
+    data = plan_data(user, day)
+    planned = sum(b["length"] for b in data["blocks"] if not b["done"])
+    window = (s.day_end.hour * 60 + s.day_end.minute) - (s.day_start.hour * 60 + s.day_start.minute)
+    return render_work(request, "work/plan.html", {
+        "day": day, "today": today, "is_today": day == today, "prev": day - timedelta(days=1), "next": day + timedelta(days=1),
+        "plan": data, "planned_minutes": planned, "window_minutes": max(window, 0),
+        "day_start": s.day_start.hour * 60 + s.day_start.minute, "day_end": s.day_end.hour * 60 + s.day_end.minute,
+        "start_label": s.day_start.strftime("%H:%M"), "end_label": s.day_end.strftime("%H:%M"),
+        "grid_px": round(24 * 60 * PLAN_PPM), "work_top": round((s.day_start.hour * 60 + s.day_start.minute) * PLAN_PPM),
+        "work_px": round(max(window, 0) * PLAN_PPM), "work_day": s.is_work_day(day),
     })
 
 

@@ -3,6 +3,17 @@
   <button type="button" class="menu-item" role="menuitem" data-menu="myday">{% icon "sun" %}<span data-label-on="{% translate 'Remove from My Day' %}" data-label-off="{% translate 'Add to My Day' %}"></span></button>
   <button type="button" class="menu-item" role="menuitem" data-menu="today">{% icon "calendar" %}{% translate "Due today" %}</button>
   <button type="button" class="menu-item" role="menuitem" data-menu="tomorrow">{% icon "calendar" %}{% translate "Due tomorrow" %}</button>
+  <button type="button" class="menu-item" role="menuitem" data-menu="later">{% icon "clock" %}{% translate "Do it later…" %}</button>
+  <form class="wt-menu-form wt-later" data-menu-form="later" hidden>
+    <div class="wt-later-quick">
+      <button type="button" class="btn btn-secondary btn-sm" data-later="1">{% translate "Tomorrow" %}</button>
+      <button type="button" class="btn btn-secondary btn-sm" data-later="3">{% translate "In 3 days" %}</button>
+      <button type="button" class="btn btn-secondary btn-sm" data-later="7">{% translate "Next week" %}</button>
+    </div>
+    <input type="date" class="form-input input-compact" aria-label="{% translate 'Do it on' %}" required>
+    <button type="submit" class="btn btn-primary btn-sm">{% translate "Set" %}</button>
+    <p class="help">{% translate "Out of sight until then; it comes back in My Day that morning." %}</p>
+  </form>
   <button type="button" class="menu-item" role="menuitem" data-menu="waiting">{% icon "clock" %}<span data-label-on="{% translate 'No longer waiting' %}" data-label-off="{% translate 'Waiting on someone…' %}"></span></button>
   <form class="wt-menu-form" data-menu-form="waiting" hidden>
     <input class="form-input input-compact" maxlength="120" placeholder="{% translate 'Who or what? (review, Rahim, deploy…)' %}" aria-label="{% translate 'Waiting on' %}">

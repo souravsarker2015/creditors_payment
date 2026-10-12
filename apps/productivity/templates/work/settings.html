@@ -12,6 +12,10 @@
       <div class="card-body form-stack">
         {% with field=form.daily_target_hours %}{% include "partials/field.html" %}{% endwith %}
         <fieldset><legend class="label">{{ form.work_day_list.label }}</legend><div class="w-days">{% for box in form.work_day_list %}<label class="w-day">{{ box.tag }}<span>{{ box.choice_label }}</span></label>{% endfor %}</div></fieldset>
+        <div class="form-grid form-grid-2">
+          {% with field=form.day_start %}{% include "partials/field.html" %}{% endwith %}
+          {% with field=form.day_end %}{% include "partials/field.html" %}{% endwith %}
+        </div>
         {% with field=form.week_start %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.default_project %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.long_timer_hours %}{% include "partials/field.html" %}{% endwith %}

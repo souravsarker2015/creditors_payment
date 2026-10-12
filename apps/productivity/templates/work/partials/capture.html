@@ -14,7 +14,7 @@
         <template x-for="c in chips" :key="c.k + c.v"><span class="wc-chip" :data-k="c.k" x-text="c.v"></span></template>
       </div>
       <label class="wc-check"><input type="checkbox" x-model="myDay"> {% translate "Add to My Day" %}</label>
-      <p class="wc-hint">{% translate "#tag  @project  !high  ~30m  tomorrow / friday / +3d  ·  Enter to add, Shift+Enter to add and start the timer" %}</p>
+      <p class="wc-hint">{% translate "#tag  @project  !high  ~30m  tomorrow / friday / +3d  at 3pm  every monday  ·  Enter to add, Shift+Enter to add and start the timer" %}</p>
     </div>
     <div x-show="mode === 'note'">
       <textarea x-ref="note" x-model="text" class="wc-input wc-area" rows="5" placeholder="{% translate 'Write it down before it slips away… (Markdown works)' %}"

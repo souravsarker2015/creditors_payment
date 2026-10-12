@@ -13,6 +13,7 @@ from apps.core.pwa import manifest_view, offline_view, service_worker_view
 from apps.core.receipts import receipt_view
 from apps.core.search import search_view
 from apps.accounts import views as account_views
+from apps.overview import report as overview_report
 from apps.overview import views as overview_views
 
 urlpatterns = [
@@ -26,6 +27,7 @@ urlpatterns = [
     path("record/<slug:kind>/", overview_views.pick_view, name="pick"),
     path("help/", overview_views.help_view, name="help"),
     path("upcoming/", overview_views.upcoming_view, name="upcoming"),
+    path("report/", overview_report.report_view, name="money_report"),
     path("", include("apps.creditors.urls")),
     path("networth/", include("apps.overview.urls")),
     path("debtors/", include("apps.debtors.urls")),

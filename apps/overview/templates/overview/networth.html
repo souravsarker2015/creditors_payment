@@ -68,7 +68,10 @@
   {% endif %}
 
   <div>
-    <h2 class="section-title">{% blocktranslate with month=today|date:"F Y" %}This month · {{ month }}{% endblocktranslate %}</h2>
+    <div class="flex items-baseline justify-between gap-3">
+      <h2 class="section-title">{% blocktranslate with month=today|date:"F Y" %}This month · {{ month }}{% endblocktranslate %}</h2>
+      <a href="{% url 'money_report' %}" class="backup-link text-sm whitespace-nowrap">{% translate "Full report" %}</a>
+    </div>
     <dl class="stat-grid">
       <div class="stat" data-tone="good">
         <div class="stat-top"><dt class="stat-label inline-flex items-center">{% translate "Money in" %}{% translate "Income plus contributions received this month, compared with the same days of last month." as info_text %}{% include "partials/info.html" with text=info_text %}</dt>{% include "partials/delta.html" with change=in_change good="up" %}</div>

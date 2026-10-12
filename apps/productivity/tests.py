@@ -171,7 +171,7 @@ class TaskTests(TestCase):
         r = self.client.post(reverse("work:api_task_done", args=[t.pk]), {"done": "1"}).json()
         self.assertTrue(r["done"])
         nxt = Task.objects.get(pk=r["next"]["id"])
-        self.assertEqual(nxt.due_date, date(2026, 10, 12))      # skips the weekend
+        self.assertEqual(nxt.due_date, date(2026, 10, 11))      # skips the weekend: Friday → Sunday (the default Sun–Thu work week)
         self.assertEqual(nxt.checklist.count(), 1)
         self.client.post(reverse("work:api_task_done", args=[t.pk]), {"done": "0"})
         t.refresh_from_db()
@@ -655,3 +655,138 @@ class FeedAndRestoreTests(TestCase):
         junk = SimpleUploadedFile("x.zip", io.BytesIO(b"not a zip").getvalue())
         r = self.client.post(reverse("work:settings"), {"action": "restore", "backup": junk}, follow=True)
         self.assertContains(r, "isn&#x27;t a Productivity backup")
+
+
+class DayPlannerTests(TestCase):
+    """Time blocking, snoozing, smarter quick add and estimate accuracy."""
+
+    def setUp(self):
+        self.user = User.objects.create_superuser("dev", "d@example.com", PW)
+        self.client.force_login(self.user)
+        self.today = timezone.localdate()
+        self.tomorrow = self.today + timedelta(days=1)
+
+    def test_planner_page_and_scheduling(self):
+        t = Task.objects.create(owner=self.user, title="Write the migration", estimate_minutes=45, my_day=self.today)
+        r = self.client.get(reverse("work:plan"))
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual([x["id"] for x in r.context["plan"]["unplanned"]], [t.pk])
+        when = f"{self.tomorrow.isoformat()}T10:30"
+        res = self.client.post(reverse("work:api_task_update", args=[t.pk]), {"scheduled_at": when}).json()
+        self.assertEqual(res["scheduled_at"], when)
+        t.refresh_from_db()
+        self.assertEqual(t.my_day, self.tomorrow)                     # planned for a day: on that day's list
+        plan = self.client.get(reverse("work:plan"), {"date": self.tomorrow.isoformat()}).context["plan"]
+        self.assertEqual(plan["blocks"][0]["start"], 10 * 60 + 30)
+        self.assertEqual(plan["blocks"][0]["length"], 45)
+        self.assertEqual(self.client.post(reverse("work:api_task_update", args=[t.pk]), {"scheduled_at": "soon"}).status_code, 400)
+        self.client.post(reverse("work:api_task_update", args=[t.pk]), {"scheduled_at": ""})
+        t.refresh_from_db()
+        self.assertIsNone(t.scheduled_at)
+
+    def test_fill_my_day_packs_tasks_around_fixed_blocks(self):
+        s = WorkSettings.for_user(self.user)
+        s.day_start, s.day_end = datetime.min.time().replace(hour=9), datetime.min.time().replace(hour=12)
+        s.save()
+        fixed = Task.objects.create(owner=self.user, title="Standup", estimate_minutes=30, my_day=self.tomorrow,
+                                    scheduled_at=aware(self.tomorrow.year, self.tomorrow.month, self.tomorrow.day, 9, 30))
+        big = Task.objects.create(owner=self.user, title="Big", estimate_minutes=120, my_day=self.tomorrow, priority=3)
+        small = Task.objects.create(owner=self.user, title="Small", my_day=self.tomorrow)              # 30 minutes when not estimated
+        huge = Task.objects.create(owner=self.user, title="Huge", estimate_minutes=600, my_day=self.tomorrow)
+        waiting = Task.objects.create(owner=self.user, title="Blocked", my_day=self.tomorrow, waiting_for="QA")
+        res = self.client.post(reverse("work:api_plan"), {"action": "fill", "date": self.tomorrow.isoformat()}).json()
+        self.assertEqual(res["placed"], 2)
+        self.assertEqual(res["left"], 1)
+        for t in (big, small, huge, waiting, fixed):
+            t.refresh_from_db()
+        local = lambda t: timezone.localtime(t.scheduled_at).strftime("%H:%M")   # noqa: E731
+        self.assertEqual(local(big), "10:00")            # 9:00–9:30 is too short for 2h, and 9:30 is standup
+        self.assertEqual(local(small), "09:00")
+        self.assertIsNone(huge.scheduled_at)
+        self.assertIsNone(waiting.scheduled_at)
+        self.client.post(reverse("work:api_plan"), {"action": "clear", "date": self.tomorrow.isoformat()})
+        self.assertFalse(Task.objects.filter(owner=self.user, scheduled_at__isnull=False).exists())
+
+    def test_planner_is_private(self):
+        other = User.objects.create_superuser("other", "o@example.com", PW)
+        theirs = Task.objects.create(owner=other, title="Not yours", my_day=self.today)
+        r = self.client.get(reverse("work:plan"))
+        self.assertNotContains(r, "Not yours")
+        self.assertEqual(self.client.post(reverse("work:api_task_update", args=[theirs.pk]), {"scheduled_at": f"{self.today}T10:00"}).status_code, 404)
+
+    def test_snooze_hides_until_the_day(self):
+        t = Task.objects.create(owner=self.user, title="Read the RFC", my_day=self.today)
+        later = self.today + timedelta(days=3)
+        self.client.post(reverse("work:api_task_update", args=[t.pk]), {"my_day": later.isoformat()})
+        open_today, _done = services.today_tasks(self.user, self.today)
+        self.assertNotIn(t, open_today)
+        groups = {key: items for key, _label, items, _n in self.client.get(reverse("work:tasks")).context["groups"]}
+        self.assertIn(t, groups["later"])
+        self.assertNotIn(t, groups.get("todo", []))
+        self.assertIn(t, services.today_tasks(self.user, later)[0])
+
+    def test_snoozing_takes_it_off_the_old_timeline(self):
+        t = Task.objects.create(owner=self.user, title="Plan", my_day=self.today, scheduled_at=timezone.now())
+        self.client.post(reverse("work:api_task_update", args=[t.pk]), {"my_day": self.tomorrow.isoformat()})
+        t.refresh_from_db()
+        self.assertIsNone(t.scheduled_at)
+
+    def test_quick_add_understands_times_repeats_and_snooze(self):
+        p = services.parse_quick("Call client at 3pm tomorrow", self.today)
+        self.assertEqual((p.title, str(p.at), p.due), ("Call client", "15:00:00", self.tomorrow))
+        p = services.parse_quick("Standup every weekday at 10:00 ~15m", self.today)
+        self.assertEqual((p.title, p.repeat, p.estimate, str(p.at)), ("Standup", "weekdays", 15, "10:00:00"))
+        p = services.parse_quick("Fix #482 room 3 at noon", self.today)
+        self.assertEqual(p.title, "Fix #482 room 3 at noon")          # not times: left in the title
+        self.assertIsNone(p.at)
+        p = services.parse_quick("Read paper snooze:+3d", self.today)
+        self.assertEqual(p.later, self.today + timedelta(days=3))
+        r = self.client.post(reverse("work:api_task_add"), {"text": "Review PRs every monday at 9:30am"}).json()
+        t = Task.objects.get(pk=r["id"]) if "id" in r else Task.objects.get(title="Review PRs")
+        self.assertEqual(t.repeat, "weekly")
+        self.assertEqual(t.due_date.weekday(), 0)
+        self.assertEqual(timezone.localtime(t.remind_at).strftime("%H:%M"), "09:30")
+        self.assertEqual(timezone.localtime(t.remind_at).date(), t.due_date)
+
+    def test_every_work_day_follows_my_work_days(self):
+        thursday = date(2026, 10, 15)
+        self.assertEqual(services.next_due(thursday, "weekdays", "60123"), date(2026, 10, 18))   # Sun–Thu week: Thursday → Sunday
+        self.assertEqual(services.next_due(date(2026, 10, 16), "weekdays", "01234"), date(2026, 10, 19))
+
+    def test_estimate_accuracy(self):
+        for title, est, worked in (("A", 60, 90), ("B", 30, 30), ("C", 120, 240)):
+            t = Task.objects.create(owner=self.user, title=title, estimate_minutes=est, status=Status.DONE, completed_at=timezone.now())
+            start = timezone.now() - timedelta(hours=8)
+            TimeEntry.objects.create(owner=self.user, task=t, started_at=start, ended_at=start + timedelta(minutes=worked))
+        est = services.estimate_accuracy(self.user, self.today - timedelta(days=1), self.today)
+        self.assertEqual(est["count"], 3)
+        self.assertAlmostEqual(est["ratio"], 360 / 210)
+        self.assertTrue(est["under"])
+        self.assertEqual(est["misses"][0]["task"].title, "C")
+        self.assertEqual(est["on_target"], 1)
+        r = self.client.get(reverse("work:reports"), {"range": "week"})
+        self.assertContains(r, "×1.7")
+
+    def test_calendar_feed_has_planned_blocks(self):
+        t = Task.objects.create(owner=self.user, title="Deep work on caching", estimate_minutes=90,
+                                scheduled_at=timezone.now() + timedelta(hours=2))
+        self.client.post(reverse("work:settings"), {"action": "feed"})
+        token = WorkSettings.objects.get(owner=self.user).feed_token
+        body = self.client.get(reverse("work:feed", args=[token])).content.decode()
+        self.assertIn(f"UID:block-{t.pk}@fintrack-work", body)
+        self.assertIn("Deep work on caching", body)
+
+    def test_today_shows_the_next_block(self):
+        Task.objects.create(owner=self.user, title="Pair with Rahim", my_day=self.today,
+                            scheduled_at=timezone.now() + timedelta(minutes=5))
+        r = self.client.get(reverse("work:today"))
+        self.assertContains(r, "Pair with Rahim")
+        self.assertIsNotNone(r.context["next_block"])
+
+    def test_work_hours_setting(self):
+        r = self.client.post(reverse("work:settings"), {"action": "settings", "s-week_start": 6, "s-focus_minutes": 25, "s-short_break_minutes": 5,
+                                                         "s-long_break_minutes": 15, "s-long_break_every": 4, "s-sound": "chime", "s-volume": 70,
+                                                         "s-long_timer_hours": 3, "s-idle_minutes": 15, "s-work_day_list": ["0", "1"],
+                                                         "s-daily_target_hours": "6", "s-day_start": "08:30", "s-day_end": "08:00"})
+        self.assertEqual(r.status_code, 200)            # ends before it starts: refused
+        self.assertContains(r, "end after it starts")

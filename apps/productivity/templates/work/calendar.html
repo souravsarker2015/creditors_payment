@@ -40,6 +40,7 @@
       <p class="card-subtitle">{% if d.secs %}{% blocktranslate with t=d.secs|hm %}{{ t }} tracked{% endblocktranslate %}{% else %}{% translate "Nothing tracked" %}{% endif %}{% if d.done %} · {% blocktranslate count counter=d.done %}{{ counter }} task done{% plural %}{{ counter }} tasks done{% endblocktranslate %}{% endif %}</p></div>
       <div class="wp-actions">
         <button type="button" class="btn btn-secondary btn-sm" @click="$dispatch('work:capture', { mode: 'task', text: 'due:{{ d.date|date:'Y-m-d' }} ' })">{% icon "plus" %}{% translate "Task due" %}</button>
+        <a href="{% url 'work:plan' %}?date={{ d.date|date:'Y-m-d' }}" class="btn btn-ghost btn-sm">{% translate "Plan" %}</a>
         <a href="{% url 'work:time' %}?week={{ d.date|date:'Y-m-d' }}" class="btn btn-ghost btn-sm">{% translate "Time" %}</a>
         <a href="{% url 'work:journal' %}?date={{ d.date|date:'Y-m-d' }}" class="btn btn-ghost btn-sm">{% translate "Journal" %}</a>
       </div></header>

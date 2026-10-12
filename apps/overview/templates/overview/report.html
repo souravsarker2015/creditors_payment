@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% translate "Money report" %} · {{ label }} | FinTrack{% endblock %}
+{% block content %}
+<div class="page stack report">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "Money report" %}</h1>
+      <p class="page-subtitle">{% translate "Where your money came from and where it went, for one month or a whole year." %}</p>
+    </div>
+    <div class="page-actions no-print">
+      <a href="{{ csv_url }}" class="btn btn-secondary" download>{% include "partials/icon.html" with name="download" %}{% translate "Excel (CSV)" %}</a>
+      <button type="button" class="btn btn-secondary" onclick="window.print()">{% include "partials/icon.html" with name="printer" %}{% translate "Print / PDF" %}</button>
+    </div>
+  </header>
+
+  <div class="rp-bar no-print">
+    <nav class="seg" aria-label="{% translate 'Report period' %}">
+      <a href="{% if kind == 'year' %}{{ switch_url }}{% else %}{{ this_url }}{% endif %}" class="seg-item {% if kind == 'month' %}is-active{% endif %}"{% if kind == 'month' %} aria-current="page"{% endif %}>{% translate "Month" %}</a>
+      <a href="{% if kind == 'month' %}{{ switch_url }}{% else %}{{ this_url }}{% endif %}" class="seg-item {% if kind == 'year' %}is-active{% endif %}"{% if kind == 'year' %} aria-current="page"{% endif %}>{% translate "Year" %}</a>
+    </nav>
+    <div class="rp-step">
+      <a href="{{ prev_url }}" class="icon-btn" aria-label="{% translate 'Earlier' %}" rel="prev">{% include "partials/icon.html" with name="chevron-left" %}</a>
+      <form method="get" class="rp-pick">
+        {% if kind == "month" %}
+        <input type="month" name="month" value="{{ month_value }}" max="{{ today|date:'Y-m' }}" class="form-input input-compact" aria-label="{% translate 'Month' %}" onchange="this.form.submit()">
+        {% else %}
+        <select name="year" class="form-select input-compact" aria-label="{% translate 'Year' %}" onchange="this.form.submit()">
+          {% for y in years %}<option value="{{ y }}"{% if y == start.year %} selected{% endif %}>{{ y }}</option>{% endfor %}
+        </select>
+        {% endif %}
+        <noscript><button type="submit" class="btn btn-secondary btn-sm">{% translate "Show" %}</button></noscript>
+      </form>
+      {% if next_url %}<a href="{{ next_url }}" class="icon-btn" aria-label="{% translate 'Later' %}" rel="next">{% include "partials/icon.html" with name="chevron-right" %}</a>{% else %}<span class="icon-btn is-disabled" aria-hidden="true">{% include "partials/icon.html" with name="chevron-right" %}</span>{% endif %}
+      {% if not is_current %}<a href="{{ this_url }}" class="btn btn-ghost btn-sm">{% if kind == "month" %}{% translate "This month" %}{% else %}{% translate "This year" %}{% endif %}</a>{% endif %}
+    </div>
+  </div>
+
+  <h2 class="rp-title">{{ label }}{% if partial %} <small>{% blocktranslate with day=today|date:"j M" %}so far, to {{ day }}{% endblocktranslate %}</small>{% endif %}</h2>
+
+  {% if not entries %}
+  <div class="card">
+    <div class="empty">
+      <div class="empty-icon">{% include "partials/icon.html" with name="calendar" %}</div>
+      <h3 class="empty-title">{% if kind == "month" %}{% translate "Nothing was written down for this month." %}{% else %}{% translate "Nothing was written down for this year." %}{% endif %}</h3>
+      <p class="empty-text">{% translate "Record what you earn and spend, and the report fills in by itself." %}</p>
+      <a href="{% url 'expense_create' %}" class="btn btn-primary btn-sm mt-4 no-print">{% include "partials/icon.html" with name="plus" %}{% translate "New Expense" %}</a>
+    </div>
+  </div>
+  {% else %}
+
+  <dl class="stat-grid">
+    <div class="stat" data-tone="good">
+      <div class="stat-top"><dt class="stat-label">{% translate "Money in" %}</dt>{% include "partials/delta.html" with change=in_change good="up" %}</div>
+      <dd class="stat-value">{{ in_total|money }}</dd>
+      <dd class="stat-hint">{% translate "Income + contributions" %}</dd>
+    </div>
+    <div class="stat" data-tone="critical">
+      <div class="stat-top"><dt class="stat-label">{% translate "Money out" %}</dt>{% include "partials/delta.html" with change=out_change good="down" %}</div>
+      <dd class="stat-value">{{ out_total|money }}</dd>
+      <dd class="stat-hint">{% blocktranslate with amount=daily_out|money %}{{ amount }} a day on average{% endblocktranslate %}</dd>
+    </div>
+    <div class="stat" data-tone="{% if net >= 0 %}good{% else %}critical{% endif %}">
+      <dt class="stat-label">{% if net >= 0 %}{% translate "Saved" %}{% else %}{% translate "Overspent" %}{% endif %}</dt>
+      <dd class="stat-value">{{ net|signed_money }}</dd>
+      <dd class="stat-hint">{% if savings_rate is not None %}{% blocktranslate with rate=savings_rate %}{{ rate }}% of what came in{% endblocktranslate %}{% else %}{% translate "No money came in" %}{% endif %}</dd>
+    </div>
+    <div class="stat" data-tone="muted">
+      <dt class="stat-label">{% if kind == "month" %}{% translate "Last month" %}{% else %}{% translate "Last year" %}{% endif %}{% if partial %} · {% translate "same days" %}{% endif %}</dt>
+      <dd class="stat-value rp-small">{{ prev_in|money }} <span>/</span> {{ prev_out|money }}</dd>
+      <dd class="stat-hint">{% translate "in / out" %}</dd>
+    </div>
+  </dl>
+
+  <div class="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
+    <section class="card">
+      <div class="card-header"><div>
+        <h2 class="card-title">{% translate "Where it went" %}</h2>
+        <p class="card-subtitle">{% translate "Expenses by category, and bazar you paid for. Tap one to see each entry." %}</p>
+      </div></div>
+      <div class="card-body">{% if out_rank %}{% include "partials/ranked_list.html" with rows=out_rank %}{% else %}<p class="help">{% translate "No spending." %}</p>{% endif %}</div>
+    </section>
+    <section class="card">
+      <div class="card-header"><div>
+        <h2 class="card-title">{% translate "Where it came from" %}</h2>
+        <p class="card-subtitle">{% translate "Income sources and contributions." %}</p>
+      </div></div>
+      <div class="card-body">{% if in_rank %}{% include "partials/ranked_list.html" with rows=in_rank %}{% else %}<p class="help">{% translate "Nothing came in." %}</p>{% endif %}</div>
+    </section>
+  </div>
+
+  {% if months %}
+  <section class="card">
+    <div class="card-header"><div>
+      <h2 class="card-title">{% translate "Month by month" %}</h2>
+      <p class="card-subtitle">{% translate "Tap a month for its own report." %}</p>
+    </div></div>
+    <div class="rp-months">
+      <div class="rp-mrow rp-mhead" aria-hidden="true"><span>{% translate "Month" %}</span><span>{% translate "In" %}</span><span>{% translate "Out" %}</span><span>{% translate "Saved" %}</span></div>
+      {% for m in months %}
+      {% if m.future %}
+      <div class="rp-mrow is-future"><span class="rp-mname">{{ m.start|date:"F" }}</span><span>—</span><span>—</span><span>—</span></div>
+      {% else %}
+      <a href="{{ m.url }}" class="rp-mrow">
+        <span class="rp-mname">{{ m.start|date:"F" }}
+          <span class="rp-bars" aria-hidden="true"><i class="is-in" style="width: {{ m.in_bar }}%"></i><i class="is-out" style="width: {{ m.out_bar }}%"></i></span>
+        </span>
+        <span class="num">{{ m.in|money }}</span>
+        <span class="num">{{ m.out|money }}</span>
+        <span class="num" data-tone="{% if m.net >= 0 %}good{% else %}critical{% endif %}">{{ m.net|signed_money }}</span>
+      </a>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <div class="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
+    {% if biggest %}
+    <section class="card">
+      <div class="card-header"><div>
+        <h2 class="card-title">{% translate "Biggest spends" %}</h2>
+        <p class="card-subtitle">{% translate "The largest single entries." %}</p>
+      </div></div>
+      <ul class="ledger">
+        {% for b in biggest %}
+        <li><a href="{{ b.url }}" class="ledger-row">
+          <div class="ledger-main">
+            <p class="ledger-title">{{ b.label }}</p>
+            <p class="ledger-meta">{{ b.date|date:"j M Y" }}{% if b.note %} · {{ b.note|truncatechars:60 }}{% endif %}</p>
+          </div>
+          <div class="ledger-end"><span class="num font-semibold">{{ b.amount|money }}</span></div>
+        </a></li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+    {% if has_loans or saved_goals %}
+    <section class="card">
+      <div class="card-header"><div>
+        <h2 class="card-title">{% translate "Loans and savings" %}</h2>
+        <p class="card-subtitle">{% translate "Money borrowed and lent in this period. Not counted as income or spending." %}</p>
+      </div></div>
+      <dl class="rp-kv card-body">
+        {% if loans.borrowed %}<div><dt>{% translate "Borrowed" %}</dt><dd>{{ loans.borrowed|money }}</dd></div>{% endif %}
+        {% if loans.repaid %}<div><dt>{% translate "Paid back to lenders" %}</dt><dd>{{ loans.repaid|money }}</dd></div>{% endif %}
+        {% if loans.lent %}<div><dt>{% translate "Lent to others" %}</dt><dd>{{ loans.lent|money }}</dd></div>{% endif %}
+        {% if loans.got_back %}<div><dt>{% translate "Got back from others" %}</dt><dd>{{ loans.got_back|money }}</dd></div>{% endif %}
+        {% if saved_goals %}<div><dt>{% translate "Put into savings goals" %}</dt><dd>{{ saved_goals|signed_money }}</dd></div>{% endif %}
+      </dl>
+    </section>
+    {% endif %}
+  </div>
+  {% endif %}
+  <p class="help rp-foot">{% blocktranslate with when=today|date:"j M Y" %}Made on {{ when }} by FinTrack.{% endblocktranslate %}</p>
+</div>
+{% endblock %}

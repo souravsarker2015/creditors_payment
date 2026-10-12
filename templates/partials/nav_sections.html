@@ -15,6 +15,10 @@ The menu sections: the sidebar shows them as a list, and the app view's
         {% include "partials/icon.html" with name="calendar" %}
         {% translate "Upcoming money" %}
     </a>
+    <a href="{% url 'money_report' %}" class="nav-link {% if p == '/report/' %}is-active{% endif %}" {% if p == '/report/' %}aria-current="page"{% endif %}>
+        {% include "partials/icon.html" with name="note" %}
+        {% translate "Money report" %}
+    </a>
     <a href="{% url 'zakat' %}" class="nav-link {% if '/zakat/' in p %}is-active{% endif %}" {% if '/zakat/' in p %}aria-current="page"{% endif %}>
         {% include "business/partials/icon.html" with name="percent" %}
         {% translate "Zakat helper" %}
@@ -27,9 +31,9 @@ The menu sections: the sidebar shows them as a list, and the app view's
         {% include "partials/icon.html" with name="cloud" %}
         {% translate "Use without internet" %}
     </a>
-    <a href="{% url 'my_data' %}" class="nav-link" download data-tip="{% translate 'All your records as Excel-ready files, to keep a copy.' %}">
+    <a href="{% url 'my_data_page' %}" class="nav-link {% if '/core/my-data/' in p %}is-active{% endif %}" data-tip="{% translate 'Download a copy of all your records, or restore one.' %}">
         {% include "partials/icon.html" with name="download" %}
-        {% translate "Download my data" %}
+        {% translate "My data & backup" %}
     </a>
 </div>
 

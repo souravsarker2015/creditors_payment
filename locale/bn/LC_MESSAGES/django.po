@@ -16691,3 +16691,444 @@ msgstr "দিন শেষ। ভালো করে বিশ্রাম ন�
 
 msgid "Everything is written down — tomorrow starts with your plan."
 msgstr "সব লেখা আছে — আগামীকাল শুরু হবে আপনার পরিকল্পনা দিয়ে।"
+
+#, python-format
+msgid "Too many wrong passwords. Signing in to this account is paused for %(minutes)s minutes — or reset your password now."
+msgstr "অনেকবার ভুল পাসওয়ার্ড দেওয়া হয়েছে। এই অ্যাকাউন্টে সাইন ইন %(minutes)s মিনিটের জন্য বন্ধ — অথবা এখনই পাসওয়ার্ড রিসেট করুন।"
+
+msgid "Someone is trying to sign in to your FinTrack account"
+msgstr "কেউ আপনার FinTrack অ্যাকাউন্টে সাইন ইন করার চেষ্টা করছে"
+
+#, python-format
+msgid "There were %(count)s wrong passwords for your account by %(when)s, so signing in is paused for %(minutes)s minutes. If this wasn't you, nothing is needed — but a stronger password (and two-step sign-in) keeps guessers out."
+msgstr "%(when)s পর্যন্ত আপনার অ্যাকাউন্টে %(count)sবার ভুল পাসওয়ার্ড দেওয়া হয়েছে, তাই সাইন ইন %(minutes)s মিনিটের জন্য বন্ধ রাখা হয়েছে। এটা আপনি না হলে কিছু করতে হবে না — তবে আরও শক্ত পাসওয়ার্ড (আর দুই-ধাপের সাইন-ইন) অনুমানকারীদের দূরে রাখে।"
+
+msgid "Work tracker"
+msgstr "কাজের ট্র্যাকার"
+
+msgid "Choose your backup file first."
+msgstr "আগে আপনার ব্যাকআপ ফাইলটি বেছে নিন।"
+
+msgid "Choose your backup file to restore."
+msgstr "রিস্টোর করতে আপনার ব্যাকআপ ফাইলটি বেছে নিন।"
+
+msgid "Tick the box to say your current records may be replaced."
+msgstr "আপনার এখনকার রেকর্ড বদলে যেতে পারে — এটা মেনে নিতে বক্সে টিক দিন।"
+
+#, python-format
+msgid "Restored %(total)s records from your backup."
+msgstr "আপনার ব্যাকআপ থেকে %(total)sটি রেকর্ড রিস্টোর হয়েছে।"
+
+#, python-format
+msgid "Your records from before were saved as “%(name)s”. To undo, restore that copy below."
+msgstr "আগের রেকর্ডগুলো “%(name)s” নামে রাখা হয়েছে। ফিরিয়ে নিতে নিচ থেকে সেই কপিটি রিস্টোর করুন।"
+
+msgid "Money report"
+msgstr "টাকার রিপোর্ট"
+
+msgid "My data & backup"
+msgstr "আমার তথ্য ও ব্যাকআপ"
+
+msgid "Full report"
+msgstr "পুরো রিপোর্ট"
+
+msgid "No backup has been saved on this server yet. Save one now, and set up automatic backups (below) so there's always a recent one."
+msgstr "এই সার্ভারে এখনো কোনো ব্যাকআপ রাখা হয়নি। এখনই একটি রাখুন, আর স্বয়ংক্রিয় ব্যাকআপ চালু করুন (নিচে), যাতে সবসময় একটি নতুন ব্যাকআপ থাকে।"
+
+#, python-format
+msgid "The newest backup on this server is %(days)s day old."
+msgid_plural "The newest backup on this server is %(days)s days old."
+msgstr[0] "এই সার্ভারের সবচেয়ে নতুন ব্যাকআপটি %(days)s দিন পুরোনো।"
+msgstr[1] "এই সার্ভারের সবচেয়ে নতুন ব্যাকআপটি %(days)s দিন পুরোনো।"
+
+msgid "Save a fresh one, or set up automatic backups (below)."
+msgstr "একটি নতুন ব্যাকআপ রাখুন, অথবা স্বয়ংক্রিয় ব্যাকআপ চালু করুন (নিচে)।"
+
+#, python-format
+msgid "Newest backup on this server: %(when)s."
+msgstr "এই সার্ভারের সবচেয়ে নতুন ব্যাকআপ: %(when)s।"
+
+msgid "Automatic backups"
+msgstr "স্বয়ংক্রিয় ব্যাকআপ"
+
+msgid "Have the server save a backup by itself every day and keep the last two weeks."
+msgstr "সার্ভার নিজেই প্রতিদিন একটি ব্যাকআপ রাখবে, আর শেষ দুই সপ্তাহেরগুলো রেখে দেবে।"
+
+msgid "Add a daily scheduled task (on PythonAnywhere: the “Tasks” tab; on your own server: cron) that runs, in the project folder:"
+msgstr "একটি দৈনিক নির্ধারিত কাজ যোগ করুন (PythonAnywhere-এ: “Tasks” ট্যাব; নিজের সার্ভারে: cron), যা প্রজেক্ট ফোল্ডারে চালাবে:"
+
+msgid "Each run saves a new backup here and deletes the ones older than the newest 14. Copies saved before a restore are never deleted by it. Download one now and then to keep somewhere other than this server."
+msgstr "প্রতিবার চালালে এখানে একটি নতুন ব্যাকআপ রাখা হয় আর সবচেয়ে নতুন ১৪টির চেয়ে পুরোনোগুলো মুছে যায়। রিস্টোরের আগে রাখা কপি এটি কখনো মোছে না। মাঝে মাঝে একটি ডাউনলোড করে এই সার্ভারের বাইরে কোথাও রাখুন।"
+
+msgid "Download a copy of all your records, or restore one."
+msgstr "আপনার সব রেকর্ডের একটি কপি ডাউনলোড করুন, বা আগের কপি রিস্টোর করুন।"
+
+msgid "This isn't a FinTrack “My data” file. Choose the .zip you downloaded from “My data & backup”."
+msgstr "এটি FinTrack-এর “আমার তথ্য” ফাইল নয়। “আমার তথ্য ও ব্যাকআপ” থেকে ডাউনলোড করা .zip ফাইলটি বেছে নিন।"
+
+msgid "This is a backup of the whole system. Only a site admin can restore it, on the “Backup & restore” page."
+msgstr "এটি পুরো সিস্টেমের ব্যাকআপ। শুধু সাইট অ্যাডমিন “ব্যাকআপ ও রিস্টোর” পাতায় এটি রিস্টোর করতে পারেন।"
+
+msgid "This is a download from the work tracker. Restore it in Work → Settings → Your data."
+msgstr "এটি কাজের ট্র্যাকারের ডাউনলোড। কাজ → সেটিংস → আপনার তথ্য থেকে এটি রিস্টোর করুন।"
+
+msgid "This download was made before backups could be restored, so it only has Excel sheets. Download “My data” again to get a file you can restore."
+msgstr "এই ডাউনলোডটি রিস্টোর সুবিধা আসার আগের, তাই এতে শুধু এক্সেল শিট আছে। রিস্টোর করা যায় এমন ফাইল পেতে আবার “আমার তথ্য” ডাউনলোড করুন।"
+
+msgid "The restore was stopped: the records loaded don't match the backup. Nothing was changed."
+msgstr "রিস্টোর থামানো হয়েছে: লোড হওয়া রেকর্ড ব্যাকআপের সাথে মেলেনি। কিছুই বদলায়নি।"
+
+#, python-format
+msgid "The backup's records don't fit together (%(model)s). Nothing was changed."
+msgstr "ব্যাকআপের রেকর্ডগুলো একে অপরের সাথে মিলছে না (%(model)s)। কিছুই বদলায়নি।"
+
+msgid "Where it went"
+msgstr "কোথায় গেছে"
+
+msgid "Bazar (household)"
+msgstr "বাজার (সংসার)"
+
+msgid "Where your money came from and where it went, for one month or a whole year."
+msgstr "এক মাস বা পুরো বছরে আপনার টাকা কোথা থেকে এসেছে আর কোথায় গেছে।"
+
+msgid "Print / PDF"
+msgstr "প্রিন্ট / PDF"
+
+msgid "Report period"
+msgstr "রিপোর্টের সময়কাল"
+
+msgid "Earlier"
+msgstr "আগের"
+
+msgid "Later"
+msgstr "পরের"
+
+#, python-format
+msgid "so far, to %(day)s"
+msgstr "এখন পর্যন্ত, %(day)s পর্যন্ত"
+
+msgid "Nothing was written down for this month."
+msgstr "এই মাসে কিছু লেখা হয়নি।"
+
+msgid "Nothing was written down for this year."
+msgstr "এই বছরে কিছু লেখা হয়নি।"
+
+msgid "Record what you earn and spend, and the report fills in by itself."
+msgstr "আয় আর খরচ লিখে রাখুন, রিপোর্ট নিজেই তৈরি হবে।"
+
+msgid "No money came in"
+msgstr "কোনো টাকা আসেনি"
+
+msgid "same days"
+msgstr "একই দিনগুলো"
+
+msgid "in / out"
+msgstr "আয় / খরচ"
+
+msgid "Expenses by category, and bazar you paid for. Tap one to see each entry."
+msgstr "খাত অনুযায়ী খরচ, আর আপনার দেওয়া বাজার। প্রতিটি এন্ট্রি দেখতে একটিতে চাপুন।"
+
+msgid "No spending."
+msgstr "কোনো খরচ নেই।"
+
+msgid "Income sources and contributions."
+msgstr "আয়ের উৎস আর অবদান।"
+
+msgid "Tap a month for its own report."
+msgstr "কোনো মাসের আলাদা রিপোর্ট দেখতে সেটিতে চাপুন।"
+
+msgid "Biggest spends"
+msgstr "সবচেয়ে বড় খরচ"
+
+msgid "The largest single entries."
+msgstr "একক হিসেবে সবচেয়ে বড় এন্ট্রিগুলো।"
+
+msgid "Loans and savings"
+msgstr "ধার ও সঞ্চয়"
+
+msgid "Money borrowed and lent in this period. Not counted as income or spending."
+msgstr "এই সময়ে নেওয়া ও দেওয়া ধার। আয় বা খরচ হিসেবে ধরা হয়নি।"
+
+msgid "Paid back to lenders"
+msgstr "পাওনাদারদের ফেরত দেওয়া"
+
+msgid "Lent to others"
+msgstr "অন্যদের ধার দেওয়া"
+
+msgid "Got back from others"
+msgstr "অন্যদের কাছ থেকে ফেরত পাওয়া"
+
+msgid "Put into savings goals"
+msgstr "সঞ্চয়ের লক্ষ্যে রাখা"
+
+#, python-format
+msgid "Made on %(when)s by FinTrack."
+msgstr "FinTrack দিয়ে %(when)s তারিখে তৈরি।"
+
+msgid "Keep a copy of everything you've recorded, and bring it back whenever you need it — on this server or another one. Only your own records are in it."
+msgstr "আপনার লেখা সবকিছুর একটি কপি রাখুন, আর দরকার হলে ফিরিয়ে আনুন — এই সার্ভারে বা অন্য কোথাও। এতে শুধু আপনার নিজের রেকর্ড থাকে।"
+
+msgid "Your records"
+msgstr "আপনার রেকর্ড"
+
+msgid "A backup file is waiting to be restored."
+msgstr "একটি ব্যাকআপ ফাইল রিস্টোরের অপেক্ষায় আছে।"
+
+msgid "One .zip file. Keep it somewhere safe — your computer, Google Drive, a USB stick."
+msgstr "একটি .zip ফাইল। নিরাপদ কোথাও রাখুন — আপনার কম্পিউটার, Google Drive, বা USB স্টিকে।"
+
+msgid "Everything you keep here: lenders and borrowers, income and expenses, bazar, shops, wallets, budgets, savings goals, the work tracker, your settings and receipt photos."
+msgstr "এখানে রাখা সবকিছু: পাওনাদার ও দেনাদার, আয় ও খরচ, বাজার, দোকান, ওয়ালেট, বাজেট, সঞ্চয়ের লক্ষ্য, কাজের ট্র্যাকার, আপনার সেটিংস আর রসিদের ছবি।"
+
+msgid "Excel-ready sheets to read or print, plus a copy you can restore here later."
+msgstr "পড়া বা প্রিন্টের জন্য এক্সেল শিট, আর পরে এখানে রিস্টোর করার মতো একটি কপি।"
+
+msgid "Sealed: a file that was damaged or changed is refused when you restore it."
+msgstr "সিল করা: নষ্ট বা বদলানো ফাইল রিস্টোরের সময় গ্রহণ করা হয় না।"
+
+msgid "Your password and two-step sign-in are never in the file. Farm records have their own download under Farm setup."
+msgstr "আপনার পাসওয়ার্ড আর দুই-ধাপের সাইন-ইন কখনো ফাইলে থাকে না। খামারের রেকর্ডের আলাদা ডাউনলোড আছে খামার সেটআপে।"
+
+msgid "Restore from my backup"
+msgstr "আমার ব্যাকআপ থেকে রিস্টোর"
+
+msgid "Restoring replaces your records with the backup's — nothing is added twice. Your records from now are saved first, so you can undo it."
+msgstr "রিস্টোর করলে আপনার রেকর্ডের জায়গায় ব্যাকআপের রেকর্ড বসে — কিছুই দুবার যোগ হয় না। এখনকার রেকর্ড আগে রেখে দেওয়া হয়, তাই ফিরিয়ে নেওয়া যায়।"
+
+msgid "Choose your backup file (.zip)"
+msgstr "আপনার ব্যাকআপ ফাইল বেছে নিন (.zip)"
+
+msgid "The file from “Download my data” — from this server or another one"
+msgstr "“আমার তথ্য ডাউনলোড” থেকে পাওয়া ফাইল — এই সার্ভারের বা অন্য কোনোটির"
+
+msgid "Saved before a restore"
+msgstr "রিস্টোরের আগে রাখা কপি"
+
+msgid "Your records as they were just before each restore — the last three are kept. Restore one to undo."
+msgstr "প্রতিটি রিস্টোরের ঠিক আগে আপনার রেকর্ড যেমন ছিল — শেষ তিনটি রাখা হয়। ফিরিয়ে নিতে একটি রিস্টোর করুন।"
+
+msgid "Moving to another FinTrack"
+msgstr "অন্য FinTrack-এ সরানো"
+
+msgid "A new server, or a new account: your records come across with every link between them."
+msgstr "নতুন সার্ভার বা নতুন অ্যাকাউন্ট: আপনার রেকর্ড তাদের সব সংযোগসহ চলে আসে।"
+
+msgid "Here"
+msgstr "এখানে"
+
+msgid "Press “Download my data”."
+msgstr "“আমার তথ্য ডাউনলোড” চাপুন।"
+
+msgid "There"
+msgstr "সেখানে"
+
+msgid "Sign in (or sign up), open “My data & backup” and choose the file."
+msgstr "সাইন ইন (বা সাইন আপ) করুন, “আমার তথ্য ও ব্যাকআপ” খুলে ফাইলটি বেছে নিন।"
+
+msgid "Check and restore"
+msgstr "যাচাই ও রিস্টোর"
+
+msgid "See what's in it, then restore. Your receipt photos come too."
+msgstr "এতে কী আছে দেখুন, তারপর রিস্টোর করুন। রসিদের ছবিও চলে আসে।"
+
+msgid "Moving everyone's data, with all accounts and the farm?"
+msgstr "সব অ্যাকাউন্ট আর খামারসহ সবার তথ্য সরাতে চান?"
+
+msgid "Use the whole-system Backup & restore"
+msgstr "পুরো সিস্টেমের ব্যাকআপ ও রিস্টোর ব্যবহার করুন"
+
+msgid "What you have now"
+msgstr "এখন আপনার যা আছে"
+
+msgid "The file is complete and undamaged. Here is what's in it, next to what you have now."
+msgstr "ফাইলটি সম্পূর্ণ ও অক্ষত। এতে কী আছে, আর এখন আপনার কী আছে — পাশাপাশি দেখুন।"
+
+msgid "Receipt photos"
+msgstr "রসিদের ছবি"
+
+#, python-format
+msgid "This backup was made by the account “%(them)s”. Restoring it puts its records in your account (%(me)s)."
+msgstr "এই ব্যাকআপটি “%(them)s” অ্যাকাউন্টের তৈরি। রিস্টোর করলে এর রেকর্ড আপনার অ্যাকাউন্টে (%(me)s) আসবে।"
+
+#, python-format
+msgid "You have %(total_now)s records now. After restoring you will have exactly the backup's %(total_backup)s."
+msgstr "এখন আপনার %(total_now)sটি রেকর্ড আছে। রিস্টোরের পর ঠিক ব্যাকআপের %(total_backup)sটি থাকবে।"
+
+msgid "Replace my records with this backup"
+msgstr "আমার রেকর্ডের জায়গায় এই ব্যাকআপ বসান"
+
+msgid "Only your own records change. Nobody else's data is touched, and you stay signed in."
+msgstr "শুধু আপনার নিজের রেকর্ড বদলায়। অন্য কারো তথ্যে হাত দেওয়া হয় না, আর আপনি সাইন ইন থাকবেন।"
+
+msgid "I understand: my current records are replaced by the backup's. They are saved first, so I can undo this."
+msgstr "আমি বুঝেছি: আমার এখনকার রেকর্ডের জায়গায় ব্যাকআপের রেকর্ড বসবে। এগুলো আগে রেখে দেওয়া হয়, তাই ফিরিয়ে নেওয়া যাবে।"
+
+msgid "A large backup can take a minute. Keep this page open until it's done."
+msgstr "বড় ব্যাকআপে এক মিনিট লাগতে পারে। শেষ না হওয়া পর্যন্ত এই পাতা খোলা রাখুন।"
+
+#, python-format
+msgid "Your records from before were saved. To undo, restore the copy from %(when)s below."
+msgstr "আগের রেকর্ডগুলো রেখে দেওয়া হয়েছে। ফিরিয়ে নিতে নিচ থেকে %(when)s-এর কপিটি রিস্টোর করুন।"
+
+msgid "A block on your day planner, as long as the estimate (else 30 minutes)."
+msgstr "দিনের পরিকল্পনায় একটি সময়-ব্লক, আনুমানিক সময়ের সমান লম্বা (না থাকলে ৩০ মিনিট)।"
+
+msgid "The day has to end after it starts."
+msgstr "দিন শুরু হওয়ার পরেই শেষ হতে হবে।"
+
+msgid "Planned for"
+msgstr "পরিকল্পিত সময়"
+
+msgid "Work day starts"
+msgstr "কাজের দিন শুরু"
+
+msgid "Work day ends"
+msgstr "কাজের দিন শেষ"
+
+msgid "The day planner opens here, and “Fill my day” plans from here."
+msgstr "দিনের পরিকল্পনা এখান থেকে খোলে, আর “আমার দিন সাজান” এখান থেকে সাজায়।"
+
+msgid "A reminder at that time (on the due day, else today)."
+msgstr "ওই সময়ে রিমাইন্ডার (নির্ধারিত দিনে, না থাকলে আজ)।"
+
+msgid "Repeats. “Every weekday” follows your work days."
+msgstr "পুনরাবৃত্তি। “প্রতি কর্মদিবস” আপনার কাজের দিন মেনে চলে।"
+
+msgid "Out of sight until that day; then it's in My Day."
+msgstr "সেই দিন পর্যন্ত চোখের আড়ালে; তারপর আমার দিন-এ চলে আসে।"
+
+msgid "#tag  @project  !high  ~30m  tomorrow / friday / +3d  at 3pm  every monday  ·  Enter to add, Shift+Enter to add and start the timer"
+msgstr "#ট্যাগ  @প্রজেক্ট  !high  ~30m  tomorrow / friday / +3d  at 3pm  every monday  ·  যোগ করতে Enter, যোগ করে টাইমার চালু করতে Shift+Enter"
+
+msgid "Plan my day"
+msgstr "আমার দিনের পরিকল্পনা"
+
+msgid "Do it later…"
+msgstr "পরে করব…"
+
+msgid "Do it on"
+msgstr "যেদিন করব"
+
+msgid "Out of sight until then; it comes back in My Day that morning."
+msgstr "ততদিন চোখের আড়ালে থাকবে; সেদিন সকালে আমার দিন-এ ফিরে আসবে।"
+
+msgid "Out of sight until then"
+msgstr "ততদিন চোখের আড়ালে"
+
+#, python-format
+msgid "From %(counter)s finished task with an estimate and tracked time."
+msgid_plural "From %(counter)s finished tasks with an estimate and tracked time."
+msgstr[0] "আনুমানিক সময় ও ট্র্যাক করা সময়সহ %(counter)sটি শেষ করা টাস্ক থেকে।"
+msgstr[1] "আনুমানিক সময় ও ট্র্যাক করা সময়সহ %(counter)sটি শেষ করা টাস্ক থেকে।"
+
+#, python-format
+msgid "Work takes you %(pct)s%% longer than you estimate. Multiply your next estimates by this number."
+msgstr "আপনার কাজে অনুমানের চেয়ে %(pct)s%% বেশি সময় লাগে। পরের অনুমানগুলো এই সংখ্যা দিয়ে গুণ করুন।"
+
+#, python-format
+msgid "You finish %(pct)s%% faster than you estimate — you can plan more into a day."
+msgstr "অনুমানের চেয়ে %(pct)s%% দ্রুত শেষ করেন — দিনে আরও বেশি কাজ রাখতে পারেন।"
+
+msgid "Your estimates are spot on overall."
+msgstr "সব মিলিয়ে আপনার অনুমান একদম ঠিক।"
+
+#, python-format
+msgid "%(n)s within ±20–25%% (%(pct)s%%) · "
+msgstr "±২০–২৫%%-এর মধ্যে %(n)sটি (%(pct)s%%) · "
+
+msgid "Biggest misses"
+msgstr "সবচেয়ে বড় গরমিল"
+
+msgid "On your plan now"
+msgstr "এখন পরিকল্পনায় আছে"
+
+msgid "Next on your plan"
+msgstr "পরিকল্পনায় পরের কাজ"
+
+msgid "Add to My Day… (try #tag !high ~30m at 3pm)"
+msgstr "আমার দিনে যোগ করুন… (যেমন #tag !high ~30m at 3pm)"
+
+msgid "Take every open task off the timeline? They stay on the day's list."
+msgstr "সব খোলা টাস্ক সময়রেখা থেকে সরাবেন? সেগুলো দিনের তালিকায় থেকে যাবে।"
+
+msgid "no room for"
+msgstr "জায়গা হয়নি"
+
+msgid "No free time left in your work day."
+msgstr "আপনার কাজের দিনে আর ফাঁকা সময় নেই।"
+
+msgid "Nothing left to plan."
+msgstr "পরিকল্পনার মতো আর কিছু নেই।"
+
+msgid "Couldn't save. Try again."
+msgstr "সেভ করা যায়নি। আবার চেষ্টা করুন।"
+
+msgid "Moved to"
+msgstr "সরানো হলো"
+
+msgid "a day off"
+msgstr "ছুটির দিন"
+
+msgid "planned"
+msgstr "পরিকল্পিত"
+
+#, python-format
+msgid "your day is %(start)s–%(end)s"
+msgstr "আপনার দিন %(start)s–%(end)s"
+
+msgid "more than fits"
+msgstr "যতটা ধরে তার চেয়ে বেশি"
+
+msgid "tracked"
+msgstr "ট্র্যাক করা"
+
+msgid "To plan"
+msgstr "পরিকল্পনা বাকি"
+
+msgid "Drag a task onto a time. Drag a block's bottom edge to change how long it takes."
+msgstr "টাস্ক টেনে কোনো সময়ে রাখুন। কতক্ষণ লাগবে বদলাতে ব্লকের নিচের কিনারা টানুন।"
+
+msgid "Tap a task, then tap a time. Hold ⠿ to drag."
+msgstr "একটি টাস্কে চাপুন, তারপর একটি সময়ে চাপুন। টেনে নিতে ⠿ ধরে রাখুন।"
+
+msgid "Fill my day"
+msgstr "আমার দিন সাজান"
+
+msgid "Clear the plan"
+msgstr "পরিকল্পনা মুছুন"
+
+msgid "no estimate (30m)"
+msgstr "অনুমান নেই (৩০ মি.)"
+
+msgid "Pick a time for this"
+msgstr "এর জন্য সময় বেছে নিন"
+
+msgid "Everything on today's list has a time. Add tasks to My Day to plan more."
+msgstr "আজকের তালিকার সবকিছুর সময় ঠিক আছে। আরও পরিকল্পনা করতে আমার দিনে টাস্ক যোগ করুন।"
+
+msgid "Nothing on this day's list yet."
+msgstr "এই দিনের তালিকায় এখনো কিছু নেই।"
+
+msgid "Pick from your tasks"
+msgstr "আপনার টাস্ক থেকে বেছে নিন"
+
+msgid "tap a time on the timeline, or type one:"
+msgstr "সময়রেখায় একটি সময়ে চাপুন, অথবা লিখুন:"
+
+msgid "Start time"
+msgstr "শুরুর সময়"
+
+msgid "Move"
+msgstr "সরান"
+
+msgid "Stop"
+msgstr "থামান"
+
+msgid "Not done"
+msgstr "হয়নি"
+
+msgid "Take off the plan"
+msgstr "পরিকল্পনা থেকে সরান"
+
+msgid "Thin bars: time you actually tracked"
+msgstr "সরু দাগ: আসলে যতটা সময় ট্র্যাক করেছেন"

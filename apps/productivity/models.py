@@ -3,7 +3,7 @@ habits and a daily journal. Everything belongs to one person (`owner`) and
 nobody else sees it — not even other admins.
 """
 import re
-from datetime import timedelta
+from datetime import time, timedelta
 from urllib.parse import urlparse
 
 from django.conf import settings
@@ -99,6 +99,8 @@ class Task(models.Model):
     remind_at = models.DateTimeField(_("Remind me"), null=True, blank=True)
     estimate_minutes = models.PositiveIntegerField(_("Estimate (minutes)"), null=True, blank=True)
     my_day = models.DateField(_("In My Day"), null=True, blank=True, help_text="Picked for this day's focus list.")
+    scheduled_at = models.DateTimeField(_("Planned for"), null=True, blank=True,
+                                        help_text="Start of its block on the day planner (as long as the estimate, else 30 minutes).")
     repeat = models.CharField(_("Repeat"), max_length=10, choices=Repeat.choices, default=Repeat.NONE, blank=True)
     tags = models.ManyToManyField(Tag, blank=True, related_name="tasks", verbose_name=_("Tags"))
     link = models.URLField(_("Link"), max_length=500, blank=True,
@@ -113,10 +115,16 @@ class Task(models.Model):
 
     class Meta:
         ordering = ["order", "-priority", "created_at"]
-        indexes = [models.Index(fields=["owner", "status"]), models.Index(fields=["owner", "due_date"])]
+        indexes = [models.Index(fields=["owner", "status"]), models.Index(fields=["owner", "due_date"]),
+                   models.Index(fields=["owner", "scheduled_at"])]
 
     def __str__(self):
         return self.title
+
+    @property
+    def block_minutes(self):
+        """How long its block on the day planner is."""
+        return self.estimate_minutes or 30
 
     @property
     def is_done(self):
@@ -364,6 +372,9 @@ class WorkSettings(models.Model):
                                                     validators=[MinValueValidator(0), MaxValueValidator(240)],
                                                     help_text=_("When you come back to a running timer after this long away. 0 = never ask."))
     feed_token = models.CharField(max_length=40, blank=True, help_text="Secret part of the calendar feed address.")
+    day_start = models.TimeField(_("Work day starts"), default=time(9, 0),
+                                 help_text=_("The day planner opens here, and “Fill my day” plans from here."))
+    day_end = models.TimeField(_("Work day ends"), default=time(18, 0))
 
     def __str__(self):
         return f"Work settings for {self.owner}"

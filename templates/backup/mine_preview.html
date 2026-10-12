@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% translate "Check the backup" %} | FinTrack{% endblock %}
+{% block content %}
+<div class="page-medium stack">
+  <header class="page-header !mb-0">
+    <div>
+      <a href="{% url 'my_data_page' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "My data & backup" %}</a>
+      <h1 class="page-title">{% translate "Check the backup" %}</h1>
+      <p class="page-subtitle">{% translate "The file is complete and undamaged. Here is what's in it, next to what you have now." %}</p>
+    </div>
+  </header>
+
+  <dl class="backup-stats">
+    <div class="backup-stat"><dt>{% translate "Made on" %}</dt><dd class="is-text">{% if created %}{{ created|date:"j M Y" }} <small>{{ created|time:"H:i" }}</small>{% else %}—{% endif %}</dd></div>
+    <div class="backup-stat"><dt>{% translate "Account" %}</dt><dd class="is-text">{{ manifest.name|default:manifest.username|default:"—" }}</dd></div>
+    <div class="backup-stat is-total"><dt>{% translate "Records in the backup" %}</dt><dd>{{ total_backup }}</dd></div>
+    <div class="backup-stat"><dt>{% translate "Receipt photos" %}</dt><dd>{{ photos }}</dd></div>
+  </dl>
+
+  {% if other_account %}
+  <div class="callout" data-tone="info">
+    {% include "partials/icon.html" with name="users" %}
+    <p>{% blocktranslate with them=manifest.username me=request.user.username %}This backup was made by the account “{{ them }}”. Restoring it puts its records in your account ({{ me }}).{% endblocktranslate %}</p>
+  </div>
+  {% endif %}
+  {% for note in notes %}
+  <div class="callout" data-tone="info">{% include "partials/icon.html" with name="check" %}<p>{{ note }}</p></div>
+  {% endfor %}
+
+  <section class="card">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title">{% translate "Now and after restoring" %}</h2>
+        <p class="card-subtitle">{% blocktranslate %}You have {{ total_now }} records now. After restoring you will have exactly the backup's {{ total_backup }}.{% endblocktranslate %}</p>
+      </div>
+    </div>
+    {% include "backup/_counts.html" with compare=True %}
+  </section>
+
+  <section class="card backup-confirm">
+    <div class="card-header">
+      <span class="backup-icon" data-tone="critical">{% include "partials/icon.html" with name="restore" %}</span>
+      <div>
+        <h2 class="card-title">{% translate "Replace my records with this backup" %}</h2>
+        <p class="card-subtitle">{% translate "Only your own records change. Nobody else's data is touched, and you stay signed in." %}</p>
+      </div>
+    </div>
+    <div class="card-body stack">
+      <form method="post" action="{% url 'my_data_restore' %}" class="form-stack">
+        {% csrf_token %}
+        <label class="backup-agree">
+          <input type="checkbox" name="confirm" value="yes" required>
+          <span>{% translate "I understand: my current records are replaced by the backup's. They are saved first, so I can undo this." %}</span>
+        </label>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-danger">{% include "partials/icon.html" with name="restore" %}{% translate "Restore now" %}</button>
+          <button type="submit" form="backup-cancel" class="btn btn-ghost">{% translate "Cancel" %}</button>
+        </div>
+        <p class="help">{% translate "A large backup can take a minute. Keep this page open until it's done." %}</p>
+      </form>
+      <form method="post" action="{% url 'my_data_cancel' %}" id="backup-cancel">{% csrf_token %}</form>
+    </div>
+  </section>
+</div>
+{% endblock %}

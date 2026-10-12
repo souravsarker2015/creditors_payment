@@ -350,6 +350,168 @@
     });
 
     /* ── Command palette (Ctrl+K): pages, commands and everything you made ─ */
+    /* ── Day planner: drag tasks onto the day's hours (time blocking) ──── */
+    Alpine.data("workPlan", function (initial, opts) {
+      var PPM = 1.2, SLOT = 15;     // pixels per minute; snap to quarter hours
+      function pad(n) { return (n < 10 ? "0" : "") + n; }
+      function hhmm(min) { return pad(Math.floor(min / 60) % 24) + ":" + pad(min % 60); }
+      function snap(min) { return Math.max(0, Math.min(24 * 60 - SLOT, Math.round(min / SLOT) * SLOT)); }
+      function nowMinute() { var n = new Date(); return n.getHours() * 60 + n.getMinutes(); }
+      return {
+        plan: initial, ppm: PPM, picked: null, open: null, drag: null, ghost: null, now: nowMinute(),
+        isToday: opts.isToday, dayStart: opts.dayStart, dayEnd: opts.dayEnd, busy: false, pickTime: "",
+        init: function () {
+          var self = this;
+          setInterval(function () { self.now = nowMinute(); }, 60000);
+          this.$nextTick(function () {
+            var box = self.$refs.scroll; if (!box) return;
+            var at = self.isToday ? Math.max(Math.min(self.now - 60, self.dayEnd - 120), self.dayStart - 30) : self.dayStart - 30;
+            box.scrollTop = Math.max(0, at * PPM);
+          });
+        },
+        hours: function () { var out = []; for (var h = 0; h < 24; h++) out.push(h); return out; },
+        label: function (h) { return pad(h) + ":00"; },
+        hhmm: hhmm,
+        get laid() {      // side by side when blocks overlap
+          var items = this.plan.blocks.slice().sort(function (a, b) { return a.start - b.start || b.length - a.length; });
+          var out = [], cluster = [], colsEnd = [], clusterEnd = -1;
+          function close() { var n = colsEnd.length || 1; cluster.forEach(function (b) { b.cols = n; }); cluster = []; colsEnd = []; }
+          items.forEach(function (b) {
+            var item = Object.assign({}, b), end = b.start + b.length;
+            if (b.start >= clusterEnd) { close(); clusterEnd = -1; }
+            var col = colsEnd.findIndex(function (e) { return e <= b.start; });
+            if (col < 0) { col = colsEnd.length; colsEnd.push(end); } else colsEnd[col] = end;
+            item.col = col; cluster.push(item); out.push(item); clusterEnd = Math.max(clusterEnd, end);
+          });
+          close();
+          return out;
+        },
+        blockStyle: function (b) {
+          var w = 100 / (b.cols || 1);
+          return "top:" + (b.start * PPM) + "px;height:" + Math.max(b.length * PPM - 2, 18) + "px;left:calc(" + (b.col * w) + "% + 2px);width:calc(" + w + "% - 4px)";
+        },
+        entryStyle: function (e) { return "top:" + (e.start * PPM) + "px;height:" + Math.max((e.end - e.start) * PPM, 3) + "px"; },
+        get planned() { return this.plan.blocks.reduce(function (s, b) { return s + (b.done ? 0 : b.length); }, 0); },
+        get tracked() { return this.plan.entries.reduce(function (s, e) { return s + Math.max(0, e.end - e.start); }, 0); },
+        get windowMinutes() { return Math.max(0, this.dayEnd - this.dayStart); },
+        get overbooked() { return this.planned > this.windowMinutes && this.windowMinutes > 0; },
+        hm: function (min) { return hm(min * 60); },
+        task: function (id) {
+          return this.plan.blocks.find(function (b) { return b.id === id; }) || this.plan.unplanned.find(function (b) { return b.id === id; });
+        },
+        /* Saving */
+        place: function (id, start) {
+          var self = this, item = this.task(id); if (!item) return;
+          start = snap(start);
+          this.plan.unplanned = this.plan.unplanned.filter(function (b) { return b.id !== id; });
+          var existing = this.plan.blocks.find(function (b) { return b.id === id; });
+          if (existing) existing.start = start; else this.plan.blocks.push(Object.assign({}, item, { start: start }));
+          this.picked = null; this.pickTime = "";
+          return api(CFG.urls.taskBase + id + "/update/", { scheduled_at: this.plan.date + "T" + hhmm(start) }).then(function (res) {
+            if (res && res.ok === false) { toast(res.error || t("error", "Couldn't save."), "warn"); }
+            return res;
+          });
+        },
+        resize: function (id, length) {
+          var b = this.plan.blocks.find(function (x) { return x.id === id; }); if (!b) return;
+          b.length = Math.max(SLOT, Math.round(length / SLOT) * SLOT); b.estimate = b.length;
+          api(CFG.urls.taskBase + id + "/update/", { estimate_minutes: b.length });
+        },
+        unplan: function (id) {
+          var b = this.plan.blocks.find(function (x) { return x.id === id; }); if (!b) return;
+          this.plan.blocks = this.plan.blocks.filter(function (x) { return x.id !== id; });
+          if (!b.done) this.plan.unplanned.unshift(Object.assign({}, b, { length: b.estimate || 30 }));
+          this.open = null;
+          api(CFG.urls.taskBase + id + "/update/", { scheduled_at: "" });
+        },
+        done: function (id) {
+          var b = this.task(id); if (!b) return;
+          b.done = !b.done; this.open = null;
+          if (b.done) play(CFG.sound ? "chime" : "");
+          if (b.done) this.plan.unplanned = this.plan.unplanned.filter(function (x) { return x.id !== id; });
+          api(CFG.urls.taskBase + id + "/done/", { done: b.done ? "1" : "0" });
+        },
+        timer: function (id) {
+          var b = this.task(id), tm = Alpine.store("timer"); if (!b) return;
+          this.open = null;
+          if (tm.isFor(id)) tm.stop(); else tm.start({ task: id, label: b.title });
+        },
+        setTime: function (id, value) {
+          var m = /^(\d{1,2}):(\d{2})$/.exec(value || ""); if (!m) return;
+          this.place(id, +m[1] * 60 + +m[2]); this.open = null;
+        },
+        act: function (action) {
+          var self = this; if (this.busy) return;
+          if (action === "clear" && !window.confirm(t("clearPlan", "Take every open task off the timeline? They stay on the day's list."))) return;
+          this.busy = true;
+          api(CFG.urls.planAction, { action: action, date: this.plan.date }).then(function (res) {
+            self.busy = false;
+            if (!res || !res.ok || res.queued) return;
+            self.plan = res.plan;
+            if (action === "fill") {
+              var tomorrow = self.isToday && !res.placed && res.left ? { label: t("planTomorrow", "Plan tomorrow"), run: function () { location.href = CFG.urls.plan + "?date=" + isoDay(1); } } : null;
+              toast(res.placed ? t("planned", "Planned") + ": " + res.placed + (res.left ? " · " + t("noRoom", "no room for") + " " + res.left : "")
+                               : (res.left ? t("dayFull", "No free time left in your work day.") : t("nothingToPlan", "Nothing left to plan.")), res.placed ? "good" : "warn", tomorrow);
+            }
+          });
+        },
+        /* Pointer: drag a task or block onto the timeline, or stretch a block */
+        minuteAt: function (clientY) {
+          var grid = this.$refs.grid.getBoundingClientRect();
+          return (clientY - grid.top) / PPM;
+        },
+        overGrid: function (x, y) {
+          var r = this.$refs.scroll.getBoundingClientRect();
+          return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+        },
+        down: function (e, id, kind) {
+          if (e.button !== undefined && e.button !== 0) return;
+          var item = this.task(id); if (!item) return;
+          var offset = 0;
+          if (kind === "block") offset = this.minuteAt(e.clientY) - item.start;
+          this.drag = { id: id, kind: kind, x: e.clientX, y: e.clientY, offset: offset, moved: false, length: item.length, start: item.start, el: e.currentTarget, pid: e.pointerId };
+          try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) { /* old browser */ }
+        },
+        move: function (e) {
+          var g = this.drag; if (!g) return;
+          if (!g.moved && Math.abs(e.clientX - g.x) + Math.abs(e.clientY - g.y) < 6) return;
+          g.moved = true; e.preventDefault();
+          this.autoscroll(e.clientY);
+          if (g.kind === "resize") {
+            var b = this.plan.blocks.find(function (x) { return x.id === g.id; });
+            g.length = Math.max(SLOT, Math.round((this.minuteAt(e.clientY) - b.start) / SLOT) * SLOT);
+            this.ghost = { start: b.start, length: g.length, title: b.title };
+            return;
+          }
+          if (this.overGrid(e.clientX, e.clientY)) {
+            this.ghost = { start: snap(this.minuteAt(e.clientY) - g.offset), length: g.length, title: this.task(g.id).title };
+          } else this.ghost = null;
+        },
+        up: function (e) {
+          var g = this.drag; if (!g) return;
+          this.drag = null;
+          try { g.el.releasePointerCapture(g.pid); } catch (err) { /* fine */ }
+          var ghost = this.ghost; this.ghost = null;
+          if (!g.moved) {             // a tap
+            if (g.kind === "block") this.open = this.open === g.id ? null : g.id;
+            else if (g.kind === "item") this.picked = this.picked === g.id ? null : g.id;
+            return;
+          }
+          if (g.kind === "resize") { this.resize(g.id, g.length); return; }
+          if (ghost) this.place(g.id, ghost.start);
+        },
+        autoscroll: function (y) {
+          var box = this.$refs.scroll, r = box.getBoundingClientRect();
+          if (y < r.top + 40) box.scrollTop -= 12; else if (y > r.bottom - 40) box.scrollTop += 12;
+        },
+        gridClick: function (e) {
+          if (this.picked) { this.place(this.picked, Math.floor(this.minuteAt(e.clientY) / SLOT) * SLOT); return; }
+          this.open = null;
+        },
+        isRunning: function (id) { var tm = Alpine.store("timer"); return tm && tm.isFor(id); },
+      };
+    });
+
     Alpine.data("workPalette", function () {
       var RECENT = "work-recent:" + ME;
       return {
@@ -720,7 +882,7 @@
     label("myday", row.hasAttribute("data-myday"));
     label("doing", row.getAttribute("data-status") === "doing");
     label("waiting", row.hasAttribute("data-waiting"));
-    var wf = menu.querySelector("[data-menu-form=waiting]"); if (wf) wf.hidden = true;
+    menu.querySelectorAll("[data-menu-form]").forEach(function (f) { f.hidden = true; });
     menu.querySelector("[data-needs-link]").hidden = !row.getAttribute("data-link");
     menu.hidden = false;
     var r = btn.getBoundingClientRect(), w = menu.offsetWidth, h = menu.offsetHeight;
@@ -745,11 +907,17 @@
   d.addEventListener("click", function (e) {
     var item = e.target.closest("[data-menu]");
     if (item && menu && menu.contains(item)) {
+      if (item.getAttribute("data-menu") === "later" && menuRow) {   // pick the day, right in the menu
+        var lf = menu.querySelector("[data-menu-form=later]"); lf.hidden = false;
+        lf.querySelector("input").min = isoDay(1); lf.querySelector("input").value = isoDay(1); lf.querySelector("[data-later]").focus(); return;
+      }
       if (item.getAttribute("data-menu") === "waiting" && menuRow && !menuRow.hasAttribute("data-waiting")) {   // ask who, right in the menu
         var wf = menu.querySelector("[data-menu-form=waiting]"); wf.hidden = false; wf.querySelector("input").value = ""; wf.querySelector("input").focus(); return;
       }
       var row = menuRow; closeMenu(); if (row) menuAction(row, item.getAttribute("data-menu"), item.getAttribute("data-value")); return;
     }
+    var quick = e.target.closest("[data-later]");
+    if (quick && menu && menu.contains(quick)) { var qrow = menuRow; closeMenu(); if (qrow) later(qrow, isoDay(+quick.getAttribute("data-later"))); return; }
     var act = e.target.closest("[data-act]"), target = act && rowOf(act);
     if (target && act.getAttribute("data-act") === "done" && target.closest(".is-selecting")) { e.preventDefault(); pick(target, e.shiftKey); return; }
     if (target) {
@@ -772,7 +940,16 @@
     if (menu && !menu.contains(e.target) && Date.now() - menuAt > 250) closeMenu();
   }, { passive: true, capture: true });
   window.addEventListener("resize", function () { closeMenu(); });
+  function later(row, day) {          // snooze: My Day moves to that day, so it's out of sight until then
+    taskUpdate(row, "my_day", day).then(function (res) {
+      if (!res.ok) return;
+      toast(t("later", "Moved to") + " " + new Date(day + "T00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" }));
+      if (row.closest("[data-today-list]") || row.hasAttribute("data-hide-done")) { row.classList.add("is-leaving"); setTimeout(function () { row.remove(); }, 260); }
+    });
+  }
   d.addEventListener("submit", function (e) {
+    var lf = e.target.closest("[data-menu-form=later]");
+    if (lf) { e.preventDefault(); var lrow = menuRow, day = lf.querySelector("input").value; closeMenu(); if (lrow && day) later(lrow, day); return; }
     var wf = e.target.closest("[data-menu-form=waiting]"); if (!wf) return;
     e.preventDefault();
     var who = wf.querySelector("input").value.trim(), row = menuRow; closeMenu();
@@ -911,8 +1088,15 @@
   /* ── Quick-add preview chips: what "#tag @project !high tomorrow" means ── */
   function parseChips(text) {
     var out = [];
-    (text || "").split(/\s+/).forEach(function (w) {
+    text = text || "";
+    var every = /\bevery\s+(day|weekday|workday|work\s+day|week|month|mon(day)?|tue(sday)?|wed(nesday)?|thu(rsday)?|fri(day)?|sat(urday)?|sun(day)?)\b/i.exec(text);
+    if (every) { out.push({ k: "repeat", v: "↻ " + every[0].toLowerCase() }); text = text.replace(every[0], " "); }
+    var at = /\bat\s+(\d{1,2}(:\d{2})?\s*(am|pm)?)\b/i.exec(text);
+    if (at && (at[2] || at[3])) { out.push({ k: "remind", v: "⏰ " + at[1] }); text = text.replace(at[0], " "); }
+    text.split(/\s+/).forEach(function (w) {
       var low = w.toLowerCase();
+      if (/^\d{1,2}(:\d{2})?(am|pm)$|^\d{1,2}:\d{2}$/.test(low)) { out.push({ k: "remind", v: "⏰ " + low }); return; }
+      if (/^snooze:\S+/.test(low)) { out.push({ k: "later", v: "💤 " + low.slice(7) }); return; }
       if (/^#[^\s\d#]/.test(w)) out.push({ k: "tag", v: w });
       else if (/^@\S/.test(w)) out.push({ k: "project", v: w.slice(1).replace(/_/g, " ") });
       else if (/^!(urgent|high|medium|med|low|[1-4])$/.test(low)) out.push({ k: "priority", v: low.slice(1) });
@@ -928,7 +1112,7 @@
   /* ── Keyboard: the whole module without a mouse ─────────────────────── */
   var pending = null;
   var GO = { h: "today", t: "tasks", b: "board", p: "projects", i: "time", f: "focus_page", n: "notes", s: "snippets", a: "habits", j: "journal", r: "reports", ",": "settings",
-             c: "calendar", o: "goals", l: "learning", v: "review" };
+             c: "calendar", o: "goals", l: "learning", v: "review", d: "plan" };
   d.addEventListener("keydown", function (e) {
     if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || typing(e)) return;
     var k = e.key;

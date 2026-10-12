@@ -219,3 +219,43 @@ class PeopleAdminTests(TestCase):
         r = self.client.get(reverse("user_create"))
         for d in Dashboard.objects.filter(is_active=True):
             self.assertContains(r, f'value="{d.code}"')
+
+
+class SignInLockoutTests(TestCase):
+    def setUp(self):
+        from django.core.cache import cache
+
+        cache.clear()
+        self.addCleanup(cache.clear)
+        self.user = User.objects.create_user("rahim", "rahim@example.com", PW)
+
+    def wrong(self, n, **extra):
+        for _i in range(n):
+            self.client.post(reverse("login"), {"username": "rahim", "password": "not-it"}, **extra)
+
+    def test_five_wrong_passwords_pause_signing_in_from_that_place(self):
+        self.wrong(5)
+        r = self.client.post(reverse("login"), {"username": "rahim", "password": PW})
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "Too many wrong passwords")
+        self.assertNotIn("_auth_user_id", self.client.session)
+        # somewhere else, the right password still works
+        r = self.client.post(reverse("login"), {"username": "rahim", "password": PW}, REMOTE_ADDR="10.0.0.9")
+        self.assertEqual(r.status_code, 302)
+
+    def test_a_right_password_clears_the_count(self):
+        self.wrong(4)
+        self.assertEqual(self.client.post(reverse("login"), {"username": "rahim", "password": PW}).status_code, 302)
+        self.client.logout()
+        self.wrong(4)
+        self.assertEqual(self.client.post(reverse("login"), {"username": "rahim", "password": PW}).status_code, 302)
+
+    def test_guessing_from_many_places_locks_the_account_and_emails_the_owner(self):
+        from django.core import mail
+
+        for i in range(20):
+            self.client.post(reverse("login"), {"username": "rahim", "password": "x"}, REMOTE_ADDR=f"10.1.0.{i}")
+        r = self.client.post(reverse("login"), {"username": "rahim", "password": PW}, REMOTE_ADDR="10.2.0.1")
+        self.assertContains(r, "Too many wrong passwords")
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("rahim@example.com", mail.outbox[0].to)

@@ -23,15 +23,21 @@ def _resolve(get_party):
 
 
 @receiver([post_save, post_delete], sender=CreditorTx)
-def _creditor_changed(sender, instance, **kwargs):
+def _creditor_changed(sender, instance, raw=False, **kwargs):
+    if raw:  # loaded from a backup, which brings its plan's due date along
+        return
     _sync(_resolve(lambda: instance.creditor))
 
 
 @receiver([post_save, post_delete], sender=DebtorTx)
-def _debtor_changed(sender, instance, **kwargs):
+def _debtor_changed(sender, instance, raw=False, **kwargs):
+    if raw:  # loaded from a backup, which brings its plan's due date along
+        return
     _sync(_resolve(lambda: instance.debtor))
 
 
 @receiver([post_save, post_delete], sender=ShopTx)
-def _shop_changed(sender, instance, **kwargs):
+def _shop_changed(sender, instance, raw=False, **kwargs):
+    if raw:  # loaded from a backup, which brings its plan's due date along
+        return
     _sync(_resolve(lambda: instance.shop))

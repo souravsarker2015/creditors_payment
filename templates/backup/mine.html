@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% translate "My data & backup" %} | FinTrack{% endblock %}
+{% block content %}
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "My data & backup" %}</h1>
+      <p class="page-subtitle">{% translate "Keep a copy of everything you've recorded, and bring it back whenever you need it — on this server or another one. Only your own records are in it." %}</p>
+    </div>
+  </header>
+
+  <dl class="backup-stats">
+    <div class="backup-stat is-total">
+      <dt>{% translate "Your records" %}</dt>
+      <dd>{{ total }}</dd>
+    </div>
+    {% for area in areas %}
+    <div class="backup-stat" data-area="{{ area.key }}">
+      <dt>{{ area.title }}</dt>
+      <dd>{{ area.now }}</dd>
+    </div>
+    {% endfor %}
+  </dl>
+
+  {% if has_pending %}
+  <div class="callout" data-tone="info">
+    {% include "partials/icon.html" with name="restore" %}
+    <p>{% translate "A backup file is waiting to be restored." %} <a href="{% url 'my_data_restore' %}" class="backup-link">{% translate "Continue" %}</a></p>
+  </div>
+  {% endif %}
+
+  <div class="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
+    <section class="card">
+      <div class="card-header">
+        <span class="backup-icon" data-tone="accent">{% include "partials/icon.html" with name="download" %}</span>
+        <div>
+          <h2 class="card-title">{% translate "Download my data" %}</h2>
+          <p class="card-subtitle">{% translate "One .zip file. Keep it somewhere safe — your computer, Google Drive, a USB stick." %}</p>
+        </div>
+      </div>
+      <div class="card-body stack">
+        <ul class="backup-points">
+          <li>{% include "partials/icon.html" with name="check" %}<span>{% translate "Everything you keep here: lenders and borrowers, income and expenses, bazar, shops, wallets, budgets, savings goals, the work tracker, your settings and receipt photos." %}</span></li>
+          <li>{% include "partials/icon.html" with name="check" %}<span>{% translate "Excel-ready sheets to read or print, plus a copy you can restore here later." %}</span></li>
+          <li>{% include "partials/icon.html" with name="check" %}<span>{% translate "Sealed: a file that was damaged or changed is refused when you restore it." %}</span></li>
+        </ul>
+        <a href="{% url 'my_data' %}" class="btn btn-primary btn-block" download>{% include "partials/icon.html" with name="download" %}{% translate "Download my data" %}</a>
+        <p class="help">{% translate "Your password and two-step sign-in are never in the file. Farm records have their own download under Farm setup." %}</p>
+      </div>
+    </section>
+
+    <section class="card" x-data="{ name: '' }">
+      <div class="card-header">
+        <span class="backup-icon" data-tone="critical">{% include "partials/icon.html" with name="upload" %}</span>
+        <div>
+          <h2 class="card-title">{% translate "Restore from my backup" %}</h2>
+          <p class="card-subtitle">{% translate "Nothing changes yet: first you see what's in the file." %}</p>
+        </div>
+      </div>
+      <form method="post" action="{% url 'my_data_upload' %}" enctype="multipart/form-data" class="card-body stack">
+        <div class="callout" data-tone="warn">
+          {% include "partials/icon.html" with name="alert" %}
+          <p>{% translate "Restoring replaces your records with the backup's — nothing is added twice. Your records from now are saved first, so you can undo it." %}</p>
+        </div>
+        <label class="backup-drop" :class="name && 'has-file'">
+          <input type="file" name="backup" accept=".zip,application/zip" required class="sr-only" @change="name = $event.target.files.length ? $event.target.files[0].name : ''">
+          <span class="backup-drop-icon">{% include "partials/icon.html" with name="upload" %}</span>
+          <span class="backup-drop-text" x-text="name || '{{ _("Choose your backup file (.zip)")|escapejs }}'">{% translate "Choose your backup file (.zip)" %}</span>
+          <span class="backup-drop-hint">{% translate "The file from “Download my data” — from this server or another one" %}</span>
+        </label>
+        <button type="submit" class="btn btn-secondary btn-block" :disabled="!name">{% include "partials/icon.html" with name="search" %}{% translate "Check the file" %}</button>
+        {% csrf_token %}
+      </form>
+    </section>
+  </div>
+
+  {% if copies %}
+  <section class="card">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title">{% translate "Saved before a restore" %}</h2>
+        <p class="card-subtitle">{% translate "Your records as they were just before each restore — the last three are kept. Restore one to undo." %}</p>
+      </div>
+    </div>
+    <ul class="ledger">
+      {% for c in copies %}
+      <li class="ledger-row backup-row">
+        <span class="ledger-icon">{% include "partials/icon.html" with name="archive" %}</span>
+        <div class="ledger-main">
+          <p class="ledger-title">{{ c.when|date:"j M Y, H:i" }}</p>
+          <p class="ledger-meta">{{ c.size|filesizeformat }}</p>
+        </div>
+        <div class="ledger-end">
+          <a href="{% url 'my_data_copy' c.name %}" class="icon-btn" download aria-label="{% translate 'Download' %}">{% include "partials/icon.html" with name="download" %}</a>
+          <form method="post" action="{% url 'my_data_copy' c.name %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="restore" %}<span class="hide-sm">{% translate "Restore…" %}</span></button>
+          </form>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  <section class="card">
+    <div class="card-header">
+      <span class="backup-icon" data-tone="info">{% include "partials/icon.html" with name="arrow-right" %}</span>
+      <div>
+        <h2 class="card-title">{% translate "Moving to another FinTrack" %}</h2>
+        <p class="card-subtitle">{% translate "A new server, or a new account: your records come across with every link between them." %}</p>
+      </div>
+    </div>
+    <ol class="backup-steps card-body">
+      <li><strong>{% translate "Here" %}</strong><span>{% translate "Press “Download my data”." %}</span></li>
+      <li><strong>{% translate "There" %}</strong><span>{% translate "Sign in (or sign up), open “My data & backup” and choose the file." %}</span></li>
+      <li><strong>{% translate "Check and restore" %}</strong><span>{% translate "See what's in it, then restore. Your receipt photos come too." %}</span></li>
+    </ol>
+    {% if request.user.is_superuser %}
+    <div class="card-footer">
+      <p class="help">{% translate "Moving everyone's data, with all accounts and the farm?" %} <a href="{% url 'backup_home' %}" class="backup-link">{% translate "Use the whole-system Backup & restore" %}</a></p>
+    </div>
+    {% endif %}
+  </section>
+
+  <section class="card">
+    <div class="card-header"><h2 class="card-title">{% translate "What you have now" %}</h2></div>
+    {% include "backup/_counts.html" with compare=False %}
+  </section>
+</div>
+{% endblock %}

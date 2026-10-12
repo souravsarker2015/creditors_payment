@@ -1,5 +1,8 @@
 """python manage.py backup_export [file.zip] — the whole system in one backup file
-(the same file as "Download backup" on the Backup & restore page)."""
+(the same file as "Download backup" on the Backup & restore page).
+
+For automatic backups, run it every day from a scheduled task (cron, or
+PythonAnywhere's "Tasks" tab):  python manage.py backup_export --keep 14"""
 from pathlib import Path
 
 from django.core.management.base import BaseCommand
@@ -12,8 +15,10 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("path", nargs="?", help="Where to write it (default: a dated file in BACKUP_DIR).")
+        parser.add_argument("--keep", type=int, default=0, metavar="N",
+                            help="After saving in BACKUP_DIR, keep only the newest N of these backups (for a daily scheduled task).")
 
-    def handle(self, *args, path=None, **options):
+    def handle(self, *args, path=None, keep=0, **options):
         if path:
             target = Path(path)
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -23,3 +28,6 @@ class Command(BaseCommand):
             manifest = bk.read_backup(target).manifest
         media = len(manifest["files"]) - 1
         self.stdout.write(self.style.SUCCESS(f"Backup written: {target}  ({manifest['total']} records, {media} files)"))
+        if keep and not path:
+            for name in bk.prune(keep):
+                self.stdout.write(f"Deleted an older backup: {name}")

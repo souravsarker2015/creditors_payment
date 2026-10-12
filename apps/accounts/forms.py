@@ -14,6 +14,54 @@ def email_taken(email, exclude=None):
     return qs.exists()
 
 
+# Guessing passwords: after this many wrong ones in LOCK_WINDOW, signing in
+# pauses for LOCK_WINDOW — for one account from one place, for one account from
+# anywhere (a spread-out attack), and for one place trying many accounts.
+PAIR_LIMIT = 5
+ACCOUNT_LIMIT = 20
+PLACE_LIMIT = 50
+LOCK_WINDOW = 15 * 60
+
+
+def client_ip(request):
+    meta = getattr(request, "META", {}) or {}
+    return (meta.get("HTTP_X_REAL_IP") or meta.get("REMOTE_ADDR") or "").strip()[:64]
+
+
+def _login_keys(request, username):
+    name = (username or "").strip().lower()[:150]
+    place = client_ip(request)
+    return {"pair": f"login-fail:{name}:{place}", "account": f"login-fail:{name}", "place": f"login-fail-ip:{place}"}
+
+
+LIMITS = {"pair": PAIR_LIMIT, "account": ACCOUNT_LIMIT, "place": PLACE_LIMIT}
+
+
+def login_locked(request, username):
+    keys = _login_keys(request, username)
+    return any(cache.get(keys[k], 0) >= LIMITS[k] for k in keys)
+
+
+def login_failed(request, username):
+    """Count a wrong password. Returns True when this one locked the account."""
+    keys = _login_keys(request, username)
+    locked_now = False
+    for kind, key in keys.items():
+        try:
+            n = cache.incr(key)
+        except ValueError:
+            cache.set(key, 1, LOCK_WINDOW)
+            n = 1
+        if kind == "account" and n == ACCOUNT_LIMIT:
+            locked_now = True
+    return locked_now
+
+
+def login_succeeded(request, username):
+    keys = _login_keys(request, username)
+    cache.delete(keys["pair"])
+
+
 class LoginForm(AuthenticationForm):
     remember_me = forms.BooleanField(
         label=_("Remember me"), required=False, initial=True,
@@ -25,6 +73,35 @@ class LoginForm(AuthenticationForm):
         self.fields["username"].label = _("Username or email")
         self.fields["username"].widget.attrs.update({"autocomplete": "username", "autocapitalize": "none"})
         self.fields["password"].widget.attrs.update({"autocomplete": "current-password"})
+
+    def clean(self):
+        username = self.cleaned_data.get("username")
+        if username and login_locked(self.request, username):
+            raise forms.ValidationError(
+                _("Too many wrong passwords. Signing in to this account is paused for %(minutes)s minutes — or reset your password now."),
+                code="locked", params={"minutes": LOCK_WINDOW // 60})
+        try:
+            cleaned = super().clean()
+        except forms.ValidationError:
+            if username and self.cleaned_data.get("password") and login_failed(self.request, username):
+                self._warn_owner(username)
+            raise
+        login_succeeded(self.request, username)
+        return cleaned
+
+    def _warn_owner(self, username):
+        """Tell the account's owner someone is guessing their password."""
+        from django.db.models import Q
+
+        from .twofactor import notify, when_text
+
+        name = username.strip()
+        user = User.objects.filter(Q(username=name) | Q(email__iexact=name) if "@" in name else Q(username=name)).first()
+        if user is not None and self.request is not None:
+            notify(self.request, user, _("Someone is trying to sign in to your FinTrack account"),
+                   _("There were %(count)s wrong passwords for your account by %(when)s, so signing in is paused for %(minutes)s minutes. "
+                     "If this wasn't you, nothing is needed — but a stronger password (and two-step sign-in) keeps guessers out.")
+                   % {"count": ACCOUNT_LIMIT, "when": when_text(), "minutes": LOCK_WINDOW // 60})
 
 
 class SignupForm(UserCreationForm):

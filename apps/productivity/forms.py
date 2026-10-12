@@ -50,13 +50,19 @@ class OwnedForm(forms.ModelForm):
 class TaskForm(OwnedForm):
     tags_text = TagsField()
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["scheduled_at"].help_text = _("A block on your day planner, as long as the estimate (else 30 minutes).")
+
     class Meta:
         model = Task
-        fields = ("title", "project", "status", "priority", "due_date", "estimate_minutes", "repeat", "remind_at", "link", "goal", "waiting_for", "notes")
+        fields = ("title", "project", "status", "priority", "due_date", "estimate_minutes", "repeat", "remind_at", "scheduled_at", "link", "goal",
+                  "waiting_for", "notes")
         widgets = {
             "link": forms.URLInput(attrs={"placeholder": "https://github.com/…/pull/482", "inputmode": "url"}),
             "due_date": DATE,
             "remind_at": forms.DateTimeInput(attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"),
+            "scheduled_at": forms.DateTimeInput(attrs={"type": "datetime-local", "step": 900}, format="%Y-%m-%dT%H:%M"),
             "notes": forms.Textarea(attrs={"rows": 8, "data-markdown": "1"}),
             "estimate_minutes": forms.NumberInput(attrs={"inputmode": "numeric", "min": 0, "step": 5}),
         }
@@ -190,14 +196,27 @@ class SettingsForm(forms.ModelForm):
         model = WorkSettings
         fields = ("week_start", "focus_minutes", "short_break_minutes", "long_break_minutes", "long_break_every",
                   "auto_start_breaks", "auto_start_focus", "sound_enabled", "sound", "volume", "tick_sound",
-                  "notifications", "long_timer_hours", "idle_minutes", "default_project")
-        widgets = {"volume": forms.NumberInput(attrs={"type": "range", "min": 0, "max": 100, "step": 5})}
+                  "notifications", "long_timer_hours", "idle_minutes", "default_project", "day_start", "day_end")
+        widgets = {"volume": forms.NumberInput(attrs={"type": "range", "min": 0, "max": 100, "step": 5}),
+                   "day_start": forms.TimeInput(attrs={"type": "time"}, format="%H:%M"),
+                   "day_end": forms.TimeInput(attrs={"type": "time"}, format="%H:%M")}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        for name in ("day_start", "day_end"):      # left empty: keep what it was
+            self.fields[name].required = False
         self.fields["default_project"].queryset = Project.objects.filter(owner=self.instance.owner, is_archived=False)
         self.fields["work_day_list"].initial = list(self.instance.work_days)
         self.fields["daily_target_hours"].initial = round(self.instance.daily_target_minutes / 60, 2)
+
+    def clean(self):
+        data = super().clean()
+        start = data.get("day_start") or self.instance.day_start
+        end = data.get("day_end") or self.instance.day_end
+        data["day_start"], data["day_end"] = start, end
+        if start and end and end <= start:
+            self.add_error("day_end", _("The day has to end after it starts."))
+        return data
 
     def save(self, commit=True):
         s = super().save(commit=False)

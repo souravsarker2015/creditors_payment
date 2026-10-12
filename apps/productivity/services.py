@@ -263,6 +263,9 @@ class Parsed:
     estimate: int | None = None
     my_day: bool = False
     link: str = ""
+    at: time | None = None          # "at 3pm": a reminder at that time
+    repeat: str = ""                # "every monday", "every day"…
+    later: date | None = None       # "snooze:fri": out of sight until then
 
 
 def parse_due(word, today):
@@ -310,18 +313,56 @@ def _date_word(low, today):
     return None
 
 
+TIME_WORD = re.compile(r"(\d{1,2})(?::(\d{2}))?\s*(am|pm)?")
+EVERY = re.compile(r"\bevery\s+(day|weekday|workday|work\s+day|week|month|mon(?:day)?|tue(?:sday)?|wed(?:nesday)?|thu(?:rsday)?|fri(?:day)?|sat(?:urday)?|sun(?:day)?)\b", re.I)
+REPEAT_WORDS = {"day": Repeat.DAILY, "weekday": Repeat.WEEKDAYS, "workday": Repeat.WEEKDAYS, "week": Repeat.WEEKLY, "month": Repeat.MONTHLY}
+
+
+def _time_word(word):
+    """3pm, 3:30pm, 15:30 → a time; anything else → None."""
+    m = TIME_WORD.fullmatch(word.lower())
+    if not m or (not m.group(2) and not m.group(3)):      # a bare "3" is a number, not a time
+        return None
+    h, mins = int(m.group(1)), int(m.group(2) or 0)
+    if m.group(3):
+        if not 1 <= h <= 12:
+            return None
+        h = h % 12 + (12 if m.group(3) == "pm" else 0)
+    if h > 23 or mins > 59:
+        return None
+    return time(h, mins)
+
+
 def parse_quick(text, today=None):
     """Turns one line into a task's parts:
     #tag  @project  !high (or !1–!4)  ~30m / ~2h  *  (My Day)
-    and a due date: today, tomorrow, friday, +3d, +2w, 2026-10-20, due:mon, due:25/12.
+    a due date: today, tomorrow, friday, +3d, +2w, 2026-10-20, due:mon, due:25/12
+    a reminder: at 3pm, at 15:30   ·   a repeat: every day / weekday / week / month / monday
+    out of sight until a day: snooze:fri, snooze:+3d.
     A pasted link (a PR, an issue…) is kept as the task's link."""
     today = today or timezone.localdate()
     p = Parsed(title="")
+    m = EVERY.search(text)
+    if m:
+        word = re.sub(r"\s+", "", m.group(1).lower())
+        if word in REPEAT_WORDS:
+            p.repeat = REPEAT_WORDS[word]
+        else:
+            p.repeat = Repeat.WEEKLY
+            p.due = parse_due(word[:3], today - timedelta(days=1))   # this weekday, today included
+        text = (text[:m.start()] + " " + text[m.end():]).strip()
     words = []
     estimate = re.compile(r"~(\d+(?:\.\d+)?)(m|min|h|hr)?")
-    for word in text.split():
+    tokens = text.split()
+    i = 0
+    while i < len(tokens):
+        word = tokens[i]
         low = word.lower()
         m = estimate.fullmatch(low)
+        if low == "at" and i + 1 < len(tokens) and _time_word(tokens[i + 1]) is not None:
+            p.at = _time_word(tokens[i + 1])
+            i += 2
+            continue
         if len(word) > 1 and word[0] == "#" and word[1].isalpha():   # "#482" stays in the title (an issue number)
             p.tags.append(word[1:40])
         elif len(word) > 1 and word[0] == "@":
@@ -335,12 +376,30 @@ def parse_quick(text, today=None):
             p.my_day = True
         elif re.match(r"https?://\S+\.\S+", word) and not p.link:
             p.link = word[:500]
+        elif low.startswith("snooze:") and parse_due(low[7:].lstrip("+"), today):
+            p.later = parse_due(low[7:].lstrip("+"), today)
         elif _date_word(low, today) is not None:
             p.due = _date_word(low, today)
+        elif re.fullmatch(r"\d{1,2}(:\d{2})?(am|pm)|\d{1,2}:\d{2}", low) and _time_word(low) is not None:
+            p.at = _time_word(low)
         else:
             words.append(word)
+        i += 1
     p.title = " ".join(words).strip() or link_label(p.link)
     return p
+
+
+def reminder_time(p, today):
+    """When "at 3pm" fires: on the due (or snooze) day, else today — or
+    tomorrow, if that time has already gone today."""
+    if p.at is None:
+        return None
+    tz = timezone.get_current_timezone()
+    day = p.due or p.later or today
+    when = timezone.make_aware(datetime.combine(day, p.at), tz)
+    if when <= timezone.now() and not (p.due or p.later):
+        when += timedelta(days=1)
+    return when
 
 
 def find_project(user, name):
@@ -372,9 +431,9 @@ def create_from_quick(user, text, *, status=Status.TODO, project=None, today=Non
     task = Task.objects.create(
         owner=user, title=p.title[:300], status=status, priority=p.priority,
         project=find_project(user, p.project) or project,
-        due_date=p.due or due, estimate_minutes=p.estimate,
-        my_day=today if (p.my_day or my_day) else None, order=next_order(user, status),
-        link=p.link, goal=goal,
+        due_date=p.due or due or (today if p.repeat else None), estimate_minutes=p.estimate,
+        my_day=p.later or (today if (p.my_day or my_day) else None), order=next_order(user, status),
+        link=p.link, goal=goal, repeat=p.repeat, remind_at=reminder_time(p, today),
     )
     if p.tags:
         task.tags.set(tags_named(user, p.tags))
@@ -382,12 +441,14 @@ def create_from_quick(user, text, *, status=Status.TODO, project=None, today=Non
 
 
 # ── Tasks ─────────────────────────────────────────────────────────────────
-def next_due(day, repeat):
+def next_due(day, repeat, work_days="01234"):
     if repeat == Repeat.DAILY:
         return day + timedelta(days=1)
-    if repeat == Repeat.WEEKDAYS:
+    if repeat == Repeat.WEEKDAYS:      # the person's own work days (Sunday–Thursday by default here)
         nxt = day + timedelta(days=1)
-        while nxt.weekday() >= 5:   # Saturday, Sunday
+        for _i in range(7):
+            if str(nxt.weekday()) in (work_days or "01234"):
+                break
             nxt += timedelta(days=1)
         return nxt
     if repeat == Repeat.WEEKLY:
@@ -412,7 +473,8 @@ def set_done(task, done=True):
         if task.repeat:
             base = task.due_date or timezone.localdate()
             nxt = Task.objects.create(owner=task.owner, project=task.project, title=task.title, notes=task.notes,
-                                      priority=task.priority, due_date=next_due(base, task.repeat), repeat=task.repeat,
+                                      priority=task.priority, due_date=next_due(base, task.repeat, WorkSettings.for_user(task.owner).work_days),
+                                      repeat=task.repeat,
                                       estimate_minutes=task.estimate_minutes, order=next_order(task.owner, Status.TODO))
             nxt.tags.set(task.tags.all())
             for item in task.checklist.all():
@@ -770,8 +832,8 @@ def _fold(line):
 
 
 def calendar_feed(user, base_url=""):
-    """Open tasks with a due date (all-day), reminders (timed, with an alarm)
-    and goal deadlines, for Google / Apple / Outlook calendars."""
+    """Open tasks with a due date (all-day), reminders and day-planner blocks
+    (timed, with an alarm) and goal deadlines, for Google / Apple / Outlook calendars."""
     from django.urls import reverse
 
     now = timezone.now()
@@ -801,8 +863,121 @@ def calendar_feed(user, base_url=""):
         end = at + timedelta(minutes=15)
         event(f"remind-{t.pk}", "⏰ " + t.title, reverse("work:task", args=[t.pk]),
               [f"DTSTART:{at:%Y%m%dT%H%M%SZ}", f"DTEND:{end:%Y%m%dT%H%M%SZ}"], alarm=True)
+    for t in open_tasks.filter(scheduled_at__gte=now - timedelta(days=7)):     # the day planner's blocks
+        at = t.scheduled_at.astimezone(dt_timezone.utc)
+        end = at + timedelta(minutes=t.block_minutes)
+        event(f"block-{t.pk}", t.title, reverse("work:task", args=[t.pk]),
+              [f"DTSTART:{at:%Y%m%dT%H%M%SZ}", f"DTEND:{end:%Y%m%dT%H%M%SZ}"], alarm=True,
+              description=" · ".join(x for x in (t.project.name if t.project_id else "", t.link) if x))
     for g in Goal.objects.filter(owner=user, status=GoalStatus.ACTIVE, target_date__isnull=False):
         event(f"goal-{g.pk}", "🎯 " + g.title, reverse("work:goal", args=[g.pk]),
               [f"DTSTART;VALUE=DATE:{g.target_date:%Y%m%d}", f"DTEND;VALUE=DATE:{g.target_date + timedelta(days=1):%Y%m%d}"])
     lines.append("END:VCALENDAR")
     return "\r\n".join(lines) + "\r\n"
+
+
+# ── Day planner (time blocking) ───────────────────────────────────────────
+SLOT_MINUTES = 15
+
+
+def _at(day, t):
+    return timezone.make_aware(datetime.combine(day, t), timezone.get_current_timezone())
+
+
+def plan_day(user, day):
+    """(blocks, unplanned, entries) for the planner: tasks with a time on
+    `day`, the day's other open tasks, and the time actually tracked."""
+    lo, hi = day_bounds(day)
+    blocks = list(Task.objects.filter(owner=user, scheduled_at__gte=lo, scheduled_at__lt=hi)
+                  .select_related("project").order_by("scheduled_at"))
+    if day == timezone.localdate():
+        candidates = today_tasks(user, day)[0]
+    else:
+        candidates = list(Task.objects.filter(owner=user).exclude(status=Status.DONE)
+                          .filter(Q(my_day=day) | Q(due_date=day)).select_related("project")
+                          .order_by("-priority", "order"))
+    planned = {t.pk for t in blocks}
+    unplanned = [t for t in candidates if t.pk not in planned]
+    entries = list(TimeEntry.objects.filter(owner=user, started_at__lt=hi)
+                   .filter(Q(ended_at__gt=lo) | Q(ended_at__isnull=True))
+                   .select_related("task", "project").order_by("started_at"))
+    return blocks, unplanned, entries
+
+
+def fill_day(user, day, now=None):
+    """"Fill my day": gives each unplanned task (most important first) the
+    first free time that fits it, from now (or the start of the work day) to
+    its end. Waiting tasks are left out. Returns (placed, did_not_fit)."""
+    s = WorkSettings.for_user(user)
+    now = now or timezone.now()
+    start, end = _at(day, s.day_start), _at(day, s.day_end)
+    if timezone.localtime(now).date() == day:
+        local = timezone.localtime(now)
+        rounded = local.replace(second=0, microsecond=0) + timedelta(minutes=(-local.minute) % SLOT_MINUTES)
+        start = max(start, rounded)
+    blocks, unplanned, _entries = plan_day(user, day)
+    busy = sorted((b.scheduled_at, b.scheduled_at + timedelta(minutes=b.block_minutes)) for b in blocks)
+    placed, left = [], []
+    for task in unplanned:
+        if task.waiting_for:
+            continue
+        length = timedelta(minutes=task.block_minutes)
+        at = start
+        for b_start, b_end in busy:
+            if b_start < at + length and at < b_end:
+                at = max(at, b_end)
+        if at + length > end:
+            left.append(task)
+            continue
+        task.scheduled_at = at
+        fields = ["scheduled_at", "updated_at"]
+        if task.my_day != day and task.due_date != day:
+            task.my_day = day
+            fields.append("my_day")
+        task.save(update_fields=fields)
+        busy = sorted(busy + [(at, at + length)])
+        placed.append(task)
+    return placed, left
+
+
+def clear_plan(user, day):
+    """Takes the day's open tasks off the timeline (they stay on the day's list)."""
+    lo, hi = day_bounds(day)
+    return Task.objects.filter(owner=user, scheduled_at__gte=lo, scheduled_at__lt=hi).exclude(status=Status.DONE).update(scheduled_at=None)
+
+
+def next_block(user, now=None):
+    """The planned task now running or coming next today, for the Today page."""
+    now = now or timezone.now()
+    lo, hi = day_bounds(timezone.localtime(now).date())
+    for t in (Task.objects.filter(owner=user, scheduled_at__gte=lo, scheduled_at__lt=hi).exclude(status=Status.DONE)
+              .select_related("project").order_by("scheduled_at")):
+        if t.scheduled_at + timedelta(minutes=t.block_minutes) > now:
+            return t
+    return None
+
+
+# ── Estimates vs. what it really took ─────────────────────────────────────
+def estimate_accuracy(user, start, end):
+    """For tasks finished between start and end that had an estimate and
+    tracked time: totals, the ratio (1.0 = spot on), and the biggest misses."""
+    lo, hi = day_bounds(start)[0], day_bounds(end)[1]
+    tasks = list(Task.objects.filter(owner=user, status=Status.DONE, completed_at__gte=lo, completed_at__lt=hi,
+                                     estimate_minutes__gt=0))
+    tracked = tracked_by(user, "task", [t.pk for t in tasks]) if tasks else {}
+    rows = []
+    for t in tasks:
+        actual = tracked.get(t.pk, 0)
+        if actual < 60:
+            continue
+        est = t.estimate_minutes * 60
+        rows.append({"task": t, "estimate": est, "actual": actual, "ratio": actual / est, "over": actual - est})
+    if not rows:
+        return None
+    est_total, actual_total = sum(r["estimate"] for r in rows), sum(r["actual"] for r in rows)
+    ratio = actual_total / est_total
+    on_target = sum(1 for r in rows if 0.8 <= r["ratio"] <= 1.25)
+    return {"count": len(rows), "estimate": est_total, "actual": actual_total, "ratio": ratio,
+            "pct_off": round(abs(ratio - 1) * 100), "under": ratio > 1.05, "over": ratio < 0.95,
+            "on_target": on_target, "on_target_pct": round(100 * on_target / len(rows)),
+            "misses": sorted(rows, key=lambda r: -abs(r["over"]))[:5]}

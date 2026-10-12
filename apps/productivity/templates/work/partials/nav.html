@@ -3,6 +3,7 @@
 <div class="space-y-0.5">
   <p class="nav-section-label">{% translate "Plan & do" %}</p>
   <a href="{% url 'work:today' %}" class="nav-link {% if p == '/work/' %}is-active{% endif %}" {% if p == '/work/' %}aria-current="page"{% endif %}>{% icon "sun" %}{% translate "Today" %}</a>
+  <a href="{% url 'work:plan' %}" class="nav-link {% if '/work/plan/' in p %}is-active{% endif %}" {% if '/work/plan/' in p %}aria-current="page"{% endif %}>{% icon "clock" %}{% translate "Plan my day" %}</a>
   <a href="{% url 'work:tasks' %}" class="nav-link {% if '/work/tasks/' in p %}is-active{% endif %}" {% if p == '/work/tasks/' %}aria-current="page"{% endif %}>{% icon "check" %}{% translate "Tasks" %}</a>
   <a href="{% url 'work:calendar' %}" class="nav-link {% if '/work/calendar/' in p %}is-active{% endif %}">{% icon "calendar" %}{% translate "Calendar" %}</a>
   <a href="{% url 'work:projects' %}" class="nav-link {% if '/work/projects/' in p %}is-active{% endif %}">{% icon "folder" %}{% translate "Projects" %}</a>

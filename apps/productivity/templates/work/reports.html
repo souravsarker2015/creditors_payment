@@ -74,10 +74,17 @@
     <ul class="wd-notes">{% for task, secs in tasks %}<li><a href="{% url 'work:task' task.pk %}"><span class="truncate">{{ task.title }}</span><time class="num">{{ secs|hm }}</time></a></li>{% endfor %}</ul>
   </section>
   {% endif %}
-  {% if estimated %}
+  {% if est %}
   <section class="card">
-    <header class="card-header"><div><h2 class="card-title">{% translate "Estimates vs. actual" %}</h2>{% if accuracy is not None %}<p class="card-subtitle">{% blocktranslate with a=accuracy %}Your estimates are {{ a }}% accurate.{% endblocktranslate %}</p>{% endif %}</div></header>
-    <ul class="wd-notes">{% for r in estimated %}<li><a href="{% url 'work:task' r.task.pk %}"><span class="truncate">{{ r.task.title }}</span><time class="num" data-tone="{% if r.ratio > 120 %}late{% elif r.ratio < 80 %}early{% endif %}">{{ r.spent|hm }} / {{ r.estimate|hm }}</time></a></li>{% endfor %}</ul>
+    <header class="card-header"><div><h2 class="card-title">{% translate "Estimates vs. actual" %}</h2>
+      <p class="card-subtitle">{% blocktranslate count counter=est.count %}From {{ counter }} finished task with an estimate and tracked time.{% plural %}From {{ counter }} finished tasks with an estimate and tracked time.{% endblocktranslate %}</p></div></header>
+    <div class="card-body wr-est">
+      <p class="wr-est-big num" data-tone="{% if est.under %}late{% elif est.over %}early{% else %}ok{% endif %}">×{{ est.ratio|floatformat:1 }}</p>
+      <p class="wr-est-text">{% if est.under %}{% blocktranslate with pct=est.pct_off %}Work takes you {{ pct }}% longer than you estimate. Multiply your next estimates by this number.{% endblocktranslate %}{% elif est.over %}{% blocktranslate with pct=est.pct_off %}You finish {{ pct }}% faster than you estimate — you can plan more into a day.{% endblocktranslate %}{% else %}{% translate "Your estimates are spot on overall." %}{% endif %}
+        <br><span class="help">{% blocktranslate with n=est.on_target pct=est.on_target_pct %}{{ n }} within ±20–25% ({{ pct }}%) · {% endblocktranslate %}{{ est.actual|hm }} / {{ est.estimate|hm }}</span></p>
+    </div>
+    <p class="wr-est-label">{% translate "Biggest misses" %}</p>
+    <ul class="wd-notes">{% for r in est.misses %}<li><a href="{% url 'work:task' r.task.pk %}"><span class="truncate">{{ r.task.title }}</span><time class="num" data-tone="{% if r.ratio > 1.2 %}late{% elif r.ratio < 0.8 %}early{% endif %}">{{ r.actual|hm }} / {{ r.estimate|hm }}</time></a></li>{% endfor %}</ul>
   </section>
   {% endif %}
 </div>

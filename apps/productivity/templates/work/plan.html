@@ -1,0 +1,118 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% translate "Plan my day" %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+{{ plan|json_script:"plan-data" }}
+<div class="stack" x-data="workPlan(JSON.parse(document.getElementById('plan-data').textContent), { isToday: {{ is_today|yesno:'true,false' }}, dayStart: {{ day_start }}, dayEnd: {{ day_end }} })"
+     @pointermove.window="move($event)" @pointerup.window="up($event)" @pointercancel.window="drag = null; ghost = null" @keydown.escape.window="picked = null; open = null">
+  <header class="wp-head">
+    <div class="min-w-0"><p class="wp-kicker">{% if is_today %}{% translate "Today" %} · {% endif %}{{ day|date:"l, j F" }}{% if not work_day %} · {% translate "a day off" %}{% endif %}</p>
+      <h1 class="wp-title">{% translate "Plan my day" %}</h1>
+      <p class="wp-sub">
+        <span x-text="hm(planned)">{{ planned_minutes|minutes_hm }}</span> {% translate "planned" %}
+        {% if window_minutes %}· {% blocktranslate with start=start_label end=end_label %}your day is {{ start }}–{{ end }}{% endblocktranslate %}{% endif %}
+        <span class="wpn-over" x-show="overbooked" x-cloak>· {% translate "more than fits" %}</span>
+        <span x-show="tracked" x-cloak>· <span x-text="hm(tracked)"></span> {% translate "tracked" %}</span>
+      </p></div>
+    <div class="wp-actions">
+      <a href="?date={{ prev|date:'Y-m-d' }}" class="icon-btn" aria-label="{% translate 'Previous day' %}">{% icon "chevron-left" %}</a>
+      {% if not is_today %}<a href="{% url 'work:plan' %}" class="btn btn-secondary btn-sm">{% translate "Today" %}</a>{% endif %}
+      <a href="?date={{ next|date:'Y-m-d' }}" class="icon-btn" aria-label="{% translate 'Next day' %}">{% icon "chevron-right" %}</a>
+    </div>
+  </header>
+
+  <div class="wpn">
+    <section class="card wpn-side">
+      <header class="card-header"><div>
+        <h2 class="card-title">{% translate "To plan" %} <span class="wpn-count" x-text="plan.unplanned.length"></span></h2>
+        <p class="card-subtitle wpn-hint-desk">{% translate "Drag a task onto a time. Drag a block's bottom edge to change how long it takes." %}</p>
+        <p class="card-subtitle wpn-hint-touch">{% translate "Tap a task, then tap a time. Hold ⠿ to drag." %}</p>
+      </div></header>
+      <div class="card-body wpn-tools">
+        <button type="button" class="btn btn-primary btn-sm" @click="act('fill')" :disabled="busy || !plan.unplanned.length">{% icon "bolt" %}{% translate "Fill my day" %}</button>
+        <button type="button" class="btn btn-ghost btn-sm" @click="act('clear')" :disabled="busy || !plan.blocks.length">{% translate "Clear the plan" %}</button>
+      </div>
+      <ul class="wpn-list" role="list">
+        <template x-for="item in plan.unplanned" :key="item.id">
+          <li class="wpn-item" :class="{ 'is-picked': picked === item.id, 'is-dragging': drag && drag.id === item.id && drag.moved }" :data-color="item.color || null"
+              @pointerdown="if (!$event.target.closest('a, button')) down($event, item.id, 'item')">
+            <span class="wpn-grip" aria-hidden="true" @pointerdown.stop="down($event, item.id, 'item')">⠿</span>
+            <span class="wpn-item-main">
+              <span class="wpn-item-title" x-text="item.title"></span>
+              <span class="wpn-item-meta">
+                <span x-show="item.priority >= 3" class="wt-prio" :data-p="item.priority" x-text="item.priority == 4 ? '!!!' : '!!'"></span>
+                <span x-show="item.project" class="wt-proj"><i class="wt-dot" :data-color="item.color"></i><span x-text="item.project"></span></span>
+                <span class="num" x-text="item.estimate ? '~' + hm(item.estimate) : '{{ _("no estimate (30m)")|escapejs }}'"></span>
+                <span x-show="item.waiting" class="wt-wait">{% icon "clock" %}<span x-text="item.waiting"></span></span>
+              </span>
+            </span>
+            <button type="button" class="icon-btn wpn-pick" @click.stop="picked = picked === item.id ? null : item.id" :aria-pressed="(picked === item.id).toString()" aria-label="{% translate 'Pick a time for this' %}">{% icon "clock" %}</button>
+          </li>
+        </template>
+      </ul>
+      <div class="card-body" x-show="!plan.unplanned.length" x-cloak>
+        <p class="help">{% if is_today %}{% translate "Everything on today's list has a time. Add tasks to My Day to plan more." %}{% else %}{% translate "Nothing on this day's list yet." %}{% endif %}</p>
+        <a href="{% url 'work:tasks' %}" class="btn btn-secondary btn-sm mt-3">{% icon "check" %}{% translate "Pick from your tasks" %}</a>
+      </div>
+    </section>
+
+    <section class="card wpn-main">
+      <div class="wpn-pickbar" x-show="picked" x-cloak>
+        <span>{% icon "clock" %}<b x-text="picked && task(picked) ? task(picked).title : ''"></b> — {% translate "tap a time on the timeline, or type one:" %}</span>
+        <form class="wpn-pickform" @submit.prevent="setTime(picked, pickTime)">
+          <input type="time" step="900" class="form-input input-compact" x-model="pickTime" aria-label="{% translate 'Start time' %}" required>
+          <button type="submit" class="btn btn-primary btn-sm">{% translate "Plan" %}</button>
+          <button type="button" class="btn btn-ghost btn-sm" @click="picked = null">{% translate "Cancel" %}</button>
+        </form>
+      </div>
+      <div class="wpn-scroll" x-ref="scroll">
+        <div class="wpn-grid" x-ref="grid" :class="picked && 'is-picking'" style="height: {{ grid_px }}px" @click.self="gridClick($event)">
+          <div class="wpn-work" style="top: {{ work_top }}px; height: {{ work_px }}px" aria-hidden="true"></div>
+          <template x-for="h in hours()" :key="h">
+            <div class="wpn-hour" :style="'top:' + (h * 60 * ppm) + 'px'" aria-hidden="true"><span x-text="label(h)"></span></div>
+          </template>
+          <div class="wpn-lanes" @click.self="gridClick($event)">
+            <div class="wpn-tracked" aria-hidden="true">
+              <template x-for="(e, i) in plan.entries" :key="i">
+                <i :style="entryStyle(e)" :data-color="e.color || null" :class="e.running && 'is-running'" :title="e.title"></i>
+              </template>
+            </div>
+            <div class="wpn-blocks" @click.self="gridClick($event)">
+              <template x-for="b in laid" :key="b.id">
+                <div class="wpn-block" :style="blockStyle(b)" :data-color="b.color || null" :data-p="b.priority"
+                     :class="{ 'is-done': b.done, 'is-open': open === b.id, 'is-short': b.length < 30, 'is-running': isRunning(b.id), 'is-dragging': drag && drag.id === b.id && drag.moved }"
+                     @pointerdown="if (!$event.target.closest('button, a, input, form')) down($event, b.id, 'block')">
+                  <span class="wpn-block-time num" x-text="hhmm(b.start) + '–' + hhmm(b.start + b.length)"></span>
+                  <span class="wpn-block-title" x-text="b.title"></span>
+                  <span class="wpn-resize" @pointerdown.stop="down($event, b.id, 'resize')" aria-hidden="true"></span>
+                  <div class="wpn-pop" x-show="open === b.id" x-cloak @click.outside="open = null" @pointerdown.stop>
+                    <p class="wpn-pop-title" x-text="b.title"></p>
+                    <form class="wpn-pickform" @submit.prevent="setTime(b.id, $event.target.elements.t.value)">
+                      <label class="sr-only" :for="'t' + b.id">{% translate "Start time" %}</label>
+                      <input type="time" step="900" name="t" :id="'t' + b.id" class="form-input input-compact" :value="hhmm(b.start)">
+                      <button type="submit" class="btn btn-secondary btn-sm">{% translate "Move" %}</button>
+                    </form>
+                    <div class="wpn-pop-actions">
+                      <button type="button" class="btn btn-primary btn-sm" x-show="!b.done" @click="timer(b.id)"><span x-text="isRunning(b.id) ? '{{ _("Stop")|escapejs }}' : '{{ _("Start timer")|escapejs }}'"></span></button>
+                      <button type="button" class="btn btn-secondary btn-sm" @click="done(b.id)" x-text="b.done ? '{{ _("Not done")|escapejs }}' : '{{ _("Done")|escapejs }}'"></button>
+                      <a :href="b.url" class="btn btn-ghost btn-sm">{% translate "Open" %}</a>
+                      <button type="button" class="btn btn-ghost btn-sm" @click="unplan(b.id)">{% translate "Take off the plan" %}</button>
+                    </div>
+                  </div>
+                </div>
+              </template>
+              <div class="wpn-ghost" x-show="ghost" x-cloak :style="ghost ? 'top:' + (ghost.start * ppm) + 'px;height:' + Math.max(ghost.length * ppm - 2, 18) + 'px' : ''">
+                <span class="num" x-text="ghost ? hhmm(ghost.start) + '–' + hhmm(ghost.start + ghost.length) : ''"></span>
+              </div>
+            </div>
+          </div>
+          {% if is_today %}<div class="wpn-now" x-show="isToday" :style="'top:' + (now * ppm) + 'px'" aria-hidden="true"><span x-text="hhmm(now)"></span></div>{% endif %}
+        </div>
+      </div>
+      <p class="wpn-legend"><i class="wpn-legend-tracked"></i>{% translate "Thin bars: time you actually tracked" %}</p>
+    </section>
+  </div>
+</div>
+{% endblock %}

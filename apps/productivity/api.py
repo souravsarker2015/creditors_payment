@@ -170,7 +170,16 @@ def task_move(request, pk):
     return ok(status=task.status, order=task.order)
 
 
-TASK_FIELDS = {"title", "priority", "due_date", "my_day", "project", "status", "notes", "estimate_minutes", "link", "goal", "waiting_for"}
+TASK_FIELDS = {"title", "priority", "due_date", "my_day", "project", "status", "notes", "estimate_minutes", "link", "goal", "waiting_for",
+               "scheduled_at"}
+
+
+def _local_dt(value):
+    """'2026-10-12T14:30' (the person's own clock) → an aware time, or None."""
+    when = parse_datetime(value) if value else None
+    if when is not None and timezone.is_naive(when):
+        when = timezone.make_aware(when, timezone.get_current_timezone())
+    return when
 
 
 @work_required
@@ -207,8 +216,37 @@ def task_update(request, pk):
             task.goal = Goal.objects.filter(owner=request.user, pk=value or 0).first()
         elif name == "waiting_for":
             task.waiting_for = value[:120]
+        elif name == "scheduled_at":       # a block on the day planner (empty = take it off)
+            task.scheduled_at = _local_dt(value)
+            if value and task.scheduled_at is None:
+                return bad("scheduled_at")
+            if task.scheduled_at:
+                day = timezone.localtime(task.scheduled_at).date()
+                if task.my_day != day and task.due_date != day:
+                    task.my_day = day
+    if "my_day" in request.POST and "scheduled_at" not in request.POST and task.scheduled_at:
+        if timezone.localtime(task.scheduled_at).date() != task.my_day:     # moved to another day: off the old timeline
+            task.scheduled_at = None
     task.save()
-    return ok(html=task_row(request, task))
+    return ok(html=task_row(request, task), scheduled_at=timezone.localtime(task.scheduled_at).strftime("%Y-%m-%dT%H:%M") if task.scheduled_at else "",
+              my_day=task.my_day.isoformat() if task.my_day else "")
+
+
+@work_required
+@require_POST
+def plan_action(request):
+    """The day planner's "Fill my day" and "Clear the plan"."""
+    from .views import plan_data
+
+    day = parse_date(request.POST.get("date", "")) or timezone.localdate()
+    action = request.POST.get("action")
+    if action == "fill":
+        placed, left = services.fill_day(request.user, day)
+        return ok(placed=len(placed), left=len(left), plan=plan_data(request.user, day))
+    if action == "clear":
+        services.clear_plan(request.user, day)
+        return ok(plan=plan_data(request.user, day))
+    return bad("action")
 
 
 @work_required

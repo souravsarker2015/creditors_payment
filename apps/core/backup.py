@@ -35,6 +35,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core import serializers
+from django.core.serializers.json import DjangoJSONEncoder
 from django.core.files.base import File
 from django.core.files.storage import default_storage
 from django.core.management.color import no_style
@@ -123,17 +124,30 @@ def current_counts():
 _ZERO_MS = re.compile(r"(\d{2}:\d{2}:\d{2})\.000(?=Z|[+-]\d{2}:\d{2}|$)")
 
 
+def serialize_rows(model, queryset):
+    """Rows of one table as Django-serialized dicts. Many-to-many links are read
+    with one query per link table, not one per row (Django's own way)."""
+    m2m = list(model._meta.many_to_many)
+    objs = serializers.serialize("python", queryset, fields=[f.name for f in model._meta.local_fields])
+    objs = json.loads(json.dumps(objs, cls=DjangoJSONEncoder))     # the same values the JSON format writes
+    for f in m2m:
+        src, dst = f.m2m_field_name(), f.m2m_reverse_field_name()
+        links = {}
+        for a, b in f.remote_field.through._base_manager.filter(**{f"{src}__in": queryset.values("pk")}).values_list(f"{src}_id", f"{dst}_id"):
+            links.setdefault(a, []).append(b)
+        for o in objs:
+            o["fields"][f.name] = sorted(links.get(o["pk"], []))
+    return objs
+
+
 def _dump_rows():
     """Every row as a list of Django-serialized dicts, in a fixed order (table, then id),
     so two exports of the same data are identical."""
     rows, counts = [], {}
     for model in backup_models():
-        objs = json.loads(serializers.serialize("json", model._base_manager.order_by("pk")))
-        m2m = [f.name for f in model._meta.many_to_many]
+        objs = serialize_rows(model, model._base_manager.order_by("pk"))
         times = [f.name for f in model._meta.concrete_fields if f.get_internal_type() in ("DateTimeField", "TimeField")]
         for o in objs:
-            for name in m2m:
-                o["fields"][name] = sorted(o["fields"].get(name) or [])
             for name in times:
                 value = o["fields"].get(name)
                 if isinstance(value, str):
@@ -211,6 +225,17 @@ def save_on_server(prefix="fintrack-backup", user=None):
     finally:
         tmp.unlink(missing_ok=True)
     return path
+
+
+def prune(keep, prefix="fintrack-backup"):
+    """Delete all but the newest `keep` backups with this name (the ones a
+    scheduled `backup_export --keep N` makes). Returns the names deleted."""
+    found = sorted(backup_dir().glob(f"{prefix}-*.zip"), key=lambda p: p.stat().st_mtime, reverse=True)
+    gone = []
+    for old in found[max(keep, 1):]:
+        old.unlink(missing_ok=True)
+        gone.append(old.name)
+    return gone
 
 
 def server_backups():
@@ -423,13 +448,15 @@ def area_of(label):
     app = label.split(".")[0]
     if label in ("auth.user", "auth.group") or app in ("accounts", "core"):
         return "people"
+    if app == "productivity":
+        return "work"
     config = apps.get_app_config(app)
     return "business" if config.name.startswith("apps.business.") else "personal"
 
 
 def summary(counts_now, counts_backup=None):
     """Rows for the page: per area (People, Personal, Business), each table's count now and in the backup."""
-    groups = {"people": [], "personal": [], "business": []}
+    groups = {"people": [], "personal": [], "work": [], "business": []}
     for model in backup_models():
         label = model._meta.label_lower
         now = counts_now.get(label, 0)
@@ -438,9 +465,10 @@ def summary(counts_now, counts_backup=None):
             continue
         groups[area_of(label)].append({"label": label, "name": str(model._meta.verbose_name_plural).capitalize(),
                                        "app": str(apps.get_app_config(model._meta.app_label).verbose_name).split("·")[-1].strip(), "now": now, "backup": then})
-    titles = {"people": _("Users and settings"), "personal": _("Personal ledgers"), "business": _("Fish farm business")}
+    titles = {"people": _("Users and settings"), "personal": _("Personal ledgers"), "work": _("Work tracker"),
+              "business": _("Fish farm business")}
     out = []
-    for key in ("people", "personal", "business"):
+    for key in ("people", "personal", "work", "business"):
         rows = sorted(groups[key], key=lambda r: r["name"].lower())
         out.append({"key": key, "title": titles[key], "rows": rows,
                     "now": sum(r["now"] for r in rows),

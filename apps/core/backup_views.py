@@ -35,12 +35,18 @@ def site_admin_required(view):
 
 @site_admin_required
 def backup_home_view(request):
+    from django.utils import timezone
+
     counts = bk.current_counts()
+    copies = bk.server_backups()
+    last = next((b for b in copies if not b["automatic"]), None)
     return render(request, "backup/home.html", {
         "areas": bk.summary(counts),
         "total": sum(counts.values()),
-        "server_backups": bk.server_backups(),
+        "server_backups": copies,
         "backup_dir": bk.backup_dir(),
+        "last": last,
+        "last_days": (timezone.now() - last["when"]).days if last else None,
     })
 
 

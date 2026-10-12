@@ -11,7 +11,7 @@
   </header>
 
   <dl class="backup-stats">
-    <div class="backup-stat is-total">
+    <div class="backup-stat is-total is-wide">
       <dt>{% translate "Records now" %}</dt>
       <dd>{{ total }}</dd>
     </div>
@@ -22,6 +22,23 @@
     </div>
     {% endfor %}
   </dl>
+
+  {% if not last %}
+  <div class="callout" data-tone="warn">
+    {% include "partials/icon.html" with name="alert" %}
+    <p>{% translate "No backup has been saved on this server yet. Save one now, and set up automatic backups (below) so there's always a recent one." %}</p>
+  </div>
+  {% elif last_days >= 7 %}
+  <div class="callout" data-tone="warn">
+    {% include "partials/icon.html" with name="alert" %}
+    <p>{% blocktranslate count days=last_days %}The newest backup on this server is {{ days }} day old.{% plural %}The newest backup on this server is {{ days }} days old.{% endblocktranslate %} {% translate "Save a fresh one, or set up automatic backups (below)." %}</p>
+  </div>
+  {% else %}
+  <div class="callout" data-tone="info">
+    {% include "partials/icon.html" with name="check" %}
+    <p>{% blocktranslate with when=last.when|date:"j M Y, H:i" %}Newest backup on this server: {{ when }}.{% endblocktranslate %}</p>
+  </div>
+  {% endif %}
 
   <div class="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
     <section class="card">
@@ -113,6 +130,21 @@
     {% else %}
     <div class="card-body"><p class="help">{% translate "None yet. Use “Save a copy on this server”, and one is also saved automatically before every restore." %}</p></div>
     {% endif %}
+  </section>
+
+  <section class="card">
+    <div class="card-header">
+      <span class="backup-icon" data-tone="accent">{% include "partials/icon.html" with name="clock" %}</span>
+      <div>
+        <h2 class="card-title">{% translate "Automatic backups" %}</h2>
+        <p class="card-subtitle">{% translate "Have the server save a backup by itself every day and keep the last two weeks." %}</p>
+      </div>
+    </div>
+    <div class="card-body stack">
+      <p class="help">{% translate "Add a daily scheduled task (on PythonAnywhere: the “Tasks” tab; on your own server: cron) that runs, in the project folder:" %}</p>
+      <code class="backup-code">python manage.py backup_export --keep 14</code>
+      <p class="help">{% translate "Each run saves a new backup here and deletes the ones older than the newest 14. Copies saved before a restore are never deleted by it. Download one now and then to keep somewhere other than this server." %}</p>
+    </div>
   </section>
 
   <section class="card">

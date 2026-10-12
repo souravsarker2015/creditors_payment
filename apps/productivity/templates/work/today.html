@@ -46,8 +46,18 @@
         {% if cap.target and cap.planned %}<p class="wd-cap{% if cap.over %} is-over{% endif %}"><span class="wd-cap-bar"><i style="width: {{ cap.pct }}%"></i></span>
           {% if cap.over %}{% blocktranslate with p=cap.planned|hm t=cap.target|hm %}{{ p }} planned — more than your {{ t }} day. Move something to tomorrow?{% endblocktranslate %}{% else %}{% blocktranslate with p=cap.planned|hm t=cap.target|hm %}{{ p }} planned of your {{ t }} day{% endblocktranslate %}{% endif %}{% if cap.unestimated %} · {% blocktranslate count counter=cap.unestimated %}{{ counter }} without an estimate{% plural %}{{ counter }} without an estimate{% endblocktranslate %}{% endif %}</p>{% endif %}
       </div>
-      <a href="{% url 'work:tasks' %}" class="btn btn-ghost btn-sm">{% translate "All tasks" %}{% icon "arrow-right" %}</a>
+      <div class="wd-head-actions">
+        <a href="{% url 'work:plan' %}" class="btn btn-secondary btn-sm">{% icon "clock" %}{% translate "Plan" %}</a>
+        <a href="{% url 'work:tasks' %}" class="btn btn-ghost btn-sm">{% translate "All tasks" %}{% icon "arrow-right" %}</a>
+      </div>
     </header>
+    {% if next_block %}
+    <a href="{% url 'work:plan' %}" class="wd-next{% if next_block.scheduled_at <= now %} is-now{% endif %}">
+      <span class="wd-next-time num">{{ next_block.scheduled_at|time:"H:i" }}</span>
+      <span class="wd-next-main"><small>{% if next_block.scheduled_at <= now %}{% translate "On your plan now" %}{% else %}{% translate "Next on your plan" %}{% endif %}</small><b>{{ next_block.title }}</b></span>
+      {% icon "arrow-right" %}
+    </a>
+    {% endif %}
     {% if leftovers %}
     <div class="wd-left" x-data="{ gone: false, key: 'work-left-seen:{{ today|date:"Y-m-d" }}', init() { try { this.gone = !!localStorage.getItem(this.key) } catch (e) {} } }" x-show="!gone">
       <p>{% icon "repeat" %}<span>{% blocktranslate count counter=leftovers|length %}{{ counter }} task left from earlier days.{% plural %}{{ counter }} tasks left from earlier days.{% endblocktranslate %}</span></p>
@@ -57,9 +67,9 @@
     {% endif %}
     <form class="wd-quick" @submit.prevent="const box = $refs.q; if (!box.value.trim()) return; Work.api(Work.cfg.urls.taskAdd, { text: box.value, my_day: '1' }).then(r => { if (r.ok && r.html) { $refs.list.insertAdjacentHTML('afterbegin', r.html); $root.classList.add('has-items'); } else if (!r.ok) Work.toast(r.error, 'warn'); }); box.value = ''">
       <span class="wd-quick-icon" aria-hidden="true">{% icon "plus" %}</span>
-      <input x-ref="q" class="wd-quick-input" placeholder="{% translate 'Add to My Day… (try #tag !high ~30m)' %}" aria-label="{% translate 'Add a task to My Day' %}" autocomplete="off" enterkeyhint="done">
+      <input x-ref="q" class="wd-quick-input" placeholder="{% translate 'Add to My Day… (try #tag !high ~30m at 3pm)' %}" aria-label="{% translate 'Add a task to My Day' %}" autocomplete="off" enterkeyhint="done">
     </form>
-    <ul class="wt-list" x-ref="list" data-new-tasks>
+    <ul class="wt-list" x-ref="list" data-new-tasks data-today-list>
       {% for t in open_tasks %}{% include "work/partials/task_row.html" %}{% endfor %}
     </ul>
     {% if more_tasks %}<a href="{% url 'work:tasks' %}" class="wt-show-done wd-more">{% blocktranslate count counter=more_tasks %}{{ counter }} more on the task list{% plural %}{{ counter }} more on the task list{% endblocktranslate %}{% icon "arrow-right" %}</a>{% endif %}
