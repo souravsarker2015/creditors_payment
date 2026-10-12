@@ -725,6 +725,16 @@ class DayPlannerTests(TestCase):
         self.assertNotIn(t, groups.get("todo", []))
         self.assertIn(t, services.today_tasks(self.user, later)[0])
 
+    def test_snoozing_a_task_due_today_moves_its_due_date(self):
+        t = Task.objects.create(owner=self.user, title="Reply to Karim", due_date=self.today, my_day=self.today)
+        keep = Task.objects.create(owner=self.user, title="Release", due_date=self.today + timedelta(days=10))
+        for task in (t, keep):
+            self.client.post(reverse("work:api_task_update", args=[task.pk]), {"my_day": self.tomorrow.isoformat(), "later": "1"})
+        t.refresh_from_db(), keep.refresh_from_db()
+        self.assertEqual((t.my_day, t.due_date), (self.tomorrow, self.tomorrow))
+        self.assertEqual(keep.due_date, self.today + timedelta(days=10))      # a later deadline stays
+        self.assertNotIn(t, services.today_tasks(self.user, self.today)[0])
+
     def test_snoozing_takes_it_off_the_old_timeline(self):
         t = Task.objects.create(owner=self.user, title="Plan", my_day=self.today, scheduled_at=timezone.now())
         self.client.post(reverse("work:api_task_update", args=[t.pk]), {"my_day": self.tomorrow.isoformat()})
@@ -790,3 +800,93 @@ class DayPlannerTests(TestCase):
                                                          "s-daily_target_hours": "6", "s-day_start": "08:30", "s-day_end": "08:00"})
         self.assertEqual(r.status_code, 200)            # ends before it starts: refused
         self.assertContains(r, "end after it starts")
+
+
+class WeekAndNotesTests(TestCase):
+    """Plan the week, to-dos in notes becoming tasks, and [[links]] between notes."""
+
+    def setUp(self):
+        self.user = User.objects.create_superuser("dev", "d@example.com", PW)
+        self.client.force_login(self.user)
+        self.today = timezone.localdate()
+
+    def test_week_shows_days_and_moves_tasks(self):
+        s = WorkSettings.for_user(self.user)
+        start = services.week_start(self.today, s.week_start)
+        later = start + timedelta(days=6) if start + timedelta(days=6) > self.today else self.today
+        planned = Task.objects.create(owner=self.user, title="On a day", my_day=later, estimate_minutes=90)
+        due = Task.objects.create(owner=self.user, title="Due that day", due_date=later)
+        loose = Task.objects.create(owner=self.user, title="No day yet", priority=3)
+        Task.objects.create(owner=self.user, title="Waiting one", waiting_for="QA")
+        r = self.client.get(reverse("work:week"))
+        self.assertEqual(r.status_code, 200)
+        day = next(d for d in r.context["days"] if d["date"] == later)
+        self.assertEqual({t.title for t in day["tasks"]}, {"On a day", "Due that day"})
+        self.assertEqual(day["planned"], 90 * 60)
+        self.assertEqual([t.title for t in r.context["backlog"]], ["No day yet"])
+        self.client.post(reverse("work:api_task_update", args=[loose.pk]), {"my_day": later.isoformat()})
+        self.client.post(reverse("work:api_task_update", args=[planned.pk]), {"my_day": ""})        # back to "not planned yet"
+        loose.refresh_from_db(), planned.refresh_from_db()
+        self.assertEqual((loose.my_day, planned.my_day), (later, None))
+        r = self.client.get(reverse("work:week"), {"start": (start + timedelta(days=7)).isoformat()})
+        self.assertEqual(r.context["start"], start + timedelta(days=7))
+        res = self.client.post(reverse("work:api_task_add"), {"text": "Write tests ~1h", "my_day": later.isoformat()}).json()
+        self.assertEqual(Task.objects.get(pk=res["id"]).my_day, later)
+        self.assertIn('data-est="60"', res["card"])
+
+    def test_week_is_private(self):
+        other = User.objects.create_superuser("other", "o@example.com", PW)
+        Task.objects.create(owner=other, title="Someone else's", my_day=self.today)
+        self.assertNotContains(self.client.get(reverse("work:week")), "Someone else")
+
+    def test_note_todos_become_tasks_once_and_tick_back(self):
+        api = Project.objects.create(owner=self.user, name="API")
+        note = Note.objects.create(owner=self.user, title="Sprint planning", project=api,
+                                   body="## Action items\n- [ ] Fix token refresh #auth tomorrow ~1h\n- [x] Already done\n* [ ] Write the ADR\nNot a todo")
+        r = self.client.post(reverse("work:api_note_action", args=[note.pk]), {"action": "todos"}).json()
+        self.assertEqual(r["count"], 2)
+        fix = Task.objects.get(title="Fix token refresh")
+        self.assertEqual((fix.project, fix.from_note, fix.estimate_minutes), (api, note, 60))
+        self.assertEqual(fix.due_date, self.today + timedelta(days=1))
+        self.assertEqual(list(fix.tags.values_list("name", flat=True)), ["auth"])
+        note.refresh_from_db()
+        self.assertIn(f"- [ ] [Fix token refresh](/work/tasks/{fix.pk}/)", note.body)
+        self.assertIn("- [x] Already done", note.body)
+        self.assertEqual(r["body"], note.body)
+        again = self.client.post(reverse("work:api_note_action", args=[note.pk]), {"action": "todos"})
+        self.assertEqual(again.status_code, 400)                         # nothing new: no duplicates
+        self.assertEqual(Task.objects.filter(owner=self.user).count(), 2)
+        self.client.post(reverse("work:api_task_done", args=[fix.pk]), {"done": "1"})
+        note.refresh_from_db()
+        self.assertIn(f"- [x] [Fix token refresh](/work/tasks/{fix.pk}/)", note.body)
+        self.client.post(reverse("work:api_task_done", args=[fix.pk]), {"done": "0"})
+        note.refresh_from_db()
+        self.assertIn(f"- [ ] [Fix token refresh](/work/tasks/{fix.pk}/)", note.body)
+
+    def test_wiki_links_and_backlinks(self):
+        adr = Note.objects.create(owner=self.user, title="ADR: Use Postgres", body="We chose Postgres.")
+        Note.objects.create(owner=self.user, title="Sprint 12", body="See [[ADR: Use Postgres]] for why.")
+        other = User.objects.create_superuser("other", "o@example.com", PW)
+        Note.objects.create(owner=other, title="Theirs", body="[[ADR: Use Postgres]]")
+        r = self.client.get(reverse("work:note_go"), {"title": "adr: use postgres"})
+        self.assertRedirects(r, reverse("work:note", args=[adr.pk]))
+        r = self.client.get(reverse("work:note_go"), {"title": "Caching plan"})
+        self.assertEqual(r.status_code, 302)
+        self.assertIn("new=1", r["Location"])
+        page = self.client.get(r["Location"])
+        self.assertEqual(page.context["note_data"]["title"], "Caching plan")
+        self.assertFalse(Note.objects.filter(title="Caching plan").exists())   # only made when you write in it
+        page = self.client.get(reverse("work:note", args=[adr.pk]))
+        self.assertEqual([n.title for n in page.context["backlinks"]], ["Sprint 12"])
+        self.assertIn("Sprint 12", page.context["titles"])
+        self.assertNotIn("Theirs", page.context["titles"])
+
+    def test_restore_keeps_note_links(self):
+        note = Note.objects.create(owner=self.user, title="Retro", body="- [ ] Fix flaky test")
+        services.note_todos_to_tasks(self.user, note)
+        rows = __import__("json").loads(__import__("django.core.serializers", fromlist=["serialize"]).serialize(
+            "json", list(Note.objects.filter(owner=self.user)) + list(Task.objects.filter(owner=self.user))))
+        new = User.objects.create_superuser("new", "n@example.com", PW)
+        services.restore(new, rows)
+        task = Task.objects.get(owner=new)
+        self.assertEqual(task.from_note.owner, new)

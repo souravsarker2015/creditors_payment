@@ -2,6 +2,7 @@
 (owner=request.user): nobody sees anyone else's work, admins included."""
 import csv
 from datetime import timedelta
+from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -53,7 +54,7 @@ def _urls():
         "help": r("work:help"), "entry_new": r("work:entry_new"), "task_new": r("work:task_new"), "goal_new": r("work:goal_new"),
         "learning_new": r("work:learning_new"), "snippet_new": r("work:snippet_new"), "export": r("work:export"),
         "learningBase": "/work/api/learning/", "goalBase": "/work/api/goals/",
-        "plan": r("work:plan"), "planAction": r("work:api_plan"),
+        "plan": r("work:plan"), "planAction": r("work:api_plan"), "week": r("work:week"), "noteGo": r("work:note_go"),
     }
 
 
@@ -73,6 +74,7 @@ def _texts():
         "pickSome": _("Select some tasks first."),
         "clearPlan": _("Take every open task off the timeline? They stay on the day's list."), "planned": _("Planned"),
         "noRoom": _("no room for"), "dayFull": _("No free time left in your work day."), "nothingToPlan": _("Nothing left to plan."), "planTomorrow": _("Plan tomorrow"),
+        "tasksMade": _("Tasks made"), "openTasks": _("See them"), "tomorrow": _("Tomorrow"),
         "error": _("Couldn't save. Try again."), "later": _("Moved to"),
         "kinds": {"task": _("Task"), "note": _("Note"), "project": _("Project"), "goal": _("Goal"), "learning": _("Learning"),
                   "snippet": _("Snippet")},
@@ -85,6 +87,7 @@ def _commands():
     go = [
         ("today", _("Today"), "sun", "work:today", "g h", "home my day"),
         ("plan", _("Plan my day"), "clock", "work:plan", "g d", "time blocking schedule timeline day planner calendar hours"),
+        ("week", _("Plan the week"), "calendar", "work:week", "g w", "weekly planning schedule days"),
         ("tasks", _("Tasks"), "check", "work:tasks", "g t", "todo list"),
         ("board", _("Board"), "board", None, "g b", "kanban"),
         ("calendar", _("Calendar"), "calendar", "work:calendar", "g c", "month due"),
@@ -490,6 +493,8 @@ def notes_view(request, pk=None):
     if template:
         stamp = date_format(_today(), "j M Y")
         note_data.update({"title": f"{template[0]} — {stamp}", "body": str(template[1]), "tags": template[2]})
+    elif not note and request.GET.get("title"):        # a [[link]] to a note that isn't written yet
+        note_data["title"] = request.GET["title"].strip()[:200]
     if note:
         note_data = {"id": note.pk, "title": note.title, "body": note.body, "tags": " ".join(note.tags.values_list("name", flat=True)),
                      "project": str(note.project_id or ""), "updated": int(note.updated_at.timestamp() * 1000),
@@ -500,7 +505,21 @@ def notes_view(request, pk=None):
         "tags": Tag.objects.filter(owner=user, notes__isnull=False).distinct(),
         "projects": Project.objects.filter(owner=user, is_archived=False),
         "templates": [(key, t[0]) for key, t in NOTE_TEMPLATES.items()],
+        "backlinks": services.backlinks(note) if note else [],
+        "titles": list(Note.objects.filter(owner=user, is_archived=False).exclude(title="").order_by("-updated_at")
+                       .values_list("title", flat=True)[:500]),
     })
+
+
+@work_required
+def note_go_view(request):
+    """Where a [[Note title]] link goes: that note, or a new one with that title."""
+    title = request.GET.get("title", "").strip()[:200]
+    notes = Note.objects.filter(owner=request.user, title__iexact=title).order_by("is_archived", "-updated_at")
+    note = notes.first() if title else None
+    if note:
+        return redirect("work:note", pk=note.pk)
+    return redirect(reverse("work:notes") + "?" + urlencode({"new": "1", "title": title}))
 
 
 # ── Snippets ──────────────────────────────────────────────────────────────
@@ -971,6 +990,23 @@ def plan_view(request):
         "start_label": s.day_start.strftime("%H:%M"), "end_label": s.day_end.strftime("%H:%M"),
         "grid_px": round(24 * 60 * PLAN_PPM), "work_top": round((s.day_start.hour * 60 + s.day_start.minute) * PLAN_PPM),
         "work_px": round(max(window, 0) * PLAN_PPM), "work_day": s.is_work_day(day),
+    })
+
+
+@work_required
+def week_view(request):
+    """Plan the week: drag tasks between the days (My Day), see each day's load."""
+    user, today = request.user, _today()
+    s = WorkSettings.for_user(user)
+    start = services.week_start(_day(request, "start", today), s.week_start)
+    days, backlog, backlog_total = services.plan_week(user, start, today)
+    prefetch_related_objects([t for d in days for t in d["tasks"]] + backlog, "tags", "checklist")
+    planned = sum(d["planned"] for d in days if not d["past"])
+    return render_work(request, "work/week.html", {
+        "start": start, "end": start + timedelta(days=6), "today": today, "days": days, "backlog": backlog,
+        "backlog_more": max(backlog_total - len(backlog), 0), "prev": start - timedelta(days=7), "next": start + timedelta(days=7),
+        "is_this_week": start <= today <= start + timedelta(days=6), "planned": planned,
+        "target": sum(d["target"] for d in days if not d["past"]),
     })
 
 

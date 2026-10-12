@@ -17132,3 +17132,83 @@ msgstr "পরিকল্পনা থেকে সরান"
 
 msgid "Thin bars: time you actually tracked"
 msgstr "সরু দাগ: আসলে যতটা সময় ট্র্যাক করেছেন"
+
+msgid "No open to-dos here. Write them as “- [ ] something to do”."
+msgstr "এখানে কোনো খোলা করণীয় নেই। এভাবে লিখুন: “- [ ] যা করতে হবে”।"
+
+msgid "From note"
+msgstr "যে নোট থেকে"
+
+msgid "Plan the week (g w): drag tasks to the day you'll do them; Plan my day (g d): drag them onto hours. “Fill my day” does it for you."
+msgstr "সপ্তাহের পরিকল্পনা (g w): যেদিন করবেন সেদিনে টাস্ক টেনে রাখুন; দিনের পরিকল্পনা (g d): ঘণ্টায় টেনে রাখুন। “আমার দিন সাজান” নিজেই করে দেয়।"
+
+msgid "In a note, write to-dos as “- [ ] …” and press “Make tasks”. Ticking a task ticks its line in the note."
+msgstr "নোটে করণীয় “- [ ] …” এভাবে লিখে “টাস্ক বানান” চাপুন। টাস্কে টিক দিলে নোটের লাইনেও টিক পড়ে।"
+
+msgid "Link notes with [[Note title]] — type [[ to pick one. A note shows which notes link to it."
+msgstr "[[নোটের শিরোনাম]] দিয়ে নোট যুক্ত করুন — বেছে নিতে [[ লিখুন। প্রতিটি নোটে দেখা যায় কোন কোন নোট এর সাথে যুক্ত।"
+
+msgid "On a phone, swipe a task right to finish it, or left to move it to tomorrow."
+msgstr "ফোনে টাস্ক ডানে সোয়াইপ করলে শেষ, বাঁয়ে করলে আগামীকালে সরে যায়।"
+
+msgid "Link another note"
+msgstr "অন্য নোট যুক্ত করুন"
+
+msgid "Link another note: [[Title]]"
+msgstr "অন্য নোট যুক্ত করুন: [[শিরোনাম]]"
+
+msgid "Each “- [ ] …” line becomes a task. Ticking the task ticks the line."
+msgstr "প্রতিটি “- [ ] …” লাইন একটি টাস্ক হয়। টাস্কে টিক দিলে লাইনেও টিক পড়ে।"
+
+msgid "Make tasks"
+msgstr "টাস্ক বানান"
+
+msgid "Start writing… Markdown works: # heading, **bold**, `code`, - [ ] to-do, ``` code blocks, [[Another note]]."
+msgstr "লেখা শুরু করুন… Markdown চলে: # শিরোনাম, **মোটা**, `কোড`, - [ ] করণীয়, ``` কোড ব্লক, [[অন্য নোট]]।"
+
+msgid "Notes to link"
+msgstr "যুক্ত করার মতো নোট"
+
+#, python-format
+msgid "Linked from %(counter)s note"
+msgid_plural "Linked from %(counter)s notes"
+msgstr[0] "%(counter)sটি নোট থেকে যুক্ত"
+msgstr[1] "%(counter)sটি নোট থেকে যুক্ত"
+
+msgid "Plan the week"
+msgstr "সপ্তাহের পরিকল্পনা"
+
+msgid "Tasks made"
+msgstr "টাস্ক তৈরি হয়েছে"
+
+#, python-format
+msgid "planned of %(t)s left this week"
+msgstr "পরিকল্পিত — এই সপ্তাহে বাকি %(t)s-এর মধ্যে"
+
+msgid "Drag tasks to the day you'll do them."
+msgstr "যেদিন করবেন সেদিনে টাস্ক টেনে রাখুন।"
+
+msgid "Drag a task to the day you'll do it — it shows up in My Day that morning. Drop it back on “Not planned yet” to take it off."
+msgstr "যেদিন করবেন সেদিনে টাস্ক টেনে রাখুন — সেদিন সকালে আমার দিন-এ দেখা যাবে। সরাতে আবার “এখনো পরিকল্পনা হয়নি”-তে রাখুন।"
+
+msgid "Not planned yet"
+msgstr "এখনো পরিকল্পনা হয়নি"
+
+msgid "Open tasks with no day, most important first"
+msgstr "যেসব খোলা টাস্কের দিন ঠিক হয়নি, জরুরিগুলো আগে"
+
+msgid "day off"
+msgstr "ছুটির দিন"
+
+msgid "Plan the hours of this day"
+msgstr "এই দিনের ঘণ্টাগুলো সাজান"
+
+msgid "Plan the hours"
+msgstr "ঘণ্টা সাজান"
+
+msgid "Add a task…"
+msgstr "টাস্ক যোগ করুন…"
+
+#, python-format
+msgid "Add a task for %(day)s"
+msgstr "%(day)s-এর জন্য টাস্ক যোগ করুন"

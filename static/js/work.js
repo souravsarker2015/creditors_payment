@@ -349,7 +349,55 @@
       };
     });
 
-    /* ── Command palette (Ctrl+K): pages, commands and everything you made ─ */
+    /* ── Plan the week: drag tasks between the days (sets My Day) ─────── */
+    Alpine.data("workWeek", function () {
+      return {
+        init: function () {
+          var self = this;
+          function setup() {
+            if (!window.Sortable) return setTimeout(setup, 80);
+            self.$root.querySelectorAll("[data-day]").forEach(function (list) {
+              Sortable.create(list, {
+                group: { name: "week", put: function (to) { return !to.el.hasAttribute("data-past"); } },
+                animation: 160, ghostClass: "is-ghost", dragClass: "is-dragging", delay: 150, delayOnTouchOnly: true, filter: "a.wt-link", preventOnFilter: false,
+                forceFallback: true, fallbackTolerance: 4, fallbackOnBody: true, scroll: true, bubbleScroll: true,
+                onAdd: function (e) {
+                  var day = e.to.getAttribute("data-day");
+                  api(CFG.urls.taskBase + e.item.getAttribute("data-task") + "/update/", { my_day: day }).then(function (res) {
+                    if (res && res.ok === false) toast(res.error || t("error", "Couldn't save."), "warn");
+                  });
+                  self.count();
+                },
+              });
+            });
+            self.count();
+          }
+          setup();
+        },
+        count: function () {
+          var total = 0;
+          this.$root.querySelectorAll("[data-day]").forEach(function (list) {
+            var col = list.closest(".wwk-col"), mins = 0;
+            list.querySelectorAll("[data-task]:not(.is-done)").forEach(function (c) { mins += +c.getAttribute("data-est") || 0; });
+            var p = col.querySelector("[data-planned]"); if (p) p.textContent = hm(mins * 60);
+            var target = +col.getAttribute("data-target") || 0, bar = col.querySelector(".wwk-load");
+            if (bar && target) { bar.querySelector("i").style.width = Math.min(100, Math.round(100 * mins * 60 / target)) + "%"; bar.classList.toggle("is-over", mins * 60 > target); }
+            var c = col.querySelector("[data-count]"); if (c) c.textContent = list.children.length;
+            if (list.getAttribute("data-day") && !list.hasAttribute("data-past")) total += mins;
+          });
+          var w = d.querySelector("[data-week-planned]"); if (w) w.textContent = hm(total * 60);
+        },
+        add: function (e, day) {
+          var self = this, box = e.target.elements.text, text = box.value.trim(); if (!text) return;
+          box.value = "";
+          api(CFG.urls.taskAdd, { text: text, my_day: day }).then(function (res) {
+            if (!res.ok) { toast(res.error || t("notSaved", "Not saved."), "warn"); return; }
+            if (res.card) { e.target.previousElementSibling.insertAdjacentHTML("beforeend", res.card); self.count(); }
+          });
+        },
+      };
+    });
+
     /* ── Day planner: drag tasks onto the day's hours (time blocking) ──── */
     Alpine.data("workPlan", function (initial, opts) {
       var PPM = 1.2, SLOT = 15;     // pixels per minute; snap to quarter hours
@@ -512,6 +560,7 @@
       };
     });
 
+    /* ── Command palette (Ctrl+K): pages, commands and everything you made ─ */
     Alpine.data("workPalette", function () {
       var RECENT = "work-recent:" + ME;
       return {
@@ -680,6 +729,50 @@
       return {
         id: initial.id || null, title: initial.title || "", body: initial.body || "", tags: initial.tags || "", project: initial.project || "",
         state: "saved", savedAt: initial.saved || "", preview: false, timer: null, inflight: null, again: false,
+        making: false, suggest: [], pick: 0,
+        titles: (function () { try { return JSON.parse((d.getElementById("note-titles") || {}).textContent || "[]"); } catch (e) { return []; } })(),
+        get todoCount() {      // open "- [ ] …" lines that aren't tasks yet
+          return (this.body.match(/^[ \t]*[-*+][ \t]+\[ \][ \t]+\S.*$/gm) || []).filter(function (l) { return l.indexOf("/work/tasks/") < 0; }).length;
+        },
+        todosToTasks: function () {
+          var self = this; if (!this.id || this.making) return;
+          this.making = true;
+          Promise.resolve(this.saveNow()).then(function () {
+            return api(CFG.urls.noteBase + self.id + "/", { action: "todos" });
+          }).then(function (res) {
+            self.making = false;
+            if (!res || !res.ok) { if (res && res.error) toast(res.error, "warn"); return; }
+            if (res.queued) return;
+            self.body = res.body; self.savedAt = res.saved;
+            toast(t("tasksMade", "Tasks made") + ": " + res.count, "good", { label: t("openTasks", "See them"), run: function () { location.href = CFG.urls.tasks; } });
+          });
+        },
+        /* [[Note title]]: suggest the person's notes while typing a link */
+        linkLookup: function () {
+          var ta = this.$refs.body, before = this.body.slice(0, ta.selectionStart), m = /\[\[([^\]\n]{0,60})$/.exec(before);
+          if (!m) { this.suggest = []; return; }
+          var q = m[1].toLowerCase(), me = this.title;
+          this.suggest = this.titles.filter(function (x) { return x !== me && x.toLowerCase().indexOf(q) >= 0; }).slice(0, 7);
+          this.pick = 0;
+        },
+        chooseLink: function (title) {
+          var ta = this.$refs.body, at = ta.selectionStart, before = this.body.slice(0, at), after = this.body.slice(at);
+          var start = before.lastIndexOf("[[");
+          var close = after.indexOf("]]") === 0 ? "" : "]]";
+          this.body = before.slice(0, start) + "[[" + title + close + after;
+          var pos = start + 2 + title.length + 2;
+          this.suggest = [];
+          var self = this; this.$nextTick(function () { ta.focus(); ta.setSelectionRange(pos, pos); });
+        },
+        linkKey: function (e) {
+          if (this.suggest.length) {
+            if (e.key === "ArrowDown") { e.preventDefault(); this.pick = (this.pick + 1) % this.suggest.length; return; }
+            if (e.key === "ArrowUp") { e.preventDefault(); this.pick = (this.pick - 1 + this.suggest.length) % this.suggest.length; return; }
+            if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); this.chooseLink(this.suggest[this.pick]); return; }
+            if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); this.suggest = []; return; }
+          }
+          if (e.key === "Tab") { e.preventDefault(); this.insert("  "); }
+        },
         get draftKey() { return "work-note-draft:" + ME + ":" + (this.id || "new"); },
         init: function () {
           var draft = recall(this.draftKey, null), self = this;
@@ -940,11 +1033,14 @@
     if (menu && !menu.contains(e.target) && Date.now() - menuAt > 250) closeMenu();
   }, { passive: true, capture: true });
   window.addEventListener("resize", function () { closeMenu(); });
-  function later(row, day) {          // snooze: My Day moves to that day, so it's out of sight until then
-    taskUpdate(row, "my_day", day).then(function (res) {
+  function later(row, day) {          // snooze: out of sight until that day (a due date that has come moves along)
+    var id = row.getAttribute("data-task"), leave = !!row.closest("[data-today-list]") || row.hasAttribute("data-hide-done");
+    api(CFG.urls.taskBase + id + "/update/", { my_day: day, later: "1" }).then(function (res) {
       if (!res.ok) return;
-      toast(t("later", "Moved to") + " " + new Date(day + "T00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" }));
-      if (row.closest("[data-today-list]") || row.hasAttribute("data-hide-done")) { row.classList.add("is-leaving"); setTimeout(function () { row.remove(); }, 260); }
+      toast(t("later", "Moved to") + " " + new Date(day + "T00:00").toLocaleDateString(d.documentElement.lang || undefined, { weekday: "short", day: "numeric", month: "short" }));
+      var cur = d.querySelector('.wt-task[data-task="' + id + '"]') || row;
+      if (leave) { cur.classList.add("is-leaving"); setTimeout(function () { cur.remove(); }, 260); }
+      else if (res.html && cur.isConnected) freshRow(cur, res.html);
     });
   }
   d.addEventListener("submit", function (e) {
@@ -955,6 +1051,48 @@
     var who = wf.querySelector("input").value.trim(), row = menuRow; closeMenu();
     if (row && who) taskUpdate(row, "waiting_for", who);
   });
+
+  /* ── Phones: swipe a task right for done, left for tomorrow ─────────── */
+  (function () {
+    if (!("ontouchstart" in window)) return;
+    var sw = null, LIMIT = 84;
+    function reset(row) { row.classList.remove("is-swiping"); row.style.removeProperty("--sx"); row.removeAttribute("data-swipe"); row.removeAttribute("data-later-label"); }
+    d.addEventListener("touchstart", function (e) {
+      var row = e.target.closest && e.target.closest(".wt-task");
+      if (!row || e.touches.length !== 1 || row.closest(".is-selecting") || e.target.closest("input, textarea, .menu")) { sw = null; return; }
+      sw = { row: row, x: e.touches[0].clientX, y: e.touches[0].clientY, dx: 0, on: false };
+    }, { passive: true });
+    d.addEventListener("touchmove", function (e) {
+      if (!sw) return;
+      var dx = e.touches[0].clientX - sw.x, dy = e.touches[0].clientY - sw.y;
+      if (!sw.on) {
+        if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) { sw = null; return; }      // scrolling the page
+        if (Math.abs(dx) < 14 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+        sw.on = true; sw.row.classList.add("is-swiping"); sw.row.setAttribute("data-later-label", t("tomorrow", "Tomorrow"));
+      }
+      e.preventDefault();
+      if (dx > 0 && sw.row.classList.contains("is-done")) dx = Math.min(dx, 24);
+      sw.dx = Math.max(-130, Math.min(130, dx));
+      sw.row.style.setProperty("--sx", sw.dx + "px");
+      sw.row.setAttribute("data-swipe", sw.dx > 0 ? "done" : "later");
+      sw.row.classList.toggle("is-armed", Math.abs(sw.dx) >= LIMIT);
+    }, { passive: false });
+    function end() {
+      if (!sw) return;
+      var cur = sw; sw = null;
+      if (!cur.on) return;
+      var row = cur.row, armed = Math.abs(cur.dx) >= LIMIT;
+      row.classList.remove("is-armed"); reset(row);
+      if (!armed) return;
+      if (navigator.vibrate) { try { navigator.vibrate(12); } catch (err) { /* fine */ } }
+      if (cur.dx > 0) taskDone(row); else later(row, isoDay(1));
+      var stop = function (ev) { ev.preventDefault(); ev.stopPropagation(); };   // the finger lifting isn't a tap on the row
+      row.addEventListener("click", stop, { capture: true, once: true });
+      setTimeout(function () { row.removeEventListener("click", stop, { capture: true }); }, 400);
+    }
+    d.addEventListener("touchend", end, { passive: true });
+    d.addEventListener("touchcancel", function () { if (sw) { reset(sw.row); sw = null; } }, { passive: true });
+  })();
 
   /* ── Select many tasks (the task list's "Select" mode) ─────────────────── */
   var lastPicked = null;
@@ -1069,7 +1207,14 @@
   })();
 
   /* ── Markdown (notes, task notes) ───────────────────────────────────── */
+  function wikiLinks(text) {      // [[Note title]] → a link that opens (or starts) that note
+    if (!CFG.urls || !CFG.urls.noteGo) return text;
+    return (text || "").replace(/\[\[([^\[\]\n]{1,200})\]\]/g, function (all, title) {
+      return "[" + title.replace(/([\\*_`])/g, "\\$1") + "](" + CFG.urls.noteGo + "?title=" + encodeURIComponent(title.trim()).replace(/\(/g, "%28").replace(/\)/g, "%29") + ")";
+    });
+  }
   function renderMarkdown(text) {
+    text = wikiLinks(text);
     if (window.marked && window.DOMPurify) {
       var html = marked.parse(text || "", { gfm: true, breaks: true });
       return DOMPurify.sanitize(html);
@@ -1112,7 +1257,7 @@
   /* ── Keyboard: the whole module without a mouse ─────────────────────── */
   var pending = null;
   var GO = { h: "today", t: "tasks", b: "board", p: "projects", i: "time", f: "focus_page", n: "notes", s: "snippets", a: "habits", j: "journal", r: "reports", ",": "settings",
-             c: "calendar", o: "goals", l: "learning", v: "review", d: "plan" };
+             c: "calendar", o: "goals", l: "learning", v: "review", d: "plan", w: "week" };
   d.addEventListener("keydown", function (e) {
     if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || typing(e)) return;
     var k = e.key;

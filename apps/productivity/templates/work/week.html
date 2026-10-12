@@ -1,0 +1,54 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% translate "Plan the week" %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+<div class="stack" x-data="workWeek">
+  <header class="wp-head">
+    <div class="min-w-0"><p class="wp-kicker">{{ start|date:"j M" }} – {{ end|date:"j M Y" }}</p>
+      <h1 class="wp-title">{% translate "Plan the week" %}</h1>
+      <p class="wp-sub">{% if target %}<span data-week-planned>{{ planned|hm }}</span> {% blocktranslate with t=target|hm %}planned of {{ t }} left this week{% endblocktranslate %}{% else %}{% translate "Drag tasks to the day you'll do them." %}{% endif %}</p></div>
+    <div class="wp-actions">
+      <a href="?start={{ prev|date:'Y-m-d' }}" class="icon-btn" aria-label="{% translate 'Previous week' %}">{% icon "chevron-left" %}</a>
+      {% if not is_this_week %}<a href="{% url 'work:week' %}" class="btn btn-secondary btn-sm">{% translate "This week" %}</a>{% endif %}
+      <a href="?start={{ next|date:'Y-m-d' }}" class="icon-btn" aria-label="{% translate 'Next week' %}">{% icon "chevron-right" %}</a>
+      <a href="{% url 'work:plan' %}" class="btn btn-ghost btn-sm">{% icon "clock" %}{% translate "Plan my day" %}</a>
+    </div>
+  </header>
+  <p class="help wwk-hint">{% translate "Drag a task to the day you'll do it — it shows up in My Day that morning. Drop it back on “Not planned yet” to take it off." %}</p>
+
+  <div class="wwk">
+    <section class="card wwk-col wwk-backlog">
+      <header class="wwk-head"><div><h2 class="wwk-day">{% translate "Not planned yet" %}</h2>
+        <p class="wwk-sub">{% translate "Open tasks with no day, most important first" %}</p></div><span class="wwk-count" data-count>{{ backlog|length }}</span></header>
+      <div class="wwk-list" data-day="">{% for t in backlog %}{% include "work/partials/task_card.html" %}{% endfor %}</div>
+      {% if backlog_more %}<a href="{% url 'work:tasks' %}" class="wwk-more">{% blocktranslate count counter=backlog_more %}{{ counter }} more on the task list{% plural %}{{ counter }} more on the task list{% endblocktranslate %}</a>{% endif %}
+    </section>
+    <div class="wwk-days">
+      {% for d in days %}
+      <section class="card wwk-col{% if d.today %} is-today{% endif %}{% if d.past %} is-past{% endif %}{% if not d.work %} is-off{% endif %}" data-target="{{ d.target }}">
+        <header class="wwk-head">
+          <div class="min-w-0"><h2 class="wwk-day">{{ d.date|date:"D" }} <span class="num">{{ d.date|date:"j" }}</span>{% if d.today %} <span class="wwk-badge">{% translate "Today" %}</span>{% endif %}</h2>
+            <p class="wwk-sub">
+              {% if d.past %}{% if d.tracked %}{% blocktranslate with t=d.tracked|hm %}{{ t }} tracked{% endblocktranslate %}{% else %}{% translate "Nothing tracked" %}{% endif %}
+              {% else %}<span data-planned>{{ d.planned|hm }}</span>{% if d.target %} / {{ d.target|hm }}{% else %} · {% translate "day off" %}{% endif %}{% endif %}
+            </p></div>
+          <a href="{% url 'work:plan' %}?date={{ d.date|date:'Y-m-d' }}" class="icon-btn" aria-label="{% translate 'Plan the hours of this day' %}" data-tip="{% translate 'Plan the hours' %}">{% icon "clock" %}</a>
+        </header>
+        {% if not d.past and d.target %}<div class="wwk-load{% if d.over %} is-over{% endif %}"><i style="width: {{ d.pct }}%"></i></div>{% endif %}
+        <div class="wwk-list" data-day="{{ d.date|date:'Y-m-d' }}"{% if d.past %} data-past{% endif %}>{% for t in d.tasks %}{% include "work/partials/task_card.html" %}{% endfor %}</div>
+        {% if not d.past %}
+        <form class="wwk-add" @submit.prevent="add($event, '{{ d.date|date:'Y-m-d' }}')">
+          <span aria-hidden="true">{% icon "plus" %}</span>
+          <input name="text" placeholder="{% translate 'Add a task…' %}" aria-label="{% blocktranslate with day=d.date|date:'l' %}Add a task for {{ day }}{% endblocktranslate %}" autocomplete="off" enterkeyhint="done">
+        </form>
+        {% endif %}
+      </section>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block work_libs %}<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>{% endblock %}

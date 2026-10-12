@@ -42,6 +42,7 @@
   <section class="wn-editor">
     {% if note or request.GET.new %}
     {{ note_data|json_script:"note-data" }}
+    {{ titles|json_script:"note-titles" }}
     <div class="wn-pane" x-data="workNote(JSON.parse(document.getElementById('note-data').textContent))" x-init="$nextTick(() => { if (!id) $refs.body.focus(); })">
       <div class="wn-toolbar">
         <a href="{% url 'work:notes' %}" class="icon-btn wn-back" aria-label="{% translate 'All notes' %}">{% icon "chevron-left" %}</a>
@@ -51,8 +52,11 @@
           <button type="button" class="icon-btn" @click="insert('`', '`')" aria-label="{% translate 'Code' %}" data-tip="{% translate 'Code' %}">{% icon "code" %}</button>
           <button type="button" class="icon-btn" @click="insert('\n- [ ] ')" aria-label="{% translate 'To-do item' %}" data-tip="{% translate 'To-do item' %}">{% icon "check" %}</button>
           <button type="button" class="icon-btn" @click="insert('\n```\n', '\n```\n')" aria-label="{% translate 'Code block' %}" data-tip="{% translate 'Code block' %}"><span class="wn-cb">{}</span></button>
+          <button type="button" class="icon-btn" @click="insert('[[', ']]')" aria-label="{% translate 'Link another note' %}" data-tip="{% translate 'Link another note: [[Title]]' %}"><span class="wn-cb">[[ ]]</span></button>
         </div>
         <span class="spacer"></span>
+        <button type="button" class="btn btn-secondary btn-sm wn-todos" x-show="id && todoCount" x-cloak @click="todosToTasks()" :disabled="making"
+                data-tip="{% translate 'Each “- [ ] …” line becomes a task. Ticking the task ticks the line.' %}">{% icon "check" %}<span>{% translate "Make tasks" %} (<b x-text="todoCount"></b>)</span></button>
         <span class="wn-state" :data-state="state" x-text="{ saving: '{% translate "Saving…" %}', saved: savedAt ? '{% translate "Saved" %} ' + savedAt : '', offline: '{% translate "Saved on this device" %}', dirty: '{% translate "Editing…" %}', error: '{% translate "Not saved" %}' }[state]"></span>
         <template x-if="id">
           <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false">
@@ -75,9 +79,22 @@
         </select>
         <input x-model.lazy="tags" class="form-input input-compact" placeholder="{% translate 'tags: idea, backend…' %}" aria-label="{% translate 'Tags' %}">
       </div>
-      <textarea x-ref="body" x-show="!preview" x-model="body" class="wn-body" placeholder="{% translate 'Start writing… Markdown works: # heading, **bold**, `code`, - [ ] to-do, ``` code blocks.' %}" aria-label="{% translate 'Note' %}"
-                @keydown.tab.prevent="insert('  ')"></textarea>
+      <div class="wn-body-wrap" x-show="!preview">
+        <textarea x-ref="body" x-model="body" class="wn-body" placeholder="{% translate 'Start writing… Markdown works: # heading, **bold**, `code`, - [ ] to-do, ``` code blocks, [[Another note]].' %}" aria-label="{% translate 'Note' %}"
+                  @keydown="linkKey($event)" @input="linkLookup()" @click="linkLookup()" @focus="linkLookup()" @blur="setTimeout(() => { if (document.activeElement !== $refs.body) suggest = [] }, 150)"></textarea>
+        <ul class="wn-suggest" x-show="suggest.length && !preview" x-cloak role="listbox" aria-label="{% translate 'Notes to link' %}">
+          <template x-for="(s, i) in suggest" :key="s">
+            <li role="option" :aria-selected="(i === pick).toString()" :class="i === pick && 'is-active'" @mousedown.prevent="chooseLink(s)">{% icon "note" %}<span x-text="s"></span></li>
+          </template>
+        </ul>
+      </div>
       <article x-show="preview" x-cloak class="wn-md" x-html="html" x-effect="preview && $nextTick(() => window.hljs && $el.querySelectorAll('pre code').forEach(c => hljs.highlightElement(c)))"></article>
+      {% if backlinks %}
+      <aside class="wn-backlinks">
+        <p class="wn-backlinks-label">{% icon "link" %}{% blocktranslate count counter=backlinks|length %}Linked from {{ counter }} note{% plural %}Linked from {{ counter }} notes{% endblocktranslate %}</p>
+        <ul>{% for b in backlinks %}<li><a href="{% url 'work:note' b.pk %}">{{ b.display_title }}</a><time>{{ b.updated_at|date:"j M" }}</time></li>{% endfor %}</ul>
+      </aside>
+      {% endif %}
     </div>
     {% else %}
     <div class="wn-blank">

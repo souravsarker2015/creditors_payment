@@ -14,7 +14,7 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from .models import (
-    EntryKind, Goal, GoalStatus, GoalStep, Habit, HabitCheck, JournalEntry, LearningItem, LearningStatus, Priority, Project,
+    EntryKind, Goal, GoalStatus, GoalStep, Habit, HabitCheck, JournalEntry, LearningItem, LearningStatus, Note, Priority, Project,
     Repeat, Status, Tag, Task, TimeEntry, WorkSettings, link_label,
 )
 
@@ -423,7 +423,8 @@ def next_order(user, status):
 
 
 def create_from_quick(user, text, *, status=Status.TODO, project=None, today=None, my_day=False, due=None, goal=None):
-    """A task from one typed line (see parse_quick). Returns the task, or None when no title."""
+    """A task from one typed line (see parse_quick). Returns the task, or None when no title.
+    my_day: True for today, or a day."""
     today = today or timezone.localdate()
     p = parse_quick(text, today)
     if not p.title:
@@ -432,7 +433,8 @@ def create_from_quick(user, text, *, status=Status.TODO, project=None, today=Non
         owner=user, title=p.title[:300], status=status, priority=p.priority,
         project=find_project(user, p.project) or project,
         due_date=p.due or due or (today if p.repeat else None), estimate_minutes=p.estimate,
-        my_day=p.later or (today if (p.my_day or my_day) else None), order=next_order(user, status),
+        my_day=p.later or (today if p.my_day else (my_day if isinstance(my_day, date) else (today if my_day else None))),
+        order=next_order(user, status),
         link=p.link, goal=goal, repeat=p.repeat, remind_at=reminder_time(p, today),
     )
     if p.tags:
@@ -464,6 +466,8 @@ def set_done(task, done=True):
     """Ticks a task off (or back on). A repeating task leaves the next one behind."""
     if done == task.is_done:
         return None
+    if task.from_note_id:
+        tick_note_line(task, done)
     if done:
         task.status, task.completed_at = Status.DONE, timezone.now()
         task.save(update_fields=["status", "completed_at", "updated_at"])
@@ -754,7 +758,7 @@ def bulk(user, ids, action, value=""):
 
 
 # ── Restore from a backup (the export .zip / data.json) ───────────────────
-BACKUP_ORDER = ["project", "tag", "goal", "goalstep", "task", "checklistitem", "timeentry", "note", "snippet",
+BACKUP_ORDER = ["project", "tag", "goal", "goalstep", "note", "task", "checklistitem", "timeentry", "snippet",
                 "habit", "habitcheck", "journalentry", "learningitem"]
 
 
@@ -981,3 +985,106 @@ def estimate_accuracy(user, start, end):
             "pct_off": round(abs(ratio - 1) * 100), "under": ratio > 1.05, "over": ratio < 0.95,
             "on_target": on_target, "on_target_pct": round(100 * on_target / len(rows)),
             "misses": sorted(rows, key=lambda r: -abs(r["over"]))[:5]}
+
+
+# ── Notes: to-dos into tasks, and links between notes ─────────────────────
+TODO_LINE = re.compile(r"^([ \t]*[-*+][ \t]+)\[ \][ \t]+(\S.*?)[ \t]*$", re.M)
+TASK_URL = re.compile(r"/work/tasks/(\d+)/")
+
+
+def open_todos(body):
+    """The note's unticked "- [ ] …" lines that aren't tasks yet."""
+    return [m.group(2) for m in TODO_LINE.finditer(body or "") if not TASK_URL.search(m.group(2))]
+
+
+@transaction.atomic
+def note_todos_to_tasks(user, note, today=None):
+    """Each open to-do line becomes a task (quick-add words work: "#tag
+    tomorrow ~30m @api"), and the line becomes a link to it — so doing it again
+    skips those lines, and ticking the task ticks the line. Returns the new tasks."""
+    from django.urls import reverse
+
+    made = []
+
+    def swap(m):
+        text = m.group(2)
+        if TASK_URL.search(text):
+            return m.group(0)
+        task = create_from_quick(user, text, project=note.project, today=today)
+        if task is None:
+            return m.group(0)
+        task.from_note = note
+        task.save(update_fields=["from_note"])
+        made.append(task)
+        label = task.title.replace("[", "(").replace("]", ")")
+        return f"{m.group(1)}[ ] [{label}]({reverse('work:task', args=[task.pk])})"
+
+    body = TODO_LINE.sub(swap, note.body)
+    if made:
+        note.body = body
+        note.save(update_fields=["body", "updated_at"])
+    return made
+
+
+def tick_note_line(task, done):
+    """Ticks (or unticks) the note line a task was made from."""
+    note = Note.objects.filter(pk=task.from_note_id).first()
+    if note is None:
+        return
+    url = f"/work/tasks/{task.pk}/"
+    lines, changed = note.body.split("\n"), False
+    for i, line in enumerate(lines):
+        if url in line:
+            new = re.sub(r"\[( |x|X)\]", "[x]" if done else "[ ]", line, count=1)
+            changed, lines[i] = changed or new != line, new
+    if changed:
+        note.body = "\n".join(lines)
+        note.save(update_fields=["body", "updated_at"])
+
+
+def backlinks(note):
+    """Other notes that link here with [[Title]]."""
+    if not note.title.strip():
+        return []
+    return list(Note.objects.filter(owner=note.owner, body__icontains=f"[[{note.title.strip()}]]").exclude(pk=note.pk)
+                .order_by("-updated_at")[:30])
+
+
+# ── Week planner ──────────────────────────────────────────────────────────
+WEEK_BACKLOG = 60
+
+
+def week_start(day, starts_on):
+    """The first day of day's week, for a week starting on `starts_on` (0 = Monday)."""
+    return day - timedelta(days=(day.weekday() - starts_on) % 7)
+
+
+def plan_week(user, start, today=None):
+    """Seven days of tasks (by My Day, or by due date when not picked for a
+    day), each with its planned and tracked time, plus what isn't planned."""
+    today = today or timezone.localdate()
+    s = WorkSettings.for_user(user)
+    end = start + timedelta(days=6)
+    tasks = list(Task.objects.filter(owner=user)
+                 .filter(Q(my_day__gte=start, my_day__lte=end) | Q(my_day__isnull=True, due_date__gte=start, due_date__lte=end))
+                 .exclude(Q(status=Status.DONE) & ~Q(completed_at__gte=day_bounds(start)[0], completed_at__lt=day_bounds(end)[1]))
+                 .select_related("project").order_by("status", "-priority", "order"))
+    tracked = daily_seconds(user, start, end)
+    days = []
+    for i in range(7):
+        day = start + timedelta(days=i)
+        items = [t for t in tasks if (t.my_day or t.due_date) == day]
+        if day == today:     # late tasks and work in progress show up today
+            seen = {t.pk for t in items}
+            items += [t for t in today_tasks(user, today)[0] if t.pk not in seen and (t.my_day or t.due_date or today) < start]
+        open_items = [t for t in items if not t.is_done]
+        planned = sum((t.estimate_minutes or 0) for t in open_items) * 60
+        target = s.daily_target_minutes * 60 if s.is_work_day(day) else 0
+        days.append({"date": day, "tasks": items, "planned": planned, "target": target, "over": bool(target) and planned > target,
+                     "pct": min(round(100 * planned / target), 100) if target else 0, "tracked": tracked.get(day, 0),
+                     "past": day < today, "today": day == today, "work": s.is_work_day(day),
+                     "unestimated": sum(1 for t in open_items if not t.estimate_minutes)})
+    backlog_qs = (Task.objects.filter(owner=user, my_day__isnull=True).exclude(status=Status.DONE).exclude(waiting_for__gt="")
+                  .filter(Q(due_date__isnull=True) | Q(due_date__gt=end)).select_related("project")
+                  .order_by("-priority", "due_date", "order"))
+    return days, list(backlog_qs[:WEEK_BACKLOG]), backlog_qs.count()

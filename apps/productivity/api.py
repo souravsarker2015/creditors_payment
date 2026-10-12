@@ -121,8 +121,9 @@ def task_add(request):
     status = request.POST.get("status") if request.POST.get("status") in Status.values else Status.TODO
     project = Project.objects.filter(owner=user, pk=request.POST.get("project") or 0).first()
     goal = Goal.objects.filter(owner=user, pk=request.POST.get("goal") or 0).first()
+    my_day = request.POST.get("my_day") or ""
     task = services.create_from_quick(user, request.POST.get("text", ""), status=status, project=project, goal=goal,
-                                      my_day=request.POST.get("my_day") == "1", due=parse_date(request.POST.get("due") or ""))
+                                      my_day=my_day == "1" or parse_date(my_day) or False, due=parse_date(request.POST.get("due") or ""))
     if task is None:
         return bad(_("Type what needs doing."))
     if request.POST.get("start") == "1":
@@ -224,6 +225,8 @@ def task_update(request, pk):
                 day = timezone.localtime(task.scheduled_at).date()
                 if task.my_day != day and task.due_date != day:
                     task.my_day = day
+    if request.POST.get("later") == "1" and task.my_day and task.due_date and task.due_date < task.my_day:
+        task.due_date = task.my_day            # "do it later": a due date that has come moves along, so it's really out of sight
     if "my_day" in request.POST and "scheduled_at" not in request.POST and task.scheduled_at:
         if timezone.localtime(task.scheduled_at).date() != task.my_day:     # moved to another day: off the old timeline
             task.scheduled_at = None
@@ -337,6 +340,13 @@ def note_action(request, pk):
         note.is_archived = not note.is_archived
     elif action == "delete":
         return _trash(request, note, _("Note: %(title)s") % {"title": note.display_title}, reverse("work:notes"))
+    elif action == "todos":            # every "- [ ] …" line becomes a task
+        made = services.note_todos_to_tasks(request.user, note)
+        if not made:
+            return bad(_("No open to-dos here. Write them as “- [ ] something to do”."))
+        note.refresh_from_db()
+        return ok(count=len(made), body=note.body, saved=timezone.localtime(note.updated_at).strftime("%H:%M"),
+                  updated=int(note.updated_at.timestamp() * 1000))
     elif action == "to_task":
         task = Task.objects.create(owner=request.user, title=note.display_title[:300], notes=note.body, project=note.project,
                                    order=services.next_order(request.user, Status.TODO))

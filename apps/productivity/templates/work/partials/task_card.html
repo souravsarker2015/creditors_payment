@@ -1,5 +1,5 @@
 {% load i18n work %}{% comment %}A task on the board. Needs: t.{% endcomment %}
-<article class="wb-card{% if t.is_done %} is-done{% endif %}" data-task="{{ t.pk }}" data-p="{{ t.priority }}">
+<article class="wb-card{% if t.is_done %} is-done{% endif %}" data-task="{{ t.pk }}" data-p="{{ t.priority }}" data-est="{{ t.estimate_minutes|default:0 }}">
   <a href="{% url 'work:task' t.pk %}" class="wb-card-title">{{ t.title }}</a>
   <div class="wt-task-meta">
     {% if t.priority >= 3 %}<span class="wt-prio" data-p="{{ t.priority }}">{{ t.get_priority_display }}</span>{% endif %}

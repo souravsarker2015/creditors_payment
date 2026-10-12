@@ -106,6 +106,8 @@ class Task(models.Model):
     link = models.URLField(_("Link"), max_length=500, blank=True,
                            help_text=_("The pull request, issue, ticket or doc this is about."))
     goal = models.ForeignKey("Goal", on_delete=models.SET_NULL, null=True, blank=True, related_name="tasks", verbose_name=_("Goal"))
+    from_note = models.ForeignKey("Note", on_delete=models.SET_NULL, null=True, blank=True, related_name="action_tasks",
+                                  verbose_name=_("From note"), help_text="Made from a to-do line in this note (ticked there too).")
     waiting_for = models.CharField(_("Waiting on"), max_length=120, blank=True,
                                    help_text=_("Who or what it's stuck on: a code review, Rahim, the client, a deploy…"))
     order = models.FloatField(default=0, help_text="Position in its column (smaller first).")
