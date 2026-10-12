@@ -21,11 +21,11 @@
   </div>
 
   <div class="wfo-controls">
-    <button type="button" class="wfo-small" @click="reset()" aria-label="{% translate 'Reset' %}" data-tip="{% translate 'Reset' %}">{% include "partials/icon.html" with name="restore" %}</button>
+    <button type="button" class="wfo-small" @click="reset()" aria-label="{% translate 'Reset' %}" data-tip="{% translate 'Reset' %}">{% icon "restore" %}</button>
     <button type="button" class="wfo-main" @click="toggle()" :aria-label="running ? '{% translate "Pause" %}' : '{% translate "Start" %}'">
-      <span x-show="!running">{% include "partials/icon.html" with name="play" %}</span><span x-show="running" x-cloak>{% include "partials/icon.html" with name="pause" %}</span>
+      <span x-show="!running">{% icon "play" %}</span><span x-show="running" x-cloak>{% icon "pause" %}</span>
     </button>
-    <button type="button" class="wfo-small" @click="skip()" aria-label="{% translate 'Skip to next' %}" data-tip="{% translate 'Skip' %}">{% include "partials/icon.html" with name="chevron-right" %}</button>
+    <button type="button" class="wfo-small" @click="skip()" aria-label="{% translate 'Skip to next' %}" data-tip="{% translate 'Skip' %}">{% icon "chevron-right" %}</button>
   </div>
   <p class="wfo-hint">{% translate "Space to start or pause. Focus time is added to your timesheet." %}</p>
 
@@ -43,6 +43,6 @@
     <div><dt>{% translate "Focused today" %}</dt><dd class="num">{{ focus_seconds|hm }}</dd></div>
     <div><dt>{% translate "Lengths" %}</dt><dd>{{ ws.focus_minutes }} / {{ ws.short_break_minutes }} / {{ ws.long_break_minutes }} <a href="{% url 'work:settings' %}" class="wd-link">{% translate "Change" %}</a></dd></div>
   </dl>
-  <button type="button" class="btn btn-ghost btn-sm wfo-test" @click="Work.askNotify().then(p => { Work.play(Work.cfg.sound || 'chime', true); Work.notify('{% translate "Sound and notifications are on" %}', '{% translate "This is how a finished session will sound." %}'); })">{% include "partials/icon.html" with name="bell" %}{% translate "Test sound & notifications" %}</button>
+  <button type="button" class="btn btn-ghost btn-sm wfo-test" @click="Work.askNotify().then(p => { Work.play(Work.cfg.sound || 'chime', true); Work.notify('{% translate "Sound and notifications are on" %}', '{% translate "This is how a finished session will sound." %}'); })">{% icon "bell" %}{% translate "Test sound & notifications" %}</button>
 </div>
 {% endblock %}

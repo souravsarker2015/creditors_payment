@@ -15595,3 +15595,610 @@ msgstr "ট্যাগ সংরক্ষিত হয়েছে।"
 
 msgid "That tag name is empty or already used."
 msgstr "ট্যাগের নাম ফাঁকা বা আগেই ব্যবহৃত।"
+
+msgid "Goals"
+msgstr "লক্ষ্য"
+
+msgid "Learning"
+msgstr "শেখা"
+
+msgid "Review & brag document"
+msgstr "রিভিউ ও অর্জনের তালিকা"
+
+msgid "Type a title or paste a link."
+msgstr "একটি শিরোনাম লিখুন বা লিংক পেস্ট করুন।"
+
+msgid "Type the milestone."
+msgstr "মাইলফলকটি লিখুন।"
+
+msgid "Type a number."
+msgstr "একটি সংখ্যা লিখুন।"
+
+msgid "The target has to be different from where you start."
+msgstr "লক্ষ্যমাত্রা শুরুর মান থেকে আলাদা হতে হবে।"
+
+msgid "Become a senior engineer by next June"
+msgstr "আগামী জুনের মধ্যে সিনিয়র ইঞ্জিনিয়ার হওয়া"
+
+msgid "books, problems solved, users…"
+msgstr "বই, সমাধান করা প্রবলেম, ইউজার…"
+
+msgid "Link"
+msgstr "লিংক"
+
+msgid "Career"
+msgstr "ক্যারিয়ার"
+
+msgid "Health"
+msgstr "স্বাস্থ্য"
+
+msgid "Dropped"
+msgstr "বাদ দেওয়া"
+
+msgid "Why it matters"
+msgstr "কেন এটা জরুরি"
+
+msgid "By when"
+msgstr "কবের মধ্যে"
+
+msgid "Measured in"
+msgstr "যা দিয়ে মাপা হবে"
+
+msgid "Starting from"
+msgstr "শুরুর মান"
+
+msgid "Now at"
+msgstr "এখন পর্যন্ত"
+
+msgid "Book"
+msgstr "বই"
+
+msgid "Course"
+msgstr "কোর্স"
+
+msgid "Video / talk"
+msgstr "ভিডিও / টক"
+
+msgid "Article / blog"
+msgstr "আর্টিকেল / ব্লগ"
+
+msgid "Docs / tutorial"
+msgstr "ডকস / টিউটোরিয়াল"
+
+msgid "Podcast"
+msgstr "পডকাস্ট"
+
+msgid "Paper"
+msgstr "পেপার"
+
+msgid "Want to"
+msgstr "পরে শিখব"
+
+msgid "chapters"
+msgstr "অধ্যায়"
+
+msgid "lessons"
+msgstr "লেসন"
+
+msgid "videos"
+msgstr "ভিডিও"
+
+msgid "minutes"
+msgstr "মিনিট"
+
+msgid "%"
+msgstr "%"
+
+msgid "Author / source"
+msgstr "লেখক / উৎস"
+
+msgid "Progress in"
+msgstr "অগ্রগতি মাপা হবে"
+
+msgid "Done so far"
+msgstr "এ পর্যন্ত শেষ"
+
+msgid "Out of"
+msgstr "মোট"
+
+msgid "Rating"
+msgstr "রেটিং"
+
+msgid "Takeaways"
+msgstr "যা শিখলাম"
+
+msgid "The pull request, issue, ticket or doc this is about."
+msgstr "এই কাজের পুল রিকোয়েস্ট, ইস্যু, টিকিট বা ডক।"
+
+msgid "Markdown works. Read it when motivation dips."
+msgstr "Markdown চলে। উৎসাহ কমে গেলে এটা পড়ুন।"
+
+msgid "Optional: books, users, LeetCode problems, kg… Leave empty to track by milestones."
+msgstr "ঐচ্ছিক: বই, ইউজার, LeetCode প্রবলেম, কেজি… মাইলফলক দিয়ে মাপতে চাইলে খালি রাখুন।"
+
+msgid "Pages in the book, lessons in the course…"
+msgstr "বইয়ের পৃষ্ঠা, কোর্সের লেসন…"
+
+msgid "What you learnt, in your own words. Markdown works."
+msgstr "যা শিখলেন, নিজের ভাষায়। Markdown চলে।"
+
+msgid "Work review"
+msgstr "কাজের রিভিউ"
+
+msgid "Time tracked"
+msgstr "ট্র্যাক করা সময়"
+
+msgid "What I shipped"
+msgstr "যা শেষ করে দিয়েছি"
+
+msgid "Where the time went"
+msgstr "সময় কোথায় গেল"
+
+msgid "Goals reached"
+msgstr "পূরণ হওয়া লক্ষ্য"
+
+msgid "Highlights"
+msgstr "উল্লেখযোগ্য"
+
+msgid "Goals in progress"
+msgstr "চলমান লক্ষ্য"
+
+msgid "A pasted link is kept on the task (shown as “PR #482”, “#91”, “ABC-123”…)."
+msgstr "পেস্ট করা লিংক টাস্কে থেকে যায় (দেখায় “PR #482”, “#91”, “ABC-123”… হিসেবে)।"
+
+msgid "Ctrl+K opens the command palette: jump to any task, note, goal or page, or type a new task and press Enter."
+msgstr "Ctrl+K কমান্ড প্যালেট খোলে: যেকোনো টাস্ক, নোট, লক্ষ্য বা পাতায় যান, বা নতুন টাস্ক লিখে Enter চাপুন।"
+
+msgid "On a phone, share a link from any app to FinTrack to keep it as a task, a note or something to read later."
+msgstr "ফোনে যেকোনো অ্যাপ থেকে লিংক FinTrack-এ শেয়ার করুন — টাস্ক, নোট বা পরে পড়ার জন্য রেখে দিন।"
+
+msgid "End each week on Review: it lists what you shipped and learnt — copy it into your brag document."
+msgstr "প্রতি সপ্তাহ রিভিউ দিয়ে শেষ করুন: যা শেষ করলেন আর শিখলেন তার তালিকা পাবেন — অর্জনের তালিকায় কপি করে রাখুন।"
+
+msgid "Grow"
+msgstr "এগিয়ে যান"
+
+msgid "Review & brag doc"
+msgstr "রিভিউ ও অর্জন"
+
+msgid "Command palette: find anything, run any command"
+msgstr "কমান্ড প্যালেট: যেকোনো কিছু খুঁজুন, যেকোনো কমান্ড চালান"
+
+msgid "Search this page (or the palette)"
+msgstr "এই পাতায় খুঁজুন (বা প্যালেট)"
+
+msgid "Task lists"
+msgstr "টাস্কের তালিকা"
+
+msgid "Next / previous task"
+msgstr "পরের / আগের টাস্ক"
+
+msgid "Tick it off (or back on)"
+msgstr "শেষ চিহ্ন দিন (বা তুলে নিন)"
+
+msgid "Start / stop its timer"
+msgstr "এর টাইমার চালু / বন্ধ"
+
+msgid "Its menu: My Day, due, priority…"
+msgstr "এর মেনু: আমার দিন, শেষ তারিখ, অগ্রাধিকার…"
+
+msgid "Open it"
+msgstr "খুলুন"
+
+msgid "Start or stop the timer"
+msgstr "টাইমার চালু বা বন্ধ করুন"
+
+#, python-format
+msgid "%(t)s on %(counter)s day"
+msgid_plural "%(t)s on %(counter)s days"
+msgstr[0] "%(counter)s দিনে %(t)s"
+msgstr[1] "%(counter)s দিনে %(t)s"
+
+msgid "Your data"
+msgstr "আপনার ডেটা"
+
+msgid "Everything in your tracker as one .zip: all data as JSON, plus notes, snippets and journal days as plain files you can open anywhere."
+msgstr "আপনার ট্র্যাকারের সবকিছু একটি .zip-এ: সব ডেটা JSON হিসেবে, সাথে নোট, স্নিপেট ও জার্নাল আলাদা ফাইলে — যেকোনো জায়গায় খোলা যায়।"
+
+msgid "Download everything (.zip)"
+msgstr "সব ডাউনলোড করুন (.zip)"
+
+msgid "This year's time (CSV)"
+msgstr "এ বছরের সময় (CSV)"
+
+msgid "Any goal"
+msgstr "যেকোনো লক্ষ্য"
+
+#, python-format
+msgid "%(counter)s more in the list"
+msgid_plural "%(counter)s more in the list"
+msgstr[0] "তালিকায় আরও %(counter)sটি"
+msgstr[1] "তালিকায় আরও %(counter)sটি"
+
+msgid "All groups"
+msgstr "সব গ্রুপ"
+
+#, python-format
+msgid "Show all %(n)s"
+msgstr "সব %(n)sটি দেখুন"
+
+#, python-format
+msgid "%(counter)s more on the task list"
+msgid_plural "%(counter)s more on the task list"
+msgstr[0] "টাস্ক তালিকায় আরও %(counter)sটি"
+msgstr[1] "টাস্ক তালিকায় আরও %(counter)sটি"
+
+msgid "Learning now"
+msgstr "এখন শিখছি"
+
+msgid "Command"
+msgstr "কমান্ড"
+
+msgid "Recent"
+msgstr "সাম্প্রতিক"
+
+msgid "Create"
+msgstr "তৈরি"
+
+msgid "Save as a note"
+msgstr "নোট হিসেবে রাখুন"
+
+msgid "Start the timer for"
+msgstr "টাইমার চালু করুন"
+
+msgid "New goal"
+msgstr "নতুন লক্ষ্য"
+
+msgid "Add a book, course or article"
+msgstr "বই, কোর্স বা আর্টিকেল যোগ করুন"
+
+msgid "Copy my standup"
+msgstr "আমার স্ট্যান্ডআপ কপি করুন"
+
+msgid "Download all my data"
+msgstr "আমার সব ডেটা ডাউনলোড করুন"
+
+msgid "Goal saved."
+msgstr "লক্ষ্য সংরক্ষিত হয়েছে।"
+
+msgid "Shared items are kept in Productivity, which isn't turned on for you."
+msgstr "শেয়ার করা জিনিস প্রোডাক্টিভিটিতে রাখা হয়, যা আপনার জন্য চালু নেই।"
+
+#, python-format
+msgid "Removed from your learning list: %(title)s."
+msgstr "শেখার তালিকা থেকে সরানো হয়েছে: %(title)s।"
+
+msgid "This quarter"
+msgstr "এই প্রান্তিক"
+
+msgid "Half year"
+msgstr "অর্ধবছর"
+
+msgid "Goal reached. Well done!"
+msgstr "লক্ষ্য পূরণ হয়েছে। দারুণ!"
+
+msgid "Goal dropped."
+msgstr "লক্ষ্য বাদ দেওয়া হয়েছে।"
+
+msgid "Goal is active again."
+msgstr "লক্ষ্য আবার চালু হয়েছে।"
+
+#, python-format
+msgid "Goal deleted: %(title)s. Its tasks are kept."
+msgstr "লক্ষ্য মুছে ফেলা হয়েছে: %(title)s। এর টাস্কগুলো রয়ে গেছে।"
+
+#, python-format
+msgid "%(t)s tracked"
+msgstr "%(t)s ট্র্যাক হয়েছে"
+
+#, python-format
+msgid "%(counter)s task due"
+msgid_plural "%(counter)s tasks due"
+msgstr[0] "%(counter)sটি টাস্কের শেষ তারিখ"
+msgstr[1] "%(counter)sটি টাস্কের শেষ তারিখ"
+
+msgid "Nothing tracked"
+msgstr "কিছু ট্র্যাক হয়নি"
+
+#, python-format
+msgid "%(counter)s task done"
+msgid_plural "%(counter)s tasks done"
+msgstr[0] "%(counter)sটি টাস্ক শেষ"
+msgstr[1] "%(counter)sটি টাস্ক শেষ"
+
+msgid "Task due"
+msgstr "শেষ তারিখসহ টাস্ক"
+
+msgid "No tasks due this day."
+msgstr "এই দিনে কোনো টাস্কের শেষ তারিখ নেই।"
+
+msgid "Mark reached"
+msgstr "পূরণ হয়েছে"
+
+msgid "Make active again"
+msgstr "আবার চালু করুন"
+
+msgid "Drop this goal"
+msgstr "এই লক্ষ্য বাদ দিন"
+
+msgid "Delete this goal? Its tasks stay. You can bring it back from Recently deleted."
+msgstr "এই লক্ষ্য মুছবেন? এর টাস্কগুলো থাকবে। \"সম্প্রতি মুছে ফেলা\" থেকে ফিরিয়ে আনা যাবে।"
+
+msgid "there"
+msgstr "পথ পেরিয়েছেন"
+
+#, python-format
+msgid "By %(d)s"
+msgstr "%(d)s-এর মধ্যে"
+
+#, python-format
+msgid "Reached %(d)s"
+msgstr "%(d)s-এ পূরণ হয়েছে"
+
+msgid "A date makes it real — add one."
+msgstr "একটা তারিখ দিলে লক্ষ্যটা বাস্তব হয় — দিন।"
+
+#, python-format
+msgid "%(t)s worked on its tasks"
+msgstr "এর টাস্কে %(t)s কাজ হয়েছে"
+
+msgid "Next milestone"
+msgstr "পরের মাইলফলক"
+
+msgid "All milestones passed — mark the goal as reached?"
+msgstr "সব মাইলফলক পার হয়েছে — লক্ষ্য পূরণ হয়েছে চিহ্নিত করবেন?"
+
+msgid "Break the goal into 3–6 milestones below. Progress follows them."
+msgstr "নিচে লক্ষ্যটিকে ৩–৬টি মাইলফলকে ভাগ করুন। অগ্রগতি সেগুলো ধরে চলবে।"
+
+#, python-format
+msgid "%(d)s of %(n)s tasks done"
+msgstr "%(n)sটির মধ্যে %(d)sটি টাস্ক শেষ"
+
+msgid "Target reached! Mark the goal as reached when you’re ready."
+msgstr "লক্ষ্যমাত্রা ছুঁয়েছেন! প্রস্তুত হলে লক্ষ্যটি পূরণ হয়েছে চিহ্নিত করুন।"
+
+msgid "Progress"
+msgstr "অগ্রগতি"
+
+#, python-format
+msgid "target %(t)s"
+msgstr "লক্ষ্যমাত্রা %(t)s"
+
+msgid "One less"
+msgstr "একটি কম"
+
+msgid "One more"
+msgstr "আরও একটি"
+
+#, python-format
+msgid "Started at %(s)s"
+msgstr "শুরু %(s)s থেকে"
+
+msgid "Tasks for this goal"
+msgstr "এই লক্ষ্যের টাস্ক"
+
+msgid "The next actions. Pick one for today."
+msgstr "পরের কাজগুলো। আজকের জন্য একটি বেছে নিন।"
+
+msgid "In the list"
+msgstr "তালিকায়"
+
+msgid "Add a task for this goal… (#tag !high friday)"
+msgstr "এই লক্ষ্যের জন্য টাস্ক যোগ করুন… (#tag !high friday)"
+
+msgid "What's the next small step? Add it above."
+msgstr "পরের ছোট পদক্ষেপ কী? উপরে যোগ করুন।"
+
+msgid "Milestones"
+msgstr "মাইলফলক"
+
+msgid "The big steps on the way. Tick them as you pass them."
+msgstr "পথের বড় ধাপগুলো। পার হলে টিক দিন।"
+
+msgid "Add a milestone…"
+msgstr "মাইলফলক যোগ করুন…"
+
+msgid "Add a milestone"
+msgstr "মাইলফলক যোগ করুন"
+
+msgid "Learning for this goal"
+msgstr "এই লক্ষ্যের জন্য শেখা"
+
+msgid "Books, courses or talks that get you there."
+msgstr "যে বই, কোর্স বা টক আপনাকে সেখানে পৌঁছে দেবে।"
+
+msgid "Edit goal"
+msgstr "লক্ষ্য সম্পাদনা"
+
+msgid "Measure it with a number (books read, problems solved, users…)"
+msgstr "সংখ্যা দিয়ে মাপুন (পড়া বই, সমাধান করা প্রবলেম, ইউজার…)"
+
+msgid "Without a number, progress comes from the goal's milestones, or else from its tasks."
+msgstr "সংখ্যা না দিলে অগ্রগতি আসবে লক্ষ্যের মাইলফলক থেকে, তা না থাকলে এর টাস্ক থেকে।"
+
+msgid "Where all the daily work is heading: a promotion, a launch, a skill. Link tasks and learning to a goal and watch it move."
+msgstr "প্রতিদিনের কাজ কোথায় নিয়ে যাচ্ছে: প্রমোশন, লঞ্চ, নতুন দক্ষতা। টাস্ক আর শেখাকে লক্ষ্যের সাথে যুক্ত করুন, অগ্রগতি দেখুন।"
+
+#, python-format
+msgid "%(d)s of %(n)s milestones"
+msgstr "%(n)sটির মধ্যে %(d)sটি মাইলফলক"
+
+#, python-format
+msgid "%(d)s of %(n)s tasks"
+msgstr "%(n)sটির মধ্যে %(d)sটি টাস্ক"
+
+msgid "Set a goal for your future self"
+msgstr "ভবিষ্যতের নিজের জন্য একটি লক্ষ্য ঠিক করুন"
+
+msgid "Nothing here yet"
+msgstr "এখানে এখনো কিছু নেই"
+
+msgid "“Become a senior engineer”, “Ship v2 of the app”, “Solve 150 LeetCode problems”, “Get the AWS certificate”. Measure it with a number, milestones or tasks."
+msgstr "“সিনিয়র ইঞ্জিনিয়ার হওয়া”, “অ্যাপের v2 লঞ্চ”, “১৫০টি LeetCode প্রবলেম সমাধান”, “AWS সার্টিফিকেট”। সংখ্যা, মাইলফলক বা টাস্ক দিয়ে মাপুন।"
+
+#, python-format
+msgid "%(counter)s finished this year."
+msgid_plural "%(counter)s finished this year."
+msgstr[0] "এ বছর %(counter)sটি শেষ হয়েছে।"
+msgstr[1] "এ বছর %(counter)sটি শেষ হয়েছে।"
+
+msgid "Books, courses, talks and docs — and what you took from them."
+msgstr "বই, কোর্স, টক আর ডকস — আর সেগুলো থেকে যা শিখলেন।"
+
+msgid "A title, or paste a link to read later…"
+msgstr "শিরোনাম লিখুন, বা পরে পড়ার জন্য লিংক পেস্ট করুন…"
+
+msgid "Add something to learn"
+msgstr "শেখার কিছু যোগ করুন"
+
+#, python-format
+msgid "%(n)s of 5"
+msgstr "৫-এর মধ্যে %(n)s"
+
+msgid "Track time on it"
+msgstr "এতে সময় ট্র্যাক করুন"
+
+msgid "Nothing finished yet"
+msgstr "এখনো কিছু শেষ হয়নি"
+
+msgid "Your reading list is empty"
+msgstr "আপনার পড়ার তালিকা খালি"
+
+msgid "What are you learning?"
+msgstr "আপনি কী শিখছেন?"
+
+msgid "Add the book on your desk, the course you bought, the talk someone shared. Track progress, then write down the takeaways so they stick."
+msgstr "টেবিলের বইটি, কেনা কোর্সটি, কারো শেয়ার করা টকটি যোগ করুন। অগ্রগতি ট্র্যাক করুন, তারপর যা শিখলেন লিখে রাখুন যাতে মনে থাকে।"
+
+msgid "Add to learning"
+msgstr "শেখার তালিকায় যোগ"
+
+msgid "Remove this from your learning list?"
+msgstr "শেখার তালিকা থেকে এটি সরাবেন?"
+
+msgid "- The 3 ideas worth keeping&#10;- What I will do differently&#10;- Quotes, code, links"
+msgstr "- মনে রাখার মতো ৩টি আইডিয়া&#10;- এখন থেকে যা অন্যভাবে করব&#10;- উক্তি, কোড, লিংক"
+
+msgid "Command palette"
+msgstr "কমান্ড প্যালেট"
+
+msgid "Find anything, or type a command…"
+msgstr "যেকোনো কিছু খুঁজুন, বা কমান্ড লিখুন…"
+
+msgid "Find anything, or type a command"
+msgstr "যেকোনো কিছু খুঁজুন, বা কমান্ড লিখুন"
+
+msgid "Nothing found."
+msgstr "কিছু পাওয়া যায়নি।"
+
+msgid "move"
+msgstr "সরান"
+
+msgid "open"
+msgstr "খুলুন"
+
+msgid "commands only"
+msgstr "শুধু কমান্ড"
+
+msgid "Due tomorrow"
+msgstr "আগামীকাল শেষ তারিখ"
+
+msgid "Open the link"
+msgstr "লিংক খুলুন"
+
+msgid "Copy title & link"
+msgstr "শিরোনাম ও লিংক কপি"
+
+msgid "What you did, learnt and reached — for your weekly review, a 1:1 or your next performance review."
+msgstr "যা করলেন, শিখলেন আর অর্জন করলেন — সাপ্তাহিক রিভিউ, ১:১ মিটিং বা পরের পারফরম্যান্স রিভিউয়ের জন্য।"
+
+msgid "Copied as Markdown"
+msgstr "Markdown হিসেবে কপি হয়েছে"
+
+msgid "Download .md"
+msgstr ".md ডাউনলোড"
+
+msgid "Learning finished"
+msgstr "শেষ করা শেখা"
+
+msgid "Mood · energy"
+msgstr "মেজাজ · এনার্জি"
+
+msgid "From “Done & learnt” in your journal."
+msgstr "জার্নালের “শেষ ও শেখা” থেকে।"
+
+msgid "Write a line in the journal at the end of each day — they collect here."
+msgstr "প্রতিদিন শেষে জার্নালে এক লাইন লিখুন — সেগুলো এখানে জমা হবে।"
+
+msgid "Open the journal"
+msgstr "জার্নাল খুলুন"
+
+msgid "What you shipped"
+msgstr "যা শেষ করে দিয়েছেন"
+
+#, python-format
+msgid "and %(counter)s more"
+msgid_plural "and %(counter)s more"
+msgstr[0] "আরও %(counter)sটি"
+msgstr[1] "আরও %(counter)sটি"
+
+msgid "No tasks finished in this period."
+msgstr "এই সময়ে কোনো টাস্ক শেষ হয়নি।"
+
+msgid "No goals yet."
+msgstr "এখনো কোনো লক্ষ্য নেই।"
+
+msgid "Set one"
+msgstr "একটি ঠিক করুন"
+
+msgid "Learning & habits"
+msgstr "শেখা ও অভ্যাস"
+
+msgid "Before the next week starts."
+msgstr "পরের সপ্তাহ শুরুর আগে।"
+
+#, python-format
+msgid "%(counter)s late task — reschedule or drop it"
+msgid_plural "%(counter)s late tasks — reschedule or drop them"
+msgstr[0] "%(counter)sটি টাস্ক দেরি — নতুন তারিখ দিন বা বাদ দিন"
+msgstr[1] "%(counter)sটি টাস্ক দেরি — নতুন তারিখ দিন বা বাদ দিন"
+
+msgid "Nothing is late."
+msgstr "কিছুই দেরি নেই।"
+
+#, python-format
+msgid "%(counter)s task “in progress” for over a week — still going?"
+msgid_plural "%(counter)s tasks “in progress” for over a week — still going?"
+msgstr[0] "%(counter)sটি টাস্ক এক সপ্তাহের বেশি “চলছে” — এখনো চলছে?"
+msgstr[1] "%(counter)sটি টাস্ক এক সপ্তাহের বেশি “চলছে” — এখনো চলছে?"
+
+#, python-format
+msgid "%(counter)s blocker noted — raise it at the next 1:1"
+msgid_plural "%(counter)s blockers noted — raise them at the next 1:1"
+msgstr[0] "%(counter)sটি বাধা লেখা আছে — পরের ১:১ মিটিংয়ে তুলুন"
+msgstr[1] "%(counter)sটি বাধা লেখা আছে — পরের ১:১ মিটিংয়ে তুলুন"
+
+msgid "Due in the next 7 days"
+msgstr "আগামী ৭ দিনে শেষ তারিখ"
+
+msgid "Brag document (Markdown)"
+msgstr "অর্জনের তালিকা (Markdown)"
+
+msgid "Keep one per month — at review time you'll have the evidence ready."
+msgstr "প্রতি মাসে একটি রাখুন — রিভিউয়ের সময় প্রমাণ হাতের কাছে থাকবে।"
+
+msgid "Save to Productivity"
+msgstr "প্রোডাক্টিভিটিতে রাখুন"
+
+msgid "Save what you shared"
+msgstr "যা শেয়ার করলেন তা রাখুন"
+
+msgid "Keep it as a task, something to read or watch, or a note."
+msgstr "টাস্ক, পরে পড়া বা দেখার জিনিস, অথবা নোট হিসেবে রাখুন।"
+
+msgid "Text"
+msgstr "লেখা"
+
+msgid "Read / watch later"
+msgstr "পরে পড়ব / দেখব"

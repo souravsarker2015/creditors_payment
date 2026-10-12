@@ -1,0 +1,58 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% if item %}{{ item.title }}{% else %}{% translate "Add to learning" %}{% endif %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+<div class="page-medium">
+  <header class="wp-head">
+    <div class="min-w-0"><a href="{% url 'work:learning' %}{% if item %}?show={{ item.status }}{% endif %}" class="back-link">{% icon "chevron-left" %}{% translate "Learning" %}</a>
+      <h1 class="wp-title">{% if item %}{{ item.title }}{% else %}{% translate "Add to learning" %}{% endif %}</h1></div>
+    {% if item %}
+    <div class="wp-actions">
+      {% if item.url %}<a href="{{ item.url }}" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">{% icon "external" %}{% translate "Open" %}</a>{% endif %}
+      <form method="post">{% csrf_token %}<button type="submit" name="action" value="delete" class="icon-btn" aria-label="{% translate 'Remove' %}" data-tip="{% translate 'Remove' %}" onclick="return confirm('{% translate "Remove this from your learning list?" %}')">{% icon "trash" %}</button></form>
+    </div>
+    {% endif %}
+  </header>
+  <form method="post" class="card" novalidate>
+    {% csrf_token %}
+    <div class="card-body form-stack">
+      {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+      {% with field=form.title %}{% include "partials/field.html" %}{% endwith %}
+      <div class="form-grid form-grid-2">
+        {% with field=form.kind %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.author %}{% include "partials/field.html" %}{% endwith %}
+      </div>
+      {% with field=form.url %}{% include "partials/field.html" %}{% endwith %}
+      <div class="form-grid form-grid-2">
+        {% with field=form.status %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.unit %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.progress %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.total %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.started_on %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.finished_on %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.rating %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.goal %}{% include "partials/field.html" %}{% endwith %}
+      </div>
+      {% with field=form.tags_text %}{% include "partials/field.html" %}{% endwith %}
+      <div class="field" x-data="{ preview: false, text: '' }">
+        <div class="field-head"><label class="label" for="{{ form.takeaways.id_for_label }}">{{ form.takeaways.label }}</label>
+          <div class="seg seg-sm"><button type="button" class="seg-item" :class="!preview && 'is-active'" @click="preview = false">{% translate "Write" %}</button><button type="button" class="seg-item" :class="preview && 'is-active'" @click="text = $refs.take.value; preview = true">{% translate "Preview" %}</button></div></div>
+        <textarea x-ref="take" x-show="!preview" name="{{ form.takeaways.html_name }}" id="{{ form.takeaways.id_for_label }}" rows="10" class="form-input" placeholder="{% translate '- The 3 ideas worth keeping&#10;- What I will do differently&#10;- Quotes, code, links' %}">{{ form.takeaways.value|default:'' }}</textarea>
+        <div x-show="preview" x-cloak class="wn-md wtd-preview" x-html="Work.markdown(text)"></div>
+        <p class="help">{{ form.takeaways.help_text }}</p>
+      </div>
+    </div>
+    <div class="card-footer form-actions">
+      <a href="{% url 'work:learning' %}" class="btn btn-ghost">{% translate "Cancel" %}</a>
+      <button type="submit" class="btn btn-primary">{% icon "check" %}{% translate "Save" %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block work_libs %}
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+{% endblock %}

@@ -4,7 +4,9 @@ import csv
 from datetime import timedelta
 
 from django.contrib import messages
-from django.db.models import Count, Q
+from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
+from django.db.models import Count, Q, prefetch_related_objects
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -16,11 +18,14 @@ from apps.trash.undo import delete_with_undo
 
 from . import services
 from .api import entry_json
-from .access import work_required
-from .forms import EntryForm, HabitForm, ProjectForm, SettingsForm, SnippetForm, TagForm, TaskForm
+from .access import can_use, work_required
+from .forms import EntryForm, GoalForm, HabitForm, LearningForm, ProjectForm, SettingsForm, SnippetForm, TagForm, TaskForm
 from .models import (
-    Habit, JournalEntry, Language, Note, Priority, Project, Snippet, Status, Tag, Task, TimeEntry, WorkSettings,
+    Goal, GoalStatus, Habit, JournalEntry, Language, LearningItem, LearningKind, LearningStatus, LearningUnit, Note, Priority, Project, Snippet,
+    Status, Tag, Task, TimeEntry, WorkSettings,
 )
+
+ROW_RELATED = ("tags", "checklist")   # what a task row shows; fetched only for the rows on screen
 
 
 def _today():
@@ -41,6 +46,10 @@ def _urls():
         "today": r("work:today"), "tasks": r("work:tasks"), "board": r("work:tasks") + "?view=board", "projects": r("work:projects"),
         "time": r("work:time"), "focus_page": r("work:focus"), "notes": r("work:notes"), "snippets": r("work:snippets"),
         "habits": r("work:habits"), "journal_page": r("work:journal"), "reports": r("work:reports"), "settings": r("work:settings"),
+        "goals": r("work:goals"), "learning": r("work:learning"), "review": r("work:review"), "calendar": r("work:calendar"),
+        "help": r("work:help"), "entry_new": r("work:entry_new"), "task_new": r("work:task_new"), "goal_new": r("work:goal_new"),
+        "learning_new": r("work:learning_new"), "snippet_new": r("work:snippet_new"), "export": r("work:export"),
+        "learningBase": "/work/api/learning/", "goalBase": "/work/api/goals/",
     }
 
 
@@ -52,7 +61,52 @@ def _texts():
         "repeatMade": _("Next one added"), "taskDeleted": _("Task deleted"), "noteDeleted": _("Note deleted"),
         "focusSession": _("Focus session"), "focusDone": _("Focus session done"), "takeBreak": _("Time for a break."),
         "breakOver": _("Break's over"), "backToWork": _("Ready to focus again?"), "myDay": _("My Day"), "noAccess": _("Not allowed."),
+        "link": _("Link"), "copied": _("Copied"),
+        "units": {k: str(v) for k, v in LearningUnit.choices},
+        "kindCommand": _("Command"), "kindRecent": _("Recent"), "kindCreate": _("Create"),
+        "addTask": _("Add task"), "addNote": _("Save as a note"), "trackThis": _("Start the timer for"),
+        "kinds": {"task": _("Task"), "note": _("Note"), "project": _("Project"), "goal": _("Goal"), "learning": _("Learning"),
+                  "snippet": _("Snippet")},
     }
+
+
+def _commands():
+    """What the command palette (Ctrl+K) can do, besides finding things."""
+    r = reverse
+    go = [
+        ("today", _("Today"), "sun", "work:today", "g h", "home my day"),
+        ("tasks", _("Tasks"), "check", "work:tasks", "g t", "todo list"),
+        ("board", _("Board"), "board", None, "g b", "kanban"),
+        ("calendar", _("Calendar"), "calendar", "work:calendar", "g c", "month due"),
+        ("projects", _("Projects"), "folder", "work:projects", "g p", "clients"),
+        ("goals", _("Goals"), "flag", "work:goals", "g o", "okr career future"),
+        ("learning", _("Learning"), "book", "work:learning", "g l", "books courses reading list"),
+        ("focus", _("Focus timer"), "bolt", "work:focus", "g f", "pomodoro"),
+        ("time", _("Time"), "timer", "work:time", "g i", "timesheet hours"),
+        ("habits", _("Habits"), "flame", "work:habits", "g a", "streak"),
+        ("journal", _("Journal & standup"), "journal", "work:journal", "g j", "daily log standup"),
+        ("review", _("Review & brag document"), "trophy", "work:review", "g v", "weekly review performance achievements"),
+        ("reports", _("Reports"), "chart", "work:reports", "g r", "stats charts"),
+        ("notes", _("Notes"), "note", "work:notes", "g n", ""),
+        ("snippets", _("Snippets"), "code", "work:snippets", "g s", "code"),
+        ("settings", _("Timer, focus & sounds"), "key", "work:settings", "g ,", "settings preferences tags"),
+    ]
+    out = [{"id": "go-" + key, "title": title, "icon": icon, "url": r(name) if name else r("work:tasks") + "?view=board",
+            "hint": hint, "words": words, "kind": "page"} for key, title, icon, name, hint, words in go]
+    out += [
+        {"id": "new-task", "title": _("New task"), "icon": "plus", "action": "capture:task", "hint": "c", "words": "add create"},
+        {"id": "new-note", "title": _("New note"), "icon": "note", "action": "capture:note", "hint": "n", "words": "add create write"},
+        {"id": "start", "title": _("Start the timer"), "icon": "play", "action": "capture:time", "hint": "s", "words": "track", "when": "idle"},
+        {"id": "stop", "title": _("Stop the timer"), "icon": "stop", "action": "timer:stop", "hint": "s", "words": "track", "when": "running"},
+        {"id": "add-time", "title": _("Add time by hand"), "icon": "clock", "url": r("work:entry_new"), "words": "manual entry log"},
+        {"id": "new-goal", "title": _("New goal"), "icon": "flag", "url": r("work:goal_new"), "words": "add create"},
+        {"id": "new-learning", "title": _("Add a book, course or article"), "icon": "book", "url": r("work:learning_new"), "words": "learning read"},
+        {"id": "new-snippet", "title": _("New snippet"), "icon": "code", "url": r("work:snippet_new"), "words": "code add"},
+        {"id": "standup", "title": _("Copy my standup"), "icon": "copy", "url": r("work:journal") + "#standup", "words": "daily slack teams"},
+        {"id": "export", "title": _("Download all my data"), "icon": "download", "url": r("work:export"), "words": "export backup zip json"},
+        {"id": "shortcuts", "title": _("Keyboard shortcuts"), "icon": "keyboard", "action": "help", "hint": "?", "words": "keys help"},
+    ]
+    return out
 
 
 def render_work(request, template, ctx=None):
@@ -72,7 +126,7 @@ def render_work(request, template, ctx=None):
         "running": running,
         "ws": s,
         "work_config": {
-            "running": entry_json(running), "todaySeconds": today_secs, "urls": _urls(), "text": _texts(),
+            "running": entry_json(running), "todaySeconds": today_secs, "urls": _urls(), "text": _texts(), "commands": _commands(),
             "focus": s.focus_minutes, "short": s.short_break_minutes, "long": s.long_break_minutes, "every": s.long_break_every,
             "autoBreaks": s.auto_start_breaks, "autoFocus": s.auto_start_focus,
             "sound": s.sound if s.sound_enabled else "", "volume": s.volume, "tick": s.tick_sound,
@@ -87,11 +141,18 @@ def render_work(request, template, ctx=None):
 
 
 # ── Today ─────────────────────────────────────────────────────────────────
+TODAY_LIMIT = 40
+
+
 @work_required
 def today_view(request):
     user, today = request.user, _today()
     s = WorkSettings.for_user(user)
     open_tasks, done_today = services.today_tasks(user, today)
+    more = max(len(open_tasks) - TODAY_LIMIT, 0)
+    open_tasks = open_tasks[:TODAY_LIMIT]
+    prefetch_related_objects(open_tasks, *ROW_RELATED)
+    prefetch_related_objects(done_today, *ROW_RELATED)
     week_start = today - timedelta(days=6)
     week = services.totals(user, week_start, today)
     today_secs = week.by_day.get(today, 0)
@@ -102,7 +163,9 @@ def today_view(request):
     peak = max(week.by_day.values()) or 1
     return render_work(request, "work/today.html", {
         "today": today, "greeting": greeting,
-        "open_tasks": open_tasks, "done_today": done_today,
+        "open_tasks": open_tasks, "done_today": done_today, "more_tasks": more,
+        "goals": services.with_progress(Goal.objects.filter(owner=user, status=GoalStatus.ACTIVE)[:3]),
+        "reading": LearningItem.objects.filter(owner=user, status=LearningStatus.ACTIVE)[:3],
         "today_seconds": today_secs, "target_seconds": s.daily_target_minutes * 60,
         "target_pct": min(round(100 * today_secs / (s.daily_target_minutes * 60)), 100) if s.daily_target_minutes else 0,
         "week_bars": [{"day": d, "secs": v, "pct": round(100 * v / peak), "today": d == today} for d, v in week.by_day.items()],
@@ -118,6 +181,10 @@ def today_view(request):
 
 # ── Tasks ─────────────────────────────────────────────────────────────────
 DUE_FILTERS = ("overdue", "today", "week", "none")
+GROUP_LIMIT = 40     # rows per group on the list; "Show all" opens one group
+GROUP_PAGE = 100
+BOARD_LIMIT = 80
+BOARD_DONE = 30
 
 
 @work_required
@@ -125,8 +192,8 @@ def tasks_view(request):
     user, today = request.user, _today()
     view = request.GET.get("view") or request.COOKIES.get("work_task_view") or "list"
     view = view if view in ("list", "board") else "list"
-    qs = Task.objects.filter(owner=user).select_related("project").prefetch_related("tags", "checklist")
-    f = {k: request.GET.get(k, "").strip() for k in ("q", "project", "tag", "priority", "due")}
+    qs = Task.objects.filter(owner=user).select_related("project")
+    f = {k: request.GET.get(k, "").strip() for k in ("q", "project", "tag", "priority", "due", "goal")}
     if f["q"]:
         qs = qs.filter(Q(title__icontains=f["q"]) | Q(notes__icontains=f["q"]))
     if f["project"] == "none":
@@ -137,6 +204,8 @@ def tasks_view(request):
         qs = qs.filter(tags__name=f["tag"].lower())
     if f["priority"].isdigit():
         qs = qs.filter(priority__gte=int(f["priority"]))
+    if f["goal"].isdigit():
+        qs = qs.filter(goal_id=int(f["goal"]))
     if f["due"] == "overdue":
         qs = qs.filter(due_date__lt=today).exclude(status=Status.DONE)
     elif f["due"] == "today":
@@ -147,16 +216,19 @@ def tasks_view(request):
         qs = qs.filter(due_date__isnull=True)
     qs = qs.distinct()
     show_done = request.GET.get("done") == "1"
-    ctx = {"view": view, "f": f, "filtered": any(f.values()), "show_done": show_done, "today": today,
+    one = request.GET.get("group", "")
+    ctx = {"view": view, "f": f, "filtered": any(f.values()), "show_done": show_done, "today": today, "one_group": one,
            "projects": Project.objects.filter(owner=user, is_archived=False), "tags": Tag.objects.filter(owner=user),
+           "goals": Goal.objects.filter(owner=user, status=GoalStatus.ACTIVE),
            "priorities": Priority.choices, "statuses": Status.choices}
     if view == "board":
         columns = []
         for value, label in Status.choices:
             items = qs.filter(status=value)
-            if value == Status.DONE:
-                items = items.order_by("-completed_at")[:30]
-            columns.append({"status": value, "label": label, "tasks": list(items)})
+            total = items.count()
+            items = list((items.order_by("-completed_at") if value == Status.DONE else items)[:BOARD_DONE if value == Status.DONE else BOARD_LIMIT])
+            prefetch_related_objects(items, *ROW_RELATED)
+            columns.append({"status": value, "label": label, "tasks": items, "total": total, "hidden": total - len(items)})
         ctx["columns"] = columns
     else:
         open_ = list(qs.exclude(status=Status.DONE))
@@ -168,10 +240,26 @@ def tasks_view(request):
             ("todo", _("To do"), [t for t in open_ if t.status == Status.TODO and not t.due_date and t.my_day != today]),
             ("backlog", _("Backlog"), [t for t in open_ if t.status == Status.BACKLOG and not t.due_date and t.my_day != today]),
         ]
-        ctx["groups"] = [(key, label, items) for key, label, items in groups if items]
+        groups = [(key, label, items) for key, label, items in groups if items and (not one or key == one)]
+        shown, page = [], None
+        for i, (key, label, items) in enumerate(groups):
+            if one:
+                page = Paginator(items, GROUP_PAGE).get_page(request.GET.get("page"))
+                groups[i] = (key, label, list(page.object_list), len(items))
+            else:
+                groups[i] = (key, label, items[:GROUP_LIMIT], len(items))
+            shown += groups[i][2]
+        ctx["groups"], ctx["page"] = groups, page
+        if page:
+            from apps.accounts.views import _page_window
+
+            base = request.GET.copy()
+            base.pop("page", None)
+            ctx.update({"base_query_string": base.urlencode(), "pagination_window": _page_window(page)})
         ctx["open_count"] = len(open_)
-        ctx["done"] = list(qs.filter(status=Status.DONE).order_by("-completed_at")[:50]) if show_done else []
+        ctx["done"] = list(qs.filter(status=Status.DONE).order_by("-completed_at")[:50]) if show_done and not one else []
         ctx["done_count"] = qs.filter(status=Status.DONE).count()
+        prefetch_related_objects(shown + ctx["done"], *ROW_RELATED)
     response = render_work(request, "work/tasks.html", ctx)
     if request.GET.get("view"):
         response.set_cookie("work_task_view", view, max_age=365 * 86400, samesite="Lax")
@@ -183,7 +271,9 @@ def task_view(request, pk=None):
     user = request.user
     task = get_object_or_404(Task, pk=pk, owner=user) if pk else None
     form = TaskForm(request.POST or None, instance=task, owner=user,
-                    initial=None if task else {"project": request.GET.get("project") or None, "due_date": request.GET.get("due") or None})
+                    initial=None if task else {"project": request.GET.get("project") or None, "due_date": request.GET.get("due") or None,
+                                               "goal": request.GET.get("goal") or None, "title": request.GET.get("title", ""),
+                                               "link": request.GET.get("link", "")})
     if request.method == "POST" and form.is_valid():
         was_done = task.is_done if task else False
         obj = form.save(commit=False)
@@ -215,8 +305,7 @@ def projects_view(request):
     first, last = s.week_of(today)
     week = services.totals(user, first, last)
     week_by = {p.pk if p else None: secs for p, secs in week.by_project}
-    alltime = services.totals(user, today - timedelta(days=3650), today)
-    all_by = {p.pk if p else None: secs for p, secs in alltime.by_project}
+    all_by = services.tracked_by(user, "project_id")
     archived = request.GET.get("archived") == "1"
     projects = (Project.objects.filter(owner=user, is_archived=archived)
                 .annotate(open_tasks=Count("tasks", filter=~Q(tasks__status=Status.DONE)),
@@ -251,17 +340,20 @@ def project_view(request, pk):
     s = WorkSettings.for_user(user)
     first, last = s.week_of(today)
     week = services.totals(user, first, last)
-    alltime = services.totals(user, project.created_at.date() - timedelta(days=1), today)
-    total = next((secs for p, secs in alltime.by_project if p and p.pk == project.pk), 0)
-    tasks = Task.objects.filter(owner=user, project=project).prefetch_related("tags", "checklist")
+    total = services.tracked_by(user, "project_id", ids=[project.pk]).get(project.pk, 0)
+    tasks = Task.objects.filter(owner=user, project=project).select_related("project")
+    open_tasks = list(tasks.exclude(status=Status.DONE)[:100])
+    done_tasks = list(tasks.filter(status=Status.DONE).order_by("-completed_at")[:15])
+    prefetch_related_objects(open_tasks + done_tasks, *ROW_RELATED)
     budget = float(project.estimate_hours or 0) * 3600
     return render_work(request, "work/project.html", {
         "project": project, "total": total,
         "week": next((secs for p, secs in week.by_project if p and p.pk == project.pk), 0),
         "budget_pct": round(100 * total / budget) if budget else None,
         "earned": (float(project.hourly_rate) * total / 3600) if project.hourly_rate else None,
-        "open_tasks": tasks.exclude(status=Status.DONE), "done_tasks": tasks.filter(status=Status.DONE).order_by("-completed_at")[:15],
-        "entries": TimeEntry.objects.filter(owner=user, project=project).select_related("task")[:20],
+        "open_tasks": open_tasks, "done_tasks": done_tasks,
+        "entries": TimeEntry.objects.filter(owner=user, project=project).select_related("task", "project").prefetch_related("tags")[:20],
+        "goals": services.with_progress(project.goals.filter(status=GoalStatus.ACTIVE)),
         "notes": Note.objects.filter(owner=user, project=project, is_archived=False)[:10],
         "today": today,
     })
@@ -505,11 +597,9 @@ def reports_view(request):
     accuracy = None
     if estimated:
         accuracy = round(100 * sum(min(r["estimate"], r["spent"]) / max(r["estimate"], r["spent"], 1) for r in estimated) / len(estimated))
-    hours = [0] * 24
-    for e in t.entries:
-        st = timezone.localtime(e.started_at)
-        hours[st.hour] += e.seconds
+    hours = t.by_hour
     hpeak = max(hours) or 1
+    year = services.daily_seconds(user, today - timedelta(days=364), today)
     return render_work(request, "work/reports.html", {
         "t": t, "start": start, "end": end, "preset": preset, "today": today,
         "bars": [{"day": d, "secs": v, "pct": round(100 * v / peak), "work": s.is_work_day(d), "weekend": not s.is_work_day(d)} for d, v in t.by_day.items()],
@@ -520,6 +610,8 @@ def reports_view(request):
         "tasks": t.by_task, "completed": completed.count(), "created": Task.objects.filter(owner=user, created_at__gte=lo, created_at__lt=hi).count(),
         "estimated": estimated, "accuracy": accuracy,
         "hours": [{"h": h, "secs": v, "pct": round(100 * v / hpeak)} for h, v in enumerate(hours)],
+        "heat": services.heatmap(year, today, s.week_start), "year_total": sum(year.values()),
+        "year_days": sum(1 for v in year.values() if v),
         "presets": [("week", _("This week")), ("lastweek", _("Last week")), ("month", _("This month")), ("lastmonth", _("Last month")),
                     ("30", _("Last 30 days")), ("year", _("This year"))],
     })
@@ -562,3 +654,237 @@ def settings_view(request):
 def help_view(request):
     return render_work(request, "work/help.html", {})
 
+
+
+# ── Goals ─────────────────────────────────────────────────────────────────
+@work_required
+def goals_view(request):
+    user, today = request.user, _today()
+    show = request.GET.get("show", "active")
+    show = show if show in ("active", "done", "dropped") else "active"
+    goals = services.with_progress(Goal.objects.filter(owner=user, status=show).select_related("project"))
+    counts = dict(Goal.objects.filter(owner=user).values_list("status").annotate(n=Count("id")).values_list("status", "n"))
+    return render_work(request, "work/goals.html", {"goals": goals, "show": show, "counts": counts, "today": today})
+
+
+@work_required
+def goal_form_view(request, pk=None):
+    goal = get_object_or_404(Goal, pk=pk, owner=request.user) if pk else None
+    initial = None if goal else {"project": request.GET.get("project") or None, "area": request.GET.get("area") or None}
+    form = GoalForm(request.POST or None, instance=goal, owner=request.user, initial=initial)
+    if request.method == "POST" and form.is_valid():
+        obj = form.save(commit=False)
+        obj.owner = request.user
+        obj.save()
+        messages.success(request, _("Goal saved."))
+        return redirect("work:goal", pk=obj.pk)
+    return render_work(request, "work/goal_form.html", {"form": form, "goal": goal})
+
+
+@work_required
+def goal_view(request, pk):
+    user, today = request.user, _today()
+    goal = get_object_or_404(Goal.objects.select_related("project"), pk=pk, owner=user)
+    if request.method == "POST":
+        action = request.POST.get("action")
+        if action in GoalStatus.values:
+            services.set_goal_status(goal, action)
+            messages.success(request, {GoalStatus.DONE: _("Goal reached. Well done!"), GoalStatus.DROPPED: _("Goal dropped."),
+                                       GoalStatus.ACTIVE: _("Goal is active again.")}[action])
+        elif action == "delete":
+            delete_with_undo(request, goal, _("Goal deleted: %(title)s. Its tasks are kept.") % {"title": goal.title},
+                             label=goal.title, back_url=reverse("work:goal", args=[pk]))
+            return redirect("work:goals")
+        return redirect("work:goal", pk=pk)
+    goal = services.with_progress([goal])[0]
+    tasks = Task.objects.filter(owner=user, goal=goal).select_related("project")
+    open_tasks = list(tasks.exclude(status=Status.DONE))
+    done_tasks = list(tasks.filter(status=Status.DONE).order_by("-completed_at")[:20])
+    prefetch_related_objects(open_tasks + done_tasks, *ROW_RELATED)
+    spent = sum(services.tracked_by(user, "task__goal_id", ids=[goal.pk]).values())
+    return render_work(request, "work/goal.html", {
+        "goal": goal, "steps": goal.steps.all(), "open_tasks": open_tasks, "done_tasks": done_tasks, "today": today,
+        "spent": spent, "days_left": goal.days_left(today),
+        "learning": goal.learning.all()[:10],
+    })
+
+
+# ── Learning ──────────────────────────────────────────────────────────────
+@work_required
+def learning_view(request):
+    user, today = request.user, _today()
+    show = request.GET.get("show", "active")
+    show = show if show in (*LearningStatus.values, "all") else "active"
+    kind = request.GET.get("kind", "")
+    items = LearningItem.objects.filter(owner=user).prefetch_related("tags")
+    counts = dict(items.values_list("status").annotate(n=Count("id")).values_list("status", "n"))
+    if show != "all":
+        items = items.filter(status=show)
+    if kind in LearningKind.values:
+        items = items.filter(kind=kind)
+    if show == LearningStatus.DONE:
+        items = items.order_by("-finished_on", "-updated_at")
+    return render_work(request, "work/learning.html", {
+        "items": items[:300], "show": show, "kind": kind, "counts": counts, "kinds": LearningKind.choices,
+        "finished_this_year": LearningItem.objects.filter(owner=user, status=LearningStatus.DONE, finished_on__year=today.year).count(),
+        "statuses": LearningStatus.choices,
+    })
+
+
+@work_required
+def learning_form_view(request, pk=None):
+    item = get_object_or_404(LearningItem, pk=pk, owner=request.user) if pk else None
+    initial = None
+    if not item:
+        initial = {k: request.GET.get(k) for k in ("title", "url", "kind", "goal") if request.GET.get(k)}
+    form = LearningForm(request.POST or None, instance=item, owner=request.user, initial=initial)
+    if request.method == "POST":
+        if item and request.POST.get("action") == "delete":
+            delete_with_undo(request, item, _("Removed from your learning list: %(title)s.") % {"title": item.title},
+                             label=item.title, back_url=reverse("work:learning"))
+            return redirect("work:learning")
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.owner = request.user
+            obj.save()
+            form.save_tags(obj)
+            messages.success(request, _("Saved."))
+            return redirect(reverse("work:learning") + f"?show={obj.status}#learn-{obj.pk}")
+    return render_work(request, "work/learning_form.html", {"form": form, "item": item})
+
+
+# ── Review & brag document ────────────────────────────────────────────────
+def _review_range(request, s, today):
+    preset = request.GET.get("range", "week")
+    if preset == "quarter":
+        q = (today.month - 1) // 3 * 3 + 1
+        return (today.replace(month=q, day=1), today), preset
+    if preset == "half":
+        return (today.replace(month=1 if today.month <= 6 else 7, day=1), today), preset
+    return _range(request, s, today)
+
+
+@work_required
+def review_view(request):
+    user, today = request.user, _today()
+    s = WorkSettings.for_user(user)
+    (start, end), preset = _review_range(request, s, today)
+    if (end - start).days > 400:
+        start = end - timedelta(days=400)
+    data = services.review(user, start, end)
+    md = services.review_markdown(data)
+    if request.GET.get("export") == "md":
+        response = HttpResponse(md, content_type="text/markdown; charset=utf-8")
+        response["Content-Disposition"] = f'attachment; filename="review-{start}-{end}.md"'
+        return response
+    lo = services.day_bounds(today)[0]
+    return render_work(request, "work/review.html", {
+        "d": data, "md": md, "start": start, "end": end, "preset": preset, "today": today,
+        "presets": [("week", _("This week")), ("lastweek", _("Last week")), ("month", _("This month")), ("lastmonth", _("Last month")),
+                    ("quarter", _("This quarter")), ("half", _("Half year")), ("year", _("This year"))],
+        "late": Task.objects.filter(owner=user, due_date__lt=today).exclude(status=Status.DONE).count(),
+        "coming": Task.objects.filter(owner=user, due_date__gte=today, due_date__lte=today + timedelta(days=7)).exclude(status=Status.DONE)
+                  .select_related("project").order_by("due_date")[:12],
+        "stale": Task.objects.filter(owner=user, status=Status.DOING, updated_at__lt=lo - timedelta(days=7)).count(),
+    })
+
+
+# ── Calendar ──────────────────────────────────────────────────────────────
+@work_required
+def calendar_view(request):
+    import calendar as cal
+
+    user, today = request.user, _today()
+    s = WorkSettings.for_user(user)
+    month = parse_date((request.GET.get("month") or "") + "-01") if request.GET.get("month") else None
+    month = (month or today).replace(day=1)
+    last = month.replace(day=cal.monthrange(month.year, month.month)[1])
+    first_cell = month - timedelta(days=(month.weekday() - s.week_start) % 7)
+    last_cell = last + timedelta(days=(s.week_start - last.weekday() - 1) % 7)
+    secs = services.daily_seconds(user, first_cell, last_cell)
+    due = {}
+    for t in (Task.objects.filter(owner=user, due_date__gte=first_cell, due_date__lte=last_cell)
+              .select_related("project").order_by("status", "-priority", "order")):
+        due.setdefault(t.due_date, []).append(t)
+    lo, hi = services.day_bounds(first_cell)[0], services.day_bounds(last_cell)[1]
+    done = {}
+    for when in Task.objects.filter(owner=user, status=Status.DONE, completed_at__gte=lo, completed_at__lt=hi).values_list("completed_at", flat=True):
+        day = timezone.localtime(when).date()
+        done[day] = done.get(day, 0) + 1
+    moods = dict(JournalEntry.objects.filter(owner=user, date__gte=first_cell, date__lte=last_cell, mood__isnull=False).values_list("date", "mood"))
+    peak = max(secs.values(), default=0) or 1
+    days, day = [], first_cell
+    while day <= last_cell:
+        v = secs.get(day, 0)
+        days.append({"date": day, "secs": v, "level": 0 if not v else min(4, 1 + int(4 * v / (peak + 1))),
+                     "tasks": due.get(day, []), "done": done.get(day, 0), "mood": moods.get(day),
+                     "in_month": day.month == month.month, "today": day == today, "work": s.is_work_day(day)})
+        day += timedelta(days=1)
+    prev = (month - timedelta(days=1)).replace(day=1)
+    return render_work(request, "work/calendar.html", {
+        "month": month, "days": days, "weeks": [days[i:i + 7] for i in range(0, len(days), 7)],
+        "weekdays": [d["date"] for d in days[:7]], "prev": prev, "next": last + timedelta(days=1), "today": today,
+        "month_secs": sum(v for d, v in secs.items() if d.month == month.month),
+        "month_due": sum(len(v) for d, v in due.items() if d.month == month.month),
+        "moods": {1: "😞", 2: "😕", 3: "😐", 4: "🙂", 5: "😄"},
+    })
+
+
+# ── Your data ─────────────────────────────────────────────────────────────
+@work_required
+def export_view(request):
+    """Everything in the tracker as one .zip: data.json, plus notes and
+    snippets as plain files you can open anywhere."""
+    import io
+    import json
+    import re
+    import zipfile
+
+    from django.core import serializers
+
+    user = request.user
+    models = [Project, Tag, Goal, Task, TimeEntry, Note, Snippet, Habit, JournalEntry, LearningItem]
+    from .models import ChecklistItem, GoalStep, HabitCheck
+    rows = []
+    for model in models:
+        rows += json.loads(serializers.serialize("json", model.objects.filter(owner=user)))
+    rows += json.loads(serializers.serialize("json", ChecklistItem.objects.filter(task__owner=user)))
+    rows += json.loads(serializers.serialize("json", GoalStep.objects.filter(goal__owner=user)))
+    rows += json.loads(serializers.serialize("json", HabitCheck.objects.filter(habit__owner=user)))
+    ext = {"python": "py", "javascript": "js", "typescript": "ts", "bash": "sh", "plaintext": "txt", "markdown": "md", "xml": "html",
+           "csharp": "cs", "cpp": "cpp", "dockerfile": "Dockerfile", "kotlin": "kt", "ruby": "rb", "rust": "rs", "yaml": "yml"}
+
+    def slug(text, pk):
+        return f"{pk}-" + (re.sub(r"[^\w-]+", "-", text.lower()).strip("-")[:60] or "untitled")
+
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        z.writestr("data.json", json.dumps(rows, ensure_ascii=False, indent=1))
+        for n in Note.objects.filter(owner=user):
+            z.writestr(f"notes/{slug(n.display_title, n.pk)}.md", (f"# {n.title}\n\n" if n.title else "") + n.body)
+        for sn in Snippet.objects.filter(owner=user):
+            z.writestr(f"snippets/{slug(sn.title, sn.pk)}.{ext.get(sn.language, sn.language)}", sn.code)
+        for j in JournalEntry.objects.filter(owner=user):
+            z.writestr(f"journal/{j.date}.md", f"# {j.date}\n\n## Plan\n{j.plan}\n\n## Done & learnt\n{j.wins}\n\n## Blockers\n{j.blockers}\n\n## Notes\n{j.notes}\n")
+    response = HttpResponse(buf.getvalue(), content_type="application/zip")
+    response["Content-Disposition"] = f'attachment; filename="productivity-{_today()}.zip"'
+    return response
+
+
+# ── Shared from another app (phone share sheet) ───────────────────────────
+@login_required
+def share_view(request):
+    """What another app shared (a link, some text): keep it as a task, a note
+    or something to read — one tap. (The app's share target, so someone
+    without Productivity is just taken home.)"""
+    if not can_use(request.user):
+        messages.info(request, _("Shared items are kept in Productivity, which isn't turned on for you."))
+        return redirect("home")
+    title, text, url = (request.GET.get(k, "").strip() for k in ("title", "text", "url"))
+    if not url:   # many apps put the link in the text
+        import re
+
+        m = re.search(r"https?://\S+", text)
+        if m:
+            url, text = m.group(0), (text[:m.start()] + text[m.end():]).strip()
+    return render_work(request, "work/share.html", {"title": title or text[:200], "text": text, "url": url})

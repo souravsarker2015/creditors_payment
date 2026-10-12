@@ -1,0 +1,30 @@
+{% load i18n work %}{% comment %}Command palette: Ctrl+K (or / on a page without its own search). work.js: workPalette.{% endcomment %}
+<div x-data="workPalette" x-cloak>
+  {% for name in "sun check board calendar folder flag book bolt timer flame journal trophy chart note code key plus play stop clock copy download keyboard arrow-right"|split_words %}<template data-icon="{{ name }}">{% icon name %}</template>{% endfor %}
+  <template data-icon="task">{% icon "check" %}</template><template data-icon="project">{% icon "folder" %}</template><template data-icon="goal">{% icon "flag" %}</template>
+  <template data-icon="learning">{% icon "book" %}</template><template data-icon="snippet">{% icon "code" %}</template><template data-icon="add">{% icon "plus" %}</template>
+  <template data-icon="add-note">{% icon "note" %}</template><template data-icon="add-time">{% icon "play" %}</template><template data-icon="arrow">{% icon "arrow-right" %}</template>
+  <div class="wc-backdrop" x-show="open" x-transition.opacity.duration.120ms @click="close()"></div>
+  <section class="wc wpl" x-show="open" x-transition.scale.98.origin.top.duration.120ms x-trap.noscroll="open" @keydown.escape.stop="close()" role="dialog" aria-modal="true" aria-label="{% translate 'Command palette' %}">
+    <div class="wpl-bar">
+      {% icon "search" %}
+      <input x-ref="q" x-model="q" @input="search()" @keydown.down.prevent="move(1)" @keydown.up.prevent="move(-1)" @keydown.enter.prevent="go(active)"
+             class="wpl-input" placeholder="{% translate 'Find anything, or type a command…' %}" autocomplete="off" spellcheck="false" enterkeyhint="go"
+             role="combobox" aria-expanded="true" aria-controls="wpl-list" :aria-activedescendant="'wpl-' + active" aria-label="{% translate 'Find anything, or type a command' %}">
+      <span class="wpl-spin" x-show="loading" aria-hidden="true"></span>
+      <kbd class="wpl-esc">Esc</kbd>
+    </div>
+    <ul class="wpl-list" id="wpl-list" role="listbox" x-ref="list">
+      <template x-for="(it, i) in items" :key="it.key">
+        <li :id="'wpl-' + i" role="option" :aria-selected="i === active" class="wpl-item" :class="i === active && 'is-active'" @mousemove="active = i" @click="go(i)">
+          <span class="wpl-ico" :data-kind="it.kind" x-html="icon(it)"></span>
+          <span class="wpl-text"><span class="wpl-title" :class="it.done && 'is-done'" x-text="it.title"></span><span class="wpl-meta" x-show="it.meta" x-text="it.meta"></span></span>
+          <span class="wpl-group" x-text="it.group"></span>
+          <span class="wpl-keys" x-show="it.hint"><template x-for="k in (it.hint || '').split(' ')"><kbd x-text="k"></kbd></template></span>
+        </li>
+      </template>
+      <li class="wpl-empty" x-show="!items.length">{% translate "Nothing found." %}</li>
+    </ul>
+    <footer class="wpl-foot"><span><kbd>↑</kbd><kbd>↓</kbd> {% translate "move" %}</span><span><kbd>Enter</kbd> {% translate "open" %}</span><span><kbd>&gt;</kbd> {% translate "commands only" %}</span></footer>
+  </section>
+</div>

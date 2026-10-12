@@ -1,5 +1,5 @@
 """Search everything: one box for people, ponds, entries and pages across the
-personal ledgers and the farm business.
+personal ledgers, the farm business and Productivity.
 
 Each source only runs for someone who may open it: the personal ledgers need
 personal access, farm records need business access, and farm money (partners,
@@ -98,6 +98,19 @@ PAGES = [
     (gettext_noop("Income & expenses"), "business:statement", "business", "view_reports"),
     (gettext_noop("All reports"), "business:reports", "business", "view_reports"),
     (gettext_noop("What the farm is worth"), "business:worth", "business", "view_finance"),
+    (gettext_noop("Productivity"), "work:today", "work", ""),
+    (gettext_noop("Tasks"), "work:tasks", "work", ""),
+    (gettext_noop("Calendar"), "work:calendar", "work", ""),
+    (gettext_noop("Goals"), "work:goals", "work", ""),
+    (gettext_noop("Learning"), "work:learning", "work", ""),
+    (gettext_noop("Focus timer"), "work:focus", "work", ""),
+    (gettext_noop("Time"), "work:time", "work", ""),
+    (gettext_noop("Journal & standup"), "work:journal", "work", ""),
+    (gettext_noop("Review & brag document"), "work:review", "work", ""),
+    (gettext_noop("Reports"), "work:reports", "work", ""),
+    (gettext_noop("Notes"), "work:notes", "work", ""),
+    (gettext_noop("Snippets"), "work:snippets", "work", ""),
+    (gettext_noop("Habits"), "work:habits", "work", ""),
 ]
 
 
@@ -219,20 +232,38 @@ def _business(request, text):
     return [farm]
 
 
-def _pages(request, text, personal, business):
+def _work(user, text):
+    """Productivity: the person's own tasks, notes, goals and learning."""
+    from apps.productivity.models import Goal, LearningItem, Note, Task
+
+    group = Group(_("Productivity"))
+    for t in Task.objects.filter(_q(text, "title", "link"), owner=user).order_by("status", "-updated_at")[:PER_GROUP]:
+        group.hits.append(Hit(t.title, " · ".join((_("Task"), t.get_status_display())), _url("work:task", t.pk), "check"))
+    for n in Note.objects.filter(_q(text, "title", "body"), owner=user, is_archived=False)[:4]:
+        group.hits.append(Hit(n.display_title, _("Note"), _url("work:note", n.pk), "note"))
+    for g in Goal.objects.filter(_q(text, "title"), owner=user)[:3]:
+        group.hits.append(Hit(g.title, _("Goal"), _url("work:goal", g.pk), "flag"))
+    for item in LearningItem.objects.filter(_q(text, "title", "author"), owner=user)[:3]:
+        group.hits.append(Hit(item.title, " · ".join(x for x in (_("Learning"), item.author) if x), _url("work:learning_edit", item.pk), "book"))
+    return [group]
+
+
+def _pages(request, text, personal, business, work=False):
     from apps.business.core.access import active_membership, can
 
     m = active_membership(request) if business else None
     group = Group(_("Pages"))
     low = text.lower()
     for title, name, area, cap in PAGES:
-        if (area == "personal" and not personal) or (area == "business" and m is None) or (cap and not can(m, cap)):
+        if (area == "personal" and not personal) or (area == "business" and m is None) or (area == "work" and not work) \
+                or (cap and not can(m, cap)):
             continue
         shown = _(title)
         if low in title.lower() or low in shown.lower():       # English or the page's name in Bangla
             url = _url(name)
             if url:
-                group.hits.append(Hit(shown, _("Farm") if area == "business" else _("Personal"), url, "arrow-right"))
+                where = {"business": _("Farm"), "work": _("Productivity")}.get(area, _("Personal"))
+                group.hits.append(Hit(shown, where, url, "arrow-right"))
     return group
 
 
@@ -242,12 +273,17 @@ def search(request, text):
     text = (text or "").strip().translate(BN_DIGITS)
     if len(text) < MIN_LENGTH:
         return text, []
+    from apps.productivity.access import can_use as can_use_work
+
     personal, business = has_dashboard(request.user, PERSONAL), has_dashboard(request.user, BUSINESS)
-    groups = [_pages(request, text, personal, business)]
+    work = can_use_work(request.user)
+    groups = [_pages(request, text, personal, business, work)]
     if personal:
         groups += _personal(request.user, text)
     if business:
         groups += _business(request, text)
+    if work:
+        groups += _work(request.user, text)
     return text, [g for g in groups if g.hits]
 
 

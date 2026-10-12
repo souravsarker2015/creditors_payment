@@ -1,5 +1,5 @@
 {% extends "work/base.html" %}
-{% load i18n %}
+{% load i18n work %}
 
 {% block title %}{% translate "Habits" %} | {% translate "Productivity" %}{% endblock %}
 
@@ -9,7 +9,7 @@
     <p class="wp-sub">{% translate "Small things, every day: read, exercise, practise, review. Tap a day to tick it." %}</p></div>
   <div class="wp-actions">
     <nav class="seg seg-sm"><a href="?range=14" class="seg-item{% if days == 14 %} is-active{% endif %}">{% translate "2 weeks" %}</a><a href="?range=28" class="seg-item{% if days == 28 %} is-active{% endif %}">{% translate "4 weeks" %}</a></nav>
-    <a href="{% url 'work:habit_new' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Habit" %}</a>
+    <a href="{% url 'work:habit_new' %}" class="btn btn-primary">{% icon "plus" %}{% translate "Habit" %}</a>
   </div>
 </header>
 
@@ -27,7 +27,7 @@
                   @click="const on = !$el.classList.contains('is-on'); $el.classList.toggle('is-on', on); if (on) Work.play(Work.cfg.sound ? 'soft' : ''); Work.api('{% url 'work:api_habit_check' row.habit.pk %}', { date: '{{ c.date|date:"Y-m-d" }}', done: on ? '1' : '0' }).then(r => { if (r.streak != null) streak = r.streak; })"
                   aria-pressed="{{ c.done|yesno:'true,false' }}" aria-label="{{ row.habit.name }} · {{ c.date|date:'j M' }}"></button>{% else %}<span class="wh-off" aria-hidden="true"></span>{% endif %}</td>
           {% endfor %}
-          <td class="wh-streak-cell"><span class="wh-streak" :class="streak && 'is-on'">{% include "partials/icon.html" with name="flame" %}<span x-text="streak"></span></span></td>
+          <td class="wh-streak-cell"><span class="wh-streak" :class="streak && 'is-on'">{% icon "flame" %}<span x-text="streak"></span></span></td>
         </tr>
         {% endfor %}
       </tbody>
@@ -35,9 +35,9 @@
   </div>
 </section>
 {% else %}
-<div class="empty"><div class="empty-icon">{% include "partials/icon.html" with name="flame" %}</div>
+<div class="empty"><div class="empty-icon">{% icon "flame" %}</div>
   <h3 class="empty-title">{% translate "Start a habit" %}</h3>
   <p class="empty-text">{% translate "Like “Read 20 pages”, “LeetCode problem”, “Walk 30 minutes”. Tick it off each day and watch the streak grow." %}</p>
-  <a href="{% url 'work:habit_new' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "New habit" %}</a></div>
+  <a href="{% url 'work:habit_new' %}" class="btn btn-primary">{% icon "plus" %}{% translate "New habit" %}</a></div>
 {% endif %}
 {% endblock %}

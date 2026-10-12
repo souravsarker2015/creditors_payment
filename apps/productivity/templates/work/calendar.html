@@ -1,0 +1,51 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% translate "Calendar" %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+<header class="wp-head">
+  <div class="min-w-0"><h1 class="wp-title">{{ month|date:"F Y" }}</h1>
+    <p class="wp-sub">{% blocktranslate with t=month_secs|hm %}{{ t }} tracked{% endblocktranslate %} · {% blocktranslate count counter=month_due %}{{ counter }} task due{% plural %}{{ counter }} tasks due{% endblocktranslate %}</p></div>
+  <div class="wp-actions">
+    <a href="?month={{ prev|date:'Y-m' }}" class="icon-btn" aria-label="{% translate 'Previous month' %}">{% icon "chevron-left" %}</a>
+    <a href="{% url 'work:calendar' %}" class="btn btn-secondary btn-sm">{% translate "This month" %}</a>
+    <a href="?month={{ next|date:'Y-m' }}" class="icon-btn" aria-label="{% translate 'Next month' %}">{% icon "chevron-right" %}</a>
+  </div>
+</header>
+
+<div x-data="{ pick: '{% if month.month == today.month and month.year == today.year %}{{ today|date:'Y-m-d' }}{% endif %}' }">
+  <section class="card wcal">
+    <div class="wcal-head">{% for d in weekdays %}<span>{{ d|date:"D" }}</span>{% endfor %}</div>
+    <div class="wcal-grid">
+      {% for d in days %}
+      <button type="button" class="wcal-day{% if not d.in_month %} is-out{% endif %}{% if d.today %} is-today{% endif %}{% if not d.work %} is-off{% endif %}" data-level="{{ d.level }}"
+              :class="pick === '{{ d.date|date:'Y-m-d' }}' && 'is-picked'" @click="pick = '{{ d.date|date:'Y-m-d' }}'"
+              aria-label="{{ d.date|date:'l j F' }}{% if d.secs %} · {{ d.secs|hm }}{% endif %}{% if d.tasks %} · {% blocktranslate count counter=d.tasks|length %}{{ counter }} task due{% plural %}{{ counter }} tasks due{% endblocktranslate %}{% endif %}">
+        <span class="wcal-num">{{ d.date|date:"j" }}{% if d.mood %}<i class="wcal-mood">{{ moods|get_item:d.mood }}</i>{% endif %}</span>
+        {% if d.secs %}<span class="wcal-time num">{{ d.secs|hm }}</span>{% endif %}
+        <span class="wcal-tasks">
+          {% for t in d.tasks|slice:":3" %}<span class="wcal-task{% if t.is_done %} is-done{% endif %}" data-p="{{ t.priority }}">{% if t.project %}<i class="wt-dot" data-color="{{ t.project.color }}"></i>{% endif %}{{ t.title }}</span>{% endfor %}
+          {% if d.tasks|length > 3 %}<span class="wcal-more">+{{ d.tasks|length|add:"-3" }}</span>{% endif %}
+        </span>
+        <span class="wcal-dots" aria-hidden="true">{% for t in d.tasks|slice:":4" %}<i{% if t.is_done %} class="is-done"{% endif %}></i>{% endfor %}{% if d.done %}<b>✓{{ d.done }}</b>{% endif %}</span>
+      </button>
+      {% endfor %}
+    </div>
+  </section>
+
+  {% for d in days %}
+  <section class="card wcal-panel" x-show="pick === '{{ d.date|date:'Y-m-d' }}'" x-cloak>
+    <header class="card-header"><div><h2 class="card-title">{{ d.date|date:"l, j F" }}</h2>
+      <p class="card-subtitle">{% if d.secs %}{% blocktranslate with t=d.secs|hm %}{{ t }} tracked{% endblocktranslate %}{% else %}{% translate "Nothing tracked" %}{% endif %}{% if d.done %} · {% blocktranslate count counter=d.done %}{{ counter }} task done{% plural %}{{ counter }} tasks done{% endblocktranslate %}{% endif %}</p></div>
+      <div class="wp-actions">
+        <button type="button" class="btn btn-secondary btn-sm" @click="$dispatch('work:capture', { mode: 'task', text: 'due:{{ d.date|date:'Y-m-d' }} ' })">{% icon "plus" %}{% translate "Task due" %}</button>
+        <a href="{% url 'work:time' %}?week={{ d.date|date:'Y-m-d' }}" class="btn btn-ghost btn-sm">{% translate "Time" %}</a>
+        <a href="{% url 'work:journal' %}?date={{ d.date|date:'Y-m-d' }}" class="btn btn-ghost btn-sm">{% translate "Journal" %}</a>
+      </div></header>
+    {% if d.tasks %}<ul class="wv-list">{% for t in d.tasks %}<li><a href="{% url 'work:task' t.pk %}"{% if t.is_done %} class="is-done"{% endif %}>{% if t.project %}<span class="wt-dot" data-color="{{ t.project.color }}"></span> {% endif %}{{ t.title }}</a><time>{{ t.get_status_display }}</time></li>{% endfor %}</ul>
+    {% else %}<p class="wd-muted">{% translate "No tasks due this day." %}</p>{% endif %}
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}

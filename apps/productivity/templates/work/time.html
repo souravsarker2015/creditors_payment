@@ -11,10 +11,10 @@
   </div>
   <div class="wp-actions">
     <nav class="wpg" aria-label="{% translate 'Week' %}">
-      <a href="?week={{ prev_week|date:'Y-m-d' }}" class="icon-btn" aria-label="{% translate 'Previous week' %}">{% include "partials/icon.html" with name="chevron-left" %}</a>
-      {% if next_week %}<a href="{% url 'work:time' %}" class="btn btn-ghost btn-sm">{% translate "This week" %}</a><a href="?week={{ next_week|date:'Y-m-d' }}" class="icon-btn" aria-label="{% translate 'Next week' %}">{% include "partials/icon.html" with name="chevron-right" %}</a>{% endif %}
+      <a href="?week={{ prev_week|date:'Y-m-d' }}" class="icon-btn" aria-label="{% translate 'Previous week' %}">{% icon "chevron-left" %}</a>
+      {% if next_week %}<a href="{% url 'work:time' %}" class="btn btn-ghost btn-sm">{% translate "This week" %}</a><a href="?week={{ next_week|date:'Y-m-d' }}" class="icon-btn" aria-label="{% translate 'Next week' %}">{% icon "chevron-right" %}</a>{% endif %}
     </nav>
-    <a href="{% url 'work:entry_new' %}" class="btn btn-secondary">{% include "partials/icon.html" with name="plus" %}{% translate "Add time" %}</a>
+    <a href="{% url 'work:entry_new' %}" class="btn btn-secondary">{% icon "plus" %}{% translate "Add time" %}</a>
   </div>
 </header>
 
@@ -28,7 +28,7 @@
 {% if sheet %}
 <section class="card">
   <header class="card-header"><h2 class="card-title">{% translate "Timesheet" %}</h2>
-    <a href="{% url 'work:reports' %}?range=custom&from={{ first|date:'Y-m-d' }}&to={{ last|date:'Y-m-d' }}&export=csv" class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="download" %}CSV</a></header>
+    <a href="{% url 'work:reports' %}?range=custom&from={{ first|date:'Y-m-d' }}&to={{ last|date:'Y-m-d' }}&export=csv" class="btn btn-ghost btn-sm">{% icon "download" %}CSV</a></header>
   <div class="ws-scroll">
     <table class="ws-table">
       <thead><tr><th>{% translate "Project" %}</th>{% for d in weekdays %}<th class="{% if d == today %}is-today{% endif %}">{{ d|date:"D" }}<small>{{ d|date:"j" }}</small></th>{% endfor %}<th>{% translate "Total" %}</th></tr></thead>
@@ -53,7 +53,7 @@
   </section>
   {% endif %}{% endfor %}
   {% if not week.entries %}
-  <div class="empty"><div class="empty-icon">{% include "partials/icon.html" with name="timer" %}</div>
+  <div class="empty"><div class="empty-icon">{% icon "timer" %}</div>
     <h3 class="empty-title">{% translate "No time this week" %}</h3>
     <p class="empty-text">{% translate "Start the timer at the top, or add time you already worked." %}</p></div>
   {% endif %}

@@ -10,7 +10,10 @@ from django.utils import timezone
 from apps.business.core.models import Dashboard, UserDashboardAccess
 
 from . import services
-from .models import Habit, HabitCheck, JournalEntry, Note, Project, Snippet, Status, Tag, Task, TimeEntry, WorkSettings
+from .models import (
+    Goal, GoalStatus, Habit, HabitCheck, JournalEntry, LearningItem, Note, Project, Snippet, Status, Tag, Task, TimeEntry, WorkSettings,
+    link_label,
+)
 
 PW = "Str0ng-pass-123"
 
@@ -69,7 +72,8 @@ class PagesTests(TestCase):
 
     def test_every_page(self):
         names = ["today", "tasks", "task_new", "projects", "project_new", "time", "entry_new", "focus", "notes", "snippets",
-                 "snippet_new", "habits", "habit_new", "journal", "reports", "settings", "help"]
+                 "snippet_new", "habits", "habit_new", "journal", "reports", "settings", "help", "goals", "goal_new", "learning",
+                 "learning_new", "review", "calendar", "share"]
         for name in names:
             with self.subTest(name):
                 r = self.client.get(reverse(f"work:{name}"))
@@ -78,7 +82,9 @@ class PagesTests(TestCase):
         for url in [reverse("work:task", args=[self.t.pk]), reverse("work:project", args=[self.p.pk]), reverse("work:project_edit", args=[self.p.pk]),
                     reverse("work:note", args=[self.n.pk]), reverse("work:tasks") + "?view=board", reverse("work:tasks") + "?done=1&q=write",
                     reverse("work:reports") + "?range=30", reverse("work:reports") + "?range=custom&from=2026-01-01&to=2026-02-01",
-                    reverse("work:notes") + "?new=1", reverse("work:time") + "?week=2026-01-05", reverse("work:journal") + "?date=2026-01-05"]:
+                    reverse("work:notes") + "?new=1", reverse("work:time") + "?week=2026-01-05", reverse("work:journal") + "?date=2026-01-05",
+                    reverse("work:review") + "?range=quarter", reverse("work:review") + "?range=year", reverse("work:calendar") + "?month=2026-02",
+                    reverse("work:learning") + "?show=all&kind=book", reverse("work:goals") + "?show=done"]:
             with self.subTest(url):
                 self.assertEqual(self.client.get(url).status_code, 200)
 
@@ -294,3 +300,225 @@ class OfflineTests(TestCase):
         member = User.objects.create_user("plain", "", PW)
         self.client.force_login(member)
         self.assertFalse([u for u in self.client.get(reverse("offline_pages")).json()["more"] if u.startswith("/work/")])
+
+
+class SpeedTests(TestCase):
+    """Long lists stay quick: rows are capped (with "Show all"), and a page's
+    query count doesn't grow with the number of tasks or projects."""
+
+    def setUp(self):
+        self.user = User.objects.create_superuser("dev", "d@example.com", PW)
+        self.client.force_login(self.user)
+        self.p = Project.objects.create(owner=self.user, name="Big", color="blue")
+        tag = Tag.objects.create(owner=self.user, name="t")
+        tasks = Task.objects.bulk_create([Task(owner=self.user, title=f"Backlog {i}", status="backlog", project=self.p, order=i) for i in range(60)])
+        for t in tasks[:10]:
+            t.tags.add(tag)
+
+    def test_groups_are_capped_and_one_group_shows_in_full(self):
+        r = self.client.get(reverse("work:tasks"))
+        self.assertEqual(r.content.decode().count('<li class="wt-task'), 40)
+        self.assertContains(r, "?group=backlog")
+        r = self.client.get(reverse("work:tasks") + "?group=backlog")
+        self.assertEqual(r.content.decode().count('<li class="wt-task'), 60)
+
+    def test_query_count_does_not_grow_with_rows(self):
+        def queries(url):
+            from django.db import connection
+            from django.test.utils import CaptureQueriesContext
+
+            with CaptureQueriesContext(connection) as q:
+                self.assertEqual(self.client.get(url).status_code, 200)
+            return len(q)
+
+        Task.objects.create(owner=self.user, title="Today", project=self.p, my_day=timezone.localdate()).tags.add(Tag.objects.get(name="t"))
+        for url in (reverse("work:tasks"), reverse("work:project", args=[self.p.pk]), reverse("work:today"), reverse("work:projects")):
+            with self.subTest(url):
+                before = queries(url)
+                more = Task.objects.bulk_create([Task(owner=self.user, title=f"More {i}", status="todo", project=self.p, my_day=timezone.localdate()) for i in range(20)])
+                Project.objects.create(owner=self.user, name=f"Other {url}")
+                self.assertLessEqual(queries(url), before + 1, url)
+                Task.objects.filter(pk__in=[t.pk for t in more]).delete()
+
+    def test_rows_are_light(self):
+        r = self.client.get(reverse("work:tasks"))
+        self.assertEqual(r.content.decode().count('id="work-task-menu"'), 1)    # one shared menu, not one per row
+        self.assertNotIn("x-data", r.content.decode().split('<li class="wt-task', 1)[1].split("</li>", 1)[0])
+
+    def test_totals_match_the_database_sums(self):
+        now = timezone.now()
+        for h in range(1, 30):
+            TimeEntry.objects.create(owner=self.user, project=self.p, started_at=now - timedelta(hours=h * 5), ended_at=now - timedelta(hours=h * 5 - 1))
+        today = timezone.localdate()
+        t = services.totals(self.user, today - timedelta(days=20), today)
+        self.assertEqual(t.seconds, 29 * 3600)
+        self.assertEqual(sum(t.by_day.values()), t.seconds)
+        self.assertEqual(sum(t.by_hour), t.seconds)
+        self.assertEqual(services.tracked_by(self.user, "project_id"), {self.p.pk: 29 * 3600})
+        self.assertEqual(sum(services.daily_seconds(self.user, today - timedelta(days=20), today).values()), 29 * 3600)
+        self.assertEqual(len(t.entries), 29)    # the objects, loaded only when asked for
+
+
+class LinkTests(TestCase):
+    def test_labels(self):
+        self.assertEqual(link_label("https://github.com/acme/api/pull/482"), "PR #482")
+        self.assertEqual(link_label("https://gitlab.com/acme/api/-/merge_requests/7"), "MR !7")
+        self.assertEqual(link_label("https://github.com/acme/api/issues/91"), "#91")
+        self.assertEqual(link_label("https://acme.atlassian.net/browse/FIN-231"), "FIN-231")
+        self.assertEqual(link_label("https://www.example.com/docs/x"), "example.com")
+
+    def test_quick_add_keeps_a_pasted_link(self):
+        p = services.parse_quick("Review https://github.com/acme/api/pull/12 #review", date(2026, 10, 12))
+        self.assertEqual((p.title, p.link, p.tags), ("Review", "https://github.com/acme/api/pull/12", ["review"]))
+        self.assertEqual(services.parse_quick("https://github.com/acme/api/pull/12").title, "PR #12")
+        user = User.objects.create_superuser("dev", "d@example.com", PW)
+        self.client.force_login(user)
+        r = self.client.post(reverse("work:api_task_add"), {"text": "Fix it https://github.com/acme/api/issues/5"}).json()
+        self.assertIn("#5", r["html"])
+        t = Task.objects.get(pk=r["id"])
+        self.client.post(reverse("work:api_task_update", args=[t.pk]), {"link": "javascript:alert(1)"})
+        t.refresh_from_db()
+        self.assertEqual(t.link, "https://github.com/acme/api/issues/5")    # only web links
+
+
+class GoalTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_superuser("dev", "d@example.com", PW)
+        self.client.force_login(self.user)
+
+    def test_form_has_colour_swatches(self):
+        # Colour pickers must be real radio buttons (they were <option>s, so a new project or habit never saved).
+        for name in ("goal_new", "project_new", "habit_new"):
+            with self.subTest(name):
+                self.assertContains(self.client.get(reverse(f"work:{name}")), 'type="radio" name="color"')
+        r = self.client.post(reverse("work:project_new"), {"name": "New one", "color": "teal"})
+        self.assertEqual(r.status_code, 302)
+
+    def test_progress_from_number_milestones_or_tasks(self):
+        r = self.client.post(reverse("work:goal_new"), {"title": "150 problems", "area": "learning", "color": "amber", "unit": "problems",
+                                                        "start_value": "0", "target_value": "150"})
+        g = Goal.objects.get(title="150 problems")
+        self.assertRedirects(r, reverse("work:goal", args=[g.pk]))
+        r = self.client.post(reverse("work:api_goal_value", args=[g.pk]), {"value": "57"}).json()
+        self.assertEqual((r["value"], r["pct"]), ("57", 38))
+        r = self.client.post(reverse("work:api_goal_value", args=[g.pk]), {"add": "93"}).json()
+        self.assertTrue(r["reached"])
+
+        g2 = Goal.objects.create(owner=self.user, title="Senior engineer")
+        a = self.client.post(reverse("work:api_goal_step", args=[g2.pk]), {"text": "Design doc"}).json()
+        self.client.post(reverse("work:api_goal_step", args=[g2.pk]), {"text": "Mentor"})
+        r = self.client.post(reverse("work:api_goal_step", args=[g2.pk]), {"step": a["id"], "done": "1"}).json()
+        self.assertEqual((r["pct"], r["steps"]), (50, [1, 2]))
+
+        g3 = Goal.objects.create(owner=self.user, title="Ship v2")
+        self.client.post(reverse("work:api_task_add"), {"text": "Release notes", "goal": g3.pk})
+        t = Task.objects.create(owner=self.user, title="Deploy", goal=g3)
+        services.set_done(t, True)
+        self.assertEqual(services.with_progress([g3])[0].pct, 50)
+        self.assertContains(self.client.get(reverse("work:goals")), "Ship v2")
+        self.assertContains(self.client.get(reverse("work:goal", args=[g3.pk])), "Release notes")
+
+    def test_reach_drop_delete(self):
+        g = Goal.objects.create(owner=self.user, title="G")
+        t = Task.objects.create(owner=self.user, title="Kept", goal=g)
+        self.client.post(reverse("work:goal", args=[g.pk]), {"action": "done"})
+        g.refresh_from_db()
+        self.assertEqual((g.status, g.progress()), (GoalStatus.DONE, 100))
+        self.assertTrue(g.completed_at)
+        self.client.post(reverse("work:goal", args=[g.pk]), {"action": "delete"})
+        self.assertFalse(Goal.objects.filter(pk=g.pk).exists())
+        t.refresh_from_db()
+        self.assertIsNone(t.goal)
+
+    def test_private(self):
+        other = User.objects.create_superuser("other", "o@example.com", PW)
+        g = Goal.objects.create(owner=other, title="Secret goal")
+        item = LearningItem.objects.create(owner=other, title="Secret book")
+        self.assertEqual(self.client.get(reverse("work:goal", args=[g.pk])).status_code, 404)
+        self.assertEqual(self.client.post(reverse("work:api_goal_step", args=[g.pk]), {"text": "x"}).status_code, 404)
+        self.assertEqual(self.client.post(reverse("work:api_learning_update", args=[item.pk]), {"add": "1"}).status_code, 404)
+        self.assertNotContains(self.client.get(reverse("work:goals")), "Secret goal")
+        self.assertEqual(self.client.get(reverse("work:api_search") + "?q=secret").json()["results"], [])
+
+
+class LearningTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_superuser("dev", "d@example.com", PW)
+        self.client.force_login(self.user)
+
+    def test_quick_add_progress_and_finish(self):
+        r = self.client.post(reverse("work:api_learning_add"), {"text": "https://youtu.be/abc Simple Made Easy"}).json()
+        item = LearningItem.objects.get(pk=r["id"])
+        self.assertEqual((item.title, item.kind, item.url, item.status), ("Simple Made Easy", "video", "https://youtu.be/abc", "queued"))
+        book = LearningItem.objects.create(owner=self.user, title="DDIA", total=590, progress=200)
+        r = self.client.post(reverse("work:api_learning_update", args=[book.pk]), {"add": "10"}).json()
+        self.assertEqual((r["progress"], r["status"]), (210, "active"))     # reading it → in progress
+        r = self.client.post(reverse("work:api_learning_update", args=[book.pk]), {"status": "done"}).json()
+        book.refresh_from_db()
+        self.assertEqual((book.progress, book.percent, book.finished_on), (590, 100, timezone.localdate()))
+
+    def test_form_fills_the_dates(self):
+        r = self.client.post(reverse("work:learning_new"), {"title": "Clean Code", "kind": "book", "status": "done", "unit": "pages",
+                                                            "progress": "0", "total": "400", "tags_text": "craft"})
+        self.assertEqual(r.status_code, 302)
+        item = LearningItem.objects.get(title="Clean Code")
+        self.assertEqual((item.finished_on, item.started_on, item.progress), (timezone.localdate(), timezone.localdate(), 400))
+        self.assertEqual(list(item.tags.values_list("name", flat=True)), ["craft"])
+
+
+class ReviewCalendarExportTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_superuser("dev", "d@example.com", PW)
+        self.client.force_login(self.user)
+        p = Project.objects.create(owner=self.user, name="FinTrack")
+        t = Task.objects.create(owner=self.user, title="Ship 2FA", project=p, link="https://github.com/a/b/pull/9")
+        services.set_done(t, True)
+        Task.objects.create(owner=self.user, title="Due soon", due_date=timezone.localdate() + timedelta(days=2))
+        JournalEntry.objects.create(owner=self.user, date=timezone.localdate(), wins="Shipped 2FA\n- Learnt MVCC", mood=4)
+        Goal.objects.create(owner=self.user, title="Lead a project", status="done", completed_at=timezone.now())
+        LearningItem.objects.create(owner=self.user, title="DDIA", status="done", finished_on=timezone.localdate())
+        Note.objects.create(owner=self.user, title="Runbook", body="Restart the worker")
+        Snippet.objects.create(owner=self.user, title="Prune", language="bash", code="docker system prune")
+
+    def test_review_and_brag_document(self):
+        r = self.client.get(reverse("work:review"))
+        for text in ("Ship 2FA", "Learnt MVCC", "Lead a project", "DDIA", "Due soon"):
+            self.assertContains(r, text)
+        md = self.client.get(reverse("work:review") + "?export=md").content.decode()
+        self.assertIn("## What I shipped", md)
+        self.assertIn("- Ship 2FA (https://github.com/a/b/pull/9)", md)
+        self.assertIn("- Learnt MVCC", md)
+
+    def test_calendar_shows_due_tasks(self):
+        day = timezone.localdate() + timedelta(days=2)
+        r = self.client.get(reverse("work:calendar") + f"?month={day:%Y-%m}")
+        self.assertContains(r, "Due soon")
+
+    def test_export_everything(self):
+        import io
+        import json
+        import zipfile
+
+        r = self.client.get(reverse("work:export"))
+        z = zipfile.ZipFile(io.BytesIO(r.content))
+        data = json.loads(z.read("data.json"))
+        models = {row["model"] for row in data}
+        self.assertTrue({"productivity.task", "productivity.goal", "productivity.learningitem", "productivity.note"} <= models)
+        self.assertIn("Restart the worker", z.read([n for n in z.namelist() if n.startswith("notes/")][0]).decode())
+        self.assertEqual(z.read([n for n in z.namelist() if n.startswith("snippets/")][0]).decode(), "docker system prune")
+
+    def test_share_target(self):
+        r = self.client.get(reverse("work:share") + "?title=Bug&text=See+https://github.com/a/b/issues/3+please")
+        self.assertContains(r, "https://github.com/a/b/issues/3")
+        plain = User.objects.create_user("plain", "", PW)
+        self.client.force_login(plain)
+        self.assertRedirects(self.client.get(reverse("work:share") + "?url=https://x.y"), reverse("home"), fetch_redirect_response=False)
+
+    def test_search_everywhere(self):
+        r = self.client.get(reverse("work:api_search") + "?q=ddia").json()
+        self.assertEqual([x["kind"] for x in r["results"]], ["learning"])
+        r = self.client.get(reverse("search") + "?q=ship")
+        self.assertContains(r, "Ship 2FA")                      # the app-wide search finds tasks too
+        plain = User.objects.create_user("plain", "", PW)
+        self.client.force_login(plain)
+        self.assertNotContains(self.client.get(reverse("search") + "?q=ship"), "Ship 2FA")

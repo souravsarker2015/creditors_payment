@@ -5,14 +5,16 @@ import re
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta
+from functools import cached_property
 
 from django.db import transaction
-from django.db.models import Max
+from django.db.models import DurationField, ExpressionWrapper, F, Max, Q, Sum
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from .models import (
-    EntryKind, Habit, HabitCheck, Priority, Project, Repeat, Status, Tag, Task, TimeEntry, WorkSettings,
+    EntryKind, Goal, GoalStatus, GoalStep, Habit, HabitCheck, JournalEntry, LearningItem, LearningStatus, Priority, Project,
+    Repeat, Status, Tag, Task, TimeEntry, WorkSettings, link_label,
 )
 
 
@@ -88,25 +90,24 @@ def entry_seconds_between(entry, start, end, now=None):
 
 def entries_between(user, start, end):
     """Entries that overlap [start, end) — including one still running."""
-    from django.db.models import Q
-
     return (TimeEntry.objects.filter(owner=user, started_at__lt=end)
             .filter(Q(ended_at__gt=start) | Q(ended_at__isnull=True))
             .select_related("task", "project").prefetch_related("tags").order_by("started_at"))
 
 
-@dataclass
 class Totals:
-    start: date
-    end: date                                   # inclusive
-    seconds: int = 0
-    by_day: dict = field(default_factory=dict)  # date → seconds
-    by_project: list = field(default_factory=list)   # [(project or None, seconds)]
-    by_tag: list = field(default_factory=list)
-    by_task: list = field(default_factory=list)
-    billable_seconds: int = 0
-    focus_sessions: int = 0
-    entries: list = field(default_factory=list)
+    """Tracked time from `start` to `end` (dates, inclusive), split by day,
+    project, tag, task and hour. Sums are made from plain rows (no model
+    objects), so a year of entries is still quick; `entries` (the full
+    objects, for lists and CSV) is only loaded when a page asks for it."""
+
+    def __init__(self, user, start, end):
+        self.user, self.start, self.end = user, start, end
+        self.seconds = self.billable_seconds = self.focus_sessions = 0
+        self.by_day = {start + timedelta(days=i): 0 for i in range((end - start).days + 1)}
+        self.by_project, self.by_tag, self.by_task = [], [], []
+        self.by_hour = [0] * 24
+        self._lo, self._hi = day_bounds(start)[0], day_bounds(end)[1]
 
     @property
     def days(self):
@@ -121,44 +122,102 @@ class Totals:
     def best_day(self):
         return max(self.by_day.items(), key=lambda kv: kv[1]) if any(self.by_day.values()) else None
 
+    @cached_property
+    def entries(self):
+        now = timezone.now()
+        return [e for e in entries_between(self.user, self._lo, self._hi) if entry_seconds_between(e, self._lo, self._hi, now)]
+
+
+def _overlapping(qs, lo, hi, prefix=""):
+    return qs.filter(**{f"{prefix}started_at__lt": hi}).filter(Q(**{f"{prefix}ended_at__gt": lo}) | Q(**{f"{prefix}ended_at__isnull": True}))
+
 
 def totals(user, start, end):
     """Tracked time from `start` to `end` (dates, inclusive), split every way."""
-    lo, _x = day_bounds(start)
-    _y, hi = day_bounds(end)
-    now = timezone.now()
-    out = Totals(start, end, by_day={start + timedelta(days=i): 0 for i in range((end - start).days + 1)})
+    out = Totals(user, start, end)
+    lo, hi, now = out._lo, out._hi, timezone.now()
+    tz = timezone.get_current_timezone()
+    rows = _overlapping(TimeEntry.objects.filter(owner=user), lo, hi).values_list(
+        "pk", "started_at", "ended_at", "project_id", "task_id", "billable", "kind")
+    tags_of = defaultdict(list)
+    through = TimeEntry.tags.through.objects.filter(timeentry__owner=user)
+    for entry_id, tag_id in _overlapping(through, lo, hi, "timeentry__").values_list("timeentry_id", "tag_id"):
+        tags_of[entry_id].append(tag_id)
     projects, tags, tasks = defaultdict(int), defaultdict(int), defaultdict(int)
-    names = {}
-    for e in entries_between(user, lo, hi):
-        secs = entry_seconds_between(e, lo, hi, now)
-        if not secs:
+    for pk, started, ended, project_id, task_id, billable, kind in rows:
+        a, b = max(started, lo), min(ended or now, hi)
+        secs = int((b - a).total_seconds())
+        if secs <= 0:
             continue
-        out.entries.append(e)
         out.seconds += secs
-        if e.billable:
+        if billable:
             out.billable_seconds += secs
-        if e.kind == EntryKind.FOCUS:
+        if kind == EntryKind.FOCUS:
             out.focus_sessions += 1
+        out.by_hour[started.astimezone(tz).hour] += secs
         # Split across the days it touches (an entry past midnight counts on both).
-        cursor = max(e.started_at, lo)
-        stop = min(e.ended_at or now, hi)
-        while cursor < stop:
-            local = timezone.localtime(cursor).date()
-            _a, next_day = day_bounds(local)
-            part = int((min(next_day, stop) - cursor).total_seconds())
+        cursor, left = a, secs
+        while left > 0:
+            local = cursor.astimezone(tz).date()
+            next_day = day_bounds(local)[1]
+            part = left if next_day >= b else min(int((next_day - cursor).total_seconds()), left)
             if local in out.by_day:
                 out.by_day[local] += part
+            left -= part
             cursor = next_day
-        projects[e.project_id] += secs
-        names[e.project_id] = e.project
-        for t in e.tags.all():
-            tags[t] += secs
-        if e.task_id:
-            tasks[e.task] += secs
-    out.by_project = sorted(((names[k], v) for k, v in projects.items()), key=lambda kv: -kv[1])
-    out.by_tag = sorted(tags.items(), key=lambda kv: -kv[1])
-    out.by_task = sorted(tasks.items(), key=lambda kv: -kv[1])[:10]
+        projects[project_id] += secs
+        for tag_id in tags_of.get(pk, ()):
+            tags[tag_id] += secs
+        if task_id:
+            tasks[task_id] += secs
+    found = Project.objects.in_bulk([k for k in projects if k])
+    out.by_project = sorted(((found.get(k), v) for k, v in projects.items()), key=lambda kv: -kv[1])
+    found = Tag.objects.in_bulk(list(tags))
+    out.by_tag = sorted(((found[k], v) for k, v in tags.items() if k in found), key=lambda kv: -kv[1])
+    top = sorted(tasks.items(), key=lambda kv: -kv[1])[:10]
+    found = Task.objects.select_related("project").in_bulk([k for k, _v in top])
+    out.by_task = [(found[k], v) for k, v in top if k in found]
+    return out
+
+
+def daily_seconds(user, start, end):
+    """date → tracked seconds, summed by the database (by the day each entry
+    started — close enough for a year at a glance)."""
+    from django.db.models.functions import TruncDate
+
+    duration = ExpressionWrapper(F("ended_at") - F("started_at"), output_field=DurationField())
+    lo, hi = day_bounds(start)[0], day_bounds(end)[1]
+    rows = (TimeEntry.objects.filter(owner=user, started_at__gte=lo, started_at__lt=hi, ended_at__isnull=False)
+            .annotate(day=TruncDate("started_at")).values("day").annotate(d=Sum(duration)).values_list("day", "d"))
+    out = {start + timedelta(days=i): 0 for i in range((end - start).days + 1)}
+    for day, total in rows:
+        if day in out and total:
+            out[day] += int(total.total_seconds())
+    running = running_entry(user)
+    if running and running.started_at < hi:       # the timer that's going now, split by day
+        tz, now = timezone.get_current_timezone(), timezone.now()
+        cursor = max(running.started_at, lo)
+        while cursor < now:
+            day = cursor.astimezone(tz).date()
+            nxt = day_bounds(day)[1]
+            if day in out:
+                out[day] += int((min(nxt, now) - cursor).total_seconds())
+            cursor = nxt
+    return out
+
+
+def tracked_by(user, field, ids=None):
+    """All-time tracked seconds per project (or task…), summed by the database."""
+    duration = ExpressionWrapper(F("ended_at") - F("started_at"), output_field=DurationField())
+    qs = TimeEntry.objects.filter(owner=user)
+    if ids is not None:
+        qs = qs.filter(**{f"{field}__in": ids})
+    out = defaultdict(int)
+    for key, total in qs.filter(ended_at__isnull=False).values(field).annotate(d=Sum(duration)).values_list(field, "d"):
+        out[key] += int(total.total_seconds()) if total else 0
+    running = qs.filter(ended_at__isnull=True).values_list(field, "started_at").first()
+    if running:
+        out[running[0]] += max(int((timezone.now() - running[1]).total_seconds()), 0)
     return out
 
 
@@ -202,6 +261,7 @@ class Parsed:
     due: date | None = None
     estimate: int | None = None
     my_day: bool = False
+    link: str = ""
 
 
 def parse_due(word, today):
@@ -252,7 +312,8 @@ def _date_word(low, today):
 def parse_quick(text, today=None):
     """Turns one line into a task's parts:
     #tag  @project  !high (or !1–!4)  ~30m / ~2h  *  (My Day)
-    and a due date: today, tomorrow, friday, +3d, +2w, 2026-10-20, due:mon, due:25/12."""
+    and a due date: today, tomorrow, friday, +3d, +2w, 2026-10-20, due:mon, due:25/12.
+    A pasted link (a PR, an issue…) is kept as the task's link."""
     today = today or timezone.localdate()
     p = Parsed(title="")
     words = []
@@ -271,11 +332,13 @@ def parse_quick(text, today=None):
             p.estimate = int(round(amount * 60)) if (m.group(2) or "m").startswith("h") else int(round(amount))
         elif word == "*":
             p.my_day = True
+        elif re.match(r"https?://\S+\.\S+", word) and not p.link:
+            p.link = word[:500]
         elif _date_word(low, today) is not None:
             p.due = _date_word(low, today)
         else:
             words.append(word)
-    p.title = " ".join(words).strip()
+    p.title = " ".join(words).strip() or link_label(p.link)
     return p
 
 
@@ -299,7 +362,7 @@ def next_order(user, status):
     return (top or 0) + 1
 
 
-def create_from_quick(user, text, *, status=Status.TODO, project=None, today=None, my_day=False, due=None):
+def create_from_quick(user, text, *, status=Status.TODO, project=None, today=None, my_day=False, due=None, goal=None):
     """A task from one typed line (see parse_quick). Returns the task, or None when no title."""
     today = today or timezone.localdate()
     p = parse_quick(text, today)
@@ -310,6 +373,7 @@ def create_from_quick(user, text, *, status=Status.TODO, project=None, today=Non
         project=find_project(user, p.project) or project,
         due_date=p.due or due, estimate_minutes=p.estimate,
         my_day=today if (p.my_day or my_day) else None, order=next_order(user, status),
+        link=p.link, goal=goal,
     )
     if p.tags:
         task.tags.set(tags_named(user, p.tags))
@@ -361,12 +425,10 @@ def set_done(task, done=True):
 
 def today_tasks(user, today=None):
     """What's on today's list: My Day picks, in progress, due today or late."""
-    from django.db.models import Q
-
     today = today or timezone.localdate()
     open_ = (Task.objects.filter(owner=user).exclude(status=Status.DONE)
              .filter(Q(my_day=today) | Q(status=Status.DOING) | Q(due_date__lte=today))
-             .select_related("project").prefetch_related("tags", "checklist"))
+             .select_related("project"))
     done_today = (Task.objects.filter(owner=user, status=Status.DONE, completed_at__gte=day_bounds(today)[0])
                   .select_related("project"))
     rank = lambda t: (0 if t.status == Status.DOING else 1, -(t.priority or 0), t.due_date or date.max, t.order)  # noqa: E731
@@ -413,8 +475,6 @@ def habit_rows(user, today, days=14):
 # ── Standup / daily summary ───────────────────────────────────────────────
 def standup(user, today=None):
     """Yesterday (the last work day) / Today / Blockers, ready to paste."""
-    from .models import JournalEntry
-
     today = today or timezone.localdate()
     s = WorkSettings.for_user(user)
     prev = today - timedelta(days=1)
@@ -449,3 +509,117 @@ def standup_text(data, markdown=True):
     parts += ["", head(_("Today"))] + ([bullet + x for x in data["today"]] or [bullet + _("Planning the day")])
     parts += ["", head(_("Blockers"))] + ([bullet + x for x in data["blockers"]] or [bullet + _("None")])
     return "\n".join(parts)
+
+
+
+# ── Goals ─────────────────────────────────────────────────────────────────
+def with_progress(goals):
+    """Goals with .steps_count / .tasks_count (done, total) and .pct, counted in two queries."""
+    from django.db.models import Count
+
+    goals = list(goals)
+    ids = [g.pk for g in goals]
+    steps = {r["goal_id"]: (r["done"], r["total"]) for r in GoalStep.objects.filter(goal_id__in=ids).values("goal_id")
+             .annotate(total=Count("id"), done=Count("id", filter=Q(done=True)))}
+    tasks = {r["goal_id"]: (r["done"], r["total"]) for r in Task.objects.filter(goal_id__in=ids).values("goal_id")
+             .annotate(total=Count("id"), done=Count("id", filter=Q(status=Status.DONE)))}
+    for g in goals:
+        g.steps_count, g.tasks_count = steps.get(g.pk, (0, 0)), tasks.get(g.pk, (0, 0))
+        g.pct = g.progress(g.steps_count, g.tasks_count)
+    return goals
+
+
+def set_goal_status(goal, status):
+    goal.status = status
+    goal.completed_at = timezone.now() if status == GoalStatus.DONE else None
+    goal.save(update_fields=["status", "completed_at", "updated_at"])
+
+
+# ── Year heatmap (like GitHub's) ──────────────────────────────────────────
+def heatmap(by_day, last, week_start=0):
+    """Weeks (columns) of 7 days ending with the week of `last`; each cell has
+    a level 0–4 against the busiest day. `by_day` is date → seconds."""
+    if not by_day:
+        return {"weeks": [], "months": []}
+    first = min(by_day)
+    first -= timedelta(days=(first.weekday() - week_start) % 7)
+    peak = max(by_day.values()) or 1
+    weeks, months, day, seen = [], [], first, None
+    while day <= last:
+        week = []
+        for _i in range(7):
+            secs = by_day.get(day)
+            level = 0 if not secs else min(4, 1 + int(4 * secs / (peak + 1)))
+            week.append({"date": day, "secs": secs or 0, "level": level, "out": secs is None or day > last})
+            day += timedelta(days=1)
+        top = week[0]["date"]
+        if top.month != seen:
+            months.append({"col": len(weeks), "date": top})
+            seen = top.month
+        weeks.append(week)
+    return {"weeks": weeks, "months": months}
+
+
+# ── Review & brag document ────────────────────────────────────────────────
+def review(user, start, end):
+    """Everything worth remembering from a period: time, what got done (by
+    project), wins from the journal, goals reached, learning finished,
+    habits kept, mood and energy."""
+    from django.db.models import Avg
+
+    lo, hi = day_bounds(start)[0], day_bounds(end)[1]
+    today = timezone.localdate()
+    t = totals(user, start, end)
+    done = list(Task.objects.filter(owner=user, status=Status.DONE, completed_at__gte=lo, completed_at__lt=hi)
+                .select_related("project").order_by("project__name", "completed_at"))
+    by_project = defaultdict(list)
+    for task in done:
+        by_project[task.project].append(task)
+    journals = list(JournalEntry.objects.filter(owner=user, date__gte=start, date__lte=end).order_by("date"))
+    wins = [(j.date, line.strip("-*• ").strip()) for j in journals for line in j.wins.splitlines() if line.strip("-*• ").strip()]
+    blockers = [(j.date, line.strip("-*• ").strip()) for j in journals for line in j.blockers.splitlines() if line.strip("-*• ").strip()]
+    feel = JournalEntry.objects.filter(owner=user, date__gte=start, date__lte=end).aggregate(mood=Avg("mood"), energy=Avg("energy"))
+    goals_done = list(Goal.objects.filter(owner=user, status=GoalStatus.DONE, completed_at__gte=lo, completed_at__lt=hi))
+    goals_active = with_progress(Goal.objects.filter(owner=user, status=GoalStatus.ACTIVE))
+    learnt = list(LearningItem.objects.filter(owner=user, status=LearningStatus.DONE, finished_on__gte=start, finished_on__lte=end))
+    habits = []
+    for h in Habit.objects.filter(owner=user, is_archived=False):
+        due = [start + timedelta(days=i) for i in range((end - start).days + 1) if h.is_due(start + timedelta(days=i))]
+        checked = set(h.checks.filter(date__gte=start, date__lte=end).values_list("date", flat=True))
+        due = [d for d in due if d >= h.created_at.date() and (d < today or d in checked)]   # today isn't missed yet
+        if due:
+            habits.append({"habit": h, "pct": round(100 * sum(1 for d in due if d in checked) / len(due))})
+    return {
+        "start": start, "end": end, "totals": t, "done": done,
+        "done_by_project": sorted(by_project.items(), key=lambda kv: (kv[0] is None, kv[0].name if kv[0] else "")),
+        "wins": wins, "blockers": blockers, "mood": feel["mood"], "energy": feel["energy"],
+        "goals_done": goals_done, "goals_active": goals_active, "learnt": learnt, "habits": habits,
+        "created": Task.objects.filter(owner=user, created_at__gte=lo, created_at__lt=hi).count(),
+    }
+
+
+def review_markdown(data):
+    """The review as Markdown — a brag document to paste into a 1:1 or a performance review."""
+    t = data["totals"]
+    lines = [f"# {_('Work review')}: {data['start']:%d %b %Y} – {data['end']:%d %b %Y}", ""]
+    lines += [f"- **{_('Time tracked')}:** {hm(t.seconds)}", f"- **{_('Tasks done')}:** {len(data['done'])}"]
+    if t.focus_sessions:
+        lines.append(f"- **{_('Focus sessions')}:** {t.focus_sessions}")
+    if data["goals_done"]:
+        lines += ["", f"## {_('Goals reached')}"] + [f"- {g.title}" for g in data["goals_done"]]
+    if data["wins"]:
+        lines += ["", f"## {_('Highlights')}"] + [f"- {text} ({day:%d %b})" for day, text in data["wins"]]
+    if data["done_by_project"]:
+        lines += ["", f"## {_('What I shipped')}"]
+        for project, tasks in data["done_by_project"]:
+            lines += ["", f"### {project.name if project else _('Other work')}"]
+            lines += [f"- {task.title}" + (f" ({task.link})" if task.link else "") for task in tasks]
+    if t.by_project:
+        lines += ["", f"## {_('Where the time went')}"]
+        lines += [f"- {(p.name if p else _('No project'))}: {hm(secs)} ({round(100 * secs / t.seconds)}%)" for p, secs in t.by_project]
+    if data["learnt"]:
+        lines += ["", f"## {_('Learning')}"] + [f"- {item.title}" + (f" — {item.author}" if item.author else "") for item in data["learnt"]]
+    active = [g for g in data["goals_active"]]
+    if active:
+        lines += ["", f"## {_('Goals in progress')}"] + [f"- {g.title}: {g.pct}%" for g in active]
+    return "\n".join(lines) + "\n"

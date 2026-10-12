@@ -8,22 +8,22 @@
   <aside class="wn-list">
     <div class="wn-list-head">
       <h1 class="wp-title">{% translate "Notes" %}</h1>
-      <a href="{% url 'work:notes' %}?new=1" class="btn btn-primary btn-sm">{% include "partials/icon.html" with name="plus" %}{% translate "New" %}</a>
+      <a href="{% url 'work:notes' %}?new=1" class="btn btn-primary btn-sm">{% icon "plus" %}{% translate "New" %}</a>
     </div>
     <form method="get" class="input-icon">
-      {% include "partials/icon.html" with name="search" %}
+      {% icon "search" %}
       <input type="search" name="q" value="{{ q }}" class="form-input input-compact" placeholder="{% translate 'Search notes  ( / )' %}" data-work-search aria-label="{% translate 'Search notes' %}">
       {% if archived %}<input type="hidden" name="archived" value="1">{% endif %}
     </form>
     <div class="chip-row wn-tags">
       <a href="{% url 'work:notes' %}" class="chip{% if not tag and not archived %} is-active{% endif %}">{% translate "All" %}</a>
       {% for tg in tags %}<a href="?tag={{ tg.name|urlencode }}" class="chip{% if tag == tg.name %} is-active{% endif %}">#{{ tg.name }}</a>{% endfor %}
-      <a href="?archived=1" class="chip{% if archived %} is-active{% endif %}">{% include "partials/icon.html" with name="archive" %}{% translate "Archived" %}</a>
+      <a href="?archived=1" class="chip{% if archived %} is-active{% endif %}">{% icon "archive" %}{% translate "Archived" %}</a>
     </div>
     <ul class="wn-items">
       {% for n in notes %}
       <li data-note-id="{{ n.pk }}"><a href="{% url 'work:note' n.pk %}{% if q %}?q={{ q|urlencode }}{% endif %}" class="wn-item{% if note and note.pk == n.pk %} is-active{% endif %}">
-        <span class="wn-item-top">{% if n.is_pinned %}<span class="wd-pin">{% include "partials/icon.html" with name="pin" %}</span>{% endif %}<span class="work-note-item-title wn-item-title">{{ n.display_title }}</span></span>
+        <span class="wn-item-top">{% if n.is_pinned %}<span class="wd-pin">{% icon "pin" %}</span>{% endif %}<span class="work-note-item-title wn-item-title">{{ n.display_title }}</span></span>
         <span class="wn-item-snip">{{ n.body|plain|truncatechars:90 }}</span>
         <time class="wn-item-time">{{ n.updated_at|date:"j M, H:i" }}</time>
       </a></li>
@@ -38,25 +38,25 @@
     {{ note_data|json_script:"note-data" }}
     <div class="wn-pane" x-data="workNote(JSON.parse(document.getElementById('note-data').textContent))" x-init="$nextTick(() => { if (!id) $refs.body.focus(); })">
       <div class="wn-toolbar">
-        <a href="{% url 'work:notes' %}" class="icon-btn wn-back" aria-label="{% translate 'All notes' %}">{% include "partials/icon.html" with name="chevron-left" %}</a>
+        <a href="{% url 'work:notes' %}" class="icon-btn wn-back" aria-label="{% translate 'All notes' %}">{% icon "chevron-left" %}</a>
         <div class="seg seg-sm"><button type="button" class="seg-item" :class="!preview && 'is-active'" @click="preview = false">{% translate "Write" %}</button><button type="button" class="seg-item" :class="preview && 'is-active'" @click="preview = true">{% translate "Preview" %}</button></div>
         <div class="wn-fmt" x-show="!preview">
           <button type="button" class="icon-btn" @click="insert('**', '**')" aria-label="{% translate 'Bold' %}" data-tip="{% translate 'Bold' %}"><b>B</b></button>
-          <button type="button" class="icon-btn" @click="insert('`', '`')" aria-label="{% translate 'Code' %}" data-tip="{% translate 'Code' %}">{% include "partials/icon.html" with name="code" %}</button>
-          <button type="button" class="icon-btn" @click="insert('\n- [ ] ')" aria-label="{% translate 'To-do item' %}" data-tip="{% translate 'To-do item' %}">{% include "partials/icon.html" with name="check" %}</button>
+          <button type="button" class="icon-btn" @click="insert('`', '`')" aria-label="{% translate 'Code' %}" data-tip="{% translate 'Code' %}">{% icon "code" %}</button>
+          <button type="button" class="icon-btn" @click="insert('\n- [ ] ')" aria-label="{% translate 'To-do item' %}" data-tip="{% translate 'To-do item' %}">{% icon "check" %}</button>
           <button type="button" class="icon-btn" @click="insert('\n```\n', '\n```\n')" aria-label="{% translate 'Code block' %}" data-tip="{% translate 'Code block' %}"><span class="wn-cb">{}</span></button>
         </div>
         <span class="spacer"></span>
         <span class="wn-state" :data-state="state" x-text="{ saving: '{% translate "Saving…" %}', saved: savedAt ? '{% translate "Saved" %} ' + savedAt : '', offline: '{% translate "Saved on this device" %}', dirty: '{% translate "Editing…" %}', error: '{% translate "Not saved" %}' }[state]"></span>
         <template x-if="id">
           <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false">
-            <button type="button" class="icon-btn" @click="open = !open" aria-label="{% translate 'More actions' %}">{% include "partials/icon.html" with name="dots" %}</button>
+            <button type="button" class="icon-btn" @click="open = !open" aria-label="{% translate 'More actions' %}">{% icon "dots" %}</button>
             <div class="menu" x-show="open" x-cloak role="menu">
-              <button type="button" class="menu-item" @click="action('pin')">{% include "partials/icon.html" with name="pin" %}{% if note.is_pinned %}{% translate "Unpin" %}{% else %}{% translate "Pin to top" %}{% endif %}</button>
-              <button type="button" class="menu-item" @click="action('to_task')">{% include "partials/icon.html" with name="check" %}{% translate "Turn into a task" %}</button>
-              <button type="button" class="menu-item" @click="navigator.clipboard && navigator.clipboard.writeText(body).then(() => Work.toast('{% translate "Copied" %}'))">{% include "partials/icon.html" with name="copy" %}{% translate "Copy Markdown" %}</button>
-              <button type="button" class="menu-item" @click="action('archive')">{% include "partials/icon.html" with name="archive" %}{% if note.is_archived %}{% translate "Unarchive" %}{% else %}{% translate "Archive" %}{% endif %}</button>
-              <button type="button" class="menu-item is-danger" @click="action('delete')">{% include "partials/icon.html" with name="trash" %}{% translate "Delete" %}</button>
+              <button type="button" class="menu-item" @click="action('pin')">{% icon "pin" %}{% if note.is_pinned %}{% translate "Unpin" %}{% else %}{% translate "Pin to top" %}{% endif %}</button>
+              <button type="button" class="menu-item" @click="action('to_task')">{% icon "check" %}{% translate "Turn into a task" %}</button>
+              <button type="button" class="menu-item" @click="navigator.clipboard && navigator.clipboard.writeText(body).then(() => Work.toast('{% translate "Copied" %}'))">{% icon "copy" %}{% translate "Copy Markdown" %}</button>
+              <button type="button" class="menu-item" @click="action('archive')">{% icon "archive" %}{% if note.is_archived %}{% translate "Unarchive" %}{% else %}{% translate "Archive" %}{% endif %}</button>
+              <button type="button" class="menu-item is-danger" @click="action('delete')">{% icon "trash" %}{% translate "Delete" %}</button>
             </div>
           </div>
         </template>
@@ -75,9 +75,9 @@
     </div>
     {% else %}
     <div class="wn-blank">
-      <span class="wd-empty-icon">{% include "partials/icon.html" with name="note" %}</span>
+      <span class="wd-empty-icon">{% icon "note" %}</span>
       <p>{% translate "Pick a note, or start a new one." %}</p>
-      <a href="{% url 'work:notes' %}?new=1" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "New note" %}</a>
+      <a href="{% url 'work:notes' %}?new=1" class="btn btn-primary">{% icon "plus" %}{% translate "New note" %}</a>
       <p class="wd-muted">{% translate "Tip: press n on any Productivity page to jot something down." %}</p>
     </div>
     {% endif %}

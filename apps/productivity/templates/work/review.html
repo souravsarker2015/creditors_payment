@@ -1,0 +1,95 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% translate "Review" %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+<header class="wp-head">
+  <div class="min-w-0"><h1 class="wp-title">{% translate "Review & brag document" %}</h1>
+    <p class="wp-sub">{{ start|date:"j M Y" }} – {{ end|date:"j M Y" }} · {% translate "What you did, learnt and reached — for your weekly review, a 1:1 or your next performance review." %}</p></div>
+  <div class="wp-actions">
+    <button type="button" class="btn btn-primary" x-data @click="navigator.clipboard.writeText(JSON.parse(document.getElementById('review-md').textContent)).then(() => Work.toast('{% translate "Copied as Markdown" %}'))">{% icon "copy" %}{% translate "Copy" %}</button>
+    <a href="{% query_with export='md' %}" class="btn btn-secondary">{% icon "download" %}{% translate "Download .md" %}</a>
+  </div>
+</header>
+
+<form method="get" class="wf-bar" x-data="{ custom: '{{ preset }}' === 'custom' }">
+  <nav class="chip-row">{% for v, l in presets %}<a href="?range={{ v }}" class="chip{% if preset == v %} is-active{% endif %}">{{ l }}</a>{% endfor %}
+    <button type="button" class="chip{% if preset == 'custom' %} is-active{% endif %}" @click="custom = !custom">{% translate "Custom…" %}</button></nav>
+  <div class="wr-custom" x-show="custom" x-cloak>
+    <input type="hidden" name="range" value="custom">
+    <input type="date" name="from" value="{{ start|date:'Y-m-d' }}" class="form-input input-compact" aria-label="{% translate 'From' %}">
+    <input type="date" name="to" value="{{ end|date:'Y-m-d' }}" class="form-input input-compact" aria-label="{% translate 'To' %}">
+    <button type="submit" class="btn btn-primary btn-sm">{% translate "Show" %}</button>
+  </div>
+</form>
+
+<dl class="stat-grid">
+  <div class="stat" data-tone="accent"><dt class="stat-label">{% translate "Tracked" %}</dt><dd class="stat-value num">{{ d.totals.seconds|hm }}</dd></div>
+  <div class="stat" data-tone="good"><dt class="stat-label">{% translate "Tasks done" %}</dt><dd class="stat-value num">{{ d.done|length }}<small class="wr-of"> / {{ d.created }} {% translate "added" %}</small></dd></div>
+  <div class="stat"><dt class="stat-label">{% translate "Focus sessions" %}</dt><dd class="stat-value num">{{ d.totals.focus_sessions }}</dd></div>
+  <div class="stat"><dt class="stat-label">{% translate "Goals reached" %}</dt><dd class="stat-value num">{{ d.goals_done|length }}</dd></div>
+  <div class="stat"><dt class="stat-label">{% translate "Learning finished" %}</dt><dd class="stat-value num">{{ d.learnt|length }}</dd></div>
+  <div class="stat"><dt class="stat-label">{% translate "Mood · energy" %}</dt><dd class="stat-value num">{% if d.mood %}{{ d.mood|floatformat:1 }}{% else %}—{% endif %} · {% if d.energy %}{{ d.energy|floatformat:1 }}{% else %}—{% endif %}<small class="wr-of"> / 5</small></dd></div>
+</dl>
+
+<div class="wr-grid">
+  <section class="card">
+    <header class="card-header"><div><h2 class="card-title">{% translate "Highlights" %}</h2><p class="card-subtitle">{% translate "From “Done & learnt” in your journal." %}</p></div></header>
+    {% if d.wins %}<ul class="wv-list">{% for day, text in d.wins %}<li><span>{{ text }}</span><time>{{ day|date:"j M" }}</time></li>{% endfor %}</ul>
+    {% else %}<p class="wd-muted">{% translate "Write a line in the journal at the end of each day — they collect here." %} <a href="{% url 'work:journal' %}" class="wd-link">{% translate "Open the journal" %}</a></p>{% endif %}
+  </section>
+
+  <section class="card">
+    <header class="card-header"><h2 class="card-title">{% translate "What you shipped" %}</h2></header>
+    {% for project, tasks in d.done_by_project %}
+    <div class="wv-group"><p class="wv-head">{% if project %}<span class="wt-dot" data-color="{{ project.color }}"></span>{{ project.name }}{% else %}{% translate "Other work" %}{% endif %}<span class="wt-group-count">{{ tasks|length }}</span></p>
+      <ul class="wv-list">{% for t in tasks|slice:":25" %}<li><a href="{% url 'work:task' t.pk %}">{{ t.title }}</a>{% if t.link %}<a href="{{ t.link }}" class="wt-link" target="_blank" rel="noopener noreferrer">{% icon "link" %}{{ t.link_label }}</a>{% endif %}</li>{% endfor %}
+        {% if tasks|length > 25 %}<li class="wd-muted">{% blocktranslate count counter=tasks|length|add:"-25" %}and {{ counter }} more{% plural %}and {{ counter }} more{% endblocktranslate %}</li>{% endif %}</ul></div>
+    {% empty %}<p class="wd-muted">{% translate "No tasks finished in this period." %}</p>{% endfor %}
+  </section>
+
+  {% if d.totals.by_project %}
+  <section class="card">
+    <header class="card-header"><h2 class="card-title">{% translate "Where the time went" %}</h2></header>
+    <ul class="wr-rank">{% for p, secs in d.totals.by_project %}<li><span class="wr-rank-name">{% if p %}<span class="wt-dot" data-color="{{ p.color }}"></span>{{ p.name }}{% else %}<span class="ws-none">{% translate "No project" %}</span>{% endif %}</span><span class="wr-rank-val num">{{ secs|hm }}</span><span class="wr-rank-bar" data-color="{{ p.color|default:'slate' }}"><i style="width: {% widthratio secs d.totals.seconds 100 %}%"></i></span></li>{% endfor %}</ul>
+  </section>
+  {% endif %}
+
+  <section class="card">
+    <header class="card-header"><h2 class="card-title">{% translate "Goals" %}</h2><a href="{% url 'work:goals' %}" class="btn btn-ghost btn-sm">{% translate "All" %}</a></header>
+    {% if d.goals_done or d.goals_active %}
+    <ul class="wg-mini">
+      {% for g in d.goals_done %}<li><a href="{% url 'work:goal' g.pk %}" data-color="{{ g.color }}"><span class="wg-mini-top"><span class="truncate">🏆 {{ g.title }}</span><b>{% translate "Reached" %}</b></span><span class="wg-bar"><i style="width: 100%"></i></span></a></li>{% endfor %}
+      {% for g in d.goals_active %}<li><a href="{% url 'work:goal' g.pk %}" data-color="{{ g.color }}"><span class="wg-mini-top"><span class="truncate">{{ g.title }}</span><b class="num">{{ g.pct }}%</b></span><span class="wg-bar"><i style="width: {{ g.pct }}%"></i></span></a></li>{% endfor %}
+    </ul>
+    {% else %}<p class="wd-muted">{% translate "No goals yet." %} <a href="{% url 'work:goal_new' %}" class="wd-link">{% translate "Set one" %}</a></p>{% endif %}
+  </section>
+
+  {% if d.learnt or d.habits %}
+  <section class="card">
+    <header class="card-header"><h2 class="card-title">{% translate "Learning & habits" %}</h2></header>
+    {% if d.learnt %}<ul class="wv-list">{% for item in d.learnt %}<li><a href="{% url 'work:learning_edit' item.pk %}">📚 {{ item.title }}</a><time>{{ item.finished_on|date:"j M" }}</time></li>{% endfor %}</ul>{% endif %}
+    {% if d.habits %}<ul class="wr-rank">{% for h in d.habits %}<li><span class="wr-rank-name">{{ h.habit.emoji }} {{ h.habit.name }}</span><span class="wr-rank-val num">{{ h.pct }}%</span><span class="wr-rank-bar" data-color="{{ h.habit.color }}"><i style="width: {{ h.pct }}%"></i></span></li>{% endfor %}</ul>{% endif %}
+  </section>
+  {% endif %}
+
+  <section class="card">
+    <header class="card-header"><div><h2 class="card-title">{% translate "Plan ahead" %}</h2><p class="card-subtitle">{% translate "Before the next week starts." %}</p></div></header>
+    <ul class="wv-checks">
+      <li data-tone="{% if late %}late{% else %}good{% endif %}">{% if late %}<a href="{% url 'work:tasks' %}?due=overdue">{% blocktranslate count counter=late %}{{ counter }} late task — reschedule or drop it{% plural %}{{ counter }} late tasks — reschedule or drop them{% endblocktranslate %}</a>{% else %}{% translate "Nothing is late." %}{% endif %}</li>
+      {% if stale %}<li data-tone="late"><a href="{% url 'work:tasks' %}">{% blocktranslate count counter=stale %}{{ counter }} task “in progress” for over a week — still going?{% plural %}{{ counter }} tasks “in progress” for over a week — still going?{% endblocktranslate %}</a></li>{% endif %}
+      {% if d.blockers %}<li data-tone="late">{% blocktranslate count counter=d.blockers|length %}{{ counter }} blocker noted — raise it at the next 1:1{% plural %}{{ counter }} blockers noted — raise them at the next 1:1{% endblocktranslate %}</li>{% endif %}
+    </ul>
+    {% if coming %}<p class="wv-head">{% translate "Due in the next 7 days" %}</p>
+    <ul class="wv-list">{% for t in coming %}<li><a href="{% url 'work:task' t.pk %}">{{ t.title }}</a><time>{{ t.due_date|due_label }}</time></li>{% endfor %}</ul>{% endif %}
+  </section>
+</div>
+
+<section class="card" x-data="{ open: false }">
+  <header class="card-header"><div><h2 class="card-title">{% translate "Brag document (Markdown)" %}</h2><p class="card-subtitle">{% translate "Keep one per month — at review time you'll have the evidence ready." %}</p></div>
+    <button type="button" class="btn btn-ghost btn-sm" @click="open = !open" x-text="open ? '{% translate "Hide" %}' : '{% translate "Show" %}'">{% translate "Show" %}</button></header>
+  <div class="card-body !pt-0" x-show="open" x-cloak><pre class="wv-md">{{ md }}</pre></div>
+</section>
+{{ md|json_script:"review-md" }}
+{% endblock %}

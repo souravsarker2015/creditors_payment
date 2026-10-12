@@ -2,7 +2,9 @@
 habits and a daily journal. Everything belongs to one person (`owner`) and
 nobody else sees it — not even other admins.
 """
+import re
 from datetime import timedelta
+from urllib.parse import urlparse
 
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -99,6 +101,9 @@ class Task(models.Model):
     my_day = models.DateField(_("In My Day"), null=True, blank=True, help_text="Picked for this day's focus list.")
     repeat = models.CharField(_("Repeat"), max_length=10, choices=Repeat.choices, default=Repeat.NONE, blank=True)
     tags = models.ManyToManyField(Tag, blank=True, related_name="tasks", verbose_name=_("Tags"))
+    link = models.URLField(_("Link"), max_length=500, blank=True,
+                           help_text=_("The pull request, issue, ticket or doc this is about."))
+    goal = models.ForeignKey("Goal", on_delete=models.SET_NULL, null=True, blank=True, related_name="tasks", verbose_name=_("Goal"))
     order = models.FloatField(default=0, help_text="Position in its column (smaller first).")
     completed_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -117,6 +122,30 @@ class Task(models.Model):
 
     def is_overdue(self, today=None):
         return bool(self.due_date and not self.is_done and self.due_date < (today or timezone.localdate()))
+
+
+    @property
+    def link_label(self):
+        return link_label(self.link)
+
+
+def link_label(url):
+    """A short name for a link: "PR #482", "#91", "ABC-123", or the site's name."""
+    if not url:
+        return ""
+    u = urlparse(url)
+    path = u.path.rstrip("/")
+    m = re.search(r"/(pull|pulls|merge_requests)/(\d+)", path)
+    if m:
+        return f"PR #{m.group(2)}" if m.group(1) != "merge_requests" else f"MR !{m.group(2)}"
+    m = re.search(r"/issues/(\d+)", path)
+    if m:
+        return f"#{m.group(1)}"
+    m = re.search(r"\b([A-Z][A-Z0-9]{1,9}-\d+)\b", url)   # Jira / Linear keys
+    if m:
+        return m.group(1)
+    host = (u.hostname or "").removeprefix("www.")
+    return host or url[:30]
 
 
 class ChecklistItem(models.Model):
@@ -335,7 +364,12 @@ class WorkSettings(models.Model):
 
     @classmethod
     def for_user(cls, user):
+        """The person's settings (made on first use), kept on the user for the rest of the request."""
+        cached = getattr(user, "_work_settings", None)
+        if cached is not None and cached.owner_id == user.pk:
+            return cached
         obj, _created = cls.objects.get_or_create(owner=user)
+        user._work_settings = obj
         return obj
 
     def is_work_day(self, day):
@@ -345,3 +379,155 @@ class WorkSettings(models.Model):
         """(first, last) day of the week `day` is in."""
         first = day - timedelta(days=(day.weekday() - self.week_start) % 7)
         return first, first + timedelta(days=6)
+
+
+# ── Goals: where all this work is heading ─────────────────────────────────
+class GoalArea(models.TextChoices):
+    CAREER = "career", _("Career")
+    LEARNING = "learning", _("Learning")
+    PROJECT = "project", _("Project")
+    HEALTH = "health", _("Health")
+    MONEY = "money", _("Money")
+    PERSONAL = "personal", _("Personal")
+
+
+class GoalStatus(models.TextChoices):
+    ACTIVE = "active", _("Active")
+    DONE = "done", _("Reached")
+    DROPPED = "dropped", _("Dropped")
+
+
+class Goal(models.Model):
+    """Something bigger than a task: "Become a senior engineer", "Ship v2",
+    "Read 12 books". Progress comes from a number (12 books), its milestones,
+    or the tasks linked to it — whichever it has."""
+
+    owner = models.ForeignKey(**OWNER)
+    title = models.CharField(_("Goal"), max_length=200)
+    why = models.TextField(_("Why it matters"), blank=True, help_text=_("Markdown works. Read it when motivation dips."))
+    area = models.CharField(_("Area"), max_length=10, choices=GoalArea.choices, default=GoalArea.CAREER)
+    color = models.CharField(_("Colour"), max_length=10, choices=Color.choices, default=Color.PURPLE)
+    status = models.CharField(_("Status"), max_length=10, choices=GoalStatus.choices, default=GoalStatus.ACTIVE, db_index=True)
+    target_date = models.DateField(_("By when"), null=True, blank=True)
+    unit = models.CharField(_("Measured in"), max_length=30, blank=True,
+                            help_text=_("Optional: books, users, LeetCode problems, kg… Leave empty to track by milestones."))
+    start_value = models.DecimalField(_("Starting from"), max_digits=12, decimal_places=2, default=0)
+    current_value = models.DecimalField(_("Now at"), max_digits=12, decimal_places=2, null=True, blank=True)
+    target_value = models.DecimalField(_("Target"), max_digits=12, decimal_places=2, null=True, blank=True)
+    project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True, blank=True, related_name="goals", verbose_name=_("Project"))
+    completed_at = models.DateTimeField(null=True, blank=True)
+    order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["order", "target_date", "-created_at"]
+        indexes = [models.Index(fields=["owner", "status"])]
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def has_number(self):
+        return self.target_value is not None and self.target_value != self.start_value
+
+    def progress(self, steps=None, tasks=None):
+        """0–100. `steps` / `tasks` are (done, total), when already counted."""
+        if self.status == GoalStatus.DONE:
+            return 100
+        if self.has_number:
+            now = self.current_value if self.current_value is not None else self.start_value
+            pct = float((now - self.start_value) / (self.target_value - self.start_value) * 100)
+            return max(0, min(100, round(pct)))
+        for done, total in (steps, tasks):
+            if total:
+                return round(100 * done / total)
+        return 0
+
+    def days_left(self, today=None):
+        if not self.target_date:
+            return None
+        return (self.target_date - (today or timezone.localdate())).days
+
+
+class GoalStep(models.Model):
+    """A milestone on the way to a goal."""
+
+    goal = models.ForeignKey(Goal, on_delete=models.CASCADE, related_name="steps")
+    text = models.CharField(max_length=300)
+    done = models.BooleanField(default=False)
+    done_at = models.DateTimeField(null=True, blank=True)
+    order = models.FloatField(default=0)
+
+    class Meta:
+        ordering = ["order", "pk"]
+
+    def __str__(self):
+        return self.text
+
+
+# ── Learning: books, courses, talks and docs ──────────────────────────────
+class LearningKind(models.TextChoices):
+    BOOK = "book", _("Book")
+    COURSE = "course", _("Course")
+    VIDEO = "video", _("Video / talk")
+    ARTICLE = "article", _("Article / blog")
+    DOCS = "docs", _("Docs / tutorial")
+    PODCAST = "podcast", _("Podcast")
+    PAPER = "paper", _("Paper")
+    OTHER = "other", _("Other")
+
+
+class LearningStatus(models.TextChoices):
+    QUEUED = "queued", _("Want to")
+    ACTIVE = "active", _("In progress")
+    DONE = "done", _("Finished")
+    DROPPED = "dropped", _("Dropped")
+
+
+class LearningUnit(models.TextChoices):
+    PAGES = "pages", _("pages")
+    CHAPTERS = "chapters", _("chapters")
+    LESSONS = "lessons", _("lessons")
+    VIDEOS = "videos", _("videos")
+    MINUTES = "minutes", _("minutes")
+    PERCENT = "percent", _("%")
+
+
+class LearningItem(models.Model):
+    owner = models.ForeignKey(**OWNER)
+    title = models.CharField(_("Title"), max_length=250)
+    kind = models.CharField(_("Kind"), max_length=10, choices=LearningKind.choices, default=LearningKind.BOOK)
+    url = models.URLField(_("Link"), max_length=500, blank=True)
+    author = models.CharField(_("Author / source"), max_length=150, blank=True)
+    status = models.CharField(_("Status"), max_length=10, choices=LearningStatus.choices, default=LearningStatus.QUEUED, db_index=True)
+    unit = models.CharField(_("Progress in"), max_length=10, choices=LearningUnit.choices, default=LearningUnit.PAGES)
+    progress = models.PositiveIntegerField(_("Done so far"), default=0)
+    total = models.PositiveIntegerField(_("Out of"), null=True, blank=True, help_text=_("Pages in the book, lessons in the course…"))
+    rating = models.PositiveSmallIntegerField(_("Rating"), null=True, blank=True, validators=[MinValueValidator(1), MaxValueValidator(5)])
+    takeaways = models.TextField(_("Takeaways"), blank=True, help_text=_("What you learnt, in your own words. Markdown works."))
+    tags = models.ManyToManyField(Tag, blank=True, related_name="learning", verbose_name=_("Tags"))
+    goal = models.ForeignKey(Goal, on_delete=models.SET_NULL, null=True, blank=True, related_name="learning", verbose_name=_("Goal"))
+    started_on = models.DateField(_("Started"), null=True, blank=True)
+    finished_on = models.DateField(_("Finished"), null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-updated_at"]
+        indexes = [models.Index(fields=["owner", "status"])]
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def percent(self):
+        if self.status == LearningStatus.DONE:
+            return 100
+        if self.unit == LearningUnit.PERCENT:
+            return min(self.progress, 100)
+        return min(round(100 * self.progress / self.total), 100) if self.total else 0
+
+    @property
+    def link_label(self):
+        return link_label(self.url)

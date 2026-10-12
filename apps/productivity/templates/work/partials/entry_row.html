@@ -10,10 +10,10 @@
   {% if not e.is_running %}
   <div class="we-act">
     <button type="button" class="icon-btn" data-tip="{% translate 'Continue — start again' %}" aria-label="{% translate 'Continue' %}"
-            @click="Work.api('{% url 'work:api_entry_continue' e.pk %}', { at: new Date().toISOString() }).then(r => { if (r.running) { $store.timer.running = r.running; $store.timer.share(); } })">{% include "partials/icon.html" with name="play" %}</button>
-    <a href="{% url 'work:entry' e.pk %}" class="icon-btn" aria-label="{% translate 'Edit' %}" data-tip="{% translate 'Edit' %}">{% include "partials/icon.html" with name="edit" %}</a>
+            @click="Work.api('{% url 'work:api_entry_continue' e.pk %}', { at: new Date().toISOString() }).then(r => { if (r.running) { $store.timer.running = r.running; $store.timer.share(); } })">{% icon "play" %}</button>
+    <a href="{% url 'work:entry' e.pk %}" class="icon-btn" aria-label="{% translate 'Edit' %}" data-tip="{% translate 'Edit' %}">{% icon "edit" %}</a>
     <button type="button" class="icon-btn" aria-label="{% translate 'Delete' %}" data-tip="{% translate 'Delete' %}"
-            @click="const row = $el.closest('[data-entry]'); row.classList.add('is-leaving'); Work.api('{% url 'work:api_entry_delete' e.pk %}').then(r => { setTimeout(() => row.remove(), 250); Work.undoable('{% translate "Time entry deleted" %}', r.undo); })">{% include "partials/icon.html" with name="trash" %}</button>
+            @click="const row = $el.closest('[data-entry]'); row.classList.add('is-leaving'); Work.api('{% url 'work:api_entry_delete' e.pk %}').then(r => { setTimeout(() => row.remove(), 250); Work.undoable('{% translate "Time entry deleted" %}', r.undo); })">{% icon "trash" %}</button>
   </div>
   {% endif %}
 </li>

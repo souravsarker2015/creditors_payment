@@ -6,7 +6,7 @@
 {% block work %}
 <header class="wp-head">
   <div class="min-w-0"><h1 class="wp-title">{% translate "Reports" %}</h1><p class="wp-sub">{{ start|date:"j M Y" }} – {{ end|date:"j M Y" }}</p></div>
-  <div class="wp-actions"><a href="{% query_with export='csv' %}" class="btn btn-secondary">{% include "partials/icon.html" with name="download" %}{% translate "Export CSV" %}</a></div>
+  <div class="wp-actions"><a href="{% query_with export='csv' %}" class="btn btn-secondary">{% icon "download" %}{% translate "Export CSV" %}</a></div>
 </header>
 
 <form method="get" class="wf-bar" x-data="{ custom: '{{ preset }}' === 'custom' }">
@@ -28,6 +28,20 @@
   <div class="stat"><dt class="stat-label">{% translate "Focus sessions" %}</dt><dd class="stat-value num">{{ t.focus_sessions }}</dd></div>
   <div class="stat"><dt class="stat-label">{% translate "Billable" %}</dt><dd class="stat-value num">{{ t.billable_seconds|hm }}</dd></div>
 </dl>
+
+{% if heat.weeks %}
+<section class="card">
+  <header class="card-header"><div><h2 class="card-title">{% translate "Last 12 months" %}</h2>
+    <p class="card-subtitle">{% blocktranslate with t=year_total|hm count counter=year_days %}{{ t }} on {{ counter }} day{% plural %}{{ t }} on {{ counter }} days{% endblocktranslate %}</p></div></header>
+  <div class="wy-scroll">
+    <div class="wy" style="--weeks: {{ heat.weeks|length }}">
+      <div class="wy-months">{% for m in heat.months %}<span style="grid-column: {{ m.col|add:1 }}">{{ m.date|date:"M" }}</span>{% endfor %}</div>
+      <div class="wy-grid">{% for week in heat.weeks %}{% for c in week %}<a{% if not c.out %} href="{% url 'work:time' %}?week={{ c.date|date:'Y-m-d' }}"{% endif %} class="wy-cell{% if c.out %} is-out{% endif %}" data-level="{{ c.level }}" title="{{ c.date|date:'D j M Y' }} · {{ c.secs|hm }}"></a>{% endfor %}{% endfor %}</div>
+    </div>
+  </div>
+  <p class="wy-legend">{% translate "Less" %} {% for l in "01234" %}<i class="wy-cell" data-level="{{ l }}"></i>{% endfor %} {% translate "More" %}</p>
+</section>
+{% endif %}
 
 {% if t.seconds %}
 <section class="card">
@@ -68,6 +82,6 @@
   {% endif %}
 </div>
 {% else %}
-<div class="empty"><div class="empty-icon">{% include "partials/icon.html" with name="chart" %}</div><h3 class="empty-title">{% translate "No time in this period" %}</h3><p class="empty-text">{% translate "Track some time and come back — the charts fill in as you work." %}</p></div>
+<div class="empty"><div class="empty-icon">{% icon "chart" %}</div><h3 class="empty-title">{% translate "No time in this period" %}</h3><p class="empty-text">{% translate "Track some time and come back — the charts fill in as you work." %}</p></div>
 {% endif %}
 {% endblock %}

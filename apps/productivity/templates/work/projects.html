@@ -11,7 +11,7 @@
   </div>
   <div class="wp-actions">
     <a href="{% if archived %}{% url 'work:projects' %}{% else %}?archived=1{% endif %}" class="btn btn-ghost">{% if archived %}{% translate "Active projects" %}{% else %}{% translate "Archived" %}{% endif %}</a>
-    <a href="{% url 'work:project_new' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Project" %}</a>
+    <a href="{% url 'work:project_new' %}" class="btn btn-primary">{% icon "plus" %}{% translate "Project" %}</a>
   </div>
 </header>
 
@@ -33,10 +33,10 @@
 </div>
 {% else %}
 <div class="empty">
-  <div class="empty-icon">{% include "partials/icon.html" with name="folder" %}</div>
+  <div class="empty-icon">{% icon "folder" %}</div>
   <h3 class="empty-title">{% if archived %}{% translate "No archived projects" %}{% else %}{% translate "No projects yet" %}{% endif %}</h3>
   <p class="empty-text">{% translate "Group tasks, time and notes by project — a client, a product, or a side project." %}</p>
-  {% if not archived %}<a href="{% url 'work:project_new' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "New project" %}</a>{% endif %}
+  {% if not archived %}<a href="{% url 'work:project_new' %}" class="btn btn-primary">{% icon "plus" %}{% translate "New project" %}</a>{% endif %}
 </div>
 {% endif %}
 {% endblock %}

@@ -1,0 +1,40 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% if goal %}{{ goal.title }}{% else %}{% translate "New goal" %}{% endif %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+<div class="page-narrow">
+  <header class="wp-head">
+    <div><a href="{% if goal %}{% url 'work:goal' goal.pk %}{% else %}{% url 'work:goals' %}{% endif %}" class="back-link">{% icon "chevron-left" %}{% translate "Goals" %}</a>
+      <h1 class="wp-title">{% if goal %}{% translate "Edit goal" %}{% else %}{% translate "New goal" %}{% endif %}</h1></div>
+  </header>
+  <form method="post" class="card" novalidate x-data="{ measured: {{ form.instance.has_number|yesno:'true,false' }} || '{{ form.unit.value|default:'' }}' !== '' }">
+    {% csrf_token %}
+    <div class="card-body form-stack">
+      {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+      {% with field=form.title %}{% include "partials/field.html" %}{% endwith %}
+      <div class="form-grid form-grid-2">
+        {% with field=form.area %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.target_date %}{% include "partials/field.html" %}{% endwith %}
+      </div>
+      <fieldset><legend class="label">{{ form.color.label }}</legend>
+        <div class="w-swatches">{% for radio in form.color %}<label class="w-swatch" data-color="{{ radio.data.value }}" title="{{ radio.choice_label }}">{{ radio.tag }}<span class="sr-only">{{ radio.choice_label }}</span></label>{% endfor %}</div></fieldset>
+      {% with field=form.project %}{% include "partials/field.html" %}{% endwith %}
+      <label class="wc-check"><input type="checkbox" x-model="measured"> {% translate "Measure it with a number (books read, problems solved, users…)" %}</label>
+      <div class="form-grid form-grid-2" x-show="measured" x-cloak>
+        {% with field=form.unit %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.start_value %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.target_value %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.current_value %}{% include "partials/field.html" %}{% endwith %}
+      </div>
+      <p class="help" x-show="!measured">{% translate "Without a number, progress comes from the goal's milestones, or else from its tasks." %}</p>
+      {% with field=form.why %}{% include "partials/field.html" %}{% endwith %}
+    </div>
+    <div class="card-footer form-actions">
+      <a href="{% if goal %}{% url 'work:goal' goal.pk %}{% else %}{% url 'work:goals' %}{% endif %}" class="btn btn-ghost">{% translate "Cancel" %}</a>
+      <button type="submit" class="btn btn-primary">{% icon "check" %}{% translate "Save" %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

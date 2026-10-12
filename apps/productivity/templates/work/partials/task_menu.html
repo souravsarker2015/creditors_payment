@@ -1,0 +1,21 @@
+{% load i18n work %}{% comment %}The ⋯ menu for any task row on the page — one copy, moved next to the row that opened it (work.js: taskMenu).{% endcomment %}
+<div class="menu wt-menu" id="work-task-menu" role="menu" hidden>
+  <button type="button" class="menu-item" role="menuitem" data-menu="myday">{% icon "sun" %}<span data-label-on="{% translate 'Remove from My Day' %}" data-label-off="{% translate 'Add to My Day' %}"></span></button>
+  <button type="button" class="menu-item" role="menuitem" data-menu="today">{% icon "calendar" %}{% translate "Due today" %}</button>
+  <button type="button" class="menu-item" role="menuitem" data-menu="tomorrow">{% icon "calendar" %}{% translate "Due tomorrow" %}</button>
+  <button type="button" class="menu-item" role="menuitem" data-menu="doing">{% icon "play" %}<span data-label-on="{% translate 'Not started' %}" data-label-off="{% translate 'Mark in progress' %}"></span></button>
+  <div class="menu-sep"></div>
+  <p class="menu-label">{% translate "Priority" %}</p>
+  <div class="wt-prio-pick">
+    <button type="button" data-p="4" data-menu="prio" data-value="4" aria-label="{% translate 'Urgent' %}">!!!</button>
+    <button type="button" data-p="3" data-menu="prio" data-value="3" aria-label="{% translate 'High' %}">!!</button>
+    <button type="button" data-p="2" data-menu="prio" data-value="2" aria-label="{% translate 'Medium' %}">!</button>
+    <button type="button" data-p="0" data-menu="prio" data-value="0" aria-label="{% translate 'No priority' %}">—</button>
+  </div>
+  <div class="menu-sep"></div>
+  <button type="button" class="menu-item" role="menuitem" data-menu="open-link" data-needs-link>{% icon "external" %}{% translate "Open the link" %}</button>
+  <button type="button" class="menu-item" role="menuitem" data-menu="copy">{% icon "copy" %}{% translate "Copy title & link" %}</button>
+  <button type="button" class="menu-item" role="menuitem" data-menu="time">{% icon "clock" %}{% translate "Add time by hand" %}</button>
+  <button type="button" class="menu-item" role="menuitem" data-menu="focus">{% icon "bolt" %}{% translate "Focus on this" %}</button>
+  <button type="button" class="menu-item is-danger" role="menuitem" data-menu="delete">{% icon "trash" %}{% translate "Delete" %}</button>
+</div>

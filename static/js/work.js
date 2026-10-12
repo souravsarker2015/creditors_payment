@@ -8,6 +8,9 @@
  *    so it's right even when stopped offline.
  *  - Focus (Pomodoro): runs by end time, so it stays right when the phone
  *    sleeps; sounds (made in the browser, no files) and notifications.
+ *  - Task rows: one click handler for the whole page and one shared ⋯ menu
+ *    (rows are plain HTML, so long lists draw fast); j / k to move, x to tick.
+ *  - Command palette (Ctrl+K): every page, command and item in one box.
  *  - Reminders, quick capture, keyboard shortcuts, undo.
  * Server: apps/productivity/api.py. Settings: window.WORK (json_script).
  */
@@ -193,6 +196,7 @@
         var self = this;
         setInterval(function () { self.now = Date.now(); self.title(); self.check(); }, 1000);
         if (chan) chan.onmessage = function (e) { self.running = e.data.running; if (e.data.today != null) self.today = e.data.today; self.title(); };
+        Alpine.effect(function () { markTimer(self.running ? self.running.task : null); });
         d.addEventListener("visibilitychange", function () { if (!d.hidden) self.sync(); });
         this.title();
       },
@@ -259,7 +263,13 @@
         open: false, mode: "task", text: "", busy: false,
         init: function () {
           var self = this;
-          d.addEventListener("work:capture", function (e) { self.show(e.detail || "task"); });
+          d.addEventListener("work:capture", function (e) {
+            var x = e.detail || "task";
+            if (typeof x === "object") { if (x.text != null) self.text = x.text; x = x.mode || "task"; }
+            self.show(x);
+          });
+          var asked = new URLSearchParams(location.search).get("capture");
+          if (asked && /^(task|note|time)$/.test(asked)) setTimeout(function () { self.show(asked); }, 60);
         },
         show: function (mode) { this.mode = mode || "task"; this.open = true; var self = this; setTimeout(function () { var el = self.$refs[self.mode]; if (el) el.focus(); }, 40); },
         hide: function () { this.open = false; },
@@ -280,6 +290,7 @@
               toast(res.queued ? t("savedOffline", "Saved on this device") : t("taskAdded", "Task added"));
               if (startTimer && res.id) Alpine.store("timer").sync();
               d.dispatchEvent(new CustomEvent("work:task-added", { detail: res }));
+              if (res.url && !res.queued) self.last = res.url;
             } else if (self.mode === "note") { toast(t("noteSaved", "Note saved")); }
             if (!self.keepOpen) self.hide();
           });
@@ -288,45 +299,19 @@
       };
     });
 
-    /* ── Tasks: tick off, edit inline, My Day, delete with undo ───────── */
+    /* ── A task list: new tasks (quick add) appear at the top ────────────── */
     Alpine.data("workTasks", function () {
       return {
         init: function () {
           var self = this;
           d.addEventListener("work:task-added", function (e) {
             var list = self.$root.querySelector("[data-new-tasks]");
-            if (list && e.detail.html) { list.insertAdjacentHTML("afterbegin", e.detail.html); list.closest("[data-empty-wrap]") && list.closest("[data-empty-wrap]").classList.add("has-items"); }
+            if (list && e.detail.html) {
+              list.insertAdjacentHTML("afterbegin", e.detail.html); markTimer();
+              var wrap = list.closest("[data-empty-wrap]"); if (wrap) wrap.classList.add("has-items");
+            }
           });
         },
-        done: function (id, el) {
-          var row = el.closest("[data-task]"), on = !row.classList.contains("is-done");
-          row.classList.toggle("is-done", on);
-          if (on) play(CFG.sound ? "chime" : "");
-          api(CFG.urls.taskBase + id + "/done/", { done: on ? "1" : "0" }).then(function (res) {
-            if (res.next && res.next.html) { row.insertAdjacentHTML("afterend", res.next.html); toast(t("repeatMade", "Next one added") + (res.next.due ? " · " + res.next.due : "")); }
-          });
-          if (on && row.hasAttribute("data-hide-done")) setTimeout(function () { row.classList.add("is-leaving"); setTimeout(function () { row.remove(); }, 260); }, 700);
-        },
-        update: function (id, field, value, el) {
-          var data = {}; data[field] = value;
-          return api(CFG.urls.taskBase + id + "/update/", data).then(function (res) {
-            if (res.ok && res.html && el) { var row = el.closest("[data-task]"); if (row) row.outerHTML = res.html; }
-            return res;
-          });
-        },
-        rename: function (id, el) {
-          var text = el.textContent.trim();
-          if (!text) { el.textContent = el.getAttribute("data-was"); return; }
-          if (text !== el.getAttribute("data-was")) { el.setAttribute("data-was", text); this.update(id, "title", text); }
-        },
-        remove: function (id, el) {
-          var row = el.closest("[data-task]"); row.classList.add("is-leaving");
-          api(CFG.urls.taskBase + id + "/delete/", {}).then(function (res) {
-            setTimeout(function () { row.remove(); }, 250);
-            undoable(t("taskDeleted", "Task deleted"), res.undo);
-          });
-        },
-        timer: function (id, label, project) { var tm = Alpine.store("timer"); return tm.isFor(id) ? tm.stop() : tm.start({ task: id, label: label, project: project }); },
       };
     });
 
@@ -361,6 +346,111 @@
           });
         },
         count: function () { this.$root.querySelectorAll("[data-column]").forEach(function (col) { var c = col.parentElement.querySelector("[data-count]"); if (c) c.textContent = col.children.length; }); },
+      };
+    });
+
+    /* ── Command palette (Ctrl+K): pages, commands and everything you made ─ */
+    Alpine.data("workPalette", function () {
+      var RECENT = "work-recent:" + ME;
+      return {
+        open: false, q: "", active: 0, found: [], loading: false, ctl: null, timer: null, icons: {},
+        init: function () {
+          var self = this;
+          this.$root.querySelectorAll("template[data-icon]").forEach(function (tp) { self.icons[tp.getAttribute("data-icon")] = tp.innerHTML; });
+          d.addEventListener("work:palette", function () { self.open ? self.close() : self.show(); });
+        },
+        show: function () { this.open = true; this.q = ""; this.found = []; this.active = 0; var self = this; this.$nextTick(function () { self.$refs.q.focus(); }); },
+        close: function () { this.open = false; if (this.ctl) this.ctl.abort(); },
+        get commands() {
+          var tm = Alpine.store("timer");
+          return (CFG.commands || []).filter(function (c) {
+            return c.when === "running" ? !!tm.running : c.when === "idle" ? !tm.running : true;
+          });
+        },
+        get items() {
+          var q = this.q.trim(), cmdOnly = q.charAt(0) === ">", text = (cmdOnly ? q.slice(1) : q).trim().toLowerCase();
+          var cmds = this.commands.filter(function (c) { return !text || match(c.title + " " + (c.words || ""), text); })
+            .map(function (c) { return Object.assign({ key: "c:" + c.id, group: T.kindCommand || "Command" }, c); });
+          if (!q) {
+            var recent = recall(RECENT, []).map(function (r) { return Object.assign({ key: "r:" + r.url, group: T.kindRecent || "Recent" }, r); });
+            return recent.concat(cmds).slice(0, 40);
+          }
+          if (cmdOnly) return cmds;
+          var hits = this.found.map(function (r) { return Object.assign({ key: "f:" + r.url, group: (T.kinds || {})[r.kind] || r.kind }, r); });
+          var adds = [
+            { key: "a:task", kind: "add", action: "add:task", title: (T.addTask || "Add task") + ": " + q, group: T.kindCreate || "Create" },
+            { key: "a:note", kind: "add-note", action: "add:note", title: (T.addNote || "Save as a note") + ": " + q, group: T.kindCreate || "Create" },
+            { key: "a:time", kind: "add-time", action: "add:time", title: (T.trackThis || "Start the timer for") + ": " + q, group: T.kindCreate || "Create" },
+          ];
+          return cmds.slice(0, 6).concat(hits, adds);
+        },
+        search: function () {
+          var self = this, q = this.q.trim();
+          this.active = 0; clearTimeout(this.timer);
+          if (q.length < 2 || q.charAt(0) === ">") { this.found = []; return; }
+          this.timer = setTimeout(function () {
+            if (self.ctl) self.ctl.abort();
+            self.ctl = ("AbortController" in window) ? new AbortController() : null;
+            self.loading = true;
+            fetch(CFG.urls.search + "?q=" + encodeURIComponent(q), { credentials: "same-origin", headers: { "Accept": "application/json" }, signal: self.ctl && self.ctl.signal })
+              .then(function (r) { return r.json(); }).then(function (data) { if (self.q.trim() === q) { self.found = data.results || []; self.loading = false; } })
+              .catch(function () { self.loading = false; });
+          }, 110);
+        },
+        move: function (step) {
+          var n = this.items.length; if (!n) return;
+          this.active = (this.active + step + n) % n;
+          var el = this.$refs.list.children[this.active + 1]; if (el && el.scrollIntoView) el.scrollIntoView({ block: "nearest" });
+        },
+        icon: function (it) { return this.icons[it.icon || it.kind] || this.icons.arrow || ""; },
+        go: function (i) {
+          var it = this.items[i]; if (!it) return;
+          var q = this.q.trim();
+          if (it.url) {
+            if (it.kind && it.kind !== "page") {
+              var recent = recall(RECENT, []).filter(function (r) { return r.url !== it.url; });
+              recent.unshift({ url: it.url, title: it.title, kind: it.kind, meta: it.meta || "" }); store(RECENT, recent.slice(0, 6));
+            }
+            this.close(); location.href = it.url; return;
+          }
+          this.close();
+          var a = it.action || "";
+          if (a === "add:task") api(CFG.urls.taskAdd, { text: q }).then(function (res) { if (res.ok) { toast(res.queued ? t("savedOffline", "Saved on this device") : t("taskAdded", "Task added")); d.dispatchEvent(new CustomEvent("work:task-added", { detail: res })); } else toast(res.error || t("notSaved", "Not saved."), "warn"); });
+          else if (a === "add:note") api(CFG.urls.noteSave, { body: q }).then(function (res) { if (res.ok) toast(t("noteSaved", "Note saved")); });
+          else if (a === "add:time") Alpine.store("timer").start({ description: q, label: q });
+          else if (a.indexOf("capture:") === 0) d.dispatchEvent(new CustomEvent("work:capture", { detail: a.slice(8) }));
+          else if (a === "timer:stop") Alpine.store("timer").stop();
+          else if (a === "help") d.dispatchEvent(new CustomEvent("work:help"));
+          else if (a === "copy:url") copyText(location.href);
+        },
+      };
+    });
+
+    /* ── Learning: +progress, start, finish ───────────────────────────── */
+    Alpine.data("workLearn", function (id, progress, total, unit, status) {
+      var UNITS = (CFG.text && CFG.text.units) || {};
+      return {
+        p: progress, total: total, unit: unit, status: status,
+        get step() { return unit === "percent" ? 10 : 1; },
+        get pct() { return this.status === "done" ? 100 : unit === "percent" ? Math.min(this.p, 100) : (this.total ? Math.min(100, Math.round(100 * this.p / this.total)) : 0); },
+        get label() { return unit === "percent" ? this.p + "%" : this.p + (this.total ? " / " + this.total : "") + " " + (UNITS[unit] || unit); },
+        send: function (data) {
+          var self = this;
+          return api(CFG.urls.learningBase + id + "/", data).then(function (res) {
+            if (res.ok && !res.queued) { self.p = res.progress; self.status = res.status; }
+            return res;
+          });
+        },
+        add: function (n) {
+          this.p = Math.max(0, this.p + n); if (this.total) this.p = Math.min(this.p, this.total); if (unit === "percent") this.p = Math.min(this.p, 100);
+          if (this.status === "queued") this.status = "active";
+          this.send({ add: n });
+        },
+        set: function (st) {
+          this.status = st;
+          if (st === "done") { play(CFG.sound ? "chime" : ""); if (this.total) this.p = this.total; }
+          this.send({ status: st });
+        },
       };
     });
 
@@ -518,6 +608,134 @@
     });
   });
 
+  function match(hay, needle) {
+    hay = hay.toLowerCase();
+    return needle.split(/\s+/).every(function (w) {
+      if (hay.indexOf(w) >= 0) return true;
+      var i = 0; for (var k = 0; k < hay.length && i < w.length; k++) if (hay[k] === w[i]) i++;
+      return i === w.length && w.length > 2;
+    });
+  }
+  function copyText(text) {
+    var done = function () { toast(t("copied", "Copied")); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function () { prompt("", text); });
+    else prompt("", text);
+  }
+  function isoDay(offset) { var x = new Date(); x.setDate(x.getDate() + (offset || 0)); return x.getFullYear() + "-" + pad(x.getMonth() + 1) + "-" + pad(x.getDate()); }
+
+  /* ── Task rows: one handler for every row on the page ────────────────── */
+  function rowOf(el) { return el && el.closest ? el.closest("[data-task]") : null; }
+  function markTimer(taskId) {
+    var id = taskId == null ? "" : String(taskId);
+    d.querySelectorAll(".wt-play.is-on").forEach(function (b) { var r = rowOf(b); if (!r || r.getAttribute("data-task") !== id) b.classList.remove("is-on"); });
+    if (id) d.querySelectorAll('[data-task="' + id + '"] .wt-play').forEach(function (b) { b.classList.add("is-on"); });
+  }
+  function freshRow(row, html) {
+    var tmp = d.createElement("ul"); tmp.innerHTML = html;
+    var fresh = tmp.firstElementChild; if (!fresh) return row;
+    if (row.hasAttribute("data-hide-done")) fresh.setAttribute("data-hide-done", "");
+    row.replaceWith(fresh);
+    var tm = window.Alpine && Alpine.store("timer"); markTimer(tm && tm.running ? tm.running.task : null);
+    return fresh;
+  }
+  function taskDone(row) {
+    var id = row.getAttribute("data-task"), on = !row.classList.contains("is-done");
+    row.classList.toggle("is-done", on);
+    if (on) play(CFG.sound ? "chime" : "");
+    api(CFG.urls.taskBase + id + "/done/", { done: on ? "1" : "0" }).then(function (res) {
+      if (res.next && res.next.html) { row.insertAdjacentHTML("afterend", res.next.html); toast(t("repeatMade", "Next one added") + (res.next.due ? " · " + res.next.due : "")); }
+      if (on) { var tm = window.Alpine && Alpine.store("timer"); if (tm && tm.isFor(id)) { tm.running = null; tm.share(); tm.sync(); } }
+    });
+    if (on && row.hasAttribute("data-hide-done")) setTimeout(function () { row.classList.add("is-leaving"); setTimeout(function () { row.remove(); }, 260); }, 700);
+  }
+  function taskTimer(row) {
+    var tm = window.Alpine && Alpine.store("timer"); if (!tm) return;
+    var id = row.getAttribute("data-task");
+    if (tm.isFor(id)) tm.stop(); else tm.start({ task: id, label: row.getAttribute("data-title"), project: row.getAttribute("data-project") });
+  }
+  function taskUpdate(row, field, value) {
+    var data = {}; data[field] = value;
+    return api(CFG.urls.taskBase + row.getAttribute("data-task") + "/update/", data).then(function (res) {
+      if (res.ok && res.html && row.isConnected) freshRow(row, res.html);
+      return res;
+    });
+  }
+  function taskDelete(row) {
+    row.classList.add("is-leaving");
+    api(CFG.urls.taskBase + row.getAttribute("data-task") + "/delete/", {}).then(function (res) {
+      setTimeout(function () { row.remove(); }, 250);
+      undoable(t("taskDeleted", "Task deleted"), res.undo);
+    });
+  }
+
+  var menu = null, menuRow = null, menuBtn = null, menuAt = 0;
+  function closeMenu(refocus) {
+    if (!menu || menu.hidden) return;
+    menu.hidden = true;
+    if (refocus && menuBtn) menuBtn.focus({ preventScroll: true });
+    menuRow = menuBtn = null;
+  }
+  function openMenu(btn) {
+    menu = menu || d.getElementById("work-task-menu");
+    var row = rowOf(btn); if (!menu || !row) return;
+    if (menuRow === row && !menu.hidden) return closeMenu();
+    menuRow = row; menuBtn = btn; menuAt = Date.now();
+    var label = function (name, on) { var el = menu.querySelector('[data-menu="' + name + '"] span'); el.textContent = el.getAttribute(on ? "data-label-on" : "data-label-off"); };
+    label("myday", row.hasAttribute("data-myday"));
+    label("doing", row.getAttribute("data-status") === "doing");
+    menu.querySelector("[data-needs-link]").hidden = !row.getAttribute("data-link");
+    menu.hidden = false;
+    var r = btn.getBoundingClientRect(), w = menu.offsetWidth, h = menu.offsetHeight;
+    var top = r.bottom + 4; if (top + h > innerHeight - 8) top = Math.max(8, r.top - h - 4);
+    menu.style.left = Math.min(Math.max(8, r.right - w), innerWidth - w - 8) + "px"; menu.style.top = top + "px";
+    var first = menu.querySelector(".menu-item"); if (first) first.focus({ preventScroll: true });
+  }
+  function menuAction(row, name, value) {
+    var id = row.getAttribute("data-task"), link = row.getAttribute("data-link") || "";
+    if (name === "myday") taskUpdate(row, "my_day", row.hasAttribute("data-myday") ? "0" : "1");
+    else if (name === "today") taskUpdate(row, "due_date", isoDay(0));
+    else if (name === "tomorrow") taskUpdate(row, "due_date", isoDay(1));
+    else if (name === "doing") taskUpdate(row, "status", row.getAttribute("data-status") === "doing" ? "todo" : "doing");
+    else if (name === "prio") taskUpdate(row, "priority", value);
+    else if (name === "open-link" && link) window.open(link, "_blank", "noopener");
+    else if (name === "copy") copyText(row.getAttribute("data-title") + (link ? " " + link : ""));
+    else if (name === "time") location.href = CFG.urls.entry_new + "?task=" + id;
+    else if (name === "focus") location.href = CFG.urls.focus_page + "?task=" + id;
+    else if (name === "delete") taskDelete(row);
+  }
+  d.addEventListener("click", function (e) {
+    var item = e.target.closest("[data-menu]");
+    if (item && menu && menu.contains(item)) { var row = menuRow; closeMenu(); if (row) menuAction(row, item.getAttribute("data-menu"), item.getAttribute("data-value")); return; }
+    var act = e.target.closest("[data-act]"), target = act && rowOf(act);
+    if (target) {
+      e.preventDefault();
+      var a = act.getAttribute("data-act");
+      if (a === "done") taskDone(target); else if (a === "timer") taskTimer(target); else if (a === "menu") openMenu(act);
+      return;
+    }
+    if (menu && !menu.hidden && !menu.contains(e.target)) closeMenu();
+  });
+  d.addEventListener("keydown", function (e) {
+    if (!menu || menu.hidden) return;
+    if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); closeMenu(true); return; }
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      var all = Array.prototype.slice.call(menu.querySelectorAll("button:not([hidden])")), i = all.indexOf(d.activeElement);
+      e.preventDefault(); all[(i + (e.key === "ArrowDown" ? 1 : -1) + all.length) % all.length].focus();
+    }
+  }, true);
+  window.addEventListener("scroll", function (e) {   // the page scrolled away from the row (not the menu itself, nor the scroll that brought the row into view)
+    if (menu && !menu.contains(e.target) && Date.now() - menuAt > 250) closeMenu();
+  }, { passive: true, capture: true });
+  window.addEventListener("resize", function () { closeMenu(); });
+  window.Work.taskUpdate = taskUpdate;
+
+  /* ── Ctrl+K: the palette (instead of the app-wide search, while here) ── */
+  window.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && (e.key || "").toLowerCase() === "k") {
+      e.preventDefault(); e.stopPropagation(); d.dispatchEvent(new CustomEvent("work:palette"));
+    }
+  }, true);
+
   /* ── A focus session running on another page still ends on time ─────── */
   (function () {
     var KEY = "work-focus:" + ME;
@@ -558,6 +776,7 @@
       else if (/^!(urgent|high|medium|med|low|[1-4])$/.test(low)) out.push({ k: "priority", v: low.slice(1) });
       else if (/^~\d+(\.\d+)?(m|min|h|hr)?$/.test(low)) out.push({ k: "estimate", v: low.slice(1) });
       else if (w === "*") out.push({ k: "myday", v: t("myDay", "My Day") });
+      else if (/^https?:\/\/\S+\.\S+/.test(w)) out.push({ k: "link", v: t("link", "Link") });
       else if (/^(today|tomorrow|tmr|nextweek|monday|tuesday|wednesday|thursday|friday|saturday|sunday)$/.test(low) || /^\+\d{1,3}[dw]$/.test(low) || /^\d{4}-\d{2}-\d{2}$/.test(low) || /^due:\S+/.test(low)) out.push({ k: "due", v: low.replace(/^due:/, "") });
     });
     return out;
@@ -566,7 +785,8 @@
 
   /* ── Keyboard: the whole module without a mouse ─────────────────────── */
   var pending = null;
-  var GO = { h: "today", t: "tasks", b: "board", p: "projects", i: "time", f: "focus_page", n: "notes", s: "snippets", a: "habits", j: "journal", r: "reports", ",": "settings" };
+  var GO = { h: "today", t: "tasks", b: "board", p: "projects", i: "time", f: "focus_page", n: "notes", s: "snippets", a: "habits", j: "journal", r: "reports", ",": "settings",
+             c: "calendar", o: "goals", l: "learning", v: "review" };
   d.addEventListener("keydown", function (e) {
     if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || typing(e)) return;
     var k = e.key;
@@ -577,10 +797,28 @@
       return;
     }
     if (k === "g") { pending = "g"; setTimeout(function () { pending = null; }, 1200); return; }
+    var focused = rowOf(d.activeElement);
+    if (k === "j" || k === "k" || k === "ArrowDown" && focused || k === "ArrowUp" && focused) {
+      var rows = Array.prototype.filter.call(d.querySelectorAll(".wt-task"), function (r) { return r.offsetParent !== null; });
+      if (!rows.length) return;
+      var down = k === "j" || k === "ArrowDown", i = rows.indexOf(focused);
+      i = i < 0 ? (down ? 0 : rows.length - 1) : Math.max(0, Math.min(rows.length - 1, i + (down ? 1 : -1)));
+      e.preventDefault(); rows[i].querySelector(".wt-task-title").focus(); rows[i].scrollIntoView({ block: "nearest" });
+      return;
+    }
+    if (focused && (k === "x" || k === "p" || k === "m" || k === "e")) {
+      e.preventDefault();
+      if (k === "x") taskDone(focused); else if (k === "p") taskTimer(focused);
+      else if (k === "m") openMenu(focused.querySelector('[data-act="menu"]')); else location.href = focused.querySelector(".wt-task-title").href;
+      return;
+    }
     if (k === "c" || k === "t") { e.preventDefault(); d.dispatchEvent(new CustomEvent("work:capture", { detail: "task" })); }
     else if (k === "n") { e.preventDefault(); d.dispatchEvent(new CustomEvent("work:capture", { detail: "note" })); }
     else if (k === "s" && window.Alpine) { e.preventDefault(); var tm = Alpine.store("timer"); tm.running ? tm.stop() : d.dispatchEvent(new CustomEvent("work:capture", { detail: "time" })); }
-    else if (k === "/") { var box = d.querySelector("[data-work-search]"); if (box) { e.preventDefault(); box.focus(); box.select && box.select(); } }
+    else if (k === "/") {
+      var box = d.querySelector("[data-work-search]"); e.preventDefault(); e.stopPropagation();
+      if (box) { box.focus(); if (box.select) box.select(); } else d.dispatchEvent(new CustomEvent("work:palette"));
+    }
     else if (k === "?") { e.preventDefault(); d.dispatchEvent(new CustomEvent("work:help")); }
   });
 

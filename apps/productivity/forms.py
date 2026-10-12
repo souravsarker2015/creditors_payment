@@ -5,9 +5,10 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from . import services
-from .models import Habit, Project, Snippet, Tag, Task, TimeEntry, WorkSettings
+from .models import Goal, GoalStatus, Habit, LearningItem, LearningStatus, Project, Snippet, Tag, Task, TimeEntry, WorkSettings
 
 DATE = forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d")
+SWATCHES = forms.RadioSelect   # colours are picked from swatches (templates: .w-swatches)
 WEEKDAY_CHOICES = [("0", _("Mon")), ("1", _("Tue")), ("2", _("Wed")), ("3", _("Thu")), ("4", _("Fri")), ("5", _("Sat")), ("6", _("Sun"))]
 
 
@@ -35,6 +36,9 @@ class OwnedForm(forms.ModelForm):
             self.fields["project"].queryset = Project.objects.filter(owner=owner, is_archived=False)
         if "task" in self.fields:
             self.fields["task"].queryset = Task.objects.filter(owner=owner).exclude(status="done").order_by("-updated_at")
+        if "goal" in self.fields:
+            goals = Goal.objects.filter(owner=owner)
+            self.fields["goal"].queryset = goals.filter(status=GoalStatus.ACTIVE) | goals.filter(pk=getattr(self.instance, "goal_id", None) or 0)
         if "tags_text" in self.fields and self.instance.pk:
             self.fields["tags_text"].initial = " ".join(self.instance.tags.values_list("name", flat=True))
 
@@ -48,8 +52,9 @@ class TaskForm(OwnedForm):
 
     class Meta:
         model = Task
-        fields = ("title", "project", "status", "priority", "due_date", "estimate_minutes", "repeat", "remind_at", "notes")
+        fields = ("title", "project", "status", "priority", "due_date", "estimate_minutes", "repeat", "remind_at", "link", "goal", "notes")
         widgets = {
+            "link": forms.URLInput(attrs={"placeholder": "https://github.com/…/pull/482", "inputmode": "url"}),
             "due_date": DATE,
             "remind_at": forms.DateTimeInput(attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"),
             "notes": forms.Textarea(attrs={"rows": 8, "data-markdown": "1"}),
@@ -61,7 +66,7 @@ class ProjectForm(forms.ModelForm):
     class Meta:
         model = Project
         fields = ("name", "color", "client", "estimate_hours", "hourly_rate", "description", "is_archived")
-        widgets = {"description": forms.Textarea(attrs={"rows": 3})}
+        widgets = {"description": forms.Textarea(attrs={"rows": 3}), "color": SWATCHES}
 
     def __init__(self, *args, owner=None, **kwargs):
         self.owner = owner
@@ -161,6 +166,7 @@ class HabitForm(forms.ModelForm):
     class Meta:
         model = Habit
         fields = ("name", "emoji", "color")
+        widgets = {"color": SWATCHES}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -206,3 +212,49 @@ class TagForm(forms.ModelForm):
     class Meta:
         model = Tag
         fields = ("name", "color")
+
+
+class GoalForm(OwnedForm):
+    class Meta:
+        model = Goal
+        fields = ("title", "area", "color", "target_date", "project", "unit", "start_value", "target_value", "current_value", "why")
+        widgets = {
+            "color": SWATCHES,
+            "target_date": DATE,
+            "why": forms.Textarea(attrs={"rows": 4}),
+            "title": forms.TextInput(attrs={"placeholder": _("Become a senior engineer by next June")}),
+            "unit": forms.TextInput(attrs={"placeholder": _("books, problems solved, users…")}),
+        }
+
+    def clean(self):
+        data = super().clean()
+        if data.get("target_value") is not None and data.get("target_value") == data.get("start_value"):
+            self.add_error("target_value", _("The target has to be different from where you start."))
+        return data
+
+
+class LearningForm(OwnedForm):
+    tags_text = TagsField()
+
+    class Meta:
+        model = LearningItem
+        fields = ("title", "kind", "author", "url", "status", "unit", "progress", "total", "rating", "goal", "started_on", "finished_on", "takeaways")
+        widgets = {
+            "started_on": DATE, "finished_on": DATE,
+            "takeaways": forms.Textarea(attrs={"rows": 8}),
+            "url": forms.URLInput(attrs={"inputmode": "url", "placeholder": "https://"}),
+            "progress": forms.NumberInput(attrs={"inputmode": "numeric", "min": 0}),
+            "total": forms.NumberInput(attrs={"inputmode": "numeric", "min": 1}),
+            "rating": forms.Select(choices=[("", "—"), (1, "★"), (2, "★★"), (3, "★★★"), (4, "★★★★"), (5, "★★★★★")]),
+        }
+
+    def clean(self):
+        data = super().clean()
+        today = timezone.localdate()
+        if data.get("status") == LearningStatus.DONE and not data.get("finished_on"):
+            data["finished_on"] = today
+        if data.get("status") in (LearningStatus.ACTIVE, LearningStatus.DONE) and not data.get("started_on"):
+            data["started_on"] = data.get("finished_on") or today
+        if data.get("status") == LearningStatus.DONE and data.get("total"):
+            data["progress"] = max(data.get("progress") or 0, data["total"])
+        return data

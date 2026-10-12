@@ -1,12 +1,12 @@
 {% extends "work/base.html" %}
-{% load i18n %}
+{% load i18n work %}
 
 {% block title %}{% if project %}{{ project.name }}{% else %}{% translate "New project" %}{% endif %} | {% translate "Productivity" %}{% endblock %}
 
 {% block work %}
 <div class="page-narrow">
   <header class="wp-head">
-    <div><a href="{% if project %}{% url 'work:project' project.pk %}{% else %}{% url 'work:projects' %}{% endif %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Projects" %}</a>
+    <div><a href="{% if project %}{% url 'work:project' project.pk %}{% else %}{% url 'work:projects' %}{% endif %}" class="back-link">{% icon "chevron-left" %}{% translate "Projects" %}</a>
       <h1 class="wp-title">{% if project %}{% translate "Edit project" %}{% else %}{% translate "New project" %}{% endif %}</h1></div>
   </header>
   <form method="post" class="card" novalidate>
@@ -25,7 +25,7 @@
     </div>
     <div class="card-footer form-actions">
       <a href="{% if project %}{% url 'work:project' project.pk %}{% else %}{% url 'work:projects' %}{% endif %}" class="btn btn-ghost">{% translate "Cancel" %}</a>
-      <button type="submit" class="btn btn-primary">{% include "partials/icon.html" with name="check" %}{% translate "Save" %}</button>
+      <button type="submit" class="btn btn-primary">{% icon "check" %}{% translate "Save" %}</button>
     </div>
   </form>
 </div>

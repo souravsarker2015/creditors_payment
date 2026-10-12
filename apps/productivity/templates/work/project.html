@@ -6,15 +6,15 @@
 {% block work %}
 <header class="wp-head">
   <div class="min-w-0">
-    <a href="{% url 'work:projects' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Projects" %}</a>
+    <a href="{% url 'work:projects' %}" class="back-link">{% icon "chevron-left" %}{% translate "Projects" %}</a>
     <h1 class="wp-title"><span class="wpj-swatch is-lg" data-color="{{ project.color }}"></span>{{ project.name }}{% if project.is_archived %} <span class="badge">{% translate "Archived" %}</span>{% endif %}</h1>
     {% if project.client or project.description %}<p class="wp-sub">{% if project.client %}{{ project.client }}{% endif %}{% if project.client and project.description %} · {% endif %}{{ project.description|truncatechars:160 }}</p>{% endif %}
   </div>
   <div class="wp-actions">
-    <button type="button" class="btn btn-primary" @click="$store.timer.start({ project: {{ project.pk }}, label: '{{ project.name|escapejs }}', description: '' })">{% include "partials/icon.html" with name="play" %}{% translate "Start timer" %}</button>
-    <a href="{% url 'work:project_edit' project.pk %}" class="btn btn-secondary">{% include "partials/icon.html" with name="edit" %}{% translate "Edit" %}</a>
+    <button type="button" class="btn btn-primary" @click="$store.timer.start({ project: {{ project.pk }}, label: '{{ project.name|escapejs }}', description: '' })">{% icon "play" %}{% translate "Start timer" %}</button>
+    <a href="{% url 'work:project_edit' project.pk %}" class="btn btn-secondary">{% icon "edit" %}{% translate "Edit" %}</a>
     <form method="post" action="{% url 'work:project_delete' project.pk %}" data-confirm="{% translate 'Delete this project? Its tasks, time and notes are kept, without a project. You can undo this from Recently deleted.' %}">{% csrf_token %}
-      <button type="submit" class="icon-btn" aria-label="{% translate 'Delete project' %}" data-tip="{% translate 'Delete project' %}">{% include "partials/icon.html" with name="trash" %}</button></form>
+      <button type="submit" class="icon-btn" aria-label="{% translate 'Delete project' %}" data-tip="{% translate 'Delete project' %}">{% icon "trash" %}</button></form>
   </div>
 </header>
 
@@ -28,15 +28,21 @@
 <div class="wd-grid">
   <section class="card" x-data="workTasks">
     <header class="card-header"><h2 class="card-title">{% translate "Open tasks" %}</h2>
-      <a href="{% url 'work:tasks' %}?project={{ project.pk }}&view=board" class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="board" %}{% translate "Board" %}</a></header>
+      <a href="{% url 'work:tasks' %}?project={{ project.pk }}&view=board" class="btn btn-ghost btn-sm">{% icon "board" %}{% translate "Board" %}</a></header>
     <form class="wd-quick" @submit.prevent="const box = $refs.q; if (!box.value.trim()) return; Work.api(Work.cfg.urls.taskAdd, { text: box.value, project: '{{ project.pk }}' }).then(r => { if (r.html) $refs.list.insertAdjacentHTML('afterbegin', r.html); }); box.value = ''">
-      <span class="wd-quick-icon" aria-hidden="true">{% include "partials/icon.html" with name="plus" %}</span>
+      <span class="wd-quick-icon" aria-hidden="true">{% icon "plus" %}</span>
       <input x-ref="q" class="wd-quick-input" placeholder="{% translate 'Add a task to this project…' %}" aria-label="{% translate 'New task' %}" autocomplete="off">
     </form>
     <ul class="wt-list" x-ref="list">{% for t in open_tasks %}{% include "work/partials/task_row.html" %}{% endfor %}</ul>
     {% if done_tasks %}<details class="wd-done"><summary>{% blocktranslate count counter=done_tasks|length %}{{ counter }} done{% plural %}{{ counter }} done{% endblocktranslate %}</summary><ul class="wt-list">{% for t in done_tasks %}{% include "work/partials/task_row.html" %}{% endfor %}</ul></details>{% endif %}
   </section>
   <div class="wd-side">
+    {% if goals %}
+    <section class="card">
+      <header class="card-header"><h2 class="card-title">{% translate "Goals" %}</h2><a href="{% url 'work:goal_new' %}?project={{ project.pk }}" class="btn btn-ghost btn-sm">{% icon "plus" %}{% translate "Add" %}</a></header>
+      <ul class="wg-mini">{% for g in goals %}<li><a href="{% url 'work:goal' g.pk %}" data-color="{{ g.color }}"><span class="wg-mini-top"><span class="truncate">{{ g.title }}</span><b class="num">{{ g.pct }}%</b></span><span class="wg-bar"><i style="width: {{ g.pct }}%"></i></span></a></li>{% endfor %}</ul>
+    </section>
+    {% endif %}
     <section class="card">
       <header class="card-header"><h2 class="card-title">{% translate "Recent time" %}</h2><a href="{% url 'work:reports' %}" class="btn btn-ghost btn-sm">{% translate "Reports" %}</a></header>
       {% if entries %}<ul class="we-list">{% for e in entries %}{% include "work/partials/entry_row.html" %}{% endfor %}</ul>{% else %}<p class="wd-muted">{% translate "No time tracked on this project yet." %}</p>{% endif %}

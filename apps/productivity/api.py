@@ -6,8 +6,11 @@ with no signal is queued on the phone and sent later — and never saved twice
 (apps/core/offline.py). Times come from the phone's clock (started_at /
 ended_at), so a timer stopped offline keeps the right length.
 """
+import re
 from datetime import timedelta
+from urllib.parse import quote
 
+from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
@@ -22,7 +25,8 @@ from apps.trash.services import trash
 from . import services
 from .access import work_required
 from .models import (
-    ChecklistItem, EntryKind, Habit, HabitCheck, JournalEntry, Note, Priority, Project, Snippet, Status, Task, TimeEntry,
+    ChecklistItem, EntryKind, Goal, GoalStatus, GoalStep, Habit, HabitCheck, JournalEntry, LearningItem, LearningKind, LearningStatus,
+    LearningUnit, Note, Priority, Project, Snippet, Status, Task, TimeEntry, link_label,
 )
 
 
@@ -116,7 +120,8 @@ def task_add(request):
     user = request.user
     status = request.POST.get("status") if request.POST.get("status") in Status.values else Status.TODO
     project = Project.objects.filter(owner=user, pk=request.POST.get("project") or 0).first()
-    task = services.create_from_quick(user, request.POST.get("text", ""), status=status, project=project,
+    goal = Goal.objects.filter(owner=user, pk=request.POST.get("goal") or 0).first()
+    task = services.create_from_quick(user, request.POST.get("text", ""), status=status, project=project, goal=goal,
                                       my_day=request.POST.get("my_day") == "1", due=parse_date(request.POST.get("due") or ""))
     if task is None:
         return bad(_("Type what needs doing."))
@@ -165,7 +170,7 @@ def task_move(request, pk):
     return ok(status=task.status, order=task.order)
 
 
-TASK_FIELDS = {"title", "priority", "due_date", "my_day", "project", "status", "notes", "estimate_minutes"}
+TASK_FIELDS = {"title", "priority", "due_date", "my_day", "project", "status", "notes", "estimate_minutes", "link", "goal"}
 
 
 @work_required
@@ -196,6 +201,10 @@ def task_update(request, pk):
             task.notes = value
         elif name == "estimate_minutes":
             task.estimate_minutes = int(value) if value.isdigit() else None
+        elif name == "link":
+            task.link = value[:500] if value.startswith(("http://", "https://")) or not value else task.link
+        elif name == "goal":
+            task.goal = Goal.objects.filter(owner=request.user, pk=value or 0).first()
     task.save()
     return ok(html=task_row(request, task))
 
@@ -276,6 +285,7 @@ def note_action(request, pk):
     elif action == "to_task":
         task = Task.objects.create(owner=request.user, title=note.display_title[:300], notes=note.body, project=note.project,
                                    order=services.next_order(request.user, Status.TODO))
+        task.tags.set(note.tags.all())
         return ok(url=reverse("work:task", args=[task.pk]))
     note.save(update_fields=["is_pinned", "is_archived", "updated_at"])
     return ok(pinned=note.is_pinned, archived=note.is_archived)
@@ -369,20 +379,127 @@ def snippet_action(request, pk):
 @work_required
 @require_GET
 def search(request):
-    """Quick switcher: tasks, notes, projects and snippets matching the text."""
+    """Command palette (Ctrl+K): tasks, notes, projects, goals, learning and snippets matching the text."""
     q = request.GET.get("q", "").strip()
     if len(q) < 2:
         return ok(results=[])
     user, out = request.user, []
-    for t in Task.objects.filter(owner=user, title__icontains=q).order_by("status", "-updated_at")[:6]:
-        out.append({"kind": "task", "title": t.title, "url": reverse("work:task", args=[t.pk]), "done": t.is_done})
-    for n in Note.objects.filter(owner=user, is_archived=False).filter(title__icontains=q)[:4]:
+    for t in Task.objects.filter(owner=user).filter(Q(title__icontains=q) | Q(link__icontains=q)).select_related("project").order_by("status", "-updated_at")[:7]:
+        out.append({"kind": "task", "title": t.title, "url": reverse("work:task", args=[t.pk]), "done": t.is_done, "id": t.pk,
+                    "meta": " · ".join(x for x in (t.project.name if t.project_id else "", t.link_label) if x)})
+    for n in Note.objects.filter(owner=user, is_archived=False).filter(Q(title__icontains=q) | Q(body__icontains=q))[:5]:
         out.append({"kind": "note", "title": n.display_title, "url": reverse("work:note", args=[n.pk])})
-    if len(out) < 8:
-        for n in Note.objects.filter(owner=user, is_archived=False, body__icontains=q).exclude(title__icontains=q)[:3]:
-            out.append({"kind": "note", "title": n.display_title, "url": reverse("work:note", args=[n.pk])})
     for p in Project.objects.filter(owner=user, name__icontains=q)[:3]:
-        out.append({"kind": "project", "title": p.name, "url": reverse("work:project", args=[p.pk])})
-    for s in Snippet.objects.filter(owner=user, title__icontains=q)[:3]:
-        out.append({"kind": "snippet", "title": s.title, "url": reverse("work:snippets") + f"?q={s.title}"})
+        out.append({"kind": "project", "title": p.name, "url": reverse("work:project", args=[p.pk]), "meta": p.client})
+    for g in Goal.objects.filter(owner=user, title__icontains=q)[:3]:
+        out.append({"kind": "goal", "title": g.title, "url": reverse("work:goal", args=[g.pk]), "meta": g.get_status_display()})
+    for item in LearningItem.objects.filter(owner=user).filter(Q(title__icontains=q) | Q(author__icontains=q))[:3]:
+        out.append({"kind": "learning", "title": item.title, "url": reverse("work:learning_edit", args=[item.pk]),
+                    "meta": " · ".join(x for x in (item.get_kind_display(), item.author) if x)})
+    for sn in Snippet.objects.filter(owner=user).filter(Q(title__icontains=q) | Q(description__icontains=q))[:3]:
+        out.append({"kind": "snippet", "title": sn.title, "url": reverse("work:snippets") + "?q=" + quote(sn.title), "meta": sn.get_language_display()})
     return ok(results=out)
+
+
+# ── Goals ─────────────────────────────────────────────────────────────────
+@work_required
+@require_POST
+def goal_step(request, pk):
+    """Add a milestone (text) or change one (step, done / text / delete)."""
+    goal = get_object_or_404(Goal, pk=pk, owner=request.user)
+    sid = request.POST.get("step")
+    if not sid:
+        text = request.POST.get("text", "").strip()
+        if not text:
+            return bad(_("Type the milestone."))
+        last = goal.steps.order_by("-order").first()
+        step = goal.steps.create(text=text[:300], order=(last.order + 1) if last else 1)
+    else:
+        step = get_object_or_404(GoalStep, pk=sid, goal=goal)
+        action = request.POST.get("action")
+        if action == "delete":
+            step.delete()
+            step = None
+        elif action == "text":
+            step.text = request.POST.get("text", "").strip()[:300] or step.text
+            step.save(update_fields=["text"])
+        else:
+            step.done = request.POST.get("done", "1") == "1"
+            step.done_at = timezone.now() if step.done else None
+            step.save(update_fields=["done", "done_at"])
+    Goal.objects.filter(pk=goal.pk).update(updated_at=timezone.now())
+    goal = services.with_progress([goal])[0]
+    return ok(id=step.pk if step else None, text=step.text if step else "", pct=goal.pct, steps=list(goal.steps_count))
+
+
+@work_required
+@require_POST
+def goal_value(request, pk):
+    """Where a measured goal is now (or a step up/down from it)."""
+    from decimal import Decimal, InvalidOperation
+
+    goal = get_object_or_404(Goal, pk=pk, owner=request.user)
+    now = goal.current_value if goal.current_value is not None else goal.start_value
+    try:
+        if "add" in request.POST:
+            now += Decimal(request.POST["add"])
+        else:
+            now = Decimal(request.POST.get("value", ""))
+    except InvalidOperation:
+        return bad(_("Type a number."))
+    goal.current_value = now
+    goal.save(update_fields=["current_value", "updated_at"])
+    reached = goal.has_number and goal.status == GoalStatus.ACTIVE and (
+        now >= goal.target_value if goal.target_value > goal.start_value else now <= goal.target_value)
+    return ok(value=str(now.normalize()), pct=goal.progress(), reached=reached)
+
+
+# ── Learning ──────────────────────────────────────────────────────────────
+@work_required
+@require_POST
+def learning_add(request):
+    """One line: a title, or a link (an article, a talk) to read later."""
+    text = request.POST.get("text", "").strip()
+    if not text:
+        return bad(_("Type a title or paste a link."))
+    url = ""
+    m = re.search(r"https?://\S+", text)
+    if m:
+        url, text = m.group(0)[:500], (text[:m.start()] + text[m.end():]).strip()
+    kind = request.POST.get("kind") if request.POST.get("kind") in LearningKind.values else (
+        LearningKind.VIDEO if re.search(r"youtube\.com|youtu\.be|vimeo\.com", url) else LearningKind.ARTICLE if url else LearningKind.BOOK)
+    item = LearningItem.objects.create(owner=request.user, title=(text or link_label(url) or url)[:250], url=url, kind=kind,
+                                       unit=LearningUnit.PERCENT if url else LearningUnit.PAGES,
+                                       status=request.POST.get("status") if request.POST.get("status") in LearningStatus.values else LearningStatus.QUEUED)
+    return ok(id=item.pk, url=reverse("work:learning_edit", args=[item.pk]))
+
+
+@work_required
+@require_POST
+def learning_update(request, pk):
+    """+N progress, or a new status (starting / finishing sets the dates)."""
+    item = get_object_or_404(LearningItem, pk=pk, owner=request.user)
+    today = timezone.localdate()
+    if "add" in request.POST:
+        try:
+            step = int(request.POST["add"])
+        except ValueError:
+            return bad("add")
+        item.progress = max(0, item.progress + step)
+        if item.total:
+            item.progress = min(item.progress, item.total)
+        if item.unit == "percent":
+            item.progress = min(item.progress, 100)
+        if item.status == LearningStatus.QUEUED and item.progress:
+            item.status, item.started_on = LearningStatus.ACTIVE, item.started_on or today
+    status = request.POST.get("status")
+    if status in LearningStatus.values:
+        item.status = status
+        if status in (LearningStatus.ACTIVE, LearningStatus.DONE):
+            item.started_on = item.started_on or today
+        item.finished_on = (item.finished_on or today) if status == LearningStatus.DONE else None
+        if status == LearningStatus.DONE and item.total:
+            item.progress = item.total
+    item.save()
+    return ok(progress=item.progress, total=item.total, percent=item.percent, status=item.status,
+              status_label=item.get_status_display())

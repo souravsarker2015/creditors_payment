@@ -1,0 +1,49 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% translate "Goals" %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+<header class="wp-head">
+  <div class="min-w-0"><h1 class="wp-title">{% translate "Goals" %}</h1>
+    <p class="wp-sub">{% translate "Where all the daily work is heading: a promotion, a launch, a skill. Link tasks and learning to a goal and watch it move." %}</p></div>
+  <div class="wp-actions">
+    <nav class="seg seg-sm" aria-label="{% translate 'Show' %}">
+      <a href="?show=active" class="seg-item{% if show == 'active' %} is-active{% endif %}">{% translate "Active" %}{% if counts.active %} <span class="wg-count">{{ counts.active }}</span>{% endif %}</a>
+      <a href="?show=done" class="seg-item{% if show == 'done' %} is-active{% endif %}">{% translate "Reached" %}{% if counts.done %} <span class="wg-count">{{ counts.done }}</span>{% endif %}</a>
+      <a href="?show=dropped" class="seg-item{% if show == 'dropped' %} is-active{% endif %}">{% translate "Dropped" %}</a>
+    </nav>
+    <a href="{% url 'work:goal_new' %}" class="btn btn-primary">{% icon "plus" %}{% translate "Goal" %}</a>
+  </div>
+</header>
+
+{% if goals %}
+<div class="wg-grid">
+  {% for g in goals %}
+  <a href="{% url 'work:goal' g.pk %}" class="wg-card" data-color="{{ g.color }}">
+    <div class="wg-ring" style="--p: {{ g.pct }}" aria-hidden="true">
+      <svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" class="wd-ring-bg"/><circle cx="60" cy="60" r="52" class="wg-ring-fg" pathLength="100"/></svg>
+      <span class="num">{{ g.pct }}%</span>
+    </div>
+    <div class="wg-body">
+      <p class="wg-area">{{ g.get_area_display }}{% if g.project %} · {{ g.project.name }}{% endif %}</p>
+      <h2 class="wg-title">{{ g.title }}</h2>
+      <p class="wg-meta">
+        {% if g.has_number %}<span class="num">{{ g.current_value|default_if_none:g.start_value|floatformat:"-2" }} / {{ g.target_value|floatformat:"-2" }} {{ g.unit }}</span>
+        {% elif g.steps_count.1 %}<span>{% blocktranslate with d=g.steps_count.0 n=g.steps_count.1 %}{{ d }} of {{ n }} milestones{% endblocktranslate %}</span>
+        {% elif g.tasks_count.1 %}<span>{% blocktranslate with d=g.tasks_count.0 n=g.tasks_count.1 %}{{ d }} of {{ n }} tasks{% endblocktranslate %}</span>{% endif %}
+        {% if g.target_date %}{% with left=g|goal_days_left %}<span class="wg-when" data-tone="{% if g.status == 'active' and left < 0 %}late{% elif g.status == 'active' and left <= 14 %}soon{% endif %}">{% icon "calendar" %}{{ g.target_date|date:"j M Y" }}{% if g.status == 'active' %} · {% if left < 0 %}{% blocktranslate count counter=left|abs_int %}{{ counter }} day late{% plural %}{{ counter }} days late{% endblocktranslate %}{% elif left == 0 %}{% translate "today" %}{% else %}{% blocktranslate count counter=left %}{{ counter }} day left{% plural %}{{ counter }} days left{% endblocktranslate %}{% endif %}{% endif %}</span>{% endwith %}{% endif %}
+      </p>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty">
+  <div class="empty-icon">{% icon "flag" %}</div>
+  <h3 class="empty-title">{% if show == "active" %}{% translate "Set a goal for your future self" %}{% else %}{% translate "Nothing here yet" %}{% endif %}</h3>
+  <p class="empty-text">{% translate "“Become a senior engineer”, “Ship v2 of the app”, “Solve 150 LeetCode problems”, “Get the AWS certificate”. Measure it with a number, milestones or tasks." %}</p>
+  {% if show == "active" %}<a href="{% url 'work:goal_new' %}" class="btn btn-primary">{% icon "plus" %}{% translate "New goal" %}</a>{% endif %}
+</div>
+{% endif %}
+{% endblock %}

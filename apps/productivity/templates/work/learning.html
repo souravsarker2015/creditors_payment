@@ -1,0 +1,67 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% translate "Learning" %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+<header class="wp-head">
+  <div class="min-w-0"><h1 class="wp-title">{% translate "Learning" %}</h1>
+    <p class="wp-sub">{% blocktranslate count counter=finished_this_year %}{{ counter }} finished this year.{% plural %}{{ counter }} finished this year.{% endblocktranslate %} {% translate "Books, courses, talks and docs — and what you took from them." %}</p></div>
+  <div class="wp-actions"><a href="{% url 'work:learning_new' %}" class="btn btn-primary">{% icon "plus" %}{% translate "Add" %}</a></div>
+</header>
+
+<form class="wd-quick wl-quick" x-data @submit.prevent="const box = $refs.q; if (!box.value.trim()) return; Work.api('{% url 'work:api_learning_add' %}', { text: box.value, status: '{% if show == 'active' %}active{% else %}queued{% endif %}' }).then(r => { if (r.ok && !r.queued) location.reload(); else if (r.ok) Work.toast(Work.cfg.text.savedOffline); else Work.toast(r.error, 'warn'); }); box.value = ''">
+  <span class="wd-quick-icon" aria-hidden="true">{% icon "book" %}</span>
+  <input x-ref="q" class="wd-quick-input" placeholder="{% translate 'A title, or paste a link to read later…' %}" aria-label="{% translate 'Add something to learn' %}" autocomplete="off" enterkeyhint="done">
+</form>
+
+<div class="wf-bar">
+  <nav class="seg seg-sm" aria-label="{% translate 'Show' %}">
+    <a href="?show=active" class="seg-item{% if show == 'active' %} is-active{% endif %}">{% translate "In progress" %} <span class="wg-count">{{ counts.active|default:0 }}</span></a>
+    <a href="?show=queued" class="seg-item{% if show == 'queued' %} is-active{% endif %}">{% translate "Want to" %} <span class="wg-count">{{ counts.queued|default:0 }}</span></a>
+    <a href="?show=done" class="seg-item{% if show == 'done' %} is-active{% endif %}">{% translate "Finished" %} <span class="wg-count">{{ counts.done|default:0 }}</span></a>
+    <a href="?show=all" class="seg-item{% if show == 'all' %} is-active{% endif %}">{% translate "All" %}</a>
+  </nav>
+  <nav class="chip-row">{% for v, l in kinds %}<a href="{% if kind == v %}?show={{ show }}{% else %}?show={{ show }}&kind={{ v }}{% endif %}" class="chip{% if kind == v %} is-active{% endif %}">{{ l }}</a>{% endfor %}</nav>
+</div>
+
+{% if items %}
+<div class="wl-grid">
+  {% for item in items %}
+  <article class="card wl-card" id="learn-{{ item.pk }}" x-data="workLearn({{ item.pk }}, {{ item.progress }}, {{ item.total|default:'null' }}, '{{ item.unit }}', '{{ item.status }}')">
+    <div class="wl-top">
+      <span class="wl-kind" data-kind="{{ item.kind }}">{{ item.get_kind_display }}</span>
+      {% if item.rating %}<span class="wl-stars" aria-label="{% blocktranslate with n=item.rating %}{{ n }} of 5{% endblocktranslate %}">{% for i in "12345" %}<i{% if forloop.counter <= item.rating %} class="is-on"{% endif %}>★</i>{% endfor %}</span>{% endif %}
+      <span class="spacer"></span>
+      <a href="{% url 'work:learning_edit' item.pk %}" class="icon-btn" aria-label="{% translate 'Edit' %}">{% icon "edit" %}</a>
+    </div>
+    <h2 class="wl-title">{% if item.url %}<a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.title }} {% icon "external" %}</a>{% else %}<a href="{% url 'work:learning_edit' item.pk %}">{{ item.title }}</a>{% endif %}</h2>
+    {% if item.author %}<p class="wl-author">{{ item.author }}</p>{% endif %}
+    <div class="wl-progress">
+      <div class="wg-bar is-learn"><i :style="'width:' + pct + '%'" style="width: {{ item.percent }}%"></i></div>
+      <p class="wl-count num"><span x-text="label">{% if item.unit == 'percent' %}{{ item.progress }}%{% else %}{{ item.progress }}{% if item.total %} / {{ item.total }}{% endif %} {{ item.get_unit_display }}{% endif %}</span></p>
+    </div>
+    <div class="wl-actions">
+      <template x-if="status !== 'done'"><div class="wl-steps">
+        <button type="button" class="btn btn-secondary btn-sm" @click="add(step)" x-text="'+' + step + (unit === 'percent' ? '%' : '')">+1</button>
+        <button type="button" class="btn btn-ghost btn-sm" @click="add(step * 10)" x-show="unit === 'pages' || unit === 'minutes'" x-text="'+' + (step * 10)">+10</button>
+      </div></template>
+      <span class="spacer"></span>
+      <button type="button" class="btn btn-ghost btn-sm" x-show="status === 'queued'" @click="set('active')">{% icon "play" %}{% translate "Start" %}</button>
+      <button type="button" class="btn btn-ghost btn-sm" x-show="status === 'active'" @click="$store.timer.start({ description: '{{ item.title|escapejs }}', label: '{{ item.title|escapejs }}' })" aria-label="{% translate 'Track time on it' %}" data-tip="{% translate 'Track time on it' %}">{% icon "timer" %}</button>
+      <button type="button" class="btn btn-ghost btn-sm" x-show="status === 'active'" @click="set('done')">{% icon "check" %}{% translate "Finished" %}</button>
+      <span class="badge" data-tone="good" x-show="status === 'done'" x-cloak>{% icon "check" %}{% if item.finished_on %}{{ item.finished_on|date:"j M Y" }}{% else %}{% translate "Finished" %}{% endif %}</span>
+    </div>
+    {% if item.takeaways %}<p class="wl-take">{{ item.takeaways|plain|truncatechars:180 }}</p>{% endif %}
+    {% if item.tags.all %}<p class="wl-tags">{% for tg in item.tags.all %}<span class="wt-tag">#{{ tg.name }}</span> {% endfor %}</p>{% endif %}
+  </article>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty">
+  <div class="empty-icon">{% icon "book" %}</div>
+  <h3 class="empty-title">{% if show == "done" %}{% translate "Nothing finished yet" %}{% elif show == "queued" %}{% translate "Your reading list is empty" %}{% else %}{% translate "What are you learning?" %}{% endif %}</h3>
+  <p class="empty-text">{% translate "Add the book on your desk, the course you bought, the talk someone shared. Track progress, then write down the takeaways so they stick." %}</p>
+</div>
+{% endif %}
+{% endblock %}

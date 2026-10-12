@@ -130,7 +130,7 @@ def _drop_messages(request):
 SKIP_NAMES = re.compile(
     r"(^admin:|^djdt:|import|template|login|logout|signup|password|account_settings|preferences|my_data|offline|backup|"
     r"^search$|manifest|service_worker|switch_business|default_dashboard|export|_ics$|^business:setup$|"
-    r"preview|quick|empty|copy|cancel|access_admin|budget_edit|two_factor|^user_|:api_)"
+    r"preview|quick|empty|copy|cancel|access_admin|budget_edit|two_factor|^user_|:api_|^work:share$)"
 )
 MORE_LIMIT = 400
 

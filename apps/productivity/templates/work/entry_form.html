@@ -1,11 +1,11 @@
 {% extends "work/base.html" %}
-{% load i18n %}
+{% load i18n work %}
 
 {% block title %}{% if entry %}{% translate "Edit time" %}{% else %}{% translate "Add time" %}{% endif %} | {% translate "Productivity" %}{% endblock %}
 
 {% block work %}
 <div class="page-narrow">
-  <header class="wp-head"><div><a href="{% url 'work:time' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Time" %}</a>
+  <header class="wp-head"><div><a href="{% url 'work:time' %}" class="back-link">{% icon "chevron-left" %}{% translate "Time" %}</a>
     <h1 class="wp-title">{% if entry %}{% translate "Edit time" %}{% else %}{% translate "Add time" %}{% endif %}</h1></div></header>
   <form method="post" class="card" novalidate>
     {% csrf_token %}
@@ -27,7 +27,7 @@
     </div>
     <div class="card-footer form-actions">
       <a href="{% url 'work:time' %}" class="btn btn-ghost">{% translate "Cancel" %}</a>
-      <button type="submit" class="btn btn-primary">{% include "partials/icon.html" with name="check" %}{% translate "Save" %}</button>
+      <button type="submit" class="btn btn-primary">{% icon "check" %}{% translate "Save" %}</button>
     </div>
   </form>
 </div>

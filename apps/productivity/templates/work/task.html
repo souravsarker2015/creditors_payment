@@ -6,20 +6,21 @@
 {% block work %}
 <header class="wp-head">
   <div class="min-w-0">
-    <a href="{% url 'work:tasks' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Tasks" %}</a>
+    <a href="{% url 'work:tasks' %}" class="back-link">{% icon "chevron-left" %}{% translate "Tasks" %}</a>
     <h1 class="wp-title">{% if task %}{{ task.title }}{% else %}{% translate "New task" %}{% endif %}</h1>
-    {% if task %}<p class="wp-sub">{{ task.get_status_display }}{% if task.project %} · <a href="{% url 'work:project' task.project_id %}" class="wt-proj"><span class="wt-dot" data-color="{{ task.project.color }}"></span>{{ task.project.name }}</a>{% endif %}{% if task.completed_at %} · {% blocktranslate with when=task.completed_at|date:"j M, H:i" %}done {{ when }}{% endblocktranslate %}{% endif %}</p>{% endif %}
+    {% if task %}<p class="wp-sub">{{ task.get_status_display }}{% if task.project %} · <a href="{% url 'work:project' task.project_id %}" class="wt-proj"><span class="wt-dot" data-color="{{ task.project.color }}"></span>{{ task.project.name }}</a>{% endif %}{% if task.completed_at %} · {% blocktranslate with when=task.completed_at|date:"j M, H:i" %}done {{ when }}{% endblocktranslate %}{% endif %}{% if task.goal %} · <a href="{% url 'work:goal' task.goal_id %}" class="wt-proj">{% icon "flag" %}{{ task.goal.title }}</a>{% endif %}</p>{% endif %}
   </div>
   {% if task %}
   <div class="wp-actions" x-data="workTasks">
     {% if not task.is_done %}
     <button type="button" class="btn" :class="$store.timer.isFor({{ task.pk }}) ? 'btn-danger' : 'btn-primary'" @click="$store.timer.toggle({ task: {{ task.pk }}, label: '{{ task.title|escapejs }}', project: '{{ task.project_id|default:'' }}' })">
-      <span x-show="!$store.timer.isFor({{ task.pk }})" class="contents">{% include "partials/icon.html" with name="play" %}{% translate "Start timer" %}</span>
-      <span x-show="$store.timer.isFor({{ task.pk }})" x-cloak class="contents">{% include "partials/icon.html" with name="stop" %}<span x-text="$store.timer.text"></span></span>
+      <span x-show="!$store.timer.isFor({{ task.pk }})" class="contents">{% icon "play" %}{% translate "Start timer" %}</span>
+      <span x-show="$store.timer.isFor({{ task.pk }})" x-cloak class="contents">{% icon "stop" %}<span x-text="$store.timer.text"></span></span>
     </button>
-    <a href="{% url 'work:focus' %}?task={{ task.pk }}" class="btn btn-secondary">{% include "partials/icon.html" with name="bolt" %}{% translate "Focus" %}</a>
+    <a href="{% url 'work:focus' %}?task={{ task.pk }}" class="btn btn-secondary">{% icon "bolt" %}{% translate "Focus" %}</a>
     {% endif %}
-    <button type="button" class="icon-btn" aria-label="{% translate 'Delete task' %}" data-tip="{% translate 'Delete task' %}" @click="if (confirm('{% translate "Delete this task? You can bring it back from Recently deleted." %}')) Work.api(Work.cfg.urls.taskBase + '{{ task.pk }}/delete/').then(r => { Work.undoable('{% translate "Task deleted" %}', r.undo, () => location.reload()); setTimeout(() => location.href = '{% url 'work:tasks' %}', 600); })">{% include "partials/icon.html" with name="trash" %}</button>
+    {% if task.link %}<a href="{{ task.link }}" class="btn btn-secondary" target="_blank" rel="noopener noreferrer" title="{{ task.link }}">{% icon "external" %}{{ task.link_label }}</a>{% endif %}
+    <button type="button" class="icon-btn" aria-label="{% translate 'Delete task' %}" data-tip="{% translate 'Delete task' %}" @click="if (confirm('{% translate "Delete this task? You can bring it back from Recently deleted." %}')) Work.api(Work.cfg.urls.taskBase + '{{ task.pk }}/delete/').then(r => { Work.undoable('{% translate "Task deleted" %}', r.undo, () => location.reload()); setTimeout(() => location.href = '{% url 'work:tasks' %}', 600); })">{% icon "trash" %}</button>
   </div>
   {% endif %}
 </header>
@@ -39,6 +40,8 @@
         {% with field=form.repeat %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.remind_at %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.tags_text %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.link %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.goal %}{% include "partials/field.html" %}{% endwith %}
       </div>
       <div class="field" x-data="{ preview: false, text: $refs.notes ? $refs.notes.value : '' }">
         <div class="field-head"><label class="label" for="{{ form.notes.id_for_label }}">{{ form.notes.label }}</label>
@@ -50,7 +53,7 @@
     </div>
     <div class="card-footer form-actions">
       <a href="{% url 'work:tasks' %}" class="btn btn-ghost">{% translate "Cancel" %}</a>
-      <button type="submit" class="btn btn-primary">{% include "partials/icon.html" with name="check" %}{% translate "Save" %}</button>
+      <button type="submit" class="btn btn-primary">{% icon "check" %}{% translate "Save" %}</button>
     </div>
   </form>
 
@@ -65,7 +68,7 @@
     </section>
 
     <section class="card">
-      <header class="card-header"><h2 class="card-title">{% translate "Time" %}</h2><a href="{% url 'work:entry_new' %}?task={{ task.pk }}" class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="plus" %}{% translate "Add" %}</a></header>
+      <header class="card-header"><h2 class="card-title">{% translate "Time" %}</h2><a href="{% url 'work:entry_new' %}?task={{ task.pk }}" class="btn btn-ghost btn-sm">{% icon "plus" %}{% translate "Add" %}</a></header>
       <div class="card-body !pt-0">
         <p class="wtd-spent"><strong class="num">{{ spent|hm }}</strong>{% if task.estimate_minutes %} <span>{% blocktranslate with est=task.estimate_minutes|minutes_hm %}of ~{{ est }} planned{% endblocktranslate %}</span>{% endif %}</p>
         {% if estimate_pct is not None %}<div class="wtd-meter{% if estimate_pct > 100 %} is-over{% endif %}"><span style="width: {% if estimate_pct > 100 %}100{% else %}{{ estimate_pct }}{% endif %}%"></span></div>{% endif %}

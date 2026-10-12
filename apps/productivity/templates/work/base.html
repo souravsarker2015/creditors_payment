@@ -2,7 +2,8 @@
 {% load i18n %}
 {% comment %}
 Every Productivity page: the timer bar, quick capture (c / n / s), the
-keyboard-shortcut sheet (?) and the settings the page script needs.
+keyboard-shortcut sheet (?), the command palette (Ctrl+K), the shared task
+menu and the settings the page script needs.
 {% endcomment %}
 {% block extra_css %}<link rel="stylesheet" href="{% asset 'css/work.css' %}">{% endblock %}
 
@@ -12,6 +13,8 @@ keyboard-shortcut sheet (?) and the settings the page script needs.
   {% block work %}{% endblock %}
   {% include "work/partials/capture.html" %}
   {% include "work/partials/shortcuts.html" %}
+  {% include "work/partials/palette.html" %}
+  {% include "work/partials/task_menu.html" %}
 </div>
 {{ work_config|json_script:"work-config" }}
 {% endblock %}

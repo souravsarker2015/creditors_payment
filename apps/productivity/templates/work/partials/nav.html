@@ -1,28 +1,35 @@
-{% load i18n %}{% comment %}Productivity sidebar menu (and the app view's "More" sheet).{% endcomment %}
+{% load i18n work %}{% comment %}Productivity sidebar menu (and the app view's "More" sheet).{% endcomment %}
 {% with p=request.path %}
 <div class="space-y-0.5">
   <p class="nav-section-label">{% translate "Plan & do" %}</p>
-  <a href="{% url 'work:today' %}" class="nav-link {% if p == '/work/' %}is-active{% endif %}" {% if p == '/work/' %}aria-current="page"{% endif %}>{% include "partials/icon.html" with name="sun" %}{% translate "Today" %}</a>
-  <a href="{% url 'work:tasks' %}" class="nav-link {% if '/work/tasks/' in p %}is-active{% endif %}" {% if p == '/work/tasks/' %}aria-current="page"{% endif %}>{% include "partials/icon.html" with name="check" %}{% translate "Tasks" %}</a>
-  <a href="{% url 'work:projects' %}" class="nav-link {% if '/work/projects/' in p %}is-active{% endif %}">{% include "partials/icon.html" with name="folder" %}{% translate "Projects" %}</a>
-  <a href="{% url 'work:focus' %}" class="nav-link {% if '/work/focus/' in p %}is-active{% endif %}">{% include "partials/icon.html" with name="bolt" %}{% translate "Focus timer" %}</a>
-  <a href="{% url 'work:habits' %}" class="nav-link {% if '/work/habits/' in p %}is-active{% endif %}">{% include "partials/icon.html" with name="flame" %}{% translate "Habits" %}</a>
+  <a href="{% url 'work:today' %}" class="nav-link {% if p == '/work/' %}is-active{% endif %}" {% if p == '/work/' %}aria-current="page"{% endif %}>{% icon "sun" %}{% translate "Today" %}</a>
+  <a href="{% url 'work:tasks' %}" class="nav-link {% if '/work/tasks/' in p %}is-active{% endif %}" {% if p == '/work/tasks/' %}aria-current="page"{% endif %}>{% icon "check" %}{% translate "Tasks" %}</a>
+  <a href="{% url 'work:calendar' %}" class="nav-link {% if '/work/calendar/' in p %}is-active{% endif %}">{% icon "calendar" %}{% translate "Calendar" %}</a>
+  <a href="{% url 'work:projects' %}" class="nav-link {% if '/work/projects/' in p %}is-active{% endif %}">{% icon "folder" %}{% translate "Projects" %}</a>
+  <a href="{% url 'work:focus' %}" class="nav-link {% if '/work/focus/' in p %}is-active{% endif %}">{% icon "bolt" %}{% translate "Focus timer" %}</a>
+  <a href="{% url 'work:habits' %}" class="nav-link {% if '/work/habits/' in p %}is-active{% endif %}">{% icon "flame" %}{% translate "Habits" %}</a>
+</div>
+<div class="space-y-0.5">
+  <p class="nav-section-label">{% translate "Grow" %}</p>
+  <a href="{% url 'work:goals' %}" class="nav-link {% if '/work/goals/' in p %}is-active{% endif %}">{% icon "flag" %}{% translate "Goals" %}</a>
+  <a href="{% url 'work:learning' %}" class="nav-link {% if '/work/learning/' in p %}is-active{% endif %}">{% icon "book" %}{% translate "Learning" %}</a>
 </div>
 <div class="space-y-0.5">
   <p class="nav-section-label">{% translate "Track & review" %}</p>
-  <a href="{% url 'work:time' %}" class="nav-link {% if '/work/time/' in p %}is-active{% endif %}">{% include "partials/icon.html" with name="timer" %}{% translate "Time" %}</a>
-  <a href="{% url 'work:journal' %}" class="nav-link {% if '/work/journal/' in p %}is-active{% endif %}">{% include "partials/icon.html" with name="journal" %}{% translate "Journal & standup" %}</a>
-  <a href="{% url 'work:reports' %}" class="nav-link {% if '/work/reports/' in p %}is-active{% endif %}">{% include "partials/icon.html" with name="chart" %}{% translate "Reports" %}</a>
+  <a href="{% url 'work:time' %}" class="nav-link {% if '/work/time/' in p %}is-active{% endif %}">{% icon "timer" %}{% translate "Time" %}</a>
+  <a href="{% url 'work:journal' %}" class="nav-link {% if '/work/journal/' in p %}is-active{% endif %}">{% icon "journal" %}{% translate "Journal & standup" %}</a>
+  <a href="{% url 'work:review' %}" class="nav-link {% if '/work/review/' in p %}is-active{% endif %}">{% icon "trophy" %}{% translate "Review & brag doc" %}</a>
+  <a href="{% url 'work:reports' %}" class="nav-link {% if '/work/reports/' in p %}is-active{% endif %}">{% icon "chart" %}{% translate "Reports" %}</a>
 </div>
 <div class="space-y-0.5">
   <p class="nav-section-label">{% translate "Know-how" %}</p>
-  <a href="{% url 'work:notes' %}" class="nav-link {% if '/work/notes/' in p %}is-active{% endif %}">{% include "partials/icon.html" with name="note" %}{% translate "Notes" %}</a>
-  <a href="{% url 'work:snippets' %}" class="nav-link {% if '/work/snippets/' in p %}is-active{% endif %}">{% include "partials/icon.html" with name="code" %}{% translate "Snippets" %}</a>
+  <a href="{% url 'work:notes' %}" class="nav-link {% if '/work/notes/' in p %}is-active{% endif %}">{% icon "note" %}{% translate "Notes" %}</a>
+  <a href="{% url 'work:snippets' %}" class="nav-link {% if '/work/snippets/' in p %}is-active{% endif %}">{% icon "code" %}{% translate "Snippets" %}</a>
 </div>
 <div class="space-y-0.5">
   <p class="nav-section-label">{% translate "Settings" %}</p>
   <a href="{% url 'work:settings' %}" class="nav-link {% if '/work/settings/' in p %}is-active{% endif %}">{% include "business/partials/icon.html" with name="cog" %}{% translate "Timer, focus & sounds" %}</a>
-  <a href="{% url 'work:help' %}" class="nav-link {% if '/work/shortcuts/' in p %}is-active{% endif %}">{% include "partials/icon.html" with name="keyboard" %}{% translate "Shortcuts & tips" %}</a>
-  <a href="{% url 'offline_settings' %}" class="nav-link">{% include "partials/icon.html" with name="cloud" %}{% translate "Use without internet" %}</a>
+  <a href="{% url 'work:help' %}" class="nav-link {% if '/work/shortcuts/' in p %}is-active{% endif %}">{% icon "keyboard" %}{% translate "Shortcuts & tips" %}</a>
+  <a href="{% url 'offline_settings' %}" class="nav-link">{% icon "cloud" %}{% translate "Use without internet" %}</a>
 </div>
 {% endwith %}

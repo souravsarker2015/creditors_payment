@@ -11,8 +11,8 @@
   </div>
   <div class="wp-actions">
     <nav class="wpg">
-      <a href="?date={{ prev|date:'Y-m-d' }}" class="icon-btn" aria-label="{% translate 'Day before' %}">{% include "partials/icon.html" with name="chevron-left" %}</a>
-      {% if next %}<a href="{% url 'work:journal' %}" class="btn btn-ghost btn-sm">{% translate "Today" %}</a><a href="?date={{ next|date:'Y-m-d' }}" class="icon-btn" aria-label="{% translate 'Day after' %}">{% include "partials/icon.html" with name="chevron-right" %}</a>{% endif %}
+      <a href="?date={{ prev|date:'Y-m-d' }}" class="icon-btn" aria-label="{% translate 'Day before' %}">{% icon "chevron-left" %}</a>
+      {% if next %}<a href="{% url 'work:journal' %}" class="btn btn-ghost btn-sm">{% translate "Today" %}</a><a href="?date={{ next|date:'Y-m-d' }}" class="icon-btn" aria-label="{% translate 'Day after' %}">{% icon "chevron-right" %}</a>{% endif %}
     </nav>
   </div>
 </header>
@@ -40,7 +40,7 @@
   </section>
 
   <div class="wd-side">
-    <section class="card" x-data="{ md: true }">
+    <section class="card" id="standup" x-data="{ md: true }">
       <header class="card-header"><div><h2 class="card-title">{% translate "Standup" %}</h2><p class="card-subtitle">{% translate "Made from your tasks, time and blockers — ready to paste." %}</p></div></header>
       <div class="card-body !pt-0">
         <div class="wj-standup">
@@ -53,7 +53,7 @@
         </div>
         {{ standup_md|json_script:"standup-md" }}{{ standup_plain|json_script:"standup-plain" }}
         <div class="form-actions !justify-start mt-3">
-          <button type="button" class="btn btn-primary btn-sm" @click="navigator.clipboard.writeText(JSON.parse(document.getElementById('standup-md').textContent)).then(() => Work.toast('{% translate "Copied for Slack / Teams (Markdown)" %}'))">{% include "partials/icon.html" with name="copy" %}{% translate "Copy Markdown" %}</button>
+          <button type="button" class="btn btn-primary btn-sm" @click="navigator.clipboard.writeText(JSON.parse(document.getElementById('standup-md').textContent)).then(() => Work.toast('{% translate "Copied for Slack / Teams (Markdown)" %}'))">{% icon "copy" %}{% translate "Copy Markdown" %}</button>
           <button type="button" class="btn btn-secondary btn-sm" @click="navigator.clipboard.writeText(JSON.parse(document.getElementById('standup-plain').textContent)).then(() => Work.toast('{% translate "Copied" %}'))">{% translate "Copy plain text" %}</button>
         </div>
       </div>

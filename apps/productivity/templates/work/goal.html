@@ -1,0 +1,106 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{{ goal.title }} | {% translate "Goals" %}{% endblock %}
+
+{% block work %}
+<header class="wp-head">
+  <div class="min-w-0">
+    <a href="{% url 'work:goals' %}" class="back-link">{% icon "chevron-left" %}{% translate "Goals" %}</a>
+    <h1 class="wp-title"><span class="wpj-swatch is-lg" data-color="{{ goal.color }}"></span>{{ goal.title }}</h1>
+    <p class="wp-sub">{{ goal.get_area_display }}{% if goal.project %} · <a href="{% url 'work:project' goal.project_id %}" class="wt-proj"><span class="wt-dot" data-color="{{ goal.project.color }}"></span>{{ goal.project.name }}</a>{% endif %}
+      {% if goal.status != "active" %} · <span class="badge" data-tone="{% if goal.status == 'done' %}good{% else %}muted{% endif %}">{{ goal.get_status_display }}</span>{% endif %}</p>
+  </div>
+  <div class="wp-actions">
+    <form method="post">{% csrf_token %}
+      {% if goal.status == "active" %}<button type="submit" name="action" value="done" class="btn btn-primary">{% icon "trophy" %}{% translate "Mark reached" %}</button>
+      {% else %}<button type="submit" name="action" value="active" class="btn btn-secondary">{% icon "restore" %}{% translate "Make active again" %}</button>{% endif %}
+    </form>
+    <a href="{% url 'work:goal_edit' goal.pk %}" class="btn btn-secondary">{% icon "edit" %}{% translate "Edit" %}</a>
+    <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
+      <button type="button" class="icon-btn" @click="open = !open" :aria-expanded="open" aria-haspopup="true" aria-label="{% translate 'More actions' %}">{% icon "dots" %}</button>
+      <form method="post" class="menu" x-show="open" x-cloak role="menu">{% csrf_token %}
+        {% if goal.status == "active" %}<button type="submit" name="action" value="dropped" class="menu-item" role="menuitem">{% icon "archive" %}{% translate "Drop this goal" %}</button>{% endif %}
+        <button type="submit" name="action" value="delete" class="menu-item is-danger" role="menuitem" onclick="return confirm('{% translate "Delete this goal? Its tasks stay. You can bring it back from Recently deleted." %}')">{% icon "trash" %}{% translate "Delete" %}</button>
+      </form>
+    </div>
+  </div>
+</header>
+
+<div class="wd-stats">
+  <div class="wd-ring-card" data-color="{{ goal.color }}" x-data="{ pct: {{ goal.pct }} }" @goal-progress.window="pct = $event.detail">
+    <div class="wd-ring wg-big" :style="'--p:' + pct" style="--p: {{ goal.pct }}">
+      <svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="52" class="wd-ring-bg"/><circle cx="60" cy="60" r="52" class="wg-ring-fg" pathLength="100"/></svg>
+      <div class="wd-ring-text"><strong class="num" x-text="pct + '%'">{{ goal.pct }}%</strong><span>{% translate "there" %}</span></div>
+    </div>
+    <div class="min-w-0">
+      {% if goal.target_date %}<p class="wd-stat-label">{% blocktranslate with d=goal.target_date|date:"j F Y" %}By {{ d }}{% endblocktranslate %}</p>
+      <p class="wd-stat-sub">{% if goal.status == "active" %}{% if days_left < 0 %}<span class="wg-when" data-tone="late">{% blocktranslate count counter=days_left|abs_int %}{{ counter }} day late{% plural %}{{ counter }} days late{% endblocktranslate %}</span>{% else %}{% blocktranslate count counter=days_left %}{{ counter }} day left{% plural %}{{ counter }} days left{% endblocktranslate %}{% endif %}{% elif goal.completed_at %}{% blocktranslate with d=goal.completed_at|date:"j M Y" %}Reached {{ d }}{% endblocktranslate %}{% endif %}</p>
+      {% else %}<p class="wd-stat-label">{% translate "No deadline" %}</p><p class="wd-stat-sub">{% translate "A date makes it real — add one." %}</p>{% endif %}
+      <p class="wd-stat-sub">{% blocktranslate with t=spent|hm %}{{ t }} worked on its tasks{% endblocktranslate %}</p>
+    </div>
+  </div>
+  {% if not goal.has_number %}
+  <div class="wd-week wg-measure">
+    <div class="wd-week-head"><p class="wd-stat-label">{% translate "Next milestone" %}</p>{% if goal.steps_count.1 %}<p class="wd-week-total num">{{ goal.steps_count.0 }} / {{ goal.steps_count.1 }}</p>{% endif %}</div>
+    {% with nxt=steps|first_open %}{% if nxt %}<p class="wg-next">{{ nxt.text }}</p>{% elif goal.steps_count.1 %}<p class="wg-next">{% translate "All milestones passed — mark the goal as reached?" %}</p>{% else %}<p class="wd-stat-sub">{% translate "Break the goal into 3–6 milestones below. Progress follows them." %}</p>{% endif %}{% endwith %}
+    {% if goal.tasks_count.1 %}<p class="wd-stat-sub">{% blocktranslate with d=goal.tasks_count.0 n=goal.tasks_count.1 %}{{ d }} of {{ n }} tasks done{% endblocktranslate %}</p>{% endif %}
+  </div>
+  {% endif %}
+  {% if goal.has_number %}
+  <div class="wd-week wg-measure" x-data="{ value: '{{ goal.current_value|default_if_none:goal.start_value|floatformat:'-2' }}', busy: false,
+        send(data) { this.busy = true; Work.api('{% url 'work:api_goal_value' goal.pk %}', data).then(r => { this.busy = false; if (r.ok && !r.queued) { this.value = r.value; $dispatch('goal-progress', r.pct); if (r.reached) { Work.play(Work.cfg.sound || 'chime', true); Work.toast('{% translate "Target reached! Mark the goal as reached when you’re ready." %}'); } } else if (!r.ok) Work.toast(r.error, 'warn'); }); } }">
+    <div class="wd-week-head"><p class="wd-stat-label">{{ goal.unit|default:_("Progress") }}</p><p class="wd-week-total num">{% blocktranslate with t=goal.target_value|floatformat:"-2" %}target {{ t }}{% endblocktranslate %}</p></div>
+    <div class="wg-step">
+      <button type="button" class="btn btn-secondary" @click="send({ add: '-1' })" :disabled="busy" aria-label="{% translate 'One less' %}">−1</button>
+      <input type="number" step="any" inputmode="decimal" class="form-input wg-value num" x-model="value" @change="send({ value: value })" aria-label="{% translate 'Now at' %}">
+      <button type="button" class="btn btn-primary" @click="send({ add: '1' })" :disabled="busy" aria-label="{% translate 'One more' %}">+1</button>
+    </div>
+    <p class="wd-stat-sub">{% blocktranslate with s=goal.start_value|floatformat:"-2" %}Started at {{ s }}{% endblocktranslate %}</p>
+  </div>
+  {% endif %}
+</div>
+
+<div class="wd-grid">
+  <section class="card wd-tasks{% if open_tasks %} has-items{% endif %}" x-data="workTasks" data-empty-wrap>
+    <header class="card-header"><div><h2 class="card-title">{% translate "Tasks for this goal" %}</h2><p class="card-subtitle">{% translate "The next actions. Pick one for today." %}</p></div>
+      <a href="{% url 'work:tasks' %}?goal={{ goal.pk }}" class="btn btn-ghost btn-sm">{% translate "In the list" %}{% icon "arrow-right" %}</a></header>
+    <form class="wd-quick" @submit.prevent="const box = $refs.q; if (!box.value.trim()) return; Work.api(Work.cfg.urls.taskAdd, { text: box.value, goal: '{{ goal.pk }}', project: '{{ goal.project_id|default:'' }}' }).then(r => { if (r.ok && r.html) { $refs.list.insertAdjacentHTML('afterbegin', r.html); $root.classList.add('has-items'); } else if (!r.ok) Work.toast(r.error, 'warn'); }); box.value = ''">
+      <span class="wd-quick-icon" aria-hidden="true">{% icon "plus" %}</span>
+      <input x-ref="q" class="wd-quick-input" placeholder="{% translate 'Add a task for this goal… (#tag !high friday)' %}" aria-label="{% translate 'New task' %}" autocomplete="off" enterkeyhint="done">
+    </form>
+    <ul class="wt-list" x-ref="list">{% for t in open_tasks %}{% include "work/partials/task_row.html" %}{% endfor %}</ul>
+    <div class="wd-empty"><span class="wd-empty-icon">{% icon "flag" %}</span><p>{% translate "What's the next small step? Add it above." %}</p></div>
+    {% if done_tasks %}<details class="wd-done"><summary>{% blocktranslate count counter=done_tasks|length %}{{ counter }} done{% plural %}{{ counter }} done{% endblocktranslate %}</summary><ul class="wt-list">{% for t in done_tasks %}{% include "work/partials/task_row.html" %}{% endfor %}</ul></details>{% endif %}
+  </section>
+  <div class="wd-side">
+    <section class="card" x-data="{ text: '', add() { const text = this.text.trim(); if (!text) return; this.text = ''; Work.api('{% url 'work:api_goal_step' goal.pk %}', { text }).then(r => { if (r.ok && r.id) { const li = $refs.tpl.content.firstElementChild.cloneNode(true); li.dataset.step = r.id; li.querySelector('span').textContent = r.text; $refs.list.appendChild(li); $dispatch('goal-progress', r.pct); } }); },
+          toggle(li, on) { li.classList.toggle('is-done', on); if (on) Work.play(Work.cfg.sound ? 'chime' : ''); Work.api('{% url 'work:api_goal_step' goal.pk %}', { step: li.dataset.step, done: on ? '1' : '0' }).then(r => { if (r.pct != null) $dispatch('goal-progress', r.pct); }); },
+          drop(li) { Work.api('{% url 'work:api_goal_step' goal.pk %}', { step: li.dataset.step, action: 'delete' }).then(r => { if (r.pct != null) $dispatch('goal-progress', r.pct); }); li.remove(); } }">
+      <header class="card-header"><div><h2 class="card-title">{% translate "Milestones" %}</h2><p class="card-subtitle">{% translate "The big steps on the way. Tick them as you pass them." %}</p></div></header>
+      <template x-ref="tpl"><li class="work-check" data-step=""><label><input type="checkbox" @change="toggle($el.closest('li'), $event.target.checked)"><span></span></label><button type="button" class="icon-btn" aria-label="{% translate 'Remove' %}" @click="drop($el.closest('li'))">×</button></li></template>
+      <ul class="work-checks" x-ref="list">
+        {% for st in steps %}<li class="work-check{% if st.done %} is-done{% endif %}" data-step="{{ st.pk }}"><label><input type="checkbox"{% if st.done %} checked{% endif %} @change="toggle($el.closest('li'), $event.target.checked)"><span>{{ st.text }}</span></label><button type="button" class="icon-btn" aria-label="{% translate 'Remove' %}" @click="drop($el.closest('li'))">×</button></li>{% endfor %}
+      </ul>
+      <form class="work-check-add" @submit.prevent="add()"><input x-model="text" class="form-input input-compact" placeholder="{% translate 'Add a milestone…' %}" aria-label="{% translate 'Add a milestone' %}"><button type="submit" class="btn btn-secondary btn-sm">{% translate "Add" %}</button></form>
+    </section>
+    {% if goal.why %}
+    <section class="card">
+      <header class="card-header"><h2 class="card-title">{% translate "Why it matters" %}</h2></header>
+      <div class="wn-md wg-why" data-render-markdown="{{ goal.why }}"></div>
+    </section>
+    {% endif %}
+    <section class="card">
+      <header class="card-header"><h2 class="card-title">{% translate "Learning for this goal" %}</h2><a href="{% url 'work:learning_new' %}?goal={{ goal.pk }}" class="btn btn-ghost btn-sm">{% icon "plus" %}{% translate "Add" %}</a></header>
+      {% if learning %}<ul class="wg-mini">{% for item in learning %}<li><a href="{% url 'work:learning_edit' item.pk %}"><span class="wg-mini-top"><span class="truncate">{{ item.title }}</span><b class="num">{{ item.percent }}%</b></span><span class="wg-bar is-learn"><i style="width: {{ item.percent }}%"></i></span></a></li>{% endfor %}</ul>
+      {% else %}<p class="wd-muted">{% translate "Books, courses or talks that get you there." %}</p>{% endif %}
+    </section>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block work_libs %}
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+{% endblock %}

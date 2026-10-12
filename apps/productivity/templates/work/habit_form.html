@@ -1,11 +1,11 @@
 {% extends "work/base.html" %}
-{% load i18n %}
+{% load i18n work %}
 
 {% block title %}{% if habit %}{{ habit.name }}{% else %}{% translate "New habit" %}{% endif %} | {% translate "Productivity" %}{% endblock %}
 
 {% block work %}
 <div class="page-narrow">
-  <header class="wp-head"><div><a href="{% url 'work:habits' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Habits" %}</a>
+  <header class="wp-head"><div><a href="{% url 'work:habits' %}" class="back-link">{% icon "chevron-left" %}{% translate "Habits" %}</a>
     <h1 class="wp-title">{% if habit %}{% translate "Edit habit" %}{% else %}{% translate "New habit" %}{% endif %}</h1></div></header>
   <form method="post" class="card" novalidate>
     {% csrf_token %}
@@ -21,12 +21,12 @@
     </div>
     <div class="card-footer form-actions">
       {% if habit %}
-      <button type="submit" name="action" value="archive" class="btn btn-ghost" formnovalidate>{% include "partials/icon.html" with name="archive" %}{% if habit.is_archived %}{% translate "Bring back" %}{% else %}{% translate "Archive" %}{% endif %}</button>
-      <button type="submit" name="action" value="delete" class="btn btn-ghost" style="color: var(--status-critical);" formnovalidate onclick="return confirm('{% translate "Delete this habit and its history? You can undo this from Recently deleted." %}')">{% include "partials/icon.html" with name="trash" %}{% translate "Delete" %}</button>
+      <button type="submit" name="action" value="archive" class="btn btn-ghost" formnovalidate>{% icon "archive" %}{% if habit.is_archived %}{% translate "Bring back" %}{% else %}{% translate "Archive" %}{% endif %}</button>
+      <button type="submit" name="action" value="delete" class="btn btn-ghost" style="color: var(--status-critical);" formnovalidate onclick="return confirm('{% translate "Delete this habit and its history? You can undo this from Recently deleted." %}')">{% icon "trash" %}{% translate "Delete" %}</button>
       <span class="spacer"></span>
       {% endif %}
       <a href="{% url 'work:habits' %}" class="btn btn-ghost">{% translate "Cancel" %}</a>
-      <button type="submit" class="btn btn-primary">{% include "partials/icon.html" with name="check" %}{% translate "Save" %}</button>
+      <button type="submit" class="btn btn-primary">{% icon "check" %}{% translate "Save" %}</button>
     </div>
   </form>
 </div>

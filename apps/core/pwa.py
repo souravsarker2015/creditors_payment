@@ -48,6 +48,8 @@ def manifest_view(request):
             {"name": _("Budgets"), "url": reverse("budget_list"), "icons": icons[:1]},
             {"name": _("Savings Goals"), "url": reverse("goal_list"), "icons": icons[:1]},
         ],
+        # Share a link or text from another app → keep it in Productivity (a task, a note, something to read).
+        "share_target": {"action": reverse("work:share"), "method": "GET", "params": {"title": "title", "text": "text", "url": "url"}},
     }
     return JsonResponse(data, content_type="application/manifest+json", json_dumps_params={"ensure_ascii": False})
 

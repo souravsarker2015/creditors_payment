@@ -72,3 +72,56 @@ def plain(text):
     text = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", text)            # [link](url) → link
     text = re.sub(r"`+|~~|\*+|(?<!\w)_+|_+(?!\w)", "", text)        # marks, but not the _ in work_mem
     return " ".join(text.split())
+
+
+_ICONS = None
+
+
+def _icon_table():
+    """name → <svg>, read once from templates/partials/icon.html (the app's
+    icon set). A dictionary lookup instead of the template's long if/elif
+    chain keeps long task lists quick to draw."""
+    global _ICONS
+    if _ICONS is None:
+        import re
+
+        from django.template.loader import get_template
+
+        source = open(get_template("partials/icon.html").origin.name, encoding="utf-8").read()
+        _ICONS = {m.group(1): m.group(2).strip() for m in re.finditer(r'name == "([\w-]+)" %\}(.*?)(?=\{% (?:elif|endif))', source, re.S)}
+    return _ICONS
+
+
+@register.simple_tag
+def icon(name):
+    from django.utils.safestring import mark_safe
+
+    return mark_safe(_icon_table().get(name, ""))
+
+
+@register.filter
+def split_words(text):
+    return (text or "").split()
+
+
+@register.filter
+def goal_days_left(goal):
+    return goal.days_left()
+
+
+@register.filter
+def abs_int(value):
+    try:
+        return abs(int(value))
+    except (TypeError, ValueError):
+        return 0
+
+
+@register.filter
+def get_item(mapping, key):
+    return (mapping or {}).get(key, "")
+
+
+@register.filter
+def first_open(steps):
+    return next((st for st in steps if not st.done), None)
