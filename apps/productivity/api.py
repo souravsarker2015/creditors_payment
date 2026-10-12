@@ -170,7 +170,7 @@ def task_move(request, pk):
     return ok(status=task.status, order=task.order)
 
 
-TASK_FIELDS = {"title", "priority", "due_date", "my_day", "project", "status", "notes", "estimate_minutes", "link", "goal"}
+TASK_FIELDS = {"title", "priority", "due_date", "my_day", "project", "status", "notes", "estimate_minutes", "link", "goal", "waiting_for"}
 
 
 @work_required
@@ -187,8 +187,8 @@ def task_update(request, pk):
             task.priority = int(value) if value.isdigit() and int(value) in Priority.values else Priority.NONE
         elif name == "due_date":
             task.due_date = parse_date(value) if value else None
-        elif name == "my_day":
-            task.my_day = timezone.localdate() if value in ("1", "true", "on") else None
+        elif name == "my_day":     # "1" = today, a date = that day (moved to tomorrow…), else off
+            task.my_day = timezone.localdate() if value in ("1", "true", "on") else parse_date(value)
         elif name == "project":
             task.project = Project.objects.filter(owner=request.user, pk=value or 0).first()
         elif name == "status" and value in Status.values:
@@ -205,8 +205,25 @@ def task_update(request, pk):
             task.link = value[:500] if value.startswith(("http://", "https://")) or not value else task.link
         elif name == "goal":
             task.goal = Goal.objects.filter(owner=request.user, pk=value or 0).first()
+        elif name == "waiting_for":
+            task.waiting_for = value[:120]
     task.save()
     return ok(html=task_row(request, task))
+
+
+@work_required
+@require_POST
+def task_bulk(request):
+    """The same change to many tasks (the task list's select mode)."""
+    ids = [int(x) for x in request.POST.get("ids", "").split(",") if x.strip().isdigit()][:500]
+    action = request.POST.get("action")
+    if not ids or action not in services.BULK_ACTIONS:
+        return bad(_("Pick some tasks and what to do."))
+    value = request.POST.get("value", "")
+    if action == "due" and value and parse_date(value) is None:
+        return bad("value")
+    n = services.bulk(request.user, ids, action, value)
+    return ok(count=n, trash=reverse("trash_list") if action == "delete" else "")
 
 
 def _trash(request, obj, label, back):

@@ -4,12 +4,13 @@ list draws fast: clicks are handled once for the whole page in work.js
 ([data-act]), and the ⋯ menu is one shared menu (partials/task_menu.html).
 Needs: t, today.
 {% endcomment %}
-<li class="wt-task{% if t.is_done %} is-done{% endif %}" data-task="{{ t.pk }}" data-title="{{ t.title }}" data-project="{{ t.project_id|default:'' }}" data-status="{{ t.status }}"{% if t.my_day == today %} data-myday{% endif %}{% if t.link %} data-link="{{ t.link }}"{% endif %}{% if hide_done %} data-hide-done{% endif %}>
+<li class="wt-task{% if t.is_done %} is-done{% endif %}" data-task="{{ t.pk }}" data-title="{{ t.title }}" data-project="{{ t.project_id|default:'' }}" data-status="{{ t.status }}"{% if t.my_day == today %} data-myday{% endif %}{% if t.link %} data-link="{{ t.link }}"{% endif %}{% if t.waiting_for %} data-waiting="{{ t.waiting_for }}"{% endif %}{% if hide_done %} data-hide-done{% endif %}>
   <button type="button" class="wt-check" data-act="done" aria-label="{% translate 'Done' %}" data-p="{{ t.priority }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
   <div class="wt-task-main">
     <a href="{% url 'work:task' t.pk %}" class="wt-task-title">{{ t.title }}</a>
     <div class="wt-task-meta">
       {% if t.priority >= 3 %}<span class="wt-prio" data-p="{{ t.priority }}">{{ t.get_priority_display }}</span>{% endif %}
+      {% if t.waiting_for %}<span class="wt-wait" title="{% translate 'Waiting on' %}">{% icon "clock" %}{{ t.waiting_for }}</span>{% endif %}
       {% if t.project %}<span class="wt-proj"><span class="wt-dot" data-color="{{ t.project.color }}"></span>{{ t.project.name }}</span>{% endif %}
       {% if t.due_date %}<span class="wt-due" data-tone="{{ t|due_tone }}">{% icon "calendar" %}{{ t.due_date|due_label }}</span>{% endif %}
       {% if t.link %}<a href="{{ t.link }}" class="wt-link" target="_blank" rel="noopener noreferrer" title="{{ t.link }}">{% icon "link" %}{{ t.link_label }}</a>{% endif %}

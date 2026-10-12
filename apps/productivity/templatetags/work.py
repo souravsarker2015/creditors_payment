@@ -125,3 +125,14 @@ def get_item(mapping, key):
 @register.filter
 def first_open(steps):
     return next((st for st in steps if not st.done), None)
+
+
+@register.filter
+def escapejs_json(value):
+    """A string as a JavaScript literal, safe inside an HTML attribute."""
+    import json
+
+    from django.utils.html import escape
+    from django.utils.safestring import mark_safe
+
+    return mark_safe(escape(json.dumps(str(value or ""))))

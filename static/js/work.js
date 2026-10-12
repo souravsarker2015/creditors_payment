@@ -426,6 +426,37 @@
       };
     });
 
+    /* ── "You were away": time the timer ran while nobody was there ────── */
+    Alpine.data("workIdle", function () {
+      return {
+        open: false, since: 0, until: 0, label: "", run: null,
+        get awayText() { return hm((this.until - this.since) / 1000); },
+        get sinceText() { var x = new Date(this.since); return pad(x.getHours()) + ":" + pad(x.getMinutes()); },
+        init: function () {
+          var self = this;
+          d.addEventListener("work:idle", function (e) {
+            var tm = Alpine.store("timer"); if (!tm.running || self.open) return;
+            self.since = e.detail.since; self.until = e.detail.until || Date.now();
+            self.run = JSON.parse(JSON.stringify(tm.running)); self.label = tm.running.label; self.open = true;
+            play(); notify(t("stillWorking", "Still working on this?"), self.label, location.pathname, "idle");
+          });
+        },
+        stopAt: function () {
+          var tm = Alpine.store("timer"), at = new Date(this.since).toISOString();
+          this.open = false; tm.running = null; tm.share(); tm.title();
+          api(CFG.urls.timerStop, { at: at }).then(function () { tm.sync(); });
+        },
+        trim: function () {
+          var tm = Alpine.store("timer"), r = this.run, at = new Date(this.since).toISOString();
+          this.open = false;
+          api(CFG.urls.timerStop, { at: at }).then(function () {
+            return api(CFG.urls.timerStart, { task: r.task || "", project: r.project || "", description: r.description || "", at: new Date().toISOString() });
+          }).then(function () { tm.sync(); });
+        },
+        keep: function () { this.open = false; },
+      };
+    });
+
     /* ── Learning: +progress, start, finish ───────────────────────────── */
     Alpine.data("workLearn", function (id, progress, total, unit, status) {
       var UNITS = (CFG.text && CFG.text.units) || {};
@@ -486,7 +517,7 @@
     Alpine.data("workNote", function (initial) {
       return {
         id: initial.id || null, title: initial.title || "", body: initial.body || "", tags: initial.tags || "", project: initial.project || "",
-        state: "saved", savedAt: initial.saved || "", preview: false, timer: null,
+        state: "saved", savedAt: initial.saved || "", preview: false, timer: null, inflight: null, again: false,
         get draftKey() { return "work-note-draft:" + ME + ":" + (this.id || "new"); },
         init: function () {
           var draft = recall(this.draftKey, null), self = this;
@@ -502,9 +533,13 @@
         saveNow: function () {
           var self = this;
           if (!this.id && !this.title.trim() && !this.body.trim()) { this.state = "saved"; return; }
+          // One save at a time: a second one before the first answers would make a new note twice.
+          if (this.inflight) { this.again = true; return this.inflight; }
           this.state = "saving";
           var key = this.draftKey;
-          return api(CFG.urls.noteSave, { id: this.id || "", title: this.title, body: this.body, tags: this.tags, project: this.project }).then(function (res) {
+          this.inflight = api(CFG.urls.noteSave, { id: this.id || "", title: this.title, body: this.body, tags: this.tags, project: this.project }).then(function (res) {
+            self.inflight = null;
+            if (self.again) { self.again = false; if (res.ok && res.id) self.id = res.id; setTimeout(function () { self.saveNow(); }, 0); }
             if (!res.ok) { self.state = "error"; return; }
             if (res.queued) { self.state = "offline"; return; }
             store(key, null);
@@ -512,6 +547,7 @@
             self.savedAt = res.saved; self.state = "saved";
             var item = d.querySelector('[data-note-id="' + self.id + '"] .work-note-item-title'); if (item) item.textContent = res.title;
           });
+          return this.inflight;
         },
         get html() { return renderMarkdown(this.body); },
         action: function (name) {
@@ -683,6 +719,8 @@
     var label = function (name, on) { var el = menu.querySelector('[data-menu="' + name + '"] span'); el.textContent = el.getAttribute(on ? "data-label-on" : "data-label-off"); };
     label("myday", row.hasAttribute("data-myday"));
     label("doing", row.getAttribute("data-status") === "doing");
+    label("waiting", row.hasAttribute("data-waiting"));
+    var wf = menu.querySelector("[data-menu-form=waiting]"); if (wf) wf.hidden = true;
     menu.querySelector("[data-needs-link]").hidden = !row.getAttribute("data-link");
     menu.hidden = false;
     var r = btn.getBoundingClientRect(), w = menu.offsetWidth, h = menu.offsetHeight;
@@ -697,6 +735,7 @@
     else if (name === "tomorrow") taskUpdate(row, "due_date", isoDay(1));
     else if (name === "doing") taskUpdate(row, "status", row.getAttribute("data-status") === "doing" ? "todo" : "doing");
     else if (name === "prio") taskUpdate(row, "priority", value);
+    else if (name === "waiting") taskUpdate(row, "waiting_for", "");
     else if (name === "open-link" && link) window.open(link, "_blank", "noopener");
     else if (name === "copy") copyText(row.getAttribute("data-title") + (link ? " " + link : ""));
     else if (name === "time") location.href = CFG.urls.entry_new + "?task=" + id;
@@ -705,8 +744,14 @@
   }
   d.addEventListener("click", function (e) {
     var item = e.target.closest("[data-menu]");
-    if (item && menu && menu.contains(item)) { var row = menuRow; closeMenu(); if (row) menuAction(row, item.getAttribute("data-menu"), item.getAttribute("data-value")); return; }
+    if (item && menu && menu.contains(item)) {
+      if (item.getAttribute("data-menu") === "waiting" && menuRow && !menuRow.hasAttribute("data-waiting")) {   // ask who, right in the menu
+        var wf = menu.querySelector("[data-menu-form=waiting]"); wf.hidden = false; wf.querySelector("input").value = ""; wf.querySelector("input").focus(); return;
+      }
+      var row = menuRow; closeMenu(); if (row) menuAction(row, item.getAttribute("data-menu"), item.getAttribute("data-value")); return;
+    }
     var act = e.target.closest("[data-act]"), target = act && rowOf(act);
+    if (target && act.getAttribute("data-act") === "done" && target.closest(".is-selecting")) { e.preventDefault(); pick(target, e.shiftKey); return; }
     if (target) {
       e.preventDefault();
       var a = act.getAttribute("data-act");
@@ -727,6 +772,66 @@
     if (menu && !menu.contains(e.target) && Date.now() - menuAt > 250) closeMenu();
   }, { passive: true, capture: true });
   window.addEventListener("resize", function () { closeMenu(); });
+  d.addEventListener("submit", function (e) {
+    var wf = e.target.closest("[data-menu-form=waiting]"); if (!wf) return;
+    e.preventDefault();
+    var who = wf.querySelector("input").value.trim(), row = menuRow; closeMenu();
+    if (row && who) taskUpdate(row, "waiting_for", who);
+  });
+
+  /* ── Select many tasks (the task list's "Select" mode) ─────────────────── */
+  var lastPicked = null;
+  function bulkRoot() { return d.querySelector("[data-bulk-root]"); }
+  function bulkCount() {
+    var root = bulkRoot(); if (!root) return;
+    var n = root.querySelectorAll(".wt-task.is-selected").length, bar = d.querySelector("[data-bulkbar]");
+    if (bar) { bar.querySelector("[data-bulk-count]").textContent = n; bar.classList.toggle("has-some", n > 0); }
+  }
+  function bulkMode(on) {
+    var root = bulkRoot(), bar = d.querySelector("[data-bulkbar]"); if (!root || !bar) return;
+    root.classList.toggle("is-selecting", on); bar.hidden = !on;
+    d.querySelectorAll("[data-bulk-toggle]").forEach(function (b) { b.setAttribute("aria-pressed", on ? "true" : "false"); });
+    if (!on) root.querySelectorAll(".wt-task.is-selected").forEach(function (r) { r.classList.remove("is-selected"); });
+    lastPicked = null; bulkCount();
+  }
+  function pick(row, shift) {
+    var rows = Array.prototype.filter.call(bulkRoot().querySelectorAll(".wt-task"), function (r) { return r.offsetParent !== null; });
+    var on = !row.classList.contains("is-selected");
+    if (shift && lastPicked && rows.indexOf(lastPicked) >= 0) {
+      var a = rows.indexOf(lastPicked), b = rows.indexOf(row);
+      rows.slice(Math.min(a, b), Math.max(a, b) + 1).forEach(function (r) { r.classList.toggle("is-selected", on); });
+    } else row.classList.toggle("is-selected", on);
+    lastPicked = row; bulkCount();
+  }
+  function bulkRun(action, value) {
+    var ids = Array.prototype.map.call(bulkRoot().querySelectorAll(".wt-task.is-selected"), function (r) { return r.getAttribute("data-task"); });
+    if (!ids.length) { toast(t("pickSome", "Select some tasks first."), "warn"); return; }
+    if (action === "delete" && !confirm(t("confirmBulkDelete", "Delete the selected tasks?"))) return;
+    if (action === "done") play(CFG.sound ? "chime" : "");
+    api(CFG.urls.taskBulk, { ids: ids.join(","), action: action, value: value || "" }).then(function (res) {
+      if (!res.ok) { toast(res.error || t("notSaved", "Not saved."), "warn"); return; }
+      toast(t("changed", "Updated") + (res.count ? " · " + res.count : ""));
+      if (!res.queued) setTimeout(function () { location.reload(); }, 350);
+    });
+  }
+  d.addEventListener("click", function (e) {
+    var el = e.target.closest("[data-bulk-toggle], [data-bulk-cancel], [data-bulk-all], button[data-bulk]");
+    if (!el) return;
+    if (el.hasAttribute("data-bulk-toggle")) bulkMode(!bulkRoot().classList.contains("is-selecting"));
+    else if (el.hasAttribute("data-bulk-cancel")) bulkMode(false);
+    else if (el.hasAttribute("data-bulk-all")) {
+      var rows = Array.prototype.filter.call(bulkRoot().querySelectorAll(".wt-task"), function (r) { return r.offsetParent !== null; });
+      var all = rows.every(function (r) { return r.classList.contains("is-selected"); });
+      rows.forEach(function (r) { r.classList.toggle("is-selected", !all); }); bulkCount();
+    } else bulkRun(el.getAttribute("data-bulk"));
+  });
+  d.addEventListener("change", function (e) {
+    var sel = e.target.closest("select[data-bulk]"); if (!sel || !sel.value) return;
+    var action = sel.getAttribute("data-bulk"), v = sel.value;
+    if (action === "due") v = { today: isoDay(0), tomorrow: isoDay(1), week: isoDay(7), none: "" }[v];
+    if (v === "none") v = "";
+    bulkRun(action, v); sel.value = "";
+  });
   window.Work.taskUpdate = taskUpdate;
 
   /* ── Ctrl+K: the palette (instead of the app-wide search, while here) ── */
@@ -735,6 +840,43 @@
       e.preventDefault(); e.stopPropagation(); d.dispatchEvent(new CustomEvent("work:palette"));
     }
   }, true);
+
+  /* ── Idle time: the computer slept, the browser was closed, or (with the
+   *    browser's permission) nobody touched the computer for a while ────── */
+  (function () {
+    var BEAT = "work-beat:" + ME, mins = CFG.idle || 0;
+    if (!mins) return;
+    var limit = mins * 60000, asked = false;
+    function running() { var tm = window.Alpine && Alpine.store("timer"); return tm && tm.running ? new Date(tm.running.started_at).getTime() : 0; }
+    function ask(since, until) {
+      var started = running();
+      if (asked || !started || since <= started) return;
+      asked = true; d.dispatchEvent(new CustomEvent("work:idle", { detail: { since: since, until: until } }));
+    }
+    function beat() {
+      var now = Date.now(), last = recall(BEAT, 0);
+      if (last && now - last > limit) ask(last, now);     // a gap: asleep or closed
+      store(BEAT, now);
+    }
+    d.addEventListener("alpine:initialized", function () { setTimeout(beat, 300); setInterval(beat, 20000); });
+    d.addEventListener("visibilitychange", function () { if (!d.hidden) beat(); });
+    d.addEventListener("work:timer", function () { asked = false; });
+    // Away from the keyboard: Chrome's idle detection, once allowed in Settings.
+    if ("IdleDetector" in window && navigator.permissions) {
+      navigator.permissions.query({ name: "idle-detection" }).then(function (p) {
+        if (p.state !== "granted") return;
+        var det = new IdleDetector(), idleSince = 0;
+        det.addEventListener("change", function () {
+          if (det.userState === "idle") idleSince = Date.now() - Math.max(limit, 60000);
+          else if (idleSince) { var since = idleSince; idleSince = 0; ask(since, Date.now()); }
+        });
+        det.start({ threshold: Math.max(limit, 60000) }).catch(function () {});
+      }).catch(function () {});
+    }
+    window.Work.allowIdle = function () {
+      return ("IdleDetector" in window) ? IdleDetector.requestPermission() : Promise.resolve("unsupported");
+    };
+  })();
 
   /* ── A focus session running on another page still ends on time ─────── */
   (function () {
@@ -808,7 +950,7 @@
     }
     if (focused && (k === "x" || k === "p" || k === "m" || k === "e")) {
       e.preventDefault();
-      if (k === "x") taskDone(focused); else if (k === "p") taskTimer(focused);
+      if (k === "x") { if (focused.closest(".is-selecting")) pick(focused, e.shiftKey); else taskDone(focused); } else if (k === "p") taskTimer(focused);
       else if (k === "m") openMenu(focused.querySelector('[data-act="menu"]')); else location.href = focused.querySelector(".wt-task-title").href;
       return;
     }

@@ -12,7 +12,9 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_date
+from django.utils.formats import date_format
 from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy
 
 from apps.trash.undo import delete_with_undo
 
@@ -41,6 +43,7 @@ def _urls():
     return {
         "timerState": r("work:api_timer_state"), "timerStart": r("work:api_timer_start"), "timerStop": r("work:api_timer_stop"),
         "timerUpdate": r("work:api_timer_update"), "taskAdd": r("work:api_task_add"), "taskBase": "/work/api/tasks/",
+        "taskBulk": r("work:api_task_bulk"), "wrapup": r("work:wrapup"),
         "checklist": "/work/api/checklist/", "noteSave": r("work:api_note_save"), "noteBase": "/work/api/notes/",
         "journal": r("work:api_journal_save"), "focus": r("work:api_focus_log"), "search": r("work:api_search"),
         "today": r("work:today"), "tasks": r("work:tasks"), "board": r("work:tasks") + "?view=board", "projects": r("work:projects"),
@@ -65,6 +68,8 @@ def _texts():
         "units": {k: str(v) for k, v in LearningUnit.choices},
         "kindCommand": _("Command"), "kindRecent": _("Recent"), "kindCreate": _("Create"),
         "addTask": _("Add task"), "addNote": _("Save as a note"), "trackThis": _("Start the timer for"),
+        "selected": _("Selected"), "changed": _("Updated"), "confirmBulkDelete": _("Delete the selected tasks? You can bring them back from Recently deleted."),
+        "pickSome": _("Select some tasks first."),
         "kinds": {"task": _("Task"), "note": _("Note"), "project": _("Project"), "goal": _("Goal"), "learning": _("Learning"),
                   "snippet": _("Snippet")},
     }
@@ -98,6 +103,10 @@ def _commands():
         {"id": "new-note", "title": _("New note"), "icon": "note", "action": "capture:note", "hint": "n", "words": "add create write"},
         {"id": "start", "title": _("Start the timer"), "icon": "play", "action": "capture:time", "hint": "s", "words": "track", "when": "idle"},
         {"id": "stop", "title": _("Stop the timer"), "icon": "stop", "action": "timer:stop", "hint": "s", "words": "track", "when": "running"},
+        {"id": "wrapup", "title": _("Wrap up the day"), "icon": "sun", "url": r("work:wrapup"), "words": "shutdown end of day evening plan tomorrow"},
+        {"id": "note-meeting", "title": _("New meeting notes"), "icon": "note", "url": r("work:notes") + "?new=1&template=meeting", "words": "template"},
+        {"id": "note-adr", "title": _("New decision record (ADR)"), "icon": "note", "url": r("work:notes") + "?new=1&template=adr", "words": "template architecture"},
+        {"id": "note-bug", "title": _("New bug report"), "icon": "note", "url": r("work:notes") + "?new=1&template=bug", "words": "template issue"},
         {"id": "add-time", "title": _("Add time by hand"), "icon": "clock", "url": r("work:entry_new"), "words": "manual entry log"},
         {"id": "new-goal", "title": _("New goal"), "icon": "flag", "url": r("work:goal_new"), "words": "add create"},
         {"id": "new-learning", "title": _("Add a book, course or article"), "icon": "book", "url": r("work:learning_new"), "words": "learning read"},
@@ -130,7 +139,7 @@ def render_work(request, template, ctx=None):
             "focus": s.focus_minutes, "short": s.short_break_minutes, "long": s.long_break_minutes, "every": s.long_break_every,
             "autoBreaks": s.auto_start_breaks, "autoFocus": s.auto_start_focus,
             "sound": s.sound if s.sound_enabled else "", "volume": s.volume, "tick": s.tick_sound,
-            "notify": s.notifications, "longTimer": s.long_timer_hours, "target": s.daily_target_minutes,
+            "notify": s.notifications, "longTimer": s.long_timer_hours, "target": s.daily_target_minutes, "idle": s.idle_minutes,
             "reminders": [{"id": r["pk"], "title": r["title"], "at": r["remind_at"].isoformat(),
                            "url": reverse("work:task", args=[r["pk"]])} for r in reminders],
         },
@@ -149,6 +158,7 @@ def today_view(request):
     user, today = request.user, _today()
     s = WorkSettings.for_user(user)
     open_tasks, done_today = services.today_tasks(user, today)
+    cap = services.capacity(open_tasks, user, today)
     more = max(len(open_tasks) - TODAY_LIMIT, 0)
     open_tasks = open_tasks[:TODAY_LIMIT]
     prefetch_related_objects(open_tasks, *ROW_RELATED)
@@ -162,8 +172,9 @@ def today_view(request):
     greeting = _("Good morning") if hour < 12 else (_("Good afternoon") if hour < 17 else _("Good evening"))
     peak = max(week.by_day.values()) or 1
     return render_work(request, "work/today.html", {
-        "today": today, "greeting": greeting,
-        "open_tasks": open_tasks, "done_today": done_today, "more_tasks": more,
+        "today": today, "greeting": greeting, "hour_late": hour >= 16,
+        "open_tasks": open_tasks, "done_today": done_today, "more_tasks": more, "cap": cap,
+        "leftovers": services.leftovers(user, today), "waiting": services.waiting_tasks(user)[:6],
         "goals": services.with_progress(Goal.objects.filter(owner=user, status=GoalStatus.ACTIVE)[:3]),
         "reading": LearningItem.objects.filter(owner=user, status=LearningStatus.ACTIVE)[:3],
         "today_seconds": today_secs, "target_seconds": s.daily_target_minutes * 60,
@@ -232,8 +243,11 @@ def tasks_view(request):
         ctx["columns"] = columns
     else:
         open_ = list(qs.exclude(status=Status.DONE))
+        waiting = [t for t in open_ if t.waiting_for]
+        open_ = [t for t in open_ if not t.waiting_for]
         groups = [
             ("doing", _("In progress"), [t for t in open_ if t.status == Status.DOING]),
+            ("waiting", _("Waiting on others"), waiting),
             ("overdue", _("Late"), [t for t in open_ if t.status != Status.DOING and t.due_date and t.due_date < today]),
             ("today", _("Today"), [t for t in open_ if t.status != Status.DOING and (t.due_date == today or (t.my_day == today and not t.due_date))]),
             ("upcoming", _("Coming up"), sorted([t for t in open_ if t.status != Status.DOING and t.due_date and t.due_date > today], key=lambda t: t.due_date)),
@@ -256,7 +270,7 @@ def tasks_view(request):
             base = request.GET.copy()
             base.pop("page", None)
             ctx.update({"base_query_string": base.urlencode(), "pagination_window": _page_window(page)})
-        ctx["open_count"] = len(open_)
+        ctx["open_count"] = len(open_) + len(waiting)
         ctx["done"] = list(qs.filter(status=Status.DONE).order_by("-completed_at")[:50]) if show_done and not one else []
         ctx["done_count"] = qs.filter(status=Status.DONE).count()
         prefetch_related_objects(shown + ctx["done"], *ROW_RELATED)
@@ -434,6 +448,17 @@ def focus_view(request):
 
 
 # ── Notes ─────────────────────────────────────────────────────────────────
+NOTE_TEMPLATES = {   # key: (title, Markdown body, tags)
+    "meeting": (gettext_lazy("Meeting notes"), gettext_lazy("**Who:** \n**Goal of the meeting:** \n\n## Notes\n- \n\n## Decisions\n- \n\n## Action items\n- [ ] "), "meeting"),
+    "one_on_one": (gettext_lazy("1:1"), gettext_lazy("## Wins since last time\n- \n\n## Blockers / need help with\n- \n\n## Feedback (both ways)\n- \n\n## Career & growth\n- \n\n## Follow-ups\n- [ ] "), "1on1"),
+    "adr": (gettext_lazy("Decision record (ADR)"), gettext_lazy("## Status\nProposed\n\n## Context\nWhat is the problem, and why now?\n\n## Options\n1. \n2. \n\n## Decision\nWe will …\n\n## Consequences\n- Good: \n- Bad: \n- Follow-up: "), "adr"),
+    "bug": (gettext_lazy("Bug report"), gettext_lazy("## What happens\n\n## What should happen\n\n## Steps to reproduce\n1. \n2. \n\n## Environment\n- Version / commit: \n- Browser / device: \n\n## Logs\n```\n\n```\n\n## Cause & fix\n"), "bug"),
+    "postmortem": (gettext_lazy("Post-mortem"), gettext_lazy("## Summary\n\n## Impact\nWho was affected, for how long?\n\n## Timeline\n- 00:00 — \n\n## Root cause\n\n## What went well\n- \n\n## What went badly\n- \n\n## Action items\n- [ ] "), "postmortem"),
+    "daily": (gettext_lazy("Daily note"), gettext_lazy("## Top 3 today\n1. \n2. \n3. \n\n## Notes\n- \n\n## Learnt today\n- "), "daily"),
+    "design": (gettext_lazy("Design doc"), gettext_lazy("## Problem\n\n## Goals / non-goals\n- \n\n## Proposal\n\n## Alternatives considered\n\n## Rollout & risks\n\n## Open questions\n- "), "design"),
+}
+
+
 @work_required
 def notes_view(request, pk=None):
     user = request.user
@@ -446,6 +471,10 @@ def notes_view(request, pk=None):
         notes = notes.filter(tags__name=tag)
     note = get_object_or_404(Note, pk=pk, owner=user) if pk else None
     note_data = {"id": None, "title": "", "body": "", "tags": "", "project": "", "updated": 0, "saved": ""}
+    template = NOTE_TEMPLATES.get(request.GET.get("template", "")) if not note else None
+    if template:
+        stamp = date_format(_today(), "j M Y")
+        note_data.update({"title": f"{template[0]} — {stamp}", "body": str(template[1]), "tags": template[2]})
     if note:
         note_data = {"id": note.pk, "title": note.title, "body": note.body, "tags": " ".join(note.tags.values_list("name", flat=True)),
                      "project": str(note.project_id or ""), "updated": int(note.updated_at.timestamp() * 1000),
@@ -455,6 +484,7 @@ def notes_view(request, pk=None):
         "notes": notes.distinct()[:200], "note": note, "q": q, "tag": tag, "archived": archived,
         "tags": Tag.objects.filter(owner=user, notes__isnull=False).distinct(),
         "projects": Project.objects.filter(owner=user, is_archived=False),
+        "templates": [(key, t[0]) for key, t in NOTE_TEMPLATES.items()],
     })
 
 
@@ -629,6 +659,17 @@ def settings_view(request):
             form.save()
             messages.success(request, _("Settings saved."))
             return redirect("work:settings")
+        if action == "feed":
+            s.new_feed_token()
+            messages.success(request, _("New calendar link made. The old one no longer works."))
+            return redirect(reverse("work:settings") + "#feed")
+        if action == "feed_off":
+            s.feed_token = ""
+            s.save(update_fields=["feed_token"])
+            messages.success(request, _("Calendar link turned off."))
+            return redirect(reverse("work:settings") + "#feed")
+        if action == "restore":
+            return _restore(request)
         if action == "tag":
             tag = get_object_or_404(Tag, pk=request.POST.get("tag"), owner=request.user)
             if request.POST.get("delete"):
@@ -647,7 +688,46 @@ def settings_view(request):
             return redirect(reverse("work:settings") + "#tags")
     tags = Tag.objects.filter(owner=request.user).annotate(n_tasks=Count("tasks", distinct=True), n_notes=Count("notes", distinct=True),
                                                            n_entries=Count("entries", distinct=True))
-    return render_work(request, "work/settings.html", {"form": form, "tags": tags, "tag_form": tag_form})
+    feed = request.build_absolute_uri(reverse("work:feed", args=[s.feed_token])) if s.feed_token else ""
+    return render_work(request, "work/settings.html", {"form": form, "tags": tags, "tag_form": tag_form, "feed": feed})
+
+
+BACKUP_LIMIT = 30 * 1024 * 1024
+
+
+def _restore(request):
+    """Adds what's in a backup (.zip from "Download everything", or its data.json)."""
+    import json
+    import zipfile
+
+    upload = request.FILES.get("backup")
+    back = redirect(reverse("work:settings") + "#data")
+    if not upload or upload.size > BACKUP_LIMIT:
+        messages.error(request, _("Choose the .zip (or data.json) you downloaded, up to 30 MB."))
+        return back
+    try:
+        if zipfile.is_zipfile(upload):
+            with zipfile.ZipFile(upload) as z:
+                rows = json.loads(z.read("data.json").decode("utf-8"))
+        else:
+            upload.seek(0)
+            rows = json.loads(upload.read().decode("utf-8"))
+        if not isinstance(rows, list):
+            raise ValueError
+        counts = services.restore(request.user, rows)
+    except (KeyError, ValueError, UnicodeDecodeError, zipfile.BadZipFile):
+        messages.error(request, _("That file isn't a Productivity backup."))
+        return back
+    except Exception:   # a damaged file: nothing was added (it all runs in one transaction)
+        import logging
+
+        logging.getLogger(__name__).exception("work backup restore failed")
+        messages.error(request, _("The backup couldn't be read, so nothing was added."))
+        return back
+    messages.success(request, _("Backup restored: %(tasks)s tasks, %(time)s time entries, %(notes)s notes and %(other)s other items added.") % {
+        "tasks": counts.get("task", 0), "time": counts.get("timeentry", 0), "notes": counts.get("note", 0),
+        "other": sum(v for k, v in counts.items() if k not in ("task", "timeentry", "note"))})
+    return back
 
 
 @work_required
@@ -786,6 +866,7 @@ def review_view(request):
         "coming": Task.objects.filter(owner=user, due_date__gte=today, due_date__lte=today + timedelta(days=7)).exclude(status=Status.DONE)
                   .select_related("project").order_by("due_date")[:12],
         "stale": Task.objects.filter(owner=user, status=Status.DOING, updated_at__lt=lo - timedelta(days=7)).count(),
+        "waiting": Task.objects.filter(owner=user).exclude(waiting_for="").exclude(status=Status.DONE).count(),
     })
 
 
@@ -888,3 +969,38 @@ def share_view(request):
         if m:
             url, text = m.group(0), (text[:m.start()] + text[m.end():]).strip()
     return render_work(request, "work/share.html", {"title": title or text[:200], "text": text, "url": url})
+
+
+
+# ── End of the day ────────────────────────────────────────────────────────
+@work_required
+def wrapup_view(request):
+    """Shut the day down: what got done, what's left (move it on), wins and
+    blockers for the journal, and tomorrow's plan — so you can stop thinking about work."""
+    user, today = request.user, _today()
+    tomorrow = today + timedelta(days=1)
+    open_tasks, done_today = services.today_tasks(user, today)
+    prefetch_related_objects(done_today, *ROW_RELATED)
+    t = services.totals(user, today, today)
+    journal = JournalEntry.objects.filter(owner=user, date=today).first()
+    next_plan = JournalEntry.objects.filter(owner=user, date=tomorrow).values_list("plan", flat=True).first() or ""
+    s = WorkSettings.for_user(user)
+    return render_work(request, "work/wrapup.html", {
+        "today": today, "tomorrow": tomorrow, "left": [x for x in open_tasks if x.status != Status.DOING or x.my_day == today][:30],
+        "doing": [x for x in open_tasks if x.status == Status.DOING], "done_today": done_today, "t": t, "journal": journal,
+        "next_plan": next_plan, "done_lines": "\n".join(f"- {x.title}" for x in done_today),
+        "target": s.daily_target_minutes * 60, "moods": range(1, 6),
+    })
+
+
+# ── Calendar feed for Google / Apple / Outlook ────────────────────────────
+def feed_view(request, token):
+    """No sign-in (calendar apps can't sign in): the long secret in the address is the key."""
+    s = WorkSettings.objects.filter(feed_token=token).exclude(feed_token="").select_related("owner").first()
+    if s is None or len(token) < 20 or not s.owner.is_active or not can_use(s.owner):
+        raise Http404
+    body = services.calendar_feed(s.owner, base_url=request.build_absolute_uri("/").rstrip("/"))
+    response = HttpResponse(body, content_type="text/calendar; charset=utf-8")
+    response["Content-Disposition"] = 'inline; filename="work.ics"'
+    response["Cache-Control"] = "private, max-age=900"
+    return response

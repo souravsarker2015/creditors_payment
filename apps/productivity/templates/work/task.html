@@ -42,6 +42,7 @@
         {% with field=form.tags_text %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.link %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.goal %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.waiting_for %}{% include "partials/field.html" %}{% endwith %}
       </div>
       <div class="field" x-data="{ preview: false, text: $refs.notes ? $refs.notes.value : '' }">
         <div class="field-head"><label class="label" for="{{ form.notes.id_for_label }}">{{ form.notes.label }}</label>

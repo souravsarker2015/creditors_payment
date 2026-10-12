@@ -16202,3 +16202,492 @@ msgstr "লেখা"
 
 msgid "Read / watch later"
 msgstr "পরে পড়ব / দেখব"
+
+msgid "Pick some tasks and what to do."
+msgstr "কিছু টাস্ক আর কী করবেন তা বেছে নিন।"
+
+msgid "Waiting on"
+msgstr "যার অপেক্ষায়"
+
+msgid "Ask about idle time after (minutes)"
+msgstr "অলস সময় নিয়ে জিজ্ঞেস করুন (মিনিট পরে)"
+
+msgid "Who or what it's stuck on: a code review, Rahim, the client, a deploy…"
+msgstr "কার বা কিসের জন্য আটকে আছে: কোড রিভিউ, রহিম, ক্লায়েন্ট, ডিপ্লয়…"
+
+msgid "When you come back to a running timer after this long away. 0 = never ask."
+msgstr "চলমান টাইমার রেখে এতক্ষণ দূরে থাকার পর ফিরলে। ০ = কখনো জিজ্ঞেস করবে না।"
+
+#, python-format
+msgid "Waiting on %(who)s: %(task)s"
+msgstr "%(who)s-এর অপেক্ষায়: %(task)s"
+
+msgid "Work tasks"
+msgstr "কাজের টাস্ক"
+
+msgid "Wrap up the day"
+msgstr "দিন শেষ করুন"
+
+msgid "click"
+msgstr "ক্লিক"
+
+msgid "Select a range (in Select mode)"
+msgstr "একসাথে কয়েকটি বাছুন (বাছাই মোডে)"
+
+msgid "No longer waiting"
+msgstr "আর অপেক্ষা নেই"
+
+msgid "Waiting on someone…"
+msgstr "কারো অপেক্ষায়…"
+
+msgid "Who or what? (review, Rahim, deploy…)"
+msgstr "কে বা কী? (রিভিউ, রহিম, ডিপ্লয়…)"
+
+msgid "Set"
+msgstr "ঠিক করুন"
+
+#, python-format
+msgid "%(counter)s task waiting on someone — follow up"
+msgid_plural "%(counter)s tasks waiting on someone — follow up"
+msgstr[0] "%(counter)sটি টাস্ক কারো অপেক্ষায় — খোঁজ নিন"
+msgstr[1] "%(counter)sটি টাস্ক কারো অপেক্ষায় — খোঁজ নিন"
+
+msgid "Also notice when I step away from the computer"
+msgstr "কম্পিউটার থেকে উঠে গেলেও যেন বুঝতে পারে"
+
+msgid "On: this browser tells the tracker when you're away from the keyboard."
+msgstr "চালু: আপনি কিবোর্ড থেকে দূরে থাকলে এই ব্রাউজার ট্র্যাকারকে জানায়।"
+
+msgid "This browser only notices when the computer sleeps or the browser is closed (Chrome can also notice when you step away)."
+msgstr "এই ব্রাউজার শুধু কম্পিউটার ঘুমালে বা ব্রাউজার বন্ধ হলে বোঝে (Chrome আপনি উঠে গেলেও বুঝতে পারে)।"
+
+msgid "Adds everything in the .zip to your tracker (for a new server or a new account). Restoring the same file twice makes copies."
+msgstr ".zip-এর সবকিছু আপনার ট্র্যাকারে যোগ করে (নতুন সার্ভার বা নতুন অ্যাকাউন্টের জন্য)। একই ফাইল দুবার দিলে কপি তৈরি হবে।"
+
+msgid "Choose the .zip"
+msgstr ".zip বেছে নিন"
+
+msgid "Add everything in this backup to your tracker?"
+msgstr "এই ব্যাকআপের সবকিছু আপনার ট্র্যাকারে যোগ করবেন?"
+
+msgid "Calendar feed"
+msgstr "ক্যালেন্ডার ফিড"
+
+msgid "Due dates, reminders and goal deadlines in Google Calendar, Apple Calendar or Outlook — with their alarms, even when this app is closed."
+msgstr "শেষ তারিখ, রিমাইন্ডার আর লক্ষ্যের সময়সীমা Google Calendar, Apple Calendar বা Outlook-এ — তাদের অ্যালার্মসহ, এই অ্যাপ বন্ধ থাকলেও।"
+
+msgid "Calendar feed address"
+msgstr "ক্যালেন্ডার ফিডের ঠিকানা"
+
+msgid "Google Calendar: Other calendars → + → From URL, and paste it. Keep the address private — anyone with it can see your task titles."
+msgstr "Google Calendar: Other calendars → + → From URL, তারপর পেস্ট করুন। ঠিকানাটি গোপন রাখুন — যার কাছে থাকবে সে আপনার টাস্কের শিরোনাম দেখতে পাবে।"
+
+msgid "Make a new address"
+msgstr "নতুন ঠিকানা তৈরি করুন"
+
+msgid "Make my calendar address"
+msgstr "আমার ক্যালেন্ডার ঠিকানা তৈরি করুন"
+
+msgid "Select"
+msgstr "বাছাই"
+
+msgid "Selected tasks"
+msgstr "বাছাই করা টাস্ক"
+
+msgid "selected"
+msgstr "বাছাই করা"
+
+msgid "Due…"
+msgstr "শেষ তারিখ…"
+
+msgid "Project…"
+msgstr "প্রজেক্ট…"
+
+msgid "Priority…"
+msgstr "অগ্রাধিকার…"
+
+#, python-format
+msgid "%(p)s planned — more than your %(t)s day. Move something to tomorrow?"
+msgstr "%(p)s পরিকল্পনা — আপনার %(t)s দিনের চেয়ে বেশি। কিছু আগামীকালে সরাবেন?"
+
+#, python-format
+msgid "%(p)s planned of your %(t)s day"
+msgstr "আপনার %(t)s দিনের %(p)s পরিকল্পনা করা"
+
+#, python-format
+msgid "%(counter)s without an estimate"
+msgid_plural "%(counter)s without an estimate"
+msgstr[0] "%(counter)sটির সময় আন্দাজ নেই"
+msgstr[1] "%(counter)sটির সময় আন্দাজ নেই"
+
+#, python-format
+msgid "%(counter)s task left from earlier days."
+msgid_plural "%(counter)s tasks left from earlier days."
+msgstr[0] "আগের দিনের %(counter)sটি টাস্ক বাকি।"
+msgstr[1] "আগের দিনের %(counter)sটি টাস্ক বাকি।"
+
+msgid "Add them to today"
+msgstr "আজকে যোগ করুন"
+
+msgid "Not now"
+msgstr "এখন না"
+
+msgid "Waiting on others"
+msgstr "অন্যের অপেক্ষায়"
+
+msgid "Follow up if it's been a while."
+msgstr "অনেকক্ষণ হলে খোঁজ নিন।"
+
+msgid "Selected"
+msgstr "বাছাই করা"
+
+msgid "Updated"
+msgstr "হালনাগাদ হয়েছে"
+
+msgid "Delete the selected tasks? You can bring them back from Recently deleted."
+msgstr "বাছাই করা টাস্কগুলো মুছবেন? \"সম্প্রতি মুছে ফেলা\" থেকে ফিরিয়ে আনা যাবে।"
+
+msgid "Select some tasks first."
+msgstr "আগে কিছু টাস্ক বাছুন।"
+
+msgid "Meeting notes"
+msgstr "মিটিং নোট"
+
+msgid ""
+"**Who:** \n"
+"**Goal of the meeting:** \n"
+"\n"
+"## Notes\n"
+"- \n"
+"\n"
+"## Decisions\n"
+"- \n"
+"\n"
+"## Action items\n"
+"- [ ] "
+msgstr ""
+"**কারা:** \n"
+"**মিটিংয়ের উদ্দেশ্য:** \n"
+"\n"
+"## নোট\n"
+"- \n"
+"\n"
+"## সিদ্ধান্ত\n"
+"- \n"
+"\n"
+"## করণীয়\n"
+"- [ ] "
+
+msgid "1:1"
+msgstr "১:১"
+
+msgid ""
+"## Wins since last time\n"
+"- \n"
+"\n"
+"## Blockers / need help with\n"
+"- \n"
+"\n"
+"## Feedback (both ways)\n"
+"- \n"
+"\n"
+"## Career & growth\n"
+"- \n"
+"\n"
+"## Follow-ups\n"
+"- [ ] "
+msgstr ""
+"## গতবারের পর থেকে অর্জন\n"
+"- \n"
+"\n"
+"## বাধা / যেখানে সাহায্য দরকার\n"
+"- \n"
+"\n"
+"## ফিডব্যাক (দুই দিক থেকে)\n"
+"- \n"
+"\n"
+"## ক্যারিয়ার ও উন্নতি\n"
+"- \n"
+"\n"
+"## পরের করণীয়\n"
+"- [ ] "
+
+msgid "Decision record (ADR)"
+msgstr "সিদ্ধান্তের রেকর্ড (ADR)"
+
+msgid ""
+"## Status\n"
+"Proposed\n"
+"\n"
+"## Context\n"
+"What is the problem, and why now?\n"
+"\n"
+"## Options\n"
+"1. \n"
+"2. \n"
+"\n"
+"## Decision\n"
+"We will …\n"
+"\n"
+"## Consequences\n"
+"- Good: \n"
+"- Bad: \n"
+"- Follow-up: "
+msgstr ""
+"## অবস্থা\n"
+"প্রস্তাবিত\n"
+"\n"
+"## প্রেক্ষাপট\n"
+"সমস্যা কী, আর এখন কেন?\n"
+"\n"
+"## বিকল্প\n"
+"1. \n"
+"2. \n"
+"\n"
+"## সিদ্ধান্ত\n"
+"আমরা …\n"
+"\n"
+"## ফলাফল\n"
+"- ভালো: \n"
+"- খারাপ: \n"
+"- পরের করণীয়: "
+
+msgid "Bug report"
+msgstr "বাগ রিপোর্ট"
+
+msgid ""
+"## What happens\n"
+"\n"
+"## What should happen\n"
+"\n"
+"## Steps to reproduce\n"
+"1. \n"
+"2. \n"
+"\n"
+"## Environment\n"
+"- Version / commit: \n"
+"- Browser / device: \n"
+"\n"
+"## Logs\n"
+"```\n"
+"\n"
+"```\n"
+"\n"
+"## Cause & fix\n"
+msgstr ""
+"## কী হচ্ছে\n"
+"\n"
+"## কী হওয়া উচিত\n"
+"\n"
+"## কীভাবে আবার ঘটানো যায়\n"
+"1. \n"
+"2. \n"
+"\n"
+"## পরিবেশ\n"
+"- ভার্সন / কমিট: \n"
+"- ব্রাউজার / ডিভাইস: \n"
+"\n"
+"## লগ\n"
+"```\n"
+"\n"
+"```\n"
+"\n"
+"## কারণ ও সমাধান\n"
+
+msgid "Post-mortem"
+msgstr "পোস্ট-মর্টেম"
+
+msgid ""
+"## Summary\n"
+"\n"
+"## Impact\n"
+"Who was affected, for how long?\n"
+"\n"
+"## Timeline\n"
+"- 00:00 — \n"
+"\n"
+"## Root cause\n"
+"\n"
+"## What went well\n"
+"- \n"
+"\n"
+"## What went badly\n"
+"- \n"
+"\n"
+"## Action items\n"
+"- [ ] "
+msgstr ""
+"## সারসংক্ষেপ\n"
+"\n"
+"## প্রভাব\n"
+"কারা, কতক্ষণ ক্ষতিগ্রস্ত হয়েছে?\n"
+"\n"
+"## সময়রেখা\n"
+"- 00:00 — \n"
+"\n"
+"## মূল কারণ\n"
+"\n"
+"## যা ভালো গেছে\n"
+"- \n"
+"\n"
+"## যা খারাপ গেছে\n"
+"- \n"
+"\n"
+"## করণীয়\n"
+"- [ ] "
+
+msgid "Daily note"
+msgstr "দৈনিক নোট"
+
+msgid ""
+"## Top 3 today\n"
+"1. \n"
+"2. \n"
+"3. \n"
+"\n"
+"## Notes\n"
+"- \n"
+"\n"
+"## Learnt today\n"
+"- "
+msgstr ""
+"## আজকের সেরা ৩টি\n"
+"1. \n"
+"2. \n"
+"3. \n"
+"\n"
+"## নোট\n"
+"- \n"
+"\n"
+"## আজ যা শিখলাম\n"
+"- "
+
+msgid "Design doc"
+msgstr "ডিজাইন ডক"
+
+msgid ""
+"## Problem\n"
+"\n"
+"## Goals / non-goals\n"
+"- \n"
+"\n"
+"## Proposal\n"
+"\n"
+"## Alternatives considered\n"
+"\n"
+"## Rollout & risks\n"
+"\n"
+"## Open questions\n"
+"- "
+msgstr ""
+"## সমস্যা\n"
+"\n"
+"## লক্ষ্য / যা লক্ষ্য নয়\n"
+"- \n"
+"\n"
+"## প্রস্তাব\n"
+"\n"
+"## বিবেচিত বিকল্প\n"
+"\n"
+"## চালু করা ও ঝুঁকি\n"
+"\n"
+"## খোলা প্রশ্ন\n"
+"- "
+
+msgid "New meeting notes"
+msgstr "নতুন মিটিং নোট"
+
+msgid "New decision record (ADR)"
+msgstr "নতুন সিদ্ধান্তের রেকর্ড (ADR)"
+
+msgid "New bug report"
+msgstr "নতুন বাগ রিপোর্ট"
+
+msgid "Choose the .zip (or data.json) you downloaded, up to 30 MB."
+msgstr "ডাউনলোড করা .zip (বা data.json) বেছে নিন, ৩০ MB পর্যন্ত।"
+
+#, python-format
+msgid "Backup restored: %(tasks)s tasks, %(time)s time entries, %(notes)s notes and %(other)s other items added."
+msgstr "ব্যাকআপ ফিরিয়ে আনা হয়েছে: %(tasks)sটি টাস্ক, %(time)sটি সময়ের হিসাব, %(notes)sটি নোট এবং আরও %(other)sটি জিনিস যোগ হয়েছে।"
+
+msgid "New calendar link made. The old one no longer works."
+msgstr "নতুন ক্যালেন্ডার লিংক তৈরি হয়েছে। পুরোনোটি আর কাজ করবে না।"
+
+msgid "Calendar link turned off."
+msgstr "ক্যালেন্ডার লিংক বন্ধ করা হয়েছে।"
+
+msgid "That file isn't a Productivity backup."
+msgstr "এই ফাইলটি প্রোডাক্টিভিটির ব্যাকআপ নয়।"
+
+msgid "The backup couldn't be read, so nothing was added."
+msgstr "ব্যাকআপ পড়া যায়নি, তাই কিছুই যোগ হয়নি।"
+
+msgid "You were away for <span x-text=\"awayText\"></span>"
+msgstr "আপনি <span x-text=\"awayText\"></span> দূরে ছিলেন"
+
+msgid "The timer for “<b x-text=\"label\"></b>” kept running since <b x-text=\"sinceText\"></b>."
+msgstr "“<b x-text=\"label\"></b>”-এর টাইমার <b x-text=\"sinceText\"></b> থেকে চলছিল।"
+
+msgid "Remove the time away, keep going"
+msgstr "দূরে থাকার সময় বাদ দিন, চালু রাখুন"
+
+msgid "Stop it at <span x-text=\"sinceText\"></span>"
+msgstr "<span x-text=\"sinceText\"></span>-এ বন্ধ করুন"
+
+msgid "I was working — keep it"
+msgstr "আমি কাজ করছিলাম — রেখে দিন"
+
+msgid "Five minutes to close the loops: tick off, move on, write it down — then stop thinking about work."
+msgstr "পাঁচ মিনিটে সব গুছিয়ে নিন: শেষ চিহ্ন দিন, বাকিটা সরান, লিখে রাখুন — তারপর কাজের চিন্তা বাদ।"
+
+msgid "The timer is still running."
+msgstr "টাইমার এখনো চলছে।"
+
+msgid "Stop it"
+msgstr "বন্ধ করুন"
+
+msgid "What's still open"
+msgstr "যা এখনো বাকি"
+
+msgid "Tick what you finished. Move the rest to tomorrow, or take it off your list."
+msgstr "যা শেষ করেছেন টিক দিন। বাকিটা আগামীকালে সরান, বা তালিকা থেকে বাদ দিন।"
+
+msgid "Moved to tomorrow"
+msgstr "আগামীকালে সরানো হয়েছে"
+
+msgid "Move all to tomorrow"
+msgstr "সব আগামীকালে সরান"
+
+msgid "Not today"
+msgstr "আজ না"
+
+msgid "Nothing left on today's list. Well done."
+msgstr "আজকের তালিকায় কিছু বাকি নেই। দারুণ।"
+
+msgid "Write down the day"
+msgstr "দিনটা লিখে রাখুন"
+
+msgid "It goes in your journal, your standup and your review."
+msgstr "এটা আপনার জার্নাল, স্ট্যান্ডআপ আর রিভিউতে যাবে।"
+
+msgid "Add today's done tasks"
+msgstr "আজকের শেষ করা টাস্ক যোগ করুন"
+
+msgid "Plan tomorrow"
+msgstr "আগামীকালের পরিকল্পনা"
+
+#, python-format
+msgid "It's waiting on Today when you start on %(d)s."
+msgstr "%(d)s শুরু করলে \"আজ\" পাতায় এটা থাকবে।"
+
+msgid "The one thing that would make tomorrow a good day…"
+msgstr "যে একটা কাজ হলে আগামীকাল ভালো দিন হবে…"
+
+msgid "Close the day"
+msgstr "দিন শেষ করুন"
+
+msgid "Day closed. Rest well."
+msgstr "দিন শেষ। ভালো করে বিশ্রাম নিন।"
+
+msgid "Everything is written down — tomorrow starts with your plan."
+msgstr "সব লেখা আছে — আগামীকাল শুরু হবে আপনার পরিকল্পনা দিয়ে।"

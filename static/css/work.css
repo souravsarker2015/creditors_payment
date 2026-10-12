@@ -677,3 +677,70 @@ a.wy-cell:hover { outline: 2px solid var(--text-primary); outline-offset: -1px; 
 @media (min-width: 480px) { .wsh-actions { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .wg-next { font: 650 1rem/1.4 var(--font-heading); color: var(--text-primary); }
 @media (max-width: 639.98px) { .wf-bar > .seg { grid-column: 1 / -1; justify-self: start; } }
+
+/* ── Waiting on others ──────────────────────────────────────────────────── */
+.wt-wait { display: inline-flex; align-items: center; gap: 0.25rem; max-width: 14rem; padding: 0 0.375rem; border-radius: 0.375rem; background: var(--status-warn-bg); color: var(--status-warn); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wt-wait svg { width: 0.75rem; height: 0.75rem; flex-shrink: 0; }
+.wd-notes time.wt-wait { padding: 0 0.375rem; font-size: 0.6875rem; }
+.wt-group[data-group="waiting"] .wt-group-head { color: var(--status-warn); }
+.wt-menu-form { display: flex; gap: 0.375rem; padding: 0.25rem 0.5rem 0.5rem; }
+.wt-menu-form[hidden] { display: none; }
+.wt-menu-form input { flex: 1; min-width: 0; }
+
+/* ── Select many ────────────────────────────────────────────────────────── */
+[data-bulk-toggle][aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
+.is-selecting .wt-check { border-radius: 0.375rem; border-color: var(--text-muted) !important; background: transparent !important; color: transparent !important; animation: none; }
+.is-selecting .wt-task.is-selected { background: var(--accent-soft); }
+.is-selecting .wt-task.is-selected .wt-check { background: var(--accent) !important; border-color: var(--accent) !important; color: var(--accent-on) !important; }
+.is-selecting .wt-task-act { visibility: hidden; }
+.wt-bulkbar { position: fixed; z-index: 60; left: 50%; bottom: calc(1rem + env(safe-area-inset-bottom)); transform: translateX(-50%); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.375rem; width: max-content; max-width: calc(100vw - 1rem); padding: 0.5rem 0.625rem; border-radius: 1rem; background: var(--surface-raised); border: 1px solid var(--border); box-shadow: var(--shadow-lg); animation: wt-menu .12s ease-out; }
+.wt-bulkbar[hidden] { display: none; }
+.wt-bulkbar select { width: auto; max-width: 9rem; }
+.wt-bulk-count { padding: 0 0.375rem; font-size: 0.8125rem; color: var(--text-secondary); white-space: nowrap; }
+.wt-bulk-count b { color: var(--text-primary); }
+.wt-bulk-sep { width: 1px; height: 1.5rem; background: var(--border-soft); }
+.wt-bulkbar:not(.has-some) [data-bulk] { opacity: 0.5; }
+:root[data-view="app"] .wt-bulkbar { bottom: calc(var(--tabbar-h, 4.5rem) + env(safe-area-inset-bottom) + 0.5rem); }
+@media (max-width: 639.98px) { .wt-bulkbar { width: calc(100vw - 1rem); } .wt-bulk-sep { display: none; } }
+
+/* ── Today: plan vs. time, leftovers ────────────────────────────────────── */
+.wd-cap { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.5rem; margin-top: 0.375rem; font-size: 0.75rem; color: var(--text-secondary); }
+.wd-cap-bar { width: 4.5rem; height: 0.3125rem; border-radius: 9999px; background: var(--surface-sunken); overflow: hidden; }
+.wd-cap-bar i { display: block; height: 100%; background: var(--status-good); }
+.wd-cap.is-over { color: var(--status-warn); font-weight: 600; }
+.wd-cap.is-over .wd-cap-bar i { background: var(--status-warn); }
+.wd-left { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin: 0 1rem 0.625rem; padding: 0.5rem 0.75rem; border-radius: 0.875rem; background: var(--status-info-bg); color: var(--status-info); font-size: 0.8125rem; }
+.wd-left p { flex: 1 1 12rem; display: flex; align-items: center; gap: 0.375rem; font-weight: 600; }
+.wd-left svg { width: 1rem; height: 1rem; flex-shrink: 0; }
+
+/* ── Wrap up ────────────────────────────────────────────────────────────── */
+.ww-row { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
+.ww-num { display: grid; place-items: center; width: 1.75rem; height: 1.75rem; flex-shrink: 0; border-radius: 9999px; background: var(--accent-soft); color: var(--accent); font-weight: 800; font-size: 0.8125rem; }
+.ww-left { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0.75rem 0.5rem 1rem; transition: opacity .25s, background .2s; }
+.ww-left + .ww-left { border-top: 1px solid var(--border-soft); }
+.ww-left.is-done .wt-check { background: var(--status-good); border-color: var(--status-good); color: #fff; }
+.ww-left.is-done .ww-title { color: var(--text-muted); text-decoration: line-through; }
+.ww-left.is-leaving { opacity: 0; }
+.ww-title { flex: 1; min-width: 0; font-size: 0.9375rem; font-weight: 550; color: var(--text-primary); overflow-wrap: anywhere; }
+.ww-title .wt-due { font-size: 0.75rem; }
+.ww-acts { display: flex; gap: 0.125rem; flex-shrink: 0; }
+.ww-moved { display: none; padding: 0.125rem 0.5rem; border-radius: 9999px; background: var(--status-info-bg); color: var(--status-info); font-size: 0.75rem; font-weight: 700; }
+.ww-left.is-moved .ww-moved { display: inline-block; }
+.ww-left.is-moved .ww-acts { display: none; }
+.ww-left.is-moved .ww-title { color: var(--text-secondary); }
+.ww-finish { display: flex; justify-content: center; padding: 0.5rem 0 1rem; }
+.ww-finish .btn { min-width: 14rem; }
+@media (max-width: 479.98px) { .ww-left { flex-wrap: wrap; } .ww-acts { width: 100%; justify-content: flex-end; } }
+
+/* ── Away dialog ────────────────────────────────────────────────────────── */
+.wid { width: min(30rem, calc(100vw - 1.5rem)); gap: 1rem; }
+.wid-head { display: flex; gap: 0.875rem; align-items: flex-start; }
+.wid-icon { display: grid; place-items: center; width: 2.75rem; height: 2.75rem; flex-shrink: 0; border-radius: 9999px; background: var(--status-warn-bg); color: var(--status-warn); }
+.wid-icon svg { width: 1.375rem; height: 1.375rem; }
+.wid-sub { margin-top: 0.25rem; font-size: 0.875rem; color: var(--text-secondary); }
+.wid-actions { display: flex; flex-direction: column; gap: 0.5rem; }
+.wid-actions .btn { justify-content: center; }
+
+/* ── Settings: feed ─────────────────────────────────────────────────────── */
+.ws-feed { display: flex; gap: 0.5rem; }
+.ws-feed input { flex: 1; min-width: 0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.75rem !important; }

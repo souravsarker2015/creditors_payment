@@ -52,7 +52,7 @@ class TaskForm(OwnedForm):
 
     class Meta:
         model = Task
-        fields = ("title", "project", "status", "priority", "due_date", "estimate_minutes", "repeat", "remind_at", "link", "goal", "notes")
+        fields = ("title", "project", "status", "priority", "due_date", "estimate_minutes", "repeat", "remind_at", "link", "goal", "waiting_for", "notes")
         widgets = {
             "link": forms.URLInput(attrs={"placeholder": "https://github.com/…/pull/482", "inputmode": "url"}),
             "due_date": DATE,
@@ -190,7 +190,7 @@ class SettingsForm(forms.ModelForm):
         model = WorkSettings
         fields = ("week_start", "focus_minutes", "short_break_minutes", "long_break_minutes", "long_break_every",
                   "auto_start_breaks", "auto_start_focus", "sound_enabled", "sound", "volume", "tick_sound",
-                  "notifications", "long_timer_hours", "default_project")
+                  "notifications", "long_timer_hours", "idle_minutes", "default_project")
         widgets = {"volume": forms.NumberInput(attrs={"type": "range", "min": 0, "max": 100, "step": 5})}
 
     def __init__(self, *args, **kwargs):

@@ -78,6 +78,7 @@
     <header class="card-header"><div><h2 class="card-title">{% translate "Plan ahead" %}</h2><p class="card-subtitle">{% translate "Before the next week starts." %}</p></div></header>
     <ul class="wv-checks">
       <li data-tone="{% if late %}late{% else %}good{% endif %}">{% if late %}<a href="{% url 'work:tasks' %}?due=overdue">{% blocktranslate count counter=late %}{{ counter }} late task — reschedule or drop it{% plural %}{{ counter }} late tasks — reschedule or drop them{% endblocktranslate %}</a>{% else %}{% translate "Nothing is late." %}{% endif %}</li>
+      {% if waiting %}<li data-tone="late"><a href="{% url 'work:tasks' %}?group=waiting">{% blocktranslate count counter=waiting %}{{ counter }} task waiting on someone — follow up{% plural %}{{ counter }} tasks waiting on someone — follow up{% endblocktranslate %}</a></li>{% endif %}
       {% if stale %}<li data-tone="late"><a href="{% url 'work:tasks' %}">{% blocktranslate count counter=stale %}{{ counter }} task “in progress” for over a week — still going?{% plural %}{{ counter }} tasks “in progress” for over a week — still going?{% endblocktranslate %}</a></li>{% endif %}
       {% if d.blockers %}<li data-tone="late">{% blocktranslate count counter=d.blockers|length %}{{ counter }} blocker noted — raise it at the next 1:1{% plural %}{{ counter }} blockers noted — raise them at the next 1:1{% endblocktranslate %}</li>{% endif %}
     </ul>

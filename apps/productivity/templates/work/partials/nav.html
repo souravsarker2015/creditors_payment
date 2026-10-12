@@ -17,6 +17,7 @@
 <div class="space-y-0.5">
   <p class="nav-section-label">{% translate "Track & review" %}</p>
   <a href="{% url 'work:time' %}" class="nav-link {% if '/work/time/' in p %}is-active{% endif %}">{% icon "timer" %}{% translate "Time" %}</a>
+  <a href="{% url 'work:wrapup' %}" class="nav-link {% if '/work/wrap-up/' in p %}is-active{% endif %}">{% icon "check" %}{% translate "Wrap up the day" %}</a>
   <a href="{% url 'work:journal' %}" class="nav-link {% if '/work/journal/' in p %}is-active{% endif %}">{% icon "journal" %}{% translate "Journal & standup" %}</a>
   <a href="{% url 'work:review' %}" class="nav-link {% if '/work/review/' in p %}is-active{% endif %}">{% icon "trophy" %}{% translate "Review & brag doc" %}</a>
   <a href="{% url 'work:reports' %}" class="nav-link {% if '/work/reports/' in p %}is-active{% endif %}">{% icon "chart" %}{% translate "Reports" %}</a>

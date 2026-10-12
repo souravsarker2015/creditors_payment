@@ -104,6 +104,8 @@ class Task(models.Model):
     link = models.URLField(_("Link"), max_length=500, blank=True,
                            help_text=_("The pull request, issue, ticket or doc this is about."))
     goal = models.ForeignKey("Goal", on_delete=models.SET_NULL, null=True, blank=True, related_name="tasks", verbose_name=_("Goal"))
+    waiting_for = models.CharField(_("Waiting on"), max_length=120, blank=True,
+                                   help_text=_("Who or what it's stuck on: a code review, Rahim, the client, a deploy…"))
     order = models.FloatField(default=0, help_text="Position in its column (smaller first).")
     completed_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -358,6 +360,10 @@ class WorkSettings(models.Model):
     long_timer_hours = models.PositiveSmallIntegerField(_("Remind me when a timer runs over (hours)"), default=3,
                                                         validators=[MinValueValidator(1), MaxValueValidator(24)])
     default_project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True, blank=True, related_name="+", verbose_name=_("Default project"))
+    idle_minutes = models.PositiveSmallIntegerField(_("Ask about idle time after (minutes)"), default=15,
+                                                    validators=[MinValueValidator(0), MaxValueValidator(240)],
+                                                    help_text=_("When you come back to a running timer after this long away. 0 = never ask."))
+    feed_token = models.CharField(max_length=40, blank=True, help_text="Secret part of the calendar feed address.")
 
     def __str__(self):
         return f"Work settings for {self.owner}"
@@ -374,6 +380,13 @@ class WorkSettings(models.Model):
 
     def is_work_day(self, day):
         return str(day.weekday()) in self.work_days
+
+    def new_feed_token(self):
+        import secrets
+
+        self.feed_token = secrets.token_urlsafe(24)
+        self.save(update_fields=["feed_token"])
+        return self.feed_token
 
     def week_of(self, day):
         """(first, last) day of the week `day` is in."""

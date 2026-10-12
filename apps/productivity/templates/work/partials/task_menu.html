@@ -3,6 +3,11 @@
   <button type="button" class="menu-item" role="menuitem" data-menu="myday">{% icon "sun" %}<span data-label-on="{% translate 'Remove from My Day' %}" data-label-off="{% translate 'Add to My Day' %}"></span></button>
   <button type="button" class="menu-item" role="menuitem" data-menu="today">{% icon "calendar" %}{% translate "Due today" %}</button>
   <button type="button" class="menu-item" role="menuitem" data-menu="tomorrow">{% icon "calendar" %}{% translate "Due tomorrow" %}</button>
+  <button type="button" class="menu-item" role="menuitem" data-menu="waiting">{% icon "clock" %}<span data-label-on="{% translate 'No longer waiting' %}" data-label-off="{% translate 'Waiting on someone…' %}"></span></button>
+  <form class="wt-menu-form" data-menu-form="waiting" hidden>
+    <input class="form-input input-compact" maxlength="120" placeholder="{% translate 'Who or what? (review, Rahim, deploy…)' %}" aria-label="{% translate 'Waiting on' %}">
+    <button type="submit" class="btn btn-primary btn-sm">{% translate "Set" %}</button>
+  </form>
   <button type="button" class="menu-item" role="menuitem" data-menu="doing">{% icon "play" %}<span data-label-on="{% translate 'Not started' %}" data-label-off="{% translate 'Mark in progress' %}"></span></button>
   <div class="menu-sep"></div>
   <p class="menu-label">{% translate "Priority" %}</p>

@@ -73,7 +73,7 @@ class PagesTests(TestCase):
     def test_every_page(self):
         names = ["today", "tasks", "task_new", "projects", "project_new", "time", "entry_new", "focus", "notes", "snippets",
                  "snippet_new", "habits", "habit_new", "journal", "reports", "settings", "help", "goals", "goal_new", "learning",
-                 "learning_new", "review", "calendar", "share"]
+                 "learning_new", "review", "calendar", "share", "wrapup"]
         for name in names:
             with self.subTest(name):
                 r = self.client.get(reverse(f"work:{name}"))
@@ -279,7 +279,8 @@ class NotesHabitsFocusTests(TestCase):
     def test_settings(self):
         r = self.client.post(reverse("work:settings"), {"action": "settings", "s-daily_target_hours": "7.5", "s-work_day_list": ["6", "0", "1", "2", "3"],
                                                         "s-week_start": "6", "s-focus_minutes": "50", "s-short_break_minutes": "10", "s-long_break_minutes": "20",
-                                                        "s-long_break_every": "3", "s-sound": "bell", "s-volume": "40", "s-long_timer_hours": "4"})
+                                                        "s-long_break_every": "3", "s-sound": "bell", "s-volume": "40", "s-long_timer_hours": "4",
+                                                        "s-idle_minutes": "20"})
         self.assertEqual(r.status_code, 302)
         s = WorkSettings.for_user(self.user)
         self.assertEqual((s.daily_target_minutes, s.work_days, s.focus_minutes, s.sound_enabled), (450, "01236", 50, False))
@@ -522,3 +523,135 @@ class ReviewCalendarExportTests(TestCase):
         plain = User.objects.create_user("plain", "", PW)
         self.client.force_login(plain)
         self.assertNotContains(self.client.get(reverse("search") + "?q=ship"), "Ship 2FA")
+
+
+class DailyFlowTests(TestCase):
+    """Waiting on others, leftovers, capacity, wrap-up, bulk changes, note templates."""
+
+    def setUp(self):
+        self.user = User.objects.create_superuser("dev", "d@example.com", PW)
+        self.client.force_login(self.user)
+        self.today = timezone.localdate()
+
+    def test_waiting_on_someone(self):
+        t = Task.objects.create(owner=self.user, title="Merge auth PR")
+        r = self.client.post(reverse("work:api_task_update", args=[t.pk]), {"waiting_for": "Rahim's review"}).json()
+        self.assertIn("Rahim", r["html"])
+        page = self.client.get(reverse("work:tasks")).content.decode()
+        self.assertIn('data-group="waiting"', page)
+        self.assertIn("Waiting on Rahim", self.client.get(reverse("work:journal")).content.decode().replace("&#x27;", "'"))   # in the standup
+        self.assertContains(self.client.get(reverse("work:today")), "Waiting on others")
+
+    def test_leftovers_and_capacity(self):
+        Task.objects.create(owner=self.user, title="From yesterday", my_day=self.today - timedelta(days=1))
+        for i in range(4):
+            Task.objects.create(owner=self.user, title=f"Big {i}", my_day=self.today, estimate_minutes=120)
+        s = WorkSettings.for_user(self.user)
+        s.work_days = "0123456"
+        s.save()
+        r = self.client.get(reverse("work:today"))
+        self.assertContains(r, "left from earlier days")
+        self.assertContains(r, "wd-cap is-over")             # 8h planned > 6h day
+
+    def test_bulk(self):
+        a, b, c = (Task.objects.create(owner=self.user, title=x) for x in "abc")
+        other = Task.objects.create(owner=User.objects.create_user("o", "", PW), title="not mine")
+        ids = f"{a.pk},{b.pk},{other.pk}"
+        self.assertEqual(self.client.post(reverse("work:api_task_bulk"), {"ids": ids, "action": "myday"}).json()["count"], 2)
+        self.assertEqual(Task.objects.filter(my_day=self.today).count(), 2)
+        self.client.post(reverse("work:api_task_bulk"), {"ids": ids, "action": "due", "value": "2026-12-01"})
+        self.client.post(reverse("work:api_task_bulk"), {"ids": ids, "action": "priority", "value": "4"})
+        a.refresh_from_db()
+        self.assertEqual((str(a.due_date), a.priority), ("2026-12-01", 4))
+        self.client.post(reverse("work:api_task_bulk"), {"ids": f"{a.pk}", "action": "tomorrow"})
+        a.refresh_from_db()
+        self.assertEqual(a.my_day, self.today + timedelta(days=1))
+        self.client.post(reverse("work:api_task_bulk"), {"ids": ids, "action": "done"})
+        self.assertEqual(Task.objects.filter(owner=self.user, status=Status.DONE).count(), 2)
+        self.client.post(reverse("work:api_task_bulk"), {"ids": f"{c.pk},{other.pk}", "action": "delete"})
+        self.assertFalse(Task.objects.filter(pk=c.pk).exists())
+        self.assertTrue(Task.objects.filter(pk=other.pk).exists())       # someone else's is never touched
+        self.assertEqual(self.client.post(reverse("work:api_task_bulk"), {"ids": "1", "action": "explode"}).status_code, 400)
+
+    def test_wrapup_moves_to_tomorrow_and_plans(self):
+        t = Task.objects.create(owner=self.user, title="Unfinished", my_day=self.today, due_date=self.today)
+        r = self.client.get(reverse("work:wrapup"))
+        self.assertContains(r, "Unfinished")
+        self.client.post(reverse("work:api_task_bulk"), {"ids": t.pk, "action": "tomorrow"})
+        t.refresh_from_db()
+        self.assertEqual((t.my_day, t.due_date), (self.today + timedelta(days=1),) * 2)
+        tomorrow = (self.today + timedelta(days=1)).isoformat()
+        self.client.post(reverse("work:api_journal_save"), {"date": tomorrow, "plan": "Ship it"})
+        self.assertEqual(JournalEntry.objects.get(owner=self.user, date=tomorrow).plan, "Ship it")
+
+    def test_note_templates(self):
+        r = self.client.get(reverse("work:notes") + "?new=1&template=adr")
+        self.assertContains(r, "Decision record")
+        self.assertContains(r, "Consequences")
+        self.assertContains(self.client.get(reverse("work:notes") + "?new=1"), "template=meeting")
+
+
+class FeedAndRestoreTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_superuser("dev", "d@example.com", PW)
+        self.client.force_login(self.user)
+
+    def test_calendar_feed_needs_only_its_secret(self):
+        Task.objects.create(owner=self.user, title="Release, v2; final", due_date=timezone.localdate() + timedelta(days=3))
+        Task.objects.create(owner=self.user, title="Call client", remind_at=timezone.now() + timedelta(hours=2))
+        Goal.objects.create(owner=self.user, title="Senior", target_date=timezone.localdate() + timedelta(days=90))
+        self.client.post(reverse("work:settings"), {"action": "feed"})
+        token = WorkSettings.objects.get(owner=self.user).feed_token
+        self.assertGreaterEqual(len(token), 20)
+        self.client.logout()
+        r = self.client.get(reverse("work:feed", args=[token]))
+        self.assertEqual(r.status_code, 200)
+        body = r.content.decode()
+        self.assertIn("SUMMARY:Release\\, v2\\; final", body)
+        self.assertIn("BEGIN:VALARM", body)
+        self.assertIn("Senior", body)
+        self.assertEqual(self.client.get(reverse("work:feed", args=["x" * 32])).status_code, 404)
+        self.client.force_login(self.user)
+        self.client.post(reverse("work:settings"), {"action": "feed_off"})
+        self.client.logout()
+        self.assertEqual(self.client.get(reverse("work:feed", args=[token])).status_code, 404)
+
+    def test_restore_a_backup(self):
+        import io
+
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        p = Project.objects.create(owner=self.user, name="API")
+        g = Goal.objects.create(owner=self.user, title="Ship", project=p)
+        g.steps.create(text="Beta")
+        t = Task.objects.create(owner=self.user, title="Write docs", project=p, goal=g)
+        t.tags.add(Tag.objects.create(owner=self.user, name="docs"))
+        t.checklist.create(text="Intro")
+        TimeEntry.objects.create(owner=self.user, task=t, project=p, started_at=timezone.now() - timedelta(hours=1), ended_at=timezone.now())
+        Note.objects.create(owner=self.user, title="N", body="b")
+        h = Habit.objects.create(owner=self.user, name="Read")
+        HabitCheck.objects.create(habit=h, date=timezone.localdate())
+        JournalEntry.objects.create(owner=self.user, date=timezone.localdate(), wins="x")
+        backup = self.client.get(reverse("work:export")).content
+
+        fresh = User.objects.create_superuser("new", "n@example.com", PW)
+        self.client.force_login(fresh)
+        upload = SimpleUploadedFile("backup.zip", backup, content_type="application/zip")
+        r = self.client.post(reverse("work:settings"), {"action": "restore", "backup": upload})
+        self.assertEqual(r.status_code, 302)
+        task = Task.objects.get(owner=fresh, title="Write docs")
+        self.assertEqual((task.project.owner, task.project.name, task.goal.title), (fresh, "API", "Ship"))
+        self.assertEqual(list(task.tags.values_list("name", flat=True)), ["docs"])
+        self.assertEqual(task.checklist.count(), 1)
+        self.assertEqual(task.goal.steps.count(), 1)
+        self.assertEqual(TimeEntry.objects.get(owner=fresh).task, task)
+        self.assertTrue(HabitCheck.objects.filter(habit__owner=fresh).exists())
+        self.assertTrue(JournalEntry.objects.filter(owner=fresh).exists())
+        self.assertEqual(Task.objects.filter(owner=self.user).count(), 1)        # the original is untouched
+
+        bad = SimpleUploadedFile("x.json", b'[{"model": "auth.user", "pk": 1, "fields": {"username": "evil"}}]', content_type="application/json")
+        self.client.post(reverse("work:settings"), {"action": "restore", "backup": bad})
+        self.assertFalse(User.objects.filter(username="evil").exists())          # only tracker records are read
+        junk = SimpleUploadedFile("x.zip", io.BytesIO(b"not a zip").getvalue())
+        r = self.client.post(reverse("work:settings"), {"action": "restore", "backup": junk}, follow=True)
+        self.assertContains(r, "isn&#x27;t a Productivity backup")

@@ -3,6 +3,7 @@
   <a href="{% url 'work:task' t.pk %}" class="wb-card-title">{{ t.title }}</a>
   <div class="wt-task-meta">
     {% if t.priority >= 3 %}<span class="wt-prio" data-p="{{ t.priority }}">{{ t.get_priority_display }}</span>{% endif %}
+    {% if t.waiting_for %}<span class="wt-wait">{% icon "clock" %}{{ t.waiting_for }}</span>{% endif %}
     {% if t.project %}<span class="wt-proj"><span class="wt-dot" data-color="{{ t.project.color }}"></span>{{ t.project.name }}</span>{% endif %}
     {% if t.due_date %}<span class="wt-due" data-tone="{{ t|due_tone }}">{% icon "calendar" %}{{ t.due_date|due_label }}</span>{% endif %}
     {% if t.link %}<a href="{{ t.link }}" class="wt-link" target="_blank" rel="noopener noreferrer">{% icon "link" %}{{ t.link_label }}</a>{% endif %}

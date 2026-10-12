@@ -1,0 +1,14 @@
+{% load i18n work %}{% comment %}"You were away": the timer kept running while the computer slept or you were away (work.js: workIdle).{% endcomment %}
+<div x-data="workIdle" x-cloak>
+  <div class="wc-backdrop" x-show="open" x-transition.opacity></div>
+  <section class="wc wid" x-show="open" x-transition.scale.98 x-trap.noscroll="open" role="alertdialog" aria-modal="true" aria-labelledby="wid-title" @keydown.escape="keep()">
+    <div class="wid-head"><span class="wid-icon">{% icon "clock" %}</span>
+      <div><h2 id="wid-title" class="card-title">{% blocktranslate %}You were away for <span x-text="awayText"></span>{% endblocktranslate %}</h2>
+        <p class="wid-sub">{% blocktranslate %}The timer for “<b x-text="label"></b>” kept running since <b x-text="sinceText"></b>.{% endblocktranslate %}</p></div></div>
+    <div class="wid-actions">
+      <button type="button" class="btn btn-primary" @click="trim()">{% translate "Remove the time away, keep going" %}</button>
+      <button type="button" class="btn btn-secondary" @click="stopAt()">{% blocktranslate %}Stop it at <span x-text="sinceText"></span>{% endblocktranslate %}</button>
+      <button type="button" class="btn btn-ghost" @click="keep()">{% translate "I was working — keep it" %}</button>
+    </div>
+  </section>
+</div>

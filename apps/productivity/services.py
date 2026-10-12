@@ -5,6 +5,7 @@ import re
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta
+from datetime import timezone as dt_timezone
 from functools import cached_property
 
 from django.db import transaction
@@ -488,6 +489,7 @@ def standup(user, today=None):
     plan, _done_today = today_tasks(user, today)
     journal = JournalEntry.objects.filter(owner=user, date=today).first()
     blockers = [line.strip("-* ").strip() for line in (journal.blockers if journal else "").splitlines() if line.strip()]
+    blockers += [_("Waiting on %(who)s: %(task)s") % {"who": t.waiting_for, "task": t.title} for t in waiting_tasks(user)[:8]]
 
     def line(task):
         return f"{task.title}" + (f" ({task.project.name})" if task.project_id else "")
@@ -623,3 +625,184 @@ def review_markdown(data):
     if active:
         lines += ["", f"## {_('Goals in progress')}"] + [f"- {g.title}: {g.pct}%" for g in active]
     return "\n".join(lines) + "\n"
+
+
+
+# ── Waiting on others, leftovers, capacity ────────────────────────────────
+def waiting_tasks(user):
+    return list(Task.objects.filter(owner=user).exclude(waiting_for="").exclude(status=Status.DONE).select_related("project").order_by("updated_at"))
+
+
+def leftovers(user, today=None):
+    """Picked for an earlier day (this past week), not done, and not already on today's list."""
+    today = today or timezone.localdate()
+    return list(Task.objects.filter(owner=user, my_day__lt=today, my_day__gte=today - timedelta(days=7))
+                .exclude(status__in=[Status.DONE, Status.DOING]).exclude(due_date__lte=today).select_related("project"))
+
+
+def capacity(tasks, user, today=None):
+    """What's planned for today against the time that's left of the daily target."""
+    s = WorkSettings.for_user(user)
+    planned = sum((t.estimate_minutes or 0) for t in tasks if not t.is_done) * 60
+    unestimated = sum(1 for t in tasks if not t.is_done and not t.estimate_minutes)
+    target = s.daily_target_minutes * 60 if s.is_work_day(today or timezone.localdate()) else 0
+    return {"planned": planned, "unestimated": unestimated, "target": target, "over": bool(target) and planned > target,
+            "pct": min(round(100 * planned / target), 100) if target else 0}
+
+
+# ── Many tasks at once ────────────────────────────────────────────────────
+BULK_ACTIONS = ("done", "myday", "notmyday", "tomorrow", "due", "project", "priority", "status", "delete")
+
+
+@transaction.atomic
+def bulk(user, ids, action, value=""):
+    """Applies one change to many tasks; returns how many changed."""
+    tasks = list(Task.objects.filter(owner=user, pk__in=ids))
+    today = timezone.localdate()
+    if action == "delete":
+        from apps.trash.services import trash
+
+        for t in tasks:
+            trash(user, t, _("Task: %(title)s") % {"title": t.title}, "")
+        return len(tasks)
+    for t in tasks:
+        if action == "done":
+            set_done(t, True)
+            continue
+        if action == "myday":
+            t.my_day = today
+        elif action == "notmyday":
+            t.my_day = None
+        elif action == "tomorrow":     # on to tomorrow's list (and its due date, if it was due by today)
+            t.my_day = today + timedelta(days=1)
+            if t.due_date and t.due_date <= today:
+                t.due_date = t.my_day
+        elif action == "due":
+            t.due_date = date.fromisoformat(value) if value else None
+        elif action == "project":
+            t.project = Project.objects.filter(owner=user, pk=value or 0).first()
+        elif action == "priority" and value.isdigit() and int(value) in Priority.values:
+            t.priority = int(value)
+        elif action == "status" and value in Status.values and value != Status.DONE:
+            if t.is_done:
+                set_done(t, False)
+            t.status = value
+        t.save()
+    return len(tasks)
+
+
+# ── Restore from a backup (the export .zip / data.json) ───────────────────
+BACKUP_ORDER = ["project", "tag", "goal", "goalstep", "task", "checklistitem", "timeentry", "note", "snippet",
+                "habit", "habitcheck", "journalentry", "learningitem"]
+
+
+@transaction.atomic
+def restore(user, rows):
+    """Adds everything in a backup to this person's tracker, with new ids.
+    Only Productivity records are read; anything else in the file is ignored.
+    Tags and journal days that already exist are kept as they are."""
+    import json
+
+    from django.apps import apps as django_apps
+    from django.core import serializers
+
+    rows = [r for r in rows if isinstance(r, dict) and str(r.get("model", "")).startswith("productivity.")
+            and r["model"].split(".", 1)[1] in BACKUP_ORDER]
+    rows.sort(key=lambda r: BACKUP_ORDER.index(r["model"].split(".", 1)[1]))
+    ids, counts = defaultdict(dict), defaultdict(int)
+    running = TimeEntry.objects.filter(owner=user, ended_at__isnull=True).exists()
+    for row in rows:
+        name = row["model"].split(".", 1)[1]
+        model = django_apps.get_model("productivity", name)
+        fields = dict(row.get("fields") or {})
+        if "owner" in fields:
+            fields["owner"] = user.pk
+        old_pk = row.get("pk")
+        m2m = {}
+        for f in model._meta.get_fields():
+            if not getattr(f, "concrete", False) or f.name not in fields:
+                continue
+            if f.many_to_many:
+                m2m[f.name] = [ids[f.related_model._meta.model_name].get(v) for v in fields.pop(f.name) or []]
+            elif f.is_relation and f.name != "owner" and fields[f.name] is not None:
+                fields[f.name] = ids[f.related_model._meta.model_name].get(fields[f.name])
+                if fields[f.name] is None and not f.null:
+                    fields = None
+                    break
+        if fields is None:
+            continue
+        if name == "tag":
+            tag, _created = Tag.objects.get_or_create(owner=user, name=fields["name"], defaults={"color": fields.get("color", "slate")})
+            ids["tag"][old_pk] = tag.pk
+            continue
+        if name == "journalentry" and JournalEntry.objects.filter(owner=user, date=fields.get("date")).exists():
+            continue
+        if name == "habitcheck" and HabitCheck.objects.filter(habit_id=fields.get("habit"), date=fields.get("date")).exists():
+            continue
+        if name == "timeentry" and fields.get("ended_at") is None:
+            if running:
+                fields["ended_at"] = fields.get("started_at")
+            running = True
+        obj = next(serializers.deserialize("json", json.dumps([{"model": row["model"], "fields": fields}])))
+        obj.object.pk = None
+        obj.object.save()
+        ids[name][old_pk] = obj.object.pk
+        for fname, values in m2m.items():
+            getattr(obj.object, fname).set([v for v in values if v])
+        counts[name] += 1
+    return dict(counts)
+
+
+# ── Calendar feed (.ics) ──────────────────────────────────────────────────
+def _ics(value):
+    return str(value).replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,").replace("\n", "\\n")
+
+
+def _fold(line):
+    out, part = [], ""
+    for ch in line:
+        if len((part + ch).encode()) > 73:
+            out.append(part)
+            part = " "
+        part += ch
+    out.append(part)
+    return "\r\n".join(out)
+
+
+def calendar_feed(user, base_url=""):
+    """Open tasks with a due date (all-day), reminders (timed, with an alarm)
+    and goal deadlines, for Google / Apple / Outlook calendars."""
+    from django.urls import reverse
+
+    now = timezone.now()
+    stamp = now.strftime("%Y%m%dT%H%M%SZ")
+    lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//FinTrack//Productivity//EN", "CALSCALE:GREGORIAN",
+             "X-WR-CALNAME:" + _ics(_("Work tasks")), "REFRESH-INTERVAL;VALUE=DURATION:PT1H", "X-PUBLISHED-TTL:PT1H"]
+
+    def event(uid, summary, url, start_lines, alarm=False, description=""):
+        nonlocal lines
+        lines += ["BEGIN:VEVENT", f"UID:{uid}@fintrack-work", f"DTSTAMP:{stamp}", *start_lines, _fold("SUMMARY:" + _ics(summary))]
+        if url:
+            lines.append(_fold("URL:" + base_url + url))
+        if description or url:
+            lines.append(_fold("DESCRIPTION:" + _ics("\n".join(x for x in (description, base_url + url if url else "") if x))))
+        if alarm:
+            lines += ["BEGIN:VALARM", "ACTION:DISPLAY", _fold("DESCRIPTION:" + _ics(summary)), "TRIGGER:PT0M", "END:VALARM"]
+        lines.append("END:VEVENT")
+
+    open_tasks = Task.objects.filter(owner=user).exclude(status=Status.DONE).select_related("project")
+    for t in open_tasks.filter(due_date__gte=timezone.localdate() - timedelta(days=30)):
+        nxt = t.due_date + timedelta(days=1)
+        event(f"task-{t.pk}", t.title, reverse("work:task", args=[t.pk]),
+              [f"DTSTART;VALUE=DATE:{t.due_date:%Y%m%d}", f"DTEND;VALUE=DATE:{nxt:%Y%m%d}"],
+              description=" · ".join(x for x in (t.project.name if t.project_id else "", t.link) if x))
+    for t in open_tasks.filter(remind_at__gte=now - timedelta(days=7)):
+        at = t.remind_at.astimezone(dt_timezone.utc)
+        end = at + timedelta(minutes=15)
+        event(f"remind-{t.pk}", "⏰ " + t.title, reverse("work:task", args=[t.pk]),
+              [f"DTSTART:{at:%Y%m%dT%H%M%SZ}", f"DTEND:{end:%Y%m%dT%H%M%SZ}"], alarm=True)
+    for g in Goal.objects.filter(owner=user, status=GoalStatus.ACTIVE, target_date__isnull=False):
+        event(f"goal-{g.pk}", "🎯 " + g.title, reverse("work:goal", args=[g.pk]),
+              [f"DTSTART;VALUE=DATE:{g.target_date:%Y%m%d}", f"DTEND;VALUE=DATE:{g.target_date + timedelta(days=1):%Y%m%d}"])
+    lines.append("END:VCALENDAR")
+    return "\r\n".join(lines) + "\r\n"

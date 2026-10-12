@@ -8,7 +8,13 @@
   <aside class="wn-list">
     <div class="wn-list-head">
       <h1 class="wp-title">{% translate "Notes" %}</h1>
-      <a href="{% url 'work:notes' %}?new=1" class="btn btn-primary btn-sm">{% icon "plus" %}{% translate "New" %}</a>
+      <div class="wpg">
+        <a href="{% url 'work:notes' %}?new=1" class="btn btn-primary btn-sm">{% icon "plus" %}{% translate "New" %}</a>
+        <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
+          <button type="button" class="btn btn-secondary btn-sm" @click="open = !open" :aria-expanded="open" aria-haspopup="true">{% translate "Template" %}{% icon "chevron-down" %}</button>
+          <div class="menu" x-show="open" x-cloak role="menu">{% for key, label in templates %}<a href="{% url 'work:notes' %}?new=1&template={{ key }}" class="menu-item" role="menuitem">{% icon "note" %}{{ label }}</a>{% endfor %}</div>
+        </div>
+      </div>
     </div>
     <form method="get" class="input-icon">
       {% icon "search" %}

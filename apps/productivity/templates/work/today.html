@@ -10,6 +10,7 @@
     <h1 class="wp-title">{{ greeting }}{% if user.first_name %}, {{ user.first_name }}{% endif %}</h1>
   </div>
   <div class="wp-actions">
+    <a href="{% url 'work:wrapup' %}" class="btn {% if hour_late %}btn-primary{% else %}btn-ghost{% endif %}">{% icon "sun" %}{% translate "Wrap up the day" %}</a>
     <a href="{% url 'work:focus' %}" class="btn btn-secondary">{% icon "bolt" %}{% translate "Focus" %}</a>
     <button type="button" class="btn btn-primary" @click="$dispatch('work:capture', 'task')">{% icon "plus" %}{% translate "Task" %}<kbd class="wp-kbd">c</kbd></button>
   </div>
@@ -41,9 +42,19 @@
 <div class="wd-grid">
   <section class="card wd-tasks{% if open_tasks %} has-items{% endif %}" x-data="workTasks" data-empty-wrap>
     <header class="card-header">
-      <div><h2 class="card-title">{% translate "My Day" %}</h2><p class="card-subtitle">{% translate "In progress, due today or late, and what you picked for today." %}</p></div>
+      <div><h2 class="card-title">{% translate "My Day" %}</h2><p class="card-subtitle">{% translate "In progress, due today or late, and what you picked for today." %}</p>
+        {% if cap.target and cap.planned %}<p class="wd-cap{% if cap.over %} is-over{% endif %}"><span class="wd-cap-bar"><i style="width: {{ cap.pct }}%"></i></span>
+          {% if cap.over %}{% blocktranslate with p=cap.planned|hm t=cap.target|hm %}{{ p }} planned — more than your {{ t }} day. Move something to tomorrow?{% endblocktranslate %}{% else %}{% blocktranslate with p=cap.planned|hm t=cap.target|hm %}{{ p }} planned of your {{ t }} day{% endblocktranslate %}{% endif %}{% if cap.unestimated %} · {% blocktranslate count counter=cap.unestimated %}{{ counter }} without an estimate{% plural %}{{ counter }} without an estimate{% endblocktranslate %}{% endif %}</p>{% endif %}
+      </div>
       <a href="{% url 'work:tasks' %}" class="btn btn-ghost btn-sm">{% translate "All tasks" %}{% icon "arrow-right" %}</a>
     </header>
+    {% if leftovers %}
+    <div class="wd-left" x-data="{ gone: false, key: 'work-left-seen:{{ today|date:"Y-m-d" }}', init() { try { this.gone = !!localStorage.getItem(this.key) } catch (e) {} } }" x-show="!gone">
+      <p>{% icon "repeat" %}<span>{% blocktranslate count counter=leftovers|length %}{{ counter }} task left from earlier days.{% plural %}{{ counter }} tasks left from earlier days.{% endblocktranslate %}</span></p>
+      <button type="button" class="btn btn-secondary btn-sm" @click="Work.api('{% url 'work:api_task_bulk' %}', { ids: '{% for t in leftovers %}{{ t.pk }}{% if not forloop.last %},{% endif %}{% endfor %}', action: 'myday' }).then(r => { if (r.ok) location.reload(); })">{% translate "Add them to today" %}</button>
+      <button type="button" class="btn btn-ghost btn-sm" @click="gone = true; try { localStorage.setItem(key, '1') } catch (e) {}">{% translate "Not now" %}</button>
+    </div>
+    {% endif %}
     <form class="wd-quick" @submit.prevent="const box = $refs.q; if (!box.value.trim()) return; Work.api(Work.cfg.urls.taskAdd, { text: box.value, my_day: '1' }).then(r => { if (r.ok && r.html) { $refs.list.insertAdjacentHTML('afterbegin', r.html); $root.classList.add('has-items'); } else if (!r.ok) Work.toast(r.error, 'warn'); }); box.value = ''">
       <span class="wd-quick-icon" aria-hidden="true">{% icon "plus" %}</span>
       <input x-ref="q" class="wd-quick-input" placeholder="{% translate 'Add to My Day… (try #tag !high ~30m)' %}" aria-label="{% translate 'Add a task to My Day' %}" autocomplete="off" enterkeyhint="done">
@@ -85,6 +96,13 @@
         </li>
         {% endfor %}
       </ul>
+    </section>
+    {% endif %}
+
+    {% if waiting %}
+    <section class="card">
+      <header class="card-header"><div><h2 class="card-title">{% translate "Waiting on others" %}</h2><p class="card-subtitle">{% translate "Follow up if it's been a while." %}</p></div><a href="{% url 'work:tasks' %}" class="btn btn-ghost btn-sm">{% translate "All" %}</a></header>
+      <ul class="wd-notes">{% for t in waiting %}<li><a href="{% url 'work:task' t.pk %}"><span class="truncate">{{ t.title }}</span><time class="wt-wait">{{ t.waiting_for }} · {{ t.updated_at|timesince }}</time></a></li>{% endfor %}</ul>
     </section>
     {% endif %}
 

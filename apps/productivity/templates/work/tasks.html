@@ -14,6 +14,7 @@
       <a href="{% query_with view='list' %}" class="seg-item{% if view == 'list' %} is-active{% endif %}">{% icon "list" %}{% translate "List" %}</a>
       <a href="{% query_with view='board' %}" class="seg-item{% if view == 'board' %} is-active{% endif %}">{% icon "board" %}{% translate "Board" %}</a>
     </nav>
+    {% if view == "list" %}<button type="button" class="btn btn-secondary" data-bulk-toggle aria-pressed="false">{% icon "check" %}{% translate "Select" %}</button>{% endif %}
     <a href="{% url 'work:task_new' %}" class="btn btn-secondary">{% translate "Full form" %}</a>
     <button type="button" class="btn btn-primary" @click="$dispatch('work:capture', 'task')">{% icon "plus" %}{% translate "Task" %}<kbd class="wp-kbd">c</kbd></button>
   </div>
@@ -78,7 +79,7 @@
   {% endfor %}
 </div>
 {% else %}
-<div x-data="workTasks" class="wt-groups" data-work-refresh>
+<div x-data="workTasks" class="wt-groups" data-work-refresh data-bulk-root>
   <ul class="wt-list" data-new-tasks></ul>
   {% if one_group %}<a href="{% query_with group='' page='' %}" class="back-link">{% icon "chevron-left" %}{% translate "All groups" %}</a>{% endif %}
   {% for key, label, items, total in groups %}
@@ -105,6 +106,25 @@
     {% endif %}
   </section>
   {% endif %}
+</div>
+{% endif %}
+
+{% if view == "list" %}
+<div class="wt-bulkbar" data-bulkbar hidden role="toolbar" aria-label="{% translate 'Selected tasks' %}">
+  <span class="wt-bulk-count"><b data-bulk-count>0</b> {% translate "selected" %}</span>
+  <button type="button" class="btn btn-ghost btn-sm" data-bulk-all>{% translate "All" %}</button>
+  <span class="wt-bulk-sep"></span>
+  <button type="button" class="btn btn-primary btn-sm" data-bulk="done">{% icon "check" %}{% translate "Done" %}</button>
+  <button type="button" class="btn btn-secondary btn-sm" data-bulk="myday">{% icon "sun" %}{% translate "My Day" %}</button>
+  <select class="form-input input-compact" data-bulk="due" data-native aria-label="{% translate 'Due' %}">
+    <option value="">{% translate "Due…" %}</option><option value="today">{% translate "Today" %}</option><option value="tomorrow">{% translate "Tomorrow" %}</option>
+    <option value="week">{% translate "In a week" %}</option><option value="none">{% translate "No date" %}</option></select>
+  <select class="form-input input-compact" data-bulk="project" data-native aria-label="{% translate 'Project' %}">
+    <option value="">{% translate "Project…" %}</option>{% for p in projects %}<option value="{{ p.pk }}">{{ p.name }}</option>{% endfor %}<option value="none">{% translate "No project" %}</option></select>
+  <select class="form-input input-compact" data-bulk="priority" data-native aria-label="{% translate 'Priority' %}">
+    <option value="">{% translate "Priority…" %}</option><option value="4">{% translate "Urgent" %}</option><option value="3">{% translate "High" %}</option><option value="2">{% translate "Medium" %}</option><option value="1">{% translate "Low" %}</option><option value="0">{% translate "No priority" %}</option></select>
+  <button type="button" class="icon-btn" data-bulk="delete" aria-label="{% translate 'Delete' %}" title="{% translate 'Delete' %}">{% icon "trash" %}</button>
+  <button type="button" class="btn btn-ghost btn-sm" data-bulk-cancel>{% translate "Cancel" %}</button>
 </div>
 {% endif %}
 {% endblock %}
