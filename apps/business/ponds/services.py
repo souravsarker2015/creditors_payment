@@ -208,6 +208,20 @@ class CycleSummary:
         gained = self.harvest_kg + self.moved_out_kg - self.stocked_kg
         return (self.feed_kg / gained).quantize(Decimal("0.01")) if (self.feed_kg and gained > 0) else None
 
+    @property
+    def fcr_so_far(self):
+        """While fish are still growing: the fish in the pond count at their
+        latest sample weight, so the FCR can be watched before the harvest."""
+        if not (self.feed_kg and self.biomass_kg):
+            return None
+        gained = self.harvest_kg + self.moved_out_kg + self.biomass_kg - self.stocked_kg
+        return (self.feed_kg / gained).quantize(Decimal("0.01")) if gained > 0 else None
+
+    @property
+    def fcr_now(self):
+        """The FCR worth showing: estimated while the cycle runs, final once it's done."""
+        return self.fcr_so_far if self.cycle.is_running else self.fcr
+
 
 def _rows(cycle, name, *related):
     """The cycle's related rows — already in memory when the caller prefetched
@@ -366,6 +380,74 @@ def projection(summary, today=None):
     return Projection(fish_kg=fish_kg, cost=summary.cost, sold=summary.earned,
                       produced_kg=summary.harvest_kg + summary.moved_out_kg + (fish_kg or ZERO),
                       usual_price=usual_price_per_kg(cycle.business, species_ids, today) if species_ids else None)
+
+
+USUAL_FCR = Decimal("1.6")      # used for the feed still to come until the pond has an FCR of its own
+MAX_LOSS = Decimal("0.5")       # never guess more than half the fish lost while waiting
+
+
+@dataclass
+class WaitPlan:
+    """Keep the fish until they reach selling size: how much more fish there
+    would be, and what the extra days would cost. Same price either way."""
+
+    ready_on: date
+    days: int
+    kg_now: Decimal
+    kg_then: Decimal
+    fish_lost: int          # at the death rate so far
+    fcr: Decimal            # used to work out the feed still to come
+    fcr_guessed: bool       # USUAL_FCR, because this pond has none yet
+    feed_cost: Decimal      # more feed
+    other_cost: Decimal     # wages, lease, care… for the extra days, at the rate so far
+
+    @property
+    def more_kg(self):
+        return (self.kg_then - self.kg_now).quantize(Decimal("1"))
+
+    @property
+    def more_cost(self):
+        return self.feed_cost + self.other_cost
+
+
+def wait_plan(summary, forecasts, today=None):
+    """None when there's nothing to wait for: no weighing, no growth, or every
+    fish already at selling size."""
+    today = today or date.today()
+    kg_now = summary.biomass_kg
+    growing = [f for f in forecasts if f.status == "growing" and f.ready_on and not f.far]
+    if not kg_now or not growing or not summary.feed_kg:
+        return None
+    ready_on = max(f.ready_on for f in growing)
+    days = (ready_on - today).days
+    if days <= 0:
+        return None
+    ran = max((today - summary.cycle.start_date).days, 1)
+    put_in = summary.stocked + summary.moved_in
+    loss = min(Decimal(summary.died) / put_in / ran * days, MAX_LOSS) if put_in else ZERO
+    kg_then = ZERO
+    fish_lost = 0
+    by_species = {r.species.pk: r for r in summary.species}
+    for f in forecasts:
+        row = by_species.get(f.species.pk)
+        if row is None or not row.biomass_kg:
+            continue
+        alive = Decimal(f.alive) * (1 - loss)
+        fish_lost += f.alive - int(alive)
+        if f.growth and f.last and f.growth > 0:
+            grams = f.last.grams + f.growth * (ready_on - f.last.date).days
+            kg_then += alive * grams / 1000
+        else:   # no growth to go on: the same weight each
+            kg_then += row.biomass_kg * (1 - loss)
+    kg_then = kg_then.quantize(Decimal("1"))
+    fcr = summary.fcr_so_far
+    guessed = fcr is None or not (Decimal("0.8") <= fcr <= Decimal("3"))
+    fcr = USUAL_FCR if guessed else fcr
+    feed_price = summary.feed_cost / summary.feed_kg
+    feed_cost = (max(kg_then - kg_now, ZERO) * fcr * feed_price).quantize(Decimal("1"))
+    running = summary.care_cost + summary.wage_cost + summary.lease_cost + summary.other_cost
+    other_cost = (running / ran * days).quantize(Decimal("1"))
+    return WaitPlan(ready_on, days, kg_now, kg_then, fish_lost, fcr, guessed, feed_cost, other_cost)
 
 
 # ── Today's pond work ───────────────────────────────────────────────────────

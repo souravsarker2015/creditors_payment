@@ -167,6 +167,7 @@ def cycle_detail_view(request, pk):
     moves_in = [m for m in cycle.moves_in.select_related("species", "weight_unit", "cycle__pond") if not m.cycle.is_deleted]
     moves_out = [m for m in cycle.moves_out.select_related("species", "weight_unit", "to_cycle__pond") if not m.to_cycle.is_deleted]
     stockings = list(cycle.stockings.select_related("species", "supplier", "weight_unit"))
+    forecasts = forecast.for_cycle(cycle) if cycle.is_running else []
     return render(request, "business/ponds/cycle_detail.html", {
         "cycle": cycle, "pond": cycle.pond, "s": summary,
         "p": services.projection(summary) if cycle.is_running else None, "mon": mon,
@@ -181,7 +182,7 @@ def cycle_detail_view(request, pk):
         "water": water, "water_now": water[0] if water else None,
         "treatments": treatments, "water_care_count": len(water) + len(treatments),
         "withdrawal": services.withdrawal(cycle),
-        "forecasts": forecast.for_cycle(cycle) if cycle.is_running else [],
+        "forecasts": forecasts, "wait": services.wait_plan(summary, forecasts) if cycle.is_running else None,
         "open": request.GET.get("add") if request.GET.get("add") in ENTRY_KINDS and cycle.is_running else None,
         "tab": request.GET.get("tab") or "overview",
         "today": date.today(),

@@ -195,7 +195,7 @@ def _cycle_report(business, period, request):
         "columns": [_("Pond"), _("Cycle"), _("Started"), _("Days"), _("Fish put in"), _("Alive"), _("Harvest kg"),
                     _("Feed kg"), _("FCR"), _("Cost"), _("Sold"), _("Profit")],
         "rows": [[r.pond.name, r.cycle.label, f"{r.cycle.start_date:%Y-%m-%d}", r.days, r.summary.stocked, r.summary.alive,
-                  _n(r.summary.harvest_kg), _n(r.summary.feed_kg), _n(r.summary.fcr), _n(r.summary.cost),
+                  _n(r.summary.harvest_kg), _n(r.summary.feed_kg), _n(r.summary.fcr_now), _n(r.summary.cost),
                   _n(r.summary.sales_net), _n(r.profit)] for r in rows],
         "total": [_("Total"), "", "", "", "", "", "", "", "", _n(sum((r.summary.cost for r in rows), ZERO)),
                   _n(sum((r.summary.sales_net for r in rows), ZERO)), _n(sum((r.profit for r in rows), ZERO))],

@@ -263,6 +263,14 @@ def statement(business, start, end, scope=Scope.BUSINESS, cycle=None, cache=None
             total = sum((u.kg * prices.get(u.product_id, ZERO) for u in used), ZERO)
             if total:
                 s.expense.append(Line("feed", _("Feed used"), total.quantize(Decimal("0.01")), reverse("business:feed_stock")))
+            if cycle is None:
+                from apps.business.feed.services import count_result
+
+                lost, found = count_result(business, start, end)
+                if lost:
+                    s.expense.append(Line("feed_lost", _("Feed short at store counts"), lost, reverse("business:feed_count")))
+                if found:
+                    s.income.append(Line("feed_found", _("Feed over at store counts"), found, reverse("business:feed_count")))
         if _installed("ponds"):
             from apps.business.ponds.models import Stocking
 

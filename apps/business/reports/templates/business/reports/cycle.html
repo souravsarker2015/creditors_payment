@@ -18,7 +18,7 @@
           <td class="num">{{ o.days }}</td>
           <td class="num">{{ o.summary.stocked|num }}</td>
           <td class="num">{{ o.summary.harvest_kg|num }}</td>
-          <td class="num">{% if o.summary.fcr %}{{ o.summary.fcr|num }}{% endif %}</td>
+          <td class="num">{% if o.summary.fcr_now %}{% if o.cycle.is_running %}≈ {% endif %}{{ o.summary.fcr_now|num }}{% endif %}</td>
           <td class="num">{{ o.summary.cost|bdt }}</td>
           <td class="num">{{ o.summary.sales_net|bdt }}</td>
           <td class="num {% if o.profit < 0 %}tone-critical{% endif %}">{{ o.profit|bdt }}</td>
@@ -31,7 +31,7 @@
       {% for o in r.objects %}
       <li class="stmt-item">
         <div class="min-w-0"><p class="stmt-title"><a href="{% url 'business:cycle_detail' o.cycle.pk %}">{{ o.pond.name }} · {{ o.cycle.label }}</a></p>
-          <p class="stmt-detail">{% blocktranslate count counter=o.days %}{{ counter }} day{% plural %}{{ counter }} days{% endblocktranslate %}{% if o.summary.fcr %} · {% blocktranslate with f=o.summary.fcr|num %}FCR {{ f }}{% endblocktranslate %}{% endif %} · {% blocktranslate with cost=o.summary.cost|bdt %}cost {{ cost }}{% endblocktranslate %}</p></div>
+          <p class="stmt-detail">{% blocktranslate count counter=o.days %}{{ counter }} day{% plural %}{{ counter }} days{% endblocktranslate %}{% if o.summary.fcr_now %} · {% if o.cycle.is_running %}≈ {% endif %}{% blocktranslate with f=o.summary.fcr_now|num %}FCR {{ f }}{% endblocktranslate %}{% endif %} · {% blocktranslate with cost=o.summary.cost|bdt %}cost {{ cost }}{% endblocktranslate %}</p></div>
         <div class="stmt-amounts"><span class="{% if o.profit < 0 %}stmt-got{% else %}stmt-gave{% endif %}">{{ o.profit|bdt }}</span><span class="stmt-detail">{{ o.summary.sales_net|bdt }} {% translate "sold" %}</span></div>
       </li>
       {% endfor %}

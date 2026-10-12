@@ -225,3 +225,53 @@ class FeedProductQuickForm(BusinessForm):
     def page_data(self, obj):
         """What a purchase form needs to work out this feed's kg and price."""
         return {"bag_kg": str(obj.bag_kg), "price": str(obj.default_price or ""), "bag": str(obj.bag_size.normalize())}
+
+
+class StoreCountForm(forms.Form):
+    """Count the bags in the store, feed by feed. A feed left empty wasn't counted."""
+
+    date = forms.DateField(label=_("Date counted"), widget=forms.DateInput(attrs={"class": "form-input datepicker"}, format="%Y-%m-%d"))
+
+    def __init__(self, *args, business, **kwargs):
+        from .services import stock
+
+        super().__init__(*args, **kwargs)
+        self.business = business
+        self.rows = []
+        for row in sorted(stock(business), key=lambda r: (not (r.bought_kg or r.used_kg or r.counted_kg), r.product.name.lower())):
+            p = row.product
+            if not p.bag_kg:
+                continue
+            self.fields[f"n{p.pk}"] = forms.DecimalField(
+                label=str(p), required=False, min_value=0, max_digits=12, decimal_places=2,
+                widget=forms.NumberInput(attrs={"class": "form-input", "inputmode": "decimal", "step": "any", "placeholder": _("bags"), "x-model": "v"}))
+            new = not (row.bought_kg or row.used_kg or row.counted_kg)
+            if new:   # feed you already had: what is it worth?
+                self.fields[f"p{p.pk}"] = money_field(forms.DecimalField(
+                    label=_("Price per bag"), required=False, min_value=0, max_digits=14, decimal_places=2,
+                    widget=forms.NumberInput(attrs={"class": "form-input", "inputmode": "decimal", "step": "any"})))
+                if p.default_price:
+                    self.initial.setdefault(f"p{p.pk}", p.default_price)
+            self.rows.append(row)
+        if not self.is_bound:
+            self.initial.setdefault("date", date.today())
+
+    def count_fields(self):
+        return [(r, self[f"n{r.product.pk}"], self[f"p{r.product.pk}"] if f"p{r.product.pk}" in self.fields else None) for r in self.rows]
+
+    def clean(self):
+        data = super().clean()
+        d = data.get("date")
+        if d and d > date.today():
+            self.add_error("date", _("This date is in the future."))
+        entries = []
+        for r in self.rows:
+            bags = data.get(f"n{r.product.pk}")
+            if bags is None:
+                continue
+            price = data.get(f"p{r.product.pk}")
+            entries.append((r.product, bags * r.product.bag_kg, (price / r.product.bag_kg) if price is not None else None))
+        if not entries:
+            raise forms.ValidationError(_("Type the bags you counted for at least one feed."))
+        data["entries"] = entries
+        return data

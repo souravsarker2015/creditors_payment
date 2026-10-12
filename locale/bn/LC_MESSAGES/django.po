@@ -17212,3 +17212,233 @@ msgstr "টাস্ক যোগ করুন…"
 #, python-format
 msgid "Add a task for %(day)s"
 msgstr "%(day)s-এর জন্য টাস্ক যোগ করুন"
+
+msgid "Date counted"
+msgstr "গোনার তারিখ"
+
+msgid "Type the bags you counted for at least one feed."
+msgstr "অন্তত একটি খাবারের গোনা বস্তার সংখ্যা লিখুন।"
+
+msgid "Price per bag"
+msgstr "প্রতি বস্তার দাম"
+
+msgid "Counted"
+msgstr "গোনা হয়েছে"
+
+msgid "Store count"
+msgstr "গুদাম গণনা"
+
+msgid "Count the store"
+msgstr "গুদাম গুনুন"
+
+msgid "more used than bought — check the entries, or count the store"
+msgstr "কেনার চেয়ে বেশি খরচ — এন্ট্রিগুলো দেখুন, অথবা গুদাম গুনুন"
+
+msgid "Bought minus fed to the ponds, put right by your store counts. The bar shows how much of what you had is used up."
+msgstr "কেনা থেকে পুকুরে খাওয়ানো বাদ, গুদাম গণনা দিয়ে ঠিক করা। দাগটি দেখায় যা ছিল তার কতটা শেষ হয়েছে।"
+
+#, python-format
+msgid "Store last counted %(d)s"
+msgstr "গুদাম শেষ গোনা হয়েছে %(d)s"
+
+msgid "The store hasn't been counted yet"
+msgstr "গুদাম এখনো গোনা হয়নি"
+
+msgid "Count now"
+msgstr "এখন গুনুন"
+
+#, python-format
+msgid "+%(c)s kg at counts"
+msgstr "গণনায় +%(c)s কেজি"
+
+#, python-format
+msgid "−%(c)s kg at counts"
+msgstr "গণনায় −%(c)s কেজি"
+
+msgid "Count feed you already have"
+msgstr "আগে থেকে থাকা খাবার গুনুন"
+
+msgid "Count removed. The stock is back to what the records say."
+msgstr "গণনা মুছে ফেলা হয়েছে। মজুদ আবার হিসাব অনুযায়ী।"
+
+#, python-format
+msgid "Store counted. %(list)s."
+msgstr "গুদাম গোনা হয়েছে। %(list)s।"
+
+#, python-format
+msgid "%(feed)s: %(n)s bags you already had"
+msgstr "%(feed)s: আগে থেকে থাকা %(n)s বস্তা"
+
+#, python-format
+msgid "%(feed)s: %(n)s bags short (%(money)s)"
+msgstr "%(feed)s: %(n)s বস্তা কম (%(money)s)"
+
+#, python-format
+msgid "%(feed)s: %(n)s bags short"
+msgstr "%(feed)s: %(n)s বস্তা কম"
+
+#, python-format
+msgid "%(feed)s: %(n)s bags more than the records"
+msgstr "%(feed)s: হিসাবের চেয়ে %(n)s বস্তা বেশি"
+
+#, python-format
+msgid "%(feed)s: matches the records"
+msgstr "%(feed)s: হিসাবের সাথে মিলেছে"
+
+msgid "Feed short at store counts"
+msgstr "গুদাম গণনায় খাবার কম"
+
+msgid "Feed over at store counts"
+msgstr "গুদাম গণনায় খাবার বেশি"
+
+#, python-format
+msgid "FCR so far ≈ %(f)s"
+msgstr "এ পর্যন্ত এফসিআর ≈ %(f)s"
+
+msgid "Feed eaten so far ÷ the weight the fish have gained: the fish in the pond at their latest sample weight, plus any harvested, minus the fingerlings. Lower is better — carp usually 1.5–2, pangas and tilapia 1.3–1.8. A number climbing between weighings means feed is being wasted."
+msgstr "এ পর্যন্ত খাওয়ানো খাবার ÷ মাছের বাড়তি ওজন: পুকুরের মাছ শেষ নমুনা ওজনে, সাথে যা ধরা হয়েছে, বাদ পোনার ওজন। কম হলে ভালো — কার্প সাধারণত ১.৫–২, পাঙ্গাস ও তেলাপিয়া ১.৩–১.৮। ওজন মাপার ফাঁকে সংখ্যাটি বাড়তে থাকলে খাবার নষ্ট হচ্ছে।"
+
+msgid "Waiting could make about {amount} more."
+msgstr "অপেক্ষা করলে প্রায় {amount} বেশি হতে পারে।"
+
+msgid "Selling now looks about {amount} better."
+msgstr "এখন বিক্রি করলে প্রায় {amount} ভালো মনে হচ্ছে।"
+
+msgid "Sell now or wait?"
+msgstr "এখন বিক্রি, না অপেক্ষা?"
+
+msgid "Sell now"
+msgstr "এখন বিক্রি"
+
+#, python-format
+msgid "Wait until %(date)s"
+msgstr "%(date)s পর্যন্ত অপেক্ষা"
+
+#, python-format
+msgid "more feed %(f)s, other costs %(o)s"
+msgstr "বাড়তি খাবার %(f)s, অন্য খরচ %(o)s"
+
+#, python-format
+msgid "more feed %(f)s"
+msgstr "বাড়তি খাবার %(f)s"
+
+#, python-format
+msgid "Profit for the whole cycle. Assumes the same price, growth as in your weighings and an FCR of %(fcr)s (this pond doesn't have its own yet)."
+msgstr "পুরো সাইকেলের লাভ। ধরে নেওয়া হয়েছে একই দাম, আপনার ওজন মাপার মতো বৃদ্ধি এবং এফসিআর %(fcr)s (এই পুকুরের নিজের এফসিআর এখনো নেই)।"
+
+#, python-format
+msgid "Profit for the whole cycle. Assumes the same price, growth as in your weighings and this pond's FCR so far (%(fcr)s)."
+msgstr "পুরো সাইকেলের লাভ। ধরে নেওয়া হয়েছে একই দাম, আপনার ওজন মাপার মতো বৃদ্ধি এবং এই পুকুরের এ পর্যন্ত এফসিআর (%(fcr)s)।"
+
+#, python-format
+msgid "About %(counter)s fish lost on the way, at the death rate so far."
+msgid_plural "About %(counter)s fish lost on the way, at the death rate so far."
+msgstr[0] "এ পর্যন্ত মরার হারে, মাঝপথে প্রায় %(counter)sটি মাছ মারা যেতে পারে।"
+msgstr[1] "এ পর্যন্ত মরার হারে, মাঝপথে প্রায় %(counter)sটি মাছ মারা যেতে পারে।"
+
+msgid "Send to buyer"
+msgstr "ক্রেতাকে পাঠান"
+
+msgid "Thank you."
+msgstr "ধন্যবাদ।"
+
+#, python-format
+msgid "%(farm)s — fish sale memo"
+msgstr "%(farm)s — মাছ বিক্রির মেমো"
+
+#, python-format
+msgid "Net: %(amount)s"
+msgstr "নিট: %(amount)s"
+
+#, python-format
+msgid "Buyer: %(name)s"
+msgstr "ক্রেতা: %(name)s"
+
+#, python-format
+msgid "Total: %(amount)s"
+msgstr "মোট: %(amount)s"
+
+#, python-format
+msgid "Paid at the sale: %(amount)s"
+msgstr "বিক্রির সময় পরিশোধ: %(amount)s"
+
+#, python-format
+msgid "Still to pay: %(amount)s"
+msgstr "বাকি আছে: %(amount)s"
+
+msgid "Count the bags really in the store and type them in. The app compares them with the records and puts the stock right."
+msgstr "গুদামে আসলে কত বস্তা আছে গুনে লিখুন। অ্যাপ হিসাবের সাথে মিলিয়ে মজুদ ঠিক করে দেবে।"
+
+msgid "Why count the store"
+msgstr "কেন গুদাম গুনবেন"
+
+msgid "Bags go missing, get wet or are fed without being written down. A count once a month keeps the stock true."
+msgstr "বস্তা হারায়, ভিজে নষ্ট হয়, বা না লিখে খাওয়ানো হয়। মাসে একবার গুনলে মজুদ ঠিক থাকে।"
+
+msgid "Feed short at a count is a farm cost; it shows in Income & expenses as “Feed short at store counts”."
+msgstr "গণনায় কম পাওয়া খাবার খামারের খরচ; আয় ও ব্যয়ে “গুদাম গণনায় খাবার কম” হিসেবে দেখায়।"
+
+msgid "Starting out? Count the feed you already have, with its price per bag, so the stock and feed costs start right."
+msgstr "নতুন শুরু করছেন? আগে থেকে থাকা খাবার প্রতি বস্তার দামসহ গুনে দিন, তাহলে মজুদ ও খাবারের খরচ ঠিকভাবে শুরু হবে।"
+
+msgid "Bags in the store"
+msgstr "গুদামে বস্তা"
+
+msgid "Leave a feed empty if you didn't count it. Half bags are fine: type 2.5."
+msgstr "যে খাবার গোনেননি সেটি খালি রাখুন। আধা বস্তাও চলবে: ২.৫ লিখুন।"
+
+msgid "Type what you counted, not what the records say."
+msgstr "হিসাবে যা আছে তা নয়, যা গুনেছেন তা লিখুন।"
+
+msgid "Not bought or used yet — count what you already have"
+msgstr "এখনো কেনা বা খাওয়ানো হয়নি — যা আছে তা গুনুন"
+
+#, python-format
+msgid "Records say %(n)s bags"
+msgstr "হিসাবে %(n)s বস্তা"
+
+#, python-format
+msgid "last counted %(d)s"
+msgstr "শেষ গোনা %(d)s"
+
+msgid "Matches the records"
+msgstr "হিসাবের সাথে মিলেছে"
+
+msgid "{n} bags short"
+msgstr "{n} বস্তা কম"
+
+msgid "{n} bags more than the records"
+msgstr "হিসাবের চেয়ে {n} বস্তা বেশি"
+
+msgid "Save the count"
+msgstr "গণনা সেভ করুন"
+
+msgid "Add the feeds you use first, with their bag size. Then count what's in the store."
+msgstr "আগে আপনার ব্যবহৃত খাবারগুলো বস্তার মাপসহ যোগ করুন। তারপর গুদামে যা আছে গুনুন।"
+
+msgid "Past counts"
+msgstr "আগের গণনা"
+
+msgid "Each count and how far it was from the records."
+msgstr "প্রতিটি গণনা এবং হিসাব থেকে কতটা আলাদা ছিল।"
+
+#, python-format
+msgid "%(n)s bags counted"
+msgstr "%(n)s বস্তা গোনা হয়েছে"
+
+msgid "Already had"
+msgstr "আগে থেকে ছিল"
+
+#, python-format
+msgid "%(n)s bags short"
+msgstr "%(n)s বস্তা কম"
+
+#, python-format
+msgid "%(n)s bags more"
+msgstr "%(n)s বস্তা বেশি"
+
+msgid "Matched"
+msgstr "মিলেছে"
+
+msgid "Remove this count? The stock goes back to what the records say."
+msgstr "এই গণনা মুছবেন? মজুদ আবার হিসাব অনুযায়ী হবে।"

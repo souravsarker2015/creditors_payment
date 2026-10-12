@@ -6,16 +6,19 @@ from django.apps import apps
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import F, Q, Sum
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
 from django.utils.translation import gettext as _g, gettext_lazy as _
 
 from apps.business.core.crud import Master
+from apps.business.core.access import can
 from apps.business.core.decorators import business_access_required
 from apps.business.core.models import Unit
+from apps.business.core.templatetags.business import bdt
 
 from . import services
-from .forms import BulkFeedingForm, FeedLineFormSet, FeedProductForm, FeedPurchaseForm
-from .models import FeedForm, FeedProduct, FeedPurchase, FeedUsage
+from .forms import BulkFeedingForm, FeedLineFormSet, FeedProductForm, FeedPurchaseForm, StoreCountForm
+from .models import FeedCount, FeedForm, FeedProduct, FeedPurchase, FeedUsage
 
 feed_products = Master(
     name="feed_products", model=FeedProduct, form_class=FeedProductForm,
@@ -89,11 +92,54 @@ def stock_view(request):
     else:
         dues = FeedPurchase.objects.filter(business=b, total__gt=F("paid_now")).aggregate(d=Sum(F("total") - F("paid_now")))["d"] or 0
     return render(request, "business/feed/stock.html", {
-        "rows": [r for r in rows if r.bought_kg or r.used_kg], "unused": [r for r in rows if not (r.bought_kg or r.used_kg)],
-        "value": sum((r.value or 0) for r in rows), "low": [r for r in rows if (r.is_low or r.is_negative) and (r.bought_kg or r.used_kg)],
+        "rows": [r for r in rows if r.bought_kg or r.used_kg or r.counted_kg], "unused": [r for r in rows if not (r.bought_kg or r.used_kg or r.counted_kg)],
+        "value": sum((r.value or 0) for r in rows), "low": [r for r in rows if (r.is_low or r.is_negative) and (r.bought_kg or r.used_kg or r.counted_kg)],
         "used_month": used_month, "bought_month": bought_month, "dues": dues,
-        "recent": recent,
+        "recent": recent, "last_counted": services.last_counted(b),
     })
+
+
+def _bags(kg, product):
+    return f"{(abs(kg) / product.bag_kg).quantize(Decimal('0.1')):,}".rstrip("0").rstrip(".") if product.bag_kg else f"{abs(kg):,.1f}"
+
+
+@business_access_required
+def count_view(request):
+    """Count the store: the records put right by what's really there."""
+    b = request.business
+    form = StoreCountForm(request.POST or None, business=b)
+    may_count = can(request.membership, "enter_data")
+    if request.method == "POST":
+        if not may_count:
+            return render(request, "business/forbidden.html", {"reason": "role", "capability": "enter_data"}, status=403)
+        if form.is_valid():
+            made = services.save_counts(b, form.cleaned_data["date"], form.cleaned_data["entries"])
+            parts = []
+            for c in made:
+                if c.opening:
+                    parts.append(_g("%(feed)s: %(n)s bags you already had") % {"feed": c.product, "n": _bags(c.counted_kg, c.product)})
+                elif c.difference_kg < 0 and can(request.membership, "view_finance"):
+                    parts.append(_g("%(feed)s: %(n)s bags short (%(money)s)") % {"feed": c.product, "n": _bags(c.difference_kg, c.product), "money": bdt(abs(c.value))})
+                elif c.difference_kg < 0:
+                    parts.append(_g("%(feed)s: %(n)s bags short") % {"feed": c.product, "n": _bags(c.difference_kg, c.product)})
+                elif c.difference_kg > 0:
+                    parts.append(_g("%(feed)s: %(n)s bags more than the records") % {"feed": c.product, "n": _bags(c.difference_kg, c.product)})
+                else:
+                    parts.append(_g("%(feed)s: matches the records") % {"feed": c.product})
+            short = any(c.difference_kg < 0 and not c.opening for c in made)
+            (messages.warning if short else messages.success)(request, _g("Store counted. %(list)s.") % {"list": "; ".join(parts)})
+            return redirect("business:feed_count")
+    counts = list(FeedCount.objects.filter(business=b).select_related("product__bag_unit", "created_by")[:30])
+    return render(request, "business/feed/count.html", {"form": form, "counts": counts, "can_count": may_count})
+
+
+@business_access_required(capability="delete")
+@require_POST
+def count_delete_view(request, pk):
+    c = get_object_or_404(FeedCount, pk=pk, business=request.business)
+    c.soft_delete()
+    messages.success(request, _g("Count removed. The stock is back to what the records say."))
+    return redirect("business:feed_count")
 
 
 @business_access_required

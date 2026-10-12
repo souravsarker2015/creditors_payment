@@ -3067,3 +3067,27 @@ a.rp-mrow:hover { background: var(--surface-hover); }
     .report .card { break-inside: avoid; box-shadow: none !important; }
     .report .stat-grid { grid-template-columns: repeat(4, 1fr) !important; }
 }
+
+/* Sell now or wait: two outcomes side by side, the better one marked */
+.proj-wait { margin-top: 1rem; padding-top: 0.875rem; border-top: 1px solid var(--border); }
+.proj-wait-title { font-size: 0.9375rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.625rem; }
+.proj-compare { display: grid; gap: 0.625rem; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); }
+.proj-option { border: 1px solid var(--border); border-radius: var(--radius); padding: 0.75rem 0.875rem; background: var(--surface); transition: border-color .15s, background-color .15s; }
+.proj-option.is-best { border-color: var(--status-good); background: color-mix(in srgb, var(--status-good) 7%, var(--surface)); }
+.proj-option-label { font-size: 0.8125rem; color: var(--text-secondary); }
+.proj-option-value { font-size: 1.25rem; font-weight: 750; color: var(--text-primary); margin-top: 0.125rem; }
+.proj-option-meta { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; }
+.proj-verdict { margin-top: 0.625rem; font-weight: 650; font-size: 0.875rem; }
+.proj-verdict[data-tone="good"] { color: var(--status-good); }
+.proj-verdict[data-tone="warn"] { color: var(--status-warn); }
+
+/* Counting the feed store */
+.count-row { grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; }
+.count-row .ledger-title, .count-row .ledger-meta { white-space: normal; }
+.count-inputs { display: flex; flex-direction: column; gap: 0.5rem; width: 8.5rem; }
+.count-inputs .bulk-input input { width: 100%; }
+.count-price .label { font-size: 0.75rem; margin-bottom: 0.125rem; }
+.count-diff { display: inline-block; margin-top: 0.25rem; font-size: 0.8125rem; font-weight: 650; }
+.count-diff[data-tone="critical"] { color: var(--status-critical); }
+.count-diff[data-tone="info"] { color: var(--status-info); }
+.count-diff[data-tone="good"] { color: var(--status-good); }

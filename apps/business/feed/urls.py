@@ -9,4 +9,6 @@ urlpatterns = [
     path("usage/", views.usage_list_view, name="feed_usage"),
     path("usage/add/", views.bulk_usage_view, name="feed_usage_bulk"),
     path("plan/", views.plan_view, name="feed_plan"),
+    path("count/", views.count_view, name="feed_count"),
+    path("count/<int:pk>/remove/", views.count_delete_view, name="feed_count_delete"),
 ]

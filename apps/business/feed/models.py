@@ -141,3 +141,37 @@ class FeedUsage(BusinessBaseModel):
     def save(self, *args, **kwargs):
         self.kg = feed_kg(self.quantity, self.unit, self.product)
         super().save(*args, **kwargs)
+
+
+class FeedCount(BusinessBaseModel):
+    """Bags actually counted in the store. The records' stock (bought − eaten)
+    is put right by the difference: feed spilt, spoilt or not written down —
+    or, the first time, feed you already had before using the app."""
+
+    product = models.ForeignKey(FeedProduct, on_delete=models.PROTECT, related_name="counts", verbose_name=_("Feed"))
+    date = models.DateField(_("Date"), db_index=True)
+    counted_kg = models.DecimalField(_("Counted"), max_digits=14, decimal_places=3, validators=[MinValueValidator(0)])
+    book_kg = models.DecimalField(max_digits=14, decimal_places=3, default=0, editable=False)   # what the records said
+    difference_kg = models.DecimalField(max_digits=14, decimal_places=3, default=0, editable=False)  # counted − book
+    rate_kg = models.DecimalField(max_digits=14, decimal_places=4, default=0, editable=False)  # price per kg of the difference
+    opening = models.BooleanField(default=False, editable=False)   # feed already in store before any record
+
+    class Meta:
+        ordering = ["-date", "-id"]
+        indexes = [models.Index(fields=["business", "is_deleted", "date"])]
+
+    def __str__(self):
+        return f"{self.product} {self.counted_kg} kg · {self.date:%d %b %Y}"
+
+    @property
+    def value(self):
+        """The difference in money: below 0 is feed lost."""
+        return (self.difference_kg * self.rate_kg).quantize(Decimal("1"))
+
+    @property
+    def counted_bags(self):
+        return (self.counted_kg / self.product.bag_kg).quantize(Decimal("0.1")) if self.product.bag_kg else None
+
+    @property
+    def difference_bags(self):
+        return (self.difference_kg / self.product.bag_kg).quantize(Decimal("0.1")) if self.product.bag_kg else None

@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% translate "Count the store" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <a href="{% url 'business:feed_stock' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Feed" %}</a>
+      <h1 class="page-title">{% translate "Count the store" %}</h1>
+      <p class="page-subtitle">{% translate "Count the bags really in the store and type them in. The app compares them with the records and puts the stock right." %}</p>
+    </div>
+  </header>
+  {% include "business/feed/feed_tabs.html" %}
+
+  {% include "business/partials/note.html" with key="feed_count" title=_("Why count the store") p1=_("Bags go missing, get wet or are fed without being written down. A count once a month keeps the stock true.") p2=_("Feed short at a count is a farm cost; it shows in Income & expenses as “Feed short at store counts”.") p3=_("Starting out? Count the feed you already have, with its price per bag, so the stock and feed costs start right.") %}
+
+  {% if form.rows %}
+  {% if can_count %}
+  <form method="post" class="stack" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+    <section class="card">
+      <div class="card-body form-stack">
+        {% with field=form.date %}{% include "business/partials/field.html" %}{% endwith %}
+      </div>
+    </section>
+    <section class="card">
+      <div class="card-header"><div><h2 class="card-title">{% translate "Bags in the store" %}{% include "business/partials/tip.html" with text=_("Leave a feed empty if you didn't count it. Half bags are fine: type 2.5.") %}</h2>
+        <p class="card-subtitle">{% translate "Type what you counted, not what the records say." %}</p></div></div>
+      <ul class="ledger">
+        {% for r, field, price in form.count_fields %}
+        <li class="ledger-row count-row" x-data="{ v: '{{ field.value|default_if_none:''|stringformat:'s' }}', book: {{ r.left_bags|default:0|stringformat:'s' }}, rate: {% if r.avg_cost and biz_can.view_finance %}{{ r.avg_cost|stringformat:'s' }} * {{ r.product.bag_kg|stringformat:'s' }}{% else %}0{% endif %},
+            get diff() { return Math.round((parseFloat(this.v) - this.book) * 10) / 10; } }" data-feed="{{ r.product.pk }}">
+          <span class="ledger-icon" data-tone="{% if price %}info{% elif r.is_negative %}critical{% else %}good{% endif %}">{% include "business/partials/icon.html" with name="banknotes" %}</span>
+          <label class="ledger-main" for="{{ field.id_for_label }}">
+            <span class="ledger-title block">{{ r.product }}</span>
+            <span class="ledger-meta block">{% if price %}{% translate "Not bought or used yet — count what you already have" %}{% else %}{% blocktranslate with n=r.left_bags|num %}Records say {{ n }} bags{% endblocktranslate %}{% if r.last_count %} · {% blocktranslate with d=r.last_count.date|date:"j M" %}last counted {{ d }}{% endblocktranslate %}{% endif %}{% endif %}</span>
+            {% if not price %}<span class="count-diff" x-show="v !== '' && !isNaN(diff)" x-cloak :data-tone="diff < 0 ? 'critical' : (diff > 0 ? 'info' : 'good')"
+                  x-text="diff === 0 ? '{{ _("Matches the records")|escapejs }}' : (diff < 0 ? '{{ _("{n} bags short")|escapejs }}'.replace('{n}', -diff) + (rate ? ' · ৳' + Math.round(-diff * rate).toLocaleString('en-IN') : '') : '{{ _("{n} bags more than the records")|escapejs }}'.replace('{n}', diff))"></span>{% endif %}
+            {% for e in field.errors %}<span class="field-error block">{{ e }}</span>{% endfor %}
+          </label>
+          <div class="count-inputs">
+            <div class="bulk-input">{{ field }}</div>
+            {% if price %}<div class="count-price"><label class="label" for="{{ price.id_for_label }}">{{ price.label }}</label><div class="input-affix has-start"><span class="affix affix-start" aria-hidden="true">৳</span>{{ price }}</div></div>{% endif %}
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+    <div class="form-actions">
+      <a href="{% url 'business:feed_stock' %}" class="btn btn-ghost btn-lg">{% translate "Cancel" %}</a>
+      <button type="submit" class="btn btn-primary btn-lg">{% include "partials/icon.html" with name="check" %}{% translate "Save the count" %}</button>
+    </div>
+  </form>
+  {% endif %}
+  {% else %}
+  <section class="card"><div class="empty is-plain">
+    <div class="empty-icon">{% include "business/partials/icon.html" with name="banknotes" %}</div>
+    <h3 class="empty-title">{% translate "No feed products yet" %}</h3>
+    <p class="empty-text">{% translate "Add the feeds you use first, with their bag size. Then count what's in the store." %}</p>
+    <a href="{% url 'business:feed_products_add' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add feed" %}</a>
+  </div></section>
+  {% endif %}
+
+  {% if counts %}
+  <section class="card">
+    <div class="card-header"><div><h2 class="card-title">{% translate "Past counts" %}</h2><p class="card-subtitle">{% translate "Each count and how far it was from the records." %}</p></div></div>
+    <ul class="ledger">
+      {% for c in counts %}
+      <li class="ledger-row" data-count="{{ c.pk }}">
+        <span class="ledger-icon" data-tone="{% if c.opening %}info{% elif c.difference_kg < 0 %}critical{% elif c.difference_kg > 0 %}warn{% else %}good{% endif %}">{% include "partials/icon.html" with name="check" %}</span>
+        <div class="ledger-main">
+          <p class="ledger-title">{{ c.product }}</p>
+          <p class="ledger-meta">{{ c.date|date:"j M Y" }} · {% blocktranslate with n=c.counted_bags|num %}{{ n }} bags counted{% endblocktranslate %}{% if c.created_by %} · {{ c.created_by.get_full_name|default:c.created_by.username }}{% endif %}</p>
+        </div>
+        <div class="ledger-end">
+          <span class="party-bal" data-tone="{% if not c.opening and c.difference_kg < 0 %}critical{% endif %}">
+            {% if c.opening %}<strong>{% translate "Already had" %}</strong>{% if biz_can.view_finance %}<span>{{ c.value|bdt }}</span>{% endif %}
+            {% elif c.difference_kg < 0 %}<strong>{% blocktranslate with n=c.difference_bags|absolute|num %}{{ n }} bags short{% endblocktranslate %}</strong>{% if biz_can.view_finance %}<span>−{{ c.value|absolute|bdt }}</span>{% endif %}
+            {% elif c.difference_kg > 0 %}<strong>{% blocktranslate with n=c.difference_bags|num %}{{ n }} bags more{% endblocktranslate %}</strong>{% if biz_can.view_finance %}<span>+{{ c.value|bdt }}</span>{% endif %}
+            {% else %}<strong>{% translate "Matched" %}</strong>{% endif %}
+          </span>
+          {% if biz_can.delete %}<form method="post" action="{% url 'business:feed_count_delete' c.pk %}" data-confirm="{% translate 'Remove this count? The stock goes back to what the records say.' %}">{% csrf_token %}<button type="submit" class="icon-btn" aria-label="{% translate 'Remove' %}" data-tip="{% translate 'Remove' %}">{% include "partials/icon.html" with name="trash" %}</button></form>{% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

@@ -97,7 +97,7 @@
         <span class="ledger-icon" data-tone="accent">{% include "business/partials/icon.html" with name="fish" %}</span>
         <div class="ledger-main">
           <p class="ledger-title"><a href="{% url 'business:cycle_detail' r.cycle.pk %}" class="hover:underline">{{ r.pond.name }} · {{ r.cycle.label }}</a></p>
-          <p class="ledger-meta">{% blocktranslate count counter=r.days %}day {{ counter }}{% plural %}day {{ counter }}{% endblocktranslate %}{% if r.summary.alive %} · {% blocktranslate with n=r.summary.alive|num %}{{ n }} fish{% endblocktranslate %}{% endif %}{% if r.summary.fcr %} · {% blocktranslate with f=r.summary.fcr|num %}FCR {{ f }}{% endblocktranslate %}{% endif %}</p>
+          <p class="ledger-meta">{% blocktranslate count counter=r.days %}day {{ counter }}{% plural %}day {{ counter }}{% endblocktranslate %}{% if r.summary.alive %} · {% blocktranslate with n=r.summary.alive|num %}{{ n }} fish{% endblocktranslate %}{% endif %}{% if r.summary.fcr_now %} · ≈ {% blocktranslate with f=r.summary.fcr_now|num %}FCR {{ f }}{% endblocktranslate %}{% endif %}</p>
         </div>
         <div class="ledger-end">
           <span class="party-bal"><strong>{{ r.summary.cost|bdt }}</strong><span>{% translate "spent" %}</span></span>

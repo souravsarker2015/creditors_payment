@@ -1,5 +1,6 @@
 import json
 from datetime import date, timedelta
+from urllib.parse import quote
 
 from django.apps import apps
 from django.contrib import messages
@@ -9,12 +10,13 @@ from django.db.models import Count, F, Q, Sum
 from django.forms import inlineformset_factory
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils.formats import date_format
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
 from apps.business.core.decorators import business_access_required
 from apps.business.core.models import Unit
-from apps.business.core.templatetags.business import bdt
+from apps.business.core.templatetags.business import bdt, num
 from apps.business.markets.models import MarketDeduction
 from apps.business.parties.models import Party
 from apps.business.ponds.models import CultureCycle, Harvest
@@ -179,12 +181,50 @@ def _saved(request, obj):
 def sale_detail_view(request, pk):
     sale = get_object_or_404(FishSale.all_objects.select_related("buyer", "market", "cycle__pond", "account", "created_by"), pk=pk, business=request.business)
     due_now = _due_now(request, sale)
+    lines = list(sale.lines.select_related("species", "unit"))
+    deductions = list(sale.deductions.select_related("deduction_type", "unit"))
     return render(request, "business/sales/sale_detail.html", {
-        "sale": sale, "lines": sale.lines.select_related("species", "unit"),
-        "deductions": sale.deductions.select_related("deduction_type", "unit"),
+        "sale": sale, "lines": lines, "deductions": deductions,
+        "wa": None if sale.is_deleted else memo_whatsapp(request.business, sale, lines, deductions, due_now),
         "later_payments": sale.later_payments.select_related("account") if apps.is_installed("apps.business.credit") else [],
         "due_now": due_now, "settled_later": sale.due - due_now if due_now is not None else None,
     })
+
+
+def memo_text(business, sale, lines, deductions, due_now=None):
+    """The sale memo as a plain message, for the buyer's phone."""
+    out = [_("%(farm)s — fish sale memo") % {"farm": business.name},
+           date_format(sale.date, "j M Y") + (f" · #{sale.memo_no}" if sale.memo_no else "")]
+    if sale.buyer:
+        out.append(_("Buyer: %(name)s") % {"name": sale.buyer.name})
+    out.append("")
+    for line in lines:
+        out.append(f"{line.species}: {num(line.quantity)} {line.unit.symbol} × {bdt(line.rate)} = {bdt(line.amount)}")
+    if deductions:
+        out.append(_("Total: %(amount)s") % {"amount": bdt(sale.gross)})
+        for d in deductions:
+            if d.amount:
+                out.append(f"− {d.deduction_type}: {bdt(d.amount)}")
+    out.append(_("Net: %(amount)s") % {"amount": bdt(sale.net)})
+    if sale.received_now:
+        out.append(_("Paid at the sale: %(amount)s") % {"amount": bdt(sale.received_now)})
+    due = sale.due if due_now is None else due_now
+    if due and due > 0:
+        out.append(_("Still to pay: %(amount)s") % {"amount": bdt(due)})
+    out += ["", _("Thank you.")]
+    return "\n".join(out)
+
+
+def memo_whatsapp(business, sale, lines, deductions, due_now=None):
+    """wa.me link with the memo filled in: straight to the buyer when we have
+    their number, otherwise WhatsApp asks who to send it to."""
+    number = ""
+    if sale.buyer and apps.is_installed("apps.business.credit"):
+        from apps.business.credit.services import whatsapp_number
+
+        number = whatsapp_number(sale.buyer.phone)
+    text = quote(memo_text(business, sale, lines, deductions, due_now))
+    return f"https://wa.me/{number}?text={text}" if number else f"https://wa.me/?text={text}"
 
 
 def _due_now(request, sale):

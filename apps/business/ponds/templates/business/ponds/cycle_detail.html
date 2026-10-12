@@ -77,6 +77,7 @@
       <dt class="stat-label inline-flex items-center">{% translate "Fish weight now" %}{% translate "Fish still in the pond × their latest sample weight." as info_text %}{% include "partials/info.html" with text=info_text %}</dt>
       <dd class="stat-value">{% if s.biomass_kg %}{{ s.biomass_kg|num }} kg{% else %}—{% endif %}</dd>
       <dd class="stat-hint">{% if s.biomass_kg %}{% translate "estimated, from sample weighing" %}{% else %}{% translate "Weigh a sample to see this" %}{% endif %}</dd>
+      {% if cycle.is_running and s.fcr_so_far %}<dd class="stat-hint" data-fcr>{% blocktranslate with f=s.fcr_so_far %}FCR so far ≈ {{ f }}{% endblocktranslate %}{% include "business/partials/tip.html" with text=_("Feed eaten so far ÷ the weight the fish have gained: the fish in the pond at their latest sample weight, plus any harvested, minus the fingerlings. Lower is better — carp usually 1.5–2, pangas and tilapia 1.3–1.8. A number climbing between weighings means feed is being wasted.") %}</dd>{% endif %}
     </div>
     <div class="stat" data-tone="warn">
       <dt class="stat-label inline-flex items-center">{% translate "Spent so far" %}{% include "business/partials/tip.html" with text=_("Fingerlings bought + feed eaten (at the average price you paid for it) + lime and medicine + any other cost you put on this cycle, like labour.") %}</dt>
@@ -87,7 +88,7 @@
       <dt class="stat-label inline-flex items-center">{% translate "Sales so far" %}{% translate "Money from fish sold out of this cycle, after market deductions. Below it: how far ahead of (or behind) all this cycle's costs you are." as info_text %}{% include "partials/info.html" with text=info_text %}</dt>
       <dd class="stat-value">{{ s.sales_net|bdt }}</dd>
       {% if s.moved_out_value %}<dd class="stat-hint">{% blocktranslate with v=s.moved_out_value|bdt %}+ {{ v }} of fish moved to other ponds{% endblocktranslate %}</dd>{% endif %}
-      <dd class="stat-hint">{% if s.profit >= 0 %}{% blocktranslate with amount=s.profit|bdt %}{{ amount }} ahead of costs{% endblocktranslate %}{% else %}{% blocktranslate with amount=s.profit|absolute|bdt %}{{ amount }} still to recover{% endblocktranslate %}{% endif %}{% if s.fcr %} · FCR {{ s.fcr }}{% include "business/partials/tip.html" with text=_("FCR (feed conversion ratio): kg of feed eaten for each 1 kg the fish grew (harvest weight minus fingerling weight). Lower is better: less feed for the same fish.") %}{% endif %}</dd>
+      <dd class="stat-hint">{% if s.profit >= 0 %}{% blocktranslate with amount=s.profit|bdt %}{{ amount }} ahead of costs{% endblocktranslate %}{% else %}{% blocktranslate with amount=s.profit|absolute|bdt %}{{ amount }} still to recover{% endblocktranslate %}{% endif %}{% if s.fcr and not cycle.is_running %} · FCR {{ s.fcr }}{% include "business/partials/tip.html" with text=_("FCR (feed conversion ratio): kg of feed eaten for each 1 kg the fish grew (harvest weight minus fingerling weight). Lower is better: less feed for the same fish.") %}{% endif %}</dd>
     </div>
   </dl>
 
@@ -97,6 +98,11 @@
       get n() { var v = parseFloat(this.price); return isNaN(v) ? 0 : v; },
       get income() { return this.kg * this.n; },
       get profit() { return this.sold + this.income - this.cost; },
+      kgThen: {% if wait %}{{ wait.kg_then|stringformat:'s' }}{% else %}0{% endif %}, waitCost: {% if wait %}{{ wait.more_cost|stringformat:'s' }}{% else %}0{% endif %},
+      get waitProfit() { return this.sold + this.kgThen * this.n - this.cost - this.waitCost; },
+      get waitBetter() { return this.waitProfit > this.profit; },
+      get verdict() { var d = this.fmt(Math.abs(this.waitProfit - this.profit));
+        return (this.waitBetter ? '{{ _("Waiting could make about {amount} more.")|escapejs }}' : '{{ _("Selling now looks about {amount} better.")|escapejs }}').replace('{amount}', d); },
       fmt(v) { return (v < 0 ? '−' : '') + '৳' + Math.round(Math.abs(v)).toLocaleString('en-IN'); } }">
     <div class="card-header">
       <div><h2 class="card-title">{% translate "If you sell now" %}{% include "business/partials/tip.html" with text=_("An estimate: the fish still in the pond (from your latest sample weighing) × the price you type, added to what this cycle has already sold, minus everything it has cost.") %}</h2>
@@ -118,6 +124,25 @@
           <div class="is-total"><dt>{% translate "Profit for the whole cycle" %}</dt><dd x-text="fmt(profit)" :class="profit < 0 ? 'tone-critical' : ''"></dd></div>
         </dl>
       </div>
+      {% if wait %}
+      <div class="proj-wait" data-wait>
+        <h3 class="proj-wait-title">{% translate "Sell now or wait?" %}</h3>
+        <div class="proj-compare">
+          <div class="proj-option" :class="n && !waitBetter && 'is-best'">
+            <p class="proj-option-label">{% translate "Sell now" %}</p>
+            <p class="proj-option-value num" x-text="n ? fmt(profit) : '—'"></p>
+            <p class="proj-option-meta">≈ {{ wait.kg_now|num }} kg</p>
+          </div>
+          <div class="proj-option" :class="n && waitBetter && 'is-best'">
+            <p class="proj-option-label">{% blocktranslate with date=wait.ready_on|date:"j M" %}Wait until {{ date }}{% endblocktranslate %} · {% blocktranslate count counter=wait.days %}{{ counter }} day{% plural %}{{ counter }} days{% endblocktranslate %}</p>
+            <p class="proj-option-value num" x-text="n ? fmt(waitProfit) : '—'"></p>
+            <p class="proj-option-meta">≈ {{ wait.kg_then|num }} kg (+{{ wait.more_kg|num }}) · {% if wait.other_cost %}{% blocktranslate with f=wait.feed_cost|bdt o=wait.other_cost|bdt %}more feed {{ f }}, other costs {{ o }}{% endblocktranslate %}{% else %}{% blocktranslate with f=wait.feed_cost|bdt %}more feed {{ f }}{% endblocktranslate %}{% endif %}</p>
+          </div>
+        </div>
+        <p class="proj-verdict" x-show="n" x-cloak :data-tone="waitBetter ? 'good' : 'warn'" x-text="verdict"></p>
+        <p class="help">{% if wait.fcr_guessed %}{% blocktranslate with fcr=wait.fcr %}Profit for the whole cycle. Assumes the same price, growth as in your weighings and an FCR of {{ fcr }} (this pond doesn't have its own yet).{% endblocktranslate %}{% else %}{% blocktranslate with fcr=wait.fcr %}Profit for the whole cycle. Assumes the same price, growth as in your weighings and this pond's FCR so far ({{ fcr }}).{% endblocktranslate %}{% endif %}{% if wait.fish_lost %} {% blocktranslate count counter=wait.fish_lost %}About {{ counter }} fish lost on the way, at the death rate so far.{% plural %}About {{ counter }} fish lost on the way, at the death rate so far.{% endblocktranslate %}{% endif %}</p>
+      </div>
+      {% endif %}
       <div class="proj-facts">
         {% if p.to_cover %}<p><strong>{% blocktranslate with price=p.break_even|bdt %}Break-even: {{ price }}/kg{% endblocktranslate %}</strong> · {% translate "sell above this and the cycle makes money." %}{% if mon %} ({% widthratio p.break_even 1 mon.factor as per_mon %}{{ per_mon|bdt }}/{{ mon.symbol }}){% endif %}</p>
         {% else %}<p><strong>{% translate "Costs are already covered." %}</strong> {% translate "Whatever the fish in the pond bring in now is profit." %}</p>{% endif %}
