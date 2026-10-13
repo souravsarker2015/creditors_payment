@@ -33,7 +33,7 @@
 <section class="card">
   <header class="card-header"><div><h2 class="card-title">{% translate "Last 12 months" %}</h2>
     <p class="card-subtitle">{% blocktranslate with t=year_total|hm count counter=year_days %}{{ t }} on {{ counter }} day{% plural %}{{ t }} on {{ counter }} days{% endblocktranslate %}</p></div></header>
-  <div class="wy-scroll">
+  <div class="wy-scroll" data-scroll-end>
     <div class="wy" style="--weeks: {{ heat.weeks|length }}">
       <div class="wy-months">{% for m in heat.months %}<span style="grid-column: {{ m.col|add:1 }}">{{ m.date|date:"M" }}</span>{% endfor %}</div>
       <div class="wy-grid">{% for week in heat.weeks %}{% for c in week %}<a{% if not c.out %} href="{% url 'work:time' %}?week={{ c.date|date:'Y-m-d' }}"{% endif %} class="wy-cell{% if c.out %} is-out{% endif %}" data-level="{{ c.level }}" title="{{ c.date|date:'D j M Y' }} · {{ c.secs|hm }}"></a>{% endfor %}{% endfor %}</div>

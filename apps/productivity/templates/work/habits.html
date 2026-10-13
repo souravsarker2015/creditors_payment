@@ -15,7 +15,7 @@
 
 {% if rows %}
 <section class="card wh">
-  <div class="wh-scroll">
+  <div class="wh-scroll" data-scroll-end>
     <table class="wh-table">
       <thead><tr><th></th>{% for d in span %}<th class="{% if d == today %}is-today{% endif %}"><span>{{ d|date:"D" }}</span><small>{{ d|date:"j" }}</small></th>{% endfor %}<th>{% translate "Streak" %}</th></tr></thead>
       <tbody>

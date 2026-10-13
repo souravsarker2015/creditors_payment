@@ -20,12 +20,14 @@
   </div>
 </header>
 
-<form method="get" class="wf-bar" x-data @change="$el.requestSubmit()">
+<form method="get" class="wf-bar has-more" x-data="{ more: false }" @change="$el.requestSubmit()">
   <input type="hidden" name="view" value="{{ view }}">
   <div class="input-icon wf-search">
     {% icon "search" %}
     <input type="search" name="q" value="{{ f.q }}" class="form-input input-compact" placeholder="{% translate 'Search tasks  ( / )' %}" data-work-search aria-label="{% translate 'Search tasks' %}">
   </div>
+  <button type="button" class="btn btn-secondary wf-toggle" @click="more = !more" :aria-expanded="more" aria-controls="task-filters">{% icon "filter" %}<span>{% translate "Filters" %}</span>{% if filtered %}<i class="wf-on" aria-label="{% translate 'Some filters are on' %}"></i>{% endif %}</button>
+  <div class="wf-more" id="task-filters" :class="more && 'is-open'">
   <select name="project" class="form-input input-compact" aria-label="{% translate 'Project' %}">
     <option value="">{% translate "All projects" %}</option>
     {% for p in projects %}<option value="{{ p.pk }}"{% if f.project == p.pk|stringformat:'s' %} selected{% endif %}>{{ p.name }}</option>{% endfor %}
@@ -57,6 +59,7 @@
   </select>
   {% endif %}
   {% if filtered %}<a href="{% url 'work:tasks' %}?view={{ view }}" class="btn btn-ghost btn-sm">{% translate "Clear" %}</a>{% endif %}
+  </div>
 </form>
 
 {% if view == "board" %}

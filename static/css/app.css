@@ -2396,7 +2396,8 @@ a.guide-chip:hover { background: var(--accent-soft); color: var(--accent); }
 .app-sidebar { view-transition-name: app-sidebar; }
 .topbar { view-transition-name: app-topbar; }
 ::view-transition-old(root), ::view-transition-new(root) { animation-duration: 160ms; animation-timing-function: ease-out; }
-::view-transition-group(app-sidebar), ::view-transition-group(app-topbar) { animation: none; }
+.app-tabbar { view-transition-name: app-tabbar; }
+::view-transition-group(app-sidebar), ::view-transition-group(app-topbar), ::view-transition-group(app-tabbar) { animation: none; }
 @media (prefers-reduced-motion: reduce) {
     @view-transition { navigation: none; }
 }

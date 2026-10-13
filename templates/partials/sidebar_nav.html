@@ -12,7 +12,7 @@
     <nav class="flex flex-1 flex-col gap-5" aria-label="{% translate 'Main' %}">
         {% include "partials/nav_sections.html" %}
         <div class="mt-auto space-y-3">
-            <div class="preferences-switcher pref-ink md:hidden rounded-2xl p-4" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);">
+            <div class="preferences-switcher pref-ink xl:hidden rounded-2xl p-4" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);">
                 <p class="mb-3 text-[10px] font-bold uppercase tracking-[0.14em]" style="color: var(--text-on-ink-muted);">{% translate "Appearance" %}</p>
                 <p class="mb-1.5 text-xs" style="color: var(--text-on-ink-muted);">{% translate "Layout on this phone" %}</p>
                 <div class="mb-3">{% include "partials/view_choice.html" with ink=True %}</div>

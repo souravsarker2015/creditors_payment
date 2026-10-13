@@ -63,6 +63,32 @@ def local_time(dt):
 
 
 @register.filter
+def when_short(dt):
+    """When something changed, as a list shows it: 14:05 today, Yesterday, Mon, 12 Oct, 12 Oct 2025."""
+    if not dt:
+        return ""
+    local = timezone.localtime(dt)
+    days = (timezone.localdate() - local.date()).days
+    if days <= 0:
+        return local.strftime("%H:%M")
+    if days == 1:
+        return _("Yesterday")
+    if days < 7:
+        return date_format(local, "D")
+    return date_format(local, "j M" if local.year == timezone.localdate().year else "j M Y")
+
+
+@register.filter
+def note_snippet(note, length=110):
+    """A note's first words for a list, without the title again when the body starts with it."""
+    text = plain(note.body)
+    title = (note.title or "").strip()
+    if title and text.lower().startswith(title.lower()):
+        text = text[len(title):].lstrip(" —-:")
+    return text[:length - 1].rstrip() + "…" if len(text) > length else text
+
+
+@register.filter
 def plain(text):
     """Markdown without its marks, for a one-line preview."""
     import re

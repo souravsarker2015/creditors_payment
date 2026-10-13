@@ -18205,3 +18205,36 @@ msgstr "সব দেখুন:"
 
 msgid "Yes. Give a loan or a shop due a “due date”. It shows on Home in “Needs attention” a week before, and in red once it is late. To get it by email each morning, turn on the reminder email on the Upcoming money page."
 msgstr "হ্যাঁ। ধার বা দোকানের বাকিতে একটি “শেষ তারিখ” দিন। এক সপ্তাহ আগে হোমের “মনোযোগ প্রয়োজন”-এ দেখাবে, আর দেরি হলে লাল হবে। প্রতিদিন সকালে ইমেইলে পেতে, সামনের টাকার হিসাব পাতায় রিমাইন্ডার ইমেইল চালু করুন।"
+
+msgid "Formatting"
+msgstr "লেখার ধরন"
+
+msgid "Heading"
+msgstr "শিরোনাম"
+
+msgid "Italic"
+msgstr "বাঁকা লেখা"
+
+msgid "Quote"
+msgstr "উদ্ধৃতি"
+
+msgid "word"
+msgstr "শব্দ"
+
+msgid "words"
+msgstr "শব্দ"
+
+msgid "to-dos done"
+msgstr "করণীয় শেষ"
+
+#, python-format
+msgid "%(counter)s note"
+msgid_plural "%(counter)s notes"
+msgstr[0] "%(counter)sটি নোট"
+msgstr[1] "%(counter)sটি নোট"
+
+msgid "Some filters are on"
+msgstr "কিছু ফিল্টার চালু আছে"
+
+msgid "min read"
+msgstr "মিনিটে পড়া"

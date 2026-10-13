@@ -21,6 +21,7 @@
   try { CFG = JSON.parse((d.getElementById("work-config") || {}).textContent || "{}"); } catch (e) { CFG = {}; }
   var T = CFG.text || {};
   var ME = root.getAttribute("data-user") || "";
+  var GROWS = !!(window.CSS && CSS.supports && CSS.supports("field-sizing", "content"));   // textareas that grow by themselves
   function t(key, fallback) { return T[key] || fallback; }
 
   /* ── Small helpers ─────────────────────────────────────────────────── */
@@ -780,6 +781,8 @@
             this.title = draft.title; this.body = draft.body; this.state = "dirty"; this.queue();
           }
           ["title", "body", "tags", "project"].forEach(function (k) { self.$watch(k, function () { self.changed(); }); });
+          this.$watch("preview", function (on) { if (!on) self.$nextTick(function () { self.grow(); }); });
+          this.$nextTick(function () { self.grow(); });
           window.addEventListener("beforeunload", function (e) { if (self.state === "dirty" || self.state === "saving") { self.saveNow(); } });
           this.$el.addEventListener("keydown", function (e) { if ((e.ctrlKey || e.metaKey) && e.key === "s") { e.preventDefault(); self.saveNow(); } });
         },
@@ -817,8 +820,30 @@
         insert: function (before, after) {
           var ta = this.$refs.body, s = ta.selectionStart, e = ta.selectionEnd, sel = this.body.slice(s, e);
           this.body = this.body.slice(0, s) + before + sel + (after || "") + this.body.slice(e);
-          var self = this; this.$nextTick(function () { ta.focus(); ta.setSelectionRange(s + before.length, s + before.length + sel.length); });
+          var self = this; this.$nextTick(function () { ta.focus(); ta.setSelectionRange(s + before.length, s + before.length + sel.length); self.grow(); });
         },
+        /* "## ", "- ", "> "…: put a mark at the start of each chosen line, or take it off when every line has it */
+        line: function (mark) {
+          var ta = this.$refs.body, s = ta.selectionStart, e = ta.selectionEnd;
+          var from = this.body.lastIndexOf("\n", s - 1) + 1, to = this.body.indexOf("\n", e); if (to < 0) to = this.body.length;
+          var lines = this.body.slice(from, to).split("\n");
+          var all = lines.every(function (l) { return l.indexOf(mark) === 0; });
+          var out = lines.map(function (l) { return all ? l.slice(mark.length) : l.replace(/^(#{1,6} |[-*+] \[[ xX]\] |[-*+] |> )/, "") .replace(/^/, mark); }).join("\n");
+          this.body = this.body.slice(0, from) + out + this.body.slice(to);
+          // several lines chosen: keep them chosen, so the same button can take the marks off again
+          var a = s === e ? from + out.length : from, z = from + out.length;
+          var self = this; this.$nextTick(function () { ta.focus(); ta.setSelectionRange(a, z); self.grow(); });
+        },
+        /* The writing box grows with the note (the page scrolls, not the box) where CSS field-sizing can't do it */
+        grow: function () {
+          if (GROWS) return;
+          var ta = this.$refs.body; if (!ta) return;
+          ta.style.height = "auto"; ta.style.height = ta.scrollHeight + "px";
+        },
+        get words() { var m = this.body.match(/[^\s#>*`_\-\[\]()]+/g); return m ? m.length : 0; },
+        get readMins() { return Math.max(1, Math.round(this.words / 200)); },
+        get todoTotal() { return (this.body.match(/^[ \t]*[-*+][ \t]+\[[ xX]\]/gm) || []).length; },
+        get todoDone() { return (this.body.match(/^[ \t]*[-*+][ \t]+\[[xX]\]/gm) || []).length; },
       };
     });
 
@@ -1294,4 +1319,21 @@
   });
 
   d.addEventListener("DOMContentLoaded", function () { badge(); flush(); });
+
+  /* ── Looks: start sideways strips at today, stagger lists in ─────────── */
+  // A strip of days (habits, the year's heatmap) opens at its newest end — today.
+  function scrollEnds(scope) {
+    (scope || d).querySelectorAll("[data-scroll-end]").forEach(function (el) { el.scrollLeft = el.scrollWidth; });
+  }
+  // Browsers without sibling-index() get each row's place as --i for the stagger delay (see work.css "Motion").
+  var STAGGER = ".work > *, .wt-list > .wt-task, .wn-items > li, .we-list > li, .wg-grid > *, .wpj-grid > *, .wl-grid > *, .wsn-list > *, .wh-today > *, .wwk-days > *";
+  var HAS_INDEX = !!(window.CSS && CSS.supports && CSS.supports("animation-delay: calc(sibling-index() * 1s)"));
+  function staggerIndex(scope) {
+    if (HAS_INDEX) return;
+    (scope || d).querySelectorAll(STAGGER).forEach(function (el) {
+      var i = 1, n = el; while ((n = n.previousElementSibling) && i < 14) i++;
+      el.style.setProperty("--i", i);
+    });
+  }
+  d.addEventListener("DOMContentLoaded", function () { scrollEnds(); staggerIndex(); });
 })();

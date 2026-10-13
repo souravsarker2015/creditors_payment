@@ -1,10 +1,10 @@
 {% load i18n %}
 {% comment %}
-Compact topbar switcher — hidden on phones; see the touch-sized version in
+Compact topbar switcher — only on wide screens (it would push the top bar off a tablet); see the touch-sized version in
 partials/sidebar_nav.html for the mobile off-canvas menu. Both share the
 `.preferences-switcher` wiring script in base.html.
 {% endcomment %}
-<div class="preferences-switcher hidden md:flex items-center gap-2 shrink-0">
+<div class="preferences-switcher hidden xl:flex items-center gap-2 shrink-0">
     <!-- Background tint -->
     <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
         <button type="button" class="icon-btn" @click="open = !open" :aria-expanded="open" aria-haspopup="true" data-tip="{% translate 'Background colour' %}" aria-label="{% translate 'Background colour' %}">

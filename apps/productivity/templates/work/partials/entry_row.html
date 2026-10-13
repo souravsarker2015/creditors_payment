@@ -3,8 +3,8 @@
   <span class="we-bar" data-color="{{ e.project.color|default:'slate' }}" aria-hidden="true"></span>
   <div class="we-main">
     <p class="we-title">{% if e.task %}<a href="{% url 'work:task' e.task_id %}">{{ e.label }}</a>{% else %}{{ e.label }}{% endif %}
-      {% if e.kind == "focus" %}<span class="badge" data-tone="accent">{% translate "Focus" %}</span>{% endif %}{% if e.billable %}<span class="badge" data-tone="good">৳</span>{% endif %}</p>
-    <p class="we-meta">{% if e.project %}<span class="wt-proj"><span class="wt-dot" data-color="{{ e.project.color }}"></span>{{ e.project.name }}</span> · {% endif %}{{ e.started_at|local_time }}–{% if e.ended_at %}{{ e.ended_at|local_time }}{% else %}{% translate "now" %}{% endif %}{% for tag in e.tags.all %} · #{{ tag.name }}{% endfor %}</p>
+      {% if e.kind == "focus" %}<span class="badge" data-tone="accent">{% translate "Focus" %}</span>{% endif %}</p>
+    <p class="we-meta">{% if e.billable %}<span class="we-bill" title="{% translate 'Billable' %}">৳</span> {% endif %}{% if e.project %}<span class="wt-proj"><span class="wt-dot" data-color="{{ e.project.color }}"></span>{{ e.project.name }}</span> · {% endif %}{{ e.started_at|local_time }}–{% if e.ended_at %}{{ e.ended_at|local_time }}{% else %}{% translate "now" %}{% endif %}{% for tag in e.tags.all %} · #{{ tag.name }}{% endfor %}</p>
   </div>
   <span class="we-len num">{% if e.is_running %}<span x-text="$store.timer.text"></span>{% else %}{{ e.seconds|hm }}{% endif %}</span>
   {% if not e.is_running %}

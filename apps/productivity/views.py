@@ -482,7 +482,7 @@ def notes_view(request, pk=None):
     user = request.user
     q, tag = request.GET.get("q", "").strip(), request.GET.get("tag", "").strip().lower()
     archived = request.GET.get("archived") == "1"
-    notes = Note.objects.filter(owner=user, is_archived=archived).prefetch_related("tags")
+    notes = Note.objects.filter(owner=user, is_archived=archived).select_related("project").prefetch_related("tags")
     if q:
         notes = notes.filter(Q(title__icontains=q) | Q(body__icontains=q))
     if tag:
