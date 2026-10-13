@@ -1,0 +1,2 @@
+{% load ui %}<tr><td style="padding:8px 0;border-top:1px solid #eee;">{% if base and i.url %}<a href="{{ base }}{{ i.url }}" style="color:#1f2a24;font-weight:bold;text-decoration:none;">{{ i.title }}</a>{% else %}<strong>{{ i.title }}</strong>{% endif %}<br><span style="color:#6b7280;font-size:13px;">{% if day %}{{ day|date:"D j M" }} · {% endif %}{{ i.detail }}</span></td>
+<td style="padding:8px 0;border-top:1px solid #eee;text-align:right;white-space:nowrap;font-weight:bold;color:{% if i.is_in %}#15803d{% else %}#b91c1c{% endif %};">{{ i.amount|signed_money }}</td></tr>

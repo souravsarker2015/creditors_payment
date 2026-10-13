@@ -110,7 +110,8 @@
       </div>
     </section>
 
-    <section class="card lg:col-span-2">
+    <div class="stack lg:col-span-2">
+    <section class="card">
       <div class="card-header">
         <div>
           <h2 class="card-title flex items-center gap-2">{% translate "Needs Attention" %}{% if attention %}<span class="badge" data-tone="critical">{{ attention|length }}</span>{% endif %}</h2>
@@ -136,6 +137,33 @@
       <p class="all-clear">{% include "partials/icon.html" with name="check" %}{% translate "Nothing overdue or due this week." %}</p>
       {% endif %}
     </section>
+
+    {% if jumps %}
+    <section class="card" data-jumps>
+      <div class="card-header">
+        <div>
+          <h2 class="card-title flex items-center gap-2">{% translate "Spending more than usual" %}<span class="badge" data-tone="warn">{{ jumps|length }}</span></h2>
+          <p class="card-subtitle">{% translate "This month so far, against what you usually spend by this day of the month (the last 3 months)." %}</p>
+        </div>
+      </div>
+      <ul class="ledger">
+        {% for j in jumps %}
+        <li class="jump-row" data-jump="{{ j.key }}">
+          <a href="{{ j.url }}" class="ledger-row">
+            <span class="ledger-icon" data-tone="{% if j.past_month %}critical{% else %}warn{% endif %}">{% include "partials/icon.html" with name="trend" %}</span>
+            <div class="ledger-main">
+              <p class="ledger-title">{{ j.name }}</p>
+              <p class="ledger-meta">{% if j.past_month %}{% blocktranslate with usual=j.usual_month|money %}Already more than a usual month ({{ usual }}){% endblocktranslate %}{% else %}{% blocktranslate with usual=j.usual_by_now|money %}Usually {{ usual }} by now{% endblocktranslate %}{% endif %}</p>
+            </div>
+            <span class="jump-figures"><span class="ledger-amount" data-tone="critical">{{ j.so_far|money }}</span><small>{{ j.change_text }}</small></span>
+          </a>
+          {% if j.budget_url %}<a href="{{ j.budget_url }}" class="jump-budget">{% translate "Set a monthly limit" %}</a>{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+    </div>
   </div>
 
   <div class="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">

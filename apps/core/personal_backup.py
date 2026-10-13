@@ -45,7 +45,7 @@ FORMAT = "fintrack-my-backup"
 VERSION = 1
 PREFIX = "backup/"
 # Sign-in secrets and the app's own bookkeeping are never written out.
-SKIP_MODELS = {"accounts.twofactor", "core.offlinereceipt", "trash.deleteditem"}
+SKIP_MODELS = {"accounts.twofactor", "accounts.signin", "core.offlinereceipt", "trash.deleteditem"}
 OWNER_FIELDS = ("user", "owner")
 
 

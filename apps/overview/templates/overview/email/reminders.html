@@ -1,0 +1,19 @@
+{% load i18n ui %}<!doctype html>
+<html><body style="margin:0;padding:24px;background:#f5f3ee;font-family:Arial,Helvetica,sans-serif;color:#1f2a24;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;">
+<tr><td style="padding:24px 24px 8px;">
+  <p style="margin:0;font-size:13px;color:#6b7280;">{{ r.today|date:"l, j F Y" }}</p>
+  <h1 style="margin:4px 0 0;font-size:22px;">{% blocktranslate with name=user.get_short_name|default:user.get_username %}Good morning {{ name }}{% endblocktranslate %}</h1>
+  <p style="margin:6px 0 0;font-size:15px;color:#374151;">{{ r.headline }}</p>
+</td></tr>
+{% if r.short %}<tr><td style="padding:12px 24px 0;"><div style="padding:12px 14px;border-radius:8px;background:#fdecea;font-size:14px;">
+  <strong>{% blocktranslate with day=r.short.0.date|date:"l j M" amount=r.short.1|money %}Your wallets would be {{ amount }} short on {{ day }}.{% endblocktranslate %}</strong></div></td></tr>{% endif %}
+{% if r.late %}<tr><td style="padding:16px 24px 0;"><h2 style="margin:0 0 6px;font-size:16px;color:#b91c1c;">{% translate "Late" %}</h2>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;">{% for i in r.late %}{% include "overview/email/_reminder_row.html" %}{% endfor %}</table></td></tr>{% endif %}
+{% if r.due_today %}<tr><td style="padding:16px 24px 0;"><h2 style="margin:0 0 6px;font-size:16px;">{% translate "Today" %}</h2>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;">{% for i in r.due_today %}{% include "overview/email/_reminder_row.html" %}{% endfor %}</table></td></tr>{% endif %}
+{% if r.soon %}<tr><td style="padding:16px 24px 0;"><h2 style="margin:0 0 6px;font-size:16px;">{% translate "This week" %}</h2>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;">{% for d in r.soon %}{% for i in d.items %}{% include "overview/email/_reminder_row.html" with day=d.date %}{% endfor %}{% endfor %}</table></td></tr>{% endif %}
+<tr><td style="padding:20px 24px 24px;">{% if base %}<a href="{{ base }}{{ page }}" style="display:inline-block;padding:10px 16px;border-radius:8px;background:#0f5c4d;color:#ffffff;text-decoration:none;font-weight:bold;">{% translate "Open Upcoming money" %}</a>{% endif %}
+<p style="margin:16px 0 0;font-size:12px;color:#9ca3af;">{% translate "You get this because you turned on morning reminders. Turn them off on the Upcoming money page." %}</p></td></tr>
+</table></body></html>

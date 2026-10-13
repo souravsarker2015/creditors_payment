@@ -23,3 +23,21 @@ class TwoFactorPolicyMiddleware:
                 if not enabled_for(user):
                     return redirect(reverse("two_factor_setup") + "?required=1")
         return self.get_response(request)
+
+
+class SignInMiddleware:
+    """Keeps "last active" on Where you're signed in up to date."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        user = getattr(request, "user", None)
+        if user is not None and user.is_authenticated and not request.path.startswith(("/static/", "/media/")):
+            from .signins import touch
+
+            try:
+                touch(request)
+            except Exception:  # noqa: BLE001 — never stop a page over this
+                pass
+        return self.get_response(request)

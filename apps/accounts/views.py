@@ -21,7 +21,7 @@ from django.utils.http import url_has_allowed_host_and_scheme, urlsafe_base64_en
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
-from . import totp, twofactor
+from . import signins, totp, twofactor
 from .forms import (
     CodeForm, EmailChangeForm, LoginForm, PasswordAndCodeForm, ProfileForm, SecuritySettingsForm, SignupForm,
     ThrottledPasswordResetForm, TwoFactorVerifyForm, UserAdminForm, UserCreateForm,
@@ -65,9 +65,8 @@ def signup_view(request):
         form = SignupForm(request.POST)
         if form.is_valid():
             user = form.save()
-            twofactor.finish_login(request, user, True, lambda: redirect("home"))
             messages.success(request, _("Account created successfully!"))
-            return redirect("home")
+            return twofactor.finish_login(request, user, True, lambda: redirect("home"), new_account=True)
     else:
         form = SignupForm()
     return render(request, "accounts/signup.html", {"form": form})
@@ -127,6 +126,7 @@ def two_factor_verify_view(request):
 
 
 def logout_view(request):
+    signins.ended(request)
     logout(request)
     messages.info(request, _("You have been logged out."))
     response = redirect("login")
@@ -209,6 +209,7 @@ def account_view(request):
             if password_form.is_valid():
                 password_form.save()
                 update_session_auth_hash(request, password_form.user)   # stay signed in here
+                signins.touch(request)
                 notify_password_changed(request, password_form.user)
                 messages.success(request, _("Password changed."))
                 return redirect(reverse("account_settings") + "#password")
@@ -225,7 +226,29 @@ def account_view(request):
         "profile_form": profile_form, "email_form": email_form, "password_form": password_form,
         "policy_form": policy_form, "policy": policy, "tf": tf if tf and tf.enabled else None,
         "two_factor_required": policy.requires_two_factor(user),
+        "sign_ins": signins.active(user, request), "recent_sign_ins": signins.recent(user),
     })
+
+
+@login_required
+@require_POST
+def sign_out_device_view(request, pk):
+    if pk == request.session.get(signins.SESSION_KEY):
+        return logout_view(request)
+    if signins.sign_out(request.user, pk):
+        messages.success(request, _("That device is signed out."))
+    return redirect(reverse("account_settings") + "#sign-ins")
+
+
+@login_required
+@require_POST
+def sign_out_others_view(request):
+    n = signins.sign_out_others(request.user, request)
+    if n:
+        messages.success(request, _("Signed out everywhere else (%(count)s).") % {"count": n})
+    else:
+        messages.info(request, _("You weren't signed in anywhere else."))
+    return redirect(reverse("account_settings") + "#sign-ins")
 
 
 # ── Two-step sign-in: turn on, recovery codes, turn off ───────────────────

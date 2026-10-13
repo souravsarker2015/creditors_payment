@@ -1,0 +1,20 @@
+{% load i18n ui %}{% autoescape off %}{% blocktranslate with name=user.get_short_name|default:user.get_username %}Good morning {{ name }},{% endblocktranslate %}
+
+{{ r.headline }}
+{% if r.short %}
+{% blocktranslate with day=r.short.0.date|date:"l j M" amount=r.short.1|money %}Your wallets would be {{ amount }} short on {{ day }}.{% endblocktranslate %}
+{% endif %}{% if r.late %}
+{% translate "LATE" %}
+{% for i in r.late %}- {{ i.title }} — {{ i.detail }}: {{ i.amount|signed_money }}
+{% endfor %}{% endif %}{% if r.due_today %}
+{% translate "TODAY" %}
+{% for i in r.due_today %}- {{ i.title }} — {{ i.detail }}: {{ i.amount|signed_money }}
+{% endfor %}{% endif %}{% if r.soon %}
+{% translate "THIS WEEK" %}
+{% for d in r.soon %}{% for i in d.items %}- {{ d.date|date:"D j M" }}: {{ i.title }} — {{ i.detail }}: {{ i.amount|signed_money }}
+{% endfor %}{% endfor %}{% endif %}
+{% if base %}{% translate "See it all:" %} {{ base }}{{ page }}
+{% endif %}
+{% translate "You get this because you turned on morning reminders. Turn them off on the Upcoming money page." %}
+— FinTrack
+{% endautoescape %}

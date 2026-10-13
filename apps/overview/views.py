@@ -1,12 +1,15 @@
+import logging
 from decimal import Decimal
 
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import DecimalField, Q, Sum, Value
 from django.db.models.functions import Coalesce
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
-from datetime import timedelta
+from django.views.decorators.http import require_POST
+from datetime import time, timedelta
 
 from apps.contributors.models import Contribution
 from apps.creditors.models import Transaction as CreditorTransaction
@@ -17,6 +20,11 @@ from apps.income.models import IncomeTransaction
 from apps.shops.models import Transaction as ShopTransaction
 from apps.goals.services import goal_rows, totals as goal_totals
 from apps.core.stats import change, last_n_month_starts, month_start, monthly_series, trend_summary
+
+from .insights import jumps
+from .reminders import REMIND_HOUR
+
+logger = logging.getLogger(__name__)
 
 DUE_SOON_DAYS = 7
 
@@ -34,6 +42,7 @@ def networth_view(request):
     user = request.user
     from apps.goals.views import catch_up_autosaves
     catch_up_autosaves(request)
+    _catch_up_reminders(request)
 
     # ── Balances: what would be settled if everyone paid up today ──
     #
@@ -151,6 +160,7 @@ def networth_view(request):
         "net_12": sum(net_series, ZERO),
         "positive_months": sum(1 for v in net_series if v > 0),
         "attention": _attention(user, today),
+        "jumps": jumps(user, today),
         "upcoming": _upcoming(user, today),
         "goals": goal_rows(user, "active", today)[:3],
         "goal_totals": goal_totals(user),
@@ -371,7 +381,7 @@ def _help_content():
         (_("I made a mistake. How do I fix it?"), _("Tap the entry, then the ⋯ button, and choose Edit or Delete. Deleted things stay in “Recently deleted” for 30 days, so you can bring them back.")),
         (_("I moved money from bKash to cash. What do I write?"), _("Tap “Move money” on Home. It is not spending, so it won't show as an expense — it only changes the two wallet balances.")),
         (_("Someone paid back only part of a loan."), _("Open that person and add a payment for the amount they gave. The app shows what is still left.")),
-        (_("Can I get a reminder before something is due?"), _("Yes. Give a loan or a shop due a “due date”. It shows on Home in “Needs attention” a week before, and in red once it is late.")),
+        (_("Can I get a reminder before something is due?"), _("Yes. Give a loan or a shop due a “due date”. It shows on Home in “Needs attention” a week before, and in red once it is late. To get it by email each morning, turn on the reminder email on the Upcoming money page.")),
         (_("How do I find an old entry?"), _("Use the search button at the top (the magnifying glass). Type a name, an amount or a note.")),
         (_("Is my data safe? Can I keep a copy?"), _("Only you can see your personal records. Use “Download my data” in the menu any time to save everything as Excel-ready files.")),
         (_("Can I use the app in Bangla?"), _("Yes. Open the menu and pick বাংলা under Language. You can switch back any time.")),
@@ -391,7 +401,48 @@ def upcoming_view(request):
     days = window(request)
     return render(request, "overview/upcoming.html", {
         "f": forecast(request.user, timezone.localdate(), days), "days": days, "periods": PERIODS,
+        "remind": request.user.profile, "remind_hour": time(REMIND_HOUR),
     })
+
+
+def _catch_up_reminders(request):
+    """This person's morning reminder, if a scheduled task hasn't sent it."""
+    from .reminders import catch_up
+
+    try:
+        catch_up(request)
+    except Exception:  # noqa: BLE001 — never stop Home over an email
+        logger.exception("money reminder catch-up")
+
+
+@login_required
+@require_POST
+def reminders_view(request):
+    """Turn the morning email on or off, or send one now to see it."""
+    from django.utils.translation import gettext as _
+
+    from apps.accounts.models import UserProfile
+
+    from .reminders import send
+
+    action = request.POST.get("action")
+    profile, _created = UserProfile.objects.get_or_create(user=request.user)
+    if not request.user.email:
+        messages.error(request, _("Add your email first, under Account & security."))
+    elif action == "on":
+        profile.money_reminders = True
+        profile.save(update_fields=["money_reminders"])
+        messages.success(request, _("Morning reminders are on. They go to %(email)s on days something is late or due soon.") % {"email": request.user.email})
+    elif action == "off":
+        profile.money_reminders = False
+        profile.save(update_fields=["money_reminders"])
+        messages.success(request, _("Morning reminders are off."))
+    elif action == "send":
+        if send(request.user, request=request, force=True) == "sent":
+            messages.success(request, _("Sent to %(email)s.") % {"email": request.user.email})
+        else:
+            messages.error(request, _("The email couldn't be sent just now. Try again later."))
+    return redirect(reverse("upcoming") + "#reminders")
 
 
 @login_required

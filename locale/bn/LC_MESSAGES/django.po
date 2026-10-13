@@ -18028,3 +18028,180 @@ msgstr "%(name)s-এর কাছে আপনার %(owed)s পাওনা �
 #, python-format
 msgid "%(name)s owed you more than this, so it all goes to settle that. Nothing is left as an advance; they still owe %(left)s."
 msgstr "%(name)s-এর কাছে এর চেয়ে বেশি পাওনা ছিল, তাই পুরোটাই সেটা শোধে গেল। দাদন হিসেবে কিছু রইল না; এখনো %(left)s পাওনা।"
+
+msgid "Morning money reminders"
+msgstr "সকালের টাকার রিমাইন্ডার"
+
+msgid "Where you're signed in"
+msgstr "কোথায় কোথায় সাইন ইন করা আছে"
+
+msgid "Every phone and computer with your account open. Sign out any you don't know, or one you've lost."
+msgstr "যে সব ফোন ও কম্পিউটারে আপনার অ্যাকাউন্ট খোলা আছে। অচেনা বা হারানো কোনোটা থাকলে সেখান থেকে সাইন আউট করুন।"
+
+msgid "We email you when a new device signs in."
+msgstr "নতুন কোনো ডিভাইসে সাইন ইন হলে আমরা আপনাকে ইমেইল করি।"
+
+msgid "This device"
+msgstr "এই ডিভাইস"
+
+msgid "Active now"
+msgstr "এখন চালু"
+
+#, python-format
+msgid "Active %(ago)s ago"
+msgstr "%(ago)s আগে চালু ছিল"
+
+#, python-format
+msgid "signed in %(when)s"
+msgstr "সাইন ইন %(when)s"
+
+#, python-format
+msgid "Sign out %(d)s?"
+msgstr "%(d)s থেকে সাইন আউট করবেন?"
+
+msgid "Sign out"
+msgstr "সাইন আউট"
+
+msgid "Sign out on every other device? You stay signed in here."
+msgstr "অন্য সব ডিভাইস থেকে সাইন আউট করবেন? এখানে সাইন ইন থাকবে।"
+
+msgid "Sign out everywhere else"
+msgstr "অন্য সব জায়গা থেকে সাইন আউট"
+
+msgid "Recent sign-ins"
+msgstr "সাম্প্রতিক সাইন ইন"
+
+msgid "That device is signed out."
+msgstr "ওই ডিভাইস থেকে সাইন আউট করা হয়েছে।"
+
+msgid "You weren't signed in anywhere else."
+msgstr "অন্য কোথাও সাইন ইন করা ছিল না।"
+
+#, python-format
+msgid "Signed out everywhere else (%(count)s)."
+msgstr "অন্য সব জায়গা থেকে সাইন আউট করা হয়েছে (%(count)sটি)।"
+
+msgid "Spending more than usual"
+msgstr "স্বাভাবিকের চেয়ে বেশি খরচ"
+
+msgid "This month so far, against what you usually spend by this day of the month (the last 3 months)."
+msgstr "এই মাসে এ পর্যন্ত, মাসের এই দিন পর্যন্ত সাধারণত যা খরচ হয় তার সাথে তুলনা (গত ৩ মাস)।"
+
+#, python-format
+msgid "Already more than a usual month (%(usual)s)"
+msgstr "এর মধ্যেই সাধারণ এক মাসের চেয়ে বেশি (%(usual)s)"
+
+#, python-format
+msgid "Usually %(usual)s by now"
+msgstr "এই সময়ে সাধারণত %(usual)s"
+
+msgid "Set a monthly limit"
+msgstr "মাসিক সীমা ঠিক করুন"
+
+msgid "Morning reminder email"
+msgstr "সকালের রিমাইন্ডার ইমেইল"
+
+msgid "Add your email under Account & security to get one."
+msgstr "পেতে হলে অ্যাকাউন্ট ও নিরাপত্তায় আপনার ইমেইল যোগ করুন।"
+
+#, python-format
+msgid "Around %(hour)s to %(email)s, on days something is late or due in the next 3 days. Nothing is sent on quiet days."
+msgstr "%(hour)s-এর দিকে %(email)s-এ, যেদিন কিছু বকেয়া থাকে বা আগামী ৩ দিনের মধ্যে দেওয়ার কথা। কিছু না থাকলে কিছুই পাঠানো হয় না।"
+
+msgid "Each morning, an email of what's late and what's due this week: loans to pay back, money to collect, shop dues and installments. Only on days there's something."
+msgstr "প্রতিদিন সকালে একটি ইমেইল: কী বকেয়া আর এই সপ্তাহে কী দিতে বা পেতে হবে — ধার শোধ, পাওনা আদায়, দোকানের বাকি ও কিস্তি। শুধু যেদিন কিছু থাকে।"
+
+msgid "Add email"
+msgstr "ইমেইল যোগ করুন"
+
+msgid "Email me each morning"
+msgstr "প্রতিদিন সকালে ইমেইল করুন"
+
+msgid "Send one now"
+msgstr "এখনই একটি পাঠান"
+
+msgid "Add your email first, under Account & security."
+msgstr "আগে অ্যাকাউন্ট ও নিরাপত্তায় আপনার ইমেইল যোগ করুন।"
+
+#, python-format
+msgid "Morning reminders are on. They go to %(email)s on days something is late or due soon."
+msgstr "সকালের রিমাইন্ডার চালু হলো। যেদিন কিছু বকেয়া বা শিগগির দেওয়ার কথা, সেদিন %(email)s-এ যাবে।"
+
+msgid "Morning reminders are off."
+msgstr "সকালের রিমাইন্ডার বন্ধ।"
+
+msgid "Unknown device"
+msgstr "অজানা ডিভাইস"
+
+msgid "New sign-in to your FinTrack account"
+msgstr "আপনার FinTrack অ্যাকাউন্টে নতুন সাইন ইন"
+
+#, python-format
+msgid "%(browser)s on %(system)s"
+msgstr "%(system)s-এ %(browser)s"
+
+#, python-format
+msgid "Your FinTrack account was opened on a new device: %(device)s, from internet address %(ip)s, on %(when)s. You can see every device that is signed in, and sign any of them out, under Account & security → Where you're signed in."
+msgstr "আপনার FinTrack অ্যাকাউন্ট একটি নতুন ডিভাইসে খোলা হয়েছে: %(device)s, ইন্টারনেট ঠিকানা %(ip)s থেকে, %(when)s-এ। কোন কোন ডিভাইসে সাইন ইন করা আছে তা দেখতে এবং যেকোনোটি থেকে সাইন আউট করতে যান অ্যাকাউন্ট ও নিরাপত্তা → কোথায় কোথায় সাইন ইন করা আছে।"
+
+msgid "Nothing due this week"
+msgstr "এই সপ্তাহে কিছু দেওয়ার নেই"
+
+#, python-format
+msgid "FinTrack — %(date)s: %(headline)s"
+msgstr "FinTrack — %(date)s: %(headline)s"
+
+#, python-format
+msgid "%(n)s late"
+msgid_plural "%(n)s late"
+msgstr[0] "%(n)sটি দেরি"
+msgstr[1] "%(n)sটি দেরি"
+
+#, python-format
+msgid "%(n)s due today"
+msgid_plural "%(n)s due today"
+msgstr[0] "আজ %(n)sটি"
+msgstr[1] "আজ %(n)sটি"
+
+#, python-format
+msgid "%(n)s more this week"
+msgid_plural "%(n)s more this week"
+msgstr[0] "এই সপ্তাহে আরও %(n)sটি"
+msgstr[1] "এই সপ্তাহে আরও %(n)sটি"
+
+#, python-format
+msgid "money runs short on %(day)s"
+msgstr "%(day)s টাকা কম পড়বে"
+
+#, python-format
+msgid "Good morning %(name)s"
+msgstr "শুভ সকাল %(name)s"
+
+#, python-format
+msgid "Your wallets would be %(amount)s short on %(day)s."
+msgstr "%(day)s আপনার ওয়ালেটে %(amount)s কম পড়বে।"
+
+msgid "Open Upcoming money"
+msgstr "সামনের টাকার হিসাব খুলুন"
+
+msgid "You get this because you turned on morning reminders. Turn them off on the Upcoming money page."
+msgstr "আপনি সকালের রিমাইন্ডার চালু করেছেন বলে এটি পাচ্ছেন। বন্ধ করতে সামনের টাকার হিসাব পাতায় যান।"
+
+#, python-format
+msgid "Good morning %(name)s,"
+msgstr "শুভ সকাল %(name)s,"
+
+msgid "LATE"
+msgstr "দেরি হয়েছে"
+
+msgid "TODAY"
+msgstr "আজ"
+
+msgid "THIS WEEK"
+msgstr "এই সপ্তাহে"
+
+msgid "See it all:"
+msgstr "সব দেখুন:"
+
+msgid "Yes. Give a loan or a shop due a “due date”. It shows on Home in “Needs attention” a week before, and in red once it is late. To get it by email each morning, turn on the reminder email on the Upcoming money page."
+msgstr "হ্যাঁ। ধার বা দোকানের বাকিতে একটি “শেষ তারিখ” দিন। এক সপ্তাহ আগে হোমের “মনোযোগ প্রয়োজন”-এ দেখাবে, আর দেরি হলে লাল হবে। প্রতিদিন সকালে ইমেইলে পেতে, সামনের টাকার হিসাব পাতায় রিমাইন্ডার ইমেইল চালু করুন।"

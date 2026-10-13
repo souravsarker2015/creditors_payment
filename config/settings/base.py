@@ -111,6 +111,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "apps.accounts.middleware.TwoFactorPolicyMiddleware",  # two-step sign-in, when an admin requires it
+    "apps.accounts.middleware.SignInMiddleware",  # Account & security → Where you're signed in
     "apps.core.offline.OfflineMiddleware",  # entries saved with no signal are sent later, never twice
     "apps.business.core.middleware.DashboardMiddleware",  # business module: dashboard access
     "django.middleware.clickjacking.XFrameOptionsMiddleware",

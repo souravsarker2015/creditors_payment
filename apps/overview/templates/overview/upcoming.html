@@ -14,6 +14,32 @@
   {% translate "Give a loan or a due a date, add an installment plan, or set up regular income and spending — they'll show here on their day." as empty_text %}
   {% include "partials/forecast.html" with now_label=now_label empty_text=empty_text %}
 
+
+  <section class="card remind-card" id="reminders" data-reminders="{% if remind.money_reminders and user.email %}on{% else %}off{% endif %}">
+    <div class="remind-head">
+      <span class="ledger-icon" data-tone="{% if remind.money_reminders and user.email %}good{% else %}info{% endif %}">{% include "partials/icon.html" with name="mail" %}</span>
+      <div class="min-w-0 flex-1">
+        <h2 class="card-title">{% translate "Morning reminder email" %}{% if remind.money_reminders and user.email %} <span class="badge" data-tone="good">{% translate "On" %}</span>{% endif %}</h2>
+        <p class="card-subtitle">{% if not user.email %}{% translate "Add your email under Account & security to get one." %}{% elif remind.money_reminders %}{% blocktranslate with email=user.email hour=remind_hour|time:"g A" %}Around {{ hour }} to {{ email }}, on days something is late or due in the next 3 days. Nothing is sent on quiet days.{% endblocktranslate %}{% else %}{% translate "Each morning, an email of what's late and what's due this week: loans to pay back, money to collect, shop dues and installments. Only on days there's something." %}{% endif %}</p>
+      </div>
+    </div>
+    <div class="remind-actions">
+      {% if not user.email %}
+      <a href="{% url 'account_settings' %}#email" class="btn btn-soft btn-sm">{% translate "Add email" %}</a>
+      {% else %}
+      <form method="post" action="{% url 'money_reminders' %}">
+        {% csrf_token %}
+        {% if remind.money_reminders %}
+        <button type="submit" name="action" value="off" class="btn btn-ghost btn-sm">{% translate "Turn off" %}</button>
+        {% else %}
+        <button type="submit" name="action" value="on" class="btn btn-primary btn-sm">{% include "partials/icon.html" with name="bell" %}{% translate "Email me each morning" %}</button>
+        {% endif %}
+        <button type="submit" name="action" value="send" class="btn btn-secondary btn-sm">{% translate "Send one now" %}</button>
+      </form>
+      {% endif %}
+    </div>
+  </section>
+
   {% if not f.tracked %}
   <div class="callout" data-tone="info">
     {% include "partials/icon.html" with name="wallet" %}

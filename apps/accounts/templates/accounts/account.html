@@ -20,6 +20,7 @@
     <a href="#email" class="chip">{% translate "Email" %}</a>
     <a href="#password" class="chip">{% translate "Password" %}</a>
     <a href="#two-factor" class="chip">{% translate "Two-step sign-in" %}</a>
+    <a href="#sign-ins" class="chip">{% translate "Where you're signed in" %}</a>
     {% if user.is_superuser %}<a href="#policy" class="chip">{% translate "Security settings" %}</a><a href="{% url 'user_list' %}" class="chip">{% translate "People & access" %}</a>{% endif %}
   </nav>
 
@@ -126,6 +127,50 @@
       {% else %}
       <p class="text-sm leading-relaxed" style="color: var(--text-secondary);">{% translate "Someone who learns your password still can't sign in without your phone. Recommended for admins." %}</p>
       <a href="{% url 'two_factor_setup' %}" class="btn btn-primary mt-4">{% include "partials/icon.html" with name="shield" %}{% translate "Turn on two-step sign-in" %}</a>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="card" id="sign-ins">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title inline-flex items-center gap-2"><span class="h-5 w-5" style="color: var(--accent);">{% include "partials/icon.html" with name="device-desktop" %}</span>{% translate "Where you're signed in" %}</h2>
+        <p class="card-subtitle">{% translate "Every phone and computer with your account open. Sign out any you don't know, or one you've lost." %}{% if user.email %} {% translate "We email you when a new device signs in." %}{% endif %}</p>
+      </div>
+    </div>
+    <ul class="signin-list">
+      {% for s in sign_ins %}
+      <li class="signin-row" data-signin="{{ s.pk }}"{% if s.is_current %} data-current{% endif %}>
+        <span class="signin-icon">{% if s.phone %}{% include "partials/icon.html" with name="device-phone" %}{% else %}{% include "partials/icon.html" with name="device-desktop" %}{% endif %}</span>
+        <div class="min-w-0 flex-1">
+          <p class="signin-name">{{ s.label }}{% if s.is_current %} <span class="badge" data-tone="good">{% translate "This device" %}</span>{% endif %}</p>
+          <p class="signin-meta">{% if s.active_now %}{% translate "Active now" %}{% else %}{% blocktranslate with ago=s.last_seen|timesince %}Active {{ ago }} ago{% endblocktranslate %}{% endif %} · {% blocktranslate with when=s.created_at|date:"j M Y" %}signed in {{ when }}{% endblocktranslate %}{% if s.ip %} · <span class="num">{{ s.ip }}</span>{% endif %}</p>
+        </div>
+        <form method="post" action="{% url 'sign_out_device' s.pk %}"{% if not s.is_current %} data-confirm="{% blocktranslate with d=s.label %}Sign out {{ d }}?{% endblocktranslate %}"{% endif %}>
+          {% csrf_token %}
+          <button type="submit" class="btn btn-ghost btn-sm">{% translate "Sign out" %}</button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+    <div class="card-body signin-foot">
+      {% if sign_ins|length > 1 %}
+      <form method="post" action="{% url 'sign_out_others' %}" data-confirm="{% translate 'Sign out on every other device? You stay signed in here.' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-secondary btn-sm">{% include "partials/icon.html" with name="x" %}{% translate "Sign out everywhere else" %}</button>
+      </form>
+      {% endif %}
+      {% if recent_sign_ins %}
+      <details class="signin-history">
+        <summary>{% translate "Recent sign-ins" %}</summary>
+        <table class="signin-table">
+          <tbody>
+            {% for r in recent_sign_ins %}
+            <tr><td class="num">{{ r.created_at|date:"j M Y, g:i A" }}</td><td>{{ r.label }}</td><td class="num">{{ r.ip|default:"—" }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </details>
       {% endif %}
     </div>
   </section>

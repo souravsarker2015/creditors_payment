@@ -27,6 +27,7 @@ urlpatterns = [
     path("record/<slug:kind>/", overview_views.pick_view, name="pick"),
     path("help/", overview_views.help_view, name="help"),
     path("upcoming/", overview_views.upcoming_view, name="upcoming"),
+    path("upcoming/reminders/", overview_views.reminders_view, name="money_reminders"),
     path("report/", overview_report.report_view, name="money_report"),
     path("", include("apps.creditors.urls")),
     path("networth/", include("apps.overview.urls")),

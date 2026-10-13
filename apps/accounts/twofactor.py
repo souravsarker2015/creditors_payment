@@ -84,7 +84,7 @@ def pending_user(request):
     return user, data
 
 
-def finish_login(request, user, remember, response_factory):
+def finish_login(request, user, remember, response_factory, new_account=False):
     """Signs the person in for real and returns the response to send."""
     request.session.pop(PENDING, None)
     login(request, user, backend=BACKEND)
@@ -94,6 +94,9 @@ def finish_login(request, user, remember, response_factory):
     translation.activate(profile.language)
     response = response_factory()
     response.set_cookie(settings.LANGUAGE_COOKIE_NAME, profile.language)
+    from . import signins
+
+    signins.record(request, response, user, new_account=new_account)
     return response
 
 

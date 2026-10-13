@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 
@@ -70,6 +71,9 @@ class UserProfile(models.Model):
         max_length=5, choices=ViewMode.choices, default=ViewMode.AUTO
     )
     phone = models.CharField(_("Phone"), max_length=20, blank=True, default="")
+    # Morning email of money that's late or due soon (apps/overview/reminders.py).
+    money_reminders = models.BooleanField(_("Morning money reminders"), default=False)
+    reminders_sent_on = models.DateField(null=True, blank=True, editable=False)
 
     def __str__(self):
         return f"Preferences for {self.user.username}"
@@ -131,3 +135,24 @@ def create_user_profile(sender, instance, created, raw=False, **kwargs):
     # raw: a user loaded from a backup brings its own profile along.
     if created and not raw:
         UserProfile.objects.get_or_create(user=instance)
+
+
+class SignIn(models.Model):
+    """One sign-in on one device, for "Where you're signed in" and the
+    new-device email. Lives as long as its session does; kept a while after
+    as history (see signins.py)."""
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="sign_ins")
+    session_key = models.CharField(max_length=40, db_index=True)
+    device = models.CharField(max_length=32, blank=True, default="", help_text="A random id kept in a cookie on the device.")
+    ip = models.CharField(max_length=64, blank=True, default="")
+    user_agent = models.CharField(max_length=300, blank=True, default="")
+    created_at = models.DateTimeField(default=timezone.now)
+    last_seen = models.DateTimeField(default=timezone.now)
+    ended_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-last_seen"]
+
+    def __str__(self):
+        return f"{self.user} on {self.user_agent[:40]}"
