@@ -63,12 +63,29 @@ def answer(card, rating, now=None):
     if rating not in RATINGS:
         raise ValueError("rating")
     now = now or timezone.now()
+    before = {"interval": card.interval, "ease": card.ease, "reps": card.reps, "lapses": card.lapses, "due": card.due.isoformat(),
+              "last_reviewed": card.last_reviewed.isoformat() if card.last_reviewed else None}
     interval, ease, reps, lapses = next_state(card, rating)
     card.interval, card.ease, card.reps, card.lapses = interval, ease, reps, lapses
     card.due = timezone.localdate(now) + timedelta(days=interval)
     card.last_reviewed = now
     card.save(update_fields=["interval", "ease", "reps", "lapses", "due", "last_reviewed", "updated_at"])
-    CardReview.objects.create(owner=card.owner, card=card, rating=rating, interval=interval, reviewed_at=now)
+    card.review = CardReview.objects.create(owner=card.owner, card=card, rating=rating, interval=interval, reviewed_at=now, before=before)
+    return card
+
+
+def undo(review):
+    """Take an answer back: the card's schedule goes back to how it was before it, and the answer is forgotten."""
+    from django.utils.dateparse import parse_date, parse_datetime
+
+    card, b = review.card, review.before or {}
+    if not b:
+        raise ValueError("nothing to undo")
+    card.interval, card.ease, card.reps, card.lapses = b["interval"], b["ease"], b["reps"], b["lapses"]
+    card.due = parse_date(b["due"]) or card.due
+    card.last_reviewed = parse_datetime(b["last_reviewed"]) if b.get("last_reviewed") else None
+    card.save(update_fields=["interval", "ease", "reps", "lapses", "due", "last_reviewed", "updated_at"])
+    review.delete()
     return card
 
 

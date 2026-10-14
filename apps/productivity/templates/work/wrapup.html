@@ -69,6 +69,15 @@
     <div class="card-body !pt-0"><textarea rows="3" class="form-input" placeholder="{% translate 'The one thing that would make tomorrow a good day…' %}" @input="save('plan', $event.target.value)">{{ next_plan }}</textarea></div>
   </section>
 
+  {% if cards_due %}
+  <a href="{% url 'work:card_review' %}" class="wd-cards">
+    <span class="wfc-hero-stack" aria-hidden="true"><i></i><i></i><i>{{ cards_due }}</i></span>
+    <span class="wd-cards-text"><b>{% blocktranslate count counter=cards_due %}{{ counter }} flashcard still waiting{% plural %}{{ counter }} flashcards still waiting{% endblocktranslate %}</b>
+      <small>{% translate "A few minutes now keeps today's learning — before you close the day." %}</small></span>
+    <span class="btn btn-secondary btn-sm">{% icon "play" %}{% translate "Review" %}</span>
+  </a>
+  {% endif %}
+
   <div class="ww-finish" x-show="!closed">
     <button type="button" class="btn btn-primary" @click="if ($store.timer.running) $store.timer.stop(); Work.play(Work.cfg.sound ? 'soft' : ''); closed = true; window.scrollTo({ top: 0, behavior: 'smooth' })">{% icon "check" %}{% translate "Close the day" %}</button>
   </div>

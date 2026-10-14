@@ -32,6 +32,7 @@
       return {
         stage: queue.length ? "card" : "empty", card: null, flipped: false, busy: false, back: S.back, practice: S.practice,
         total: queue.length, done: 0, answered: 0, knew: 0, started: Date.now(), took: "", left: { fresh: 0, again: 0, due: 0 },
+        history: [], editing: false, draft: { front: "", back: "" },
         singleDeck: S.cards.every(function (c) { return c.deckId === (S.cards[0] || {}).deckId; }),
         init: function () {
           if (queue.length) this.next(true);
@@ -70,8 +71,11 @@
           this.busy = true; this.answered++; if (r > 1) this.knew++;
           // again soon: forgotten, or still being learnt and only just remembered (the server agrees: interval 0)
           var again = r === 1 || (!this.practice && r === 2 && (c.isNew || c._again));
+          var step = { card: c, again: again, knew: r > 1, before: { previews: c.previews, isNew: c.isNew, again: !!c._again }, review: null };
+          this.history.push(step); if (this.history.length > 50) this.history.shift();
           if (!this.practice) {
             Work.api(url("cardBase") + c.id + "/", { action: "answer", rating: r, at: new Date().toISOString() }).then(function (res) {
+              if (res && res.ok && res.review) step.review = res.review;
               if (res && res.ok && res.card && again) { c.previews = res.card.previews; c.isNew = res.card.isNew; }
             });
           }
@@ -82,6 +86,34 @@
           wrap.style.transform = ""; wrap.classList.add(dir);
           setTimeout(function () { self.next(); }, 260);
         },
+        /* Undo: the last answer is taken back and its card shown again */
+        undo: function () {
+          if (this.busy || !this.history.length) return;
+          var h = this.history.pop(), c = h.card;
+          if (h.again) { var at = queue.lastIndexOf(c); if (at >= 0) queue.splice(at, 1); } else this.done--;
+          this.answered--; if (h.knew) this.knew--;
+          c.previews = h.before.previews; c.isNew = h.before.isNew; c._again = h.before.again;
+          if (this.card && this.stage === "card") queue.unshift(this.card);
+          queue.unshift(c); this.stage = "card"; this.card = null;
+          if (!this.practice) Work.api(url("cardBase") + c.id + "/", { action: "undo", review: h.review || "" });
+          this.next(); toast(TEXT.undone || "");
+        },
+        /* Fix a card without leaving the review */
+        edit: function () {
+          if (!this.card || this.stage !== "card") return;
+          this.draft = { front: this.card.front, back: this.card.back }; this.editing = true;
+          var self = this; this.$nextTick(function () { self.$refs.editFront.focus(); });
+        },
+        saveEdit: function () {
+          var self = this, c = this.card; if (!c || !this.draft.front.trim()) return;
+          c.front = this.draft.front; c.back = this.draft.back; this.editing = false;
+          show(this.$refs.front, c.front); show(this.$refs.q, c.front);
+          if (c.back) show(this.$refs.back, c.back); else this.$refs.back.innerHTML = '<p class="wfc-muted">' + (TEXT.noAnswer || "") + "</p>";
+          Work.api(url("cardBase") + c.id + "/", { action: "save", front: c.front, back: c.back }).then(function (res) {
+            if (res && res.ok) toast(TEXT.saved, "good"); else if (res && res.error) toast(res.error, "warn");
+            self.$refs.card.focus({ preventScroll: true });
+          });
+        },
         finish: function () {
           var s = Math.round((Date.now() - this.started) / 1000), m = Math.floor(s / 60);
           this.took = m ? m + "m " + (s % 60) + "s" : s + "s";
@@ -89,9 +121,13 @@
           if (window.Work && Work.play) try { Work.play(); } catch (e) { /* sounds off or not allowed */ }
         },
         key: function (e) {
-          if (typing(e.target) || e.ctrlKey || e.metaKey || e.altKey) return;
+          if (this.editing || typing(e.target)) return;
           var k = e.key;
+          if ((e.ctrlKey || e.metaKey) && (k === "z" || k === "Z")) { e.preventDefault(); this.undo(); return; }
+          if (e.ctrlKey || e.metaKey || e.altKey) return;
           if (k === "Escape") { location.href = this.back; return; }
+          if (k === "z" || k === "u") { e.preventDefault(); this.undo(); return; }
+          if (k === "e" && this.stage === "card") { e.preventDefault(); this.edit(); return; }
           if (this.stage !== "card") return;
           if ((k === " " || k === "Enter") && !this.flipped) { e.preventDefault(); this.flip(); }
           else if (this.flipped && /^[1-4]$/.test(k)) { e.preventDefault(); this.rate(+k); }

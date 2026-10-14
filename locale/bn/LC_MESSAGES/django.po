@@ -19852,3 +19852,145 @@ msgstr "নতুনগুলো"
 
 msgid "Older"
 msgstr "পুরোনোগুলো"
+
+msgid "There's nothing to undo."
+msgstr "ফিরিয়ে নেওয়ার মতো কিছু নেই।"
+
+msgid "Remind me to review flashcards at"
+msgstr "ফ্ল্যাশকার্ড রিভিউয়ের কথা মনে করিয়ে দিন"
+
+msgid "A notification when cards are waiting. Leave empty for none."
+msgstr "কার্ড অপেক্ষায় থাকলে একটি নোটিফিকেশন। না চাইলে ফাঁকা রাখুন।"
+
+#, python-format
+msgid "Flashcards: %(answers)s answers on %(cards)s cards over %(days)s days, %(pct)s%% remembered"
+msgstr "ফ্ল্যাশকার্ড: %(days)s দিনে %(cards)sটি কার্ডে %(answers)sটি উত্তর, %(pct)s%% মনে ছিল"
+
+msgid "Undo the last answer"
+msgstr "শেষ উত্তরটি ফিরিয়ে নিন"
+
+msgid "Undo the last answer (Z)"
+msgstr "শেষ উত্তরটি ফিরিয়ে নিন (Z)"
+
+msgid "Edit this card"
+msgstr "এই কার্ড এডিট করুন"
+
+msgid "Edit this card (E)"
+msgstr "এই কার্ড এডিট করুন (E)"
+
+msgid "Download for Anki or a spreadsheet"
+msgstr "Anki বা স্প্রেডশিটের জন্য ডাউনলোড করুন"
+
+msgid "A copy is kept by itself before each round of writing. Pick one to read it."
+msgstr "প্রতিবার লেখার আগে নিজে থেকেই একটি কপি রাখা হয়। পড়তে একটি বেছে নিন।"
+
+msgid "No earlier versions yet. They appear as you write."
+msgstr "এখনো আগের কোনো সংস্করণ নেই। লিখতে থাকলে এখানে দেখা যাবে।"
+
+msgid "Mind maps"
+msgstr "মাইন্ড ম্যাপ"
+
+msgid "An idea under it · next to it"
+msgstr "নিচে একটি আইডিয়া · পাশে একটি আইডিয়া"
+
+msgid "Edit the idea (or just start typing)"
+msgstr "আইডিয়া এডিট করুন (বা সরাসরি লিখতে শুরু করুন)"
+
+msgid "Tick it off"
+msgstr "টিক দিন"
+
+msgid "Move it up or down"
+msgstr "উপরে বা নিচে সরান"
+
+msgid "Fold · delete"
+msgstr "গুটিয়ে রাখুন · মুছুন"
+
+msgid "System design boards"
+msgstr "সিস্টেম ডিজাইন বোর্ড"
+
+msgid "Copy and paste parts, also into another board"
+msgstr "অংশ কপি ও পেস্ট করুন, অন্য বোর্ডেও"
+
+msgid "drag"
+msgstr "টানুন"
+
+msgid "Pick several parts in a box"
+msgstr "বাক্স এঁকে কয়েকটি অংশ বাছুন"
+
+msgid "Nudge (Shift for one step)"
+msgstr "একটু সরান (এক ধাপের জন্য Shift)"
+
+msgid "Undo (Ctrl+Shift+Z to redo)"
+msgstr "আগের অবস্থায় যান (আবার করতে Ctrl+Shift+Z)"
+
+msgid "Flashcard review"
+msgstr "ফ্ল্যাশকার্ড রিভিউ"
+
+msgid "Turn the card over"
+msgstr "কার্ড উল্টান"
+
+msgid "Again · Hard · Good · Easy"
+msgstr "আবার · কঠিন · ভালো · সহজ"
+
+msgid "Swipe"
+msgstr "সোয়াইপ"
+
+msgid "Good · again (on a phone)"
+msgstr "ভালো · আবার (ফোনে)"
+
+msgid "Worth at your rates"
+msgstr "আপনার রেটে মূল্য"
+
+msgid "Practice & diagrams"
+msgstr "অনুশীলন ও ডায়াগ্রাম"
+
+#, python-format
+msgid "%(counter)s flashcard answer"
+msgid_plural "%(counter)s flashcard answers"
+msgstr[0] "%(counter)sটি ফ্ল্যাশকার্ডের উত্তর"
+msgstr[1] "%(counter)sটি ফ্ল্যাশকার্ডের উত্তর"
+
+#, python-format
+msgid "%(c)s cards on %(days)s days"
+msgstr "%(days)s দিনে %(c)sটি কার্ড"
+
+#, python-format
+msgid "%(p)s percent remembered"
+msgstr "%(p)s শতাংশ মনে ছিল"
+
+msgid "Keep it as a task, something to read or watch, a note or a flashcard."
+msgstr "টাস্ক, পড়া বা দেখার জিনিস, নোট বা ফ্ল্যাশকার্ড হিসেবে রাখুন।"
+
+msgid "The title is the question; the text and link are the answer"
+msgstr "শিরোনাম হবে প্রশ্ন; লেখা আর লিংক হবে উত্তর"
+
+msgid "A few minutes now keeps today's learning — before you close the day."
+msgstr "দিন শেষ করার আগে কয়েক মিনিট — আজকের শেখা মনে থাকবে।"
+
+#, python-format
+msgid "%(counter)s flashcard still waiting"
+msgid_plural "%(counter)s flashcards still waiting"
+msgstr[0] "%(counter)sটি ফ্ল্যাশকার্ড এখনো অপেক্ষায়"
+msgstr[1] "%(counter)sটি ফ্ল্যাশকার্ড এখনো অপেক্ষায়"
+
+msgid "Flashcards waiting"
+msgstr "ফ্ল্যাশকার্ড অপেক্ষায়"
+
+#, python-format
+msgid "%(n)s cards to review — about %(n)s minutes."
+msgstr "রিভিউ করার %(n)sটি কার্ড — প্রায় %(n)s মিনিট।"
+
+msgid "New flashcard deck"
+msgstr "নতুন ফ্ল্যাশকার্ড ডেক"
+
+msgid "New diagram"
+msgstr "নতুন ডায়াগ্রাম"
+
+msgid "New flowchart"
+msgstr "নতুন ফ্লোচার্ট"
+
+msgid "New sequence diagram"
+msgstr "নতুন সিকোয়েন্স ডায়াগ্রাম"
+
+msgid "Answer taken back"
+msgstr "উত্তর ফিরিয়ে নেওয়া হয়েছে"

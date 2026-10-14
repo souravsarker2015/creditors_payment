@@ -27,7 +27,7 @@ from . import cards, diagrams, services
 from .access import work_required
 from .models import (
     Card, ChecklistItem, Deck, Diagram, DiagramKind, DiagramVersion, EntryKind, Goal, GoalStatus, GoalStep, Habit, HabitCheck, JournalEntry, LearningItem, LearningKind, LearningStatus,
-    LearningUnit, Note, Priority, Project, Snippet, Status, Task, TimeEntry, link_label,
+    LearningUnit, Note, NoteVersion, Priority, Project, Snippet, Status, Task, TimeEntry, link_label,
 )
 
 
@@ -316,6 +316,8 @@ def note_save(request):
     user = request.user
     pk = request.POST.get("id")
     note = get_object_or_404(Note, pk=pk, owner=user) if pk else Note(owner=user)
+    if note.pk and "body" in request.POST and request.POST["body"] != note.body:
+        services.remember_note(note)        # what it said before this sitting, at most every few minutes
     for name in ("title", "body"):
         if name in request.POST:
             setattr(note, name, request.POST[name])
@@ -354,6 +356,15 @@ def note_action(request, pk):
             return bad(_("Write cards as “question :: answer”, one a line."))
         deck = cards.deck_named(request.user, note.display_title)
         return ok(count=cards.add_cards(request.user, deck, pairs), url=reverse("work:deck", args=[deck.pk]))
+    elif action == "restore":          # an earlier version comes back (what's there now is kept too)
+        v = get_object_or_404(NoteVersion, pk=request.POST.get("version") or 0, note=note)
+        services.remember_note(note, force=True)
+        note.title, note.body = v.title, v.body
+        note.save()
+        return ok(url=reverse("work:note", args=[note.pk]))
+    elif action == "forget":
+        NoteVersion.objects.filter(pk=request.POST.get("version") or 0, note=note).delete()
+        return ok()
     elif action == "to_task":
         task = Task.objects.create(owner=request.user, title=note.display_title[:300], notes=note.body, project=note.project,
                                    order=services.next_order(request.user, Status.TODO))
@@ -539,6 +550,25 @@ def diagram_versions(request, pk):
 
 @work_required
 @require_GET
+def note_versions(request, pk):
+    note = get_object_or_404(Note, pk=pk, owner=request.user)
+    out = []
+    for v in note.versions.all()[:60]:
+        when = timezone.localtime(v.created_at)
+        out.append({"id": v.pk, "title": v.title, "body": v.body, "time": date_format(when, "j M, H:i"), "when": when.isoformat(),
+                    "words": len(v.body.split())})
+    return ok(versions=out)
+
+
+@work_required
+@require_GET
+def cards_due(request):
+    """How many flashcards are waiting (for the daily reminder)."""
+    return ok(due=cards.due_count(request.user), url=reverse("work:card_review"))
+
+
+@work_required
+@require_GET
 def diagram_list(request):
     """The person's diagrams, for putting one in a note."""
     q = request.GET.get("q", "").strip()
@@ -564,8 +594,12 @@ def card_json(c, deck_info=False):
 @work_required
 @require_POST
 def card_add(request):
-    """One card (front, back), or many from text: one "question :: answer" a line."""
-    deck = get_object_or_404(Deck, pk=request.POST.get("deck") or 0, owner=request.user)
+    """One card (front, back), or many from text: one "question :: answer" a line.
+    Without a deck (shared from another app) it goes in "My cards"."""
+    if request.POST.get("deck"):
+        deck = get_object_or_404(Deck, pk=request.POST["deck"], owner=request.user)
+    else:
+        deck = cards.deck_named(request.user, _("My cards"))
     if "text" in request.POST:
         pairs = cards.parse_pairs(request.POST["text"])
         if not pairs:
@@ -577,7 +611,7 @@ def card_add(request):
         return bad(_("Write the question."))
     card = Card.objects.create(owner=request.user, deck=deck, front=front[:cards.MAX_FRONT],
                                back=request.POST.get("back", "").strip()[:cards.MAX_BACK])
-    return ok(added=1, card=card_json(card))
+    return ok(added=1, card=card_json(card), url=reverse("work:deck", args=[deck.pk]))
 
 
 @work_required
@@ -591,7 +625,13 @@ def card_action(request, pk):
             cards.answer(card, rating, now=_when(request, "at"))
         except ValueError:
             return bad(_("Not allowed."))
-        return ok(again=card.interval == 0, card=card_json(card, deck_info=True))
+        return ok(again=card.interval == 0, review=card.review.pk, card=card_json(card, deck_info=True))
+    if action == "undo":                # take the last answer back (the review's Undo)
+        review = card.reviews.filter(pk=request.POST.get("review") or 0).first() or card.reviews.first()
+        if review is None or not review.before:
+            return bad(_("There's nothing to undo."))
+        cards.undo(review)
+        return ok(card=card_json(card, deck_info=True))
     if action == "save":
         front = request.POST.get("front", card.front).strip()
         if not front:

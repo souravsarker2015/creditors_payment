@@ -377,6 +377,8 @@ class WorkSettings(models.Model):
     day_start = models.TimeField(_("Work day starts"), default=time(9, 0),
                                  help_text=_("The day planner opens here, and “Fill my day” plans from here."))
     day_end = models.TimeField(_("Work day ends"), default=time(18, 0))
+    cards_remind_at = models.TimeField(_("Remind me to review flashcards at"), null=True, blank=True,
+                                       help_text=_("A notification when cards are waiting. Leave empty for none."))
 
     def __str__(self):
         return f"Work settings for {self.owner}"
@@ -631,6 +633,20 @@ class DiagramVersion(models.Model):
         return self.name or f"{self.title} @ {self.created_at:%Y-%m-%d %H:%M}"
 
 
+class NoteVersion(models.Model):
+    """An earlier state of a note, kept before each new round of editing (see services.remember_note)."""
+    note = models.ForeignKey(Note, on_delete=models.CASCADE, related_name="versions")
+    title = models.CharField(max_length=200, blank=True)
+    body = models.TextField(blank=True)
+    created_at = models.DateTimeField(default=timezone.now, db_index=True)
+
+    class Meta:
+        ordering = ["-created_at", "-pk"]
+
+    def __str__(self):
+        return f"{self.title or self.note_id} @ {self.created_at:%Y-%m-%d %H:%M}"
+
+
 # ── Flashcards: remember what you learn (spaced repetition) ─────────────────
 class Deck(models.Model):
     owner = models.ForeignKey(**OWNER)
@@ -687,6 +703,7 @@ class CardReview(models.Model):
     card = models.ForeignKey(Card, on_delete=models.CASCADE, related_name="reviews")
     rating = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(4)])
     interval = models.PositiveIntegerField(default=0)
+    before = models.JSONField(default=dict, blank=True, help_text="The card's schedule before this answer, so it can be undone.")
     reviewed_at = models.DateTimeField(default=timezone.now, db_index=True)
 
     class Meta:

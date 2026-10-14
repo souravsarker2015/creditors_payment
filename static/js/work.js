@@ -173,6 +173,29 @@
     if (wait <= 0 && wait > -3600000) fire(); else if (wait > 0 && wait < 86400000) setTimeout(fire, wait);
   });
 
+  /* ── Flashcards: a nudge once a day, at the time picked in settings ──── */
+  (function cardsNudge() {
+    var at = CFG.cardsRemind, key = "work-cards-nudge:" + ME;
+    if (!at || !CFG.urls.cardsDue) return;
+    function check() {
+      var now = new Date(), day = now.getFullYear() + "-" + pad(now.getMonth() + 1) + "-" + pad(now.getDate());
+      if (pad(now.getHours()) + ":" + pad(now.getMinutes()) < at || recall(key, "") === day) return;
+      store(key, day);
+      if (location.pathname.indexOf(CFG.urls.cardReview) === 0) return;          // already reviewing
+      fetch(CFG.urls.cardsDue, { credentials: "same-origin", headers: { Accept: "application/json" } })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+          if (!res || !res.due) return;
+          var msg = t("cardsToReview", "%(n)s cards to review").replace(/%\(n\)s/g, res.due);
+          play();
+          if (d.hidden) notify(t("cardsWaiting", "Flashcards waiting"), msg, res.url, "cards");
+          else toast(msg, "good", { label: t("review", "Review"), run: function () { location.href = res.url; } });
+        })
+        .catch(function () { store(key, null); });                             // offline: try again later
+    }
+    setTimeout(check, 3000); setInterval(check, 60000);
+  })();
+
   /* ── Expose for the page components ──────────────────────────────────── */
   window.Work = { api: api, toast: toast, undoable: undoable, play: play, notify: notify, askNotify: askNotify, clock: clock, hm: hm, cfg: CFG, flush: flush, recall: recall, store: store };
 
@@ -732,6 +755,31 @@
         id: initial.id || null, title: initial.title || "", body: initial.body || "", tags: initial.tags || "", project: initial.project || "",
         state: "saved", savedAt: initial.saved || "", preview: false, timer: null, inflight: null, again: false,
         making: false, suggest: [], pick: 0, dgOpen: false, dgItems: [], dgQ: "", dgLoading: false,
+        histOpen: false, histLoading: false, versions: [], shown: null,
+        /* Earlier versions: kept before each round of writing; one can be read and brought back */
+        openHistory: function () {
+          var self = this; if (!this.id) return;
+          this.histOpen = true; this.histLoading = true; this.shown = null;
+          Promise.resolve(this.saveNow()).then(function () {
+            return fetch(CFG.urls.noteBase + self.id + "/versions/", { credentials: "same-origin", headers: { Accept: "application/json" } });
+          }).then(function (r) { return r.json(); }).then(function (res) { self.versions = res.versions || []; self.shown = self.versions[0] || null; })
+            .catch(function () { self.versions = []; }).then(function () { self.histLoading = false; });
+        },
+        restoreVersion: function (v) {
+          if (!v || !confirm(t("restoreNote", "Bring back this version? What's there now is kept as a version too."))) return;
+          var self = this;
+          api(CFG.urls.noteBase + this.id + "/", { action: "restore", version: v.id }).then(function (res) {
+            if (res.ok && res.url) { store(self.draftKey, null); location.href = res.url; }
+          });
+        },
+        forgetVersion: function (v) {
+          var self = this;
+          api(CFG.urls.noteBase + this.id + "/", { action: "forget", version: v.id }).then(function (res) {
+            if (!res.ok) return;
+            self.versions = self.versions.filter(function (x) { return x.id !== v.id; });
+            if (self.shown && self.shown.id === v.id) self.shown = self.versions[0] || null;
+          });
+        },
         /* Put a diagram in the note: its picture, linking to it (it stays up to date as the diagram changes) */
         openDiagrams: function () {
           this.dgOpen = !this.dgOpen; if (this.dgOpen) this.findDiagrams();

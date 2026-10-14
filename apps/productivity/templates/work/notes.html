@@ -65,6 +65,7 @@
             <button type="button" class="icon-btn" @click="open = !open" :aria-expanded="open" aria-label="{% translate 'More actions' %}">{% icon "dots" %}</button>
             <div class="menu" x-show="open" x-cloak role="menu">
               <button type="button" class="menu-item" @click="action('pin')">{% icon "pin" %}{% if note.is_pinned %}{% translate "Unpin" %}{% else %}{% translate "Pin to top" %}{% endif %}</button>
+              <button type="button" class="menu-item" @click="open = false; openHistory()">{% icon "history" %}{% translate "History" %}</button>
               <button type="button" class="menu-item" @click="action('to_task')">{% icon "check" %}{% translate "Turn into a task" %}</button>
               <button type="button" class="menu-item" @click="Promise.resolve(saveNow()).then(() => action('cards'))" data-tip="{% translate 'Each “question :: answer” line becomes a flashcard' %}">{% icon "cards" %}{% translate "Make flashcards" %}</button>
               <button type="button" class="menu-item" @click="navigator.clipboard && navigator.clipboard.writeText(body).then(() => Work.toast('{% translate "Copied" %}'))">{% icon "copy" %}{% translate "Copy Markdown" %}</button>
@@ -125,6 +126,35 @@
       </div>
       <article x-show="preview" x-cloak class="wn-md" x-html="html" x-effect="html; preview && $nextTick(() => { Work.mermaidIn($el); window.hljs && $el.querySelectorAll('pre code:not(.language-mermaid)').forEach(c => hljs.highlightElement(c)); })"></article>
       <p class="wn-stats" x-show="words" x-cloak><span x-text="words + ' ' + (words === 1 ? '{% translate "word" %}' : '{% translate "words" %}')"></span> · <span x-text="'~' + readMins + ' {% translate "min read" %}'"></span><template x-if="todoTotal"><span> · <span x-text="todoDone + '/' + todoTotal"></span> {% translate "to-dos done" %}</span></template></p>
+      {# ── earlier versions ── #}
+      <div class="wc-backdrop" x-show="histOpen" x-cloak x-transition.opacity @click="histOpen = false"></div>
+      <aside class="wdx-hist wn-hist" x-show="histOpen" x-cloak x-trap="histOpen" x-transition:enter="wdx-hist-in" x-transition:leave="wdx-hist-out"
+             @keydown.escape.stop="histOpen = false" role="dialog" aria-modal="true" aria-labelledby="note-hist-title">
+        <header class="wdx-hist-head">
+          <h2 id="note-hist-title" class="card-title">{% icon "history" %}{% translate "History" %}</h2>
+          <button type="button" class="icon-btn" @click="histOpen = false" aria-label="{% translate 'Close' %}">{% icon "x" %}</button>
+        </header>
+        <p class="wdx-hist-tip">{% translate "A copy is kept by itself before each round of writing. Pick one to read it." %}</p>
+        <ol class="wn-vers" :aria-busy="histLoading">
+          <template x-for="v in versions" :key="v.id">
+            <li><button type="button" class="wn-ver" :class="shown && shown.id === v.id && 'is-on'" @click="shown = v">
+              <b x-text="v.time"></b><small x-text="(v.title || '') + ' · ' + v.words + ' {% translate "words" %}'"></small></button></li>
+          </template>
+          <li class="wdx-hist-empty" x-show="!histLoading && !versions.length">{% translate "No earlier versions yet. They appear as you write." %}</li>
+        </ol>
+        <template x-if="shown">
+          <div class="wn-ver-read">
+            <div class="wn-ver-acts">
+              <button type="button" class="btn btn-primary btn-sm" @click="restoreVersion(shown)">{% icon "restore" %}{% translate "Bring back" %}</button>
+              <button type="button" class="btn btn-ghost btn-sm" @click="navigator.clipboard && navigator.clipboard.writeText(shown.body).then(() => Work.toast('{% translate "Copied" %}'))">{% icon "copy" %}{% translate "Copy" %}</button>
+              <span class="spacer"></span>
+              <button type="button" class="icon-btn" @click="forgetVersion(shown)" aria-label="{% translate 'Delete this version' %}">{% icon "trash" %}</button>
+            </div>
+            <h3 class="wn-ver-title" x-text="shown.title"></h3>
+            <article class="wn-md wn-ver-md" x-html="Work.markdown(shown.body)"></article>
+          </div>
+        </template>
+      </aside>
       {% if backlinks %}
       <aside class="wn-backlinks">
         <p class="wn-backlinks-label">{% icon "link" %}{% blocktranslate count counter=backlinks|length %}Linked from {{ counter }} note{% plural %}Linked from {{ counter }} notes{% endblocktranslate %}</p>

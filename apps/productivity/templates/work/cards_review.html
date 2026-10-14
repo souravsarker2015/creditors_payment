@@ -13,6 +13,8 @@
       <b>{% if deck %}{{ deck.name }}{% else %}{% translate "All decks" %}{% endif %}</b>
       {% if practice %}<small>{% translate "Practice — your schedule stays as it is" %}</small>{% endif %}
     </div>
+    <button type="button" class="icon-btn" @click="undo()" :disabled="!history.length" aria-label="{% translate 'Undo the last answer' %}" data-tip="{% translate 'Undo the last answer (Z)' %}">{% icon "undo" %}</button>
+    <button type="button" class="icon-btn" @click="edit()" x-show="stage === 'card'" aria-label="{% translate 'Edit this card' %}" data-tip="{% translate 'Edit this card (E)' %}">{% icon "edit" %}</button>
     <div class="wfr-counts" aria-label="{% translate 'Left in this session' %}">
       <span class="is-new" data-tip="{% translate 'New' %}" x-text="left.fresh"></span>
       <span class="is-again" data-tip="{% translate 'Again soon' %}" x-text="left.again"></span>
@@ -52,6 +54,19 @@
       </div>
       <p class="wfr-help" x-show="flipped" x-cloak>{% translate "On a phone: swipe right if you knew it, left to see it again." %}</p>
     </div>
+  </section>
+
+  {# ── fix a card mid-review ── #}
+  <div class="wc-backdrop" x-show="editing" x-cloak x-transition.opacity @click="editing = false"></div>
+  <section class="wc" x-show="editing" x-cloak x-transition @keydown.escape.stop="editing = false" role="dialog" aria-modal="true" aria-labelledby="card-edit-title">
+    <h2 id="card-edit-title" class="card-title">{% translate "Edit this card" %}</h2>
+    <form class="wfc-form" @submit.prevent="saveEdit()" @keydown.ctrl.enter.prevent="saveEdit()" @keydown.meta.enter.prevent="saveEdit()">
+      <label class="label" for="re-front">{% translate "Question" %}</label>
+      <textarea id="re-front" x-ref="editFront" x-model="draft.front" class="form-input" rows="3"></textarea>
+      <label class="label" for="re-back">{% translate "Answer" %}</label>
+      <textarea id="re-back" x-model="draft.back" class="form-input" rows="4"></textarea>
+      <div class="wc-foot"><span class="spacer"></span><button type="button" class="btn btn-ghost" @click="editing = false">{% translate "Cancel" %}</button><button type="submit" class="btn btn-primary">{% translate "Save" %}</button></div>
+    </form>
   </section>
 
   {# ── nothing to do ── #}

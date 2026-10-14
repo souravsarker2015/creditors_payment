@@ -24,6 +24,7 @@
         <button type="button" class="icon-btn" @click="open = !open" :aria-expanded="open" aria-label="{% translate 'More actions' %}">{% icon "dots" %}</button>
         <div class="menu" x-show="open" x-cloak role="menu" @click="open = false">
           <button type="button" class="menu-item" role="menuitem" @click="settings = true">{% icon "edit" %}{% translate "Deck settings" %}</button>
+          <a href="{% url 'work:deck_export' deck.pk %}" class="menu-item" role="menuitem" download>{% icon "download" %}{% translate "Download for Anki or a spreadsheet" %}</a>
           <button type="button" class="menu-item" role="menuitem" @click="deckAction('archive')">{% icon "archive" %}{% if deck.is_archived %}{% translate "Unarchive" %}{% else %}{% translate "Archive" %}{% endif %}</button>
           <div class="menu-sep"></div>
           <button type="button" class="menu-item is-danger" role="menuitem" @click="deckAction('delete')">{% icon "trash" %}{% translate "Delete the deck" %}</button>

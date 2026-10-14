@@ -650,6 +650,17 @@ def review(user, start, end):
     goals_done = list(Goal.objects.filter(owner=user, status=GoalStatus.DONE, completed_at__gte=lo, completed_at__lt=hi))
     goals_active = with_progress(Goal.objects.filter(owner=user, status=GoalStatus.ACTIVE))
     learnt = list(LearningItem.objects.filter(owner=user, status=LearningStatus.DONE, finished_on__gte=start, finished_on__lte=end))
+    from .models import CardReview, Diagram
+
+    answers = CardReview.objects.filter(owner=user, reviewed_at__gte=lo, reviewed_at__lt=hi)
+    n_answers = answers.count()
+    practice = {"answers": n_answers, "cards": answers.values("card").distinct().count(),
+                "remembered": round(100 * answers.filter(rating__gt=1).count() / n_answers) if n_answers else None,
+                "days": len({timezone.localdate(r) for r in answers.values_list("reviewed_at", flat=True)})}
+    drawn = list(Diagram.objects.filter(owner=user, is_archived=False, updated_at__gte=lo, updated_at__lt=hi)
+                 .only("pk", "title", "kind", "created_at", "updated_at").order_by("-updated_at")[:20])
+    for dg in drawn:
+        dg.is_new = dg.created_at >= lo
     habits = []
     for h in Habit.objects.filter(owner=user, is_archived=False):
         due = [start + timedelta(days=i) for i in range((end - start).days + 1) if h.is_due(start + timedelta(days=i))]
@@ -662,6 +673,7 @@ def review(user, start, end):
         "done_by_project": sorted(by_project.items(), key=lambda kv: (kv[0] is None, kv[0].name if kv[0] else "")),
         "wins": wins, "blockers": blockers, "mood": feel["mood"], "energy": feel["energy"],
         "goals_done": goals_done, "goals_active": goals_active, "learnt": learnt, "habits": habits,
+        "practice": practice, "diagrams": drawn,
         "created": Task.objects.filter(owner=user, created_at__gte=lo, created_at__lt=hi).count(),
     }
 
@@ -687,6 +699,13 @@ def review_markdown(data):
         lines += [f"- {(p.name if p else _('No project'))}: {hm(secs)} ({round(100 * secs / t.seconds)}%)" for p, secs in t.by_project]
     if data["learnt"]:
         lines += ["", f"## {_('Learning')}"] + [f"- {item.title}" + (f" — {item.author}" if item.author else "") for item in data["learnt"]]
+    pr = data.get("practice") or {}
+    if pr.get("answers"):
+        lines += ["", f"## {_('Practice')}",
+                  "- " + _("Flashcards: %(answers)s answers on %(cards)s cards over %(days)s days, %(pct)s%% remembered") % {
+                      "answers": pr["answers"], "cards": pr["cards"], "days": pr["days"], "pct": pr["remembered"]}]
+    if data.get("diagrams"):
+        lines += ["", f"## {_('Diagrams')}"] + [f"- {dg.title} ({dg.get_kind_display()})" for dg in data["diagrams"]]
     active = [g for g in data["goals_active"]]
     if active:
         lines += ["", f"## {_('Goals in progress')}"] + [f"- {g.title}: {g.pct}%" for g in active]
@@ -757,9 +776,33 @@ def bulk(user, ids, action, value=""):
     return len(tasks)
 
 
+# ── Note history ──────────────────────────────────────────────────────────
+NOTE_EVERY = timedelta(minutes=10)    # a new copy at most this often while writing
+NOTE_KEEP = 40
+
+
+def remember_note(note, force=False):
+    """Keep the note as it is now, before a new round of edits (or on purpose with `force`)."""
+    from .models import NoteVersion
+
+    if not (note.title.strip() or note.body.strip()):
+        return None
+    last = note.versions.only("created_at", "body", "title").first()
+    now = timezone.now()
+    if last and not force and now - last.created_at < NOTE_EVERY:
+        return None
+    if last and last.body == note.body and last.title == note.title:
+        return None
+    v = NoteVersion.objects.create(note=note, title=note.title, body=note.body, created_at=now)
+    old = list(note.versions.values_list("pk", flat=True)[NOTE_KEEP:])
+    if old:
+        NoteVersion.objects.filter(pk__in=old).delete()
+    return v
+
+
 # ── Restore from a backup (the export .zip / data.json) ───────────────────
 BACKUP_ORDER = ["project", "tag", "goal", "goalstep", "note", "task", "checklistitem", "timeentry", "snippet",
-                "habit", "habitcheck", "journalentry", "learningitem"]
+                "habit", "habitcheck", "journalentry", "learningitem", "diagram", "deck", "card"]
 
 
 @transaction.atomic

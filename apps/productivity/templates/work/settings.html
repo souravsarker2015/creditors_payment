@@ -47,6 +47,7 @@
         <div class="flex flex-wrap gap-2">{% for v, l in form.sound.field.choices %}<button type="button" class="btn btn-ghost btn-sm" @click="Work.cfg.volume = document.querySelector('[name=s-volume]').value; Work.play('{{ v }}', true)">{% icon "play" %}{{ l }}</button>{% endfor %}</div>
         {% with field=form.tick_sound %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.notifications %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.cards_remind_at %}{% include "partials/field.html" %}{% endwith %}
         <div class="callout" :data-tone="perm === 'granted' ? 'good' : 'info'">
           {% icon "bell" %}
           <div class="min-w-0">

@@ -27,6 +27,7 @@
   <div class="stat" data-tone="good"><dt class="stat-label">{% translate "Tasks done" %}</dt><dd class="stat-value num">{{ completed }}<small class="wr-of"> / {{ created }} {% translate "added" %}</small></dd></div>
   <div class="stat"><dt class="stat-label">{% translate "Focus sessions" %}</dt><dd class="stat-value num">{{ t.focus_sessions }}</dd></div>
   <div class="stat"><dt class="stat-label">{% translate "Billable" %}</dt><dd class="stat-value num">{{ t.billable_seconds|hm }}</dd></div>
+  {% if earned is not None %}<div class="stat" data-tone="good"><dt class="stat-label">{% translate "Worth at your rates" %}</dt><dd class="stat-value num">{{ earned|money }}</dd></div>{% endif %}
 </dl>
 
 {% if heat.weeks %}
@@ -56,7 +57,7 @@
 <div class="wr-grid">
   <section class="card">
     <header class="card-header"><h2 class="card-title">{% translate "By project" %}</h2></header>
-    <ul class="wr-rank">{% for r in projects %}<li><span class="wr-rank-name">{% if r.p %}<span class="wt-dot" data-color="{{ r.p.color }}"></span>{{ r.p.name }}{% else %}<span class="ws-none">{% translate "No project" %}</span>{% endif %}</span><span class="wr-rank-val num">{{ r.secs|hm }} · {{ r.pct }}%</span><span class="wr-rank-bar" data-color="{{ r.p.color|default:'slate' }}"><i style="width: {{ r.pct }}%"></i></span></li>{% endfor %}</ul>
+    <ul class="wr-rank">{% for r in projects %}<li><span class="wr-rank-name">{% if r.p %}<span class="wt-dot" data-color="{{ r.p.color }}"></span>{{ r.p.name }}{% else %}<span class="ws-none">{% translate "No project" %}</span>{% endif %}</span><span class="wr-rank-val num">{{ r.secs|hm }} · {{ r.pct }}%{% if r.earned is not None %} · {{ r.earned|money }}{% endif %}</span><span class="wr-rank-bar" data-color="{{ r.p.color|default:'slate' }}"><i style="width: {{ r.pct }}%"></i></span></li>{% endfor %}</ul>
   </section>
   <section class="card">
     <header class="card-header"><h2 class="card-title">{% translate "When you work" %}</h2><p class="card-subtitle">{% translate "Time started in each hour" %}</p></header>

@@ -6,7 +6,7 @@
 {% block work %}
 <div class="page-narrow stack" x-data="{ title: '{{ title|escapejs }}', url: '{{ url|escapejs }}', text: '{{ text|escapejs }}', busy: false,
      done(r, where) { this.busy = false; if (r.ok) { Work.toast(r.queued ? Work.cfg.text.savedOffline : '{% translate "Saved." %}'); setTimeout(() => location.href = where, 500); } else Work.toast(r.error || Work.cfg.text.notSaved, 'warn'); } }">
-  <header class="wp-head"><div><h1 class="wp-title">{% translate "Save what you shared" %}</h1><p class="wp-sub">{% translate "Keep it as a task, something to read or watch, or a note." %}</p></div></header>
+  <header class="wp-head"><div><h1 class="wp-title">{% translate "Save what you shared" %}</h1><p class="wp-sub">{% translate "Keep it as a task, something to read or watch, a note or a flashcard." %}</p></div></header>
   <section class="card card-body form-stack">
     <div class="field"><label class="label" for="sh-title">{% translate "Title" %}</label><input id="sh-title" x-model="title" class="form-input"></div>
     <div class="field" x-show="url"><label class="label" for="sh-url">{% translate "Link" %}</label><input id="sh-url" x-model="url" class="form-input" inputmode="url"></div>
@@ -16,6 +16,7 @@
     <button type="button" class="btn btn-primary" :disabled="busy || !(title || url)" @click="busy = true; Work.api(Work.cfg.urls.taskAdd, { text: [title, url].filter(Boolean).join(' ') }).then(r => done(r, Work.cfg.urls.tasks))">{% icon "check" %}{% translate "Task" %}</button>
     <button type="button" class="btn btn-secondary" :disabled="busy || !(title || url)" @click="busy = true; Work.api('{% url 'work:api_learning_add' %}', { text: [title, url].filter(Boolean).join(' ') }).then(r => done(r, Work.cfg.urls.learning + '?show=queued'))">{% icon "book" %}{% translate "Read / watch later" %}</button>
     <button type="button" class="btn btn-secondary" :disabled="busy || !(title || url || text)" @click="busy = true; Work.api(Work.cfg.urls.noteSave, { title: title, body: [text !== title ? text : '', url].filter(Boolean).join('\n\n') }).then(r => done(r, r.url || Work.cfg.urls.notes))">{% icon "note" %}{% translate "Note" %}</button>
+    <button type="button" class="btn btn-secondary" :disabled="busy || !(title || text)" @click="busy = true; Work.api(Work.cfg.urls.cardAdd, { front: title || text, back: [text !== title ? text : '', url].filter(Boolean).join('\n\n') }).then(r => done(r, r.url || Work.cfg.urls.cards))" data-tip="{% translate 'The title is the question; the text and link are the answer' %}">{% icon "cards" %}{% translate "Flashcard" %}</button>
   </div>
 </div>
 {% endblock %}

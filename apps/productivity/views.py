@@ -58,6 +58,7 @@ def _urls():
         "learningBase": "/work/api/learning/", "goalBase": "/work/api/goals/",
         "plan": r("work:plan"), "planAction": r("work:api_plan"), "week": r("work:week"), "noteGo": r("work:note_go"),
         "diagrams": r("work:diagrams"), "diagramBase": "/work/api/diagrams/", "diagramList": r("work:api_diagram_list"),
+        "cardsDue": r("work:api_cards_due"), "cardReview": r("work:card_review"),
         "cards": r("work:cards"), "cardBase": "/work/api/cards/", "cardAdd": r("work:api_card_add"),
     }
 
@@ -82,6 +83,8 @@ def _texts():
         "error": _("Couldn't save. Try again."), "later": _("Moved to"),
         "kinds": {"task": _("Task"), "note": _("Note"), "project": _("Project"), "goal": _("Goal"), "learning": _("Learning"),
                   "snippet": _("Snippet"), "diagram": _("Diagram"), "card": _("Flashcard")},
+        "restoreNote": _("Bring back this version? What's there now is kept as a version too."),
+        "cardsWaiting": _("Flashcards waiting"), "cardsToReview": _("%(n)s cards to review — about %(n)s minutes."), "review": _("Review"),
         "cardsMade": _("Flashcards made"), "seeCards": _("See them"), "noPairs": _("Write cards as “question :: answer”, one a line."),
     }
 
@@ -118,6 +121,10 @@ def _commands():
         {"id": "new-note", "title": _("New note"), "icon": "note", "action": "capture:note", "hint": "n", "words": "add create write"},
         {"id": "new-mindmap", "title": _("New mind map"), "icon": "mindmap", "url": r("work:diagrams") + "?start=mindmap", "words": "add create brainstorm diagram"},
         {"id": "review-cards", "title": _("Review flashcards"), "icon": "cards", "url": r("work:card_review"), "words": "study quiz spaced repetition anki"},
+        {"id": "new-deck", "title": _("New flashcard deck"), "icon": "cards", "url": r("work:cards") + "?new=1", "words": "add create flashcards study"},
+        {"id": "new-diagram", "title": _("New diagram"), "icon": "diagram", "url": r("work:diagrams") + "#new", "words": "add create chart drawing c4 architecture pie git"},
+        {"id": "new-flowchart", "title": _("New flowchart"), "icon": "diagram", "url": r("work:diagrams") + "?start=flowchart", "words": "add create diagram process"},
+        {"id": "new-sequence", "title": _("New sequence diagram"), "icon": "diagram", "url": r("work:diagrams") + "?start=sequence", "words": "add create diagram api calls"},
         {"id": "new-system", "title": _("New system design"), "icon": "server", "url": r("work:diagrams") + "?start=system", "words": "add create architecture diagram board"},
         {"id": "start", "title": _("Start the timer"), "icon": "play", "action": "capture:time", "hint": "s", "words": "track", "when": "idle"},
         {"id": "stop", "title": _("Stop the timer"), "icon": "stop", "action": "timer:stop", "hint": "s", "words": "track", "when": "running"},
@@ -158,6 +165,7 @@ def render_work(request, template, ctx=None):
             "autoBreaks": s.auto_start_breaks, "autoFocus": s.auto_start_focus,
             "sound": s.sound if s.sound_enabled else "", "volume": s.volume, "tick": s.tick_sound,
             "notify": s.notifications, "longTimer": s.long_timer_hours, "target": s.daily_target_minutes, "idle": s.idle_minutes,
+            "cardsRemind": s.cards_remind_at.strftime("%H:%M") if s.cards_remind_at else "",
             "reminders": [{"id": r["pk"], "title": r["title"], "at": r["remind_at"].isoformat(),
                            "url": reverse("work:task", args=[r["pk"]])} for r in reminders],
         },
@@ -803,6 +811,17 @@ def deck_view(request, pk):
     })
 
 
+@work_required
+def deck_export_view(request, pk):
+    """One deck as a tab-separated file: Anki, Quizlet and spreadsheets open it."""
+    deck = get_object_or_404(Deck, pk=pk, owner=request.user)
+    lines = ["\t".join(t.replace("\t", " ").replace("\r", "").replace("\n", "<br>") for t in (c.front, c.back)) for c in deck.cards.order_by("pk")]
+    response = HttpResponse("\n".join(lines) + "\n", content_type="text/tab-separated-values; charset=utf-8")
+    name = "".join(ch if ch.isalnum() or ch in "-_ " else "-" for ch in deck.name).strip().replace(" ", "-")[:60] or "deck"
+    response["Content-Disposition"] = f'attachment; filename="{name}.tsv"'
+    return response
+
+
 def _card_texts():
     return {
         "again": _("Again"), "hard": _("Hard"), "good": _("Good"), "easy": _("Easy"), "show": _("Show the answer"),
@@ -810,7 +829,7 @@ def _card_texts():
         "saved": _("Saved"), "paused": _("Paused: it won't come up until you start it again"), "resumed": _("It will come up again"),
         "reset": _("It will come up as new"), "resetConfirm": _("Forget how well you know this card and start it again as new?"),
         "deleteDeck": _("Delete this deck and all its cards? You can bring it back from Recently deleted."),
-        "noAnswer": _("(no answer written)"), "moved": _("Moved"),
+        "noAnswer": _("(no answer written)"), "moved": _("Moved"), "undone": _("Answer taken back"),
     }
 
 
@@ -939,6 +958,12 @@ def _range(request, s, today):
     return (first, min(last, today)), "week"
 
 
+def _earned(by_project):
+    """Time × hourly rate over the projects that have a rate (None when none has one)."""
+    rated = [(p, secs) for p, secs in by_project if p and p.hourly_rate]
+    return sum(float(p.hourly_rate) * secs / 3600 for p, secs in rated) if rated else None
+
+
 @work_required
 def reports_view(request):
     user, today = request.user, _today()
@@ -972,7 +997,9 @@ def reports_view(request):
         "bars": [{"day": d, "secs": v, "pct": round(100 * v / peak), "work": s.is_work_day(d), "weekend": not s.is_work_day(d)} for d, v in t.by_day.items()],
         "target_total": s.daily_target_minutes * 60 * work_days,
         "target_pct": round(100 * t.seconds / (s.daily_target_minutes * 60 * work_days)) if work_days else None,
-        "projects": [{"p": p, "secs": secs, "pct": round(100 * secs / t.seconds) if t.seconds else 0} for p, secs in t.by_project],
+        "projects": [{"p": p, "secs": secs, "pct": round(100 * secs / t.seconds) if t.seconds else 0,
+                      "earned": float(p.hourly_rate) * secs / 3600 if p and p.hourly_rate else None} for p, secs in t.by_project],
+        "earned": _earned(t.by_project),
         "tags": [{"tag": tg, "secs": secs, "pct": round(100 * secs / t.seconds) if t.seconds else 0} for tg, secs in t.by_tag[:12]],
         "tasks": t.by_task, "completed": completed.count(), "created": Task.objects.filter(owner=user, created_at__gte=lo, created_at__lt=hi).count(),
         "est": est,
@@ -1414,6 +1441,7 @@ def wrapup_view(request):
         "doing": [x for x in open_tasks if x.status == Status.DOING], "done_today": done_today, "t": t, "journal": journal,
         "next_plan": next_plan, "done_lines": "\n".join(f"- {x.title}" for x in done_today),
         "target": s.daily_target_minutes * 60, "moods": range(1, 6),
+        "cards_due": cards.due_count(user, today) if Deck.objects.filter(owner=user, is_archived=False).exists() else 0,
     })
 
 

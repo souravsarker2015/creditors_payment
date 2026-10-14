@@ -66,6 +66,20 @@
     {% else %}<p class="wd-muted">{% translate "No goals yet." %} <a href="{% url 'work:goal_new' %}" class="wd-link">{% translate "Set one" %}</a></p>{% endif %}
   </section>
 
+  {% if d.practice.answers or d.diagrams %}
+  <section class="card">
+    <header class="card-header"><h2 class="card-title">{% translate "Practice & diagrams" %}</h2></header>
+    {% if d.practice.answers %}
+    <a href="{% url 'work:cards' %}" class="wv-practice">
+      <span class="wfc-hero-stack" aria-hidden="true"><i></i><i></i><i>{{ d.practice.cards }}</i></span>
+      <span><b>{% blocktranslate count counter=d.practice.answers %}{{ counter }} flashcard answer{% plural %}{{ counter }} flashcard answers{% endblocktranslate %}</b>
+        <small>{% blocktranslate with c=d.practice.cards days=d.practice.days %}{{ c }} cards on {{ days }} days{% endblocktranslate %}{% if d.practice.remembered is not None %} · {% blocktranslate with p=d.practice.remembered %}{{ p }} percent remembered{% endblocktranslate %}{% endif %}</small></span>
+    </a>
+    {% endif %}
+    {% if d.diagrams %}<ul class="wv-list">{% for dg in d.diagrams %}<li><a href="{% url 'work:diagram' dg.pk %}">{% if dg.is_new %}✏️{% else %}🔁{% endif %} {{ dg.title }}</a><time>{{ dg.get_kind_display }}</time></li>{% endfor %}</ul>{% endif %}
+  </section>
+  {% endif %}
+
   {% if d.learnt or d.habits %}
   <section class="card">
     <header class="card-header"><h2 class="card-title">{% translate "Learning & habits" %}</h2></header>
