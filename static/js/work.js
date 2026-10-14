@@ -877,7 +877,8 @@
           if (!this.id) return;
           api(CFG.urls.noteBase + this.id + "/", { action: name }).then(function (res) {
             if (name === "delete") { store(self.draftKey, null); undoable(t("noteDeleted", "Note deleted"), res.undo, function () { location.href = CFG.urls.notes + self.id + "/"; }); setTimeout(function () { location.href = CFG.urls.notes; }, 350); }
-            else if (name === "to_task" && res.url) location.href = res.url;
+            else if ((name === "to_task" || name === "mindmap") && res.url) location.href = res.url;
+            else if (name === "mindmap" && !res.ok) toast(res.error || "", "warn");
             else if (name === "cards") {
               if (res.ok && !res.queued) toast(t("cardsMade", "Flashcards made") + ": " + res.count, "good", { label: t("seeCards", "See them"), run: function () { location.href = res.url; } });
               else if (!res.ok) toast(res.error || t("noPairs", ""), "warn");

@@ -45,6 +45,7 @@ class Project(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        verbose_name, verbose_name_plural = _("Project"), _("Projects")
         ordering = ["is_archived", "order", "name"]
         indexes = [models.Index(fields=["owner", "is_archived"])]
 
@@ -116,6 +117,7 @@ class Task(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        verbose_name, verbose_name_plural = _("Task"), _("Tasks")
         ordering = ["order", "-priority", "created_at"]
         indexes = [models.Index(fields=["owner", "status"]), models.Index(fields=["owner", "due_date"]),
                    models.Index(fields=["owner", "scheduled_at"])]
@@ -193,6 +195,7 @@ class TimeEntry(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        verbose_name, verbose_name_plural = _("Time entry"), _("Time entries")
         ordering = ["-started_at"]
         indexes = [models.Index(fields=["owner", "started_at"])]
         constraints = [models.UniqueConstraint(fields=["owner"], condition=Q(ended_at__isnull=True), name="work_one_running_timer")]
@@ -226,6 +229,7 @@ class Note(models.Model):
     updated_at = models.DateTimeField(auto_now=True, db_index=True)
 
     class Meta:
+        verbose_name, verbose_name_plural = _("Note"), _("Notes")
         ordering = ["-is_pinned", "-updated_at"]
 
     def __str__(self):
@@ -278,6 +282,7 @@ class Snippet(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        verbose_name, verbose_name_plural = _("Snippet"), _("Snippets")
         ordering = ["-is_favorite", "-uses", "title"]
 
     def __str__(self):
@@ -296,6 +301,7 @@ class Habit(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        verbose_name, verbose_name_plural = _("Habit"), _("Habits")
         ordering = ["is_archived", "order", "created_at"]
 
     def __str__(self):
@@ -449,6 +455,7 @@ class Goal(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        verbose_name, verbose_name_plural = _("Goal"), _("Goals")
         ordering = ["order", "target_date", "-created_at"]
         indexes = [models.Index(fields=["owner", "status"])]
 
@@ -542,6 +549,7 @@ class LearningItem(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        verbose_name, verbose_name_plural = _("Learning item"), _("Learning")
         ordering = ["-updated_at"]
         indexes = [models.Index(fields=["owner", "status"])]
 
@@ -603,6 +611,7 @@ class Diagram(models.Model):
     updated_at = models.DateTimeField(auto_now=True, db_index=True)
 
     class Meta:
+        verbose_name, verbose_name_plural = _("Diagram"), _("Diagrams")
         ordering = ["-is_pinned", "-updated_at"]
         indexes = [models.Index(fields=["owner", "is_archived", "kind"])]
 
@@ -662,6 +671,7 @@ class Deck(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        verbose_name, verbose_name_plural = _("Deck"), _("Decks")
         ordering = ["is_archived", "name"]
 
     def __str__(self):
@@ -686,6 +696,7 @@ class Card(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        verbose_name, verbose_name_plural = _("Flashcard"), _("Flashcards")
         ordering = ["due", "pk"]
         indexes = [models.Index(fields=["owner", "is_suspended", "due"])]
 

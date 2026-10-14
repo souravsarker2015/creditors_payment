@@ -131,6 +131,7 @@ def _commands():
         {"id": "wrapup", "title": _("Wrap up the day"), "icon": "sun", "url": r("work:wrapup"), "words": "shutdown end of day evening plan tomorrow"},
         {"id": "note-meeting", "title": _("New meeting notes"), "icon": "note", "url": r("work:notes") + "?new=1&template=meeting", "words": "template"},
         {"id": "note-adr", "title": _("New decision record (ADR)"), "icon": "note", "url": r("work:notes") + "?new=1&template=adr", "words": "template architecture"},
+        {"id": "note-study", "title": _("New study notes"), "icon": "note", "url": r("work:notes") + "?new=1&template=study", "words": "template learning flashcards revise"},
         {"id": "note-bug", "title": _("New bug report"), "icon": "note", "url": r("work:notes") + "?new=1&template=bug", "words": "template issue"},
         {"id": "add-time", "title": _("Add time by hand"), "icon": "clock", "url": r("work:entry_new"), "words": "manual entry log"},
         {"id": "new-goal", "title": _("New goal"), "icon": "flag", "url": r("work:goal_new"), "words": "add create"},
@@ -493,6 +494,7 @@ NOTE_TEMPLATES = {   # key: (title, Markdown body, tags)
     "bug": (gettext_lazy("Bug report"), gettext_lazy("## What happens\n\n## What should happen\n\n## Steps to reproduce\n1. \n2. \n\n## Environment\n- Version / commit: \n- Browser / device: \n\n## Logs\n```\n\n```\n\n## Cause & fix\n"), "bug"),
     "postmortem": (gettext_lazy("Post-mortem"), gettext_lazy("## Summary\n\n## Impact\nWho was affected, for how long?\n\n## Timeline\n- 00:00 — \n\n## Root cause\n\n## What went well\n- \n\n## What went badly\n- \n\n## Action items\n- [ ] "), "postmortem"),
     "daily": (gettext_lazy("Daily note"), gettext_lazy("## Top 3 today\n1. \n2. \n3. \n\n## Notes\n- \n\n## Learnt today\n- "), "daily"),
+    "study": (gettext_lazy("Study notes"), gettext_lazy("## In one sentence\n\n## Key ideas\n- \n- \n\n## How it fits together\n```mermaid\nflowchart LR\n    A[Idea] --> B[Another idea]\n```\n\n## Flashcards\nQuestion :: Answer\n\n## Questions I still have\n- "), "study"),
     "design": (gettext_lazy("Design doc"), gettext_lazy("## Problem\n\n## Goals / non-goals\n- \n\n## Proposal\n\n## Alternatives considered\n\n## Rollout & risks\n\n## Open questions\n- "), "design"),
 }
 

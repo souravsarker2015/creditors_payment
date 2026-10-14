@@ -93,6 +93,14 @@ person's choice (Automatic / App view / Website view).
                 <span class="app-action-icon">{% include "partials/icon.html" with name="journal" %}</span>
                 <span class="app-action-name">{% translate "Journal" %}</span><span class="app-action-hint">{% translate "Today's log & standup" %}</span>
             </a>
+            <a href="{% url 'work:card_review' %}" class="app-action" data-tone="accent">
+                <span class="app-action-icon">{% include "partials/icon.html" with name="cards" %}</span>
+                <span class="app-action-name">{% translate "Flashcards" %}</span><span class="app-action-hint">{% translate "Review what's due" %}</span>
+            </a>
+            <a href="{% url 'work:diagrams' %}?start=mindmap" class="app-action" data-tone="warn">
+                <span class="app-action-icon">{% include "partials/icon.html" with name="mindmap" %}</span>
+                <span class="app-action-name">{% translate "Mind map" %}</span><span class="app-action-hint">{% translate "Think it through" %}</span>
+            </a>
             {% elif active_dashboard == "business" %}
             <a href="{% url 'business:sale_add' %}" class="app-action" data-tone="good">
                 <span class="app-action-icon">{% include "partials/icon.html" with name="cart" %}</span>

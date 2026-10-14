@@ -67,6 +67,7 @@
               <button type="button" class="menu-item" @click="action('pin')">{% icon "pin" %}{% if note.is_pinned %}{% translate "Unpin" %}{% else %}{% translate "Pin to top" %}{% endif %}</button>
               <button type="button" class="menu-item" @click="open = false; openHistory()">{% icon "history" %}{% translate "History" %}</button>
               <button type="button" class="menu-item" @click="action('to_task')">{% icon "check" %}{% translate "Turn into a task" %}</button>
+              <button type="button" class="menu-item" @click="Promise.resolve(saveNow()).then(() => action('mindmap'))" data-tip="{% translate 'Headings and lists become the branches' %}">{% icon "mindmap" %}{% translate "Turn into a mind map" %}</button>
               <button type="button" class="menu-item" @click="Promise.resolve(saveNow()).then(() => action('cards'))" data-tip="{% translate 'Each “question :: answer” line becomes a flashcard' %}">{% icon "cards" %}{% translate "Make flashcards" %}</button>
               <button type="button" class="menu-item" @click="navigator.clipboard && navigator.clipboard.writeText(body).then(() => Work.toast('{% translate "Copied" %}'))">{% icon "copy" %}{% translate "Copy Markdown" %}</button>
               <button type="button" class="menu-item" @click="action('archive')">{% icon "archive" %}{% if note.is_archived %}{% translate "Unarchive" %}{% else %}{% translate "Archive" %}{% endif %}</button>

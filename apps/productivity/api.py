@@ -356,6 +356,13 @@ def note_action(request, pk):
             return bad(_("Write cards as “question :: answer”, one a line."))
         deck = cards.deck_named(request.user, note.display_title)
         return ok(count=cards.add_cards(request.user, deck, pairs), url=reverse("work:deck", args=[deck.pk]))
+    elif action == "mindmap":          # headings and lists become a mind map
+        data = diagrams.outline_map(note.display_title, note.body)
+        if data is None:
+            return bad(_("Write some headings or a list first — they become the branches."))
+        d = Diagram.objects.create(owner=request.user, kind=DiagramKind.MINDMAP, title=note.display_title[:200], data=data, project=note.project,
+                                   notes=_("Made from the note “%(title)s”.") % {"title": note.display_title})
+        return ok(url=reverse("work:diagram", args=[d.pk]))
     elif action == "restore":          # an earlier version comes back (what's there now is kept too)
         v = get_object_or_404(NoteVersion, pk=request.POST.get("version") or 0, note=note)
         services.remember_note(note, force=True)

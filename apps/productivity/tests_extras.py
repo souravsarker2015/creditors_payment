@@ -12,7 +12,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from . import cards, services
+from . import cards, diagrams, services
 from .models import Card, CardReview, Deck, Diagram, DiagramKind, LearningItem, Note, NoteVersion, Project, TimeEntry, WorkSettings
 
 PW = "Str0ng-pass-123"
@@ -119,3 +119,35 @@ class ExtrasTests(TestCase):
         self.assertEqual(res["url"], reverse("work:deck", args=[Deck.objects.get().pk]))
         self.assertEqual(self.client.get(reverse("work:api_cards_due")).json()["due"], 1)
         self.assertContains(self.client.get(reverse("work:wrapup")), "1 flashcard still waiting")
+
+    def test_a_notes_outline_becomes_a_mind_map(self):
+        body = ("# Trip\n\nSome words that aren't a list.\n\n## Where\n- Sylhet\n  - Tea gardens\n- [x] Cox's Bazar\n\n"
+                "## Budget\n1. **Hotel**\n2. [Bus](https://example.com)\n\n```\n- not in a code block\n```\n")
+        data = diagrams.outline_map("Trip", body)
+        root = data["root"]
+        self.assertEqual(root["text"], "Trip")
+        self.assertEqual([k["text"] for k in root["children"]], ["Where", "Budget"])
+        where = root["children"][0]
+        self.assertEqual([k["text"] for k in where["children"]], ["Sylhet", "Cox's Bazar"])
+        self.assertEqual(where["children"][0]["children"][0]["text"], "Tea gardens")
+        self.assertTrue(where["children"][1]["done"])
+        self.assertEqual([k["text"] for k in root["children"][1]["children"]], ["Hotel", "Bus"])
+        self.assertIsNone(diagrams.outline_map("Plain", "Just a sentence."))
+        project = Project.objects.create(owner=self.me, name="Holiday")
+        note = Note.objects.create(owner=self.me, title="Trip", body=body, project=project)
+        res = self.client.post(reverse("work:api_note_action", args=[note.pk]), {"action": "mindmap"}).json()
+        d = Diagram.objects.get()
+        self.assertEqual((res["url"], d.kind, d.project, d.title), (reverse("work:diagram", args=[d.pk]), DiagramKind.MINDMAP, project, "Trip"))
+        plain = Note.objects.create(owner=self.me, title="Plain", body="Just words.")
+        self.assertFalse(self.client.post(reverse("work:api_note_action", args=[plain.pk]), {"action": "mindmap"}).json()["ok"])
+
+    def test_study_notes_template_and_translated_trash_labels(self):
+        r = self.client.get(reverse("work:notes") + "?new=1&template=study")
+        self.assertContains(r, "Question :: Answer")
+        from django.utils import translation
+        deck = Deck.objects.create(owner=self.me, name="Words")
+        c = Card.objects.create(owner=self.me, deck=deck, front="Q")
+        from apps.trash.services import trash
+        with translation.override("bn"):
+            item = trash(self.me, c, "x")
+        self.assertEqual(item.kind, "ফ্ল্যাশকার্ড")

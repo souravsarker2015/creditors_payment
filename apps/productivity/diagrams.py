@@ -165,6 +165,51 @@ def branch_titles(data, node_id):
     return [" ".join(str(k.get("text", "")).split())[:300] for k in picked if str(k.get("text", "")).strip()]
 
 
+# ── A note's outline → a mind map ───────────────────────────────────────────
+OUTLINE_LINE = re.compile(r"^(?P<indent>[ \t]*)(?:(?P<hashes>#{1,6})\s+|(?:[-*+]|\d+[.)])\s+(?P<tick>\[[ xX]\]\s+)?)(?P<text>\S.*)$")
+
+
+def _plain(text):
+    text = re.sub(r"!?\[([^\]]*)\]\([^)]*\)", r"\1", text)      # links and pictures keep their words
+    text = re.sub(r"\[\[([^\]]+)\]\]", r"\1", text)                # [[Other note]]
+    return re.sub(r"[*_`~]+", "", text).strip()[:MAX_TEXT]
+
+
+def outline_map(title, body):
+    """Headings and list items of a note as a mind map: the title in the middle,
+    headings as branches and each list under the heading it sits in. Code
+    blocks and plain sentences are left out. None when there's no outline."""
+    root = {"id": "r", "text": _plain(title) or "…", "children": []}
+    stack, count, fence = [(-1, root)], 0, False
+    for line in (body or "").splitlines():
+        if line.lstrip().startswith("```"):
+            fence = not fence
+            continue
+        m = None if fence else OUTLINE_LINE.match(line)
+        if not m:
+            continue
+        text = _plain(m.group("text"))
+        if not text:
+            continue
+        if m.group("hashes"):
+            level = len(m.group("hashes"))
+            if level == 1 and count == 0 and text.lower() == root["text"].lower():
+                continue                      # the note's own title as its first heading
+        else:
+            level = 10 + len(m.group("indent").expandtabs(4)) // 2    # lists sit under every heading
+        while stack[-1][0] >= level:
+            stack.pop()
+        count += 1
+        if count > MAX_ITEMS:
+            break
+        node = {"id": f"n{count}", "text": text, "children": []}
+        if m.group("tick") and m.group("tick").strip().lower() == "[x]":
+            node["done"] = True
+        stack[-1][1]["children"].append(node)
+        stack.append((level, node))
+    return {"root": root} if count else None
+
+
 # ── Versions: earlier states to go back to ──────────────────────────────────
 AUTO_EVERY = timedelta(minutes=10)    # a new automatic copy at most this often while editing
 KEEP_AUTO = 40                        # automatic copies kept per diagram (named ones are always kept)

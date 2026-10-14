@@ -19994,3 +19994,89 @@ msgstr "নতুন সিকোয়েন্স ডায়াগ্রা�
 
 msgid "Answer taken back"
 msgstr "উত্তর ফিরিয়ে নেওয়া হয়েছে"
+
+msgid "Write some headings or a list first — they become the branches."
+msgstr "আগে কিছু শিরোনাম বা একটি তালিকা লিখুন — সেগুলোই শাখা হবে।"
+
+#, python-format
+msgid "Made from the note “%(title)s”."
+msgstr "“%(title)s” নোট থেকে বানানো।"
+
+msgid "Time entry"
+msgstr "সময়ের হিসাব"
+
+msgid "Time entries"
+msgstr "সময়ের হিসাব"
+
+msgid "Learning item"
+msgstr "শেখার বিষয়"
+
+msgid "Diagrams (g m): mind maps and system designs are drawn by hand; flowcharts, sequence, ER, C4, Git and charts are written as text and drawn as you type."
+msgstr "ডায়াগ্রাম (g m): মাইন্ড ম্যাপ আর সিস্টেম ডিজাইন হাতে আঁকা হয়; ফ্লোচার্ট, সিকোয়েন্স, ER, C4, গিট আর চার্ট লেখা হয় টেক্সটে, আর লিখতে লিখতেই আঁকা হয়ে যায়।"
+
+msgid "A ```mermaid block in a note is drawn as a diagram, and the diagram button puts a saved diagram's picture in a note."
+msgstr "নোটে ```mermaid ব্লক ডায়াগ্রাম হিসেবে আঁকা হয়, আর ডায়াগ্রাম বোতাম দিয়ে সেভ করা ডায়াগ্রামের ছবি নোটে বসানো যায়।"
+
+msgid "Flashcards (g k): write “question :: answer” in a deck or a note. Cards come back just before you'd forget them — a few minutes a day is enough."
+msgstr "ফ্ল্যাশকার্ড (g k): ডেকে বা নোটে “প্রশ্ন :: উত্তর” লিখুন। কার্ডগুলো ভুলে যাওয়ার ঠিক আগে ফিরে আসে — দিনে কয়েক মিনিটই যথেষ্ট।"
+
+msgid "A mind map can become tasks, flashcards or a note, and a note's headings and lists can become a mind map."
+msgstr "মাইন্ড ম্যাপ থেকে টাস্ক, ফ্ল্যাশকার্ড বা নোট বানানো যায়, আর নোটের শিরোনাম ও তালিকা থেকে মাইন্ড ম্যাপ।"
+
+msgid "Changed your mind? Notes and diagrams keep earlier versions — open History to read or bring one back."
+msgstr "মত বদলেছেন? নোট আর ডায়াগ্রাম আগের সংস্করণ রেখে দেয় — পড়তে বা ফিরিয়ে আনতে ইতিহাস খুলুন।"
+
+msgid "Headings and lists become the branches"
+msgstr "শিরোনাম আর তালিকাগুলো শাখা হবে"
+
+msgid "Turn into a mind map"
+msgstr "মাইন্ড ম্যাপ বানান"
+
+msgid "New study notes"
+msgstr "নতুন পড়ার নোট"
+
+msgid "Study notes"
+msgstr "পড়ার নোট"
+
+msgid ""
+"## In one sentence\n"
+"\n"
+"## Key ideas\n"
+"- \n"
+"- \n"
+"\n"
+"## How it fits together\n"
+"```mermaid\n"
+"flowchart LR\n"
+"    A[Idea] --> B[Another idea]\n"
+"```\n"
+"\n"
+"## Flashcards\n"
+"Question :: Answer\n"
+"\n"
+"## Questions I still have\n"
+"- "
+msgstr ""
+"## এক বাক্যে\n"
+"\n"
+"## মূল ধারণা\n"
+"- \n"
+"- \n"
+"\n"
+"## কীভাবে মিলে যায়\n"
+"```mermaid\n"
+"flowchart LR\n"
+"    A[ধারণা] --> B[আরেকটি ধারণা]\n"
+"```\n"
+"\n"
+"## ফ্ল্যাশকার্ড\n"
+"প্রশ্ন :: উত্তর\n"
+"\n"
+"## যে প্রশ্নগুলো এখনো আছে\n"
+"- "
+
+msgid "Review what's due"
+msgstr "যা বাকি তা রিভিউ করুন"
+
+msgid "Think it through"
+msgstr "ভেবে দেখুন"
