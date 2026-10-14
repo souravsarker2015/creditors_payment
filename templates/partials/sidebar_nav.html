@@ -1,13 +1,19 @@
 {% load i18n %}
 {% with p=request.path %}
 <div class="sidebar">
-    <a href="{% if active_dashboard == 'business' %}{% url 'business:home' %}{% elif active_dashboard == 'productivity' %}{% url 'work:today' %}{% else %}{% url 'home' %}{% endif %}" class="flex h-16 shrink-0 items-center gap-2.5 px-2">
+    <div class="nav-head">
+    <a href="{% if active_dashboard == 'business' %}{% url 'business:home' %}{% elif active_dashboard == 'productivity' %}{% url 'work:today' %}{% else %}{% url 'home' %}{% endif %}" class="nav-brand flex h-16 min-w-0 shrink-0 items-center gap-2.5 px-2">
         <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg font-heading text-base font-bold" style="background: var(--gold); color: #221a06;">৳</span>
-        <span>
+        <span class="nav-brand-text">
             <span class="block font-heading text-lg font-bold leading-tight" style="color: var(--text-on-ink);">FinTrack</span>
             <span class="block text-[10px] font-semibold uppercase tracking-[0.14em]" style="color: var(--text-on-ink-muted);">{% if active_dashboard == 'business' %}{% translate "Fish Farm Business" %}{% elif active_dashboard == 'productivity' %}{% translate "Productivity" %}{% else %}{% translate "Ledger & Household" %}{% endif %}</span>
         </span>
     </a>
+    <button type="button" class="nav-collapse" data-nav-toggle aria-expanded="true" aria-keyshortcuts="["
+            data-label-close="{% translate 'Fold the menu ( [ )' %}" data-label-open="{% translate 'Open the menu ( [ )' %}" aria-label="{% translate 'Fold or open the menu' %}">
+        <svg fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor" aria-hidden="true"><rect x="3.75" y="4.5" width="16.5" height="15" rx="2.25"/><path stroke-linecap="round" d="M9 4.5v15"/><path class="nav-collapse-arrow" stroke-linecap="round" stroke-linejoin="round" d="m15.75 9.75-2.25 2.25 2.25 2.25"/></svg>
+    </button>
+    </div>
 
     <nav class="flex flex-1 flex-col gap-5" aria-label="{% translate 'Main' %}">
         {% include "partials/nav_sections.html" %}

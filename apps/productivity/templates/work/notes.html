@@ -56,6 +56,7 @@
       <div class="wn-toolbar">
         <a href="{% url 'work:notes' %}" class="icon-btn wn-back" aria-label="{% translate 'All notes' %}">{% icon "chevron-left" %}</a>
         <div class="seg seg-sm wn-mode"><button type="button" class="seg-item" :class="!preview && 'is-active'" @click="preview = false">{% icon "edit" %}<span>{% translate "Write" %}</span></button><button type="button" class="seg-item" :class="preview && 'is-active'" @click="preview = true">{% icon "words" %}<span>{% translate "Preview" %}</span></button></div>
+        <button type="button" class="icon-btn wn-zen" data-zen-toggle="write" aria-label="{% translate 'Focus writing' %}" data-tip="{% translate 'Focus writing: just this note, full screen (Ctrl+Shift+F)' %}"><span class="wt-zen-on">{% icon "maximize" %}</span><span class="wt-zen-off">{% icon "minimize" %}</span></button>
         <span class="spacer"></span>
         <span class="wn-state" :data-state="state" role="status" aria-live="polite"><i aria-hidden="true"></i><span x-text="{ saving: '{% translate "Saving…" %}', saved: savedAt ? '{% translate "Saved" %} ' + savedAt : '', offline: '{% translate "Saved on this device" %}', dirty: '{% translate "Editing…" %}', error: '{% translate "Not saved" %}' }[state]"></span></span>
         <button type="button" class="btn btn-secondary btn-sm wn-todos" x-show="id && todoCount" x-cloak @click="todosToTasks()" :disabled="making"

@@ -256,8 +256,84 @@
     if (e.dataTransfer && putImages(ta, e.dataTransfer.files)) e.preventDefault();
   });
 
+  /* ── Full screen: "page" (no menus — every page, Shift+F) or "write" (a
+        note and nothing else, Ctrl+Shift+F in the editor). The browser's own
+        full screen too, where it's allowed; Esc leaves both. ──────────────── */
+  var zenAsked = false;
+  function zenOn(mode) {
+    root.setAttribute("data-zen", mode || "page");
+    try { sessionStorage.setItem("ft-zen", mode || "page"); } catch (e) { /* storage off */ }
+    var el = d.documentElement;
+    if (el.requestFullscreen && !d.fullscreenElement) { zenAsked = true; el.requestFullscreen({ navigationUI: "hide" }).catch(function () { zenAsked = false; }); }
+    window.dispatchEvent(new Event("resize"));
+  }
+  function zenOff() {
+    root.removeAttribute("data-zen");
+    try { sessionStorage.removeItem("ft-zen"); } catch (e) { /* storage off */ }
+    if (d.fullscreenElement && d.exitFullscreen) d.exitFullscreen().catch(function () {});
+    zenAsked = false;
+    window.dispatchEvent(new Event("resize"));
+  }
+  function zenToggle(mode) {
+    var now = root.getAttribute("data-zen");
+    if (now && (!mode || now === mode)) zenOff(); else zenOn(mode);
+  }
+  d.addEventListener("fullscreenchange", function () {   // left the browser's full screen (Esc, F11): leave ours too
+    if (!d.fullscreenElement && zenAsked && root.getAttribute("data-zen")) { zenAsked = false; zenOff(); }
+  });
+  d.addEventListener("click", function (e) {
+    var on = e.target.closest && e.target.closest("[data-zen-toggle]");
+    if (on) { zenToggle(on.getAttribute("data-zen-toggle")); return; }
+    if (e.target.closest && e.target.closest("[data-zen-off]")) zenOff();
+  });
+  function dialogOpen() {
+    return Array.prototype.some.call(d.querySelectorAll('[role="dialog"]'), function (el) { return el.offsetParent !== null || getComputedStyle(el).position === "fixed" && getComputedStyle(el).display !== "none"; });
+  }
+  d.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && root.getAttribute("data-zen") && !e.defaultPrevented && !dialogOpen()) { zenOff(); return; }
+    if ((e.key === "F" || e.key === "f") && e.shiftKey && !e.altKey) {
+      if (e.ctrlKey || e.metaKey) { if (d.querySelector(".wn-body")) { e.preventDefault(); zenToggle("write"); } return; }
+      if (typing(e)) return;
+      e.preventDefault(); zenToggle("page");
+    }
+  });
+
+  /* ── Numbers on stat cards count up when they come into view ───────────── */
+  (function countUp() {
+    if (!window.IntersectionObserver || (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)) return;
+    var NUM = /\d[\d,]*(\.\d+)?/g;
+    function run(el) {
+      var text = el.textContent, parts = [], m;
+      NUM.lastIndex = 0;
+      while ((m = NUM.exec(text))) parts.push({ at: m.index, raw: m[0], value: parseFloat(m[0].replace(/,/g, "")), dec: (m[1] || "").length - (m[1] ? 1 : 0), comma: m[0].indexOf(",") >= 0 });
+      if (!parts.length || parts.every(function (p) { return !p.value; })) return;
+      var start = performance.now(), dur = 750;
+      function fmt(p, v) {
+        var str = p.dec ? v.toFixed(p.dec) : String(Math.round(v));
+        if (p.comma) str = Number(str).toLocaleString("en-IN", { minimumFractionDigits: p.dec, maximumFractionDigits: p.dec });
+        return str;
+      }
+      (function frame(now) {
+        var t = Math.min(1, (now - start) / dur), k = 1 - Math.pow(1 - t, 3), out = "", last = 0;
+        parts.forEach(function (p) { out += text.slice(last, p.at) + (t < 1 ? fmt(p, p.value * k) : p.raw); last = p.at + p.raw.length; });
+        el.textContent = out + text.slice(last);
+        if (t < 1) requestAnimationFrame(frame);
+      })(start);
+    }
+    var seen = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) { if (en.isIntersecting) { seen.unobserve(en.target); run(en.target); } });
+    }, { threshold: 0.4 });
+    d.addEventListener("DOMContentLoaded", function () {
+      d.querySelectorAll(".work .stat-value, .work .wfc-stat b, .work .wfr-sum dd:not([x-text])").forEach(function (el) {
+        if (el.children.length || el.hasAttribute("x-text")) return;     // only plain numbers; live (Alpine) ones are left alone
+        if (/[০-৯]/.test(el.textContent)) return;
+        seen.observe(el);
+      });
+    });
+  })();
+
   /* ── Expose for the page components ──────────────────────────────────── */
-  window.Work = { api: api, toast: toast, undoable: undoable, play: play, notify: notify, askNotify: askNotify, clock: clock, hm: hm, cfg: CFG, flush: flush, recall: recall, store: store, putImages: putImages };
+  window.Work = { api: api, toast: toast, undoable: undoable, play: play, notify: notify, askNotify: askNotify, clock: clock, hm: hm, cfg: CFG, flush: flush, recall: recall, store: store, putImages: putImages, zen: { on: zenOn, off: zenOff, toggle: zenToggle } };
 
   document.addEventListener("alpine:init", function () {
 

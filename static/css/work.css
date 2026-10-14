@@ -1693,3 +1693,153 @@ textarea[data-paste-images].is-dropping { outline: 2px dashed var(--accent); out
 .wn-pic { cursor: pointer; }
 .wn-md img { max-width: 100%; height: auto; border-radius: 0.625rem; }
 .wn-md img[src*="/work/images/"] { display: block; margin: 0.75em 0; border: 1px solid var(--border-soft); box-shadow: var(--shadow-sm); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Charts that read well in light and dark: bars in the full accent (less
+   opaque when they're not the point), a visible track, value labels, the
+   average / target as a dashed line, and a stronger heatmap ramp.
+   Bar heights come in as --h (0–100) so labels and lines share one scale.
+   ══════════════════════════════════════════════════════════════════════════ */
+:root {
+  --chart: var(--accent);
+  --chart-hi: color-mix(in srgb, var(--accent) 72%, #ffffff);
+  --chart-track: color-mix(in srgb, var(--text-muted) 15%, transparent);
+  --chart-line: color-mix(in srgb, var(--text-secondary) 55%, transparent);
+}
+:root[data-theme="dark"] { --chart-hi: color-mix(in srgb, var(--accent) 80%, #ffffff); --chart-track: color-mix(in srgb, var(--text-muted) 20%, transparent); }
+.w-bar-grad { background: linear-gradient(180deg, var(--chart-hi), var(--chart)); }
+
+/* Today: the last 7 days */
+.wd-bars { height: 6.75rem; }
+.wd-bar-fill { height: calc(var(--h, 0) * (100% - 2rem) / 100); max-width: 2.5rem; background: linear-gradient(180deg, var(--chart-hi), var(--chart)); opacity: 0.6;
+  transition: opacity .15s, transform .2s; transform-origin: bottom; }
+.wd-bar.is-today .wd-bar-fill, .wd-bar:hover .wd-bar-fill { background: linear-gradient(180deg, var(--chart-hi), var(--chart)); opacity: 1; box-shadow: 0 8px 18px -10px var(--chart); }
+.wd-bar:hover .wd-bar-fill { transform: scaleY(1.03); }
+.wd-bar-fill.is-zero { height: 4px; min-height: 4px; background: var(--chart-track); opacity: 1; box-shadow: none; }
+.wd-bar-val { min-height: 0.875rem; font-size: 0.625rem; font-weight: 750; font-style: normal; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.wd-bar.is-today .wd-bar-val { color: var(--accent); }
+
+/* Reports: by day */
+.wr-bars { position: relative; height: 12rem; padding-top: 0; }
+.wr-bar { gap: 0.25rem; }
+.wr-bar span { height: calc(var(--h, 0) * (100% - 2.25rem) / 100); min-height: 3px; max-width: 2.75rem; background: linear-gradient(180deg, var(--chart-hi), var(--chart));
+  border-radius: 0.5rem 0.5rem 0.25rem 0.25rem; transition: opacity .15s, filter .15s; }
+.wr-bar.is-off span { background: linear-gradient(180deg, var(--chart-hi), var(--chart)); opacity: 0.45; }
+.wr-bar:hover span { filter: brightness(1.12) saturate(1.1); box-shadow: 0 8px 18px -10px var(--chart); }
+.wr-bar.is-today span { box-shadow: 0 0 0 2px var(--surface-raised), 0 0 0 4px color-mix(in srgb, var(--chart) 45%, transparent); }
+.wr-bar small { height: 1rem; line-height: 1rem; font-size: 0.6875rem; font-weight: 600; color: var(--text-secondary); white-space: nowrap; }
+.wr-val { min-height: 0.875rem; font-size: 0.625rem; font-weight: 750; font-style: normal; color: var(--text-secondary); font-variant-numeric: tabular-nums; opacity: 0; transition: opacity .15s; }
+.wr-bars.has-values .wr-val, .wr-bar:hover .wr-val { opacity: 1; }
+.wr-bars.is-dense .wr-val { display: none; }
+.wr-bars.is-dense .wr-bar span { height: calc(var(--h, 0) * (100% - 0.5rem) / 100); border-radius: 0.1875rem 0.1875rem 0 0; }
+.wr-avg { position: absolute; left: 0; right: 0; bottom: calc(1.25rem + (100% - 2.25rem) * var(--avg, 0) / 100); border-top: 1.5px dashed var(--chart-line); pointer-events: none; z-index: 1; }
+.wr-bars.is-dense .wr-avg { bottom: calc((100% - 0.5rem) * var(--avg, 0) / 100); }
+.wr-avg b { position: absolute; right: 0; bottom: 0.1875rem; padding: 0 0.375rem; border-radius: 9999px; background: var(--surface-raised); font-size: 0.625rem; font-weight: 700; color: var(--text-secondary); }
+.wr-rank-bar { height: 0.625rem; background: var(--chart-track); }
+.wr-rank-bar i { background: linear-gradient(90deg, color-mix(in srgb, var(--c) 75%, #ffffff), var(--c)); }
+/* when you work: one cell per hour, darker = more */
+.wr-hour span { height: 2.75rem; background: var(--chart-track); opacity: 1; border-radius: 0.375rem; }
+.wr-hour[data-level="1"] span { background: color-mix(in srgb, var(--chart) 35%, var(--surface-raised)); }
+.wr-hour[data-level="2"] span { background: color-mix(in srgb, var(--chart) 58%, var(--surface-raised)); }
+.wr-hour[data-level="3"] span { background: color-mix(in srgb, var(--chart) 80%, var(--surface-raised)); }
+.wr-hour[data-level="4"] span { background: var(--chart); box-shadow: 0 6px 14px -8px var(--chart); }
+.wr-hour small { font-weight: 600; color: var(--text-secondary); }
+
+/* Year and flashcard heatmaps */
+.wy-cell { background: var(--chart-track); }
+.wy-cell[data-level="1"] { background: color-mix(in srgb, var(--chart) 35%, var(--surface-raised)); }
+.wy-cell[data-level="2"] { background: color-mix(in srgb, var(--chart) 58%, var(--surface-raised)); }
+.wy-cell[data-level="3"] { background: color-mix(in srgb, var(--chart) 80%, var(--surface-raised)); }
+.wy-cell[data-level="4"] { background: var(--chart); }
+.wy-months { font-weight: 600; color: var(--text-secondary); }
+
+/* Progress bars and rings */
+.wg-bar { height: 0.5rem; background: var(--chart-track); }
+.wg-bar i { background: linear-gradient(90deg, color-mix(in srgb, var(--c, var(--accent)) 72%, #ffffff), var(--c, var(--accent))); }
+.wg-bar.is-learn i { background: linear-gradient(90deg, color-mix(in srgb, var(--status-info) 70%, #ffffff), var(--status-info)); }
+.wd-ring-bg, .wfo-ring-bg { stroke: var(--chart-track); }
+.wd-ring-fg, .wfo-ring-fg { filter: drop-shadow(0 2px 6px color-mix(in srgb, var(--accent) 45%, transparent)); }
+.wd-cap-bar { background: var(--chart-track); }
+.wfc-fore-bar { background: var(--chart-track); }
+.wfc-fore-bar i { background: linear-gradient(180deg, var(--chart-hi), var(--chart)); opacity: 0.65; }
+.wfc-fore-day.is-today .wfc-fore-bar i { opacity: 1; }
+
+/* Time: the week, stacked by project */
+.wtw { padding: 0 1.25rem 1.25rem; }
+.wtw-plot { position: relative; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: clamp(0.375rem, 2vw, 1.25rem); height: 13rem; }
+.wtw-day { display: grid; grid-template-rows: minmax(0, 1fr) 1rem; gap: 0.25rem; justify-items: center; min-width: 0; }
+.wtw-stack { position: relative; display: flex; flex-direction: column-reverse; justify-content: flex-start; align-items: stretch; width: min(100%, 3.25rem); height: 100%; }
+.wtw-stack i { display: block; height: calc(var(--h, 0) * 1%); min-height: 2px; background: var(--c, var(--accent)); border-top: 2px solid var(--surface-raised); transition: filter .15s; }
+.wtw-stack i:first-child { border-radius: 0 0 0.375rem 0.375rem; }
+.wtw-stack i:nth-last-child(2) { border-radius: 0.5rem 0.5rem 0 0; border-top: 0; }
+.wtw-stack i:only-of-type { border-radius: 0.5rem 0.5rem 0.375rem 0.375rem; }
+.wtw-day:hover .wtw-stack i { filter: brightness(1.1) saturate(1.1); }
+.wtw-val { padding-bottom: 0.1875rem; font-size: 0.6875rem; font-weight: 750; font-style: normal; text-align: center; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.wtw-day.is-today .wtw-val, .wtw-day.is-today small { color: var(--accent); }
+.wtw-day small { font-size: 0.6875rem; font-weight: 650; line-height: 1rem; color: var(--text-secondary); }
+.wtw-day.is-off small { color: var(--text-muted); }
+.wtw-day.is-off .wtw-stack { background: repeating-linear-gradient(135deg, transparent 0 6px, var(--chart-track) 6px 7px); border-radius: 0.5rem; }
+.wtw-target { position: absolute; left: 0; right: 0; bottom: calc(1.25rem + (100% - 1.25rem) * var(--target, 0) / 100); border-top: 1.5px dashed var(--chart-line); pointer-events: none; z-index: 1; }
+.wtw-target b { position: absolute; right: 0; bottom: 0.1875rem; padding: 0 0.375rem; border-radius: 9999px; background: var(--surface-raised); font-size: 0.625rem; font-weight: 700; color: var(--text-secondary); }
+.wtw-legend { display: flex; flex-wrap: wrap; gap: 0.375rem 1rem; margin: 0.875rem 0 0; padding: 0; list-style: none; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); }
+.wtw-legend li { display: inline-flex; align-items: center; gap: 0.375rem; }
+
+/* bars grow in when a page opens */
+@media (prefers-reduced-motion: no-preference) {
+  .wd-bar-fill, .wr-bar span, .wtw-stack, .wfc-fore-bar i { animation: w-fill-y .7s cubic-bezier(.2, .8, .2, 1) backwards; animation-delay: calc(80ms + var(--i, 0) * 45ms); transform-origin: center bottom; }
+  .wr-hour span, .wy-cell { animation: w-pop-in .4s ease-out backwards; }
+}
+@keyframes w-pop-in { from { opacity: 0; scale: .6; } }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Full screen (html[data-zen]): "page" hides the menus on any Productivity
+   page; "write" leaves only the note being written.
+   ══════════════════════════════════════════════════════════════════════════ */
+.wt-zen { display: grid; place-items: center; width: 2.5rem; height: 2.5rem; flex-shrink: 0; border-radius: 0.875rem; color: var(--text-secondary); transition: background .15s, color .15s; }
+.wt-zen:hover { background: var(--surface-hover); color: var(--text-primary); }
+.wt-zen svg, .wn-zen svg { width: 1.125rem; height: 1.125rem; }
+.wt-zen-off, :root[data-zen] .wt-zen-on { display: none; }
+:root[data-zen] .wt-zen-off { display: contents; }
+.wt-zen-on { display: contents; }
+.zen-exit { display: none; }
+:root[data-zen] .app-sidebar, :root[data-zen] .topbar, :root[data-zen] .app-tabbar { display: none !important; }
+:root[data-zen] .app-content { padding-left: 0 !important; }
+:root[data-zen] .wt-bar { top: 0.5rem; }
+:root[data-zen] .app-main { padding-top: 1rem; }
+:root[data-zen] .zen-exit {
+  position: fixed; z-index: 70; right: max(1rem, env(safe-area-inset-right)); bottom: max(1rem, env(safe-area-inset-bottom));
+  display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem 0.5rem 0.625rem; border-radius: 9999px;
+  background: color-mix(in srgb, var(--surface-ink) 92%, transparent); color: var(--text-on-ink); font-size: 0.8125rem; font-weight: 650;
+  box-shadow: var(--shadow-lg); backdrop-filter: blur(8px); opacity: 0.5; transition: opacity .2s, translate .2s;
+}
+:root[data-zen] .zen-exit:hover, :root[data-zen] .zen-exit:focus-visible { opacity: 1; translate: 0 -2px; }
+.zen-exit svg { width: 1rem; height: 1rem; }
+.zen-exit kbd { padding: 0 0.3125rem; border-radius: 0.3125rem; background: rgba(255,255,255,.14); font-size: 0.625rem; color: inherit; border: 0; }
+@media (pointer: coarse) { .zen-exit kbd { display: none; } }
+@media (prefers-reduced-motion: no-preference) { :root[data-zen] .work > * { animation: zen-in .35s cubic-bezier(.2, .8, .2, 1); } }
+@keyframes zen-in { from { opacity: .4; scale: .992; } }
+
+/* Writing a note with nothing else on screen */
+:root[data-zen="write"] .wt-bar, :root[data-zen="write"] .wn-list { display: none !important; }
+:root[data-zen="write"] .wn { display: block; max-width: 52rem; margin: 0 auto; }
+:root[data-zen="write"] .wn-editor { border: 0; background: transparent; box-shadow: none; }
+:root[data-zen="write"] .wn-pane { min-height: calc(100dvh - 2rem); }
+:root[data-zen="write"] .wn-toolbar { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--surface) 90%, transparent); backdrop-filter: blur(10px); border-radius: 0 0 1rem 1rem; }
+:root[data-zen="write"] .wn-title { font-size: clamp(1.75rem, 1.4rem + 1.4vw, 2.5rem); }
+:root[data-zen="write"] .wn-body { font-size: 1.125rem; line-height: 1.85; min-height: 70dvh; }
+:root[data-zen="write"] .wn-md { font-size: 1.0625rem; line-height: 1.8; }
+:root[data-zen="write"] .wn-back { display: none; }
+:root[data-zen="write"] .wn-zen { background: var(--accent-soft); color: var(--accent); }
+:root[data-zen="write"] body { background: var(--surface); }
+:root[data-zen="write"] .wn-pane { border-color: transparent; box-shadow: none; }
+
+/* Calendar days shaded by time tracked — stronger, so busy days stand out */
+.wcal-day[data-level="1"] { --heat: 12%; } .wcal-day[data-level="2"] { --heat: 22%; } .wcal-day[data-level="3"] { --heat: 34%; } .wcal-day[data-level="4"] { --heat: 48%; }
+:root[data-theme="dark"] .wcal-day[data-level="1"] { --heat: 16%; } :root[data-theme="dark"] .wcal-day[data-level="2"] { --heat: 28%; }
+:root[data-theme="dark"] .wcal-day[data-level="3"] { --heat: 40%; } :root[data-theme="dark"] .wcal-day[data-level="4"] { --heat: 55%; }
+.wcal-day { transition: border-color .12s, box-shadow .12s, translate .15s; }
+@media (hover: hover) { .wcal-day:hover { translate: 0 -1px; box-shadow: var(--shadow-sm); } }
+/* Project cards: totals stay on one line; the time-budget meter is easier to see */
+.wpj-stats { grid-template-columns: repeat(3, minmax(max-content, 1fr)); column-gap: 0.875rem; }
+.wpj-stats dd { white-space: nowrap; }
+.wtd-meter, .wpj-meter { height: 0.5rem; background: var(--chart-track); }

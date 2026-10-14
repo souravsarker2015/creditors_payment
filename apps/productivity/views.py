@@ -209,7 +209,7 @@ def today_view(request):
         "reading": LearningItem.objects.filter(owner=user, status=LearningStatus.ACTIVE)[:3],
         "today_seconds": today_secs, "target_seconds": s.daily_target_minutes * 60,
         "target_pct": min(round(100 * today_secs / (s.daily_target_minutes * 60)), 100) if s.daily_target_minutes else 0,
-        "week_bars": [{"day": d, "secs": v, "pct": round(100 * v / peak), "today": d == today} for d, v in week.by_day.items()],
+        "week_bars": [{"day": d, "secs": v, "pct": round(100 * v / peak), "today": d == today, "hrs": _hours(v)} for d, v in week.by_day.items()],
         "week_total": week.seconds,
         "streak": services.focus_streak(user, today),
         "habits": [h for h in habits if h["due_today"]],
@@ -424,6 +424,15 @@ def project_delete_view(request, pk):
     return redirect("work:projects")
 
 
+def _hours(secs):
+    """A short label for a bar: "3.5h", "45m", "" for nothing."""
+    if not secs:
+        return ""
+    if secs < 3600:
+        return f"{round(secs / 60)}m"
+    return f"{secs / 3600:.1f}".rstrip("0").rstrip(".") + "h"
+
+
 # ── Time ──────────────────────────────────────────────────────────────────
 @work_required
 def time_view(request):
@@ -449,7 +458,18 @@ def time_view(request):
             row["days"][d] += secs
             row["total"] += secs
     sheet_rows = sorted(sheet.values(), key=lambda r: -r["total"])
+    # The week as stacked bars: one per day, a slice per project, against the daily target.
+    target = s.daily_target_minutes * 60
+    top = max([sum(r["days"][i] for r in sheet_rows) for i in range(7)] + [target, 1])
+    chart = []
+    for i in range(7):
+        d = first + timedelta(days=i)
+        total = sum(r["days"][i] for r in sheet_rows)
+        segs = [{"project": r["project"], "secs": r["days"][i], "pct": round(100 * r["days"][i] / top, 2)} for r in sheet_rows if r["days"][i]]
+        chart.append({"date": d, "secs": total, "pct": round(100 * total / top, 2), "segs": segs, "today": d == today,
+                      "off": not s.is_work_day(d), "hrs": _hours(total)})
     return render_work(request, "work/time.html", {
+        "chart": chart, "target_pct": round(100 * target / top, 2) if target else None, "target": target,
         "first": first, "last": last, "days": list(reversed(days)) if first <= today <= last else list(reversed(days)),
         "week": week, "sheet": sheet_rows, "weekdays": [first + timedelta(days=i) for i in range(7)],
         "prev_week": first - timedelta(days=7), "next_week": first + timedelta(days=7) if last < today else None,
@@ -1021,7 +1041,9 @@ def reports_view(request):
     year = services.daily_seconds(user, today - timedelta(days=364), today)
     return render_work(request, "work/reports.html", {
         "t": t, "start": start, "end": end, "preset": preset, "today": today,
-        "bars": [{"day": d, "secs": v, "pct": round(100 * v / peak), "work": s.is_work_day(d), "weekend": not s.is_work_day(d)} for d, v in t.by_day.items()],
+        "bars": [{"day": d, "secs": v, "pct": round(100 * v / peak), "work": s.is_work_day(d), "weekend": not s.is_work_day(d), "hrs": _hours(v)}
+                 for d, v in t.by_day.items()],
+        "avg_pct": round(100 * t.daily_average / peak, 1) if t.daily_average else None,
         "target_total": s.daily_target_minutes * 60 * work_days,
         "target_pct": round(100 * t.seconds / (s.daily_target_minutes * 60 * work_days)) if work_days else None,
         "projects": [{"p": p, "secs": secs, "pct": round(100 * secs / t.seconds) if t.seconds else 0,
@@ -1030,7 +1052,7 @@ def reports_view(request):
         "tags": [{"tag": tg, "secs": secs, "pct": round(100 * secs / t.seconds) if t.seconds else 0} for tg, secs in t.by_tag[:12]],
         "tasks": t.by_task, "completed": completed.count(), "created": Task.objects.filter(owner=user, created_at__gte=lo, created_at__lt=hi).count(),
         "est": est,
-        "hours": [{"h": h, "secs": v, "pct": round(100 * v / hpeak)} for h, v in enumerate(hours)],
+        "hours": [{"h": h, "secs": v, "pct": round(100 * v / hpeak), "level": 0 if not v else min(4, 1 + int(3.999 * v / hpeak))} for h, v in enumerate(hours)],
         "heat": services.heatmap(year, today, s.week_start), "year_total": sum(year.values()),
         "year_days": sum(1 for v in year.values() if v),
         "presets": [("week", _("This week")), ("lastweek", _("Last week")), ("month", _("This month")), ("lastmonth", _("Last month")),

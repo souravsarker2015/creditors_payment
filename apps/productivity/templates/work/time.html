@@ -27,6 +27,21 @@
 
 {% if sheet %}
 <section class="card">
+  <header class="card-header"><div><h2 class="card-title">{% translate "The week" %}</h2><p class="card-subtitle">{% translate "Each day split by project. The dashed line is your daily target." %}</p></div></header>
+  <div class="wtw" aria-label="{% translate 'The week, by project' %}">
+    <div class="wtw-plot"{% if target_pct %} style="--target: {{ target_pct }}"{% endif %}>
+      {% if target_pct %}<span class="wtw-target" aria-hidden="true"><b>{% translate "target" %} {{ target|hm }}</b></span>{% endif %}
+      {% for c in chart %}
+      <div class="wtw-day{% if c.today %} is-today{% endif %}{% if c.off %} is-off{% endif %}" style="--i: {{ forloop.counter0 }}" data-tip="{{ c.date|date:'D j M' }} · {{ c.secs|hm }}">
+        <div class="wtw-stack">{% for g in c.segs %}<i data-color="{{ g.project.color|default:'slate' }}" style="--h: {{ g.pct }}" title="{% if g.project %}{{ g.project.name }}{% else %}{% translate 'No project' %}{% endif %} · {{ g.secs|hm }}"></i>{% endfor %}<em class="wtw-val">{{ c.hrs }}</em></div>
+        <small>{{ c.date|date:"D" }}</small>
+      </div>
+      {% endfor %}
+    </div>
+    {% if sheet %}<ul class="wtw-legend">{% for row in sheet %}<li><span class="wt-dot" data-color="{{ row.project.color|default:'slate' }}"></span>{% if row.project %}{{ row.project.name }}{% else %}{% translate "No project" %}{% endif %}</li>{% endfor %}</ul>{% endif %}
+  </div>
+</section>
+<section class="card">
   <header class="card-header"><h2 class="card-title">{% translate "Timesheet" %}</h2>
     <a href="{% url 'work:reports' %}?range=custom&from={{ first|date:'Y-m-d' }}&to={{ last|date:'Y-m-d' }}&export=csv" class="btn btn-ghost btn-sm">{% icon "download" %}CSV</a></header>
   <div class="ws-scroll">

@@ -48,8 +48,9 @@
 <section class="card">
   <header class="card-header"><h2 class="card-title">{% translate "By day" %}</h2>{% if t.best_day %}<p class="card-subtitle">{% blocktranslate with d=t.best_day.0|date:"D j M" h=t.best_day.1|hm %}Best: {{ d }}, {{ h }}{% endblocktranslate %}</p>{% endif %}</header>
   <div class="card-body !pt-0">
-    <div class="wr-bars{% if bars|length > 31 %} is-dense{% endif %}">
-      {% for b in bars %}<div class="wr-bar{% if b.weekend %} is-off{% endif %}" data-tip="{{ b.day|date:'D j M' }} · {{ b.secs|hm }}"><span style="height: {{ b.pct }}%"></span>{% if bars|length <= 31 %}<small>{{ b.day|date:"j" }}</small>{% endif %}</div>{% endfor %}
+    <div class="wr-bars{% if bars|length > 31 %} is-dense{% endif %}{% if bars|length <= 14 %} has-values{% endif %}"{% if avg_pct %} style="--avg: {{ avg_pct }}"{% endif %}>
+      {% if avg_pct %}<span class="wr-avg" aria-hidden="true"><b>{% translate "avg" %} {{ t.daily_average|hm }}</b></span>{% endif %}
+      {% for b in bars %}<div class="wr-bar{% if b.weekend %} is-off{% endif %}{% if b.day == today %} is-today{% endif %}" data-tip="{{ b.day|date:'D j M' }} · {{ b.secs|hm }}" style="--i: {{ forloop.counter0 }}"><em class="wr-val">{{ b.hrs }}</em><span style="--h: {{ b.pct }}"></span>{% if bars|length <= 31 %}<small>{% if bars|length <= 7 %}{{ b.day|date:"D j" }}{% else %}{{ b.day|date:"j" }}{% endif %}</small>{% endif %}</div>{% endfor %}
     </div>
   </div>
 </section>
@@ -61,7 +62,7 @@
   </section>
   <section class="card">
     <header class="card-header"><h2 class="card-title">{% translate "When you work" %}</h2><p class="card-subtitle">{% translate "Time started in each hour" %}</p></header>
-    <div class="card-body !pt-0"><div class="wr-hours">{% for h in hours %}<div class="wr-hour" data-tip="{{ h.h }}:00 · {{ h.secs|hm }}"><span style="opacity: {% if h.secs %}{{ h.pct|add:15 }}{% else %}6{% endif %}%"></span><small>{% if h.h|divisibleby:3 %}{{ h.h }}{% endif %}</small></div>{% endfor %}</div></div>
+    <div class="card-body !pt-0"><div class="wr-hours">{% for h in hours %}<div class="wr-hour" data-tip="{{ h.h }}:00 · {{ h.secs|hm }}" data-level="{{ h.level }}"><span></span><small>{% if h.h|divisibleby:3 %}{{ h.h }}{% endif %}</small></div>{% endfor %}</div></div>
   </section>
   {% if tags %}
   <section class="card">

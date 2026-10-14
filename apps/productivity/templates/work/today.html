@@ -31,8 +31,8 @@
     <div class="wd-week-head"><p class="wd-stat-label">{% translate "Last 7 days" %}</p><p class="wd-week-total num">{{ week_total|hm }}</p></div>
     <div class="wd-bars">
       {% for b in week_bars %}
-      <a href="{% url 'work:time' %}?week={{ b.day|date:'Y-m-d' }}" class="wd-bar{% if b.today %} is-today{% endif %}" data-tip="{{ b.day|date:'D j M' }} · {{ b.secs|hm }}">
-        <span class="wd-bar-fill" style="height: {{ b.pct }}%;"></span><span class="wd-bar-day">{{ b.day|date:"D" }}</span>
+      <a href="{% url 'work:time' %}?week={{ b.day|date:'Y-m-d' }}" style="--i: {{ forloop.counter0 }}" class="wd-bar{% if b.today %} is-today{% endif %}" data-tip="{{ b.day|date:'D j M' }} · {{ b.secs|hm }}">
+        <em class="wd-bar-val">{{ b.hrs }}</em><span class="wd-bar-fill{% if not b.secs %} is-zero{% endif %}" style="--h: {{ b.pct }}"></span><span class="wd-bar-day">{{ b.day|date:"D" }}</span>
       </a>
       {% endfor %}
     </div>

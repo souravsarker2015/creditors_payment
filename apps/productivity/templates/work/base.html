@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n work %}
 {% comment %}
 Every Productivity page: the timer bar, quick capture (c / n / s), the
 keyboard-shortcut sheet (?), the command palette (Ctrl+K), the shared task
@@ -16,6 +16,7 @@ menu and the settings the page script needs.
   {% include "work/partials/palette.html" %}
   {% include "work/partials/task_menu.html" %}
   {% include "work/partials/idle.html" %}
+  <button type="button" class="zen-exit" data-zen-off aria-label="{% translate 'Leave full screen' %}">{% icon "minimize" %}<span>{% translate "Exit full screen" %}</span><kbd>Esc</kbd></button>
 </div>
 {{ work_config|json_script:"work-config" }}
 {% endblock %}

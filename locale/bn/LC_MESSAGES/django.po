@@ -20206,3 +20206,42 @@ msgstr "আজ আরও"
 
 msgid "You get this because you turned on reminder emails. Turn them off in Productivity → Timer, focus & sounds."
 msgstr "আপনি রিমাইন্ডার ইমেইল চালু করেছেন বলে এটি পাচ্ছেন। প্রোডাক্টিভিটি → টাইমার, ফোকাস ও শব্দ থেকে বন্ধ করুন।"
+
+msgid "Fold the menu ( [ )"
+msgstr "মেনু গুটিয়ে রাখুন ( [ )"
+
+msgid "Open the menu ( [ )"
+msgstr "মেনু খুলুন ( [ )"
+
+msgid "Fold or open the menu"
+msgstr "মেনু গুটিয়ে রাখুন বা খুলুন"
+
+msgid "Leave full screen"
+msgstr "পূর্ণ পর্দা থেকে বের হন"
+
+msgid "Exit full screen"
+msgstr "পূর্ণ পর্দা বন্ধ"
+
+msgid "Full screen (Shift+F)"
+msgstr "পূর্ণ পর্দা (Shift+F)"
+
+msgid "Focus writing"
+msgstr "মন দিয়ে লেখা"
+
+msgid "Focus writing: just this note, full screen (Ctrl+Shift+F)"
+msgstr "মন দিয়ে লেখা: শুধু এই নোট, পূর্ণ পর্দায় (Ctrl+Shift+F)"
+
+msgid "The week"
+msgstr "এই সপ্তাহ"
+
+msgid "Each day split by project. The dashed line is your daily target."
+msgstr "প্রতিটি দিন প্রজেক্ট অনুযায়ী ভাগ করা। ড্যাশ দেওয়া লাইনটি আপনার দৈনিক লক্ষ্য।"
+
+msgid "The week, by project"
+msgstr "প্রজেক্ট অনুযায়ী সপ্তাহ"
+
+msgid "target"
+msgstr "লক্ষ্য"
+
+msgid "avg"
+msgstr "গড়"

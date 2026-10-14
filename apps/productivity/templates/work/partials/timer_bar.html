@@ -25,5 +25,6 @@
     <span class="wt-today" data-tip="{% translate 'Tracked today' %}">{% icon "clock" %}<span class="num" x-text="$store.timer.todayText"></span></span>
     <span class="wt-outbox" data-work-outbox hidden data-tip="{% translate 'Changes waiting for a connection' %}">{% icon "cloud" %}<b>0</b></span>
     <button type="button" class="wt-add" @click="$dispatch('work:capture', 'task')" aria-label="{% translate 'Quick add (c)' %}" data-tip="{% translate 'Quick add — task, note or time (c)' %}">{% icon "plus" %}</button>
+    <button type="button" class="wt-zen" data-zen-toggle="page" aria-label="{% translate 'Full screen' %}" data-tip="{% translate 'Full screen (Shift+F)' %}"><span class="wt-zen-on">{% icon "maximize" %}</span><span class="wt-zen-off">{% icon "minimize" %}</span></button>
   </div>
 </section>

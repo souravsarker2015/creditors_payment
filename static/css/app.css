@@ -3156,3 +3156,38 @@ a.rp-mrow:hover { background: var(--surface-hover); }
 .adv-row .ledger-end { display: flex; align-items: center; gap: 0.625rem; }
 .adv-hint { color: var(--status-info); font-weight: 600; }
 .adv-list li + li { margin-top: 0.375rem; } .adv-list li { line-height: 1.6; }
+
+/* ==========================================================================
+   Desktop sidebar: full, or folded to a rail of icons (html[data-nav="mini"],
+   set before the page draws — see base.html). Names show as tooltips.
+   ========================================================================== */
+.nav-head { display: flex; align-items: center; gap: 0.25rem; }
+.nav-brand { flex: 1; }
+.nav-brand-text { min-width: 0; white-space: nowrap; overflow: hidden; }
+.nav-collapse { display: none; place-items: center; width: 2.25rem; height: 2.25rem; flex-shrink: 0; border-radius: 0.625rem; color: var(--text-on-ink-muted); transition: background .15s, color .15s; }
+.nav-collapse svg { width: 1.25rem; height: 1.25rem; }
+.nav-collapse .nav-collapse-arrow { transition: transform .25s; transform-origin: 14.6px 12px; }
+.nav-collapse:hover { background: rgba(255, 255, 255, 0.08); color: var(--text-on-ink); }
+.nav-collapse:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+@media (min-width: 1024px) {
+    .app-sidebar .nav-collapse { display: grid; }
+    .app-sidebar, .app-content { transition: width .24s cubic-bezier(.2, .8, .2, 1), padding-left .24s cubic-bezier(.2, .8, .2, 1); }
+    :root[data-nav="mini"] .app-sidebar { width: 4.75rem; }
+    :root[data-nav="mini"] .app-content { padding-left: 4.75rem; }
+    :root[data-nav="mini"] .app-sidebar .sidebar { padding-inline: 0.75rem; gap: 1rem; overflow-x: hidden; scrollbar-width: none; }
+    :root[data-nav="mini"] .app-sidebar .sidebar::-webkit-scrollbar { display: none; }
+    :root[data-nav="mini"] .app-sidebar .nav-head { flex-direction: column; gap: 0; padding-top: 0.75rem; }
+    :root[data-nav="mini"] .app-sidebar .nav-brand { height: auto; padding: 0 0 0.5rem; justify-content: center; }
+    :root[data-nav="mini"] .app-sidebar .nav-brand-text { display: none; }
+    :root[data-nav="mini"] .app-sidebar .nav-collapse-arrow { transform: scaleX(-1); }
+    :root[data-nav="mini"] .app-sidebar .nav-section-label { height: 1px; margin: 0.25rem 0.625rem 0.5rem; padding: 0; overflow: hidden; color: transparent; background: rgba(255, 255, 255, 0.1); }
+    :root[data-nav="mini"] .app-sidebar .nav-link { justify-content: center; gap: 0; padding: 0.5rem; font-size: 0; min-height: 2.75rem; }
+    :root[data-nav="mini"] .app-sidebar .nav-link svg { width: 1.375rem; height: 1.375rem; }
+    :root[data-nav="mini"] .app-sidebar .nav-link > :not(svg) { display: none; }
+    :root[data-nav="mini"] .app-sidebar .nav-link.is-active::before { left: -0.75rem; }
+    :root[data-nav="mini"] .app-sidebar .nav-link:hover svg { transform: scale(1.08); }
+    :root[data-nav="mini"] .app-sidebar .nav-link svg { transition: transform .15s; }
+    :root[data-nav="mini"] .app-sidebar .preferences-switcher { display: none; }
+    :root.is-nav-moving .app-sidebar .nav-link { white-space: nowrap; overflow: hidden; }
+}
+@media (prefers-reduced-motion: reduce) { .app-sidebar, .app-content { transition: none !important; } }
