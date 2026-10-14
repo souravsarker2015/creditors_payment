@@ -1,0 +1,35 @@
+{% load i18n work %}{% comment %}Text diagrams (Mermaid): write on the left, see it on the right. Driven by `mermaidEditor` in static/js/diagrams.js.{% endcomment %}
+<section class="wmd" x-data="mermaidEditor" :data-pane="pane">
+  <nav class="seg seg-sm wmd-switch" aria-label="{% translate 'Show' %}">
+    <button type="button" class="seg-item" :class="pane === 'code' && 'is-active'" @click="pane = 'code'">{% icon "code" %}{% translate "Text" %}</button>
+    <button type="button" class="seg-item" :class="pane === 'view' && 'is-active'" @click="pane = 'view'; $nextTick(() => fit())">{% icon "diagram" %}{% translate "Diagram" %}</button>
+  </nav>
+  <div class="wmd-split">
+    <div class="wmd-code card">
+      <div class="wmd-snips" role="toolbar" aria-label="{% translate 'Insert' %}">
+        <template x-for="s in snippets" :key="s[0]"><button type="button" class="wmd-snip" @click="insert(s[1])" x-text="s[0]"></button></template>
+      </div>
+      <div class="wmd-editor">
+        <pre class="wmd-lines" x-ref="lines" aria-hidden="true" x-text="lineNumbers"></pre>
+        <textarea x-ref="text" x-model="source" class="wmd-text" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off"
+                  @input="changed()" @keydown="key($event)" @scroll="$refs.lines.scrollTop = $el.scrollTop" aria-label="{% translate 'Diagram text' %}"></textarea>
+      </div>
+      <p class="wmd-error" x-show="error" x-cloak role="alert"><b x-text="texts.badSyntax"></b><span x-text="error"></span></p>
+      <p class="wmd-help">{% translate "Written in Mermaid." %} <a href="https://mermaid.js.org/intro/syntax-reference.html" target="_blank" rel="noopener">{% translate "How to write each kind" %} {% icon "external" %}</a></p>
+    </div>
+    <div class="wdx-stage wmd-view">
+      <div class="wdx-tools" role="toolbar" aria-label="{% translate 'View' %}">
+        <div class="wdx-group">
+          <button type="button" class="icon-btn" @click="view.zoomBy(1 / 1.2)" aria-label="{% translate 'Zoom out' %}">{% icon "zoom-out" %}</button>
+          <button type="button" class="wdx-zoom" @click="fit()" data-tip="{% translate 'Fit to screen' %}" x-text="zoom + '%'"></button>
+          <button type="button" class="icon-btn" @click="view.zoomBy(1.2)" aria-label="{% translate 'Zoom in' %}">{% icon "zoom-in" %}</button>
+        </div>
+        <span class="wmd-busy" x-show="busy" x-cloak aria-hidden="true"></span>
+      </div>
+      <div class="wdx-canvas wmd-canvas" x-ref="canvas" :class="error && 'is-stale'">
+        <div class="wdx-world" x-ref="world"><div class="wmd-out" x-ref="out"></div></div>
+        <p class="wsb-empty" x-show="failed" x-cloak>{% icon "cloud" %}<span x-text="texts.noMermaid"></span></p>
+      </div>
+    </div>
+  </div>
+</section>

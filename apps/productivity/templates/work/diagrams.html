@@ -1,0 +1,90 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% translate "Diagrams" %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+<header class="wp-head">
+  <div class="min-w-0">
+    <h1 class="wp-title">{% translate "Diagrams" %}</h1>
+    <p class="wp-sub">{% translate "Mind maps, system designs, flowcharts and more — drawn by hand or written as text." %}</p>
+  </div>
+</header>
+
+<section class="card wdg-start" x-data="{ pick: '{{ request.GET.start|default:"" }}' }" x-init="if (pick) $nextTick(() => $el.scrollIntoView({ block: 'nearest' }))" id="new">
+  <div class="card-header">
+    <div>
+      <h2 class="card-title">{% translate "Start something new" %}</h2>
+      <p class="card-subtitle">{% translate "Pick a kind, then a blank page or a ready-made start." %}</p>
+    </div>
+  </div>
+  <div class="wdg-kinds" role="tablist" aria-label="{% translate 'Kind of diagram' %}">
+    {% for t in tiles %}
+    <button type="button" class="wdg-kind" role="tab" :aria-selected="(pick === '{{ t.kind }}').toString()" :class="pick === '{{ t.kind }}' && 'is-on'"
+            @click="pick = pick === '{{ t.kind }}' ? '' : '{{ t.kind }}'" data-kind="{{ t.kind }}">
+      <span class="wdg-kind-ico">{% icon t.icon %}</span>
+      <span class="wdg-kind-name">{{ t.label }}</span>
+      <span class="wdg-kind-hint">{{ t.hint }}</span>
+      {% if t.count %}<span class="wdg-kind-n">{{ t.count }}</span>{% endif %}
+    </button>
+    {% endfor %}
+  </div>
+  {% for t in tiles %}
+  <div class="wdg-templates" x-show="pick === '{{ t.kind }}'" x-cloak x-transition.opacity.duration.150ms data-templates="{{ t.kind }}">
+    {% for key, title in t.templates %}
+    <form method="post" action="{% url 'work:diagram_new' %}">
+      {% csrf_token %}
+      <input type="hidden" name="kind" value="{{ t.kind }}"><input type="hidden" name="template" value="{{ key }}">
+      {% if project %}<input type="hidden" name="project" value="{{ project }}">{% endif %}
+      <button type="submit" class="wdg-tpl{% if key == 'blank' %} is-blank{% endif %}">{% if key == "blank" %}{% icon "plus" %}{% else %}{% icon t.icon %}{% endif %}<span>{{ title }}</span></button>
+    </form>
+    {% endfor %}
+  </div>
+  {% endfor %}
+</section>
+
+<form method="get" class="wf-bar wdg-filter">
+  <div class="input-icon wf-search">
+    {% icon "search" %}
+    <input type="search" name="q" value="{{ q }}" class="form-input input-compact" placeholder="{% translate 'Search diagrams  ( / )' %}" data-work-search aria-label="{% translate 'Search diagrams' %}">
+  </div>
+  {% if kind %}<input type="hidden" name="kind" value="{{ kind }}">{% endif %}
+  {% if archived %}<input type="hidden" name="archived" value="1">{% endif %}
+  {% if projects %}
+  <select name="project" class="form-input input-compact" aria-label="{% translate 'Project' %}" onchange="this.form.requestSubmit()">
+    <option value="">{% translate "All projects" %}</option>
+    {% for p in projects %}<option value="{{ p.pk }}"{% if project == p.pk|stringformat:'s' %} selected{% endif %}>{{ p.name }}</option>{% endfor %}
+  </select>
+  {% endif %}
+</form>
+<div class="chip-row wdg-chips">
+  <a href="{% url 'work:diagrams' %}" class="chip{% if not kind and not archived %} is-active{% endif %}">{% translate "All" %} <span class="wdg-chip-n">{{ total }}</span></a>
+  {% for t in tiles %}{% if t.count %}<a href="?kind={{ t.kind }}" class="chip{% if kind == t.kind %} is-active{% endif %}">{% icon t.icon %}{{ t.label }} <span class="wdg-chip-n">{{ t.count }}</span></a>{% endif %}{% endfor %}
+  <a href="?archived=1" class="chip{% if archived %} is-active{% endif %}">{% icon "archive" %}{% translate "Archived" %}</a>
+</div>
+
+{% if diagrams %}
+<ul class="wdg-grid">
+  {% for d in diagrams %}
+  <li><a href="{% url 'work:diagram' d.pk %}" class="wdg-card" data-diagram="{{ d.pk }}" data-kind="{{ d.kind }}">
+    <span class="wdg-thumb">{% if d.has_preview %}<img src="{% url 'work:diagram_preview' d.pk %}?v={{ d.updated_at|date:'U' }}" alt="" loading="lazy" decoding="async">{% else %}<span class="wdg-thumb-empty">{% with i=icons|get_item:d.kind %}{% icon i %}{% endwith %}</span>{% endif %}</span>
+    <span class="wdg-card-body">
+      <span class="wdg-card-top">{% if d.is_pinned %}<span class="wd-pin" aria-label="{% translate 'Pinned' %}">{% icon "pin" %}</span>{% endif %}<span class="wdg-card-title">{{ d.title }}</span></span>
+      <span class="wdg-card-meta"><span class="wdg-badge" data-kind="{{ d.kind }}">{% with i=icons|get_item:d.kind %}{% icon i %}{% endwith %}{{ d.get_kind_display }}</span>{% if d.project %}<span class="wt-proj"><span class="wt-dot" data-color="{{ d.project.color }}"></span>{{ d.project.name }}</span>{% endif %}<time>{{ d.updated_at|when_short }}</time></span>
+    </span>
+  </a></li>
+  {% endfor %}
+</ul>
+{% else %}
+<div class="empty wdg-empty">
+  <div class="empty-icon">{% icon "diagram" %}</div>
+  {% if q or kind or archived %}
+  <h3 class="empty-title">{% translate "No diagrams match." %}</h3>
+  <a href="{% url 'work:diagrams' %}" class="btn btn-secondary">{% translate "Show all" %}</a>
+  {% else %}
+  <h3 class="empty-title">{% translate "Draw your first diagram" %}</h3>
+  <p class="empty-text">{% translate "A mind map to think something through, a system design to practise for an interview, or a flowchart to explain a process. Pick one above." %}</p>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

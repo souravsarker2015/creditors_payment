@@ -557,3 +557,48 @@ class LearningItem(models.Model):
     @property
     def link_label(self):
         return link_label(self.url)
+
+
+# ── Diagrams: mind maps, system design boards and text diagrams ─────────────
+class DiagramKind(models.TextChoices):
+    MINDMAP = "mindmap", _("Mind map")
+    SYSTEM = "system", _("System design")
+    FLOWCHART = "flowchart", _("Flowchart")
+    SEQUENCE = "sequence", _("Sequence diagram")
+    ER = "er", _("Database (ER) diagram")
+    CLASS = "class", _("Class diagram")
+    STATE = "state", _("State diagram")
+    GANTT = "gantt", _("Gantt chart")
+    TIMELINE = "timeline", _("Timeline")
+    JOURNEY = "journey", _("User journey")
+
+
+# Drawn with the mouse or a finger (their shapes are kept in `data`); every
+# other kind is written as Mermaid text (`source`) and drawn by the browser.
+VISUAL_KINDS = (DiagramKind.MINDMAP, DiagramKind.SYSTEM)
+
+
+class Diagram(models.Model):
+    owner = models.ForeignKey(**OWNER)
+    title = models.CharField(_("Title"), max_length=200)
+    kind = models.CharField(_("Kind"), max_length=12, choices=DiagramKind.choices, default=DiagramKind.MINDMAP)
+    source = models.TextField(_("Diagram text"), blank=True, help_text="Mermaid text, for the written kinds.")
+    data = models.JSONField(default=dict, blank=True, help_text="Nodes and links, for mind maps and system design boards.")
+    notes = models.TextField(_("Notes"), blank=True, help_text=_("Requirements, decisions, trade-offs… Markdown works."))
+    preview = models.TextField(blank=True, help_text="An SVG picture of the diagram, drawn by the browser on save, for the list.")
+    project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True, blank=True, related_name="diagrams", verbose_name=_("Project"))
+    is_pinned = models.BooleanField(_("Pinned"), default=False)
+    is_archived = models.BooleanField(_("Archived"), default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True, db_index=True)
+
+    class Meta:
+        ordering = ["-is_pinned", "-updated_at"]
+        indexes = [models.Index(fields=["owner", "is_archived", "kind"])]
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def is_visual(self):
+        return self.kind in VISUAL_KINDS

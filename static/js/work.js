@@ -37,7 +37,8 @@
   function hm(sec) { sec = Math.max(0, Math.floor(sec)); var h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60); return h ? h + "h " + pad(m) + "m" : m + "m"; }
   function typing(e) {
     var el = e.target;
-    return el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
+    // a drawing canvas (diagrams) has its own single-key shortcuts
+    return el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) || !!(el.closest && el.closest("[data-own-keys]")));
   }
 
   /* ── Outbox: send now, or keep until there's signal ──────────────────── */
@@ -1248,9 +1249,63 @@
     return "<p>" + esc.replace(/\n\n+/g, "</p><p>").replace(/\n/g, "<br>") + "</p>";
   }
   window.Work.markdown = renderMarkdown;
+
+  /* ── Mermaid: diagrams written as text (Diagrams, and ```mermaid blocks in notes) ── */
+  var MERMAID = "https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js", mermaidLoading = null, mermaidTheme = "";
+  window.Work.loadMermaid = function () {
+    if (window.mermaid && mermaidTheme) return Promise.resolve(window.mermaid);
+    if (!mermaidLoading) mermaidLoading = new Promise(function (resolve, reject) {
+      var s = d.createElement("script"); s.src = MERMAID; s.async = true;
+      s.onload = function () { mermaidTheme = ""; Work.mermaidTheme(root.getAttribute("data-theme") === "dark" ? "dark" : "default"); resolve(window.mermaid); };
+      s.onerror = function () { mermaidLoading = null; s.remove(); reject(new Error("mermaid-load")); };
+      d.head.appendChild(s);
+    });
+    return mermaidLoading;
+  };
+  // Strict: no clicks or scripts from the text; plain SVG labels, so a picture can be exported.
+  window.Work.mermaidTheme = function (theme) {
+    if (!window.mermaid || mermaidTheme === theme) return;
+    mermaidTheme = theme;
+    // The app's own colours (teal ink on paper; light text on deep green in the dark).
+    var dark = theme === "dark", vars = dark ? {
+      darkMode: true, background: "#16201c", primaryColor: "#1f3a33", primaryTextColor: "#e8efe9", primaryBorderColor: "#3fbfa8",
+      secondaryColor: "#2a2f45", tertiaryColor: "#3a2f1f", lineColor: "#9fb3ab", textColor: "#e8efe9", mainBkg: "#1f3a33", nodeBorder: "#3fbfa8",
+      clusterBkg: "#1b2925", clusterBorder: "#4d6b62", edgeLabelBackground: "#16201c", noteBkgColor: "#4a3f16", noteTextColor: "#f6e7a6", noteBorderColor: "#7a6421",
+      actorBkg: "#1f3a33", actorBorder: "#3fbfa8", actorTextColor: "#e8efe9", signalColor: "#cfdcd6", signalTextColor: "#e8efe9", labelBoxBkgColor: "#1f3a33",
+    } : {
+      primaryColor: "#e2efe9", primaryTextColor: "#1f2a24", primaryBorderColor: "#0f5c4d", secondaryColor: "#e7e8f6", tertiaryColor: "#fff4e0",
+      lineColor: "#5b6b64", textColor: "#1f2a24", mainBkg: "#e2efe9", nodeBorder: "#0f5c4d", clusterBkg: "#f4f7f5", clusterBorder: "#9fb3ab",
+      edgeLabelBackground: "#ffffff", noteBkgColor: "#fff4bf", noteTextColor: "#5c4a00", noteBorderColor: "#f0c36d",
+      actorBkg: "#e2efe9", actorBorder: "#0f5c4d", actorTextColor: "#1f2a24", signalColor: "#33413b", signalTextColor: "#1f2a24", labelBoxBkgColor: "#e2efe9",
+    };
+    vars.fontFamily = "system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans Bengali', sans-serif"; vars.fontSize = "15px";
+    mermaid.initialize({ startOnLoad: false, securityLevel: "strict", theme: "base", themeVariables: vars, htmlLabels: false,
+                         flowchart: { htmlLabels: false, curve: "basis" }, gantt: { useWidth: 960 } });
+  };
+  var mermaidSeq = 0;
+  // Every ```mermaid block inside `el` becomes its diagram (a mistake shows as the text with a note).
+  window.Work.mermaidIn = function (el) {
+    var blocks = el ? el.querySelectorAll("pre > code.language-mermaid") : [];
+    if (!blocks.length) return Promise.resolve();
+    return Work.loadMermaid().then(function (mm) {
+      Work.mermaidTheme(root.getAttribute("data-theme") === "dark" ? "dark" : "default");
+      return Array.prototype.reduce.call(blocks, function (p, code) {
+        return p.then(function () {
+          var id = "wmn-" + (++mermaidSeq), box = d.createElement("div");
+          box.className = "wn-mermaid";
+          return mm.render(id, code.textContent).then(function (res) { box.innerHTML = res.svg; code.parentNode.replaceWith(box); })
+            .catch(function () { code.parentNode.classList.add("is-bad-diagram"); d.querySelectorAll("#d" + id + ", #" + id).forEach(function (n) { n.remove(); }); });
+        });
+      }, Promise.resolve());
+    }).catch(function () { /* offline and never loaded: the text stays */ });
+  };
   d.addEventListener("DOMContentLoaded", function () {
     d.querySelectorAll("[data-render-markdown]").forEach(function (el) {
-      var draw = function () { el.innerHTML = renderMarkdown(el.getAttribute("data-render-markdown")); if (window.hljs) el.querySelectorAll("pre code").forEach(function (c) { hljs.highlightElement(c); }); };
+      var draw = function () {
+        el.innerHTML = renderMarkdown(el.getAttribute("data-render-markdown"));
+        Work.mermaidIn(el);
+        if (window.hljs) el.querySelectorAll("pre code:not(.language-mermaid)").forEach(function (c) { hljs.highlightElement(c); });
+      };
       if (window.marked) draw(); else setTimeout(draw, 300);
     });
   });
@@ -1282,7 +1337,7 @@
   /* ── Keyboard: the whole module without a mouse ─────────────────────── */
   var pending = null;
   var GO = { h: "today", t: "tasks", b: "board", p: "projects", i: "time", f: "focus_page", n: "notes", s: "snippets", a: "habits", j: "journal", r: "reports", ",": "settings",
-             c: "calendar", o: "goals", l: "learning", v: "review", d: "plan", w: "week" };
+             c: "calendar", o: "goals", l: "learning", v: "review", d: "plan", w: "week", m: "diagrams" };
   d.addEventListener("keydown", function (e) {
     if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || typing(e)) return;
     var k = e.key;

@@ -1,0 +1,78 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{{ diagram.title }} | {% translate "Diagrams" %}{% endblock %}
+
+{% block work %}
+{{ payload|json_script:"diagram-data" }}
+{{ texts|json_script:"diagram-text" }}
+<div class="wdx" x-data="diagramPage(JSON.parse(document.getElementById('diagram-data').textContent))" :class="full && 'is-full'"
+     data-kind="{{ diagram.kind }}" @keydown.escape.window="if (full && !$event.defaultPrevented) full = false">
+  <header class="wdx-head">
+    <a href="{% url 'work:diagrams' %}" class="icon-btn wdx-back" aria-label="{% translate 'All diagrams' %}" data-tip="{% translate 'All diagrams' %}">{% icon "chevron-left" %}</a>
+    <span class="wdx-kind" data-kind="{{ diagram.kind }}" data-tip="{{ diagram.get_kind_display }}">{% icon icon %}</span>
+    <input x-model="title" @input="queue({ title })" class="wdx-title" aria-label="{% translate 'Title' %}" maxlength="200" placeholder="{% translate 'Title' %}">
+    <span class="wn-state" :data-state="state" role="status" aria-live="polite"><i aria-hidden="true"></i><span x-text="stateText()"></span></span>
+    <div class="wdx-actions">
+      <label class="wn-field wdx-project">{% icon "folder" %}
+        <select x-model="project" @change="queue({ project })" data-native aria-label="{% translate 'Project' %}">
+          <option value="">{% translate "No project" %}</option>
+          {% for p in projects %}<option value="{{ p.pk }}">{{ p.name }}</option>{% endfor %}
+        </select>
+      </label>
+      <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
+        <button type="button" class="btn btn-secondary btn-sm" @click="open = !open" :aria-expanded="open" aria-haspopup="true">{% icon "download" %}<span class="wn-hide-xs">{% translate "Export" %}</span></button>
+        <div class="menu" x-show="open" x-cloak role="menu" @click="open = false">
+          <button type="button" class="menu-item" role="menuitem" @click="exportPNG()">{% icon "image" %}{% translate "Picture (PNG)" %}</button>
+          <button type="button" class="menu-item" role="menuitem" @click="exportSVG()">{% icon "diagram" %}{% translate "Drawing (SVG)" %}</button>
+          {% if diagram.kind == "mindmap" %}<button type="button" class="menu-item" role="menuitem" @click="copyText()">{% icon "copy" %}{% translate "Copy as an outline" %}</button>
+          {% elif diagram.kind == "system" %}<button type="button" class="menu-item" role="menuitem" @click="copyText()">{% icon "copy" %}{% translate "Copy as Mermaid text" %}</button>
+          {% else %}<button type="button" class="menu-item" role="menuitem" @click="copyText()">{% icon "copy" %}{% translate "Copy the Mermaid text" %}</button>{% endif %}
+          <button type="button" class="menu-item" role="menuitem" @click="action('note')">{% icon "note" %}{% translate "Save as a note" %}</button>
+        </div>
+      </div>
+      <button type="button" class="icon-btn" @click="full = !full" :aria-pressed="full.toString()" aria-label="{% translate 'Full screen' %}" data-tip="{% translate 'Full screen (Esc to leave)' %}">
+        <span x-show="!full">{% icon "maximize" %}</span><span x-show="full" x-cloak>{% icon "minimize" %}</span></button>
+      <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
+        <button type="button" class="icon-btn" @click="open = !open" :aria-expanded="open" aria-label="{% translate 'More actions' %}">{% icon "dots" %}</button>
+        <div class="menu" x-show="open" x-cloak role="menu" @click="open = false">
+          <button type="button" class="menu-item" role="menuitem" @click="action('pin')">{% icon "pin" %}<span x-text="pinned ? '{% translate "Unpin" %}' : '{% translate "Pin to top" %}'"></span></button>
+          <button type="button" class="menu-item" role="menuitem" @click="action('duplicate')">{% icon "copy" %}{% translate "Make a copy" %}</button>
+          <button type="button" class="menu-item" role="menuitem" @click="action('archive')">{% icon "archive" %}{% if diagram.is_archived %}{% translate "Unarchive" %}{% else %}{% translate "Archive" %}{% endif %}</button>
+          <div class="menu-sep"></div>
+          <button type="button" class="menu-item is-danger" role="menuitem" @click="action('delete')">{% icon "trash" %}{% translate "Delete" %}</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  {% if diagram.kind == "mindmap" %}{% include "work/diagram/_mindmap.html" %}
+  {% elif diagram.kind == "system" %}{% include "work/diagram/_board.html" %}
+  {% else %}{% include "work/diagram/_mermaid.html" %}{% endif %}
+
+  {% if diagram.kind != "system" %}
+  <section class="card wdx-notes" x-data="{ show: false }">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title">{% icon "note" %}{% translate "Notes" %}</h2>
+        <p class="card-subtitle">{% translate "What this shows, decisions, open questions. Markdown works." %}</p>
+      </div>
+      <div class="seg seg-sm"><button type="button" class="seg-item" :class="!show && 'is-active'" @click="show = false">{% translate "Write" %}</button><button type="button" class="seg-item" :class="show && 'is-active'" @click="show = true">{% translate "Preview" %}</button></div>
+    </div>
+    <div class="card-body">
+      <textarea x-show="!show" x-model="notes" @input="queue({ notes })" class="form-input wdx-notes-text" rows="5" placeholder="{% translate 'Write something about this diagram…' %}" aria-label="{% translate 'Notes' %}"></textarea>
+      <article x-show="show" x-cloak class="wn-md" x-html="Work.markdown(notes || '')"></article>
+    </div>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block work_libs %}
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+{% endblock %}
+
+{% block work_js %}
+<script src="{% asset 'js/diagrams.js' %}"></script>
+{% endblock %}

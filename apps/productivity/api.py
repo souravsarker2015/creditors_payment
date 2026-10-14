@@ -22,10 +22,10 @@ from django.views.decorators.http import require_GET, require_POST
 
 from apps.trash.services import trash
 
-from . import services
+from . import diagrams, services
 from .access import work_required
 from .models import (
-    ChecklistItem, EntryKind, Goal, GoalStatus, GoalStep, Habit, HabitCheck, JournalEntry, LearningItem, LearningKind, LearningStatus,
+    ChecklistItem, Diagram, DiagramKind, EntryKind, Goal, GoalStatus, GoalStep, Habit, HabitCheck, JournalEntry, LearningItem, LearningKind, LearningStatus,
     LearningUnit, Note, Priority, Project, Snippet, Status, Task, TimeEntry, link_label,
 )
 
@@ -424,6 +424,77 @@ def entry_continue(request, pk):
     return ok(running=entry_json(entry), today=_today_seconds(request.user))
 
 
+# ── Diagrams ──────────────────────────────────────────────────────────────
+@work_required
+@require_POST
+def diagram_save(request, pk):
+    """Autosave from a diagram page: title, the drawing (shapes or text), notes and its picture."""
+    d = get_object_or_404(Diagram, pk=pk, owner=request.user)
+    post = request.POST
+    if "title" in post:
+        d.title = post["title"].strip()[:200] or d.title
+    if "source" in post and not d.is_visual:
+        if len(post["source"]) > diagrams.MAX_SOURCE:
+            return bad(_("This diagram is too big to save."))
+        d.source = post["source"]
+        d.kind = diagrams.kind_of_source(d.source, d.kind)
+    if "data" in post and d.is_visual:
+        try:
+            d.data = diagrams.clean_data(d.kind, post["data"])
+        except diagrams.Invalid as e:
+            return bad(str(e))
+    if "notes" in post:
+        d.notes = post["notes"][:diagrams.MAX_SOURCE]
+    if "preview" in post:
+        d.preview = diagrams.clean_preview(post["preview"])
+    if "project" in post:
+        d.project = Project.objects.filter(owner=request.user, pk=post["project"] or 0).first()
+    d.save()
+    return ok(saved=timezone.localtime(d.updated_at).strftime("%H:%M"), updated=int(d.updated_at.timestamp() * 1000), kind=d.kind)
+
+
+@work_required
+@require_POST
+def diagram_action(request, pk):
+    d = get_object_or_404(Diagram, pk=pk, owner=request.user)
+    action = request.POST.get("action")
+    if action == "pin":
+        d.is_pinned = not d.is_pinned
+        d.save(update_fields=["is_pinned"])
+        return ok(pinned=d.is_pinned)
+    if action == "archive":
+        d.is_archived = not d.is_archived
+        d.save(update_fields=["is_archived"])
+        return ok(archived=d.is_archived, url=reverse("work:diagrams"))
+    if action == "delete":
+        return _trash(request, d, _("Diagram: %(title)s") % {"title": d.title}, reverse("work:diagrams"))
+    if action == "duplicate":
+        copy = Diagram.objects.create(owner=request.user, kind=d.kind, title=(_("%(title)s (copy)") % {"title": d.title})[:200],
+                                      source=d.source, data=d.data, notes=d.notes, preview=d.preview, project=d.project)
+        return ok(url=reverse("work:diagram", args=[copy.pk]))
+    if action == "tasks":               # a mind map branch: each idea under it becomes a task
+        if d.kind != DiagramKind.MINDMAP:
+            return bad(_("Only mind maps can make tasks."))
+        titles = diagrams.branch_titles(d.data, request.POST.get("node", ""))
+        if not titles:
+            return bad(_("Pick an idea with something written in it."))
+        for title in titles:
+            Task.objects.create(owner=request.user, title=title, project=d.project, order=services.next_order(request.user, Status.TODO))
+        return ok(count=len(titles), url=reverse("work:tasks"))
+    if action == "note":                # the diagram as a note: an outline, the Mermaid text or the design notes
+        if d.kind == DiagramKind.MINDMAP:
+            body = diagrams.outline_text(d.data)
+        elif d.kind == DiagramKind.SYSTEM:
+            parts = ["- **%s**%s" % (n.get("label") or n.get("type"), f" — {n['tech']}" if n.get("tech") else "")
+                     for n in d.data.get("nodes", []) if n.get("type") not in ("zone", "note")]
+            body = "\n".join([f"# {d.title}", "", _("Components") + ":", *parts, "", d.notes]).strip() + "\n"
+        else:
+            body = f"# {d.title}\n\n```mermaid\n{d.source.strip()}\n```\n" + (f"\n{d.notes}\n" if d.notes else "")
+        note = Note.objects.create(owner=request.user, title=d.title, body=body, project=d.project)
+        return ok(url=reverse("work:note", args=[note.pk]))
+    return bad(_("Not allowed."))
+
+
 @work_required
 @require_POST
 def snippet_action(request, pk):
@@ -444,7 +515,7 @@ def snippet_action(request, pk):
 @work_required
 @require_GET
 def search(request):
-    """Command palette (Ctrl+K): tasks, notes, projects, goals, learning and snippets matching the text."""
+    """Command palette (Ctrl+K): tasks, notes, projects, goals, learning, diagrams and snippets matching the text."""
     q = request.GET.get("q", "").strip()
     if len(q) < 2:
         return ok(results=[])
@@ -461,6 +532,8 @@ def search(request):
     for item in LearningItem.objects.filter(owner=user).filter(Q(title__icontains=q) | Q(author__icontains=q))[:3]:
         out.append({"kind": "learning", "title": item.title, "url": reverse("work:learning_edit", args=[item.pk]),
                     "meta": " · ".join(x for x in (item.get_kind_display(), item.author) if x)})
+    for dg in Diagram.objects.filter(owner=user, is_archived=False).filter(Q(title__icontains=q) | Q(notes__icontains=q)).only("pk", "title", "kind")[:4]:
+        out.append({"kind": "diagram", "title": dg.title, "url": reverse("work:diagram", args=[dg.pk]), "meta": dg.get_kind_display()})
     for sn in Snippet.objects.filter(owner=user).filter(Q(title__icontains=q) | Q(description__icontains=q))[:3]:
         out.append({"kind": "snippet", "title": sn.title, "url": reverse("work:snippets") + "?q=" + quote(sn.title), "meta": sn.get_language_display()})
     return ok(results=out)

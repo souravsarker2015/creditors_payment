@@ -18238,3 +18238,869 @@ msgstr "কিছু ফিল্টার চালু আছে"
 
 msgid "min read"
 msgstr "মিনিটে পড়া"
+
+msgid "Diagrams"
+msgstr "ডায়াগ্রাম"
+
+msgid "Mind map"
+msgstr "মাইন্ড ম্যাপ"
+
+msgid "System design"
+msgstr "সিস্টেম ডিজাইন"
+
+msgid "Diagram"
+msgstr "ডায়াগ্রাম"
+
+msgid "This diagram is too big to save."
+msgstr "এই ডায়াগ্রামটি সেভ করার জন্য অনেক বড়।"
+
+#, python-format
+msgid "Diagram: %(title)s"
+msgstr "ডায়াগ্রাম: %(title)s"
+
+#, python-format
+msgid "%(title)s (copy)"
+msgstr "%(title)s (কপি)"
+
+msgid "Only mind maps can make tasks."
+msgstr "শুধু মাইন্ড ম্যাপ থেকে টাস্ক বানানো যায়।"
+
+msgid "Pick an idea with something written in it."
+msgstr "লেখা আছে এমন একটি আইডিয়া বেছে নিন।"
+
+msgid "Components"
+msgstr "অংশগুলো"
+
+msgid "Flowchart"
+msgstr "ফ্লোচার্ট"
+
+msgid "Sequence diagram"
+msgstr "সিকোয়েন্স ডায়াগ্রাম"
+
+msgid "Database (ER) diagram"
+msgstr "ডেটাবেস (ER) ডায়াগ্রাম"
+
+msgid "Class diagram"
+msgstr "ক্লাস ডায়াগ্রাম"
+
+msgid "State diagram"
+msgstr "স্টেট ডায়াগ্রাম"
+
+msgid "Gantt chart"
+msgstr "গ্যান্ট চার্ট"
+
+msgid "User journey"
+msgstr "ইউজার জার্নি"
+
+msgid "Diagram text"
+msgstr "ডায়াগ্রামের লেখা"
+
+msgid "Requirements, decisions, trade-offs… Markdown works."
+msgstr "চাহিদা, সিদ্ধান্ত, সুবিধা-অসুবিধা… Markdown চলে।"
+
+msgid "New mind map"
+msgstr "নতুন মাইন্ড ম্যাপ"
+
+msgid "New system design"
+msgstr "নতুন সিস্টেম ডিজাইন"
+
+msgid "Ideas around one centre. Tab adds a branch, Enter a sibling."
+msgstr "একটি কেন্দ্র ঘিরে আইডিয়া। Tab দিলে শাখা, Enter দিলে পাশে আরেকটি।"
+
+msgid "Services, databases, caches and queues, linked up — with the numbers."
+msgstr "সার্ভিস, ডেটাবেস, ক্যাশ ও কিউ জুড়ে — হিসাবসহ।"
+
+msgid "Steps and decisions."
+msgstr "ধাপ আর সিদ্ধান্ত।"
+
+msgid "Who calls whom, in order."
+msgstr "কে কাকে কল করে, ক্রম অনুযায়ী।"
+
+msgid "Tables, keys and how they relate."
+msgstr "টেবিল, কী আর তাদের সম্পর্ক।"
+
+msgid "Classes, fields and methods."
+msgstr "ক্লাস, ফিল্ড আর মেথড।"
+
+msgid "The states something moves through."
+msgstr "কোনো কিছু যে যে অবস্থার মধ্য দিয়ে যায়।"
+
+msgid "Tasks on a calendar."
+msgstr "ক্যালেন্ডারে টাস্ক।"
+
+msgid "Events in time."
+msgstr "সময়ের ধারায় ঘটনা।"
+
+msgid "A person's steps and how each feels."
+msgstr "একজনের ধাপগুলো আর প্রতিটিতে কেমন লাগে।"
+
+msgid "Users"
+msgstr "ব্যবহারকারী"
+
+msgid "Phone app"
+msgstr "ফোন অ্যাপ"
+
+msgid "Web app"
+msgstr "ওয়েব অ্যাপ"
+
+msgid "DNS"
+msgstr "DNS"
+
+msgid "CDN"
+msgstr "CDN"
+
+msgid "Load balancer"
+msgstr "লোড ব্যালান্সার"
+
+msgid "API gateway"
+msgstr "API গেটওয়ে"
+
+msgid "Function"
+msgstr "ফাংশন"
+
+msgid "Auth"
+msgstr "লগইন/অথ"
+
+msgid "SQL database"
+msgstr "SQL ডেটাবেস"
+
+msgid "NoSQL store"
+msgstr "NoSQL স্টোর"
+
+msgid "Cache"
+msgstr "ক্যাশ"
+
+msgid "Queue"
+msgstr "কিউ"
+
+msgid "Event stream"
+msgstr "ইভেন্ট স্ট্রিম"
+
+msgid "File storage"
+msgstr "ফাইল স্টোরেজ"
+
+msgid "Analytics"
+msgstr "অ্যানালিটিক্স"
+
+msgid "Outside service"
+msgstr "বাইরের সার্ভিস"
+
+msgid "Monitoring"
+msgstr "মনিটরিং"
+
+msgid "Sticky note"
+msgstr "স্টিকি নোট"
+
+msgid "Zone / group"
+msgstr "এলাকা / গ্রুপ"
+
+msgid "Box"
+msgstr "বক্স"
+
+msgid "Rounded"
+msgstr "গোলাকার"
+
+msgid "Question"
+msgstr "প্রশ্ন"
+
+msgid "Arrow"
+msgstr "তীর"
+
+msgid "Arrow with words"
+msgstr "লেখাসহ তীর"
+
+msgid "Dotted arrow"
+msgstr "ডটেড তীর"
+
+msgid "Group"
+msgstr "গ্রুপ"
+
+msgid "Part"
+msgstr "অংশ"
+
+msgid "Answer"
+msgstr "উত্তর"
+
+msgid "Loop"
+msgstr "লুপ"
+
+msgid "Either / or"
+msgstr "হয় / নয়"
+
+msgid "Table"
+msgstr "টেবিল"
+
+msgid "One to many"
+msgstr "এক থেকে অনেক"
+
+msgid "One to one"
+msgstr "এক থেকে এক"
+
+msgid "Many to many"
+msgstr "অনেক থেকে অনেক"
+
+msgid "Class"
+msgstr "ক্লাস"
+
+msgid "Inherits"
+msgstr "উত্তরাধিকার"
+
+msgid "Contains"
+msgstr "ধারণ করে"
+
+msgid "Uses"
+msgstr "ব্যবহার করে"
+
+msgid "State"
+msgstr "অবস্থা"
+
+msgid "Section"
+msgstr "সেকশন"
+
+msgid "Milestone"
+msgstr "মাইলফলক"
+
+msgid "Step"
+msgstr "ধাপ"
+
+msgid "New idea"
+msgstr "নতুন আইডিয়া"
+
+msgid "Downloaded"
+msgstr "ডাউনলোড হয়েছে"
+
+msgid "Diagram deleted"
+msgstr "ডায়াগ্রাম মুছে ফেলা হয়েছে"
+
+msgid "Pick an idea first."
+msgstr "আগে একটি আইডিয়া বেছে নিন।"
+
+msgid "Paste a list first: one idea per line, indent to go deeper."
+msgstr "আগে একটি তালিকা পেস্ট করুন: প্রতি লাইনে একটি আইডিয়া, ভেতরে নিতে ইনডেন্ট দিন।"
+
+msgid "Now tap the part to connect to."
+msgstr "এবার যে অংশের সাথে জুড়বেন সেটিতে ট্যাপ করুন।"
+
+msgid "There is nothing to export yet."
+msgstr "এক্সপোর্ট করার মতো এখনো কিছু নেই।"
+
+msgid "There is a mistake in the text"
+msgstr "লেখায় একটি ভুল আছে"
+
+msgid "The diagram drawing tool could not load. Check the internet connection."
+msgstr "ডায়াগ্রাম আঁকার টুলটি লোড হয়নি। ইন্টারনেট সংযোগ দেখুন।"
+
+msgid "Replace this mind map with the pasted list? You can undo it."
+msgstr "এই মাইন্ড ম্যাপটি পেস্ট করা তালিকা দিয়ে বদলাবেন? চাইলে ফিরিয়ে আনতে পারবেন।"
+
+msgid "The diagram couldn't be read."
+msgstr "ডায়াগ্রামটি পড়া যায়নি।"
+
+msgid "A mind map needs its central idea."
+msgstr "মাইন্ড ম্যাপে একটি কেন্দ্রীয় আইডিয়া লাগে।"
+
+msgid "This mind map goes too deep."
+msgstr "এই মাইন্ড ম্যাপটি অনেক বেশি গভীরে গেছে।"
+
+msgid "Blank mind map"
+msgstr "ফাঁকা মাইন্ড ম্যাপ"
+
+msgid "Central idea"
+msgstr "মূল আইডিয়া"
+
+msgid "Plan a project"
+msgstr "প্রজেক্টের পরিকল্পনা"
+
+msgid "Why we're doing it"
+msgstr "কেন করছি"
+
+msgid "What success looks like"
+msgstr "সফল হলে কেমন দেখাবে"
+
+msgid "Scope"
+msgstr "পরিধি"
+
+msgid "First version"
+msgstr "প্রথম সংস্করণ"
+
+msgid "Launch"
+msgstr "চালু করা"
+
+msgid "Risks"
+msgstr "ঝুঁকি"
+
+msgid "Unknowns"
+msgstr "অজানা বিষয়"
+
+msgid "Dependencies"
+msgstr "নির্ভরতা"
+
+msgid "Helpers"
+msgstr "সহায়ক"
+
+msgid "System design interview"
+msgstr "সিস্টেম ডিজাইন ইন্টারভিউ"
+
+msgid "Design the system"
+msgstr "সিস্টেম ডিজাইন করুন"
+
+msgid "Requirements"
+msgstr "চাহিদা"
+
+msgid "Functional"
+msgstr "কার্যগত"
+
+msgid "Non-functional"
+msgstr "অকার্যগত"
+
+msgid "Out of scope"
+msgstr "পরিধির বাইরে"
+
+msgid "Estimates"
+msgstr "হিসাব"
+
+msgid "Requests per second"
+msgstr "প্রতি সেকেন্ডে অনুরোধ"
+
+msgid "Storage"
+msgstr "স্টোরেজ"
+
+msgid "Bandwidth"
+msgstr "ব্যান্ডউইথ"
+
+msgid "API"
+msgstr "API"
+
+msgid "Endpoints"
+msgstr "এন্ডপয়েন্ট"
+
+msgid "Data model"
+msgstr "ডেটা মডেল"
+
+msgid "Tables / collections"
+msgstr "টেবিল / কালেকশন"
+
+msgid "SQL or NoSQL?"
+msgstr "SQL নাকি NoSQL?"
+
+msgid "High-level design"
+msgstr "উপর থেকে ডিজাইন"
+
+msgid "Clients"
+msgstr "ক্লায়েন্ট"
+
+msgid "Services"
+msgstr "সার্ভিস"
+
+msgid "Deep dives"
+msgstr "গভীরে দেখা"
+
+msgid "Caching"
+msgstr "ক্যাশিং"
+
+msgid "Sharding"
+msgstr "শার্ডিং"
+
+msgid "Queues"
+msgstr "কিউ"
+
+msgid "Consistency"
+msgstr "সামঞ্জস্য"
+
+msgid "Trade-offs"
+msgstr "সুবিধা-অসুবিধা"
+
+msgid "Learn a topic"
+msgstr "একটি বিষয় শেখা"
+
+msgid "Topic"
+msgstr "বিষয়"
+
+msgid "What it is"
+msgstr "এটা কী"
+
+msgid "Key ideas"
+msgstr "মূল ধারণা"
+
+msgid "Idea 1"
+msgstr "আইডিয়া ১"
+
+msgid "Idea 2"
+msgstr "আইডিয়া ২"
+
+msgid "Practice"
+msgstr "অনুশীলন"
+
+msgid "Resources"
+msgstr "সহায়ক উপকরণ"
+
+msgid "Questions"
+msgstr "প্রশ্ন"
+
+msgid "Blank board"
+msgstr "ফাঁকা বোর্ড"
+
+msgid "Web app (three tiers)"
+msgstr "ওয়েব অ্যাপ (তিন স্তর)"
+
+msgid "Browser & phone"
+msgstr "ব্রাউজার ও ফোন"
+
+msgid "Static files"
+msgstr "স্ট্যাটিক ফাইল"
+
+msgid "App servers (auto-scaling)"
+msgstr "অ্যাপ সার্ভার (অটো-স্কেলিং)"
+
+msgid "Web / API"
+msgstr "ওয়েব / API"
+
+msgid "Primary database"
+msgstr "প্রধান ডেটাবেস"
+
+msgid "Read replica"
+msgstr "রিড রেপ্লিকা"
+
+msgid "Job queue"
+msgstr "জব কিউ"
+
+msgid "Emails, reports"
+msgstr "ইমেইল, রিপোর্ট"
+
+msgid "look up"
+msgstr "খোঁজা"
+
+msgid "read"
+msgstr "পড়া"
+
+msgid "write"
+msgstr "লেখা"
+
+msgid "replicate"
+msgstr "কপি রাখা"
+
+msgid "enqueue"
+msgstr "কিউতে দেওয়া"
+
+msgid "URL shortener"
+msgstr "URL ছোট করার সার্ভিস"
+
+msgid "Shorten API"
+msgstr "ছোট করার API"
+
+msgid "Redirect API"
+msgstr "রিডাইরেক্ট API"
+
+msgid "Key generator"
+msgstr "কী তৈরিকারক"
+
+msgid "Pre-made unique keys"
+msgstr "আগে থেকে বানানো আলাদা কী"
+
+msgid "Redis, hot links"
+msgstr "Redis, জনপ্রিয় লিংক"
+
+msgid "URL store"
+msgstr "URL স্টোর"
+
+msgid "Click events"
+msgstr "ক্লিক ইভেন্ট"
+
+msgid "Click counts"
+msgstr "ক্লিকের সংখ্যা"
+
+msgid "take a key"
+msgstr "একটি কী নেওয়া"
+
+msgid "save"
+msgstr "সেভ"
+
+msgid "on a miss"
+msgstr "না পেলে"
+
+msgid "Chat app"
+msgstr "চ্যাট অ্যাপ"
+
+msgid "Phone & web apps"
+msgstr "ফোন ও ওয়েব অ্যাপ"
+
+msgid "Sticky sessions"
+msgstr "স্টিকি সেশন"
+
+msgid "Chat servers"
+msgstr "চ্যাট সার্ভার"
+
+msgid "Presence"
+msgstr "উপস্থিতি"
+
+msgid "Who's online"
+msgstr "কে অনলাইনে"
+
+msgid "Message bus"
+msgstr "মেসেজ বাস"
+
+msgid "Messages"
+msgstr "মেসেজ"
+
+msgid "Push sender"
+msgstr "পুশ পাঠানো"
+
+msgid "Push services"
+msgstr "পুশ সার্ভিস"
+
+msgid "Sessions"
+msgstr "সেশন"
+
+msgid "Photos & files"
+msgstr "ছবি ও ফাইল"
+
+msgid "publish"
+msgstr "প্রকাশ"
+
+msgid "store"
+msgstr "রাখা"
+
+msgid "offline users"
+msgstr "অফলাইন ব্যবহারকারী"
+
+msgid "upload"
+msgstr "আপলোড"
+
+msgid "Sign-in flow"
+msgstr "সাইন ইনের ধাপ"
+
+msgid "Deploy pipeline"
+msgstr "ডিপ্লয় পাইপলাইন"
+
+msgid "Paying for an order"
+msgstr "অর্ডারের টাকা দেওয়া"
+
+msgid "Shop orders"
+msgstr "দোকানের অর্ডার"
+
+msgid "Bank accounts"
+msgstr "ব্যাংক অ্যাকাউন্ট"
+
+msgid "Order status"
+msgstr "অর্ডারের অবস্থা"
+
+msgid "Release plan"
+msgstr "রিলিজ পরিকল্পনা"
+
+msgid "Career path"
+msgstr "ক্যারিয়ারের পথ"
+
+msgid "Signing up"
+msgstr "সাইন আপ"
+
+msgid "Blank"
+msgstr "ফাঁকা"
+
+msgid "All diagrams"
+msgstr "সব ডায়াগ্রাম"
+
+msgid "Export"
+msgstr "এক্সপোর্ট"
+
+msgid "Picture (PNG)"
+msgstr "ছবি (PNG)"
+
+msgid "Drawing (SVG)"
+msgstr "আঁকা (SVG)"
+
+msgid "Copy as an outline"
+msgstr "আউটলাইন হিসেবে কপি"
+
+msgid "Copy as Mermaid text"
+msgstr "Mermaid লেখা হিসেবে কপি"
+
+msgid "Copy the Mermaid text"
+msgstr "Mermaid লেখা কপি"
+
+msgid "Full screen"
+msgstr "পুরো স্ক্রিন"
+
+msgid "Full screen (Esc to leave)"
+msgstr "পুরো স্ক্রিন (বের হতে Esc)"
+
+msgid "Make a copy"
+msgstr "একটি কপি বানান"
+
+msgid "What this shows, decisions, open questions. Markdown works."
+msgstr "এটা কী দেখায়, সিদ্ধান্ত, খোলা প্রশ্ন। Markdown চলে।"
+
+msgid "Write something about this diagram…"
+msgstr "এই ডায়াগ্রাম নিয়ে কিছু লিখুন…"
+
+msgid "Parts"
+msgstr "অংশ"
+
+msgid "Drag or tap to add"
+msgstr "যোগ করতে টানুন বা ট্যাপ করুন"
+
+msgid "Board tools"
+msgstr "বোর্ডের টুল"
+
+msgid "Undo (Ctrl+Z)"
+msgstr "আগের অবস্থা (Ctrl+Z)"
+
+msgid "Redo"
+msgstr "আবার করুন"
+
+msgid "Redo (Ctrl+Shift+Z)"
+msgstr "আবার করুন (Ctrl+Shift+Z)"
+
+msgid "Zoom out"
+msgstr "ছোট করুন"
+
+msgid "Fit to screen (0)"
+msgstr "স্ক্রিনে মানানসই (0)"
+
+msgid "Zoom in"
+msgstr "বড় করুন"
+
+msgid "Link the picked part to another: or drag from one of its dots"
+msgstr "বাছাই করা অংশকে আরেকটির সাথে জুড়ুন: অথবা তার একটি বিন্দু থেকে টানুন"
+
+msgid "Connect"
+msgstr "জুড়ুন"
+
+msgid "Duplicate"
+msgstr "ডুপ্লিকেট"
+
+msgid "Duplicate (Ctrl+D)"
+msgstr "ডুপ্লিকেট (Ctrl+D)"
+
+msgid "Delete (Del)"
+msgstr "মুছুন (Del)"
+
+msgid "Snap to grid"
+msgstr "গ্রিডে বসান"
+
+msgid "System design board"
+msgstr "সিস্টেম ডিজাইন বোর্ড"
+
+msgid "Add parts from the left — users, a load balancer, services, a database — then drag from a part's dot to another to link them."
+msgstr "বাঁ দিক থেকে অংশ যোগ করুন — ব্যবহারকারী, লোড ব্যালান্সার, সার্ভিস, ডেটাবেস — তারপর একটি অংশের বিন্দু থেকে আরেকটিতে টেনে জুড়ুন।"
+
+msgid "delete"
+msgstr "মুছুন"
+
+msgid "duplicate"
+msgstr "ডুপ্লিকেট"
+
+msgid "nudge"
+msgstr "সরান"
+
+msgid "rename"
+msgstr "নাম বদলান"
+
+msgid "Shift-click to pick several. Dashed links are asynchronous (a queue, an event)."
+msgstr "কয়েকটি বাছতে Shift চেপে ক্লিক করুন। ড্যাশ দেওয়া লিংক মানে অ্যাসিঙ্ক্রোনাস (কিউ, ইভেন্ট)।"
+
+msgid "Panel"
+msgstr "প্যানেল"
+
+msgid "Built with"
+msgstr "যা দিয়ে তৈরি"
+
+msgid "PostgreSQL, Redis, Kafka…"
+msgstr "PostgreSQL, Redis, Kafka…"
+
+msgid "What it does"
+msgstr "এটা কী করে"
+
+msgid "Responsibilities, why this choice, limits…"
+msgstr "দায়িত্ব, কেন এটা বেছে নেওয়া, সীমাবদ্ধতা…"
+
+msgid "Connect to…"
+msgstr "জুড়ুন…"
+
+msgid "Label"
+msgstr "লেবেল"
+
+msgid "HTTPS, gRPC, publish, read…"
+msgstr "HTTPS, gRPC, প্রকাশ, পড়া…"
+
+msgid "Kind of call"
+msgstr "কলের ধরন"
+
+msgid "Waits for an answer"
+msgstr "উত্তরের অপেক্ষা করে"
+
+msgid "Fire and forget"
+msgstr "পাঠিয়ে ভুলে যায়"
+
+msgid "Arrows"
+msgstr "তীর"
+
+msgid "Turn around"
+msgstr "উল্টে দিন"
+
+msgid "parts picked"
+msgstr "টি অংশ বাছাই করা"
+
+msgid "Links"
+msgstr "লিংক"
+
+msgid "Pick a part to name it, say what it's built with and what it does. Pick a link to label it."
+msgstr "একটি অংশ বেছে তার নাম, কী দিয়ে তৈরি আর কী করে লিখুন। লিংক বেছে তার লেবেল দিন।"
+
+msgid "Back-of-the-envelope numbers for the design. Change any box."
+msgstr "ডিজাইনের মোটামুটি হিসাব। যেকোনো ঘর বদলান।"
+
+msgid "Daily active users"
+msgstr "দৈনিক সক্রিয় ব্যবহারকারী"
+
+msgid "Requests per user per day"
+msgstr "প্রতি ব্যবহারকারীর দৈনিক অনুরোধ"
+
+msgid "Reads for each write"
+msgstr "প্রতিটি লেখার বিপরীতে পড়া"
+
+msgid "Size of one write (KB)"
+msgstr "একটি লেখার আকার (KB)"
+
+msgid "Peak is busier by (×)"
+msgstr "সবচেয়ে ব্যস্ত সময়ে কতগুণ (×)"
+
+msgid "Keep data for (years)"
+msgstr "ডেটা রাখা হবে (বছর)"
+
+msgid "Copies of the data"
+msgstr "ডেটার কপি"
+
+msgid "Requests a second"
+msgstr "প্রতি সেকেন্ডে অনুরোধ"
+
+msgid "At the peak"
+msgstr "সবচেয়ে ব্যস্ত সময়ে"
+
+msgid "Writes a second"
+msgstr "প্রতি সেকেন্ডে লেখা"
+
+msgid "Reads a second"
+msgstr "প্রতি সেকেন্ডে পড়া"
+
+msgid "New data a day"
+msgstr "দৈনিক নতুন ডেটা"
+
+msgid "Storage in total"
+msgstr "মোট স্টোরেজ"
+
+msgid "Data in (writes)"
+msgstr "ডেটা আসা (লেখা)"
+
+msgid "Data out (reads)"
+msgstr "ডেটা যাওয়া (পড়া)"
+
+msgid "Add these to the notes"
+msgstr "এগুলো নোটে যোগ করুন"
+
+msgid "Requirements, API, data model, trade-offs… Markdown works."
+msgstr "চাহিদা, API, ডেটা মডেল, সুবিধা-অসুবিধা… Markdown চলে।"
+
+msgid "Written in Mermaid."
+msgstr "Mermaid-এ লেখা।"
+
+msgid "How to write each kind"
+msgstr "প্রতিটি ধরন কীভাবে লিখবেন"
+
+msgid "Fit to screen"
+msgstr "স্ক্রিনে মানানসই"
+
+msgid "Mind map tools"
+msgstr "মাইন্ড ম্যাপের টুল"
+
+msgid "Add an idea under it"
+msgstr "এর নিচে আইডিয়া যোগ করুন"
+
+msgid "Add an idea under it (Tab)"
+msgstr "এর নিচে আইডিয়া যোগ করুন (Tab)"
+
+msgid "Add an idea next to it"
+msgstr "এর পাশে আইডিয়া যোগ করুন"
+
+msgid "Add an idea next to it (Enter)"
+msgstr "এর পাশে আইডিয়া যোগ করুন (Enter)"
+
+msgid "Edit the text"
+msgstr "লেখা বদলান"
+
+msgid "Edit the text (Space or double-click)"
+msgstr "লেখা বদলান (Space বা ডাবল-ক্লিক)"
+
+msgid "Fold or unfold"
+msgstr "গুটিয়ে রাখুন বা খুলুন"
+
+msgid "Fold or unfold (/)"
+msgstr "গুটিয়ে রাখুন বা খুলুন (/)"
+
+msgid "Colour of this branch"
+msgstr "এই শাখার রং"
+
+msgid "Delete with what is under it (Delete)"
+msgstr "নিচে যা আছে সহ মুছুন (Delete)"
+
+msgid "Each idea under the picked one becomes a task"
+msgstr "বাছাই করা আইডিয়ার নিচের প্রতিটি আইডিয়া একটি টাস্ক হবে"
+
+msgid "Turn a pasted list into a mind map"
+msgstr "পেস্ট করা তালিকা থেকে মাইন্ড ম্যাপ বানান"
+
+msgid "Paste a list"
+msgstr "তালিকা পেস্ট করুন"
+
+msgid "Mind map. Arrow keys move between ideas."
+msgstr "মাইন্ড ম্যাপ। তীর কী দিয়ে আইডিয়াগুলোর মধ্যে যান।"
+
+msgid "idea under it"
+msgstr "নিচে আইডিয়া"
+
+msgid "idea next to it"
+msgstr "পাশে আইডিয়া"
+
+msgid "edit"
+msgstr "বদলান"
+
+msgid "fold"
+msgstr "গুটান"
+
+msgid "Drag an idea onto another to move it. Drag the background to look around; pinch or Ctrl+scroll to zoom."
+msgstr "সরাতে একটি আইডিয়া আরেকটির উপর টেনে আনুন। চারপাশ দেখতে পটভূমি টানুন; জুম করতে দুই আঙুল বা Ctrl+স্ক্রল।"
+
+msgid "One idea per line. Indent (or use “- ” lists) to put ideas under others. A first line like “# Title” becomes the centre."
+msgstr "প্রতি লাইনে একটি আইডিয়া। কোনোটির নিচে রাখতে ইনডেন্ট দিন (বা “- ” তালিকা)। প্রথম লাইন “# শিরোনাম” হলে সেটি কেন্দ্র হবে।"
+
+msgid "Make the mind map"
+msgstr "মাইন্ড ম্যাপ বানান"
+
+msgid "Mind maps, system designs, flowcharts and more — drawn by hand or written as text."
+msgstr "মাইন্ড ম্যাপ, সিস্টেম ডিজাইন, ফ্লোচার্ট আরও অনেক কিছু — হাতে আঁকা বা লিখে বানানো।"
+
+msgid "Start something new"
+msgstr "নতুন কিছু শুরু করুন"
+
+msgid "Pick a kind, then a blank page or a ready-made start."
+msgstr "একটি ধরন বেছে নিন, তারপর ফাঁকা পাতা বা তৈরি শুরু।"
+
+msgid "Kind of diagram"
+msgstr "ডায়াগ্রামের ধরন"
+
+msgid "Search diagrams  ( / )"
+msgstr "ডায়াগ্রাম খুঁজুন  ( / )"
+
+msgid "Search diagrams"
+msgstr "ডায়াগ্রাম খুঁজুন"
+
+msgid "No diagrams match."
+msgstr "কোনো ডায়াগ্রাম মেলেনি।"
+
+msgid "Draw your first diagram"
+msgstr "আপনার প্রথম ডায়াগ্রাম আঁকুন"
+
+msgid "A mind map to think something through, a system design to practise for an interview, or a flowchart to explain a process. Pick one above."
+msgstr "কিছু ভেবে দেখতে মাইন্ড ম্যাপ, ইন্টারভিউয়ের অনুশীলনে সিস্টেম ডিজাইন, বা কোনো প্রক্রিয়া বোঝাতে ফ্লোচার্ট। উপর থেকে একটি বেছে নিন।"
+
+msgid "Mind maps and system designs for this project show here."
+msgstr "এই প্রজেক্টের মাইন্ড ম্যাপ আর সিস্টেম ডিজাইন এখানে দেখাবে।"

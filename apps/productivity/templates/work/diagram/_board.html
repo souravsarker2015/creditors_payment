@@ -1,0 +1,129 @@
+{% load i18n work %}{% comment %}System design board. Drawn and driven by `sysBoard` in static/js/diagrams.js.{% endcomment %}
+<div class="wsb" x-data="sysBoard" data-own-keys>
+  <aside class="wsb-palette" aria-label="{% translate 'Parts' %}">
+    <p class="wsb-palette-label">{% translate "Drag or tap to add" %}</p>
+    <div class="wsb-parts">
+      {% for type, name in parts %}
+      <button type="button" class="wsb-part" data-type="{{ type }}" @pointerdown="paletteDown($event, '{{ type }}')" @click="paletteClick('{{ type }}')" title="{{ name }}">
+        <span class="wsb-part-ico" data-part-icon="{{ type }}"></span><span class="wsb-part-name">{{ name }}</span>
+      </button>
+      {% endfor %}
+    </div>
+  </aside>
+
+  <section class="wdx-stage wsb-stage">
+    <div class="wdx-tools" role="toolbar" aria-label="{% translate 'Board tools' %}">
+      <div class="wdx-group">
+        <button type="button" class="icon-btn" @click="undo()" :disabled="!canUndo" aria-label="{% translate 'Undo' %}" data-tip="{% translate 'Undo (Ctrl+Z)' %}">{% icon "undo" %}</button>
+        <button type="button" class="icon-btn" @click="redo()" :disabled="!canRedo" aria-label="{% translate 'Redo' %}" data-tip="{% translate 'Redo (Ctrl+Shift+Z)' %}">{% icon "redo" %}</button>
+      </div>
+      <div class="wdx-group">
+        <button type="button" class="icon-btn" @click="view.zoomBy(1 / 1.2)" aria-label="{% translate 'Zoom out' %}">{% icon "zoom-out" %}</button>
+        <button type="button" class="wdx-zoom" @click="fit()" data-tip="{% translate 'Fit to screen (0)' %}" x-text="zoom + '%'"></button>
+        <button type="button" class="icon-btn" @click="view.zoomBy(1.2)" aria-label="{% translate 'Zoom in' %}">{% icon "zoom-in" %}</button>
+      </div>
+      <div class="wdx-group">
+        <button type="button" class="btn btn-ghost btn-sm" :class="connecting && 'is-on'" @click="startConnect()" :disabled="!oneNode" data-tip="{% translate 'Link the picked part to another: or drag from one of its dots' %}">{% icon "arrow-right" %}<span class="wn-hide-xs">{% translate "Connect" %}</span></button>
+        <button type="button" class="icon-btn" @click="duplicate()" :disabled="!sel.length" aria-label="{% translate 'Duplicate' %}" data-tip="{% translate 'Duplicate (Ctrl+D)' %}">{% icon "copy" %}</button>
+        <button type="button" class="icon-btn is-danger" @click="removeSelected()" :disabled="!sel.length && !edgeSel" aria-label="{% translate 'Delete' %}" data-tip="{% translate 'Delete (Del)' %}">{% icon "trash" %}</button>
+      </div>
+      <label class="wsb-snap"><input type="checkbox" x-model="snap"> {% translate "Snap to grid" %}</label>
+    </div>
+    <div class="wdx-canvas wsb-canvas" x-ref="canvas" tabindex="0" :class="connecting && 'is-connecting'" aria-label="{% translate 'System design board' %}" @keydown="key($event)">
+      <div class="wdx-world" x-ref="world">
+        <div class="wsb-zones" x-ref="zones"></div>
+        <svg class="wsb-links" x-ref="links" aria-hidden="true"></svg>
+        <div class="wsb-nodes" x-ref="nodes"></div>
+      </div>
+      <p class="wsb-empty" x-show="empty" x-cloak>{% icon "server" %}<span>{% translate "Add parts from the left — users, a load balancer, services, a database — then drag from a part's dot to another to link them." %}</span></p>
+      <p class="wsb-banner" x-show="connecting" x-cloak x-text="texts.connectPick"></p>
+    </div>
+    <p class="wdx-hint"><kbd>Del</kbd> {% translate "delete" %} · <kbd>Ctrl</kbd>+<kbd>D</kbd> {% translate "duplicate" %} · <kbd>←↑→↓</kbd> {% translate "nudge" %} · <kbd>Enter</kbd> {% translate "rename" %} · {% translate "Shift-click to pick several. Dashed links are asynchronous (a queue, an event)." %}</p>
+  </section>
+
+  <aside class="wsb-side card">
+    <nav class="seg seg-sm wsb-tabs" aria-label="{% translate 'Panel' %}">
+      <button type="button" class="seg-item" :class="tab === 'item' && 'is-active'" @click="tab = 'item'">{% translate "Selected" %}</button>
+      <button type="button" class="seg-item" :class="tab === 'est' && 'is-active'" @click="tab = 'est'">{% icon "calc" %}{% translate "Estimates" %}</button>
+      <button type="button" class="seg-item" :class="tab === 'notes' && 'is-active'" @click="tab = 'notes'">{% icon "note" %}{% translate "Notes" %}</button>
+    </nav>
+
+    {# ── the picked part or link ── #}
+    <div class="wsb-panel" x-show="tab === 'item'">
+      <template x-if="node">
+        <div class="wsb-form">
+          <p class="wsb-panel-title"><span class="wsb-part-ico" x-html="iconOf(node.type)"></span><span x-text="texts.parts[node.type] || node.type"></span></p>
+          <label class="label" for="sb-label">{% translate "Name" %}</label>
+          <input id="sb-label" class="form-input input-compact" x-model="node.label" @input="changed(false)" @change="commit()" maxlength="120">
+          <template x-if="node.type !== 'zone' && node.type !== 'note'"><div>
+            <label class="label" for="sb-tech">{% translate "Built with" %}</label>
+            <input id="sb-tech" class="form-input input-compact" x-model="node.tech" @input="changed(false)" @change="commit()" maxlength="120" placeholder="{% translate 'PostgreSQL, Redis, Kafka…' %}">
+          </div></template>
+          <label class="label" for="sb-type">{% translate "Kind" %}</label>
+          <select id="sb-type" class="form-input input-compact" x-model="node.type" @change="retype()" data-native>
+            {% for type, name in parts %}<option value="{{ type }}">{{ name }}</option>{% endfor %}
+          </select>
+          <p class="label">{% translate "Colour" %}</p>
+          <div class="wsb-colors">
+            <button type="button" class="wdx-swatch is-auto" :class="!node.color && 'is-on'" @click="node.color = ''; commit()" aria-label="{% translate 'Automatic' %}">A</button>
+            <template x-for="c in colors" :key="c"><button type="button" class="wdx-swatch" :class="node.color === c && 'is-on'" :style="'background:' + c" @click="node.color = c; commit()" :aria-label="c"></button></template>
+          </div>
+          <label class="label" for="sb-note">{% translate "What it does" %}</label>
+          <textarea id="sb-note" class="form-input" rows="3" x-model="node.note" @input="changed(false)" @change="commit()" placeholder="{% translate 'Responsibilities, why this choice, limits…' %}"></textarea>
+          <div class="wsb-row"><button type="button" class="btn btn-secondary btn-sm" @click="startConnect()">{% icon "arrow-right" %}{% translate "Connect to…" %}</button><button type="button" class="btn btn-ghost btn-sm is-danger" @click="removeSelected()">{% icon "trash" %}{% translate "Delete" %}</button></div>
+        </div>
+      </template>
+      <template x-if="edge">
+        <div class="wsb-form">
+          <p class="wsb-panel-title">{% icon "arrow-right" %}<span x-text="edgeTitle()"></span></p>
+          <label class="label" for="sb-elabel">{% translate "Label" %}</label>
+          <input id="sb-elabel" class="form-input input-compact" x-model="edge.label" @input="changed(false)" @change="commit()" maxlength="80" placeholder="{% translate 'HTTPS, gRPC, publish, read…' %}">
+          <p class="label">{% translate "Kind of call" %}</p>
+          <div class="seg seg-sm"><button type="button" class="seg-item" :class="edge.style !== 'dashed' && 'is-active'" @click="edge.style = 'solid'; commit()">{% translate "Waits for an answer" %}</button><button type="button" class="seg-item" :class="edge.style === 'dashed' && 'is-active'" @click="edge.style = 'dashed'; commit()">{% translate "Fire and forget" %}</button></div>
+          <p class="label">{% translate "Arrows" %}</p>
+          <div class="seg seg-sm"><button type="button" class="seg-item" :class="edge.arrow === 'end' && 'is-active'" @click="edge.arrow = 'end'; commit()">→</button><button type="button" class="seg-item" :class="edge.arrow === 'both' && 'is-active'" @click="edge.arrow = 'both'; commit()">↔</button><button type="button" class="seg-item" :class="edge.arrow === 'none' && 'is-active'" @click="edge.arrow = 'none'; commit()">—</button></div>
+          <div class="wsb-row"><button type="button" class="btn btn-secondary btn-sm" @click="reverseEdge()">⇄ {% translate "Turn around" %}</button><button type="button" class="btn btn-ghost btn-sm is-danger" @click="removeSelected()">{% icon "trash" %}{% translate "Delete" %}</button></div>
+        </div>
+      </template>
+      <template x-if="!node && !edge">
+        <div class="wsb-none">
+          <p x-show="sel.length > 1"><b x-text="sel.length"></b> {% translate "parts picked" %}</p>
+          <dl class="wsb-stats"><div><dt>{% translate "Parts" %}</dt><dd x-text="count.nodes"></dd></div><div><dt>{% translate "Links" %}</dt><dd x-text="count.edges"></dd></div></dl>
+          <p class="wsb-tip">{% translate "Pick a part to name it, say what it's built with and what it does. Pick a link to label it." %}</p>
+        </div>
+      </template>
+    </div>
+
+    {# ── back-of-the-envelope numbers ── #}
+    <div class="wsb-panel" x-show="tab === 'est'" x-cloak>
+      <p class="wsb-tip">{% translate "Back-of-the-envelope numbers for the design. Change any box." %}</p>
+      <div class="wsb-est">
+        <label>{% translate "Daily active users" %}<input type="number" min="0" step="any" class="form-input input-compact" x-model.number="est.dau" @input="estChanged()"></label>
+        <label>{% translate "Requests per user per day" %}<input type="number" min="0" step="any" class="form-input input-compact" x-model.number="est.rpu" @input="estChanged()"></label>
+        <label>{% translate "Reads for each write" %}<input type="number" min="0" step="any" class="form-input input-compact" x-model.number="est.rw" @input="estChanged()"></label>
+        <label>{% translate "Size of one write (KB)" %}<input type="number" min="0" step="any" class="form-input input-compact" x-model.number="est.size" @input="estChanged()"></label>
+        <label>{% translate "Peak is busier by (×)" %}<input type="number" min="1" step="any" class="form-input input-compact" x-model.number="est.peak" @input="estChanged()"></label>
+        <label>{% translate "Keep data for (years)" %}<input type="number" min="0" step="any" class="form-input input-compact" x-model.number="est.years" @input="estChanged()"></label>
+        <label>{% translate "Copies of the data" %}<input type="number" min="1" step="1" class="form-input input-compact" x-model.number="est.copies" @input="estChanged()"></label>
+      </div>
+      <dl class="wsb-out">
+        <div><dt>{% translate "Requests a second" %}</dt><dd x-text="out.qps"></dd></div>
+        <div><dt>{% translate "At the peak" %}</dt><dd x-text="out.peakQps"></dd></div>
+        <div><dt>{% translate "Writes a second" %}</dt><dd x-text="out.wqps"></dd></div>
+        <div><dt>{% translate "Reads a second" %}</dt><dd x-text="out.rqps"></dd></div>
+        <div><dt>{% translate "New data a day" %}</dt><dd x-text="out.perDay"></dd></div>
+        <div><dt>{% translate "Storage in total" %}</dt><dd x-text="out.total"></dd></div>
+        <div><dt>{% translate "Data in (writes)" %}</dt><dd x-text="out.inBw"></dd></div>
+        <div><dt>{% translate "Data out (reads)" %}</dt><dd x-text="out.outBw"></dd></div>
+      </dl>
+      <button type="button" class="btn btn-secondary btn-sm" @click="estToNotes()">{% icon "note" %}{% translate "Add these to the notes" %}</button>
+    </div>
+
+    {# ── design notes ── #}
+    <div class="wsb-panel" x-show="tab === 'notes'" x-cloak x-data="{ show: false }">
+      <div class="seg seg-sm"><button type="button" class="seg-item" :class="!show && 'is-active'" @click="show = false">{% translate "Write" %}</button><button type="button" class="seg-item" :class="show && 'is-active'" @click="show = true">{% translate "Preview" %}</button></div>
+      <textarea x-show="!show" x-model="notes" @input="queue({ notes })" class="form-input wsb-notes code-ish" rows="16" aria-label="{% translate 'Notes' %}" placeholder="{% translate 'Requirements, API, data model, trade-offs… Markdown works.' %}"></textarea>
+      <article x-show="show" x-cloak class="wn-md wsb-notes-md" x-html="Work.markdown(notes || '')"></article>
+    </div>
+  </aside>
+</div>

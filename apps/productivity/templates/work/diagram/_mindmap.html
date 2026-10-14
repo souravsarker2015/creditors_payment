@@ -1,0 +1,47 @@
+{% load i18n work %}{% comment %}Mind map editor. Drawn and driven by `mindMap` in static/js/diagrams.js.{% endcomment %}
+<section class="wdx-stage wmm" x-data="mindMap" data-own-keys>
+  <div class="wdx-tools" role="toolbar" aria-label="{% translate 'Mind map tools' %}">
+    <div class="wdx-group">
+      <button type="button" class="icon-btn" @click="addChild()" aria-label="{% translate 'Add an idea under it' %}" data-tip="{% translate 'Add an idea under it (Tab)' %}">{% icon "branch" %}</button>
+      <button type="button" class="icon-btn" @click="addSibling()" :disabled="isRoot" aria-label="{% translate 'Add an idea next to it' %}" data-tip="{% translate 'Add an idea next to it (Enter)' %}">{% icon "sibling" %}</button>
+      <button type="button" class="icon-btn" @click="edit()" aria-label="{% translate 'Edit the text' %}" data-tip="{% translate 'Edit the text (Space or double-click)' %}">{% icon "edit" %}</button>
+      <button type="button" class="icon-btn" @click="fold()" :disabled="!hasKids" aria-label="{% translate 'Fold or unfold' %}" data-tip="{% translate 'Fold or unfold (/)' %}"><span class="wdx-fold" x-text="folded ? '+' : '−'"></span></button>
+      <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false">
+        <button type="button" class="icon-btn" @click="open = !open" :aria-expanded="open" aria-label="{% translate 'Colour' %}" data-tip="{% translate 'Colour of this branch' %}"><span class="wmm-dot" :style="'background:' + selColor"></span></button>
+        <div class="menu wdx-swatches" x-show="open" x-cloak @click="open = false">
+          <template x-for="c in colors" :key="c"><button type="button" class="wdx-swatch" :style="'background:' + c" @click="setColor(c)" :aria-label="c"></button></template>
+          <button type="button" class="wdx-swatch is-auto" @click="setColor('')" aria-label="{% translate 'Automatic' %}">A</button>
+        </div>
+      </div>
+      <button type="button" class="icon-btn is-danger" @click="remove()" :disabled="isRoot" aria-label="{% translate 'Delete' %}" data-tip="{% translate 'Delete with what is under it (Delete)' %}">{% icon "trash" %}</button>
+    </div>
+    <div class="wdx-group">
+      <button type="button" class="icon-btn" @click="undo()" :disabled="!canUndo" aria-label="{% translate 'Undo' %}" data-tip="{% translate 'Undo (Ctrl+Z)' %}">{% icon "undo" %}</button>
+      <button type="button" class="icon-btn" @click="redo()" :disabled="!canRedo" aria-label="{% translate 'Redo' %}" data-tip="{% translate 'Redo (Ctrl+Shift+Z)' %}">{% icon "redo" %}</button>
+    </div>
+    <div class="wdx-group">
+      <button type="button" class="icon-btn" @click="view.zoomBy(1 / 1.2)" aria-label="{% translate 'Zoom out' %}">{% icon "zoom-out" %}</button>
+      <button type="button" class="wdx-zoom" @click="fit()" data-tip="{% translate 'Fit to screen (0)' %}" x-text="zoom + '%'"></button>
+      <button type="button" class="icon-btn" @click="view.zoomBy(1.2)" aria-label="{% translate 'Zoom in' %}">{% icon "zoom-in" %}</button>
+    </div>
+    <div class="wdx-group wdx-group-end">
+      <button type="button" class="btn btn-ghost btn-sm" @click="makeTasks()" data-tip="{% translate 'Each idea under the picked one becomes a task' %}">{% icon "check" %}<span class="wn-hide-xs">{% translate "Make tasks" %}</span></button>
+      <button type="button" class="btn btn-ghost btn-sm" @click="importOpen = true; $nextTick(() => $refs.paste.focus())" data-tip="{% translate 'Turn a pasted list into a mind map' %}">{% icon "upload" %}<span class="wn-hide-xs">{% translate "Paste a list" %}</span></button>
+    </div>
+  </div>
+  <div class="wdx-canvas" x-ref="canvas" tabindex="0" aria-label="{% translate 'Mind map. Arrow keys move between ideas.' %}" @keydown="key($event)">
+    <div class="wdx-world" x-ref="world">
+      <svg class="wmm-links" x-ref="links" aria-hidden="true"></svg>
+      <div class="wmm-nodes" x-ref="nodes"></div>
+    </div>
+  </div>
+  <p class="wdx-hint"><kbd>Tab</kbd> {% translate "idea under it" %} · <kbd>Enter</kbd> {% translate "idea next to it" %} · <kbd>Space</kbd> {% translate "edit" %} · <kbd>/</kbd> {% translate "fold" %} · <kbd>Del</kbd> {% translate "delete" %} · {% translate "Drag an idea onto another to move it. Drag the background to look around; pinch or Ctrl+scroll to zoom." %}</p>
+
+  <div class="wc-backdrop" x-show="importOpen" x-cloak x-transition.opacity @click="importOpen = false"></div>
+  <section class="wc" x-show="importOpen" x-cloak x-transition @keydown.escape.stop="importOpen = false" role="dialog" aria-modal="true" aria-labelledby="mm-import-title">
+    <h2 id="mm-import-title" class="card-title">{% translate "Paste a list" %}</h2>
+    <p class="wc-hint">{% translate "One idea per line. Indent (or use “- ” lists) to put ideas under others. A first line like “# Title” becomes the centre." %}</p>
+    <textarea x-ref="paste" x-model="importText" class="form-input wc-area code-ish" rows="9" placeholder="# Holiday&#10;- Where&#10;  - Sylhet&#10;  - Cox's Bazar&#10;- Budget&#10;- Dates"></textarea>
+    <div class="wc-foot"><span class="spacer"></span><button type="button" class="btn btn-ghost" @click="importOpen = false">{% translate "Cancel" %}</button><button type="button" class="btn btn-primary" @click="importOutline()">{% translate "Make the mind map" %}</button></div>
+  </section>
+</section>

@@ -7,7 +7,7 @@ from urllib.parse import urlencode
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Count, Q, prefetch_related_objects
+from django.db.models import BooleanField, Count, ExpressionWrapper, Q, prefetch_related_objects
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -16,15 +16,16 @@ from django.utils.dateparse import parse_date
 from django.utils.formats import date_format
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
+from django.views.decorators.http import require_POST
 
 from apps.trash.undo import delete_with_undo
 
-from . import services
+from . import diagrams, services
 from .api import entry_json
 from .access import can_use, work_required
 from .forms import EntryForm, GoalForm, HabitForm, LearningForm, ProjectForm, SettingsForm, SnippetForm, TagForm, TaskForm
 from .models import (
-    Goal, GoalStatus, Habit, JournalEntry, Language, LearningItem, LearningKind, LearningStatus, LearningUnit, Note, Priority, Project, Snippet,
+    Diagram, DiagramKind, Goal, GoalStatus, Habit, JournalEntry, Language, LearningItem, LearningKind, LearningStatus, LearningUnit, Note, Priority, Project, Snippet,
     Status, Tag, Task, TimeEntry, WorkSettings,
 )
 
@@ -55,6 +56,7 @@ def _urls():
         "learning_new": r("work:learning_new"), "snippet_new": r("work:snippet_new"), "export": r("work:export"),
         "learningBase": "/work/api/learning/", "goalBase": "/work/api/goals/",
         "plan": r("work:plan"), "planAction": r("work:api_plan"), "week": r("work:week"), "noteGo": r("work:note_go"),
+        "diagrams": r("work:diagrams"), "diagramBase": "/work/api/diagrams/",
     }
 
 
@@ -77,7 +79,7 @@ def _texts():
         "tasksMade": _("Tasks made"), "openTasks": _("See them"), "tomorrow": _("Tomorrow"),
         "error": _("Couldn't save. Try again."), "later": _("Moved to"),
         "kinds": {"task": _("Task"), "note": _("Note"), "project": _("Project"), "goal": _("Goal"), "learning": _("Learning"),
-                  "snippet": _("Snippet")},
+                  "snippet": _("Snippet"), "diagram": _("Diagram")},
     }
 
 
@@ -102,6 +104,7 @@ def _commands():
         ("reports", _("Reports"), "chart", "work:reports", "g r", "stats charts"),
         ("notes", _("Notes"), "note", "work:notes", "g n", ""),
         ("snippets", _("Snippets"), "code", "work:snippets", "g s", "code"),
+        ("diagrams", _("Diagrams"), "diagram", "work:diagrams", "g m", "mind map mindmap system design architecture flowchart sequence er uml whiteboard"),
         ("settings", _("Timer, focus & sounds"), "key", "work:settings", "g ,", "settings preferences tags"),
     ]
     out = [{"id": "go-" + key, "title": title, "icon": icon, "url": r(name) if name else r("work:tasks") + "?view=board",
@@ -109,6 +112,8 @@ def _commands():
     out += [
         {"id": "new-task", "title": _("New task"), "icon": "plus", "action": "capture:task", "hint": "c", "words": "add create"},
         {"id": "new-note", "title": _("New note"), "icon": "note", "action": "capture:note", "hint": "n", "words": "add create write"},
+        {"id": "new-mindmap", "title": _("New mind map"), "icon": "mindmap", "url": r("work:diagrams") + "?start=mindmap", "words": "add create brainstorm diagram"},
+        {"id": "new-system", "title": _("New system design"), "icon": "server", "url": r("work:diagrams") + "?start=system", "words": "add create architecture diagram board"},
         {"id": "start", "title": _("Start the timer"), "icon": "play", "action": "capture:time", "hint": "s", "words": "track", "when": "idle"},
         {"id": "stop", "title": _("Stop the timer"), "icon": "stop", "action": "timer:stop", "hint": "s", "words": "track", "when": "running"},
         {"id": "wrapup", "title": _("Wrap up the day"), "icon": "sun", "url": r("work:wrapup"), "words": "shutdown end of day evening plan tomorrow"},
@@ -387,6 +392,7 @@ def project_view(request, pk):
         "entries": TimeEntry.objects.filter(owner=user, project=project).select_related("task", "project").prefetch_related("tags")[:20],
         "goals": services.with_progress(project.goals.filter(status=GoalStatus.ACTIVE)),
         "notes": Note.objects.filter(owner=user, project=project, is_archived=False)[:10],
+        "diagrams": Diagram.objects.filter(owner=user, project=project, is_archived=False).only("pk", "title", "kind", "updated_at")[:8],
         "today": today,
     })
 
@@ -520,6 +526,141 @@ def note_go_view(request):
     if note:
         return redirect("work:note", pk=note.pk)
     return redirect(reverse("work:notes") + "?" + urlencode({"new": "1", "title": title}))
+
+
+# ── Diagrams ──────────────────────────────────────────────────────────────
+# What each kind is for, shown on the "start something new" tiles.
+DIAGRAM_KINDS = [
+    (DiagramKind.MINDMAP, "mindmap", gettext_lazy("Ideas around one centre. Tab adds a branch, Enter a sibling.")),
+    (DiagramKind.SYSTEM, "server", gettext_lazy("Services, databases, caches and queues, linked up — with the numbers.")),
+    (DiagramKind.FLOWCHART, "flow", gettext_lazy("Steps and decisions.")),
+    (DiagramKind.SEQUENCE, "sequence", gettext_lazy("Who calls whom, in order.")),
+    (DiagramKind.ER, "database", gettext_lazy("Tables, keys and how they relate.")),
+    (DiagramKind.CLASS, "class", gettext_lazy("Classes, fields and methods.")),
+    (DiagramKind.STATE, "state", gettext_lazy("The states something moves through.")),
+    (DiagramKind.GANTT, "gantt", gettext_lazy("Tasks on a calendar.")),
+    (DiagramKind.TIMELINE, "timeline", gettext_lazy("Events in time.")),
+    (DiagramKind.JOURNEY, "journey", gettext_lazy("A person's steps and how each feels.")),
+]
+DIAGRAM_ICON = {k: icon for k, icon, _h in DIAGRAM_KINDS}
+
+
+@work_required
+def diagrams_view(request):
+    user = request.user
+    kind, q = request.GET.get("kind", ""), request.GET.get("q", "").strip()
+    archived = request.GET.get("archived") == "1"
+    mine = Diagram.objects.filter(owner=user)
+    qs = (mine.filter(is_archived=archived).select_related("project").defer("source", "data", "notes", "preview")
+          .annotate(has_preview=ExpressionWrapper(~Q(preview=""), output_field=BooleanField())))
+    if kind in DiagramKind.values:
+        qs = qs.filter(kind=kind)
+    if q:
+        qs = qs.filter(Q(title__icontains=q) | Q(notes__icontains=q) | Q(source__icontains=q))
+    project = request.GET.get("project", "")
+    if project.isdigit():
+        qs = qs.filter(project_id=int(project))
+    counts = dict(mine.filter(is_archived=False).values_list("kind").annotate(n=Count("id")))
+    starts = diagrams.templates()
+    tiles = [{"kind": k, "label": k.label, "icon": icon, "hint": hint, "templates": starts.get(k, []), "count": counts.get(k, 0)}
+             for k, icon, hint in DIAGRAM_KINDS]
+    return render_work(request, "work/diagrams.html", {
+        "diagrams": qs[:300], "tiles": tiles, "kind": kind, "q": q, "archived": archived, "project": project,
+        "total": sum(counts.values()), "icons": DIAGRAM_ICON,
+        "projects": Project.objects.filter(owner=user, is_archived=False),
+    })
+
+
+@work_required
+@require_POST
+def diagram_new_view(request):
+    kind = request.POST.get("kind", "")
+    if kind not in DiagramKind.values:
+        raise Http404
+    title, source, data, notes = diagrams.start(kind, request.POST.get("template", "blank"))
+    project = Project.objects.filter(owner=request.user, pk=request.POST.get("project") or 0).first()
+    d = Diagram.objects.create(owner=request.user, kind=kind, title=title[:200], source=source, data=data, notes=notes, project=project)
+    return redirect("work:diagram", pk=d.pk)
+
+
+# The parts a system design board is built from: (type, name). Their pictures are in static/js/diagrams.js.
+BOARD_PARTS = [
+    ("client", gettext_lazy("Users")), ("mobile", gettext_lazy("Phone app")), ("web", gettext_lazy("Web app")),
+    ("dns", gettext_lazy("DNS")), ("cdn", gettext_lazy("CDN")), ("lb", gettext_lazy("Load balancer")),
+    ("gateway", gettext_lazy("API gateway")), ("service", gettext_lazy("Service")), ("worker", gettext_lazy("Worker")),
+    ("function", gettext_lazy("Function")), ("auth", gettext_lazy("Auth")), ("db", gettext_lazy("SQL database")),
+    ("nosql", gettext_lazy("NoSQL store")), ("cache", gettext_lazy("Cache")), ("queue", gettext_lazy("Queue")),
+    ("stream", gettext_lazy("Event stream")), ("storage", gettext_lazy("File storage")), ("search", gettext_lazy("Search")),
+    ("analytics", gettext_lazy("Analytics")), ("external", gettext_lazy("Outside service")), ("monitor", gettext_lazy("Monitoring")),
+    ("note", gettext_lazy("Sticky note")), ("zone", gettext_lazy("Zone / group")),
+]
+
+
+def _snippets(kind):
+    """Buttons above a text diagram that put in a piece of Mermaid: (label, text)."""
+    k = DiagramKind
+    table = {
+        k.FLOWCHART: [(_("Box"), "\n    id[Text]"), (_("Rounded"), "\n    id([Text])"), (_("Question"), "\n    id{Question?}"),
+                      (_("Arrow"), " --> "), (_("Arrow with words"), " -- words --> "), (_("Dotted arrow"), " -.-> "),
+                      (_("Group"), "\n    subgraph Name\n        \n    end")],
+        k.SEQUENCE: [(_("Person"), "\n    actor P as Person"), (_("Part"), "\n    participant S as Service"), (_("Call"), "\n    A->>B: Request"),
+                     (_("Answer"), "\n    B-->>A: Response"), (_("Note"), "\n    Note over A,B: Text"), (_("Loop"), "\n    loop Every minute\n        A->>B: Ping\n    end"),
+                     (_("Either / or"), "\n    alt Success\n        B-->>A: OK\n    else Failure\n        B-->>A: Error\n    end")],
+        k.ER: [(_("Table"), "\n    TABLE {\n        int id PK\n        string name\n    }"), (_("One to many"), "\n    A ||--o{ B : has"),
+               (_("One to one"), "\n    A ||--|| B : is"), (_("Many to many"), "\n    A }o--o{ B : links")],
+        k.CLASS: [(_("Class"), "\n    class Name {\n        +field\n        +method()\n    }"), (_("Inherits"), "\n    Parent <|-- Child"),
+                  (_("Contains"), "\n    Whole *-- Part"), (_("Uses"), "\n    A --> B")],
+        k.STATE: [(_("State"), "\n    Name"), (_("Change"), "\n    A --> B: why"), (_("Start"), "\n    [*] --> A"), (_("End"), "\n    A --> [*]"),
+                  (_("Group"), "\n    state Name {\n        [*] --> Inner\n    }")],
+        k.GANTT: [(_("Section"), "\n    section Name"), (_("Task"), "\n    Task name :t1, after a1, 3d"), (_("Milestone"), "\n    Milestone :milestone, after t1, 0d")],
+        k.TIMELINE: [(_("Period"), "\n    2026 : What happened"), (_("Section"), "\n    section Name")],
+        k.JOURNEY: [(_("Section"), "\n    section Name"), (_("Step"), "\n      Step: 3: Person")],
+    }
+    return table.get(kind, [])
+
+
+def _diagram_texts(kind=""):
+    return {
+        "kindLabel": str(DiagramKind(kind).label) if kind in DiagramKind.values else "",
+        "snips": _snippets(kind),
+        "saving": _("Saving…"), "saved": _("Saved"), "editing": _("Editing…"), "offline": _("Saved on this device"), "error": _("Not saved"),
+        "newIdea": _("New idea"), "copied": _("Copied"), "exported": _("Downloaded"),
+        "deleted": _("Diagram deleted"), "tasksMade": _("Tasks made"), "seeTasks": _("See them"),
+        "pickIdea": _("Pick an idea first."), "importEmpty": _("Paste a list first: one idea per line, indent to go deeper."),
+        "connectPick": _("Now tap the part to connect to."), "nothing": _("There is nothing to export yet."),
+        "badSyntax": _("There is a mistake in the text"), "noMermaid": _("The diagram drawing tool could not load. Check the internet connection."),
+        "replaceMap": _("Replace this mind map with the pasted list? You can undo it."),
+        "parts": {k: str(v) for k, v in BOARD_PARTS},
+    }
+
+
+@work_required
+def diagram_view(request, pk):
+    d = get_object_or_404(Diagram.objects.select_related("project"), pk=pk, owner=request.user)
+    payload = {"id": d.pk, "title": d.title, "kind": d.kind, "source": d.source, "data": d.data, "notes": d.notes,
+               "project": str(d.project_id or ""), "saved": timezone.localtime(d.updated_at).strftime("%H:%M"),
+               "updated": int(d.updated_at.timestamp() * 1000), "pinned": d.is_pinned,
+               "hasPreview": bool(d.preview)}
+    return render_work(request, "work/diagram.html", {
+        "diagram": d, "payload": payload, "icon": DIAGRAM_ICON.get(d.kind, "diagram"), "texts": _diagram_texts(d.kind), "parts": BOARD_PARTS,
+        "projects": Project.objects.filter(owner=request.user, is_archived=False),
+        "kinds": [(k, k.label) for k in DiagramKind if k not in (DiagramKind.MINDMAP, DiagramKind.SYSTEM)],
+    })
+
+
+@work_required
+def diagram_preview_view(request, pk):
+    """The list's picture of a diagram. It's an SVG the page drew, so it is
+    sent with scripts, links and anything outside it switched off."""
+    d = get_object_or_404(Diagram.objects.only("preview", "owner_id", "updated_at"), pk=pk, owner=request.user)
+    if not d.preview:
+        raise Http404
+    response = HttpResponse(d.preview, content_type="image/svg+xml; charset=utf-8")
+    response["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'; img-src data:; font-src data:; sandbox"
+    response["X-Content-Type-Options"] = "nosniff"
+    # the address carries ?v=<last saved>, so a copy can be kept until the diagram changes
+    response["Cache-Control"] = "private, max-age=31536000, immutable" if request.GET.get("v") else "private, no-cache"
+    return response
 
 
 # ── Snippets ──────────────────────────────────────────────────────────────

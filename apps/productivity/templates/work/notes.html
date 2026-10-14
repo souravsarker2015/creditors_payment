@@ -108,7 +108,7 @@
           </template>
         </ul>
       </div>
-      <article x-show="preview" x-cloak class="wn-md" x-html="html" x-effect="preview && $nextTick(() => window.hljs && $el.querySelectorAll('pre code').forEach(c => hljs.highlightElement(c)))"></article>
+      <article x-show="preview" x-cloak class="wn-md" x-html="html" x-effect="html; preview && $nextTick(() => { Work.mermaidIn($el); window.hljs && $el.querySelectorAll('pre code:not(.language-mermaid)').forEach(c => hljs.highlightElement(c)); })"></article>
       <p class="wn-stats" x-show="words" x-cloak><span x-text="words + ' ' + (words === 1 ? '{% translate "word" %}' : '{% translate "words" %}')"></span> · <span x-text="'~' + readMins + ' {% translate "min read" %}'"></span><template x-if="todoTotal"><span> · <span x-text="todoDone + '/' + todoTotal"></span> {% translate "to-dos done" %}</span></template></p>
       {% if backlinks %}
       <aside class="wn-backlinks">

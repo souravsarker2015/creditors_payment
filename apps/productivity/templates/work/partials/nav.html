@@ -27,6 +27,7 @@
 <div class="space-y-0.5">
   <p class="nav-section-label">{% translate "Know-how" %}</p>
   <a href="{% url 'work:notes' %}" class="nav-link {% if '/work/notes/' in p %}is-active{% endif %}">{% icon "note" %}{% translate "Notes" %}</a>
+  <a href="{% url 'work:diagrams' %}" class="nav-link {% if '/work/diagrams/' in p %}is-active{% endif %}">{% icon "diagram" %}{% translate "Diagrams" %}</a>
   <a href="{% url 'work:snippets' %}" class="nav-link {% if '/work/snippets/' in p %}is-active{% endif %}">{% icon "code" %}{% translate "Snippets" %}</a>
 </div>
 <div class="space-y-0.5">

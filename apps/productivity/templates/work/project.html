@@ -47,6 +47,11 @@
       <header class="card-header"><h2 class="card-title">{% translate "Recent time" %}</h2><a href="{% url 'work:reports' %}" class="btn btn-ghost btn-sm">{% translate "Reports" %}</a></header>
       {% if entries %}<ul class="we-list">{% for e in entries %}{% include "work/partials/entry_row.html" %}{% endfor %}</ul>{% else %}<p class="wd-muted">{% translate "No time tracked on this project yet." %}</p>{% endif %}
     </section>
+    <section class="card">
+      <header class="card-header"><h2 class="card-title">{% translate "Diagrams" %}</h2><a href="{% url 'work:diagrams' %}?project={{ project.pk }}#new" class="btn btn-ghost btn-sm">{% icon "plus" %}{% translate "Add" %}</a></header>
+      {% if diagrams %}<ul class="wd-notes">{% for dg in diagrams %}<li><a href="{% url 'work:diagram' dg.pk %}"><span class="truncate">{{ dg.title }}</span><time>{{ dg.get_kind_display }}</time></a></li>{% endfor %}</ul>
+      {% else %}<p class="wd-muted">{% translate "Mind maps and system designs for this project show here." %}</p>{% endif %}
+    </section>
     {% if notes %}
     <section class="card">
       <header class="card-header"><h2 class="card-title">{% translate "Notes" %}</h2></header>
