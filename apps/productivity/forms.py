@@ -196,7 +196,8 @@ class SettingsForm(forms.ModelForm):
         model = WorkSettings
         fields = ("week_start", "focus_minutes", "short_break_minutes", "long_break_minutes", "long_break_every",
                   "auto_start_breaks", "auto_start_focus", "sound_enabled", "sound", "volume", "tick_sound",
-                  "notifications", "long_timer_hours", "idle_minutes", "default_project", "day_start", "day_end", "cards_remind_at")
+                  "notifications", "long_timer_hours", "idle_minutes", "default_project", "day_start", "day_end", "cards_remind_at",
+                  "daily_email", "reminder_emails")
         widgets = {"volume": forms.NumberInput(attrs={"type": "range", "min": 0, "max": 100, "step": 5}),
                    "day_start": forms.TimeInput(attrs={"type": "time"}, format="%H:%M"),
                    "cards_remind_at": forms.TimeInput(attrs={"type": "time"}, format="%H:%M"),

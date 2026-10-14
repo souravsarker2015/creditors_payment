@@ -60,8 +60,16 @@
           </div>
         </div>
       </div></section>
+    <section class="card" id="emails"><header class="card-header"><div><h2 class="card-title">{% translate "Emails" %}</h2>
+      <p class="card-subtitle">{% if request.user.email %}{% blocktranslate with email=request.user.email %}Sent to {{ email }} — for when the app isn't open.{% endblocktranslate %}{% else %}{% translate "Add an email address to your account to get these." %}{% endif %}</p></div></header>
+      <div class="card-body form-stack">
+        {% with field=form.daily_email %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.reminder_emails %}{% include "partials/field.html" %}{% endwith %}
+        {% if request.user.email %}<div><button type="submit" form="work-test-brief" class="btn btn-secondary btn-sm">{% icon "mail" %}{% translate "Send me today's now" %}</button></div>{% endif %}
+      </div></section>
     <div class="form-actions"><button type="submit" class="btn btn-primary">{% icon "check" %}{% translate "Save settings" %}</button></div>
   </form>
+  <form method="post" id="work-test-brief" hidden>{% csrf_token %}<input type="hidden" name="action" value="test_brief"></form>
 
   <section class="card" id="data"><header class="card-header"><div><h2 class="card-title">{% translate "Your data" %}</h2><p class="card-subtitle">{% translate "Everything in your tracker as one .zip: all data as JSON, plus notes, snippets and journal days as plain files you can open anywhere." %}</p></div></header>
     <div class="card-body !pt-0 flex flex-wrap gap-2">

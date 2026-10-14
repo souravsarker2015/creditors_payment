@@ -1,0 +1,22 @@
+{% load i18n %}<!doctype html>
+<html><body style="margin:0;padding:24px;background:#f5f3ee;font-family:Arial,Helvetica,sans-serif;color:#1f2a24;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;">
+<tr><td style="padding:24px 24px 8px;">
+  <p style="margin:0;font-size:13px;color:#6b7280;">{{ b.today|date:"l, j F Y" }}</p>
+  <h1 style="margin:4px 0 0;font-size:22px;">{% blocktranslate with name=user.get_short_name|default:user.get_username %}Your day, {{ name }}{% endblocktranslate %}</h1>
+  <p style="margin:6px 0 0;font-size:15px;color:#374151;">{{ b.headline }}</p>
+</td></tr>
+{% if b.note %}<tr><td style="padding:12px 24px 0;"><div style="padding:12px 14px;border-radius:8px;background:#e2efe9;font-size:14px;white-space:pre-line;"><strong>{% translate "Your plan:" %}</strong> {{ b.note }}</div></td></tr>{% endif %}
+{% if b.late %}<tr><td style="padding:16px 24px 0;"><h2 style="margin:0 0 6px;font-size:16px;color:#b91c1c;">{% translate "Late" %}</h2>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;">{% for t in b.late %}<tr><td style="padding:5px 0;border-bottom:1px solid #f0eee8;">{% if base %}<a href="{{ base }}{% url 'work:task' t.pk %}" style="color:#1f2a24;text-decoration:none;">{{ t.title }}</a>{% else %}{{ t.title }}{% endif %}{% if t.project %} <span style="color:#6b7280;">· {{ t.project.name }}</span>{% endif %}</td><td align="right" style="padding:5px 0;border-bottom:1px solid #f0eee8;color:#b91c1c;white-space:nowrap;">{{ t.due_date|date:"j M" }}</td></tr>{% endfor %}</table></td></tr>{% endif %}
+{% if b.plan %}<tr><td style="padding:16px 24px 0;"><h2 style="margin:0 0 6px;font-size:16px;">{% translate "On your plan" %}</h2>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;">{% for t in b.plan %}<tr><td width="56" style="padding:5px 0;border-bottom:1px solid #f0eee8;color:#0f5c4d;font-weight:bold;">{{ t.scheduled_at|time:"H:i" }}</td><td style="padding:5px 0;border-bottom:1px solid #f0eee8;">{{ t.title }}{% if t.estimate_minutes %} <span style="color:#6b7280;">· {{ t.estimate_minutes }} {% translate "min" %}</span>{% endif %}</td></tr>{% endfor %}</table></td></tr>{% endif %}
+{% if b.today_tasks %}<tr><td style="padding:16px 24px 0;"><h2 style="margin:0 0 6px;font-size:16px;">{% translate "Today" %}</h2>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;">{% for t in b.today_tasks %}<tr><td style="padding:5px 0;border-bottom:1px solid #f0eee8;">☐ {% if base %}<a href="{{ base }}{% url 'work:task' t.pk %}" style="color:#1f2a24;text-decoration:none;">{{ t.title }}</a>{% else %}{{ t.title }}{% endif %}{% if t.project %} <span style="color:#6b7280;">· {{ t.project.name }}</span>{% endif %}</td></tr>{% endfor %}</table></td></tr>{% endif %}
+{% if b.reminders %}<tr><td style="padding:16px 24px 0;"><h2 style="margin:0 0 6px;font-size:16px;">{% translate "Reminders today" %}</h2>
+<p style="margin:0;font-size:14px;line-height:1.7;">{% for t in b.reminders %}⏰ {{ t.remind_at|time:"H:i" }} — {{ t.title }}<br>{% endfor %}</p></td></tr>{% endif %}
+{% if b.habits or b.cards_due %}<tr><td style="padding:16px 24px 0;"><h2 style="margin:0 0 6px;font-size:16px;">{% translate "Also today" %}</h2>
+<p style="margin:0;font-size:14px;line-height:1.7;">{% for h in b.habits %}{{ h.emoji }} {{ h.name }}<br>{% endfor %}{% if b.cards_due %}🗂️ {% if base %}<a href="{{ base }}{{ review_url }}" style="color:#0f5c4d;">{% endif %}{% blocktranslate count counter=b.cards_due %}{{ counter }} flashcard to review{% plural %}{{ counter }} flashcards to review{% endblocktranslate %}{% if base %}</a>{% endif %}{% endif %}</p></td></tr>{% endif %}
+<tr><td style="padding:20px 24px 24px;">{% if base %}<a href="{{ base }}{{ today_url }}" style="display:inline-block;padding:10px 16px;border-radius:8px;background:#0f5c4d;color:#ffffff;text-decoration:none;font-weight:bold;">{% translate "Open Today" %}</a>{% endif %}
+<p style="margin:16px 0 0;font-size:12px;color:#9ca3af;">{% translate "You get this because you turned on “Email me my day”. Turn it off in Productivity → Timer, focus & sounds." %}</p></td></tr>
+</table></body></html>

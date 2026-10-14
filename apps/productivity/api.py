@@ -567,6 +567,42 @@ def note_versions(request, pk):
     return ok(versions=out)
 
 
+# Pictures in notes: only these, checked by their first bytes (an SVG could carry a script, so it's not allowed).
+IMAGE_KINDS = {b"\x89PNG\r\n\x1a\n": ".png", b"\xff\xd8\xff": ".jpg", b"GIF87a": ".gif", b"GIF89a": ".gif"}
+IMAGE_MAX_MB = 8
+
+
+def _image_ext(head):
+    if head[:4] == b"RIFF" and head[8:12] == b"WEBP":
+        return ".webp"
+    return next((ext for magic, ext in IMAGE_KINDS.items() if head.startswith(magic)), None)
+
+
+@work_required
+@require_POST
+def image_upload(request):
+    """A picture pasted, dropped or picked into a note (or any Markdown box). Returns its private address."""
+    from .models import NoteImage
+
+    f = request.FILES.get("image")
+    if not f:
+        return bad(_("Choose a picture."))
+    if f.size > IMAGE_MAX_MB * 1024 * 1024:
+        return bad(_("The picture is too big (over %(mb)s MB).") % {"mb": IMAGE_MAX_MB})
+    head = f.read(16)
+    f.seek(0)
+    ext = _image_ext(head)
+    if ext is None:
+        return bad(_("Only PNG, JPEG, GIF or WebP pictures can go in a note."))
+    name = (request.POST.get("name") or f.name or "").strip()[:200]
+    f.name = "image" + ext
+    note = Note.objects.filter(owner=request.user, pk=request.POST.get("note") or 0).first()
+    img = NoteImage.objects.create(owner=request.user, note=note, file=f, name=name, size=f.size)
+    url = reverse("work:note_image", args=[img.pk])
+    alt = name.rsplit(".", 1)[0].replace("[", "").replace("]", "") or _("picture")
+    return ok(id=img.pk, url=url, markdown=f"![{alt}]({url})")
+
+
 @work_required
 @require_GET
 def cards_due(request):

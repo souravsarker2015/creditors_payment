@@ -20080,3 +20080,129 @@ msgstr "যা বাকি তা রিভিউ করুন"
 
 msgid "Think it through"
 msgstr "ভেবে দেখুন"
+
+msgid "Choose a picture."
+msgstr "একটি ছবি বেছে নিন।"
+
+#, python-format
+msgid "The picture is too big (over %(mb)s MB)."
+msgstr "ছবিটি অনেক বড় (%(mb)s MB-এর বেশি)।"
+
+msgid "Only PNG, JPEG, GIF or WebP pictures can go in a note."
+msgstr "নোটে শুধু PNG, JPEG, GIF বা WebP ছবি রাখা যায়।"
+
+msgid "picture"
+msgstr "ছবি"
+
+msgid "Email me my day each morning"
+msgstr "প্রতিদিন সকালে আমার দিনের খবর ইমেইল করুন"
+
+msgid "When your work day starts: what's late and due, your plan, reminders, habits and flashcards."
+msgstr "কাজের দিন শুরু হলে: কী দেরি আর কী বাকি, আপনার পরিকল্পনা, রিমাইন্ডার, অভ্যাস আর ফ্ল্যাশকার্ড।"
+
+msgid "Email my task reminders too"
+msgstr "টাস্কের রিমাইন্ডারও ইমেইল করুন"
+
+msgid "So a reminder reaches you even when the app is closed."
+msgstr "যাতে অ্যাপ বন্ধ থাকলেও রিমাইন্ডার আপনার কাছে পৌঁছায়।"
+
+msgid "Add a picture"
+msgstr "ছবি যোগ করুন"
+
+msgid "Add a picture (or paste / drop one)"
+msgstr "ছবি যোগ করুন (বা পেস্ট / টেনে আনুন)"
+
+msgid "Emails"
+msgstr "ইমেইল"
+
+msgid "Add an email address to your account to get these."
+msgstr "এগুলো পেতে আপনার অ্যাকাউন্টে একটি ইমেইল ঠিকানা যোগ করুন।"
+
+msgid "Send me today's now"
+msgstr "আজকেরটা এখনই পাঠান"
+
+#, python-format
+msgid "Sent to %(email)s — for when the app isn't open."
+msgstr "%(email)s-এ পাঠানো হয় — অ্যাপ খোলা না থাকলে কাজে লাগে।"
+
+msgid "Uploading…"
+msgstr "আপলোড হচ্ছে…"
+
+msgid "The picture couldn't be uploaded."
+msgstr "ছবিটি আপলোড করা যায়নি।"
+
+msgid "Pictures need a connection — try again when you're online."
+msgstr "ছবির জন্য ইন্টারনেট লাগে — অনলাইনে এলে আবার চেষ্টা করুন।"
+
+msgid "The email couldn't be sent. Try again later."
+msgstr "ইমেইল পাঠানো যায়নি। পরে আবার চেষ্টা করুন।"
+
+msgid "A clear day"
+msgstr "আজ ফাঁকা দিন"
+
+#, python-format
+msgid "Your day, %(date)s: %(headline)s"
+msgstr "আপনার দিন, %(date)s: %(headline)s"
+
+#, python-format
+msgid "Reminder: %(title)s"
+msgstr "রিমাইন্ডার: %(title)s"
+
+#, python-format
+msgid "%(n)s reminders: %(title)s and more"
+msgstr "%(n)sটি রিমাইন্ডার: %(title)s এবং আরও"
+
+#, python-format
+msgid "%(n)s task today"
+msgid_plural "%(n)s tasks today"
+msgstr[0] "আজ %(n)sটি টাস্ক"
+msgstr[1] "আজ %(n)sটি টাস্ক"
+
+#, python-format
+msgid "%(n)s planned block"
+msgid_plural "%(n)s planned blocks"
+msgstr[0] "%(n)sটি পরিকল্পিত সময়"
+msgstr[1] "%(n)sটি পরিকল্পিত সময়"
+
+#, python-format
+msgid "%(n)s flashcard"
+msgid_plural "%(n)s flashcards"
+msgstr[0] "%(n)sটি ফ্ল্যাশকার্ড"
+msgstr[1] "%(n)sটি ফ্ল্যাশকার্ড"
+
+msgid "Your plan:"
+msgstr "আপনার পরিকল্পনা:"
+
+msgid "On your plan"
+msgstr "আপনার পরিকল্পনায়"
+
+msgid "min"
+msgstr "মিনিট"
+
+msgid "Reminders today"
+msgstr "আজকের রিমাইন্ডার"
+
+msgid "Also today"
+msgstr "আজ আরও"
+
+msgid "Open Today"
+msgstr "আজকের পাতা খুলুন"
+
+msgid "You get this because you turned on “Email me my day”. Turn it off in Productivity → Timer, focus & sounds."
+msgstr "আপনি “প্রতিদিন সকালে আমার দিনের খবর ইমেইল করুন” চালু করেছেন বলে এটি পাচ্ছেন। প্রোডাক্টিভিটি → টাইমার, ফোকাস ও শব্দ থেকে বন্ধ করুন।"
+
+#, python-format
+msgid "Your day, %(name)s"
+msgstr "আপনার দিন, %(name)s"
+
+msgid "ON YOUR PLAN"
+msgstr "আপনার পরিকল্পনায়"
+
+msgid "REMINDERS TODAY"
+msgstr "আজকের রিমাইন্ডার"
+
+msgid "ALSO TODAY"
+msgstr "আজ আরও"
+
+msgid "You get this because you turned on reminder emails. Turn them off in Productivity → Timer, focus & sounds."
+msgstr "আপনি রিমাইন্ডার ইমেইল চালু করেছেন বলে এটি পাচ্ছেন। প্রোডাক্টিভিটি → টাইমার, ফোকাস ও শব্দ থেকে বন্ধ করুন।"

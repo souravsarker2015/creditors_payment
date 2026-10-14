@@ -48,7 +48,7 @@
       <div class="field" x-data="{ preview: false, text: $refs.notes ? $refs.notes.value : '' }">
         <div class="field-head"><label class="label" for="{{ form.notes.id_for_label }}">{{ form.notes.label }}</label>
           <div class="seg seg-sm"><button type="button" class="seg-item" :class="!preview && 'is-active'" @click="preview = false">{% translate "Write" %}</button><button type="button" class="seg-item" :class="preview && 'is-active'" @click="text = $refs.notes.value; preview = true">{% translate "Preview" %}</button></div></div>
-        <textarea x-ref="notes" x-show="!preview" name="{{ form.notes.html_name }}" id="{{ form.notes.id_for_label }}" rows="8" class="form-input code-ish">{{ form.notes.value|default:'' }}</textarea>
+        <textarea x-ref="notes" x-show="!preview" data-paste-images name="{{ form.notes.html_name }}" id="{{ form.notes.id_for_label }}" rows="8" class="form-input code-ish">{{ form.notes.value|default:'' }}</textarea>
         <div x-show="preview" x-cloak class="wn-md wtd-preview" x-html="Work.markdown(text)"></div>
         <p class="help">{{ form.notes.help_text }}</p>
       </div>

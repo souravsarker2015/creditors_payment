@@ -151,3 +151,123 @@ class ExtrasTests(TestCase):
         with translation.override("bn"):
             item = trash(self.me, c, "x")
         self.assertEqual(item.kind, "ফ্ল্যাশকার্ড")
+
+
+class EmailTests(TestCase):
+    """“Your day” and emailed reminders (apps/productivity/emails.py)."""
+
+    def setUp(self):
+        from django.core import mail  # noqa: F401  (the test runner's outbox)
+
+        self.me = User.objects.create_superuser("me", "me@example.com", PW)
+        self.s = WorkSettings.for_user(self.me)
+        self.s.daily_email = self.s.reminder_emails = True
+        self.s.work_days = "0123456"
+        self.s.day_start = timezone.datetime(2026, 1, 1, 9, 0).time()
+        self.s.save()
+
+    def at(self, hour, minute=0, days=0):
+        today = timezone.localdate() + timedelta(days=days)
+        return timezone.make_aware(timezone.datetime.combine(today, timezone.datetime.min.time()).replace(hour=hour, minute=minute))
+
+    def test_your_day_goes_once_when_the_day_starts(self):
+        from django.core import mail
+
+        from . import emails
+        from .models import Task
+        today = timezone.localdate()
+        Task.objects.create(owner=self.me, title="Ship the release", due_date=today)
+        Task.objects.create(owner=self.me, title="Old bug", due_date=today - timedelta(days=2))
+        Task.objects.create(owner=self.me, title="Design review", scheduled_at=self.at(14))
+        self.assertEqual(emails.run(self.at(8))["briefs"], 0)                 # before the work day starts
+        self.assertEqual(emails.run(self.at(9, 5))["briefs"], 1)
+        self.assertEqual(emails.run(self.at(10))["briefs"], 0)                # once a day
+        msg = mail.outbox[0]
+        self.assertIn("1 late", msg.subject)
+        body = msg.body
+        self.assertIn("Ship the release", body)
+        self.assertIn("Old bug", body)
+        self.assertIn("14:00 Design review", body)
+        self.assertIn("Your day", msg.alternatives[0][0])
+
+    def test_nothing_to_say_and_days_off(self):
+        from django.core import mail
+
+        from . import emails
+        self.assertEqual(emails.run(self.at(9, 30))["quiet"], 1)               # a clear day: no email
+        self.assertEqual(len(mail.outbox), 0)
+        self.s.daily_email_sent_on = None
+        self.s.work_days = ""                                                   # not a work day
+        self.s.save()
+        self.assertEqual(emails.briefs_due(self.at(10)), [])
+
+    def test_a_reminder_is_emailed_once(self):
+        from django.core import mail
+
+        from . import emails
+        from .models import Task
+        t = Task.objects.create(owner=self.me, title="Call the bank", remind_at=self.at(11), due_date=timezone.localdate())
+        Task.objects.create(owner=self.me, title="Later", remind_at=self.at(16))
+        Task.objects.create(owner=self.me, title="Done already", remind_at=self.at(11), status="done")
+        self.assertEqual(emails.run(self.at(10, 50))["reminders"], 0)
+        self.assertEqual(emails.run(self.at(11, 5))["reminders"], 1)
+        self.assertEqual(emails.run(self.at(11, 20))["reminders"], 0)           # not twice
+        reminder = [m for m in mail.outbox if "Reminder" in m.subject]
+        self.assertEqual(reminder[0].subject, "Reminder: Call the bank")
+        t.remind_at = self.at(15)                                               # moved: it reminds again at the new time
+        t.save()
+        self.assertEqual(emails.run(self.at(15, 1))["reminders"], 1)
+        self.s.reminder_emails = False
+        self.s.save()
+        Task.objects.create(owner=self.me, title="Quiet", remind_at=self.at(16, 30))
+        self.assertEqual(emails.run(self.at(16, 40))["reminders"], 0)           # turned off: nothing more is emailed
+        self.assertFalse([m for m in mail.outbox if "Quiet" in m.subject])
+
+    def test_settings_send_a_test(self):
+        from django.core import mail
+
+        self.client.force_login(self.me)
+        r = self.client.post(reverse("work:settings"), {"action": "test_brief"})
+        self.assertRedirects(r, reverse("work:settings") + "#emails", fetch_redirect_response=False)
+        self.assertEqual(len(mail.outbox), 1)
+
+
+class NoteImageTests(TestCase):
+    PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 64
+
+    def setUp(self):
+        import tempfile
+
+        from django.test import override_settings
+        self.media = override_settings(MEDIA_ROOT=tempfile.mkdtemp())
+        self.media.enable()
+        self.me = User.objects.create_superuser("me", "me@example.com", PW)
+        self.client.force_login(self.me)
+
+    def tearDown(self):
+        self.media.disable()
+
+    def upload(self, content, name="shot.png", **extra):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        return self.client.post(reverse("work:api_image_upload"), {"image": SimpleUploadedFile(name, content), **extra}).json()
+
+    def test_a_picture_goes_in_and_only_its_owner_sees_it(self):
+        note = Note.objects.create(owner=self.me, title="Bug")
+        res = self.upload(self.PNG, note=note.pk)
+        self.assertTrue(res["ok"])
+        self.assertTrue(res["markdown"].startswith("![shot]("))
+        from .models import NoteImage
+        img = NoteImage.objects.get()
+        self.assertEqual((img.note, img.file.name.endswith(".png")), (note, True))
+        r = self.client.get(res["url"])
+        self.assertEqual((r.status_code, r["Content-Type"]), (200, "image/png"))
+        self.assertIn("sandbox", r["Content-Security-Policy"])
+        other = User.objects.create_superuser("other", "o@example.com", PW)
+        self.client.force_login(other)
+        self.assertEqual(self.client.get(res["url"]).status_code, 404)
+
+    def test_only_real_pictures(self):
+        self.assertFalse(self.upload(b"<svg onload=alert(1)>", "x.svg")["ok"])
+        self.assertFalse(self.upload(b"<html>", "x.png")["ok"])                  # the name doesn't make it a picture
+        self.assertTrue(self.upload(b"\xff\xd8\xff\xe0" + b"\x00" * 32, "photo.heic")["ok"])   # a JPEG whatever its name
+        self.assertTrue(self.upload(b"RIFF\x00\x00\x00\x00WEBPVP8 ", "a.webp")["ok"])

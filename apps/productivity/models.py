@@ -2,6 +2,7 @@
 habits and a daily journal. Everything belongs to one person (`owner`) and
 nobody else sees it — not even other admins.
 """
+import os
 import re
 from datetime import time, timedelta
 from urllib.parse import urlparse
@@ -112,6 +113,7 @@ class Task(models.Model):
     waiting_for = models.CharField(_("Waiting on"), max_length=120, blank=True,
                                    help_text=_("Who or what it's stuck on: a code review, Rahim, the client, a deploy…"))
     order = models.FloatField(default=0, help_text="Position in its column (smaller first).")
+    reminder_sent_at = models.DateTimeField(null=True, blank=True, help_text="When its reminder was emailed (once per remind_at).")
     completed_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -383,6 +385,11 @@ class WorkSettings(models.Model):
     day_start = models.TimeField(_("Work day starts"), default=time(9, 0),
                                  help_text=_("The day planner opens here, and “Fill my day” plans from here."))
     day_end = models.TimeField(_("Work day ends"), default=time(18, 0))
+    daily_email = models.BooleanField(_("Email me my day each morning"), default=False,
+                                      help_text=_("When your work day starts: what's late and due, your plan, reminders, habits and flashcards."))
+    reminder_emails = models.BooleanField(_("Email my task reminders too"), default=False,
+                                          help_text=_("So a reminder reaches you even when the app is closed."))
+    daily_email_sent_on = models.DateField(null=True, blank=True)
     cards_remind_at = models.TimeField(_("Remind me to review flashcards at"), null=True, blank=True,
                                        help_text=_("A notification when cards are waiting. Leave empty for none."))
 
@@ -640,6 +647,29 @@ class DiagramVersion(models.Model):
 
     def __str__(self):
         return self.name or f"{self.title} @ {self.created_at:%Y-%m-%d %H:%M}"
+
+
+def note_image_path(instance, filename):
+    import uuid
+    ext = os.path.splitext(filename)[1].lower()[:6] or ".png"
+    return f"work/images/{instance.owner_id}/{uuid.uuid4().hex}{ext}"
+
+
+class NoteImage(models.Model):
+    """A picture pasted or dropped into a note. Served only to its owner
+    (views.note_image_view), never as a public media address."""
+    owner = models.ForeignKey(**OWNER)
+    note = models.ForeignKey(Note, on_delete=models.SET_NULL, null=True, blank=True, related_name="images")
+    file = models.FileField(upload_to=note_image_path)
+    name = models.CharField(max_length=200, blank=True)
+    size = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.name or self.file.name
 
 
 class NoteVersion(models.Model):

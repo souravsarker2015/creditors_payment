@@ -58,7 +58,7 @@ def _urls():
         "learningBase": "/work/api/learning/", "goalBase": "/work/api/goals/",
         "plan": r("work:plan"), "planAction": r("work:api_plan"), "week": r("work:week"), "noteGo": r("work:note_go"),
         "diagrams": r("work:diagrams"), "diagramBase": "/work/api/diagrams/", "diagramList": r("work:api_diagram_list"),
-        "cardsDue": r("work:api_cards_due"), "cardReview": r("work:card_review"),
+        "cardsDue": r("work:api_cards_due"), "cardReview": r("work:card_review"), "imageUpload": r("work:api_image_upload"),
         "cards": r("work:cards"), "cardBase": "/work/api/cards/", "cardAdd": r("work:api_card_add"),
     }
 
@@ -84,6 +84,8 @@ def _texts():
         "kinds": {"task": _("Task"), "note": _("Note"), "project": _("Project"), "goal": _("Goal"), "learning": _("Learning"),
                   "snippet": _("Snippet"), "diagram": _("Diagram"), "card": _("Flashcard")},
         "restoreNote": _("Bring back this version? What's there now is kept as a version too."),
+        "uploading": _("Uploading…"), "imageFailed": _("The picture couldn't be uploaded."),
+        "imageOffline": _("Pictures need a connection — try again when you're online."),
         "cardsWaiting": _("Flashcards waiting"), "cardsToReview": _("%(n)s cards to review — about %(n)s minutes."), "review": _("Review"),
         "cardsMade": _("Flashcards made"), "seeCards": _("See them"), "noPairs": _("Write cards as “question :: answer”, one a line."),
     }
@@ -727,6 +729,29 @@ def diagram_preview_view(request, pk):
 
 
 @work_required
+def note_image_view(request, pk):
+    """A picture in a note — only ever to the person it belongs to."""
+    import mimetypes
+    import os
+
+    from django.http import FileResponse
+
+    from .models import NoteImage
+
+    img = get_object_or_404(NoteImage, pk=pk, owner=request.user)
+    try:
+        handle = img.file.open("rb")
+    except (FileNotFoundError, OSError):
+        raise Http404
+    response = FileResponse(handle, content_type=mimetypes.guess_type(img.file.name)[0] or "application/octet-stream")
+    response["Content-Disposition"] = f'inline; filename="{os.path.basename(img.file.name)}"'
+    response["Cache-Control"] = "private, max-age=31536000, immutable"     # a picture never changes
+    response["X-Content-Type-Options"] = "nosniff"
+    response["Content-Security-Policy"] = "default-src 'none'; sandbox"
+    return response
+
+
+@work_required
 def diagram_version_preview_view(request, pk, vid):
     v = get_object_or_404(DiagramVersion.objects.only("preview"), pk=vid, diagram_id=pk, diagram__owner=request.user)
     if not v.preview:
@@ -1029,6 +1054,15 @@ def settings_view(request):
             s.new_feed_token()
             messages.success(request, _("New calendar link made. The old one no longer works."))
             return redirect(reverse("work:settings") + "#feed")
+        if action == "test_brief":
+            from . import emails
+
+            result = emails.send_brief(request.user, request=request, force=True)
+            if result == "sent":
+                messages.success(request, _("Sent to %(email)s.") % {"email": request.user.email})
+            else:
+                messages.error(request, _("The email couldn't be sent. Try again later."))
+            return redirect(reverse("work:settings") + "#emails")
         if action == "feed_off":
             s.feed_token = ""
             s.save(update_fields=["feed_token"])
@@ -1356,6 +1390,7 @@ def export_view(request):
     snippets, diagrams and flashcards as plain files you can open anywhere."""
     import io
     import json
+    import os
     import re
     import zipfile
 
@@ -1397,6 +1432,14 @@ def export_view(request):
                 z.writestr(f"{name}.md", diagrams.outline_text(dg.data))
             elif not dg.is_visual:
                 z.writestr(f"{name}.mmd", dg.source)
+        from .models import NoteImage
+
+        for img in NoteImage.objects.filter(owner=user):
+            try:
+                with img.file.open("rb") as fh:
+                    z.writestr(f"notes/images/{img.pk}{os.path.splitext(img.file.name)[1]}", fh.read())
+            except (FileNotFoundError, OSError):
+                pass
         for dk in Deck.objects.filter(owner=user):    # tab-separated: Anki and spreadsheets open these
             lines = ["\t".join(" ".join(t.split()) for t in (c.front, c.back)) for c in dk.cards.all()]
             z.writestr(f"flashcards/{slug(dk.name, dk.pk)}.tsv", "\n".join(lines) + "\n")

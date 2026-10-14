@@ -89,6 +89,7 @@
           <button type="button" class="icon-btn" @click="insert('[', '](https://)')" aria-label="{% translate 'Link' %}" data-tip="{% translate 'Link' %}">{% icon "link" %}</button>
           <button type="button" class="icon-btn" @click="insert('[[', ']]')" aria-label="{% translate 'Link another note' %}" data-tip="{% translate 'Link another note: [[Title]]' %}"><span class="wn-cb">[[ ]]</span></button>
           <span class="wn-fmt-sep" aria-hidden="true"></span>
+          <label class="icon-btn wn-pic" aria-label="{% translate 'Add a picture' %}" data-tip="{% translate 'Add a picture (or paste / drop one)' %}">{% icon "image" %}<input type="file" accept="image/png,image/jpeg,image/gif,image/webp" multiple class="sr-only" @change="$refs.body.focus(); Work.putImages($refs.body, $event.target.files); $event.target.value = ''"></label>
           <button type="button" class="icon-btn" @click="insert(' :: ', '')" aria-label="{% translate 'Flashcard' %}" data-tip="{% translate 'Flashcard: question :: answer' %}">{% icon "cards" %}</button>
           <div class="menu-wrap wn-dg" @click.outside="dgOpen = false" @keydown.escape.stop="dgOpen = false">
             <button type="button" class="icon-btn" @click="openDiagrams()" :aria-expanded="dgOpen" aria-label="{% translate 'Insert a diagram' %}" data-tip="{% translate 'Insert a diagram' %}">{% icon "diagram" %}</button>
@@ -117,7 +118,7 @@
         </label>
       </div>
       <div class="wn-body-wrap" x-show="!preview">
-        <textarea x-ref="body" x-model="body" class="wn-body" placeholder="{% translate 'Start writing… Markdown works: # heading, **bold**, `code`, - [ ] to-do, ``` code blocks, [[Another note]].' %}" aria-label="{% translate 'Note' %}"
+        <textarea x-ref="body" x-model="body" class="wn-body" data-paste-images :data-note="id || ''" placeholder="{% translate 'Start writing… Markdown works: # heading, **bold**, `code`, - [ ] to-do, ``` code blocks, [[Another note]].' %}" aria-label="{% translate 'Note' %}"
                   @keydown="linkKey($event)" @input="linkLookup(); grow()" @click="linkLookup()" @focus="linkLookup()" @blur="setTimeout(() => { if (document.activeElement !== $refs.body) suggest = [] }, 150)"></textarea>
         <ul class="wn-suggest" x-show="suggest.length && !preview" x-cloak role="listbox" aria-label="{% translate 'Notes to link' %}">
           <template x-for="(s, i) in suggest" :key="s">

@@ -1,0 +1,9 @@
+{% load i18n %}{% autoescape off %}{% translate "Reminder" %}
+{% for t in tasks %}
+- {{ t.title }} ({{ t.remind_at|time:"H:i" }}{% if t.project %} · {{ t.project.name }}{% endif %}){% if base %}
+  {{ base }}{% url 'work:task' t.pk %}{% endif %}{% if t.notes %}
+  {{ t.notes|truncatechars:300 }}{% endif %}
+{% endfor %}
+{% translate "You get this because you turned on reminder emails. Turn them off in Productivity → Timer, focus & sounds." %}
+— FinTrack
+{% endautoescape %}

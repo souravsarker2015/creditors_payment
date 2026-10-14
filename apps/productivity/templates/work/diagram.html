@@ -63,7 +63,7 @@
       <div class="seg seg-sm"><button type="button" class="seg-item" :class="!show && 'is-active'" @click="show = false">{% translate "Write" %}</button><button type="button" class="seg-item" :class="show && 'is-active'" @click="show = true">{% translate "Preview" %}</button></div>
     </div>
     <div class="card-body">
-      <textarea x-show="!show" x-model="notes" @input="queue({ notes })" class="form-input wdx-notes-text" rows="5" placeholder="{% translate 'Write something about this diagram…' %}" aria-label="{% translate 'Notes' %}"></textarea>
+      <textarea x-show="!show" x-model="notes" @input="queue({ notes })" data-paste-images class="form-input wdx-notes-text" rows="5" placeholder="{% translate 'Write something about this diagram…' %}" aria-label="{% translate 'Notes' %}"></textarea>
       <article x-show="show" x-cloak class="wn-md" x-html="Work.markdown(notes || '')"></article>
     </div>
   </section>

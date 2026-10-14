@@ -196,8 +196,68 @@
     setTimeout(check, 3000); setInterval(check, 60000);
   })();
 
+  /* ── Pictures in Markdown boxes (textarea[data-paste-images]): paste, drop
+        or pick one → it's uploaded and ![…](its address) goes in at the cursor ── */
+  function shrinkImage(file) {      // big photos get smaller first; screenshots and small pictures go up as they are
+    return new Promise(function (resolve) {
+      if (!/^image\/(jpeg|png|webp)$/.test(file.type) || file.size < 1.5 * 1024 * 1024) return resolve(file);
+      var img = new Image(), url = URL.createObjectURL(file);
+      img.onload = function () {
+        var k = Math.min(1, 2000 / Math.max(img.width, img.height)), c = d.createElement("canvas");
+        c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+        c.toBlob(function (b) { resolve(b && b.size < file.size ? new File([b], (file.name || "image").replace(/\.\w+$/, "") + ".jpg", { type: "image/jpeg" }) : file); }, "image/jpeg", 0.85);
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); resolve(file); };
+      img.src = url;
+    });
+  }
+  function setText(ta, value, caret) {
+    ta.value = value; if (caret != null) ta.selectionStart = ta.selectionEnd = caret;
+    ta.dispatchEvent(new Event("input", { bubbles: true }));          // x-model and autosave pick it up
+  }
+  function putImages(ta, files) {
+    files = Array.prototype.filter.call(files || [], function (f) { return /^image\//.test(f.type); });
+    if (!files.length || !CFG.urls.imageUpload) return false;
+    files.forEach(function (file) {
+      var mark = "![" + t("uploading", "Uploading…") + " " + uid().slice(0, 8) + "]()", s0 = ta.selectionStart, e0 = ta.selectionEnd;
+      var before = ta.value.slice(0, s0), pad = before && !/\n$/.test(before) ? "\n" : "";
+      setText(ta, before + pad + mark + "\n" + ta.value.slice(e0), s0 + pad.length + mark.length + 1);
+      var done = function (text, error) {
+        var i = ta.value.indexOf(mark); if (i < 0) return;
+        var end = i + mark.length + (text ? 0 : 1);
+        setText(ta, ta.value.slice(0, i) + text + ta.value.slice(end), null);
+        if (error) toast(error, "warn");
+      };
+      shrinkImage(file).then(function (f) {
+        var fd = new FormData(); fd.append("image", f, f.name || "image"); fd.append("name", file.name || "");
+        if (ta.getAttribute("data-note")) fd.append("note", ta.getAttribute("data-note"));
+        return fetch(CFG.urls.imageUpload, { method: "POST", body: fd, credentials: "same-origin",
+                                             headers: { "X-CSRFToken": csrf(), "X-Requested-With": "fetch", Accept: "application/json" } })
+          .then(function (r) { return r.json(); });
+      }).then(function (res) {
+        if (res && res.ok) done(res.markdown); else done("", (res && res.error) || t("imageFailed", "The picture couldn't be uploaded."));
+      }).catch(function () { done("", t("imageOffline", "Pictures need a connection — try again when you're online.")); });
+    });
+    return true;
+  }
+  function pictureBox(e) { return e.target && e.target.closest && e.target.closest("textarea[data-paste-images]"); }
+  d.addEventListener("paste", function (e) {
+    var ta = pictureBox(e); if (ta && e.clipboardData && putImages(ta, e.clipboardData.files)) e.preventDefault();
+  });
+  d.addEventListener("dragover", function (e) {
+    var ta = pictureBox(e); if (!ta || !e.dataTransfer || Array.prototype.indexOf.call(e.dataTransfer.types, "Files") < 0) return;
+    e.preventDefault(); ta.classList.add("is-dropping");
+  });
+  d.addEventListener("dragleave", function (e) { var ta = pictureBox(e); if (ta) ta.classList.remove("is-dropping"); });
+  d.addEventListener("drop", function (e) {
+    var ta = pictureBox(e); if (!ta) return;
+    ta.classList.remove("is-dropping");
+    if (e.dataTransfer && putImages(ta, e.dataTransfer.files)) e.preventDefault();
+  });
+
   /* ── Expose for the page components ──────────────────────────────────── */
-  window.Work = { api: api, toast: toast, undoable: undoable, play: play, notify: notify, askNotify: askNotify, clock: clock, hm: hm, cfg: CFG, flush: flush, recall: recall, store: store };
+  window.Work = { api: api, toast: toast, undoable: undoable, play: play, notify: notify, askNotify: askNotify, clock: clock, hm: hm, cfg: CFG, flush: flush, recall: recall, store: store, putImages: putImages };
 
   document.addEventListener("alpine:init", function () {
 

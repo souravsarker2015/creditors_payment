@@ -1,0 +1,27 @@
+{% load i18n %}{% autoescape off %}{% blocktranslate with name=user.get_short_name|default:user.get_username %}Your day, {{ name }}{% endblocktranslate %} — {{ b.today|date:"l j M" }}
+
+{{ b.headline }}
+{% if b.note %}
+{% translate "Your plan:" %} {{ b.note }}
+{% endif %}{% if b.late %}
+{% translate "LATE" %}
+{% for t in b.late %}- {{ t.title }} ({{ t.due_date|date:"j M" }})
+{% endfor %}{% endif %}{% if b.plan %}
+{% translate "ON YOUR PLAN" %}
+{% for t in b.plan %}- {{ t.scheduled_at|time:"H:i" }} {{ t.title }}
+{% endfor %}{% endif %}{% if b.today_tasks %}
+{% translate "TODAY" %}
+{% for t in b.today_tasks %}- {{ t.title }}
+{% endfor %}{% endif %}{% if b.reminders %}
+{% translate "REMINDERS TODAY" %}
+{% for t in b.reminders %}- {{ t.remind_at|time:"H:i" }} {{ t.title }}
+{% endfor %}{% endif %}{% if b.habits or b.cards_due %}
+{% translate "ALSO TODAY" %}
+{% for h in b.habits %}- {{ h.emoji }} {{ h.name }}
+{% endfor %}{% if b.cards_due %}- {% blocktranslate count counter=b.cards_due %}{{ counter }} flashcard to review{% plural %}{{ counter }} flashcards to review{% endblocktranslate %}
+{% endif %}{% endif %}
+{% if base %}{{ base }}{{ today_url }}
+{% endif %}
+{% translate "You get this because you turned on “Email me my day”. Turn it off in Productivity → Timer, focus & sounds." %}
+— FinTrack
+{% endautoescape %}

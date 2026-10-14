@@ -46,11 +46,11 @@
       <form x-show="mode === 'one'" class="wfc-one" @submit.prevent="addOne()" @keydown.ctrl.enter.prevent="addOne()" @keydown.meta.enter.prevent="addOne()">
         <label class="wfc-side-in" data-side="front">
           <span>{% translate "Question" %}</span>
-          <textarea x-ref="front" x-model="front" class="form-input" rows="3" required placeholder="{% translate 'What does a load balancer do?' %}"></textarea>
+          <textarea x-ref="front" x-model="front" data-paste-images class="form-input" rows="3" required placeholder="{% translate 'What does a load balancer do?' %}"></textarea>
         </label>
         <label class="wfc-side-in" data-side="back">
           <span>{% translate "Answer" %}</span>
-          <textarea x-model="back" class="form-input" rows="3" placeholder="{% translate 'Spreads requests across servers, so none gets overloaded and one can fail safely.' %}"></textarea>
+          <textarea x-model="back" data-paste-images class="form-input" rows="3" placeholder="{% translate 'Spreads requests across servers, so none gets overloaded and one can fail safely.' %}"></textarea>
         </label>
         <div class="wfc-one-foot">
           <p class="wfc-hint">{% translate "Markdown works: **bold**, `code`, lists, ```mermaid diagrams." %} <kbd>Ctrl</kbd>+<kbd>Enter</kbd> {% translate "adds it" %}</p>

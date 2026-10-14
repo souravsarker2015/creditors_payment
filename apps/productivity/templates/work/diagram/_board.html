@@ -140,7 +140,7 @@
     {# ── design notes ── #}
     <div class="wsb-panel" x-show="tab === 'notes'" x-cloak x-data="{ show: false }">
       <div class="seg seg-sm"><button type="button" class="seg-item" :class="!show && 'is-active'" @click="show = false">{% translate "Write" %}</button><button type="button" class="seg-item" :class="show && 'is-active'" @click="show = true">{% translate "Preview" %}</button></div>
-      <textarea x-show="!show" x-model="notes" @input="queue({ notes })" class="form-input wsb-notes code-ish" rows="16" aria-label="{% translate 'Notes' %}" placeholder="{% translate 'Requirements, API, data model, trade-offs… Markdown works.' %}"></textarea>
+      <textarea x-show="!show" x-model="notes" @input="queue({ notes })" data-paste-images class="form-input wsb-notes code-ish" rows="16" aria-label="{% translate 'Notes' %}" placeholder="{% translate 'Requirements, API, data model, trade-offs… Markdown works.' %}"></textarea>
       <article x-show="show" x-cloak class="wn-md wsb-notes-md" x-html="Work.markdown(notes || '')"></article>
     </div>
   </aside>
