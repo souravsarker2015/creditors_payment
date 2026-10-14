@@ -27,9 +27,23 @@
         <button type="button" class="icon-btn" @click="duplicate()" :disabled="!sel.length" aria-label="{% translate 'Duplicate' %}" data-tip="{% translate 'Duplicate (Ctrl+D)' %}">{% icon "copy" %}</button>
         <button type="button" class="icon-btn is-danger" @click="removeSelected()" :disabled="!sel.length && !edgeSel" aria-label="{% translate 'Delete' %}" data-tip="{% translate 'Delete (Del)' %}">{% icon "trash" %}</button>
       </div>
+      <div class="wdx-group wsb-align" x-show="sel.length > 1" x-cloak x-transition.opacity.duration.120ms role="group" aria-label="{% translate 'Line up' %}">
+        <button type="button" class="icon-btn" @click="align('left')" aria-label="{% translate 'Line up left edges' %}" data-tip="{% translate 'Line up left edges' %}">{% icon "align-left" %}</button>
+        <button type="button" class="icon-btn" @click="align('hcenter')" aria-label="{% translate 'Line up centres' %}" data-tip="{% translate 'Line up centres' %}">{% icon "align-hcenter" %}</button>
+        <button type="button" class="icon-btn" @click="align('right')" aria-label="{% translate 'Line up right edges' %}" data-tip="{% translate 'Line up right edges' %}">{% icon "align-right" %}</button>
+        <button type="button" class="icon-btn" @click="align('top')" aria-label="{% translate 'Line up tops' %}" data-tip="{% translate 'Line up tops' %}">{% icon "align-top" %}</button>
+        <button type="button" class="icon-btn" @click="align('vmiddle')" aria-label="{% translate 'Line up middles' %}" data-tip="{% translate 'Line up middles' %}">{% icon "align-vmiddle" %}</button>
+        <button type="button" class="icon-btn" @click="align('bottom')" aria-label="{% translate 'Line up bottoms' %}" data-tip="{% translate 'Line up bottoms' %}">{% icon "align-bottom" %}</button>
+        <button type="button" class="icon-btn" @click="distribute('x')" :disabled="sel.length < 3" aria-label="{% translate 'Space evenly across' %}" data-tip="{% translate 'Space evenly across' %}">{% icon "dist-h" %}</button>
+        <button type="button" class="icon-btn" @click="distribute('y')" :disabled="sel.length < 3" aria-label="{% translate 'Space evenly down' %}" data-tip="{% translate 'Space evenly down' %}">{% icon "dist-v" %}</button>
+      </div>
+      <div class="wdx-group">
+        <button type="button" class="icon-btn" :class="marquee && 'is-on'" @click="marquee = !marquee" :aria-pressed="marquee.toString()" aria-label="{% translate 'Pick an area' %}" data-tip="{% translate 'Drag a box to pick several parts (or Shift+drag)' %}">{% icon "select" %}</button>
+        <button type="button" class="btn btn-ghost btn-sm" :class="flow && 'is-on'" @click="toggleFlow()" :aria-pressed="flow.toString()" data-tip="{% translate 'See requests move along the links' %}">{% icon "play" %}<span class="wn-hide-xs">{% translate "Show traffic" %}</span></button>
+      </div>
       <label class="wsb-snap"><input type="checkbox" x-model="snap"> {% translate "Snap to grid" %}</label>
     </div>
-    <div class="wdx-canvas wsb-canvas" x-ref="canvas" tabindex="0" :class="connecting && 'is-connecting'" aria-label="{% translate 'System design board' %}" @keydown="key($event)">
+    <div class="wdx-canvas wsb-canvas" x-ref="canvas" tabindex="0" :class="{ 'is-connecting': connecting, 'is-marquee': marquee, 'is-flow': flow }" aria-label="{% translate 'System design board' %}" @keydown="key($event)">
       <div class="wdx-world" x-ref="world">
         <div class="wsb-zones" x-ref="zones"></div>
         <svg class="wsb-links" x-ref="links" aria-hidden="true"></svg>
@@ -37,8 +51,9 @@
       </div>
       <p class="wsb-empty" x-show="empty" x-cloak>{% icon "server" %}<span>{% translate "Add parts from the left — users, a load balancer, services, a database — then drag from a part's dot to another to link them." %}</span></p>
       <p class="wsb-banner" x-show="connecting" x-cloak x-text="texts.connectPick"></p>
+      <div class="wsb-box" x-ref="box" hidden></div>
     </div>
-    <p class="wdx-hint"><kbd>Del</kbd> {% translate "delete" %} · <kbd>Ctrl</kbd>+<kbd>D</kbd> {% translate "duplicate" %} · <kbd>←↑→↓</kbd> {% translate "nudge" %} · <kbd>Enter</kbd> {% translate "rename" %} · {% translate "Shift-click to pick several. Dashed links are asynchronous (a queue, an event)." %}</p>
+    <p class="wdx-hint"><kbd>Del</kbd> {% translate "delete" %} · <kbd>Ctrl</kbd>+<kbd>D</kbd> {% translate "duplicate" %} · <kbd>←↑→↓</kbd> {% translate "nudge" %} · <kbd>Enter</kbd> {% translate "rename" %} · <kbd>Ctrl</kbd>+<kbd>C</kbd>/<kbd>V</kbd> {% translate "copy and paste, also into another board" %} · {% translate "Shift-click to pick several. Dashed links are asynchronous (a queue, an event)." %}</p>
   </section>
 
   <aside class="wsb-side card">
@@ -80,6 +95,8 @@
           <input id="sb-elabel" class="form-input input-compact" x-model="edge.label" @input="changed(false)" @change="commit()" maxlength="80" placeholder="{% translate 'HTTPS, gRPC, publish, read…' %}">
           <p class="label">{% translate "Kind of call" %}</p>
           <div class="seg seg-sm"><button type="button" class="seg-item" :class="edge.style !== 'dashed' && 'is-active'" @click="edge.style = 'solid'; commit()">{% translate "Waits for an answer" %}</button><button type="button" class="seg-item" :class="edge.style === 'dashed' && 'is-active'" @click="edge.style = 'dashed'; commit()">{% translate "Fire and forget" %}</button></div>
+          <p class="label">{% translate "Line" %}</p>
+          <div class="seg seg-sm"><button type="button" class="seg-item" :class="(edge.shape || 'straight') === 'straight' && 'is-active'" @click="setShape('straight')">{% translate "Straight" %}</button><button type="button" class="seg-item" :class="edge.shape === 'curve' && 'is-active'" @click="setShape('curve')">{% translate "Curved" %}</button><button type="button" class="seg-item" :class="edge.shape === 'elbow' && 'is-active'" @click="setShape('elbow')">{% translate "Right angles" %}</button></div>
           <p class="label">{% translate "Arrows" %}</p>
           <div class="seg seg-sm"><button type="button" class="seg-item" :class="edge.arrow === 'end' && 'is-active'" @click="edge.arrow = 'end'; commit()">→</button><button type="button" class="seg-item" :class="edge.arrow === 'both' && 'is-active'" @click="edge.arrow = 'both'; commit()">↔</button><button type="button" class="seg-item" :class="edge.arrow === 'none' && 'is-active'" @click="edge.arrow = 'none'; commit()">—</button></div>
           <div class="wsb-row"><button type="button" class="btn btn-secondary btn-sm" @click="reverseEdge()">⇄ {% translate "Turn around" %}</button><button type="button" class="btn btn-ghost btn-sm is-danger" @click="removeSelected()">{% icon "trash" %}{% translate "Delete" %}</button></div>
@@ -87,7 +104,8 @@
       </template>
       <template x-if="!node && !edge">
         <div class="wsb-none">
-          <p x-show="sel.length > 1"><b x-text="sel.length"></b> {% translate "parts picked" %}</p>
+          <p x-show="sel.length > 1" class="wsb-picked"><b x-text="sel.length"></b> {% translate "parts picked" %} — {% translate "line them up with the buttons above the board, or move them together." %}</p>
+          <div class="wsb-row" x-show="sel.length > 1"><button type="button" class="btn btn-secondary btn-sm" @click="sameSize()">{% translate "Make the same size" %}</button><button type="button" class="btn btn-ghost btn-sm" @click="duplicate()">{% icon "copy" %}{% translate "Duplicate" %}</button><button type="button" class="btn btn-ghost btn-sm is-danger" @click="removeSelected()">{% icon "trash" %}{% translate "Delete" %}</button></div>
           <dl class="wsb-stats"><div><dt>{% translate "Parts" %}</dt><dd x-text="count.nodes"></dd></div><div><dt>{% translate "Links" %}</dt><dd x-text="count.edges"></dd></div></dl>
           <p class="wsb-tip">{% translate "Pick a part to name it, say what it's built with and what it does. Pick a link to label it." %}</p>
         </div>

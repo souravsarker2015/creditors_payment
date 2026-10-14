@@ -120,6 +120,7 @@ PAGES = [
     (gettext_noop("Diagrams"), "work:diagrams", "work", ""),
     (gettext_noop("Mind map"), "work:diagrams", "work", ""),
     (gettext_noop("System design"), "work:diagrams", "work", ""),
+    (gettext_noop("Flashcards"), "work:cards", "work", ""),
     (gettext_noop("Habits"), "work:habits", "work", ""),
 ]
 
@@ -243,8 +244,8 @@ def _business(request, text):
 
 
 def _work(user, text):
-    """Productivity: the person's own tasks, notes, diagrams, goals and learning."""
-    from apps.productivity.models import Diagram, Goal, LearningItem, Note, Task
+    """Productivity: the person's own tasks, notes, diagrams, flashcards, goals and learning."""
+    from apps.productivity.models import Card, Diagram, Goal, LearningItem, Note, Task
 
     group = Group(_("Productivity"))
     for t in Task.objects.filter(_q(text, "title", "link"), owner=user).order_by("status", "-updated_at")[:PER_GROUP]:
@@ -253,6 +254,8 @@ def _work(user, text):
         group.hits.append(Hit(n.display_title, _("Note"), _url("work:note", n.pk), "note"))
     for dg in Diagram.objects.filter(_q(text, "title", "notes"), owner=user, is_archived=False).only("pk", "title", "kind")[:3]:
         group.hits.append(Hit(dg.title, " · ".join((_("Diagram"), dg.get_kind_display())), _url("work:diagram", dg.pk), "diagram"))
+    for c in Card.objects.filter(_q(text, "front", "back"), owner=user).select_related("deck")[:3]:
+        group.hits.append(Hit(" ".join(c.front.split())[:120], " · ".join((_("Flashcard"), c.deck.name)), _url("work:deck", c.deck_id), "cards"))
     for g in Goal.objects.filter(_q(text, "title"), owner=user)[:3]:
         group.hits.append(Hit(g.title, _("Goal"), _url("work:goal", g.pk), "flag"))
     for item in LearningItem.objects.filter(_q(text, "title", "author"), owner=user)[:3]:

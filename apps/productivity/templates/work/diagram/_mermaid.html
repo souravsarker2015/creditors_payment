@@ -24,6 +24,12 @@
           <button type="button" class="wdx-zoom" @click="fit()" data-tip="{% translate 'Fit to screen' %}" x-text="zoom + '%'"></button>
           <button type="button" class="icon-btn" @click="view.zoomBy(1.2)" aria-label="{% translate 'Zoom in' %}">{% icon "zoom-in" %}</button>
         </div>
+        <div class="wdx-group wmd-dir" x-show="dir" x-cloak role="group" aria-label="{% translate 'Direction' %}">
+          <button type="button" class="icon-btn" :class="(dir === 'TD' || dir === 'TB') && 'is-on'" @click="setDir('TD')" aria-label="{% translate 'Top to bottom' %}" data-tip="{% translate 'Top to bottom' %}">{% icon "arrow-down" %}</button>
+          <button type="button" class="icon-btn" :class="dir === 'LR' && 'is-on'" @click="setDir('LR')" aria-label="{% translate 'Left to right' %}" data-tip="{% translate 'Left to right' %}">{% icon "arrow-right" %}</button>
+          <button type="button" class="icon-btn" :class="dir === 'BT' && 'is-on'" @click="setDir('BT')" aria-label="{% translate 'Bottom to top' %}" data-tip="{% translate 'Bottom to top' %}">{% icon "arrow-up" %}</button>
+        </div>
+        {% if sketchable %}<button type="button" class="btn btn-ghost btn-sm" :class="look === 'handDrawn' && 'is-on'" @click="toggleLook()" :aria-pressed="(look === 'handDrawn').toString()" data-tip="{% translate 'Draw it as if by hand' %}">{% icon "sketch" %}<span class="wn-hide-xs">{% translate "Hand-drawn" %}</span></button>{% endif %}
         <span class="wmd-busy" x-show="busy" x-cloak aria-hidden="true"></span>
       </div>
       <div class="wdx-canvas wmd-canvas" x-ref="canvas" :class="error && 'is-stale'">

@@ -731,7 +731,22 @@
       return {
         id: initial.id || null, title: initial.title || "", body: initial.body || "", tags: initial.tags || "", project: initial.project || "",
         state: "saved", savedAt: initial.saved || "", preview: false, timer: null, inflight: null, again: false,
-        making: false, suggest: [], pick: 0,
+        making: false, suggest: [], pick: 0, dgOpen: false, dgItems: [], dgQ: "", dgLoading: false,
+        /* Put a diagram in the note: its picture, linking to it (it stays up to date as the diagram changes) */
+        openDiagrams: function () {
+          this.dgOpen = !this.dgOpen; if (this.dgOpen) this.findDiagrams();
+        },
+        findDiagrams: function () {
+          var self = this; this.dgLoading = true;
+          fetch(CFG.urls.diagramList + "?q=" + encodeURIComponent(this.dgQ), { credentials: "same-origin", headers: { Accept: "application/json" } })
+            .then(function (r) { return r.json(); }).then(function (res) { self.dgItems = res.items || []; })
+            .catch(function () { self.dgItems = []; }).then(function () { self.dgLoading = false; });
+        },
+        insertDiagram: function (item) {
+          var title = String(item.title).replace(/[\[\]]/g, "");
+          this.dgOpen = false; this.preview = false;
+          this.insert("\n[![" + title + "](" + item.picture + ")](" + item.url + ")\n", "");
+        },
         titles: (function () { try { return JSON.parse((d.getElementById("note-titles") || {}).textContent || "[]"); } catch (e) { return []; } })(),
         get todoCount() {      // open "- [ ] …" lines that aren't tasks yet
           return (this.body.match(/^[ \t]*[-*+][ \t]+\[ \][ \t]+\S.*$/gm) || []).filter(function (l) { return l.indexOf("/work/tasks/") < 0; }).length;
@@ -815,6 +830,10 @@
           api(CFG.urls.noteBase + this.id + "/", { action: name }).then(function (res) {
             if (name === "delete") { store(self.draftKey, null); undoable(t("noteDeleted", "Note deleted"), res.undo, function () { location.href = CFG.urls.notes + self.id + "/"; }); setTimeout(function () { location.href = CFG.urls.notes; }, 350); }
             else if (name === "to_task" && res.url) location.href = res.url;
+            else if (name === "cards") {
+              if (res.ok && !res.queued) toast(t("cardsMade", "Flashcards made") + ": " + res.count, "good", { label: t("seeCards", "See them"), run: function () { location.href = res.url; } });
+              else if (!res.ok) toast(res.error || t("noPairs", ""), "warn");
+            }
             else location.reload();
           });
         },
@@ -1263,9 +1282,10 @@
     return mermaidLoading;
   };
   // Strict: no clicks or scripts from the text; plain SVG labels, so a picture can be exported.
-  window.Work.mermaidTheme = function (theme) {
-    if (!window.mermaid || mermaidTheme === theme) return;
-    mermaidTheme = theme;
+  window.Work.mermaidTheme = function (theme, look) {
+    var key = theme + "/" + (look || "");
+    if (!window.mermaid || mermaidTheme === key) return;
+    mermaidTheme = key;
     // The app's own colours (teal ink on paper; light text on deep green in the dark).
     var dark = theme === "dark", vars = dark ? {
       darkMode: true, background: "#16201c", primaryColor: "#1f3a33", primaryTextColor: "#e8efe9", primaryBorderColor: "#3fbfa8",
@@ -1279,7 +1299,7 @@
       actorBkg: "#e2efe9", actorBorder: "#0f5c4d", actorTextColor: "#1f2a24", signalColor: "#33413b", signalTextColor: "#1f2a24", labelBoxBkgColor: "#e2efe9",
     };
     vars.fontFamily = "system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans Bengali', sans-serif"; vars.fontSize = "15px";
-    mermaid.initialize({ startOnLoad: false, securityLevel: "strict", theme: "base", themeVariables: vars, htmlLabels: false,
+    mermaid.initialize({ startOnLoad: false, securityLevel: "strict", theme: "base", themeVariables: vars, htmlLabels: false, look: look || "classic",
                          flowchart: { htmlLabels: false, curve: "basis" }, gantt: { useWidth: 960 } });
   };
   var mermaidSeq = 0;
@@ -1337,7 +1357,7 @@
   /* ── Keyboard: the whole module without a mouse ─────────────────────── */
   var pending = null;
   var GO = { h: "today", t: "tasks", b: "board", p: "projects", i: "time", f: "focus_page", n: "notes", s: "snippets", a: "habits", j: "journal", r: "reports", ",": "settings",
-             c: "calendar", o: "goals", l: "learning", v: "review", d: "plan", w: "week", m: "diagrams" };
+             c: "calendar", o: "goals", l: "learning", v: "review", d: "plan", w: "week", m: "diagrams", k: "cards" };
   d.addEventListener("keydown", function (e) {
     if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || typing(e)) return;
     var k = e.key;

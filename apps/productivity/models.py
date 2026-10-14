@@ -571,6 +571,14 @@ class DiagramKind(models.TextChoices):
     GANTT = "gantt", _("Gantt chart")
     TIMELINE = "timeline", _("Timeline")
     JOURNEY = "journey", _("User journey")
+    C4 = "c4", _("C4 context")
+    ARCHITECTURE = "architecture", _("Cloud architecture")
+    BLOCK = "block", _("Block diagram")
+    GITGRAPH = "gitgraph", _("Git branches")
+    PIE = "pie", _("Pie chart")
+    QUADRANT = "quadrant", _("Priority matrix")
+    XYCHART = "xychart", _("Bar & line chart")
+    SANKEY = "sankey", _("Sankey (flows)")
 
 
 # Drawn with the mouse or a finger (their shapes are kept in `data`); every
@@ -602,3 +610,84 @@ class Diagram(models.Model):
     @property
     def is_visual(self):
         return self.kind in VISUAL_KINDS
+
+
+class DiagramVersion(models.Model):
+    """An earlier state of a diagram, kept so it can be brought back: taken
+    by itself before a new round of editing, or on purpose with a name."""
+    diagram = models.ForeignKey(Diagram, on_delete=models.CASCADE, related_name="versions")
+    name = models.CharField(_("Name"), max_length=120, blank=True, help_text="Given by hand; empty for automatic copies.")
+    title = models.CharField(max_length=200)
+    source = models.TextField(blank=True)
+    data = models.JSONField(default=dict, blank=True)
+    notes = models.TextField(blank=True)
+    preview = models.TextField(blank=True)
+    created_at = models.DateTimeField(default=timezone.now, db_index=True)
+
+    class Meta:
+        ordering = ["-created_at", "-pk"]
+
+    def __str__(self):
+        return self.name or f"{self.title} @ {self.created_at:%Y-%m-%d %H:%M}"
+
+
+# ── Flashcards: remember what you learn (spaced repetition) ─────────────────
+class Deck(models.Model):
+    owner = models.ForeignKey(**OWNER)
+    name = models.CharField(_("Name"), max_length=120)
+    color = models.CharField(_("Colour"), max_length=10, choices=Color.choices, default=Color.TEAL)
+    description = models.TextField(_("About this deck"), blank=True)
+    learning = models.ForeignKey(LearningItem, on_delete=models.SET_NULL, null=True, blank=True, related_name="decks",
+                                 verbose_name=_("From what you're learning"))
+    new_per_day = models.PositiveSmallIntegerField(_("New cards a day"), default=20, validators=[MaxValueValidator(500)],
+                                                   help_text=_("How many cards you haven't seen yet come up each day."))
+    is_archived = models.BooleanField(_("Archived"), default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["is_archived", "name"]
+
+    def __str__(self):
+        return self.name
+
+
+class Card(models.Model):
+    """One question and its answer. `due`, `interval` (days) and `ease` say
+    when it comes up next: sooner when it was hard, later when it was easy."""
+    owner = models.ForeignKey(**OWNER)
+    deck = models.ForeignKey(Deck, on_delete=models.CASCADE, related_name="cards", verbose_name=_("Deck"))
+    front = models.TextField(_("Question"))
+    back = models.TextField(_("Answer"), blank=True)
+    due = models.DateField(_("Next review"), default=timezone.localdate, db_index=True)
+    interval = models.PositiveIntegerField(default=0, help_text="Days until the next review.")
+    ease = models.FloatField(default=2.5)
+    reps = models.PositiveIntegerField(default=0, help_text="Times answered right in a row.")
+    lapses = models.PositiveIntegerField(default=0, help_text="Times forgotten.")
+    last_reviewed = models.DateTimeField(null=True, blank=True)
+    is_suspended = models.BooleanField(_("Paused"), default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["due", "pk"]
+        indexes = [models.Index(fields=["owner", "is_suspended", "due"])]
+
+    def __str__(self):
+        return self.front[:60]
+
+    @property
+    def is_new(self):
+        return self.last_reviewed is None
+
+
+class CardReview(models.Model):
+    """One answer in a review: kept for the streak and the "how am I doing" numbers."""
+    owner = models.ForeignKey(**OWNER)
+    card = models.ForeignKey(Card, on_delete=models.CASCADE, related_name="reviews")
+    rating = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(4)])
+    interval = models.PositiveIntegerField(default=0)
+    reviewed_at = models.DateTimeField(default=timezone.now, db_index=True)
+
+    class Meta:
+        ordering = ["-reviewed_at"]

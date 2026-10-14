@@ -5,6 +5,7 @@
       <button type="button" class="icon-btn" @click="addChild()" aria-label="{% translate 'Add an idea under it' %}" data-tip="{% translate 'Add an idea under it (Tab)' %}">{% icon "branch" %}</button>
       <button type="button" class="icon-btn" @click="addSibling()" :disabled="isRoot" aria-label="{% translate 'Add an idea next to it' %}" data-tip="{% translate 'Add an idea next to it (Enter)' %}">{% icon "sibling" %}</button>
       <button type="button" class="icon-btn" @click="edit()" aria-label="{% translate 'Edit the text' %}" data-tip="{% translate 'Edit the text (Space or double-click)' %}">{% icon "edit" %}</button>
+      <button type="button" class="icon-btn" :class="isDone && 'is-on'" @click="toggleDone()" :disabled="isRoot" :aria-pressed="isDone.toString()" aria-label="{% translate 'Done' %}" data-tip="{% translate 'Tick it off (Ctrl+Enter)' %}">{% icon "check" %}</button>
       <button type="button" class="icon-btn" @click="fold()" :disabled="!hasKids" aria-label="{% translate 'Fold or unfold' %}" data-tip="{% translate 'Fold or unfold (/)' %}"><span class="wdx-fold" x-text="folded ? '+' : '−'"></span></button>
       <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false">
         <button type="button" class="icon-btn" @click="open = !open" :aria-expanded="open" aria-label="{% translate 'Colour' %}" data-tip="{% translate 'Colour of this branch' %}"><span class="wmm-dot" :style="'background:' + selColor"></span></button>
@@ -24,18 +25,43 @@
       <button type="button" class="wdx-zoom" @click="fit()" data-tip="{% translate 'Fit to screen (0)' %}" x-text="zoom + '%'"></button>
       <button type="button" class="icon-btn" @click="view.zoomBy(1.2)" aria-label="{% translate 'Zoom in' %}">{% icon "zoom-in" %}</button>
     </div>
+    <div class="wdx-group">
+      <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
+        <button type="button" class="icon-btn" @click="open = !open" :aria-expanded="open" aria-haspopup="true" aria-label="{% translate 'Layout' %}" data-tip="{% translate 'Layout' %}">
+          <span x-show="layout === 'map'">{% icon "lay-map" %}</span><span x-show="layout === 'right'" x-cloak>{% icon "lay-right" %}</span><span x-show="layout === 'down'" x-cloak>{% icon "lay-down" %}</span></button>
+        <div class="menu wmm-lay" x-show="open" x-cloak role="menu" @click="open = false">
+          <button type="button" class="menu-item" role="menuitemradio" :aria-checked="(layout === 'map').toString()" :class="layout === 'map' && 'is-on'" @click="setLayout('map')">{% icon "lay-map" %}{% translate "Map: branches on both sides" %}</button>
+          <button type="button" class="menu-item" role="menuitemradio" :aria-checked="(layout === 'right').toString()" :class="layout === 'right' && 'is-on'" @click="setLayout('right')">{% icon "lay-right" %}{% translate "Tree: everything to the right" %}</button>
+          <button type="button" class="menu-item" role="menuitemradio" :aria-checked="(layout === 'down').toString()" :class="layout === 'down' && 'is-on'" @click="setLayout('down')">{% icon "lay-down" %}{% translate "Org chart: top to bottom" %}</button>
+          <div class="menu-sep"></div>
+          <button type="button" class="menu-item" role="menuitem" @click="foldAll(false)">{% icon "maximize" %}{% translate "Unfold everything" %}</button>
+          <button type="button" class="menu-item" role="menuitem" @click="foldAll(true)">{% icon "minimize" %}{% translate "Fold to the main branches" %}</button>
+        </div>
+      </div>
+      <button type="button" class="icon-btn" :class="findOpen && 'is-on'" @click="openFind()" aria-label="{% translate 'Find' %}" data-tip="{% translate 'Find an idea (Ctrl+F)' %}">{% icon "search" %}</button>
+    </div>
     <div class="wdx-group wdx-group-end">
+      <span class="wmm-progress" x-show="total > 1" x-cloak :data-tip="'{% translate "Ticked off" %}'"><i :style="'--p:' + (doneCount / Math.max(1, total - 1) * 100) + '%'"></i><span x-text="doneCount + '/' + (total - 1)"></span></span>
       <button type="button" class="btn btn-ghost btn-sm" @click="makeTasks()" data-tip="{% translate 'Each idea under the picked one becomes a task' %}">{% icon "check" %}<span class="wn-hide-xs">{% translate "Make tasks" %}</span></button>
+      <button type="button" class="btn btn-ghost btn-sm" @click="makeCards()" data-tip="{% translate 'Each idea with ideas under it becomes a flashcard' %}">{% icon "cards" %}<span class="wn-hide-xs">{% translate "Flashcards" %}</span></button>
       <button type="button" class="btn btn-ghost btn-sm" @click="importOpen = true; $nextTick(() => $refs.paste.focus())" data-tip="{% translate 'Turn a pasted list into a mind map' %}">{% icon "upload" %}<span class="wn-hide-xs">{% translate "Paste a list" %}</span></button>
     </div>
   </div>
-  <div class="wdx-canvas" x-ref="canvas" tabindex="0" aria-label="{% translate 'Mind map. Arrow keys move between ideas.' %}" @keydown="key($event)">
+  <div class="wdx-canvas" x-ref="canvas" tabindex="0" :data-layout="layout" :class="findOpen && findText && 'is-finding'" aria-label="{% translate 'Mind map. Arrow keys move between ideas.' %}" @keydown="key($event)">
+    <form class="wmm-find" x-show="findOpen" x-cloak x-transition.opacity.duration.120ms @submit.prevent="findNext(1)" @keydown.escape.prevent.stop="closeFind()" @keydown.stop @pointerdown.stop>
+      {% icon "search" %}
+      <input x-ref="find" x-model="findText" @input="find()" class="wmm-find-input" placeholder="{% translate 'Find an idea…' %}" aria-label="{% translate 'Find an idea' %}" enterkeyhint="search">
+      <span class="wmm-find-n" x-text="findText ? (hits.length ? (hitAt + 1) + '/' + hits.length : texts.noMatch) : ''"></span>
+      <button type="button" class="icon-btn" @click="findNext(-1)" :disabled="!hits.length" aria-label="{% translate 'Previous' %}">{% icon "chevron-left" %}</button>
+      <button type="button" class="icon-btn" @click="findNext(1)" :disabled="!hits.length" aria-label="{% translate 'Next' %}">{% icon "chevron-right" %}</button>
+      <button type="button" class="icon-btn" @click="closeFind()" aria-label="{% translate 'Close' %}">{% icon "x" %}</button>
+    </form>
     <div class="wdx-world" x-ref="world">
       <svg class="wmm-links" x-ref="links" aria-hidden="true"></svg>
       <div class="wmm-nodes" x-ref="nodes"></div>
     </div>
   </div>
-  <p class="wdx-hint"><kbd>Tab</kbd> {% translate "idea under it" %} · <kbd>Enter</kbd> {% translate "idea next to it" %} · <kbd>Space</kbd> {% translate "edit" %} · <kbd>/</kbd> {% translate "fold" %} · <kbd>Del</kbd> {% translate "delete" %} · {% translate "Drag an idea onto another to move it. Drag the background to look around; pinch or Ctrl+scroll to zoom." %}</p>
+  <p class="wdx-hint"><kbd>Tab</kbd> {% translate "idea under it" %} · <kbd>Enter</kbd> {% translate "idea next to it" %} · <kbd>Space</kbd> {% translate "edit" %} · <kbd>/</kbd> {% translate "fold" %} · <kbd>Ctrl</kbd>+<kbd>Enter</kbd> {% translate "tick off" %} · <kbd>Alt</kbd>+<kbd>↑↓</kbd> {% translate "move up or down" %} · <kbd>Del</kbd> {% translate "delete" %} · {% translate "Drag an idea onto another to move it. Drag the background to look around; pinch or Ctrl+scroll to zoom." %}</p>
 
   <div class="wc-backdrop" x-show="importOpen" x-cloak x-transition.opacity @click="importOpen = false"></div>
   <section class="wc" x-show="importOpen" x-cloak x-transition @keydown.escape.stop="importOpen = false" role="dialog" aria-modal="true" aria-labelledby="mm-import-title">

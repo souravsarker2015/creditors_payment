@@ -1,0 +1,158 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{{ deck.name }} | {% translate "Flashcards" %}{% endblock %}
+
+{% block work %}
+{{ cards|json_script:"deck-cards" }}
+{{ texts|json_script:"card-text" }}
+<div class="wfc-deckpage" x-data="deckPage({{ deck.pk }}, {{ form.errors|yesno:'true,false' }})" data-color="{{ deck.color }}">
+  <header class="wp-head wfc-deck-head">
+    <div class="min-w-0">
+      <a href="{% url 'work:cards' %}" class="wfc-crumb">{% icon "chevron-left" %}{% translate "Flashcards" %}</a>
+      <h1 class="wp-title"><span class="wfc-dot" aria-hidden="true"></span>{{ deck.name }}{% if deck.is_archived %} <span class="badge">{% translate "Archived" %}</span>{% endif %}</h1>
+      <p class="wp-sub">
+        {% blocktranslate count counter=deck.n_total %}{{ counter }} card{% plural %}{{ counter }} cards{% endblocktranslate %} · {{ deck.pct }}% {% translate "learnt" %}
+        {% if deck.learning %} · <a href="{% url 'work:learning_edit' deck.learning.pk %}" class="wfc-link">{% icon "book" %}{{ deck.learning.title }}</a>{% endif %}
+      </p>
+      {% if deck.description %}<p class="wfc-desc">{{ deck.description }}</p>{% endif %}
+    </div>
+    <div class="wp-actions">
+      {% if deck.n_today %}<a href="{% url 'work:card_review' %}?deck={{ deck.pk }}" class="btn btn-primary">{% icon "play" %}{% translate "Review" %} <span class="wfc-pill">{{ deck.n_today }}</span></a>{% endif %}
+      {% if deck.n_total %}<a href="{% url 'work:card_review' %}?deck={{ deck.pk }}&practice=1" class="btn btn-secondary" data-tip="{% translate 'Go through every card; your schedule stays as it is' %}">{% icon "repeat" %}{% translate "Practise all" %}</a>{% endif %}
+      <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
+        <button type="button" class="icon-btn" @click="open = !open" :aria-expanded="open" aria-label="{% translate 'More actions' %}">{% icon "dots" %}</button>
+        <div class="menu" x-show="open" x-cloak role="menu" @click="open = false">
+          <button type="button" class="menu-item" role="menuitem" @click="settings = true">{% icon "edit" %}{% translate "Deck settings" %}</button>
+          <button type="button" class="menu-item" role="menuitem" @click="deckAction('archive')">{% icon "archive" %}{% if deck.is_archived %}{% translate "Unarchive" %}{% else %}{% translate "Archive" %}{% endif %}</button>
+          <div class="menu-sep"></div>
+          <button type="button" class="menu-item is-danger" role="menuitem" @click="deckAction('delete')">{% icon "trash" %}{% translate "Delete the deck" %}</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  {# ── add cards ── #}
+  <section class="card wfc-add" id="add">
+    <div class="card-header">
+      <div><h2 class="card-title">{% icon "plus" %}{% translate "Add cards" %}</h2></div>
+      <nav class="seg seg-sm" aria-label="{% translate 'How to add' %}">
+        <button type="button" class="seg-item" :class="mode === 'one' && 'is-active'" @click="mode = 'one'">{% translate "One card" %}</button>
+        <button type="button" class="seg-item" :class="mode === 'many' && 'is-active'" @click="mode = 'many'; $nextTick(() => $refs.many.focus())">{% translate "Many at once" %}</button>
+      </nav>
+    </div>
+    <div class="card-body">
+      <form x-show="mode === 'one'" class="wfc-one" @submit.prevent="addOne()" @keydown.ctrl.enter.prevent="addOne()" @keydown.meta.enter.prevent="addOne()">
+        <label class="wfc-side-in" data-side="front">
+          <span>{% translate "Question" %}</span>
+          <textarea x-ref="front" x-model="front" class="form-input" rows="3" required placeholder="{% translate 'What does a load balancer do?' %}"></textarea>
+        </label>
+        <label class="wfc-side-in" data-side="back">
+          <span>{% translate "Answer" %}</span>
+          <textarea x-model="back" class="form-input" rows="3" placeholder="{% translate 'Spreads requests across servers, so none gets overloaded and one can fail safely.' %}"></textarea>
+        </label>
+        <div class="wfc-one-foot">
+          <p class="wfc-hint">{% translate "Markdown works: **bold**, `code`, lists, ```mermaid diagrams." %} <kbd>Ctrl</kbd>+<kbd>Enter</kbd> {% translate "adds it" %}</p>
+          <button type="submit" class="btn btn-primary" :disabled="!front.trim() || busy">{% icon "plus" %}{% translate "Add card" %}</button>
+        </div>
+      </form>
+      <form x-show="mode === 'many'" x-cloak class="wfc-many" @submit.prevent="addMany()">
+        <textarea x-ref="many" x-model="many" class="form-input code-ish" rows="7" placeholder="{% translate 'CAP theorem :: Consistency, availability, partition tolerance — pick two when the network splits&#10;Idempotent :: Doing it twice has the same effect as once&#10;P99 latency :: 99 of 100 requests are faster than this' %}"></textarea>
+        <div class="wfc-one-foot">
+          <p class="wfc-hint">{% translate "One card a line: question :: answer. Copied spreadsheet columns (question, then answer) work too." %} <b x-show="manyCount" x-text="manyCount + ' {% translate "cards found" %}'"></b></p>
+          <button type="submit" class="btn btn-primary" :disabled="!manyCount || busy">{% icon "plus" %}{% translate "Add them" %}</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  {# ── the cards ── #}
+  <form method="get" class="wf-bar wfc-filter">
+    <nav class="seg seg-sm" aria-label="{% translate 'Show' %}">
+      <a href="?show=all" class="seg-item{% if show == 'all' %} is-active{% endif %}">{% translate "All" %} <span class="wg-count">{{ deck.n_total }}</span></a>
+      <a href="?show=due" class="seg-item{% if show == 'due' %} is-active{% endif %}">{% translate "Due" %} <span class="wg-count">{{ deck.n_due }}</span></a>
+      <a href="?show=new" class="seg-item{% if show == 'new' %} is-active{% endif %}">{% translate "New" %}</a>
+      <a href="?show=learnt" class="seg-item{% if show == 'learnt' %} is-active{% endif %}">{% translate "Learnt" %} <span class="wg-count">{{ deck.n_learnt }}</span></a>
+      {% if paused %}<a href="?show=paused" class="seg-item{% if show == 'paused' %} is-active{% endif %}">{% translate "Paused" %} <span class="wg-count">{{ paused }}</span></a>{% endif %}
+    </nav>
+    <div class="input-icon wf-search">
+      {% icon "search" %}
+      <input type="search" name="q" value="{{ q }}" class="form-input input-compact" placeholder="{% translate 'Search cards  ( / )' %}" data-work-search aria-label="{% translate 'Search cards' %}">
+      <input type="hidden" name="show" value="{{ show }}">
+    </div>
+  </form>
+
+  <ul class="wfc-list" x-show="list.length">
+    <template x-for="(c, i) in list" :key="c.id">
+      <li class="wfc-row" :class="{ 'is-paused': c.paused, 'is-editing': editing === c.id, 'is-fresh': c.fresh }">
+        <template x-if="editing !== c.id">
+          <div class="wfc-row-view" @dblclick="edit(c)">
+            <div class="wfc-row-q wn-md" x-html="md(c.front)"></div>
+            <div class="wfc-row-a wn-md" x-html="c.back ? md(c.back) : '<p class=wfc-muted>' + texts.noAnswer + '</p>'"></div>
+            <div class="wfc-row-side">
+              <span class="wfc-chip" :data-state="c.paused ? 'paused' : c.isNew ? 'new' : (c.dueText === '{% translate "due" %}' ? 'due' : 'later')" x-text="c.paused ? '{% translate "paused" %}' : c.dueText"></span>
+              <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
+                <button type="button" class="icon-btn" @click="open = !open" :aria-expanded="open" aria-label="{% translate 'Card actions' %}">{% icon "dots" %}</button>
+                <div class="menu" x-show="open" x-cloak role="menu" @click="open = false">
+                  <button type="button" class="menu-item" role="menuitem" @click="edit(c)">{% icon "edit" %}{% translate "Edit" %}</button>
+                  <button type="button" class="menu-item" role="menuitem" @click="act(c, 'pause')">{% icon "pause" %}<span x-text="c.paused ? '{% translate "Start again" %}' : '{% translate "Pause" %}'"></span></button>
+                  <button type="button" class="menu-item" role="menuitem" @click="act(c, 'reset')" x-show="!c.isNew">{% icon "restore" %}{% translate "Start over as new" %}</button>
+                  {% if decks %}<div class="menu-sep"></div><p class="menu-label">{% translate "Move to" %}</p>
+                  {% for other in decks %}<button type="button" class="menu-item" role="menuitem" @click="act(c, 'move', { deck: {{ other.pk }} })"><span class="wfc-dot" data-color="{{ other.color }}"></span>{{ other.name }}</button>{% endfor %}{% endif %}
+                  <div class="menu-sep"></div>
+                  <button type="button" class="menu-item is-danger" role="menuitem" @click="act(c, 'delete')">{% icon "trash" %}{% translate "Delete" %}</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+        <template x-if="editing === c.id">
+          <form class="wfc-row-edit" @submit.prevent="saveEdit(c)" @keydown.escape.stop="editing = null" @keydown.ctrl.enter.prevent="saveEdit(c)">
+            <textarea x-model="draft.front" class="form-input" rows="3" aria-label="{% translate 'Question' %}" x-init="$nextTick(() => $el.focus())"></textarea>
+            <textarea x-model="draft.back" class="form-input" rows="3" aria-label="{% translate 'Answer' %}"></textarea>
+            <div class="wfc-row-edit-foot"><button type="button" class="btn btn-ghost btn-sm" @click="editing = null">{% translate "Cancel" %}</button><button type="submit" class="btn btn-primary btn-sm">{% translate "Save" %}</button></div>
+          </form>
+        </template>
+      </li>
+    </template>
+  </ul>
+  <div class="empty" x-show="!list.length" x-cloak>
+    <div class="empty-icon">{% icon "cards" %}</div>
+    {% if q or show != "all" %}<h3 class="empty-title">{% translate "No cards here." %}</h3><a href="?" class="btn btn-secondary">{% translate "Show all" %}</a>
+    {% else %}<h3 class="empty-title">{% translate "No cards yet" %}</h3><p class="empty-text">{% translate "Write the first one above — or paste a list of “question :: answer” lines." %}</p>{% endif %}
+  </div>
+  {% if page.has_other_pages %}
+  <nav class="wfc-pager">
+    {% if page.has_previous %}<a class="btn btn-ghost btn-sm" href="?show={{ show }}&q={{ q|urlencode }}&page={{ page.previous_page_number }}">{% icon "chevron-left" %}{% translate "Newer" %}</a>{% endif %}
+    <span>{{ page.number }} / {{ page.paginator.num_pages }}</span>
+    {% if page.has_next %}<a class="btn btn-ghost btn-sm" href="?show={{ show }}&q={{ q|urlencode }}&page={{ page.next_page_number }}">{% translate "Older" %}{% icon "chevron-right" %}</a>{% endif %}
+  </nav>
+  {% endif %}
+
+  {# ── settings ── #}
+  <div class="wc-backdrop" x-show="settings" x-cloak x-transition.opacity @click="settings = false"></div>
+  <section class="wc" x-show="settings" x-cloak x-transition @keydown.escape.stop="settings = false" role="dialog" aria-modal="true" aria-labelledby="deck-set-title">
+    <h2 id="deck-set-title" class="card-title">{% translate "Deck settings" %}</h2>
+    <form method="post" class="wfc-form form-stack" novalidate>
+      {% csrf_token %}
+      {% with field=form.name %}{% include "partials/field.html" %}{% endwith %}
+      <fieldset><legend class="label">{{ form.color.label }}</legend>
+        <div class="w-swatches">{% for radio in form.color %}<label class="w-swatch" data-color="{{ radio.data.value }}" title="{{ radio.choice_label }}">{{ radio.tag }}<span class="sr-only">{{ radio.choice_label }}</span></label>{% endfor %}</div></fieldset>
+      {% with field=form.description %}{% include "partials/field.html" %}{% endwith %}
+      {% with field=form.learning %}{% include "partials/field.html" %}{% endwith %}
+      {% with field=form.new_per_day %}{% include "partials/field.html" %}{% endwith %}
+      <div class="wc-foot"><span class="spacer"></span><button type="button" class="btn btn-ghost" @click="settings = false">{% translate "Cancel" %}</button><button type="submit" class="btn btn-primary">{% translate "Save" %}</button></div>
+    </form>
+  </section>
+</div>
+{% endblock %}
+
+{% block work_libs %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.10.0/styles/github-dark.min.css">
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+{% endblock %}
+
+{% block work_js %}
+<script src="{% asset 'js/cards.js' %}"></script>
+{% endblock %}

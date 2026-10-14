@@ -66,6 +66,7 @@
             <div class="menu" x-show="open" x-cloak role="menu">
               <button type="button" class="menu-item" @click="action('pin')">{% icon "pin" %}{% if note.is_pinned %}{% translate "Unpin" %}{% else %}{% translate "Pin to top" %}{% endif %}</button>
               <button type="button" class="menu-item" @click="action('to_task')">{% icon "check" %}{% translate "Turn into a task" %}</button>
+              <button type="button" class="menu-item" @click="Promise.resolve(saveNow()).then(() => action('cards'))" data-tip="{% translate 'Each “question :: answer” line becomes a flashcard' %}">{% icon "cards" %}{% translate "Make flashcards" %}</button>
               <button type="button" class="menu-item" @click="navigator.clipboard && navigator.clipboard.writeText(body).then(() => Work.toast('{% translate "Copied" %}'))">{% icon "copy" %}{% translate "Copy Markdown" %}</button>
               <button type="button" class="menu-item" @click="action('archive')">{% icon "archive" %}{% if note.is_archived %}{% translate "Unarchive" %}{% else %}{% translate "Archive" %}{% endif %}</button>
               <button type="button" class="menu-item is-danger" @click="action('delete')">{% icon "trash" %}{% translate "Delete" %}</button>
@@ -85,6 +86,20 @@
           <button type="button" class="icon-btn" @click="insert('\n```\n', '\n```\n')" aria-label="{% translate 'Code block' %}" data-tip="{% translate 'Code block' %}"><span class="wn-cb">{}</span></button>
           <button type="button" class="icon-btn" @click="insert('[', '](https://)')" aria-label="{% translate 'Link' %}" data-tip="{% translate 'Link' %}">{% icon "link" %}</button>
           <button type="button" class="icon-btn" @click="insert('[[', ']]')" aria-label="{% translate 'Link another note' %}" data-tip="{% translate 'Link another note: [[Title]]' %}"><span class="wn-cb">[[ ]]</span></button>
+          <span class="wn-fmt-sep" aria-hidden="true"></span>
+          <button type="button" class="icon-btn" @click="insert(' :: ', '')" aria-label="{% translate 'Flashcard' %}" data-tip="{% translate 'Flashcard: question :: answer' %}">{% icon "cards" %}</button>
+          <div class="menu-wrap wn-dg" @click.outside="dgOpen = false" @keydown.escape.stop="dgOpen = false">
+            <button type="button" class="icon-btn" @click="openDiagrams()" :aria-expanded="dgOpen" aria-label="{% translate 'Insert a diagram' %}" data-tip="{% translate 'Insert a diagram' %}">{% icon "diagram" %}</button>
+            <div class="menu wn-dg-menu" x-show="dgOpen" x-cloak x-transition.opacity.duration.120ms>
+              <input x-model="dgQ" @input.debounce.250ms="findDiagrams()" class="form-input input-compact" placeholder="{% translate 'Find a diagram…' %}" aria-label="{% translate 'Find a diagram' %}">
+              <ul class="wn-dg-list">
+                <template x-for="item in dgItems" :key="item.id">
+                  <li><button type="button" class="wn-dg-item" @click="insertDiagram(item)"><img :src="item.thumb" alt="" loading="lazy"><span><b x-text="item.title"></b><small x-text="item.kind"></small></span></button></li>
+                </template>
+              </ul>
+              <p class="wn-dg-none" x-show="!dgLoading && !dgItems.length">{% translate "No diagrams yet." %} <a href="{% url 'work:diagrams' %}">{% translate "Draw one" %}</a></p>
+            </div>
+          </div>
         </div>
       </div>
       <input x-model="title" class="wn-title" placeholder="{% translate 'Title' %}" aria-label="{% translate 'Title' %}">

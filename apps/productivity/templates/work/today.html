@@ -39,6 +39,15 @@
   </div>
 </section>
 
+{% if cards_due %}
+<a href="{% url 'work:card_review' %}" class="wd-cards">
+  <span class="wfc-hero-stack" aria-hidden="true"><i></i><i></i><i>{{ cards_due }}</i></span>
+  <span class="wd-cards-text"><b>{% blocktranslate count counter=cards_due %}{{ counter }} flashcard to review{% plural %}{{ counter }} flashcards to review{% endblocktranslate %}</b>
+    <small>{% blocktranslate count counter=cards_due %}About {{ counter }} minute — keeps what you learnt from slipping away.{% plural %}About {{ counter }} minutes — keeps what you learnt from slipping away.{% endblocktranslate %}</small></span>
+  <span class="btn btn-primary btn-sm">{% icon "play" %}{% translate "Review" %}</span>
+</a>
+{% endif %}
+
 <div class="wd-grid">
   <section class="card wd-tasks{% if open_tasks %} has-items{% endif %}" x-data="workTasks" data-empty-wrap>
     <header class="card-header">

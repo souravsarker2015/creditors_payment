@@ -8,7 +8,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from . import diagrams
-from .models import Diagram, DiagramKind, Note, Project, Task
+from .models import Diagram, DiagramKind, DiagramVersion, Note, Project, Task
 
 PW = "Str0ng-pass-123"
 SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect width="10" height="10"/></svg>'
@@ -162,3 +162,79 @@ class DiagramTests(TestCase):
         self.assertEqual(self.client.post(reverse("work:api_diagram_action", args=[d.pk]), {"action": "delete"}).status_code, 404)
         self.assertEqual(self.client.get(reverse("work:diagrams")).context["diagrams"].count(), 0)
         self.assertEqual(self.client.post(reverse("work:diagram_new"), {"kind": "nonsense"}).status_code, 404)
+
+    def test_every_kind_has_a_tile_in_a_group(self):
+        r = self.client.get(reverse("work:diagrams"))
+        kinds = [t["kind"] for g in r.context["groups"] for t in g["tiles"]]
+        self.assertEqual(sorted(kinds), sorted(DiagramKind.values))
+        for kind in ("c4", "architecture", "quadrant", "sankey"):
+            self.assertContains(r, f'data-kind="{kind}"')
+
+    def test_hand_drawn_look_is_kept_for_kinds_that_have_it(self):
+        d = self.start(DiagramKind.FLOWCHART)
+        self.save(d, data=json.dumps({"look": "handDrawn"}))
+        d.refresh_from_db()
+        self.assertEqual(d.data, {"look": "handDrawn"})
+        self.assertContains(self.client.get(reverse("work:diagram", args=[d.pk])), "Hand-drawn")
+        seq = self.start(DiagramKind.SEQUENCE)
+        self.save(seq, data=json.dumps({"look": "handDrawn"}))
+        seq.refresh_from_db()
+        self.assertEqual(seq.data, {})
+        self.assertNotContains(self.client.get(reverse("work:diagram", args=[seq.pk])), "Hand-drawn")
+
+    def test_earlier_versions_are_kept_and_can_come_back(self):
+        d = self.start(DiagramKind.FLOWCHART)
+        first = d.source
+        self.save(d, source="flowchart LR\n    A --> B\n")       # the template's text is kept before the first change
+        self.assertEqual(DiagramVersion.objects.get().source, first)
+        self.save(d, source="flowchart LR\n    A --> C\n")       # within a few minutes: no second copy
+        self.assertEqual(DiagramVersion.objects.count(), 1)
+        DiagramVersion.objects.update(created_at=DiagramVersion.objects.get().created_at - diagrams.AUTO_EVERY)
+        self.save(d, source="flowchart LR\n    A --> D\n")
+        self.assertEqual(DiagramVersion.objects.count(), 2)
+        url = reverse("work:api_diagram_action", args=[d.pk])
+        v = self.client.post(url, {"action": "version", "name": "Before review"}).json()["version"]
+        self.assertEqual(v["name"], "Before review")
+        listed = self.client.get(reverse("work:api_diagram_versions", args=[d.pk])).json()["versions"]
+        self.assertEqual([x["name"] for x in listed][0], "Before review")
+        oldest = DiagramVersion.objects.order_by("created_at").first()
+        self.client.post(url, {"action": "restore", "version": oldest.pk})
+        d.refresh_from_db()
+        self.assertEqual(d.source, first)
+        self.assertTrue(DiagramVersion.objects.filter(source="flowchart LR\n    A --> D\n").exists())   # what was there is kept too
+        self.client.post(url, {"action": "forget", "version": oldest.pk})
+        self.assertFalse(DiagramVersion.objects.filter(pk=oldest.pk).exists())
+
+    def test_version_pictures_are_safe_and_private(self):
+        d = self.start(DiagramKind.FLOWCHART)
+        self.save(d, preview=SVG)
+        d.refresh_from_db()
+        v = diagrams.remember(d, name="x", force=True)
+        r = self.client.get(reverse("work:diagram_version_preview", args=[d.pk, v.pk]))
+        self.assertIn("sandbox", r["Content-Security-Policy"])
+        self.assertIn("immutable", r["Cache-Control"])
+        other = User.objects.create_superuser("other", "o@example.com", PW)
+        self.client.force_login(other)
+        self.assertEqual(self.client.get(reverse("work:diagram_version_preview", args=[d.pk, v.pk])).status_code, 404)
+        self.assertEqual(self.client.get(reverse("work:api_diagram_versions", args=[d.pk])).status_code, 404)
+
+    def test_picture_in_a_note_is_checked_for_changes(self):
+        d = self.start(DiagramKind.FLOWCHART)
+        self.save(d, preview=SVG)
+        url = reverse("work:diagram_preview", args=[d.pk])
+        r = self.client.get(url)
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(self.client.get(url, HTTP_IF_MODIFIED_SINCE=r["Last-Modified"]).status_code, 304)
+        items = self.client.get(reverse("work:api_diagram_list")).json()["items"]
+        self.assertEqual([(i["id"], i["picture"]) for i in items], [(d.pk, url)])
+
+    def test_ticked_ideas(self):
+        data = {"root": {"id": "r", "text": "Trip", "children": [
+            {"id": "a", "text": "Pack", "children": [{"id": "b", "text": "Socks", "done": True, "children": []}, {"id": "c", "text": "Charger", "children": []}]}]},
+            "layout": "down"}
+        d = self.start(DiagramKind.MINDMAP)
+        self.save(d, data=json.dumps(data))
+        d.refresh_from_db()
+        self.assertEqual(d.data["layout"], "down")
+        self.assertIn("- [x] Socks", diagrams.outline_text(d.data))
+        self.assertEqual(diagrams.branch_titles(d.data, "a"), ["Charger"])     # done ideas don't become tasks

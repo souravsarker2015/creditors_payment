@@ -18,26 +18,31 @@
       <p class="card-subtitle">{% translate "Pick a kind, then a blank page or a ready-made start." %}</p>
     </div>
   </div>
-  <div class="wdg-kinds" role="tablist" aria-label="{% translate 'Kind of diagram' %}">
-    {% for t in tiles %}
-    <button type="button" class="wdg-kind" role="tab" :aria-selected="(pick === '{{ t.kind }}').toString()" :class="pick === '{{ t.kind }}' && 'is-on'"
-            @click="pick = pick === '{{ t.kind }}' ? '' : '{{ t.kind }}'" data-kind="{{ t.kind }}">
-      <span class="wdg-kind-ico">{% icon t.icon %}</span>
-      <span class="wdg-kind-name">{{ t.label }}</span>
-      <span class="wdg-kind-hint">{{ t.hint }}</span>
-      {% if t.count %}<span class="wdg-kind-n">{{ t.count }}</span>{% endif %}
-    </button>
-    {% endfor %}
-  </div>
-  {% for t in tiles %}
-  <div class="wdg-templates" x-show="pick === '{{ t.kind }}'" x-cloak x-transition.opacity.duration.150ms data-templates="{{ t.kind }}">
-    {% for key, title in t.templates %}
-    <form method="post" action="{% url 'work:diagram_new' %}">
-      {% csrf_token %}
-      <input type="hidden" name="kind" value="{{ t.kind }}"><input type="hidden" name="template" value="{{ key }}">
-      {% if project %}<input type="hidden" name="project" value="{{ project }}">{% endif %}
-      <button type="submit" class="wdg-tpl{% if key == 'blank' %} is-blank{% endif %}">{% if key == "blank" %}{% icon "plus" %}{% else %}{% icon t.icon %}{% endif %}<span>{{ title }}</span></button>
-    </form>
+  {% for g in groups %}
+  <div class="wdg-group">
+    <h3 class="wdg-group-label">{{ g.label }}</h3>
+    <div class="wdg-kinds{% if forloop.first %} is-big{% endif %}" role="tablist" aria-label="{{ g.label }}">
+      {% for t in g.tiles %}
+      <button type="button" class="wdg-kind" role="tab" :aria-selected="(pick === '{{ t.kind }}').toString()" :class="pick === '{{ t.kind }}' && 'is-on'"
+              @click="pick = pick === '{{ t.kind }}' ? '' : '{{ t.kind }}'" data-kind="{{ t.kind }}" style="--i: {{ forloop.counter0 }}">
+        <span class="wdg-kind-ico">{% icon t.icon %}</span>
+        <span class="wdg-kind-name">{{ t.label }}</span>
+        <span class="wdg-kind-hint">{{ t.hint }}</span>
+        {% if t.count %}<span class="wdg-kind-n">{{ t.count }}</span>{% endif %}
+      </button>
+      {% endfor %}
+    </div>
+    {% for t in g.tiles %}
+    <div class="wdg-templates" x-show="pick === '{{ t.kind }}'" x-cloak x-transition.opacity.duration.150ms data-templates="{{ t.kind }}">
+      {% for key, title in t.templates %}
+      <form method="post" action="{% url 'work:diagram_new' %}">
+        {% csrf_token %}
+        <input type="hidden" name="kind" value="{{ t.kind }}"><input type="hidden" name="template" value="{{ key }}">
+        {% if project %}<input type="hidden" name="project" value="{{ project }}">{% endif %}
+        <button type="submit" class="wdg-tpl{% if key == 'blank' %} is-blank{% endif %}" data-kind="{{ t.kind }}">{% if key == "blank" %}{% icon "plus" %}{% else %}{% icon t.icon %}{% endif %}<span>{{ title }}</span></button>
+      </form>
+      {% endfor %}
+    </div>
     {% endfor %}
   </div>
   {% endfor %}

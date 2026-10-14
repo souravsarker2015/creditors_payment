@@ -4,19 +4,25 @@ saves, and turning a mind map into an outline or tasks.
 Mind maps and system design boards are drawn by hand; their shapes live in
 `Diagram.data`:
 
-    mind map  {"root": {"id", "text", "children": [...], "collapsed"?, "color"?, "side"?}}
+    mind map  {"root": {"id", "text", "children": [...], "collapsed"?, "color"?, "done"?},
+               "layout": "map"|"right"|"down"}
     board     {"nodes": [{"id", "type", "x", "y", "w", "h", "label", "tech", "note", "color"}],
                "edges": [{"id", "from", "to", "label", "style": "solid"|"dashed", "arrow": "end"|"both"|"none"}],
                "est": {back-of-the-envelope numbers}}
 
-Every other kind is Mermaid text in `Diagram.source`, drawn in the browser.
+Every other kind is Mermaid text in `Diagram.source`, drawn in the browser;
+its `data` only says how it looks: {"look": "handDrawn"}.
+
+Earlier states are kept as DiagramVersion rows (see `remember`).
 """
 import json
 import re
+from datetime import timedelta
+
 from django.utils import timezone
 from django.utils.translation import gettext as _, gettext_lazy
 
-from .models import DiagramKind
+from .models import DiagramKind, DiagramVersion
 
 MAX_SOURCE = 100_000          # characters of Mermaid text
 MAX_DATA = 1_000_000          # bytes of shapes (JSON)
@@ -63,6 +69,8 @@ def clean_data(kind, raw):
                     n[key] = n[key][:MAX_TEXT * (8 if key == "note" else 1)]
         # a link whose end was deleted is dropped rather than saved broken
         data["edges"] = [e for e in edges if isinstance(e, dict) and e.get("from") in ids and e.get("to") in ids]
+    else:                                   # a text diagram: only how it looks
+        data = {"look": "handDrawn"} if data.get("look") == "handDrawn" and kind in SKETCH_KINDS else {}
     return data
 
 
@@ -94,10 +102,16 @@ def clean_preview(svg):
     return svg
 
 
+# Text diagrams that can be drawn as if by hand (Mermaid's "handDrawn" look).
+SKETCH_KINDS = (DiagramKind.FLOWCHART, DiagramKind.STATE, DiagramKind.CLASS)
+
 KIND_WORDS = [
     (r"^(flowchart|graph)\b", DiagramKind.FLOWCHART), (r"^sequenceDiagram\b", DiagramKind.SEQUENCE),
     (r"^erDiagram\b", DiagramKind.ER), (r"^classDiagram\b", DiagramKind.CLASS), (r"^stateDiagram", DiagramKind.STATE),
     (r"^gantt\b", DiagramKind.GANTT), (r"^timeline\b", DiagramKind.TIMELINE), (r"^journey\b", DiagramKind.JOURNEY),
+    (r"^C4(Context|Container|Component|Dynamic|Deployment)\b", DiagramKind.C4), (r"^architecture(-beta)?\b", DiagramKind.ARCHITECTURE),
+    (r"^block(-beta)?\b", DiagramKind.BLOCK), (r"^gitGraph\b", DiagramKind.GITGRAPH), (r"^pie\b", DiagramKind.PIE),
+    (r"^quadrantChart\b", DiagramKind.QUADRANT), (r"^xychart(-beta)?\b", DiagramKind.XYCHART), (r"^sankey(-beta)?\b", DiagramKind.SANKEY),
 ]
 
 
@@ -128,9 +142,10 @@ def find(node, node_id):
 
 
 def outline(node, depth=0):
-    """A mind map as a Markdown list: the centre as a heading, branches indented."""
+    """A mind map as a Markdown list: the centre as a heading, branches indented (done ideas ticked)."""
     text = " ".join(str(node.get("text", "")).split())
-    lines = [f"# {text}", ""] if depth == 0 else ["  " * (depth - 1) + f"- {text}"]
+    tick = "[x] " if node.get("done") else ""
+    lines = [f"# {text}", ""] if depth == 0 else ["  " * (depth - 1) + f"- {tick}{text}"]
     for k in node.get("children") or []:
         lines += outline(k, depth + 1)
     return lines
@@ -146,8 +161,46 @@ def branch_titles(data, node_id):
     if node is None:
         return []
     kids = node.get("children") or []
-    picked = kids if kids else [node]
+    picked = [k for k in kids if not k.get("done")] if kids else [node]
     return [" ".join(str(k.get("text", "")).split())[:300] for k in picked if str(k.get("text", "")).strip()]
+
+
+# ── Versions: earlier states to go back to ──────────────────────────────────
+AUTO_EVERY = timedelta(minutes=10)    # a new automatic copy at most this often while editing
+KEEP_AUTO = 40                        # automatic copies kept per diagram (named ones are always kept)
+
+
+def has_drawing(d):
+    return bool(d.source.strip() if not d.is_visual else (d.data.get("root") or d.data.get("nodes")))
+
+
+def remember(d, name="", force=False):
+    """Keep the diagram as it is now. Without `force`, only when the last copy is
+    old enough — so one sitting of edits can be undone as a whole."""
+    if not has_drawing(d):
+        return None
+    last = d.versions.only("created_at", "source", "data").first()
+    now = timezone.now()
+    if last and not force and now - last.created_at < AUTO_EVERY:
+        return None
+    if last and not name and last.source == d.source and last.data == d.data:
+        return None                    # nothing changed since the last copy
+    v = DiagramVersion.objects.create(diagram=d, name=name[:120], title=d.title, source=d.source, data=d.data,
+                                      notes=d.notes, preview=d.preview, created_at=now)
+    old = d.versions.filter(name="").values_list("pk", flat=True)[KEEP_AUTO:]
+    if old:
+        DiagramVersion.objects.filter(pk__in=list(old)).delete()
+    return v
+
+
+def bring_back(d, version):
+    """Put an earlier version back (keeping what was there as a version first, so this can be undone too)."""
+    remember(d, force=True)
+    d.title, d.source, d.data, d.notes, d.preview = version.title, version.source, version.data, version.notes, version.preview
+    if not d.is_visual:
+        d.kind = kind_of_source(d.source, d.kind)
+    d.save()
+    return d
 
 
 # ── Templates ───────────────────────────────────────────────────────────────
@@ -429,6 +482,151 @@ def _mermaid_templates(today):
       Add the first entry: 5: User
 """),
         ],
+        DiagramKind.C4: [
+            ("shop", gettext_lazy("Online shop (context)"), """C4Context
+    title Online shop — who and what it talks to
+    Person(customer, "Customer", "Browses and buys")
+    Person(staff, "Staff", "Packs and ships orders")
+    System(shop, "Shop", "Web and phone app, orders, stock")
+    System_Ext(pay, "Payment provider", "Cards and mobile wallets")
+    System_Ext(mail, "Email service", "Receipts and updates")
+    System_Ext(courier, "Courier", "Delivers parcels")
+    Rel(customer, shop, "Orders with", "HTTPS")
+    Rel(staff, shop, "Manages orders in")
+    Rel(shop, pay, "Takes payments via", "HTTPS")
+    Rel(shop, mail, "Sends receipts via")
+    Rel(shop, courier, "Books deliveries with", "API")
+    UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
+"""),
+            ("containers", gettext_lazy("Inside the app (containers)"), """C4Container
+    title Inside the shop
+    Person(customer, "Customer")
+    System_Boundary(shop, "Shop") {
+        Container(web, "Web app", "React", "What customers use")
+        Container(api, "API", "Django", "Orders, stock, accounts")
+        ContainerDb(db, "Database", "PostgreSQL", "Orders and products")
+        Container(worker, "Worker", "Celery", "Emails and reports")
+    }
+    System_Ext(pay, "Payment provider")
+    Rel(customer, web, "Uses", "HTTPS")
+    Rel(web, api, "Calls", "JSON")
+    Rel(api, db, "Reads and writes", "SQL")
+    Rel(api, worker, "Queues jobs for")
+    Rel(api, pay, "Charges cards via")
+    UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
+"""),
+        ],
+        DiagramKind.ARCHITECTURE: [
+            ("cloud", gettext_lazy("Web app in the cloud"), """architecture-beta
+    group cloud(cloud)[Cloud]
+    group private(server)[Private network] in cloud
+
+    service users(internet)[Users]
+    service lb(server)[Load balancer] in cloud
+    service app(server)[App servers] in private
+    service db(database)[Database] in private
+    service cache(database)[Cache] in private
+    service files(disk)[File storage] in cloud
+
+    users:R --> L:lb
+    lb:R --> L:app
+    app:R --> L:db
+    app:T --> B:cache
+    app:B --> T:files
+"""),
+        ],
+        DiagramKind.BLOCK: [
+            ("layers", gettext_lazy("App layers"), """block-beta
+    columns 3
+    ui["Screens (web and phone)"]:3
+    space:3
+    api["API"] auth["Sign-in"] jobs["Background jobs"]
+    space:3
+    db[("Database")] cache[("Cache")] files[("Files")]
+    ui --> api
+    api --> db
+    api --> cache
+    jobs --> files
+"""),
+        ],
+        DiagramKind.GITGRAPH: [
+            ("flow", gettext_lazy("Feature branch and release"), """gitGraph
+    commit id: "start"
+    branch develop
+    checkout develop
+    commit id: "set up"
+    branch feature/login
+    checkout feature/login
+    commit id: "login form"
+    commit id: "tests"
+    checkout develop
+    merge feature/login
+    checkout main
+    merge develop tag: "v1.0"
+    checkout develop
+    commit id: "next work"
+"""),
+        ],
+        DiagramKind.PIE: [
+            ("week", gettext_lazy("Where my week went"), """pie showData
+    title Where my week went (hours)
+    "Deep work" : 18
+    "Meetings" : 7
+    "Email and chat" : 5
+    "Learning" : 4
+    "Admin" : 3
+"""),
+        ],
+        DiagramKind.QUADRANT: [
+            ("priorities", gettext_lazy("What to do first"), """quadrantChart
+    title What to do first
+    x-axis Little effort --> Lots of effort
+    y-axis Small impact --> Big impact
+    quadrant-1 Plan it
+    quadrant-2 Do it now
+    quadrant-3 Maybe later
+    quadrant-4 Hand it off
+    Fix the sign-in bug: [0.2, 0.9]
+    New dashboard: [0.75, 0.8]
+    Tidy the README: [0.15, 0.25]
+    Rewrite billing: [0.9, 0.4]
+    Faster search: [0.45, 0.65]
+"""),
+            ("skills", gettext_lazy("Skills to work on"), """quadrantChart
+    title Skills to work on
+    x-axis Weak now --> Strong now
+    y-axis Rarely needed --> Often needed
+    quadrant-1 Keep sharp
+    quadrant-2 Learn next
+    quadrant-3 Ignore for now
+    quadrant-4 Nice to have
+    System design: [0.35, 0.9]
+    SQL: [0.7, 0.75]
+    Docker: [0.5, 0.55]
+    Rust: [0.1, 0.2]
+"""),
+        ],
+        DiagramKind.XYCHART: [
+            ("hours", gettext_lazy("Hours worked each month"), f"""xychart-beta
+    title "Hours worked in {today.year}"
+    x-axis [Jan, Feb, Mar, Apr, May, Jun]
+    y-axis "Hours" 0 --> 200
+    bar [142, 151, 168, 139, 175, 160]
+    line [150, 150, 150, 150, 150, 150]
+"""),
+        ],
+        DiagramKind.SANKEY: [
+            ("money", gettext_lazy("Where the money goes"), """sankey-beta
+
+Salary,Rent,30000
+Salary,Food,15000
+Salary,Savings,20000
+Salary,Transport,6000
+Salary,Bills,9000
+Freelance,Savings,12000
+Freelance,Learning,4000
+"""),
+        ],
     }
 
 
@@ -441,6 +639,14 @@ BLANK_SOURCE = {
     DiagramKind.GANTT: "gantt\n    dateFormat YYYY-MM-DD\n    section Work\n    First task :a1, {today}, 3d\n",
     DiagramKind.TIMELINE: "timeline\n    title My timeline\n    {year} : Something happened\n",
     DiagramKind.JOURNEY: "journey\n    title A journey\n    section Start\n      First step: 3: Me\n",
+    DiagramKind.C4: 'C4Context\n    Person(user, "User")\n    System(app, "My system")\n    Rel(user, app, "Uses")\n',
+    DiagramKind.ARCHITECTURE: "architecture-beta\n    service web(internet)[Web]\n    service api(server)[API]\n    web:R --> L:api\n",
+    DiagramKind.BLOCK: 'block-beta\n    columns 2\n    a["First"] b["Second"]\n',
+    DiagramKind.GITGRAPH: 'gitGraph\n    commit id: "start"\n    branch feature\n    commit id: "work"\n    checkout main\n    merge feature\n',
+    DiagramKind.PIE: 'pie showData\n    title My chart\n    "One" : 60\n    "Two" : 40\n',
+    DiagramKind.QUADRANT: "quadrantChart\n    x-axis Low --> High\n    y-axis Low --> High\n    Item A: [0.3, 0.7]\n",
+    DiagramKind.XYCHART: 'xychart-beta\n    x-axis [A, B, C]\n    y-axis "Value" 0 --> 10\n    bar [3, 7, 5]\n',
+    DiagramKind.SANKEY: "sankey-beta\n\nFrom,To,10\nFrom,Elsewhere,5\n",
 }
 
 

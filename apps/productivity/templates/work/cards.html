@@ -1,0 +1,136 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% translate "Flashcards" %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+<header class="wp-head">
+  <div class="min-w-0">
+    <h1 class="wp-title">{% translate "Flashcards" %}</h1>
+    <p class="wp-sub">{% translate "Remember what you learn. Each card comes back just before you'd forget it — a few minutes a day is enough." %}</p>
+  </div>
+  <div class="wp-actions" x-data>
+    <button type="button" class="btn btn-secondary" @click="$dispatch('wfc-new-deck')">{% icon "plus" %}{% translate "New deck" %}</button>
+    {% if due %}<a href="{% url 'work:card_review' %}" class="btn btn-primary">{% icon "play" %}{% translate "Review" %} <span class="wfc-pill">{{ due }}</span></a>{% endif %}
+  </div>
+</header>
+
+{% if decks %}
+{# ── today ── #}
+<section class="wfc-hero{% if not due %} is-done{% endif %}" x-data @keydown.enter.window="if ($event.target === document.body && $refs.go) $refs.go.click()">
+  <div class="wfc-hero-stack" aria-hidden="true"><i></i><i></i><i>{% if due %}{{ due }}{% else %}✓{% endif %}</i></div>
+  <div class="wfc-hero-body">
+    {% if due %}
+    <p class="wfc-hero-kicker">{% translate "Today" %}</p>
+    <h2 class="wfc-hero-title">{% blocktranslate count counter=due %}{{ counter }} card to review{% plural %}{{ counter }} cards to review{% endblocktranslate %}</h2>
+    <p class="wfc-hero-sub">{% blocktranslate count counter=due %}About {{ counter }} minute.{% plural %}About {{ counter }} minutes.{% endblocktranslate %}</p>
+    {% else %}
+    <p class="wfc-hero-kicker">{% translate "All done" %}</p>
+    <h2 class="wfc-hero-title">{% translate "Nothing left to review today" %}</h2>
+    <p class="wfc-hero-sub">{% with nxt=forecast.1.n %}{% if nxt %}{% blocktranslate count counter=nxt %}{{ counter }} card comes back tomorrow.{% plural %}{{ counter }} cards come back tomorrow.{% endblocktranslate %}{% else %}{% translate "Add cards, or practise a deck any time." %}{% endif %}{% endwith %}</p>
+    {% endif %}
+  </div>
+  {% if due %}<a href="{% url 'work:card_review' %}" class="btn btn-primary btn-lg wfc-hero-go" x-ref="go">{% icon "play" %}{% translate "Start" %}<kbd class="wp-kbd">Enter</kbd></a>{% endif %}
+</section>
+
+<section class="wfc-stats" aria-label="{% translate 'How you are doing' %}">
+  <div class="wfc-stat" data-tone="flame"><span class="wfc-stat-ico">{% icon "flame" %}</span><b class="num">{{ stats.streak }}</b><small>{% blocktranslate count counter=stats.streak %}day in a row{% plural %}days in a row{% endblocktranslate %}</small></div>
+  <div class="wfc-stat" data-tone="today"><span class="wfc-stat-ico">{% icon "check" %}</span><b class="num">{{ stats.today }}</b><small>{% translate "answered today" %} · {{ stats.week }} {% translate "this week" %}</small></div>
+  <div class="wfc-stat" data-tone="memory"><span class="wfc-stat-ico">{% icon "target" %}</span><b class="num">{% if stats.retention is None %}—{% else %}{{ stats.retention }}%{% endif %}</b><small>{% translate "remembered (30 days)" %}</small></div>
+  <div class="wfc-stat" data-tone="learnt"><span class="wfc-stat-ico">{% icon "trophy" %}</span><b class="num">{{ stats.learnt }}</b><small>{% blocktranslate with total=stats.cards %}learnt, of {{ total }} cards{% endblocktranslate %}</small></div>
+</section>
+
+<div class="wfc-layout">
+  {# ── decks ── #}
+  <section class="wfc-decks" aria-label="{% translate 'Decks' %}">
+    {% for dk in decks %}
+    <article class="wfc-deck w-rise" data-color="{{ dk.color }}" style="--i: {{ forloop.counter0 }}">
+      <a href="{% url 'work:deck' dk.pk %}" class="wfc-deck-link">
+        <span class="wfc-deck-top">
+          <span class="wfc-deck-name">{{ dk.name }}</span>
+          {% if dk.n_today %}<span class="wfc-due">{{ dk.n_today }}</span>{% endif %}
+        </span>
+        {% if dk.learning %}<span class="wfc-deck-from">{% icon "book" %}{{ dk.learning.title }}</span>{% elif dk.description %}<span class="wfc-deck-from">{{ dk.description|truncatechars:80 }}</span>{% endif %}
+        <span class="wfc-deck-bar" role="img" aria-label="{{ dk.pct }}% {% translate 'learnt' %}"><i style="width: {{ dk.pct }}%"></i></span>
+        <span class="wfc-deck-meta">
+          <span>{% blocktranslate count counter=dk.n_total %}{{ counter }} card{% plural %}{{ counter }} cards{% endblocktranslate %}</span>
+          {% if dk.n_due %}<span class="is-due">{% blocktranslate with n=dk.n_due %}{{ n }} due{% endblocktranslate %}</span>{% endif %}
+          {% if dk.n_new %}<span class="is-new">{% blocktranslate with n=dk.n_new %}{{ n }} new{% endblocktranslate %}</span>{% endif %}
+          <span class="wfc-deck-pct">{{ dk.pct }}% {% translate "learnt" %}</span>
+        </span>
+      </a>
+      <div class="wfc-deck-acts">
+        {% if dk.n_today %}<a href="{% url 'work:card_review' %}?deck={{ dk.pk }}" class="btn btn-primary btn-sm">{% icon "play" %}{% translate "Review" %}</a>
+        {% elif dk.n_total %}<a href="{% url 'work:card_review' %}?deck={{ dk.pk }}&practice=1" class="btn btn-secondary btn-sm">{% icon "repeat" %}{% translate "Practise" %}</a>{% endif %}
+        <a href="{% url 'work:deck' dk.pk %}#add" class="btn btn-ghost btn-sm">{% icon "plus" %}{% translate "Add cards" %}</a>
+      </div>
+    </article>
+    {% endfor %}
+    {% if archived %}
+    <details class="wfc-archived">
+      <summary>{% icon "archive" %}{% blocktranslate count counter=archived|length %}{{ counter }} archived deck{% plural %}{{ counter }} archived decks{% endblocktranslate %}</summary>
+      <ul>{% for dk in archived %}<li><a href="{% url 'work:deck' dk.pk %}">{{ dk.name }}</a><span>{% blocktranslate count counter=dk.n_total %}{{ counter }} card{% plural %}{{ counter }} cards{% endblocktranslate %}</span></li>{% endfor %}</ul>
+    </details>
+    {% endif %}
+  </section>
+
+  {# ── practice over time, and what's coming ── #}
+  <aside class="wfc-side">
+    <section class="card">
+      <div class="card-header"><div><h2 class="card-title">{% translate "Last 13 weeks" %}</h2><p class="card-subtitle">{% translate "Cards answered each day." %}</p></div></div>
+      <div class="wy-scroll"><div class="wy" style="--weeks: {{ weeks }}">
+        <div class="wy-grid">
+          {% for _ in pad %}<span class="wy-cell is-out"></span>{% endfor %}
+          {% for h in stats.heat %}<span class="wy-cell" data-level="{{ h.level }}" data-tip="{{ h.date|date:'D j M' }} · {{ h.n }}"></span>{% endfor %}
+        </div>
+      </div></div>
+      <div class="wy-legend">{% translate "Less" %} <span class="wy-cell"></span><span class="wy-cell" data-level="1"></span><span class="wy-cell" data-level="2"></span><span class="wy-cell" data-level="3"></span><span class="wy-cell" data-level="4"></span> {% translate "More" %}</div>
+    </section>
+    <section class="card">
+      <div class="card-header"><div><h2 class="card-title">{% translate "Coming up" %}</h2><p class="card-subtitle">{% translate "Learnt cards due in the next two weeks." %}</p></div></div>
+      <div class="wfc-fore">
+        {% for f in forecast %}
+        <span class="wfc-fore-day{% if forloop.first %} is-today{% endif %}" data-tip="{{ f.date|date:'D j M' }} · {{ f.n }}">
+          <span class="wfc-fore-bar"><i style="height: {{ f.pct }}%"></i></span>
+          <small>{% if forloop.first %}{% translate "Now" %}{% else %}{{ f.date|date:"D"|slice:":2" }}{% endif %}</small>
+        </span>
+        {% endfor %}
+      </div>
+    </section>
+    <section class="card wfc-how">
+      <h2 class="card-title">{% icon "info" %}{% translate "Making cards quickly" %}</h2>
+      <ul>
+        <li>{% translate "In a deck, paste many at once: one “question :: answer” a line." %}</li>
+        <li>{% translate "In a note, write “question :: answer” lines, then More → Make flashcards." %}</li>
+        <li>{% translate "A mind map turns into cards: each idea asks for the ideas under it." %}</li>
+        <li>{% translate "Cards can hold Markdown, code and ```mermaid diagrams." %}</li>
+      </ul>
+    </section>
+  </aside>
+</div>
+{% else %}
+<section class="empty wfc-empty">
+  <div class="wfc-hero-stack is-big" aria-hidden="true"><i></i><i></i><i>?</i></div>
+  <h3 class="empty-title">{% translate "Make your first deck" %}</h3>
+  <p class="empty-text">{% translate "A deck is a pile of cards about one thing — interview questions, AWS services, words in a new language. Write a question on the front and the answer on the back; we'll bring each card back at the right time." %}</p>
+  <div class="wfc-empty-acts" x-data><button type="button" class="btn btn-primary" @click="$dispatch('wfc-new-deck')">{% icon "plus" %}{% translate "New deck" %}</button><a href="{% url 'work:diagrams' %}?kind=mindmap" class="btn btn-secondary">{% icon "mindmap" %}{% translate "Or start from a mind map" %}</a></div>
+</section>
+{% endif %}
+
+{# ── new deck ── #}
+<div x-data="{ open: {% if not decks and request.GET.new %}true{% else %}false{% endif %} }" @wfc-new-deck.window="open = true; $nextTick(() => $refs.name.focus())" @keydown.escape="open = false">
+  <div class="wc-backdrop" x-show="open" x-cloak x-transition.opacity @click="open = false"></div>
+  <section class="wc" x-show="open" x-cloak x-transition role="dialog" aria-modal="true" aria-labelledby="deck-new-title">
+    <h2 id="deck-new-title" class="card-title">{% translate "New deck" %}</h2>
+    <form method="post" action="{% url 'work:deck_new' %}" class="wfc-form">
+      {% csrf_token %}
+      <label class="label" for="id_name">{{ form.name.label }}</label>
+      <input x-ref="name" id="id_name" name="name" class="form-input" required maxlength="120" placeholder="{{ form.name.field.widget.attrs.placeholder }}">
+      <p class="label">{{ form.color.label }}</p>
+      <div class="w-swatches">{% for radio in form.color %}<label class="w-swatch" data-color="{{ radio.data.value }}">{{ radio.tag }}<span class="sr-only">{{ radio.choice_label }}</span></label>{% endfor %}</div>
+      <input type="hidden" name="new_per_day" value="20">
+      <div class="wc-foot"><span class="spacer"></span><button type="button" class="btn btn-ghost" @click="open = false">{% translate "Cancel" %}</button><button type="submit" class="btn btn-primary">{% translate "Make the deck" %}</button></div>
+    </form>
+  </section>
+</div>
+{% endblock %}

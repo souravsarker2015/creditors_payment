@@ -26,17 +26,20 @@
           <button type="button" class="menu-item" role="menuitem" @click="exportPNG()">{% icon "image" %}{% translate "Picture (PNG)" %}</button>
           <button type="button" class="menu-item" role="menuitem" @click="exportSVG()">{% icon "diagram" %}{% translate "Drawing (SVG)" %}</button>
           {% if diagram.kind == "mindmap" %}<button type="button" class="menu-item" role="menuitem" @click="copyText()">{% icon "copy" %}{% translate "Copy as an outline" %}</button>
+          <button type="button" class="menu-item" role="menuitem" @click="makeCards()">{% icon "cards" %}{% translate "Make flashcards" %}</button>
           {% elif diagram.kind == "system" %}<button type="button" class="menu-item" role="menuitem" @click="copyText()">{% icon "copy" %}{% translate "Copy as Mermaid text" %}</button>
           {% else %}<button type="button" class="menu-item" role="menuitem" @click="copyText()">{% icon "copy" %}{% translate "Copy the Mermaid text" %}</button>{% endif %}
           <button type="button" class="menu-item" role="menuitem" @click="action('note')">{% icon "note" %}{% translate "Save as a note" %}</button>
         </div>
       </div>
+      <button type="button" class="icon-btn" @click="openHistory()" :aria-expanded="histOpen.toString()" aria-label="{% translate 'History' %}" data-tip="{% translate 'Earlier versions' %}">{% icon "history" %}</button>
       <button type="button" class="icon-btn" @click="full = !full" :aria-pressed="full.toString()" aria-label="{% translate 'Full screen' %}" data-tip="{% translate 'Full screen (Esc to leave)' %}">
         <span x-show="!full">{% icon "maximize" %}</span><span x-show="full" x-cloak>{% icon "minimize" %}</span></button>
       <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
         <button type="button" class="icon-btn" @click="open = !open" :aria-expanded="open" aria-label="{% translate 'More actions' %}">{% icon "dots" %}</button>
         <div class="menu" x-show="open" x-cloak role="menu" @click="open = false">
           <button type="button" class="menu-item" role="menuitem" @click="action('pin')">{% icon "pin" %}<span x-text="pinned ? '{% translate "Unpin" %}' : '{% translate "Pin to top" %}'"></span></button>
+          <button type="button" class="menu-item" role="menuitem" @click="openHistory(true)">{% icon "history" %}{% translate "Save a version…" %}</button>
           <button type="button" class="menu-item" role="menuitem" @click="action('duplicate')">{% icon "copy" %}{% translate "Make a copy" %}</button>
           <button type="button" class="menu-item" role="menuitem" @click="action('archive')">{% icon "archive" %}{% if diagram.is_archived %}{% translate "Unarchive" %}{% else %}{% translate "Archive" %}{% endif %}</button>
           <div class="menu-sep"></div>
@@ -65,6 +68,42 @@
     </div>
   </section>
   {% endif %}
+
+  {# ── earlier versions ── #}
+  <div class="wc-backdrop" x-show="histOpen" x-cloak x-transition.opacity @click="histOpen = false"></div>
+  <aside class="wdx-hist" x-show="histOpen" x-cloak x-trap="histOpen" x-transition:enter="wdx-hist-in" x-transition:leave="wdx-hist-out"
+         @keydown.escape.stop="histOpen = false" role="dialog" aria-modal="true" aria-labelledby="dg-hist-title">
+    <header class="wdx-hist-head">
+      <h2 id="dg-hist-title" class="card-title">{% icon "history" %}{% translate "History" %}</h2>
+      <button type="button" class="icon-btn" @click="histOpen = false" aria-label="{% translate 'Close' %}">{% icon "x" %}</button>
+    </header>
+    <p class="wdx-hist-tip">{% translate "A copy is kept by itself before each round of changes. Name one to keep it for good." %}</p>
+    <form class="wdx-hist-save" @submit.prevent="saveVersion()">
+      <input x-ref="vname" x-model="versionName" class="form-input input-compact" maxlength="120" placeholder="{% translate 'Name this version, e.g. Before the review' %}" aria-label="{% translate 'Version name' %}">
+      <button type="submit" class="btn btn-primary btn-sm">{% icon "pin" %}{% translate "Keep" %}</button>
+    </form>
+    <ol class="wdx-hist-list" aria-busy="histLoading">
+      <li class="wdx-ver is-now"><span class="wdx-ver-dot"></span><span class="wdx-ver-body"><b x-text="texts.now"></b><small x-text="stateText()"></small></span></li>
+      <template x-for="(v, i) in versions" :key="v.id">
+        <li class="wdx-ver" :style="'--i:' + i">
+          <span class="wdx-ver-dot" :class="v.name && 'is-named'"></span>
+          <button type="button" class="wdx-ver-pic" @click="restore(v)" :aria-label="'{% translate "Bring back" %} ' + v.time">
+            <template x-if="v.picture"><img :src="v.picture" alt="" loading="lazy" decoding="async"></template>
+            <template x-if="!v.picture">{% icon icon %}</template>
+          </button>
+          <span class="wdx-ver-body">
+            <b x-text="v.name || texts.auto"></b>
+            <small><time :datetime="v.when" x-text="v.time"></time> · <span x-text="v.title"></span></small>
+            <span class="wdx-ver-acts">
+              <button type="button" class="btn btn-secondary btn-sm" @click="restore(v)">{% icon "restore" %}{% translate "Bring back" %}</button>
+              <button type="button" class="icon-btn" @click="forget(v)" aria-label="{% translate 'Delete this version' %}">{% icon "trash" %}</button>
+            </span>
+          </span>
+        </li>
+      </template>
+      <li class="wdx-hist-empty" x-show="!histLoading && !versions.length" x-cloak>{% translate "No earlier versions yet. They appear as you make changes." %}</li>
+    </ol>
+  </aside>
 </div>
 {% endblock %}
 

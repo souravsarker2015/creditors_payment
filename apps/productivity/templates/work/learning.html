@@ -47,6 +47,8 @@
         <button type="button" class="btn btn-ghost btn-sm" @click="add(step * 10)" x-show="unit === 'pages' || unit === 'minutes'" x-text="'+' + (step * 10)">+10</button>
       </div></template>
       <span class="spacer"></span>
+      <form method="post" action="{% url 'work:deck_new' %}" class="wl-cards">{% csrf_token %}<input type="hidden" name="learning" value="{{ item.pk }}"><input type="hidden" name="from_learning" value="1">
+        <button type="submit" class="btn btn-ghost btn-sm" aria-label="{% translate 'Flashcards' %}" data-tip="{% if item.n_cards %}{% blocktranslate count counter=item.n_cards %}{{ counter }} flashcard{% plural %}{{ counter }} flashcards{% endblocktranslate %}{% else %}{% translate 'Make flashcards to remember it' %}{% endif %}">{% icon "cards" %}{% if item.n_cards %}<span class="num">{{ item.n_cards }}</span>{% endif %}</button></form>
       <button type="button" class="btn btn-ghost btn-sm" x-show="status === 'queued'" @click="set('active')">{% icon "play" %}{% translate "Start" %}</button>
       <button type="button" class="btn btn-ghost btn-sm" x-show="status === 'active'" @click="$store.timer.start({ description: '{{ item.title|escapejs }}', label: '{{ item.title|escapejs }}' })" aria-label="{% translate 'Track time on it' %}" data-tip="{% translate 'Track time on it' %}">{% icon "timer" %}</button>
       <button type="button" class="btn btn-ghost btn-sm" x-show="status === 'active'" @click="set('done')">{% icon "check" %}{% translate "Finished" %}</button>

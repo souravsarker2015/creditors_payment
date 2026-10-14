@@ -19104,3 +19104,751 @@ msgstr "কিছু ভেবে দেখতে মাইন্ড ম্য�
 
 msgid "Mind maps and system designs for this project show here."
 msgstr "এই প্রজেক্টের মাইন্ড ম্যাপ আর সিস্টেম ডিজাইন এখানে দেখাবে।"
+
+msgid "Flashcards"
+msgstr "ফ্ল্যাশকার্ড"
+
+msgid "Flashcard"
+msgstr "ফ্ল্যাশকার্ড"
+
+msgid "Write cards as “question :: answer”, one a line."
+msgstr "প্রতি লাইনে একটি করে কার্ড লিখুন: “প্রশ্ন :: উত্তর”।"
+
+msgid "Only mind maps can make flashcards."
+msgstr "শুধু মাইন্ড ম্যাপ থেকে ফ্ল্যাশকার্ড বানানো যায়।"
+
+msgid "Add ideas under an idea to make a card from it."
+msgstr "কোনো আইডিয়ার নিচে আরও আইডিয়া যোগ করুন, তাহলে সেটি থেকে কার্ড বানানো যাবে।"
+
+msgid "Saved by hand"
+msgstr "নিজে সেভ করা"
+
+msgid "Draw something first."
+msgstr "আগে কিছু আঁকুন।"
+
+msgid "new"
+msgstr "নতুন"
+
+msgid "due"
+msgstr "বাকি"
+
+msgid "Write the question."
+msgstr "প্রশ্নটি লিখুন।"
+
+#, python-format
+msgid "Flashcard: %(text)s"
+msgstr "ফ্ল্যাশকার্ড: %(text)s"
+
+#, python-format
+msgid "Deck: %(name)s"
+msgstr "ডেক: %(name)s"
+
+msgid "Online shop (context)"
+msgstr "অনলাইন দোকান (কনটেক্সট)"
+
+msgid "Inside the app (containers)"
+msgstr "অ্যাপের ভেতরে (কন্টেইনার)"
+
+msgid "Web app in the cloud"
+msgstr "ক্লাউডে ওয়েব অ্যাপ"
+
+msgid "App layers"
+msgstr "অ্যাপের স্তর"
+
+msgid "Feature branch and release"
+msgstr "ফিচার ব্রাঞ্চ ও রিলিজ"
+
+msgid "Where my week went"
+msgstr "আমার সপ্তাহ কোথায় গেল"
+
+msgid "What to do first"
+msgstr "আগে কোনটা করব"
+
+msgid "Skills to work on"
+msgstr "যে দক্ষতাগুলো বাড়াতে হবে"
+
+msgid "Hours worked each month"
+msgstr "প্রতি মাসে কাজের ঘণ্টা"
+
+msgid "System design, Spanish words, AWS exam…"
+msgstr "সিস্টেম ডিজাইন, ইংরেজি শব্দ, AWS পরীক্ষা…"
+
+msgid "C4 context"
+msgstr "C4 কনটেক্সট"
+
+msgid "Cloud architecture"
+msgstr "ক্লাউড আর্কিটেকচার"
+
+msgid "Block diagram"
+msgstr "ব্লক ডায়াগ্রাম"
+
+msgid "Git branches"
+msgstr "গিট ব্রাঞ্চ"
+
+msgid "Pie chart"
+msgstr "পাই চার্ট"
+
+msgid "Priority matrix"
+msgstr "অগ্রাধিকার ছক"
+
+msgid "Bar & line chart"
+msgstr "বার ও লাইন চার্ট"
+
+msgid "Sankey (flows)"
+msgstr "স্যাংকি (প্রবাহ)"
+
+msgid "About this deck"
+msgstr "এই ডেক সম্পর্কে"
+
+msgid "From what you're learning"
+msgstr "যা শিখছেন তার থেকে"
+
+msgid "New cards a day"
+msgstr "দিনে নতুন কার্ড"
+
+msgid "How many cards you haven't seen yet come up each day."
+msgstr "এখনো না দেখা কতগুলো কার্ড প্রতিদিন আসবে।"
+
+msgid "Deck"
+msgstr "ডেক"
+
+msgid "Next review"
+msgstr "পরের রিভিউ"
+
+msgid "Make flashcards"
+msgstr "ফ্ল্যাশকার্ড বানান"
+
+msgid "Earlier versions"
+msgstr "আগের সংস্করণ"
+
+msgid "Save a version…"
+msgstr "একটি সংস্করণ রাখুন…"
+
+msgid "A copy is kept by itself before each round of changes. Name one to keep it for good."
+msgstr "প্রতিবার বদলানোর আগে নিজে থেকেই একটি কপি রাখা হয়। কোনোটি চিরদিন রাখতে একটি নাম দিন।"
+
+msgid "Name this version, e.g. Before the review"
+msgstr "এই সংস্করণের নাম দিন, যেমন রিভিউয়ের আগে"
+
+msgid "Version name"
+msgstr "সংস্করণের নাম"
+
+msgid "Keep"
+msgstr "রাখুন"
+
+msgid "Delete this version"
+msgstr "এই সংস্করণ মুছুন"
+
+msgid "No earlier versions yet. They appear as you make changes."
+msgstr "এখনো আগের কোনো সংস্করণ নেই। বদলাতে থাকলে এখানে দেখা যাবে।"
+
+msgid "Line up"
+msgstr "সারি করুন"
+
+msgid "Line up left edges"
+msgstr "বাম কিনারা মেলান"
+
+msgid "Line up centres"
+msgstr "মাঝ বরাবর মেলান"
+
+msgid "Line up right edges"
+msgstr "ডান কিনারা মেলান"
+
+msgid "Line up tops"
+msgstr "উপরের দিক মেলান"
+
+msgid "Line up middles"
+msgstr "মাঝামাঝি মেলান"
+
+msgid "Line up bottoms"
+msgstr "নিচের দিক মেলান"
+
+msgid "Space evenly across"
+msgstr "পাশাপাশি সমান ফাঁকে রাখুন"
+
+msgid "Space evenly down"
+msgstr "উপর-নিচে সমান ফাঁকে রাখুন"
+
+msgid "Pick an area"
+msgstr "একটি জায়গা বাছুন"
+
+msgid "Drag a box to pick several parts (or Shift+drag)"
+msgstr "কয়েকটি অংশ বাছতে একটি বাক্স টেনে আঁকুন (বা Shift+টানুন)"
+
+msgid "See requests move along the links"
+msgstr "লিংক ধরে রিকোয়েস্ট চলতে দেখুন"
+
+msgid "Show traffic"
+msgstr "ট্রাফিক দেখান"
+
+msgid "copy and paste, also into another board"
+msgstr "কপি ও পেস্ট, অন্য বোর্ডেও"
+
+msgid "Line"
+msgstr "লাইন"
+
+msgid "Straight"
+msgstr "সোজা"
+
+msgid "Curved"
+msgstr "বাঁকা"
+
+msgid "Right angles"
+msgstr "সমকোণে"
+
+msgid "line them up with the buttons above the board, or move them together."
+msgstr "বোর্ডের উপরের বোতাম দিয়ে সারি করুন, বা একসাথে সরান।"
+
+msgid "Make the same size"
+msgstr "একই মাপের করুন"
+
+msgid "Direction"
+msgstr "দিক"
+
+msgid "Top to bottom"
+msgstr "উপর থেকে নিচে"
+
+msgid "Left to right"
+msgstr "বাম থেকে ডানে"
+
+msgid "Bottom to top"
+msgstr "নিচ থেকে উপরে"
+
+msgid "Draw it as if by hand"
+msgstr "হাতে আঁকার মতো করে দেখান"
+
+msgid "Hand-drawn"
+msgstr "হাতে আঁকা"
+
+msgid "Tick it off (Ctrl+Enter)"
+msgstr "টিক দিন (Ctrl+Enter)"
+
+msgid "Layout"
+msgstr "সাজানো"
+
+msgid "Map: branches on both sides"
+msgstr "ম্যাপ: দুই পাশে শাখা"
+
+msgid "Tree: everything to the right"
+msgstr "গাছ: সব ডান দিকে"
+
+msgid "Org chart: top to bottom"
+msgstr "অর্গ চার্ট: উপর থেকে নিচে"
+
+msgid "Unfold everything"
+msgstr "সব খুলুন"
+
+msgid "Fold to the main branches"
+msgstr "মূল শাখা পর্যন্ত গুটিয়ে রাখুন"
+
+msgid "Find"
+msgstr "খুঁজুন"
+
+msgid "Find an idea (Ctrl+F)"
+msgstr "আইডিয়া খুঁজুন (Ctrl+F)"
+
+msgid "Ticked off"
+msgstr "টিক দেওয়া"
+
+msgid "Each idea with ideas under it becomes a flashcard"
+msgstr "নিচে আইডিয়া আছে এমন প্রতিটি আইডিয়া একটি ফ্ল্যাশকার্ড হবে"
+
+msgid "Find an idea…"
+msgstr "আইডিয়া খুঁজুন…"
+
+msgid "Find an idea"
+msgstr "আইডিয়া খুঁজুন"
+
+msgid "tick off"
+msgstr "টিক দিন"
+
+msgid "move up or down"
+msgstr "উপরে বা নিচে সরান"
+
+msgid "Make flashcards to remember it"
+msgstr "মনে রাখতে ফ্ল্যাশকার্ড বানান"
+
+#, python-format
+msgid "%(counter)s flashcard"
+msgid_plural "%(counter)s flashcards"
+msgstr[0] "%(counter)sটি ফ্ল্যাশকার্ড"
+msgstr[1] "%(counter)sটি ফ্ল্যাশকার্ড"
+
+msgid "Each “question :: answer” line becomes a flashcard"
+msgstr "প্রতিটি “প্রশ্ন :: উত্তর” লাইন একটি ফ্ল্যাশকার্ড হবে"
+
+msgid "Flashcard: question :: answer"
+msgstr "ফ্ল্যাশকার্ড: প্রশ্ন :: উত্তর"
+
+msgid "Insert a diagram"
+msgstr "ডায়াগ্রাম যোগ করুন"
+
+msgid "Find a diagram…"
+msgstr "ডায়াগ্রাম খুঁজুন…"
+
+msgid "Find a diagram"
+msgstr "ডায়াগ্রাম খুঁজুন"
+
+msgid "No diagrams yet."
+msgstr "এখনো কোনো ডায়াগ্রাম নেই।"
+
+msgid "Draw one"
+msgstr "একটি আঁকুন"
+
+#, python-format
+msgid "%(counter)s flashcard to review"
+msgid_plural "%(counter)s flashcards to review"
+msgstr[0] "রিভিউ করার %(counter)sটি ফ্ল্যাশকার্ড"
+msgstr[1] "রিভিউ করার %(counter)sটি ফ্ল্যাশকার্ড"
+
+#, python-format
+msgid "About %(counter)s minute — keeps what you learnt from slipping away."
+msgid_plural "About %(counter)s minutes — keeps what you learnt from slipping away."
+msgstr[0] "প্রায় %(counter)s মিনিট — শেখা জিনিস ভুলে যাওয়া থেকে বাঁচায়।"
+msgstr[1] "প্রায় %(counter)s মিনিট — শেখা জিনিস ভুলে যাওয়া থেকে বাঁচায়।"
+
+msgid "Flashcards made"
+msgstr "ফ্ল্যাশকার্ড বানানো হয়েছে"
+
+msgid "Review flashcards"
+msgstr "ফ্ল্যাশকার্ড রিভিউ করুন"
+
+msgid "People, systems and what talks to what."
+msgstr "মানুষ, সিস্টেম, আর কে কার সাথে কথা বলে।"
+
+msgid "Cloud services in groups, with icons."
+msgstr "আইকনসহ দলে দলে ক্লাউড সার্ভিস।"
+
+msgid "Boxes laid out in rows and columns."
+msgstr "সারি ও কলামে সাজানো বাক্স।"
+
+msgid "Branches, commits and merges."
+msgstr "ব্রাঞ্চ, কমিট আর মার্জ।"
+
+msgid "Parts of a whole."
+msgstr "পুরোটার কোন অংশ কত।"
+
+msgid "Effort against impact: what to do first."
+msgstr "পরিশ্রম বনাম প্রভাব: আগে কোনটা করবেন।"
+
+msgid "Numbers over time as bars and lines."
+msgstr "সময়ের সাথে সংখ্যা, বার ও লাইনে।"
+
+msgid "Where amounts flow, like money or traffic."
+msgstr "টাকা বা ট্রাফিকের মতো পরিমাণ কোথায় যায়।"
+
+msgid "Draw by hand"
+msgstr "হাতে আঁকুন"
+
+msgid "Software and systems"
+msgstr "সফটওয়্যার ও সিস্টেম"
+
+msgid "Plans and time"
+msgstr "পরিকল্পনা ও সময়"
+
+msgid "Charts"
+msgstr "চার্ট"
+
+msgid "Outside system"
+msgstr "বাইরের সিস্টেম"
+
+msgid "Database"
+msgstr "ডেটাবেস"
+
+msgid "Boundary"
+msgstr "সীমানা"
+
+msgid "Server"
+msgstr "সার্ভার"
+
+msgid "Internet"
+msgstr "ইন্টারনেট"
+
+msgid "Columns"
+msgstr "কলাম"
+
+msgid "Wide box"
+msgstr "চওড়া বাক্স"
+
+msgid "Gap"
+msgstr "ফাঁকা"
+
+msgid "Commit"
+msgstr "কমিট"
+
+msgid "Branch"
+msgstr "ব্রাঞ্চ"
+
+msgid "Switch"
+msgstr "বদলান"
+
+msgid "Merge"
+msgstr "মার্জ"
+
+msgid "Slice"
+msgstr "ভাগ"
+
+msgid "Point"
+msgstr "বিন্দু"
+
+msgid "Quadrant names"
+msgstr "চার ভাগের নাম"
+
+msgid "Bars"
+msgstr "বার"
+
+msgid "Labels"
+msgstr "লেবেল"
+
+msgid "Flow"
+msgstr "প্রবাহ"
+
+msgid "Version saved"
+msgstr "সংস্করণ রাখা হয়েছে"
+
+msgid "Earlier version brought back"
+msgstr "আগের সংস্করণ ফিরিয়ে আনা হয়েছে"
+
+msgid "Bring back this version? What's there now is kept as a version too."
+msgstr "এই সংস্করণটি ফিরিয়ে আনবেন? এখন যা আছে সেটিও একটি সংস্করণ হিসেবে রাখা হবে।"
+
+msgid "Nothing matches"
+msgstr "কিছু মেলেনি"
+
+msgid "Pasted"
+msgstr "পেস্ট হয়েছে"
+
+msgid "Kept by itself"
+msgstr "নিজে থেকে রাখা"
+
+msgid "Deck saved."
+msgstr "ডেক সেভ হয়েছে।"
+
+msgid "Again"
+msgstr "আবার"
+
+msgid "Hard"
+msgstr "কঠিন"
+
+msgid "Good"
+msgstr "ভালো"
+
+msgid "Easy"
+msgstr "সহজ"
+
+msgid "Show the answer"
+msgstr "উত্তর দেখুন"
+
+msgid "Card deleted"
+msgstr "কার্ড মুছে ফেলা হয়েছে"
+
+msgid "Card added"
+msgstr "কার্ড যোগ হয়েছে"
+
+msgid "Cards added"
+msgstr "কার্ড যোগ হয়েছে"
+
+msgid "already in the deck"
+msgstr "আগে থেকেই ডেকে আছে"
+
+msgid "Paused: it won't come up until you start it again"
+msgstr "থামানো হয়েছে: আবার চালু না করা পর্যন্ত এটি আসবে না"
+
+msgid "It will come up again"
+msgstr "এটি আবার আসবে"
+
+msgid "It will come up as new"
+msgstr "এটি নতুন হিসেবে আসবে"
+
+msgid "Forget how well you know this card and start it again as new?"
+msgstr "এই কার্ড কতটা জানেন তা ভুলে গিয়ে নতুন করে শুরু করবেন?"
+
+msgid "Delete this deck and all its cards? You can bring it back from Recently deleted."
+msgstr "এই ডেক আর এর সব কার্ড মুছবেন? সম্প্রতি মোছা থেকে ফিরিয়ে আনা যাবে।"
+
+msgid "(no answer written)"
+msgstr "(কোনো উত্তর লেখা নেই)"
+
+msgid "Moved"
+msgstr "সরানো হয়েছে"
+
+#, python-format
+msgid "%(n)d wk"
+msgstr "%(n)d সপ্তাহ"
+
+#, python-format
+msgid "%(n)d mo"
+msgstr "%(n)d মাস"
+
+#, python-format
+msgid "%(n)s yr"
+msgstr "%(n)s বছর"
+
+msgid "My cards"
+msgstr "আমার কার্ড"
+
+#, python-format
+msgid "%(n)d day"
+msgid_plural "%(n)d days"
+msgstr[0] "%(n)d দিন"
+msgstr[1] "%(n)d দিন"
+
+msgid "Remember what you learn. Each card comes back just before you'd forget it — a few minutes a day is enough."
+msgstr "যা শেখেন তা মনে রাখুন। প্রতিটি কার্ড ভুলে যাওয়ার ঠিক আগে ফিরে আসে — দিনে কয়েক মিনিটই যথেষ্ট।"
+
+msgid "New deck"
+msgstr "নতুন ডেক"
+
+msgid "All done"
+msgstr "সব শেষ"
+
+msgid "Nothing left to review today"
+msgstr "আজ আর রিভিউ করার কিছু নেই"
+
+msgid "Add cards, or practise a deck any time."
+msgstr "কার্ড যোগ করুন, বা যেকোনো সময় একটি ডেক অনুশীলন করুন।"
+
+msgid "How you are doing"
+msgstr "কেমন চলছে"
+
+msgid "answered today"
+msgstr "আজ উত্তর দিয়েছেন"
+
+msgid "this week"
+msgstr "এই সপ্তাহে"
+
+msgid "remembered (30 days)"
+msgstr "মনে ছিল (৩০ দিন)"
+
+msgid "Decks"
+msgstr "ডেক"
+
+msgid "learnt"
+msgstr "শেখা"
+
+msgid "Practise"
+msgstr "অনুশীলন"
+
+msgid "Add cards"
+msgstr "কার্ড যোগ করুন"
+
+msgid "Last 13 weeks"
+msgstr "গত ১৩ সপ্তাহ"
+
+msgid "Cards answered each day."
+msgstr "প্রতিদিন কতগুলো কার্ডের উত্তর দিয়েছেন।"
+
+msgid "Learnt cards due in the next two weeks."
+msgstr "আগামী দুই সপ্তাহে কোন দিন কতগুলো শেখা কার্ড আসবে।"
+
+msgid "Making cards quickly"
+msgstr "দ্রুত কার্ড বানানো"
+
+msgid "In a deck, paste many at once: one “question :: answer” a line."
+msgstr "ডেকে একসাথে অনেকগুলো পেস্ট করুন: প্রতি লাইনে একটি “প্রশ্ন :: উত্তর”।"
+
+msgid "In a note, write “question :: answer” lines, then More → Make flashcards."
+msgstr "নোটে “প্রশ্ন :: উত্তর” লাইন লিখুন, তারপর আরও → ফ্ল্যাশকার্ড বানান।"
+
+msgid "A mind map turns into cards: each idea asks for the ideas under it."
+msgstr "মাইন্ড ম্যাপ থেকে কার্ড হয়: প্রতিটি আইডিয়া তার নিচের আইডিয়াগুলো জিজ্ঞেস করে।"
+
+msgid "Cards can hold Markdown, code and ```mermaid diagrams."
+msgstr "কার্ডে Markdown, কোড আর ```mermaid ডায়াগ্রাম রাখা যায়।"
+
+msgid "Make your first deck"
+msgstr "আপনার প্রথম ডেক বানান"
+
+msgid "A deck is a pile of cards about one thing — interview questions, AWS services, words in a new language. Write a question on the front and the answer on the back; we'll bring each card back at the right time."
+msgstr "ডেক হলো একটি বিষয়ের কার্ডের গোছা — ইন্টারভিউয়ের প্রশ্ন, AWS সার্ভিস, নতুন ভাষার শব্দ। সামনে প্রশ্ন আর পেছনে উত্তর লিখুন; প্রতিটি কার্ড ঠিক সময়ে ফিরিয়ে আনা হবে।"
+
+msgid "Or start from a mind map"
+msgstr "বা একটি মাইন্ড ম্যাপ থেকে শুরু করুন"
+
+msgid "Make the deck"
+msgstr "ডেক বানান"
+
+#, python-format
+msgid "%(counter)s card to review"
+msgid_plural "%(counter)s cards to review"
+msgstr[0] "রিভিউ করার %(counter)sটি কার্ড"
+msgstr[1] "রিভিউ করার %(counter)sটি কার্ড"
+
+#, python-format
+msgid "About %(counter)s minute."
+msgid_plural "About %(counter)s minutes."
+msgstr[0] "প্রায় %(counter)s মিনিট।"
+msgstr[1] "প্রায় %(counter)s মিনিট।"
+
+#, python-format
+msgid "%(counter)s card comes back tomorrow."
+msgid_plural "%(counter)s cards come back tomorrow."
+msgstr[0] "আগামীকাল %(counter)sটি কার্ড ফিরে আসবে।"
+msgstr[1] "আগামীকাল %(counter)sটি কার্ড ফিরে আসবে।"
+
+msgid "day in a row"
+msgid_plural "days in a row"
+msgstr[0] "দিন টানা"
+msgstr[1] "দিন টানা"
+
+#, python-format
+msgid "learnt, of %(total)s cards"
+msgstr "শেখা, %(total)sটি কার্ডের মধ্যে"
+
+#, python-format
+msgid "%(counter)s card"
+msgid_plural "%(counter)s cards"
+msgstr[0] "%(counter)sটি কার্ড"
+msgstr[1] "%(counter)sটি কার্ড"
+
+#, python-format
+msgid "%(n)s due"
+msgstr "%(n)sটি বাকি"
+
+#, python-format
+msgid "%(n)s new"
+msgstr "%(n)sটি নতুন"
+
+#, python-format
+msgid "%(counter)s archived deck"
+msgid_plural "%(counter)s archived decks"
+msgstr[0] "আর্কাইভ করা %(counter)sটি ডেক"
+msgstr[1] "আর্কাইভ করা %(counter)sটি ডেক"
+
+msgid "Stop (Esc)"
+msgstr "থামুন (Esc)"
+
+msgid "All decks"
+msgstr "সব ডেক"
+
+msgid "Practice — your schedule stays as it is"
+msgstr "অনুশীলন — আপনার সময়সূচি যেমন আছে তেমনই থাকবে"
+
+msgid "Left in this session"
+msgstr "এই সেশনে বাকি"
+
+msgid "Again soon"
+msgstr "শিগগির আবার"
+
+msgid "To review"
+msgstr "রিভিউ করার"
+
+msgid "Question — tap to see the answer"
+msgstr "প্রশ্ন — উত্তর দেখতে চাপুন"
+
+msgid "Tap or press Space to turn over"
+msgstr "উল্টাতে চাপুন বা Space দিন"
+
+msgid "How well did you know it?"
+msgstr "কতটা জানতেন?"
+
+msgid "On a phone: swipe right if you knew it, left to see it again."
+msgstr "ফোনে: জানলে ডানে সোয়াইপ করুন, আবার দেখতে বামে।"
+
+msgid "Nothing to review right now"
+msgstr "এখন রিভিউ করার কিছু নেই"
+
+msgid "Every card is resting until its next turn. Add new cards, or practise a deck any time."
+msgstr "প্রতিটি কার্ড তার পরের পালার জন্য অপেক্ষা করছে। নতুন কার্ড যোগ করুন, বা যেকোনো সময় একটি ডেক অনুশীলন করুন।"
+
+msgid "Practise this deck anyway"
+msgstr "তবুও এই ডেক অনুশীলন করুন"
+
+msgid "Session done"
+msgstr "সেশন শেষ"
+
+msgid "Cards"
+msgstr "কার্ড"
+
+msgid "Remembered"
+msgstr "মনে ছিল"
+
+msgid "Practise again"
+msgstr "আবার অনুশীলন করুন"
+
+msgid "Go through every card; your schedule stays as it is"
+msgstr "সব কার্ড দেখুন; আপনার সময়সূচি যেমন আছে তেমনই থাকবে"
+
+msgid "Practise all"
+msgstr "সব অনুশীলন করুন"
+
+msgid "Deck settings"
+msgstr "ডেকের সেটিংস"
+
+msgid "Delete the deck"
+msgstr "ডেক মুছুন"
+
+msgid "How to add"
+msgstr "কীভাবে যোগ করবেন"
+
+msgid "One card"
+msgstr "একটি কার্ড"
+
+msgid "Many at once"
+msgstr "একসাথে অনেক"
+
+msgid "What does a load balancer do?"
+msgstr "লোড ব্যালান্সার কী করে?"
+
+msgid "Spreads requests across servers, so none gets overloaded and one can fail safely."
+msgstr "রিকোয়েস্টগুলো সার্ভারে ভাগ করে দেয়, যাতে কোনোটির উপর বেশি চাপ না পড়ে আর একটি বন্ধ হলেও সমস্যা না হয়।"
+
+msgid "Markdown works: **bold**, `code`, lists, ```mermaid diagrams."
+msgstr "Markdown চলে: **মোটা**, `কোড`, তালিকা, ```mermaid ডায়াগ্রাম।"
+
+msgid "adds it"
+msgstr "যোগ করে"
+
+msgid "Add card"
+msgstr "কার্ড যোগ করুন"
+
+msgid "CAP theorem :: Consistency, availability, partition tolerance — pick two when the network splits&#10;Idempotent :: Doing it twice has the same effect as once&#10;P99 latency :: 99 of 100 requests are faster than this"
+msgstr "CAP থিওরেম :: নেটওয়ার্ক ভাগ হলে কনসিস্টেন্সি আর অ্যাভেইলেবিলিটির মধ্যে একটি বাছতে হয়&#10;Idempotent :: দুবার করলেও একবারের মতোই ফল&#10;P99 latency :: ১০০টির মধ্যে ৯৯টি রিকোয়েস্ট এর চেয়ে দ্রুত"
+
+msgid "One card a line: question :: answer. Copied spreadsheet columns (question, then answer) work too."
+msgstr "প্রতি লাইনে একটি কার্ড: প্রশ্ন :: উত্তর। স্প্রেডশিট থেকে কপি করা কলামও (আগে প্রশ্ন, তারপর উত্তর) চলে।"
+
+msgid "cards found"
+msgstr "টি কার্ড পাওয়া গেছে"
+
+msgid "Add them"
+msgstr "যোগ করুন"
+
+msgid "Learnt"
+msgstr "শেখা"
+
+msgid "Search cards  ( / )"
+msgstr "কার্ড খুঁজুন  ( / )"
+
+msgid "Search cards"
+msgstr "কার্ড খুঁজুন"
+
+msgid "paused"
+msgstr "থামানো"
+
+msgid "Card actions"
+msgstr "কার্ডের কাজ"
+
+msgid "Start again"
+msgstr "আবার চালু করুন"
+
+msgid "Start over as new"
+msgstr "নতুন করে শুরু করুন"
+
+msgid "Move to"
+msgstr "সরান"
+
+msgid "No cards here."
+msgstr "এখানে কোনো কার্ড নেই।"
+
+msgid "No cards yet"
+msgstr "এখনো কোনো কার্ড নেই"
+
+msgid "Write the first one above — or paste a list of “question :: answer” lines."
+msgstr "উপরে প্রথমটি লিখুন — বা “প্রশ্ন :: উত্তর” লাইনের একটি তালিকা পেস্ট করুন।"
+
+msgid "Newer"
+msgstr "নতুনগুলো"
+
+msgid "Older"
+msgstr "পুরোনোগুলো"

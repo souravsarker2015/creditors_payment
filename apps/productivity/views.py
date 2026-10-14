@@ -8,24 +8,25 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import BooleanField, Count, ExpressionWrapper, Q, prefetch_related_objects
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, HttpResponseNotModified
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_date
 from django.utils.formats import date_format
+from django.utils.http import http_date, parse_http_date_safe
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
 from django.views.decorators.http import require_POST
 
 from apps.trash.undo import delete_with_undo
 
-from . import diagrams, services
-from .api import entry_json
+from . import cards, diagrams, services
+from .api import card_json, entry_json
 from .access import can_use, work_required
-from .forms import EntryForm, GoalForm, HabitForm, LearningForm, ProjectForm, SettingsForm, SnippetForm, TagForm, TaskForm
+from .forms import DeckForm, EntryForm, GoalForm, HabitForm, LearningForm, ProjectForm, SettingsForm, SnippetForm, TagForm, TaskForm
 from .models import (
-    Diagram, DiagramKind, Goal, GoalStatus, Habit, JournalEntry, Language, LearningItem, LearningKind, LearningStatus, LearningUnit, Note, Priority, Project, Snippet,
+    Card, Color, Deck, Diagram, DiagramKind, DiagramVersion, Goal, GoalStatus, Habit, JournalEntry, Language, LearningItem, LearningKind, LearningStatus, LearningUnit, Note, Priority, Project, Snippet,
     Status, Tag, Task, TimeEntry, WorkSettings,
 )
 
@@ -56,7 +57,8 @@ def _urls():
         "learning_new": r("work:learning_new"), "snippet_new": r("work:snippet_new"), "export": r("work:export"),
         "learningBase": "/work/api/learning/", "goalBase": "/work/api/goals/",
         "plan": r("work:plan"), "planAction": r("work:api_plan"), "week": r("work:week"), "noteGo": r("work:note_go"),
-        "diagrams": r("work:diagrams"), "diagramBase": "/work/api/diagrams/",
+        "diagrams": r("work:diagrams"), "diagramBase": "/work/api/diagrams/", "diagramList": r("work:api_diagram_list"),
+        "cards": r("work:cards"), "cardBase": "/work/api/cards/", "cardAdd": r("work:api_card_add"),
     }
 
 
@@ -79,7 +81,8 @@ def _texts():
         "tasksMade": _("Tasks made"), "openTasks": _("See them"), "tomorrow": _("Tomorrow"),
         "error": _("Couldn't save. Try again."), "later": _("Moved to"),
         "kinds": {"task": _("Task"), "note": _("Note"), "project": _("Project"), "goal": _("Goal"), "learning": _("Learning"),
-                  "snippet": _("Snippet"), "diagram": _("Diagram")},
+                  "snippet": _("Snippet"), "diagram": _("Diagram"), "card": _("Flashcard")},
+        "cardsMade": _("Flashcards made"), "seeCards": _("See them"), "noPairs": _("Write cards as “question :: answer”, one a line."),
     }
 
 
@@ -104,6 +107,7 @@ def _commands():
         ("reports", _("Reports"), "chart", "work:reports", "g r", "stats charts"),
         ("notes", _("Notes"), "note", "work:notes", "g n", ""),
         ("snippets", _("Snippets"), "code", "work:snippets", "g s", "code"),
+        ("cards", _("Flashcards"), "cards", "work:cards", "g k", "flashcards spaced repetition anki memorise memorize study quiz revise"),
         ("diagrams", _("Diagrams"), "diagram", "work:diagrams", "g m", "mind map mindmap system design architecture flowchart sequence er uml whiteboard"),
         ("settings", _("Timer, focus & sounds"), "key", "work:settings", "g ,", "settings preferences tags"),
     ]
@@ -113,6 +117,7 @@ def _commands():
         {"id": "new-task", "title": _("New task"), "icon": "plus", "action": "capture:task", "hint": "c", "words": "add create"},
         {"id": "new-note", "title": _("New note"), "icon": "note", "action": "capture:note", "hint": "n", "words": "add create write"},
         {"id": "new-mindmap", "title": _("New mind map"), "icon": "mindmap", "url": r("work:diagrams") + "?start=mindmap", "words": "add create brainstorm diagram"},
+        {"id": "review-cards", "title": _("Review flashcards"), "icon": "cards", "url": r("work:card_review"), "words": "study quiz spaced repetition anki"},
         {"id": "new-system", "title": _("New system design"), "icon": "server", "url": r("work:diagrams") + "?start=system", "words": "add create architecture diagram board"},
         {"id": "start", "title": _("Start the timer"), "icon": "play", "action": "capture:time", "hint": "s", "words": "track", "when": "idle"},
         {"id": "stop", "title": _("Stop the timer"), "icon": "stop", "action": "timer:stop", "hint": "s", "words": "track", "when": "running"},
@@ -201,6 +206,7 @@ def today_view(request):
         "notes": Note.objects.filter(owner=user, is_archived=False)[:5],
         "journal": journal,
         "suggest": Task.objects.filter(owner=user, status__in=[Status.TODO, Status.BACKLOG], my_day__isnull=True, due_date__isnull=True).order_by("-priority", "order")[:5],
+        "cards_due": cards.due_count(user, today) if Deck.objects.filter(owner=user, is_archived=False).exists() else 0,
     })
 
 
@@ -541,8 +547,23 @@ DIAGRAM_KINDS = [
     (DiagramKind.GANTT, "gantt", gettext_lazy("Tasks on a calendar.")),
     (DiagramKind.TIMELINE, "timeline", gettext_lazy("Events in time.")),
     (DiagramKind.JOURNEY, "journey", gettext_lazy("A person's steps and how each feels.")),
+    (DiagramKind.C4, "c4", gettext_lazy("People, systems and what talks to what.")),
+    (DiagramKind.ARCHITECTURE, "cloud", gettext_lazy("Cloud services in groups, with icons.")),
+    (DiagramKind.BLOCK, "block", gettext_lazy("Boxes laid out in rows and columns.")),
+    (DiagramKind.GITGRAPH, "git", gettext_lazy("Branches, commits and merges.")),
+    (DiagramKind.PIE, "pie", gettext_lazy("Parts of a whole.")),
+    (DiagramKind.QUADRANT, "quadrant", gettext_lazy("Effort against impact: what to do first.")),
+    (DiagramKind.XYCHART, "chart", gettext_lazy("Numbers over time as bars and lines.")),
+    (DiagramKind.SANKEY, "sankey", gettext_lazy("Where amounts flow, like money or traffic.")),
 ]
 DIAGRAM_ICON = {k: icon for k, icon, _h in DIAGRAM_KINDS}
+K = DiagramKind
+DIAGRAM_GROUPS = [
+    (gettext_lazy("Draw by hand"), [K.MINDMAP, K.SYSTEM]),
+    (gettext_lazy("Software and systems"), [K.FLOWCHART, K.SEQUENCE, K.ER, K.CLASS, K.STATE, K.C4, K.ARCHITECTURE, K.BLOCK, K.GITGRAPH]),
+    (gettext_lazy("Plans and time"), [K.GANTT, K.TIMELINE, K.JOURNEY]),
+    (gettext_lazy("Charts"), [K.PIE, K.QUADRANT, K.XYCHART, K.SANKEY]),
+]
 
 
 @work_required
@@ -564,8 +585,10 @@ def diagrams_view(request):
     starts = diagrams.templates()
     tiles = [{"kind": k, "label": k.label, "icon": icon, "hint": hint, "templates": starts.get(k, []), "count": counts.get(k, 0)}
              for k, icon, hint in DIAGRAM_KINDS]
+    by_kind = {t["kind"]: t for t in tiles}
+    groups = [{"label": label, "tiles": [by_kind[k] for k in kinds]} for label, kinds in DIAGRAM_GROUPS]
     return render_work(request, "work/diagrams.html", {
-        "diagrams": qs[:300], "tiles": tiles, "kind": kind, "q": q, "archived": archived, "project": project,
+        "diagrams": qs[:300], "tiles": tiles, "groups": groups, "kind": kind, "q": q, "archived": archived, "project": project,
         "total": sum(counts.values()), "icons": DIAGRAM_ICON,
         "projects": Project.objects.filter(owner=user, is_archived=False),
     })
@@ -615,6 +638,20 @@ def _snippets(kind):
         k.GANTT: [(_("Section"), "\n    section Name"), (_("Task"), "\n    Task name :t1, after a1, 3d"), (_("Milestone"), "\n    Milestone :milestone, after t1, 0d")],
         k.TIMELINE: [(_("Period"), "\n    2026 : What happened"), (_("Section"), "\n    section Name")],
         k.JOURNEY: [(_("Section"), "\n    section Name"), (_("Step"), "\n      Step: 3: Person")],
+        k.C4: [(_("Person"), '\n    Person(id, "Name", "What they do")'), (_("System"), '\n    System(id, "Name", "What it does")'),
+               (_("Outside system"), '\n    System_Ext(id, "Name")'), (_("Database"), '\n    SystemDb(id, "Name")'),
+               (_("Link"), '\n    Rel(from, to, "Uses", "HTTPS")'), (_("Boundary"), '\n    System_Boundary(b1, "Name") {\n        \n    }')],
+        k.ARCHITECTURE: [(_("Group"), "\n    group name(cloud)[Name]"), (_("Server"), "\n    service id(server)[Name]"),
+                         (_("Database"), "\n    service id(database)[Name]"), (_("Storage"), "\n    service id(disk)[Name]"),
+                         (_("Internet"), "\n    service id(internet)[Name]"), (_("Link"), "\n    a:R --> L:b")],
+        k.BLOCK: [(_("Columns"), "\n    columns 3"), (_("Box"), '\n    id["Text"]'), (_("Wide box"), '\n    id["Text"]:2'),
+                  (_("Database"), '\n    id[("Text")]'), (_("Gap"), "\n    space"), (_("Arrow"), "\n    a --> b")],
+        k.GITGRAPH: [(_("Commit"), '\n    commit id: "message"'), (_("Branch"), "\n    branch name"), (_("Switch"), "\n    checkout main"),
+                     (_("Merge"), "\n    merge name"), (_("Tag"), '\n    commit id: "release" tag: "v1.0"')],
+        k.PIE: [(_("Slice"), '\n    "Name" : 10')],
+        k.QUADRANT: [(_("Point"), "\n    Item: [0.5, 0.5]"), (_("Quadrant names"), "\n    quadrant-1 Top right\n    quadrant-2 Top left\n    quadrant-3 Bottom left\n    quadrant-4 Bottom right")],
+        k.XYCHART: [(_("Bars"), "\n    bar [1, 2, 3]"), (_("Line"), "\n    line [1, 2, 3]"), (_("Labels"), "\n    x-axis [A, B, C]")],
+        k.SANKEY: [(_("Flow"), "\nFrom,To,10")],
     }
     return table.get(kind, [])
 
@@ -631,6 +668,10 @@ def _diagram_texts(kind=""):
         "badSyntax": _("There is a mistake in the text"), "noMermaid": _("The diagram drawing tool could not load. Check the internet connection."),
         "replaceMap": _("Replace this mind map with the pasted list? You can undo it."),
         "parts": {k: str(v) for k, v in BOARD_PARTS},
+        "cardsMade": _("Flashcards made"), "seeCards": _("See them"), "noCards": _("Add ideas under an idea to make a card from it."),
+        "versionSaved": _("Version saved"), "restored": _("Earlier version brought back"), "restoreConfirm": _("Bring back this version? What's there now is kept as a version too."),
+        "noMatch": _("Nothing matches"), "copiedParts": _("Copied"), "pasted": _("Pasted"),
+        "auto": _("Kept by itself"), "now": _("Now"),
     }
 
 
@@ -640,27 +681,155 @@ def diagram_view(request, pk):
     payload = {"id": d.pk, "title": d.title, "kind": d.kind, "source": d.source, "data": d.data, "notes": d.notes,
                "project": str(d.project_id or ""), "saved": timezone.localtime(d.updated_at).strftime("%H:%M"),
                "updated": int(d.updated_at.timestamp() * 1000), "pinned": d.is_pinned,
-               "hasPreview": bool(d.preview)}
+               "hasPreview": bool(d.preview), "look": (d.data or {}).get("look", "") if not d.is_visual else ""}
     return render_work(request, "work/diagram.html", {
-        "diagram": d, "payload": payload, "icon": DIAGRAM_ICON.get(d.kind, "diagram"), "texts": _diagram_texts(d.kind), "parts": BOARD_PARTS,
+        "diagram": d, "payload": payload, "sketchable": d.kind in diagrams.SKETCH_KINDS, "icon": DIAGRAM_ICON.get(d.kind, "diagram"), "texts": _diagram_texts(d.kind), "parts": BOARD_PARTS,
         "projects": Project.objects.filter(owner=request.user, is_archived=False),
         "kinds": [(k, k.label) for k in DiagramKind if k not in (DiagramKind.MINDMAP, DiagramKind.SYSTEM)],
     })
 
 
+def _svg_picture(svg, request, modified=None, fixed=False):
+    """A picture a page drew, sent as an image with scripts, links and
+    anything outside it switched off."""
+    response = HttpResponse(svg, content_type="image/svg+xml; charset=utf-8")
+    response["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'; img-src data:; font-src data:; sandbox"
+    response["X-Content-Type-Options"] = "nosniff"
+    if fixed or request.GET.get("v"):     # the address names the version, so a copy can be kept until it changes
+        response["Cache-Control"] = "private, max-age=31536000, immutable"
+    else:
+        response["Cache-Control"] = "private, no-cache"
+        if modified:
+            response["Last-Modified"] = http_date(modified.timestamp())
+    return response
+
+
 @work_required
 def diagram_preview_view(request, pk):
-    """The list's picture of a diagram. It's an SVG the page drew, so it is
-    sent with scripts, links and anything outside it switched off."""
+    """The list's picture of a diagram (also what a note shows when a diagram is put in it)."""
     d = get_object_or_404(Diagram.objects.only("preview", "owner_id", "updated_at"), pk=pk, owner=request.user)
     if not d.preview:
         raise Http404
-    response = HttpResponse(d.preview, content_type="image/svg+xml; charset=utf-8")
-    response["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'; img-src data:; font-src data:; sandbox"
-    response["X-Content-Type-Options"] = "nosniff"
-    # the address carries ?v=<last saved>, so a copy can be kept until the diagram changes
-    response["Cache-Control"] = "private, max-age=31536000, immutable" if request.GET.get("v") else "private, no-cache"
-    return response
+    since = parse_http_date_safe(request.headers.get("If-Modified-Since", ""))
+    if since and not request.GET.get("v") and int(d.updated_at.timestamp()) <= since:
+        return HttpResponseNotModified()
+    return _svg_picture(d.preview, request, d.updated_at)
+
+
+@work_required
+def diagram_version_preview_view(request, pk, vid):
+    v = get_object_or_404(DiagramVersion.objects.only("preview"), pk=vid, diagram_id=pk, diagram__owner=request.user)
+    if not v.preview:
+        raise Http404
+    return _svg_picture(v.preview, request, fixed=True)     # a version never changes
+
+
+# ── Flashcards ────────────────────────────────────────────────────────────
+def _with_counts(decks, counts):
+    for dk in decks:
+        c = counts.get(dk.pk, {})
+        dk.n_due, dk.n_new, dk.n_total, dk.n_learnt = c.get("due", 0), c.get("new", 0), c.get("total", 0), c.get("learnt", 0)
+        dk.n_today = dk.n_due + dk.n_new
+        dk.pct = round(100 * dk.n_learnt / dk.n_total) if dk.n_total else 0
+    return decks
+
+
+@work_required
+def cards_view(request):
+    user, today = request.user, _today()
+    counts = cards.deck_counts(user, today)
+    decks = _with_counts(list(Deck.objects.filter(owner=user, is_archived=False).select_related("learning")), counts)
+    stats = cards.stats(user, today)
+    pad = stats["heat"][0]["date"].weekday()            # the heatmap's rows run Monday to Sunday
+    return render_work(request, "work/cards.html", {
+        "decks": decks, "archived": _with_counts(list(Deck.objects.filter(owner=user, is_archived=True)), counts),
+        "due": sum(dk.n_today for dk in decks), "stats": stats, "forecast": cards.forecast(user, today),
+        "pad": range(pad), "weeks": -(-(pad + len(stats["heat"])) // 7),
+        "form": DeckForm(owner=user, initial={"new_per_day": 20}),
+    })
+
+
+@work_required
+@require_POST
+def deck_new_view(request):
+    user = request.user
+    learning = LearningItem.objects.filter(owner=user, pk=request.POST.get("learning") or 0).first()
+    if learning and request.POST.get("from_learning"):      # "Flashcards" on something you're learning: its deck
+        deck = Deck.objects.filter(owner=user, learning=learning).first() or Deck.objects.create(
+            owner=user, name=learning.title[:120], learning=learning, color=Color.PURPLE)
+        return redirect("work:deck", pk=deck.pk)
+    form = DeckForm(request.POST, owner=user)
+    if form.is_valid():
+        deck = form.save(commit=False)
+        deck.owner = user
+        deck.save()
+        return redirect("work:deck", pk=deck.pk)
+    messages.error(request, " ".join(e for errs in form.errors.values() for e in errs))
+    return redirect("work:cards")
+
+
+DECK_SHOW = ("all", "due", "new", "learnt", "paused")
+
+
+@work_required
+def deck_view(request, pk):
+    user, today = request.user, _today()
+    deck = get_object_or_404(Deck.objects.select_related("learning"), pk=pk, owner=user)
+    form = DeckForm(request.POST or None, instance=deck, owner=user)
+    if request.method == "POST":
+        if form.is_valid():
+            form.save()
+            messages.success(request, _("Deck saved."))
+            return redirect("work:deck", pk=deck.pk)
+    show, q = request.GET.get("show", "all"), request.GET.get("q", "").strip()
+    show = show if show in DECK_SHOW else "all"
+    qs = deck.cards.all()
+    if show == "due":
+        qs = qs.filter(is_suspended=False, last_reviewed__isnull=False, due__lte=today)
+    elif show == "new":
+        qs = qs.filter(last_reviewed__isnull=True)
+    elif show == "learnt":
+        qs = qs.filter(interval__gte=cards.MATURE)
+    elif show == "paused":
+        qs = qs.filter(is_suspended=True)
+    if q:
+        qs = qs.filter(Q(front__icontains=q) | Q(back__icontains=q))
+    _with_counts([deck], cards.deck_counts(user, today))
+    page = Paginator(qs.order_by("-created_at", "-pk"), 100).get_page(request.GET.get("page"))
+    return render_work(request, "work/deck.html", {
+        "deck": deck, "form": form, "page": page, "cards": [card_json(c) for c in page], "show": show, "q": q,
+        "paused": deck.cards.filter(is_suspended=True).count(), "decks": Deck.objects.filter(owner=user, is_archived=False).exclude(pk=deck.pk),
+        "texts": _card_texts(),
+    })
+
+
+def _card_texts():
+    return {
+        "again": _("Again"), "hard": _("Hard"), "good": _("Good"), "easy": _("Easy"), "show": _("Show the answer"),
+        "deleted": _("Card deleted"), "added": _("Card added"), "addedMany": _("Cards added"), "skipped": _("already in the deck"),
+        "saved": _("Saved"), "paused": _("Paused: it won't come up until you start it again"), "resumed": _("It will come up again"),
+        "reset": _("It will come up as new"), "resetConfirm": _("Forget how well you know this card and start it again as new?"),
+        "deleteDeck": _("Delete this deck and all its cards? You can bring it back from Recently deleted."),
+        "noAnswer": _("(no answer written)"), "moved": _("Moved"),
+    }
+
+
+@work_required
+def card_review_view(request):
+    """A review session: the cards due today (or, to practise, every card in a deck)."""
+    user = request.user
+    deck = Deck.objects.filter(owner=user, pk=request.GET.get("deck") or 0).first()
+    practice = request.GET.get("practice") == "1" and deck is not None
+    if practice:
+        session = list(deck.cards.filter(is_suspended=False).order_by("?")[:cards.SESSION_MAX])
+    else:
+        session = cards.due_cards(user, deck)
+    return render_work(request, "work/cards_review.html", {
+        "deck": deck, "practice": practice, "texts": _card_texts(),
+        "review": {"cards": [card_json(c, deck_info=True) for c in session], "practice": practice,
+                    "back": reverse("work:deck", args=[deck.pk]) if deck else reverse("work:cards")},
+        "stats": cards.stats(user, days=1),
+    })
 
 
 # ── Snippets ──────────────────────────────────────────────────────────────
@@ -974,7 +1143,7 @@ def learning_view(request):
     if show == LearningStatus.DONE:
         items = items.order_by("-finished_on", "-updated_at")
     return render_work(request, "work/learning.html", {
-        "items": items[:300], "show": show, "kind": kind, "counts": counts, "kinds": LearningKind.choices,
+        "items": items.annotate(n_cards=Count("decks__cards", distinct=True))[:300], "show": show, "kind": kind, "counts": counts, "kinds": LearningKind.choices,
         "finished_this_year": LearningItem.objects.filter(owner=user, status=LearningStatus.DONE, finished_on__year=today.year).count(),
         "statuses": LearningStatus.choices,
     })
@@ -1154,8 +1323,8 @@ def week_view(request):
 # ── Your data ─────────────────────────────────────────────────────────────
 @work_required
 def export_view(request):
-    """Everything in the tracker as one .zip: data.json, plus notes and
-    snippets as plain files you can open anywhere."""
+    """Everything in the tracker as one .zip: data.json, plus notes,
+    snippets, diagrams and flashcards as plain files you can open anywhere."""
     import io
     import json
     import re
@@ -1172,6 +1341,10 @@ def export_view(request):
     rows += json.loads(serializers.serialize("json", ChecklistItem.objects.filter(task__owner=user)))
     rows += json.loads(serializers.serialize("json", GoalStep.objects.filter(goal__owner=user)))
     rows += json.loads(serializers.serialize("json", HabitCheck.objects.filter(habit__owner=user)))
+    diagram_fields = [f.name for f in Diagram._meta.fields if f.name not in ("id", "preview")]
+    rows += json.loads(serializers.serialize("json", Diagram.objects.filter(owner=user), fields=diagram_fields))
+    rows += json.loads(serializers.serialize("json", Deck.objects.filter(owner=user)))
+    rows += json.loads(serializers.serialize("json", Card.objects.filter(owner=user)))
     ext = {"python": "py", "javascript": "js", "typescript": "ts", "bash": "sh", "plaintext": "txt", "markdown": "md", "xml": "html",
            "csharp": "cs", "cpp": "cpp", "dockerfile": "Dockerfile", "kotlin": "kt", "ruby": "rb", "rust": "rs", "yaml": "yml"}
 
@@ -1187,6 +1360,17 @@ def export_view(request):
             z.writestr(f"snippets/{slug(sn.title, sn.pk)}.{ext.get(sn.language, sn.language)}", sn.code)
         for j in JournalEntry.objects.filter(owner=user):
             z.writestr(f"journal/{j.date}.md", f"# {j.date}\n\n## Plan\n{j.plan}\n\n## Done & learnt\n{j.wins}\n\n## Blockers\n{j.blockers}\n\n## Notes\n{j.notes}\n")
+        for dg in Diagram.objects.filter(owner=user):
+            name = f"diagrams/{slug(dg.title, dg.pk)}"
+            if dg.preview:
+                z.writestr(f"{name}.svg", dg.preview)
+            if dg.kind == DiagramKind.MINDMAP:
+                z.writestr(f"{name}.md", diagrams.outline_text(dg.data))
+            elif not dg.is_visual:
+                z.writestr(f"{name}.mmd", dg.source)
+        for dk in Deck.objects.filter(owner=user):    # tab-separated: Anki and spreadsheets open these
+            lines = ["\t".join(" ".join(t.split()) for t in (c.front, c.back)) for c in dk.cards.all()]
+            z.writestr(f"flashcards/{slug(dk.name, dk.pk)}.tsv", "\n".join(lines) + "\n")
     response = HttpResponse(buf.getvalue(), content_type="application/zip")
     response["Content-Disposition"] = f'attachment; filename="productivity-{_today()}.zip"'
     return response

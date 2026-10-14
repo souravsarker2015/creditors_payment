@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from . import services
-from .models import Goal, GoalStatus, Habit, LearningItem, LearningStatus, Project, Snippet, Tag, Task, TimeEntry, WorkSettings
+from .models import Deck, Goal, GoalStatus, Habit, LearningItem, LearningStatus, Project, Snippet, Tag, Task, TimeEntry, WorkSettings
 
 DATE = forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d")
 SWATCHES = forms.RadioSelect   # colours are picked from swatches (templates: .w-swatches)
@@ -277,3 +277,19 @@ class LearningForm(OwnedForm):
         if data.get("status") == LearningStatus.DONE and data.get("total"):
             data["progress"] = max(data.get("progress") or 0, data["total"])
         return data
+
+
+class DeckForm(OwnedForm):
+    class Meta:
+        model = Deck
+        fields = ("name", "color", "description", "learning", "new_per_day")
+        widgets = {
+            "color": SWATCHES,
+            "name": forms.TextInput(attrs={"placeholder": _("System design, Spanish words, AWS exam…")}),
+            "description": forms.Textarea(attrs={"rows": 2}),
+            "new_per_day": forms.NumberInput(attrs={"inputmode": "numeric", "min": 0, "max": 500}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["learning"].queryset = LearningItem.objects.filter(owner=self.owner).order_by("-updated_at")

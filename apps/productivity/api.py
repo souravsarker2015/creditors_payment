@@ -17,15 +17,16 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_date, parse_datetime
+from django.utils.formats import date_format
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_GET, require_POST
 
 from apps.trash.services import trash
 
-from . import diagrams, services
+from . import cards, diagrams, services
 from .access import work_required
 from .models import (
-    ChecklistItem, Diagram, DiagramKind, EntryKind, Goal, GoalStatus, GoalStep, Habit, HabitCheck, JournalEntry, LearningItem, LearningKind, LearningStatus,
+    Card, ChecklistItem, Deck, Diagram, DiagramKind, DiagramVersion, EntryKind, Goal, GoalStatus, GoalStep, Habit, HabitCheck, JournalEntry, LearningItem, LearningKind, LearningStatus,
     LearningUnit, Note, Priority, Project, Snippet, Status, Task, TimeEntry, link_label,
 )
 
@@ -347,6 +348,12 @@ def note_action(request, pk):
         note.refresh_from_db()
         return ok(count=len(made), body=note.body, saved=timezone.localtime(note.updated_at).strftime("%H:%M"),
                   updated=int(note.updated_at.timestamp() * 1000))
+    elif action == "cards":            # every "question :: answer" line becomes a flashcard
+        pairs = cards.parse_pairs(note.body)
+        if not pairs:
+            return bad(_("Write cards as “question :: answer”, one a line."))
+        deck = cards.deck_named(request.user, note.display_title)
+        return ok(count=cards.add_cards(request.user, deck, pairs), url=reverse("work:deck", args=[deck.pk]))
     elif action == "to_task":
         task = Task.objects.create(owner=request.user, title=note.display_title[:300], notes=note.body, project=note.project,
                                    order=services.next_order(request.user, Status.TODO))
@@ -431,14 +438,14 @@ def diagram_save(request, pk):
     """Autosave from a diagram page: title, the drawing (shapes or text), notes and its picture."""
     d = get_object_or_404(Diagram, pk=pk, owner=request.user)
     post = request.POST
-    if "title" in post:
-        d.title = post["title"].strip()[:200] or d.title
+    if "source" in post or "data" in post:
+        diagrams.remember(d)          # what it was before this sitting, at most every few minutes
     if "source" in post and not d.is_visual:
         if len(post["source"]) > diagrams.MAX_SOURCE:
             return bad(_("This diagram is too big to save."))
         d.source = post["source"]
         d.kind = diagrams.kind_of_source(d.source, d.kind)
-    if "data" in post and d.is_visual:
+    if "data" in post:
         try:
             d.data = diagrams.clean_data(d.kind, post["data"])
         except diagrams.Invalid as e:
@@ -449,6 +456,8 @@ def diagram_save(request, pk):
         d.preview = diagrams.clean_preview(post["preview"])
     if "project" in post:
         d.project = Project.objects.filter(owner=request.user, pk=post["project"] or 0).first()
+    if "title" in post:
+        d.title = post["title"].strip()[:200] or d.title
     d.save()
     return ok(saved=timezone.localtime(d.updated_at).strftime("%H:%M"), updated=int(d.updated_at.timestamp() * 1000), kind=d.kind)
 
@@ -481,6 +490,26 @@ def diagram_action(request, pk):
         for title in titles:
             Task.objects.create(owner=request.user, title=title, project=d.project, order=services.next_order(request.user, Status.TODO))
         return ok(count=len(titles), url=reverse("work:tasks"))
+    if action == "cards":               # a mind map as flashcards: each idea asks for the ideas under it
+        if d.kind != DiagramKind.MINDMAP:
+            return bad(_("Only mind maps can make flashcards."))
+        pairs = cards.mindmap_pairs(d.data)
+        if not pairs:
+            return bad(_("Add ideas under an idea to make a card from it."))
+        deck = cards.deck_named(request.user, d.title)
+        return ok(count=cards.add_cards(request.user, deck, pairs), url=reverse("work:deck", args=[deck.pk]))
+    if action == "version":             # keep it as it is now, with a name
+        v = diagrams.remember(d, name=request.POST.get("name", "").strip() or _("Saved by hand"), force=True)
+        if v is None:
+            return bad(_("Draw something first."))
+        return ok(version=version_json(v))
+    if action == "restore":
+        v = get_object_or_404(DiagramVersion, pk=request.POST.get("version") or 0, diagram=d)
+        diagrams.bring_back(d, v)
+        return ok(url=reverse("work:diagram", args=[d.pk]))
+    if action == "forget":              # throw one version away
+        DiagramVersion.objects.filter(pk=request.POST.get("version") or 0, diagram=d).delete()
+        return ok()
     if action == "note":                # the diagram as a note: an outline, the Mermaid text or the design notes
         if d.kind == DiagramKind.MINDMAP:
             body = diagrams.outline_text(d.data)
@@ -492,6 +521,113 @@ def diagram_action(request, pk):
             body = f"# {d.title}\n\n```mermaid\n{d.source.strip()}\n```\n" + (f"\n{d.notes}\n" if d.notes else "")
         note = Note.objects.create(owner=request.user, title=d.title, body=body, project=d.project)
         return ok(url=reverse("work:note", args=[note.pk]))
+    return bad(_("Not allowed."))
+
+
+def version_json(v):
+    when = timezone.localtime(v.created_at)
+    return {"id": v.pk, "name": v.name, "title": v.title, "when": when.isoformat(), "time": date_format(when, "j M, H:i"),
+            "picture": reverse("work:diagram_version_preview", args=[v.diagram_id, v.pk]) if v.preview else ""}
+
+
+@work_required
+@require_GET
+def diagram_versions(request, pk):
+    d = get_object_or_404(Diagram, pk=pk, owner=request.user)
+    return ok(versions=[version_json(v) for v in d.versions.defer("source", "data", "notes")[:60]])
+
+
+@work_required
+@require_GET
+def diagram_list(request):
+    """The person's diagrams, for putting one in a note."""
+    q = request.GET.get("q", "").strip()
+    qs = Diagram.objects.filter(owner=request.user, is_archived=False).exclude(preview="").only("pk", "title", "kind", "updated_at")
+    if q:
+        qs = qs.filter(title__icontains=q)
+    return ok(items=[{"id": d.pk, "title": d.title, "kind": d.get_kind_display(), "url": reverse("work:diagram", args=[d.pk]),
+                      "picture": reverse("work:diagram_preview", args=[d.pk]),
+                      "thumb": reverse("work:diagram_preview", args=[d.pk]) + f"?v={int(d.updated_at.timestamp())}"} for d in qs[:40]])
+
+
+# ── Flashcards ────────────────────────────────────────────────────────────
+def card_json(c, deck_info=False):
+    today = timezone.localdate()
+    out = {"id": c.pk, "front": c.front, "back": c.back, "isNew": c.is_new, "paused": c.is_suspended, "interval": c.interval,
+           "due": c.due.isoformat(), "lapses": c.lapses, "previews": cards.previews(c),
+           "dueText": _("new") if c.is_new else (_("due") if c.due <= today else cards.wait_label((c.due - today).days))}
+    if deck_info:
+        out.update(deck=c.deck.name, color=c.deck.color, deckId=c.deck_id)
+    return out
+
+
+@work_required
+@require_POST
+def card_add(request):
+    """One card (front, back), or many from text: one "question :: answer" a line."""
+    deck = get_object_or_404(Deck, pk=request.POST.get("deck") or 0, owner=request.user)
+    if "text" in request.POST:
+        pairs = cards.parse_pairs(request.POST["text"])
+        if not pairs:
+            return bad(_("Write cards as “question :: answer”, one a line."))
+        added = cards.add_cards(request.user, deck, pairs)
+        return ok(added=added, skipped=len(pairs) - added)
+    front = request.POST.get("front", "").strip()
+    if not front:
+        return bad(_("Write the question."))
+    card = Card.objects.create(owner=request.user, deck=deck, front=front[:cards.MAX_FRONT],
+                               back=request.POST.get("back", "").strip()[:cards.MAX_BACK])
+    return ok(added=1, card=card_json(card))
+
+
+@work_required
+@require_POST
+def card_action(request, pk):
+    card = get_object_or_404(Card.objects.select_related("deck"), pk=pk, owner=request.user)
+    action = request.POST.get("action")
+    if action == "answer":
+        try:
+            rating = int(request.POST.get("rating", ""))
+            cards.answer(card, rating, now=_when(request, "at"))
+        except ValueError:
+            return bad(_("Not allowed."))
+        return ok(again=card.interval == 0, card=card_json(card, deck_info=True))
+    if action == "save":
+        front = request.POST.get("front", card.front).strip()
+        if not front:
+            return bad(_("Write the question."))
+        card.front, card.back = front[:cards.MAX_FRONT], request.POST.get("back", card.back).strip()[:cards.MAX_BACK]
+        card.save(update_fields=["front", "back", "updated_at"])
+        return ok(card=card_json(card))
+    if action == "pause":
+        card.is_suspended = not card.is_suspended
+        card.save(update_fields=["is_suspended", "updated_at"])
+        return ok(card=card_json(card))
+    if action == "reset":
+        card.interval, card.ease, card.reps, card.lapses, card.last_reviewed, card.due = 0, 2.5, 0, 0, None, timezone.localdate()
+        card.save()
+        return ok(card=card_json(card))
+    if action == "move":
+        deck = get_object_or_404(Deck, pk=request.POST.get("deck") or 0, owner=request.user)
+        card.deck = deck
+        card.save(update_fields=["deck", "updated_at"])
+        return ok(deck=deck.name)
+    if action == "delete":
+        return _trash(request, card, _("Flashcard: %(text)s") % {"text": card.front[:80]}, reverse("work:deck", args=[card.deck_id]))
+    return bad(_("Not allowed."))
+
+
+@work_required
+@require_POST
+def deck_action(request, pk):
+    deck = get_object_or_404(Deck, pk=pk, owner=request.user)
+    action = request.POST.get("action")
+    if action == "archive":
+        deck.is_archived = not deck.is_archived
+        deck.save(update_fields=["is_archived", "updated_at"])
+        return ok(archived=deck.is_archived, url=reverse("work:cards"))
+    if action == "delete":
+        return _trash(request, deck, _("Deck: %(name)s") % {"name": deck.name}, reverse("work:cards"))
     return bad(_("Not allowed."))
 
 
@@ -515,7 +651,7 @@ def snippet_action(request, pk):
 @work_required
 @require_GET
 def search(request):
-    """Command palette (Ctrl+K): tasks, notes, projects, goals, learning, diagrams and snippets matching the text."""
+    """Command palette (Ctrl+K): tasks, notes, projects, goals, learning, diagrams, flashcards and snippets matching the text."""
     q = request.GET.get("q", "").strip()
     if len(q) < 2:
         return ok(results=[])
@@ -534,6 +670,9 @@ def search(request):
                     "meta": " · ".join(x for x in (item.get_kind_display(), item.author) if x)})
     for dg in Diagram.objects.filter(owner=user, is_archived=False).filter(Q(title__icontains=q) | Q(notes__icontains=q)).only("pk", "title", "kind")[:4]:
         out.append({"kind": "diagram", "title": dg.title, "url": reverse("work:diagram", args=[dg.pk]), "meta": dg.get_kind_display()})
+    for c in Card.objects.filter(owner=user).filter(Q(front__icontains=q) | Q(back__icontains=q)).select_related("deck")[:3]:
+        out.append({"kind": "card", "title": " ".join(c.front.split())[:120], "url": reverse("work:deck", args=[c.deck_id]) + "?q=" + quote(c.front[:60]),
+                    "meta": c.deck.name})
     for sn in Snippet.objects.filter(owner=user).filter(Q(title__icontains=q) | Q(description__icontains=q))[:3]:
         out.append({"kind": "snippet", "title": sn.title, "url": reverse("work:snippets") + "?q=" + quote(sn.title), "meta": sn.get_language_display()})
     return ok(results=out)

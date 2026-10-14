@@ -1,0 +1,95 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% translate "Review" %} | {% translate "Flashcards" %}{% endblock %}
+
+{% block work %}
+{{ review|json_script:"review-data" }}
+{{ texts|json_script:"card-text" }}
+<div class="wfr" x-data="cardReview" data-own-keys @keydown.window="key($event)" :data-stage="stage">
+  <header class="wfr-head">
+    <a :href="back" class="icon-btn" aria-label="{% translate 'Stop' %}" data-tip="{% translate 'Stop (Esc)' %}">{% icon "x" %}</a>
+    <div class="wfr-title">
+      <b>{% if deck %}{{ deck.name }}{% else %}{% translate "All decks" %}{% endif %}</b>
+      {% if practice %}<small>{% translate "Practice — your schedule stays as it is" %}</small>{% endif %}
+    </div>
+    <div class="wfr-counts" aria-label="{% translate 'Left in this session' %}">
+      <span class="is-new" data-tip="{% translate 'New' %}" x-text="left.fresh"></span>
+      <span class="is-again" data-tip="{% translate 'Again soon' %}" x-text="left.again"></span>
+      <span class="is-due" data-tip="{% translate 'To review' %}" x-text="left.due"></span>
+    </div>
+  </header>
+  <div class="wfr-progress" role="progressbar" :aria-valuenow="done" aria-valuemin="0" :aria-valuemax="total"><i :style="'width:' + (total ? 100 * done / total : 0) + '%'"></i></div>
+
+  {# ── the card ── #}
+  <section class="wfr-stage" x-show="stage === 'card'">
+    <div class="wfr-deckname" x-show="card && card.deck && !singleDeck" x-cloak><span class="wfc-dot" :data-color="card && card.color"></span><span x-text="card && card.deck"></span></div>
+    <div class="wfr-card-wrap" x-ref="wrap">
+      <div class="wfr-card" x-ref="card" :class="{ 'is-flipped': flipped, 'is-new': card && card.isNew }" @click="flip()" role="button" tabindex="0"
+           :aria-label="flipped ? '{% translate "Answer" %}' : '{% translate "Question — tap to see the answer" %}'">
+        <div class="wfr-face wfr-front">
+          <span class="wfr-tag" x-text="card && card.isNew ? '{% translate "New" %}' : '{% translate "Question" %}'"></span>
+          <div class="wfr-text wn-md" x-ref="front"></div>
+          <span class="wfr-tap">{% icon "repeat" %}{% translate "Tap or press Space to turn over" %}</span>
+        </div>
+        <div class="wfr-face wfr-back">
+          <div class="wfr-q wn-md" x-ref="q"></div>
+          <hr>
+          <div class="wfr-text wn-md" x-ref="back"></div>
+        </div>
+      </div>
+      <span class="wfr-swipe is-left" aria-hidden="true">{% translate "Again" %}</span>
+      <span class="wfr-swipe is-right" aria-hidden="true">{% translate "Good" %}</span>
+    </div>
+
+    <div class="wfr-actions">
+      <button type="button" class="btn btn-primary btn-lg wfr-show" x-show="!flipped" @click="flip()">{% translate "Show the answer" %} <kbd>Space</kbd></button>
+      <div class="wfr-rate" x-show="flipped" x-cloak role="group" aria-label="{% translate 'How well did you know it?' %}">
+        <button type="button" class="wfr-btn" data-r="1" @click="rate(1)"><b>{% translate "Again" %}</b><small x-text="hint(1)"></small><kbd>1</kbd></button>
+        <button type="button" class="wfr-btn" data-r="2" @click="rate(2)"><b>{% translate "Hard" %}</b><small x-text="hint(2)"></small><kbd>2</kbd></button>
+        <button type="button" class="wfr-btn" data-r="3" @click="rate(3)"><b>{% translate "Good" %}</b><small x-text="hint(3)"></small><kbd>3</kbd></button>
+        <button type="button" class="wfr-btn" data-r="4" @click="rate(4)"><b>{% translate "Easy" %}</b><small x-text="hint(4)"></small><kbd>4</kbd></button>
+      </div>
+      <p class="wfr-help" x-show="flipped" x-cloak>{% translate "On a phone: swipe right if you knew it, left to see it again." %}</p>
+    </div>
+  </section>
+
+  {# ── nothing to do ── #}
+  <section class="wfr-end" x-show="stage === 'empty'" x-cloak>
+    <div class="wfc-hero-stack is-big" aria-hidden="true"><i></i><i></i><i>✓</i></div>
+    <h2>{% translate "Nothing to review right now" %}</h2>
+    <p>{% translate "Every card is resting until its next turn. Add new cards, or practise a deck any time." %}</p>
+    <div class="wfr-end-acts">
+      {% if deck %}<a href="{% url 'work:card_review' %}?deck={{ deck.pk }}&practice=1" class="btn btn-primary">{% icon "repeat" %}{% translate "Practise this deck anyway" %}</a>{% endif %}
+      <a :href="back" class="btn btn-secondary">{% translate "Back" %}</a>
+    </div>
+  </section>
+
+  {# ── finished ── #}
+  <section class="wfr-end is-finished" x-show="stage === 'done'" x-cloak>
+    <div class="wfr-burst" aria-hidden="true"><template x-for="i in 14" :key="i"><i :style="'--a:' + (i * 360 / 14) + 'deg; --d:' + (i % 3) * 60 + 'ms'"></i></template></div>
+    <div class="wfc-hero-stack is-big" aria-hidden="true"><i></i><i></i><i>🎉</i></div>
+    <h2>{% translate "Session done" %}</h2>
+    <dl class="wfr-sum">
+      <div><dt>{% translate "Cards" %}</dt><dd x-text="done"></dd></div>
+      <div><dt>{% translate "Remembered" %}</dt><dd x-text="answered ? Math.round(100 * knew / answered) + '%' : '—'"></dd></div>
+      <div><dt>{% translate "Time" %}</dt><dd x-text="took"></dd></div>
+    </dl>
+    <div class="wfr-end-acts">
+      <a :href="back" class="btn btn-primary">{% translate "Done" %}</a>
+      {% if deck %}<a href="{% url 'work:card_review' %}?deck={{ deck.pk }}&practice=1" class="btn btn-secondary">{% icon "repeat" %}{% translate "Practise again" %}</a>{% endif %}
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block work_libs %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.10.0/styles/github-dark.min.css">
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.10.0/highlight.min.js"></script>
+{% endblock %}
+
+{% block work_js %}
+<script src="{% asset 'js/cards.js' %}"></script>
+{% endblock %}
