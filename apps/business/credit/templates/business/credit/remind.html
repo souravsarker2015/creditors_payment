@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% translate "Remind about baki" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-narrow stack">
+  <header class="page-header !mb-0">
+    <div>
+      <a href="{% url 'business:dues' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Baki (dues)" %}</a>
+      <h1 class="page-title">{% translate "Remind about baki" %}</h1>
+      <p class="page-subtitle">{% translate "Everyone who owes you, the longest waiting first. Tap SMS or WhatsApp: the message is written for you — just press send." %}</p>
+    </div>
+  </header>
+
+  {% if rows %}
+  <div class="remind-sum" data-remind-progress>
+    <span><strong>{{ total|bdt }}</strong> {% blocktranslate count counter=rows|length %}from {{ counter }} person{% plural %}from {{ counter }} people{% endblocktranslate %}</span>
+    {% if done_today %}<span class="glance-chip" data-tone="good">{% include "partials/icon.html" with name="check" %}{% blocktranslate count counter=done_today %}{{ counter }} reminded today{% plural %}{{ counter }} reminded today{% endblocktranslate %}</span>{% endif %}
+  </div>
+  <section class="card">
+    <ul class="ledger">
+      {% for led in rows %}
+      <li class="ledger-row remind-row" data-remind-row {% if led.reminded_days == 0 %}data-reminded="today"{% endif %}>
+        <span class="avatar party-avatar" data-kind="buyer" aria-hidden="true">{{ led.party.name|slice:":1"|upper }}</span>
+        <div class="ledger-main">
+          <p class="ledger-title"><a href="{% url 'business:party_statement' led.party.pk %}" class="hover:underline">{{ led.party.name }}</a> <span class="remind-done">{% include "partials/icon.html" with name="check" %}{% translate "Reminded today" %}</span></p>
+          <p class="ledger-meta"><strong class="tone-good">{{ led.amount|bdt }}</strong>{% if led.oldest_days is not None %} · <span {% if led.oldest_days > 90 %}class="tone-critical"{% elif led.oldest_days > 30 %}class="tone-warn"{% endif %}>{% blocktranslate count counter=led.oldest_days %}oldest {{ counter }} day{% plural %}oldest {{ counter }} days{% endblocktranslate %}</span>{% endif %}
+            {% if led.reminded_days %} · {% blocktranslate count counter=led.reminded_days %}reminded {{ counter }} day ago{% plural %}reminded {{ counter }} days ago{% endblocktranslate %}{% endif %}
+            {% if led.party.follow_up_on %} · <span class="baki-promise">{% include "business/partials/icon.html" with name="bell" %}{% blocktranslate with date=led.party.follow_up_on|date:"j M" %}promised {{ date }}{% endblocktranslate %}</span>{% endif %}</p>
+          <div class="remind-acts">
+            {% if led.sms %}<a href="{{ led.sms }}" class="btn btn-soft btn-sm" data-remind="{% url 'business:party_reminded' led.party.pk %}">{% include "partials/icon.html" with name="mail" %}{% translate "SMS" %}</a>{% endif %}
+            {% if led.wa %}<a href="{{ led.wa }}" target="_blank" rel="noopener" class="btn btn-soft btn-sm" data-remind="{% url 'business:party_reminded' led.party.pk %}">{% include "partials/icon.html" with name="chat" %}{% translate "WhatsApp" %}</a>{% endif %}
+            {% if led.party.phone %}<a href="tel:{{ led.party.phone }}" class="btn btn-ghost btn-sm" data-remind="{% url 'business:party_reminded' led.party.pk %}">{% include "business/partials/icon.html" with name="phone" %}{% translate "Call" %}</a>
+            {% else %}<a href="{% if led.party.is_buyer or not led.party.is_supplier %}{% url 'business:buyers_edit' led.party.pk %}{% else %}{% url 'business:suppliers_edit' led.party.pk %}{% endif %}?next={{ request.path|urlencode }}" class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="plus" %}{% translate "Add a phone number" %}</a>{% endif %}
+          </div>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  <p class="help">{% translate "SMS and WhatsApp open on this phone with the message ready, so they cost what your own messages cost. Opening one notes “reminded today”." %}</p>
+  {% else %}
+  <div class="empty">
+    <div class="empty-icon">{% include "partials/icon.html" with name="check" %}</div>
+    <h3 class="empty-title">{% translate "Nobody owes you anything" %}</h3>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block extra_js %}{% include "business/credit/_remind_js.html" %}{% endblock %}

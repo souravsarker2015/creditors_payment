@@ -1,0 +1,13 @@
+<script>
+/* Opening an SMS or WhatsApp reminder notes "reminded today" in the background,
+   so the baki list shows who was reminded and nobody gets two in a day. */
+document.addEventListener("click", function (e) {
+  var a = e.target.closest("[data-remind]");
+  if (!a) return;
+  var fd = new FormData();
+  fd.append("csrfmiddlewaretoken", "{{ csrf_token }}");
+  try { navigator.sendBeacon(a.dataset.remind, fd); } catch (err) { /* the reminder still opens */ }
+  var row = a.closest("[data-remind-row]");
+  if (row) row.setAttribute("data-reminded", "today");
+});
+</script>

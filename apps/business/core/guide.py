@@ -114,7 +114,7 @@ STAGES = [
               Step("money", _("Money in & out"), _("Labour, medicine, lime, electricity, household costs…"),
                    "transactions", "view_finance", ("cost", "profit"), "wallet",
                    _("Put a cost on a pond's cycle and it counts in that pond's profit. A cost for the whole farm is shared between the ponds that had fish that day.")),
-              Step("staff", _("Staff & wages"), _("A work sheet for daily workers, a salary sheet for monthly staff, and what you've paid."),
+              Step("staff", _("Staff & wages"), _("A work sheet for who came each day, a month's attendance, a salary sheet for monthly staff (days off without pay taken off), and what you've paid."),
                    "staff", "view_finance", ("cost", "profit"), "users",
                    _("Wages are a cost when they're earned; an advance is simply taken off later pay.")),
               Step("lease", _("Pond lease"), _("What you pay the owners of leased ponds, and what's still due."),

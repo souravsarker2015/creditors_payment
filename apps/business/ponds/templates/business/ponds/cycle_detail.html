@@ -126,6 +126,33 @@
   <a href="{% url 'business:cycle_targets' cycle.pk %}" class="callout tgt-invite" data-tone="info">{% include "partials/icon.html" with name="target" %}<div class="flex-1"><p class="callout-title">{% translate "Set targets for this cycle" %}</p><p>{% translate "Selling size, survival, FCR, price and a budget — then see at a glance whether the pond is on track." %}</p></div>{% include "partials/icon.html" with name="chevron-right" %}</a>
   {% endif %}
 
+  {% if vs %}
+  <section class="card" data-season-compare>
+    <div class="card-header">
+      <div><h2 class="card-title">{% if vs.same_pond %}{% translate "Against the last season in this pond" %}{% else %}{% translate "Against your last season of this fish" %}{% endif %}{% include "business/partials/tip.html" with text=_("Both cycles on the same day of their life, so you can see early whether this one is ahead or behind. Green is as good or better, amber a little behind, red well behind.") %}</h2>
+        <p class="card-subtitle">{% if vs.same_pond %}{{ vs.other.label }}{% else %}{{ vs.other.pond.name }} · {{ vs.other.label }}{% endif %} · {% if vs.other_ended_sooner %}{% blocktranslate with day=vs.day other=vs.other_day %}day {{ day }} now, against its last day ({{ other }}){% endblocktranslate %}{% else %}{% blocktranslate with day=vs.day %}both on day {{ day }}{% endblocktranslate %}{% endif %}</p></div>
+      <a href="{% url 'business:cycle_detail' vs.other.pk %}" class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="arrow-right" %}{% translate "Open it" %}</a>
+    </div>
+    <div class="tgt-wrap">
+      <table class="tgt-table">
+        <thead><tr><th></th><th class="num">{% translate "Now" %}</th><th class="num">{% translate "Then" %}</th></tr></thead>
+        <tbody>
+          {% for l in vs.lines %}
+          <tr data-compare-line="{{ l.key }}" data-state="{{ l.tone }}">
+            <td>{% if l.tone %}<span class="tgt-dot" data-tone="{{ l.tone }}" aria-hidden="true"></span>{% endif %}{{ l.label }}{% if l.note %}<span class="tgt-note">{{ l.note }}</span>{% endif %}</td>
+            <td class="num tgt-now">{{ l.now }}</td>
+            <td class="num">{{ l.then }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% with o=vs.other_summary %}
+    <p class="card-footer help" data-compare-result>{% blocktranslate with name=vs.other.label days=vs.other.days %}{{ name }} ran {{ days }} days{% endblocktranslate %}{% if o.harvest_kg %} · {% blocktranslate with kg=o.harvest_kg|num %}{{ kg }} kg harvested{% endblocktranslate %}{% endif %}{% if o.fcr %} · FCR {{ o.fcr|num }}{% endif %}{% if biz_can.view_reports %} · {% if o.profit >= 0 %}{% blocktranslate with p=o.profit|bdt %}made {{ p }}{% endblocktranslate %}{% else %}{% blocktranslate with p=o.profit|absolute|bdt %}lost {{ p }}{% endblocktranslate %}{% endif %}{% endif %}.</p>
+    {% endwith %}
+  </section>
+  {% endif %}
+
   {% if p %}
   <section class="card" x-data="{ price: '{% if p.usual_price %}{{ p.usual_price|stringformat:'s' }}{% endif %}', kg: {{ p.fish_kg|default:0|stringformat:'s' }},
       cost: {{ p.cost|stringformat:'s' }}, sold: {{ p.sold|stringformat:'s' }}, mon: {% if mon %}{{ mon.factor|stringformat:'s' }}{% else %}0{% endif %},

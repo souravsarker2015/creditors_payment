@@ -18,7 +18,7 @@ from apps.business.core.templatetags.business import bdt
 from apps.business.feed.forms import FeedUsageForm
 from apps.business.feed.models import FeedUsage
 
-from . import forecast, plan, services
+from . import compare, forecast, plan, services
 from .forms import BulkWaterForm, CycleForm, FishMoveForm, LeasePaymentForm, HarvestForm, MortalityForm, PondAlertsForm, PondForm, StockingForm, TreatmentForm, WaterTestForm, WeighingForm
 from .models import CultureCycle, FishMove, Harvest, LeasePayment, Mortality, Pond, PondAlerts, PondStatus, SampleWeighing, Stocking, Treatment, WaterTest
 
@@ -187,6 +187,7 @@ def cycle_detail_view(request, pk):
         "withdrawal": services.withdrawal(cycle),
         "forecasts": forecasts, "wait": (wait := services.wait_plan(summary, forecasts) if cycle.is_running else None),
         "targets": plan.compare(cycle, summary, forecasts, wait),
+        "vs": compare.compare(cycle),
         "advances": _cycle_advances(cycle),
         "open": request.GET.get("add") if request.GET.get("add") in ENTRY_KINDS and cycle.is_running else None,
         "tab": request.GET.get("tab") or "overview",

@@ -15,7 +15,8 @@
     </div>
     <div class="page-actions">
       <button type="button" class="btn btn-secondary" onclick="window.print()">{% include "partials/icon.html" with name="printer" %}{% translate "Print" %}</button>
-      {% if wa %}<a href="{{ wa }}" target="_blank" rel="noopener" class="btn btn-secondary">{% include "partials/icon.html" with name="chat" %}{% translate "WhatsApp" %}</a>{% endif %}
+      {% if sms %}<a href="{{ sms }}" class="btn btn-secondary" data-remind="{% url 'business:party_reminded' party.pk %}">{% include "partials/icon.html" with name="mail" %}{% translate "SMS" %}</a>{% endif %}
+      {% if wa %}<a href="{{ wa }}" target="_blank" rel="noopener" class="btn btn-secondary" data-remind="{% url 'business:party_reminded' party.pk %}">{% include "partials/icon.html" with name="chat" %}{% translate "WhatsApp" %}</a>{% endif %}
       {% if biz_can.enter_data %}<a href="{% if party.is_supplier %}{% url 'business:suppliers_edit' party.pk %}{% else %}{% url 'business:buyers_edit' party.pk %}{% endif %}?next={{ request.path|urlencode }}" class="icon-btn" aria-label="{% translate 'Edit details' %}" data-tip="{% translate 'Edit details' %}">{% include "partials/icon.html" with name="edit" %}</a>{% endif %}
     </div>
   </header>
@@ -186,3 +187,4 @@
   </article>
 </div>
 {% endblock %}
+{% block extra_js %}{% include "business/credit/_remind_js.html" %}{% endblock %}

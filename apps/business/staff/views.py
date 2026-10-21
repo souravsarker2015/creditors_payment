@@ -16,7 +16,7 @@ from apps.business.core.templatetags.business import bdt
 
 from . import services
 from .forms import EarningForm, PaymentForm, WorkerForm, WorkSheetDayForm
-from .models import Earning, EarningKind, PayType, Worker, WorkerPayment
+from .models import Absence, Earning, EarningKind, PayType, Worker, WorkerPayment
 
 ZERO = Decimal(0)
 
@@ -135,7 +135,9 @@ def entry_delete_view(request, kind, pk):
 
 @business_access_required(capability="enter_data")
 def work_sheet_view(request):
-    """Tick who worked on a day (full or half day) — for daily-wage workers. Writes their wages."""
+    """Tick who worked on a day. Daily-wage workers: full or half day, and their
+    wage is written. Monthly staff: here unless marked half, off or on leave —
+    days off without pay come off the month's salary on the salary sheet."""
     from apps.business.core.access import can
 
     b = request.business
@@ -143,7 +145,9 @@ def work_sheet_view(request):
     day_form = WorkSheetDayForm({"date": raw})
     day = day_form.cleaned_data["date"] if day_form.is_valid() else date.today()
     workers = [w for w in Worker.objects.filter(business=b, pay_type=PayType.DAILY) if w.works_on(day)]
+    monthly = [w for w in Worker.objects.filter(business=b, pay_type=PayType.MONTHLY) if w.works_on(day)]
     done = {e.worker_id: e for e in Earning.objects.filter(business=b, kind=EarningKind.WORK, date=day, worker__in=workers)}
+    away = {a.worker_id: a for a in Absence.objects.filter(business=b, date=day, worker__in=monthly)}
     from apps.business.ponds.models import CultureCycle, CycleStatus
 
     cycles = list(CultureCycle.objects.filter(business=b, status=CycleStatus.RUNNING).select_related("pond"))
@@ -168,14 +172,42 @@ def work_sheet_view(request):
                 e.days, e.cycle = days, cycle
                 e.save()
                 saved += 1
+            changed = []
+            for w in monthly:
+                if services.set_attendance(w, day, request.POST.get(f"m{w.pk}", "1")):
+                    changed.append(w)
+                if request.POST.get(f"m{w.pk}", "1") in ("1", "0.5"):
+                    saved += 1
         messages.success(request, _g("Work sheet saved for %(date)s: %(n)s worked.") % {"date": date_format(day, "j M Y"), "n": saved})
+        written = set(Earning.objects.filter(business=b, kind=EarningKind.SALARY, month=day.replace(day=1), worker__in=changed).values_list("worker__name", flat=True))
+        if written:
+            messages.warning(request, _g("%(names)s: this month's salary is already written. Change it from their khata if the days off should change it.")
+                             % {"names": ", ".join(sorted(written))})
         return redirect(reverse("business:staff_work") + f"?date={day.isoformat()}")
     rows = [{"w": w, "e": done.get(w.pk)} for w in workers]
+    staff_rows = [{"w": w, "a": away.get(w.pk)} for w in monthly]
     return render(request, "business/staff/work_sheet.html", {
-        "day": day, "day_form": day_form, "rows": rows, "cycles": cycles,
+        "day": day, "day_form": day_form, "rows": rows, "staff_rows": staff_rows, "cycles": cycles,
         "prev": day - timedelta(days=1), "next": day + timedelta(days=1) if day < date.today() else None,
         "show_money": can(request.membership, "view_finance"),
         "total": sum((r["e"].amount for r in rows if r["e"]), ZERO),
+    })
+
+
+@business_access_required(capability="enter_data")
+def attendance_view(request):
+    """The month at a glance: who worked which day."""
+    today = date.today()
+    try:
+        month = date.fromisoformat((request.GET.get("month") or "") + "-01")
+    except ValueError:
+        month = today.replace(day=1)
+    days, rows = services.attendance(request.business, month, today)
+    prev = (month - timedelta(days=1)).replace(day=1)
+    nxt = _month_end(month) + timedelta(days=1)
+    return render(request, "business/staff/attendance.html", {
+        "month": month, "days": days, "rows": rows, "today": today,
+        "prev": prev, "next": nxt if nxt <= today else None,
     })
 
 

@@ -48,12 +48,14 @@ def due_list_view(request):
     total = sum((led.amount for led in rows), ZERO)
     for led in rows:
         led.wa = _whatsapp_link(b, led)
+        led.sms = _sms_link(b, led)
     follow = [led for led in t["ledgers"] if led.party.follow_up_on and led.party.follow_up_on <= today]
     follow.sort(key=lambda led: led.party.follow_up_on)
     return render(request, "business/credit/due_list.html", {
         "t": t, "side": side, "rows": rows, "q": request.GET.get("q", ""), "sort": sort, "total": total,
         "ageing": [(label, amount, round(amount * 100 / total) if total else 0) for label, amount in zip(services.bucket_labels(), buckets)],
         "follow_ups": follow, "advances": services.advances(b),
+        "to_remind": sum(1 for led in t["ledgers"] if led.owes_me and led.party.phone),
     })
 
 
@@ -64,6 +66,49 @@ def _whatsapp_link(business, led):
     text = _("Assalamu alaikum %(name)s. As per %(farm)s's records, %(amount)s is due from you. Please pay when you can. Thank you.") % {
         "name": led.party.name, "farm": business.name, "amount": bdt(led.amount)}
     return f"https://wa.me/{number}?text={quote(text)}"
+
+
+def _sms_text(business, led):
+    """Short: an SMS in Bangla holds only 70 letters, so every word costs."""
+    return _("%(farm)s: %(amount)s baki is due from you. Please pay soon. Thank you.") % {"farm": business.name, "amount": bdt(led.amount)}
+
+
+def _sms_link(business, led):
+    """Opens the phone's own messages app with the reminder written — no SMS
+    service or cost for the farm. "?&body=" works on both Android and iPhone."""
+    number = services.whatsapp_number(led.party.phone)
+    if not number or not led.owes_me:
+        return ""
+    return f"sms:+{number}?&body={quote(_sms_text(business, led))}"
+
+
+@business_access_required(capability="view_finance")
+def remind_view(request):
+    """A reminder round: everyone who owes the farm, the longest-waiting first,
+    each with SMS, WhatsApp and Call — and who was reminded when."""
+    b = request.business
+    today = date.today()
+    rows = [led for led in services.totals(b)["ledgers"] if led.owes_me]
+    rows.sort(key=lambda led: (led.party.reminded_on == today, led.oldest or today, -led.amount))
+    for led in rows:
+        led.wa, led.sms = _whatsapp_link(b, led), _sms_link(b, led)
+        led.reminded_days = (today - led.party.reminded_on).days if led.party.reminded_on else None
+    return render(request, "business/credit/remind.html", {
+        "rows": rows, "total": sum((led.amount for led in rows), ZERO), "today": today,
+        "no_phone": [led for led in rows if not led.party.phone],
+        "done_today": sum(1 for led in rows if led.party.reminded_on == today),
+    })
+
+
+@business_access_required(capability="view_finance")
+@require_POST
+def reminded_view(request, pk):
+    """Called (in the background) when a reminder is opened, so the list can
+    say "reminded today" and nobody gets two in a day."""
+    from django.http import HttpResponse
+
+    Party.objects.filter(pk=pk, business=request.business).update(reminded_on=date.today())
+    return HttpResponse(status=204)
 
 
 # ── Party statement ─────────────────────────────────────────────────────────
@@ -115,7 +160,7 @@ def statement_view(request, pk):
         "party": party, "led": led, "rows": list(reversed(rows)) if request.GET.get("order") == "new" else rows,
         "brought": brought, "closing": closing, "shown_gave": shown_gave, "shown_got": shown_got,
         "periods": periods, "period": period, "start": start, "end": end, "newest_first": request.GET.get("order") == "new",
-        "wa": _whatsapp_link(b, led), "follow_form": FollowUpForm(instance=party),
+        "wa": _whatsapp_link(b, led), "sms": _sms_link(b, led), "follow_form": FollowUpForm(instance=party),
         "open_items": led.open_items, "today": today,
         "follow_quick": [(1, _("Tomorrow")), (3, _("In 3 days")), (7, _("In a week")), (15, _("In 15 days"))],
     })

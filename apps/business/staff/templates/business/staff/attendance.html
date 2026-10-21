@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% load i18n business %}
+{% block title %}{% translate "Attendance" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "Attendance" %}</h1>
+      <p class="page-subtitle">{% translate "Who worked which day this month, from the work sheet. Tap a day to change it." %}</p>
+    </div>
+  </header>
+  {% include "business/staff/tabs.html" %}
+
+  <section class="card">
+    <div class="card-body month-nav">
+      <a href="?month={{ prev|date:'Y-m' }}" class="icon-btn" aria-label="{% translate 'Previous month' %}">{% include "partials/icon.html" with name="chevron-left" %}</a>
+      <p class="flex-1 text-center font-semibold" data-month>{{ month|date:"F Y" }}</p>
+      {% if next %}<a href="?month={{ next|date:'Y-m' }}" class="icon-btn" aria-label="{% translate 'Next month' %}">{% include "partials/icon.html" with name="chevron-right" %}</a>{% else %}<span class="w-9"></span>{% endif %}
+    </div>
+  </section>
+
+  {% if rows %}
+  <section class="card att-card">
+    <div class="att-scroll">
+      <table class="att-table">
+        <thead>
+          <tr>
+            <th scope="col" class="att-name">{% translate "Worker" %}</th>
+            {% for d in days %}<th scope="col" class="att-day{% if d.weekday == 4 %} is-friday{% endif %}{% if d == today %} is-today{% endif %}"><span>{{ d|date:"D"|slice:":2" }}</span>{{ d.day }}</th>{% endfor %}
+            <th scope="col" class="att-sum">{% translate "Worked" %}</th>
+            <th scope="col" class="att-sum">{% translate "Absent" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+          <tr>
+            <th scope="row" class="att-name"><a href="{% url 'business:staff_worker' r.worker.pk %}" class="hover:underline">{{ r.worker.name }}</a><small>{{ r.worker.get_pay_type_display }}</small></th>
+            {% for d, state in r.cells %}
+            <td class="att-cell{% if d.weekday == 4 %} is-friday{% endif %}">{% if state != "none" %}<a href="{% url 'business:staff_work' %}?date={{ d|date:'Y-m-d' }}" class="att-mark" data-state="{{ state }}" data-tip="{{ d|date:'D j M' }} · {% if state == 'full' %}{% translate 'Worked' %}{% elif state == 'half' %}{% translate 'Half day' %}{% elif state == 'leave' %}{% translate 'Leave' %}{% else %}{% translate 'Absent' %}{% endif %}">{% if state == "full" %}✓{% elif state == "half" %}½{% elif state == "leave" %}L{% else %}✕{% endif %}</a>{% endif %}</td>
+            {% endfor %}
+            <td class="att-sum"><strong>{{ r.worked|num }}</strong></td>
+            <td class="att-sum">{{ r.off|num }}{% if r.leave %}<small>+{{ r.leave|num }} L</small>{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer att-legend">
+      <span><i class="att-mark" data-state="full">✓</i>{% translate "Worked" %}</span>
+      <span><i class="att-mark" data-state="half">½</i>{% translate "Half day" %}</span>
+      <span><i class="att-mark" data-state="off">✕</i>{% translate "Absent" %}</span>
+      <span><i class="att-mark" data-state="leave">L</i>{% translate "Leave (paid)" %}</span>
+    </div>
+  </section>
+  {% else %}
+  <div class="empty">
+    <div class="empty-icon">{% include "partials/icon.html" with name="users" %}</div>
+    <h3 class="empty-title">{% translate "No workers this month" %}</h3>
+    {% if biz_can.view_finance %}<a href="{% url 'business:staff_add' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add worker" %}</a>{% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

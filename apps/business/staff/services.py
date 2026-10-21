@@ -6,7 +6,7 @@ from decimal import Decimal
 
 from django.db.models import Q, Sum
 
-from .models import Earning, EarningKind, PayType, Worker, WorkerPayment
+from .models import Absence, Earning, EarningKind, PayType, Worker, WorkerPayment
 
 ZERO = Decimal(0)
 
@@ -74,13 +74,31 @@ def khata(worker):
 @dataclass
 class SalaryRow:
     worker: Worker
-    amount: Decimal             # what the month's salary should be (part month if they joined or left)
+    amount: Decimal             # what the month's salary should be: part month if they joined or left, less days off without pay
     added: Earning | None       # the salary already written for this month, if any
     balance: Decimal
+    days_off: Decimal = ZERO    # days off without pay this month (from the work sheet)
+    cut: Decimal = ZERO         # what those days take off the salary
+    leave: Decimal = ZERO       # paid leave: shown, not cut
 
     @property
     def is_partial(self):
-        return self.amount != self.worker.rate
+        return self.amount + self.cut != self.worker.rate
+
+    @property
+    def days_off_plural(self):     # for "1 day" / "1.5 days"
+        return 1 if self.days_off == 1 else 2
+
+    @property
+    def leave_plural(self):
+        return 1 if self.leave == 1 else 2
+
+
+def day_rate(worker, month):
+    """One day of a monthly salary: the month's salary ÷ the days in that month."""
+    import calendar
+
+    return worker.rate / calendar.monthrange(month.year, month.month)[1]
 
 
 def salary_sheet(business, month):
@@ -93,7 +111,35 @@ def salary_sheet(business, month):
                .filter(Q(left_on__isnull=True) | Q(left_on__gte=first)))
     added = {e.worker_id: e for e in Earning.objects.filter(business=business, kind=EarningKind.SALARY, month=first)}
     bal = balances(business)
-    return [SalaryRow(w, w.salary_for(first), added.get(w.pk), bal.get(w.pk, ZERO)) for w in workers]
+    off, leave = defaultdict(Decimal), defaultdict(Decimal)
+    for a in Absence.objects.filter(business=business, date__gte=first, date__lte=last).select_related("worker"):
+        if a.worker.works_on(a.date):
+            (leave if a.paid else off)[a.worker_id] += a.days
+    rows = []
+    for w in workers:
+        full = w.salary_for(first)
+        cut = min((day_rate(w, first) * off[w.pk]).quantize(Decimal("1")), full)
+        rows.append(SalaryRow(w, full - cut, added.get(w.pk), bal.get(w.pk, ZERO), off[w.pk], cut, leave[w.pk]))
+    return rows
+
+
+def set_attendance(worker, day, mark):
+    """A monthly worker's day on the work sheet: "1" worked, "0.5" half day,
+    "0" off without pay, "leave" paid leave. Returns True if it changed."""
+    days, paid = {"0.5": (Decimal("0.5"), False), "0": (Decimal(1), False), "leave": (Decimal(1), True)}.get(mark, (None, False))
+    now = Absence.objects.filter(worker=worker, date=day).first()
+    if days is None:
+        if now:
+            now.delete()
+            return True
+        return False
+    if now and (now.days, now.paid) == (days, paid):
+        return False
+    if now is None:
+        now = Absence(business=worker.business, worker=worker, date=day)
+    now.days, now.paid = days, paid
+    now.save()
+    return True
 
 
 def missing_salaries(business, month):
@@ -126,3 +172,57 @@ def by_worker(business, start, end):
     for p in WorkerPayment.objects.filter(business=business, date__gte=start, date__lte=end):
         out[p.worker_id][1] += p.amount
     return out
+
+
+# ── Attendance: a month at a glance ─────────────────────────────────────────
+
+@dataclass
+class AttendanceRow:
+    worker: Worker
+    cells: list            # [(date, state)] — state: full | half | off | leave | none (not here then, or not yet)
+    worked: Decimal = ZERO
+    off: Decimal = ZERO
+    leave: Decimal = ZERO
+
+
+def attendance(business, month, today=None):
+    """Every worker's days in `month`. Daily workers: the days written on the
+    work sheet (no entry for a past day = off). Monthly staff: here every day
+    unless marked half, off or on leave."""
+    import calendar
+    from datetime import timedelta
+
+    today = today or date.today()
+    first = month.replace(day=1)
+    last = first.replace(day=calendar.monthrange(first.year, first.month)[1])
+    days = [first + timedelta(days=i) for i in range((last - first).days + 1)]
+    workers = list(Worker.objects.filter(business=business, started_on__lte=last).filter(Q(left_on__isnull=True) | Q(left_on__gte=first))
+                   .order_by("pay_type", "name"))
+    worked = defaultdict(Decimal)
+    for e in Earning.objects.filter(business=business, kind=EarningKind.WORK, date__gte=first, date__lte=last).values("worker_id", "date").annotate(d=Sum("days")):
+        worked[(e["worker_id"], e["date"])] = e["d"] or ZERO
+    away = {(a.worker_id, a.date): a for a in Absence.objects.filter(business=business, date__gte=first, date__lte=last)}
+    rows = []
+    for w in workers:
+        row = AttendanceRow(w, [])
+        for d in days:
+            if not w.works_on(d) or d > today:
+                state = "none"
+            elif w.is_monthly:
+                a = away.get((w.pk, d))
+                state = "full" if a is None else "leave" if a.paid else "half" if a.days < 1 else "off"
+            else:
+                n = worked.get((w.pk, d), ZERO)
+                state = "full" if n >= 1 else "half" if n > 0 else ("none" if d == today else "off")
+            if state == "full":
+                row.worked += 1
+            elif state == "half":
+                row.worked += Decimal("0.5")
+                row.off += Decimal("0.5")
+            elif state == "off":
+                row.off += 1
+            elif state == "leave":
+                row.leave += 1
+            row.cells.append((d, state))
+        rows.append(row)
+    return days, rows

@@ -20371,3 +20371,187 @@ msgstr "খরচ কোনো পুকুরের চক্রে লিখ�
 
 msgid "Fish sold (after market deductions) + fish moved to other ponds − fingerlings and fish moved in − feed eaten − lime & medicine − wages, its share of the pond lease, other costs put on that cycle, and its share of whole-farm costs (electricity, a guard, repairs) for the days it had fish."
 msgstr "বিক্রি করা মাছ (বাজারের কর্তনের পরে) + অন্য পুকুরে সরানো মাছ − পোনা ও এনে রাখা মাছ − খাওয়ানো খাবার − চুন ও ওষুধ − মজুরি, পুকুর লিজের ভাগ, ওই চক্রে লেখা অন্য খরচ, আর যতদিন মাছ ছিল ততদিনের পুরো খামারের খরচের (বিদ্যুৎ, পাহারাদার, মেরামত) ভাগ।"
+
+#, python-format
+msgid "%(counter)s reminded today"
+msgid_plural "%(counter)s reminded today"
+msgstr[0] "আজ %(counter)s জনকে মনে করানো হয়েছে"
+msgstr[1] "আজ %(counter)s জনকে মনে করানো হয়েছে"
+
+#, python-format
+msgid "%(farm)s: %(amount)s baki is due from you. Please pay soon. Thank you."
+msgstr "%(farm)s: আপনার কাছে %(amount)s বাকি আছে। দয়া করে শিগগির পরিশোধ করুন। ধন্যবাদ।"
+
+#, python-format
+msgid "%(n)s day of leave"
+msgid_plural "%(n)s days of leave"
+msgstr[0] "%(n)s দিন ছুটি"
+msgstr[1] "%(n)s দিন ছুটি"
+
+#, python-format
+msgid "%(n)s day off without pay: −%(c)s"
+msgid_plural "%(n)s days off without pay: −%(c)s"
+msgstr[0] "%(n)s দিন বিনা বেতনে অনুপস্থিত: −%(c)s"
+msgstr[1] "%(n)s দিন বিনা বেতনে অনুপস্থিত: −%(c)s"
+
+#, python-format
+msgid "%(name)s ran %(days)s days"
+msgstr "%(name)s চলেছিল %(days)s দিন"
+
+#, python-format
+msgid "%(names)s: this month's salary is already written. Change it from their khata if the days off should change it."
+msgstr "%(names)s: এই মাসের বেতন আগেই লেখা হয়ে গেছে। অনুপস্থিতির জন্য বদলাতে চাইলে তার খাতা থেকে বদলান।"
+
+msgid "Add a phone number"
+msgstr "ফোন নম্বর যোগ করুন"
+
+msgid "Add your workers — paid by the day or by the month — and they'll appear here."
+msgstr "আপনার কর্মীদের যোগ করুন — দিনমজুরি বা মাসিক বেতন — তারা এখানে দেখা যাবে।"
+
+msgid "Against the last season in this pond"
+msgstr "এই পুকুরের আগের মৌসুমের সাথে তুলনা"
+
+msgid "Against your last season of this fish"
+msgstr "এই মাছের আগের মৌসুমের সাথে তুলনা"
+
+msgid "All here"
+msgstr "সবাই উপস্থিত"
+
+msgid "Attendance"
+msgstr "হাজিরা"
+
+msgid "Both cycles on the same day of their life, so you can see early whether this one is ahead or behind. Green is as good or better, amber a little behind, red well behind."
+msgstr "দুই চক্রকেই তাদের একই দিনে মেলানো হয়েছে, যাতে আগেভাগে বোঝা যায় এবার এগিয়ে না পিছিয়ে। সবুজ মানে সমান বা ভালো, হলুদ একটু পিছিয়ে, লাল অনেক পিছিয়ে।"
+
+msgid "Choose the feed this pond ate."
+msgstr "এই পুকুরে কোন খাবার দেওয়া হয়েছে বেছে নিন।"
+
+msgid "Daily-wage workers: their wage for the day is written for you."
+msgstr "দিনমজুর: দিনের মজুরি নিজে থেকেই লেখা হয়।"
+
+msgid "Everyone is here unless you mark them. A half day or a day off without pay comes off that month's salary on the Salary sheet (salary ÷ days in the month). Leave is paid: it's only noted."
+msgstr "চিহ্ন না দিলে সবাই উপস্থিত ধরা হয়। অর্ধদিন বা বিনা বেতনে অনুপস্থিতি বেতন শিটে সেই মাসের বেতন থেকে কাটা হয় (বেতন ÷ মাসের দিন)। ছুটি বেতনসহ: শুধু লিখে রাখা হয়।"
+
+msgid "Everyone who owes you, the longest waiting first. Tap SMS or WhatsApp: the message is written for you — just press send."
+msgstr "যাদের কাছে টাকা পাবেন, সবচেয়ে পুরনো বাকি আগে। SMS বা WhatsApp চাপুন: বার্তা লেখা থাকবে — শুধু পাঠান।"
+
+msgid "FCR so far"
+msgstr "এ পর্যন্ত FCR"
+
+#, python-format
+msgid "Feed for %(pond)s"
+msgstr "%(pond)s-এর খাবার"
+
+msgid "Feed per 1,000 fish released"
+msgstr "প্রতি ১,০০০ ছাড়া মাছে খাবার"
+
+msgid "Fish alive"
+msgstr "বেঁচে থাকা মাছ"
+
+msgid "For every pond, unless you choose another feed for a pond below."
+msgstr "সব পুকুরের জন্য, যদি না নিচে কোনো পুকুরের জন্য অন্য খাবার বেছে নেন।"
+
+msgid "Half day"
+msgstr "অর্ধদিন"
+
+msgid "Last reminded"
+msgstr "শেষ মনে করানো"
+
+msgid "Last time's feed and amounts are filled in for each pond — change what's different and save."
+msgstr "প্রতিটি পুকুরে গতবারের খাবার ও পরিমাণ বসানো আছে — যা আলাদা তা বদলে সেভ করুন।"
+
+msgid "Leave"
+msgstr "ছুটি"
+
+msgid "Leave (paid)"
+msgstr "ছুটি (বেতনসহ)"
+
+msgid "Lower is better."
+msgstr "যত কম তত ভালো।"
+
+msgid "Mark only who wasn't here."
+msgstr "শুধু যারা আসেনি তাদের চিহ্ন দিন।"
+
+msgid "Month view"
+msgstr "মাসের হিসাব"
+
+msgid "Monthly staff"
+msgstr "মাসিক কর্মী"
+
+msgid "No workers this month"
+msgstr "এই মাসে কোনো কর্মী নেই"
+
+msgid "Paid leave"
+msgstr "বেতনসহ ছুটি"
+
+#, python-format
+msgid "Remind %(counter)s person"
+msgid_plural "Remind %(counter)s people"
+msgstr[0] "%(counter)s জনকে মনে করান"
+msgstr[1] "%(counter)s জনকে মনে করান"
+
+msgid "Remind about baki"
+msgstr "বাকির কথা মনে করান"
+
+msgid "Remind by SMS"
+msgstr "SMS-এ মনে করান"
+
+msgid "Reminded today"
+msgstr "আজ মনে করানো হয়েছে"
+
+msgid "SMS"
+msgstr "SMS"
+
+msgid "SMS and WhatsApp open on this phone with the message ready, so they cost what your own messages cost. Opening one notes “reminded today”."
+msgstr "SMS ও WhatsApp এই ফোনেই বার্তা লেখা অবস্থায় খোলে, তাই খরচ আপনার সাধারণ বার্তার মতোই। খুললেই “আজ মনে করানো হয়েছে” লেখা হয়।"
+
+msgid "Same as above"
+msgstr "উপরের মতো"
+
+msgid "Then"
+msgstr "তখন"
+
+msgid "Tick who worked on the day. A daily worker's wage is written for you; monthly staff's days off come off their salary."
+msgstr "সেদিন কে কাজ করেছে টিক দিন। দিনমজুরের মজুরি নিজে থেকে লেখা হয়; মাসিক কর্মীর অনুপস্থিতি বেতন থেকে কাটা হয়।"
+
+msgid "Who worked which day this month, from the work sheet. Tap a day to change it."
+msgstr "এই মাসে কে কোন দিন কাজ করেছে, কাজের শিট থেকে। বদলাতে কোনো দিনে চাপুন।"
+
+msgid "Worked"
+msgstr "কাজ করেছে"
+
+#, python-format
+msgid "both on day %(day)s"
+msgstr "দুটিই %(day)s তম দিনে"
+
+#, python-format
+msgid "day %(day)s now, against its last day (%(other)s)"
+msgstr "এখন %(day)s তম দিন, ওটির শেষ দিনের (%(other)s) সাথে"
+
+#, python-format
+msgid "lost %(p)s"
+msgstr "লোকসান %(p)s"
+
+#, python-format
+msgid "made %(p)s"
+msgstr "লাভ %(p)s"
+
+#, python-format
+msgid "promised %(date)s"
+msgstr "কথা দিয়েছে %(date)s"
+
+#, python-format
+msgid "reminded %(counter)s day ago"
+msgid_plural "reminded %(counter)s days ago"
+msgstr[0] "%(counter)s দিন আগে মনে করানো হয়েছে"
+msgstr[1] "%(counter)s দিন আগে মনে করানো হয়েছে"
+
+#, python-format
+msgid "reminded %(date)s"
+msgstr "মনে করানো %(date)s"
+
+msgid "A work sheet for who came each day, a month's attendance, a salary sheet for monthly staff (days off without pay taken off), and what you've paid."
+msgstr "প্রতিদিন কে এসেছে তার কাজের শিট, মাসের হাজিরা, মাসিক কর্মীদের বেতন শিট (বিনা বেতনের অনুপস্থিতি কেটে), আর কত দিয়েছেন।"
+
+msgid "Absent"
+msgstr "অনুপস্থিত"

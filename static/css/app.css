@@ -1955,6 +1955,10 @@ a.hero-progress:hover .hero-progress-row span { color: var(--text-on-ink); }
 .doc-due { padding: 0.625rem 0.875rem; border-radius: var(--radius-sm); background: var(--tone-bg); color: var(--tone); font-weight: 650; font-size: 0.875rem; }
 .bulk-row { grid-template-columns: auto minmax(0, 1fr) 7.5rem; }
 .bulk-input input { text-align: right; font-weight: 650; font-variant-numeric: tabular-nums; }
+/* Bulk feeding: a pond on another feed than the one at the top */
+.bulk-feed { display: flex; align-items: center; gap: 0.375rem; margin-top: 0.375rem; max-width: 16rem; color: var(--text-muted); }
+.bulk-feed > svg { width: 0.875rem; height: 0.875rem; flex-shrink: 0; }
+.bulk-feed select, .bulk-feed .form-input { min-height: 2rem; height: 2rem; padding-top: 0.125rem; padding-bottom: 0.125rem; font-size: 0.8125rem; }
 .memo { padding: 1.25rem; }
 @media (min-width: 640px) { .memo { padding: 1.75rem 2rem; } }
 .memo-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.75rem 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid var(--text-primary); }
@@ -2028,6 +2032,16 @@ a.hero-progress:hover .hero-progress-row span { color: var(--text-on-ink); }
 .baki-row-actions { display: flex; align-items: center; gap: 0.125rem; }
 .baki-promise { display: inline-flex; align-items: center; gap: 0.1875rem; color: var(--status-warn); font-weight: 600; }
 .baki-promise svg { width: 0.8125rem; height: 0.8125rem; }
+.baki-reminded { color: var(--status-info); font-weight: 600; }
+/* Reminder round */
+.remind-sum { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; font-size: 0.9rem; color: var(--text-secondary); }
+.remind-sum strong { font-size: 1.125rem; color: var(--text-primary); }
+.remind-row { align-items: flex-start; transition: opacity .2s, background-color .2s; }
+.remind-acts { display: flex; flex-wrap: wrap; gap: 0.375rem; margin-top: 0.5rem; }
+.remind-done { display: none; align-items: center; gap: 0.25rem; margin-left: 0.25rem; font-size: 0.75rem; font-weight: 650; color: var(--status-good); vertical-align: 0.0625rem; }
+.remind-done svg { width: 0.875rem; height: 0.875rem; }
+.remind-row[data-reminded="today"] { background: color-mix(in srgb, var(--status-good) 5%, transparent); }
+.remind-row[data-reminded="today"] .remind-done { display: inline-flex; }
 .baki-follow { margin-top: 0.25rem; display: grid; gap: 0.25rem; font-size: 0.8125rem; }
 .baki-follow span { color: var(--text-secondary); }
 .baki-follow em { font-style: normal; font-weight: 600; color: var(--status-critical); }
@@ -2741,6 +2755,8 @@ a.guide-chip:hover { background: var(--accent-soft); color: var(--accent); }
 .worker-hero[data-tone="good"] .hero-value { color: #8fe0b0; }
 .worker-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
 .worker-actions .btn-secondary { background: rgba(255, 255, 255, 0.08); color: var(--text-on-ink); border-color: rgba(255, 255, 255, 0.16); }
+.salary-off { display: block; color: var(--status-warn); font-weight: 600; }
+.month-nav { display: flex; align-items: center; gap: 0.5rem; }
 .worksheet-day { display: flex; align-items: flex-end; gap: 0.5rem; }
 .worksheet-day > .icon-btn { margin-bottom: 0.25rem; }
 .worksheet-row { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.75rem; }
@@ -2749,11 +2765,14 @@ a.guide-chip:hover { background: var(--accent-soft); color: var(--accent); }
 .worksheet-pick .seg-item { flex: 1; justify-content: center; }
 .worksheet-pick .seg-item:has(input:checked) { background: var(--surface-raised); color: var(--text-primary); box-shadow: var(--shadow-sm); }
 .worksheet-pick .seg-item[data-tone="good"]:has(input:checked) { background: var(--status-good-bg); color: var(--status-good); }
+.worksheet-pick .seg-item[data-tone="critical"]:has(input:checked) { background: var(--status-critical-bg); color: var(--status-critical); }
+.worksheet-pick .seg-item[data-tone="info"]:has(input:checked) { background: var(--status-info-bg); color: var(--status-info); }
 .worksheet-pick select { flex: 1 1 9rem; width: auto; }
 @media (min-width: 768px) {
     .worksheet-row { grid-template-columns: auto minmax(0, 1fr) auto; }
     .worksheet-pick { grid-column: auto; flex-wrap: nowrap; }
     .worksheet-pick .seg { flex: 0 0 15rem; }
+    .worksheet-pick .seg-4 { flex-basis: 19rem; }
     .worksheet-pick select { flex: 0 0 10rem; }
 }
 .salary-tick { width: 1.375rem; height: 1.375rem; accent-color: var(--accent); }
@@ -3227,3 +3246,30 @@ a.rp-mrow:hover { background: var(--surface-hover); }
     :root.is-nav-moving .app-sidebar .nav-link { white-space: nowrap; overflow: hidden; }
 }
 @media (prefers-reduced-motion: reduce) { .app-sidebar, .app-content { transition: none !important; } }
+
+/* Attendance: a month of days per worker (scrolls sideways on a phone, names stay put) */
+.att-card { padding: 0; overflow: hidden; }
+.att-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.att-table { border-collapse: separate; border-spacing: 0; font-size: 0.8125rem; min-width: 100%; }
+.att-table th, .att-table td { padding: 0.375rem 0.125rem; text-align: center; border-bottom: 1px solid var(--border-soft); }
+.att-name { position: sticky; left: 0; z-index: 1; min-width: 8rem; max-width: 10rem; padding-left: 1rem !important; padding-right: 0.5rem !important; text-align: left !important;
+  background: var(--surface-raised, var(--surface)); box-shadow: 1px 0 0 var(--border-soft); font-weight: 650; color: var(--text-primary); }
+.att-name small { display: block; font-size: 0.6875rem; font-weight: 500; color: var(--text-muted); }
+thead .att-name { font-size: 0.75rem; color: var(--text-muted); }
+.att-day { min-width: 1.875rem; font-size: 0.75rem; font-weight: 650; color: var(--text-secondary); }
+.att-day span { display: block; font-size: 0.625rem; font-weight: 500; color: var(--text-muted); }
+.att-day.is-today { color: var(--accent); }
+.att-day.is-today span { color: var(--accent); }
+.is-friday { background: color-mix(in srgb, var(--accent) 5%, transparent); }
+.att-sum { min-width: 3.25rem; padding-inline: 0.5rem !important; font-variant-numeric: tabular-nums; color: var(--text-primary); }
+.att-sum small { display: block; font-size: 0.6875rem; color: var(--status-info); }
+.att-mark { --tone: var(--text-muted); display: inline-grid; place-items: center; width: 1.5rem; height: 1.5rem; border-radius: 0.375rem; font-size: 0.75rem; font-weight: 700; font-style: normal;
+  color: var(--tone); background: color-mix(in srgb, var(--tone) 14%, transparent); text-decoration: none; }
+.att-mark[data-state="full"] { --tone: var(--status-good); }
+.att-mark[data-state="half"] { --tone: var(--status-warn); }
+.att-mark[data-state="off"] { --tone: var(--status-critical); }
+.att-mark[data-state="leave"] { --tone: var(--status-info); }
+a.att-mark:hover { outline: 2px solid var(--tone); outline-offset: 1px; }
+.att-legend { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; font-size: 0.78rem; color: var(--text-secondary); }
+.att-legend span { display: inline-flex; align-items: center; gap: 0.375rem; }
+

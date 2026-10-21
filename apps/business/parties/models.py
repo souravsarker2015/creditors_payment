@@ -39,6 +39,7 @@ class Party(BusinessBaseModel):
     opening_date = models.DateField(_("As of"), null=True, blank=True)
     follow_up_on = models.DateField(_("Follow up on"), null=True, blank=True, help_text=_("A date they promised to pay, or to remind them."))
     follow_up_note = models.CharField(_("Promise / note"), max_length=160, blank=True)
+    reminded_on = models.DateField(_("Last reminded"), null=True, blank=True, editable=False)   # set when an SMS/WhatsApp reminder is opened
 
     class Meta:
         verbose_name_plural = "parties"

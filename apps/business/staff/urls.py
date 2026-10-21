@@ -12,4 +12,5 @@ urlpatterns = staff.urls() + [
     path("<slug:kind>/<int:pk>/remove/", views.entry_delete_view, name="staff_entry_delete"),
     path("work/", views.work_sheet_view, name="staff_work"),
     path("salaries/", views.salary_sheet_view, name="staff_salaries"),
+    path("attendance/", views.attendance_view, name="staff_attendance"),
 ]

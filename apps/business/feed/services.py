@@ -155,8 +155,10 @@ def days_since_count(business, today=None):
 
 @transaction.atomic
 def save_bulk_usage(business, day, product, entries):
-    """entries: [(cycle, quantity, unit or None)] — one feeding per pond."""
+    """entries: [(cycle, quantity, unit or None[, feed])] — one feeding per pond,
+    of `product` unless the entry names its own feed."""
     made = []
-    for cycle, quantity, unit in entries:
-        made.append(FeedUsage.objects.create(business=business, cycle=cycle, date=day, product=product, quantity=quantity, unit=unit))
+    for cycle, quantity, unit, *own in entries:
+        feed = (own[0] if own else None) or product
+        made.append(FeedUsage.objects.create(business=business, cycle=cycle, date=day, product=feed, quantity=quantity, unit=unit))
     return made

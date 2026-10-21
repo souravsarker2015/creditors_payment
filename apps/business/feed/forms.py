@@ -1,3 +1,4 @@
+from collections import Counter
 from datetime import date
 
 from django import forms
@@ -158,14 +159,17 @@ class FeedUsageForm(EntryForm):
 
 
 class BulkFeedingForm(forms.Form):
-    """Feed several ponds in one go: one date and feed, a quantity per pond."""
+    """Feed several ponds in one go: one date, a quantity per pond. The feed
+    chosen at the top is for every pond, unless a pond has its own (a nursery
+    on starter feed while the big ponds get grower)."""
 
     tips = {
         "unit": _("“bags” uses the feed's bag size. Choose kg if you weighed it out."),
     }
 
     date = forms.DateField(label=_("Date"), widget=forms.DateInput(attrs={"class": "form-input datepicker"}, format="%Y-%m-%d"))
-    product = forms.ModelChoiceField(label=_("Feed"), queryset=FeedProduct.objects.none(), empty_label=_("Choose feed…"),
+    product = forms.ModelChoiceField(label=_("Feed"), queryset=FeedProduct.objects.none(), empty_label=_("Choose feed…"), required=False,
+                                     help_text=_("For every pond, unless you choose another feed for a pond below."),
                                      widget=forms.Select(attrs={"class": "form-input"}))
     unit = forms.ModelChoiceField(label=_("Unit"), queryset=Unit.objects.none(), required=False,
                                   widget=forms.Select(attrs={"class": "form-input"}))
@@ -177,23 +181,36 @@ class BulkFeedingForm(forms.Form):
         self.fields["product"].biz_quick_add = "feed"
         _bag_or_weight(self.fields["unit"], business)
         self.cycles = list(CultureCycle.objects.filter(business=business, status=CycleStatus.RUNNING).select_related("pond").order_by("pond__order", "pond__name"))
+        products = self.fields["product"].queryset
         for c in self.cycles:
             self.fields[f"c{c.pk}"] = forms.DecimalField(label=str(c.pond), required=False, min_value=0, max_digits=12, decimal_places=3,
                                                          widget=forms.NumberInput(attrs={"class": "form-input", "inputmode": "decimal", "step": "any", "placeholder": "0", "data-pond": "1"}))
+            self.fields[f"f{c.pk}"] = forms.ModelChoiceField(label=_("Feed for %(pond)s") % {"pond": c.pond}, queryset=products, required=False,
+                                                             empty_label=_("Same as above"),
+                                                             widget=forms.Select(attrs={"class": "form-input input-compact", "data-pond-feed": "1"}))
         if not self.is_bound:
             self.initial.setdefault("date", date.today())
             last = FeedUsage.objects.filter(business=business).order_by("-date", "-id").first()
             if last:
-                self.initial.setdefault("product", last.product_id)
+                prevs = {c.pk: FeedUsage.objects.filter(cycle=c).order_by("-date", "-id").first() for c in self.cycles}
+                # The feed at the top: the one most ponds ate last time, so most rows say "Same as above".
+                counts = Counter(p.product_id for p in prevs.values() if p)
+                usual = max(counts, key=lambda pk: (counts[pk], pk == last.product_id)) if counts else last.product_id
+                self.initial.setdefault("product", usual)
                 self.initial.setdefault("unit", last.unit_id)
-                # Pre-fill each pond with its last amount of this feed: most days are the same.
+                # Pre-fill each pond with what it ate last time: most days are the same.
+                # A pond on another feed (a nursery on starter) keeps its own feed.
                 for c in self.cycles:
-                    prev = FeedUsage.objects.filter(cycle=c, product_id=last.product_id).order_by("-date", "-id").first()
-                    if prev and prev.unit_id == last.unit_id:
+                    prev = prevs[c.pk]
+                    if prev is None:
+                        continue
+                    if prev.product_id != self.initial["product"]:
+                        self.initial[f"f{c.pk}"] = prev.product_id
+                    if prev.unit_id == self.initial["unit"]:
                         self.initial[f"c{c.pk}"] = format(prev.quantity.normalize(), "f")
 
     def pond_fields(self):
-        return [(c, self[f"c{c.pk}"]) for c in self.cycles]
+        return [(c, self[f"c{c.pk}"], self[f"f{c.pk}"]) for c in self.cycles]
 
     def clean(self):
         data = super().clean()
@@ -203,7 +220,14 @@ class BulkFeedingForm(forms.Form):
         d = data.get("date")
         if d and d > date.today():
             self.add_error("date", _("This date is in the future."))
-        data["entries"] = [(c, q, data.get("unit")) for c, q in entries]
+        default = data.get("product")
+        out = []
+        for c, q in entries:
+            feed = data.get(f"f{c.pk}") or default
+            if feed is None:
+                self.add_error(f"f{c.pk}", _("Choose the feed this pond ate."))
+            out.append((c, q, data.get("unit"), feed))
+        data["entries"] = out
         return data
 
 

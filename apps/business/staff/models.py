@@ -132,3 +132,22 @@ class WorkerPayment(BusinessBaseModel):
 
     def __str__(self):
         return f"{self.worker} · {self.amount} · {self.date:%d %b %Y}"
+
+
+class Absence(BusinessBaseModel):
+    """A day a monthly-salary worker didn't work (the work sheet's Half, Off or
+    Leave). Days off without pay come off that month's salary on the salary
+    sheet; paid leave doesn't. A day with no absence is a day worked."""
+
+    worker = models.ForeignKey(Worker, on_delete=models.CASCADE, related_name="absences")
+    date = models.DateField(_("Date"))
+    days = models.DecimalField(_("Days"), max_digits=3, decimal_places=1, default=1,
+                               validators=[MinValueValidator(Decimal("0.5"))])
+    paid = models.BooleanField(_("Paid leave"), default=False)
+
+    class Meta:
+        ordering = ["-date", "-id"]
+        constraints = [models.UniqueConstraint(fields=["worker", "date"], condition=models.Q(is_deleted=False), name="one_absence_per_worker_day")]
+
+    def __str__(self):
+        return f"{self.worker} · {self.date:%d %b %Y}"

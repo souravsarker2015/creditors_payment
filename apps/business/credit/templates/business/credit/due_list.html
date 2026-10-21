@@ -9,6 +9,7 @@
       <p class="page-subtitle">{% translate "Who owes you, whom you owe, and for how long — worked out from your sales, purchases and payments." %}</p>
     </div>
     <div class="page-actions">
+      {% if to_remind %}<a href="{% url 'business:dues_remind' %}" class="btn btn-secondary" data-remind-all>{% include "partials/icon.html" with name="bell" %}{% blocktranslate count counter=to_remind %}Remind {{ counter }} person{% plural %}Remind {{ counter }} people{% endblocktranslate %}</a>{% endif %}
       <a href="{% url 'business:payments' %}" class="btn btn-secondary">{% include "partials/icon.html" with name="list" %}{% translate "Payments" %}</a>
       {% if biz_can.enter_data %}<a href="{% url 'business:advance_add' %}" class="btn btn-secondary">{% include "partials/icon.html" with name="arrow-down" %}{% translate "Advance (dadon)" %}</a>{% endif %}
       {% if biz_can.enter_data %}<a href="{% url 'business:payment_add' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Record payment" %}</a>{% endif %}
@@ -106,6 +107,7 @@
           <p class="ledger-meta">
             {% if led.oldest_days is not None %}<span {% if led.oldest_days > 90 %}class="tone-critical"{% elif led.oldest_days > 30 %}class="tone-warn"{% endif %}>{% blocktranslate count counter=led.oldest_days %}oldest {{ counter }} day{% plural %}oldest {{ counter }} days{% endblocktranslate %}</span>{% endif %}
             {% if led.last_payment %} · {% blocktranslate with date=led.last_payment|date:"j M" %}last paid {{ date }}{% endblocktranslate %}{% endif %}
+            {% if led.party.reminded_on %} · <span class="baki-reminded">{% blocktranslate with date=led.party.reminded_on|date:"j M" %}reminded {{ date }}{% endblocktranslate %}</span>{% endif %}
             {% if led.party.follow_up_on %} · <span class="baki-promise">{% include "business/partials/icon.html" with name="bell" %}{{ led.party.follow_up_on|date:"j M" }}</span>{% endif %}
           </p>
           <div class="age-bar age-bar-sm" aria-hidden="true">{% for label, amount, pct in led.bucket_rows %}{% if amount %}<span data-age="{{ forloop.counter0 }}" style="flex-grow: {{ pct }}"></span>{% endif %}{% endfor %}</div>
@@ -114,7 +116,8 @@
           <span class="party-bal" data-tone="{% if led.owes_me %}good{% else %}critical{% endif %}"><strong>{{ led.amount|bdt }}</strong><span>{% if led.owes_me %}{% translate "owes you" %}{% else %}{% translate "you owe" %}{% endif %}</span></span>
           <div class="baki-row-actions">
             {% if led.party.phone %}<a href="tel:{{ led.party.phone }}" class="icon-btn" aria-label="{% translate 'Call' %}" data-tip="{% translate 'Call' %}">{% include "business/partials/icon.html" with name="phone" %}</a>{% endif %}
-            {% if led.wa %}<a href="{{ led.wa }}" target="_blank" rel="noopener" class="icon-btn" aria-label="{% translate 'Remind on WhatsApp' %}" data-tip="{% translate 'Remind on WhatsApp' %}">{% include "business/partials/icon.html" with name="chat" %}</a>{% endif %}
+            {% if led.sms %}<a href="{{ led.sms }}" class="icon-btn" aria-label="{% translate 'Remind by SMS' %}" data-tip="{% translate 'Remind by SMS' %}" data-remind="{% url 'business:party_reminded' led.party.pk %}">{% include "partials/icon.html" with name="mail" %}</a>{% endif %}
+            {% if led.wa %}<a href="{{ led.wa }}" target="_blank" rel="noopener" class="icon-btn" aria-label="{% translate 'Remind on WhatsApp' %}" data-tip="{% translate 'Remind on WhatsApp' %}" data-remind="{% url 'business:party_reminded' led.party.pk %}">{% include "business/partials/icon.html" with name="chat" %}</a>{% endif %}
             {% if biz_can.enter_data %}<a href="{% url 'business:payment_add' %}?party={{ led.party.pk }}&dir={% if led.owes_me %}in{% else %}out{% endif %}&next={{ request.get_full_path|urlencode }}" class="btn btn-soft btn-sm">{% if led.owes_me %}{% translate "Receive" %}{% else %}{% translate "Pay" %}{% endif %}</a>{% endif %}
           </div>
         </div>
@@ -132,3 +135,4 @@
   </div>
 </div>
 {% endblock %}
+{% block extra_js %}{% include "business/credit/_remind_js.html" %}{% endblock %}

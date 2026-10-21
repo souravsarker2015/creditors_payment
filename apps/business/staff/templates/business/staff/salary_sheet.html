@@ -34,6 +34,7 @@
         <a href="{% url 'business:staff_worker' r.worker.pk %}" class="ledger-main">
           <p class="ledger-title">{{ r.worker.name }}</p>
           <p class="ledger-meta">{% if r.added %}{% blocktranslate with a=r.added.amount|bdt %}Written: {{ a }}{% endblocktranslate %}{% else %}{% if r.is_partial %}{% blocktranslate with full=r.worker.rate|bdt %}Part of the month (full: {{ full }}){% endblocktranslate %}{% else %}{{ r.worker.job|default:_("Monthly salary") }}{% endif %}{% endif %}
+          {% if r.days_off and not r.added %}<span class="salary-off" data-salary-off>{% blocktranslate count counter=r.days_off_plural with n=r.days_off|num c=r.cut|bdt %}{{ n }} day off without pay: −{{ c }}{% plural %}{{ n }} days off without pay: −{{ c }}{% endblocktranslate %}</span>{% endif %}{% if r.leave %} · {% blocktranslate count counter=r.leave_plural with n=r.leave|num %}{{ n }} day of leave{% plural %}{{ n }} days of leave{% endblocktranslate %}{% endif %}
           · {% if r.balance > 0 %}{% blocktranslate with a=r.balance|bdt %}owed {{ a }} now{% endblocktranslate %}{% elif r.balance < 0 %}{% blocktranslate with a=r.balance|absolute|bdt %}advance {{ a }}{% endblocktranslate %}{% else %}{% translate "settled" %}{% endif %}</p>
         </a>
         <div class="ledger-end">
