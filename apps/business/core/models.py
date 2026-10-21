@@ -59,6 +59,12 @@ class UserDashboardAccess(models.Model):
 
 # ── The farm and its team ───────────────────────────────────────────────────
 
+class ShareCosts(models.TextChoices):
+    AREA = "area", _("By pond size")
+    EQUAL = "equal", _("Equally between ponds")
+    NONE = "none", _("Don't share them")
+
+
 class Business(models.Model):
     """One farm/business. Every business record belongs to one, so staff can
     enter data for the owner's farm and one person can run several farms."""
@@ -70,6 +76,10 @@ class Business(models.Model):
     # Where the farm is, for the weather: hot, cloudy, still nights starve ponds of oxygen.
     latitude = models.DecimalField(_("Latitude"), max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(_("Longitude"), max_digits=9, decimal_places=6, null=True, blank=True)
+    # Electricity, a guard's salary, transport… paid for the whole farm, not one pond.
+    share_costs = models.CharField(_("Share whole-farm costs between ponds"), max_length=8, choices=ShareCosts.choices, default=ShareCosts.AREA,
+                                   help_text=_("Costs not written against one pond — electricity, a guard's salary, transport, repairs — are shared "
+                                               "between the ponds that had fish that day, so each pond's profit is real."))
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -248,3 +258,16 @@ class AuditLog(models.Model):
 
     def __str__(self):
         return f"{self.at:%Y-%m-%d %H:%M} {self.user} {self.action} {self.model} #{self.object_id}"
+
+
+def memo_path(instance, filename):
+    """A photo of a paper memo (the aarot's chalan, the dealer's bill): kept
+    under the farm, with a random name so one can't be guessed from another."""
+    import os
+    import uuid
+
+    ext = os.path.splitext(filename)[1].lower()[:6] or ".jpg"
+    return f"business/{instance.business_id}/memos/{uuid.uuid4().hex}{ext}"
+
+
+MEMO_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "pdf"]

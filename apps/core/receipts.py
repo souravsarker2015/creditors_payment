@@ -49,11 +49,24 @@ class ReceiptInput(forms.ClearableFileInput):
         return ctx
 
 
-def attach_viewer(form, kind):
+def attach_viewer(form, kind, label=""):
     """Point the receipt widget at the private viewer for an existing receipt."""
     field = form.fields.get("receipt")
     if field is not None and form.instance.pk and getattr(form.instance, "receipt", None):
         field.widget.view_url = reverse("receipt_view", args=[kind, form.instance.pk])
+        field.widget.view_label = label
+
+
+def memo_field(form, kind):
+    """A paper memo's photo on a farm form: phone-sized upload, the size limit,
+    and a link to the one already saved."""
+    field = form.fields.get("receipt")
+    if field is None:
+        return
+    field.widget = ReceiptInput()
+    field.validators.append(max_size)
+    field.help_text = _("A photo of the paper memo, to check later. Big photos are made smaller before they're sent.")
+    attach_viewer(form, kind, _("See the memo"))
 
 
 def _record(request, kind, pk):
@@ -74,6 +87,19 @@ def _record(request, kind, pk):
         if m is None or m.business_id != t.business_id or not can(m, "view_finance"):
             raise Http404
         return t
+    if kind in ("sale", "feed"):
+        # A memo is seen by whoever on the farm can see the sale or purchase it belongs to.
+        from apps.business.core.access import active_membership
+
+        if kind == "sale":
+            from apps.business.sales.models import FishSale as Model
+        else:
+            from apps.business.feed.models import FeedPurchase as Model
+        obj = get_object_or_404(Model, pk=pk)
+        m = active_membership(request)
+        if m is None or m.business_id != obj.business_id:
+            raise Http404
+        return obj
     raise Http404
 
 

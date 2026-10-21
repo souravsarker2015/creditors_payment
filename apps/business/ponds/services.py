@@ -147,6 +147,8 @@ class CycleSummary:
     care_cost: Decimal = ZERO       # lime, fertilizer, medicine put into the pond
     wage_cost: Decimal = ZERO       # staff wages written against this pond
     lease_cost: Decimal = ZERO      # this cycle's share of a leased pond's rent, by days
+    shared_cost: Decimal = ZERO     # its share of whole-farm costs: electricity, a guard, repairs…
+    shared_lines: list = field(default_factory=list)   # [(what, amount)]
     stocking_cost: Decimal = ZERO
     moved_in_value: Decimal = ZERO  # fish brought from another pond, at what they'd cost there
     moved_out_value: Decimal = ZERO # fish taken to another pond: their cost goes with them
@@ -155,6 +157,16 @@ class CycleSummary:
     sales_gross: Decimal = ZERO
     harvest_kg: Decimal = ZERO
     stocked_kg: Decimal = ZERO
+
+    @property
+    def shared_tip(self):
+        """What the pond's share of whole-farm costs is made of, in words."""
+        from apps.business.core.templatetags.business import bdt
+        from django.utils.translation import gettext as _
+
+        parts = ", ".join(f"{what} {bdt(amount)}" for what, amount in self.shared_lines[:6])
+        return _("This pond's share of costs paid for the whole farm (%(parts)s). Each one is split between the ponds that had fish "
+                 "that day. Change how in Settings → Business details.") % {"parts": parts}
 
     @property
     def stocked(self):
@@ -176,9 +188,10 @@ class CycleSummary:
     @property
     def cost(self):
         """Everything this season has cost: fingerlings, feed eaten, lime and
-        medicine, and any labour or other expense recorded against this pond."""
+        medicine, any labour or other expense recorded against this pond, and
+        its share of what the whole farm spent while it had fish."""
         return (self.stocking_cost + self.moved_in_value + self.feed_cost + self.care_cost + self.wage_cost
-                + self.lease_cost + self.other_cost)
+                + self.lease_cost + self.other_cost + self.shared_cost)
 
     @property
     def earned(self):
@@ -264,6 +277,10 @@ def summarize(cycle, prices=None, cache=None):
         from apps.business.finance.services import cycle_costs
 
         s.other_cost = cycle_costs(cycle, cache=cache)
+    from .shared import cycle_share
+
+    farm = cycle_share(cycle, cache=cache)
+    s.shared_cost, s.shared_lines = farm.total(cycle.pk), farm.lines(cycle.pk)
     if "sales" in getattr(cycle, "_prefetched_objects_cache", {}):
         sold = list(cycle.sales.all())
         s.sales_net = sum((x.net for x in sold), ZERO)
@@ -445,7 +462,7 @@ def wait_plan(summary, forecasts, today=None):
     fcr = USUAL_FCR if guessed else fcr
     feed_price = summary.feed_cost / summary.feed_kg
     feed_cost = (max(kg_then - kg_now, ZERO) * fcr * feed_price).quantize(Decimal("1"))
-    running = summary.care_cost + summary.wage_cost + summary.lease_cost + summary.other_cost
+    running = summary.care_cost + summary.wage_cost + summary.lease_cost + summary.other_cost + summary.shared_cost
     other_cost = (running / ran * days).quantize(Decimal("1"))
     return WaitPlan(ready_on, days, kg_now, kg_then, fish_lost, fcr, guessed, feed_cost, other_cost)
 
@@ -586,6 +603,93 @@ def _death_tasks(business, running, today):
                                      "%(n)s fish in the last %(days)s days (%(pct)s%% of the pond). Test the water and check for disease.", now)
                             % {"n": now, "days": RECENT_DAYS, "pct": pct},
                             reverse("business:cycle_detail", args=[c.pk]) + "?tab=growth", _("View")))
+    return out
+
+
+# ── Each pond at a glance ───────────────────────────────────────────────────
+
+@dataclass
+class Glance:
+    """What a farmer wants to see about a pond without opening it."""
+
+    cycle: CultureCycle
+    alive: int = 0
+    biomass_kg: Decimal | None = None
+    avg_g: Decimal | None = None       # across all the fish, from the latest weighings
+    weighed_on: date | None = None
+    fed_today: Decimal = ZERO          # kg
+    fed_yesterday: Decimal = ZERO
+    water: object = None               # the latest water test of the last few days
+    water_problems: list = field(default_factory=list)
+    died_recently: int = 0             # in the last RECENT_DAYS
+
+    @property
+    def pond(self):
+        return self.cycle.pond
+
+    @property
+    def fed(self):
+        return self.fed_today > 0
+
+    @property
+    def kg_round(self):
+        return self.biomass_kg.quantize(Decimal("1")) if self.biomass_kg else None
+
+    @property
+    def days_to_harvest(self):
+        return self.cycle.days_to_harvest
+
+    @property
+    def tone(self):
+        if self.water_problems:
+            return "critical"
+        if not self.fed and self.cycle.start_date <= date.today():
+            return "warn"
+        return "good"
+
+
+def glance(business, today=None):
+    """[Glance] for every pond with fish in it, in the farm's pond order."""
+    from django.db.models import Sum as _Sum
+
+    from .models import PondAlerts, WaterTest
+
+    today = today or date.today()
+    running = list(CultureCycle.objects.filter(business=business, status=CycleStatus.RUNNING).select_related("pond")
+                   .prefetch_related("stockings__species", "moves_in__species", "moves_in__cycle__pond", "moves_out__species",
+                                     "moves_out__to_cycle__pond", "weighings__species", "weighings__unit", "mortalities__species",
+                                     "harvests__species", "harvests__unit")
+                   .order_by("pond__order", "pond__name"))
+    if not running:
+        return []
+    fed = {}
+    if apps.is_installed("apps.business.feed"):
+        from apps.business.feed.models import FeedUsage
+
+        for r in (FeedUsage.objects.filter(business=business, cycle__in=running, date__gte=today - timedelta(days=1), date__lte=today)
+                  .values("cycle_id", "date").annotate(kg=_Sum("kg"))):
+            fed[(r["cycle_id"], r["date"])] = r["kg"]
+    limits = PondAlerts.for_business(business)
+    water = {}
+    for t in WaterTest.objects.filter(business=business, cycle__in=running, date__gte=today - timedelta(days=RECENT_DAYS)).order_by("date", "id"):
+        water[t.cycle_id] = t
+    since = today - timedelta(days=RECENT_DAYS)
+    out = []
+    for c in running:
+        rows = count_fish(c).values()
+        g = Glance(cycle=c, alive=sum(r.alive for r in rows))
+        weighed = [r for r in rows if r.biomass_kg]
+        if weighed:
+            g.biomass_kg = sum((r.biomass_kg for r in weighed), ZERO)
+            fish = sum(r.alive for r in weighed)
+            g.avg_g = (g.biomass_kg * 1000 / fish).quantize(Decimal("1")) if fish else None
+            g.weighed_on = max(r.weighed_on for r in weighed)
+        g.fed_today = fed.get((c.pk, today), ZERO)
+        g.fed_yesterday = fed.get((c.pk, today - timedelta(days=1)), ZERO)
+        g.water = water.get(c.pk)
+        g.water_problems = g.water.problems(limits) if g.water else []
+        g.died_recently = sum(m.count for m in c.mortalities.all() if m.date >= since)
+        out.append(g)
     return out
 
 

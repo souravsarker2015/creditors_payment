@@ -10,6 +10,7 @@ from apps.business.finance.models import Account
 from apps.business.parties.models import Party
 from apps.business.ponds.forms import EntryForm
 from apps.business.ponds.models import CultureCycle, CycleStatus
+from apps.core.receipts import memo_field
 
 from .models import FeedProduct, FeedPurchase, FeedPurchaseLine, FeedUsage
 
@@ -71,7 +72,7 @@ class FeedPurchaseForm(BusinessForm):
 
     class Meta:
         model = FeedPurchase
-        fields = ["supplier", "date", "invoice_no", "transport", "discount", "paid_now", "account", "notes"]
+        fields = ["supplier", "date", "invoice_no", "transport", "discount", "paid_now", "account", "receipt", "notes"]
         widgets = {"date": forms.DateInput()}
 
     def __init__(self, *args, **kwargs):
@@ -80,6 +81,7 @@ class FeedPurchaseForm(BusinessForm):
         self.fields["supplier"].empty_label = _("Choose supplier…")
         self.fields["supplier"].biz_quick_add = "supplier"
         self.fields["account"].queryset = Account.objects.filter(business=self.business)
+        memo_field(self, "feed")
         self.fields["account"].empty_label = _("Not recorded")
         self.fields["account"].biz_quick_add = "account"
         for name in ("transport", "discount", "paid_now"):

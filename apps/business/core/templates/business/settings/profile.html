@@ -45,6 +45,19 @@
         </div>
       </div>
     </section>
+    <section class="card" id="share-costs">
+      <div class="card-header"><div><h2 class="card-title">{% translate "Pond profit" %}</h2>
+        <p class="card-subtitle">{{ form.share_costs.help_text }}</p></div></div>
+      <div class="card-body">
+        <p class="label">{{ form.share_costs.label }}</p>
+        <div class="choice-list">
+          {% for radio in form.share_costs %}
+          <label class="choice choice-2line">{{ radio.tag }}<span><strong>{{ radio.choice_label }}</strong>
+            <small>{% if radio.data.value == "area" %}{% translate "A 100-decimal pond pays twice what a 50-decimal pond pays. Best for most farms." %}{% elif radio.data.value == "equal" %}{% translate "Every pond with fish pays the same part." %}{% else %}{% translate "Pond profit shows only costs written against that pond. The farm's own profit still counts everything." %}{% endif %}</small></span></label>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
     <div class="form-actions">
       <a href="{% url 'business:home' %}" class="btn btn-ghost btn-lg">{% translate "Cancel" %}</a>
       <button type="submit" class="btn btn-primary btn-lg">{% include "partials/icon.html" with name="check" %}{% translate "Save" %}</button>

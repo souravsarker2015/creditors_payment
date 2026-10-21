@@ -127,8 +127,9 @@ def plans(business, today=None):
     for t in WaterTest.objects.filter(business=business, cycle__in=cycles, date__gte=today - timedelta(days=3)).order_by("date", "id"):
         water[t.cycle_id] = t
     out = []
+    cache = {}
     for c in cycles:
-        s = summarize(c)
+        s = summarize(c, cache=cache)
         p = PondPlan(cycle=c)
         for row in s.species:
             if not row.alive:

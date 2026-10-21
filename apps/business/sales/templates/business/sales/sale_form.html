@@ -10,7 +10,8 @@
       {% if harvest %}<p class="page-subtitle">{% blocktranslate with h=harvest %}From the harvest: {{ h }}{% endblocktranslate %}</p>{% endif %}
     </div>
   </header>
-  <form method="post" class="stack" novalidate x-data="docTotals({{ sale_json }}, 'sale')" @input="calc($event)" @change="calc($event)">
+  {{ break_evens|json_script:"break-evens" }}
+  <form method="post" enctype="multipart/form-data" class="stack" novalidate x-data="docTotals({{ sale_json }}, 'sale')" @input="calc($event)" @change="calc($event)">
     {% csrf_token %}
     {% if harvest %}<input type="hidden" name="harvest" value="{{ harvest.pk }}">{% endif %}
     {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
@@ -71,10 +72,16 @@
           </div>
           {% with field=form.account %}{% include "business/partials/field.html" %}{% endwith %}
         </div>
+        <p class="callout" :data-tone="perKg < need ? 'warn' : 'good'" x-show="need && perKg" x-cloak data-break-even>
+          {% include "partials/icon.html" with name="info" %}
+          <span><strong x-text="'{{ _('You get {got}/kg after deductions.')|escapejs }}'.replace('{got}', money(perKg))"></strong>
+            <span x-text="(perKg < need ? '{{ _('That’s below what this pond’s fish cost: they need {need}/kg to cover the cycle so far.')|escapejs }}' : '{{ _('Above the {need}/kg this pond’s fish need to cover the cycle so far.')|escapejs }}').replace('{need}', money(need))"></span></span>
+        </p>
         <p class="doc-due" x-show="net > 0" :data-tone="due > 0 ? 'warn' : 'good'">
           <span x-show="due > 0" x-text="'{{ _('Still to receive')|escapejs }}: ' + money(due)"></span>
           <span x-show="due <= 0">{% translate "Received in full" %}</span>
         </p>
+        {% with field=form.receipt %}{% include "business/partials/field.html" %}{% endwith %}
         {% with field=form.notes %}{% include "business/partials/field.html" %}{% endwith %}
       </div>
     </section>

@@ -178,11 +178,12 @@ def _pond_report(business, period, request):
     rows = services.pond_rows(business, period.start, period.end)
     return {
         "title": _("Pond profit & loss"), "template": "business/reports/pond.html", "objects": rows,
-        "columns": [_("Pond"), _("Cycles"), _("Sold"), _("Cost"), _("Profit"), _("Per decimal"), _("Feed kg"), _("Harvest kg"), _("FCR")],
-        "rows": [[r["pond"].name, r["cycles"], _n(r["sales"]), _n(r["cost"]), _n(r["profit"]), _n(r["per_decimal"]),
+        "columns": [_("Pond"), _("Cycles"), _("Sold"), _("Cost"), _("Of which farm share"), _("Profit"), _("Per decimal"), _("Feed kg"), _("Harvest kg"), _("FCR")],
+        "rows": [[r["pond"].name, r["cycles"], _n(r["sales"]), _n(r["cost"]), _n(r["shared"]), _n(r["profit"]), _n(r["per_decimal"]),
                   _n(r["feed_kg"]), _n(r["harvest_kg"]), _n(r["fcr"])] for r in rows],
         "total": [_("Total"), "", _n(sum((r["sales"] for r in rows), ZERO)), _n(sum((r["cost"] for r in rows), ZERO)),
-                  _n(sum((r["profit"] for r in rows), ZERO))],
+                  _n(sum((r["shared"] for r in rows), ZERO)), _n(sum((r["profit"] for r in rows), ZERO))],
+        "shared": sum((r["shared"] for r in rows), ZERO), "share_rule": business.share_costs,
         "sales": sum((r["sales"] for r in rows), ZERO), "cost": sum((r["cost"] for r in rows), ZERO),
         "profit": sum((r["profit"] for r in rows), ZERO),
     }
@@ -193,13 +194,14 @@ def _cycle_report(business, period, request):
     return {
         "title": _("Cycle by cycle"), "template": "business/reports/cycle.html", "objects": rows,
         "columns": [_("Pond"), _("Cycle"), _("Started"), _("Days"), _("Fish put in"), _("Alive"), _("Harvest kg"),
-                    _("Feed kg"), _("FCR"), _("Cost"), _("Sold"), _("Profit")],
+                    _("Feed kg"), _("FCR"), _("Cost"), _("Of which farm share"), _("Sold"), _("Profit")],
         "rows": [[r.pond.name, r.cycle.label, f"{r.cycle.start_date:%Y-%m-%d}", r.days, r.summary.stocked, r.summary.alive,
-                  _n(r.summary.harvest_kg), _n(r.summary.feed_kg), _n(r.summary.fcr_now), _n(r.summary.cost),
+                  _n(r.summary.harvest_kg), _n(r.summary.feed_kg), _n(r.summary.fcr_now), _n(r.summary.cost), _n(r.summary.shared_cost),
                   _n(r.summary.sales_net), _n(r.profit)] for r in rows],
         "total": [_("Total"), "", "", "", "", "", "", "", "", _n(sum((r.summary.cost for r in rows), ZERO)),
-                  _n(sum((r.summary.sales_net for r in rows), ZERO)), _n(sum((r.profit for r in rows), ZERO))],
+                  _n(sum((r.summary.shared_cost for r in rows), ZERO)), _n(sum((r.summary.sales_net for r in rows), ZERO)), _n(sum((r.profit for r in rows), ZERO))],
         "profit": sum((r.profit for r in rows), ZERO),
+        "shared": sum((r.summary.shared_cost for r in rows), ZERO), "share_rule": business.share_costs,
     }
 
 

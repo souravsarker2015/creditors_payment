@@ -193,18 +193,19 @@ def pond_rows(business, start=None, end=None):
 
     by_pond = {}
     for row in cycle_rows(business, start, end):
-        got = by_pond.setdefault(row.pond.pk, {"pond": row.pond, "sales": ZERO, "cost": ZERO, "cycles": 0, "moved": ZERO,
+        got = by_pond.setdefault(row.pond.pk, {"pond": row.pond, "sales": ZERO, "cost": ZERO, "cycles": 0, "moved": ZERO, "shared": ZERO,
                                                "feed_kg": ZERO, "harvest_kg": ZERO, "stocked_kg": ZERO, "moved_kg": ZERO})
         got["sales"] += row.summary.sales_net
         got["moved"] += row.summary.moved_out_value     # fish passed on to another pond, at their value
         got["moved_kg"] += row.summary.moved_out_kg
         got["cost"] += row.summary.cost
+        got["shared"] += row.summary.shared_cost
         got["cycles"] += 1
         got["feed_kg"] += row.summary.feed_kg
         got["harvest_kg"] += row.summary.harvest_kg
         got["stocked_kg"] += row.summary.stocked_kg
     for pond in Pond.objects.filter(business=business):
-        by_pond.setdefault(pond.pk, {"pond": pond, "sales": ZERO, "cost": ZERO, "cycles": 0, "feed_kg": ZERO, "harvest_kg": ZERO,
+        by_pond.setdefault(pond.pk, {"pond": pond, "sales": ZERO, "cost": ZERO, "shared": ZERO, "cycles": 0, "feed_kg": ZERO, "harvest_kg": ZERO,
                                      "stocked_kg": ZERO, "moved": ZERO, "moved_kg": ZERO})
     rows = list(by_pond.values())
     for r in rows:

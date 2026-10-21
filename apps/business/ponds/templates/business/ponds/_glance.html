@@ -1,0 +1,13 @@
+{% load i18n business %}{% comment %}One pond at a glance: fish, size, weight, today's feed and water. Needs: g (services.Glance).{% endcomment %}
+<dl class="glance-facts">
+  <div><dt>{% translate "Fish" %}</dt><dd>{{ g.alive|num }}</dd></div>
+  <div><dt>{% translate "Size" %}</dt><dd>{% if g.avg_g %}≈ {{ g.avg_g|num }} g{% else %}—{% endif %}</dd></div>
+  <div><dt>{% translate "Weight" %}</dt><dd>{% if g.biomass_kg %}≈ {{ g.kg_round|num }} kg{% else %}—{% endif %}</dd></div>
+</dl>
+<div class="glance-chips">
+  {% if g.fed %}<span class="glance-chip" data-tone="good">{% include "partials/icon.html" with name="check" %}{% blocktranslate with kg=g.fed_today|num %}Fed {{ kg }} kg{% endblocktranslate %}</span>
+  {% else %}<span class="glance-chip" data-tone="warn">{% include "business/partials/icon.html" with name="banknotes" %}{% translate "Not fed yet" %}{% if g.fed_yesterday %} · {% blocktranslate with kg=g.fed_yesterday|num %}{{ kg }} kg yesterday{% endblocktranslate %}{% endif %}</span>{% endif %}
+  {% if g.water %}<span class="glance-chip" data-tone="{% if g.water_problems %}critical{% else %}good{% endif %}" data-tip="{% if g.water_problems %}{% for p in g.water_problems %}{{ p.what }}{% if not forloop.last %} · {% endif %}{% endfor %}{% else %}{% translate 'Last water test was fine' %}{% endif %} · {{ g.water.date|date:'j M' }}">{% include "business/partials/icon.html" with name="beaker" %}{% if g.water.oxygen is not None %}O₂ {{ g.water.oxygen|num }}{% elif g.water_problems %}{% translate "Water problem" %}{% else %}{% translate "Water OK" %}{% endif %}</span>{% endif %}
+  {% if g.died_recently %}<span class="glance-chip" data-tone="warn">{% include "partials/icon.html" with name="alert" %}{% blocktranslate count counter=g.died_recently %}{{ counter }} died (3 days){% plural %}{{ counter }} died (3 days){% endblocktranslate %}</span>{% endif %}
+  {% with d=g.days_to_harvest %}{% if d is not None and d <= 30 %}<span class="glance-chip" data-tone="{% if d < 0 %}critical{% else %}info{% endif %}">{% include "partials/icon.html" with name="cart" %}{% if d < 0 %}{% translate "Harvest overdue" %}{% elif d == 0 %}{% translate "Harvest today" %}{% else %}{% blocktranslate count counter=d %}Harvest in {{ counter }} day{% plural %}Harvest in {{ counter }} days{% endblocktranslate %}{% endif %}</span>{% endif %}{% endwith %}
+</div>

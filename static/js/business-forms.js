@@ -62,9 +62,11 @@ document.addEventListener("alpine:init", function () {
     return {
       data: data, mode: mode,
       kg: 0, subtotal: 0, extra: 0, less: 0, total: 0, paid: 0, due: 0,
-      gross: 0, deductions: 0, net: 0,
+      gross: 0, deductions: 0, net: 0, perKg: 0, need: 0,
       init() {
         root = this.$el;
+        var be = document.getElementById("break-evens");
+        this.breakEvens = be ? JSON.parse(be.textContent) : {};
         // A feed created with "+ New feed": remember its bag size and price for the totals.
         window.addEventListener("quick-added", (e) => {
           var d = e.detail || {};
@@ -152,6 +154,11 @@ document.addEventListener("alpine:init", function () {
           row.querySelector("[data-line-amount]").textContent = amount ? "− " + self.money(amount) : "";
         });
         this.gross = gross; this.deductions = ded; this.net = gross - ded;
+        // What each kg really brings, against what the pond's fish need to fetch to cover its costs.
+        var kgSold = base.weight || 0, cyc = (root.querySelector("[name=cycle]") || {}).value;
+        var onlyWeight = Object.keys(base).every(function (t) { return t === "weight"; });   // a line sold by the piece would skew it
+        this.perKg = kgSold && onlyWeight && this.net > 0 ? this.net / kgSold : 0;
+        this.need = num((this.breakEvens || {})[cyc]);
         this.paid = num((root.querySelector("[name=received_now]") || {}).value);
         this.due = Math.max(this.net - this.paid, 0); this.total = this.net;
       },

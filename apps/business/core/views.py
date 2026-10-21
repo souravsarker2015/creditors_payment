@@ -55,6 +55,7 @@ def home_view(request):
         "has_ponds": _has_ponds(b),
         "tasks": tasks,
         "low_feed": _low_feed(b),
+        "ponds_glance": _ponds_glance(b),
         "baki": _baki_summary(request),
         "money": _money_summary(request),
     })
@@ -71,6 +72,14 @@ def _catch_up_summaries(request):
         import logging
 
         logging.getLogger(__name__).exception("evening summary catch-up")
+
+
+def _ponds_glance(business):
+    if not apps.is_installed("apps.business.ponds"):
+        return []
+    from apps.business.ponds.services import glance
+
+    return glance(business)
 
 
 def _has_ponds(business):

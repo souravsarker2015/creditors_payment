@@ -113,7 +113,7 @@ STAGES = [
           _("Everything else that comes in or goes out, and what you plan to spend."), "gold", [
               Step("money", _("Money in & out"), _("Labour, medicine, lime, electricity, household costs…"),
                    "transactions", "view_finance", ("cost", "profit"), "wallet",
-                   _("Put a cost on a pond's cycle and it counts in that pond's profit.")),
+                   _("Put a cost on a pond's cycle and it counts in that pond's profit. A cost for the whole farm is shared between the ponds that had fish that day.")),
               Step("staff", _("Staff & wages"), _("A work sheet for daily workers, a salary sheet for monthly staff, and what you've paid."),
                    "staff", "view_finance", ("cost", "profit"), "users",
                    _("Wages are a cost when they're earned; an advance is simply taken off later pay.")),
@@ -158,7 +158,7 @@ STAGES = [
 
 # "Where does this number come from?" — the questions farmers actually ask.
 ANSWERS = [
-    (_("Profit of a cycle"), _("Fish sold (after market deductions) + fish moved to other ponds − fingerlings and fish moved in − feed eaten − lime & medicine − wages, its share of the pond lease and other costs put on that cycle."),
+    (_("Profit of a cycle"), _("Fish sold (after market deductions) + fish moved to other ponds − fingerlings and fish moved in − feed eaten − lime & medicine − wages, its share of the pond lease, other costs put on that cycle, and its share of whole-farm costs (electricity, a guard, repairs) for the days it had fish."),
      ("sale", "stocking", "move", "feeding", "care", "staff", "lease", "money")),
     (_("Fish in the pond"), _("Fingerlings released + fish moved in − deaths recorded − fish harvested − fish moved out. A harvest without a count is counted by its weight ÷ the fish's size then."), ("stocking", "move", "growth", "harvest")),
     (_("Weight in the pond"), _("Fish in the pond × their latest sample weight."), ("growth",)),

@@ -1,10 +1,10 @@
 from decimal import Decimal
 
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import FileExtensionValidator, MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from apps.business.core.models import MONEY, BusinessBaseModel, Unit
+from apps.business.core.models import MEMO_EXTENSIONS, MONEY, BusinessBaseModel, Unit, memo_path
 
 
 class FeedForm(models.TextChoices):
@@ -61,6 +61,7 @@ class FeedPurchase(BusinessBaseModel):
     supplier = models.ForeignKey("business_parties.Party", on_delete=models.PROTECT, related_name="feed_purchases", verbose_name=_("Supplier"))
     date = models.DateField(_("Date"), db_index=True)
     invoice_no = models.CharField(_("Memo / invoice no."), max_length=40, blank=True)
+    receipt = models.FileField(_("Memo photo"), upload_to=memo_path, blank=True, validators=[FileExtensionValidator(MEMO_EXTENSIONS)])
     transport = models.DecimalField(_("Transport / labour"), default=0, validators=[MinValueValidator(0)], **MONEY)
     discount = models.DecimalField(_("Discount"), default=0, validators=[MinValueValidator(0)], **MONEY)
     paid_now = models.DecimalField(_("Paid now"), default=0, validators=[MinValueValidator(0)], **MONEY)

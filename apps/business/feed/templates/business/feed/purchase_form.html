@@ -9,7 +9,7 @@
       <h1 class="page-title">{% if obj %}{% translate "Edit purchase" %}{% else %}{% translate "Buy feed" %}{% endif %}</h1>
     </div>
   </header>
-  <form method="post" class="stack" novalidate x-data="docTotals({{ feed_json }}, 'feed')" @input="calc($event)" @change="calc($event)">
+  <form method="post" enctype="multipart/form-data" class="stack" novalidate x-data="docTotals({{ feed_json }}, 'feed')" @input="calc($event)" @change="calc($event)">
     {% csrf_token %}
     {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
     <section class="card">
@@ -55,6 +55,7 @@
           <span x-show="due > 0" x-text="'{{ _('Owed to the supplier')|escapejs }}: ' + money(due)"></span>
           <span x-show="due <= 0">{% translate "Fully paid" %}</span>
         </p>
+        {% with field=form.receipt %}{% include "business/partials/field.html" %}{% endwith %}
         {% with field=form.notes %}{% include "business/partials/field.html" %}{% endwith %}
       </div>
     </section>

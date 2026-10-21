@@ -2,11 +2,11 @@
 and what was received now. The rest is due — the credit ledger picks it up."""
 from decimal import Decimal
 
-from django.core.validators import MinValueValidator
+from django.core.validators import FileExtensionValidator, MinValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from apps.business.core.models import MONEY, BusinessBaseModel, QuantityMixin, Unit
+from apps.business.core.models import MEMO_EXTENSIONS, MONEY, BusinessBaseModel, QuantityMixin, Unit, memo_path
 from apps.business.markets.models import DeductionMethod
 
 CENT = Decimal("0.01")
@@ -19,6 +19,7 @@ class FishSale(BusinessBaseModel):
     cycle = models.ForeignKey("business_ponds.CultureCycle", on_delete=models.SET_NULL, null=True, blank=True, related_name="sales", verbose_name=_("From pond"))
     harvest = models.ForeignKey("business_ponds.Harvest", on_delete=models.SET_NULL, null=True, blank=True, related_name="sales", verbose_name=_("Harvest"))
     memo_no = models.CharField(_("Memo no."), max_length=40, blank=True)
+    receipt = models.FileField(_("Memo photo"), upload_to=memo_path, blank=True, validators=[FileExtensionValidator(MEMO_EXTENSIONS)])
     received_now = models.DecimalField(_("Received now"), default=0, validators=[MinValueValidator(0)], **MONEY)
     account = models.ForeignKey("business_finance.Account", on_delete=models.SET_NULL, null=True, blank=True, related_name="+", verbose_name=_("Received into"))
     gross = models.DecimalField(default=0, editable=False, **MONEY)

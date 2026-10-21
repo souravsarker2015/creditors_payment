@@ -10,11 +10,16 @@
     </div>
     {% include "business/master/_actions.html" %}
   </div>
+  {% if o.glance and not is_deleted_tab %}
+  {% with g=o.glance %}<div class="pond-glance" data-tone="{{ g.tone }}">{% include "business/ponds/_glance.html" %}</div>{% endwith %}
+  <p class="pond-meta-line">{% if o.area %}<span>{% qty o.area o.area_unit %}</span>{% endif %}{% if o.depth_ft %}<span>{{ o.depth_ft|num }} {% translate "ft" %}</span>{% endif %}<span>{{ o.get_ownership_display }}</span></p>
+  {% else %}
   <dl class="pond-facts">
     <div><dt>{% translate "Area" %}</dt><dd>{% if o.area %}{% qty o.area o.area_unit %}{% else %}—{% endif %}</dd></div>
     <div><dt>{% translate "Depth" %}</dt><dd>{% if o.depth_ft %}{{ o.depth_ft|num }} {% translate "ft" %}{% else %}—{% endif %}</dd></div>
     <div><dt>{% translate "Ownership" %}</dt><dd>{{ o.get_ownership_display }}</dd></div>
   </dl>
+  {% endif %}
   {% if not is_deleted_tab %}
   {% if o.current %}
   <a href="{% url 'business:cycle_detail' o.current.pk %}" class="pond-cycle">

@@ -12,6 +12,7 @@ from apps.business.markets.forms import MarketDeductionForm
 from apps.business.parties.models import Party
 from apps.business.ponds.models import CultureCycle, CycleStatus
 from apps.business.species.models import Species
+from apps.core.receipts import memo_field
 
 from .models import FishSale, FishSaleLine, SaleDeduction
 
@@ -29,7 +30,7 @@ class FishSaleForm(BusinessForm):
 
     class Meta:
         model = FishSale
-        fields = ["date", "market", "buyer", "cycle", "memo_no", "received_now", "account", "notes"]
+        fields = ["date", "market", "buyer", "cycle", "memo_no", "received_now", "account", "receipt", "notes"]
         widgets = {"date": forms.DateInput()}
 
     def __init__(self, *args, **kwargs):
@@ -47,6 +48,7 @@ class FishSaleForm(BusinessForm):
         self.fields["cycle"].queryset = cycles.distinct().select_related("pond")
         self.fields["cycle"].empty_label = _("Not from a particular pond")
         self.fields["account"].queryset = Account.objects.filter(business=b)
+        memo_field(self, "sale")
         self.fields["account"].empty_label = _("Not recorded")
         self.fields["account"].biz_quick_add = "account"
         money_field(self.fields["received_now"])

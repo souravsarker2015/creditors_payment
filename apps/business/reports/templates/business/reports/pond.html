@@ -8,11 +8,12 @@
 
   <dl class="stat-grid no-print">
     <div class="stat" data-tone="good"><dt class="stat-label">{% translate "Sold" %}</dt><dd class="stat-value">{{ r.sales|bdt }}</dd></div>
-    <div class="stat" data-tone="critical"><dt class="stat-label">{% translate "Cost" %}{% include "business/partials/tip.html" with text=_("Fingerlings, feed eaten, and other costs you put on the ponds' cycles. Farm-wide costs that aren't put on a pond are not shared out here.") %}</dt><dd class="stat-value">{{ r.cost|bdt }}</dd></div>
+    <div class="stat" data-tone="critical"><dt class="stat-label">{% translate "Cost" %}{% if r.share_rule == "none" %}{% include "business/partials/tip.html" with text=_("Fingerlings, feed eaten, and other costs you put on the ponds' cycles. Farm-wide costs that aren't put on a pond are not shared out here.") %}{% else %}{% include "business/partials/tip.html" with text=_("Fingerlings, feed eaten, other costs you put on the ponds' cycles, and each pond's share of whole-farm costs like electricity and a guard's salary.") %}{% endif %}</dt><dd class="stat-value">{{ r.cost|bdt }}</dd></div>
     <div class="stat" data-tone="{% if r.profit >= 0 %}accent{% else %}critical{% endif %}"><dt class="stat-label">{% if r.profit >= 0 %}{% translate "Profit" %}{% else %}{% translate "Loss" %}{% endif %}</dt><dd class="stat-value">{{ r.profit|absolute|bdt }}</dd></div>
   </dl>
 
   <p class="help no-print">{% translate "A cycle is counted in full if it ran at any time in the chosen period. Choose “All time” to compare every cycle." %}</p>
+  {% include "business/reports/_share_note.html" %}
   <article class="card memo stmt">
     {% include "business/reports/_memo_head.html" %}
     {% if r.objects %}

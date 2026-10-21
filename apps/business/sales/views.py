@@ -142,7 +142,7 @@ def _from_advance(business, pk, form, lines, harvest):
 def sale_form_view(request, pk=None):
     b = request.business
     sale = get_object_or_404(FishSale, pk=pk, business=b) if pk else None
-    form = FishSaleForm(request.POST or None, instance=sale, business=b)
+    form = FishSaleForm(request.POST or None, request.FILES or None, instance=sale, business=b)
     harvest, line_initial, ded_initial = (None, [], [])
     if not sale and request.method != "POST":
         harvest, line_initial, ded_initial = _initial(request, form)
@@ -178,7 +178,7 @@ def sale_form_view(request, pk=None):
             return _saved(request, obj)
     return render(request, "business/sales/sale_form.html", {
         "form": form, "lines": lines, "deds": deds, "obj": sale, "harvest": harvest or (sale.harvest if sale else None),
-        "sale_json": _form_json(b, sale), "waits": _medicine_waits(b), "buyer_advances": _buyer_advances(b),
+        "sale_json": _form_json(b, sale), "waits": _medicine_waits(b), "break_evens": _break_evens(request), "buyer_advances": _buyer_advances(b),
     })
 
 
@@ -193,6 +193,25 @@ def _buyer_advances(business):
         left[a.party.pk] = left.get(a.party.pk, 0) + a.open
     return {str(pk): _("They have %(amount)s of advance (dadon) with you. This sale is set against it — leave “Received now” empty unless they pay more.") % {"amount": bdt(v)}
             for pk, v in left.items()}
+
+
+def _break_evens(request):
+    """{cycle id: price per kg} the fish left in each pond must fetch to cover what
+    its cycle has cost so far — so a sale below it can be flagged. Only for
+    people who may see the farm's money."""
+    from apps.business.core.access import can
+    from apps.business.ponds.models import CycleStatus
+    from apps.business.ponds.services import projection, summarize
+
+    if not can(request.membership, "view_finance"):
+        return {}
+    out, cache = {}, {}
+    for c in CultureCycle.objects.filter(business=request.business, status=CycleStatus.RUNNING).select_related("pond"):
+        p = projection(summarize(c, cache=cache))
+        need = p.break_even or p.cost_per_kg
+        if need and need > 0:
+            out[str(c.pk)] = str(need)
+    return out
 
 
 def _medicine_waits(business):

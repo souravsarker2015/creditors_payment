@@ -1196,6 +1196,9 @@ select.just-added, input.just-added { animation: just-added 1.2s ease; }
 .choice { display: flex; align-items: center; gap: 0.625rem; padding: 0.625rem 0.75rem; border: 1px solid var(--border-soft); border-radius: 0.75rem; background: var(--surface); font-size: 0.875rem; color: var(--text-primary); cursor: pointer; }
 .choice:has(input:checked) { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); background: var(--accent-soft); }
 .choice input { accent-color: var(--accent); width: 1.0625rem; height: 1.0625rem; flex-shrink: 0; }
+.choice-2line { align-items: flex-start; }
+.choice-2line input { margin-top: 0.1875rem; }
+.choice-2line small { display: block; margin-top: 0.125rem; font-size: 0.78rem; line-height: 1.4; color: var(--text-muted); }
 @media print { .tfa-codes { grid-template-columns: repeat(2, 1fr); } }
 
 /* Sign-in: "Forgot password?" under the password box */
@@ -1830,6 +1833,39 @@ a.hero-progress:hover .hero-progress-row span { color: var(--text-on-ink); }
 .pond-photo { position: relative; height: 8rem; background: linear-gradient(135deg, color-mix(in srgb, #0e7490 22%, var(--surface-sunken)), color-mix(in srgb, #15803d 16%, var(--surface-sunken))); display: grid; place-items: center; color: color-mix(in srgb, #0e7490 60%, transparent); }
 .pond-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .pond-photo svg { width: 2.75rem; height: 2.75rem; opacity: .7; }
+/* No photo: a slim water-coloured band instead of a big empty picture */
+.pond-photo.is-empty { height: 3rem; place-items: center end; padding-right: 1rem; }
+.pond-photo.is-empty svg { width: 1.75rem; height: 1.75rem; }
+.pond-photo.is-empty .pond-status { top: 50%; transform: translateY(-50%); }
+.pond-meta-line { display: flex; flex-wrap: wrap; gap: 0.25rem 0.75rem; font-size: 0.78rem; color: var(--text-muted); }
+.pond-meta-line > span + span::before { content: "·"; margin-right: 0.75rem; }
+.pond-meta-line .qty-base { display: none; }
+
+/* A pond at a glance: fish, size, weight, today's feed and water (home page and pond list) */
+.glance-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.75rem; padding: 0.75rem 1rem 1rem; }
+@media (min-width: 640px) { .glance-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr)); padding: 1rem 1.5rem 1.5rem; } }
+.glance { --tone: var(--status-good); position: relative; display: flex; flex-direction: column; gap: 0.625rem; padding: 0.75rem 0.875rem 0.875rem; border: 1px solid var(--border-soft); border-left: 4px solid var(--tone); border-radius: var(--radius-sm, 0.75rem); background: var(--surface); }
+.glance[data-tone="warn"], .pond-glance[data-tone="warn"] { --tone: var(--status-warn); }
+.glance[data-tone="critical"], .pond-glance[data-tone="critical"] { --tone: var(--status-critical); }
+.glance-head { display: flex; align-items: center; gap: 0.625rem; color: var(--text-primary); }
+.glance-head > svg { width: 1rem; height: 1rem; flex-shrink: 0; color: var(--text-muted); }
+.glance-head:hover .glance-name { text-decoration: underline; }
+.glance-dot { width: 0.625rem; height: 0.625rem; flex-shrink: 0; border-radius: 9999px; background: var(--tone); box-shadow: 0 0 0 3px color-mix(in srgb, var(--tone) 22%, transparent); }
+.glance-name { display: block; font-weight: 700; font-size: 0.95rem; line-height: 1.3; overflow-wrap: anywhere; }
+.glance-sub { display: block; font-size: 0.75rem; color: var(--text-muted); overflow-wrap: anywhere; }
+.glance-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.375rem; }
+.glance-facts > div { min-width: 0; padding: 0.375rem 0.5rem; border-radius: 0.5rem; background: var(--surface-sunken); }
+.glance-facts dt { font-size: 0.6875rem; font-weight: 600; color: var(--text-muted); }
+.glance-facts dd { font-size: 0.875rem; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.glance-chips { display: flex; flex-wrap: wrap; gap: 0.375rem; }
+.glance-chip { --tone: var(--status-info); display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.1875rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; line-height: 1.4;
+  color: var(--tone); background: color-mix(in srgb, var(--tone) 12%, transparent); }
+.glance-chip[data-tone="good"] { --tone: var(--status-good); }
+.glance-chip[data-tone="warn"] { --tone: var(--status-warn); }
+.glance-chip[data-tone="critical"] { --tone: var(--status-critical); }
+.glance-chip svg { width: 0.875rem; height: 0.875rem; flex-shrink: 0; }
+.glance-act { align-self: flex-start; }
+.pond-glance { display: flex; flex-direction: column; gap: 0.5rem; }
 .pond-status { position: absolute; left: 0.75rem; top: 0.75rem; background: var(--surface-raised); box-shadow: var(--shadow-sm); }
 .pond-code { display: inline-block; margin-right: 0.375rem; padding: 0 0.375rem; border-radius: 0.375rem; background: var(--accent-soft); color: var(--accent); font-size: 0.75rem; font-weight: 700; vertical-align: 0.125rem; }
 .pond-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; }

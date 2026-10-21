@@ -141,8 +141,9 @@ def _fish(business, w, own, today):
     kg = ZERO
     cycles = list(CultureCycle.objects.filter(business=business, status=CycleStatus.RUNNING).select_related("pond"))
     prices = {}
+    cache = {}
     for c in cycles:
-        s = summarize(c)
+        s = summarize(c, cache=cache)
         at_cost += max(s.cost - s.earned, ZERO)
         for r in s.species:
             if not r.biomass_kg:

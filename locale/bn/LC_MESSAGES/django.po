@@ -20245,3 +20245,129 @@ msgstr "লক্ষ্য"
 
 msgid "avg"
 msgstr "গড়"
+
+#, python-format
+msgid "%(counter)s died (3 days)"
+msgid_plural "%(counter)s died (3 days)"
+msgstr[0] "%(counter)sটি মরেছে (৩ দিনে)"
+msgstr[1] "%(counter)sটি মরেছে (৩ দিনে)"
+
+#, python-format
+msgid "%(counter)s pond with fish"
+msgid_plural "%(counter)s ponds with fish"
+msgstr[0] "মাছসহ %(counter)sটি পুকুর"
+msgstr[1] "মাছসহ %(counter)sটি পুকুর"
+
+#, python-format
+msgid "%(kg)s kg yesterday"
+msgstr "গতকাল %(kg)s কেজি"
+
+msgid "A 100-decimal pond pays twice what a 50-decimal pond pays. Best for most farms."
+msgstr "১০০ শতাংশের পুকুর ৫০ শতাংশের পুকুরের দ্বিগুণ ভাগ বহন করে। বেশিরভাগ খামারের জন্য এটাই ভালো।"
+
+msgid "A photo of the paper memo, to check later. Big photos are made smaller before they're sent."
+msgstr "কাগজের মেমোর ছবি, পরে মিলিয়ে দেখার জন্য। বড় ছবি পাঠানোর আগে ছোট করে নেওয়া হয়।"
+
+msgid "Above the {need}/kg this pond’s fish need to cover the cycle so far."
+msgstr "এই পুকুরের মাছের এ পর্যন্ত চক্রের খরচ উঠাতে কেজিপ্রতি {need} দরকার — তার চেয়ে বেশি।"
+
+msgid "By pond size"
+msgstr "পুকুরের আয়তন অনুযায়ী"
+
+#, python-format
+msgid "Costs include %(amount)s of whole-farm costs (electricity, a guard's salary, repairs…), shared between the ponds that had fish each day, by pond size."
+msgstr "খরচে পুরো খামারের %(amount)s খরচ (বিদ্যুৎ, পাহারাদারের বেতন, মেরামত…) ধরা আছে — যেদিন যে পুকুরে মাছ ছিল, আয়তন অনুযায়ী তাদের মধ্যে ভাগ করা।"
+
+#, python-format
+msgid "Costs include %(amount)s of whole-farm costs (electricity, a guard's salary, repairs…), shared equally between the ponds that had fish each day."
+msgstr "খরচে পুরো খামারের %(amount)s খরচ (বিদ্যুৎ, পাহারাদারের বেতন, মেরামত…) ধরা আছে — যেদিন যে পুকুরে মাছ ছিল, তাদের মধ্যে সমান ভাগ করা।"
+
+msgid "Costs not written against one pond — electricity, a guard's salary, transport, repairs — are shared between the ponds that had fish that day, so each pond's profit is real."
+msgstr "যে খরচ কোনো একটি পুকুরের নামে লেখা নয় — বিদ্যুৎ, পাহারাদারের বেতন, গাড়িভাড়া, মেরামত — তা সেদিন যে পুকুরগুলোতে মাছ ছিল তাদের মধ্যে ভাগ হয়, যাতে প্রতিটি পুকুরের লাভ সঠিক দেখায়।"
+
+msgid "Don't share them"
+msgstr "ভাগ করবেন না"
+
+msgid "Equally between ponds"
+msgstr "পুকুরগুলোর মধ্যে সমান ভাগে"
+
+msgid "Every pond with fish in it: how many fish are left, their size and weight from the latest sample weighing, whether they've been fed today, and the latest water test."
+msgstr "মাছ আছে এমন প্রতিটি পুকুর: কতটি মাছ আছে, সর্বশেষ নমুনা ওজন থেকে আকার ও মোট ওজন, আজ খাবার দেওয়া হয়েছে কি না, আর সর্বশেষ পানি পরীক্ষা।"
+
+msgid "Every pond with fish pays the same part."
+msgstr "মাছ আছে এমন প্রতিটি পুকুর সমান ভাগ বহন করে।"
+
+#, python-format
+msgid "Fed %(kg)s kg"
+msgstr "খাবার %(kg)s কেজি"
+
+msgid "Fingerlings bought + feed eaten (at the average price you paid for it) + lime and medicine + any other cost you put on this cycle, like labour + this pond's share of whole-farm costs."
+msgstr "কেনা পোনা + খাওয়ানো খাবার (যে গড় দামে কিনেছেন) + চুন ও ওষুধ + এই চক্রে লেখা অন্য খরচ, যেমন শ্রমিক + পুরো খামারের খরচে এই পুকুরের ভাগ।"
+
+msgid "Fingerlings, feed eaten, other costs you put on the ponds' cycles, and each pond's share of whole-farm costs like electricity and a guard's salary."
+msgstr "পোনা, খাওয়ানো খাবার, পুকুরের চক্রে লেখা অন্য খরচ, আর বিদ্যুৎ ও পাহারাদারের বেতনের মতো পুরো খামারের খরচে প্রতিটি পুকুরের ভাগ।"
+
+msgid "Harvest overdue"
+msgstr "মাছ ধরার দিন পেরিয়ে গেছে"
+
+msgid "Harvest today"
+msgstr "আজ মাছ ধরা"
+
+msgid "Last water test was fine"
+msgstr "শেষ পানি পরীক্ষা ঠিক ছিল"
+
+msgid "Memo photo"
+msgstr "মেমোর ছবি"
+
+msgid "Not fed yet"
+msgstr "এখনো খাবার দেওয়া হয়নি"
+
+msgid "Of which farm share"
+msgstr "এর মধ্যে খামারের ভাগ"
+
+msgid "Other costs"
+msgstr "অন্যান্য খরচ"
+
+msgid "Pond profit"
+msgstr "পুকুরের লাভ"
+
+msgid "Pond profit shows only costs written against that pond. The farm's own profit still counts everything."
+msgstr "পুকুরের লাভে শুধু সেই পুকুরের নামে লেখা খরচ ধরা হবে। খামারের মোট লাভে তবুও সব খরচ ধরা থাকবে।"
+
+msgid "See the memo"
+msgstr "মেমো দেখুন"
+
+msgid "Share whole-farm costs between ponds"
+msgstr "পুরো খামারের খরচ পুকুরগুলোর মধ্যে ভাগ করুন"
+
+msgid "That’s below what this pond’s fish cost: they need {need}/kg to cover the cycle so far."
+msgstr "এটা এই পুকুরের মাছের খরচের চেয়ে কম: এ পর্যন্ত চক্রের খরচ উঠাতে কেজিপ্রতি {need} দরকার।"
+
+#, python-format
+msgid "This pond's share of costs paid for the whole farm (%(parts)s). Each one is split between the ponds that had fish that day. Change how in Settings → Business details."
+msgstr "পুরো খামারের জন্য দেওয়া খরচে এই পুকুরের ভাগ (%(parts)s)। প্রতিটি খরচ সেদিন যে পুকুরগুলোতে মাছ ছিল তাদের মধ্যে ভাগ হয়েছে। কীভাবে ভাগ হবে তা বদলান সেটিংস → ব্যবসার তথ্য থেকে।"
+
+msgid "Water OK"
+msgstr "পানি ঠিক আছে"
+
+msgid "Water problem"
+msgstr "পানিতে সমস্যা"
+
+msgid "You get {got}/kg after deductions."
+msgstr "কর্তনের পরে কেজিপ্রতি পাচ্ছেন {got}।"
+
+msgid "Your ponds"
+msgstr "আপনার পুকুর"
+
+#, python-format
+msgid "farm share %(o)s"
+msgstr "খামারের ভাগ %(o)s"
+
+msgid "memo"
+msgstr "মেমো"
+
+msgid "Put a cost on a pond's cycle and it counts in that pond's profit. A cost for the whole farm is shared between the ponds that had fish that day."
+msgstr "খরচ কোনো পুকুরের চক্রে লিখলে তা সেই পুকুরের লাভে ধরা হয়। পুরো খামারের খরচ সেদিন যে পুকুরগুলোতে মাছ ছিল তাদের মধ্যে ভাগ হয়।"
+
+msgid "Fish sold (after market deductions) + fish moved to other ponds − fingerlings and fish moved in − feed eaten − lime & medicine − wages, its share of the pond lease, other costs put on that cycle, and its share of whole-farm costs (electricity, a guard, repairs) for the days it had fish."
+msgstr "বিক্রি করা মাছ (বাজারের কর্তনের পরে) + অন্য পুকুরে সরানো মাছ − পোনা ও এনে রাখা মাছ − খাওয়ানো খাবার − চুন ও ওষুধ − মজুরি, পুকুর লিজের ভাগ, ওই চক্রে লেখা অন্য খরচ, আর যতদিন মাছ ছিল ততদিনের পুরো খামারের খরচের (বিদ্যুৎ, পাহারাদার, মেরামত) ভাগ।"

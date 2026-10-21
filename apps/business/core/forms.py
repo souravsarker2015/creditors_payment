@@ -37,10 +37,17 @@ class BusinessProfileForm(forms.ModelForm):
 
     class Meta:
         model = Business
-        fields = ["name", "phone", "address", "latitude", "longitude"]
-        widgets = {**BusinessSetupForm.Meta.widgets,
+        fields = ["name", "phone", "address", "latitude", "longitude", "share_costs"]
+        widgets = {**BusinessSetupForm.Meta.widgets, "share_costs": forms.RadioSelect,
                    "latitude": forms.NumberInput(attrs={"class": "form-input", "step": "any", "inputmode": "decimal", "placeholder": "23.17"}),
                    "longitude": forms.NumberInput(attrs={"class": "form-input", "step": "any", "inputmode": "decimal", "placeholder": "89.21"})}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["share_costs"].required = False     # left out (an older page): keep what's set
+
+    def clean_share_costs(self):
+        return self.cleaned_data.get("share_costs") or self.instance.share_costs
 
     def clean(self):
         data = super().clean()

@@ -56,7 +56,32 @@
   </section>
   {% endif %}
   {% if low_feed %}
-  <div class="callout" data-tone="warn">{% include "partials/icon.html" with name="alert" %}<div class="flex-1"><p class="callout-title">{% translate "Feed running low" %}</p><p>{% for r in low_feed %}{{ r.product }}: {% blocktranslate with n=r.left_bags|num %}{{ n }} bags{% endblocktranslate %}{% if not forloop.last %} · {% endif %}{% endfor %}</p><a href="{% url 'business:feed_purchases_add' %}" class="btn btn-soft btn-sm mt-2">{% translate "Buy feed" %}</a></div></div>
+  <div class="callout" data-tone="warn">{% include "partials/icon.html" with name="alert" %}<div class="flex-1"><p class="callout-title">{% translate "Feed running low" %}</p><p>{% for r in low_feed %}{{ r.product }}: {% if r.is_negative %}{% translate "more used than bought — check the entries, or count the store" %}{% else %}{% blocktranslate with n=r.left_bags|num %}{{ n }} bags left{% endblocktranslate %}{% endif %}{% if not forloop.last %} · {% endif %}{% endfor %}</p>
+    <div class="mt-2 flex flex-wrap gap-2"><a href="{% url 'business:feed_purchases_add' %}" class="btn btn-soft btn-sm">{% translate "Buy feed" %}</a>{% for r in low_feed %}{% if r.is_negative and forloop.first %}<a href="{% url 'business:feed_count' %}" class="btn btn-ghost btn-sm">{% translate "Count the store" %}</a>{% endif %}{% endfor %}</div></div></div>
+  {% endif %}
+
+  {% if ponds_glance %}
+  <section class="card" data-home-ponds>
+    <div class="card-header">
+      <div><h2 class="card-title">{% translate "Your ponds" %}{% include "business/partials/tip.html" with text=_("Every pond with fish in it: how many fish are left, their size and weight from the latest sample weighing, whether they've been fed today, and the latest water test.") %}</h2>
+        <p class="card-subtitle">{% blocktranslate count counter=ponds_glance|length %}{{ counter }} pond with fish{% plural %}{{ counter }} ponds with fish{% endblocktranslate %}</p></div>
+      <a href="{% url 'business:ponds' %}" class="btn btn-ghost btn-sm">{% translate "All ponds" %}{% include "partials/icon.html" with name="arrow-right" %}</a>
+    </div>
+    <div class="glance-grid">
+      {% for g in ponds_glance %}
+      <article class="glance" data-tone="{{ g.tone }}">
+        <a href="{% url 'business:cycle_detail' g.cycle.pk %}" class="glance-head">
+          <span class="glance-dot" aria-hidden="true"></span>
+          <span class="min-w-0 flex-1"><span class="glance-name">{% if g.pond.code %}<span class="pond-code">{{ g.pond.code }}</span>{% endif %}{{ g.pond.name }}</span>
+            <span class="glance-sub">{% blocktranslate count counter=g.cycle.days %}day {{ counter }}{% plural %}day {{ counter }}{% endblocktranslate %} · {{ g.cycle.label }}</span></span>
+          {% include "partials/icon.html" with name="chevron-right" %}
+        </a>
+        {% include "business/ponds/_glance.html" %}
+        {% if biz_can.enter_data and not g.fed %}<a href="{% url 'business:cycle_detail' g.cycle.pk %}?add=feeding" class="btn btn-soft btn-sm glance-act">{% include "business/partials/icon.html" with name="banknotes" %}{% translate "Record feeding" %}</a>{% endif %}
+      </article>
+      {% endfor %}
+    </div>
+  </section>
   {% endif %}
 
   <div class="grid grid-cols-1 gap-5 lg:grid-cols-5 lg:items-start">

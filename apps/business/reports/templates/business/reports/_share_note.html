@@ -1,0 +1,5 @@
+{% load i18n business %}{% if r.share_rule != "none" and r.shared %}
+<p class="callout no-print" data-tone="info" data-share-note>{% include "partials/icon.html" with name="info" %}
+  <span>{% if r.share_rule == "equal" %}{% blocktranslate with amount=r.shared|bdt %}Costs include {{ amount }} of whole-farm costs (electricity, a guard's salary, repairs…), shared equally between the ponds that had fish each day.{% endblocktranslate %}{% else %}{% blocktranslate with amount=r.shared|bdt %}Costs include {{ amount }} of whole-farm costs (electricity, a guard's salary, repairs…), shared between the ponds that had fish each day, by pond size.{% endblocktranslate %}{% endif %}
+  {% if biz_can.manage_settings %}<a href="{% url 'business:profile' %}#share-costs" class="font-semibold hover:underline">{% translate "Change" %}</a>{% endif %}</span></p>
+{% endif %}

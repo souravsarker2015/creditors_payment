@@ -24,8 +24,10 @@ from .models import CultureCycle, FishMove, Harvest, LeasePayment, Mortality, Po
 
 def _with_cycles(objects, business):
     running = {c.pond_id: c for c in CultureCycle.objects.filter(business=business, status="running", pond__in=objects)}
+    seen = {g.cycle.pond_id: g for g in services.glance(business)} if running else {}
     for pond in objects:
         pond.current = running.get(pond.pk)
+        pond.glance = seen.get(pond.pk)
 
 
 ponds = Master(
@@ -95,11 +97,12 @@ def pond_detail_view(request, pk):
     pond = get_object_or_404(Pond, pk=pk, business=request.business)
     cycles = list(pond.cycles.all())
     current = next((c for c in cycles if c.is_running), None)
+    cache = {}   # the farm's shared costs, worked out once for every cycle on the page
     return render(request, "business/ponds/pond_detail.html", {
         "pond": pond, "current": current, "past": [c for c in cycles if not c.is_running],
-        "summary": services.summarize(current) if current else None,
+        "summary": services.summarize(current, cache=cache) if current else None,
         "cycle_form": _for_popup(CycleForm(business=request.business, prefix="cycle")),
-        "past_summaries": [(c, services.summarize(c)) for c in cycles if not c.is_running],
+        "past_summaries": [(c, services.summarize(c, cache=cache)) for c in cycles if not c.is_running],
         "lease": services.lease_status(pond) if pond.is_leased else None,
     })
 

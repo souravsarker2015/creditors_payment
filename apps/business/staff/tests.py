@@ -86,10 +86,14 @@ class MoneyTests(StaffBase):
 
     def test_wages_for_a_pond_count_in_its_cycle(self):
         self.earn(self.daily, "1500", EarningKind.BONUS, cycle=self.cycle)
-        self.earn(self.daily, "999", EarningKind.BONUS)       # whole farm: not this pond
+        self.earn(self.daily, "999", EarningKind.BONUS)       # whole farm: shared between the ponds with fish
         s = summarize(self.cycle)
         self.assertEqual(s.wage_cost, D("1500"))
-        self.assertEqual(s.cost, D("1500"))
+        self.assertEqual(s.shared_cost, D("999"))             # the only pond with fish takes all of it
+        self.assertEqual(s.cost, D("2499"))
+        self.b.share_costs = "none"
+        self.b.save()
+        self.assertEqual(summarize(self.cycle).cost, D("1500"))
 
 
 class PageTests(StaffBase):
