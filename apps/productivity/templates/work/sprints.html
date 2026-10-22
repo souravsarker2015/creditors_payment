@@ -1,0 +1,76 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% translate "Sprints" %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+<header class="wp-head">
+  <div class="min-w-0">
+    <h1 class="wp-title">{% translate "Sprints" %}</h1>
+    <p class="wp-sub">{% translate "Work in fixed stretches, as in Jira: pick the tasks for the next week or two, watch them burn down, and when it ends carry what's left into the next sprint." %}</p>
+  </div>
+</header>
+
+<div class="wsp-layout">
+  <div class="wsp-main">
+    {% for r in rows %}
+    <a href="{% url 'work:sprint' r.s.pk %}" class="card wsp-card{% if r.state == 'active' %} is-active{% endif %}">
+      <div class="wsp-card-head">
+        <span class="badge badge-dot"{% if r.state == 'active' %} data-tone="good"{% endif %}>{% if r.state == 'active' %}{% translate "Running" %}{% else %}{% translate "Planned" %}{% endif %}</span>
+        <h2 class="wsp-name">{{ r.s.name }}</h2>
+        <span class="wsp-dates">{{ r.s.start_date|date:"j M" }} – {{ r.s.end_date|date:"j M" }}</span>
+      </div>
+      {% if r.s.goal %}<p class="wsp-goal">{% icon "target" %}<span>{{ r.s.goal }}</span></p>{% endif %}
+      <div class="wsp-progress"><span style="width: {{ r.pct }}%"></span></div>
+      <p class="wsp-meta">{% blocktranslate with done=r.done total=r.total %}{{ done }} of {{ total }} done{% endblocktranslate %}
+        {% if r.state == 'active' %} · {% if r.days_left > 0 %}{% blocktranslate count counter=r.days_left %}{{ counter }} day left{% plural %}{{ counter }} days left{% endblocktranslate %}{% elif r.days_left == 0 %}{% translate "Last day" %}{% else %}<strong class="wsp-over">{% translate "Time's up — close it" %}</strong>{% endif %}{% endif %}</p>
+    </a>
+    {% empty %}
+    <div class="empty">
+      <div class="empty-icon">{% icon "repeat" %}</div>
+      <h3 class="empty-title">{% translate "No sprint running" %}</h3>
+      <p class="empty-text">{% translate "Start one with “New sprint”: give it a name and its dates, then pick the tasks you'll finish in it." %}</p>
+    </div>
+    {% endfor %}
+
+    {% if velocity %}
+    <section class="card wsp-velocity">
+      <header class="card-header"><div><h2 class="card-title">{% translate "Velocity" %}{% include "partials/info.html" with text=_("Tasks finished in each closed sprint (green) and the ones that were carried on (grey). The average tells you how much to plan for the next one.") %}</h2>
+        <p class="card-subtitle">{% blocktranslate with n=average %}About {{ n }} tasks finished a sprint{% endblocktranslate %}</p></div></header>
+      <div class="card-body">
+        <div class="wsp-bars">
+          {% for v in velocity %}
+          <div class="wsp-bar" data-tip="{{ v.s.name }} · {% blocktranslate with done=v.done left=v.left %}{{ done }} done, {{ left }} carried on{% endblocktranslate %}">
+            <div class="wsp-bar-stack"><span class="is-left" style="height: {{ v.lh }}%"></span><span class="is-done" style="height: {{ v.h }}%"></span></div>
+            <b class="num">{{ v.done }}</b><small>{{ v.s.name|truncatechars:12 }}</small>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+    {% endif %}
+
+    {% if closed %}
+    <section class="card">
+      <header class="card-header"><h2 class="card-title">{% translate "Closed sprints" %}</h2></header>
+      <ul class="wv-list">
+        {% for s in closed %}<li><a href="{% url 'work:sprint' s.pk %}">{{ s.name }}</a><time>{{ s.start_date|date:"j M" }} – {{ s.end_date|date:"j M Y" }} · {% blocktranslate with done=s.summary.done|default:0 left=s.summary.left|default:0 %}{{ done }} done, {{ left }} carried on{% endblocktranslate %}</time></li>{% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+  </div>
+
+  <section class="card wsp-new">
+    <header class="card-header"><h2 class="card-title">{% icon "plus" %}{% translate "New sprint" %}</h2></header>
+    <form method="post" class="card-body form-stack" novalidate>{% csrf_token %}
+      {% with field=form.name %}{% include "partials/field.html" %}{% endwith %}
+      {% with field=form.goal %}{% include "partials/field.html" %}{% endwith %}
+      <div class="form-grid form-grid-2 wsp-new-dates">
+        {% with field=form.start_date %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.end_date %}{% include "partials/field.html" %}{% endwith %}
+      </div>
+      <button type="submit" class="btn btn-primary">{% translate "Add the sprint" %}</button>
+    </form>
+  </section>
+</div>
+{% endblock %}

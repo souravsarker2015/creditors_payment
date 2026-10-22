@@ -8,6 +8,8 @@
   <div class="min-w-0">
     <p class="wp-kicker">{{ today|date:"l, j F" }}</p>
     <h1 class="wp-title">{{ greeting }}{% if user.first_name %}, {{ user.first_name }}{% endif %}</h1>
+    {% if sprint %}<a href="{% url 'work:sprint' sprint.pk %}" class="wd-sprint">{% icon "repeat" %}<strong>{{ sprint.name }}</strong>
+      <span>{% blocktranslate with done=sprint.counts.done total=sprint.counts.total %}{{ done }} of {{ total }} done{% endblocktranslate %} · {% if sprint.days_left > 0 %}{% blocktranslate count counter=sprint.days_left %}{{ counter }} day left{% plural %}{{ counter }} days left{% endblocktranslate %}{% elif sprint.days_left == 0 %}{% translate "last day" %}{% else %}{% translate "time's up — close it" %}{% endif %}</span></a>{% endif %}
   </div>
   <div class="wp-actions">
     <a href="{% url 'work:wrapup' %}" class="btn {% if hour_late %}btn-primary{% else %}btn-ghost{% endif %}">{% icon "sun" %}{% translate "Wrap up the day" %}</a>

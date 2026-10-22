@@ -539,7 +539,8 @@ def set_done(task, done=True):
                                       priority=task.priority, due_date=due, start_date=start, goal=task.goal, link=task.link,
                                       repeat=task.repeat, repeat_every=task.repeat_every, repeat_days=task.repeat_days,
                                       repeat_from_done=task.repeat_from_done,
-                                      estimate_minutes=task.estimate_minutes, order=next_order(task.owner, Status.TODO))
+                                      estimate_minutes=task.estimate_minutes, remind_at=_next_reminder(task, due),
+                                      order=next_order(task.owner, Status.TODO))
             nxt.tags.set(task.tags.all())
             for item in task.checklist.all():
                 nxt.checklist.create(text=item.text, order=item.order)
@@ -548,6 +549,16 @@ def set_done(task, done=True):
         task.status, task.completed_at = Status.TODO, None
         task.save(update_fields=["status", "completed_at", "updated_at"])
     return None
+
+
+def _next_reminder(task, due):
+    """The next repeat's reminder: as many days before its due date as this one's was
+    (at the same time of day) — or none, when there's nothing to count from."""
+    if not task.remind_at or not due:
+        return None
+    local = timezone.localtime(task.remind_at)
+    gap = max((task.due_date - local.date()).days, 0) if task.due_date else 0       # never after its due day
+    return timezone.make_aware(datetime.combine(due - timedelta(days=gap), local.time().replace(tzinfo=None)), timezone.get_current_timezone())
 
 
 def can_be_parent(task, parent):
@@ -843,7 +854,7 @@ def capacity(tasks, user, today=None):
 
 
 # ── Many tasks at once ────────────────────────────────────────────────────
-BULK_ACTIONS = ("done", "myday", "notmyday", "tomorrow", "due", "project", "priority", "status", "delete")
+BULK_ACTIONS = ("done", "myday", "notmyday", "tomorrow", "due", "project", "priority", "status", "sprint", "delete")
 
 
 @transaction.atomic
@@ -854,7 +865,10 @@ def bulk(user, ids, action, value=""):
     if action == "delete":
         from apps.trash.services import trash
 
+        picked = {t.pk for t in tasks}
         for t in tasks:
+            if t.parent_id in picked:      # goes to the trash with its task
+                continue
             trash(user, t, _("Task: %(title)s") % {"title": t.title}, "")
         return len(tasks)
     for t in tasks:
@@ -873,6 +887,9 @@ def bulk(user, ids, action, value=""):
             t.due_date = date.fromisoformat(value) if value else None
         elif action == "project":
             t.project = Project.objects.filter(owner=user, pk=value or 0).first()
+        elif action == "sprint":
+            from .models import Sprint
+            t.sprint = Sprint.objects.filter(owner=user, pk=value or 0, completed_at__isnull=True).first()
         elif action == "priority" and value.isdigit() and int(value) in Priority.values:
             t.priority = int(value)
         elif action == "status" and value in Status.values and value != Status.DONE:
@@ -908,7 +925,7 @@ def remember_note(note, force=False):
 
 
 # ── Restore from a backup (the export .zip / data.json) ───────────────────
-BACKUP_ORDER = ["project", "tag", "goal", "goalstep", "note", "task", "checklistitem", "taskactivity", "timeentry", "snippet",
+BACKUP_ORDER = ["project", "tag", "goal", "goalstep", "note", "sprint", "task", "checklistitem", "taskactivity", "timeentry", "snippet",
                 "habit", "habitcheck", "journalentry", "learningitem", "diagram", "deck", "card", "savedview", "tasktemplate"]
 
 
@@ -924,7 +941,7 @@ def restore(user, rows):
 
     rows = [r for r in rows if isinstance(r, dict) and str(r.get("model", "")).startswith("productivity.")
             and r["model"].split(".", 1)[1] in BACKUP_ORDER]
-    rows.sort(key=lambda r: BACKUP_ORDER.index(r["model"].split(".", 1)[1]))
+    rows.sort(key=lambda r: (BACKUP_ORDER.index(r["model"].split(".", 1)[1]), bool((r.get("fields") or {}).get("parent"))))   # a subtask after the task it's part of
     ids, counts = defaultdict(dict), defaultdict(int)
     later = []      # tasks blocked by other tasks: linked once every task exists
     running = TimeEntry.objects.filter(owner=user, ended_at__isnull=True).exists()

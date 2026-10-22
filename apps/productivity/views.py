@@ -7,7 +7,7 @@ from urllib.parse import urlencode
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import BooleanField, Count, ExpressionWrapper, Q, prefetch_related_objects
+from django.db.models import BooleanField, Count, ExpressionWrapper, F, Q, prefetch_related_objects
 from django.http import Http404, HttpResponse, HttpResponseNotModified
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -16,7 +16,7 @@ from django.utils.dateparse import parse_date
 from django.utils.formats import date_format
 from django.utils.http import http_date, parse_http_date_safe
 from django.utils.translation import gettext as _
-from django.utils.translation import gettext_lazy
+from django.utils.translation import gettext_lazy, ngettext
 from django.views.decorators.http import require_POST
 
 from apps.trash.undo import delete_with_undo
@@ -24,9 +24,9 @@ from apps.trash.undo import delete_with_undo
 from . import cards, diagrams, services
 from .api import card_json, entry_json
 from .access import can_use, work_required
-from .forms import DeckForm, EntryForm, GoalForm, HabitForm, LearningForm, ProjectForm, SettingsForm, SnippetForm, TagForm, TaskForm
+from .forms import DeckForm, EntryForm, GoalForm, HabitForm, LearningForm, ProjectForm, SettingsForm, SnippetForm, SprintForm, TagForm, TaskForm
 from .models import (
-    Card, Color, Deck, Diagram, DiagramKind, DiagramVersion, Goal, GoalStatus, Habit, JournalEntry, Language, LearningItem, LearningKind, LearningStatus, LearningUnit, Note, Priority, Project, SavedView, Snippet, TaskTemplate,
+    Card, Color, Deck, Diagram, DiagramKind, DiagramVersion, Goal, GoalStatus, Habit, JournalEntry, Language, LearningItem, LearningKind, LearningStatus, LearningUnit, Note, Priority, Project, SavedView, Snippet, Sprint, TaskTemplate,
     Status, Tag, Task, TimeEntry, WorkSettings,
 )
 
@@ -131,6 +131,7 @@ def _commands():
          "words": "gantt roadmap schedule weeks start due", "kind": "page"},
         {"id": "go-blocked", "title": _("Tasks: blocked"), "icon": "lock", "url": r("work:tasks") + "?view=list&blocked=yes",
          "words": "dependencies waiting depends on", "kind": "page"},
+        {"id": "go-sprints", "title": _("Sprints"), "icon": "repeat", "url": r("work:sprints"), "words": "sprint scrum jira iteration cycle burndown velocity backlog", "kind": "page"},
         {"id": "go-templates", "title": _("Task templates"), "icon": "insert", "url": r("work:templates"), "words": "template checklist reuse repeat", "kind": "page"},
         {"id": "go-invoice", "title": _("Invoice & timesheet"), "icon": "note", "url": r("work:invoice"), "words": "bill client billing hours rate money", "kind": "page"},
         {"id": "go-import", "title": _("Import tasks"), "icon": "upload", "url": r("work:import"), "words": "csv todoist trello jira asana clickup move migrate", "kind": "page"},
@@ -218,8 +219,14 @@ def today_view(request):
     hour = timezone.localtime().hour
     greeting = _("Good morning") if hour < 12 else (_("Good afternoon") if hour < 17 else _("Good evening"))
     peak = max(week.by_day.values()) or 1
+    from .sprints import current
+
+    sprint = current(user, today)
+    if sprint:
+        counts = sprint.tasks.aggregate(total=Count("pk"), done=Count("pk", filter=Q(status=Status.DONE)))
+        sprint.counts, sprint.days_left = counts, (sprint.end_date - today).days
     return render_work(request, "work/today.html", {
-        "today": today, "greeting": greeting, "hour_late": hour >= 16,
+        "today": today, "greeting": greeting, "hour_late": hour >= 16, "sprint": sprint,
         "open_tasks": open_tasks, "done_today": done_today, "more_tasks": more, "cap": cap,
         "next_block": services.next_block(user), "now": timezone.now(),
         "leftovers": services.leftovers(user, today), "waiting": services.waiting_tasks(user)[:6],
@@ -330,7 +337,7 @@ def tasks_view(request):
     view = request.GET.get("view") or request.COOKIES.get("work_task_view") or "list"
     view = view if view in TASK_VIEWS else "list"
     qs = Task.objects.filter(owner=user).select_related("project")
-    f = {k: request.GET.get(k, "").strip() for k in ("q", "project", "tag", "priority", "due", "goal", "blocked")}
+    f = {k: request.GET.get(k, "").strip() for k in ("q", "project", "tag", "priority", "due", "goal", "blocked", "sprint")}
     if f["q"]:
         qs = qs.filter(Q(title__icontains=f["q"]) | Q(notes__icontains=f["q"]))
     if f["project"] == "none":
@@ -343,6 +350,13 @@ def tasks_view(request):
         qs = qs.filter(priority__gte=int(f["priority"]))
     if f["goal"].isdigit():
         qs = qs.filter(goal_id=int(f["goal"]))
+    if f["sprint"] == "current":
+        from .sprints import current
+        qs = qs.filter(sprint=current(user, today))
+    elif f["sprint"] == "none":
+        qs = qs.filter(sprint__isnull=True)
+    elif f["sprint"].isdigit():
+        qs = qs.filter(sprint_id=int(f["sprint"]))
     if f["due"] == "overdue":
         qs = qs.filter(due_date__lt=today).exclude(status=Status.DONE)
     elif f["due"] == "today":
@@ -373,6 +387,7 @@ def tasks_view(request):
            "saved_views": SavedView.objects.filter(owner=user), "sv": request.GET.get("sv", ""), "show_subs": show_subs,
            "has_subs": Task.objects.filter(owner=user, parent__isnull=False).exclude(status=Status.DONE).exists(),
            "templates": TaskTemplate.objects.filter(owner=user).only("pk", "name"),
+           "sprints": Sprint.objects.filter(owner=user, completed_at__isnull=True).order_by("start_date", "pk"),
            "query": request.GET.urlencode()}
     if view == "matrix":
         ctx["quadrants"] = _matrix(list(qs.exclude(status=Status.DONE).prefetch_related(*ROW_RELATED)), today)
@@ -446,6 +461,7 @@ def task_view(request, pk=None):
     form = TaskForm(request.POST or None, instance=task, owner=user,
                     initial=None if task else {"project": request.GET.get("project") or None, "due_date": request.GET.get("due") or None,
                                                "goal": request.GET.get("goal") or None, "title": request.GET.get("title", ""),
+                                               "sprint": request.GET.get("sprint") or None,
                                                "link": request.GET.get("link", "")})
     old_status = task.status if task else None      # the form writes the new one onto the task as it checks it
     if request.method == "POST" and form.is_valid():
@@ -1598,6 +1614,7 @@ def export_view(request):
     rows += json.loads(serializers.serialize("json", TaskActivity.objects.filter(task__owner=user)))
     rows += json.loads(serializers.serialize("json", SavedView.objects.filter(owner=user)))
     rows += json.loads(serializers.serialize("json", TaskTemplate.objects.filter(owner=user)))
+    rows += json.loads(serializers.serialize("json", Sprint.objects.filter(owner=user)))
     ext = {"python": "py", "javascript": "js", "typescript": "ts", "bash": "sh", "plaintext": "txt", "markdown": "md", "xml": "html",
            "csharp": "cs", "cpp": "cpp", "dockerfile": "Dockerfile", "kotlin": "kt", "ruby": "rb", "rust": "rs", "yaml": "yml"}
 
@@ -1698,6 +1715,94 @@ def feed_view(request, token):
     response["Content-Disposition"] = 'inline; filename="work.ics"'
     response["Cache-Control"] = "private, max-age=900"
     return response
+
+
+# ── Sprints ───────────────────────────────────────────────────────────────
+@work_required
+def sprints_view(request):
+    """Sprints: the running one, the ones planned, the closed ones and how many
+    tasks each finished (velocity) — and a new one."""
+    from . import sprints
+    from .models import Sprint
+
+    user, today = request.user, _today()
+    form = SprintForm(request.POST or None, initial=sprints.suggest(user, today))
+    if request.method == "POST" and form.is_valid():
+        sp = form.save(commit=False)
+        sp.owner = user
+        sp.save()
+        messages.success(request, _("Sprint added. Now pick the tasks for it."))
+        return redirect("work:sprint", pk=sp.pk)
+    rows = []
+    for sp in Sprint.objects.filter(owner=user, completed_at__isnull=True).order_by("start_date", "pk"):
+        counts = sp.tasks.aggregate(total=Count("pk"), done=Count("pk", filter=Q(status=Status.DONE)))
+        rows.append({"s": sp, "state": sp.state(today), **counts, "pct": round(100 * counts["done"] / counts["total"]) if counts["total"] else 0,
+                     "days_left": (sp.end_date - today).days})
+    velocity = sprints.velocity(user)
+    top = max([d + left for _s, d, left in velocity] + [1])
+    return render_work(request, "work/sprints.html", {
+        "form": form, "rows": rows, "today": today,
+        "closed": Sprint.objects.filter(owner=user, completed_at__isnull=False).order_by("-end_date", "-pk")[:30],
+        "velocity": [{"s": s, "done": d, "left": left, "h": round(100 * d / top), "lh": round(100 * left / top)} for s, d, left in velocity],
+        "average": round(sum(d for _s, d, _l in velocity) / len(velocity), 1) if velocity else None,
+    })
+
+
+@work_required
+def sprint_view(request, pk):
+    """One sprint: its tasks by status, the burndown, adding tasks from the backlog, closing it."""
+    from . import sprints
+    from .models import Sprint
+
+    user, today = request.user, _today()
+    sp = get_object_or_404(Sprint, pk=pk, owner=user)
+    form = SprintForm(instance=sp)
+    if request.method == "POST":
+        action = request.POST.get("action")
+        if action == "edit":
+            form = SprintForm(request.POST, instance=sp)
+            if form.is_valid():
+                form.save()
+                messages.success(request, _("Sprint saved."))
+                return redirect("work:sprint", pk=sp.pk)
+        elif action == "add":
+            n = sprints.add_tasks(sp, [int(x) for x in request.POST.getlist("task") if x.isdigit()])
+            messages.success(request, ngettext("%(n)s task added to the sprint.", "%(n)s tasks added to the sprint.", n) % {"n": n})
+            return redirect("work:sprint", pk=sp.pk)
+        elif action == "close" and not sp.completed_at:
+            target = request.POST.get("move_to", "")
+            move_to = None
+            if target == "new":
+                move_to = Sprint.objects.create(owner=user, **sprints.suggest(user, today))
+            elif target.isdigit():
+                move_to = Sprint.objects.filter(owner=user, completed_at__isnull=True, pk=int(target)).exclude(pk=sp.pk).first()
+            n = sprints.close(sp, move_to)
+            if move_to:
+                messages.success(request, ngettext("Sprint closed. %(n)s open task moved to %(name)s.", "Sprint closed. %(n)s open tasks moved to %(name)s.", n)
+                                 % {"n": n, "name": move_to.name})
+                return redirect("work:sprint", pk=move_to.pk)
+            messages.success(request, ngettext("Sprint closed. %(n)s open task went back to the backlog.", "Sprint closed. %(n)s open tasks went back to the backlog.", n) % {"n": n})
+            return redirect("work:sprints")
+        elif action == "delete":
+            sp.delete()
+            messages.success(request, _("Sprint deleted. Its tasks are kept."))
+            return redirect("work:sprints")
+    tasks = _with_rows(list(sp.tasks.select_related("project", "parent").order_by("order", "-priority", "pk")))
+    columns = [(value, Status(value).label, [t for t in tasks if t.status == value]) for value in (Status.DOING, Status.TODO, Status.BACKLOG, Status.DONE)]
+    done = [t for t in tasks if t.is_done]
+    backlog = []
+    if not sp.completed_at:
+        backlog = list(Task.objects.filter(owner=user, sprint__isnull=True, parent__isnull=True).exclude(status=Status.DONE)
+                       .select_related("project").order_by("-priority", F("due_date").asc(nulls_last=True), "order")[:200])
+    est_total = sum(t.estimate_minutes or 0 for t in tasks)
+    est_done = sum(t.estimate_minutes or 0 for t in done)
+    return render_work(request, "work/sprint.html", {
+        "sp": sp, "form": form, "state": sp.state(today), "today": today, "columns": [c for c in columns if c[2] or c[0] in (Status.TODO, Status.DOING)],
+        "total": len(tasks), "done": len(done), "pct": round(100 * len(done) / len(tasks)) if tasks else 0,
+        "est_total": est_total, "est_done": est_done, "chart": sprints.chart(sp, today), "backlog": backlog,
+        "days_left": (sp.end_date - today).days, "day_no": min(max((today - sp.start_date).days + 1, 0), sp.length),
+        "others": sprints.open_sprints(user).exclude(pk=sp.pk),
+    })
 
 
 # ── Templates, copying a project, importing, invoices ──────────────────────

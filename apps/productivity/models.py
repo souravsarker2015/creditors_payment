@@ -91,6 +91,37 @@ class Repeat(models.TextChoices):
     YEARLY = "yearly", _("Every year")
 
 
+class Sprint(models.Model):
+    """A fixed stretch of work (a week or a few), as in Jira: pick the tasks for it,
+    watch them burn down, and when it ends move what's left to the next one."""
+    owner = models.ForeignKey(**OWNER)
+    name = models.CharField(_("Name"), max_length=80)
+    goal = models.CharField(_("Sprint goal"), max_length=300, blank=True, help_text=_("What this sprint is for, in one line."))
+    start_date = models.DateField(_("Starts"))
+    end_date = models.DateField(_("Ends"))
+    completed_at = models.DateTimeField(null=True, blank=True, help_text="When it was closed (what was left went on).")
+    summary = models.JSONField(default=dict, blank=True, help_text="Kept when it's closed: done, left, done_minutes, burndown [[day, open]…].")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name, verbose_name_plural = _("Sprint"), _("Sprints")
+        ordering = ["-start_date", "-pk"]
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def length(self):
+        return (self.end_date - self.start_date).days + 1
+
+    def state(self, today=None):
+        """'done', 'active' or 'planned'."""
+        today = today or timezone.localdate()
+        if self.completed_at:
+            return "done"
+        return "active" if self.start_date <= today else "planned"
+
+
 class Task(models.Model):
     owner = models.ForeignKey(**OWNER)
     project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True, blank=True, related_name="tasks", verbose_name=_("Project"))
@@ -112,10 +143,11 @@ class Task(models.Model):
     repeat_from_done = models.BooleanField(_("Count from when it's done"), default=False,
                                            help_text=_("The next one is set from the day you finish it, not from its due date — for things like “water the plants”."))
     start_date = models.DateField(_("Starts"), null=True, blank=True, help_text=_("When work on it begins — it's drawn from here to its due date on the timeline."))
-    parent = models.ForeignKey("self", on_delete=models.SET_NULL, null=True, blank=True, related_name="subtasks", verbose_name=_("Part of"),
+    parent = models.ForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="subtasks", verbose_name=_("Part of"),
                                help_text=_("Makes this a subtask of a bigger task."))
     blocked_by = models.ManyToManyField("self", symmetrical=False, blank=True, related_name="blocking", verbose_name=_("Blocked by"),
                                         help_text=_("Tasks that must be done before this one can start."))
+    sprint = models.ForeignKey(Sprint, on_delete=models.SET_NULL, null=True, blank=True, related_name="tasks", verbose_name=_("Sprint"))
     tags = models.ManyToManyField(Tag, blank=True, related_name="tasks", verbose_name=_("Tags"))
     link = models.URLField(_("Link"), max_length=500, blank=True,
                            help_text=_("The pull request, issue, ticket or doc this is about."))

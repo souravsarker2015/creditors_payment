@@ -1,0 +1,113 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{{ sp.name }} | {% translate "Sprints" %}{% endblock %}
+
+{% block work %}
+<header class="wp-head">
+  <div class="min-w-0">
+    <a href="{% url 'work:sprints' %}" class="back-link">{% icon "chevron-left" %}{% translate "Sprints" %}</a>
+    <h1 class="wp-title">{{ sp.name }}</h1>
+    <p class="wp-sub">{{ sp.start_date|date:"j M" }} – {{ sp.end_date|date:"j M Y" }} ·
+      {% if state == "done" %}{% blocktranslate with when=sp.completed_at|date:"j M" %}closed {{ when }}{% endblocktranslate %}
+      {% elif state == "planned" %}{% translate "not started yet" %}
+      {% elif days_left > 0 %}{% blocktranslate with n=day_no total=sp.length %}day {{ n }} of {{ total }}{% endblocktranslate %} · {% blocktranslate count counter=days_left %}{{ counter }} day left{% plural %}{{ counter }} days left{% endblocktranslate %}
+      {% elif days_left == 0 %}{% translate "last day" %}{% else %}<strong class="wsp-over">{% translate "time's up — close it" %}</strong>{% endif %}</p>
+    {% if sp.goal %}<p class="wsp-goal">{% icon "target" %}<span>{{ sp.goal }}</span></p>{% endif %}
+  </div>
+  {% if state != "done" %}
+  <div class="wp-actions">
+    <a href="{% url 'work:task_new' %}?sprint={{ sp.pk }}" class="btn btn-secondary">{% icon "plus" %}{% translate "New task" %}</a>
+    <a href="#close" class="btn btn-primary">{% icon "check" %}{% translate "Close the sprint" %}</a>
+  </div>
+  {% endif %}
+</header>
+
+<dl class="stat-grid wsp-stats">
+  <div class="stat"><dt class="stat-label">{% translate "Done" %}</dt><dd class="stat-value num">{{ done }} / {{ total }}</dd></div>
+  <div class="stat"><dt class="stat-label">{% translate "Progress" %}</dt><dd class="stat-value num">{{ pct }}%</dd></div>
+  {% if est_total %}<div class="stat"><dt class="stat-label">{% translate "Estimated work done" %}</dt><dd class="stat-value num">{{ est_done|minutes_hm }} / {{ est_total|minutes_hm }}</dd></div>{% endif %}
+</dl>
+
+{% if chart.total and state != "planned" %}
+<section class="card wbu wsp-burn">
+  <header class="card-header"><div><h2 class="card-title">{% translate "Burndown" %}{% include "partials/info.html" with text=_("Open tasks at the end of each day (solid) against a steady pace to none by the last day (dashed). Above the dashed line: behind; below it: ahead.") %}</h2>
+    <p class="card-subtitle">{% blocktranslate count counter=chart.left %}{{ counter }} task still open{% plural %}{{ counter }} tasks still open{% endblocktranslate %}</p></div>
+    <span class="wbu-key"><i data-k="added"></i>{% translate "Steady pace" %}<i data-k="done"></i>{% translate "Open tasks" %}</span></header>
+  <div class="card-body">
+    <div class="wsp-plot">
+    <svg class="wbu-chart" viewBox="0 -8 {{ chart.w }} {{ chart.h|add:16 }}" preserveAspectRatio="none" role="img" aria-label="{% translate 'Open tasks, day by day' %}">
+      <polyline class="wbu-added" points="{{ chart.ideal }}" fill="none" vector-effect="non-scaling-stroke"/>
+      <polyline class="wbu-done" points="{{ chart.real }}" fill="none" vector-effect="non-scaling-stroke"/>
+    </svg>
+    {% if chart.dot %}<i class="wsp-dot" style="left: {{ chart.dot.x|stringformat:'.2f' }}%; top: {{ chart.dot.y|stringformat:'.2f' }}%" aria-hidden="true"></i>{% endif %}
+    </div>
+    <div class="wbu-axis"><span>{{ sp.start_date|date:"j M" }}</span><span>{{ sp.end_date|date:"j M" }}</span></div>
+  </div>
+</section>
+{% endif %}
+
+<div class="wsp-cols" x-data="workTasks" data-work-refresh{% if state != "done" %} data-sprint-page{% endif %}>
+  {% for status, label, items in columns %}
+  <section class="wt-group wsp-col" data-group="{{ status }}">
+    <h2 class="wt-group-head"><span>{{ label }}</span><span class="wt-group-count">{{ items|length }}</span></h2>
+    {% if items %}<ul class="wt-list card">{% for t in items %}{% include "work/partials/task_row.html" %}{% endfor %}</ul>
+    {% else %}<p class="wsp-none">{% translate "Nothing here." %}</p>{% endif %}
+  </section>
+  {% empty %}
+  <div class="empty"><div class="empty-icon">{% icon "check" %}</div><h3 class="empty-title">{% translate "No tasks in this sprint yet" %}</h3>
+    <p class="empty-text">{% translate "Pick them from your backlog below." %}</p></div>
+  {% endfor %}
+</div>
+
+{% if state != "done" %}
+{% if backlog %}
+<section class="card wsp-pick" x-data="{ n: 0, q: '' }">
+  <header class="card-header"><div><h2 class="card-title">{% icon "plus" %}{% translate "Add from your backlog" %}</h2>
+    <p class="card-subtitle">{% translate "Open tasks that aren't in a sprint — most important first. Their subtasks come along." %}</p></div></header>
+  <form method="post" @change="n = $el.querySelectorAll('input[name=task]:checked').length">{% csrf_token %}<input type="hidden" name="action" value="add">
+    <div class="wsp-pick-search"><input type="search" x-model="q" class="form-input input-compact" placeholder="{% translate 'Find a task…' %}" aria-label="{% translate 'Find a task' %}"></div>
+    <ul class="wsp-pick-list">
+      {% for t in backlog %}<li x-show="!q || $el.dataset.title.includes(q.toLowerCase())" data-title="{{ t.title|lower }}"><label>
+        <input type="checkbox" name="task" value="{{ t.pk }}"><span class="wsp-pick-title">{{ t.title }}</span>
+        <span class="wsp-pick-meta">{% if t.priority >= 3 %}<b data-p="{{ t.priority }}">{{ t.get_priority_display }}</b>{% endif %}{% if t.project %}<i class="wt-dot" data-color="{{ t.project.color }}"></i>{{ t.project.name }}{% endif %}{% if t.due_date %} · {{ t.due_date|date:"j M" }}{% endif %}{% if t.estimate_minutes %} · ~{{ t.estimate_minutes|minutes_hm }}{% endif %}</span>
+      </label></li>{% endfor %}
+    </ul>
+    <div class="wsp-pick-foot"><button type="submit" class="btn btn-primary btn-sm" :disabled="!n">{% icon "plus" %}<span x-text="n ? '{{ _("Add to the sprint")|escapejs }} (' + n + ')' : '{{ _("Add to the sprint")|escapejs }}'">{% translate "Add to the sprint" %}</span></button></div>
+  </form>
+</section>
+{% endif %}
+
+<div class="wsp-bottom">
+  <section class="card" id="close">
+    <header class="card-header"><div><h2 class="card-title">{% translate "Close the sprint" %}</h2>
+      <p class="card-subtitle">{% blocktranslate count counter=chart.left %}{{ counter }} open task goes on to…{% plural %}{{ counter }} open tasks go on to…{% endblocktranslate %}</p></div></header>
+    <form method="post" class="card-body form-stack">{% csrf_token %}<input type="hidden" name="action" value="close">
+      <select name="move_to" class="form-input" aria-label="{% translate 'Where the open tasks go' %}">
+        {% for o in others %}<option value="{{ o.pk }}">{{ o.name }} ({{ o.start_date|date:"j M" }})</option>{% endfor %}
+        <option value="new"{% if not others %} selected{% endif %}>{% translate "A new sprint, right after this one" %}</option>
+        <option value="">{% translate "Back to the backlog" %}</option>
+      </select>
+      <button type="submit" class="btn btn-primary">{% icon "check" %}{% translate "Close the sprint" %}</button>
+    </form>
+  </section>
+
+  <details class="card wsp-edit">
+    <summary class="card-header"><h2 class="card-title">{% icon "edit" %}{% translate "Change name, goal or dates" %}</h2></summary>
+    <form method="post" class="card-body form-stack" novalidate>{% csrf_token %}<input type="hidden" name="action" value="edit">
+      {% with field=form.name %}{% include "partials/field.html" %}{% endwith %}
+      {% with field=form.goal %}{% include "partials/field.html" %}{% endwith %}
+      <div class="form-grid form-grid-2">
+        {% with field=form.start_date %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.end_date %}{% include "partials/field.html" %}{% endwith %}
+      </div>
+      <div class="wsp-edit-foot">
+        <button type="submit" class="btn btn-primary">{% translate "Save" %}</button>
+      </div>
+    </form>
+    <form method="post" class="card-body !pt-0" data-confirm="{{ _("Delete this sprint? Its tasks are kept, just not in a sprint.") }}">{% csrf_token %}<input type="hidden" name="action" value="delete">
+      <button type="submit" class="btn btn-ghost btn-sm wsp-delete">{% icon "trash" %}{% translate "Delete the sprint" %}</button></form>
+  </details>
+</div>
+{% endif %}
+{% endblock %}

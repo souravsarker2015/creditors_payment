@@ -858,7 +858,7 @@
         search: function () {
           var self = this, q = this.q.trim();
           this.active = 0; clearTimeout(this.timer);
-          if (q.length < 2 || q.charAt(0) === ">") { this.found = []; return; }
+          if ((q.length < 2 && !/^\d$/.test(q)) || q.charAt(0) === ">") { this.found = []; return; }
           this.timer = setTimeout(function () {
             if (self.ctl) self.ctl.abort();
             self.ctl = ("AbortController" in window) ? new AbortController() : null;
@@ -969,6 +969,96 @@
             if (res.ok && res.html) { self.$refs.list.insertAdjacentHTML("beforeend", res.html); self.$refs.count.textContent = res.counts || ""; }
             else if (res.error) { toast(res.error, "warn"); self.text = text; }
           });
+        },
+      };
+    });
+
+    /* ── A task's reminder, picked from its due date (on the day, a day or a week before — at the work day's start) ── */
+    Alpine.data("workRemind", function (dueId, remindId, dayStart) {
+      return {
+        due: "", has: false,
+        init: function () {
+          var self = this, due = d.getElementById(dueId), remind = d.getElementById(remindId);
+          this.dueEl = due; this.remindEl = remind;
+          var read = function () { self.due = due ? due.value : ""; self.has = !!(remind && remind.value); };
+          read();
+          if (due) { due.addEventListener("input", read); due.addEventListener("change", read); }
+          if (remind) remind.addEventListener("input", read);
+        },
+        put: function (when) {
+          var pad = function (n) { return (n < 10 ? "0" : "") + n; };
+          this.remindEl.value = when ? when.getFullYear() + "-" + pad(when.getMonth() + 1) + "-" + pad(when.getDate()) + "T" + pad(when.getHours()) + ":" + pad(when.getMinutes()) : "";
+          this.remindEl.dispatchEvent(new Event("input", { bubbles: true }));
+          this.has = !!when;
+        },
+        at: function (day) {
+          var hm = (dayStart || "09:00").split(":");
+          day.setHours(+hm[0] || 0, +hm[1] || 0, 0, 0);
+          return day;
+        },
+        before: function (days) {
+          var p = this.due.split("-");
+          if (p.length !== 3) return;
+          this.put(this.at(new Date(+p[0], +p[1] - 1, +p[2] - days)));
+        },
+        inHours: function (h) { var w = new Date(Date.now() + h * 3600000); w.setSeconds(0, 0); this.put(w); },
+        tomorrow: function () { var w = new Date(); w.setDate(w.getDate() + 1); this.put(this.at(w)); },
+        clear: function () { this.put(null); },
+      };
+    });
+
+    /* ── The timeline: drag a bar to move a task's dates, or an end to change one.
+          With a finger only the ends move (the bar itself scrolls and opens the task). ── */
+    Alpine.data("workTimeline", function (days) {
+      var shift = function (iso, n) {
+        if (!iso) return "";
+        var p = iso.split("-"), x = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2] + n));
+        return x.toISOString().slice(0, 10);
+      };
+      return {
+        init: function () {
+          var root = this.$el, drag = null, swallow = false;
+          root.addEventListener("pointerdown", function (e) {
+            var bar = e.target.closest(".wtl-bar-item[data-task]"); if (!bar || e.button > 0) return;
+            var edge = e.target.closest(".wtl-h"); edge = edge ? edge.getAttribute("data-edge") : "move";
+            if (edge === "move" && e.pointerType === "touch") return;
+            drag = { bar: bar, edge: edge, x: e.clientX, n: 0, left: parseFloat(bar.style.left), width: parseFloat(bar.style.width),
+                     px: bar.parentElement.getBoundingClientRect().width / days, id: e.pointerId };
+            bar.setPointerCapture(e.pointerId);
+            if (edge !== "move") e.preventDefault();
+          });
+          root.addEventListener("pointermove", function (e) {
+            if (!drag || e.pointerId !== drag.id) return;
+            var n = Math.round((e.clientX - drag.x) / drag.px), step = 100 / days, b = drag.bar;
+            if (Math.abs(e.clientX - drag.x) > 4) b.classList.add("is-dragging");
+            var span = Math.round(drag.width / step);      // days the bar covers
+            if (drag.edge === "start") n = Math.min(n, span - 1);
+            if (drag.edge === "end") n = Math.max(n, 1 - span);
+            if (n === drag.n) return;
+            drag.n = n;
+            if (drag.edge === "move") b.style.left = (drag.left + n * step) + "%";
+            else if (drag.edge === "start") { b.style.left = (drag.left + n * step) + "%"; b.style.width = (drag.width - n * step) + "%"; }
+            else b.style.width = (drag.width + n * step) + "%";
+          });
+          var end = function (e) {
+            if (!drag || e.pointerId !== drag.id) return;
+            var g = drag; drag = null;
+            g.bar.classList.remove("is-dragging");
+            if (!g.n) return;
+            swallow = true; setTimeout(function () { swallow = false; }, 0);
+            var start = g.bar.getAttribute("data-start"), due = g.bar.getAttribute("data-due"), data = {};
+            if (g.edge === "move") { if (start) data.start_date = shift(start, g.n); if (due) data.due_date = shift(due, g.n); }
+            else if (g.edge === "start") data.start_date = shift(start || due, g.n);
+            else data.due_date = shift(due || start, g.n);
+            if (e.type === "pointercancel") { location.reload(); return; }
+            api(CFG.urls.taskBase + g.bar.getAttribute("data-task") + "/update/", data).then(function (res) {
+              if (res.queued) toast(t("savedOffline", "Saved on this device — it will sync when you're online."));
+              else if (res.ok) location.reload(); else { toast(res.error, "warn"); location.reload(); }
+            });
+          };
+          root.addEventListener("pointerup", end);
+          root.addEventListener("pointercancel", end);
+          root.addEventListener("click", function (e) { if (swallow && e.target.closest(".wtl-bar-item")) e.preventDefault(); }, true);
         },
       };
     });
@@ -1433,6 +1523,7 @@
     label("waiting", row.hasAttribute("data-waiting"));
     menu.querySelectorAll("[data-menu-form]").forEach(function (f) { f.hidden = true; });
     menu.querySelector("[data-needs-link]").hidden = !row.getAttribute("data-link");
+    menu.querySelector("[data-needs-sprint]").hidden = !row.closest("[data-sprint-page]");
     menu.hidden = false;
     var r = btn.getBoundingClientRect(), w = menu.offsetWidth, h = menu.offsetHeight;
     var top = r.bottom + 4; if (top + h > innerHeight - 8) top = Math.max(8, r.top - h - 4);
@@ -1454,6 +1545,7 @@
       row.insertAdjacentHTML("afterend", res.html);
       toast(t("duplicated", "Copy made") + ": " + res.title, "good", { label: t("open", "Open"), run: function () { location.href = res.url; } });
     });
+    else if (name === "unsprint") api(CFG.urls.taskBase + id + "/update/", { sprint: "" }).then(function (res) { if (res.ok) row.remove(); });
     else if (name === "time") location.href = CFG.urls.entry_new + "?task=" + id;
     else if (name === "focus") location.href = CFG.urls.focus_page + "?task=" + id;
     else if (name === "delete") taskDelete(row);

@@ -27,7 +27,7 @@ from . import cards, diagrams, services
 from .access import work_required
 from .models import (
     Card, ChecklistItem, Deck, Diagram, DiagramKind, DiagramVersion, EntryKind, Goal, GoalStatus, GoalStep, Habit, HabitCheck, JournalEntry, LearningItem, LearningKind, LearningStatus,
-    LearningUnit, Note, NoteVersion, Priority, Project, SavedView, Snippet, Status, Task, TaskActivity, TimeEntry, link_label,
+    LearningUnit, Note, NoteVersion, Priority, Project, SavedView, Snippet, Sprint, Status, Task, TaskActivity, TimeEntry, link_label,
 )
 
 
@@ -271,7 +271,7 @@ def comment_delete(request, pk):
     return ok()
 
 
-VIEW_KEYS = ("view", "q", "project", "tag", "priority", "due", "goal", "done", "blocked", "sub", "by", "sort")
+VIEW_KEYS = ("view", "q", "project", "tag", "priority", "due", "goal", "done", "blocked", "sub", "by", "sort", "sprint")
 
 
 @work_required
@@ -334,7 +334,7 @@ def task_move(request, pk):
     return ok(status=task.status, order=task.order)
 
 
-TASK_FIELDS = {"title", "priority", "due_date", "my_day", "project", "status", "notes", "estimate_minutes", "link", "goal", "waiting_for",
+TASK_FIELDS = {"title", "priority", "due_date", "start_date", "sprint", "my_day", "project", "status", "notes", "estimate_minutes", "link", "goal", "waiting_for",
                "scheduled_at"}
 
 
@@ -360,6 +360,10 @@ def task_update(request, pk):
             task.priority = int(value) if value.isdigit() and int(value) in Priority.values else Priority.NONE
         elif name == "due_date":
             task.due_date = parse_date(value) if value else None
+        elif name == "start_date":
+            task.start_date = parse_date(value) if value else None
+        elif name == "sprint":
+            task.sprint = Sprint.objects.filter(owner=request.user, pk=value or 0, completed_at__isnull=True).first()
         elif name == "my_day":     # "1" = today, a date = that day (moved to tomorrow…), else off
             task.my_day = timezone.localdate() if value in ("1", "true", "on") else parse_date(value)
         elif name == "project":
@@ -394,7 +398,10 @@ def task_update(request, pk):
         if timezone.localtime(task.scheduled_at).date() != task.my_day:     # moved to another day: off the old timeline
             task.scheduled_at = None
     if task.start_date and task.due_date and task.start_date > task.due_date:
-        task.start_date = task.due_date        # due sooner than it was to start: it starts that day too
+        if "start_date" in request.POST and "due_date" not in request.POST:
+            task.due_date = task.start_date    # starting after it was due: it's due that day too
+        else:
+            task.start_date = task.due_date    # due sooner than it was to start: it starts that day too
     task.save()
     return ok(html=task_row(request, task), scheduled_at=timezone.localtime(task.scheduled_at).strftime("%Y-%m-%dT%H:%M") if task.scheduled_at else "",
               my_day=task.my_day.isoformat() if task.my_day else "")
@@ -903,12 +910,21 @@ def snippet_action(request, pk):
 def search(request):
     """Command palette (Ctrl+K): tasks, notes, projects, goals, learning, diagrams, flashcards and snippets matching the text."""
     q = request.GET.get("q", "").strip()
-    if len(q) < 2:
+    if len(q) < 2 and not q.isdigit():
         return ok(results=[])
     user, out = request.user, []
-    for t in Task.objects.filter(owner=user).filter(Q(title__icontains=q) | Q(link__icontains=q)).select_related("project").order_by("status", "-updated_at")[:7]:
+    tasks = Task.objects.filter(owner=user).select_related("project")
+    number = re.fullmatch(r"#?(\d+)", q)
+    first = list(tasks.filter(pk=int(number.group(1)))) if number else []      # "#42": that task
+    by_title = Q(title__icontains=q) | Q(link__icontains=q)
+    deeper = (Q(notes__icontains=q) | Q(files__name__icontains=q)
+              | Q(activity__kind=TaskActivity.Kind.COMMENT, activity__text__icontains=q))     # what's written in it, its files, its comments
+    found = list(tasks.filter(by_title).order_by("status", "-updated_at")[:7])
+    if len(found) < 7:
+        found += list(tasks.filter(deeper).exclude(by_title).distinct().order_by("status", "-updated_at")[:7 - len(found)])
+    for t in first + [t for t in found if t not in first]:
         out.append({"kind": "task", "title": t.title, "url": reverse("work:task", args=[t.pk]), "done": t.is_done, "id": t.pk,
-                    "meta": " · ".join(x for x in (t.project.name if t.project_id else "", t.link_label) if x)})
+                    "meta": " · ".join(x for x in (f"#{t.pk}", t.project.name if t.project_id else "", t.link_label) if x)})
     for n in Note.objects.filter(owner=user, is_archived=False).filter(Q(title__icontains=q) | Q(body__icontains=q))[:5]:
         out.append({"kind": "note", "title": n.display_title, "url": reverse("work:note", args=[n.pk])})
     for p in Project.objects.filter(owner=user, name__icontains=q)[:3]:

@@ -82,6 +82,14 @@
     {% for g in goals %}<option value="{{ g.pk }}"{% if f.goal == g.pk|stringformat:'s' %} selected{% endif %}>{{ g.title|truncatechars:40 }}</option>{% endfor %}
   </select>
   {% endif %}
+  {% if sprints %}
+  <select name="sprint" class="form-input input-compact" aria-label="{% translate 'Sprint' %}">
+    <option value="">{% translate "Any sprint" %}</option>
+    <option value="current"{% if f.sprint == 'current' %} selected{% endif %}>{% translate "The running sprint" %}</option>
+    {% for sp in sprints %}<option value="{{ sp.pk }}"{% if f.sprint == sp.pk|stringformat:'s' %} selected{% endif %}>{{ sp.name }}</option>{% endfor %}
+    <option value="none"{% if f.sprint == 'none' %} selected{% endif %}>{% translate "Not in a sprint" %}</option>
+  </select>
+  {% endif %}
   {% if has_subs %}<label class="wf-check"><input type="checkbox" name="sub" value="1"{% if show_subs %} checked{% endif %}>{% translate "Show subtasks" %}</label>{% endif %}
   <select name="blocked" class="form-input input-compact" aria-label="{% translate 'Blocked' %}">
     <option value="">{% translate "Blocked or not" %}</option>
@@ -120,12 +128,13 @@
   <p class="wmx-how">{% icon "info" %}{% translate "Important: high or urgent priority, or part of a goal. Urgent: late, due within two days, in progress, or marked urgent. Change a task's priority or due date and it moves." %}</p>
 </div>
 {% elif view == "timeline" %}
-<section class="card wtl" data-timeline>
+<section class="card wtl" data-timeline x-data="workTimeline({{ tl_days|length }})">
   <header class="wtl-bar">
     <a href="{% query_with from=tl_prev|date:'Y-m-d' %}" class="icon-btn" aria-label="{% translate 'Earlier' %}">{% icon "chevron-left" %}</a>
     <strong>{{ tl_first|date:"j M" }} – {{ tl_last|date:"j M Y" }}</strong>
     <a href="{% query_with from=tl_next|date:'Y-m-d' %}" class="icon-btn" aria-label="{% translate 'Later' %}">{% icon "chevron-right" %}</a>
     <a href="{% query_with from='' %}" class="btn btn-ghost btn-sm">{% translate "This week" %}</a>
+    <span class="wtl-hint">{% translate "Drag a bar to move it, or its ends to change the dates." %}</span>
     {% if tl_undated %}<span class="wtl-undated">{% blocktranslate count counter=tl_undated %}{{ counter }} open task has no dates{% plural %}{{ counter }} open tasks have no dates{% endblocktranslate %}</span>{% endif %}
   </header>
   <div class="wtl-scroll">
@@ -145,7 +154,8 @@
           {% if tl_today is not None %}<i class="wtl-today" style="left: {{ tl_today|stringformat:'.3f' }}%"></i>{% endif %}
           <a href="{% url 'work:task' b.t.pk %}" class="wtl-bar-item{% if b.t.is_done %} is-done{% elif b.late %} is-late{% elif b.t.is_blocked %} is-blocked{% endif %}{% if b.cut_start %} cut-start{% endif %}{% if b.cut_end %} cut-end{% endif %}"
              style="left: {{ b.left|stringformat:'.3f' }}%; width: {{ b.width|stringformat:'.3f' }}%" data-color="{{ b.t.project.color|default:'slate' }}"
-             data-tip="{{ b.t.title }} · {% if b.t.start_date %}{{ b.t.start_date|date:'j M' }} → {% endif %}{{ b.t.due_date|date:'j M'|default:'—' }}"><span>{{ b.t.title }}</span></a>
+             data-tip="{{ b.t.title }} · {% if b.t.start_date %}{{ b.t.start_date|date:'j M' }} → {% endif %}{{ b.t.due_date|date:'j M'|default:'—' }}"
+             {% if not b.t.is_done %}data-task="{{ b.t.pk }}" data-start="{{ b.t.start_date|date:'Y-m-d' }}" data-due="{{ b.t.due_date|date:'Y-m-d' }}"{% endif %}>{% if not b.t.is_done and not b.cut_start %}<i class="wtl-h" data-edge="start" aria-hidden="true"></i>{% endif %}<span>{{ b.t.title }}</span>{% if not b.t.is_done and not b.cut_end %}<i class="wtl-h" data-edge="end" aria-hidden="true"></i>{% endif %}</a>
         </div>
       </div>
       {% endfor %}
@@ -220,6 +230,8 @@
     <option value="">{% translate "Project…" %}</option>{% for p in projects %}<option value="{{ p.pk }}">{{ p.name }}</option>{% endfor %}<option value="none">{% translate "No project" %}</option></select>
   <select class="form-input input-compact" data-bulk="priority" data-native aria-label="{% translate 'Priority' %}">
     <option value="">{% translate "Priority…" %}</option><option value="4">{% translate "Urgent" %}</option><option value="3">{% translate "High" %}</option><option value="2">{% translate "Medium" %}</option><option value="1">{% translate "Low" %}</option><option value="0">{% translate "No priority" %}</option></select>
+  {% if sprints %}<select class="form-input input-compact" data-bulk="sprint" data-native aria-label="{% translate 'Sprint' %}">
+    <option value="">{% translate "Sprint…" %}</option>{% for sp in sprints %}<option value="{{ sp.pk }}">{{ sp.name }}</option>{% endfor %}<option value="none">{% translate "Not in a sprint" %}</option></select>{% endif %}
   <button type="button" class="icon-btn" data-bulk="delete" aria-label="{% translate 'Delete' %}" title="{% translate 'Delete' %}">{% icon "trash" %}</button>
   <button type="button" class="btn btn-ghost btn-sm" data-bulk-cancel>{% translate "Cancel" %}</button>
 </div>

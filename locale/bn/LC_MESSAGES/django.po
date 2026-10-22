@@ -21300,3 +21300,244 @@ msgstr "সব মিলিয়ে ~%(est)s পরিকল্পিত"
 #, python-format
 msgid "“%(name)s” is too big (over %(mb)s MB)."
 msgstr "“%(name)s” অনেক বড় (%(mb)s MB-এর বেশি)।"
+
+#, python-format
+msgid "%(counter)s open task goes on to…"
+msgid_plural "%(counter)s open tasks go on to…"
+msgstr[0] "%(counter)sটি খোলা কাজ যাবে…"
+msgstr[1] "%(counter)sটি খোলা কাজ যাবে…"
+
+#, python-format
+msgid "%(counter)s task still open"
+msgid_plural "%(counter)s tasks still open"
+msgstr[0] "%(counter)sটি কাজ এখনো বাকি"
+msgstr[1] "%(counter)sটি কাজ এখনো বাকি"
+
+#, python-format
+msgid "%(done)s done, %(left)s carried on"
+msgstr "%(done)sটি শেষ, %(left)sটি পরের জন্য রাখা"
+
+#, python-format
+msgid "%(done)s of %(total)s done"
+msgstr "%(total)sটির মধ্যে %(done)sটি শেষ"
+
+#, python-format
+msgid "%(n)s task added to the sprint."
+msgid_plural "%(n)s tasks added to the sprint."
+msgstr[0] "স্প্রিন্টে %(n)sটি কাজ যোগ হয়েছে।"
+msgstr[1] "স্প্রিন্টে %(n)sটি কাজ যোগ হয়েছে।"
+
+msgid "1 day before"
+msgstr "১ দিন আগে"
+
+msgid "1 week before"
+msgstr "১ সপ্তাহ আগে"
+
+msgid "A new sprint, right after this one"
+msgstr "নতুন স্প্রিন্ট, এটির ঠিক পরে"
+
+#, python-format
+msgid "About %(n)s tasks finished a sprint"
+msgstr "প্রতি স্প্রিন্টে প্রায় %(n)sটি কাজ শেষ"
+
+msgid "Add from your backlog"
+msgstr "ব্যাকলগ থেকে যোগ করুন"
+
+msgid "Add the sprint"
+msgstr "স্প্রিন্ট যোগ করুন"
+
+msgid "Add to the sprint"
+msgstr "স্প্রিন্টে যোগ করুন"
+
+msgid "Any sprint"
+msgstr "যেকোনো স্প্রিন্ট"
+
+msgid "Back to the backlog"
+msgstr "ব্যাকলগে ফেরত"
+
+msgid "Burndown"
+msgstr "বার্নডাউন"
+
+msgid "Change name, goal or dates"
+msgstr "নাম, লক্ষ্য বা তারিখ বদলান"
+
+msgid "Close the sprint"
+msgstr "স্প্রিন্ট শেষ করুন"
+
+msgid "Closed sprints"
+msgstr "শেষ হওয়া স্প্রিন্ট"
+
+msgid "Delete the sprint"
+msgstr "স্প্রিন্ট মুছুন"
+
+msgid "Delete this sprint? Its tasks are kept, just not in a sprint."
+msgstr "এই স্প্রিন্ট মুছবেন? কাজগুলো থাকবে, শুধু কোনো স্প্রিন্টে থাকবে না।"
+
+msgid "Drag a bar to move it, or its ends to change the dates."
+msgstr "বার টেনে সরান, বা দুই প্রান্ত টেনে তারিখ বদলান।"
+
+msgid "Ends"
+msgstr "শেষ"
+
+msgid "Estimated work done"
+msgstr "আনুমানিক কাজ শেষ"
+
+msgid "Find a task"
+msgstr "কাজ খুঁজুন"
+
+msgid "Find a task…"
+msgstr "কাজ খুঁজুন…"
+
+msgid "In 1 hour"
+msgstr "১ ঘণ্টা পরে"
+
+msgid "It moves with the due date when that changes."
+msgstr "শেষ তারিখ বদলালে এটিও সাথে সরে যাবে।"
+
+msgid "Its number — type it in search (Ctrl+K) to come back here"
+msgstr "এর নম্বর — সার্চে (Ctrl+K) লিখলেই এখানে ফিরে আসবেন"
+
+msgid "Keep a sprint to three months at most — a few weeks works best."
+msgstr "একটি স্প্রিন্ট সর্বোচ্চ তিন মাস রাখুন — কয়েক সপ্তাহই সবচেয়ে ভালো।"
+
+msgid "Last day"
+msgstr "শেষ দিন"
+
+msgid "New sprint"
+msgstr "নতুন স্প্রিন্ট"
+
+msgid "No reminder"
+msgstr "রিমাইন্ডার নেই"
+
+msgid "No sprint running"
+msgstr "কোনো স্প্রিন্ট চলছে না"
+
+msgid "No tasks in this sprint yet"
+msgstr "এই স্প্রিন্টে এখনো কোনো কাজ নেই"
+
+msgid "Not in a sprint"
+msgstr "কোনো স্প্রিন্টে নেই"
+
+msgid "On the due date"
+msgstr "শেষ তারিখের দিন"
+
+msgid "Open tasks at the end of each day (solid) against a steady pace to none by the last day (dashed). Above the dashed line: behind; below it: ahead."
+msgstr "প্রতিদিন শেষে খোলা কাজ (পুরো রেখা), শেষ দিনে শূন্যে নামার সমান গতির সাথে তুলনা (ড্যাশ রেখা)। ড্যাশ রেখার উপরে: পিছিয়ে; নিচে: এগিয়ে।"
+
+msgid "Open tasks that aren't in a sprint — most important first. Their subtasks come along."
+msgstr "যেসব খোলা কাজ কোনো স্প্রিন্টে নেই — জরুরিগুলো আগে। সাব-টাস্কও সাথে আসবে।"
+
+msgid "Open tasks, day by day"
+msgstr "দিনে দিনে খোলা কাজ"
+
+msgid "Pick them from your backlog below."
+msgstr "নিচের ব্যাকলগ থেকে বেছে নিন।"
+
+msgid "Quick reminders"
+msgstr "দ্রুত রিমাইন্ডার"
+
+msgid "Sprint"
+msgstr "স্প্রিন্ট"
+
+#, python-format
+msgid "Sprint %(n)s"
+msgstr "স্প্রিন্ট %(n)s"
+
+msgid "Sprint added. Now pick the tasks for it."
+msgstr "স্প্রিন্ট যোগ হয়েছে। এবার এর কাজগুলো বেছে নিন।"
+
+#, python-format
+msgid "Sprint closed. %(n)s open task moved to %(name)s."
+msgid_plural "Sprint closed. %(n)s open tasks moved to %(name)s."
+msgstr[0] "স্প্রিন্ট শেষ। %(n)sটি খোলা কাজ %(name)s-এ সরানো হয়েছে।"
+msgstr[1] "স্প্রিন্ট শেষ। %(n)sটি খোলা কাজ %(name)s-এ সরানো হয়েছে।"
+
+#, python-format
+msgid "Sprint closed. %(n)s open task went back to the backlog."
+msgid_plural "Sprint closed. %(n)s open tasks went back to the backlog."
+msgstr[0] "স্প্রিন্ট শেষ। %(n)sটি খোলা কাজ ব্যাকলগে ফেরত গেছে।"
+msgstr[1] "স্প্রিন্ট শেষ। %(n)sটি খোলা কাজ ব্যাকলগে ফেরত গেছে।"
+
+msgid "Sprint deleted. Its tasks are kept."
+msgstr "স্প্রিন্ট মোছা হয়েছে। কাজগুলো রাখা আছে।"
+
+msgid "Sprint goal"
+msgstr "স্প্রিন্টের লক্ষ্য"
+
+msgid "Sprint saved."
+msgstr "স্প্রিন্ট সেভ হয়েছে।"
+
+#, python-format
+msgid "Sprint: %(old)s → %(new)s"
+msgstr "স্প্রিন্ট: %(old)s → %(new)s"
+
+msgid "Sprints"
+msgstr "স্প্রিন্ট"
+
+msgid "Sprint…"
+msgstr "স্প্রিন্ট…"
+
+msgid "Start one with “New sprint”: give it a name and its dates, then pick the tasks you'll finish in it."
+msgstr "“নতুন স্প্রিন্ট” দিয়ে শুরু করুন: নাম ও তারিখ দিন, তারপর যে কাজগুলো শেষ করবেন সেগুলো বেছে নিন।"
+
+msgid "Steady pace"
+msgstr "সমান গতি"
+
+msgid "Take out of the sprint"
+msgstr "স্প্রিন্ট থেকে বের করুন"
+
+msgid "Tasks finished in each closed sprint (green) and the ones that were carried on (grey). The average tells you how much to plan for the next one."
+msgstr "প্রতিটি শেষ হওয়া স্প্রিন্টে কতগুলো কাজ শেষ হয়েছে (সবুজ) আর কতগুলো পরে গেছে (ধূসর)। গড় দেখে বুঝবেন পরেরটিতে কতটা পরিকল্পনা করবেন।"
+
+msgid "The running sprint"
+msgstr "চলমান স্প্রিন্ট"
+
+msgid "The sprint has to end after it starts."
+msgstr "স্প্রিন্ট শুরুর পরে শেষ হতে হবে।"
+
+msgid "Time's up — close it"
+msgstr "সময় শেষ — বন্ধ করুন"
+
+msgid "Tomorrow morning"
+msgstr "আগামীকাল সকালে"
+
+msgid "Velocity"
+msgstr "গতি (ভেলোসিটি)"
+
+msgid "What this sprint is for, in one line."
+msgstr "এই স্প্রিন্ট কিসের জন্য, এক লাইনে।"
+
+msgid "Where the open tasks go"
+msgstr "খোলা কাজগুলো কোথায় যাবে"
+
+msgid "Work in fixed stretches, as in Jira: pick the tasks for the next week or two, watch them burn down, and when it ends carry what's left into the next sprint."
+msgstr "Jira-র মতো নির্দিষ্ট সময় ধরে কাজ করুন: আগামী এক-দুই সপ্তাহের কাজ বেছে নিন, কমতে দেখুন, আর শেষ হলে বাকিগুলো পরের স্প্রিন্টে নিয়ে যান।"
+
+#, python-format
+msgid "closed %(when)s"
+msgstr "%(when)s বন্ধ হয়েছে"
+
+#, python-format
+msgid "day %(n)s of %(total)s"
+msgstr "%(total)s দিনের %(n)sতম দিন"
+
+msgid "last day"
+msgstr "শেষ দিন"
+
+msgid "not started yet"
+msgstr "এখনো শুরু হয়নি"
+
+msgid "time's up — close it"
+msgstr "সময় শেষ — বন্ধ করুন"
+
+msgid "— Not in a sprint —"
+msgstr "— কোনো স্প্রিন্টে নয় —"
+
+msgid "Sprints work like Jira's: pick tasks for a week or two, follow the burndown, and close it to carry what's left on. Velocity shows how much you usually finish."
+msgstr "স্প্রিন্ট Jira-র মতো: এক-দুই সপ্তাহের কাজ বেছে নিন, বার্নডাউন দেখুন, আর শেষ করলে বাকি কাজ পরেরটিতে চলে যাবে। গতি (ভেলোসিটি) দেখায় আপনি সাধারণত কতটা শেষ করেন।"
+
+msgid "On the Timeline, drag a bar to move a task, or its ends to change the start or due date. On the Calendar, drag a task to another day."
+msgstr "টাইমলাইনে বার টেনে কাজ সরান, বা প্রান্ত টেনে শুরু বা শেষ তারিখ বদলান। ক্যালেন্ডারে কাজ টেনে অন্য দিনে নিন।"
+
+msgid "Every task has a number (#42 at the bottom of its page): type it in search to jump straight there. Search also reads notes, comments and file names."
+msgstr "প্রতিটি কাজের একটি নম্বর আছে (পাতার নিচে #42): সার্চে লিখলেই সরাসরি সেখানে যাবেন। সার্চ নোট, মন্তব্য আর ফাইলের নামও খোঁজে।"

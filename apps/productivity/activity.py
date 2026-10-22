@@ -2,17 +2,18 @@
 matter is noted (from the task page, the board, a quick menu or a bulk action),
 and comments can be written alongside. Changes are stored as plain values and
 put into words when shown, so they read in whichever language you use."""
-from datetime import date
+from datetime import date, timedelta
 
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
+from django.utils import timezone
 from django.utils.formats import date_format
 from django.utils.translation import gettext as _
 
-from .models import Goal, Priority, Project, Status, Task, TaskActivity
+from .models import Goal, Priority, Project, Sprint, Status, Task, TaskActivity
 
-TRACKED = ("title", "status", "priority", "due_date", "start_date", "project_id", "goal_id", "estimate_minutes", "waiting_for")
-NAMED = {"project_id": Project, "goal_id": Goal}     # kept with their name, in case they're deleted later
+TRACKED = ("title", "status", "priority", "due_date", "start_date", "project_id", "goal_id", "sprint_id", "estimate_minutes", "waiting_for")
+NAMED = {"project_id": Project, "goal_id": Goal, "sprint_id": Sprint}     # kept with their name, in case they're deleted later
 
 
 def _plain(field, value):
@@ -25,7 +26,7 @@ def _label(field, pk):
     if not pk:
         return ""
     model = NAMED[field]
-    obj = model.objects.filter(pk=pk).values_list("name" if model is Project else "title", flat=True).first()
+    obj = model.objects.filter(pk=pk).values_list("title" if model is Goal else "name", flat=True).first()
     return obj or ""
 
 
@@ -34,9 +35,10 @@ def _before(sender, instance, raw=False, **kwargs):
     instance._activity = []
     if raw or not instance.pk or getattr(instance, "_no_activity", False):
         return
-    old = Task.objects.filter(pk=instance.pk).values(*TRACKED).first()
+    old = Task.objects.filter(pk=instance.pk).values(*TRACKED, "remind_at").first()
     if old is None:
         return
+    _reminder_follows_due(instance, old)
     for f in TRACKED:
         a, b = old[f], getattr(instance, f)
         if (a or None) != (b or None):
@@ -58,6 +60,16 @@ def _after(sender, instance, created, raw=False, **kwargs):
         if change["field"] == "project_id" and instance.parent_id is None:
             _subtasks_follow(instance, change["old"])
     instance._activity = []
+
+
+def _reminder_follows_due(task, old):
+    """A due date moved (dragged on the calendar, pushed to tomorrow…) takes a
+    reminder that was counted from it along — unless the reminder was changed too."""
+    before, after = old["due_date"], task.due_date
+    if not (before and after and before != after and task.remind_at and task.remind_at == old["remind_at"]):
+        return
+    if timezone.localtime(task.remind_at).date() <= before:
+        task.remind_at += timedelta(days=(after - before).days)
 
 
 def _subtasks_follow(task, old_project):
@@ -108,6 +120,8 @@ def describe(a):
         return _("Start date: %(old)s → %(new)s") % {"old": _day(old), "new": _day(new)}
     if f == "project_id":
         return _("Project: %(old)s → %(new)s") % {"old": d.get("old_label") or "—", "new": d.get("new_label") or "—"}
+    if f == "sprint_id":
+        return _("Sprint: %(old)s → %(new)s") % {"old": d.get("old_label") or "—", "new": d.get("new_label") or "—"}
     if f == "goal_id":
         return _("Goal: %(old)s → %(new)s") % {"old": d.get("old_label") or "—", "new": d.get("new_label") or "—"}
     if f == "estimate_minutes":

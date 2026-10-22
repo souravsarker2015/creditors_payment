@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from . import services
-from .models import Deck, Goal, GoalStatus, Habit, LearningItem, LearningStatus, Project, Snippet, Tag, Task, TimeEntry, WorkSettings
+from .models import Deck, Goal, GoalStatus, Habit, LearningItem, LearningStatus, Project, Snippet, Sprint, Tag, Task, TimeEntry, WorkSettings
 
 DATE = forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d")
 SWATCHES = forms.RadioSelect   # colours are picked from swatches (templates: .w-swatches)
@@ -39,6 +39,10 @@ class OwnedForm(forms.ModelForm):
         if "goal" in self.fields:
             goals = Goal.objects.filter(owner=owner)
             self.fields["goal"].queryset = goals.filter(status=GoalStatus.ACTIVE) | goals.filter(pk=getattr(self.instance, "goal_id", None) or 0)
+        if "sprint" in self.fields:
+            sprints = Sprint.objects.filter(owner=owner)
+            self.fields["sprint"].queryset = (sprints.filter(completed_at__isnull=True) | sprints.filter(pk=getattr(self.instance, "sprint_id", None) or 0)).order_by("start_date")
+            self.fields["sprint"].empty_label = _("— Not in a sprint —")
         if "tags_text" in self.fields and self.instance.pk:
             self.fields["tags_text"].initial = " ".join(self.instance.tags.values_list("name", flat=True))
 
@@ -66,7 +70,7 @@ class TaskForm(OwnedForm):
 
     class Meta:
         model = Task
-        fields = ("title", "parent", "project", "status", "priority", "start_date", "due_date", "estimate_minutes", "repeat", "repeat_every", "repeat_from_done",
+        fields = ("title", "parent", "project", "sprint", "status", "priority", "start_date", "due_date", "estimate_minutes", "repeat", "repeat_every", "repeat_from_done",
                   "remind_at", "scheduled_at", "link", "goal", "waiting_for", "notes")
         widgets = {
             "link": forms.URLInput(attrs={"placeholder": "https://github.com/…/pull/482", "inputmode": "url"}),
@@ -98,6 +102,22 @@ class TaskForm(OwnedForm):
         if commit:
             obj.save()
         return obj
+
+
+class SprintForm(forms.ModelForm):
+    class Meta:
+        model = Sprint
+        fields = ("name", "goal", "start_date", "end_date")
+        widgets = {"start_date": DATE, "end_date": DATE}
+
+    def clean(self):
+        data = super().clean()
+        start, end = data.get("start_date"), data.get("end_date")
+        if start and end and end < start:
+            self.add_error("end_date", _("The sprint has to end after it starts."))
+        elif start and end and (end - start).days > 90:
+            self.add_error("end_date", _("Keep a sprint to three months at most — a few weeks works best."))
+        return data
 
 
 class ProjectForm(forms.ModelForm):

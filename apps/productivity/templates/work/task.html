@@ -42,6 +42,7 @@
         {% with field=form.priority %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.project %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.estimate_minutes %}{% include "partials/field.html" %}{% endwith %}
+        {% if form.sprint.field.queryset.exists %}<div class="sm:col-span-2">{% with field=form.sprint %}{% include "partials/field.html" %}{% endwith %}</div>{% endif %}
         {% with field=form.start_date %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.due_date %}{% include "partials/field.html" %}{% endwith %}
         <div class="wtd-repeat sm:col-span-2" x-data="{ rep: '{{ form.repeat.value|default_if_none:''|escapejs }}' }" @change="if ($event.target.name === 'repeat') rep = $event.target.value">
@@ -56,7 +57,20 @@
           </fieldset>
           <label class="wtd-check" x-show="rep" x-cloak>{{ form.repeat_from_done }}<span><strong>{{ form.repeat_from_done.label }}</strong><small>{{ form.repeat_from_done.help_text }}</small></span></label>
         </div>
+        <div class="wrm" x-data="workRemind('{{ form.due_date.id_for_label }}', '{{ form.remind_at.id_for_label }}', '{{ ws.day_start|time:'H:i' }}')">
         {% with field=form.remind_at %}{% include "partials/field.html" %}{% endwith %}
+          <div class="chip-row wrm-presets" role="group" aria-label="{% translate 'Quick reminders' %}">
+            <template x-if="due"><span class="contents">
+              <button type="button" class="chip wrm-chip" @click="before(0)">{% translate "On the due date" %}</button>
+              <button type="button" class="chip wrm-chip" @click="before(1)">{% translate "1 day before" %}</button>
+              <button type="button" class="chip wrm-chip" @click="before(7)">{% translate "1 week before" %}</button>
+            </span></template>
+            <button type="button" class="chip wrm-chip" @click="inHours(1)">{% translate "In 1 hour" %}</button>
+            <button type="button" class="chip wrm-chip" x-show="!due" @click="tomorrow()">{% translate "Tomorrow morning" %}</button>
+            <button type="button" class="chip-clear" x-show="has" x-cloak @click="clear()">{% translate "No reminder" %}</button>
+          </div>
+          <p class="help" x-show="due && has" x-cloak>{% translate "It moves with the due date when that changes." %}</p>
+        </div>
         {% with field=form.scheduled_at %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.tags_text %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.link %}{% include "partials/field.html" %}{% endwith %}
@@ -136,7 +150,7 @@
         {% for a in activity %}{% include "work/partials/activity_item.html" %}{% endfor %}
       </ol>
     </section>
-    <p class="wtd-dates">{% blocktranslate with c=task.created_at|date:"j M Y" u=task.updated_at|timesince %}Added {{ c }} · changed {{ u }} ago{% endblocktranslate %}</p>
+    <p class="wtd-dates"><span class="num" data-tip="{% translate 'Its number — type it in search (Ctrl+K) to come back here' %}">#{{ task.pk }}</span> · {% blocktranslate with c=task.created_at|date:"j M Y" u=task.updated_at|timesince %}Added {{ c }} · changed {{ u }} ago{% endblocktranslate %}</p>
   </aside>
   {% endif %}
 </div>
