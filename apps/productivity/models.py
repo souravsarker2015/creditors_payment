@@ -88,6 +88,7 @@ class Repeat(models.TextChoices):
     WEEKDAYS = "weekdays", _("Every work day")
     WEEKLY = "weekly", _("Every week")
     MONTHLY = "monthly", _("Every month")
+    YEARLY = "yearly", _("Every year")
 
 
 class Task(models.Model):
@@ -104,6 +105,15 @@ class Task(models.Model):
     scheduled_at = models.DateTimeField(_("Planned for"), null=True, blank=True,
                                         help_text="Start of its block on the day planner (as long as the estimate, else 30 minutes).")
     repeat = models.CharField(_("Repeat"), max_length=10, choices=Repeat.choices, default=Repeat.NONE, blank=True)
+    repeat_every = models.PositiveSmallIntegerField(_("Every"), default=1, validators=[MinValueValidator(1)],
+                                                    help_text=_("Every 2 weeks, every 3 months…"))
+    repeat_days = models.CharField(_("On these days"), max_length=14, blank=True,
+                                   help_text="Weekly repeats: the weekdays it falls on, Monday=0 (\"0,3\" = Monday and Thursday).")
+    repeat_from_done = models.BooleanField(_("Count from when it's done"), default=False,
+                                           help_text=_("The next one is set from the day you finish it, not from its due date — for things like “water the plants”."))
+    start_date = models.DateField(_("Starts"), null=True, blank=True, help_text=_("When work on it begins — it's drawn from here to its due date on the timeline."))
+    blocked_by = models.ManyToManyField("self", symmetrical=False, blank=True, related_name="blocking", verbose_name=_("Blocked by"),
+                                        help_text=_("Tasks that must be done before this one can start."))
     tags = models.ManyToManyField(Tag, blank=True, related_name="tasks", verbose_name=_("Tags"))
     link = models.URLField(_("Link"), max_length=500, blank=True,
                            help_text=_("The pull request, issue, ticket or doc this is about."))
@@ -144,6 +154,21 @@ class Task(models.Model):
     def link_label(self):
         return link_label(self.link)
 
+    @property
+    def open_blockers(self):
+        """The unfinished tasks in this one's way (uses prefetched blocked_by when there)."""
+        return [b for b in self.blocked_by.all() if b.status != Status.DONE]
+
+    @property
+    def is_blocked(self):
+        return not self.is_done and bool(self.open_blockers)
+
+    @property
+    def repeat_label(self):
+        from .services import repeat_text
+
+        return repeat_text(self)
+
 
 def link_label(url):
     """A short name for a link: "PR #482", "#91", "ABC-123", or the site's name."""
@@ -162,6 +187,52 @@ def link_label(url):
         return m.group(1)
     host = (u.hostname or "").removeprefix("www.")
     return host or url[:30]
+
+
+class TaskActivity(models.Model):
+    """A task's history: what changed and when, and comments written on it."""
+
+    class Kind(models.TextChoices):
+        COMMENT = "comment", _("Comment")
+        CHANGE = "change", _("Change")
+
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="activity")
+    kind = models.CharField(max_length=8, choices=Kind.choices, default=Kind.CHANGE)
+    text = models.TextField(blank=True)                    # a comment's words
+    data = models.JSONField(default=dict, blank=True)      # a change: {"field": "status", "old": "todo", "new": "doing"} — worded when shown
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name, verbose_name_plural = _("Task activity"), _("Task activity")
+        ordering = ["-created_at", "-id"]
+        indexes = [models.Index(fields=["task", "created_at"])]
+
+    def __str__(self):
+        return self.text[:60] or str(self.data)[:60]
+
+    @property
+    def words(self):
+        """A change, put into words in the reader's language."""
+        from .activity import describe
+
+        return describe(self)
+
+
+class SavedView(models.Model):
+    """A task filter kept under a name — "Urgent at work", "Waiting on others"."""
+
+    owner = models.ForeignKey(**OWNER)
+    name = models.CharField(_("Name"), max_length=60)
+    query = models.CharField(max_length=500, help_text="The task list's query string: view=board&project=3&priority=3…")
+    order = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name, verbose_name_plural = _("Saved view"), _("Saved views")
+        ordering = ["order", "created_at"]
+
+    def __str__(self):
+        return self.name
 
 
 class ChecklistItem(models.Model):

@@ -3273,3 +3273,10 @@ a.att-mark:hover { outline: 2px solid var(--tone); outline-offset: 1px; }
 .att-legend { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; font-size: 0.78rem; color: var(--text-secondary); }
 .att-legend span { display: inline-flex; align-items: center; gap: 0.375rem; }
 
+/* A Productivity focus session running while you're elsewhere in the app */
+.focus-float { position: fixed; z-index: 60; left: 1rem; bottom: calc(1rem + env(safe-area-inset-bottom)); padding: 0.375rem 0.75rem; border-radius: 9999px;
+  background: #e5484d; color: #fff; font-weight: 700; font-size: 0.8125rem; font-variant-numeric: tabular-nums; box-shadow: var(--shadow-md, 0 4px 12px rgba(0,0,0,.2)); text-decoration: none; }
+.focus-float[data-mode="short"], .focus-float[data-mode="long"] { background: var(--status-good); }
+.focus-float[hidden] { display: none; }
+@media (max-width: 1023px) { .focus-float { bottom: calc(5rem + env(safe-area-inset-bottom)); } }   /* above the phone's bottom bar */
+

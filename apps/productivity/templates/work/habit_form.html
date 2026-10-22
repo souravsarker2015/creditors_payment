@@ -22,7 +22,7 @@
     <div class="card-footer form-actions">
       {% if habit %}
       <button type="submit" name="action" value="archive" class="btn btn-ghost" formnovalidate>{% icon "archive" %}{% if habit.is_archived %}{% translate "Bring back" %}{% else %}{% translate "Archive" %}{% endif %}</button>
-      <button type="submit" name="action" value="delete" class="btn btn-ghost" style="color: var(--status-critical);" formnovalidate onclick="return confirm('{% translate "Delete this habit and its history? You can undo this from Recently deleted." %}')">{% icon "trash" %}{% translate "Delete" %}</button>
+      <button type="submit" name="action" value="delete" class="btn btn-ghost" style="color: var(--status-critical);" formnovalidate onclick="return confirm('{{ _("Delete this habit and its history? You can undo this from Recently deleted.")|escapejs }}')">{% icon "trash" %}{% translate "Delete" %}</button>
       <span class="spacer"></span>
       {% endif %}
       <a href="{% url 'work:habits' %}" class="btn btn-ghost">{% translate "Cancel" %}</a>

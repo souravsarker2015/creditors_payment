@@ -41,7 +41,7 @@
             {% elif biz_can.manage_settings %}
               <a href="{% url 'business:unit_edit' u.pk %}" class="icon-btn" aria-label="{% translate 'Edit' %}" data-tip="{% translate 'Edit' %}">{% include "partials/icon.html" with name="edit" %}</a>
               {% if biz_can.delete and not u.is_base %}
-              <form method="post" action="{% url 'business:unit_delete' u.pk %}" data-confirm="{% translate 'Delete this unit? Records that already use it keep it, and you can restore it from Deleted.' %}">{% csrf_token %}
+              <form method="post" action="{% url 'business:unit_delete' u.pk %}" data-confirm="{{ _("Delete this unit? Records that already use it keep it, and you can restore it from Deleted.") }}">{% csrf_token %}
                 <button type="submit" class="icon-btn" aria-label="{% translate 'Delete' %}" data-tip="{% translate 'Delete' %}">{% include "partials/icon.html" with name="trash" %}</button>
               </form>
               {% endif %}

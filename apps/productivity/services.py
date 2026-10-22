@@ -265,6 +265,9 @@ class Parsed:
     link: str = ""
     at: time | None = None          # "at 3pm": a reminder at that time
     repeat: str = ""                # "every monday", "every day"…
+    repeat_every: int = 1           # "every 2 weeks"
+    repeat_days: str = ""           # "every mon, thu" → "0,3"
+    repeat_from_done: bool = False  # "every! week": counted from the day it's done
     later: date | None = None       # "snooze:fri": out of sight until then
 
 
@@ -314,8 +317,11 @@ def _date_word(low, today):
 
 
 TIME_WORD = re.compile(r"(\d{1,2})(?::(\d{2}))?\s*(am|pm)?")
-EVERY = re.compile(r"\bevery\s+(day|weekday|workday|work\s+day|week|month|mon(?:day)?|tue(?:sday)?|wed(?:nesday)?|thu(?:rsday)?|fri(?:day)?|sat(?:urday)?|sun(?:day)?)\b", re.I)
-REPEAT_WORDS = {"day": Repeat.DAILY, "weekday": Repeat.WEEKDAYS, "workday": Repeat.WEEKDAYS, "week": Repeat.WEEKLY, "month": Repeat.MONTHLY}
+DAY_NAME = r"(?:monday|mon|tuesday|tues|tue|wednesday|wed|thursday|thurs|thu|friday|fri|saturday|sat|sunday|sun)"
+EVERY = re.compile(r"\bevery(!?)\s+(?:(\d{1,2})\s+)?(days?|weekday|workday|work\s+day|weeks?|months?|years?|"
+                   + DAY_NAME + r"(?:\s*(?:,|&|\band\b)\s*" + DAY_NAME + r")*)\b", re.I)
+REPEAT_WORDS = {"day": Repeat.DAILY, "days": Repeat.DAILY, "weekday": Repeat.WEEKDAYS, "workday": Repeat.WEEKDAYS, "week": Repeat.WEEKLY,
+                "weeks": Repeat.WEEKLY, "month": Repeat.MONTHLY, "months": Repeat.MONTHLY, "year": Repeat.YEARLY, "years": Repeat.YEARLY}
 
 
 def _time_word(word):
@@ -344,12 +350,17 @@ def parse_quick(text, today=None):
     p = Parsed(title="")
     m = EVERY.search(text)
     if m:
-        word = re.sub(r"\s+", "", m.group(1).lower())
+        p.repeat_from_done = m.group(1) == "!"
+        p.repeat_every = max(int(m.group(2) or 1), 1)
+        word = re.sub(r"\s+", "", m.group(3).lower())
         if word in REPEAT_WORDS:
             p.repeat = REPEAT_WORDS[word]
-        else:
+        else:                     # "every mon", "every mon, thu", "every tue and fri"
             p.repeat = Repeat.WEEKLY
-            p.due = parse_due(word[:3], today - timedelta(days=1))   # this weekday, today included
+            picked = sorted({FULL_DAYS[next(k for k in FULL_DAYS if k.startswith(d[:3]))] for d in re.findall(DAY_NAME, m.group(3).lower())})
+            if len(picked) > 1 or p.repeat_every > 1:
+                p.repeat_days = ",".join(str(w) for w in picked)
+            p.due = min(today + timedelta(days=(w - today.weekday()) % 7) for w in picked)   # the first of them, today included
         text = (text[:m.start()] + " " + text[m.end():]).strip()
     words = []
     estimate = re.compile(r"~(\d+(?:\.\d+)?)(m|min|h|hr)?")
@@ -436,6 +447,7 @@ def create_from_quick(user, text, *, status=Status.TODO, project=None, today=Non
         my_day=p.later or (today if p.my_day else (my_day if isinstance(my_day, date) else (today if my_day else None))),
         order=next_order(user, status),
         link=p.link, goal=goal, repeat=p.repeat, remind_at=reminder_time(p, today),
+        repeat_every=p.repeat_every, repeat_days=p.repeat_days, repeat_from_done=p.repeat_from_done,
     )
     if p.tags:
         task.tags.set(tags_named(user, p.tags))
@@ -443,9 +455,18 @@ def create_from_quick(user, text, *, status=Status.TODO, project=None, today=Non
 
 
 # ── Tasks ─────────────────────────────────────────────────────────────────
-def next_due(day, repeat, work_days="01234"):
+def _add_months(day, n):
+    y, m = divmod(day.month - 1 + n, 12)
+    y, m = day.year + y, m + 1
+    return date(y, m, min(day.day, calendar.monthrange(y, m)[1]))
+
+
+def next_due(day, repeat, work_days="01234", every=1, days=""):
+    """The next date after `day`: every N days / weeks / months / years, or on
+    chosen weekdays ("0,3" = Monday and Thursday) every N weeks."""
+    every = max(int(every or 1), 1)
     if repeat == Repeat.DAILY:
-        return day + timedelta(days=1)
+        return day + timedelta(days=every)
     if repeat == Repeat.WEEKDAYS:      # the person's own work days (Sunday–Thursday by default here)
         nxt = day + timedelta(days=1)
         for _i in range(7):
@@ -454,11 +475,44 @@ def next_due(day, repeat, work_days="01234"):
             nxt += timedelta(days=1)
         return nxt
     if repeat == Repeat.WEEKLY:
-        return day + timedelta(days=7)
+        picked = sorted({int(x) for x in (days or "").split(",") if x.strip().isdigit() and int(x) < 7})
+        if not picked:
+            return day + timedelta(days=7 * every)
+        later = [w for w in picked if w > day.weekday()]
+        if later:                                   # later this same week
+            return day + timedelta(days=later[0] - day.weekday())
+        monday = day - timedelta(days=day.weekday())   # else the first chosen day, `every` weeks on
+        return monday + timedelta(days=7 * every + picked[0])
     if repeat == Repeat.MONTHLY:
-        y, m = (day.year + (day.month // 12), day.month % 12 + 1)
-        return date(y, m, min(day.day, calendar.monthrange(y, m)[1]))
+        return _add_months(day, every)
+    if repeat == Repeat.YEARLY:
+        return _add_months(day, 12 * every)
     return None
+
+
+def repeat_text(task):
+    """"Every 2 weeks on Mon, Thu", "Every month (from when it's done)"… for a task row or page."""
+    from django.utils.dates import WEEKDAYS_ABBR
+
+    if not task.repeat:
+        return ""
+    n = task.repeat_every or 1
+    if task.repeat == Repeat.WEEKDAYS:
+        text = _("Every work day")
+    elif task.repeat == Repeat.DAILY:
+        text = (_("Every day") if n == 1 else _("Every %(n)s days") % {"n": n})
+    elif task.repeat == Repeat.WEEKLY:
+        text = (_("Every week") if n == 1 else _("Every %(n)s weeks") % {"n": n})
+        picked = [int(x) for x in (task.repeat_days or "").split(",") if x.strip().isdigit() and int(x) < 7]
+        if picked:
+            text += " · " + ", ".join(str(WEEKDAYS_ABBR[w]) for w in sorted(set(picked)))
+    elif task.repeat == Repeat.MONTHLY:
+        text = (_("Every month") if n == 1 else _("Every %(n)s months") % {"n": n})
+    else:
+        text = (_("Every year") if n == 1 else _("Every %(n)s years") % {"n": n})
+    if task.repeat_from_done:
+        text += " · " + _("from when it's done")
+    return text
 
 
 @transaction.atomic
@@ -475,10 +529,13 @@ def set_done(task, done=True):
         if running:
             stop_timer(task.owner)
         if task.repeat:
-            base = task.due_date or timezone.localdate()
+            base = timezone.localdate() if (task.repeat_from_done or not task.due_date) else task.due_date
+            due = next_due(base, task.repeat, WorkSettings.for_user(task.owner).work_days, task.repeat_every, task.repeat_days)
+            start = due - (task.due_date - task.start_date) if (task.start_date and task.due_date and due) else None
             nxt = Task.objects.create(owner=task.owner, project=task.project, title=task.title, notes=task.notes,
-                                      priority=task.priority, due_date=next_due(base, task.repeat, WorkSettings.for_user(task.owner).work_days),
-                                      repeat=task.repeat,
+                                      priority=task.priority, due_date=due, start_date=start, goal=task.goal, link=task.link,
+                                      repeat=task.repeat, repeat_every=task.repeat_every, repeat_days=task.repeat_days,
+                                      repeat_from_done=task.repeat_from_done,
                                       estimate_minutes=task.estimate_minutes, order=next_order(task.owner, Status.TODO))
             nxt.tags.set(task.tags.all())
             for item in task.checklist.all():
@@ -488,6 +545,32 @@ def set_done(task, done=True):
         task.status, task.completed_at = Status.TODO, None
         task.save(update_fields=["status", "completed_at", "updated_at"])
     return None
+
+
+def unblocked_by(task):
+    """Open tasks that were waiting on `task` and now have nothing left in their way."""
+    out = []
+    for t in task.blocking.exclude(status=Status.DONE).prefetch_related("blocked_by"):
+        if all(b.status == Status.DONE for b in t.blocked_by.all()):
+            out.append(t)
+    return out
+
+
+def can_block(task, other):
+    """Whether `other` may be set as blocking `task`: not itself, and not
+    something that (through others) already waits on `task` — no circles."""
+    if other.pk == task.pk or other.owner_id != task.owner_id:
+        return False
+    seen, todo = set(), [other.pk]
+    while todo:
+        pk = todo.pop()
+        if pk == task.pk:
+            return False
+        if pk in seen:
+            continue
+        seen.add(pk)
+        todo.extend(Task.blocked_by.through.objects.filter(from_task_id=pk).values_list("to_task_id", flat=True))
+    return True
 
 
 def today_tasks(user, today=None):
@@ -801,8 +884,8 @@ def remember_note(note, force=False):
 
 
 # ── Restore from a backup (the export .zip / data.json) ───────────────────
-BACKUP_ORDER = ["project", "tag", "goal", "goalstep", "note", "task", "checklistitem", "timeentry", "snippet",
-                "habit", "habitcheck", "journalentry", "learningitem", "diagram", "deck", "card"]
+BACKUP_ORDER = ["project", "tag", "goal", "goalstep", "note", "task", "checklistitem", "taskactivity", "timeentry", "snippet",
+                "habit", "habitcheck", "journalentry", "learningitem", "diagram", "deck", "card", "savedview"]
 
 
 @transaction.atomic
@@ -819,6 +902,7 @@ def restore(user, rows):
             and r["model"].split(".", 1)[1] in BACKUP_ORDER]
     rows.sort(key=lambda r: BACKUP_ORDER.index(r["model"].split(".", 1)[1]))
     ids, counts = defaultdict(dict), defaultdict(int)
+    later = []      # tasks blocked by other tasks: linked once every task exists
     running = TimeEntry.objects.filter(owner=user, ended_at__isnull=True).exists()
     for row in rows:
         name = row["model"].split(".", 1)[1]
@@ -831,7 +915,9 @@ def restore(user, rows):
         for f in model._meta.get_fields():
             if not getattr(f, "concrete", False) or f.name not in fields:
                 continue
-            if f.many_to_many:
+            if f.many_to_many and f.related_model is model:     # task → task (blocked by): after all tasks are in
+                later.append((name, old_pk, f.name, fields.pop(f.name) or []))
+            elif f.many_to_many:
                 m2m[f.name] = [ids[f.related_model._meta.model_name].get(v) for v in fields.pop(f.name) or []]
             elif f.is_relation and f.name != "owner" and fields[f.name] is not None:
                 fields[f.name] = ids[f.related_model._meta.model_name].get(fields[f.name])
@@ -854,11 +940,17 @@ def restore(user, rows):
             running = True
         obj = next(serializers.deserialize("json", json.dumps([{"model": row["model"], "fields": fields}])))
         obj.object.pk = None
+        obj.object._no_activity = True     # its history comes from the backup, not from being added now
         obj.object.save()
         ids[name][old_pk] = obj.object.pk
         for fname, values in m2m.items():
             getattr(obj.object, fname).set([v for v in values if v])
         counts[name] += 1
+    for name, old_pk, fname, values in later:
+        new_pk = ids[name].get(old_pk)
+        if new_pk:
+            model = django_apps.get_model("productivity", name)
+            getattr(model.objects.get(pk=new_pk), fname).set([ids[name][v] for v in values if ids[name].get(v)])
     return dict(counts)
 
 

@@ -1,0 +1,21 @@
+{% load i18n work %}{% comment %}What a task waits on, and what waits on it. Needs: task.{% endcomment %}
+{% with waits=task.blocked_by.all blocks=task.blocking.all %}
+{% if waits %}
+<ul class="wtd-blockers">
+  {% for b in waits %}
+  <li class="wtd-blocker{% if b.is_done %} is-done{% endif %}">
+    <span class="wtd-blocker-mark" aria-hidden="true">{% if b.is_done %}{% icon "check" %}{% else %}{% icon "lock" %}{% endif %}</span>
+    <a href="{% url 'work:task' b.pk %}" class="min-w-0 flex-1">{{ b.title }}</a>
+    <button type="button" class="icon-btn" data-remove="{{ b.pk }}" aria-label="{% translate 'Remove' %}">×</button>
+  </li>
+  {% endfor %}
+</ul>
+{% if not task.is_done %}<p class="wtd-blocker-state" data-state="{% if task.is_blocked %}blocked{% else %}ready{% endif %}">{% if task.is_blocked %}{% blocktranslate count counter=task.open_blockers|length %}Waiting on {{ counter }} task{% plural %}Waiting on {{ counter }} tasks{% endblocktranslate %}{% else %}{% translate "Ready: everything it waits on is done." %}{% endif %}</p>{% endif %}
+{% else %}
+<p class="wtd-empty">{% translate "Nothing — this task can start any time." %}</p>
+{% endif %}
+{% if blocks %}
+<p class="wtd-blocking-head">{% translate "Waiting on this one" %}</p>
+<ul class="wtd-blockers">{% for b in blocks %}<li class="wtd-blocker{% if b.is_done %} is-done{% endif %}"><span class="wtd-blocker-mark" aria-hidden="true">{% icon "arrow-right" %}</span><a href="{% url 'work:task' b.pk %}" class="min-w-0 flex-1">{{ b.title }}</a></li>{% endfor %}</ul>
+{% endif %}
+{% endwith %}

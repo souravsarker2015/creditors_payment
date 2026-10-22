@@ -8,7 +8,7 @@
     {% if extra %}{% include extra %}{% endif %}
     <a href="{% url 'business:'|add:m.name|add:'_edit' o.pk %}" class="menu-item" role="menuitem">{% include "partials/icon.html" with name="edit" %}{% translate "Edit" %}</a>
     {% if biz_can.delete %}
-    <form method="post" action="{% url 'business:'|add:m.name|add:'_delete' o.pk %}" data-confirm="{% translate 'Delete this? Records that already use it keep it, and you can restore it from Deleted.' %}">{% csrf_token %}
+    <form method="post" action="{% url 'business:'|add:m.name|add:'_delete' o.pk %}" data-confirm="{{ _("Delete this? Records that already use it keep it, and you can restore it from Deleted.") }}">{% csrf_token %}
       <button type="submit" class="menu-item is-danger" role="menuitem">{% include "partials/icon.html" with name="trash" %}{% translate "Delete" %}</button>
     </form>
     {% endif %}

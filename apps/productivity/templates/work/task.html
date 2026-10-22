@@ -20,7 +20,7 @@
     <a href="{% url 'work:focus' %}?task={{ task.pk }}" class="btn btn-secondary">{% icon "bolt" %}{% translate "Focus" %}</a>
     {% endif %}
     {% if task.link %}<a href="{{ task.link }}" class="btn btn-secondary" target="_blank" rel="noopener noreferrer" title="{{ task.link }}">{% icon "external" %}{{ task.link_label }}</a>{% endif %}
-    <button type="button" class="icon-btn" aria-label="{% translate 'Delete task' %}" data-tip="{% translate 'Delete task' %}" @click="if (confirm('{% translate "Delete this task? You can bring it back from Recently deleted." %}')) Work.api(Work.cfg.urls.taskBase + '{{ task.pk }}/delete/').then(r => { Work.undoable('{% translate "Task deleted" %}', r.undo, () => location.reload()); setTimeout(() => location.href = '{% url 'work:tasks' %}', 600); })">{% icon "trash" %}</button>
+    <button type="button" class="icon-btn" aria-label="{% translate 'Delete task' %}" data-tip="{% translate 'Delete task' %}" @click="if (confirm('{{ _("Delete this task? You can bring it back from Recently deleted.")|escapejs }}')) Work.api(Work.cfg.urls.taskBase + '{{ task.pk }}/delete/').then(r => { Work.undoable('{{ _("Task deleted")|escapejs }}', r.undo, () => location.reload()); setTimeout(() => location.href = '{% url 'work:tasks' %}', 600); })">{% icon "trash" %}</button>
   </div>
   {% endif %}
 </header>
@@ -35,9 +35,21 @@
         {% with field=form.status %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.priority %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.project %}{% include "partials/field.html" %}{% endwith %}
-        {% with field=form.due_date %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.estimate_minutes %}{% include "partials/field.html" %}{% endwith %}
-        {% with field=form.repeat %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.start_date %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.due_date %}{% include "partials/field.html" %}{% endwith %}
+        <div class="wtd-repeat sm:col-span-2" x-data="{ rep: '{{ form.repeat.value|default_if_none:''|escapejs }}' }" @change="if ($event.target.name === 'repeat') rep = $event.target.value">
+          <div class="form-grid form-grid-2">
+            {% with field=form.repeat %}{% include "partials/field.html" %}{% endwith %}
+            <div x-show="rep && rep !== 'weekdays'" x-cloak>{% with field=form.repeat_every %}{% include "partials/field.html" %}{% endwith %}</div>
+          </div>
+          <fieldset class="field wtd-days" x-show="rep === 'weekly'" x-cloak>
+            <legend class="label">{{ form.repeat_on.label }}</legend>
+            <div class="wtd-daypick">{% for c in form.repeat_on %}<label class="wtd-day">{{ c.tag }}<span>{{ c.choice_label }}</span></label>{% endfor %}</div>
+            <p class="help">{{ form.repeat_on.help_text }}</p>
+          </fieldset>
+          <label class="wtd-check" x-show="rep" x-cloak>{{ form.repeat_from_done }}<span><strong>{{ form.repeat_from_done.label }}</strong><small>{{ form.repeat_from_done.help_text }}</small></span></label>
+        </div>
         {% with field=form.remind_at %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.scheduled_at %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.tags_text %}{% include "partials/field.html" %}{% endwith %}
@@ -61,6 +73,20 @@
 
   {% if task %}
   <aside class="wtd-side">
+    <section class="card" x-data="workBlockers({{ task.pk }})" data-blockers>
+      <header class="card-header"><h2 class="card-title">{% icon "lock" %}{% translate "Blocked by" %}{% include "partials/info.html" with text=_("Tasks that must be finished first. When the last one is done, you're told this one is ready.") %}</h2></header>
+      <div x-ref="box">{% include "work/partials/blockers.html" %}</div>
+      {% if blocker_options %}
+      <form class="work-check-add" @submit.prevent="add()">
+        <select x-ref="pick" class="form-input input-compact" data-native aria-label="{% translate 'A task this one waits on' %}">
+          <option value="">{% translate "Waits on…" %}</option>
+          {% for o in blocker_options %}<option value="{{ o.pk }}">{{ o.title|truncatechars:70 }}</option>{% endfor %}
+        </select>
+        <button type="submit" class="btn btn-secondary btn-sm">{% translate "Add" %}</button>
+      </form>
+      {% endif %}
+    </section>
+
     <section class="card" x-data="workChecklist({{ task.pk }})">
       <header class="card-header"><h2 class="card-title">{% translate "Checklist" %}</h2><span class="wtd-progress" data-progress></span></header>
       <ul class="work-checks" x-ref="list">
@@ -76,6 +102,16 @@
         {% if estimate_pct is not None %}<div class="wtd-meter{% if estimate_pct > 100 %} is-over{% endif %}"><span style="width: {% if estimate_pct > 100 %}100{% else %}{{ estimate_pct }}{% endif %}%"></span></div>{% endif %}
       </div>
       {% if entries %}<ul class="we-list">{% for e in entries %}{% include "work/partials/entry_row.html" %}{% endfor %}</ul>{% endif %}
+    </section>
+    <section class="card" x-data="workComments({{ task.pk }})" data-activity>
+      <header class="card-header"><h2 class="card-title">{% icon "chat" %}{% translate "Activity" %}</h2></header>
+      <form class="wtd-comment" @submit.prevent="send()">
+        <textarea x-ref="text" rows="2" class="form-input" placeholder="{% translate 'Write a comment — what you tried, what you decided, a link…' %}" aria-label="{% translate 'Comment' %}" @keydown.ctrl.enter.prevent="send()" @keydown.meta.enter.prevent="send()"></textarea>
+        <div class="wtd-comment-foot"><span class="help">{% translate "Ctrl+Enter to post" %}</span><button type="submit" class="btn btn-secondary btn-sm" :disabled="busy">{% translate "Comment" %}</button></div>
+      </form>
+      <ol class="wtd-activity" x-ref="list">
+        {% for a in activity %}{% include "work/partials/activity_item.html" %}{% endfor %}
+      </ol>
     </section>
     <p class="wtd-dates">{% blocktranslate with c=task.created_at|date:"j M Y" u=task.updated_at|timesince %}Added {{ c }} · changed {{ u }} ago{% endblocktranslate %}</p>
   </aside>

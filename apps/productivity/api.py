@@ -27,7 +27,7 @@ from . import cards, diagrams, services
 from .access import work_required
 from .models import (
     Card, ChecklistItem, Deck, Diagram, DiagramKind, DiagramVersion, EntryKind, Goal, GoalStatus, GoalStep, Habit, HabitCheck, JournalEntry, LearningItem, LearningKind, LearningStatus,
-    LearningUnit, Note, NoteVersion, Priority, Project, Snippet, Status, Task, TimeEntry, link_label,
+    LearningUnit, Note, NoteVersion, Priority, Project, SavedView, Snippet, Status, Task, TaskActivity, TimeEntry, link_label,
 )
 
 
@@ -141,7 +141,93 @@ def task_done(request, pk):
     data = {"done": task.is_done}
     if nxt:
         data["next"] = {"id": nxt.pk, "due": nxt.due_date.isoformat() if nxt.due_date else None, "html": task_row(request, nxt)}
+    if task.is_done:
+        free = services.unblocked_by(task)
+        for t in free:
+            from .activity import note
+
+            note(t, field="unblocked", title=task.title)
+        if free:
+            data["unblocked"] = [t.title for t in free[:3]]
     return ok(**data)
+
+
+# ── Task dependencies, comments and saved views ─────────────────────────────
+@work_required
+@require_POST
+def task_blockers(request, pk):
+    """add=<task id> or remove=<task id>: what this task waits on."""
+    from .activity import note
+
+    task = get_object_or_404(Task, pk=pk, owner=request.user)
+    if request.POST.get("add"):
+        other = get_object_or_404(Task, pk=request.POST["add"], owner=request.user)
+        if not services.can_block(task, other):
+            return bad(_("That would make the two tasks wait on each other."))
+        if not task.blocked_by.filter(pk=other.pk).exists():
+            task.blocked_by.add(other)
+            note(task, field="blocked_by", added=True, title=other.title)
+    elif request.POST.get("remove"):
+        other = task.blocked_by.filter(pk=request.POST["remove"]).first()
+        if other:
+            task.blocked_by.remove(other)
+            note(task, field="blocked_by", added=False, title=other.title)
+    html = render_to_string("work/partials/blockers.html", {"task": task}, request=request)
+    return ok(html=html, blocked=task.is_blocked)
+
+
+@work_required
+@require_POST
+def task_comment(request, pk):
+    task = get_object_or_404(Task, pk=pk, owner=request.user)
+    text = request.POST.get("text", "").strip()[:5000]
+    if not text:
+        return bad(_("Write something first."))
+    a = TaskActivity.objects.create(task=task, kind=TaskActivity.Kind.COMMENT, text=text)
+    return ok(html=render_to_string("work/partials/activity_item.html", {"a": a}, request=request))
+
+
+@work_required
+@require_POST
+def comment_delete(request, pk):
+    a = get_object_or_404(TaskActivity, pk=pk, task__owner=request.user, kind=TaskActivity.Kind.COMMENT)
+    a.delete()
+    return ok()
+
+
+VIEW_KEYS = ("view", "q", "project", "tag", "priority", "due", "goal", "done", "blocked")
+
+
+@work_required
+@require_POST
+def view_save(request):
+    """Keep the task list's current filters under a name."""
+    from django.http import QueryDict
+
+    name = request.POST.get("name", "").strip()[:60]
+    if not name:
+        return bad(_("Give the view a name."))
+    raw = QueryDict(request.POST.get("query", "").lstrip("?"))
+    query = "&".join(f"{k}={quote(raw[k])}" for k in VIEW_KEYS if raw.get(k))
+    if SavedView.objects.filter(owner=request.user).count() >= 30:
+        return bad(_("You can keep up to 30 views."))
+    v = SavedView.objects.create(owner=request.user, name=name, query=query,
+                                 order=SavedView.objects.filter(owner=request.user).count())
+    return ok(id=v.pk, name=v.name, url=reverse("work:tasks") + "?" + query + ("&" if query else "") + f"sv={v.pk}")
+
+
+@work_required
+@require_POST
+def view_action(request, pk):
+    v = get_object_or_404(SavedView, pk=pk, owner=request.user)
+    if request.POST.get("action") == "delete":
+        v.delete()
+        return ok()
+    name = request.POST.get("name", "").strip()[:60]
+    if name:
+        v.name = name
+        v.save(update_fields=["name"])
+    return ok(name=v.name)
 
 
 @work_required
@@ -426,6 +512,9 @@ def focus_log(request):
     start, end = _when(request, "started_at"), _when(request, "ended_at")
     if not (start and end) or end <= start or end - start > timedelta(hours=4):
         return bad("times")
+    same = TimeEntry.objects.filter(owner=user, kind=EntryKind.FOCUS, started_at=services._sane(start)).first()
+    if same:      # the same session sent twice (two tabs, or a retry after a lost answer): keep one
+        return ok(id=same.pk, today=_today_seconds(user))
     task = Task.objects.filter(owner=user, pk=request.POST.get("task") or 0).first()
     entry = TimeEntry.objects.create(owner=user, task=task, project=task.project if task else None, kind=EntryKind.FOCUS,
                                      description=request.POST.get("description", "").strip()[:300],

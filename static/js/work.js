@@ -335,6 +335,95 @@
   /* ── Expose for the page components ──────────────────────────────────── */
   window.Work = { api: api, toast: toast, undoable: undoable, play: play, notify: notify, askNotify: askNotify, clock: clock, hm: hm, cfg: CFG, flush: flush, recall: recall, store: store, putImages: putImages, zen: { on: zenOn, off: zenOff, toggle: zenToggle } };
 
+  /* ── Focus (Pomodoro): one engine for every page ──────────────────────
+   * The session lives in localStorage (by its end time), so it keeps going
+   * through page changes, other tabs and a sleeping phone. Whichever page is
+   * open when it ends finishes it: saves the focus time to the timesheet,
+   * plays the sound, starts the break. A session that ended while no page of
+   * the app was open is saved the next time one opens. Tabs keep in step
+   * through "storage" events; a Web Lock (and the server, by start time)
+   * makes sure a session is saved once. */
+  var Focus = (function () {
+    var KEY = "work-focus:" + ME, subs = [], TITLE = /^(?:🍅|☕) [^·]+ · /u;
+    function lengths() { return { focus: CFG.focus || 25, short: CFG.short || 5, long: CFG.long || 15 }; }
+    function blank() { return { mode: "focus", running: false, endsAt: 0, startedAt: 0, left: lengths().focus * 60, done: 0, day: isoDay(0), task: "", taskTitle: "" }; }
+    function load() {
+      var x = Object.assign(blank(), recall(KEY, {}) || {});
+      if (x.day !== isoDay(0) && !x.running) { x.done = 0; x.day = isoDay(0); }     // the session dots start again each day
+      if (!x.running && !(x.left > 0)) x.left = lengths()[x.mode] * 60;
+      return x;
+    }
+    var S = load();
+    function total() { return lengths()[S.mode] * 60; }
+    function left() { return S.running ? Math.max(0, (S.endsAt - Date.now()) / 1000) : S.left; }
+    function emit() { subs.forEach(function (fn) { try { fn(S); } catch (e) { /* a page part that's gone */ } }); }
+    function save() { store(KEY, S); emit(); }
+    function title() {
+      var base = d.title.replace(TITLE, "");
+      d.title = S.running ? (S.mode === "focus" ? "🍅 " : "☕ ") + clock(left()) + " · " + base : base;
+    }
+    function start() {
+      S = load(); if (S.running) return;
+      askNotify();
+      S.running = true; S.endsAt = Date.now() + S.left * 1000;
+      if (!S.startedAt) S.startedAt = Date.now();
+      save(); title();
+    }
+    function pause() { S = load(); if (!S.running) return; S.left = left(); S.running = false; save(); title(); }
+    function reset() { S = load(); S.running = false; S.startedAt = 0; S.left = total(); save(); title(); }
+    function setMode(mode) { S = load(); S.mode = mode; S.running = false; S.startedAt = 0; S.left = total(); save(); title(); }
+    function setTask(id, label) { S = load(); S.task = id || ""; S.taskTitle = id ? (label || "") : ""; save(); }
+    // `skipped`: the Skip button. Otherwise the time ran out — maybe while no page was open (`late`).
+    function finish(skipped) {
+      S = load();
+      var was = S.mode, endedAt = skipped ? Date.now() : (S.endsAt || Date.now()), late = !skipped && Date.now() - endedAt > 60000;
+      if (!skipped && !S.running) return;
+      S.running = false;
+      if (was === "focus") {
+        var started = S.startedAt || (endedAt - total() * 1000);
+        if (!skipped || endedAt - started > 60000) {
+          S.done += 1;
+          api(CFG.urls.focus, { started_at: new Date(started).toISOString(), ended_at: new Date(endedAt).toISOString(), task: S.task || "",
+                                description: S.task ? "" : t("focusSession", "Focus session") })
+            .then(function (res) { if (res && res.today != null && window.Alpine && Alpine.store("timer")) Alpine.store("timer").today = res.today; });
+        }
+        S.mode = (S.done % (CFG.every || 4) === 0) ? "long" : "short";
+      } else {
+        S.mode = "focus";
+      }
+      S.startedAt = 0; S.left = total(); S.endsAt = 0;
+      save(); title();
+      if (late) {   // it ended while the app was closed: say so quietly, don't start a break that's long over
+        toast(was === "focus" ? t("focusSavedLate", "A focus session finished while you were away — it's in your timesheet.") : t("breakOver", "Break's over"));
+        return;
+      }
+      if (!skipped) {
+        play();
+        if (was === "focus") notify(t("focusDone", "Focus session done"), t("takeBreak", "Time for a break."), CFG.urls.focus_page, "focus");
+        else notify(t("breakOver", "Break's over"), t("backToWork", "Ready to focus again?"), CFG.urls.focus_page, "focus");
+      }
+      var auto = S.mode === "focus" ? CFG.autoFocus : CFG.autoBreaks;
+      if (auto && !skipped) setTimeout(start, 1200);
+    }
+    function due() { var x = recall(KEY, null); return x && x.running && Date.now() >= x.endsAt; }
+    function check() {
+      if (!due()) return;
+      if (navigator.locks && navigator.locks.request) {      // one tab finishes it, the others just follow
+        navigator.locks.request(KEY, { ifAvailable: true }, function (lock) { if (lock && due()) finish(false); });
+      } else finish(false);
+    }
+    setInterval(function () { if (S.running) title(); check(); }, 1000);
+    window.addEventListener("storage", function (e) { if (e.key === KEY) { S = load(); emit(); title(); } });
+    d.addEventListener("visibilitychange", function () { if (!d.hidden) { S = load(); check(); emit(); title(); } });
+    setTimeout(check, 0);
+    return {
+      get state() { return S; }, left: left, total: total, start: start, pause: pause, reset: reset, set: setMode, setTask: setTask,
+      skip: function () { finish(true); }, toggle: function () { load().running ? pause() : start(); },
+      subscribe: function (fn) { subs.push(fn); fn(S); },
+    };
+  })();
+  window.Work.focus = Focus;
+
   document.addEventListener("alpine:init", function () {
 
     /* ── The running timer (top bar + any "start" button) ─────────────── */
@@ -858,6 +947,78 @@
     });
 
     /* ── Checklist on a task ──────────────────────────────────────────── */
+    /* ── Saved views: the task list's filters, kept under a name ───────── */
+    Alpine.data("workSavedViews", function (query) {
+      return {
+        save: function () {
+          var name = (prompt(t("viewName", "Name this view:")) || "").trim();
+          if (!name) return;
+          api(CFG.urls.viewSave, { name: name, query: query }).then(function (res) {
+            if (res.ok && res.url) { toast(t("viewSaved", "View saved")); location.href = res.url; }
+            else if (res.error) toast(res.error, "warn");
+          });
+        },
+        drop: function (id) {
+          if (!confirm(t("viewDelete", "Remove this saved view?"))) return;
+          var chip = this.$root.querySelector('[data-view="' + id + '"]'), active = chip && chip.classList.contains("is-active");
+          api(CFG.urls.viewBase + id + "/", { action: "delete" }).then(function (res) {
+            if (!res.ok) return;
+            if (active) location.href = CFG.urls.tasks; else if (chip) chip.remove();
+          });
+        },
+      };
+    });
+
+    /* ── A task's blockers ("Blocked by") and its activity / comments ──── */
+    Alpine.data("workBlockers", function (taskId) {
+      return {
+        init: function () {
+          var self = this;
+          this.$el.addEventListener("click", function (e) {
+            var b = e.target.closest("[data-remove]"); if (!b) return;
+            self.send({ remove: b.getAttribute("data-remove") });
+          });
+        },
+        add: function () {
+          var pick = this.$refs.pick; if (!pick || !pick.value) return;
+          var opt = pick.selectedOptions[0];
+          this.send({ add: pick.value }).then(function (res) { if (res.ok && opt) { opt.remove(); pick.value = ""; } });
+        },
+        send: function (data) {
+          var self = this;
+          return api(CFG.urls.taskBase + taskId + "/blockers/", data).then(function (res) {
+            if (res.ok && res.html != null) self.$refs.box.innerHTML = res.html;
+            else if (res.error) toast(res.error, "warn");
+            return res;
+          });
+        },
+      };
+    });
+    Alpine.data("workComments", function (taskId) {
+      return {
+        busy: false,
+        init: function () {
+          this.$el.addEventListener("click", function (e) {
+            var b = e.target.closest("[data-delete-comment]"); if (!b) return;
+            if (!confirm(t("deleteComment", "Delete this comment?"))) return;
+            var li = b.closest("li");
+            api(CFG.urls.commentBase + b.getAttribute("data-delete-comment") + "/delete/", {}).then(function (res) { if (res.ok && li) li.remove(); });
+          });
+        },
+        send: function () {
+          var box = this.$refs.text, text = box.value.trim(), self = this;
+          if (!text || this.busy) return;
+          this.busy = true;
+          api(CFG.urls.taskBase + taskId + "/comment/", { text: text }).then(function (res) {
+            self.busy = false;
+            if (res.ok && res.html) { self.$refs.list.insertAdjacentHTML("afterbegin", res.html); box.value = ""; }
+            else if (res.queued) box.value = "";
+            else if (res.error) toast(res.error, "warn");
+          });
+        },
+      };
+    });
+
     Alpine.data("workChecklist", function (taskId) {
       return {
         text: "",
@@ -1066,65 +1227,46 @@
       };
     });
 
-    /* ── Focus (Pomodoro) ─────────────────────────────────────────────── */
+    /* ── Focus (Pomodoro): the Focus page and the top-bar pill, over the engine ── */
+    Alpine.store("focus", {
+      mode: "focus", running: false, left: 0, total: 1, done: 0, startedAt: 0, task: "", taskTitle: "",
+      get text() { return clock(this.left); },
+      get active() { return this.running || (this.startedAt && this.left < this.total); },   // running, or paused part-way
+      get pct() { return 100 - Math.round(100 * this.left / this.total); },
+      init: function () {
+        var self = this;
+        function pull() { var x = Focus.state; self.mode = x.mode; self.running = x.running; self.done = x.done; self.startedAt = x.startedAt;
+                          self.task = x.task; self.taskTitle = x.taskTitle; self.total = Focus.total(); self.left = Focus.left(); }
+        Focus.subscribe(pull);
+        setInterval(function () { if (self.running) self.left = Focus.left(); }, 250);
+      },
+      toggle: function () { Focus.toggle(); },
+    });
     Alpine.data("workFocus", function (opts) {
-      var KEY = "work-focus:" + ME;
       return {
-        mode: "focus", running: false, endsAt: 0, startedAt: 0, left: 0, done: 0, task: opts.task || "", taskTitle: opts.taskTitle || "",
-        lengths: { focus: CFG.focus || 25, short: CFG.short || 5, long: CFG.long || 15 },
+        get mode() { return Alpine.store("focus").mode; },
+        get running() { return Alpine.store("focus").running; },
+        get done() { return Alpine.store("focus").done; },
+        get task() { return Alpine.store("focus").task; },
+        get text() { return Alpine.store("focus").text; },
+        get pct() { return Alpine.store("focus").pct; },
         init: function () {
-          var saved = recall(KEY, null), self = this;
-          if (saved) Object.assign(this, saved);
-          if (!this.running) this.left = this.lengths[this.mode] * 60;
-          setInterval(function () { self.step(); }, 250);
+          var self = this, last = -1;
+          if (opts.task && !Focus.state.running) Focus.setTask(opts.task, opts.taskTitle);   // opened from a task's "Focus"
+          setInterval(function () {      // the soft tick, on this page only
+            var sec = Math.ceil(Focus.left());
+            if (CFG.tick && Focus.state.running && Focus.state.mode === "focus" && sec !== last) { if (last >= 0) tick(); }
+            last = sec;
+          }, 250);
           d.addEventListener("keydown", function (e) { if (!typing(e) && e.code === "Space" && !e.ctrlKey) { e.preventDefault(); self.toggle(); } });
         },
-        save: function () { store(KEY, { mode: this.mode, running: this.running, endsAt: this.endsAt, startedAt: this.startedAt, left: this.left, done: this.done, task: this.task, taskTitle: this.taskTitle }); },
-        get total() { return this.lengths[this.mode] * 60; },
-        get pct() { return 100 - Math.round(100 * this.left / this.total); },
-        get text() { return clock(this.left); },
-        step: function () {
-          if (!this.running) return;
-          var before = Math.ceil(this.left);
-          this.left = Math.max(0, (this.endsAt - Date.now()) / 1000);
-          if (CFG.tick && this.mode === "focus" && Math.ceil(this.left) !== before) tick();
-          d.title = d.title.replace(/^[🍅☕] [^·]+ · /, "");
-          d.title = (this.mode === "focus" ? "🍅 " : "☕ ") + clock(this.left) + " · " + d.title;
-          if (this.left <= 0) this.finish();
-        },
-        start: function () {
-          if (this.running) return;
-          askNotify();
-          this.running = true; this.endsAt = Date.now() + this.left * 1000;
-          if (!this.startedAt) this.startedAt = Date.now();
-          this.save();
-        },
-        pause: function () { if (!this.running) return; this.step(); this.running = false; this.save(); d.title = d.title.replace(/^[🍅☕] [^·]+ · /, ""); },
-        toggle: function () { this.running ? this.pause() : this.start(); },
-        reset: function () { this.running = false; this.startedAt = 0; this.left = this.total; this.save(); d.title = d.title.replace(/^[🍅☕] [^·]+ · /, ""); },
-        set: function (mode) { this.mode = mode; this.reset(); },
-        skip: function () { this.finish(true); },
-        finish: function (skipped) {
-          var was = this.mode, self = this;
-          this.running = false; d.title = d.title.replace(/^[🍅☕] [^·]+ · /, "");
-          if (was === "focus") {
-            var started = new Date(this.startedAt || (Date.now() - this.total * 1000)), ended = new Date();
-            if (!skipped || (ended - started) > 60000) {
-              this.done += 1;
-              api(CFG.urls.focus, { started_at: started.toISOString(), ended_at: ended.toISOString(), task: this.task || "", description: this.task ? "" : t("focusSession", "Focus session") })
-                .then(function (res) { if (res.today != null) Alpine.store("timer").today = res.today; });
-            }
-            if (!skipped) { play(); notify(t("focusDone", "Focus session done"), t("takeBreak", "Time for a break."), location.pathname, "focus"); }
-            this.mode = (this.done % (CFG.every || 4) === 0) ? "long" : "short";
-          } else {
-            if (!skipped) { play(); notify(t("breakOver", "Break's over"), t("backToWork", "Ready to focus again?"), location.pathname, "focus"); }
-            this.mode = "focus";
-          }
-          this.startedAt = 0; this.left = this.total; this.save();
-          var auto = this.mode === "focus" ? CFG.autoFocus : CFG.autoBreaks;
-          if (auto && !skipped) setTimeout(function () { self.start(); }, 1200);
-        },
-        pick: function (e) { var o = e.target.selectedOptions[0]; this.task = e.target.value; this.taskTitle = o && e.target.value ? o.textContent.trim() : ""; this.save(); },
+        start: function () { Focus.start(); },
+        pause: function () { Focus.pause(); },
+        toggle: function () { Focus.toggle(); },
+        reset: function () { Focus.reset(); },
+        set: function (mode) { Focus.set(mode); },
+        skip: function () { Focus.skip(); },
+        pick: function (e) { var o = e.target.selectedOptions[0]; Focus.setTask(e.target.value, o && e.target.value ? o.textContent.trim() : ""); },
       };
     });
   });
@@ -1165,6 +1307,7 @@
     if (on) play(CFG.sound ? "chime" : "");
     api(CFG.urls.taskBase + id + "/done/", { done: on ? "1" : "0" }).then(function (res) {
       if (res.next && res.next.html) { row.insertAdjacentHTML("afterend", res.next.html); toast(t("repeatMade", "Next one added") + (res.next.due ? " · " + res.next.due : "")); }
+      if (res.unblocked && res.unblocked.length) toast(t("unblocked", "Ready to start now:") + " " + res.unblocked.join(", "));
       if (on) { var tm = window.Alpine && Alpine.store("timer"); if (tm && tm.isFor(id)) { tm.running = null; tm.share(); tm.sync(); } }
     });
     if (on && row.hasAttribute("data-hide-done")) setTimeout(function () { row.classList.add("is-leaving"); setTimeout(function () { row.remove(); }, 260); }, 700);
@@ -1421,19 +1564,6 @@
     window.Work.allowIdle = function () {
       return ("IdleDetector" in window) ? IdleDetector.requestPermission() : Promise.resolve("unsupported");
     };
-  })();
-
-  /* ── A focus session running on another page still ends on time ─────── */
-  (function () {
-    var KEY = "work-focus:" + ME;
-    if (d.querySelector("[data-focus-page]")) return;
-    setInterval(function () {
-      var f = recall(KEY, null);
-      if (!f || !f.running || Date.now() < f.endsAt) return;
-      f.running = false; f.left = 0; store(KEY, f);
-      play(); notify(f.mode === "focus" ? t("focusDone", "Focus session done") : t("breakOver", "Break's over"), "", CFG.urls.focus_page, "focus");
-      var bar = d.querySelector("[data-focus-pill]"); if (bar) bar.hidden = true;
-    }, 1000);
   })();
 
   /* ── Markdown (notes, task notes) ───────────────────────────────────── */

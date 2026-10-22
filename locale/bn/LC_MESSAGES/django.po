@@ -20555,3 +20555,282 @@ msgstr "প্রতিদিন কে এসেছে তার কাজে�
 
 msgid "Absent"
 msgstr "অনুপস্থিত"
+
+#, python-format
+msgid "%(counter)s open task has no dates"
+msgid_plural "%(counter)s open tasks have no dates"
+msgstr[0] "%(counter)sটি খোলা কাজের কোনো তারিখ নেই"
+msgstr[1] "%(counter)sটি খোলা কাজের কোনো তারিখ নেই"
+
+#, python-format
+msgid "%(t)s ago"
+msgstr "%(t)s আগে"
+
+#, python-format
+msgid "+ %(n)s more"
+msgstr "+ আরও %(n)sটি"
+
+msgid "A focus session finished while you were away — it's in your timesheet."
+msgstr "আপনি দূরে থাকার সময় একটি ফোকাস সেশন শেষ হয়েছে — সেটা আপনার টাইমশিটে আছে।"
+
+msgid "A task this one waits on"
+msgstr "যে কাজের জন্য এটি অপেক্ষা করছে"
+
+msgid "Activity"
+msgstr "কার্যক্রম"
+
+msgid "Blocked"
+msgstr "আটকে আছে"
+
+msgid "Blocked by"
+msgstr "যার জন্য আটকে আছে"
+
+msgid "Blocked by other tasks"
+msgstr "অন্য কাজের জন্য আটকে আছে"
+
+msgid "Blocked or not"
+msgstr "আটকে আছে কি না"
+
+msgid "Break’s over"
+msgstr "বিরতি শেষ"
+
+msgid "Comment"
+msgstr "মন্তব্য"
+
+msgid "Count from when it's done"
+msgstr "শেষ করার দিন থেকে গুনুন"
+
+msgid "Created this task"
+msgstr "কাজটি তৈরি হয়েছে"
+
+msgid "Ctrl+Enter to post"
+msgstr "পোস্ট করতে Ctrl+Enter"
+
+msgid "Delete this comment?"
+msgstr "এই মন্তব্যটি মুছবেন?"
+
+msgid "Do first"
+msgstr "আগে করুন"
+
+#, python-format
+msgid "Due date: %(old)s → %(new)s"
+msgstr "শেষ তারিখ: %(old)s → %(new)s"
+
+#, python-format
+msgid "Estimate: %(old)s → %(new)s"
+msgstr "আনুমানিক সময়: %(old)s → %(new)s"
+
+#, python-format
+msgid "Every %(n)s days"
+msgstr "প্রতি %(n)s দিনে"
+
+#, python-format
+msgid "Every %(n)s months"
+msgstr "প্রতি %(n)s মাসে"
+
+#, python-format
+msgid "Every %(n)s weeks"
+msgstr "প্রতি %(n)s সপ্তাহে"
+
+#, python-format
+msgid "Every %(n)s years"
+msgstr "প্রতি %(n)s বছরে"
+
+msgid "Every 2 weeks, every 3 months…"
+msgstr "প্রতি ২ সপ্তাহে, প্রতি ৩ মাসে…"
+
+msgid "Focus session — open the timer"
+msgstr "ফোকাস সেশন — টাইমার খুলুন"
+
+msgid "Get it off your plate"
+msgstr "দ্রুত সেরে ফেলুন"
+
+msgid "Give tasks a start and a due date (on the task's page) and they're drawn here as bars."
+msgstr "কাজের পাতায় শুরু ও শেষ তারিখ দিন, তাহলে এখানে বার হিসেবে দেখা যাবে।"
+
+msgid "Give the view a name."
+msgstr "ভিউটির একটি নাম দিন।"
+
+#, python-format
+msgid "Goal: %(old)s → %(new)s"
+msgstr "লক্ষ্য: %(old)s → %(new)s"
+
+msgid "Important and urgent"
+msgstr "জরুরি ও গুরুত্বপূর্ণ"
+
+msgid "Important, not urgent — give it a day"
+msgstr "গুরুত্বপূর্ণ, জরুরি নয় — একটা দিন ঠিক করুন"
+
+msgid "Important: high or urgent priority, or part of a goal. Urgent: late, due within two days, in progress, or marked urgent. Change a task's priority or due date and it moves."
+msgstr "গুরুত্বপূর্ণ: উচ্চ বা জরুরি অগ্রাধিকার, অথবা কোনো লক্ষ্যের অংশ। জরুরি: দেরি হয়েছে, দুই দিনের মধ্যে শেষ তারিখ, চলছে, বা জরুরি চিহ্নিত। অগ্রাধিকার বা শেষ তারিখ বদলালে কাজটি সরে যায়।"
+
+msgid "Later, or never"
+msgstr "পরে, অথবা কখনো না"
+
+msgid "Leave empty to repeat on the same weekday as the due date."
+msgstr "ফাঁকা রাখলে শেষ তারিখের একই বারে আবার হবে।"
+
+msgid "Marked done"
+msgstr "শেষ হিসেবে চিহ্নিত"
+
+msgid "Matrix"
+msgstr "ম্যাট্রিক্স"
+
+msgid "Name this view (e.g. “Urgent at work”):"
+msgstr "ভিউটির নাম দিন (যেমন “অফিসের জরুরি কাজ”):"
+
+msgid "Neither — question whether it's needed"
+msgstr "কোনোটিই নয় — আদৌ দরকার কি না ভাবুন"
+
+#, python-format
+msgid "No longer blocked by “%(title)s”"
+msgstr "“%(title)s”-এর জন্য আর আটকে নেই"
+
+#, python-format
+msgid "No longer waiting on %(old)s"
+msgstr "%(old)s-এর জন্য আর অপেক্ষা নেই"
+
+msgid "Nothing dated in these weeks"
+msgstr "এই সপ্তাহগুলোতে তারিখসহ কোনো কাজ নেই"
+
+msgid "Nothing here."
+msgstr "এখানে কিছু নেই।"
+
+msgid "Nothing — this task can start any time."
+msgstr "কিছু নেই — কাজটি যেকোনো সময় শুরু করা যায়।"
+
+#, python-format
+msgid "Now blocked by “%(title)s”"
+msgstr "এখন “%(title)s”-এর জন্য আটকে আছে"
+
+msgid "Plan it"
+msgstr "পরিকল্পনা করুন"
+
+#, python-format
+msgid "Priority: %(old)s → %(new)s"
+msgstr "অগ্রাধিকার: %(old)s → %(new)s"
+
+#, python-format
+msgid "Project: %(old)s → %(new)s"
+msgstr "প্রজেক্ট: %(old)s → %(new)s"
+
+msgid "Ready to start"
+msgstr "শুরু করা যায়"
+
+msgid "Ready to start now:"
+msgstr "এখন শুরু করা যায়:"
+
+msgid "Ready: everything it waits on is done."
+msgstr "প্রস্তুত: যেগুলোর জন্য অপেক্ষা ছিল সব শেষ।"
+
+#, python-format
+msgid "Ready: “%(title)s” is done"
+msgstr "প্রস্তুত: “%(title)s” শেষ হয়েছে"
+
+#, python-format
+msgid "Remove the view %(name)s"
+msgstr "%(name)s ভিউটি সরান"
+
+msgid "Remove this saved view?"
+msgstr "এই সেভ করা ভিউটি সরাবেন?"
+
+#, python-format
+msgid "Renamed from “%(old)s”"
+msgstr "“%(old)s” থেকে নাম বদলানো হয়েছে"
+
+msgid "Save these filters as a view"
+msgstr "এই ফিল্টারগুলো ভিউ হিসেবে সেভ করুন"
+
+msgid "Saved view"
+msgstr "সেভ করা ভিউ"
+
+msgid "Saved views"
+msgstr "সেভ করা ভিউ"
+
+#, python-format
+msgid "Start date: %(old)s → %(new)s"
+msgstr "শুরুর তারিখ: %(old)s → %(new)s"
+
+msgid "Starts"
+msgstr "শুরু"
+
+#, python-format
+msgid "Status: %(old)s → %(new)s"
+msgstr "অবস্থা: %(old)s → %(new)s"
+
+msgid "Task activity"
+msgstr "কাজের কার্যক্রম"
+
+msgid "Tasks from start to due date, week by week"
+msgstr "শুরু থেকে শেষ তারিখ পর্যন্ত কাজ, সপ্তাহ ধরে"
+
+msgid "Tasks that must be done before this one can start."
+msgstr "এটি শুরুর আগে যে কাজগুলো শেষ হতে হবে।"
+
+msgid "Tasks that must be finished first. When the last one is done, you're told this one is ready."
+msgstr "যে কাজগুলো আগে শেষ করতে হবে। শেষটি হয়ে গেলে জানানো হবে যে এটি শুরু করা যায়।"
+
+msgid "Tasks: blocked"
+msgstr "কাজ: আটকে আছে"
+
+msgid "Tasks: timeline"
+msgstr "কাজ: টাইমলাইন"
+
+msgid "Tasks: urgent × important matrix"
+msgstr "কাজ: জরুরি × গুরুত্বপূর্ণ ম্যাট্রিক্স"
+
+msgid "That would make the two tasks wait on each other."
+msgstr "তাহলে দুটি কাজ একে অপরের জন্য অপেক্ষা করবে।"
+
+msgid "The next one is set from the day you finish it, not from its due date — for things like “water the plants”."
+msgstr "পরেরটি শেষ তারিখ থেকে নয়, শেষ করার দিন থেকে ঠিক হয় — যেমন “গাছে পানি দেওয়া”।"
+
+msgid "The start can't be after the due date."
+msgstr "শুরুর তারিখ শেষ তারিখের পরে হতে পারে না।"
+
+msgid "Time’s up"
+msgstr "সময় শেষ"
+
+msgid "Urgent × important: what to do first"
+msgstr "জরুরি × গুরুত্বপূর্ণ: আগে কী করবেন"
+
+msgid "Urgent, not important — do it fast, or hand it over"
+msgstr "জরুরি, গুরুত্বপূর্ণ নয় — দ্রুত করুন, বা অন্যকে দিন"
+
+msgid "View saved"
+msgstr "ভিউ সেভ হয়েছে"
+
+#, python-format
+msgid "View: %(name)s"
+msgstr "ভিউ: %(name)s"
+
+#, python-format
+msgid "Waiting on %(counter)s task"
+msgid_plural "Waiting on %(counter)s tasks"
+msgstr[0] "%(counter)sটি কাজের অপেক্ষায়"
+msgstr[1] "%(counter)sটি কাজের অপেক্ষায়"
+
+msgid "Waiting on this one"
+msgstr "এটির অপেক্ষায় আছে"
+
+#, python-format
+msgid "Waiting on: %(new)s"
+msgstr "যার অপেক্ষায়: %(new)s"
+
+msgid "Waits on…"
+msgstr "অপেক্ষা করছে…"
+
+msgid "When work on it begins — it's drawn from here to its due date on the timeline."
+msgstr "কাজ কবে শুরু — টাইমলাইনে এখান থেকে শেষ তারিখ পর্যন্ত আঁকা হয়।"
+
+msgid "Write a comment — what you tried, what you decided, a link…"
+msgstr "মন্তব্য লিখুন — কী চেষ্টা করলেন, কী ঠিক করলেন, একটি লিংক…"
+
+msgid "Write something first."
+msgstr "আগে কিছু লিখুন।"
+
+msgid "You can keep up to 30 views."
+msgstr "সর্বোচ্চ ৩০টি ভিউ রাখা যায়।"
+
+msgid "from when it's done"
+msgstr "শেষ করার দিন থেকে"

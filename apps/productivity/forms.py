@@ -49,23 +49,47 @@ class OwnedForm(forms.ModelForm):
 
 class TaskForm(OwnedForm):
     tags_text = TagsField()
+    repeat_on = forms.MultipleChoiceField(label=_("On these days"), choices=WEEKDAY_CHOICES, required=False, widget=forms.CheckboxSelectMultiple,
+                                          help_text=_("Leave empty to repeat on the same weekday as the due date."))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["scheduled_at"].help_text = _("A block on your day planner, as long as the estimate (else 30 minutes).")
+        self.fields["repeat_every"].required = False      # left out: once each day / week / month
+        if self.instance.pk and self.instance.repeat_days:
+            self.fields["repeat_on"].initial = [x for x in self.instance.repeat_days.split(",") if x]
 
     class Meta:
         model = Task
-        fields = ("title", "project", "status", "priority", "due_date", "estimate_minutes", "repeat", "remind_at", "scheduled_at", "link", "goal",
-                  "waiting_for", "notes")
+        fields = ("title", "project", "status", "priority", "start_date", "due_date", "estimate_minutes", "repeat", "repeat_every", "repeat_from_done",
+                  "remind_at", "scheduled_at", "link", "goal", "waiting_for", "notes")
         widgets = {
             "link": forms.URLInput(attrs={"placeholder": "https://github.com/…/pull/482", "inputmode": "url"}),
+            "start_date": DATE,
+            "repeat_every": forms.NumberInput(attrs={"inputmode": "numeric", "min": 1, "max": 99}),
             "due_date": DATE,
             "remind_at": forms.DateTimeInput(attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"),
             "scheduled_at": forms.DateTimeInput(attrs={"type": "datetime-local", "step": 900}, format="%Y-%m-%dT%H:%M"),
             "notes": forms.Textarea(attrs={"rows": 8, "data-markdown": "1"}),
             "estimate_minutes": forms.NumberInput(attrs={"inputmode": "numeric", "min": 0, "step": 5}),
         }
+
+    def clean(self):
+        data = super().clean()
+        start, due = data.get("start_date"), data.get("due_date")
+        if start and due and start > due:
+            self.add_error("start_date", _("The start can't be after the due date."))
+        if not data.get("repeat_every"):
+            data["repeat_every"] = 1
+        return data
+
+    def save(self, commit=True):
+        obj = super().save(commit=False)
+        obj.repeat_days = ",".join(sorted(self.cleaned_data.get("repeat_on") or [])) if obj.repeat == "weekly" else ""
+        obj.repeat_every = obj.repeat_every or 1
+        if commit:
+            obj.save()
+        return obj
 
 
 class ProjectForm(forms.ModelForm):

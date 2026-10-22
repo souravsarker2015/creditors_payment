@@ -452,6 +452,36 @@
     };
     </script>
     <script src="{% asset 'js/offline.js' %}"></script>
+    {% if user.is_authenticated %}
+    <script>
+    /* A focus session (Productivity → Focus) keeps going while you're in another part of the app:
+       a small 🍅 shows the time left, and you're told when it's up. Productivity pages save it. */
+    (function () {
+        if (location.pathname.indexOf("/work/") === 0) return;
+        var KEY = "work-focus:" + document.documentElement.getAttribute("data-user"), el = null, told = 0;
+        function read() { try { return JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) { return null; } }
+        function two(n) { return (n < 10 ? "0" : "") + n; }
+        function draw() {
+            var f = read();
+            if (!f || !f.running) { if (el) el.hidden = true; return; }
+            var left = Math.max(0, Math.floor((f.endsAt - Date.now()) / 1000));
+            if (!el) {
+                el = document.createElement("a"); el.href = "{% url 'work:focus' %}"; el.className = "focus-float";
+                el.title = "{% translate 'Focus session — open the timer' %}"; document.body.appendChild(el);
+            }
+            el.hidden = false; el.setAttribute("data-mode", f.mode);
+            el.textContent = (f.mode === "focus" ? "🍅 " : "☕ ") + (left ? two(Math.floor(left / 60)) + ":" + two(left % 60) : "{% translate 'Time’s up' %}");
+            if (!left && told !== f.endsAt && Date.now() - f.endsAt < 60000) {
+                told = f.endsAt;
+                var title = f.mode === "focus" ? "{% translate 'Focus session done' %}" : "{% translate 'Break’s over' %}";
+                if ("Notification" in window && Notification.permission === "granted") { try { new Notification(title, { tag: "focus" }); } catch (e) { /* ignore */ } }
+                if (window.FT && FT.toast) FT.toast(title);
+            }
+        }
+        setInterval(draw, 1000); draw();
+    })();
+    </script>
+    {% endif %}
     {% block extra_js %}{% endblock %}
     {% if user.is_authenticated %}
     {% comment %}

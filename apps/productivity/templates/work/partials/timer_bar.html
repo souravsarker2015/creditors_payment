@@ -22,6 +22,12 @@
     </form>
   </template>
   <div class="wt-side">
+    {% if request.resolver_match.url_name != "focus" %}
+    <span class="wf-pill" x-show="$store.focus.active" x-cloak :data-mode="$store.focus.mode" :class="!$store.focus.running && 'is-paused'" data-focus-pill>
+      <a href="{% url 'work:focus' %}" class="wf-pill-time" data-tip="{% translate 'Focus session — open the timer' %}"><span aria-hidden="true" x-text="$store.focus.mode === 'focus' ? '🍅' : '☕'"></span><span class="num" x-text="$store.focus.text"></span></a>
+      <button type="button" class="wf-pill-btn" @click="$store.focus.toggle()" :aria-label="$store.focus.running ? '{% translate "Pause" %}' : '{% translate "Resume" %}'"><span x-show="$store.focus.running">{% icon "pause" %}</span><span x-show="!$store.focus.running" x-cloak>{% icon "play" %}</span></button>
+    </span>
+    {% endif %}
     <span class="wt-today" data-tip="{% translate 'Tracked today' %}">{% icon "clock" %}<span class="num" x-text="$store.timer.todayText"></span></span>
     <span class="wt-outbox" data-work-outbox hidden data-tip="{% translate 'Changes waiting for a connection' %}">{% icon "cloud" %}<b>0</b></span>
     <button type="button" class="wt-add" @click="$dispatch('work:capture', 'task')" aria-label="{% translate 'Quick add (c)' %}" data-tip="{% translate 'Quick add — task, note or time (c)' %}">{% icon "plus" %}</button>

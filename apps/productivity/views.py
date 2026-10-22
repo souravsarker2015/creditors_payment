@@ -1,7 +1,7 @@
 """Productivity pages. Every query is limited to the signed-in person
 (owner=request.user): nobody sees anyone else's work, admins included."""
 import csv
-from datetime import timedelta
+from datetime import date, timedelta
 from urllib.parse import urlencode
 
 from django.contrib import messages
@@ -26,11 +26,11 @@ from .api import card_json, entry_json
 from .access import can_use, work_required
 from .forms import DeckForm, EntryForm, GoalForm, HabitForm, LearningForm, ProjectForm, SettingsForm, SnippetForm, TagForm, TaskForm
 from .models import (
-    Card, Color, Deck, Diagram, DiagramKind, DiagramVersion, Goal, GoalStatus, Habit, JournalEntry, Language, LearningItem, LearningKind, LearningStatus, LearningUnit, Note, Priority, Project, Snippet,
+    Card, Color, Deck, Diagram, DiagramKind, DiagramVersion, Goal, GoalStatus, Habit, JournalEntry, Language, LearningItem, LearningKind, LearningStatus, LearningUnit, Note, Priority, Project, SavedView, Snippet,
     Status, Tag, Task, TimeEntry, WorkSettings,
 )
 
-ROW_RELATED = ("tags", "checklist")   # what a task row shows; fetched only for the rows on screen
+ROW_RELATED = ("tags", "checklist", "blocked_by")   # what a task row shows; fetched only for the rows on screen
 
 
 def _today():
@@ -45,7 +45,8 @@ def _urls():
     r = reverse
     return {
         "timerState": r("work:api_timer_state"), "timerStart": r("work:api_timer_start"), "timerStop": r("work:api_timer_stop"),
-        "timerUpdate": r("work:api_timer_update"), "taskAdd": r("work:api_task_add"), "taskBase": "/work/api/tasks/",
+        "timerUpdate": r("work:api_timer_update"), "taskAdd": r("work:api_task_add"), "taskBase": "/work/api/tasks/", "commentBase": "/work/api/comments/",
+        "viewSave": r("work:api_view_save"), "viewBase": "/work/api/views/",
         "taskBulk": r("work:api_task_bulk"), "wrapup": r("work:wrapup"),
         "checklist": "/work/api/checklist/", "noteSave": r("work:api_note_save"), "noteBase": "/work/api/notes/",
         "journal": r("work:api_journal_save"), "focus": r("work:api_focus_log"), "search": r("work:api_search"),
@@ -70,6 +71,9 @@ def _texts():
         "tracked": _("Tracked"), "notSaved": _("Not saved."), "taskAdded": _("Task added"), "noteSaved": _("Note saved"),
         "repeatMade": _("Next one added"), "taskDeleted": _("Task deleted"), "noteDeleted": _("Note deleted"),
         "focusSession": _("Focus session"), "focusDone": _("Focus session done"), "takeBreak": _("Time for a break."),
+        "focusSavedLate": _("A focus session finished while you were away — it's in your timesheet."),
+        "unblocked": _("Ready to start now:"), "deleteComment": _("Delete this comment?"),
+        "viewName": _("Name this view (e.g. “Urgent at work”):"), "viewDelete": _("Remove this saved view?"), "viewSaved": _("View saved"),
         "breakOver": _("Break's over"), "backToWork": _("Ready to focus again?"), "myDay": _("My Day"), "noAccess": _("Not allowed."),
         "link": _("Link"), "copied": _("Copied"),
         "units": {k: str(v) for k, v in LearningUnit.choices},
@@ -119,6 +123,12 @@ def _commands():
     out = [{"id": "go-" + key, "title": title, "icon": icon, "url": r(name) if name else r("work:tasks") + "?view=board",
             "hint": hint, "words": words, "kind": "page"} for key, title, icon, name, hint, words in go]
     out += [
+        {"id": "go-matrix", "title": _("Tasks: urgent × important matrix"), "icon": "quadrant", "url": r("work:tasks") + "?view=matrix",
+         "words": "eisenhower priority prioritise prioritize quadrant", "kind": "page"},
+        {"id": "go-timeline", "title": _("Tasks: timeline"), "icon": "gantt", "url": r("work:tasks") + "?view=timeline",
+         "words": "gantt roadmap schedule weeks start due", "kind": "page"},
+        {"id": "go-blocked", "title": _("Tasks: blocked"), "icon": "lock", "url": r("work:tasks") + "?view=list&blocked=yes",
+         "words": "dependencies waiting depends on", "kind": "page"},
         {"id": "new-task", "title": _("New task"), "icon": "plus", "action": "capture:task", "hint": "c", "words": "add create"},
         {"id": "new-note", "title": _("New note"), "icon": "note", "action": "capture:note", "hint": "n", "words": "add create write"},
         {"id": "new-mindmap", "title": _("New mind map"), "icon": "mindmap", "url": r("work:diagrams") + "?start=mindmap", "words": "add create brainstorm diagram"},
@@ -163,7 +173,10 @@ def render_work(request, template, ctx=None):
         "running": running,
         "ws": s,
         "work_config": {
-            "running": entry_json(running), "todaySeconds": today_secs, "urls": _urls(), "text": _texts(), "commands": _commands(),
+            "running": entry_json(running), "todaySeconds": today_secs, "urls": _urls(), "text": _texts(),
+            "commands": _commands() + [{"id": f"view-{v.pk}", "title": _("View: %(name)s") % {"name": v.name}, "icon": "filter", "kind": "page",
+                                        "url": reverse("work:tasks") + "?" + v.query + ("&" if v.query else "") + f"sv={v.pk}", "words": "saved view filter"}
+                                       for v in SavedView.objects.filter(owner=user)],
             "focus": s.focus_minutes, "short": s.short_break_minutes, "long": s.long_break_minutes, "every": s.long_break_every,
             "autoBreaks": s.auto_start_breaks, "autoFocus": s.auto_start_focus,
             "sound": s.sound if s.sound_enabled else "", "volume": s.volume, "tick": s.tick_sound,
@@ -229,13 +242,64 @@ BOARD_LIMIT = 80
 BOARD_DONE = 30
 
 
+TASK_VIEWS = ("list", "board", "matrix", "timeline")
+URGENT_DAYS = 2       # the matrix: due within this many days (or late) counts as urgent
+TIMELINE_DAYS = 42    # six weeks
+
+
+def _matrix(tasks, today):
+    """Urgent × important (the Eisenhower matrix). Important: high or urgent
+    priority, or tied to a goal. Urgent: late, due within two days, or marked urgent."""
+    soon = today + timedelta(days=URGENT_DAYS)
+    q = {"do": [], "plan": [], "quick": [], "drop": []}
+    for t in tasks:
+        important = (t.priority or 0) >= Priority.HIGH or bool(t.goal_id)
+        urgent = (t.priority or 0) >= Priority.URGENT or bool(t.due_date and t.due_date <= soon) or t.status == Status.DOING
+        q["do" if important and urgent else "plan" if important else "quick" if urgent else "drop"].append(t)
+    for items in q.values():
+        items.sort(key=lambda t: (t.due_date or date.max, -(t.priority or 0), t.order))
+    return [
+        ("do", _("Do first"), _("Important and urgent"), q["do"]),
+        ("plan", _("Plan it"), _("Important, not urgent — give it a day"), q["plan"]),
+        ("quick", _("Get it off your plate"), _("Urgent, not important — do it fast, or hand it over"), q["quick"]),
+        ("drop", _("Later, or never"), _("Neither — question whether it's needed"), q["drop"]),
+    ]
+
+
+def _timeline(request, qs, today):
+    """Tasks drawn from their start to their due date over six weeks, by project."""
+    first = parse_date(request.GET.get("from") or "") or (today - timedelta(days=today.weekday() + 7))
+    last = first + timedelta(days=TIMELINE_DAYS - 1)
+    dated = (qs.filter(Q(due_date__isnull=False) | Q(start_date__isnull=False))
+             .filter(Q(due_date__gte=first) | Q(due_date__isnull=True, start_date__gte=first))
+             .filter(Q(start_date__lte=last) | Q(start_date__isnull=True, due_date__lte=last))
+             .select_related("project").prefetch_related("blocked_by").order_by("project__name", "start_date", "due_date"))
+    rows = {}
+    for t in dated:
+        a, b = t.start_date or t.due_date, t.due_date or t.start_date
+        a2, b2 = max(a, first), min(b, last)
+        rows.setdefault(t.project, []).append({
+            "t": t, "left": (a2 - first).days * 100 / TIMELINE_DAYS, "width": ((b2 - a2).days + 1) * 100 / TIMELINE_DAYS,
+            "cut_start": a < first, "cut_end": b > last, "late": t.is_overdue(today), "days": (b - a).days + 1,
+        })
+    days = [first + timedelta(days=i) for i in range(TIMELINE_DAYS)]
+    weeks = [d for d in days if d.weekday() == first.weekday()]
+    return {
+        "tl_rows": sorted(rows.items(), key=lambda kv: (kv[0] is None, kv[0].name.lower() if kv[0] else "")),
+        "tl_first": first, "tl_last": last, "tl_weeks": weeks, "tl_days": days,
+        "tl_today": (today - first).days * 100 / TIMELINE_DAYS if first <= today <= last else None,
+        "tl_prev": first - timedelta(days=28), "tl_next": first + timedelta(days=28),
+        "tl_undated": qs.exclude(status=Status.DONE).filter(due_date__isnull=True, start_date__isnull=True).count(),
+    }
+
+
 @work_required
 def tasks_view(request):
     user, today = request.user, _today()
     view = request.GET.get("view") or request.COOKIES.get("work_task_view") or "list"
-    view = view if view in ("list", "board") else "list"
+    view = view if view in TASK_VIEWS else "list"
     qs = Task.objects.filter(owner=user).select_related("project")
-    f = {k: request.GET.get(k, "").strip() for k in ("q", "project", "tag", "priority", "due", "goal")}
+    f = {k: request.GET.get(k, "").strip() for k in ("q", "project", "tag", "priority", "due", "goal", "blocked")}
     if f["q"]:
         qs = qs.filter(Q(title__icontains=f["q"]) | Q(notes__icontains=f["q"]))
     if f["project"] == "none":
@@ -256,14 +320,25 @@ def tasks_view(request):
         qs = qs.filter(due_date__gte=today, due_date__lte=today + timedelta(days=7))
     elif f["due"] == "none":
         qs = qs.filter(due_date__isnull=True)
+    open_blocker = Q(blocked_by__isnull=False) & ~Q(blocked_by__status=Status.DONE)
+    if f["blocked"] == "yes":
+        qs = qs.filter(open_blocker).exclude(status=Status.DONE)
+    elif f["blocked"] == "no":
+        qs = qs.exclude(pk__in=Task.objects.filter(owner=user).filter(open_blocker).values("pk"))
     qs = qs.distinct()
     show_done = request.GET.get("done") == "1"
     one = request.GET.get("group", "")
     ctx = {"view": view, "f": f, "filtered": any(f.values()), "show_done": show_done, "today": today, "one_group": one,
            "projects": Project.objects.filter(owner=user, is_archived=False), "tags": Tag.objects.filter(owner=user),
            "goals": Goal.objects.filter(owner=user, status=GoalStatus.ACTIVE),
-           "priorities": Priority.choices, "statuses": Status.choices}
-    if view == "board":
+           "priorities": Priority.choices, "statuses": Status.choices,
+           "saved_views": SavedView.objects.filter(owner=user), "sv": request.GET.get("sv", ""),
+           "query": request.GET.urlencode()}
+    if view == "matrix":
+        ctx["quadrants"] = _matrix(list(qs.exclude(status=Status.DONE).prefetch_related(*ROW_RELATED)), today)
+    elif view == "timeline":
+        ctx.update(_timeline(request, qs, today))
+    elif view == "board":
         columns = []
         for value, label in Status.choices:
             items = qs.filter(status=value)
@@ -273,9 +348,12 @@ def tasks_view(request):
             columns.append({"status": value, "label": label, "tasks": items, "total": total, "hidden": total - len(items)})
         ctx["columns"] = columns
     else:
-        open_ = list(qs.exclude(status=Status.DONE))
+        open_ = list(qs.exclude(status=Status.DONE).prefetch_related("blocked_by"))
         waiting = [t for t in open_ if t.waiting_for]
         open_ = [t for t in open_ if not t.waiting_for]
+        blocked = [t for t in open_ if t.is_blocked and t.status != Status.DOING]
+        blocked_ids = {t.pk for t in blocked}
+        open_ = [t for t in open_ if t.pk not in blocked_ids]
         later = sorted([t for t in open_ if t.my_day and t.my_day > today and t.status != Status.DOING
                         and not (t.due_date and t.due_date <= t.my_day)], key=lambda t: t.my_day)
         later_ids = {t.pk for t in later}
@@ -283,6 +361,7 @@ def tasks_view(request):
         groups = [
             ("doing", _("In progress"), [t for t in open_ if t.status == Status.DOING]),
             ("waiting", _("Waiting on others"), waiting),
+            ("blocked", _("Blocked by other tasks"), blocked),
             ("overdue", _("Late"), [t for t in open_ if t.status != Status.DOING and t.due_date and t.due_date < today]),
             ("today", _("Today"), [t for t in open_ if t.status != Status.DOING and (t.due_date == today or (t.my_day == today and not t.due_date))]),
             ("upcoming", _("Coming up"), sorted([t for t in open_ if t.status != Status.DOING and t.due_date and t.due_date > today], key=lambda t: t.due_date)),
@@ -306,7 +385,7 @@ def tasks_view(request):
             base = request.GET.copy()
             base.pop("page", None)
             ctx.update({"base_query_string": base.urlencode(), "pagination_window": _page_window(page)})
-        ctx["open_count"] = len(open_) + len(waiting) + len(later)
+        ctx["open_count"] = len(open_) + len(waiting) + len(later) + len(blocked)
         ctx["done"] = list(qs.filter(status=Status.DONE).order_by("-completed_at")[:50]) if show_done and not one else []
         ctx["done_count"] = qs.filter(status=Status.DONE).count()
         prefetch_related_objects(shown + ctx["done"], *ROW_RELATED)
@@ -347,7 +426,10 @@ def task_view(request, pk=None):
         entries = list(task.entries.select_related("project").order_by("-started_at")[:30])
         spent = services.task_seconds(task)
         ctx.update({"entries": entries, "spent": spent, "checklist": task.checklist.all(),
-                    "estimate_pct": min(round(100 * spent / (task.estimate_minutes * 60)), 999) if task.estimate_minutes else None})
+                    "estimate_pct": min(round(100 * spent / (task.estimate_minutes * 60)), 999) if task.estimate_minutes else None,
+                    "activity": list(task.activity.all()[:60]),
+                    "blocker_options": list(Task.objects.filter(owner=user).exclude(status=Status.DONE).exclude(pk=task.pk)
+                                            .exclude(pk__in=task.blocked_by.values("pk")).order_by("-updated_at").only("pk", "title")[:300])})
     return render_work(request, "work/task.html", ctx)
 
 
@@ -1431,6 +1513,10 @@ def export_view(request):
     rows += json.loads(serializers.serialize("json", Diagram.objects.filter(owner=user), fields=diagram_fields))
     rows += json.loads(serializers.serialize("json", Deck.objects.filter(owner=user)))
     rows += json.loads(serializers.serialize("json", Card.objects.filter(owner=user)))
+    from .models import TaskActivity
+
+    rows += json.loads(serializers.serialize("json", TaskActivity.objects.filter(task__owner=user)))
+    rows += json.loads(serializers.serialize("json", SavedView.objects.filter(owner=user)))
     ext = {"python": "py", "javascript": "js", "typescript": "ts", "bash": "sh", "plaintext": "txt", "markdown": "md", "xml": "html",
            "csharp": "cs", "cpp": "cpp", "dockerfile": "Dockerfile", "kotlin": "kt", "ruby": "rb", "rust": "rs", "yaml": "yml"}
 

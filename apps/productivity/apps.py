@@ -6,3 +6,6 @@ class ProductivityConfig(AppConfig):
     name = "apps.productivity"
     label = "productivity"
     verbose_name = "Productivity"
+
+    def ready(self):
+        from . import activity  # noqa: F401 — records what changes on a task

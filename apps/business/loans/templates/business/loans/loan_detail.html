@@ -40,7 +40,7 @@
           <button type="button" class="menu-item" role="menuitem" @click="open = false; modal = 'close'">{% include "business/partials/icon.html" with name="lock" %}{% translate "Close loan" %}</button>
           {% endif %}
           {% if biz_can.delete %}
-          <form method="post" action="{% url 'business:loan_delete' loan.pk %}" data-confirm="{% translate 'Delete this loan with its payments? You can restore it from Deleted.' %}">{% csrf_token %}
+          <form method="post" action="{% url 'business:loan_delete' loan.pk %}" data-confirm="{{ _("Delete this loan with its payments? You can restore it from Deleted.") }}">{% csrf_token %}
             <button type="submit" class="menu-item is-danger" role="menuitem">{% include "partials/icon.html" with name="trash" %}{% translate "Delete loan" %}</button>
           </form>
           {% endif %}
@@ -62,7 +62,7 @@
       <p>{% blocktranslate with date=s.overdue_periods.0.due|date:"j M Y" %}The oldest was due on {{ date }}.{% endblocktranslate %}</p>
       <div class="flex flex-wrap gap-2 mt-3">
         <button type="button" class="btn btn-primary btn-sm" @click="modal = 'pay'; $dispatch('pay-pick', 'overdue')">{% translate "Pay now" %}</button>
-        <form method="post" action="{% url 'business:loan_pay_past' loan.pk %}" data-confirm="{% translate 'Mark every overdue payment as paid on its due date? Use this when you are entering an older loan that you have been paying all along.' %}">{% csrf_token %}
+        <form method="post" action="{% url 'business:loan_pay_past' loan.pk %}" data-confirm="{{ _("Mark every overdue payment as paid on its due date? Use this when you are entering an older loan that you have been paying all along.") }}">{% csrf_token %}
           <button type="submit" class="btn btn-soft btn-sm" data-tip="{% translate 'For older loans: records each overdue payment as paid on its due date' %}">{% include "partials/icon.html" with name="check" %}{% translate "Already paid these" %}</button>
         </form>
       </div>
@@ -257,7 +257,7 @@
           <span class="ledger-icon" data-tone="accent">{% include "business/partials/icon.html" with name="percent" %}</span>
           <div class="ledger-main"><p class="ledger-title">{{ c.rate|num }}% {{ loan.get_rate_period_display }}</p><p class="ledger-meta">{% blocktranslate with date=c.effective_from|date:"j M Y" %}From {{ date }}{% endblocktranslate %}</p></div>
           <div class="ledger-end">
-            <form method="post" action="{% url 'business:loan_rate_delete' c.pk %}" data-confirm="{% translate 'Remove this rate change?' %}">{% csrf_token %}
+            <form method="post" action="{% url 'business:loan_rate_delete' c.pk %}" data-confirm="{{ _("Remove this rate change?") }}">{% csrf_token %}
               <button type="submit" class="icon-btn" aria-label="{% translate 'Remove' %}" data-tip="{% translate 'Remove' %}">{% include "partials/icon.html" with name="trash" %}</button>
             </form>
           </div>

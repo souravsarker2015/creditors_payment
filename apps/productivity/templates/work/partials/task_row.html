@@ -11,6 +11,7 @@ Needs: t, today.
     <div class="wt-task-meta">
       {% if t.priority >= 3 %}<span class="wt-prio" data-p="{{ t.priority }}">{{ t.get_priority_display }}</span>{% endif %}
       {% if t.waiting_for %}<span class="wt-wait" title="{% translate 'Waiting on' %}">{% icon "clock" %}{{ t.waiting_for }}</span>{% endif %}
+      {% if t.is_blocked %}{% with first=t.open_blockers.0 %}<span class="wt-blocked" title="{% translate 'Blocked by' %}: {% for b in t.open_blockers %}{{ b.title }}{% if not forloop.last %}, {% endif %}{% endfor %}">{% icon "lock" %}{{ first.title|truncatechars:28 }}{% if t.open_blockers|length > 1 %} +{{ t.open_blockers|length|add:-1 }}{% endif %}</span>{% endwith %}{% endif %}
       {% if t.project %}<span class="wt-proj"><span class="wt-dot" data-color="{{ t.project.color }}"></span>{{ t.project.name }}</span>{% endif %}
       {% if t.my_day and t.my_day > today and not t.is_done %}<span class="wt-est wt-later-chip" title="{% translate 'Out of sight until then' %}">{% icon "clock" %}{{ t.my_day|date:"D j M" }}</span>{% endif %}
       {% if t.scheduled_at and not t.is_done %}<span class="wt-est" title="{% translate 'Planned for' %}">{% icon "clock" %}{% if t.scheduled_at|date:"Y-m-d" != today|date:"Y-m-d" %}{{ t.scheduled_at|date:"D" }} {% endif %}{{ t.scheduled_at|time:"H:i" }}</span>{% endif %}
@@ -18,7 +19,7 @@ Needs: t, today.
       {% if t.link %}<a href="{{ t.link }}" class="wt-link" target="_blank" rel="noopener noreferrer" title="{{ t.link }}">{% icon "link" %}{{ t.link_label }}</a>{% endif %}
       {% if t.estimate_minutes %}<span class="wt-est">~{{ t.estimate_minutes|minutes_hm }}</span>{% endif %}
       {% with c=t|checklist_counts %}{% if c %}<span class="wt-est">{% icon "check" %}{{ c }}</span>{% endif %}{% endwith %}
-      {% if t.repeat %}<span class="wt-est" title="{{ t.get_repeat_display }}">{% icon "repeat" %}</span>{% endif %}
+      {% if t.repeat %}<span class="wt-est" title="{{ t.repeat_label }}">{% icon "repeat" %}</span>{% endif %}
       {% for tag in t.tags.all %}<a href="{% url 'work:tasks' %}?tag={{ tag.name|urlencode }}" class="wt-tag">#{{ tag.name }}</a>{% endfor %}
     </div>
   </div>

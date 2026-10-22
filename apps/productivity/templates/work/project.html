@@ -13,7 +13,7 @@
   <div class="wp-actions">
     <button type="button" class="btn btn-primary" @click="$store.timer.start({ project: {{ project.pk }}, label: '{{ project.name|escapejs }}', description: '' })">{% icon "play" %}{% translate "Start timer" %}</button>
     <a href="{% url 'work:project_edit' project.pk %}" class="btn btn-secondary">{% icon "edit" %}{% translate "Edit" %}</a>
-    <form method="post" action="{% url 'work:project_delete' project.pk %}" data-confirm="{% translate 'Delete this project? Its tasks, time and notes are kept, without a project. You can undo this from Recently deleted.' %}">{% csrf_token %}
+    <form method="post" action="{% url 'work:project_delete' project.pk %}" data-confirm="{{ _("Delete this project? Its tasks, time and notes are kept, without a project. You can undo this from Recently deleted.") }}">{% csrf_token %}
       <button type="submit" class="icon-btn" aria-label="{% translate 'Delete project' %}" data-tip="{% translate 'Delete project' %}">{% icon "trash" %}</button></form>
   </div>
 </header>
