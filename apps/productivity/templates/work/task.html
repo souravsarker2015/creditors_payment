@@ -8,7 +8,8 @@
   <div class="min-w-0">
     <a href="{% url 'work:tasks' %}" class="back-link">{% icon "chevron-left" %}{% translate "Tasks" %}</a>
     <h1 class="wp-title">{% if task %}{{ task.title }}{% else %}{% translate "New task" %}{% endif %}</h1>
-    {% if task %}<p class="wp-sub">{{ task.get_status_display }}{% if task.project %} · <a href="{% url 'work:project' task.project_id %}" class="wt-proj"><span class="wt-dot" data-color="{{ task.project.color }}"></span>{{ task.project.name }}</a>{% endif %}{% if task.completed_at %} · {% blocktranslate with when=task.completed_at|date:"j M, H:i" %}done {{ when }}{% endblocktranslate %}{% endif %}{% if task.goal %} · <a href="{% url 'work:goal' task.goal_id %}" class="wt-proj">{% icon "flag" %}{{ task.goal.title }}</a>{% endif %}</p>{% endif %}
+    {% if task %}<p class="wp-sub">{{ task.get_status_display }}{% if task.project %} · <a href="{% url 'work:project' task.project_id %}" class="wt-proj"><span class="wt-dot" data-color="{{ task.project.color }}"></span>{{ task.project.name }}</a>{% endif %}{% if task.completed_at %} · {% blocktranslate with when=task.completed_at|date:"j M, H:i" %}done {{ when }}{% endblocktranslate %}{% endif %}{% if task.goal %} · <a href="{% url 'work:goal' task.goal_id %}" class="wt-proj">{% icon "flag" %}{{ task.goal.title }}</a>{% endif %}</p>
+    {% if task.parent %}<p class="wtd-parent">{% icon "arrow-up" %}{% translate "Subtask of" %} <a href="{% url 'work:task' task.parent_id %}">{{ task.parent.title }}</a></p>{% endif %}{% endif %}
   </div>
   {% if task %}
   <div class="wp-actions" x-data="workTasks">
@@ -20,6 +21,10 @@
     <a href="{% url 'work:focus' %}?task={{ task.pk }}" class="btn btn-secondary">{% icon "bolt" %}{% translate "Focus" %}</a>
     {% endif %}
     {% if task.link %}<a href="{{ task.link }}" class="btn btn-secondary" target="_blank" rel="noopener noreferrer" title="{{ task.link }}">{% icon "external" %}{{ task.link_label }}</a>{% endif %}
+    <button type="button" class="icon-btn" data-tip="{% translate 'Duplicate' %}" aria-label="{% translate 'Duplicate' %}" data-duplicate
+            @click="Work.api(Work.cfg.urls.taskBase + '{{ task.pk }}/duplicate/').then(r => { if (r.url) location.href = r.url; })">{% icon "copy" %}</button>
+    <button type="button" class="icon-btn" data-tip="{% translate 'Save as a template' %}" aria-label="{% translate 'Save as a template' %}" data-save-template
+            @click="const n = prompt('{{ _("Name the template:")|escapejs }}', '{{ task.title|escapejs }}'); if (n) Work.api(Work.cfg.urls.taskBase + '{{ task.pk }}/template/', { name: n }).then(r => { if (r.ok) Work.toast('{{ _("Template saved — use it from Tasks → From a template.")|escapejs }}'); })">{% icon "insert" %}</button>
     <button type="button" class="icon-btn" aria-label="{% translate 'Delete task' %}" data-tip="{% translate 'Delete task' %}" @click="if (confirm('{{ _("Delete this task? You can bring it back from Recently deleted.")|escapejs }}')) Work.api(Work.cfg.urls.taskBase + '{{ task.pk }}/delete/').then(r => { Work.undoable('{{ _("Task deleted")|escapejs }}', r.undo, () => location.reload()); setTimeout(() => location.href = '{% url 'work:tasks' %}', 600); })">{% icon "trash" %}</button>
   </div>
   {% endif %}
@@ -32,6 +37,7 @@
       {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
       {% with field=form.title %}{% include "partials/field.html" %}{% endwith %}
       <div class="form-grid form-grid-2">
+        {% if not task or not task.subtasks.exists %}<div class="sm:col-span-2">{% with field=form.parent %}{% include "partials/field.html" %}{% endwith %}</div>{% endif %}
         {% with field=form.status %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.priority %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.project %}{% include "partials/field.html" %}{% endwith %}
@@ -86,6 +92,14 @@
       </form>
       {% endif %}
     </section>
+
+    {% if not task.parent_id %}
+    <section class="card" data-subtasks x-data="workSubtasks({{ task.pk }})">
+      <header class="card-header"><h2 class="card-title">{% icon "list" %}{% translate "Subtasks" %}{% include "partials/info.html" with text=_("Smaller tasks that make up this one — each with its own date, priority and time. Finishing this task finishes them too.") %}</h2><span class="wtd-subcount" x-ref="count">{{ task.subtask_counts }}</span></header>
+      <ul class="wt-list wtd-sublist" x-ref="list">{% for t in subtasks %}{% include "work/partials/task_row.html" with in_parent=True %}{% endfor %}</ul>
+      <form class="work-check-add" @submit.prevent="add()"><input x-model="text" class="form-input input-compact" placeholder="{% translate 'Add a subtask — tomorrow ~30m !high work too' %}" aria-label="{% translate 'Add a subtask' %}"><button type="submit" class="btn btn-secondary btn-sm">{% translate "Add" %}</button></form>
+    </section>
+    {% endif %}
 
     <section class="card" x-data="workChecklist({{ task.pk }})">
       <header class="card-header"><h2 class="card-title">{% translate "Checklist" %}</h2><span class="wtd-progress" data-progress></span></header>

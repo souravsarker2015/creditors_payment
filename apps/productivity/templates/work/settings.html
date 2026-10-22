@@ -21,7 +21,7 @@
         {% with field=form.long_timer_hours %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.idle_minutes %}{% include "partials/field.html" %}{% endwith %}
         <div x-data="{ state: 'IdleDetector' in window ? 'ask' : 'unsupported' }" x-init="if (state === 'ask' && navigator.permissions) navigator.permissions.query({ name: 'idle-detection' }).then(p => { if (p.state === 'granted') state = 'on' }).catch(() => {})">
-          <button type="button" class="btn btn-secondary btn-sm" x-show="state === 'ask'" @click="Work.allowIdle().then(r => { state = r === 'granted' ? 'on' : 'ask' })">{% icon "clock" %}{% translate "Also notice when I step away from the computer" %}</button>
+          <button type="button" class="btn btn-secondary btn-sm btn-wrap" x-show="state === 'ask'" @click="Work.allowIdle().then(r => { state = r === 'granted' ? 'on' : 'ask' })">{% icon "clock" %}{% translate "Also notice when I step away from the computer" %}</button>
           <p class="help" x-show="state === 'on'" x-cloak>{% translate "On: this browser tells the tracker when you're away from the keyboard." %}</p>
           <p class="help" x-show="state === 'unsupported'" x-cloak>{% translate "This browser only notices when the computer sleeps or the browser is closed (Chrome can also notice when you step away)." %}</p>
         </div>
@@ -67,6 +67,15 @@
         {% with field=form.reminder_emails %}{% include "partials/field.html" %}{% endwith %}
         {% if request.user.email %}<div><button type="submit" form="work-test-brief" class="btn btn-secondary btn-sm">{% icon "mail" %}{% translate "Send me today's now" %}</button></div>{% endif %}
       </div></section>
+    <section class="card" id="board-invoices"><header class="card-header"><div><h2 class="card-title">{% translate "Board & invoices" %}</h2>
+      <p class="card-subtitle">{% translate "A limit for work in progress, and what an invoice says about you." %}</p></div></header>
+      <div class="card-body form-stack">
+        <div class="form-grid form-grid-2">
+          {% with field=form.wip_limit %}{% include "partials/field.html" %}{% endwith %}
+          {% with field=form.currency %}{% include "partials/field.html" %}{% endwith %}
+        </div>
+        {% with field=form.invoice_from %}{% include "partials/field.html" %}{% endwith %}
+      </div></section>
     <div class="form-actions"><button type="submit" class="btn btn-primary">{% icon "check" %}{% translate "Save settings" %}</button></div>
   </form>
   <form method="post" id="work-test-brief" hidden>{% csrf_token %}<input type="hidden" name="action" value="test_brief"></form>
@@ -75,6 +84,7 @@
     <div class="card-body !pt-0 flex flex-wrap gap-2">
       <a href="{% url 'work:export' %}" class="btn btn-secondary">{% icon "download" %}{% translate "Download everything (.zip)" %}</a>
       <a href="{% url 'work:reports' %}?range=year&export=csv" class="btn btn-ghost">{% icon "download" %}{% translate "This year's time (CSV)" %}</a>
+      <a href="{% url 'work:import' %}" class="btn btn-ghost" data-tip="{% translate 'From Todoist, Trello, Jira, Asana or a spreadsheet (CSV)' %}">{% icon "upload" %}{% translate "Import tasks" %}</a>
     </div>
     <form method="post" enctype="multipart/form-data" class="card-body !pt-0 ws-restore" x-data="{ name: '' }">{% csrf_token %}<input type="hidden" name="action" value="restore">
       <p class="label">{% translate "Restore from a backup" %}</p>

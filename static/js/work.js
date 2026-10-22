@@ -584,6 +584,8 @@
                     status: status, after: prev ? prev.getAttribute("data-task") : "", before: next ? next.getAttribute("data-task") : "",
                   });
                   self.count();
+                  if (status === "doing" && e.from !== e.to && CFG.wip && e.to.children.length > CFG.wip)
+                    toast(t("wipOver", "“In progress” is over your limit.").replace("%(n)s", CFG.wip), "warn");
                 },
               });
             });
@@ -595,7 +597,15 @@
             self.count();
           });
         },
-        count: function () { this.$root.querySelectorAll("[data-column]").forEach(function (col) { var c = col.parentElement.querySelector("[data-count]"); if (c) c.textContent = col.children.length; }); },
+        count: function () {
+          this.$root.querySelectorAll("[data-column]").forEach(function (col) {
+            var c = col.parentElement.querySelector("[data-count]"), n = col.children.length;
+            if (!c) return;
+            var limit = col.getAttribute("data-column") === "doing" && CFG.wip;
+            c.textContent = limit ? n + " / " + limit : n;
+            col.parentElement.classList.toggle("is-over", !!limit && n > limit);
+          });
+        },
       };
     });
 
@@ -947,6 +957,22 @@
     });
 
     /* ── Checklist on a task ──────────────────────────────────────────── */
+    /* ── Subtasks on a task's page ─────────────────────────────────────── */
+    Alpine.data("workSubtasks", function (taskId) {
+      return {
+        text: "",
+        add: function () {
+          var text = this.text.trim(), self = this;
+          if (!text) return;
+          this.text = "";
+          api(CFG.urls.taskBase + taskId + "/subtasks/", { text: text }).then(function (res) {
+            if (res.ok && res.html) { self.$refs.list.insertAdjacentHTML("beforeend", res.html); self.$refs.count.textContent = res.counts || ""; }
+            else if (res.error) { toast(res.error, "warn"); self.text = text; }
+          });
+        },
+      };
+    });
+
     /* ── Saved views: the task list's filters, kept under a name ───────── */
     Alpine.data("workSavedViews", function (query) {
       return {
@@ -1366,6 +1392,11 @@
     else if (name === "waiting") taskUpdate(row, "waiting_for", "");
     else if (name === "open-link" && link) window.open(link, "_blank", "noopener");
     else if (name === "copy") copyText(row.getAttribute("data-title") + (link ? " " + link : ""));
+    else if (name === "duplicate") api(CFG.urls.taskBase + id + "/duplicate/", {}).then(function (res) {
+      if (!res.ok) return;
+      row.insertAdjacentHTML("afterend", res.html);
+      toast(t("duplicated", "Copy made") + ": " + res.title, "good", { label: t("open", "Open"), run: function () { location.href = res.url; } });
+    });
     else if (name === "time") location.href = CFG.urls.entry_new + "?task=" + id;
     else if (name === "focus") location.href = CFG.urls.focus_page + "?task=" + id;
     else if (name === "delete") taskDelete(row);

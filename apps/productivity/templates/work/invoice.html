@@ -1,0 +1,80 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% translate "Invoice" %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+<header class="wp-head no-print">
+  <div class="min-w-0">
+    <h1 class="wp-title">{% translate "Invoice & timesheet" %}</h1>
+    <p class="wp-sub">{% translate "Your tracked time for a project or a client, × the project's hourly rate. Print it or save it as PDF; mark it billed so the same time isn't billed again." %}</p>
+  </div>
+  <div class="wp-actions">
+    <button type="button" class="btn btn-secondary" onclick="window.print()">{% icon "printer" %}{% translate "Print / PDF" %}</button>
+    <a href="?{{ query }}{% if query %}&{% endif %}export=csv" class="btn btn-ghost">{% icon "download" %}CSV</a>
+  </div>
+</header>
+
+<form method="get" class="wf-bar winv-bar no-print" @change="$el.requestSubmit()">
+  <select name="project" class="form-input input-compact" aria-label="{% translate 'Project' %}">
+    <option value="">{% if clients %}{% translate "A client's projects…" %}{% else %}{% translate "All projects" %}{% endif %}</option>
+    {% for p in projects %}<option value="{{ p.pk }}"{% if project.pk == p.pk %} selected{% endif %}>{{ p.name }}{% if p.client %} · {{ p.client }}{% endif %}</option>{% endfor %}
+  </select>
+  {% if clients and not project %}
+  <select name="client" class="form-input input-compact" aria-label="{% translate 'Client' %}">
+    <option value="">{% translate "Every client" %}</option>
+    {% for c in clients %}<option value="{{ c }}"{% if client == c %} selected{% endif %}>{{ c }}</option>{% endfor %}
+  </select>
+  {% endif %}
+  <label class="wf-date"><span>{% translate "From" %}</span><input type="date" name="from" value="{{ start|date:'Y-m-d' }}" class="form-input input-compact"></label>
+  <label class="wf-date"><span>{% translate "To" %}</span><input type="date" name="to" value="{{ end|date:'Y-m-d' }}" class="form-input input-compact"></label>
+  <label class="wf-check"><input type="checkbox" name="all" value="1"{% if not billable_only %} checked{% endif %}>{% translate "Non-billable time too" %}</label>
+  <label class="wf-check"><input type="checkbox" name="billed" value="1"{% if include_billed %} checked{% endif %}>{% translate "Already billed too" %}</label>
+</form>
+
+{% if inv.already_billed and not include_billed %}<p class="help no-print">{% blocktranslate count counter=inv.already_billed %}{{ counter }} entry in these dates is on an earlier invoice and left out.{% plural %}{{ counter }} entries in these dates are on an earlier invoice and left out.{% endblocktranslate %}</p>{% endif %}
+
+<article class="card winv" data-invoice>
+  <header class="winv-head">
+    <div>
+      <p class="winv-kind">{% if inv.total %}{% translate "Invoice" %}{% else %}{% translate "Timesheet" %}{% endif %}</p>
+      <p class="winv-no">{{ number }}</p>
+      <p class="winv-dates">{{ start|date:"j M Y" }} – {{ end|date:"j M Y" }}</p>
+    </div>
+    <div class="winv-from">{% if ws.invoice_from %}{{ ws.invoice_from|linebreaksbr }}{% else %}<strong>{{ request.user.get_full_name|default:request.user.username }}</strong>{% if request.user.email %}<br>{{ request.user.email }}{% endif %}
+      <a href="{% url 'work:settings' %}#board-invoices" class="winv-set no-print">{% translate "Add your address and how to pay you" %}</a>{% endif %}</div>
+  </header>
+  {% if client or project %}<p class="winv-to"><span>{% translate "Bill to" %}</span><strong>{% if client %}{{ client }}{% else %}{{ project.name }}{% endif %}</strong></p>{% endif %}
+
+  {% if inv.lines %}
+  <table class="winv-table">
+    <thead><tr><th>{% translate "Work" %}</th><th class="num">{% translate "Hours" %}</th><th class="num">{% translate "Rate" %}</th><th class="num">{% translate "Amount" %}</th></tr></thead>
+    <tbody>
+      {% regroup inv.lines by project as groups %}
+      {% for g in groups %}
+      {% if inv.projects|length > 1 %}<tr class="winv-group"><td colspan="4">{% if g.grouper %}{{ g.grouper.name }}{% else %}{% translate "No project" %}{% endif %}</td></tr>{% endif %}
+      {% for l in g.list %}
+      <tr><td>{{ l.label }}{% if l.entries > 1 %}<small>{% blocktranslate count counter=l.entries %}{{ counter }} entry{% plural %}{{ counter }} entries{% endblocktranslate %}</small>{% endif %}</td>
+        <td class="num">{{ l.hours }}</td><td class="num">{% if l.rate is not None %}{{ l.rate|cash:ws.currency }}{% else %}—{% endif %}</td>
+        <td class="num">{% if l.amount is not None %}{{ l.amount|cash:ws.currency }}{% else %}—{% endif %}</td></tr>
+      {% endfor %}
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr><th>{% translate "Total" %}</th><td class="num">{{ inv.hours }} h</td><td></td><td class="num winv-total">{{ inv.total|cash:ws.currency }}</td></tr>
+    </tfoot>
+  </table>
+  {% if inv.unpriced %}<p class="help winv-note">{% blocktranslate with h=inv.unpriced %}{{ h }} h are on projects without an hourly rate — shown, not charged. Set a rate on the project to charge them.{% endblocktranslate %}</p>{% endif %}
+  {% else %}
+  <div class="empty"><div class="empty-icon">{% icon "clock" %}</div><h3 class="empty-title">{% translate "No time to bill in these dates" %}</h3>
+    <p class="empty-text">{% if billable_only %}{% translate "Only billable time is counted. Tick “Non-billable time too”, or mark time entries billable." %}{% else %}{% translate "Track time on the project, or pick other dates." %}{% endif %}</p></div>
+  {% endif %}
+  <p class="winv-foot">{% blocktranslate with d=today|date:"j M Y" %}Made {{ d }}{% endblocktranslate %}</p>
+</article>
+
+{% if inv.entry_ids and not include_billed %}
+<form method="post" class="no-print winv-mark" data-confirm="{{ _("Mark this time as billed? It won't be on another invoice (tick “Already billed too” to see it again).") }}">{% csrf_token %}<input type="hidden" name="action" value="billed">
+  <button type="submit" class="btn btn-secondary">{% icon "check" %}{% blocktranslate count counter=inv.entry_ids|length %}Mark {{ counter }} entry as billed{% plural %}Mark {{ counter }} entries as billed{% endblocktranslate %}</button>
+</form>
+{% endif %}
+{% endblock %}

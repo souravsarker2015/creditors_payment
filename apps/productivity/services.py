@@ -525,6 +525,9 @@ def set_done(task, done=True):
     if done:
         task.status, task.completed_at = Status.DONE, timezone.now()
         task.save(update_fields=["status", "completed_at", "updated_at"])
+        for sub in task.subtasks.exclude(status=Status.DONE):    # a finished task's open subtasks are finished with it
+            sub.status, sub.completed_at = Status.DONE, task.completed_at
+            sub.save(update_fields=["status", "completed_at", "updated_at"])
         running = TimeEntry.objects.filter(owner=task.owner, task=task, ended_at__isnull=True).exists()
         if running:
             stop_timer(task.owner)
@@ -545,6 +548,27 @@ def set_done(task, done=True):
         task.status, task.completed_at = Status.TODO, None
         task.save(update_fields=["status", "completed_at", "updated_at"])
     return None
+
+
+def can_be_parent(task, parent):
+    """Subtasks go one level deep: a subtask can't have subtasks, and a task
+    with subtasks can't become one."""
+    if parent is None:
+        return True
+    return (parent.pk != task.pk and parent.owner_id == task.owner_id and parent.parent_id is None
+            and not (task.pk and task.subtasks.exists()))
+
+
+def add_subtask(parent, text):
+    """A subtask from one typed line (quick-add words work), in the parent's project."""
+    sub = create_from_quick(parent.owner, text, project=parent.project, goal=parent.goal)
+    if sub is None:
+        return None
+    sub.parent = parent
+    if not sub.project_id:
+        sub.project = parent.project
+    sub.save(update_fields=["parent", "project", "updated_at"])
+    return sub
 
 
 def unblocked_by(task):
@@ -885,7 +909,7 @@ def remember_note(note, force=False):
 
 # ── Restore from a backup (the export .zip / data.json) ───────────────────
 BACKUP_ORDER = ["project", "tag", "goal", "goalstep", "note", "task", "checklistitem", "taskactivity", "timeentry", "snippet",
-                "habit", "habitcheck", "journalentry", "learningitem", "diagram", "deck", "card", "savedview"]
+                "habit", "habitcheck", "journalentry", "learningitem", "diagram", "deck", "card", "savedview", "tasktemplate"]
 
 
 @transaction.atomic
@@ -930,6 +954,8 @@ def restore(user, rows):
             tag, _created = Tag.objects.get_or_create(owner=user, name=fields["name"], defaults={"color": fields.get("color", "slate")})
             ids["tag"][old_pk] = tag.pk
             continue
+        if name == "tasktemplate" and isinstance(fields.get("data"), dict) and fields["data"].get("project"):
+            fields["data"] = {**fields["data"], "project": ids["project"].get(fields["data"]["project"])}   # its project, by its new id
         if name == "journalentry" and JournalEntry.objects.filter(owner=user, date=fields.get("date")).exists():
             continue
         if name == "habitcheck" and HabitCheck.objects.filter(habit_id=fields.get("habit"), date=fields.get("date")).exists():

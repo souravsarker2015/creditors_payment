@@ -1,0 +1,71 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% translate "Import tasks" %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+<header class="wp-head">
+  <div class="min-w-0">
+    <a href="{% url 'work:settings' %}#data" class="back-link">{% icon "chevron-left" %}{% translate "Settings" %}</a>
+    <h1 class="wp-title">{% translate "Import tasks" %}</h1>
+    <p class="wp-sub">{% translate "Moving from another app? Export your tasks as CSV and add them here — titles, notes, due dates, priorities, projects, tags and status come across." %}</p>
+  </div>
+</header>
+
+{% if error %}<div class="callout" data-tone="warn">{% icon "alert" %}<p>{{ error }}</p></div>{% endif %}
+
+{% if parsed %}
+<section class="card" data-import-preview>
+  <header class="card-header"><div>
+    <h2 class="card-title">{% blocktranslate count counter=parsed.rows|length with name=file_name %}{{ counter }} task found in {{ name }}{% plural %}{{ counter }} tasks found in {{ name }}{% endblocktranslate %}</h2>
+    <p class="card-subtitle">{% if parsed.source == "todoist" %}{% translate "Looks like a Todoist export." %}{% elif parsed.source == "trello" %}{% translate "Looks like a Trello export." %}{% elif parsed.source == "jira" %}{% translate "Looks like a Jira export." %}{% elif parsed.source == "asana" %}{% translate "Looks like an Asana export." %}{% else %}{% translate "A spreadsheet export." %}{% endif %}
+      {% if parsed.skipped %}{% blocktranslate count counter=parsed.skipped %}{{ counter }} row left out (no title, or not a task).{% plural %}{{ counter }} rows left out (no title, or not a task).{% endblocktranslate %}{% endif %}</p>
+  </div></header>
+  <div class="card-body !pt-0">
+    <p class="wim-cols">{% translate "Columns used:" %} {% for k, v in parsed.columns.items %}<span class="wim-col"><b>{{ v }}</b> → {{ k }}</span>{% endfor %}</p>
+  </div>
+  <div class="wim-scroll">
+    <table class="wim-table">
+      <thead><tr><th>{% translate "Title" %}</th><th>{% translate "Due" %}</th><th>{% translate "Priority" %}</th><th>{% translate "Project" %}</th><th>{% translate "Status" %}</th><th>{% translate "Tags" %}</th></tr></thead>
+      <tbody>{% for r in preview %}<tr>
+        <td>{{ r.title|truncatechars:70 }}{% if r.notes %}<small>{{ r.notes|truncatechars:80 }}</small>{% endif %}</td>
+        <td>{{ r.due|date:"j M Y"|default:"—" }}</td>
+        <td>{% if r.priority %}<span class="wt-prio" data-p="{{ r.priority }}">{{ r.priority_label }}</span>{% else %}—{% endif %}</td>
+        <td>{{ r.project|default:"—" }}</td><td>{{ r.status_label }}</td><td>{{ r.tags|join:", "|default:"—" }}</td>
+      </tr>{% endfor %}</tbody>
+    </table>
+  </div>
+  {% if parsed.rows|length > preview|length %}<p class="card-body help">{% blocktranslate with n=parsed.rows|length|add:-30 %}…and {{ n }} more.{% endblocktranslate %}</p>{% endif %}
+  <form method="post" class="card-footer form-actions wim-confirm">{% csrf_token %}<input type="hidden" name="action" value="confirm">
+    <label class="label" for="imp-project">{% translate "For rows with no project" %}</label>
+    <select id="imp-project" name="project" class="form-input input-compact" data-native>
+      <option value="">{% translate "No project" %}</option>{% for p in projects %}<option value="{{ p.pk }}">{{ p.name }}</option>{% endfor %}
+    </select>
+    <a href="{% url 'work:import' %}" class="btn btn-ghost">{% translate "Choose another file" %}</a>
+    <button type="submit" class="btn btn-primary">{% icon "check" %}{% blocktranslate count counter=parsed.rows|length %}Add {{ counter }} task{% plural %}Add {{ counter }} tasks{% endblocktranslate %}</button>
+  </form>
+</section>
+{% else %}
+<section class="card">
+  <form method="post" enctype="multipart/form-data" class="card-body form-stack" x-data="{ name: '' }">{% csrf_token %}
+    <label class="wim-drop">
+      {% icon "upload" %}
+      <strong x-text="name || '{{ _("Choose a .csv file")|escapejs }}'"></strong>
+      <span>{% translate "Up to 2,000 tasks · 5 MB" %}</span>
+      <input type="file" name="file" accept=".csv,text/csv" class="sr-only" required @change="name = $event.target.files[0] ? $event.target.files[0].name : ''">
+    </label>
+    <div><button type="submit" class="btn btn-primary" :disabled="!name">{% icon "search" %}{% translate "Read it and show me first" %}</button></div>
+  </form>
+  <div class="card-body !pt-0 wim-help">
+    <p class="label">{% translate "Where to find the export" %}</p>
+    <ul>
+      <li><b>Todoist</b> — {% translate "a project's ⋯ menu → Export as a template → CSV." %}</li>
+      <li><b>Trello</b> — {% translate "board menu → Print, export and share → Export as CSV." %}</li>
+      <li><b>Jira</b> — {% translate "Issues → Export → Export CSV (all fields)." %}</li>
+      <li><b>Asana / ClickUp</b> — {% translate "project menu → Export → CSV." %}</li>
+      <li><b>{% translate "A spreadsheet" %}</b> — {% translate "any CSV with a Title (or Name / Task) column; Due, Priority, Project, Tags, Status and Notes columns are used when there." %}</li>
+    </ul>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% translate "Task templates" %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+<header class="wp-head">
+  <div class="min-w-0">
+    <a href="{% url 'work:tasks' %}" class="back-link">{% icon "chevron-left" %}{% translate "Tasks" %}</a>
+    <h1 class="wp-title">{% translate "Task templates" %}</h1>
+    <p class="wp-sub">{% translate "Work that comes round again — a release checklist, onboarding a client. Make it once, then make it again in one tap, with its checklist and subtasks." %}</p>
+  </div>
+</header>
+
+{% if templates %}
+<ul class="wtpl-list">
+  {% for tpl in templates %}
+  <li class="card wtpl-item">
+    <div class="min-w-0 flex-1">
+      <p class="wtpl-name">{{ tpl.name }}</p>
+      <p class="wtpl-meta">
+        {% with d=tpl.data %}
+        {% if d.subtasks %}<span>{% icon "list" %}{% blocktranslate count counter=d.subtasks|length %}{{ counter }} subtask{% plural %}{{ counter }} subtasks{% endblocktranslate %}</span>{% endif %}
+        {% if d.checklist %}<span>{% icon "check" %}{% blocktranslate count counter=d.checklist|length %}{{ counter }} step{% plural %}{{ counter }} steps{% endblocktranslate %}</span>{% endif %}
+        {% if d.due_in is not None %}<span>{% icon "calendar" %}{% blocktranslate count counter=d.due_in %}due {{ counter }} day after{% plural %}due {{ counter }} days after{% endblocktranslate %}</span>{% endif %}
+        {% if d.estimate %}<span>~{{ d.estimate|minutes_hm }}</span>{% endif %}
+        {% endwith %}
+      </p>
+    </div>
+    <form method="post" class="wtpl-use">{% csrf_token %}<input type="hidden" name="template" value="{{ tpl.pk }}">
+      <select name="project" class="form-input input-compact" data-native aria-label="{% translate 'Project' %}">
+        <option value="">{% translate "Its own project" %}</option>
+        {% for p in projects %}<option value="{{ p.pk }}">{{ p.name }}</option>{% endfor %}
+      </select>
+      <button type="submit" class="btn btn-primary btn-sm">{% icon "plus" %}{% translate "Use" %}</button>
+    </form>
+    <form method="post" data-confirm="{{ _("Remove this template? Tasks made from it stay.") }}">{% csrf_token %}<input type="hidden" name="template" value="{{ tpl.pk }}"><input type="hidden" name="action" value="delete">
+      <button type="submit" class="icon-btn" aria-label="{% translate 'Remove' %}" data-tip="{% translate 'Remove' %}">{% icon "trash" %}</button></form>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<div class="empty">
+  <div class="empty-icon">{% icon "insert" %}</div>
+  <h3 class="empty-title">{% translate "No templates yet" %}</h3>
+  <p class="empty-text">{% translate "Open a task you'll need again, give it its checklist and subtasks, then tap “Save as a template” at the top of its page." %}</p>
+</div>
+{% endif %}
+{% endblock %}

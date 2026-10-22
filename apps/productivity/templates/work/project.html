@@ -13,6 +13,9 @@
   <div class="wp-actions">
     <button type="button" class="btn btn-primary" @click="$store.timer.start({ project: {{ project.pk }}, label: '{{ project.name|escapejs }}', description: '' })">{% icon "play" %}{% translate "Start timer" %}</button>
     <a href="{% url 'work:project_edit' project.pk %}" class="btn btn-secondary">{% icon "edit" %}{% translate "Edit" %}</a>
+    <a href="{% url 'work:invoice' %}?project={{ project.pk }}" class="btn btn-secondary" data-tip="{% translate 'An invoice or timesheet from the time tracked here' %}">{% icon "note" %}{% translate "Invoice" %}{% if unbilled %}<i class="wpj-dot" aria-label="{% translate 'Some billable time isn’t billed yet' %}"></i>{% endif %}</a>
+    <form method="post" action="{% url 'work:project_duplicate' project.pk %}" data-confirm="{{ _("Make a copy of this project with its open tasks (and their subtasks and checklists)? Dates are left empty, for you to set.") }}">{% csrf_token %}
+      <button type="submit" class="icon-btn" aria-label="{% translate 'Copy this project' %}" data-tip="{% translate 'Copy this project' %}">{% icon "copy" %}</button></form>
     <form method="post" action="{% url 'work:project_delete' project.pk %}" data-confirm="{{ _("Delete this project? Its tasks, time and notes are kept, without a project. You can undo this from Recently deleted.") }}">{% csrf_token %}
       <button type="submit" class="icon-btn" aria-label="{% translate 'Delete project' %}" data-tip="{% translate 'Delete project' %}">{% icon "trash" %}</button></form>
   </div>
@@ -24,6 +27,21 @@
   {% if budget_pct is not None %}<div class="stat"{% if budget_pct > 100 %} data-tone="critical"{% endif %}><dt class="stat-label">{% translate "Time budget used" %}</dt><dd class="stat-value num">{{ budget_pct }}%</dd></div>{% endif %}
   {% if earned is not None %}<div class="stat" data-tone="good"><dt class="stat-label">{% translate "Worth at your rate" %}</dt><dd class="stat-value">{{ earned|money }}</dd></div>{% endif %}
 </dl>
+
+{% if burnup %}
+<section class="card wbu" data-burnup>
+  <header class="card-header"><div><h2 class="card-title">{% blocktranslate count counter=burnup.weeks %}Progress over {{ counter }} week{% plural %}Progress over {{ counter }} weeks{% endblocktranslate %}{% include "partials/info.html" with text=_("The top line is every task the project has had; the bottom line, how many are done. When the gap closes, the project is finished. The guess uses how many tasks you finished a week over the last four weeks.") %}</h2>
+    <p class="card-subtitle">{% if burnup.eta %}{% blocktranslate with left=burnup.left pace=burnup.pace date=burnup.eta|date:"j M Y" %}{{ left }} open · about {{ pace }} done a week · at this pace, done around {{ date }}{% endblocktranslate %}{% elif burnup.left %}{% blocktranslate with left=burnup.left %}{{ left }} open · nothing finished in the last four weeks{% endblocktranslate %}{% else %}{% translate "Everything is done." %}{% endif %}</p></div>
+    <span class="wbu-key"><i data-k="added"></i>{% translate "All tasks" %}<i data-k="done"></i>{% translate "Done" %}</span></header>
+  <div class="card-body">
+    <svg class="wbu-chart" viewBox="0 -8 {{ burnup.w }} {{ burnup.h|add:16 }}" preserveAspectRatio="none" role="img" aria-label="{% translate 'Tasks added and done, week by week' %}">
+      <polyline class="wbu-added" points="{{ burnup.added }}" fill="none" vector-effect="non-scaling-stroke"/>
+      <polyline class="wbu-done" points="{{ burnup.done }}" fill="none" vector-effect="non-scaling-stroke"/>
+    </svg>
+    <div class="wbu-axis"><span>{{ burnup.first|date:"j M" }}</span><span>{% translate "This week" %}</span></div>
+  </div>
+</section>
+{% endif %}
 
 <div class="wd-grid">
   <section class="card" x-data="workTasks">

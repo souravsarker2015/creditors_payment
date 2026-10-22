@@ -26,11 +26,11 @@ from .api import card_json, entry_json
 from .access import can_use, work_required
 from .forms import DeckForm, EntryForm, GoalForm, HabitForm, LearningForm, ProjectForm, SettingsForm, SnippetForm, TagForm, TaskForm
 from .models import (
-    Card, Color, Deck, Diagram, DiagramKind, DiagramVersion, Goal, GoalStatus, Habit, JournalEntry, Language, LearningItem, LearningKind, LearningStatus, LearningUnit, Note, Priority, Project, SavedView, Snippet,
+    Card, Color, Deck, Diagram, DiagramKind, DiagramVersion, Goal, GoalStatus, Habit, JournalEntry, Language, LearningItem, LearningKind, LearningStatus, LearningUnit, Note, Priority, Project, SavedView, Snippet, TaskTemplate,
     Status, Tag, Task, TimeEntry, WorkSettings,
 )
 
-ROW_RELATED = ("tags", "checklist", "blocked_by")   # what a task row shows; fetched only for the rows on screen
+ROW_RELATED = ("tags", "checklist", "blocked_by", "subtasks")   # what a task row shows; fetched only for the rows on screen
 
 
 def _today():
@@ -73,6 +73,7 @@ def _texts():
         "focusSession": _("Focus session"), "focusDone": _("Focus session done"), "takeBreak": _("Time for a break."),
         "focusSavedLate": _("A focus session finished while you were away — it's in your timesheet."),
         "unblocked": _("Ready to start now:"), "deleteComment": _("Delete this comment?"),
+        "duplicated": _("Copy made"), "open": _("Open"), "wipOver": _("“In progress” is over your limit of %(n)s — finish one before starting another?"),
         "viewName": _("Name this view (e.g. “Urgent at work”):"), "viewDelete": _("Remove this saved view?"), "viewSaved": _("View saved"),
         "breakOver": _("Break's over"), "backToWork": _("Ready to focus again?"), "myDay": _("My Day"), "noAccess": _("Not allowed."),
         "link": _("Link"), "copied": _("Copied"),
@@ -129,6 +130,9 @@ def _commands():
          "words": "gantt roadmap schedule weeks start due", "kind": "page"},
         {"id": "go-blocked", "title": _("Tasks: blocked"), "icon": "lock", "url": r("work:tasks") + "?view=list&blocked=yes",
          "words": "dependencies waiting depends on", "kind": "page"},
+        {"id": "go-templates", "title": _("Task templates"), "icon": "insert", "url": r("work:templates"), "words": "template checklist reuse repeat", "kind": "page"},
+        {"id": "go-invoice", "title": _("Invoice & timesheet"), "icon": "note", "url": r("work:invoice"), "words": "bill client billing hours rate money", "kind": "page"},
+        {"id": "go-import", "title": _("Import tasks"), "icon": "upload", "url": r("work:import"), "words": "csv todoist trello jira asana clickup move migrate", "kind": "page"},
         {"id": "new-task", "title": _("New task"), "icon": "plus", "action": "capture:task", "hint": "c", "words": "add create"},
         {"id": "new-note", "title": _("New note"), "icon": "note", "action": "capture:note", "hint": "n", "words": "add create write"},
         {"id": "new-mindmap", "title": _("New mind map"), "icon": "mindmap", "url": r("work:diagrams") + "?start=mindmap", "words": "add create brainstorm diagram"},
@@ -177,7 +181,7 @@ def render_work(request, template, ctx=None):
             "commands": _commands() + [{"id": f"view-{v.pk}", "title": _("View: %(name)s") % {"name": v.name}, "icon": "filter", "kind": "page",
                                         "url": reverse("work:tasks") + "?" + v.query + ("&" if v.query else "") + f"sv={v.pk}", "words": "saved view filter"}
                                        for v in SavedView.objects.filter(owner=user)],
-            "focus": s.focus_minutes, "short": s.short_break_minutes, "long": s.long_break_minutes, "every": s.long_break_every,
+            "wip": s.wip_limit, "focus": s.focus_minutes, "short": s.short_break_minutes, "long": s.long_break_minutes, "every": s.long_break_every,
             "autoBreaks": s.auto_start_breaks, "autoFocus": s.auto_start_focus,
             "sound": s.sound if s.sound_enabled else "", "volume": s.volume, "tick": s.tick_sound,
             "notify": s.notifications, "longTimer": s.long_timer_hours, "target": s.daily_target_minutes, "idle": s.idle_minutes,
@@ -243,6 +247,11 @@ BOARD_DONE = 30
 
 
 TASK_VIEWS = ("list", "board", "matrix", "timeline")
+
+
+def _with_rows(tasks):
+    prefetch_related_objects(tasks, *ROW_RELATED)
+    return tasks
 URGENT_DAYS = 2       # the matrix: due within this many days (or late) counts as urgent
 TIMELINE_DAYS = 42    # six weeks
 
@@ -326,13 +335,19 @@ def tasks_view(request):
     elif f["blocked"] == "no":
         qs = qs.exclude(pk__in=Task.objects.filter(owner=user).filter(open_blocker).values("pk"))
     qs = qs.distinct()
+    show_subs = request.GET.get("sub") == "1" or bool(f["q"])
+    if view in ("list", "board") and not show_subs:
+        qs = qs.filter(parent__isnull=True)      # subtasks show under their task (and on Today, the matrix and the timeline)
+    qs = qs.select_related("parent")
     show_done = request.GET.get("done") == "1"
     one = request.GET.get("group", "")
     ctx = {"view": view, "f": f, "filtered": any(f.values()), "show_done": show_done, "today": today, "one_group": one,
            "projects": Project.objects.filter(owner=user, is_archived=False), "tags": Tag.objects.filter(owner=user),
            "goals": Goal.objects.filter(owner=user, status=GoalStatus.ACTIVE),
            "priorities": Priority.choices, "statuses": Status.choices,
-           "saved_views": SavedView.objects.filter(owner=user), "sv": request.GET.get("sv", ""),
+           "saved_views": SavedView.objects.filter(owner=user), "sv": request.GET.get("sv", ""), "show_subs": show_subs,
+           "has_subs": Task.objects.filter(owner=user, parent__isnull=False).exclude(status=Status.DONE).exists(),
+           "templates": TaskTemplate.objects.filter(owner=user).only("pk", "name"),
            "query": request.GET.urlencode()}
     if view == "matrix":
         ctx["quadrants"] = _matrix(list(qs.exclude(status=Status.DONE).prefetch_related(*ROW_RELATED)), today)
@@ -428,6 +443,7 @@ def task_view(request, pk=None):
         ctx.update({"entries": entries, "spent": spent, "checklist": task.checklist.all(),
                     "estimate_pct": min(round(100 * spent / (task.estimate_minutes * 60)), 999) if task.estimate_minutes else None,
                     "activity": list(task.activity.all()[:60]),
+                    "subtasks": _with_rows(sorted(task.subtasks.select_related("project"), key=lambda t: (t.is_done, t.order, t.pk))),
                     "blocker_options": list(Task.objects.filter(owner=user).exclude(status=Status.DONE).exclude(pk=task.pk)
                                             .exclude(pk__in=task.blocked_by.values("pk")).order_by("-updated_at").only("pk", "title")[:300])})
     return render_work(request, "work/task.html", ctx)
@@ -492,7 +508,8 @@ def project_view(request, pk):
         "goals": services.with_progress(project.goals.filter(status=GoalStatus.ACTIVE)),
         "notes": Note.objects.filter(owner=user, project=project, is_archived=False)[:10],
         "diagrams": Diagram.objects.filter(owner=user, project=project, is_archived=False).only("pk", "title", "kind", "updated_at")[:8],
-        "today": today,
+        "today": today, "burnup": _burnup(project, today),
+        "unbilled": TimeEntry.objects.filter(owner=user, project=project, billable=True, invoiced_at__isnull=True, ended_at__isnull=False).exists(),
     })
 
 
@@ -1517,6 +1534,7 @@ def export_view(request):
 
     rows += json.loads(serializers.serialize("json", TaskActivity.objects.filter(task__owner=user)))
     rows += json.loads(serializers.serialize("json", SavedView.objects.filter(owner=user)))
+    rows += json.loads(serializers.serialize("json", TaskTemplate.objects.filter(owner=user)))
     ext = {"python": "py", "javascript": "js", "typescript": "ts", "bash": "sh", "plaintext": "txt", "markdown": "md", "xml": "html",
            "csharp": "cs", "cpp": "cpp", "dockerfile": "Dockerfile", "kotlin": "kt", "ruby": "rb", "rust": "rs", "yaml": "yml"}
 
@@ -1609,3 +1627,140 @@ def feed_view(request, token):
     response["Content-Disposition"] = 'inline; filename="work.ics"'
     response["Cache-Control"] = "private, max-age=900"
     return response
+
+
+# ── Templates, copying a project, importing, invoices ──────────────────────
+@work_required
+def templates_view(request):
+    """Task templates: make a task from one, rename or remove it."""
+    from .copying import use_template
+
+    user = request.user
+    if request.method == "POST":
+        tpl = get_object_or_404(TaskTemplate, pk=request.POST.get("template") or 0, owner=user)
+        if request.POST.get("action") == "delete":
+            tpl.delete()
+            messages.success(request, _("Template removed."))
+            return redirect("work:templates")
+        project = Project.objects.filter(owner=user, pk=request.POST.get("project") or 0).first()
+        task = use_template(tpl, project=project)
+        messages.success(request, _("Made “%(title)s” from the template.") % {"title": task.title})
+        return redirect("work:task", pk=task.pk)
+    return render_work(request, "work/templates.html", {
+        "templates": TaskTemplate.objects.filter(owner=user), "projects": Project.objects.filter(owner=user, is_archived=False),
+    })
+
+
+@work_required
+@require_POST
+def project_duplicate_view(request, pk):
+    from .copying import duplicate_project
+
+    project = get_object_or_404(Project, pk=pk, owner=request.user)
+    copy = duplicate_project(project, keep_dates=request.POST.get("dates") == "1")
+    messages.success(request, _("Copied as “%(name)s”, with its open tasks.") % {"name": copy.name})
+    return redirect("work:project", pk=copy.pk)
+
+
+IMPORT_KEY = "work_import_rows"
+
+
+@work_required
+def import_view(request):
+    """Tasks from a CSV: upload → preview → add."""
+    from . import importer
+
+    user = request.user
+    if request.method == "POST" and request.POST.get("action") == "confirm":
+        rows = request.session.pop(IMPORT_KEY, None)
+        if not rows:
+            messages.error(request, _("The preview has expired. Choose the file again."))
+            return redirect("work:import")
+        project = Project.objects.filter(owner=user, pk=request.POST.get("project") or 0).first()
+        made = importer.save(user, rows, project=project)
+        messages.success(request, _("%(n)s tasks added.") % {"n": made})
+        return redirect(reverse("work:tasks") + "?view=list")
+    ctx = {"projects": Project.objects.filter(owner=user, is_archived=False)}
+    if request.method == "POST" and request.FILES.get("file"):
+        f = request.FILES["file"]
+        if f.size > 5 * 1024 * 1024:
+            ctx["error"] = _("That file is over 5 MB. Split it, or export fewer tasks.")
+        else:
+            parsed = importer.read(f.read())
+            if parsed.error:
+                ctx["error"] = parsed.error
+            elif not parsed.rows:
+                ctx["error"] = _("No tasks found in that file.")
+            else:
+                request.session[IMPORT_KEY] = importer.to_session(parsed)
+                preview = [{**r, "priority_label": Priority(r["priority"]).label if r["priority"] else "", "status_label": Status(r["status"]).label}
+                           for r in parsed.rows[:30]]
+                ctx.update({"parsed": parsed, "preview": preview, "file_name": f.name})
+    return render_work(request, "work/import.html", ctx)
+
+
+@work_required
+def invoice_view(request):
+    """An invoice or a timesheet from tracked time, for a project or a client."""
+    from . import invoices
+
+    user, today = request.user, _today()
+    s = WorkSettings.for_user(user)
+    start = parse_date(request.GET.get("from") or "") or today.replace(day=1)
+    end = parse_date(request.GET.get("to") or "") or today
+    if end < start:
+        start, end = end, start
+    project = Project.objects.filter(owner=user, pk=request.GET.get("project") or 0).first()
+    client = "" if project else request.GET.get("client", "").strip()
+    billable_only = request.GET.get("all") != "1"
+    include_billed = request.GET.get("billed") == "1"
+    inv = invoices.build(user, start, end, project=project, client=client, billable_only=billable_only, include_billed=include_billed)
+    if request.method == "POST" and request.POST.get("action") == "billed":
+        n = invoices.mark_billed(user, inv.entry_ids)
+        messages.success(request, _("%(n)s time entries marked as billed — they won't go on another invoice.") % {"n": n})
+        return redirect(request.get_full_path())
+    if request.GET.get("export") == "csv":
+        response = HttpResponse(content_type="text/csv; charset=utf-8")
+        response["Content-Disposition"] = f'attachment; filename="invoice-{start}-{end}.csv"'
+        response.write("﻿")
+        w = csv.writer(response)
+        w.writerow([_("Project"), _("Work"), _("Hours"), _("Rate"), _("Amount")])
+        for line in inv.lines:
+            w.writerow([line.project.name if line.project else "", line.label, line.hours, line.rate or "", line.amount if line.amount is not None else ""])
+        w.writerow(["", _("Total"), inv.hours, "", inv.total])
+        return response
+    number = f"INV-{end:%Y%m%d}-{(project.pk if project else 0):03d}"
+    return render_work(request, "work/invoice.html", {
+        "inv": inv, "start": start, "end": end, "project": project, "client": client or (project.client if project else ""),
+        "billable_only": billable_only, "include_billed": include_billed, "ws": s, "number": number, "today": today,
+        "projects": Project.objects.filter(owner=user), "clients": invoices.clients(user),
+        "query": request.GET.urlencode(),
+    })
+
+
+def _burnup(project, today, weeks=12):
+    """Week by week: all the tasks the project has had, and how many are done —
+    with a guess at when the rest will be done, at the recent pace."""
+    tasks = list(Task.objects.filter(project=project).values_list("created_at", "completed_at", "status"))
+    if len(tasks) < 2:
+        return None
+    age = (today - min(timezone.localtime(c).date() for c, _d, _s in tasks)).days // 7 + 1
+    weeks = min(max(age, 4), weeks)          # a young project: its own few weeks, not twelve empty ones
+    ends = [today - timedelta(days=7 * i) for i in range(weeks - 1, -1, -1)]
+    points = []
+    for end in ends:
+        cut = end + timedelta(days=1)
+        added = sum(1 for c, _d, _s in tasks if timezone.localtime(c).date() < cut)
+        done = sum(1 for _c, d, s in tasks if s == Status.DONE and d and timezone.localtime(d).date() < cut)
+        points.append({"day": end, "added": added, "done": done})
+    top = max(p["added"] for p in points) or 1
+    W, H = 600, 160
+    step = W / (len(points) - 1)
+
+    def line(key):
+        return " ".join(f"{i * step:.1f},{H - p[key] * H / top:.1f}" for i, p in enumerate(points))
+    recent = points[-1]["done"] - points[-5]["done"] if len(points) >= 5 else 0      # the last four weeks
+    left = points[-1]["added"] - points[-1]["done"]
+    eta = today + timedelta(weeks=left / (recent / 4)) if (recent > 0 and left > 0) else None
+    return {"points": points, "added": line("added"), "done": line("done"), "top": top, "w": W, "h": H,
+            "left": left, "pace": round(recent / 4, 1), "eta": eta, "first": points[0]["day"], "weeks": weeks}

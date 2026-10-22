@@ -17,6 +17,15 @@
       <a href="{% query_with view='timeline' %}" class="seg-item{% if view == 'timeline' %} is-active{% endif %}" data-tip="{% translate 'Tasks from start to due date, week by week' %}">{% icon "gantt" %}{% translate "Timeline" %}</a>
     </nav>
     {% if view == "list" %}<button type="button" class="btn btn-secondary" data-bulk-toggle aria-pressed="false">{% icon "check" %}{% translate "Select" %}</button>{% endif %}
+    {% if templates %}
+    <details class="wtpl-menu" data-template-menu>
+      <summary class="btn btn-secondary">{% icon "insert" %}{% translate "From a template" %}</summary>
+      <div class="wtpl-pop" role="menu">
+        {% for tpl in templates %}<form method="post" action="{% url 'work:templates' %}">{% csrf_token %}<input type="hidden" name="template" value="{{ tpl.pk }}"><button type="submit" class="menu-item" role="menuitem">{{ tpl.name }}</button></form>{% endfor %}
+        <a href="{% url 'work:templates' %}" class="menu-item wtpl-manage">{% icon "edit" %}{% translate "Manage templates" %}</a>
+      </div>
+    </details>
+    {% endif %}
     <a href="{% url 'work:task_new' %}" class="btn btn-secondary">{% translate "Full form" %}</a>
     <button type="button" class="btn btn-primary" @click="$dispatch('work:capture', 'task')">{% icon "plus" %}{% translate "Task" %}<kbd class="wp-kbd">c</kbd></button>
   </div>
@@ -73,6 +82,7 @@
     {% for g in goals %}<option value="{{ g.pk }}"{% if f.goal == g.pk|stringformat:'s' %} selected{% endif %}>{{ g.title|truncatechars:40 }}</option>{% endfor %}
   </select>
   {% endif %}
+  {% if has_subs %}<label class="wf-check"><input type="checkbox" name="sub" value="1"{% if show_subs %} checked{% endif %}>{% translate "Show subtasks" %}</label>{% endif %}
   <select name="blocked" class="form-input input-compact" aria-label="{% translate 'Blocked' %}">
     <option value="">{% translate "Blocked or not" %}</option>
     <option value="no"{% if f.blocked == 'no' %} selected{% endif %}>{% translate "Ready to start" %}</option>
@@ -134,8 +144,8 @@
 {% elif view == "board" %}
 <div class="wb" x-data="workBoard" data-work-refresh>
   {% for col in columns %}
-  <section class="wb-col" data-status="{{ col.status }}" x-data="{ adding: false, text: '' }">
-    <header class="wb-col-head"><span class="wb-col-dot" data-status="{{ col.status }}"></span><h2>{{ col.label }}</h2><span class="wb-count" data-count>{{ col.total }}</span>
+  <section class="wb-col{% if col.status == 'doing' and ws.wip_limit and col.total > ws.wip_limit %} is-over{% endif %}" data-status="{{ col.status }}" x-data="{ adding: false, text: '' }">
+    <header class="wb-col-head"><span class="wb-col-dot" data-status="{{ col.status }}"></span><h2>{{ col.label }}</h2><span class="wb-count" data-count{% if col.status == 'doing' and ws.wip_limit %} data-tip="{% translate 'In progress, of your limit' %}"{% endif %}>{{ col.total }}{% if col.status == 'doing' and ws.wip_limit %} / {{ ws.wip_limit }}{% endif %}</span>
       {% if col.status != "done" %}<button type="button" class="icon-btn" aria-label="{% translate 'Add a task here' %}" @click="adding = true; $nextTick(() => $refs.add.focus())">{% icon "plus" %}</button>{% endif %}</header>
     <div class="wb-cards" data-column="{{ col.status }}">
       {% for t in col.tasks %}{% include "work/partials/task_card.html" %}{% endfor %}

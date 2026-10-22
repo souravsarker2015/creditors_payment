@@ -20834,3 +20834,386 @@ msgstr "সর্বোচ্চ ৩০টি ভিউ রাখা যায�
 
 msgid "from when it's done"
 msgstr "শেষ করার দিন থেকে"
+
+#, python-format
+msgid "%(counter)s entry in these dates is on an earlier invoice and left out."
+msgid_plural "%(counter)s entries in these dates are on an earlier invoice and left out."
+msgstr[0] "এই তারিখগুলোর %(counter)sটি হিসাব আগের ইনভয়েসে আছে, তাই বাদ রাখা হয়েছে।"
+msgstr[1] "এই তারিখগুলোর %(counter)sটি হিসাব আগের ইনভয়েসে আছে, তাই বাদ রাখা হয়েছে।"
+
+#, python-format
+msgid "%(counter)s row left out (no title, or not a task)."
+msgid_plural "%(counter)s rows left out (no title, or not a task)."
+msgstr[0] "%(counter)sটি সারি বাদ (শিরোনাম নেই, বা কাজ নয়)।"
+msgstr[1] "%(counter)sটি সারি বাদ (শিরোনাম নেই, বা কাজ নয়)।"
+
+#, python-format
+msgid "%(counter)s step"
+msgid_plural "%(counter)s steps"
+msgstr[0] "%(counter)sটি ধাপ"
+msgstr[1] "%(counter)sটি ধাপ"
+
+#, python-format
+msgid "%(counter)s subtask"
+msgid_plural "%(counter)s subtasks"
+msgstr[0] "%(counter)sটি সাব-টাস্ক"
+msgstr[1] "%(counter)sটি সাব-টাস্ক"
+
+#, python-format
+msgid "%(counter)s task found in %(name)s"
+msgid_plural "%(counter)s tasks found in %(name)s"
+msgstr[0] "%(name)s-এ %(counter)sটি কাজ পাওয়া গেছে"
+msgstr[1] "%(name)s-এ %(counter)sটি কাজ পাওয়া গেছে"
+
+#, python-format
+msgid "%(h)s h are on projects without an hourly rate — shown, not charged. Set a rate on the project to charge them."
+msgstr "%(h)s ঘণ্টা এমন প্রজেক্টে যার ঘণ্টাপ্রতি রেট নেই — দেখানো হয়েছে, ধরা হয়নি। ধরতে চাইলে প্রজেক্টে রেট দিন।"
+
+#, python-format
+msgid "%(left)s open · about %(pace)s done a week · at this pace, done around %(date)s"
+msgstr "%(left)sটি বাকি · সপ্তাহে প্রায় %(pace)sটি শেষ · এই গতিতে শেষ হবে প্রায় %(date)s"
+
+#, python-format
+msgid "%(left)s open · nothing finished in the last four weeks"
+msgstr "%(left)sটি বাকি · গত চার সপ্তাহে কিছু শেষ হয়নি"
+
+#, python-format
+msgid "%(n)s tasks added."
+msgstr "%(n)sটি কাজ যোগ হয়েছে।"
+
+#, python-format
+msgid "%(n)s time entries marked as billed — they won't go on another invoice."
+msgstr "%(n)sটি সময়ের হিসাব বিল করা হিসেবে চিহ্নিত — আর কোনো ইনভয়েসে যাবে না।"
+
+#, python-format
+msgid "%(name)s (copy %(n)s)"
+msgstr "%(name)s (কপি %(n)s)"
+
+#, python-format
+msgid "%(name)s (copy)"
+msgstr "%(name)s (কপি)"
+
+msgid "A client's projects…"
+msgstr "একটি ক্লায়েন্টের প্রজেক্ট…"
+
+msgid "A limit for work in progress, and what an invoice says about you."
+msgstr "চলমান কাজের সীমা, আর ইনভয়েসে আপনার কী তথ্য থাকবে।"
+
+msgid "A spreadsheet"
+msgstr "একটি স্প্রেডশিট"
+
+msgid "A spreadsheet export."
+msgstr "একটি স্প্রেডশিট এক্সপোর্ট।"
+
+msgid "A task can wait on others (“Blocked by”): it's marked with a lock, and you're told the moment it's ready."
+msgstr "একটি কাজ অন্য কাজের জন্য অপেক্ষা করতে পারে (“যার জন্য আটকে আছে”): তালা চিহ্ন থাকে, আর প্রস্তুত হলেই জানানো হয়।"
+
+#, python-format
+msgid "Add %(counter)s task"
+msgid_plural "Add %(counter)s tasks"
+msgstr[0] "%(counter)sটি কাজ যোগ করুন"
+msgstr[1] "%(counter)sটি কাজ যোগ করুন"
+
+msgid "Add a subtask"
+msgstr "সাব-টাস্ক যোগ করুন"
+
+msgid "Add a subtask — tomorrow ~30m !high work too"
+msgstr "সাব-টাস্ক যোগ করুন — tomorrow ~30m !high এগুলোও চলে"
+
+msgid "Add your address and how to pay you"
+msgstr "আপনার ঠিকানা ও টাকা পাঠানোর উপায় যোগ করুন"
+
+msgid "Already billed too"
+msgstr "আগে বিল করাগুলোও"
+
+msgid "An invoice or timesheet from the time tracked here"
+msgstr "এখানে ট্র্যাক করা সময় থেকে ইনভয়েস বা টাইমশিট"
+
+msgid "Big task? Give it subtasks on its page — each with its own date and time. Finishing the task finishes them too."
+msgstr "বড় কাজ? এর পাতায় সাব-টাস্ক দিন — প্রতিটির নিজের তারিখ ও সময়। মূল কাজ শেষ করলে এগুলোও শেষ হয়।"
+
+msgid "Bill to"
+msgstr "বিল প্রাপক"
+
+msgid "Billed"
+msgstr "বিল করা হয়েছে"
+
+msgid "Board & invoices"
+msgstr "বোর্ড ও ইনভয়েস"
+
+msgid "Choose a .csv file"
+msgstr "একটি .csv ফাইল বেছে নিন"
+
+msgid "Choose another file"
+msgstr "অন্য ফাইল বেছে নিন"
+
+msgid "Columns used:"
+msgstr "যে কলামগুলো নেওয়া হয়েছে:"
+
+msgid "Coming from Todoist, Trello, Jira or a spreadsheet? Settings → Import tasks takes their CSV export."
+msgstr "Todoist, Trello, Jira বা স্প্রেডশিট থেকে আসছেন? সেটিংস → কাজ ইমপোর্ট করুন — তাদের CSV এক্সপোর্ট নেয়।"
+
+#, python-format
+msgid "Copied as “%(name)s”, with its open tasks."
+msgstr "“%(name)s” নামে কপি হয়েছে, খোলা কাজগুলোসহ।"
+
+msgid "Copy made"
+msgstr "কপি তৈরি হয়েছে"
+
+msgid "Copy this project"
+msgstr "এই প্রজেক্ট কপি করুন"
+
+msgid "Currency"
+msgstr "মুদ্রা"
+
+msgid "Every client"
+msgstr "সব ক্লায়েন্ট"
+
+msgid "Every so often, or on chosen days. “every!” counts from the day you finish it."
+msgstr "নির্দিষ্ট সময় পরপর, বা বেছে নেওয়া দিনে। “every!” শেষ করার দিন থেকে গোনে।"
+
+msgid "Everything is done."
+msgstr "সব শেষ।"
+
+msgid "For rows with no project"
+msgstr "যে সারির প্রজেক্ট নেই"
+
+msgid "Freelancing? Projects → Invoice turns billable time × your rate into an invoice; mark it billed so it isn't billed twice."
+msgstr "ফ্রিল্যান্সিং করেন? প্রজেক্ট → ইনভয়েস বিলযোগ্য সময় × আপনার রেট দিয়ে ইনভয়েস বানায়; বিল করা হিসেবে চিহ্ন দিন যাতে দুবার বিল না হয়।"
+
+msgid "From Todoist, Trello, Jira, Asana or a spreadsheet (CSV)"
+msgstr "Todoist, Trello, Jira, Asana বা স্প্রেডশিট (CSV) থেকে"
+
+msgid "From a template"
+msgstr "টেমপ্লেট থেকে"
+
+msgid "Import tasks"
+msgstr "কাজ ইমপোর্ট করুন"
+
+msgid "In progress, of your limit"
+msgstr "চলমান, আপনার সীমার মধ্যে"
+
+msgid "Invoice"
+msgstr "ইনভয়েস"
+
+msgid "Invoice & timesheet"
+msgstr "ইনভয়েস ও টাইমশিট"
+
+msgid "Issues → Export → Export CSV (all fields)."
+msgstr "Issues → Export → Export CSV (all fields)।"
+
+msgid "Its own project"
+msgstr "নিজের প্রজেক্ট"
+
+msgid "Looks like a Jira export."
+msgstr "মনে হচ্ছে Jira-র এক্সপোর্ট।"
+
+msgid "Looks like a Todoist export."
+msgstr "মনে হচ্ছে Todoist-এর এক্সপোর্ট।"
+
+msgid "Looks like a Trello export."
+msgstr "মনে হচ্ছে Trello-র এক্সপোর্ট।"
+
+msgid "Looks like an Asana export."
+msgstr "মনে হচ্ছে Asana-র এক্সপোর্ট।"
+
+#, python-format
+msgid "Made %(d)s"
+msgstr "তৈরি %(d)s"
+
+#, python-format
+msgid "Made “%(title)s” from the template."
+msgstr "টেমপ্লেট থেকে “%(title)s” তৈরি হয়েছে।"
+
+msgid "Make a copy of this project with its open tasks (and their subtasks and checklists)? Dates are left empty, for you to set."
+msgstr "খোলা কাজগুলো (সাব-টাস্ক ও চেকলিস্টসহ) নিয়ে এই প্রজেক্টের একটি কপি বানাবেন? তারিখ ফাঁকা থাকবে, আপনি ঠিক করবেন।"
+
+msgid "Makes this a subtask of a bigger task."
+msgstr "এটিকে একটি বড় কাজের সাব-টাস্ক বানায়।"
+
+msgid "Manage templates"
+msgstr "টেমপ্লেট সামলান"
+
+#, python-format
+msgid "Mark %(counter)s entry as billed"
+msgid_plural "Mark %(counter)s entries as billed"
+msgstr[0] "%(counter)sটি হিসাব বিল করা হিসেবে চিহ্নিত করুন"
+msgstr[1] "%(counter)sটি হিসাব বিল করা হিসেবে চিহ্নিত করুন"
+
+msgid "Mark this time as billed? It won't be on another invoice (tick “Already billed too” to see it again)."
+msgstr "এই সময়টুকু বিল করা হিসেবে চিহ্নিত করবেন? আর কোনো ইনভয়েসে আসবে না (আবার দেখতে “আগে বিল করাগুলোও” টিক দিন)।"
+
+msgid "Most tasks in progress at once"
+msgstr "একসাথে সর্বোচ্চ চলমান কাজ"
+
+msgid "Moving from another app? Export your tasks as CSV and add them here — titles, notes, due dates, priorities, projects, tags and status come across."
+msgstr "অন্য অ্যাপ থেকে আসছেন? কাজগুলো CSV হিসেবে এক্সপোর্ট করে এখানে যোগ করুন — শিরোনাম, নোট, শেষ তারিখ, অগ্রাধিকার, প্রজেক্ট, ট্যাগ ও অবস্থা চলে আসে।"
+
+msgid "Name the template:"
+msgstr "টেমপ্লেটের নাম দিন:"
+
+msgid "No tasks found in that file."
+msgstr "ফাইলটিতে কোনো কাজ পাওয়া যায়নি।"
+
+msgid "No templates yet"
+msgstr "এখনো কোনো টেমপ্লেট নেই"
+
+msgid "No time to bill in these dates"
+msgstr "এই তারিখগুলোতে বিল করার মতো সময় নেই"
+
+msgid "No title column found. Name one of the columns “Title”, “Name”, “Task” or “Summary”."
+msgstr "শিরোনামের কলাম পাওয়া যায়নি। একটি কলামের নাম দিন “Title”, “Name”, “Task” বা “Summary”।"
+
+msgid "Non-billable time too"
+msgstr "বিলযোগ্য নয় এমন সময়ও"
+
+msgid "Only billable time is counted. Tick “Non-billable time too”, or mark time entries billable."
+msgstr "শুধু বিলযোগ্য সময় গোনা হয়। “বিলযোগ্য নয় এমন সময়ও” টিক দিন, বা সময়ের হিসাবগুলো বিলযোগ্য করুন।"
+
+msgid "Open a task you'll need again, give it its checklist and subtasks, then tap “Save as a template” at the top of its page."
+msgstr "যে কাজ আবার লাগবে সেটি খুলুন, চেকলিস্ট ও সাব-টাস্ক দিন, তারপর পাতার উপরে “টেমপ্লেট হিসেবে সেভ করুন” চাপুন।"
+
+msgid "Optional. The board warns when “In progress” holds more — finishing beats starting."
+msgstr "ঐচ্ছিক। “চলমান”-এ এর বেশি হলে বোর্ড সতর্ক করে — নতুন শুরুর চেয়ে শেষ করা ভালো।"
+
+msgid "Part of"
+msgstr "যার অংশ"
+
+#, python-format
+msgid "Progress over %(counter)s week"
+msgid_plural "Progress over %(counter)s weeks"
+msgstr[0] "%(counter)s সপ্তাহের অগ্রগতি"
+msgstr[1] "%(counter)s সপ্তাহের অগ্রগতি"
+
+msgid "Read it and show me first"
+msgstr "পড়ে আগে আমাকে দেখান"
+
+msgid "Remove this template? Tasks made from it stay."
+msgstr "এই টেমপ্লেট সরাবেন? এ থেকে বানানো কাজগুলো থাকবে।"
+
+msgid "Save as a template"
+msgstr "টেমপ্লেট হিসেবে সেভ করুন"
+
+msgid "Show subtasks"
+msgstr "সাব-টাস্ক দেখান"
+
+msgid "Shown on invoices and earnings: ৳, $, €…"
+msgstr "ইনভয়েস ও আয়ে দেখানো হয়: ৳, $, €…"
+
+msgid "Smaller tasks that make up this one — each with its own date, priority and time. Finishing this task finishes them too."
+msgstr "ছোট ছোট কাজ যা মিলে এই কাজ — প্রতিটির নিজের তারিখ, অগ্রাধিকার ও সময়। এই কাজ শেষ করলে এগুলোও শেষ হয়।"
+
+msgid "Some billable time isn’t billed yet"
+msgstr "কিছু বিলযোগ্য সময় এখনো বিল করা হয়নি"
+
+msgid "Subtask of"
+msgstr "যার সাব-টাস্ক"
+
+msgid "Subtasks"
+msgstr "সাব-টাস্ক"
+
+msgid "Subtasks done"
+msgstr "শেষ হওয়া সাব-টাস্ক"
+
+msgid "Subtasks go one level deep: pick a task that isn't a subtask, and this one can't have subtasks of its own."
+msgstr "সাব-টাস্ক এক স্তর পর্যন্ত: এমন কাজ বাছুন যা নিজে সাব-টাস্ক নয়, আর এই কাজের নিজের সাব-টাস্ক থাকতে পারবে না।"
+
+msgid "Subtasks go one level deep: this is already a subtask."
+msgstr "সাব-টাস্ক এক স্তর পর্যন্ত: এটি আগে থেকেই একটি সাব-টাস্ক।"
+
+msgid "Task template"
+msgstr "কাজের টেমপ্লেট"
+
+msgid "Task templates"
+msgstr "কাজের টেমপ্লেট"
+
+msgid "Tasks added and done, week by week"
+msgstr "সপ্তাহ ধরে যোগ হওয়া ও শেষ হওয়া কাজ"
+
+msgid "Tasks has four views: List, Board, Matrix (urgent × important) and Timeline (start → due). Save any filter as a view."
+msgstr "কাজের চারটি ভিউ: তালিকা, বোর্ড, ম্যাট্রিক্স (জরুরি × গুরুত্বপূর্ণ) ও টাইমলাইন (শুরু → শেষ)। যেকোনো ফিল্টার ভিউ হিসেবে সেভ করুন।"
+
+msgid "Template removed."
+msgstr "টেমপ্লেট সরানো হয়েছে।"
+
+msgid "Template saved — use it from Tasks → From a template."
+msgstr "টেমপ্লেট সেভ হয়েছে — কাজ → টেমপ্লেট থেকে ব্যবহার করুন।"
+
+msgid "That file is over 5 MB. Split it, or export fewer tasks."
+msgstr "ফাইলটি ৫ MB-র বেশি। ভাগ করুন, বা কম কাজ এক্সপোর্ট করুন।"
+
+msgid "The preview has expired. Choose the file again."
+msgstr "প্রিভিউর মেয়াদ শেষ। আবার ফাইলটি বেছে নিন।"
+
+msgid "The top line is every task the project has had; the bottom line, how many are done. When the gap closes, the project is finished. The guess uses how many tasks you finished a week over the last four weeks."
+msgstr "উপরের রেখা প্রজেক্টের সব কাজ; নিচের রেখা কতগুলো শেষ। ফাঁক মিলে গেলে প্রজেক্ট শেষ। অনুমানটি গত চার সপ্তাহে সপ্তাহপ্রতি কতগুলো শেষ করেছেন তা থেকে।"
+
+msgid "This file couldn't be read. Save it as CSV (UTF-8) and try again."
+msgstr "ফাইলটি পড়া গেল না। CSV (UTF-8) হিসেবে সেভ করে আবার চেষ্টা করুন।"
+
+msgid "Track time on the project, or pick other dates."
+msgstr "প্রজেক্টে সময় ট্র্যাক করুন, বা অন্য তারিখ বাছুন।"
+
+msgid "Up to 2,000 tasks · 5 MB"
+msgstr "সর্বোচ্চ ২,০০০ কাজ · ৫ MB"
+
+msgid "Use"
+msgstr "ব্যবহার করুন"
+
+msgid "Where to find the export"
+msgstr "এক্সপোর্ট কোথায় পাবেন"
+
+msgid "Work that comes round again — a release checklist, onboarding a client. Make it once, then make it again in one tap, with its checklist and subtasks."
+msgstr "যে কাজ বারবার আসে — রিলিজ চেকলিস্ট, নতুন ক্লায়েন্ট। একবার বানান, তারপর এক চাপে আবার বানান, চেকলিস্ট ও সাব-টাস্কসহ।"
+
+msgid "Work that comes round again? Save a task as a template, or copy a whole project with its open tasks."
+msgstr "বারবার আসা কাজ? কাজকে টেমপ্লেট হিসেবে সেভ করুন, বা খোলা কাজসহ পুরো প্রজেক্ট কপি করুন।"
+
+msgid "Your details on invoices"
+msgstr "ইনভয়েসে আপনার তথ্য"
+
+msgid ""
+"Your name\n"
+"Address\n"
+"Phone\n"
+"Pay to: bank account or bKash number"
+msgstr ""
+"আপনার নাম\n"
+"ঠিকানা\n"
+"ফোন\n"
+"টাকা পাঠান: ব্যাংক অ্যাকাউন্ট বা বিকাশ নম্বর"
+
+msgid "Your name, address, phone and how to pay you (bank, bKash…). Printed at the top of an invoice."
+msgstr "আপনার নাম, ঠিকানা, ফোন ও কীভাবে টাকা দেবে (ব্যাংক, বিকাশ…)। ইনভয়েসের উপরে ছাপা হয়।"
+
+msgid "Your tracked time for a project or a client, × the project's hourly rate. Print it or save it as PDF; mark it billed so the same time isn't billed again."
+msgstr "একটি প্রজেক্ট বা ক্লায়েন্টের ট্র্যাক করা সময় × প্রজেক্টের ঘণ্টাপ্রতি রেট। প্রিন্ট করুন বা PDF হিসেবে সেভ করুন; বিল করা হিসেবে চিহ্ন দিন যাতে একই সময় আবার বিল না হয়।"
+
+msgid "a project's ⋯ menu → Export as a template → CSV."
+msgstr "প্রজেক্টের ⋯ মেনু → Export as a template → CSV।"
+
+msgid "any CSV with a Title (or Name / Task) column; Due, Priority, Project, Tags, Status and Notes columns are used when there."
+msgstr "Title (বা Name / Task) কলামসহ যেকোনো CSV; Due, Priority, Project, Tags, Status ও Notes কলাম থাকলে সেগুলোও নেওয়া হয়।"
+
+msgid "board menu → Print, export and share → Export as CSV."
+msgstr "বোর্ড মেনু → Print, export and share → Export as CSV।"
+
+#, python-format
+msgid "due %(counter)s day after"
+msgid_plural "due %(counter)s days after"
+msgstr[0] "%(counter)s দিন পরে শেষ তারিখ"
+msgstr[1] "%(counter)s দিন পরে শেষ তারিখ"
+
+msgid "project menu → Export → CSV."
+msgstr "প্রজেক্ট মেনু → Export → CSV।"
+
+msgid "— Not a subtask —"
+msgstr "— সাব-টাস্ক নয় —"
+
+#, python-format
+msgid "“In progress” is over your limit of %(n)s — finish one before starting another?"
+msgstr "“চলমান” আপনার %(n)sটির সীমা ছাড়িয়েছে — নতুন শুরুর আগে একটি শেষ করবেন?"
+
+#, python-format
+msgid "…and %(n)s more."
+msgstr "…আর %(n)sটি।"

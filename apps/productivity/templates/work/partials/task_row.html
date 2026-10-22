@@ -8,6 +8,7 @@ Needs: t, today.
   <button type="button" class="wt-check" data-act="done" aria-label="{% translate 'Done' %}" data-p="{{ t.priority }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
   <div class="wt-task-main">
     <a href="{% url 'work:task' t.pk %}" class="wt-task-title">{{ t.title }}</a>
+    {% if t.parent_id and not in_parent %}<span class="wt-parent">{% icon "arrow-up" %}{{ t.parent.title|truncatechars:40 }}</span>{% endif %}
     <div class="wt-task-meta">
       {% if t.priority >= 3 %}<span class="wt-prio" data-p="{{ t.priority }}">{{ t.get_priority_display }}</span>{% endif %}
       {% if t.waiting_for %}<span class="wt-wait" title="{% translate 'Waiting on' %}">{% icon "clock" %}{{ t.waiting_for }}</span>{% endif %}
@@ -19,6 +20,7 @@ Needs: t, today.
       {% if t.link %}<a href="{{ t.link }}" class="wt-link" target="_blank" rel="noopener noreferrer" title="{{ t.link }}">{% icon "link" %}{{ t.link_label }}</a>{% endif %}
       {% if t.estimate_minutes %}<span class="wt-est">~{{ t.estimate_minutes|minutes_hm }}</span>{% endif %}
       {% with c=t|checklist_counts %}{% if c %}<span class="wt-est">{% icon "check" %}{{ c }}</span>{% endif %}{% endwith %}
+      {% if t.subtask_counts %}<span class="wt-est wt-subs" title="{% translate 'Subtasks done' %}">{% icon "list" %}{{ t.subtask_counts }}</span>{% endif %}
       {% if t.repeat %}<span class="wt-est" title="{{ t.repeat_label }}">{% icon "repeat" %}</span>{% endif %}
       {% for tag in t.tags.all %}<a href="{% url 'work:tasks' %}?tag={{ tag.name|urlencode }}" class="wt-tag">#{{ tag.name }}</a>{% endfor %}
     </div>

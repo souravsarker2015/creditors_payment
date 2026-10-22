@@ -112,6 +112,8 @@ class Task(models.Model):
     repeat_from_done = models.BooleanField(_("Count from when it's done"), default=False,
                                            help_text=_("The next one is set from the day you finish it, not from its due date — for things like “water the plants”."))
     start_date = models.DateField(_("Starts"), null=True, blank=True, help_text=_("When work on it begins — it's drawn from here to its due date on the timeline."))
+    parent = models.ForeignKey("self", on_delete=models.SET_NULL, null=True, blank=True, related_name="subtasks", verbose_name=_("Part of"),
+                               help_text=_("Makes this a subtask of a bigger task."))
     blocked_by = models.ManyToManyField("self", symmetrical=False, blank=True, related_name="blocking", verbose_name=_("Blocked by"),
                                         help_text=_("Tasks that must be done before this one can start."))
     tags = models.ManyToManyField(Tag, blank=True, related_name="tasks", verbose_name=_("Tags"))
@@ -158,6 +160,12 @@ class Task(models.Model):
     def open_blockers(self):
         """The unfinished tasks in this one's way (uses prefetched blocked_by when there)."""
         return [b for b in self.blocked_by.all() if b.status != Status.DONE]
+
+    @property
+    def subtask_counts(self):
+        """"2/5" for a task with subtasks (uses prefetched subtasks when there), else ""."""
+        subs = list(self.subtasks.all())
+        return f"{sum(1 for s in subs if s.status == Status.DONE)}/{len(subs)}" if subs else ""
 
     @property
     def is_blocked(self):
@@ -218,6 +226,23 @@ class TaskActivity(models.Model):
         return describe(self)
 
 
+class TaskTemplate(models.Model):
+    """A task kept to make again: its notes, checklist and subtasks — "Release
+    checklist", "New client onboarding"."""
+
+    owner = models.ForeignKey(**OWNER)
+    name = models.CharField(_("Name"), max_length=120)
+    data = models.JSONField(default=dict, help_text="title, notes, priority, estimate, tags, project, due_in (days), checklist [..], subtasks [{title, estimate, due_in}]")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name, verbose_name_plural = _("Task template"), _("Task templates")
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
 class SavedView(models.Model):
     """A task filter kept under a name — "Urgent at work", "Waiting on others"."""
 
@@ -263,6 +288,7 @@ class TimeEntry(models.Model):
     ended_at = models.DateTimeField(_("End"), null=True, blank=True, help_text="Empty while the timer runs.")
     kind = models.CharField(max_length=10, choices=EntryKind.choices, default=EntryKind.TIMER)
     billable = models.BooleanField(_("Billable"), default=False)
+    invoiced_at = models.DateTimeField(_("Billed"), null=True, blank=True, help_text="Put on an invoice (so it isn't billed twice).")
     tags = models.ManyToManyField(Tag, blank=True, related_name="entries", verbose_name=_("Tags"))
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -456,6 +482,11 @@ class WorkSettings(models.Model):
     day_start = models.TimeField(_("Work day starts"), default=time(9, 0),
                                  help_text=_("The day planner opens here, and “Fill my day” plans from here."))
     day_end = models.TimeField(_("Work day ends"), default=time(18, 0))
+    wip_limit = models.PositiveSmallIntegerField(_("Most tasks in progress at once"), null=True, blank=True, validators=[MinValueValidator(1), MaxValueValidator(50)],
+                                                 help_text=_("Optional. The board warns when “In progress” holds more — finishing beats starting."))
+    invoice_from = models.TextField(_("Your details on invoices"), blank=True,
+                                    help_text=_("Your name, address, phone and how to pay you (bank, bKash…). Printed at the top of an invoice."))
+    currency = models.CharField(_("Currency"), max_length=8, default="৳", help_text=_("Shown on invoices and earnings: ৳, $, €…"))
     daily_email = models.BooleanField(_("Email me my day each morning"), default=False,
                                       help_text=_("When your work day starts: what's late and due, your plan, reminders, habits and flashcards."))
     reminder_emails = models.BooleanField(_("Email my task reminders too"), default=False,

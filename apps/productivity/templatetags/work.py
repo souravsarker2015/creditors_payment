@@ -162,3 +162,21 @@ def escapejs_json(value):
     from django.utils.safestring import mark_safe
 
     return mark_safe(escape(json.dumps(str(value or ""))))
+
+
+@register.filter
+def cash(value, currency="৳"):
+    """An amount in the person's currency: ৳ with lakh grouping (৳1,25,000), others as 1,250.00."""
+    from decimal import Decimal, InvalidOperation
+
+    from apps.core.templatetags.ui import money
+
+    if value is None or value == "":
+        return ""
+    if not currency or currency == "৳":
+        return money(value)
+    try:
+        amount = Decimal(str(value))
+    except InvalidOperation:
+        return value
+    return f"{'−' if amount < 0 else ''}{currency}{abs(amount):,.2f}"

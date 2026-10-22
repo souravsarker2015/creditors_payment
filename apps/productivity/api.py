@@ -111,8 +111,8 @@ def timer_update(request):
 
 
 # ── Tasks ─────────────────────────────────────────────────────────────────
-def task_row(request, task):
-    return render_to_string("work/partials/task_row.html", {"t": task, "today": timezone.localdate()}, request=request)
+def task_row(request, task, **extra):
+    return render_to_string("work/partials/task_row.html", {"t": task, "today": timezone.localdate(), **extra}, request=request)
 
 
 @work_required
@@ -150,6 +150,39 @@ def task_done(request, pk):
         if free:
             data["unblocked"] = [t.title for t in free[:3]]
     return ok(**data)
+
+
+# ── Subtasks, copies and templates ─────────────────────────────────────────
+@work_required
+@require_POST
+def subtask_add(request, pk):
+    parent = get_object_or_404(Task, pk=pk, owner=request.user)
+    if parent.parent_id:
+        return bad(_("Subtasks go one level deep: this is already a subtask."))
+    sub = services.add_subtask(parent, request.POST.get("text", ""))
+    if sub is None:
+        return bad(_("Type what needs doing."))
+    return ok(id=sub.pk, html=task_row(request, sub, in_parent=True), counts=parent.subtask_counts)
+
+
+@work_required
+@require_POST
+def task_duplicate(request, pk):
+    from .copying import duplicate
+
+    task = get_object_or_404(Task, pk=pk, owner=request.user)
+    copy = duplicate(task)
+    return ok(id=copy.pk, html=task_row(request, copy), url=reverse("work:task", args=[copy.pk]), title=copy.title)
+
+
+@work_required
+@require_POST
+def task_template(request, pk):
+    from .copying import save_template
+
+    task = get_object_or_404(Task, pk=pk, owner=request.user)
+    tpl = save_template(task, request.POST.get("name", "").strip())
+    return ok(id=tpl.pk, name=tpl.name, url=reverse("work:templates"))
 
 
 # ── Task dependencies, comments and saved views ─────────────────────────────

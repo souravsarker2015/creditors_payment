@@ -56,12 +56,17 @@ class TaskForm(OwnedForm):
         super().__init__(*args, **kwargs)
         self.fields["scheduled_at"].help_text = _("A block on your day planner, as long as the estimate (else 30 minutes).")
         self.fields["repeat_every"].required = False      # left out: once each day / week / month
+        parents = Task.objects.filter(owner=self.owner, parent__isnull=True).exclude(status="done")
+        if self.instance.pk:
+            parents = parents.exclude(pk=self.instance.pk)
+        self.fields["parent"].queryset = parents.order_by("-updated_at") | Task.objects.filter(pk=getattr(self.instance, "parent_id", None) or 0)
+        self.fields["parent"].empty_label = _("— Not a subtask —")
         if self.instance.pk and self.instance.repeat_days:
             self.fields["repeat_on"].initial = [x for x in self.instance.repeat_days.split(",") if x]
 
     class Meta:
         model = Task
-        fields = ("title", "project", "status", "priority", "start_date", "due_date", "estimate_minutes", "repeat", "repeat_every", "repeat_from_done",
+        fields = ("title", "parent", "project", "status", "priority", "start_date", "due_date", "estimate_minutes", "repeat", "repeat_every", "repeat_from_done",
                   "remind_at", "scheduled_at", "link", "goal", "waiting_for", "notes")
         widgets = {
             "link": forms.URLInput(attrs={"placeholder": "https://github.com/…/pull/482", "inputmode": "url"}),
@@ -81,6 +86,9 @@ class TaskForm(OwnedForm):
             self.add_error("start_date", _("The start can't be after the due date."))
         if not data.get("repeat_every"):
             data["repeat_every"] = 1
+        parent = data.get("parent")
+        if parent and not services.can_be_parent(self.instance, parent):
+            self.add_error("parent", _("Subtasks go one level deep: pick a task that isn't a subtask, and this one can't have subtasks of its own."))
         return data
 
     def save(self, commit=True):
@@ -221,15 +229,16 @@ class SettingsForm(forms.ModelForm):
         fields = ("week_start", "focus_minutes", "short_break_minutes", "long_break_minutes", "long_break_every",
                   "auto_start_breaks", "auto_start_focus", "sound_enabled", "sound", "volume", "tick_sound",
                   "notifications", "long_timer_hours", "idle_minutes", "default_project", "day_start", "day_end", "cards_remind_at",
-                  "daily_email", "reminder_emails")
-        widgets = {"volume": forms.NumberInput(attrs={"type": "range", "min": 0, "max": 100, "step": 5}),
+                  "daily_email", "reminder_emails", "wip_limit", "invoice_from", "currency")
+        widgets = {"invoice_from": forms.Textarea(attrs={"rows": 4, "placeholder": _("Your name\nAddress\nPhone\nPay to: bank account or bKash number")}),
+                   "volume": forms.NumberInput(attrs={"type": "range", "min": 0, "max": 100, "step": 5}),
                    "day_start": forms.TimeInput(attrs={"type": "time"}, format="%H:%M"),
                    "cards_remind_at": forms.TimeInput(attrs={"type": "time"}, format="%H:%M"),
                    "day_end": forms.TimeInput(attrs={"type": "time"}, format="%H:%M")}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for name in ("day_start", "day_end"):      # left empty: keep what it was
+        for name in ("day_start", "day_end", "currency"):      # left empty: keep what it was
             self.fields[name].required = False
         self.fields["default_project"].queryset = Project.objects.filter(owner=self.instance.owner, is_archived=False)
         self.fields["work_day_list"].initial = list(self.instance.work_days)
@@ -240,6 +249,7 @@ class SettingsForm(forms.ModelForm):
         start = data.get("day_start") or self.instance.day_start
         end = data.get("day_end") or self.instance.day_end
         data["day_start"], data["day_end"] = start, end
+        data["currency"] = (data.get("currency") or "").strip() or self.instance.currency or "৳"
         if start and end and end <= start:
             self.add_error("day_end", _("The day has to end after it starts."))
         return data
