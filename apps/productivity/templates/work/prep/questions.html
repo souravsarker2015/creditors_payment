@@ -11,7 +11,9 @@
     <p class="wp-sub">{% blocktranslate count counter=total %}{{ counter }} question{% plural %}{{ counter }} questions{% endblocktranslate %}</p>
   </div>
   <div class="wp-actions">
-    {% if total %}<a href="{% url 'work:prep_practice' %}?{{ query }}" class="btn btn-secondary">{% icon "play" %}{% translate "Practise these" %}</a>{% endif %}
+    {% if total %}<a href="{% url 'work:prep_practice' %}?{{ query }}" class="btn btn-secondary">{% icon "play" %}{% translate "Practise these" %}</a>
+    <a href="{% url 'work:prep_practice' %}?{{ query }}{% if query %}&amp;{% endif %}count=1&amp;order=random" class="icon-btn" aria-label="{% translate 'Pick one at random' %}" data-tip="{% translate 'Pick one at random' %}">{% icon "sparkles" %}</a>
+    <a href="{% url 'work:prep_sheet' %}?{{ query }}" class="icon-btn" aria-label="{% translate 'Revision sheet' %}" data-tip="{% translate 'Revision sheet: questions and answers to read or print' %}">{% icon "printer" %}</a>{% endif %}
     <a href="{% url 'work:question_new' %}{% if f.topic %}?topic={{ f.topic }}{% endif %}" class="btn btn-primary">{% icon "plus" %}{% translate "Question" %}</a>
   </div>
 </header>

@@ -1,0 +1,24 @@
+{% load i18n work %}{# Run a coding answer with its checks (inside prepSession or prepExam; see runMixin in static/js/prep.js). #}
+<div class="wpq-run" x-show="canRun()" x-cloak>
+  <div class="wpq-run-bar">
+    <button type="button" class="btn btn-secondary btn-sm" @click="run()" :disabled="ran.busy">{% icon "play" %}{% translate "Run" %} <kbd class="wp-kbd">Ctrl+'</kbd></button>
+    <button type="button" class="btn btn-ghost btn-sm" @click="resetCode()">{% icon "restore" %}{% translate "Start over" %}</button>
+    <span class="help" x-show="q && q.tests && !isSQL()">{% translate "Runs your code, then its checks." %}</span>
+    <span class="help" x-show="isSQL()">{% translate "Runs on a small SQLite database." %}</span>
+  </div>
+  <details class="wpq-checks" x-show="q && q.tests">
+    <summary x-text="isSQL() ? '{{ _("See the tables")|escapejs }}' : '{{ _("See the checks")|escapejs }}'"></summary>
+    <pre><code x-text="q && q.tests"></code></pre>
+  </details>
+  <div class="wpq-out" x-show="ran.busy || ran.res" :data-tone="runTone()" role="status" aria-live="polite">
+    <p class="wpq-out-head"><span class="wpq-out-dot" :class="ran.busy && 'is-busy'"></span><span x-text="runText()"></span></p>
+    <pre x-show="ran.res && (ran.res.out || ran.res.error)" x-text="ran.res ? [ran.res.out, ran.res.error].filter(Boolean).join('\n') : ''"></pre>
+    <template x-for="tb in (ran.res ? [['{{ _("Your result")|escapejs }}', ran.res.table], ['{{ _("Expected")|escapejs }}', ran.res.verdict === 'differ' ? ran.res.want : null]] : [])" :key="tb[0]">
+      <div class="wpq-table" x-show="tb[1]">
+        <p class="help" x-text="tb[0] + (tb[1] && tb[1].count > tb[1].rows.length ? ' (' + tb[1].rows.length + ' / ' + tb[1].count + ')' : '')"></p>
+        <div class="table-wrap"><table><thead><tr><template x-for="c in (tb[1] ? tb[1].columns : [])"><th x-text="c"></th></template></tr></thead>
+          <tbody><template x-for="row in (tb[1] ? tb[1].rows : [])"><tr><template x-for="v in row"><td x-text="v === null ? 'NULL' : v"></td></template></tr></template></tbody></table></div>
+      </div>
+    </template>
+  </div>
+</div>

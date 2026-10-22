@@ -1,17 +1,22 @@
 """Diagrams: the starting points (templates), the checks on what a page
 saves, and turning a mind map into an outline or tasks.
 
-Mind maps and system design boards are drawn by hand; their shapes live in
-`Diagram.data`:
+Mind maps, system design boards and free drawings are drawn by hand; their
+shapes live in `Diagram.data`:
 
     mind map  {"root": {"id", "text", "children": [...], "collapsed"?, "color"?, "done"?},
                "layout": "map"|"right"|"down"}
     board     {"nodes": [{"id", "type", "x", "y", "w", "h", "label", "tech", "note", "color"}],
                "edges": [{"id", "from", "to", "label", "style": "solid"|"dashed", "arrow": "end"|"both"|"none"}],
                "est": {back-of-the-envelope numbers}}
+    drawing   {"nodes": [{"id", "shape", "x", "y", "w", "h", "label", …}], "edges": [{"id", "from", "to", …}]}
+              (see static/js/drawmodel.js)
 
 Every other kind is Mermaid text in `Diagram.source`, drawn in the browser;
-its `data` only says how it looks: {"look": "handDrawn"}.
+its `data` says how it looks: {"look": "handDrawn"}. Flowcharts, state, class
+and database diagrams can be drawn by dragging shapes too: then `data` also
+holds {"mode": "draw"|"text", "draw": {a drawing, plus "src": the text it was
+made from}} and the text is written from the drawing.
 
 Earlier states are kept as DiagramVersion rows (see `remember`).
 """
@@ -22,7 +27,7 @@ from datetime import timedelta
 from django.utils import timezone
 from django.utils.translation import gettext as _, gettext_lazy
 
-from .models import DiagramKind, DiagramVersion
+from .models import DRAG_KINDS, DiagramKind, DiagramVersion
 
 MAX_SOURCE = 100_000          # characters of Mermaid text
 MAX_DATA = 1_000_000          # bytes of shapes (JSON)
@@ -53,24 +58,44 @@ def clean_data(kind, raw):
         if count_nodes(root) > MAX_ITEMS:
             raise Invalid(_("This diagram is too big to save."))
         _clip_texts(root)
-    elif kind == DiagramKind.SYSTEM:
-        nodes, edges = data.get("nodes", []), data.get("edges", [])
-        if not isinstance(nodes, list) or not isinstance(edges, list):
+    elif kind in (DiagramKind.SYSTEM, DiagramKind.DRAWING):
+        data = _clean_shapes(data, ("label", "tech", "note", "attrs", "methods"))
+    else:                                   # a text diagram: how it looks (and, for some, its drawing)
+        out = {"look": "handDrawn"} if data.get("look") == "handDrawn" and kind in SKETCH_KINDS else {}
+        if kind in DRAG_KINDS:
+            if data.get("mode") in ("draw", "text"):
+                out["mode"] = data["mode"]
+            if isinstance(data.get("draw"), dict):
+                draw = _clean_shapes(data["draw"], ("label", "attrs", "methods"))
+                out["draw"] = {"nodes": draw["nodes"], "edges": draw["edges"], "dir": str(draw.get("dir") or "")[:2],
+                               "extra": [str(x)[:MAX_TEXT * 2] for x in draw.get("extra") or [] if isinstance(x, str)][:500],
+                               "front": str(draw.get("front") or "")[:MAX_TEXT * 4], "src": str(draw.get("src") or "")[:MAX_SOURCE]}
+        data = out
+    return data
+
+
+def _clean_shapes(data, texts):
+    """Shapes and the links between them: lists of objects with ids, words cut to size,
+    and links whose end was deleted dropped rather than saved broken."""
+    nodes, edges = data.get("nodes", []), data.get("edges", [])
+    if not isinstance(nodes, list) or not isinstance(edges, list):
+        raise Invalid(_("The diagram couldn't be read."))
+    if len(nodes) + len(edges) > MAX_ITEMS:
+        raise Invalid(_("This diagram is too big to save."))
+    ids = set()
+    for n in nodes:
+        if not isinstance(n, dict) or not n.get("id"):
             raise Invalid(_("The diagram couldn't be read."))
-        if len(nodes) + len(edges) > MAX_ITEMS:
-            raise Invalid(_("This diagram is too big to save."))
-        ids = set()
-        for n in nodes:
-            if not isinstance(n, dict) or not n.get("id"):
-                raise Invalid(_("The diagram couldn't be read."))
-            ids.add(n["id"])
-            for key in ("label", "tech", "note"):
-                if isinstance(n.get(key), str):
-                    n[key] = n[key][:MAX_TEXT * (8 if key == "note" else 1)]
-        # a link whose end was deleted is dropped rather than saved broken
-        data["edges"] = [e for e in edges if isinstance(e, dict) and e.get("from") in ids and e.get("to") in ids]
-    else:                                   # a text diagram: only how it looks
-        data = {"look": "handDrawn"} if data.get("look") == "handDrawn" and kind in SKETCH_KINDS else {}
+        ids.add(n["id"])
+        for key in texts:
+            if isinstance(n.get(key), str):
+                n[key] = n[key][:MAX_TEXT * (8 if key in ("note", "attrs", "methods") else 4 if key == "label" else 1)]
+    data["nodes"] = nodes
+    data["edges"] = [e for e in edges if isinstance(e, dict) and e.get("from") in ids and e.get("to") in ids]
+    for e in data["edges"]:
+        for key in ("label", "fromLabel", "toLabel"):
+            if isinstance(e.get(key), str):
+                e[key] = e[key][:MAX_TEXT]
     return data
 
 
@@ -323,6 +348,32 @@ def _mindmap_templates():
             _tree(_("Key ideas"), _tree(_("Idea 1")), _tree(_("Idea 2"))),
             _tree(_("Practice")), _tree(_("Resources")), _tree(_("Questions")),
         ))),
+    ]
+
+
+def _shapes(nodes, edges):
+    """A free drawing: nodes (id, shape, x, y, w, h, label), edges (from, to, label)."""
+    return {"nodes": [{"id": i, "shape": shape, "x": x, "y": y, "w": w, "h": h, "label": str(label)} for i, shape, x, y, w, h, label in nodes],
+            "edges": [{"id": f"e{k}", "from": a, "to": b, "line": "solid", **({"label": str(label)} if label else {})}
+                      for k, (a, b, label) in enumerate(edges, 1)]}
+
+
+def _drawing_templates():
+    return [
+        ("blank", gettext_lazy("Blank page"), lambda: {"nodes": [], "edges": []}),
+        ("process", gettext_lazy("A process with a decision"), lambda: _shapes([
+            ("start", "stadium", 225, 40, 140, 50, _("Start")),
+            ("work", "rect", 220, 150, 150, 64, _("Do the work")),
+            ("check", "diamond", 215, 280, 160, 100, _("Is it done?")),
+            ("end", "stadium", 225, 450, 140, 50, _("Finish")),
+            ("fix", "rect", 470, 298, 150, 64, _("Fix what's missing")),
+        ], [("start", "work", ""), ("work", "check", ""), ("check", "end", _("Yes")), ("check", "fix", _("No")), ("fix", "work", "")])),
+        ("team", gettext_lazy("Team chart"), lambda: _shapes([
+            ("lead", "rounded", 290, 40, 170, 64, _("Team lead")),
+            ("a", "rounded", 60, 180, 170, 64, _("Design")),
+            ("b", "rounded", 290, 180, 170, 64, _("Engineering")),
+            ("c", "rounded", 520, 180, 170, 64, _("Marketing")),
+        ], [("lead", "a", ""), ("lead", "b", ""), ("lead", "c", "")])),
     ]
 
 
@@ -699,7 +750,8 @@ def templates(today=None):
     """{kind: [(key, title), …]} for the "New" menu and the gallery."""
     today = today or timezone.localdate()
     out = {DiagramKind.MINDMAP: [(k, t) for k, t, _f in _mindmap_templates()],
-           DiagramKind.SYSTEM: [(k, t) for k, t, _f in _system_templates()]}
+           DiagramKind.SYSTEM: [(k, t) for k, t, _f in _system_templates()],
+           DiagramKind.DRAWING: [(k, t) for k, t, _f in _drawing_templates()]}
     for kind, items in _mermaid_templates(today).items():
         out[kind] = [("blank", gettext_lazy("Blank"))] + [(k, t) for k, t, _s in items]
     return out
@@ -714,6 +766,11 @@ def start(kind, key, today=None):
             if k == key:
                 return (str(kind_label) if k == "blank" else str(title)), "", make(), ""
         return str(kind_label), "", _mindmap_templates()[0][2](), ""
+    if kind == DiagramKind.DRAWING:
+        for k, title, make in _drawing_templates():
+            if k == key:
+                return (str(kind_label) if k == "blank" else str(title)), "", make(), ""
+        return str(kind_label), "", _drawing_templates()[0][2](), ""
     if kind == DiagramKind.SYSTEM:
         for k, title, make in _system_templates():
             if k == key:

@@ -297,3 +297,74 @@ class PageTests(Base):
         self.mcq(companies="Google")
         found = self.client.get(reverse("work:api_search"), {"q": "immutable"}).json()["results"]
         self.assertEqual([x["kind"] for x in found], ["question"])
+
+
+class RunAndHintTests(Base):
+    """Hints shown one at a time, checks for the Run button, tables from Anki/Quizlet, the revision sheet."""
+    def test_hints_and_checks_reach_the_page_but_not_the_answers_in_an_exam(self):
+        q = self.q("Reverse a list", kind=QuestionKind.CODE, language="python", tests="assert rev([1, 2]) == [2, 1]",
+                   hints="- Slicing\n\n- [::-1]", answer="`xs[::-1]`")
+        data = prep.as_json(q)
+        self.assertEqual(data["hints"], ["Slicing", "[::-1]"])
+        self.assertEqual(data["tests"], "assert rev([1, 2]) == [2, 1]")
+        self.assertIn(3, data["after"])                         # what each rating would do
+        exam = prep.as_json(q, for_exam=True)
+        self.assertNotIn("answer", exam)
+        self.assertEqual(exam["tests"], q.tests)
+        self.assertEqual(prep.as_json(self.q("Short one", tests="ignored"))["tests"], "")    # only coding questions run
+
+    def test_a_right_choice_after_a_hint_comes_back_sooner(self):
+        q = self.mcq()
+        self.client.post(reverse("work:api_prep_answer", args=[q.pk]), {"choice": "1", "rating": "2"})
+        q.refresh_from_db()
+        self.assertEqual((q.last_rating, q.right), (2, 0))
+
+    def test_markdown_and_json_carry_hints_and_tests(self):
+        md = "# Py\n## Add two numbers {easy, code python}\n### Hints\n- Use +\n- Really, +\n### Tests\n```python\nassert add(1, 2) == 3\n```\n### Answer\n`a + b`\n"
+        (x,) = prep.parse_markdown(md)
+        self.assertEqual((x["hints"], x["tests"]), ("Use +\nReally, +", "assert add(1, 2) == 3"))
+        prep.add_many(self.me, [x])
+        q = Question.objects.get(prompt__startswith="Add two")
+        again = prep.parse_json(json.dumps(prep.export(self.me, Question.objects.filter(pk=q.pk))))[0]
+        self.assertEqual((again["hints"], again["tests"]), (x["hints"], x["tests"]))
+        md2 = self.client.get(reverse("work:prep_export") + "?format=md").content.decode()
+        self.assertEqual(prep.parse_markdown(md2)[0]["tests"], "assert add(1, 2) == 3")
+
+    def test_tables_from_anki_quizlet_and_spreadsheets(self):
+        anki = "#separator:tab\n#html:true\nWhat is a closure?\tA function <b>plus</b> its scope<br>Made at definition\tJavaScript\nCAP?\tPick two\n"
+        items = prep.parse_any(anki)
+        self.assertEqual([i["prompt"] for i in items], ["What is a closure?", "CAP?"])
+        self.assertEqual(items[0]["answer"], "A function plus its scope\nMade at definition")
+        self.assertEqual(items[0]["topic"], "JavaScript")
+        sheet = 'Question,Answer,Topic,Difficulty,Hints\n"What is O(1)?","Constant time",DSA,easy,"Think of a dict;No loops"\n'
+        (row,) = prep.parse_any(sheet)
+        self.assertEqual((row["topic"], row["difficulty"], row["hints"]), ("DSA", 1, "Think of a dict\nNo loops"))
+        self.assertEqual(prep.parse_any("# T\n## Q one\n### Answer\nA")[0]["prompt"], "Q one")      # still Markdown
+        r = self.client.post(reverse("work:prep_import"), {"text": anki})
+        self.assertContains(r, "What is a closure?")
+
+    def test_the_form_saves_hints_and_checks(self):
+        r = self.client.post(reverse("work:question_new"), {"topic": self.topic.pk, "kind": "code", "difficulty": 2, "prompt": "Fizz", "language": "python",
+                                                             "tests": "assert fizz(3) == 'Fizz'", "hints": "Modulo", "options_json": "[]"})
+        self.assertEqual(r.status_code, 302)
+        q = Question.objects.get(prompt="Fizz")
+        self.assertEqual((q.tests, q.hint_list), ("assert fizz(3) == 'Fizz'", ["Modulo"]))
+
+    def test_the_revision_sheet(self):
+        self.q("Explain the GIL", answer="One thread runs Python bytecode at a time.")
+        other = PrepTopic.objects.create(owner=self.me, name="SQL")
+        self.q("What is an index?", topic=other)
+        r = self.client.get(reverse("work:prep_sheet") + f"?topic={other.pk}")
+        self.assertContains(r, "What is an index?")
+        self.assertNotContains(r, "Explain the GIL")
+        self.assertContains(self.client.get(reverse("work:prep_sheet")), "One thread runs Python bytecode")
+        stranger = User.objects.create_superuser("x", "x@example.com", PW)
+        self.client.force_login(stranger)
+        self.assertNotContains(self.client.get(reverse("work:prep_sheet")), "Explain the GIL")
+
+    def test_pack_coding_questions_can_be_run(self):
+        for pack in PACKS.values():
+            for x in pack["questions"]:
+                if x.get("kind") == QuestionKind.CODE:
+                    self.assertTrue(x.get("tests"), x["prompt"])
+                    self.assertTrue(x.get("hints"), x["prompt"])

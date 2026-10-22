@@ -9,6 +9,9 @@ Multiple choice is marked by the app. Short, coding and written answers are
 checked by you against the model answer; ticking the key points you covered
 suggests the mark.
 """
+import csv
+import html
+import io
 import json
 import random
 import re
@@ -153,12 +156,13 @@ def as_json(q, *, for_exam=False):
         "id": q.pk, "topic": q.topic.name, "color": q.topic.color, "kind": q.kind, "kindLabel": q.get_kind_display(),
         "difficulty": q.difficulty, "difficultyLabel": q.get_difficulty_display(), "prompt": q.prompt, "language": q.language,
         "starter": q.starter, "options": [o.get("text", "") for o in q.options or []],
+        "hints": q.hint_list, "tests": q.tests if q.kind == QuestionKind.CODE else "",
         "multi": sum(1 for o in q.options or [] if o.get("correct")) > 1, "status": q.status, "starred": q.is_starred,
         "url": reverse("work:question", args=[q.pk]), "edit": reverse("work:question_edit", args=[q.pk]),
     }
     if not for_exam:
         data.update({"answer": q.answer, "explanation": q.explanation, "points": q.points_list,
-                     "correct": [i for i, o in enumerate(q.options or []) if o.get("correct")], "hints": previews(q),
+                     "correct": [i for i, o in enumerate(q.options or []) if o.get("correct")], "after": previews(q),
                      "companies": q.company_list})
     return data
 
@@ -335,7 +339,7 @@ KIND_WORDS = {"choice": QuestionKind.CHOICE, "mcq": QuestionKind.CHOICE, "short"
               "behavioral": QuestionKind.LONG, "behavioural": QuestionKind.LONG}
 LEVEL_WORDS = {"easy": Difficulty.EASY, "medium": Difficulty.MEDIUM, "hard": Difficulty.HARD}
 LANGS = {"python", "javascript", "typescript", "java", "go", "c", "cpp", "c++", "csharp", "c#", "rust", "kotlin", "swift", "ruby", "php", "sql", "bash", "shell"}
-SECTION = re.compile(r"^###\s*(answer|solution|key points|why|explanation|starter|starting code|notes)\s*:?\s*$", re.I)
+SECTION = re.compile(r"^###\s*(answer|solution|key points|why|explanation|starter|starting code|notes|hints?|tests?|checks)\s*:?\s*$", re.I)
 OPTION = re.compile(r"^\s*[-*]\s*\[( |x|X)\]\s+(.+)$")
 HEAD = re.compile(r"^##\s*(?:Q:\s*)?(.+?)\s*(?:\{([^}]*)\})?\s*$")
 
@@ -379,8 +383,9 @@ def parse_markdown(text, default_topic=""):
 
     def close():
         if cur and cur["prompt"].strip():
-            for k in ("prompt", "answer", "explanation", "starter", "notes"):
+            for k in ("prompt", "answer", "explanation", "starter", "notes", "tests"):
                 cur[k] = cur[k].strip()
+            cur["hints"] = "\n".join(ln.strip(" -*•\t") for ln in cur["hints"].splitlines() if ln.strip(" -*•\t"))
             cur["key_points"] = "\n".join(ln.strip(" -*•\t") for ln in cur["key_points"].splitlines() if ln.strip(" -*•\t"))
             if cur["options"] and cur["kind"] == QuestionKind.SHORT and not cur["kind_set"]:
                 cur["kind"] = QuestionKind.CHOICE
@@ -399,7 +404,7 @@ def parse_markdown(text, default_topic=""):
             kind = next((KIND_WORDS[w] for w in words if w in KIND_WORDS), QuestionKind.SHORT)
             lang = next((w.replace("c++", "cpp").replace("c#", "csharp") for w in words if w in LANGS), "")
             cur = {"topic": topic or _("General"), "prompt": m.group(1).strip() + "\n", "answer": "", "key_points": "", "explanation": "",
-                   "starter": "", "notes": "", "options": [], "language": lang, "kind": QuestionKind.CODE if lang and kind == QuestionKind.SHORT else kind,
+                   "starter": "", "notes": "", "hints": "", "tests": "", "options": [], "language": lang, "kind": QuestionKind.CODE if lang and kind == QuestionKind.SHORT else kind,
                    "kind_set": any(w in KIND_WORDS for w in words) or bool(lang),
                    "difficulty": next((LEVEL_WORDS[w] for w in words if w in LEVEL_WORDS), Difficulty.MEDIUM)}
             section = "prompt"
@@ -410,7 +415,8 @@ def parse_markdown(text, default_topic=""):
         if s:
             word = s.group(1).lower()
             section = {"answer": "answer", "solution": "answer", "key points": "key_points", "why": "explanation", "explanation": "explanation",
-                       "starter": "starter", "starting code": "starter", "notes": "notes"}[word]
+                       "starter": "starter", "starting code": "starter", "notes": "notes", "hint": "hints", "hints": "hints",
+                       "test": "tests", "tests": "tests", "checks": "tests"}[word]
             continue
         o = OPTION.match(line)
         if o and section == "prompt":
@@ -419,8 +425,9 @@ def parse_markdown(text, default_topic=""):
         cur[section] += line + "\n"
     close()
     for q in out:
-        if q["kind"] == QuestionKind.CODE and q["starter"].startswith("```"):
-            q["starter"] = re.sub(r"^```\w*\n|\n?```$", "", q["starter"]).strip()
+        for key in ("starter", "tests"):
+            if q["kind"] == QuestionKind.CODE and q[key].startswith("```"):
+                q[key] = re.sub(r"^```\w*\n|\n?```$", "", q[key]).strip()
     return out
 
 
@@ -435,13 +442,79 @@ def parse_json(text):
         diff = x.get("difficulty")
         diff = diff if diff in Difficulty.values else LEVEL_WORDS.get(str(diff).lower(), Difficulty.MEDIUM)
         opts = [{"text": str(o.get("text", ""))[:500], "correct": bool(o.get("correct"))} for o in x.get("options") or [] if isinstance(o, dict)]
-        points = x.get("key_points") or ""
+        points, hints = x.get("key_points") or "", x.get("hints") or ""
         out.append({"topic": str(x.get("topic") or _("General"))[:80], "prompt": str(x.get("prompt") or x.get("question")), "answer": str(x.get("answer") or ""),
                     "key_points": "\n".join(points) if isinstance(points, list) else str(points), "explanation": str(x.get("explanation") or ""),
                     "starter": str(x.get("starter") or ""), "notes": str(x.get("notes") or ""), "options": opts, "language": str(x.get("language") or "")[:20],
+                    "hints": "\n".join(map(str, hints)) if isinstance(hints, list) else str(hints), "tests": str(x.get("tests") or ""),
                     "kind": QuestionKind.CHOICE if opts and kind == QuestionKind.SHORT else kind, "difficulty": diff,
                     "companies": str(x.get("companies") or "")[:200], "source": str(x.get("source") or "")[:500]})
     return out
+
+
+# Columns a spreadsheet (CSV with a header row) may use, and what they fill.
+COLUMNS = {"question": "prompt", "prompt": "prompt", "front": "prompt", "term": "prompt", "q": "prompt",
+           "answer": "answer", "back": "answer", "definition": "answer", "a": "answer", "solution": "answer",
+           "topic": "topic", "deck": "topic", "subject": "topic", "difficulty": "difficulty", "level": "difficulty",
+           "type": "kind", "kind": "kind", "key points": "key_points", "key_points": "key_points", "hints": "hints", "hint": "hints",
+           "explanation": "explanation", "why": "explanation", "language": "language", "companies": "companies", "tags": "tags"}
+
+
+def _cell(text):
+    """A field from Anki or Quizlet: HTML line breaks become new lines, other tags go."""
+    text = re.sub(r"<br\s*/?>|</div>|</p>", "\n", str(text or ""), flags=re.I)
+    return html.unescape(re.sub(r"<[^>]+>", "", text)).strip()
+
+
+def looks_like_table(text):
+    """Tab-separated lines (Anki and Quizlet exports), or a CSV whose first row names a question column."""
+    rows = [ln for ln in (text or "").splitlines() if ln.strip() and not ln.startswith("#")]
+    if not rows or any(ln.startswith("## ") for ln in rows):
+        return False
+    if sum("\t" in ln for ln in rows) >= max(1, len(rows) * 0.6):
+        return True
+    head = [c.strip().lower() for c in next(csv.reader([rows[0]]))]
+    return len(head) > 1 and any(COLUMNS.get(c) == "prompt" for c in head)
+
+
+def parse_table(text, default_topic=""):
+    """Questions from a table: "question<TAB>answer[<TAB>topic]" lines, or a CSV with a header row."""
+    rows = [ln for ln in (text or "").replace("\r\n", "\n").split("\n") if ln.strip() and not ln.startswith("#")]   # "#separator:tab" and the like
+    if not rows:
+        return []
+    tabbed = sum("\t" in ln for ln in rows) >= len(rows) * 0.6
+    reader = csv.reader(io.StringIO("\n".join(rows)), delimiter="\t" if tabbed else ",")
+    table = [r for r in reader if any(c.strip() for c in r)]
+    head = [c.strip().lower() for c in table[0]] if table else []
+    named = sum(1 for c in head if c in COLUMNS) >= 2 and any(COLUMNS.get(c) == "prompt" for c in head)
+    keys = [COLUMNS.get(c, "") for c in head] if named else ["prompt", "answer", "topic"]
+    out = []
+    for r in table[1:] if named else table:
+        x = {}
+        for k, v in zip(keys, r):
+            if k and v.strip() and k not in x:
+                x[k] = _cell(v)
+        if not x.get("prompt"):
+            continue
+        kind = KIND_WORDS.get(str(x.get("kind", "")).lower(), QuestionKind.SHORT)
+        lang = str(x.get("language", "")).lower()[:20]
+        out.append({"topic": (x.get("topic") or default_topic or _("General"))[:80], "prompt": x["prompt"], "answer": x.get("answer", ""),
+                    "key_points": x.get("key_points", "").replace(";", "\n"), "hints": x.get("hints", "").replace(";", "\n"),
+                    "explanation": x.get("explanation", ""), "starter": "", "tests": "", "notes": "", "options": [], "language": lang,
+                    "kind": QuestionKind.CODE if lang and kind == QuestionKind.SHORT else kind,
+                    "difficulty": LEVEL_WORDS.get(str(x.get("difficulty", "")).lower(), Difficulty.MEDIUM),
+                    "companies": x.get("companies", "")[:200]})
+    return out
+
+
+def parse_any(text):
+    """JSON, a table (Anki, Quizlet, a spreadsheet) or the Markdown format — whichever the text is."""
+    text = (text or "").strip()
+    if text[:1] in "[{":
+        return parse_json(text)
+    if looks_like_table(text):
+        return parse_table(text)
+    return parse_markdown(text)
 
 
 @transaction.atomic
@@ -462,6 +535,7 @@ def add_many(user, items, topic=None):
                                 prompt=x["prompt"][:20000], answer=(x.get("answer") or "")[:50000], key_points=(x.get("key_points") or "")[:5000],
                                 options=x.get("options") or [], explanation=(x.get("explanation") or "")[:20000], language=(x.get("language") or "")[:20],
                                 starter=(x.get("starter") or "")[:20000], notes=(x.get("notes") or "")[:20000],
+                                hints=(x.get("hints") or "")[:5000], tests=(x.get("tests") or "")[:20000],
                                 companies=(x.get("companies") or "")[:200], source=source if source.startswith(("http://", "https://")) else "")
         n += 1
     return n
@@ -473,7 +547,7 @@ def export(user, qs=None):
     return {"format": "fintrack-prep/1", "questions": [{
         "topic": q.topic.name, "kind": q.kind, "difficulty": q.difficulty, "prompt": q.prompt, "answer": q.answer,
         "key_points": q.points_list, "options": q.options, "explanation": q.explanation, "language": q.language, "starter": q.starter,
-        "companies": q.companies, "source": q.source, "notes": q.notes} for q in qs]}
+        "companies": q.companies, "source": q.source, "notes": q.notes, "hints": q.hint_list, "tests": q.tests} for q in qs]}
 
 
 def install_pack(user, key):

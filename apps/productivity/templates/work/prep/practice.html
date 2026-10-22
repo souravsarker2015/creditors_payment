@@ -34,9 +34,9 @@
     <p class="empty-text">{% translate "No questions match, or everything is done for today. Pick another topic, or add questions." %}</p>
     <a href="{% url 'work:prep' %}" class="btn btn-secondary">{% translate "Back to Interview prep" %}</a>
   </section>
-  <p class="wpq-keys" x-show="stage === 'ask' || stage === 'answered'">{% translate "Keys: 1–9 pick · Enter check / next · Ctrl+Enter show the answer · 1–4 rate" %}</p>
+  <p class="wpq-keys" x-show="stage === 'ask' || stage === 'answered'">{% translate "Keys: 1–9 pick · Enter check / next · Ctrl+Enter show the answer · 1–4 rate · H hint · S skip · Ctrl+' run code" %}</p>
 </div>
 {% endblock %}
 
 {% block work_libs %}{% include "work/prep/_libs.html" %}{% endblock %}
-{% block work_js %}<script src="{% asset 'js/prep.js' %}"></script>{% endblock %}
+{% block work_js %}<script src="{% asset 'js/runner.js' %}"></script><script src="{% asset 'js/prep.js' %}"></script>{% endblock %}

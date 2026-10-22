@@ -28,7 +28,7 @@ from .access import can_use, work_required
 from .forms import DeckForm, EntryForm, GoalForm, HabitForm, LearningForm, ProjectForm, SettingsForm, SnippetForm, SprintForm, TagForm, TaskForm
 from .models import (
     Card, Color, Deck, Diagram, DiagramKind, DiagramVersion, Goal, GoalStatus, Habit, JournalEntry, Language, LearningItem, LearningKind, LearningStatus, LearningUnit, KIND_ICONS, Note, Priority, Project, SavedView, Snippet, Sprint, TaskKind, TaskTemplate,
-    Status, Tag, Task, TimeEntry, WorkSettings,
+    Status, Tag, Task, TimeEntry, WorkSettings, DRAG_KINDS, VISUAL_KINDS,
 )
 
 ROW_RELATED = ("tags", "checklist", "blocked_by", "subtasks")   # what a task row shows; fetched only for the rows on screen
@@ -743,6 +743,7 @@ def note_go_view(request):
 DIAGRAM_KINDS = [
     (DiagramKind.MINDMAP, "mindmap", gettext_lazy("Ideas around one centre. Tab adds a branch, Enter a sibling.")),
     (DiagramKind.SYSTEM, "server", gettext_lazy("Services, databases, caches and queues, linked up — with the numbers.")),
+    (DiagramKind.DRAWING, "shapes", gettext_lazy("Any shapes, dragged and linked — like draw.io.")),
     (DiagramKind.FLOWCHART, "flow", gettext_lazy("Steps and decisions.")),
     (DiagramKind.SEQUENCE, "sequence", gettext_lazy("Who calls whom, in order.")),
     (DiagramKind.ER, "database", gettext_lazy("Tables, keys and how they relate.")),
@@ -763,7 +764,7 @@ DIAGRAM_KINDS = [
 DIAGRAM_ICON = {k: icon for k, icon, _h in DIAGRAM_KINDS}
 K = DiagramKind
 DIAGRAM_GROUPS = [
-    (gettext_lazy("Draw by hand"), [K.MINDMAP, K.SYSTEM]),
+    (gettext_lazy("Draw by hand"), [K.DRAWING, K.MINDMAP, K.SYSTEM]),
     (gettext_lazy("Software and systems"), [K.FLOWCHART, K.SEQUENCE, K.ER, K.CLASS, K.STATE, K.C4, K.ARCHITECTURE, K.BLOCK, K.GITGRAPH]),
     (gettext_lazy("Plans and time"), [K.GANTT, K.TIMELINE, K.JOURNEY]),
     (gettext_lazy("Charts"), [K.PIE, K.QUADRANT, K.XYCHART, K.SANKEY]),
@@ -876,6 +877,33 @@ def _diagram_texts(kind=""):
         "versionSaved": _("Version saved"), "restored": _("Earlier version brought back"), "restoreConfirm": _("Bring back this version? What's there now is kept as a version too."),
         "noMatch": _("Nothing matches"), "copiedParts": _("Copied"), "pasted": _("Pasted"),
         "auto": _("Kept by itself"), "now": _("Now"),
+        **(_drawing_texts() if kind == DiagramKind.DRAWING or kind in DRAG_KINDS else {}),
+    }
+
+
+def _drawing_texts():
+    """Names for the drag-and-drop editor (static/js/drawing.js): its shapes, link ends and kinds of class link."""
+    return {
+        "shapes": {
+            "terminal": _("Start / end"), "process": _("Step"), "decision": _("Decision"), "io": _("Input / output"), "subroutine": _("Sub-process"),
+            "database": _("Database"), "document": _("Document"), "circle": _("Circle"), "dcircle": _("Double circle"), "hexagon": _("Preparation"),
+            "manual": _("Manual step"), "flag": _("Flag"), "rounded": _("Rounded box"), "note": _("Note"), "text": _("Text"), "container": _("Group"),
+            "start": _("Start"), "state": _("State"), "choice": _("Choice"), "fork": _("Fork / join"), "end": _("End"),
+            "class": _("Class"), "interface": _("Interface"), "abstract": _("Abstract class"), "enum": _("Enumeration"), "entity": _("Table"),
+            "rect": _("Box"), "ellipse": _("Ellipse"), "triangle": _("Triangle"), "trapezoid": _("Trapezoid"), "cloud": _("Cloud"), "actor": _("Person"),
+        },
+        "starts": {"terminal": _("Start"), "io": _("Input"), "subroutine": _("Sub-process"), "manual": _("Manual step")},
+        "shapeGroups": {"basic": _("Shapes"), "uml": _("UML and data")},
+        "marks": {
+            "none": _("None"), "arrow": _("Arrow"), "open": _("Open arrow"), "triangle": _("Triangle (inherits)"), "diamond": _("Filled diamond (owns)"),
+            "odiamond": _("Hollow diamond (has)"), "circle": _("Circle"), "cross": _("Cross"),
+            "one": _("Exactly one"), "zone": _("Zero or one"), "many": _("One or more"), "zmany": _("Zero or more"),
+        },
+        "classLinks": {
+            "association": _("Uses (association)"), "inheritance": _("Inherits"), "realization": _("Implements"), "composition": _("Is made of (composition)"),
+            "aggregation": _("Has (aggregation)"), "dependency": _("Depends on"), "link": _("Line"), "dashedLink": _("Dashed line"),
+        },
+        "addLinked": _("Click: add a linked shape. Drag: link to another shape."), "linkLabel": _("Label"),
     }
 
 
@@ -885,11 +913,12 @@ def diagram_view(request, pk):
     payload = {"id": d.pk, "title": d.title, "kind": d.kind, "source": d.source, "data": d.data, "notes": d.notes,
                "project": str(d.project_id or ""), "saved": timezone.localtime(d.updated_at).strftime("%H:%M"),
                "updated": int(d.updated_at.timestamp() * 1000), "pinned": d.is_pinned,
-               "hasPreview": bool(d.preview), "look": (d.data or {}).get("look", "") if not d.is_visual else ""}
+               "hasPreview": bool(d.preview), "look": (d.data or {}).get("look", "") if not d.is_visual else "",
+               "mode": ((d.data or {}).get("mode") or "draw") if d.kind in DRAG_KINDS else ""}
     return render_work(request, "work/diagram.html", {
-        "diagram": d, "payload": payload, "sketchable": d.kind in diagrams.SKETCH_KINDS, "icon": DIAGRAM_ICON.get(d.kind, "diagram"), "texts": _diagram_texts(d.kind), "parts": BOARD_PARTS,
+        "diagram": d, "payload": payload, "sketchable": d.kind in diagrams.SKETCH_KINDS, "draggable": d.kind in DRAG_KINDS, "icon": DIAGRAM_ICON.get(d.kind, "diagram"), "texts": _diagram_texts(d.kind), "parts": BOARD_PARTS,
         "projects": Project.objects.filter(owner=request.user, is_archived=False),
-        "kinds": [(k, k.label) for k in DiagramKind if k not in (DiagramKind.MINDMAP, DiagramKind.SYSTEM)],
+        "kinds": [(k, k.label) for k in DiagramKind if k not in VISUAL_KINDS],
     })
 
 

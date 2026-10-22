@@ -1,6 +1,7 @@
 """Interview prep pages (see prep.py): the dashboard, the question bank, a
 question's page, practice sessions, timed mock exams, topics, and bringing
 questions in and out."""
+import csv
 import json
 from datetime import timedelta
 
@@ -38,6 +39,10 @@ def _texts():
         "unanswered": _("%(n)s questions have no answer yet. Hand in anyway?"), "submit": _("Hand in the exam now?"),
         "saved": _("Saved"), "offline": _("Not saved — check your connection."), "covered": _("You covered %(n)s of %(total)s key points"),
         "starred": _("Starred"), "unstarred": _("Star removed"), "noteSaved": _("Note saved"),
+        "runLoading": _("Getting ready — the first run takes a few seconds…"), "running": _("Running…"),
+        "runTimeout": _("Stopped: it ran too long. Is there an endless loop?"), "runPass": _("All checks passed"),
+        "runMatch": _("Same result as the model answer"), "runDiffer": _("A different result from the model answer's"),
+        "runFail": _("A check failed"), "runError": _("There's an error"), "runDone": _("Ran in %(ms)s ms"),
     }
 
 
@@ -316,8 +321,8 @@ def prep_import_view(request):
             text = f.read().decode("utf-8-sig", errors="replace")
         text = text.strip()
         try:
-            items = prep.parse_json(text) if text[:1] in "[{" else prep.parse_markdown(text)
-        except (ValueError, TypeError):
+            items = prep.parse_any(text)
+        except (ValueError, TypeError, csv.Error):
             items = []
             messages.error(request, _("That JSON couldn't be read."))
         if items:
@@ -328,6 +333,15 @@ def prep_import_view(request):
             messages.error(request, _("No questions found. Start each one with “## ” — see the example."))
             ctx["text"] = text
     return render_work(request, "work/prep/import.html", ctx)
+
+
+@work_required
+def prep_sheet_view(request):
+    """The questions and their answers on one page, to read through or print before the exam."""
+    f = _filters(request.GET)
+    qs = prep.filtered(request.user, f).order_by("topic__order", "topic__name", "difficulty", "pk")[:500]
+    topic = PrepTopic.objects.filter(owner=request.user, pk=f["topic"]).first() if f["topic"].isdigit() else None
+    return render_work(request, "work/prep/sheet.html", {"questions": qs, "topic": topic, "f": f, "query": request.GET.urlencode()})
 
 
 @work_required
@@ -349,7 +363,9 @@ def prep_export_view(request):
             lines.append(f"## {first} {{{', '.join(words)}}}")
             lines += rest
             lines += [f"- [{'x' if o.get('correct') else ' '}] {o.get('text', '')}" for o in q.options or []]
-            for head, body in (("Starter", f"```{q.language}\n{q.starter}\n```" if q.starter else ""), ("Answer", q.answer),
+            for head, body in (("Starter", f"```{q.language}\n{q.starter}\n```" if q.starter else ""),
+                               ("Tests", f"```{q.language}\n{q.tests}\n```" if q.tests else ""),
+                               ("Hints", "\n".join(f"- {h}" for h in q.hint_list)), ("Answer", q.answer),
                                ("Key points", "\n".join(f"- {p}" for p in q.points_list)), ("Why", q.explanation), ("Notes", q.notes)):
                 if body.strip():
                     lines += [f"### {head}", body.strip()]

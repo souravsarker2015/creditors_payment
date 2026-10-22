@@ -22411,3 +22411,449 @@ msgid "%(counter)s question to practise today"
 msgid_plural "%(counter)s questions to practise today"
 msgstr[0] "আজ অনুশীলনের জন্য %(counter)sটি প্রশ্ন"
 msgstr[1] "আজ অনুশীলনের জন্য %(counter)sটি প্রশ্ন"
+
+#, python-format
+msgid "%(counter)s question with its answer"
+msgid_plural "%(counter)s questions with their answers"
+msgstr[0] "উত্তরসহ %(counter)sটি প্রশ্ন"
+msgstr[1] "উত্তরসহ %(counter)sটি প্রশ্ন"
+
+msgid "A process with a decision"
+msgstr "একটি সিদ্ধান্তসহ প্রক্রিয়া"
+
+msgid "A spreadsheet (CSV) needs a first row naming its columns — question and answer, and if you like topic, difficulty, type, key points, hints, explanation, language."
+msgstr "স্প্রেডশিটে (CSV) প্রথম সারিতে কলামের নাম থাকতে হবে — question ও answer, চাইলে topic, difficulty, type, key points, hints, explanation, language।"
+
+msgid "Abstract class"
+msgstr "অ্যাবস্ট্রাক্ট ক্লাস"
+
+msgid "Another hint"
+msgstr "আরেকটি ইঙ্গিত"
+
+msgid "Any shapes, dragged and linked — like draw.io."
+msgstr "যেকোনো আকার, টেনে এনে যুক্ত করুন — draw.io-এর মতো।"
+
+msgid "At the end"
+msgstr "শেষ প্রান্তে"
+
+msgid "At the start"
+msgstr "শুরুর প্রান্তে"
+
+msgid "Blank page"
+msgstr "খালি পাতা"
+
+msgid "Bring to front"
+msgstr "সামনে আনুন"
+
+msgid "Bring to front (Ctrl+Shift+F)"
+msgstr "সামনে আনুন (Ctrl+Shift+F)"
+
+msgid "Checks"
+msgstr "যাচাই"
+
+msgid "Circle"
+msgstr "বৃত্ত"
+
+msgid "Class name"
+msgstr "ক্লাসের নাম"
+
+msgid "Click: add a linked shape. Drag: link to another shape."
+msgstr "ক্লিক: যুক্ত একটি আকার যোগ করুন। টানুন: অন্য আকারের সঙ্গে যুক্ত করুন।"
+
+msgid "Cloud"
+msgstr "মেঘ"
+
+msgid "Come back to it at the end"
+msgstr "শেষে আবার আসবে"
+
+msgid "Cross"
+msgstr "ক্রস"
+
+msgid "Dashed"
+msgstr "ড্যাশ"
+
+msgid "Dashed line"
+msgstr "ড্যাশ রেখা"
+
+msgid "Decision"
+msgstr "সিদ্ধান্ত"
+
+msgid "Depends on"
+msgstr "নির্ভর করে"
+
+msgid "Design"
+msgstr "ডিজাইন"
+
+msgid "Do the work"
+msgstr "কাজটি করুন"
+
+msgid "Document"
+msgstr "ডকুমেন্ট"
+
+msgid "Double circle"
+msgstr "দ্বৈত বৃত্ত"
+
+msgid "Double-click"
+msgstr "ডাবল-ক্লিক"
+
+msgid "Drag & drop"
+msgstr "টেনে আনুন"
+
+msgid "Drag a box to pick several shapes (with a mouse, just drag on the page)"
+msgstr "কয়েকটি আকার বাছতে একটি বাক্স টানুন (মাউসে পাতার ওপর টানলেই হবে)"
+
+msgid "Drag a round end onto another shape to move the link."
+msgstr "সংযোগ সরাতে গোল প্রান্তটি অন্য আকারের ওপর টেনে নিন।"
+
+msgid "Drag a shape from the left, or tap it to put it in the middle."
+msgstr "বাঁ দিক থেকে একটি আকার টেনে আনুন, অথবা ট্যাপ করে মাঝখানে বসান।"
+
+msgid "Drag a shape into a group to put it inside; moving the group moves what's in it."
+msgstr "কোনো আকার গ্রুপের ভেতরে টেনে নিলে সেটি গ্রুপে যায়; গ্রুপ সরালে ভেতরের সব সরে।"
+
+msgid "Drag on the empty page to pick several shapes; guides show when they line up."
+msgstr "কয়েকটি আকার বাছতে খালি পাতায় টানুন; সারিতে মিললে গাইড-রেখা দেখা যায়।"
+
+msgid "Drag shapes in from the left (or double-click the page). Point at a shape and drag one of its blue arrows to link it to another — or click an arrow to add a linked shape."
+msgstr "বাঁ দিক থেকে আকার টেনে আনুন (বা পাতায় ডাবল-ক্লিক করুন)। কোনো আকারের ওপর মাউস রেখে তার নীল তীর টেনে অন্যটির সঙ্গে যুক্ত করুন — অথবা তীরে ক্লিক করে যুক্ত নতুন আকার যোগ করুন।"
+
+msgid "Drawing"
+msgstr "আঁকা"
+
+msgid "Drawing tools"
+msgstr "আঁকার সরঞ্জাম"
+
+msgid "Ellipse"
+msgstr "উপবৃত্ত"
+
+msgid "Engineering"
+msgstr "ইঞ্জিনিয়ারিং"
+
+msgid "Enumeration"
+msgstr "এনাম"
+
+msgid "Exactly one"
+msgstr "ঠিক একটি"
+
+msgid "Fields"
+msgstr "ফিল্ড"
+
+msgid "Fill"
+msgstr "ভরাট"
+
+msgid "Filled diamond (owns)"
+msgstr "ভরাট হীরা (মালিকানা)"
+
+msgid "Finish"
+msgstr "শেষ"
+
+msgid "Fix what's missing"
+msgstr "যা বাকি তা ঠিক করুন"
+
+msgid "Flag"
+msgstr "পতাকা"
+
+msgid "For Run: Python or JavaScript asserts run after your code; for SQL, the tables and rows to make first (your result is compared with the model answer's)."
+msgstr "চালানোর জন্য: Python বা JavaScript-এ আপনার কোডের পরে চলা assert; SQL-এ আগে যে টেবিল ও সারি বানাতে হবে (আপনার ফল মডেল উত্তরের ফলের সঙ্গে মেলানো হয়)।"
+
+msgid "Fork / join"
+msgstr "ভাগ / মিলন"
+
+msgid "Format"
+msgstr "ফরম্যাট"
+
+msgid "Free drawing"
+msgstr "মুক্ত আঁকা"
+
+msgid "Grid"
+msgstr "গ্রিড"
+
+msgid "Has (aggregation)"
+msgstr "আছে (অ্যাগ্রিগেশন)"
+
+msgid "Hide the answers"
+msgstr "উত্তর লুকান"
+
+msgid "Hint"
+msgstr "ইঙ্গিত"
+
+msgid "Hints"
+msgstr "ইঙ্গিত"
+
+msgid "Hollow diamond (has)"
+msgstr "ফাঁপা হীরা (আছে)"
+
+msgid "How many, at the end"
+msgstr "কয়টি, শেষ প্রান্তে"
+
+msgid "How many, at the start"
+msgstr "কয়টি, শুরুর প্রান্তে"
+
+msgid "How to edit"
+msgstr "কীভাবে সম্পাদনা করবেন"
+
+msgid "Implements"
+msgstr "ইমপ্লিমেন্ট করে"
+
+msgid "Import (Anki, Quizlet…)"
+msgstr "ইমপোর্ট (Anki, Quizlet…)"
+
+msgid "Includes the parent's"
+msgstr "প্যারেন্টেরটি অন্তর্ভুক্ত"
+
+msgid "Input"
+msgstr "ইনপুট"
+
+msgid "Input / output"
+msgstr "ইনপুট / আউটপুট"
+
+msgid "Interface"
+msgstr "ইন্টারফেস"
+
+msgid "Is it done?"
+msgstr "কাজ শেষ?"
+
+msgid "Is made of (composition)"
+msgstr "দিয়ে গঠিত (কম্পোজিশন)"
+
+msgid "Its own"
+msgstr "নিজস্ব"
+
+msgid "Keys: 1–9 pick · Enter check / next · Ctrl+Enter show the answer · 1–4 rate · H hint · S skip · Ctrl+' run code"
+msgstr "কী: ১–৯ বাছাই · Enter যাচাই / পরেরটি · Ctrl+Enter উত্তর দেখুন · ১–৪ রেটিং · H ইঙ্গিত · S বাদ দিন · Ctrl+' কোড চালান"
+
+msgid "Kind of link"
+msgstr "সংযোগের ধরন"
+
+msgid "Lay everything out neatly"
+msgstr "সবকিছু গুছিয়ে সাজান"
+
+msgid "Manual step"
+msgstr "হাতে করা ধাপ"
+
+msgid "Marketing"
+msgstr "মার্কেটিং"
+
+msgid "Methods"
+msgstr "মেথড"
+
+msgid "No fill"
+msgstr "ভরাট নেই"
+
+msgid "One or more"
+msgstr "এক বা একাধিক"
+
+msgid "One per line, from a nudge to nearly the answer. Shown one at a time."
+msgstr "প্রতি লাইনে একটি, ছোট ইশারা থেকে প্রায় উত্তর পর্যন্ত। একবারে একটি দেখানো হয়।"
+
+msgid "Open arrow"
+msgstr "খোলা তীর"
+
+msgid "Paste or upload questions in the Markdown format below, a JSON file exported from here, or a table: Anki and Quizlet exports (question, a tab, then the answer) and spreadsheets saved as CSV with a header row. You'll see them before they're added."
+msgstr "নিচের Markdown ফরম্যাটে প্রশ্ন পেস্ট বা আপলোড করুন, এখান থেকে এক্সপোর্ট করা JSON ফাইল, অথবা একটি টেবিল: Anki ও Quizlet-এর এক্সপোর্ট (প্রশ্ন, একটি ট্যাব, তারপর উত্তর) এবং শিরোনাম-সারিসহ CSV-তে রাখা স্প্রেডশিট। যোগ করার আগে আপনি সেগুলো দেখতে পাবেন।"
+
+msgid "Path"
+msgstr "পথ"
+
+msgid "Pick a shape and just type to change its words."
+msgstr "একটি আকার বেছে টাইপ করলেই লেখা বদলে যায়।"
+
+msgid "Pick one at random"
+msgstr "এলোমেলো একটি বাছুন"
+
+msgid "Point at a shape: drag a blue arrow to another shape to link them, or click it for a new linked shape."
+msgstr "কোনো আকারের ওপর মাউস রাখুন: নীল তীর অন্য আকারে টেনে দুটি যুক্ত করুন, অথবা ক্লিক করে যুক্ত নতুন আকার পান।"
+
+msgid "Preparation"
+msgstr "প্রস্তুতি"
+
+msgid "Revision sheet"
+msgstr "রিভিশন শিট"
+
+msgid "Revision sheet to read or print"
+msgstr "পড়া বা প্রিন্টের জন্য রিভিশন শিট"
+
+msgid "Revision sheet: questions and answers to read or print"
+msgstr "রিভিশন শিট: পড়া বা প্রিন্টের জন্য প্রশ্ন ও উত্তর"
+
+msgid "Rounded box"
+msgstr "গোল কোণের বাক্স"
+
+msgid "Run"
+msgstr "চালান"
+
+msgid "Runs on a small SQLite database."
+msgstr "একটি ছোট SQLite ডেটাবেসে চলে।"
+
+msgid "Runs your code, then its checks."
+msgstr "আপনার কোড চালায়, তারপর তার যাচাইগুলো।"
+
+msgid "Same size"
+msgstr "একই মাপ"
+
+msgid "See the checks"
+msgstr "যাচাইগুলো দেখুন"
+
+msgid "See the tables"
+msgstr "টেবিলগুলো দেখুন"
+
+msgid "Send to back"
+msgstr "পেছনে পাঠান"
+
+msgid "Send to back (Ctrl+Shift+B)"
+msgstr "পেছনে পাঠান (Ctrl+Shift+B)"
+
+msgid "Shape"
+msgstr "আকার"
+
+msgid "Shapes"
+msgstr "আকার"
+
+msgid "Show a hint"
+msgstr "একটি ইঙ্গিত দেখুন"
+
+msgid "Show the answers"
+msgstr "উত্তর দেখান"
+
+msgid "Show the grid"
+msgstr "গ্রিড দেখান"
+
+msgid "Snap to the grid (hold Alt to place freely)"
+msgstr "গ্রিডে বসান (মুক্তভাবে রাখতে Alt চেপে রাখুন)"
+
+msgid "Solid"
+msgstr "টানা"
+
+msgid "Start / end"
+msgstr "শুরু / শেষ"
+
+msgid "Start over"
+msgstr "আবার শুরু"
+
+msgid "Sub-process"
+msgstr "উপ-প্রক্রিয়া"
+
+msgid "Table name"
+msgstr "টেবিলের নাম"
+
+msgid "Team chart"
+msgstr "দলের চার্ট"
+
+msgid "Team lead"
+msgstr "টিম লিড"
+
+msgid "Text size"
+msgstr "লেখার মাপ"
+
+msgid "The child table's key"
+msgstr "চাইল্ড টেবিলের কী"
+
+msgid "The text version is written for you as you draw — switch to Text to see or change it."
+msgstr "আপনি আঁকার সময় লেখা সংস্করণটি নিজে থেকেই লেখা হয় — দেখতে বা বদলাতে লেখা-তে যান।"
+
+msgid "Thick"
+msgstr "মোটা"
+
+msgid ""
+"Think about a hash map\n"
+"What do you need to remember as you go?"
+msgstr ""
+"হ্যাশ ম্যাপের কথা ভাবুন\n"
+"এগোতে এগোতে কী মনে রাখা দরকার?"
+
+msgid "Tidy up"
+msgstr "গুছিয়ে নিন"
+
+msgid "Time on this question"
+msgstr "এই প্রশ্নে সময়"
+
+msgid "Trapezoid"
+msgstr "ট্রাপিজিয়াম"
+
+msgid "Triangle"
+msgstr "ত্রিভুজ"
+
+msgid "Triangle (inherits)"
+msgstr "ত্রিভুজ (উত্তরাধিকার)"
+
+msgid "UML and data"
+msgstr "UML ও ডেটা"
+
+msgid "Ungroup"
+msgstr "গ্রুপ ভাঙুন"
+
+msgid "Uses (association)"
+msgstr "ব্যবহার করে (অ্যাসোসিয়েশন)"
+
+msgid "Words"
+msgstr "লেখা"
+
+msgid "Your result"
+msgstr "আপনার ফল"
+
+msgid "Zero or more"
+msgstr "শূন্য বা একাধিক"
+
+msgid "Zero or one"
+msgstr "শূন্য বা একটি"
+
+msgid "drag or the mouse wheel moves the page; Ctrl+wheel zooms"
+msgstr "টানা বা মাউস হুইলে পাতা সরে; Ctrl+হুইলে জুম"
+
+msgid "e.g. +save() bool"
+msgstr "যেমন +save() bool"
+
+msgid "group"
+msgstr "গ্রুপ"
+
+msgid "keeps the shape while resizing"
+msgstr "মাপ বদলানোর সময় আকৃতি ঠিক রাখে"
+
+msgid "one a line, e.g. +name: str"
+msgstr "প্রতি লাইনে একটি, যেমন +name: str"
+
+msgid "one a line: type name PK/FK \"note\""
+msgstr "প্রতি লাইনে একটি: type name PK/FK \"নোট\""
+
+msgid "places, has, belongs to…"
+msgstr "দেয়, আছে, অন্তর্ভুক্ত…"
+
+msgid "shapes picked"
+msgstr "টি আকার বাছা হয়েছে"
+
+msgid "“### Hints” (one per line) and “### Tests” (code run after a coding answer) work too."
+msgstr "“### Hints” (প্রতি লাইনে একটি) এবং “### Tests” (কোডিং উত্তরের পরে চলা কোড) — এগুলোও চলে।"
+
+msgid "A check failed"
+msgstr "একটি যাচাই ব্যর্থ হয়েছে"
+
+msgid "A different result from the model answer's"
+msgstr "মডেল উত্তরের ফল থেকে ভিন্ন ফল"
+
+msgid "All checks passed"
+msgstr "সব যাচাই পাস করেছে"
+
+msgid "Getting ready — the first run takes a few seconds…"
+msgstr "প্রস্তুত হচ্ছে — প্রথমবার কয়েক সেকেন্ড লাগে…"
+
+#, python-format
+msgid "Ran in %(ms)s ms"
+msgstr "%(ms)s মিলিসেকেন্ডে চলেছে"
+
+msgid "Running…"
+msgstr "চলছে…"
+
+msgid "Same result as the model answer"
+msgstr "মডেল উত্তরের মতোই ফল"
+
+msgid "Stopped: it ran too long. Is there an endless loop?"
+msgstr "থামানো হয়েছে: খুব বেশি সময় চলছিল। কোনো অসীম লুপ আছে?"
+
+msgid "There's an error"
+msgstr "একটি ত্রুটি আছে"
+
+msgid "Diagrams (g m): free drawings, mind maps and system designs are drawn by hand, like draw.io; flowcharts, state, class and database diagrams can be dragged and dropped or written as text; sequence, C4, Git and charts are written as text and drawn as you type."
+msgstr "ডায়াগ্রাম (g m): মুক্ত আঁকা, মাইন্ড ম্যাপ ও সিস্টেম ডিজাইন হাতে আঁকা হয়, draw.io-এর মতো; ফ্লোচার্ট, স্টেট, ক্লাস ও ডেটাবেস ডায়াগ্রাম টেনে এনে বা লিখে বানানো যায়; সিকোয়েন্স, C4, Git ও চার্ট লেখা হয় এবং টাইপ করতে করতেই আঁকা হয়।"
+
+msgid "Coding questions in Python, JavaScript and SQL can be run right on the page, with checks — and hints show one at a time when you're stuck."
+msgstr "Python, JavaScript ও SQL-এর কোডিং প্রশ্ন যাচাইসহ পাতাতেই চালানো যায় — আর আটকে গেলে ইঙ্গিত একটি একটি করে দেখা যায়।"

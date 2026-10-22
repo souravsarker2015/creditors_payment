@@ -1,0 +1,44 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% translate "Revision sheet" %} | {% translate "Interview prep" %}{% endblock %}
+
+{% block work %}
+<header class="wp-head">
+  <div class="min-w-0">
+    <a href="{% url 'work:questions' %}?{{ query }}" class="back-link">{% icon "chevron-left" %}{% translate "Question bank" %}</a>
+    <h1 class="wp-title">{% translate "Revision sheet" %}{% if topic %}: {{ topic.name }}{% endif %}</h1>
+    <p class="wp-sub">{% blocktranslate count counter=questions|length %}{{ counter }} question with its answer{% plural %}{{ counter }} questions with their answers{% endblocktranslate %}</p>
+  </div>
+  <div class="wp-actions" x-data="{ hide: false }">
+    <button type="button" class="btn btn-secondary" @click="hide = !hide; document.querySelector('.wpq-sheet').classList.toggle('is-quiz', hide)" :aria-pressed="hide.toString()">{% icon "words" %}<span x-text="hide ? '{{ _("Show the answers")|escapejs }}' : '{{ _("Hide the answers")|escapejs }}'"></span></button>
+    <button type="button" class="btn btn-primary" onclick="window.print()">{% icon "printer" %}{% translate "Print" %}</button>
+  </div>
+</header>
+
+<div class="wpq-sheet">
+  {% regroup questions by topic as groups %}
+  {% for g in groups %}
+  <section class="wpq-sheet-topic">
+    <h2 class="wpq-sheet-head"><span class="wt-dot" data-color="{{ g.grouper.color }}"></span>{{ g.grouper.name }}</h2>
+    {% for q in g.list %}
+    <article class="wpq-sheet-q">
+      <p class="wpq-sheet-meta"><b>{{ forloop.counter }}.</b> <span class="wpq-diff" data-d="{{ q.difficulty }}">{{ q.get_difficulty_display }}</span> <span class="wpq-kind">{{ q.get_kind_display }}</span>{% if q.is_starred %} ★{% endif %}</p>
+      <div class="wn-md wpq-sheet-prompt" data-render-markdown="{{ q.prompt }}"></div>
+      <div class="wpq-sheet-a">
+        {% if q.options %}<ul class="wpq-sheet-opts">{% for o in q.options %}<li{% if o.correct %} class="is-right"{% endif %}>{% if o.correct %}✓{% else %}·{% endif %} {{ o.text }}</li>{% endfor %}</ul>{% endif %}
+        {% if q.answer %}<div class="wn-md" data-render-markdown="{{ q.answer }}"></div>{% endif %}
+        {% if q.points_list %}<ul class="wpq-sheet-points">{% for p in q.points_list %}<li>{{ p }}</li>{% endfor %}</ul>{% endif %}
+        {% if q.explanation %}<div class="wn-md wpq-sheet-why" data-render-markdown="{{ q.explanation }}"></div>{% endif %}
+        {% if q.notes %}<p class="wpq-sheet-notes">{% icon "note" %}{{ q.notes }}</p>{% endif %}
+      </div>
+    </article>
+    {% endfor %}
+  </section>
+  {% empty %}
+  <section class="empty"><h3 class="empty-title">{% translate "No questions match" %}</h3></section>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block work_libs %}{% include "work/prep/_libs.html" %}{% endblock %}

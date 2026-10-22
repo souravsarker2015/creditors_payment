@@ -705,6 +705,9 @@ def diagram_action(request, pk):
     if action == "note":                # the diagram as a note: an outline, the Mermaid text or the design notes
         if d.kind == DiagramKind.MINDMAP:
             body = diagrams.outline_text(d.data)
+        elif d.kind == DiagramKind.DRAWING:
+            parts = [f"- {' '.join(str(n.get('label') or '').split())}" for n in d.data.get("nodes", []) if str(n.get("label") or "").strip()]
+            body = "\n".join([f"# {d.title}", "", *parts, "", d.notes]).strip() + "\n"
         elif d.kind == DiagramKind.SYSTEM:
             parts = ["- **%s**%s" % (n.get("label") or n.get("type"), f" — {n['tech']}" if n.get("tech") else "")
                      for n in d.data.get("nodes", []) if n.get("type") not in ("zone", "note")]

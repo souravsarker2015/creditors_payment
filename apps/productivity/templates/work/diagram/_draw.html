@@ -1,0 +1,203 @@
+{% load i18n work %}{% comment %}Drag-and-drop drawing, like draw.io. Drawn and driven by `drawBoard` in static/js/drawing.js.{% endcomment %}
+<div class="wdr" x-data="drawBoard" data-kind="{{ diagram.kind }}" data-own-keys>
+  <aside class="wdr-palette" aria-label="{% translate 'Shapes' %}">
+    <p class="wsb-palette-label">{% translate "Drag or tap to add" %}</p>
+    <template x-for="g in groups" :key="g[0]">
+      <div class="wdr-group">
+        <p class="wdr-group-label" x-show="g[1]" x-text="g[1]"></p>
+        <div class="wdr-shapes">
+          <template x-for="it in palette.filter(p => p.group === g[0])" :key="it.key">
+            <button type="button" class="wdr-tile" @pointerdown="paletteDown($event, it.key)" @click="paletteClick(it.key)" :title="it.name" :aria-label="it.name">
+              <span class="wdr-tile-ico" x-html="it.svg"></span><span class="wdr-tile-name" x-text="it.name"></span>
+            </button>
+          </template>
+        </div>
+      </div>
+    </template>
+  </aside>
+
+  <section class="wdx-stage wdr-stage">
+    <div class="wdx-tools" role="toolbar" aria-label="{% translate 'Drawing tools' %}">
+      <div class="wdx-group">
+        <button type="button" class="icon-btn" @click="undo()" :disabled="!canUndo" aria-label="{% translate 'Undo' %}" data-tip="{% translate 'Undo (Ctrl+Z)' %}">{% icon "undo" %}</button>
+        <button type="button" class="icon-btn" @click="redo()" :disabled="!canRedo" aria-label="{% translate 'Redo' %}" data-tip="{% translate 'Redo (Ctrl+Shift+Z)' %}">{% icon "redo" %}</button>
+      </div>
+      <div class="wdx-group">
+        <button type="button" class="icon-btn" @click="view.zoomBy(1 / 1.2)" aria-label="{% translate 'Zoom out' %}">{% icon "zoom-out" %}</button>
+        <button type="button" class="wdx-zoom" @click="fit()" data-tip="{% translate 'Fit to screen (0)' %}" x-text="zoom + '%'"></button>
+        <button type="button" class="icon-btn" @click="view.zoomBy(1.2)" aria-label="{% translate 'Zoom in' %}">{% icon "zoom-in" %}</button>
+      </div>
+      <div class="wdx-group">
+        <button type="button" class="icon-btn" @click="duplicate()" :disabled="!sel.length" aria-label="{% translate 'Duplicate' %}" data-tip="{% translate 'Duplicate (Ctrl+D)' %}">{% icon "copy" %}</button>
+        <button type="button" class="icon-btn" @click="front(false)" :disabled="!sel.length" aria-label="{% translate 'Bring to front' %}" data-tip="{% translate 'Bring to front (Ctrl+Shift+F)' %}">{% icon "to-front" %}</button>
+        <button type="button" class="icon-btn" @click="front(true)" :disabled="!sel.length" aria-label="{% translate 'Send to back' %}" data-tip="{% translate 'Send to back (Ctrl+Shift+B)' %}">{% icon "to-back" %}</button>
+        <button type="button" class="icon-btn is-danger" @click="removeSelected()" :disabled="!sel.length && !esel" aria-label="{% translate 'Delete' %}" data-tip="{% translate 'Delete (Del)' %}">{% icon "trash" %}</button>
+      </div>
+      <div class="wdx-group wsb-align" x-show="sel.length > 1" x-cloak x-transition.opacity.duration.120ms role="group" aria-label="{% translate 'Line up' %}">
+        <button type="button" class="icon-btn" @click="align('left')" aria-label="{% translate 'Line up left edges' %}" data-tip="{% translate 'Line up left edges' %}">{% icon "align-left" %}</button>
+        <button type="button" class="icon-btn" @click="align('hcenter')" aria-label="{% translate 'Line up centres' %}" data-tip="{% translate 'Line up centres' %}">{% icon "align-hcenter" %}</button>
+        <button type="button" class="icon-btn" @click="align('right')" aria-label="{% translate 'Line up right edges' %}" data-tip="{% translate 'Line up right edges' %}">{% icon "align-right" %}</button>
+        <button type="button" class="icon-btn" @click="align('top')" aria-label="{% translate 'Line up tops' %}" data-tip="{% translate 'Line up tops' %}">{% icon "align-top" %}</button>
+        <button type="button" class="icon-btn" @click="align('vmiddle')" aria-label="{% translate 'Line up middles' %}" data-tip="{% translate 'Line up middles' %}">{% icon "align-vmiddle" %}</button>
+        <button type="button" class="icon-btn" @click="align('bottom')" aria-label="{% translate 'Line up bottoms' %}" data-tip="{% translate 'Line up bottoms' %}">{% icon "align-bottom" %}</button>
+        <button type="button" class="icon-btn" @click="distribute('x')" :disabled="sel.length < 3" aria-label="{% translate 'Space evenly across' %}" data-tip="{% translate 'Space evenly across' %}">{% icon "dist-h" %}</button>
+        <button type="button" class="icon-btn" @click="distribute('y')" :disabled="sel.length < 3" aria-label="{% translate 'Space evenly down' %}" data-tip="{% translate 'Space evenly down' %}">{% icon "dist-v" %}</button>
+      </div>
+      <div class="wdx-group">
+        <button type="button" class="icon-btn" :class="area && 'is-on'" @click="area = !area" :aria-pressed="area.toString()" aria-label="{% translate 'Pick an area' %}" data-tip="{% translate 'Drag a box to pick several shapes (with a mouse, just drag on the page)' %}">{% icon "select" %}</button>
+        <button type="button" class="icon-btn" :class="grid && 'is-on'" @click="setGrid()" :aria-pressed="grid.toString()" aria-label="{% translate 'Grid' %}" data-tip="{% translate 'Show the grid' %}">{% icon "grid" %}</button>
+        <button type="button" class="icon-btn" :class="snap && 'is-on'" @click="setSnap()" :aria-pressed="snap.toString()" aria-label="{% translate 'Snap to grid' %}" data-tip="{% translate 'Snap to the grid (hold Alt to place freely)' %}">{% icon "magnet" %}</button>
+      </div>
+      <div class="wdx-group wdx-group-end menu-wrap" @click.outside="menu = false" @keydown.escape="menu = false">
+        <button type="button" class="btn btn-ghost btn-sm" @click="menu = !menu" :aria-expanded="menu.toString()" aria-haspopup="true" data-tip="{% translate 'Lay everything out neatly' %}">{% icon "sparkles" %}<span class="wn-hide-xs">{% translate "Tidy up" %}</span></button>
+        <div class="menu" x-show="menu" x-cloak role="menu">
+          <button type="button" class="menu-item" role="menuitem" @click="tidy('TD')">{% icon "arrow-down" %}{% translate "Top to bottom" %}</button>
+          <button type="button" class="menu-item" role="menuitem" @click="tidy('LR')">{% icon "arrow-right" %}{% translate "Left to right" %}</button>
+          <button type="button" class="menu-item" role="menuitem" @click="tidy('BT')">{% icon "arrow-up" %}{% translate "Bottom to top" %}</button>
+        </div>
+      </div>
+    </div>
+    <div class="wdx-canvas wdr-canvas" x-ref="canvas" tabindex="0" :class="{ 'no-grid': !grid, 'is-area': area }" aria-label="{% translate 'Drawing' %}" @keydown="key($event)">
+      <div class="wdx-world" x-ref="world">
+        <div class="wdr-back" x-ref="back"></div>
+        <svg class="wdr-links" x-ref="links" aria-hidden="true"></svg>
+        <div class="wdr-nodes" x-ref="nodes"></div>
+        <svg class="wdr-guides" x-ref="guides" aria-hidden="true"></svg>
+        <div class="wdr-ui" x-ref="ui"></div>
+      </div>
+      <p class="wsb-empty" x-show="empty" x-cloak>{% icon "shapes" %}<span>{% translate "Drag shapes in from the left (or double-click the page). Point at a shape and drag one of its blue arrows to link it to another — or click an arrow to add a linked shape." %}</span></p>
+      <div class="wsb-box" x-ref="box" hidden></div>
+    </div>
+    <p class="wdx-hint"><kbd>{% translate "Double-click" %}</kbd> {% translate "write" %} · <kbd>Del</kbd> {% translate "delete" %} · <kbd>Ctrl</kbd>+<kbd>D</kbd> {% translate "duplicate" %} · <kbd>Ctrl</kbd>+<kbd>G</kbd> {% translate "group" %} · <kbd>←↑→↓</kbd> {% translate "nudge" %} · <kbd>Shift</kbd> {% translate "keeps the shape while resizing" %} · <kbd>Space</kbd>+{% translate "drag or the mouse wheel moves the page; Ctrl+wheel zooms" %} · {% translate "Pick a shape and just type to change its words." %}</p>
+  </section>
+
+  <aside class="wdr-side card" aria-label="{% translate 'Format' %}">
+    {# ── one or more shapes ── #}
+    <template x-if="sel.length">
+      <div class="wsb-form">
+        <p class="wsb-panel-title" x-show="node" x-text="shapeName(node)"></p>
+        <p class="wsb-panel-title" x-show="!node"><b x-text="sel.length"></b>&nbsp;{% translate "shapes picked" %}</p>
+
+        <template x-if="node && !rowsNode && node.shape !== 'start' && node.shape !== 'end' && node.shape !== 'fork'">
+          <div><label class="label" for="dr-label">{% translate "Words" %}</label>
+            <textarea id="dr-label" class="form-input" rows="2" x-model="node.label" @input="changed()" maxlength="2000"></textarea></div>
+        </template>
+        <template x-if="node && rowsNode">
+          <div class="form-stack">
+            <div><label class="label" for="dr-name" x-text="node.shape === 'entity' ? '{{ _("Table name")|escapejs }}' : '{{ _("Class name")|escapejs }}'"></label>
+              <input id="dr-name" class="form-input input-compact" x-model="node.label" @input="changed()" maxlength="120"></div>
+            <template x-if="node.shape === 'class'"><div>
+              <label class="label" for="dr-stereo">{% translate "Kind" %}</label>
+              <select id="dr-stereo" class="form-input input-compact" x-model="node.stereo" @change="changed()" data-native>
+                <option value="">{% translate "Class" %}</option><option value="interface">«interface»</option><option value="abstract">«abstract»</option><option value="enumeration">«enumeration»</option><option value="service">«service»</option>
+              </select>
+              <label class="label" for="dr-attrs">{% translate "Fields" %} <span class="help">{% translate "one a line, e.g. +name: str" %}</span></label>
+              <textarea id="dr-attrs" class="form-input code-ish" rows="4" x-model="node.attrs" @input="changed()" spellcheck="false"></textarea>
+              <label class="label" for="dr-methods">{% translate "Methods" %} <span class="help">{% translate "e.g. +save() bool" %}</span></label>
+              <textarea id="dr-methods" class="form-input code-ish" rows="3" x-model="node.methods" @input="changed()" spellcheck="false"></textarea>
+            </div></template>
+            <template x-if="node.shape === 'entity'"><div>
+              <label class="label" for="dr-cols">{% translate "Columns" %} <span class="help">{% translate 'one a line: type name PK/FK "note"' %}</span></label>
+              <textarea id="dr-cols" class="form-input code-ish" rows="6" x-model="node.attrs" @input="changed()" spellcheck="false" placeholder="int id PK&#10;string email UK&#10;int team_id FK"></textarea>
+            </div></template>
+          </div>
+        </template>
+
+        <template x-if="!rowsNode">
+          <div><p class="label">{% translate "Shape" %}</p>
+            <div class="wdr-shape-pick">
+              <template x-for="it in palette.filter(p => !['class', 'interface', 'abstract', 'enum', 'entity', 'container'].includes(p.key))" :key="it.key">
+                <button type="button" class="wdr-tile is-mini" :class="node && node.shape === it.shape && 'is-on'" @click="reshape(it.shape)" :title="it.name" :aria-label="it.name"><span class="wdr-tile-ico" x-html="it.svg"></span></button>
+              </template>
+            </div></div>
+        </template>
+
+        <p class="label">{% translate "Fill" %}</p>
+        <div class="wsb-colors">
+          <button type="button" class="wdx-swatch is-auto" :class="node && !node.fill && 'is-on'" @click="style('fill', '')" aria-label="{% translate 'Automatic' %}">A</button>
+          <button type="button" class="wdx-swatch is-none" :class="node && node.fill === 'none' && 'is-on'" @click="style('fill', 'none')" aria-label="{% translate 'No fill' %}"></button>
+          <template x-for="c in fills" :key="c"><button type="button" class="wdx-swatch" :class="node && node.fill === c && 'is-on'" :style="'background:' + c" @click="style('fill', c)" :aria-label="c"></button></template>
+        </div>
+        <p class="label">{% translate "Line" %}</p>
+        <div class="wsb-colors">
+          <button type="button" class="wdx-swatch is-auto" :class="node && !node.stroke && 'is-on'" @click="style('stroke', '')" aria-label="{% translate 'Automatic' %}">A</button>
+          <template x-for="c in strokes" :key="c"><button type="button" class="wdx-swatch" :class="node && node.stroke === c && 'is-on'" :style="'background:' + c" @click="style('stroke', c)" :aria-label="c"></button></template>
+        </div>
+        <template x-if="!rowsNode"><div>
+          <p class="label">{% translate "Text size" %}</p>
+          <div class="seg seg-sm">
+            <template x-for="(z, i) in sizes" :key="z"><button type="button" class="seg-item" :class="((node && node.size) || 14) === z && 'is-active'" @click="style('size', z === 14 ? '' : z)" x-text="['S', 'M', 'L', 'XL'][i]"></button></template>
+            <button type="button" class="seg-item" :class="node && node.bold && 'is-active'" @click="style('bold', node && node.bold ? '' : true)"><b>B</b></button>
+          </div></div>
+        </template>
+        <div class="wsb-row">
+          <button type="button" class="btn btn-secondary btn-sm" @click="duplicate()">{% icon "copy" %}{% translate "Duplicate" %}</button>
+          <button type="button" class="btn btn-ghost btn-sm" x-show="sel.length > 1 && kind !== 'class' && kind !== 'er'" @click="group()">{% icon "group" %}{% translate "Group" %}</button>
+          <button type="button" class="btn btn-ghost btn-sm" x-show="node && node.shape === 'container'" @click="ungroup()">{% translate "Ungroup" %}</button>
+          <button type="button" class="btn btn-ghost btn-sm" x-show="sel.length > 1" @click="sameSize()">{% translate "Same size" %}</button>
+          <button type="button" class="btn btn-ghost btn-sm is-danger" @click="removeSelected()">{% icon "trash" %}{% translate "Delete" %}</button>
+        </div>
+      </div>
+    </template>
+
+    {# ── a link ── #}
+    <template x-if="edge">
+      <div class="wsb-form">
+        <p class="wsb-panel-title">{% icon "arrow-right" %}{% translate "Link" %}</p>
+        <label class="label" for="dr-elabel">{% translate "Label" %}</label>
+        <input id="dr-elabel" class="form-input input-compact" x-model="edge.label" @input="changed()" maxlength="200" :placeholder="kind === 'er' ? '{{ _("places, has, belongs to…")|escapejs }}' : ''">
+        <template x-if="kind === 'class'"><div>
+          <label class="label" for="dr-crel">{% translate "Kind of link" %}</label>
+          <select id="dr-crel" class="form-input input-compact" :value="classLinkOf()" @change="classLink(classLinks.find(c => c[0] === $event.target.value))" data-native>
+            <option value="" disabled>—</option>
+            <template x-for="c in classLinks" :key="c[0]"><option :value="c[0]" x-text="texts.classLinks[c[0]]" :selected="classLinkOf() === c[0]"></option></template>
+          </select>
+          <div class="form-grid form-grid-2">
+            <div><label class="label" for="dr-fl">{% translate "How many, at the start" %}</label><input id="dr-fl" class="form-input input-compact" x-model="edge.fromLabel" @input="changed()" maxlength="20" placeholder="1"></div>
+            <div><label class="label" for="dr-tl">{% translate "How many, at the end" %}</label><input id="dr-tl" class="form-input input-compact" x-model="edge.toLabel" @input="changed()" maxlength="20" placeholder="0..*"></div>
+          </div>
+        </div></template>
+        <template x-if="marks.length"><div class="form-grid form-grid-2">
+          <div><label class="label" for="dr-start" x-text="kind === 'er' ? '{{ _("At the start")|escapejs }}' : '{{ _("Start")|escapejs }}'"></label>
+            <select id="dr-start" class="form-input input-compact" @change="setEdge('start', $event.target.value)" data-native>
+              <template x-for="m in marks" :key="m"><option :value="m" x-text="texts.marks[m]" :selected="endMark(edge, 'start') === m"></option></template>
+            </select></div>
+          <div><label class="label" for="dr-end" x-text="kind === 'er' ? '{{ _("At the end")|escapejs }}' : '{{ _("End")|escapejs }}'"></label>
+            <select id="dr-end" class="form-input input-compact" @change="setEdge('end', $event.target.value)" data-native>
+              <template x-for="m in marks" :key="m"><option :value="m" x-text="texts.marks[m]" :selected="endMark(edge, 'end') === m"></option></template>
+            </select></div>
+        </div></template>
+        <template x-if="kind !== 'class' && kind !== 'state'"><div>
+          <p class="label" x-text="kind === 'er' ? '{{ _("The child table's key")|escapejs }}' : '{{ _("Line")|escapejs }}'"></p>
+          <div class="seg seg-sm">
+            <button type="button" class="seg-item" :class="(edge.line || 'solid') === 'solid' && 'is-active'" @click="setEdge('line', 'solid')" x-text="kind === 'er' ? '{{ _("Includes the parent's")|escapejs }}' : '{{ _("Solid")|escapejs }}'"></button>
+            <button type="button" class="seg-item" :class="edge.line === 'dashed' && 'is-active'" @click="setEdge('line', 'dashed')" x-text="kind === 'er' ? '{{ _("Its own")|escapejs }}' : '{{ _("Dashed")|escapejs }}'"></button>
+            <button type="button" class="seg-item" x-show="kind !== 'er'" :class="edge.line === 'thick' && 'is-active'" @click="setEdge('line', 'thick')">{% translate "Thick" %}</button>
+          </div></div>
+        </template>
+        <p class="label">{% translate "Path" %}</p>
+        <div class="seg seg-sm">
+          <button type="button" class="seg-item" :class="!edge.route && 'is-active'" @click="setEdge('route', '')">{% translate "Straight" %}</button>
+          <button type="button" class="seg-item" :class="edge.route === 'curve' && 'is-active'" @click="setEdge('route', 'curve')">{% translate "Curved" %}</button>
+          <button type="button" class="seg-item" :class="edge.route === 'elbow' && 'is-active'" @click="setEdge('route', 'elbow')">{% translate "Right angles" %}</button>
+        </div>
+        <div class="wsb-row"><button type="button" class="btn btn-secondary btn-sm" @click="reverse()">⇄ {% translate "Turn around" %}</button><button type="button" class="btn btn-ghost btn-sm is-danger" @click="removeSelected()">{% icon "trash" %}{% translate "Delete" %}</button></div>
+        <p class="wsb-tip">{% translate "Drag a round end onto another shape to move the link." %}</p>
+      </div>
+    </template>
+
+    {# ── nothing picked ── #}
+    <template x-if="!sel.length && !edge">
+      <div class="wsb-none">
+        <p class="wsb-panel-title">{% icon "shapes" %}{% translate "Drawing" %}</p>
+        <ul class="wdr-tips">
+          <li>{% translate "Drag a shape from the left, or tap it to put it in the middle." %}</li>
+          <li>{% translate "Point at a shape: drag a blue arrow to another shape to link them, or click it for a new linked shape." %}</li>
+          <li>{% translate "Drag a shape into a group to put it inside; moving the group moves what's in it." %}</li>
+          <li>{% translate "Drag on the empty page to pick several shapes; guides show when they line up." %}</li>
+          {% if draggable %}<li>{% translate "The text version is written for you as you draw — switch to Text to see or change it." %}</li>{% endif %}
+        </ul>
+      </div>
+    </template>
+  </aside>
+</div>

@@ -23,10 +23,15 @@
   function typing(el) {       // a text box has the keys; a checkbox or radio doesn't
     return el && (el.isContentEditable || /^(TEXTAREA|SELECT)$/.test(el.tagName) || el.tagName === "INPUT" && !/^(checkbox|radio|button)$/.test(el.type));
   }
-  function tabKey(e) {        // Tab in a code box puts in four spaces
-    if (e.key !== "Tab" || e.shiftKey) return;
-    var ta = e.target; e.preventDefault();
-    var s = ta.selectionStart; ta.setRangeText("    ", s, ta.selectionEnd, "end");
+  function tabKey(e) {        // in a code box: Tab puts in four spaces, Enter keeps the line's indent (one more after ":" or "{")
+    var ta = e.target, s = ta.selectionStart;
+    if (e.key === "Tab" && !e.shiftKey) {
+      e.preventDefault(); ta.setRangeText("    ", s, ta.selectionEnd, "end");
+    } else if (e.key === "Enter" && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
+      var line = ta.value.slice(ta.value.lastIndexOf("\n", s - 1) + 1, s), indent = (/^[ \t]*/.exec(line) || [""])[0];
+      if (/[:{[(]\s*$/.test(line)) indent += "    ";
+      e.preventDefault(); ta.setRangeText("\n" + indent, s, ta.selectionEnd, "end");
+    } else return;
     ta.dispatchEvent(new Event("input", { bubbles: true }));
   }
   function clock(secs) {
@@ -35,17 +40,59 @@
     return (h ? h + ":" + (m < 10 ? "0" : "") : "") + m + ":" + (s < 10 ? "0" : "") + s;
   }
 
+  /* Running a coding answer (practice and exams): the code with its checks, in runner.js's sandbox. */
+  var runMixin = {
+    ran: { busy: false, loading: false, res: null },
+    warm: function () { if (this.canRun()) Work.warmRunner(this.q.language); },
+    canRun: function () { return !!(this.q && this.q.kind === "code" && window.Work && Work.runLanguage && Work.runLanguage(this.q.language)); },
+    isSQL: function () { return this.canRun() && Work.runLanguage(this.q.language) === "sql"; },
+    run: function () {
+      if (!this.canRun() || this.ran.busy) return;
+      var self = this, q = this.q, lang = Work.runLanguage(q.language);
+      this.ran = { busy: true, loading: false, res: null };
+      Work.runCode(lang, this.codeNow(), {
+        tests: q.tests, expected: lang === "sql" && q.answer ? Work.firstCode(q.answer) : "",
+        onLoading: function () { self.ran.loading = true; },
+      }).then(function (res) {
+        if (self.q !== q) return;
+        self.ran = { busy: false, loading: false, res: res };
+        if (res.verdict === "pass" || res.verdict === "match") self.ranOk = true;
+      });
+    },
+    runText: function () {
+      var r = this.ran;
+      if (r.busy) return r.loading ? t("runLoading", "Getting ready — the first run takes a few seconds…") : t("running", "Running…");
+      if (!r.res) return "";
+      var res = r.res;
+      if (res.timeout) return t("runTimeout", "Stopped: it ran too long. Is there an endless loop?");
+      if (res.verdict === "pass") return t("runPass", "All checks passed");
+      if (res.verdict === "match") return t("runMatch", "Same result as the model answer");
+      if (res.verdict === "differ") return t("runDiffer", "A different result from the model answer's");
+      if (res.verdict === "fail") return t("runFail", "A check failed");
+      if (!res.ok) return t("runError", "There's an error");
+      return t("runDone", "Ran in %(ms)s ms").replace("%(ms)s", res.ms || 0);
+    },
+    runTone: function () { var r = this.ran.res; return !r ? "" : r.verdict === "pass" || r.verdict === "match" ? "good" : r.ok && !r.verdict ? "" : "bad"; },
+    runKey: function (e) { if ((e.ctrlKey || e.metaKey) && (e.key === "'" || e.key === "\\")) { e.preventDefault(); this.run(); return true; } return false; },
+  };
+
   document.addEventListener("alpine:init", function () {
     /* ── A practice session (also one question on its own page) ─────────── */
     Alpine.data("prepSession", function (source) {
       var S = data(source || "prep-session"), list = S.questions || [];
-      return {
+      return Object.assign({}, runMixin, {
         list: list, i: 0, q: null, stage: list.length ? "ask" : "empty", chosen: [], text: "", ticked: [], right: null, busy: false,
-        started: 0, total: list.length, back: S.back || "", single: !!S.single,
+        started: 0, total: list.length, back: S.back || "", single: !!S.single, shown: 0, ranOk: false, now: Date.now(), skipped: {},
         tally: { n: 0, right: 0, partly: 0, wrong: 0, seconds: 0 }, missed: [], byTopic: {},
-        init: function () { if (list.length) this.load(0); },
+        init: function () {
+          var self = this;
+          if (list.length) this.load(0);
+          setInterval(function () { self.now = Date.now(); }, 1000);
+        },
         load: function (i) {
           this.i = i; this.q = this.list[i]; this.stage = "ask"; this.chosen = []; this.ticked = []; this.right = null;
+          this.shown = 0; this.ranOk = false; this.ran = { busy: false, loading: false, res: null };
+          this.warm();
           this.text = this.q.kind === "code" ? (this.q.starter || "") : ""; this.started = Date.now();
           var self = this;
           this.$nextTick(function () {
@@ -71,7 +118,9 @@
           var q = this.q, right = this.chosen.length === q.correct.length && this.chosen.every(function (c) { return q.correct.indexOf(c) >= 0; });
           this.right = right; this.stage = "answered";
           this.count(right ? 1 : 0, q);
-          Work.api(Work.cfg.urls.prepBase + q.id + "/answer/", { choice: this.chosen.join(","), seconds: this.seconds() });
+          var sent = { choice: this.chosen.join(","), seconds: this.seconds() };
+          if (right && this.shown) sent.rating = 2;          // right, with a hint: it comes back sooner
+          Work.api(Work.cfg.urls.prepBase + q.id + "/answer/", sent);
           this.reveal();
         },
         reveal: function () {
@@ -85,9 +134,24 @@
         covered: function () { return this.q && this.q.points.length ? this.ticked.length / this.q.points.length : null; },
         suggested: function () {
           var c = this.covered();
-          if (c === null) return 0;
-          return c >= 0.999 ? 3 : c >= 0.6 ? 2 : 1;
+          if (this.ranOk && !this.ticked.length) c = null;                              // the checks passed: that's the mark until points are ticked
+          var r = c === null ? (this.ranOk ? 3 : 0) : c >= 0.999 ? 3 : c >= 0.6 ? 2 : 1;
+          if (this.ran.res && this.ran.res.verdict && !this.ranOk && r > 2) r = 2;      // the checks didn't pass
+          return this.shown && r > 2 ? 2 : r;                                          // a hint was needed: Hard at best
         },
+        /* hints, one at a time */
+        hint: function () { if (this.q && this.shown < this.q.hints.length) this.shown++; },
+        /* not now: to the end of the session (once) */
+        skip: function () {
+          if (this.single || this.stage !== "ask" || this.i + 1 >= this.list.length) return;
+          var q = this.list.splice(this.i, 1)[0];
+          if (!this.skipped[q.id]) { this.skipped[q.id] = true; this.list.push(q); } else this.total--;
+          this.load(this.i);
+        },
+        canSkip: function () { return !this.single && this.stage === "ask" && this.i + 1 < this.list.length; },
+        timeOn: function () { return clock(Math.max(0, (this.now - this.started) / 1000)); },
+        codeNow: function () { return this.text; },
+        resetCode: function () { if (this.q) this.text = this.q.starter || ""; this.ran = { busy: false, loading: false, res: null }; },
         rate: function (r) {          // written answers: you say how it went
           if (this.stage !== "answered" || this.isChoice() || this.busy) return;
           var c = this.covered(), score = c === null ? { 1: 0, 2: 0.5, 3: 1, 4: 1 }[r] : c;
@@ -114,14 +178,17 @@
         pct: function () { return this.tally.n ? Math.round(100 * (this.tally.right + 0.5 * this.tally.partly) / this.tally.n) : 0; },
         retryUrl: function () { return S.practice + "?ids=" + this.missed.join(","); },
         avg: function () { return this.tally.n ? clock(this.tally.seconds / this.tally.n) : "0:00"; },
-        hint: function (r) { return (this.q && this.q.hints && this.q.hints[r]) || ""; },
+        after: function (r) { return (this.q && this.q.after && this.q.after[r]) || ""; },
         tab: tabKey,
         key: function (e) {
           if (this.stage === "empty" || this.stage === "done" || this.stage === "rated") return;
+          if (this.runKey(e)) return;
           var inBox = typing(e.target);
           if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); this.go(); return; }
           if (inBox) return;
           if (e.key === "Enter" || e.key === " ") { e.preventDefault(); this.go(); return; }
+          if (e.key === "h" && this.stage === "ask") { e.preventDefault(); this.hint(); return; }
+          if (e.key === "s" && this.canSkip()) { e.preventDefault(); this.skip(); return; }
           var n = parseInt(e.key, 10);
           if (!n) return;
           if (this.stage === "ask" && this.isChoice() && n <= this.q.options.length) { e.preventDefault(); this.toggle(n - 1); }
@@ -131,7 +198,7 @@
           if (this.stage === "ask") { if (this.isChoice()) this.check(); else this.reveal(); }
           else if (this.stage === "answered") { if (this.isChoice()) this.next(); else this.rate(this.suggested() || 3); }
         },
-      };
+      });
     });
 
     /* ── A timed mock exam ────────────────────────────────────────────── */
@@ -144,7 +211,7 @@
         answers[q.id] = { choice: a.choice || [], text: a.text != null ? a.text : (q.kind === "code" ? q.starter || "" : ""), flag: !!a.flag };
         secs[q.id] = a.seconds || 0;
       });
-      return {
+      return Object.assign({}, runMixin, {
         list: S.questions || [], i: 0, answers: answers, left: 0, ends: new Date(S.ends).getTime(), dirty: false, state: "", handedIn: false,
         lastTick: Date.now(), timer: null, saver: null,
         get q() { return this.list[this.i]; },
@@ -159,6 +226,8 @@
         },
         load: function (i) {
           this.i = Math.max(0, Math.min(i, this.list.length - 1));
+          this.ran = { busy: false, loading: false, res: null };
+          this.warm();
           var self = this;
           this.$nextTick(function () { show(self.$refs.prompt, self.q.prompt); });
         },
@@ -212,8 +281,11 @@
           this.$refs.answers.value = JSON.stringify(this.payload());
           this.$refs.form.submit();
         },
+        codeNow: function () { return this.a.text; },
+        resetCode: function () { this.a.text = this.q.starter || ""; this.ran = { busy: false, loading: false, res: null }; },
         tab: tabKey,
         key: function (e) {
+          if (this.runKey(e)) return;
           if (typing(e.target)) return;
           if (e.key === "ArrowRight" || e.key === "n") { e.preventDefault(); this.load(this.i + 1); }
           else if (e.key === "ArrowLeft" || e.key === "p") { e.preventDefault(); this.load(this.i - 1); }
@@ -223,7 +295,7 @@
             if (n && n <= this.q.options.length) { e.preventDefault(); this.toggle(n - 1); }
           }
         },
-      };
+      });
     });
 
     /* ── The question form: its choices (multiple choice) ───────────────── */

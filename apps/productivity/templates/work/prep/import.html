@@ -8,7 +8,7 @@
   <div class="min-w-0">
     <a href="{% url 'work:prep' %}" class="back-link">{% icon "chevron-left" %}{% translate "Interview prep" %}</a>
     <h1 class="wp-title">{% translate "Import questions" %}</h1>
-    <p class="wp-sub">{% translate "Paste or upload questions in the Markdown format below — or a JSON file exported from here. You'll see them before they're added." %}</p>
+    <p class="wp-sub">{% translate "Paste or upload questions in the Markdown format below, a JSON file exported from here, or a table: Anki and Quizlet exports (question, a tab, then the answer) and spreadsheets saved as CSV with a header row. You'll see them before they're added." %}</p>
   </div>
 </header>
 
@@ -32,7 +32,7 @@
     <div class="card-body form-stack">
       <label class="field"><span class="label">{% translate "Paste here" %}</span>
         <textarea name="text" rows="16" class="form-input code-ish" spellcheck="false" placeholder="# Topic&#10;## A question? {easy, choice}&#10;- [x] Right&#10;- [ ] Wrong">{{ text }}</textarea></label>
-      <label class="field"><span class="label">{% translate "…or a file" %}</span><input type="file" name="file" accept=".md,.markdown,.txt,.json" class="form-input"></label>
+      <label class="field"><span class="label">{% translate "…or a file" %}</span><input type="file" name="file" accept=".md,.markdown,.txt,.json,.csv,.tsv" class="form-input"></label>
       <button type="submit" class="btn btn-primary">{% translate "Read them" %}</button>
     </div>
   </form>
@@ -40,6 +40,10 @@
     <header class="card-header"><div><h2 class="card-title">{% translate "The format" %}</h2>
       <p class="card-subtitle">{% translate "“# Topic” starts a topic. “## Question {difficulty, type}” starts a question — types: choice, short, code (with a language), long. “- [x]” marks a right choice. “### Answer”, “### Key points”, “### Why” and “### Starter” add those parts." %}</p></div></header>
     <pre class="wpq-example">{{ example }}</pre>
+    <div class="card-body">
+      <p class="help">{% translate "“### Hints” (one per line) and “### Tests” (code run after a coding answer) work too." %}</p>
+      <p class="help">{% translate "A spreadsheet (CSV) needs a first row naming its columns — question and answer, and if you like topic, difficulty, type, key points, hints, explanation, language." %}</p>
+    </div>
   </section>
 </div>
 {% endblock %}

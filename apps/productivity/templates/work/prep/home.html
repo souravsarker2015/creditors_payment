@@ -186,7 +186,8 @@
         <button type="submit" class="btn btn-secondary btn-sm">{% translate "Add the ticked packs" %}</button>
       </form>
     </details>
-    <p class="wpq-export">{% icon "download" %}<a href="{% url 'work:prep_export' %}">JSON</a> · <a href="{% url 'work:prep_export' %}?format=md">Markdown</a></p>
+    <p class="wpq-export">{% icon "download" %}<a href="{% url 'work:prep_export' %}">JSON</a> · <a href="{% url 'work:prep_export' %}?format=md">Markdown</a> · <a href="{% url 'work:prep_import' %}">{% translate "Import (Anki, Quizlet…)" %}</a></p>
+    <p class="wpq-export">{% icon "printer" %}<a href="{% url 'work:prep_sheet' %}">{% translate "Revision sheet to read or print" %}</a></p>
   </aside>
 </div>
 {% endif %}

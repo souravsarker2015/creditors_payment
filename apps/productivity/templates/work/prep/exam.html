@@ -43,6 +43,7 @@
       <div class="wpq-write"><label class="label" :for="'exam-answer-' + q.id">{% translate "Your answer" %}</label>
         <textarea :id="'exam-answer-' + q.id" x-model="answers[q.id].text" class="form-input" :class="q.kind === 'code' && 'wpq-code'" :rows="q.kind === 'short' ? 4 : 12" spellcheck="false" @keydown="q.kind === 'code' && tab($event)"></textarea></div>
     </template>
+    {% include "work/prep/_run.html" %}
     <div class="wpq-act wpq-exam-move">
       <button type="button" class="btn btn-secondary" @click="load(i - 1)" :disabled="i === 0">{% icon "chevron-left" %}{% translate "Previous" %}</button>
       <button type="button" class="btn btn-primary" @click="load(i + 1)" x-show="i < list.length - 1">{% translate "Next" %}{% icon "chevron-right" %}</button>
@@ -55,4 +56,4 @@
 {% endblock %}
 
 {% block work_libs %}{% include "work/prep/_libs.html" %}{% endblock %}
-{% block work_js %}<script src="{% asset 'js/prep.js' %}"></script>{% endblock %}
+{% block work_js %}<script src="{% asset 'js/runner.js' %}"></script><script src="{% asset 'js/prep.js' %}"></script>{% endblock %}

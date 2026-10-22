@@ -51,6 +51,14 @@
 
   {% if diagram.kind == "mindmap" %}{% include "work/diagram/_mindmap.html" %}
   {% elif diagram.kind == "system" %}{% include "work/diagram/_board.html" %}
+  {% elif diagram.kind == "drawing" %}{% include "work/diagram/_draw.html" %}
+  {% elif draggable %}
+  <nav class="seg wdx-mode" aria-label="{% translate 'How to edit' %}">
+    <button type="button" class="seg-item" :class="mode === 'draw' && 'is-active'" :aria-pressed="(mode === 'draw').toString()" @click="setMode('draw')">{% icon "hand" %}{% translate "Drag & drop" %}</button>
+    <button type="button" class="seg-item" :class="mode === 'text' && 'is-active'" :aria-pressed="(mode === 'text').toString()" @click="setMode('text')">{% icon "code" %}{% translate "Text" %}</button>
+  </nav>
+  <template x-if="mode === 'draw'">{% include "work/diagram/_draw.html" %}</template>
+  <template x-if="mode === 'text'">{% include "work/diagram/_mermaid.html" %}</template>
   {% else %}{% include "work/diagram/_mermaid.html" %}{% endif %}
 
   {% if diagram.kind != "system" %}
@@ -114,4 +122,6 @@
 
 {% block work_js %}
 <script src="{% asset 'js/diagrams.js' %}"></script>
+{% if diagram.kind == "drawing" or draggable %}<script src="{% asset 'js/drawmodel.js' %}"></script>
+<script src="{% asset 'js/drawing.js' %}"></script>{% endif %}
 {% endblock %}

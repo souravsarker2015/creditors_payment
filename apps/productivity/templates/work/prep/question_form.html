@@ -47,10 +47,12 @@
       {% with field=form.language %}{% include "partials/field.html" %}{% endwith %}
       <datalist id="prep-languages"><option value="python"><option value="javascript"><option value="typescript"><option value="java"><option value="go"><option value="cpp"><option value="csharp"><option value="rust"><option value="sql"><option value="bash"></datalist>
       {% with field=form.starter %}{% include "partials/field.html" %}{% endwith %}
+      {% with field=form.tests %}{% include "partials/field.html" %}{% endwith %}
     </div>
     <div x-show="kind !== 'choice'">{% with field=form.answer %}{% include "partials/field.html" %}{% endwith %}</div>
     <div x-show="kind === 'long' || kind === 'short' || kind === 'code'">{% with field=form.key_points %}{% include "partials/field.html" %}{% endwith %}</div>
     {% with field=form.explanation %}{% include "partials/field.html" %}{% endwith %}
+    {% with field=form.hints %}{% include "partials/field.html" %}{% endwith %}
 
     <details class="wpq-extra"{% if form.companies.value or form.source.value or form.notes.value %} open{% endif %}>
       <summary>{% translate "More: companies, link, tags, notes" %}</summary>

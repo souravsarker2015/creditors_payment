@@ -386,7 +386,7 @@ class QuestionForm(forms.ModelForm):
 
     class Meta:
         model = Question
-        fields = ("topic", "kind", "difficulty", "prompt", "answer", "key_points", "explanation", "language", "starter",
+        fields = ("topic", "kind", "difficulty", "prompt", "hints", "answer", "key_points", "explanation", "language", "starter", "tests",
                   "companies", "source", "notes", "is_starred")
         widgets = {
             "prompt": forms.Textarea(attrs={"rows": 5, "data-paste-images": "1"}),
@@ -394,6 +394,8 @@ class QuestionForm(forms.ModelForm):
             "key_points": forms.Textarea(attrs={"rows": 4, "placeholder": _("Mentions the trade-off\nGives the complexity\nNames an example")}),
             "explanation": forms.Textarea(attrs={"rows": 3}),
             "starter": forms.Textarea(attrs={"rows": 4, "spellcheck": "false"}),
+            "tests": forms.Textarea(attrs={"rows": 4, "spellcheck": "false", "placeholder": "assert two_sum([2, 7, 11, 15], 9) == [0, 1]"}),
+            "hints": forms.Textarea(attrs={"rows": 3, "placeholder": _("Think about a hash map\nWhat do you need to remember as you go?")}),
             "notes": forms.Textarea(attrs={"rows": 3}),
             "language": forms.TextInput(attrs={"list": "prep-languages", "placeholder": "python"}),
             "companies": forms.TextInput(attrs={"placeholder": "Google, Amazon"}),

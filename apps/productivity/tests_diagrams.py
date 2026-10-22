@@ -37,6 +37,8 @@ class DiagramTests(TestCase):
                 elif kind == DiagramKind.SYSTEM:
                     self.assertIn("nodes", d.data)
                     self.assertTrue(d.notes.startswith("## Requirements"))
+                elif kind == DiagramKind.DRAWING:
+                    self.assertIsInstance(d.data["nodes"], list)
                 else:
                     self.assertEqual(diagrams.kind_of_source(d.source, "x"), kind, f"{kind}/{key}")
                 r = self.client.get(reverse("work:diagram", args=[d.pk]))
@@ -238,3 +240,60 @@ class DiagramTests(TestCase):
         self.assertEqual(d.data["layout"], "down")
         self.assertIn("- [x] Socks", diagrams.outline_text(d.data))
         self.assertEqual(diagrams.branch_titles(d.data, "a"), ["Charger"])     # done ideas don't become tasks
+
+
+class DrawingTests(TestCase):
+    """Drag-and-drop drawings: free drawings, and flowchart/state/class/ER diagrams drawn with shapes."""
+    setUp, start, save = DiagramTests.setUp, DiagramTests.start, DiagramTests.save
+    SHAPES = {"nodes": [{"id": "a", "shape": "rect", "x": 0, "y": 0, "w": 150, "h": 64, "label": "Login"},
+                        {"id": "b", "shape": "diamond", "x": 300, "y": 0, "w": 140, "h": 96, "label": "Valid?" * 1000}],
+              "edges": [{"id": "e1", "from": "a", "to": "b", "line": "solid", "label": "go"},
+                        {"id": "e2", "from": "a", "to": "gone", "line": "solid"}]}
+
+    def test_a_free_drawing_keeps_its_shapes(self):
+        d = self.start(DiagramKind.DRAWING, "process")
+        self.assertTrue(d.is_visual)
+        self.assertEqual(len(d.data["nodes"]), 5)
+        res = self.save(d, data=json.dumps(self.SHAPES), preview=SVG)
+        self.assertTrue(res["ok"])
+        d.refresh_from_db()
+        self.assertEqual([e["id"] for e in d.data["edges"]], ["e1"])          # the link to a deleted shape is dropped
+        self.assertLessEqual(len(d.data["nodes"][1]["label"]), diagrams.MAX_TEXT * 4)
+        self.assertTrue(self.client.get(reverse("work:diagram", args=[d.pk])).context["diagram"].is_visual)
+
+    def test_text_diagrams_keep_their_drawing_and_their_text(self):
+        d = self.start(DiagramKind.FLOWCHART, "blank")
+        page = self.client.get(reverse("work:diagram", args=[d.pk]))
+        self.assertEqual(page.context["payload"]["mode"], "draw")          # drag and drop first
+        self.assertContains(page, "js/drawing.js")
+        draw = dict(self.SHAPES, src="flowchart TD\n    a --> b\n", dir="LR", extra=["classDef x fill:#f00"])
+        res = self.save(d, source="flowchart TD\n    a --> b\n", data=json.dumps({"mode": "draw", "draw": draw, "look": "handDrawn", "junk": 1}))
+        self.assertTrue(res["ok"])
+        d.refresh_from_db()
+        self.assertEqual(d.kind, DiagramKind.FLOWCHART)
+        self.assertEqual(set(d.data), {"mode", "draw", "look"})
+        self.assertEqual(d.data["draw"]["dir"], "LR")
+        self.assertEqual(d.data["draw"]["src"], d.source)
+        self.assertEqual(len(d.data["draw"]["edges"]), 1)
+        # switched to text: remembered
+        self.save(d, data=json.dumps(dict(d.data, mode="text")))
+        d.refresh_from_db()
+        self.assertEqual(self.client.get(reverse("work:diagram", args=[d.pk])).context["payload"]["mode"], "text")
+
+    def test_only_some_text_diagrams_have_a_drawing(self):
+        d = self.start(DiagramKind.SEQUENCE, "blank")
+        self.save(d, data=json.dumps({"mode": "draw", "draw": self.SHAPES}))
+        d.refresh_from_db()
+        self.assertEqual(d.data, {})
+        self.assertNotContains(self.client.get(reverse("work:diagram", args=[d.pk])), "js/drawing.js")
+
+    def test_a_bad_drawing_is_refused(self):
+        d = self.start(DiagramKind.DRAWING)
+        self.assertFalse(self.save(d, data=json.dumps({"nodes": [{"x": 1}], "edges": []}))["ok"])
+        self.assertFalse(self.save(d, data=json.dumps({"nodes": "no", "edges": []}))["ok"])
+
+    def test_a_drawing_as_a_note(self):
+        d = self.start(DiagramKind.DRAWING, "team")
+        res = self.client.post(reverse("work:api_diagram_action", args=[d.pk]), {"action": "note"}).json()
+        self.assertTrue(res["ok"])
+        self.assertIn("- Engineering", Note.objects.get().body)

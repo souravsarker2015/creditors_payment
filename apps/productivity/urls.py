@@ -31,6 +31,7 @@ urlpatterns = [
     path("prep/exams/<int:pk>/", views_prep.exam_view, name="exam"),
     path("prep/import/", views_prep.prep_import_view, name="prep_import"),
     path("prep/export/", views_prep.prep_export_view, name="prep_export"),
+    path("prep/sheet/", views_prep.prep_sheet_view, name="prep_sheet"),
     path("sprints/", views.sprints_view, name="sprints"),
     path("sprints/<int:pk>/", views.sprint_view, name="sprint"),
     path("import/", views.import_view, name="import"),

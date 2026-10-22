@@ -141,6 +141,14 @@
     return moved;
   };
 
+  /* What the editors share: the text and the drawing as they are now (a
+     flowchart can be switched between dragging shapes and writing text). */
+  var LIVE = (function () {
+    try { var p = JSON.parse(d.getElementById("diagram-data").textContent); return { source: p.source || "", data: p.data || {} }; }
+    catch (e) { return { source: "", data: {} }; }
+  })();
+  window.WorkDiagrams = { Viewport: Viewport, esc: esc, clone: clone, toast: toast, TEXT: TEXT, live: LIVE };
+
   /* ════════════════════════════════════════════════════════════════════════
      The page: title, project, notes, saving, export and the actions menu.
      ════════════════════════════════════════════════════════════════════════ */
@@ -150,7 +158,7 @@
         id: initial.id, title: initial.title, kind: initial.kind, notes: initial.notes || "", project: initial.project || "",
         state: "saved", savedAt: initial.saved, full: false, pinned: !!initial.pinned, editor: null, texts: TEXT,
         pending: {}, timer: null, inflight: null, again: false,
-        histOpen: false, histLoading: false, versions: [], versionName: "",
+        histOpen: false, histLoading: false, versions: [], versionName: "", mode: initial.mode || "",
         init: function () {
           var self = this;
           window.addEventListener("beforeunload", function () { if (self.state === "dirty") self.saveNow(); });
@@ -158,6 +166,15 @@
           this.$el.addEventListener("keydown", function (e) { if ((e.ctrlKey || e.metaKey) && e.key === "s") { e.preventDefault(); self.saveNow(); } });
           // a diagram made from a template has no picture for the list yet: draw one once it's on screen
           if (!initial.hasPreview) setTimeout(function () { if (self.editor && self.editor.preview) { self.pending._picture = true; self.saveNow(); } }, 1500);
+        },
+        /* Drag and drop, or text (flowcharts, state, class and database diagrams) */
+        setMode: function (to) {
+          if (this.mode === to) return;
+          var self = this;
+          Promise.resolve(this.saveNow()).then(function () {
+            self.mode = to; LIVE.data.mode = to;
+            self.queue({ data: JSON.stringify(LIVE.data) });
+          });
         },
         stateText: function () {
           return { saving: TEXT.saving, saved: this.savedAt ? TEXT.saved + " " + this.savedAt : "", offline: TEXT.offline, dirty: TEXT.editing, error: TEXT.error }[this.state];
@@ -1307,13 +1324,13 @@
         },
         toggleLook: function () {
           this.look = this.look === "handDrawn" ? "" : "handDrawn";
-          this.queue({ data: JSON.stringify(this.look ? { look: this.look } : {}) });
+          if (this.look) LIVE.data.look = this.look; else delete LIVE.data.look;
+          this.queue({ data: JSON.stringify(LIVE.data) });
           this._refit = true; this.draw();
         },
         init: function () {
           var self = this;
-          var payload = JSON.parse(d.getElementById("diagram-data").textContent);
-          this.source = payload.source || ""; this.look = payload.look || "";
+          this.source = LIVE.source; this.look = LIVE.data.look || "";
           this.pane = matchMedia("(min-width: 1024px)").matches ? "both" : "view";
           this.view = new Viewport(this.$refs.canvas, this.$refs.world, function (k) { self.zoom = Math.round(k * 100); });
           var c = this.$refs.canvas;
@@ -1327,7 +1344,7 @@
           matchMedia("(min-width: 1024px)").addEventListener("change", function (m) { self.pane = m.matches ? "both" : "view"; });
           this.draw();
         },
-        changed: function () { this.queue({ source: this.source }); clearTimeout(this._t); var self = this; this._t = setTimeout(function () { self.draw(); }, 350); },
+        changed: function () { LIVE.source = this.source; this.queue({ source: this.source }); clearTimeout(this._t); var self = this; this._t = setTimeout(function () { self.draw(); }, 350); },
         insert: function (text) {
           var ta = this.$refs.text, s = ta.selectionStart || this.source.length, e = ta.selectionEnd || s;
           if (text.charAt(0) === "\n") { var end = this.source.indexOf("\n", e); s = e = end < 0 ? this.source.length : end; }
@@ -1357,7 +1374,7 @@
             Work.mermaidTheme(isDark() ? "dark" : "default", self.look);
             return mm.parse(text).then(function () { return mm.render("wmd-" + mine, text); });
           }).then(function (res) {
-            if (mine !== seq) return;
+            if (mine !== seq || !self.$refs.out) return;             // a newer drawing, or switched to drag and drop meanwhile
             self.error = ""; self.busy = false; self.failed = false; lastGood = text;
             self.$refs.out.innerHTML = res.svg;
             var svg = self.$refs.out.querySelector("svg");

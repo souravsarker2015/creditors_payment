@@ -5,9 +5,18 @@
     <span class="wpq-diff" :data-d="q && q.difficulty" x-text="q && q.difficultyLabel"></span>
     <span class="wpq-kind" x-text="q && q.kindLabel"></span>
     <template x-for="c in (q && q.companies || []).slice(0, 3)"><span class="wpq-company" x-text="c"></span></template>
+    <span class="wpq-time num" x-show="stage === 'ask'" :data-tip="'{{ _("Time on this question")|escapejs }}'">{% icon "timer" %}<span x-text="timeOn()"></span></span>
     <a :href="q && q.edit" class="icon-btn wpq-edit" aria-label="{% translate 'Edit' %}" data-tip="{% translate 'Edit' %}">{% icon "edit" %}</a>
   </header>
   <div class="wpq-prompt wn-md" x-ref="prompt"></div>
+
+  {# hints, one at a time #}
+  <div class="wpq-hints" x-show="q && q.hints.length && (shown || stage === 'ask')">
+    <template x-for="(h, n) in (q ? q.hints.slice(0, shown) : [])" :key="n">
+      <p class="wpq-hint"><b x-text="'{{ _("Hint")|escapejs }} ' + (n + 1)"></b> <span class="wn-md" x-html="Work.markdown(h)"></span></p>
+    </template>
+    <button type="button" class="btn btn-ghost btn-sm" x-show="stage === 'ask' && shown < q.hints.length" @click="hint()">{% icon "bolt" %}<span x-text="(shown ? '{{ _("Another hint")|escapejs }}' : '{{ _("Show a hint")|escapejs }}') + ' (' + (q.hints.length - shown) + ')'"></span> <kbd class="wp-kbd">H</kbd></button>
+  </div>
 
   {# multiple choice #}
   <template x-if="q && q.kind === 'choice'">
@@ -32,10 +41,12 @@
                 :placeholder="q.kind === 'code' ? '{{ _("Write your solution — Tab indents")|escapejs }}' : '{{ _("Write what you would say…")|escapejs }}'"></textarea>
     </div>
   </template>
+  {% include "work/prep/_run.html" %}
 
   <div class="wpq-act" x-show="stage === 'ask'">
     <button type="button" class="btn btn-primary" x-show="q && q.kind === 'choice'" @click="check()">{% icon "check" %}{% translate "Check" %} <kbd class="wp-kbd">Enter</kbd></button>
     <button type="button" class="btn btn-primary" x-show="q && q.kind !== 'choice'" @click="reveal()">{% translate "Show the answer" %} <kbd class="wp-kbd">Ctrl+Enter</kbd></button>
+    <button type="button" class="btn btn-ghost" x-show="canSkip()" @click="skip()" data-tip="{% translate 'Come back to it at the end' %}">{% translate "Skip" %} <kbd class="wp-kbd">S</kbd></button>
   </div>
 
   {# after answering #}
@@ -53,10 +64,10 @@
     <div class="wpq-act">
       <button type="button" class="btn btn-primary" x-show="q && q.kind === 'choice'" @click="next()">{% translate "Next" %} <kbd class="wp-kbd">Enter</kbd></button>
       <div class="wfr-rate" x-show="q && q.kind !== 'choice'" role="group" aria-label="{% translate 'How did you do?' %}">
-        <button type="button" class="wfr-btn" data-r="1" :class="suggested() === 1 && 'is-suggested'" @click="rate(1)"><b>{% translate "Again" %}</b><small x-text="hint(1)"></small><kbd>1</kbd></button>
-        <button type="button" class="wfr-btn" data-r="2" :class="suggested() === 2 && 'is-suggested'" @click="rate(2)"><b>{% translate "Hard" %}</b><small x-text="hint(2)"></small><kbd>2</kbd></button>
-        <button type="button" class="wfr-btn" data-r="3" :class="suggested() === 3 && 'is-suggested'" @click="rate(3)"><b>{% translate "Good" %}</b><small x-text="hint(3)"></small><kbd>3</kbd></button>
-        <button type="button" class="wfr-btn" data-r="4" @click="rate(4)"><b>{% translate "Easy" %}</b><small x-text="hint(4)"></small><kbd>4</kbd></button>
+        <button type="button" class="wfr-btn" data-r="1" :class="suggested() === 1 && 'is-suggested'" @click="rate(1)"><b>{% translate "Again" %}</b><small x-text="after(1)"></small><kbd>1</kbd></button>
+        <button type="button" class="wfr-btn" data-r="2" :class="suggested() === 2 && 'is-suggested'" @click="rate(2)"><b>{% translate "Hard" %}</b><small x-text="after(2)"></small><kbd>2</kbd></button>
+        <button type="button" class="wfr-btn" data-r="3" :class="suggested() === 3 && 'is-suggested'" @click="rate(3)"><b>{% translate "Good" %}</b><small x-text="after(3)"></small><kbd>3</kbd></button>
+        <button type="button" class="wfr-btn" data-r="4" @click="rate(4)"><b>{% translate "Easy" %}</b><small x-text="after(4)"></small><kbd>4</kbd></button>
       </div>
     </div>
   </div>

@@ -754,6 +754,7 @@ class LearningItem(models.Model):
 class DiagramKind(models.TextChoices):
     MINDMAP = "mindmap", _("Mind map")
     SYSTEM = "system", _("System design")
+    DRAWING = "drawing", _("Free drawing")
     FLOWCHART = "flowchart", _("Flowchart")
     SEQUENCE = "sequence", _("Sequence diagram")
     ER = "er", _("Database (ER) diagram")
@@ -774,7 +775,10 @@ class DiagramKind(models.TextChoices):
 
 # Drawn with the mouse or a finger (their shapes are kept in `data`); every
 # other kind is written as Mermaid text (`source`) and drawn by the browser.
-VISUAL_KINDS = (DiagramKind.MINDMAP, DiagramKind.SYSTEM)
+VISUAL_KINDS = (DiagramKind.MINDMAP, DiagramKind.SYSTEM, DiagramKind.DRAWING)
+# Text diagrams that can also be drawn by dragging shapes: the shapes are kept
+# in `data["draw"]` and the text follows them.
+DRAG_KINDS = (DiagramKind.FLOWCHART, DiagramKind.STATE, DiagramKind.CLASS, DiagramKind.ER)
 
 
 class Diagram(models.Model):
@@ -1005,6 +1009,10 @@ class Question(models.Model):
     explanation = models.TextField(_("Why"), blank=True, help_text=_("Why the answer is right — shown after you answer."))
     language = models.CharField(_("Language"), max_length=20, blank=True, help_text=_("For coding questions: python, javascript, sql…"))
     starter = models.TextField(_("Starting code"), blank=True, help_text=_("Code to begin from, for coding questions."))
+    tests = models.TextField(_("Checks"), blank=True,
+                             help_text=_("For Run: Python or JavaScript asserts run after your code; for SQL, the tables and rows to make first "
+                                         "(your result is compared with the model answer's)."))
+    hints = models.TextField(_("Hints"), blank=True, help_text=_("One per line, from a nudge to nearly the answer. Shown one at a time."))
     source = models.URLField(_("Link"), max_length=500, blank=True, help_text=_("Where it's from: LeetCode, a blog, the docs…"))
     companies = models.CharField(_("Asked at"), max_length=200, blank=True, help_text=_("Companies known to ask it, separated by commas."))
     tags = models.ManyToManyField(Tag, blank=True, related_name="questions", verbose_name=_("Tags"))
@@ -1057,6 +1065,10 @@ class Question(models.Model):
     @property
     def points_list(self):
         return [p.strip(" -*•\t") for p in self.key_points.splitlines() if p.strip(" -*•\t")]
+
+    @property
+    def hint_list(self):
+        return [h.strip(" -*•\t") for h in self.hints.splitlines() if h.strip(" -*•\t")]
 
     @property
     def company_list(self):
