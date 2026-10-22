@@ -554,6 +554,10 @@ class WorkSettings(models.Model):
     reminder_emails = models.BooleanField(_("Email my task reminders too"), default=False,
                                           help_text=_("So a reminder reaches you even when the app is closed."))
     daily_email_sent_on = models.DateField(null=True, blank=True)
+    prep_exam = models.CharField(_("Preparing for"), max_length=120, blank=True, help_text=_("The exam or interview: “Google onsite”, “AWS SAA”…"))
+    prep_exam_date = models.DateField(_("Its date"), null=True, blank=True)
+    prep_new_per_day = models.PositiveSmallIntegerField(_("New questions a day"), default=10, validators=[MaxValueValidator(200)],
+                                                        help_text=_("How many questions you haven't seen yet join each day's practice."))
     cards_remind_at = models.TimeField(_("Remind me to review flashcards at"), null=True, blank=True,
                                        help_text=_("A notification when cards are waiting. Leave empty for none."))
 
@@ -952,3 +956,154 @@ class CardReview(models.Model):
 
     class Meta:
         ordering = ["-reviewed_at"]
+
+
+# ── Interview prep: a question bank to practise and be tested on ─────────────
+class PrepTopic(models.Model):
+    """A subject to prepare: Python, SQL, System design, Behavioural…"""
+    owner = models.ForeignKey(**OWNER)
+    name = models.CharField(_("Topic"), max_length=80)
+    color = models.CharField(_("Colour"), max_length=10, choices=Color.choices, default=Color.BLUE)
+    description = models.CharField(_("About"), max_length=200, blank=True)
+    order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name, verbose_name_plural = _("Topic"), _("Topics")
+        ordering = ["order", "name"]
+
+    def __str__(self):
+        return self.name
+
+
+class QuestionKind(models.TextChoices):
+    CHOICE = "choice", _("Multiple choice")
+    SHORT = "short", _("Short answer")
+    CODE = "code", _("Coding")
+    LONG = "long", _("Explain / design")
+
+
+class Difficulty(models.IntegerChoices):
+    EASY = 1, _("Easy")
+    MEDIUM = 2, _("Medium")
+    HARD = 3, _("Hard")
+
+
+class Question(models.Model):
+    """One question with its model answer. Multiple choice is marked by the app;
+    the others are checked against the answer (and its key points) by you.
+    The schedule fields work as a flashcard's do (cards.next_state)."""
+    owner = models.ForeignKey(**OWNER)
+    topic = models.ForeignKey(PrepTopic, on_delete=models.CASCADE, related_name="questions", verbose_name=_("Topic"))
+    kind = models.CharField(_("Type"), max_length=8, choices=QuestionKind.choices, default=QuestionKind.SHORT)
+    difficulty = models.PositiveSmallIntegerField(_("Difficulty"), choices=Difficulty.choices, default=Difficulty.MEDIUM)
+    prompt = models.TextField(_("Question"), help_text=_("Markdown works: `code`, ```code blocks```, lists, tables."))
+    answer = models.TextField(_("Answer"), blank=True, help_text=_("The model answer or solution. Markdown works."))
+    key_points = models.TextField(_("Key points"), blank=True,
+                                  help_text=_("One per line: what a good answer must mention. You tick the ones you got when you check yourself."))
+    options = models.JSONField(_("Choices"), default=list, blank=True, help_text='Multiple choice: [{"text": "…", "correct": true}, …]')
+    explanation = models.TextField(_("Why"), blank=True, help_text=_("Why the answer is right — shown after you answer."))
+    language = models.CharField(_("Language"), max_length=20, blank=True, help_text=_("For coding questions: python, javascript, sql…"))
+    starter = models.TextField(_("Starting code"), blank=True, help_text=_("Code to begin from, for coding questions."))
+    source = models.URLField(_("Link"), max_length=500, blank=True, help_text=_("Where it's from: LeetCode, a blog, the docs…"))
+    companies = models.CharField(_("Asked at"), max_length=200, blank=True, help_text=_("Companies known to ask it, separated by commas."))
+    tags = models.ManyToManyField(Tag, blank=True, related_name="questions", verbose_name=_("Tags"))
+    notes = models.TextField(_("My notes"), blank=True)
+    is_starred = models.BooleanField(_("Starred"), default=False)
+    # The schedule (spaced repetition) and the numbers
+    due = models.DateField(default=timezone.localdate, db_index=True)
+    interval = models.PositiveIntegerField(default=0)
+    ease = models.FloatField(default=2.5)
+    reps = models.PositiveIntegerField(default=0)
+    lapses = models.PositiveIntegerField(default=0)
+    last_reviewed = models.DateTimeField(null=True, blank=True)
+    last_rating = models.PositiveSmallIntegerField(null=True, blank=True)
+    attempts = models.PositiveIntegerField(default=0)
+    right = models.PositiveIntegerField(default=0, help_text="Answers rated Good or Easy (or a right choice).")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    MASTERED = 21     # days between reviews from which it counts as mastered
+
+    class Meta:
+        verbose_name, verbose_name_plural = _("Question"), _("Questions")
+        ordering = ["topic", "difficulty", "pk"]
+        indexes = [models.Index(fields=["owner", "due"])]
+
+    def __str__(self):
+        return self.prompt[:60]
+
+    @property
+    def is_new(self):
+        return self.last_reviewed is None
+
+    @property
+    def status(self):
+        """'new', 'weak' (last answer wrong), 'mastered' (comes back in three weeks or more) or 'learning'."""
+        if self.last_reviewed is None:
+            return "new"
+        if self.last_rating == 1:
+            return "weak"
+        return "mastered" if self.interval >= self.MASTERED else "learning"
+
+    @property
+    def status_label(self):
+        return {"new": _("New"), "weak": _("Weak"), "mastered": _("Mastered"), "learning": _("Learning")}[self.status]
+
+    @property
+    def accuracy(self):
+        return round(100 * self.right / self.attempts) if self.attempts else None
+
+    @property
+    def points_list(self):
+        return [p.strip(" -*•\t") for p in self.key_points.splitlines() if p.strip(" -*•\t")]
+
+    @property
+    def company_list(self):
+        return [c.strip() for c in self.companies.split(",") if c.strip()]
+
+    @property
+    def title(self):
+        """The first line of the question, without Markdown marks — for lists."""
+        first = next((ln for ln in self.prompt.splitlines() if ln.strip() and not ln.strip().startswith("```")), self.prompt)
+        return re.sub(r"[#*_`>]+", "", first).strip()[:160]
+
+
+class PrepExam(models.Model):
+    """A timed mock exam: its questions, what you answered, and the score once marked."""
+    owner = models.ForeignKey(**OWNER)
+    title = models.CharField(_("Name"), max_length=120)
+    question_ids = models.JSONField(default=list)
+    minutes = models.PositiveSmallIntegerField(_("Time (minutes)"), default=30, validators=[MinValueValidator(1), MaxValueValidator(600)])
+    answers = models.JSONField(default=dict, blank=True, help_text='{question id: {"choice": [0, 2], "text": "…", "flag": true}}')
+    marks = models.JSONField(default=dict, blank=True, help_text="{question id: 0–1}: what each answer scored.")
+    started_at = models.DateTimeField(default=timezone.now)
+    finished_at = models.DateTimeField(null=True, blank=True)
+    graded_at = models.DateTimeField(null=True, blank=True)
+    score = models.FloatField(null=True, blank=True, help_text="0–100, once every answer is marked.")
+
+    class Meta:
+        verbose_name, verbose_name_plural = _("Mock exam"), _("Mock exams")
+        ordering = ["-started_at"]
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def ends_at(self):
+        return self.started_at + timedelta(minutes=self.minutes)
+
+
+class PrepAttempt(models.Model):
+    """One answer to a question (in practice or in an exam): for the numbers and the history."""
+    owner = models.ForeignKey(**OWNER)
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="history")
+    exam = models.ForeignKey(PrepExam, on_delete=models.CASCADE, null=True, blank=True, related_name="attempts")
+    rating = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(4)])
+    score = models.FloatField(default=0, help_text="0–1: right, partly, wrong.")
+    seconds = models.PositiveIntegerField(default=0)
+    response = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(default=timezone.now, db_index=True)
+
+    class Meta:
+        ordering = ["-created_at"]

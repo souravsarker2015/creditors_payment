@@ -947,7 +947,7 @@ def remember_note(note, force=False):
 
 # ── Restore from a backup (the export .zip / data.json) ───────────────────
 BACKUP_ORDER = ["project", "tag", "goal", "goalstep", "note", "sprint", "task", "checklistitem", "taskactivity", "timeentry", "snippet",
-                "habit", "habitcheck", "journalentry", "learningitem", "diagram", "deck", "card", "savedview", "tasktemplate"]
+                "habit", "habitcheck", "journalentry", "learningitem", "diagram", "deck", "card", "savedview", "tasktemplate", "preptopic", "question"]
 
 
 @transaction.atomic

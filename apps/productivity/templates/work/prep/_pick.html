@@ -1,0 +1,8 @@
+{% load i18n %}<label class="field"><span class="label">{% translate "Topic" %}</span>
+  <select name="topic" class="form-input"><option value="">{% translate "All topics" %}</option>{% for t in topics %}<option value="{{ t.pk }}">{{ t.name }}</option>{% endfor %}</select></label>
+<div class="form-grid form-grid-2">
+  <label class="field"><span class="label">{% translate "Difficulty" %}</span>
+    <select name="difficulty" class="form-input"><option value="">{% translate "Any" %}</option>{% for v, l in difficulties %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></label>
+  <label class="field"><span class="label">{% translate "Type" %}</span>
+    <select name="kind" class="form-input"><option value="">{% translate "Any" %}</option>{% for v, l in kinds %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></label>
+</div>

@@ -1,0 +1,52 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% translate "Question bank" %} | {% translate "Interview prep" %}{% endblock %}
+
+{% block work %}
+<header class="wp-head">
+  <div class="min-w-0">
+    <a href="{% url 'work:prep' %}" class="back-link">{% icon "chevron-left" %}{% translate "Interview prep" %}</a>
+    <h1 class="wp-title">{% translate "Question bank" %}</h1>
+    <p class="wp-sub">{% blocktranslate count counter=total %}{{ counter }} question{% plural %}{{ counter }} questions{% endblocktranslate %}</p>
+  </div>
+  <div class="wp-actions">
+    {% if total %}<a href="{% url 'work:prep_practice' %}?{{ query }}" class="btn btn-secondary">{% icon "play" %}{% translate "Practise these" %}</a>{% endif %}
+    <a href="{% url 'work:question_new' %}{% if f.topic %}?topic={{ f.topic }}{% endif %}" class="btn btn-primary">{% icon "plus" %}{% translate "Question" %}</a>
+  </div>
+</header>
+
+<form method="get" class="wf-bar has-more" x-data="{ more: false }" @change="$el.requestSubmit()">
+  <div class="input-icon wf-search">{% icon "search" %}
+    <input type="search" name="q" value="{{ f.q }}" class="form-input input-compact" placeholder="{% translate 'Search questions, answers, companies…' %}" aria-label="{% translate 'Search questions' %}"></div>
+  <button type="button" class="btn btn-secondary wf-toggle" @click="more = !more" :aria-expanded="more" aria-controls="prep-filters">{% icon "filter" %}<span>{% translate "Filters" %}</span>{% if filtered %}<i class="wf-on"></i>{% endif %}</button>
+  <div class="wf-more" id="prep-filters" :class="more && 'is-open'">
+    <select name="topic" class="form-input input-compact" aria-label="{% translate 'Topic' %}"><option value="">{% translate "All topics" %}</option>
+      {% for t in topics %}<option value="{{ t.pk }}"{% if f.topic == t.pk|stringformat:'s' %} selected{% endif %}>{{ t.name }}</option>{% endfor %}</select>
+    <select name="difficulty" class="form-input input-compact" aria-label="{% translate 'Difficulty' %}"><option value="">{% translate "Any difficulty" %}</option>
+      {% for v, l in difficulties %}<option value="{{ v }}"{% if f.difficulty == v|stringformat:'s' %} selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+    <select name="kind" class="form-input input-compact" aria-label="{% translate 'Type' %}"><option value="">{% translate "Any type" %}</option>
+      {% for v, l in kinds %}<option value="{{ v }}"{% if f.kind == v %} selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+    <select name="status" class="form-input input-compact" aria-label="{% translate 'Status' %}"><option value="">{% translate "Any status" %}</option>
+      <option value="new"{% if f.status == 'new' %} selected{% endif %}>{% translate "New" %}</option>
+      <option value="weak"{% if f.status == 'weak' %} selected{% endif %}>{% translate "Weak" %}</option>
+      <option value="learning"{% if f.status == 'learning' %} selected{% endif %}>{% translate "Learning" %}</option>
+      <option value="mastered"{% if f.status == 'mastered' %} selected{% endif %}>{% translate "Mastered" %}</option>
+      <option value="due"{% if f.status == 'due' %} selected{% endif %}>{% translate "Due to review" %}</option></select>
+    <label class="wf-check"><input type="checkbox" name="starred" value="1"{% if f.starred %} checked{% endif %}>{% translate "Starred" %}</label>
+    {% if filtered %}<a href="{% url 'work:questions' %}" class="btn btn-ghost btn-sm">{% translate "Clear" %}</a>{% endif %}
+  </div>
+</form>
+
+{% if page.object_list %}
+<ul class="wpq-list card">{% for q in page.object_list %}{% include "work/prep/_row.html" %}{% endfor %}</ul>
+{% include "partials/pagination.html" with page_obj=page %}
+<p class="wpq-export">{% icon "download" %}{% translate "Export these:" %} <a href="{% url 'work:prep_export' %}?{{ query }}">JSON</a> · <a href="{% url 'work:prep_export' %}?{{ query }}&format=md">Markdown</a></p>
+{% else %}
+<div class="empty"><div class="empty-icon">{% icon "target" %}</div>
+  <h3 class="empty-title">{% if filtered %}{% translate "No questions match" %}{% else %}{% translate "No questions yet" %}{% endif %}</h3>
+  <p class="empty-text">{% translate "Add one, import a list, or start from a starter pack on the Interview prep page." %}</p></div>
+{% endif %}
+{% endblock %}
+
+{% block work_js %}<script src="{% asset 'js/prep.js' %}"></script>{% endblock %}

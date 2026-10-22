@@ -1,0 +1,24 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{{ t.name }} | {% translate "Interview prep" %}{% endblock %}
+
+{% block work %}
+<header class="wp-head">
+  <div class="min-w-0">
+    <a href="{% url 'work:prep' %}" class="back-link">{% icon "chevron-left" %}{% translate "Interview prep" %}</a>
+    <h1 class="wp-title">{{ t.name }}</h1>
+    <p class="wp-sub">{% blocktranslate count counter=n %}{{ counter }} question{% plural %}{{ counter }} questions{% endblocktranslate %}</p>
+  </div>
+</header>
+<form method="post" class="card" novalidate>{% csrf_token %}
+  <div class="card-body form-stack">
+    {% with field=form.name %}{% include "partials/field.html" %}{% endwith %}
+    {% with field=form.description %}{% include "partials/field.html" %}{% endwith %}
+    {% with field=form.color %}{% include "partials/field.html" %}{% endwith %}
+  </div>
+  <div class="form-actions"><button type="submit" class="btn btn-primary">{% icon "check" %}{% translate "Save" %}</button></div>
+</form>
+<form method="post" class="wpq-danger" data-confirm="{{ _("Delete this topic and all its questions? You can bring them back from Recently deleted.") }}">{% csrf_token %}<input type="hidden" name="action" value="delete">
+  <button type="submit" class="btn btn-ghost btn-sm">{% icon "trash" %}{% translate "Delete the topic and its questions" %}</button></form>
+{% endblock %}

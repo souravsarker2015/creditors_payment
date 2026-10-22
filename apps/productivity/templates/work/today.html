@@ -10,6 +10,8 @@
     <h1 class="wp-title">{{ greeting }}{% if user.first_name %}, {{ user.first_name }}{% endif %}</h1>
     {% if sprint %}<a href="{% url 'work:sprint' sprint.pk %}" class="wd-sprint">{% icon "repeat" %}<strong>{{ sprint.name }}</strong>
       <span>{% blocktranslate with done=sprint.counts.done total=sprint.counts.total %}{{ done }} of {{ total }} done{% endblocktranslate %} · {% if sprint.days_left > 0 %}{% blocktranslate count counter=sprint.days_left %}{{ counter }} day left{% plural %}{{ counter }} days left{% endblocktranslate %}{% elif sprint.days_left == 0 %}{% translate "last day" %}{% else %}{% translate "time's up — close it" %}{% endif %}</span></a>{% endif %}
+    {% if prep_due %}<a href="{% url 'work:prep_practice' %}?set=today" class="wd-sprint">{% icon "target" %}<strong>{% translate "Interview prep" %}</strong>
+      <span>{% blocktranslate count counter=prep_due %}{{ counter }} question to practise today{% plural %}{{ counter }} questions to practise today{% endblocktranslate %}</span></a>{% endif %}
   </div>
   <div class="wp-actions">
     <a href="{% url 'work:wrapup' %}" class="btn {% if hour_late %}btn-primary{% else %}btn-ghost{% endif %}">{% icon "sun" %}{% translate "Wrap up the day" %}</a>

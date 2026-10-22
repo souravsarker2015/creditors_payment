@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timedelta
 
 from django import forms
@@ -5,7 +6,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from . import services
-from .models import Deck, Goal, GoalStatus, Habit, LearningItem, LearningStatus, Project, Snippet, Sprint, Tag, Task, TaskKind, TimeEntry, WorkSettings
+from .models import Deck, Goal, GoalStatus, Habit, LearningItem, LearningStatus, PrepTopic, Project, Question, QuestionKind, Snippet, Sprint, Tag, Task, TaskKind, TimeEntry, WorkSettings
 
 DATE = forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d")
 SWATCHES = forms.RadioSelect   # colours are picked from swatches (templates: .w-swatches)
@@ -357,3 +358,92 @@ class DeckForm(OwnedForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["learning"].queryset = LearningItem.objects.filter(owner=self.owner).order_by("-updated_at")
+
+
+# ── Interview prep ────────────────────────────────────────────────────────
+class PrepTopicForm(forms.ModelForm):
+    class Meta:
+        model = PrepTopic
+        fields = ("name", "color", "description")
+        widgets = {"color": SWATCHES}
+
+    def __init__(self, *args, owner=None, **kwargs):
+        self.owner = owner
+        super().__init__(*args, **kwargs)
+
+    def clean_name(self):
+        name = self.cleaned_data["name"].strip()
+        if PrepTopic.objects.filter(owner=self.owner, name__iexact=name).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError(_("You already have a topic with this name."))
+        return name
+
+
+class QuestionForm(forms.ModelForm):
+    """A question. Choices come from the page's editor as JSON; a new topic can be typed in place."""
+    tags_text = TagsField()
+    new_topic = forms.CharField(label=_("…or a new topic"), max_length=80, required=False)
+    options_json = forms.CharField(required=False, widget=forms.HiddenInput)
+
+    class Meta:
+        model = Question
+        fields = ("topic", "kind", "difficulty", "prompt", "answer", "key_points", "explanation", "language", "starter",
+                  "companies", "source", "notes", "is_starred")
+        widgets = {
+            "prompt": forms.Textarea(attrs={"rows": 5, "data-paste-images": "1"}),
+            "answer": forms.Textarea(attrs={"rows": 8, "data-paste-images": "1"}),
+            "key_points": forms.Textarea(attrs={"rows": 4, "placeholder": _("Mentions the trade-off\nGives the complexity\nNames an example")}),
+            "explanation": forms.Textarea(attrs={"rows": 3}),
+            "starter": forms.Textarea(attrs={"rows": 4, "spellcheck": "false"}),
+            "notes": forms.Textarea(attrs={"rows": 3}),
+            "language": forms.TextInput(attrs={"list": "prep-languages", "placeholder": "python"}),
+            "companies": forms.TextInput(attrs={"placeholder": "Google, Amazon"}),
+            "source": forms.URLInput(attrs={"placeholder": "https://leetcode.com/problems/…", "inputmode": "url"}),
+        }
+
+    def __init__(self, *args, owner=None, **kwargs):
+        self.owner = owner
+        super().__init__(*args, **kwargs)
+        self.fields["topic"].queryset = PrepTopic.objects.filter(owner=owner)
+        self.fields["topic"].required = False
+        self.fields["topic"].empty_label = _("— Pick a topic —")
+        if self.instance.pk:
+            self.fields["tags_text"].initial = " ".join(self.instance.tags.values_list("name", flat=True))
+        self.fields["options_json"].initial = json.dumps(self.instance.options or [], ensure_ascii=False)
+
+    def clean(self):
+        data = super().clean()
+        if not data.get("topic") and not (data.get("new_topic") or "").strip():
+            self.add_error("new_topic", _("Pick a topic, or type a new one."))
+        try:
+            raw = json.loads(data.get("options_json") or "[]")
+        except ValueError:
+            raw = []
+        options = [{"text": str(o.get("text", "")).strip()[:500], "correct": bool(o.get("correct"))}
+                   for o in raw if isinstance(o, dict) and str(o.get("text", "")).strip()][:12]
+        if data.get("kind") == QuestionKind.CHOICE:
+            if len(options) < 2:
+                self.add_error("kind", _("A multiple-choice question needs at least two choices."))
+            elif not any(o["correct"] for o in options):
+                self.add_error("kind", _("Tick the right choice (or choices)."))
+        data["options"] = options if data.get("kind") == QuestionKind.CHOICE else []
+        return data
+
+    def save(self, commit=True):
+        q = super().save(commit=False)
+        q.owner = self.owner
+        q.options = self.cleaned_data["options"]
+        if not self.cleaned_data.get("topic"):
+            name = self.cleaned_data["new_topic"].strip()[:80]
+            q.topic = (PrepTopic.objects.filter(owner=self.owner, name__iexact=name).first()
+                       or PrepTopic.objects.create(owner=self.owner, name=name, order=PrepTopic.objects.filter(owner=self.owner).count()))
+        if commit:
+            q.save()
+            q.tags.set(services.tags_named(self.owner, self.cleaned_data.get("tags_text") or []))
+        return q
+
+
+class PrepGoalForm(forms.ModelForm):
+    class Meta:
+        model = WorkSettings
+        fields = ("prep_exam", "prep_exam_date", "prep_new_per_day")
+        widgets = {"prep_exam_date": DATE}

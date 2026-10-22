@@ -940,6 +940,10 @@ def search(request):
     for c in Card.objects.filter(owner=user).filter(Q(front__icontains=q) | Q(back__icontains=q)).select_related("deck")[:3]:
         out.append({"kind": "card", "title": " ".join(c.front.split())[:120], "url": reverse("work:deck", args=[c.deck_id]) + "?q=" + quote(c.front[:60]),
                     "meta": c.deck.name})
+    from .models import Question
+
+    for qn in Question.objects.filter(owner=user).filter(Q(prompt__icontains=q) | Q(companies__icontains=q)).select_related("topic")[:4]:
+        out.append({"kind": "question", "title": qn.title, "url": reverse("work:question", args=[qn.pk]), "meta": f"{qn.topic.name} · {qn.get_difficulty_display()}"})
     for sn in Snippet.objects.filter(owner=user).filter(Q(title__icontains=q) | Q(description__icontains=q))[:3]:
         out.append({"kind": "snippet", "title": sn.title, "url": reverse("work:snippets") + "?q=" + quote(sn.title), "meta": sn.get_language_display()})
     return ok(results=out)

@@ -62,6 +62,7 @@ def _urls():
         "diagrams": r("work:diagrams"), "diagramBase": "/work/api/diagrams/", "diagramList": r("work:api_diagram_list"),
         "cardsDue": r("work:api_cards_due"), "cardReview": r("work:card_review"), "imageUpload": r("work:api_image_upload"),
         "cards": r("work:cards"), "cardBase": "/work/api/cards/", "cardAdd": r("work:api_card_add"),
+        "prep": r("work:prep"), "prepBase": "/work/api/prep/questions/",
     }
 
 
@@ -89,7 +90,7 @@ def _texts():
         "tasksMade": _("Tasks made"), "openTasks": _("See them"), "tomorrow": _("Tomorrow"),
         "error": _("Couldn't save. Try again."), "later": _("Moved to"),
         "kinds": {"task": _("Task"), "note": _("Note"), "project": _("Project"), "goal": _("Goal"), "learning": _("Learning"),
-                  "snippet": _("Snippet"), "diagram": _("Diagram"), "card": _("Flashcard")},
+                  "snippet": _("Snippet"), "diagram": _("Diagram"), "card": _("Flashcard"), "question": _("Question")},
         "restoreNote": _("Bring back this version? What's there now is kept as a version too."),
         "uploading": _("Uploading…"), "imageFailed": _("The picture couldn't be uploaded."),
         "imageOffline": _("Pictures need a connection — try again when you're online."),
@@ -120,6 +121,7 @@ def _commands():
         ("notes", _("Notes"), "note", "work:notes", "g n", ""),
         ("snippets", _("Snippets"), "code", "work:snippets", "g s", "code"),
         ("cards", _("Flashcards"), "cards", "work:cards", "g k", "flashcards spaced repetition anki memorise memorize study quiz revise"),
+        ("prep", _("Interview prep"), "target", "work:prep", "g q", "interview exam questions answers quiz practice mock test leetcode prepare dsa system design"),
         ("diagrams", _("Diagrams"), "diagram", "work:diagrams", "g m", "mind map mindmap system design architecture flowchart sequence er uml whiteboard"),
         ("settings", _("Timer, focus & sounds"), "key", "work:settings", "g ,", "settings preferences tags"),
     ]
@@ -227,8 +229,16 @@ def today_view(request):
     if sprint:
         counts = sprint.tasks.aggregate(total=Count("pk"), done=Count("pk", filter=Q(status=Status.DONE)))
         sprint.counts, sprint.days_left = counts, (sprint.end_date - today).days
+    from .models import Question
+
+    prep_due = 0
+    if Question.objects.filter(owner=user).exists():
+        from .prep import new_left
+
+        due = Question.objects.filter(owner=user, last_reviewed__isnull=False, due__lte=today).count()
+        prep_due = due + min(new_left(user, today), Question.objects.filter(owner=user, last_reviewed__isnull=True).count())
     return render_work(request, "work/today.html", {
-        "today": today, "greeting": greeting, "hour_late": hour >= 16, "sprint": sprint,
+        "today": today, "greeting": greeting, "hour_late": hour >= 16, "sprint": sprint, "prep_due": prep_due,
         "open_tasks": open_tasks, "done_today": done_today, "more_tasks": more, "cap": cap,
         "next_block": services.next_block(user), "now": timezone.now(),
         "leftovers": services.leftovers(user, today), "waiting": services.waiting_tasks(user)[:6],
@@ -1664,6 +1674,10 @@ def export_view(request):
     rows += json.loads(serializers.serialize("json", SavedView.objects.filter(owner=user)))
     rows += json.loads(serializers.serialize("json", TaskTemplate.objects.filter(owner=user)))
     rows += json.loads(serializers.serialize("json", Sprint.objects.filter(owner=user)))
+    from .models import PrepTopic, Question
+
+    rows += json.loads(serializers.serialize("json", PrepTopic.objects.filter(owner=user)))
+    rows += json.loads(serializers.serialize("json", Question.objects.filter(owner=user)))
     ext = {"python": "py", "javascript": "js", "typescript": "ts", "bash": "sh", "plaintext": "txt", "markdown": "md", "xml": "html",
            "csharp": "cs", "cpp": "cpp", "dockerfile": "Dockerfile", "kotlin": "kt", "ruby": "rb", "rust": "rs", "yaml": "yml"}
 

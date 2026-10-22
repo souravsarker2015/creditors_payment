@@ -16,6 +16,7 @@
   <p class="nav-section-label">{% translate "Grow" %}</p>
   <a href="{% url 'work:goals' %}" class="nav-link {% if '/work/goals/' in p %}is-active{% endif %}">{% icon "flag" %}{% translate "Goals" %}</a>
   <a href="{% url 'work:learning' %}" class="nav-link {% if '/work/learning/' in p %}is-active{% endif %}">{% icon "book" %}{% translate "Learning" %}</a>
+  <a href="{% url 'work:prep' %}" class="nav-link {% if '/work/prep/' in p %}is-active{% endif %}">{% icon "target" %}{% translate "Interview prep" %}</a>
 </div>
 <div class="space-y-0.5">
   <p class="nav-section-label">{% translate "Track & review" %}</p>

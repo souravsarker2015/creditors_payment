@@ -1,0 +1,60 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{{ q.title|truncatechars:60 }} | {% translate "Interview prep" %}{% endblock %}
+
+{% block work %}
+{{ data|json_script:"prep-session" }}
+{{ prep_text|json_script:"prep-text" }}
+<header class="wp-head">
+  <div class="min-w-0">
+    <a href="{% url 'work:questions' %}?topic={{ q.topic_id }}" class="back-link">{% icon "chevron-left" %}{{ q.topic.name }}</a>
+    <h1 class="wp-title wpq-title">{{ q.title }}</h1>
+    <p class="wp-sub"><span class="wpq-dot" data-status="{{ q.status }}"></span> {{ q.status_label }}
+      {% if q.attempts %} · {% blocktranslate with a=q.accuracy n=q.attempts %}{{ a }}% right in {{ n }} tries{% endblocktranslate %} · {% blocktranslate with d=q.due|date:"j M" %}next review {{ d }}{% endblocktranslate %}{% endif %}
+      {% if q.source %} · <a href="{{ q.source }}" target="_blank" rel="noopener noreferrer">{% icon "external" %}{% translate "Source" %}</a>{% endif %}</p>
+  </div>
+  <div class="wp-actions">
+    <button type="button" class="icon-btn wpq-star{% if q.is_starred %} is-on{% endif %}" data-prep-star="{{ q.pk }}" aria-pressed="{% if q.is_starred %}true{% else %}false{% endif %}" aria-label="{% translate 'Star' %}" data-tip="{% translate 'Star' %}">{% icon "star" %}</button>
+    <a href="{% url 'work:question_edit' q.pk %}" class="btn btn-secondary">{% icon "edit" %}{% translate "Edit" %}</a>
+  </div>
+</header>
+
+<div class="wpq-detail">
+  <div x-data="prepSession('prep-session')" @keydown.window="key($event)">
+    {% include "work/prep/_ask.html" %}
+    <div class="wpq-rated card" x-show="stage === 'rated'" x-cloak>
+      <p>{% icon "check" %}{% translate "Saved. It comes back when it's due." %}</p>
+      <div class="wpq-act"><button type="button" class="btn btn-secondary" @click="load(0)">{% icon "repeat" %}{% translate "Try again" %}</button>
+        <a href="{% url 'work:prep_practice' %}?topic={{ q.topic_id }}" class="btn btn-primary">{% icon "play" %}{% blocktranslate with t=q.topic.name %}Practise {{ t }}{% endblocktranslate %}</a></div>
+    </div>
+  </div>
+
+  <aside class="wpq-side">
+    <section class="card" x-data="prepNotes({{ q.pk }})">
+      <header class="card-header"><h2 class="card-title">{% icon "note" %}{% translate "My notes" %}</h2><span class="help" x-text="state"></span></header>
+      <div class="card-body !pt-0"><textarea class="form-input" rows="5" @input="changed($event.target.value)" placeholder="{% translate 'Mnemonics, links, how you got it wrong…' %}" aria-label="{% translate 'My notes' %}">{{ q.notes }}</textarea></div>
+    </section>
+    {% if history %}
+    <section class="card">
+      <header class="card-header"><h2 class="card-title">{% icon "history" %}{% translate "Your answers" %}</h2></header>
+      <ul class="wpq-history">{% for a in history %}<li data-score="{% if a.score >= 0.999 %}right{% elif a.score > 0 %}partly{% else %}wrong{% endif %}">
+        <span>{% if a.score >= 0.999 %}{% translate "Right" %}{% elif a.score > 0 %}{% translate "Partly" %}{% else %}{% translate "Wrong" %}{% endif %}{% if a.exam_id %} · {% translate "exam" %}{% endif %}</span>
+        <time>{{ a.created_at|date:"j M, H:i" }}{% if a.seconds %} · {{ a.seconds }}s{% endif %}</time></li>{% endfor %}</ul>
+    </section>
+    {% endif %}
+    {% if q.tags.all or q.company_list %}
+    <section class="card"><div class="card-body wpq-tags">{% for c in q.company_list %}<span class="wpq-company">{{ c }}</span>{% endfor %}{% for tg in q.tags.all %}<span class="wt-tag">#{{ tg.name }}</span>{% endfor %}</div></section>
+    {% endif %}
+    {% if siblings %}
+    <section class="card">
+      <header class="card-header"><h2 class="card-title">{% blocktranslate with t=q.topic.name %}More in {{ t }}{% endblocktranslate %}</h2></header>
+      <ul class="wpq-list">{% for q in siblings %}{% include "work/prep/_row.html" %}{% endfor %}</ul>
+    </section>
+    {% endif %}
+  </aside>
+</div>
+{% endblock %}
+
+{% block work_libs %}{% include "work/prep/_libs.html" %}{% endblock %}
+{% block work_js %}<script src="{% asset 'js/prep.js' %}"></script>{% endblock %}

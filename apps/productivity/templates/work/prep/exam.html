@@ -1,0 +1,58 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{{ exam.title }} | {% translate "Mock exam" %}{% endblock %}
+
+{% block work %}
+{{ data|json_script:"prep-exam" }}
+{{ prep_text|json_script:"prep-text" }}
+<div class="wpq-exam" x-data="prepExam" @keydown.window="key($event)">
+  <header class="wpq-exam-head">
+    <div class="min-w-0"><p class="wfc-hero-kicker">{% translate "Mock exam" %}</p><h1 class="wpq-exam-title">{{ exam.title }}</h1></div>
+    <div class="wpq-clock num" :class="low() && 'is-low'" role="timer" aria-live="off" :aria-label="'{{ _("Time left")|escapejs }} ' + clock()">{% icon "timer" %}<span x-text="clock()"></span></div>
+    <span class="wpq-saved" x-text="state === 'saved' ? '{{ _("Saved")|escapejs }}' : state === 'offline' ? '{{ _("Not saved — check your connection.")|escapejs }}' : ''" :data-state="state"></span>
+    <button type="button" class="btn btn-primary" @click="handIn(false)">{% icon "check" %}{% translate "Hand in" %}</button>
+  </header>
+
+  <nav class="wpq-nav" aria-label="{% translate 'Questions' %}">
+    <template x-for="(item, n) in list" :key="item.id">
+      <button type="button" class="wpq-nav-btn" :class="{ 'is-on': n === i, 'is-done': done(item), 'is-flag': answers[item.id].flag }" @click="load(n)" x-text="n + 1"
+              :aria-current="n === i ? 'step' : null"></button>
+    </template>
+  </nav>
+  <p class="wpq-nav-sum"><span x-text="list.length - unanswered()"></span>/<span x-text="list.length"></span> {% translate "answered" %} · <span x-text="flagged()"></span> {% translate "flagged" %}</p>
+
+  <article class="wpq-q card" x-show="q">
+    <header class="wpq-q-head">
+      <b class="wpq-qn" x-text="'Q' + (i + 1)"></b>
+      <span class="wt-proj"><span class="wt-dot" :data-color="q.color"></span><span x-text="q.topic"></span></span>
+      <span class="wpq-diff" :data-d="q.difficulty" x-text="q.difficultyLabel"></span>
+      <span class="wpq-kind" x-text="q.kindLabel"></span>
+      <button type="button" class="btn btn-ghost btn-sm wpq-flag" :class="a.flag && 'is-on'" @click="a.flag = !a.flag" :aria-pressed="a.flag">{% icon "flag" %}<span x-text="a.flag ? '{{ _("Flagged")|escapejs }}' : '{{ _("Flag for review")|escapejs }}'"></span></button>
+    </header>
+    <div class="wpq-prompt wn-md" x-ref="prompt"></div>
+    <template x-if="q.kind === 'choice'">
+      <div class="wpq-options">
+        <p class="wpq-multi" x-show="q.multi">{% translate "More than one is right." %}</p>
+        <template x-for="(o, n) in q.options" :key="q.id + '-' + n">
+          <button type="button" class="wpq-option" :data-state="picked(n) ? 'picked' : ''" @click="toggle(n)" :aria-pressed="picked(n)"><kbd x-text="n + 1"></kbd><span class="wn-md" x-html="Work.markdown(o)"></span></button>
+        </template>
+      </div>
+    </template>
+    <template x-if="q.kind !== 'choice'">
+      <div class="wpq-write"><label class="label" :for="'exam-answer-' + q.id">{% translate "Your answer" %}</label>
+        <textarea :id="'exam-answer-' + q.id" x-model="answers[q.id].text" class="form-input" :class="q.kind === 'code' && 'wpq-code'" :rows="q.kind === 'short' ? 4 : 12" spellcheck="false" @keydown="q.kind === 'code' && tab($event)"></textarea></div>
+    </template>
+    <div class="wpq-act wpq-exam-move">
+      <button type="button" class="btn btn-secondary" @click="load(i - 1)" :disabled="i === 0">{% icon "chevron-left" %}{% translate "Previous" %}</button>
+      <button type="button" class="btn btn-primary" @click="load(i + 1)" x-show="i < list.length - 1">{% translate "Next" %}{% icon "chevron-right" %}</button>
+      <button type="button" class="btn btn-primary" @click="handIn(false)" x-show="i === list.length - 1">{% icon "check" %}{% translate "Hand in" %}</button>
+    </div>
+  </article>
+  <p class="wpq-keys">{% translate "Keys: ← → move · 1–9 pick · f flag" %}</p>
+  <form method="post" x-ref="form" hidden>{% csrf_token %}<input type="hidden" name="action" value="submit"><input type="hidden" name="answers" x-ref="answers"></form>
+</div>
+{% endblock %}
+
+{% block work_libs %}{% include "work/prep/_libs.html" %}{% endblock %}
+{% block work_js %}<script src="{% asset 'js/prep.js' %}"></script>{% endblock %}

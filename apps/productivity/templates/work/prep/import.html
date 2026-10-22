@@ -1,0 +1,45 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% translate "Import questions" %} | {% translate "Interview prep" %}{% endblock %}
+
+{% block work %}
+<header class="wp-head">
+  <div class="min-w-0">
+    <a href="{% url 'work:prep' %}" class="back-link">{% icon "chevron-left" %}{% translate "Interview prep" %}</a>
+    <h1 class="wp-title">{% translate "Import questions" %}</h1>
+    <p class="wp-sub">{% translate "Paste or upload questions in the Markdown format below — or a JSON file exported from here. You'll see them before they're added." %}</p>
+  </div>
+</header>
+
+{% if items %}
+<section class="card">
+  <header class="card-header"><div><h2 class="card-title">{% blocktranslate count counter=items|length %}{{ counter }} question found{% plural %}{{ counter }} questions found{% endblocktranslate %}</h2></div></header>
+  <ul class="wpq-list wpq-preview">{% for x in items|slice:":50" %}<li class="wpq-row"><div class="wpq-row-main"><span class="wpq-row-title">{{ x.prompt|truncatechars:120 }}</span>
+    <div class="wpq-row-meta"><span class="wt-proj">{{ x.topic }}</span><span class="wpq-diff" data-d="{{ x.difficulty }}">{{ levels|get_item:x.difficulty }}</span><span class="wpq-kind">{{ kinds|get_item:x.kind }}</span>
+      {% if x.options %}<span class="wpq-kind">{% blocktranslate count counter=x.options|length %}{{ counter }} choice{% plural %}{{ counter }} choices{% endblocktranslate %}</span>{% endif %}</div></div></li>{% endfor %}</ul>
+  {% if items|length > 50 %}<p class="card-body help">{% blocktranslate with n=items|length|add:-50 %}…and {{ n }} more.{% endblocktranslate %}</p>{% endif %}
+  <form method="post" class="card-body wpq-import-go">{% csrf_token %}<input type="hidden" name="action" value="add">
+    <label class="field"><span class="label">{% translate "Put them in" %}</span>
+      <select name="topic" class="form-input"><option value="">{% translate "The topics named in the file" %}</option>{% for t in topics %}<option value="{{ t.pk }}">{{ t.name }}</option>{% endfor %}</select></label>
+    <button type="submit" class="btn btn-primary">{% icon "plus" %}{% blocktranslate count counter=items|length %}Add {{ counter }} question{% plural %}Add {{ counter }} questions{% endblocktranslate %}</button>
+  </form>
+</section>
+{% endif %}
+
+<div class="wpq-import">
+  <form method="post" enctype="multipart/form-data" class="card">{% csrf_token %}
+    <div class="card-body form-stack">
+      <label class="field"><span class="label">{% translate "Paste here" %}</span>
+        <textarea name="text" rows="16" class="form-input code-ish" spellcheck="false" placeholder="# Topic&#10;## A question? {easy, choice}&#10;- [x] Right&#10;- [ ] Wrong">{{ text }}</textarea></label>
+      <label class="field"><span class="label">{% translate "…or a file" %}</span><input type="file" name="file" accept=".md,.markdown,.txt,.json" class="form-input"></label>
+      <button type="submit" class="btn btn-primary">{% translate "Read them" %}</button>
+    </div>
+  </form>
+  <section class="card">
+    <header class="card-header"><div><h2 class="card-title">{% translate "The format" %}</h2>
+      <p class="card-subtitle">{% translate "“# Topic” starts a topic. “## Question {difficulty, type}” starts a question — types: choice, short, code (with a language), long. “- [x]” marks a right choice. “### Answer”, “### Key points”, “### Why” and “### Starter” add those parts." %}</p></div></header>
+    <pre class="wpq-example">{{ example }}</pre>
+  </section>
+</div>
+{% endblock %}

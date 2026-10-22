@@ -1,0 +1,75 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% if q %}{% translate "Edit question" %}{% else %}{% translate "New question" %}{% endif %} | {% translate "Interview prep" %}{% endblock %}
+
+{% block work %}
+<header class="wp-head">
+  <div class="min-w-0">
+    <a href="{% if q %}{% url 'work:question' q.pk %}{% else %}{% url 'work:prep' %}{% endif %}" class="back-link">{% icon "chevron-left" %}{% if q %}{% translate "Question" %}{% else %}{% translate "Interview prep" %}{% endif %}</a>
+    <h1 class="wp-title">{% if q %}{% translate "Edit question" %}{% else %}{% translate "New question" %}{% endif %}</h1>
+  </div>
+  {% if q %}
+  <form method="post" class="wp-actions" data-confirm="{{ _("Delete this question? You can bring it back from Recently deleted.") }}">{% csrf_token %}<input type="hidden" name="action" value="delete">
+    <button type="submit" class="btn btn-ghost">{% icon "trash" %}{% translate "Delete" %}</button></form>
+  {% endif %}
+</header>
+
+<form method="post" class="card wpq-form" novalidate x-data="{ kind: '{{ form.kind.value|default:'short'|escapejs }}' }" @change="if ($event.target.name === 'kind') kind = $event.target.value">
+  {% csrf_token %}
+  <div class="card-body form-stack">
+    {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+    <div class="form-grid form-grid-2">
+      {% if has_topics %}{% with field=form.topic %}{% include "partials/field.html" %}{% endwith %}{% endif %}
+      {% with field=form.new_topic %}{% include "partials/field.html" %}{% endwith %}
+    </div>
+    <div class="form-grid form-grid-2">
+      {% with field=form.kind %}{% include "partials/field.html" %}{% endwith %}
+      {% with field=form.difficulty %}{% include "partials/field.html" %}{% endwith %}
+    </div>
+    {% with field=form.prompt %}{% include "partials/field.html" %}{% endwith %}
+
+    {# multiple choice: the choices #}
+    <fieldset class="wpq-choices" x-show="kind === 'choice'" x-data="prepChoices" x-cloak>
+      <legend class="label">{% translate "Choices" %} <span class="help">{% translate "— tick the right one (or more than one)" %}</span></legend>
+      <input type="hidden" x-ref="store" value="{{ form.options_json.value|default:'[]' }}" name="{{ form.options_json.html_name }}">
+      <template x-for="(o, n) in items" :key="n">
+        <div class="wpq-choice">
+          <label class="wpq-choice-ok" :aria-label="'{{ _("Right answer")|escapejs }}'"><input type="checkbox" x-model="o.correct"></label>
+          <input type="text" class="form-input input-compact" x-model="o.text" data-choice-text maxlength="500" :placeholder="'{{ _("Choice")|escapejs }} ' + (n + 1)" @keydown.enter.prevent="add()">
+          <button type="button" class="icon-btn" @click="drop(n)" aria-label="{% translate 'Remove' %}">{% icon "x" %}</button>
+        </div>
+      </template>
+      <button type="button" class="btn btn-ghost btn-sm" @click="add()">{% icon "plus" %}{% translate "Add a choice" %}</button>
+    </fieldset>
+
+    <div x-show="kind === 'code'" x-cloak class="form-stack">
+      {% with field=form.language %}{% include "partials/field.html" %}{% endwith %}
+      <datalist id="prep-languages"><option value="python"><option value="javascript"><option value="typescript"><option value="java"><option value="go"><option value="cpp"><option value="csharp"><option value="rust"><option value="sql"><option value="bash"></datalist>
+      {% with field=form.starter %}{% include "partials/field.html" %}{% endwith %}
+    </div>
+    <div x-show="kind !== 'choice'">{% with field=form.answer %}{% include "partials/field.html" %}{% endwith %}</div>
+    <div x-show="kind === 'long' || kind === 'short' || kind === 'code'">{% with field=form.key_points %}{% include "partials/field.html" %}{% endwith %}</div>
+    {% with field=form.explanation %}{% include "partials/field.html" %}{% endwith %}
+
+    <details class="wpq-extra"{% if form.companies.value or form.source.value or form.notes.value %} open{% endif %}>
+      <summary>{% translate "More: companies, link, tags, notes" %}</summary>
+      <div class="form-stack">
+        <div class="form-grid form-grid-2">
+          {% with field=form.companies %}{% include "partials/field.html" %}{% endwith %}
+          {% with field=form.source %}{% include "partials/field.html" %}{% endwith %}
+        </div>
+        {% with field=form.tags_text %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.notes %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.is_starred %}{% include "partials/field.html" %}{% endwith %}
+      </div>
+    </details>
+  </div>
+  <div class="form-actions wpq-form-foot">
+    {% if not q %}<button type="submit" name="then" value="another" class="btn btn-secondary">{% translate "Save and add another" %}</button>{% endif %}
+    <button type="submit" class="btn btn-primary">{% icon "check" %}{% translate "Save" %}</button>
+  </div>
+</form>
+{% endblock %}
+
+{% block work_js %}<script src="{% asset 'js/prep.js' %}"></script>{% endblock %}

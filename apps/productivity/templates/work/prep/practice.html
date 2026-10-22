@@ -1,0 +1,42 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{{ title }} | {% translate "Interview prep" %}{% endblock %}
+
+{% block work %}
+{{ session|json_script:"prep-session" }}
+{{ prep_text|json_script:"prep-text" }}
+<div class="wpq-session" x-data="prepSession('prep-session')" @keydown.window="key($event)">
+  <header class="wfr-head">
+    <a :href="back" class="icon-btn" aria-label="{% translate 'Stop' %}" data-tip="{% translate 'Stop' %}">{% icon "x" %}</a>
+    <div class="wfr-title"><b>{{ title }}</b><small x-show="stage !== 'done' && stage !== 'empty'" x-text="(i + 1) + ' / ' + total"></small></div>
+    <div class="wpq-tally" x-show="tally.n" x-cloak><span class="is-right" x-text="tally.right"></span><span class="is-partly" x-text="tally.partly"></span><span class="is-wrong" x-text="tally.wrong"></span></div>
+  </header>
+  <div class="wfr-progress" role="progressbar" :aria-valuenow="tally.n" aria-valuemin="0" :aria-valuemax="total"><i :style="'width:' + (total ? 100 * tally.n / total : 0) + '%'"></i></div>
+
+  {% include "work/prep/_ask.html" %}
+
+  <section class="wpq-done card" x-show="stage === 'done'" x-cloak>
+    <div class="wpq-ring" :style="'--p:' + pct()"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="52" class="wd-ring-bg"/><circle cx="60" cy="60" r="52" class="wd-ring-fg" pathLength="100"/></svg>
+      <span><b class="num" x-text="pct() + '%'"></b><small>{% translate "score" %}</small></span></div>
+    <h2 class="wfc-hero-title">{% translate "Session done" %}</h2>
+    <p class="wfc-hero-sub"><span x-text="tally.right"></span> {% translate "right" %} · <span x-text="tally.partly"></span> {% translate "partly" %} · <span x-text="tally.wrong"></span> {% translate "wrong" %} · <span x-text="avg()"></span> {% translate "a question" %}</p>
+    <ul class="wpq-topics"><template x-for="tp in topics()" :key="tp.name"><li><span class="wt-proj"><span class="wt-dot" :data-color="tp.color"></span><span x-text="tp.name"></span></span><b class="num" x-text="tp.pct + '%'"></b><span class="wr-rank-bar" :data-color="tp.color"><i :style="'width:' + tp.pct + '%'"></i></span></li></template></ul>
+    <div class="wpq-act">
+      <a :href="retryUrl()" class="btn btn-primary" x-show="missed.length">{% icon "repeat" %}{% translate "Practise the ones I missed" %}</a>
+      <a :href="back" class="btn btn-secondary">{% translate "Back to Interview prep" %}</a>
+    </div>
+  </section>
+
+  <section class="empty" x-show="stage === 'empty'" x-cloak>
+    <div class="empty-icon">{% icon "check" %}</div>
+    <h3 class="empty-title">{% translate "Nothing to practise here" %}</h3>
+    <p class="empty-text">{% translate "No questions match, or everything is done for today. Pick another topic, or add questions." %}</p>
+    <a href="{% url 'work:prep' %}" class="btn btn-secondary">{% translate "Back to Interview prep" %}</a>
+  </section>
+  <p class="wpq-keys" x-show="stage === 'ask' || stage === 'answered'">{% translate "Keys: 1–9 pick · Enter check / next · Ctrl+Enter show the answer · 1–4 rate" %}</p>
+</div>
+{% endblock %}
+
+{% block work_libs %}{% include "work/prep/_libs.html" %}{% endblock %}
+{% block work_js %}<script src="{% asset 'js/prep.js' %}"></script>{% endblock %}

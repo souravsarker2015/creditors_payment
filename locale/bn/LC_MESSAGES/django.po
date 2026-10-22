@@ -21715,3 +21715,699 @@ msgstr "কোথায়"
 
 msgid "browser, device, version"
 msgstr "ব্রাউজার, ডিভাইস, ভার্সন"
+
+#, python-format
+msgid "%(a)s of %(n)s answered"
+msgstr "%(n)sটির মধ্যে %(a)sটির উত্তর দেওয়া হয়েছে"
+
+#, python-format
+msgid "%(a)s%% of %(n)s"
+msgstr "%(n)sবারে %(a)s%%"
+
+#, python-format
+msgid "%(a)s%% right in %(n)s tries"
+msgstr "%(n)sবারে %(a)s%% ঠিক"
+
+#, python-format
+msgid "%(counter)s choice"
+msgid_plural "%(counter)s choices"
+msgstr[0] "%(counter)sটি অপশন"
+msgstr[1] "%(counter)sটি অপশন"
+
+#, python-format
+msgid "%(counter)s question"
+msgid_plural "%(counter)s questions"
+msgstr[0] "%(counter)sটি প্রশ্ন"
+msgstr[1] "%(counter)sটি প্রশ্ন"
+
+#, python-format
+msgid "%(counter)s question found"
+msgid_plural "%(counter)s questions found"
+msgstr[0] "%(counter)sটি প্রশ্ন পাওয়া গেছে"
+msgstr[1] "%(counter)sটি প্রশ্ন পাওয়া গেছে"
+
+#, python-format
+msgid "%(due)s to review · %(new)s new"
+msgstr "%(due)sটি রিভিউ · %(new)sটি নতুন"
+
+#, python-format
+msgid "%(m)s mastered, %(l)s learning, %(w)s weak, %(n)s new"
+msgstr "%(m)sটি আয়ত্তে, %(l)sটি শিখছেন, %(w)sটি দুর্বল, %(n)sটি নতুন"
+
+#, python-format
+msgid "%(m)s of %(t)s questions mastered"
+msgstr "%(t)sটি প্রশ্নের মধ্যে %(m)sটি আয়ত্তে"
+
+#, python-format
+msgid "%(n)s question added."
+msgid_plural "%(n)s questions added."
+msgstr[0] "%(n)sটি প্রশ্ন যোগ হয়েছে।"
+msgstr[1] "%(n)sটি প্রশ্ন যোগ হয়েছে।"
+
+#, python-format
+msgid "%(n)s questions have no answer yet. Hand in anyway?"
+msgstr "%(n)sটি প্রশ্নের এখনো উত্তর নেই। তবুও জমা দেবেন?"
+
+#, python-format
+msgid "%(n)s weak"
+msgstr "%(n)sটি দুর্বল"
+
+#, python-format
+msgid "%(n)s%% ready"
+msgstr "%(n)s%% প্রস্তুত"
+
+#, python-format
+msgid "%(n)s%% right"
+msgstr "%(n)s%% ঠিক"
+
+msgid "(no answer)"
+msgstr "(উত্তর নেই)"
+
+msgid "(optional — say it out loud if you prefer)"
+msgstr "(ঐচ্ছিক — চাইলে মুখে বলুন)"
+
+msgid "A multiple-choice question needs at least two choices."
+msgstr "বহুনির্বাচনী প্রশ্নে অন্তত দুটি অপশন লাগবে।"
+
+msgid "About"
+msgstr "সম্পর্কে"
+
+#, python-format
+msgid "Add %(counter)s question"
+msgid_plural "Add %(counter)s questions"
+msgstr[0] "%(counter)sটি প্রশ্ন যোগ করুন"
+msgstr[1] "%(counter)sটি প্রশ্ন যোগ করুন"
+
+msgid "Add a choice"
+msgstr "অপশন যোগ করুন"
+
+msgid "Add one, import a list, or start from a starter pack on the Interview prep page."
+msgstr "একটি যোগ করুন, তালিকা ইমপোর্ট করুন, বা ইন্টারভিউ প্রস্তুতির পাতায় স্টার্টার প্যাক দিয়ে শুরু করুন।"
+
+msgid "Add the exam or interview you're preparing for, and its date, to count down to it."
+msgstr "যে পরীক্ষা বা ইন্টারভিউয়ের প্রস্তুতি নিচ্ছেন সেটি আর তারিখ দিন, দিন গোনা শুরু হবে।"
+
+msgid "Add the ticked packs"
+msgstr "টিক দেওয়া প্যাক যোগ করুন"
+
+msgid "Add the topic"
+msgstr "বিষয় যোগ করুন"
+
+msgid "Add these"
+msgstr "এগুলো যোগ করুন"
+
+msgid "All topics"
+msgstr "সব বিষয়"
+
+msgid "Almost done"
+msgstr "প্রায় শেষ"
+
+msgid "Answered right"
+msgstr "ঠিক উত্তর"
+
+msgid "Any"
+msgstr "যেকোনো"
+
+msgid "Any difficulty"
+msgstr "যেকোনো কাঠিন্য"
+
+msgid "Any status"
+msgstr "যেকোনো অবস্থা"
+
+msgid "Asked at"
+msgstr "যেখানে জিজ্ঞেস করা হয়েছে"
+
+msgid "Back to Interview prep"
+msgstr "ইন্টারভিউ প্রস্তুতিতে ফিরুন"
+
+msgid "By topic"
+msgstr "বিষয় অনুযায়ী"
+
+msgid "Check"
+msgstr "যাচাই করুন"
+
+msgid "Choice"
+msgstr "অপশন"
+
+msgid "Choices"
+msgstr "অপশনগুলো"
+
+msgid "Code to begin from, for coding questions."
+msgstr "কোডিং প্রশ্নের জন্য শুরুর কোড।"
+
+msgid "Coding"
+msgstr "কোডিং"
+
+msgid "Companies known to ask it, separated by commas."
+msgstr "যেসব কোম্পানি এটি জিজ্ঞেস করে, কমা দিয়ে আলাদা করে।"
+
+msgid "Delete the topic and its questions"
+msgstr "বিষয় ও এর প্রশ্নগুলো মুছুন"
+
+msgid "Delete this exam? The answers already counted in your practice stay."
+msgstr "এই পরীক্ষা মুছবেন? অনুশীলনে যে উত্তরগুলো গোনা হয়েছে সেগুলো থাকবে।"
+
+msgid "Delete this question? You can bring it back from Recently deleted."
+msgstr "এই প্রশ্ন মুছবেন? সম্প্রতি মোছা থেকে ফেরত আনতে পারবেন।"
+
+msgid "Delete this topic and all its questions? You can bring them back from Recently deleted."
+msgstr "এই বিষয় ও এর সব প্রশ্ন মুছবেন? সম্প্রতি মোছা থেকে ফেরত আনতে পারবেন।"
+
+msgid "Did you cover these?"
+msgstr "এগুলো কি বলেছেন?"
+
+msgid "Difficulty"
+msgstr "কাঠিন্য"
+
+msgid "Due to review"
+msgstr "রিভিউর সময় হয়েছে"
+
+msgid "Edit question"
+msgstr "প্রশ্ন সম্পাদনা"
+
+msgid "Edit topic"
+msgstr "বিষয় সম্পাদনা"
+
+msgid "Every answer has gone into your practice: what you missed comes back soon."
+msgstr "প্রতিটি উত্তর আপনার অনুশীলনে যোগ হয়েছে: যা ভুল হয়েছে তা শীঘ্রই আবার আসবে।"
+
+msgid "Exam deleted."
+msgstr "পরীক্ষা মোছা হয়েছে।"
+
+#, python-format
+msgid "Exam marked: %(score)s%%."
+msgstr "পরীক্ষার নম্বর: %(score)s%%।"
+
+msgid "Explain / design"
+msgstr "ব্যাখ্যা / ডিজাইন"
+
+msgid "Export these:"
+msgstr "এগুলো এক্সপোর্ট করুন:"
+
+msgid "Flag for review"
+msgstr "পরে দেখার জন্য চিহ্নিত করুন"
+
+msgid "Flagged"
+msgstr "চিহ্নিত"
+
+msgid "For coding questions: python, javascript, sql…"
+msgstr "কোডিং প্রশ্নের জন্য: python, javascript, sql…"
+
+msgid "Getting there."
+msgstr "এগিয়ে যাচ্ছেন।"
+
+msgid "Got wrong most recently and most often."
+msgstr "সবচেয়ে সম্প্রতি ও সবচেয়ে বেশি ভুল হয়েছে।"
+
+msgid "Hand in"
+msgstr "জমা দিন"
+
+msgid "Hand in the exam now?"
+msgstr "এখনই পরীক্ষা জমা দেবেন?"
+
+msgid "How did you do?"
+msgstr "কেমন হলো?"
+
+msgid "How many"
+msgstr "কতগুলো"
+
+msgid "How many questions you haven't seen yet join each day's practice."
+msgstr "প্রতিদিনের অনুশীলনে কতগুলো না-দেখা প্রশ্ন যোগ হবে।"
+
+msgid "Import"
+msgstr "ইমপোর্ট"
+
+msgid "Import questions"
+msgstr "প্রশ্ন ইমপোর্ট"
+
+msgid "Interview prep"
+msgstr "ইন্টারভিউ প্রস্তুতি"
+
+msgid "Interview prep (g q): a bank of questions by topic — multiple choice, short, coding and design. Practise a little every day, then sit a timed mock exam to see if you're ready."
+msgstr "ইন্টারভিউ প্রস্তুতি (g q): বিষয়ভিত্তিক প্রশ্নব্যাংক — বহুনির্বাচনী, সংক্ষিপ্ত, কোডিং ও ডিজাইন। প্রতিদিন একটু অনুশীলন করুন, তারপর সময় ধরে মক পরীক্ষা দিয়ে দেখুন আপনি প্রস্তুত কিনা।"
+
+msgid "It's today — good luck!"
+msgstr "আজই — শুভকামনা!"
+
+msgid "Its date"
+msgstr "তারিখ"
+
+msgid "Keep practising."
+msgstr "অনুশীলন চালিয়ে যান।"
+
+msgid "Key points"
+msgstr "মূল পয়েন্ট"
+
+msgid "Keys: 1–9 pick · Enter check / next · Ctrl+Enter show the answer · 1–4 rate"
+msgstr "কি: 1–9 বাছাই · Enter যাচাই / পরেরটি · Ctrl+Enter উত্তর দেখুন · 1–4 রেটিং"
+
+msgid "Keys: ← → move · 1–9 pick · f flag"
+msgstr "কি: ← → সরান · 1–9 বাছাই · f চিহ্নিত"
+
+msgid "Last 14 days"
+msgstr "গত ১৪ দিন"
+
+msgid "Leave the exam? Your answers are kept, and the clock keeps running."
+msgstr "পরীক্ষা ছেড়ে যাবেন? উত্তরগুলো থাকবে, আর ঘড়ি চলতে থাকবে।"
+
+#, python-format
+msgid "Mark %(counter)s written answer"
+msgid_plural "Mark %(counter)s written answers"
+msgstr[0] "%(counter)sটি লিখিত উত্তরে নম্বর দিন"
+msgstr[1] "%(counter)sটি লিখিত উত্তরে নম্বর দিন"
+
+msgid "Markdown works: `code`, ```code blocks```, lists, tables."
+msgstr "Markdown চলে: `code`, ```code blocks```, তালিকা, টেবিল।"
+
+msgid "Marked"
+msgstr "নম্বর দেওয়া হয়েছে"
+
+msgid "Mastered"
+msgstr "আয়ত্তে"
+
+msgid ""
+"Mentions the trade-off\n"
+"Gives the complexity\n"
+"Names an example"
+msgstr ""
+"সুবিধা-অসুবিধা বলে\n"
+"কমপ্লেক্সিটি বলে\n"
+"একটি উদাহরণ দেয়"
+
+msgid "Minutes"
+msgstr "মিনিট"
+
+msgid "Mnemonics, links, how you got it wrong…"
+msgstr "মনে রাখার কৌশল, লিংক, কোথায় ভুল হয়েছিল…"
+
+msgid "Mock exam"
+msgstr "মক পরীক্ষা"
+
+#, python-format
+msgid "Mock exam: %(topics)s"
+msgstr "মক পরীক্ষা: %(topics)s"
+
+msgid "Mock exams"
+msgstr "মক পরীক্ষা"
+
+msgid "Model answer"
+msgstr "আদর্শ উত্তর"
+
+#, python-format
+msgid "More in %(t)s"
+msgstr "%(t)s-এ আরও"
+
+msgid "More than one is right."
+msgstr "একাধিক উত্তর ঠিক।"
+
+msgid "More: companies, link, tags, notes"
+msgstr "আরও: কোম্পানি, লিংক, ট্যাগ, নোট"
+
+msgid "Most needed first"
+msgstr "সবচেয়ে দরকারিগুলো আগে"
+
+msgid "Multiple choice"
+msgstr "বহুনির্বাচনী"
+
+msgid "Multiple choice is marked. Compare your written answers with the model ones below and mark them — then you get your score."
+msgstr "বহুনির্বাচনীর নম্বর দেওয়া হয়েছে। নিচে আপনার লিখিত উত্তর আদর্শ উত্তরের সাথে মিলিয়ে নম্বর দিন — তারপর মোট নম্বর পাবেন।"
+
+msgid "My notes"
+msgstr "আমার নোট"
+
+msgid "New question"
+msgstr "নতুন প্রশ্ন"
+
+msgid "New questions a day"
+msgstr "দিনে নতুন প্রশ্ন"
+
+msgid "New topic"
+msgstr "নতুন বিষয়"
+
+msgid "No questions found. Start each one with “## ” — see the example."
+msgstr "কোনো প্রশ্ন পাওয়া যায়নি। প্রতিটি “## ” দিয়ে শুরু করুন — উদাহরণ দেখুন।"
+
+msgid "No questions match"
+msgstr "কোনো প্রশ্ন মেলেনি"
+
+msgid "No questions match — change the topic or the filters."
+msgstr "কোনো প্রশ্ন মেলেনি — বিষয় বা ফিল্টার বদলান।"
+
+msgid "No questions match, or everything is done for today. Pick another topic, or add questions."
+msgstr "কোনো প্রশ্ন মেলেনি, বা আজকের সব শেষ। অন্য বিষয় বেছে নিন, বা প্রশ্ন যোগ করুন।"
+
+msgid "No questions yet"
+msgstr "এখনো কোনো প্রশ্ন নেই"
+
+msgid "Not quite"
+msgstr "পুরোপুরি ঠিক নয়"
+
+msgid "Not saved — check your connection."
+msgstr "সেভ হয়নি — ইন্টারনেট সংযোগ দেখুন।"
+
+msgid "Nothing due today"
+msgstr "আজ কিছু বাকি নেই"
+
+msgid "Nothing to practise here"
+msgstr "এখানে অনুশীলনের কিছু নেই"
+
+msgid "One per line: what a good answer must mention. You tick the ones you got when you check yourself."
+msgstr "প্রতি লাইনে একটি: ভালো উত্তরে যা অবশ্যই থাকবে। নিজেকে যাচাইয়ের সময় যেগুলো বলেছেন সেগুলোতে টিক দেবেন।"
+
+msgid "Only due"
+msgstr "শুধু রিভিউয়েরগুলো"
+
+msgid "Only mastered"
+msgstr "শুধু আয়ত্তেরগুলো"
+
+msgid "Only new"
+msgstr "শুধু নতুন"
+
+msgid "Only weak"
+msgstr "শুধু দুর্বল"
+
+msgid "Open the question"
+msgstr "প্রশ্নটি খুলুন"
+
+msgid "Or write your own questions, or import a list."
+msgstr "অথবা নিজের প্রশ্ন লিখুন, বা তালিকা ইমপোর্ট করুন।"
+
+msgid "Partly"
+msgstr "আংশিক"
+
+msgid "Partly right"
+msgstr "আংশিক ঠিক"
+
+msgid "Paste here"
+msgstr "এখানে পেস্ট করুন"
+
+msgid "Paste or upload questions in the Markdown format below — or a JSON file exported from here. You'll see them before they're added."
+msgstr "নিচের Markdown ফরম্যাটে প্রশ্ন পেস্ট বা আপলোড করুন — অথবা এখান থেকে এক্সপোর্ট করা JSON ফাইল। যোগ করার আগে দেখতে পাবেন।"
+
+msgid "Pick a topic, or type a new one."
+msgstr "একটি বিষয় বেছে নিন, বা নতুন লিখুন।"
+
+msgid "Pick an answer first."
+msgstr "আগে একটি উত্তর বাছুন।"
+
+msgid "Pick every right answer"
+msgstr "সব ঠিক উত্তর বাছুন"
+
+msgid "Pick every right answer."
+msgstr "সব ঠিক উত্তর বাছুন।"
+
+msgid "Pick one"
+msgstr "একটি বাছুন"
+
+#, python-format
+msgid "Practise %(t)s"
+msgstr "%(t)s অনুশীলন করুন"
+
+msgid "Practise a topic of your choice, or try a mock exam."
+msgstr "পছন্দের বিষয় অনুশীলন করুন, বা মক পরীক্ষা দিন।"
+
+msgid "Practise the ones I missed"
+msgstr "যেগুলো ভুল হয়েছে সেগুলো অনুশীলন করুন"
+
+msgid "Practise them"
+msgstr "এগুলো অনুশীলন করুন"
+
+msgid "Practise these"
+msgstr "এগুলো অনুশীলন করুন"
+
+msgid "Practise these again"
+msgstr "এগুলো আবার অনুশীলন করুন"
+
+msgid "Practise your way"
+msgstr "নিজের মতো অনুশীলন"
+
+msgid "Preparing for"
+msgstr "প্রস্তুতি চলছে"
+
+msgid "Put them in"
+msgstr "কোথায় রাখবেন"
+
+msgid "Question bank"
+msgstr "প্রশ্নব্যাংক"
+
+msgid "Question deleted. You can bring it back from Recently deleted."
+msgstr "প্রশ্ন মোছা হয়েছে। সম্প্রতি মোছা থেকে ফেরত আনতে পারবেন।"
+
+msgid "Question saved."
+msgstr "প্রশ্ন সেভ হয়েছে।"
+
+#, python-format
+msgid "Question: %(title)s"
+msgstr "প্রশ্ন: %(title)s"
+
+msgid "Read them"
+msgstr "পড়ুন"
+
+msgid "Readiness"
+msgstr "প্রস্তুতি"
+
+msgid "Ready — well done."
+msgstr "প্রস্তুত — দারুণ!"
+
+msgid "Right"
+msgstr "ঠিক"
+
+msgid "Right answer"
+msgstr "ঠিক উত্তর"
+
+msgid "Right!"
+msgstr "ঠিক!"
+
+msgid "Save and add another"
+msgstr "সেভ করে আরেকটি যোগ করুন"
+
+msgid "Save my marks"
+msgstr "আমার নম্বর সেভ করুন"
+
+msgid "Saved. It comes back when it's due."
+msgstr "সেভ হয়েছে। সময় হলে আবার আসবে।"
+
+msgid "Search questions"
+msgstr "প্রশ্ন খুঁজুন"
+
+msgid "Search questions, answers, companies…"
+msgstr "প্রশ্ন, উত্তর, কোম্পানি খুঁজুন…"
+
+msgid "Set the exam"
+msgstr "পরীক্ষা ঠিক করুন"
+
+msgid "Short answer"
+msgstr "সংক্ষিপ্ত উত্তর"
+
+msgid "Shuffle"
+msgstr "এলোমেলো করুন"
+
+msgid "Star"
+msgstr "তারকা"
+
+msgid "Star removed"
+msgstr "তারকা সরানো হয়েছে"
+
+msgid "Starred"
+msgstr "তারকা দেওয়া"
+
+msgid "Start practice"
+msgstr "অনুশীলন শুরু করুন"
+
+msgid "Start the exam"
+msgstr "পরীক্ষা শুরু করুন"
+
+msgid "Start with a starter pack"
+msgstr "স্টার্টার প্যাক দিয়ে শুরু করুন"
+
+msgid "Starter packs"
+msgstr "স্টার্টার প্যাক"
+
+msgid "Starting code"
+msgstr "শুরুর কোড"
+
+msgid "That JSON couldn't be read."
+msgstr "JSON পড়া যায়নি।"
+
+msgid "That file is too big (over 5 MB)."
+msgstr "ফাইলটি অনেক বড় (৫ MB-এর বেশি)।"
+
+msgid "The date has passed — set the next one."
+msgstr "তারিখ পেরিয়ে গেছে — পরেরটি ঠিক করুন।"
+
+msgid "The exam or interview: “Google onsite”, “AWS SAA”…"
+msgstr "পরীক্ষা বা ইন্টারভিউ: “Google onsite”, “AWS SAA”…"
+
+msgid "The format"
+msgstr "ফরম্যাট"
+
+msgid "The model answer or solution. Markdown works."
+msgstr "আদর্শ উত্তর বা সমাধান। Markdown চলে।"
+
+msgid "The preview has expired. Paste the questions again."
+msgstr "প্রিভিউয়ের মেয়াদ শেষ। প্রশ্নগুলো আবার পেস্ট করুন।"
+
+msgid "The topics named in the file"
+msgstr "ফাইলে লেখা বিষয়গুলোতে"
+
+msgid "Those questions are already in your bank."
+msgstr "এই প্রশ্নগুলো আগেই আপনার ব্যাংকে আছে।"
+
+msgid "Tick the right choice (or choices)."
+msgstr "ঠিক অপশনে (বা অপশনগুলোতে) টিক দিন।"
+
+msgid "Time (minutes)"
+msgstr "সময় (মিনিট)"
+
+msgid "Time left"
+msgstr "বাকি সময়"
+
+msgid "Time's up — your answers have been handed in."
+msgstr "সময় শেষ — আপনার উত্তর জমা দেওয়া হয়েছে।"
+
+msgid "Timed, no answers shown until you hand it in — like the real thing."
+msgstr "সময় ধরে, জমা না দেওয়া পর্যন্ত উত্তর দেখা যাবে না — আসল পরীক্ষার মতো।"
+
+msgid "To mark"
+msgstr "নম্বর দিতে হবে"
+
+msgid "Today's practice"
+msgstr "আজকের অনুশীলন"
+
+msgid "Topic added. Now add its questions."
+msgstr "বিষয় যোগ হয়েছে। এবার এর প্রশ্ন যোগ করুন।"
+
+msgid "Topic deleted with its questions. You can bring it back from Recently deleted."
+msgstr "বিষয়টি প্রশ্নসহ মোছা হয়েছে। সম্প্রতি মোছা থেকে ফেরত আনতে পারবেন।"
+
+msgid "Topic saved."
+msgstr "বিষয় সেভ হয়েছে।"
+
+#, python-format
+msgid "Topic: %(name)s (%(n)s questions)"
+msgstr "বিষয়: %(name)s (%(n)sটি প্রশ্ন)"
+
+msgid "Topics"
+msgstr "বিষয়"
+
+msgid "Weak"
+msgstr "দুর্বল"
+
+msgid "Well-known interview questions with model answers. Pick the subjects you're preparing — you can edit, delete or add to every question."
+msgstr "আদর্শ উত্তরসহ পরিচিত ইন্টারভিউ প্রশ্ন। যে বিষয়গুলোর প্রস্তুতি নিচ্ছেন সেগুলো বাছুন — প্রতিটি প্রশ্ন সম্পাদনা, মোছা বা যোগ করতে পারবেন।"
+
+msgid "Where it's from: LeetCode, a blog, the docs…"
+msgstr "কোথা থেকে: LeetCode, ব্লগ, ডকুমেন্টেশন…"
+
+msgid "Which"
+msgstr "কোনগুলো"
+
+msgid "Why the answer is right — shown after you answer."
+msgstr "উত্তরটি কেন ঠিক — উত্তর দেওয়ার পর দেখানো হয়।"
+
+msgid "Write what you would say…"
+msgstr "যা বলতেন তা লিখুন…"
+
+msgid "Write your solution — Tab indents"
+msgstr "আপনার সমাধান লিখুন — Tab দিয়ে ইনডেন্ট"
+
+msgid "Wrong"
+msgstr "ভুল"
+
+msgid "You already have a topic with this name."
+msgstr "এই নামে আপনার আগেই একটি বিষয় আছে।"
+
+#, python-format
+msgid "You covered %(n)s of %(total)s key points"
+msgstr "%(total)sটি মূল পয়েন্টের মধ্যে %(n)sটি বলেছেন"
+
+msgid "Your answer"
+msgstr "আপনার উত্তর"
+
+msgid "Your answers"
+msgstr "আপনার উত্তরগুলো"
+
+msgid "Your mark"
+msgstr "আপনার নম্বর"
+
+msgid "Your own question bank, by topic. Practise a little every day — what you get wrong comes back sooner — then sit a timed mock exam to see if you're ready."
+msgstr "বিষয়ভিত্তিক আপনার নিজের প্রশ্নব্যাংক। প্রতিদিন একটু অনুশীলন করুন — যা ভুল হয় তা আগে ফিরে আসে — তারপর সময় ধরে মক পরীক্ষা দিয়ে দেখুন আপনি প্রস্তুত কিনা।"
+
+msgid "Your weak spots"
+msgstr "আপনার দুর্বল জায়গা"
+
+msgid "a question"
+msgstr "প্রতি প্রশ্নে"
+
+#, python-format
+msgid "about %(n)s new questions a day to see them all"
+msgstr "সব দেখতে দিনে প্রায় %(n)sটি নতুন প্রশ্ন"
+
+msgid "answered"
+msgstr "উত্তর দেওয়া"
+
+msgid "answered this week"
+msgstr "এ সপ্তাহে উত্তর দিয়েছেন"
+
+msgid "exam"
+msgstr "পরীক্ষা"
+
+msgid "flagged"
+msgstr "চিহ্নিত"
+
+msgid "got wrong last time"
+msgstr "গতবার ভুল হয়েছে"
+
+#, python-format
+msgid "mastered, of %(total)s"
+msgstr "%(total)sটির মধ্যে আয়ত্তে"
+
+#, python-format
+msgid "next review %(d)s"
+msgstr "পরের রিভিউ %(d)s"
+
+msgid "partly"
+msgstr "আংশিক"
+
+msgid "ready"
+msgstr "প্রস্তুত"
+
+msgid "right"
+msgstr "ঠিক"
+
+msgid "score"
+msgstr "নম্বর"
+
+#, python-format
+msgid "took %(took)s of %(minutes)s min"
+msgstr "%(minutes)s মিনিটের মধ্যে %(took)s লেগেছে"
+
+msgid "wrong"
+msgstr "ভুল"
+
+msgid "— Pick a topic —"
+msgstr "— একটি বিষয় বাছুন —"
+
+msgid "— tick the right one (or more than one)"
+msgstr "— ঠিকটিতে টিক দিন (বা একাধিকটিতে)"
+
+msgid "“# Topic” starts a topic. “## Question {difficulty, type}” starts a question — types: choice, short, code (with a language), long. “- [x]” marks a right choice. “### Answer”, “### Key points”, “### Why” and “### Starter” add those parts."
+msgstr "“# Topic” দিয়ে বিষয় শুরু। “## প্রশ্ন {difficulty, type}” দিয়ে প্রশ্ন শুরু — type: choice, short, code (ভাষাসহ), long। “- [x]” ঠিক অপশন চিহ্নিত করে। “### Answer”, “### Key points”, “### Why” আর “### Starter” সেই অংশগুলো যোগ করে।"
+
+msgid "…or a file"
+msgstr "…অথবা একটি ফাইল"
+
+msgid "…or a new topic"
+msgstr "…অথবা নতুন বিষয়"
+
+#, python-format
+msgid "about %(counter)s new question a day to see them all"
+msgid_plural "about %(counter)s new questions a day to see them all"
+msgstr[0] "সব দেখতে দিনে প্রায় %(counter)sটি নতুন প্রশ্ন"
+msgstr[1] "সব দেখতে দিনে প্রায় %(counter)sটি নতুন প্রশ্ন"
+
+#, python-format
+msgid "%(counter)s question to practise today"
+msgid_plural "%(counter)s questions to practise today"
+msgstr[0] "আজ অনুশীলনের জন্য %(counter)sটি প্রশ্ন"
+msgstr[1] "আজ অনুশীলনের জন্য %(counter)sটি প্রশ্ন"

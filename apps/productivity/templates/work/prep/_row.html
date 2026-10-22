@@ -1,0 +1,14 @@
+{% load i18n work %}<li class="wpq-row" data-status="{{ q.status }}">
+  <span class="wpq-dot" data-status="{{ q.status }}" title="{{ q.status_label }}"></span>
+  <div class="wpq-row-main">
+    <a href="{% url 'work:question' q.pk %}" class="wpq-row-title">{{ q.title }}</a>
+    <div class="wpq-row-meta">
+      <span class="wt-proj"><span class="wt-dot" data-color="{{ q.topic.color }}"></span>{{ q.topic.name }}</span>
+      <span class="wpq-diff" data-d="{{ q.difficulty }}">{{ q.get_difficulty_display }}</span>
+      <span class="wpq-kind">{{ q.get_kind_display }}</span>
+      {% for c in q.company_list|slice:":3" %}<span class="wpq-company">{{ c }}</span>{% endfor %}
+      {% if q.attempts %}<span class="wpq-acc" title="{% translate 'Answered right' %}">{% blocktranslate with a=q.accuracy n=q.attempts %}{{ a }}% of {{ n }}{% endblocktranslate %}</span>{% endif %}
+    </div>
+  </div>
+  <button type="button" class="icon-btn wpq-star{% if q.is_starred %} is-on{% endif %}" data-prep-star="{{ q.pk }}" aria-pressed="{% if q.is_starred %}true{% else %}false{% endif %}" aria-label="{% translate 'Star' %}">{% icon "star" %}</button>
+</li>

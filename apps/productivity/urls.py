@@ -1,7 +1,7 @@
 """Productivity lives under /work/ in the "work" namespace."""
 from django.urls import path
 
-from . import api, views
+from . import api, views, views_prep
 
 app_name = "work"
 
@@ -20,6 +20,17 @@ urlpatterns = [
     path("time/<int:pk>/", views.entry_form_view, name="entry"),
     path("focus/", views.focus_view, name="focus"),
     path("templates/", views.templates_view, name="templates"),
+    path("prep/", views_prep.prep_view, name="prep"),
+    path("prep/questions/", views_prep.questions_view, name="questions"),
+    path("prep/questions/new/", views_prep.question_form_view, name="question_new"),
+    path("prep/questions/<int:pk>/", views_prep.question_view, name="question"),
+    path("prep/questions/<int:pk>/edit/", views_prep.question_form_view, name="question_edit"),
+    path("prep/topics/<int:pk>/", views_prep.topic_view, name="prep_topic"),
+    path("prep/practice/", views_prep.practice_view, name="prep_practice"),
+    path("prep/exams/new/", views_prep.exam_new_view, name="exam_new"),
+    path("prep/exams/<int:pk>/", views_prep.exam_view, name="exam"),
+    path("prep/import/", views_prep.prep_import_view, name="prep_import"),
+    path("prep/export/", views_prep.prep_export_view, name="prep_export"),
     path("sprints/", views.sprints_view, name="sprints"),
     path("sprints/<int:pk>/", views.sprint_view, name="sprint"),
     path("import/", views.import_view, name="import"),
@@ -109,6 +120,9 @@ urlpatterns = [
     path("api/cards/<int:pk>/", api.card_action, name="api_card_action"),
     path("api/decks/<int:pk>/", api.deck_action, name="api_deck_action"),
     path("api/search/", api.search, name="api_search"),
+    path("api/prep/questions/<int:pk>/answer/", views_prep.prep_answer, name="api_prep_answer"),
+    path("api/prep/questions/<int:pk>/", views_prep.question_action, name="api_question_action"),
+    path("api/prep/exams/<int:pk>/save/", views_prep.exam_save, name="api_exam_save"),
     path("api/goals/<int:pk>/steps/", api.goal_step, name="api_goal_step"),
     path("api/goals/<int:pk>/value/", api.goal_value, name="api_goal_value"),
     path("api/learning/add/", api.learning_add, name="api_learning_add"),

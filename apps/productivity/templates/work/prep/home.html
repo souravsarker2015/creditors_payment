@@ -1,0 +1,193 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% translate "Interview prep" %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+<header class="wp-head">
+  <div class="min-w-0">
+    <h1 class="wp-title">{% translate "Interview prep" %}</h1>
+    <p class="wp-sub">{% translate "Your own question bank, by topic. Practise a little every day — what you get wrong comes back sooner — then sit a timed mock exam to see if you're ready." %}</p>
+  </div>
+  <div class="wp-actions">
+    {% if o.total %}<a href="{% url 'work:questions' %}" class="btn btn-secondary">{% icon "list" %}{% translate "Question bank" %}</a>{% endif %}
+    <a href="{% url 'work:prep_import' %}" class="btn btn-secondary">{% icon "upload" %}{% translate "Import" %}</a>
+    <a href="{% url 'work:question_new' %}" class="btn btn-primary">{% icon "plus" %}{% translate "Question" %}</a>
+  </div>
+</header>
+
+{% if not o.total %}
+{# ── first visit: start from a pack, or write your own ── #}
+<section class="card wpq-start">
+  <header class="card-header"><div><h2 class="card-title">{% icon "sparkles" %}{% translate "Start with a starter pack" %}</h2>
+    <p class="card-subtitle">{% translate "Well-known interview questions with model answers. Pick the subjects you're preparing — you can edit, delete or add to every question." %}</p></div></header>
+  <form method="post" class="card-body" x-data="{ n: 0 }" @change="n = $el.querySelectorAll('input[name=pack]:checked').length">{% csrf_token %}<input type="hidden" name="action" value="pack">
+    <div class="wpq-packs">
+      {% for p in packs %}<label class="wpq-pack" data-color="{{ p.color }}"><input type="checkbox" name="pack" value="{{ p.key }}">
+        <span class="wpq-pack-body"><b>{{ p.name }}</b><small>{{ p.about }}</small><em>{% blocktranslate count counter=p.n %}{{ counter }} question{% plural %}{{ counter }} questions{% endblocktranslate %}</em></span></label>{% endfor %}
+    </div>
+    <div class="wpq-start-foot">
+      <button type="submit" class="btn btn-primary" :disabled="!n">{% icon "plus" %}{% translate "Add these" %}</button>
+      <span class="help">{% translate "Or write your own questions, or import a list." %}</span>
+    </div>
+  </form>
+</section>
+{% else %}
+
+{# ── the exam ahead ── #}
+<section class="wpq-goal" x-data="{ edit: false }">
+  <div class="wpq-ring" style="--p: {{ o.ready }}" role="img" aria-label="{% blocktranslate with n=o.ready %}{{ n }}% ready{% endblocktranslate %}">
+    <svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="52" class="wd-ring-bg"/><circle cx="60" cy="60" r="52" class="wd-ring-fg" pathLength="100"/></svg>
+    <span><b class="num">{{ o.ready }}%</b><small>{% translate "ready" %}</small></span>
+  </div>
+  <div class="wpq-goal-body">
+    {% if ws.prep_exam %}
+    <p class="wfc-hero-kicker">{% translate "Preparing for" %}</p>
+    <h2 class="wpq-goal-title">{{ ws.prep_exam }}</h2>
+    <p class="wpq-goal-sub">{% if days_left is not None %}{% if days_left > 0 %}{% blocktranslate count counter=days_left %}{{ counter }} day to go{% plural %}{{ counter }} days to go{% endblocktranslate %}{% elif days_left == 0 %}<strong>{% translate "It's today — good luck!" %}</strong>{% else %}{% translate "The date has passed — set the next one." %}{% endif %} · {{ ws.prep_exam_date|date:"j M Y" }}{% endif %}
+      {% if per_day %} · {% blocktranslate count counter=per_day %}about {{ counter }} new question a day to see them all{% plural %}about {{ counter }} new questions a day to see them all{% endblocktranslate %}{% endif %}</p>
+    {% else %}
+    <p class="wfc-hero-kicker">{% translate "Readiness" %}</p>
+    <h2 class="wpq-goal-title">{% blocktranslate with m=o.mastered t=o.total %}{{ m }} of {{ t }} questions mastered{% endblocktranslate %}</h2>
+    <p class="wpq-goal-sub">{% translate "Add the exam or interview you're preparing for, and its date, to count down to it." %}</p>
+    {% endif %}
+    <button type="button" class="btn btn-ghost btn-sm" @click="edit = !edit">{% icon "edit" %}{% if ws.prep_exam %}{% translate "Change" %}{% else %}{% translate "Set the exam" %}{% endif %}</button>
+  </div>
+  <form method="post" class="wpq-goal-form" x-show="edit" x-cloak novalidate>{% csrf_token %}<input type="hidden" name="action" value="goal">
+    <div class="form-grid form-grid-2">
+      {% with field=goal_form.prep_exam %}{% include "partials/field.html" %}{% endwith %}
+      {% with field=goal_form.prep_exam_date %}{% include "partials/field.html" %}{% endwith %}
+    </div>
+    {% with field=goal_form.prep_new_per_day %}{% include "partials/field.html" %}{% endwith %}
+    <button type="submit" class="btn btn-primary btn-sm">{% translate "Save" %}</button>
+  </form>
+</section>
+
+{# ── today ── #}
+{% with today_n=o.due|add:o.new_today %}
+<section class="wfc-hero{% if not today_n %} is-done{% endif %}" x-data @keydown.enter.window="if ($event.target === document.body && $refs.go) $refs.go.click()">
+  <div class="wfc-hero-stack" aria-hidden="true"><i></i><i></i><i>{% if today_n %}{{ today_n }}{% else %}✓{% endif %}</i></div>
+  <div class="wfc-hero-body">
+    {% if today_n %}
+    <p class="wfc-hero-kicker">{% translate "Today's practice" %}</p>
+    <h2 class="wfc-hero-title">{% blocktranslate count counter=today_n %}{{ counter }} question{% plural %}{{ counter }} questions{% endblocktranslate %}</h2>
+    <p class="wfc-hero-sub">{% blocktranslate with due=o.due new=o.new_today %}{{ due }} to review · {{ new }} new{% endblocktranslate %}</p>
+    {% else %}
+    <p class="wfc-hero-kicker">{% translate "All done" %}</p>
+    <h2 class="wfc-hero-title">{% translate "Nothing due today" %}</h2>
+    <p class="wfc-hero-sub">{% translate "Practise a topic of your choice, or try a mock exam." %}</p>
+    {% endif %}
+  </div>
+  {% if today_n %}<a href="{% url 'work:prep_practice' %}?set=today" class="btn btn-primary btn-lg wfc-hero-go" x-ref="go">{% icon "play" %}{% translate "Start" %}<kbd class="wp-kbd">Enter</kbd></a>{% endif %}
+</section>
+{% endwith %}
+
+<section class="wfc-stats" aria-label="{% translate 'How you are doing' %}">
+  <div class="wfc-stat" data-tone="flame"><span class="wfc-stat-ico">{% icon "flame" %}</span><b class="num">{{ o.streak }}</b><small>{% blocktranslate count counter=o.streak %}day in a row{% plural %}days in a row{% endblocktranslate %}</small></div>
+  <div class="wfc-stat" data-tone="today"><span class="wfc-stat-ico">{% icon "check" %}</span><b class="num">{{ o.week_n }}</b><small>{% translate "answered this week" %}{% if o.week_acc is not None %} · {% blocktranslate with n=o.week_acc %}{{ n }}% right{% endblocktranslate %}{% endif %}</small></div>
+  <div class="wfc-stat" data-tone="learnt"><span class="wfc-stat-ico">{% icon "trophy" %}</span><b class="num">{{ o.mastered }}</b><small>{% blocktranslate with total=o.total %}mastered, of {{ total }}{% endblocktranslate %}</small></div>
+  <a class="wfc-stat" data-tone="memory" href="{% url 'work:questions' %}?status=weak"><span class="wfc-stat-ico">{% icon "alert" %}</span><b class="num">{{ o.weak }}</b><small>{% translate "got wrong last time" %}</small></a>
+</section>
+
+<div class="wfc-layout">
+  <div class="wpq-main">
+    {# ── topics ── #}
+    <section class="wfc-decks" aria-label="{% translate 'Topics' %}">
+      {% for r in o.rows %}
+      <article class="wfc-deck w-rise" data-color="{{ r.t.color }}" style="--i: {{ forloop.counter0 }}">
+        <a href="{% url 'work:questions' %}?topic={{ r.t.pk }}" class="wfc-deck-link">
+          <span class="wfc-deck-top"><span class="wfc-deck-name">{{ r.t.name }}</span>{% if r.due %}<span class="wfc-due">{{ r.due }}</span>{% endif %}</span>
+          {% if r.t.description %}<span class="wfc-deck-from">{{ r.t.description|truncatechars:80 }}</span>{% endif %}
+          <span class="wpq-mix" role="img" aria-label="{% blocktranslate with m=r.mastered l=r.learning w=r.weak n=r.new %}{{ m }} mastered, {{ l }} learning, {{ w }} weak, {{ n }} new{% endblocktranslate %}">
+            {% if r.total %}<i class="is-mastered" style="flex: {{ r.mastered }}"></i><i class="is-learning" style="flex: {{ r.learning }}"></i><i class="is-weak" style="flex: {{ r.weak }}"></i><i class="is-new" style="flex: {{ r.new }}"></i>{% endif %}</span>
+          <span class="wfc-deck-meta">
+            <span>{% blocktranslate count counter=r.total %}{{ counter }} question{% plural %}{{ counter }} questions{% endblocktranslate %}</span>
+            {% if r.weak %}<span class="is-due">{% blocktranslate with n=r.weak %}{{ n }} weak{% endblocktranslate %}</span>{% endif %}
+            {% if r.new %}<span class="is-new">{% blocktranslate with n=r.new %}{{ n }} new{% endblocktranslate %}</span>{% endif %}
+            <span class="wfc-deck-pct">{{ r.ready }}% {% translate "ready" %}</span>
+          </span>
+        </a>
+        <div class="wfc-deck-acts">
+          {% if r.total %}<a href="{% url 'work:prep_practice' %}?topic={{ r.t.pk }}" class="btn btn-primary btn-sm">{% icon "play" %}{% translate "Practise" %}</a>{% endif %}
+          <a href="{% url 'work:question_new' %}?topic={{ r.t.pk }}" class="btn btn-ghost btn-sm">{% icon "plus" %}{% translate "Add" %}</a>
+          <a href="{% url 'work:prep_topic' r.t.pk %}" class="icon-btn" aria-label="{% translate 'Edit topic' %}" data-tip="{% translate 'Edit topic' %}">{% icon "edit" %}</a>
+        </div>
+      </article>
+      {% endfor %}
+    </section>
+    <p class="wpq-legend"><i class="is-mastered"></i>{% translate "Mastered" %}<i class="is-learning"></i>{% translate "Learning" %}<i class="is-weak"></i>{% translate "Weak" %}<i class="is-new"></i>{% translate "New" %}</p>
+
+    {% if o.weakest %}
+    <section class="card">
+      <header class="card-header"><div><h2 class="card-title">{% icon "alert" %}{% translate "Your weak spots" %}</h2>
+        <p class="card-subtitle">{% translate "Got wrong most recently and most often." %}</p></div>
+        <a href="{% url 'work:prep_practice' %}?status=weak" class="btn btn-secondary btn-sm">{% icon "play" %}{% translate "Practise them" %}</a></header>
+      <ul class="wpq-list">{% for q in o.weakest %}{% include "work/prep/_row.html" %}{% endfor %}</ul>
+    </section>
+    {% endif %}
+  </div>
+
+  <aside class="wpq-side">
+    {# ── practise your way ── #}
+    <section class="card">
+      <header class="card-header"><h2 class="card-title">{% icon "play" %}{% translate "Practise your way" %}</h2></header>
+      <form method="get" action="{% url 'work:prep_practice' %}" class="card-body form-stack">
+        {% include "work/prep/_pick.html" %}
+        <label class="field"><span class="label">{% translate "Which" %}</span>
+          <select name="status" class="form-input"><option value="">{% translate "Most needed first" %}</option><option value="new">{% translate "Only new" %}</option><option value="weak">{% translate "Only weak" %}</option><option value="due">{% translate "Only due" %}</option><option value="mastered">{% translate "Only mastered" %}</option></select></label>
+        <div class="form-grid form-grid-2">
+          <label class="field"><span class="label">{% translate "How many" %}</span><input type="number" name="count" value="10" min="1" max="100" class="form-input" inputmode="numeric"></label>
+          <label class="wf-check wpq-shuffle"><input type="checkbox" name="order" value="random">{% translate "Shuffle" %}</label>
+        </div>
+        <button type="submit" class="btn btn-primary">{% icon "play" %}{% translate "Start practice" %}</button>
+      </form>
+    </section>
+
+    {# ── a mock exam ── #}
+    <section class="card" id="exam">
+      <header class="card-header"><div><h2 class="card-title">{% icon "timer" %}{% translate "Mock exam" %}</h2>
+        <p class="card-subtitle">{% translate "Timed, no answers shown until you hand it in — like the real thing." %}</p></div></header>
+      <form method="post" action="{% url 'work:exam_new' %}" class="card-body form-stack">{% csrf_token %}
+        {% include "work/prep/_pick.html" %}
+        <div class="form-grid form-grid-2">
+          <label class="field"><span class="label">{% translate "Questions" %}</span><input type="number" name="count" value="20" min="1" max="100" class="form-input" inputmode="numeric"></label>
+          <label class="field"><span class="label">{% translate "Minutes" %}</span><input type="number" name="minutes" value="30" min="1" max="600" class="form-input" inputmode="numeric"></label>
+        </div>
+        <button type="submit" class="btn btn-primary">{% icon "timer" %}{% translate "Start the exam" %}</button>
+      </form>
+      {% if exams %}
+      <ul class="wpq-exams">
+        {% for e in exams %}<li><a href="{% url 'work:exam' e.pk %}"><span class="wpq-exam-name">{{ e.title }}</span>
+          <span class="wpq-exam-meta">{{ e.started_at|date:"j M" }} · {% blocktranslate count counter=e.question_ids|length %}{{ counter }} question{% plural %}{{ counter }} questions{% endblocktranslate %}</span></a>
+          {% if e.score is not None %}<b class="wpq-score num" data-tone="{% if e.score >= 80 %}good{% elif e.score >= 50 %}warn{% else %}bad{% endif %}">{{ e.score|floatformat:0 }}%</b>
+          {% elif e.finished_at %}<span class="badge badge-dot" data-tone="warn">{% translate "To mark" %}</span>{% else %}<span class="badge badge-dot" data-tone="good">{% translate "In progress" %}</span>{% endif %}</li>{% endfor %}
+      </ul>
+      {% endif %}
+    </section>
+
+    {# ── the last two weeks ── #}
+    <section class="card">
+      <header class="card-header"><h2 class="card-title">{% translate "Last 14 days" %}</h2></header>
+      <div class="card-body !pt-0"><div class="wpq-days">{% for d in o.days %}<span data-tip="{{ d.date|date:'D j M' }} · {{ d.n }}"><i style="height: {{ d.pct }}%"{% if not d.n %} class="is-zero"{% endif %}></i></span>{% endfor %}</div></div>
+    </section>
+
+    <details class="card wpq-more">
+      <summary class="card-header"><h2 class="card-title">{% icon "plus" %}{% translate "New topic" %}</h2></summary>
+      <form method="post" class="card-body form-stack" novalidate>{% csrf_token %}<input type="hidden" name="action" value="topic">
+        {% with field=topic_form.name %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=topic_form.description %}{% include "partials/field.html" %}{% endwith %}
+        <button type="submit" class="btn btn-secondary">{% translate "Add the topic" %}</button>
+      </form>
+    </details>
+    <details class="card wpq-more">
+      <summary class="card-header"><h2 class="card-title">{% icon "sparkles" %}{% translate "Starter packs" %}</h2></summary>
+      <form method="post" class="card-body form-stack">{% csrf_token %}<input type="hidden" name="action" value="pack">
+        {% for p in packs %}<label class="wf-check"><input type="checkbox" name="pack" value="{{ p.key }}"{% if p.added %} disabled checked{% endif %}>{{ p.name }} <small class="help">({{ p.n }})</small></label>{% endfor %}
+        <button type="submit" class="btn btn-secondary btn-sm">{% translate "Add the ticked packs" %}</button>
+      </form>
+    </details>
+    <p class="wpq-export">{% icon "download" %}<a href="{% url 'work:prep_export' %}">JSON</a> · <a href="{% url 'work:prep_export' %}?format=md">Markdown</a></p>
+  </aside>
+</div>
+{% endif %}
+{% endblock %}

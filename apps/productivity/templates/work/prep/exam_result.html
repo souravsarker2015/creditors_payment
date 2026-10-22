@@ -1,0 +1,77 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{{ exam.title }} | {% translate "Mock exam" %}{% endblock %}
+
+{% block work %}
+<header class="wp-head">
+  <div class="min-w-0">
+    <a href="{% url 'work:prep' %}" class="back-link">{% icon "chevron-left" %}{% translate "Interview prep" %}</a>
+    <h1 class="wp-title">{{ exam.title }}</h1>
+    <p class="wp-sub">{{ exam.started_at|date:"j M Y, H:i" }} · {% blocktranslate with took=took|hm minutes=exam.minutes %}took {{ took }} of {{ minutes }} min{% endblocktranslate %} · {% blocktranslate with a=answered n=exam.question_ids|length %}{{ a }} of {{ n }} answered{% endblocktranslate %}</p>
+  </div>
+  <div class="wp-actions">
+    {% if wrong %}<a href="{% url 'work:prep_practice' %}?ids={{ wrong }}" class="btn btn-primary">{% icon "repeat" %}{% translate "Practise the ones I missed" %}</a>{% endif %}
+    <form method="post" data-confirm="{{ _("Delete this exam? The answers already counted in your practice stay.") }}">{% csrf_token %}<input type="hidden" name="action" value="delete"><button type="submit" class="icon-btn" aria-label="{% translate 'Delete' %}">{% icon "trash" %}</button></form>
+  </div>
+</header>
+
+<section class="wpq-goal" id="results">
+  <div class="wpq-ring" style="--p: {% if exam.score is not None %}{{ exam.score|floatformat:0 }}{% else %}0{% endif %}">
+    <svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="52" class="wd-ring-bg"/><circle cx="60" cy="60" r="52" class="wd-ring-fg" pathLength="100"/></svg>
+    <span><b class="num">{% if exam.score is not None %}{{ exam.score|floatformat:0 }}%{% else %}…{% endif %}</b><small>{% translate "score" %}</small></span>
+  </div>
+  <div class="wpq-goal-body">
+    {% if exam.graded_at %}
+    <p class="wfc-hero-kicker">{% translate "Marked" %}</p>
+    <h2 class="wpq-goal-title">{% if exam.score >= 80 %}{% translate "Ready — well done." %}{% elif exam.score >= 50 %}{% translate "Getting there." %}{% else %}{% translate "Keep practising." %}{% endif %}</h2>
+    <p class="wpq-goal-sub">{% translate "Every answer has gone into your practice: what you missed comes back soon." %}</p>
+    {% else %}
+    <p class="wfc-hero-kicker">{% translate "Almost done" %}</p>
+    <h2 class="wpq-goal-title">{% blocktranslate count counter=report.to_mark|length %}Mark {{ counter }} written answer{% plural %}Mark {{ counter }} written answers{% endblocktranslate %}</h2>
+    <p class="wpq-goal-sub">{% translate "Multiple choice is marked. Compare your written answers with the model ones below and mark them — then you get your score." %}</p>
+    {% endif %}
+  </div>
+</section>
+
+{% if report.by_topic|length > 1 %}
+<section class="card wpq-bytopic">
+  <header class="card-header"><h2 class="card-title">{% translate "By topic" %}</h2></header>
+  <ul class="wr-rank">{% for t in report.by_topic %}<li><span class="wr-rank-name">{{ t.name }}</span><span class="wr-rank-val num">{{ t.got|floatformat:"-1" }} / {{ t.n }} · {{ t.pct }}%</span><span class="wr-rank-bar"><i style="width: {{ t.pct }}%; background: var(--status-good)"></i></span></li>{% endfor %}</ul>
+</section>
+{% endif %}
+
+<form method="post">{% csrf_token %}<input type="hidden" name="action" value="mark">
+<ol class="wpq-review">
+  {% for x in report.items %}
+  <li class="card wpq-review-item" data-mark="{% if x.mark is None %}todo{% elif x.mark >= 1 %}right{% elif x.mark > 0 %}partly{% else %}wrong{% endif %}">
+    <header class="wpq-q-head"><b class="wpq-qn">Q{{ x.n }}</b><span class="wt-proj"><span class="wt-dot" data-color="{{ x.q.topic.color }}"></span>{{ x.q.topic.name }}</span>
+      <span class="wpq-diff" data-d="{{ x.q.difficulty }}">{{ x.q.get_difficulty_display }}</span>
+      {% if x.a.flag %}<span class="wpq-kind">{% icon "flag" %}{% translate "Flagged" %}</span>{% endif %}
+      <span class="wpq-mark-label">{% if x.mark is None %}{% translate "To mark" %}{% elif x.mark >= 1 %}{% translate "Right" %}{% elif x.mark > 0 %}{% translate "Partly" %}{% else %}{% translate "Wrong" %}{% endif %}</span>
+      <a href="{% url 'work:question' x.q.pk %}" class="icon-btn" aria-label="{% translate 'Open the question' %}">{% icon "external" %}</a></header>
+    <div class="wpq-prompt wn-md" data-render-markdown="{{ x.q.prompt }}"></div>
+    {% if x.q.kind == "choice" %}
+    <ul class="wpq-options is-review">{% for o in x.q.options %}<li class="wpq-option" data-state="{% if forloop.counter0 in x.correct %}{% if forloop.counter0 in x.chosen %}right{% else %}missed{% endif %}{% elif forloop.counter0 in x.chosen %}wrong{% endif %}"><kbd>{{ forloop.counter }}</kbd><span>{{ o.text }}</span></li>{% endfor %}</ul>
+    {% if x.q.explanation %}<div class="wpq-why"><h3>{% translate "Why" %}</h3><div class="wn-md" data-render-markdown="{{ x.q.explanation }}"></div></div>{% endif %}
+    {% else %}
+    <div class="wpq-compare">
+      <section><h3>{% translate "Your answer" %}</h3>{% if x.a.text %}<pre class="wpq-mine">{{ x.a.text }}</pre>{% else %}<p class="help">{% translate "(no answer)" %}</p>{% endif %}</section>
+      <section><h3>{% translate "Model answer" %}</h3><div class="wn-md" data-render-markdown="{{ x.q.answer }}"></div>
+        {% if x.q.points_list %}<ul class="wpq-pointlist">{% for p in x.q.points_list %}<li>{{ p }}</li>{% endfor %}</ul>{% endif %}</section>
+    </div>
+    {% if not exam.graded_at and x.mark is None %}
+    <fieldset class="wpq-markit"><legend class="label">{% translate "Your mark" %}</legend>
+      <label><input type="radio" name="mark-{{ x.q.pk }}" value="1" required>{% translate "Right" %}</label>
+      <label><input type="radio" name="mark-{{ x.q.pk }}" value="0.5">{% translate "Partly" %}</label>
+      <label><input type="radio" name="mark-{{ x.q.pk }}" value="0">{% translate "Wrong" %}</label></fieldset>
+    {% endif %}
+    {% endif %}
+  </li>
+  {% endfor %}
+</ol>
+{% if report.to_mark and not exam.graded_at %}<div class="form-actions wpq-markbar"><button type="submit" class="btn btn-primary">{% icon "check" %}{% translate "Save my marks" %}</button></div>{% endif %}
+</form>
+{% endblock %}
+
+{% block work_libs %}{% include "work/prep/_libs.html" %}{% endblock %}
