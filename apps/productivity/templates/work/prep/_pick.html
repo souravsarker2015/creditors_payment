@@ -6,3 +6,5 @@
   <label class="field"><span class="label">{% translate "Type" %}</span>
     <select name="kind" class="form-input"><option value="">{% translate "Any" %}</option>{% for v, l in kinds %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></label>
 </div>
+<label class="field"><span class="label">{% translate "Level" %}</span>
+  <select name="level" class="form-input">{% for v, l in levels %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></label>

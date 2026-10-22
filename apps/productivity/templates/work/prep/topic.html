@@ -4,21 +4,148 @@
 {% block title %}{{ t.name }} | {% translate "Interview prep" %}{% endblock %}
 
 {% block work %}
+{{ contents|json_script:"prep-contents" }}
+{{ prep_text|json_script:"prep-text" }}
 <header class="wp-head">
   <div class="min-w-0">
-    <a href="{% url 'work:prep' %}" class="back-link">{% icon "chevron-left" %}{% translate "Interview prep" %}</a>
-    <h1 class="wp-title">{{ t.name }}</h1>
-    <p class="wp-sub">{% blocktranslate count counter=n %}{{ counter }} question{% plural %}{{ counter }} questions{% endblocktranslate %}</p>
+    <a href="{% url 'work:prep_contents' %}" class="back-link">{% icon "chevron-left" %}{% translate "Contents" %}</a>
+    <h1 class="wp-title"><span class="wt-dot" data-color="{{ t.color }}"></span> {{ t.name }} <span class="wpq-code">{{ t.code }}</span></h1>
+    <p class="wp-sub">{% blocktranslate count counter=n %}{{ counter }} question{% plural %}{{ counter }} questions{% endblocktranslate %}{% if ready %} · {% blocktranslate with r=ready.ready %}{{ r }}% ready{% endblocktranslate %}{% endif %}{% if t.description %} · {{ t.description }}{% endif %}</p>
+  </div>
+  <div class="wp-actions">
+    {% if n %}<a href="{% url 'work:prep_practice' %}?topic={{ t.pk }}&amp;order=sequence" class="btn btn-secondary" data-tip="{% translate 'Every question from the first, in this order' %}">{% icon "list" %}{% translate "Study in order" %}</a>
+    <a href="{% url 'work:prep_practice' %}?topic={{ t.pk }}" class="btn btn-primary">{% icon "play" %}{% translate "Practise" %}</a>{% endif %}
+    <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
+      <button type="button" class="icon-btn" @click="open = !open" :aria-expanded="open" aria-label="{% translate 'More actions' %}">{% icon "dots" %}</button>
+      <div class="menu" x-show="open" x-cloak role="menu">
+        <a class="menu-item" role="menuitem" href="{% url 'work:questions' %}?topic={{ t.pk }}">{% icon "list" %}{% translate "In the question bank" %}</a>
+        <a class="menu-item" role="menuitem" href="{% url 'work:prep_sheet' %}?topic={{ t.pk }}">{% icon "printer" %}{% translate "Revision sheet" %}</a>
+        <a class="menu-item" role="menuitem" href="{% url 'work:prep_export' %}?topic={{ t.pk }}&amp;format=md">{% icon "download" %}{% translate "Export (Markdown)" %}</a>
+        <button type="button" class="menu-item" role="menuitem" @click="open = false; document.getElementById('topic-details').open = true; document.getElementById('topic-details').scrollIntoView({ behavior: 'smooth' })">{% icon "edit" %}{% translate "Edit the topic" %}</button>
+      </div>
+    </div>
   </div>
 </header>
-<form method="post" class="card" novalidate>{% csrf_token %}
-  <div class="card-body form-stack">
-    {% with field=form.name %}{% include "partials/field.html" %}{% endwith %}
-    {% with field=form.description %}{% include "partials/field.html" %}{% endwith %}
-    {% with field=form.color %}{% include "partials/field.html" %}{% endwith %}
+
+<div class="wpc" x-data="prepContents">
+  <div class="wpc-bar">
+    <div class="input-icon wf-search">{% icon "search" %}
+      <input type="search" x-model="find" class="form-input input-compact" placeholder="{% translate 'Find in this topic, or a number like 2.3' %}" aria-label="{% translate 'Find in this topic' %}"></div>
+    <button type="button" class="btn btn-secondary btn-sm" @click="expandAll = !expandAll" x-text="expandAll ? '{{ _("Hide the answers")|escapejs }}' : '{{ _("Show the answers")|escapejs }}'"></button>
+    <span class="help wpc-saving" x-show="saving" x-cloak>{% translate "Saving…" %}</span>
   </div>
-  <div class="form-actions"><button type="submit" class="btn btn-primary">{% icon "check" %}{% translate "Save" %}</button></div>
-</form>
-<form method="post" class="wpq-danger" data-confirm="{{ _("Delete this topic and all its questions? You can bring them back from Recently deleted.") }}">{% csrf_token %}<input type="hidden" name="action" value="delete">
-  <button type="submit" class="btn btn-ghost btn-sm">{% icon "trash" %}{% translate "Delete the topic and its questions" %}</button></form>
+
+  <div class="wpc-sections" x-ref="sections">
+    <template x-for="(s, si) in sections" :key="s.id">
+      <section class="card wpc-section" :data-section="s.id" x-show="s.id || s.questions.length || !sections.slice(1).length">
+        <header class="wpc-head">
+          <span class="wpc-grip" x-show="s.id" aria-hidden="true" title="{% translate 'Drag to move the section' %}">{% icon "grip" %}</span>
+          <b class="wpc-no" x-text="s.id ? sectionNo(s) + '.' : ''"></b>
+          <template x-if="renaming !== s.id">
+            <h2 class="wpc-name" x-text="s.id ? s.name : '{{ _("Not in a section")|escapejs }}'" @dblclick="s.id && startRename(s)"></h2>
+          </template>
+          <template x-if="renaming === s.id">
+            <form class="wpc-rename" @submit.prevent="rename(s)"><input class="form-input input-compact" x-model="renameText" x-ref="renameBox" maxlength="120" @keydown.escape.stop="renaming = null" @blur="rename(s)" aria-label="{% translate 'Section name' %}"></form>
+          </template>
+          <span class="wpc-count" x-text="mastered(s) + ' / ' + s.questions.length" :title="'{{ _("mastered")|escapejs }}'"></span>
+          <div class="wpc-head-acts" x-show="s.id">
+            <button type="button" class="icon-btn" @click="startRename(s)" aria-label="{% translate 'Rename the section' %}" data-tip="{% translate 'Rename' %}">{% icon "edit" %}</button>
+            <a :href="'{% url "work:prep_practice" %}?topic={{ t.pk }}&section=' + s.id + '&order=sequence'" class="icon-btn" aria-label="{% translate 'Study this section in order' %}" data-tip="{% translate 'Study this section in order' %}">{% icon "play" %}</a>
+            <button type="button" class="icon-btn is-danger" @click="dropSection(s)" aria-label="{% translate 'Delete the section' %}" data-tip="{% translate 'Delete the section (its questions stay)' %}">{% icon "trash" %}</button>
+          </div>
+        </header>
+
+        <ol class="wpc-list" :data-section="s.id">
+          <template x-for="q in s.questions" :key="q.id">
+            <li class="wpc-q" :data-id="q.id" :class="{ 'is-open': open === q.id, 'is-hidden': !matches(q) }">
+              <div class="wpc-q-row">
+                <span class="wpc-grip" aria-hidden="true">{% icon "grip" %}</span>
+                <span class="wpc-num num" x-text="q.number"></span>
+                <span class="wpq-dot" :data-status="q.status" :title="q.statusLabel"></span>
+                <button type="button" class="wpc-title" @click="toggle(q)" :aria-expanded="(open === q.id || expandAll).toString()" x-text="q.title"></button>
+                <span class="wpc-tags">
+                  <span class="wpq-diff" :data-d="q.difficulty" x-text="q.difficultyLabel"></span>
+                  <span class="wpq-level" x-show="q.level" x-text="q.levelLabel"></span>
+                  <span class="wpq-kind" x-text="q.kindLabel"></span>
+                </span>
+                <span class="wpc-acts">
+                  <button type="button" class="icon-btn" @click="startEdit(q)" aria-label="{% translate 'Edit here' %}" data-tip="{% translate 'Edit here' %}">{% icon "edit" %}</button>
+                  <a :href="q.url" class="icon-btn wpc-go" aria-label="{% translate 'Open' %}" data-tip="{% translate 'Open and practise' %}">{% icon "external" %}</a>
+                  <button type="button" class="icon-btn is-danger" @click="remove(q, s)" aria-label="{% translate 'Delete' %}" data-tip="{% translate 'Delete' %}">{% icon "trash" %}</button>
+                </span>
+              </div>
+              {# the answer, read in place #}
+              <div class="wpc-answer" x-show="(open === q.id || expandAll) && editing !== q.id" x-cloak>
+                <div class="wn-md" x-html="md(q.answer) || '<p class=help>{{ _("No answer written yet.")|escapejs }}</p>'"></div>
+                <ul class="wpq-sheet-points" x-show="q.key_points"><template x-for="p in points(q)"><li x-text="p"></li></template></ul>
+                <a :href="q.url" class="wpc-open">{% translate "Open and practise" %} →</a>
+              </div>
+              {# edited in place #}
+              <form class="wpc-edit" x-show="editing === q.id" x-cloak @submit.prevent="saveEdit(q)" @keydown.ctrl.enter.prevent="saveEdit(q)" @keydown.meta.enter.prevent="saveEdit(q)" @keydown.escape.stop="editing = null">
+                <label class="label">{% translate "Question" %}<textarea class="form-input" rows="2" x-model="draft.prompt" required></textarea></label>
+                <label class="label">{% translate "Answer" %}<textarea class="form-input" rows="6" x-model="draft.answer" data-paste-images></textarea></label>
+                <label class="label">{% translate "Key points" %} <span class="help">{% translate "one per line" %}</span><textarea class="form-input" rows="3" x-model="draft.key_points"></textarea></label>
+                <div class="wpc-edit-row">
+                  <select class="form-input input-compact" x-model="draft.kind" aria-label="{% translate 'Type' %}" :disabled="q.kind === 'choice'">{% for v, l in kinds %}<option value="{{ v }}"{% if v == "choice" %} disabled{% endif %}>{{ l }}</option>{% endfor %}</select>
+                  <select class="form-input input-compact" x-model.number="draft.difficulty" aria-label="{% translate 'Difficulty' %}">{% for v, l in difficulties %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select>
+                  <select class="form-input input-compact" x-model="draft.level" aria-label="{% translate 'Level' %}">{% for v, l in levels %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select>
+                  <select class="form-input input-compact" x-model.number="draft.section" aria-label="{% translate 'Section' %}">
+                    <template x-for="o in sections" :key="o.id"><option :value="o.id" x-text="o.id ? sectionNo(o) + '. ' + o.name : '{{ _("Not in a section")|escapejs }}'" :selected="o.id === draft.section"></option></template>
+                  </select>
+                </div>
+                <div class="wpc-edit-acts">
+                  <button type="submit" class="btn btn-primary btn-sm">{% icon "check" %}{% translate "Save" %} <kbd class="wp-kbd">Ctrl+Enter</kbd></button>
+                  <button type="button" class="btn btn-ghost btn-sm" @click="editing = null">{% translate "Cancel" %}</button>
+                  <a :href="q.edit" class="btn btn-ghost btn-sm">{% translate "All fields (hints, choices, code…)" %}</a>
+                </div>
+              </form>
+            </li>
+          </template>
+        </ol>
+
+        {# add a question to this section, right here #}
+        <form class="wpc-add" @submit.prevent="add(s)" @keydown.ctrl.enter.prevent="add(s)" @keydown.meta.enter.prevent="add(s)">
+          <textarea class="form-input" rows="1" x-model="adding[s.id].prompt" @focus="adding[s.id].open = true" @keydown.enter.exact.prevent="$el.closest('form').querySelector('[data-answer]').focus()"
+                    placeholder="{% translate '+ Write a question and press Enter for its answer…' %}" aria-label="{% translate 'New question' %}"></textarea>
+          <div class="wpc-add-more" x-show="adding[s.id].open" x-cloak>
+            <textarea class="form-input" rows="4" data-answer x-model="adding[s.id].answer" placeholder="{% translate 'The answer (Markdown works). Ctrl+Enter adds it.' %}" aria-label="{% translate 'Answer' %}"></textarea>
+            <div class="wpc-edit-row">
+              <select class="form-input input-compact" x-model="adding[s.id].kind" aria-label="{% translate 'Type' %}"><option value="short">{% translate "Short answer" %}</option><option value="long">{% translate "Explain / design" %}</option><option value="code">{% translate "Coding" %}</option></select>
+              <select class="form-input input-compact" x-model.number="adding[s.id].difficulty" aria-label="{% translate 'Difficulty' %}">{% for v, l in difficulties %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select>
+              <select class="form-input input-compact" x-model="adding[s.id].level" aria-label="{% translate 'Level' %}">{% for v, l in levels %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select>
+              <button type="submit" class="btn btn-primary btn-sm">{% icon "plus" %}{% translate "Add" %}</button>
+              <button type="button" class="btn btn-ghost btn-sm" @click="adding[s.id].open = false">{% translate "Close" %}</button>
+            </div>
+          </div>
+        </form>
+      </section>
+    </template>
+  </div>
+
+  <form class="wpc-new-section" @submit.prevent="addSection()">
+    <input class="form-input" x-model="newSection" maxlength="120" placeholder="{% translate 'New section, e.g. Basics, Concurrency, Data model' %}" aria-label="{% translate 'New section' %}">
+    <button type="submit" class="btn btn-secondary">{% icon "plus" %}{% translate "Add a section" %}</button>
+  </form>
+  <p class="wpq-keys">{% translate "Drag the handles to change the order — between sections too. Numbers follow the order: 2.3 is the third question of section 2." %}</p>
+</div>
+
+<details class="card wpq-more" id="topic-details"{% if form.errors %} open{% endif %}>
+  <summary class="card-header"><h2 class="card-title">{% icon "edit" %}{% translate "The topic" %}</h2></summary>
+  <form method="post" novalidate>{% csrf_token %}
+    <div class="card-body form-stack">
+      <div class="form-grid form-grid-2">
+        {% with field=form.name %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.code %}{% include "partials/field.html" %}{% endwith %}
+      </div>
+      {% with field=form.description %}{% include "partials/field.html" %}{% endwith %}
+      {% with field=form.color %}{% include "partials/field.html" %}{% endwith %}
+    </div>
+    <div class="form-actions"><button type="submit" class="btn btn-primary">{% icon "check" %}{% translate "Save" %}</button></div>
+  </form>
+  <form method="post" class="card-body wpq-danger" data-confirm="{{ _("Delete this topic and all its questions? You can bring them back from Recently deleted.") }}">{% csrf_token %}<input type="hidden" name="action" value="delete">
+    <button type="submit" class="btn btn-ghost btn-sm">{% icon "trash" %}{% translate "Delete the topic and its questions" %}</button></form>
+</details>
 {% endblock %}
+
+{% block work_libs %}{% include "work/prep/_libs.html" %}<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>{% endblock %}
+{% block work_js %}<script src="{% asset 'js/prep.js' %}"></script>{% endblock %}

@@ -90,6 +90,10 @@ def _clean_shapes(data, texts):
         for key in texts:
             if isinstance(n.get(key), str):
                 n[key] = n[key][:MAX_TEXT * (8 if key in ("note", "attrs", "methods") else 4 if key == "label" else 1)]
+        if "src" in n:                      # a picture: one of ours (/media/…) or on the web — nothing else
+            src = n["src"] if isinstance(n["src"], str) else ""
+            if not (src.startswith("/") and not src.startswith("//") or src.startswith("https://")) or len(src) > 2000:
+                n.pop("src")
     data["nodes"] = nodes
     data["edges"] = [e for e in edges if isinstance(e, dict) and e.get("from") in ids and e.get("to") in ids]
     for e in data["edges"]:

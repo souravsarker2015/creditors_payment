@@ -10,7 +10,8 @@
     <p class="wp-sub">{% translate "Your own question bank, by topic. Practise a little every day — what you get wrong comes back sooner — then sit a timed mock exam to see if you're ready." %}</p>
   </div>
   <div class="wp-actions">
-    {% if o.total %}<a href="{% url 'work:questions' %}" class="btn btn-secondary">{% icon "list" %}{% translate "Question bank" %}</a>{% endif %}
+    {% if o.total %}<a href="{% url 'work:prep_contents' %}" class="btn btn-secondary">{% icon "book" %}{% translate "Contents" %}</a>
+    <a href="{% url 'work:questions' %}" class="btn btn-secondary">{% icon "list" %}{% translate "Question bank" %}</a>{% endif %}
     <a href="{% url 'work:prep_import' %}" class="btn btn-secondary">{% icon "upload" %}{% translate "Import" %}</a>
     <a href="{% url 'work:question_new' %}" class="btn btn-primary">{% icon "plus" %}{% translate "Question" %}</a>
   </div>
@@ -95,7 +96,7 @@
     <section class="wfc-decks" aria-label="{% translate 'Topics' %}">
       {% for r in o.rows %}
       <article class="wfc-deck w-rise" data-color="{{ r.t.color }}" style="--i: {{ forloop.counter0 }}">
-        <a href="{% url 'work:questions' %}?topic={{ r.t.pk }}" class="wfc-deck-link">
+        <a href="{% url 'work:prep_topic' r.t.pk %}" class="wfc-deck-link">
           <span class="wfc-deck-top"><span class="wfc-deck-name">{{ r.t.name }}</span>{% if r.due %}<span class="wfc-due">{{ r.due }}</span>{% endif %}</span>
           {% if r.t.description %}<span class="wfc-deck-from">{{ r.t.description|truncatechars:80 }}</span>{% endif %}
           <span class="wpq-mix" role="img" aria-label="{% blocktranslate with m=r.mastered l=r.learning w=r.weak n=r.new %}{{ m }} mastered, {{ l }} learning, {{ w }} weak, {{ n }} new{% endblocktranslate %}">
@@ -109,8 +110,8 @@
         </a>
         <div class="wfc-deck-acts">
           {% if r.total %}<a href="{% url 'work:prep_practice' %}?topic={{ r.t.pk }}" class="btn btn-primary btn-sm">{% icon "play" %}{% translate "Practise" %}</a>{% endif %}
-          <a href="{% url 'work:question_new' %}?topic={{ r.t.pk }}" class="btn btn-ghost btn-sm">{% icon "plus" %}{% translate "Add" %}</a>
-          <a href="{% url 'work:prep_topic' r.t.pk %}" class="icon-btn" aria-label="{% translate 'Edit topic' %}" data-tip="{% translate 'Edit topic' %}">{% icon "edit" %}</a>
+          <a href="{% url 'work:prep_topic' r.t.pk %}" class="btn btn-ghost btn-sm">{% icon "list" %}{% translate "Contents" %}</a>
+          <a href="{% url 'work:prep_topic' r.t.pk %}#topic-details" class="icon-btn" aria-label="{% translate 'Edit topic' %}" data-tip="{% translate 'Edit topic' %}">{% icon "edit" %}</a>
         </div>
       </article>
       {% endfor %}
@@ -137,7 +138,8 @@
           <select name="status" class="form-input"><option value="">{% translate "Most needed first" %}</option><option value="new">{% translate "Only new" %}</option><option value="weak">{% translate "Only weak" %}</option><option value="due">{% translate "Only due" %}</option><option value="mastered">{% translate "Only mastered" %}</option></select></label>
         <div class="form-grid form-grid-2">
           <label class="field"><span class="label">{% translate "How many" %}</span><input type="number" name="count" value="10" min="1" max="100" class="form-input" inputmode="numeric"></label>
-          <label class="wf-check wpq-shuffle"><input type="checkbox" name="order" value="random">{% translate "Shuffle" %}</label>
+          <label class="field"><span class="label">{% translate "Order" %}</span>
+            <select name="order" class="form-input"><option value="smart">{% translate "Most needed first" %}</option><option value="sequence">{% translate "In order (by number)" %}</option><option value="random">{% translate "Shuffled" %}</option></select></label>
         </div>
         <button type="submit" class="btn btn-primary">{% icon "play" %}{% translate "Start practice" %}</button>
       </form>

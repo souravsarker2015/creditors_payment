@@ -25,6 +25,7 @@
         <div class="menu" x-show="open" x-cloak role="menu" @click="open = false">
           <button type="button" class="menu-item" role="menuitem" @click="exportPNG()">{% icon "image" %}{% translate "Picture (PNG)" %}</button>
           <button type="button" class="menu-item" role="menuitem" @click="exportSVG()">{% icon "diagram" %}{% translate "Drawing (SVG)" %}</button>
+          {% if diagram.kind == "drawing" or draggable %}<button type="button" class="menu-item" role="menuitem" x-show="kind === 'drawing' || mode === 'draw'" @click="exportDrawio()">{% icon "shapes" %}{% translate "draw.io file (.drawio)" %}</button>{% endif %}
           {% if diagram.kind == "mindmap" %}<button type="button" class="menu-item" role="menuitem" @click="copyText()">{% icon "copy" %}{% translate "Copy as an outline" %}</button>
           <button type="button" class="menu-item" role="menuitem" @click="makeCards()">{% icon "cards" %}{% translate "Make flashcards" %}</button>
           {% elif diagram.kind == "system" %}<button type="button" class="menu-item" role="menuitem" @click="copyText()">{% icon "copy" %}{% translate "Copy as Mermaid text" %}</button>

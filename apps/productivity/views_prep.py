@@ -19,11 +19,11 @@ from apps.trash.services import trash
 from . import prep
 from .access import work_required
 from .forms import PrepGoalForm, PrepTopicForm, QuestionForm
-from .models import Difficulty, PrepExam, PrepTopic, Question, QuestionKind, WorkSettings
+from .models import Difficulty, Level, PrepExam, PrepSection, PrepTopic, Question, QuestionKind, WorkSettings
 from .prep_packs import PACKS
 from .views import render_work
 
-FILTER_KEYS = ("topic", "kind", "difficulty", "status", "starred", "q", "company", "tag")
+FILTER_KEYS = ("topic", "section", "kind", "difficulty", "level", "status", "starred", "q", "company", "tag")
 
 
 def _filters(source):
@@ -42,6 +42,8 @@ def _texts():
         "runLoading": _("Getting ready — the first run takes a few seconds…"), "running": _("Running…"),
         "runTimeout": _("Stopped: it ran too long. Is there an endless loop?"), "runPass": _("All checks passed"),
         "runMatch": _("Same result as the model answer"), "runDiffer": _("A different result from the model answer's"),
+        "deleted": _("Question deleted"), "added": _("Question added"), "writeFirst": _("Write the question first."), "notSaved": _("Not saved — check your connection."),
+        "dropSection": _("Delete this section? Its questions stay, outside any section."),
         "runFail": _("A check failed"), "runError": _("There's an error"), "runDone": _("Ran in %(ms)s ms"),
     }
 
@@ -86,33 +88,93 @@ def prep_view(request):
         "o": o, "ws": s, "goal_form": goal_form, "topic_form": topic_form, "packs": packs, "today": today, "days_left": days_left,
         "per_day": -(-o["new"] // days_left) if days_left and days_left > 0 and o["new"] else None,     # rounded up
         "exams": PrepExam.objects.filter(owner=user)[:8], "kinds": QuestionKind.choices, "difficulties": Difficulty.choices,
-        "topics": PrepTopic.objects.filter(owner=user),
+        "topics": PrepTopic.objects.filter(owner=user), "levels": Level.choices,
     })
 
 
 # ── The question bank ─────────────────────────────────────────────────────
+SORTS = {"": prep.SEQUENCE, "hard": ("-difficulty", "topic__name", "pk"), "weak": ("-lapses", "due", "pk"), "new": ("-created_at",)}
+
+
 @work_required
 def questions_view(request):
     user = request.user
+    if request.method == "POST":
+        return _bulk(request)
     f = _filters(request.GET)
+    if f["q"] and prep.NUMBER.match(f["q"]):          # "PY-2.3": straight to that question
+        topic = PrepTopic.objects.filter(owner=user, pk=f["topic"]).first() if f["topic"].isdigit() else None
+        hit = prep.find_number(user, f["q"], topic)
+        if hit:
+            return redirect("work:question", pk=hit.pk)
+    sort = request.GET.get("sort", "") if request.GET.get("sort", "") in SORTS else ""
     qs = prep.filtered(user, f).prefetch_related("tags")
-    page = Paginator(qs.order_by("topic__order", "topic__name", "difficulty", "pk"), 50).get_page(request.GET.get("page"))
+    page = Paginator(qs.order_by(*SORTS[sort]), 50).get_page(request.GET.get("page"))
+    page.object_list = prep.numbered(user, page.object_list)
     base = request.GET.copy()
     base.pop("page", None)
     from apps.accounts.views import _page_window
 
     return render_work(request, "work/prep/questions.html", {
-        "page": page, "f": f, "filtered": any(f.values()), "topics": PrepTopic.objects.filter(owner=user),
-        "kinds": QuestionKind.choices, "difficulties": Difficulty.choices, "total": qs.count(),
+        "page": page, "f": f, "filtered": any(f.values()), "topics": PrepTopic.objects.filter(owner=user), "sort": sort,
+        "sections": PrepSection.objects.filter(owner=user, topic_id=f["topic"]) if f["topic"].isdigit() else [],
+        "all_sections": PrepSection.objects.filter(owner=user).select_related("topic").order_by("topic__order", "topic__name", "order", "pk"),
+        "levels": Level.choices[1:], "kinds": QuestionKind.choices, "difficulties": Difficulty.choices, "total": qs.count(),
         "query": base.urlencode(), "base_query_string": base.urlencode(), "pagination_window": _page_window(page),
     })
 
 
+def _bulk(request):
+    """Picked questions in the bank: move them, set their level or difficulty, or delete them."""
+    user = request.user
+    ids = [int(x) for x in request.POST.getlist("ids") if x.isdigit()]
+    qs = Question.objects.filter(owner=user, pk__in=ids)
+    action, n = request.POST.get("action"), qs.count()
+    back = request.POST.get("next") or reverse("work:questions")
+    if not back.startswith("/"):
+        back = reverse("work:questions")
+    if not n:
+        messages.info(request, _("Pick some questions first."))
+        return redirect(back)
+    if action == "move":
+        target = request.POST.get("to", "")             # "t12" a topic, "s34" a section
+        section = PrepSection.objects.filter(owner=user, pk=target[1:] or 0).select_related("topic").first() if target.startswith("s") else None
+        topic = section.topic if section else PrepTopic.objects.filter(owner=user, pk=target[1:] or 0).first() if target.startswith("t") else None
+        if topic is None:
+            messages.error(request, _("Pick where to move them."))
+            return redirect(back)
+        for q in qs.order_by(*prep.SEQUENCE):
+            prep.move(q, topic, section)
+        messages.success(request, ngettext("%(n)s question moved.", "%(n)s questions moved.", n) % {"n": n})
+    elif action == "level" and request.POST.get("level", "") in Level.values:
+        qs.update(level=request.POST["level"], updated_at=timezone.now())
+        messages.success(request, ngettext("%(n)s question changed.", "%(n)s questions changed.", n) % {"n": n})
+    elif action == "difficulty" and request.POST.get("difficulty", "").isdigit() and int(request.POST["difficulty"]) in Difficulty.values:
+        qs.update(difficulty=int(request.POST["difficulty"]), updated_at=timezone.now())
+        messages.success(request, ngettext("%(n)s question changed.", "%(n)s questions changed.", n) % {"n": n})
+    elif action == "delete":
+        for q in qs:
+            trash(user, q, _("Question: %(title)s") % {"title": q.title[:80]}, reverse("work:questions"))
+        messages.success(request, ngettext("%(n)s question deleted. You can bring it back from Recently deleted.",
+                                           "%(n)s questions deleted. You can bring them back from Recently deleted.", n) % {"n": n})
+    return redirect(back)
+
+
+def _question_row(q, number=""):
+    """What the contents page needs for one question."""
+    return {"id": q.pk, "number": number, "title": q.title, "prompt": q.prompt, "answer": q.answer, "key_points": q.key_points,
+            "kind": q.kind, "kindLabel": q.get_kind_display(), "difficulty": q.difficulty, "difficultyLabel": q.get_difficulty_display(),
+            "level": q.level, "levelLabel": q.get_level_display() if q.level else "", "status": q.status, "statusLabel": str(q.status_label),
+            "section": q.section_id or 0, "url": reverse("work:question", args=[q.pk]), "edit": reverse("work:question_edit", args=[q.pk])}
+
+
 @work_required
 def question_view(request, pk):
-    q = get_object_or_404(Question.objects.select_related("topic"), pk=pk, owner=request.user)
+    q = get_object_or_404(Question.objects.select_related("topic", "section"), pk=pk, owner=request.user)
+    q.number = prep.numbering(request.user, [q.topic_id]).get(q.pk, "")
+    before, after = prep.neighbours(q)
     return render_work(request, "work/prep/question.html", {
-        "q": q, "history": q.history.all()[:20], "prep_text": _texts(),
+        "q": q, "history": q.history.all()[:20], "prep_text": _texts(), "before": before, "after": after,
         "data": {"questions": [prep.as_json(q)], "single": True, "practice": reverse("work:prep_practice")},
         "siblings": Question.objects.filter(owner=request.user, topic=q.topic).exclude(pk=q.pk).order_by("?")[:5],
     })
@@ -131,19 +193,22 @@ def question_form_view(request, pk=None):
     if not q:
         last = Question.objects.filter(owner=user).order_by("-created_at").first()
         initial = {"topic": request.GET.get("topic") or (last.topic_id if last else None), "kind": request.GET.get("kind") or QuestionKind.SHORT,
+                   "section": request.GET.get("section") or None, "level": request.GET.get("level") or "",
                    "difficulty": Difficulty.MEDIUM}
     form = QuestionForm(request.POST or None, instance=q, owner=user, initial=initial)
     if request.method == "POST" and form.is_valid():
         saved = form.save()
         messages.success(request, _("Question saved."))
         if request.POST.get("then") == "another":
-            return redirect(reverse("work:question_new") + f"?topic={saved.topic_id}&kind={saved.kind}")
+            return redirect(reverse("work:question_new") + f"?topic={saved.topic_id}&kind={saved.kind}&section={saved.section_id or ''}&level={saved.level}")
         return redirect("work:question", pk=saved.pk)
     return render_work(request, "work/prep/question_form.html", {"form": form, "q": q, "has_topics": PrepTopic.objects.filter(owner=user).exists()})
 
 
 @work_required
 def topic_view(request, pk):
+    """A topic's contents: its sections and their numbered questions, in order — added to, edited,
+    reordered and deleted right there. The topic's own details are edited here too."""
     t = get_object_or_404(PrepTopic, pk=pk, owner=request.user)
     form = PrepTopicForm(request.POST or None, instance=t, owner=request.user)
     if request.method == "POST":
@@ -155,8 +220,80 @@ def topic_view(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, _("Topic saved."))
-            return redirect("work:prep")
-    return render_work(request, "work/prep/topic.html", {"form": form, "t": t, "n": t.questions.count()})
+            return redirect("work:prep_topic", pk=t.pk)
+    return render_work(request, "work/prep/topic.html", {
+        "form": form, "t": t, "n": t.questions.count(), "contents": _contents(t), "prep_text": _texts(),
+        "kinds": QuestionKind.choices, "difficulties": Difficulty.choices, "levels": Level.choices,
+        "ready": next((r for r in prep.topic_rows(request.user) if r["t"].pk == t.pk), None),
+    })
+
+
+def _contents(t):
+    labels = prep.numbering(t.owner, [t.pk])
+    groups = {0: []}
+    for q in t.questions.select_related("section").order_by(*prep.SEQUENCE):
+        groups.setdefault(q.section_id or 0, []).append(_question_row(q, labels.get(q.pk, "")))
+    return {"id": t.pk, "code": t.code, "api": reverse("work:api_prep_topic", args=[t.pk]), "new": reverse("work:question_new") + f"?topic={t.pk}",
+            "sections": [{"id": 0, "name": "", "questions": groups[0]}] +
+                        [{"id": s.pk, "name": s.name, "questions": groups.get(s.pk, [])} for s in t.sections.all()]}
+
+
+@work_required
+def contents_view(request):
+    """Every topic's contents on one page — the index of the whole bank."""
+    user = request.user
+    labels = prep.numbering(user)
+    topics = list(PrepTopic.objects.filter(owner=user).prefetch_related("sections"))
+    groups = {}
+    for q in Question.objects.filter(owner=user).only("pk", "prompt", "topic_id", "section_id", "difficulty", "level", "last_reviewed",
+                                                       "last_rating", "interval").order_by(*prep.SEQUENCE):
+        q.number = labels.get(q.pk, "")
+        groups.setdefault((q.topic_id, q.section_id or 0), []).append(q)
+    book = [{"t": t, "parts": [(None, groups.get((t.pk, 0), []))] + [(s, groups.get((t.pk, s.pk), [])) for s in t.sections.all()]} for t in topics]
+    return render_work(request, "work/prep/contents.html", {"book": book, "total": len(labels)})
+
+
+@work_required
+@require_POST
+def topic_api(request, pk):
+    """The contents page's changes: order, sections, and questions added in place."""
+    t = get_object_or_404(PrepTopic, pk=pk, owner=request.user)
+    action, post = request.POST.get("action"), request.POST
+    if action == "order":
+        try:
+            data = json.loads(post.get("order") or "{}")
+            prep.reorder(t, [int(x) for x in data.get("sections", [])], {str(k): [int(x) for x in v] for k, v in data.get("questions", {}).items()})
+        except (ValueError, TypeError, AttributeError):
+            return JsonResponse({"ok": False, "error": "order"}, status=400)
+    elif action == "section_add":
+        name = (post.get("name") or "").strip()[:120]
+        if not name:
+            return JsonResponse({"ok": False, "error": _("Give the section a name.")}, status=400)
+        s = PrepSection.objects.create(owner=request.user, topic=t, name=name, order=t.sections.count() + 1)
+        return JsonResponse({"ok": True, "section": {"id": s.pk, "name": s.name, "questions": []}})
+    elif action in ("section_rename", "section_delete"):
+        s = get_object_or_404(PrepSection, pk=post.get("section") or 0, topic=t)
+        if action == "section_delete":           # its questions stay, at the end of the questions outside any section
+            for q in s.questions.order_by(*prep.SEQUENCE):
+                prep.move(q, t, None)
+            s.delete()
+        else:
+            s.name = (post.get("name") or "").strip()[:120] or s.name
+            s.save(update_fields=["name"])
+    elif action == "question_add":
+        prompt = (post.get("prompt") or "").strip()
+        if not prompt:
+            return JsonResponse({"ok": False, "error": _("Write the question first.")}, status=400)
+        section = PrepSection.objects.filter(topic=t, pk=post.get("section") or 0).first()
+        q = Question.objects.create(owner=request.user, topic=t, section=section, order=prep.next_position(t, section), prompt=prompt[:20000],
+                                    answer=(post.get("answer") or "")[:50000], key_points=(post.get("key_points") or "")[:5000],
+                                    kind=post.get("kind") if post.get("kind") in QuestionKind.values else QuestionKind.SHORT,
+                                    difficulty=int(post["difficulty"]) if (post.get("difficulty") or "").isdigit() and int(post["difficulty"]) in Difficulty.values else Difficulty.MEDIUM,
+                                    level=post.get("level") if post.get("level") in Level.values else "")
+        return JsonResponse({"ok": True, "question": _question_row(q)})
+    else:
+        return JsonResponse({"ok": False, "error": "action"}, status=400)
+    return JsonResponse({"ok": True, "contents": _contents(t)})
 
 
 # ── Practice ──────────────────────────────────────────────────────────────
@@ -174,9 +311,12 @@ def practice_view(request):
         items, title = prep.today_queue(user, topic=topic), _("Today's practice")
     else:
         f = _filters(g)
-        items = prep.practice_queue(user, f, count=g.get("count") or 20, order=g.get("order") or "smart")
+        items = prep.practice_queue(user, f, count=g.get("count") or (prep.SESSION_MAX if g.get("order") == "sequence" else 20), order=g.get("order") or "smart")
         topic = PrepTopic.objects.filter(owner=user, pk=f["topic"]).first() if f["topic"].isdigit() else None
         title = topic.name if topic else _("Practice")
+        if g.get("order") == "sequence":
+            title = _("%(topic)s, in order") % {"topic": title}
+    items = prep.numbered(user, items)
     return render_work(request, "work/prep/practice.html", {
         "title": title, "session": {"questions": [prep.as_json(q) for q in items], "back": reverse("work:prep"), "practice": reverse("work:prep_practice")},
         "prep_text": _texts(),
@@ -221,6 +361,25 @@ def question_action(request, pk):
         q.notes = (request.POST.get("notes") or "")[:20000]
         q.save(update_fields=["notes", "updated_at"])
         return JsonResponse({"ok": True})
+    if action == "update":                # edited in place on the contents page
+        for key, limit in (("prompt", 20000), ("answer", 50000), ("key_points", 5000)):
+            if key in request.POST:
+                setattr(q, key, request.POST[key][:limit])
+        if not q.prompt.strip():
+            return JsonResponse({"ok": False, "error": _("Write the question first.")}, status=400)
+        if request.POST.get("kind") in QuestionKind.values and not (request.POST["kind"] == QuestionKind.CHOICE and not q.options):
+            q.kind = request.POST["kind"]
+        if (request.POST.get("difficulty") or "").isdigit() and int(request.POST["difficulty"]) in Difficulty.values:
+            q.difficulty = int(request.POST["difficulty"])
+        if "level" in request.POST and request.POST["level"] in Level.values:
+            q.level = request.POST["level"]
+        q.save()
+        if "section" in request.POST:
+            prep.move(q, q.topic, PrepSection.objects.filter(topic=q.topic, pk=request.POST["section"] or 0).first())
+        return JsonResponse({"ok": True, "question": _question_row(q)})
+    if action == "delete":
+        item = trash(request.user, q, _("Question: %(title)s") % {"title": q.title[:80]}, reverse("work:questions"))
+        return JsonResponse({"ok": True, "undo": reverse("trash_restore", args=[item.pk])})
     if action == "reset":                 # start over: like a new question
         q.interval, q.ease, q.reps, q.lapses, q.last_reviewed, q.last_rating, q.due = 0, 2.5, 0, 0, None, None, timezone.localdate()
         q.save(update_fields=["interval", "ease", "reps", "lapses", "last_reviewed", "last_rating", "due", "updated_at"])
@@ -339,7 +498,7 @@ def prep_import_view(request):
 def prep_sheet_view(request):
     """The questions and their answers on one page, to read through or print before the exam."""
     f = _filters(request.GET)
-    qs = prep.filtered(request.user, f).order_by("topic__order", "topic__name", "difficulty", "pk")[:500]
+    qs = prep.numbered(request.user, prep.filtered(request.user, f).order_by(*prep.SEQUENCE)[:500])
     topic = PrepTopic.objects.filter(owner=request.user, pk=f["topic"]).first() if f["topic"].isdigit() else None
     return render_work(request, "work/prep/sheet.html", {"questions": qs, "topic": topic, "f": f, "query": request.GET.urlencode()})
 
@@ -348,15 +507,18 @@ def prep_sheet_view(request):
 def prep_export_view(request):
     user = request.user
     f = _filters(request.GET)
-    qs = prep.filtered(user, f).order_by("topic__order", "topic__name", "pk")
+    qs = prep.filtered(user, f).order_by(*prep.SEQUENCE)
     stamp = timezone.localdate().isoformat()
     if request.GET.get("format") == "md":
-        lines, topic = [], None
-        for q in qs:
-            if q.topic.name != topic:
-                topic = q.topic.name
-                lines += [f"# {topic}", ""]
-            words = [q.get_difficulty_display().lower() if q.difficulty in Difficulty.values else "medium", q.kind]
+        lines, head = [], None
+        for q in qs.order_by(*prep.SEQUENCE):
+            here = q.topic.name + (f" / {q.section.name}" if q.section_id else "")
+            if here != head:
+                head = here
+                lines += [f"# {here}", ""]
+            words = [{1: "easy", 2: "medium", 3: "hard"}.get(q.difficulty, "medium"), q.kind]      # English words: they import back in any language
+            if q.level:
+                words.append(q.level)
             if q.language:
                 words.append(q.language)
             first, *rest = q.prompt.split("\n")

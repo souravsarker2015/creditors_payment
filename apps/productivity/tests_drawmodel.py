@@ -13,7 +13,7 @@ MODEL = Path(settings.BASE_DIR) / "static" / "js" / "drawmodel.js"
 SCRIPT = r"""
 const M = require(process.argv[1]);
 const cases = JSON.parse(process.argv[2]), out = {};
-for (const [kind, text] of Object.entries(cases)) {
+for (const [kind, text] of Object.entries(cases).filter(([k]) => k !== "drawio")) {
   const g = M.importText(kind, text);
   const again = M.importText(kind, M.toMermaid(kind, g), g);
   const overlaps = [];
@@ -24,6 +24,8 @@ for (const [kind, text] of Object.entries(cases)) {
                 text: M.toMermaid(kind, g), same: JSON.stringify(again.nodes.map(n => [n.id, n.shape, n.label, n.x, n.y]).sort()) === JSON.stringify(g.nodes.map(n => [n.id, n.shape, n.label, n.x, n.y]).sort()),
                 sameLinks: again.edges.length === g.edges.length, overlaps, extra: g.extra };
 }
+const g = M.importText("class", cases["class"]);
+out.drawio = M.toDrawio(g);
 console.log(JSON.stringify(out));
 """
 CASES = {
@@ -45,7 +47,7 @@ class DrawModelTests(SimpleTestCase):
         cls.out = json.loads(run.stdout)
 
     def test_round_trips_keep_shapes_and_places(self):
-        for kind, r in self.out.items():
+        for kind, r in ((k, v) for k, v in self.out.items() if k != "drawio"):
             self.assertTrue(r["same"], kind)
             self.assertTrue(r["sameLinks"], kind)
             self.assertEqual(r["overlaps"], [], kind)
@@ -79,3 +81,11 @@ class DrawModelTests(SimpleTestCase):
         r = self.out["er"]
         self.assertIn('CUSTOMER ||--o{ ORDER : "places"', r["text"])
         self.assertIn('string email UK "login"', r["text"])
+
+    def test_drawio_file(self):
+        xml = self.out["drawio"]
+        self.assertTrue(xml.startswith("<mxfile"))
+        self.assertEqual(xml.count('vertex="1"'), 4)          # Animal, Dog, Leg, Food
+        self.assertEqual(xml.count('edge="1"'), 3)
+        self.assertIn("endArrow=block;endFill=0", xml.replace("startArrow=block;startFill=0", "endArrow=block;endFill=0"))
+        self.assertIn("dashed=1", xml)

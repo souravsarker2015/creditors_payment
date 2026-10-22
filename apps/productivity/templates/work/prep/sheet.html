@@ -22,8 +22,9 @@
   <section class="wpq-sheet-topic">
     <h2 class="wpq-sheet-head"><span class="wt-dot" data-color="{{ g.grouper.color }}"></span>{{ g.grouper.name }}</h2>
     {% for q in g.list %}
+    {% ifchanged q.section_id %}{% if q.section_id %}<h3 class="wpq-sheet-part">{{ q.section.name }}</h3>{% endif %}{% endifchanged %}
     <article class="wpq-sheet-q">
-      <p class="wpq-sheet-meta"><b>{{ forloop.counter }}.</b> <span class="wpq-diff" data-d="{{ q.difficulty }}">{{ q.get_difficulty_display }}</span> <span class="wpq-kind">{{ q.get_kind_display }}</span>{% if q.is_starred %} ★{% endif %}</p>
+      <p class="wpq-sheet-meta"><b class="num">{{ q.number }}</b> <span class="wpq-diff" data-d="{{ q.difficulty }}">{{ q.get_difficulty_display }}</span> <span class="wpq-kind">{{ q.get_kind_display }}</span>{% if q.level %} <span class="wpq-level">{{ q.get_level_display }}</span>{% endif %}{% if q.is_starred %} ★{% endif %}</p>
       <div class="wn-md wpq-sheet-prompt" data-render-markdown="{{ q.prompt }}"></div>
       <div class="wpq-sheet-a">
         {% if q.options %}<ul class="wpq-sheet-opts">{% for o in q.options %}<li{% if o.correct %} class="is-right"{% endif %}>{% if o.correct %}✓{% else %}·{% endif %} {{ o.text }}</li>{% endfor %}</ul>{% endif %}

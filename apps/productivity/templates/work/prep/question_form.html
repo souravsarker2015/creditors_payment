@@ -15,7 +15,8 @@
   {% endif %}
 </header>
 
-<form method="post" class="card wpq-form" novalidate x-data="{ kind: '{{ form.kind.value|default:'short'|escapejs }}' }" @change="if ($event.target.name === 'kind') kind = $event.target.value">
+<form method="post" class="card wpq-form" novalidate x-data="{ kind: '{{ form.kind.value|default:'short'|escapejs }}', topic: '{{ form.topic.value|default:''|escapejs }}' }"
+      @change="if ($event.target.name === 'kind') kind = $event.target.value; if ($event.target.name === 'topic') { topic = $event.target.value; const s = $el.querySelector('[name=section]'); if (s && s.selectedOptions[0] && s.selectedOptions[0].dataset.topic !== topic) s.value = ''; }">
   {% csrf_token %}
   <div class="card-body form-stack">
     {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
@@ -24,8 +25,18 @@
       {% with field=form.new_topic %}{% include "partials/field.html" %}{% endwith %}
     </div>
     <div class="form-grid form-grid-2">
+      <label class="field"><span class="label">{% translate "Section" %}</span>
+        <select name="section" class="form-input">
+          <option value="">{% translate "— Not in a section —" %}</option>
+          {% for s in form.fields.section.queryset %}<option value="{{ s.pk }}" data-topic="{{ s.topic_id }}" :hidden="topic !== '{{ s.topic_id }}'"{% if form.section.value|stringformat:"s" == s.pk|stringformat:"s" %} selected{% endif %}>{{ s.name }}</option>{% endfor %}
+        </select>
+        <span class="help">{% translate "Sections group a topic's questions, like chapters; numbers follow them (PY-2.3)." %}</span></label>
+      {% with field=form.new_section %}{% include "partials/field.html" %}{% endwith %}
+    </div>
+    <div class="form-grid form-grid-2">
       {% with field=form.kind %}{% include "partials/field.html" %}{% endwith %}
       {% with field=form.difficulty %}{% include "partials/field.html" %}{% endwith %}
+      {% with field=form.level %}{% include "partials/field.html" %}{% endwith %}
     </div>
     {% with field=form.prompt %}{% include "partials/field.html" %}{% endwith %}
 

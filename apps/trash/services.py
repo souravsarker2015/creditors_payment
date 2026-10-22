@@ -93,10 +93,18 @@ def restore(item):
     try:
         with transaction.atomic(using=db):
             tables, restored = set(), []
-            for d in serializers.deserialize("json", item.data):
+            rows = list(serializers.deserialize("json", item.data))
+            coming = {(type(d.object), d.object.pk) for d in rows}
+            for d in rows:
                 model = type(d.object)
                 if model._base_manager.filter(pk=d.object.pk).exists():
                     raise CannotRestore("already there")
+                # An optional link to something gone since (e.g. a question's section) is let go rather than refused.
+                for f in model._meta.concrete_fields:
+                    value = getattr(d.object, f.attname)
+                    if f.is_relation and f.null and value is not None and (f.related_model, value) not in coming \
+                            and not f.related_model._base_manager.filter(pk=value).exists():
+                        setattr(d.object, f.attname, None)
                 # Links to tags and the like come back as their own rows (they were
                 # kept with the rest), so they aren't set a second time here.
                 d.save(save_m2m=False)

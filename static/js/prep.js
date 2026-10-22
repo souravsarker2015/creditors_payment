@@ -298,6 +298,163 @@
       });
     });
 
+    /* ── A topic's contents: sections and numbered questions, edited in place ── */
+    Alpine.data("prepContents", function () {
+      var C = data("prep-contents"), sorters = [];
+      function blank() { return { prompt: "", answer: "", kind: "short", difficulty: 2, level: "", open: false }; }
+      return {
+        sections: C.sections, find: "", expandAll: false, open: null, editing: null, draft: {}, adding: {}, newSection: "",
+        renaming: null, renameText: "", saving: false,
+        init: function () {
+          var self = this;
+          this.sections.forEach(function (s) { self.adding[s.id] = blank(); });
+          this.$nextTick(function () { self.sortable(); });
+        },
+        api: function (url, fields) {
+          var self = this; this.saving = true;
+          return Work.api(url, fields).then(function (r) {
+            self.saving = false;
+            if (!r || (!r.ok && !r.queued)) toast((r && r.error) || t("notSaved", "Not saved — check your connection."), "warn");
+            return r || {};
+          });
+        },
+        md: md,
+        points: function (q) { return (q.key_points || "").split("\n").map(function (l) { return l.replace(/^[\s*•-]+/, "").trim(); }).filter(Boolean); },
+        sectionNo: function (s) { return this.sections.filter(function (x) { return x.id; }).indexOf(s) + 1; },
+        renumber: function () {
+          var self = this;
+          this.sections.forEach(function (s) {
+            var no = self.sectionNo(s);
+            s.questions.forEach(function (q, i) { q.number = C.code + "-" + (s.id ? no + "." : "") + (i + 1); q.section = s.id; });
+          });
+        },
+        mastered: function (s) { return s.questions.filter(function (q) { return q.status === "mastered"; }).length; },
+        matches: function (q) {
+          var f = this.find.trim().toLowerCase();
+          if (!f) return true;
+          if (/^[a-z0-9\u0980-\u09ff]*[-\s]?\d+(\.\d+)?$/i.test(f)) {
+            var n = q.number.toLowerCase();
+            if (n === f || n.endsWith("-" + f.replace(/^[^\d]*[-\s]?/, ""))) return true;
+          }
+          return (q.title + " " + q.prompt + " " + q.answer).toLowerCase().indexOf(f) >= 0;
+        },
+        toggle: function (q) { this.open = this.open === q.id ? null : q.id; },
+        /* drag to reorder: Sortable moves the row, then the data is changed and Alpine draws it again */
+        sortable: function () {
+          if (!window.Sortable) { var self0 = this; setTimeout(function () { self0.sortable(); }, 100); return; }
+          var self = this, root = this.$refs.sections;
+          // the floating copy Sortable drags is a clone of the row: Alpine is told to leave it alone
+          // (set on press, before Sortable clones it; Alpine's own flag is cleared again afterwards)
+          function start(evt) { evt.item.setAttribute("x-ignore", ""); }
+          function done(evt) { evt.item.removeAttribute("x-ignore"); delete evt.item._x_ignore; }
+          function undoMove(evt, selector) {
+            done(evt);
+            evt.item.remove();
+            evt.from.insertBefore(evt.item, evt.from.querySelectorAll(":scope > " + selector)[evt.oldDraggableIndex] || null);
+          }
+          if (!root._sortable) root._sortable = Sortable.create(root, {
+            handle: ".wpc-head .wpc-grip", draggable: ".wpc-section", animation: 150, forceFallback: true, fallbackOnBody: true, onChoose: start, onUnchoose: done,
+            onEnd: function (evt) {
+              if (evt.oldDraggableIndex === evt.newDraggableIndex) { done(evt); return; }
+              undoMove(evt, ".wpc-section");
+              var moved = self.sections.splice(evt.oldDraggableIndex, 1)[0];
+              self.sections.splice(Math.max(1, evt.newDraggableIndex), 0, moved);     // "not in a section" stays first
+              self.renumber(); self.saveOrder();
+            },
+          });
+          root.querySelectorAll(".wpc-list").forEach(function (list) {
+            if (list._sortable) return;
+            list._sortable = Sortable.create(list, {
+              group: "wpc-questions", handle: ".wpc-grip", draggable: ".wpc-q", animation: 150, forceFallback: true, fallbackOnBody: true, emptyInsertThreshold: 28, onChoose: start, onUnchoose: done,
+              onEnd: function (evt) {
+                if (evt.from === evt.to && evt.oldDraggableIndex === evt.newDraggableIndex) { done(evt); return; }
+                undoMove(evt, ".wpc-q");
+                var from = self.byId(+evt.from.getAttribute("data-section")), to = self.byId(+evt.to.getAttribute("data-section"));
+                var q = from.questions.splice(evt.oldDraggableIndex, 1)[0];
+                to.questions.splice(evt.newDraggableIndex, 0, q);
+                self.renumber(); self.saveOrder();
+              },
+            });
+          });
+        },
+        byId: function (id) { return this.sections.filter(function (s) { return s.id === id; })[0]; },
+        saveOrder: function () {
+          var order = { sections: [], questions: {} };
+          this.sections.forEach(function (s) { if (s.id) order.sections.push(s.id); order.questions[s.id] = s.questions.map(function (q) { return q.id; }); });
+          this.api(C.api, { action: "order", order: JSON.stringify(order) });
+        },
+        /* questions */
+        startEdit: function (q) {
+          this.editing = q.id; this.open = q.id;
+          this.draft = { prompt: q.prompt, answer: q.answer, key_points: q.key_points, kind: q.kind, difficulty: q.difficulty, level: q.level, section: q.section };
+          var self = this;
+          this.$nextTick(function () { var box = self.$root.querySelector('.wpc-q[data-id="' + q.id + '"] .wpc-edit textarea'); if (box) box.focus(); });
+        },
+        saveEdit: function (q) {
+          var self = this, d = this.draft, was = q.section, moved = d.section !== was;
+          if (!d.prompt.trim()) { toast(t("writeFirst", "Write the question first."), "warn"); return; }
+          this.api(Work.cfg.urls.prepBase + q.id + "/", Object.assign({ action: "update" }, d)).then(function (r) {
+            if (!r.ok && !r.queued) return;
+            Object.assign(q, r.question || { prompt: d.prompt, answer: d.answer, key_points: d.key_points, level: d.level });
+            if (moved) {
+              var from = self.byId(was), to = self.byId(d.section);
+              if (from && to) { from.questions.splice(from.questions.indexOf(q), 1); to.questions.push(q); }
+            }
+            self.renumber(); self.editing = null;
+            toast(t("saved", "Saved"), "good");
+          });
+        },
+        remove: function (q, s) {
+          var self = this;
+          this.api(Work.cfg.urls.prepBase + q.id + "/", { action: "delete" }).then(function (r) {
+            if (!r.ok) return;
+            s.questions.splice(s.questions.indexOf(q), 1); self.renumber();
+            Work.undoable(t("deleted", "Question deleted"), r.undo, function () { location.reload(); });
+          });
+        },
+        add: function (s) {
+          var self = this, a = this.adding[s.id];
+          if (!a.prompt.trim()) { toast(t("writeFirst", "Write the question first."), "warn"); return; }
+          this.api(C.api, { action: "question_add", section: s.id, prompt: a.prompt, answer: a.answer, kind: a.kind, difficulty: a.difficulty, level: a.level }).then(function (r) {
+            if (!r.ok || !r.question) return;
+            s.questions.push(r.question); self.renumber();
+            self.adding[s.id] = Object.assign(blank(), { open: true, kind: a.kind, difficulty: a.difficulty, level: a.level });    // ready for the next one
+            toast(t("added", "Question added") + " · " + r.question.number, "good");
+            self.$nextTick(function () { var box = self.$root.querySelector('.wpc-section[data-section="' + s.id + '"] .wpc-add textarea'); if (box) box.focus(); });
+          });
+        },
+        /* sections */
+        addSection: function () {
+          var self = this, name = this.newSection.trim();
+          if (!name) return;
+          this.api(C.api, { action: "section_add", name: name }).then(function (r) {
+            if (!r.ok || !r.section) return;
+            self.adding[r.section.id] = blank(); self.sections.push(r.section); self.newSection = "";
+            self.$nextTick(function () { self.sortable(); });
+          });
+        },
+        startRename: function (s) {
+          this.renaming = s.id; this.renameText = s.name;
+          var self = this; this.$nextTick(function () { if (self.$refs.renameBox) { self.$refs.renameBox.focus(); self.$refs.renameBox.select(); } });
+        },
+        rename: function (s) {
+          if (this.renaming !== s.id) return;
+          var name = this.renameText.trim(); this.renaming = null;
+          if (!name || name === s.name) return;
+          s.name = name; this.api(C.api, { action: "section_rename", section: s.id, name: name });
+        },
+        dropSection: function (s) {
+          if (!confirm(t("dropSection", "Delete this section? Its questions stay, outside any section."))) return;
+          var self = this;
+          this.api(C.api, { action: "section_delete", section: s.id }).then(function (r) {
+            if (!r.ok) return;
+            self.byId(0).questions = self.byId(0).questions.concat(s.questions);
+            self.sections.splice(self.sections.indexOf(s), 1); self.renumber();
+          });
+        },
+      };
+    });
+
     /* ── The question form: its choices (multiple choice) ───────────────── */
     Alpine.data("prepChoices", function () {
       return {

@@ -222,6 +222,11 @@
             return svgToPng(o.svg, o.w, o.h).then(function (b) { download(slug(self.title) + ".png", b); toast(TEXT.exported); });
           }).catch(function () { toast(TEXT.error, "warn"); });
         },
+        exportDrawio: function () {
+          var xml = this.editor && this.editor.drawio ? this.editor.drawio() : "";
+          if (!xml) { toast(TEXT.nothing, "warn"); return; }
+          download(slug(this.title) + ".drawio", new Blob([xml], { type: "application/xml" })); toast(TEXT.exported);
+        },
         copyText: function () {
           var text = this.editor && this.editor.text ? this.editor.text() : "";
           if (navigator.clipboard && text) navigator.clipboard.writeText(text).then(function () { toast(TEXT.copied, "good"); });

@@ -1,7 +1,9 @@
 {% load i18n work %}{# One question being answered — used by a practice session and a question's own page (inside x-data="prepSession"). #}
 <article class="wpq-q card" x-show="q && (stage === 'ask' || stage === 'answered')">
   <header class="wpq-q-head">
+    <span class="wpc-num num" x-show="q && q.number" x-text="q && q.number"></span>
     <span class="wt-proj"><span class="wt-dot" :data-color="q && q.color"></span><span x-text="q && q.topic"></span></span>
+    <span class="wpq-level" x-show="q && q.level" x-text="q && q.levelLabel"></span>
     <span class="wpq-diff" :data-d="q && q.difficulty" x-text="q && q.difficultyLabel"></span>
     <span class="wpq-kind" x-text="q && q.kindLabel"></span>
     <template x-for="c in (q && q.companies || []).slice(0, 3)"><span class="wpq-company" x-text="c"></span></template>

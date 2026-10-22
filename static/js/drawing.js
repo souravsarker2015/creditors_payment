@@ -85,6 +85,11 @@
       case "start": return '<circle cx="' + w / 2 + '" cy="' + h / 2 + '" r="' + (Math.min(w, h) / 2 - 1) + '" fill="' + p.stroke + '"/>';
       case "end": return '<circle cx="' + w / 2 + '" cy="' + h / 2 + '" r="' + (Math.min(w, h) / 2 - 1) + '" fill="' + p.fill + '" stroke="' + p.stroke + '" stroke-width="2"/><circle cx="' + w / 2 + '" cy="' + h / 2 + '" r="' + Math.max(2, Math.min(w, h) / 2 - 6) + '" fill="' + p.stroke + '"/>';
       case "fork": return '<rect width="' + w + '" height="' + h + '" rx="' + Math.min(3, h / 2) + '" fill="' + p.stroke + '"/>';
+      case "image":
+        return n.src ? '<image href="' + esc(n.src) + '" width="' + w + '" height="' + h + '" preserveAspectRatio="xMidYMid meet"/>' +
+                       (n.stroke ? '<rect x="0.5" y="0.5" width="' + (w - 1) + '" height="' + (h - 1) + '" fill="none" stroke="' + p.stroke + '"/>' : "")
+                     : '<rect x="0.5" y="0.5" width="' + (w - 1) + '" height="' + (h - 1) + '" rx="6" fill="' + p.fill + '" stroke="' + p.stroke + '" stroke-dasharray="5 4"/>' +
+                       '<path transform="translate(' + (w / 2 - 12) + "," + (h / 2 - 12) + ')" d="M2.25 15.75 7.4 10.6a2.25 2.25 0 0 1 3.18 0l5.16 5.15m-1.5-1.5 1.4-1.4a2.25 2.25 0 0 1 3.18 0l2.9 2.9M3.75 19.5h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Z" fill="none" stroke="' + p.stroke + '" stroke-width="1.5"/>';
       case "class": case "entity":
         return '<rect x="' + o + '" y="' + o + '" width="' + (w - 2 * o) + '" height="' + (h - 2 * o) + '" rx="' + (n.shape === "entity" ? 6 : 2) + '" ' + f + "/>";
       default: return '<rect x="' + o + '" y="' + o + '" width="' + (w - 2 * o) + '" height="' + (h - 2 * o) + '" rx="2" ' + f + "/>";
@@ -186,6 +191,97 @@
     return { x: p.x - Math.cos(ang) * 22 - Math.sin(ang) * 12 * side, y: p.y - Math.sin(ang) * 22 + Math.cos(ang) * 12 * side };
   }
 
+  /* ── Reading a draw.io file: its first page's shapes and links ── */
+  var FROM_MARK = { classic: "arrow", classicThin: "arrow", block: "arrow", blockThin: "arrow", open: "open", openThin: "open", diamond: "diamond", diamondThin: "diamond",
+                    oval: "circle", cross: "cross", ERmandOne: "one", ERone: "one", ERzeroToOne: "zone", ERoneToMany: "many", ERmany: "many", ERzeroToMany: "zmany", none: "none" };
+  function inflate(text) {
+    var bytes = Uint8Array.from(atob(text.trim()), function (c) { return c.charCodeAt(0); });
+    var stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+    return new Response(stream).text().then(function (s) { return decodeURIComponent(s); });
+  }
+  function readDrawio(text) {
+    var doc = new DOMParser().parseFromString(text, "text/xml"), page = doc.querySelector("diagram");
+    var model = doc.querySelector("mxGraphModel");
+    var ready = model ? Promise.resolve(doc) : page && page.textContent.trim() ? inflate(page.textContent).then(function (x) { return new DOMParser().parseFromString(x, "text/xml"); }) : Promise.reject(new Error("empty"));
+    return ready.then(function (xml) {
+      if (xml.querySelector("parsererror")) throw new Error("xml");
+      var cells = {}, order = [];
+      xml.querySelectorAll("mxCell").forEach(function (c) {
+        var wrap = c.parentNode && /^(object|UserObject)$/.test(c.parentNode.nodeName) ? c.parentNode : null;
+        var id = (wrap || c).getAttribute("id"), cell = { id: id, el: c, value: wrap ? (wrap.getAttribute("label") || "") : (c.getAttribute("value") || ""), parent: c.getAttribute("parent"),
+                                                           style: c.getAttribute("style") || "", vertex: c.getAttribute("vertex") === "1", edge: c.getAttribute("edge") === "1",
+                                                           source: c.getAttribute("source"), target: c.getAttribute("target"), geo: c.querySelector("mxGeometry") };
+        cells[id] = cell; order.push(cell);
+      });
+      function style(s) { var o = {}; s.split(";").forEach(function (part, i) { if (!part) return; var kv = part.split("="); if (kv.length === 1) o[i === 0 ? "_" : kv[0]] = kv[0]; else o[kv[0]] = kv.slice(1).join("="); }); return o; }
+      function plain(v) {
+        if (!/<[a-z!/]/i.test(v)) return v;
+        var box = d.createElement("div"); box.innerHTML = v.replace(/<br\s*\/?>/gi, "\n").replace(/<\/(div|p|li|h\d)>/gi, "\n");
+        return box.textContent.replace(/\n{2,}/g, "\n").trim();
+      }
+      function num(el, a) { return parseFloat(el && el.getAttribute(a)) || 0; }
+      function offset(cell) {          // children of a group or a container are placed relative to it
+        var x = 0, y = 0, p = cells[cell.parent];
+        while (p && p.vertex && p.geo) { x += num(p.geo, "x"); y += num(p.geo, "y"); p = cells[p.parent]; }
+        return { x: x, y: y };
+      }
+      var nodes = [], edges = [], made = {};
+      order.forEach(function (c) {
+        if (!c.vertex || !c.geo || (cells[c.parent] && cells[c.parent].edge)) return;       // (a link's own label is read with the link)
+        var st = style(c.style), sh = st.shape || st._ || "", o = offset(c), w = num(c.geo, "width") || 120, h = num(c.geo, "height") || 60;
+        if (sh === "group" || st._ === "group") return;
+        var shape = "rect";
+        if (sh === "ellipse" || st.ellipse) shape = st.shape === "doubleEllipse" ? "dcircle" : st.shape === "cloud" ? "cloud" : st.shape === "endState" ? "end" : Math.abs(w - h) < 2 ? "circle" : "ellipse";
+        else if (sh === "rhombus") shape = "diamond";
+        else if (sh === "triangle") shape = "triangle";
+        else if (sh === "hexagon") shape = "hexagon";
+        else if (sh === "parallelogram") shape = st.flipH === "1" ? "parallelogram2" : "parallelogram";
+        else if (sh === "trapezoid") shape = st.flipV === "1" ? "trapezoid2" : "trapezoid";
+        else if (/^cylinder|datastore/.test(sh)) shape = "cylinder";
+        else if (sh === "document") shape = "document";
+        else if (sh === "cloud") shape = "cloud";
+        else if (sh === "process") shape = "subroutine";
+        else if (sh === "umlActor") shape = "actor";
+        else if (sh === "note") shape = "note";
+        else if (sh === "text" || st._ === "text") shape = "text";
+        else if (sh === "image" || st.image) shape = "image";
+        else if (sh === "step") shape = "flag";
+        else if (sh === "swimlane" || st.container === "1") shape = "container";
+        else if (st.rounded === "1") shape = (st.arcSize | 0) >= 40 ? "stadium" : "rounded";
+        var n = { id: uid(), shape: shape, x: Math.round(num(c.geo, "x") + o.x), y: Math.round(num(c.geo, "y") + o.y), w: Math.round(w), h: Math.round(h), label: plain(c.value).slice(0, 2000) };
+        if (shape === "image") { n.src = st.image || ""; if (!/^(https?:|\/)/.test(n.src)) n.src = ""; }
+        if (/^#[0-9a-f]{6}$/i.test(st.fillColor || "") && shape !== "note") n.fill = st.fillColor.toLowerCase();
+        if (st.fillColor === "none" && shape !== "text" && shape !== "container") n.fill = "none";
+        if (/^#[0-9a-f]{6}$/i.test(st.strokeColor || "")) n.stroke = st.strokeColor.toLowerCase();
+        if (+st.fontSize && +st.fontSize !== 14) n.size = Math.max(8, Math.min(48, +st.fontSize));
+        made[c.id] = n; nodes.push(n);
+      });
+      order.forEach(function (c) {           // containers own what's inside them
+        var n = made[c.id], p = c && made[c.parent];
+        if (n && p && p.shape === "container") n.parent = p.id;
+      });
+      order.forEach(function (c) {
+        if (!c.edge || !made[c.source] || !made[c.target]) return;
+        var st = style(c.style), e = { id: uid(), from: made[c.source].id, to: made[c.target].id, line: st.dashed === "1" ? "dashed" : +st.strokeWidth >= 3 ? "thick" : "solid" };
+        var endFill = st.endFill !== "0", startFill = st.startFill !== "0";
+        var em = FROM_MARK[st.endArrow == null ? "classic" : st.endArrow] || "arrow", sm = FROM_MARK[st.startArrow || "none"] || "none";
+        if (em === "arrow" && /^block/.test(st.endArrow || "") && !endFill) em = "triangle";
+        if (em === "diamond" && !endFill) em = "odiamond";
+        if (sm === "arrow" && /^block/.test(st.startArrow || "") && !startFill) sm = "triangle";
+        if (sm === "diamond" && !startFill) sm = "odiamond";
+        e.end = em; e.start = sm;
+        if (st.edgeStyle) e.route = "elbow"; else if (st.curved === "1") e.route = "curve";
+        var label = plain(c.value);
+        order.forEach(function (l) { if (l.parent === c.id && l.vertex && !label) label = plain(l.value); });     // a label stuck on the link
+        if (label) e.label = label.slice(0, 200);
+        var pts = c.el.querySelectorAll('Array[as="points"] mxPoint');
+        if (pts.length && !st.edgeStyle) { var o = offset(c); e.pts = Array.prototype.map.call(pts, function (q) { return [Math.round(num(q, "x") + o.x), Math.round(num(q, "y") + o.y)]; }); }
+        edges.push(e);
+      });
+      return { nodes: nodes, edges: edges };
+    });
+  }
+
   /* Rows of a class or a table, as HTML (on the page) */
   function rowsHTML(n) {
     var out = '<div class="wdr-rows' + (n.shape === "entity" ? " is-table" : "") + '"><header class="wdr-rows-head">' +
@@ -207,7 +303,7 @@
       return {
         kind: "drawing", mermaid: false, sel: [], esel: null, node: null, edge: null, zoom: 100, view: null, grid: true, snap: true, empty: true,
         canUndo: false, canRedo: false, palette: [], groups: [], fills: FILLS, strokes: STROKES, sizes: SIZES, area: false, texts: TEXT,
-        marks: [], classLinks: CLASS_LINKS, menu: false,
+        marks: [], classLinks: CLASS_LINKS, menu: false, ctx: null, findOpen: false, findText: "", hits: [], hitAt: 0,
         get one() { return this.sel.length === 1; },
         get rowsNode() { return !!(this.node && DM.ROWS[this.node.shape]); },
         init: function () {
@@ -229,8 +325,8 @@
           M.nodes = M.nodes || []; M.edges = M.edges || [];
           this.buildPalette();
           this.view = new WD.Viewport(this.$refs.canvas, this.$refs.world, function (k) { self.zoom = Math.round(k * 100); self.$refs.world.style.setProperty("--k", k); });
-          this.editor = { svg: function () { return self.toSVG(); }, preview: function () { var o = self.toSVG(); return o ? o.svg : ""; },
-                          text: function () { return DM.toMermaid(self.kind, M); }, resized: function () { self.fit(); } };
+          this.editor = { svg: function () { return self.pictureSVG(); }, preview: function () { var o = self.toSVG(); return o ? o.svg : ""; },
+                          text: function () { return DM.toMermaid(self.kind, M); }, resized: function () { self.fit(); }, drawio: function () { return self.drawio(); } };
           this.pointers();
           this.render();
           this.$nextTick(function () { self.fit(); });
@@ -383,8 +479,13 @@
           if (this.esel) {
             var e = this.edgeById(this.esel), a = e && this.byId(e.from), b = e && this.byId(e.to);
             if (a && b) {
-              var g = route(e, a, b, 0);
+              var g = route(e, a, b, 0), pts = (e.pts || []).map(function (q) { return { x: q[0], y: q[1] }; }), all = [g.a].concat(pts, [g.b]);
               out.push('<i class="wdr-end" data-end="from" style="left:' + g.a.x + "px;top:" + g.a.y + 'px"></i><i class="wdr-end" data-end="to" style="left:' + g.b.x + "px;top:" + g.b.y + 'px"></i>');
+              // bends: drag one to move it (double-click takes it away); drag a middle dot to add one
+              pts.forEach(function (q, i) { out.push('<i class="wdr-bend" data-bend="' + i + '" style="left:' + q.x + "px;top:" + q.y + 'px"></i>'); });
+              if (a !== b) for (var k = 0; k < all.length - 1; k++) {
+                out.push('<i class="wdr-mid" data-mid="' + k + '" style="left:' + (all[k].x + all[k + 1].x) / 2 + "px;top:" + (all[k].y + all[k + 1].y) / 2 + 'px"></i>');
+              }
             }
           }
           this.$refs.ui.innerHTML = out.join("");
@@ -414,7 +515,8 @@
         /* moved shapes: the bends a tidy-up gave their links no longer fit */
         unpin: function (ns) {
           var ids = {}; ns.forEach(function (n) { ids[n.id] = true; });
-          M.edges.forEach(function (e) { if (e.pts && (ids[e.from] || ids[e.to])) delete e.pts; });
+          // only the bends a tidy-up made: the ones drawn by hand stay (like draw.io's waypoints)
+          M.edges.forEach(function (e) { if (e.pts && e.auto && (ids[e.from] || ids[e.to])) { delete e.pts; delete e.auto; } });
         },
         picked: function () { var self = this; return this.sel.map(function (id) { return self.byId(id); }).filter(Boolean); },
         /* a group's shapes, and theirs, all the way down */
@@ -450,6 +552,7 @@
         },
         paletteClick: function (key) {
           if (this._paletteDragged) { this._paletteDragged = false; return; }
+          if (key === "picture") { this._dropAt = null; this.$refs.file.click(); return; }
           var r = this.$refs.canvas.getBoundingClientRect(), c = this.view.toWorld(r.left + r.width / 2, r.top + r.height / 2), k = M.nodes.length % 6;
           this.add(key, c.x + k * 16, c.y + k * 16);
         },
@@ -466,7 +569,10 @@
             if (!ghost) return;
             ghost.remove();
             var r = self.$refs.canvas.getBoundingClientRect();
-            if (ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom) { var p = self.view.toWorld(ev.clientX, ev.clientY); self.add(key, p.x, p.y); }
+            if (ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom) {
+              var p = self.view.toWorld(ev.clientX, ev.clientY);
+              if (key === "picture") { self._dropAt = p; self.$refs.file.click(); } else self.add(key, p.x, p.y);
+            }
             setTimeout(function () { self._paletteDragged = false; }, 50);
           }
           d.addEventListener("pointermove", move); d.addEventListener("pointerup", up); d.addEventListener("pointercancel", up);
@@ -553,7 +659,7 @@
           if (!clip) { clip = this._clip; try { clip = JSON.parse(localStorage.getItem("wdr-clip") || "null") || clip; } catch (e) { /* the one in memory */ } }
           if (!clip || !clip.nodes || !clip.nodes.length) return;
           var allowed = DM.shapesOf(this.kind), main = MAIN[this.kind], self = this;
-          var b = this.bounds(clip.nodes), at = fromClip && this._pointer ? this.view.toWorld(this._pointer.x, this._pointer.y) : { x: b.x1 + (offset || 30), y: b.y1 + (offset || 30) };
+          var b = this.bounds(clip.nodes), at = this._pointerWorld || (fromClip && this._pointer ? this.view.toWorld(this._pointer.x, this._pointer.y) : { x: b.x1 + (offset || 30), y: b.y1 + (offset || 30) });
           var dx = snapTo(at.x - b.x1, this.snap), dy = snapTo(at.y - b.y1, this.snap), map = {}, made = [];
           this.snapshot();
           clip.nodes.forEach(function (n) { map[n.id] = uid(); });
@@ -737,6 +843,96 @@
           box.addEventListener("pointerdown", function (ev) { ev.stopPropagation(); });
         },
 
+        /* ── pictures: picked, pasted or dropped in; uploaded like a note's pictures ── */
+        pictures: function (files, at) {
+          var self = this;
+          files = Array.prototype.filter.call(files || [], function (f) { return /^image\//.test(f.type); });
+          if (!files.length) return false;
+          if (!Work.cfg.urls.imageUpload) return false;
+          files.forEach(function (file, i) {
+            var r = self.$refs.canvas.getBoundingClientRect(), c = at || self.view.toWorld(r.left + r.width / 2, r.top + r.height / 2);
+            toast(TEXT.uploading || "Uploading…");
+            (Work.shrinkImage ? Work.shrinkImage(file) : Promise.resolve(file)).then(function (f) {
+              var fd = new FormData(); fd.append("image", f, f.name || "image"); fd.append("name", file.name || "");
+              return fetch(Work.cfg.urls.imageUpload, { method: "POST", body: fd, credentials: "same-origin",
+                headers: { "X-CSRFToken": (d.cookie.match(/csrftoken=([^;]+)/) || [])[1] || "", "X-Requested-With": "fetch", Accept: "application/json" } }).then(function (res) { return res.json(); });
+            }).then(function (res) {
+              if (!res || !res.ok) { toast((res && res.error) || TEXT.imageFailed || "The picture couldn't be uploaded.", "warn"); return; }
+              var img = new Image();
+              img.onload = function () {
+                var k = Math.min(1, 320 / Math.max(img.width, img.height, 1)), w = Math.max(40, Math.round(img.width * k)), h = Math.max(30, Math.round(img.height * k));
+                var n = { id: uid(), shape: "image", src: res.url, label: "", w: w, h: h, x: snapTo(c.x - w / 2 + i * 24, self.snap), y: snapTo(c.y - h / 2 + i * 24, self.snap) };
+                self.snapshot(); M.nodes.push(n); self.adopt([n]); self.render(); self.pick([n.id]); self.save();
+              };
+              img.src = res.url;
+            }).catch(function () { toast(TEXT.imageFailed || "The picture couldn't be uploaded.", "warn"); });
+          });
+          return true;
+        },
+        filePicked: function (e) { this.pictures(e.target.files, this._dropAt); e.target.value = ""; },
+        /* ── draw.io files: opened into this drawing, saved from it ── */
+        drawio: function () {
+          var self = this;
+          return DM.toDrawio(M, function (e) { return { start: self.endMark(e, "start"), end: self.endMark(e, "end") }; }, location.origin);
+        },
+        openDrawio: function (e) {
+          var file = e.target.files && e.target.files[0], self = this;
+          e.target.value = "";
+          if (!file) return;
+          file.text().then(readDrawio).then(function (g) {
+            if (!g.nodes.length) { toast(TEXT.drawioEmpty || "No shapes found in that file.", "warn"); return; }
+            var b = self.bounds(g.nodes), here = M.nodes.length ? self.bounds() : { x2: 0, y1: 40 }, dx = M.nodes.length ? here.x2 + 80 - b.x1 : 40 - b.x1, dy = here.y1 - b.y1;
+            g.nodes.forEach(function (n) { n.x = Math.round(n.x + dx); n.y = Math.round(n.y + dy); });
+            g.edges.forEach(function (ed) { if (ed.pts) ed.pts = ed.pts.map(function (q) { return [Math.round(q[0] + dx), Math.round(q[1] + dy)]; }); });
+            self.snapshot();
+            M.nodes = g.nodes.filter(function (n) { return n.shape === "container"; }).concat(M.nodes, g.nodes.filter(function (n) { return n.shape !== "container"; }));
+            M.edges = M.edges.concat(g.edges);
+            self.render(); self.pick(g.nodes.map(function (n) { return n.id; })); self.save(); self.fit();
+            toast((TEXT.drawioOpened || "Opened") + ": " + g.nodes.length, "good");
+          }).catch(function () { toast(TEXT.drawioBad || "That file couldn't be read as a draw.io drawing.", "warn"); });
+        },
+        straighten: function () { if (!this.edge || !this.edge.pts) return; this.snapshot(); delete this.edge.pts; delete this.edge.auto; this.render(); this.pick([], this.edge.id); this.save(); },
+        /* ── the menu on a right-click (or a long press) ── */
+        openMenu: function (cx, cy, target) {
+          var nodeEl = target && target.closest && target.closest(".wdr-node"), linkEl = target && target.closest && target.closest(".wdr-link");
+          var id = nodeEl && nodeEl.getAttribute("data-id");
+          if (id) { if (this.sel.indexOf(id) < 0) this.pick([id]); }
+          else if (linkEl) this.pick([], linkEl.getAttribute("data-edge"));
+          else if (this.sel.length || this.esel) this.pick([]);
+          var r = this.$refs.canvas.getBoundingClientRect();
+          this._menuAt = this.view.toWorld(cx, cy);
+          this.ctx = { x: Math.min(cx - r.left, r.width - 230), y: Math.min(cy - r.top, r.height - 300), on: id ? "node" : linkEl ? "edge" : "page" };
+        },
+        menuDo: function (what) {
+          var at = this._menuAt || { x: 0, y: 0 }; this.ctx = null;
+          var run = {
+            edit: function (s) { if (s.node) s.editText(s.node.id); else if (s.edge) s.editEdge(s.edge.id); },
+            duplicate: function (s) { s.duplicate(); }, copy: function (s) { s.copy(false); }, cut: function (s) { s.copy(true); },
+            paste: function (s) { s._pointer = null; s.pasteAt(at); }, remove: function (s) { s.removeSelected(); },
+            front: function (s) { s.front(false); }, back: function (s) { s.front(true); }, group: function (s) { s.group(); }, ungroup: function (s) { s.ungroup(); },
+            reverse: function (s) { s.reverse(); }, straighten: function (s) { s.straighten(); },
+            curve: function (s) { s.setEdge("route", "curve"); }, elbow: function (s) { s.setEdge("route", "elbow"); }, straight: function (s) { s.setEdge("route", ""); },
+            add: function (s) { var lib = DM.LIBRARY[s.kind] || DM.LIBRARY.drawing, key = lib[0][0]; for (var i = 0; i < lib.length; i++) if (lib[i][1] === MAIN[s.kind]) { key = lib[i][0]; break; } var n = s.add(key, at.x, at.y); if (!DM.TIGHT[n.shape]) s.editText(n.id); },
+            picture: function (s) { s._dropAt = at; s.$refs.file.click(); }, all: function (s) { s.pick(M.nodes.map(function (n) { return n.id; })); },
+            fit: function (s) { s.fit(); }, find: function (s) { s.openFind(); },
+          }[what];
+          if (run) run(this);
+        },
+        pasteAt: function (at) { this._pointerWorld = at; this.paste(); this._pointerWorld = null; },
+        /* ── find a shape by its words ── */
+        openFind: function () { this.findOpen = true; var self = this; this.$nextTick(function () { self.$refs.find && self.$refs.find.focus(); self.$refs.find && self.$refs.find.select(); }); },
+        closeFind: function () { this.findOpen = false; this.findText = ""; this.find(); this.$refs.canvas.focus({ preventScroll: true }); },
+        find: function () {
+          var q = this.findText.trim().toLowerCase();
+          this.hits = q ? M.nodes.filter(function (n) { return [n.label, n.attrs, n.methods].join(" ").toLowerCase().indexOf(q) >= 0; }).map(function (n) { return n.id; }) : [];
+          this.hitAt = 0;
+          var hits = this.hits;
+          Object.keys(els).forEach(function (id) { els[id].classList.toggle("is-found", hits.indexOf(id) >= 0); });
+          if (hits.length) this.showHit();
+        },
+        findNext: function (step) { if (!this.hits.length) return; this.hitAt = (this.hitAt + step + this.hits.length) % this.hits.length; this.showHit(); },
+        showHit: function () { var n = this.byId(this.hits[this.hitAt]); if (!n) return; this.pick([n.id]); this.view.reveal({ x1: n.x, y1: n.y, x2: n.x + n.w, y2: n.y + n.h }, 60); },
+
         /* ── keys ── */
         key: function (e) {
           if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable) return;
@@ -749,11 +945,13 @@
           else if (mod && k === "v") this.paste();
           else if (mod && k === "a") this.pick(M.nodes.map(function (n) { return n.id; }));
           else if (mod && (k === "g" || k === "G")) { if (e.shiftKey) this.ungroup(); else this.group(); }
+          else if (mod && (k === "f" || k === "F") && !e.shiftKey) this.openFind();
           else if (mod && e.shiftKey && (k === "f" || k === "F")) this.front(false);
           else if (mod && e.shiftKey && (k === "b" || k === "B")) this.front(true);
           else if (mod) done = false;
           else if (k === "Delete" || k === "Backspace") this.removeSelected();
-          else if (k === "Escape") { this.pick([]); this.area = false; }
+          else if (k === "Escape") { if (this.ctx) this.ctx = null; else { this.pick([]); this.area = false; } }
+          else if (k === "ContextMenu" || (e.shiftKey && k === "F10")) { var rr = this.$refs.canvas.getBoundingClientRect(); this.openMenu(rr.left + rr.width / 2, rr.top + rr.height / 3, this.node ? els[this.node.id] : null); }
           else if ((k === "Enter" || k === "F2") && this.node) this.editText(this.node.id);
           else if ((k === "Enter" || k === "F2") && this.edge) this.editEdge(this.edge.id);
           else if (k === "0") this.fit(); else if (k === "+" || k === "=") this.view.zoomBy(1.2); else if (k === "-") this.view.zoomBy(1 / 1.2);
@@ -797,7 +995,8 @@
             var nodeEl = e.target.closest(".wdr-node"), id = nodeEl && nodeEl.getAttribute("data-id");
             var handle = e.target.closest(".wdr-handle"), arrow = e.target.closest(".wdr-arrow"), end = e.target.closest(".wdr-end"), linkEl = e.target.closest(".wdr-link");
             c.focus({ preventScroll: true });
-            if (e.button === 1 || (e.button === 0 && spaceDown) || e.button === 2) { act = { kind: "pan" }; self.view.down(e); e.preventDefault(); return; }
+            if (e.button === 2) return;                    // the right button opens the menu (contextmenu below)
+            if (e.button === 1 || (e.button === 0 && spaceDown)) { act = { kind: "pan" }; self.view.down(e); e.preventDefault(); return; }
             if (handle && self.node) {
               var n0 = self.node; self.snapshot(); self._dragging = true; self.unpin([n0]);
               act = { kind: "resize", dir: handle.getAttribute("data-handle"), n: n0, x: e.clientX, y: e.clientY, box: { x: n0.x, y: n0.y, w: n0.w, h: n0.h } };
@@ -808,6 +1007,16 @@
               c.setPointerCapture(e.pointerId); e.preventDefault(); return;
             }
             if (end && self.edge) { act = { kind: "reconnect", e: self.edge, which: end.getAttribute("data-end") }; self._dragging = true; c.setPointerCapture(e.pointerId); e.preventDefault(); return; }
+            var bend = e.target.closest(".wdr-bend"), mid = e.target.closest(".wdr-mid");
+            if ((bend || mid) && self.esel) {
+              var be = self.edgeById(self.esel); self.snapshot();
+              if (be.auto) delete be.auto;                         // shaped by hand from now on
+              be.pts = be.pts || [];
+              var at = bend ? +bend.getAttribute("data-bend") : +mid.getAttribute("data-mid");
+              if (mid) { var p0 = self.view.toWorld(e.clientX, e.clientY); be.pts.splice(at, 0, [Math.round(p0.x), Math.round(p0.y)]); }
+              act = { kind: "bend", e: be, i: at, moved: !!mid }; self._dragging = true;
+              c.setPointerCapture(e.pointerId); e.preventDefault(); return;
+            }
             if (id && e.isPrimary) {
               var picked = self.sel.indexOf(id) >= 0 ? self.sel.slice() : (e.shiftKey || e.ctrlKey || e.metaKey ? self.sel.concat([id]) : [id]);
               if ((e.shiftKey || e.ctrlKey || e.metaKey) && self.sel.indexOf(id) >= 0) picked = self.sel.filter(function (x) { return x !== id; });
@@ -833,7 +1042,30 @@
             act = { kind: "pan" };
             self.view.down(e);
           });
-          c.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+          c.addEventListener("contextmenu", function (e) {
+            if (e.target.isContentEditable || e.target.classList.contains("wdr-edit") || e.target.closest(".wdr-ctx, .wdr-find")) return;
+            e.preventDefault(); act = null; self.openMenu(e.clientX, e.clientY, e.target);
+          });
+          // a long press with a finger opens the same menu
+          var press = null;
+          c.addEventListener("pointerdown", function (e) {
+            if (e.pointerType === "mouse") return;
+            clearTimeout(press && press.t);
+            press = { x: e.clientX, y: e.clientY, target: e.target, t: setTimeout(function () { if (!press) return; act = null; self.view.up({ pointerId: e.pointerId }); self.openMenu(press.x, press.y, press.target); press = null; }, 550) };
+          }, true);
+          function unpress(e) { if (press && (e.type !== "pointermove" || Math.hypot(e.clientX - press.x, e.clientY - press.y) > 8)) { clearTimeout(press.t); press = null; } }
+          c.addEventListener("pointermove", unpress, true); c.addEventListener("pointerup", unpress, true); c.addEventListener("pointercancel", unpress, true);
+          if (self.kind === "drawing") {
+            c.addEventListener("paste", function (e) { if (e.clipboardData && self.pictures(e.clipboardData.files, self._pointer ? self.view.toWorld(self._pointer.x, self._pointer.y) : null)) e.preventDefault(); });
+            c.addEventListener("dragover", function (e) { if (e.dataTransfer && Array.prototype.some.call(e.dataTransfer.items || [], function (i) { return i.kind === "file"; })) e.preventDefault(); });
+            c.addEventListener("drop", function (e) {
+              if (!e.dataTransfer || !e.dataTransfer.files.length) return;
+              e.preventDefault();
+              var f = e.dataTransfer.files[0];
+              if (/\.(drawio|xml)$/i.test(f.name)) { self.openDrawio({ target: { files: [f], value: "" } }); return; }
+              self.pictures(e.dataTransfer.files, self.view.toWorld(e.clientX, e.clientY));
+            });
+          }
           c.addEventListener("pointermove", function (e) {
             self._pointer = { x: e.clientX, y: e.clientY };
             if (!act) {
@@ -859,7 +1091,11 @@
             if (act.kind === "move") {
               var dx = (e.clientX - act.x) / k, dy = (e.clientY - act.y) / k;
               if (!act.moved && Math.abs(dx) + Math.abs(dy) < 4 / k) return;
-              if (!act.moved) { act.moved = true; self.snapshot(); self._dragging = true; hover = null; self.unpin(act.list); }
+              if (!act.moved) {
+                act.moved = true; self.snapshot(); self._dragging = true; hover = null; self.unpin(act.list);
+                var moving = {}; act.list.forEach(function (n) { moving[n.id] = true; });
+                act.bends = M.edges.filter(function (ed) { return ed.pts && moving[ed.from] && moving[ed.to]; }).map(function (ed) { return { e: ed, pts: ed.pts.map(function (q) { return q.slice(); }) }; });
+              }
               var snapOn = self.snap && !e.altKey, lead = act.start[0];
               // snap the first picked shape to the grid, then let the guides pull everything into line
               var sdx = snapOn ? snapTo(lead.x + dx, true) - lead.x : dx, sdy = snapOn ? snapTo(lead.y + dy, true) - lead.y : dy;
@@ -868,6 +1104,7 @@
               if (gd.dx !== null) sdx = dx + gd.dx;
               if (gd.dy !== null) sdy = dy + gd.dy;
               act.start.forEach(function (s) { s.n.x = Math.round(s.x + sdx); s.n.y = Math.round(s.y + sdy); });
+              (act.bends || []).forEach(function (b) { b.e.pts = b.pts.map(function (q) { return [Math.round(q[0] + sdx), Math.round(q[1] + sdy)]; }); });
               // the group it would drop into
               var lead2 = act.start[0].n, cc = centre(lead2), target = null, mine = act.list.map(function (n) { return n.id; });
               M.nodes.forEach(function (g) { if (g.shape === "container" && mine.indexOf(g.id) < 0 && cc.x > g.x && cc.x < g.x + g.w && cc.y > g.y && cc.y < g.y + g.h && (!target || g.w * g.h < target.w * target.h)) target = g; });
@@ -890,6 +1127,11 @@
               n.w = Math.max(12, snapTo(x2, so && dir.indexOf("e") >= 0) - n.x); n.h = Math.max(6, snapTo(y2, so && dir.indexOf("s") >= 0) - n.y);
               if (DM.ROWS[n.shape]) { n.y = b.y; n.h = b.h; }
               self.render();
+            } else if (act.kind === "bend") {
+              act.moved = true;
+              var gs = self.snap && !e.altKey;
+              act.e.pts[act.i] = [snapTo(p.x, gs), snapTo(p.y, gs)];
+              self.links(); self.ui();
             } else if (act.kind === "arrow" || act.kind === "reconnect") {
               if (act.kind === "arrow" && !act.moved && Math.hypot(e.clientX - act.x, e.clientY - act.y) < 6) return;
               act.moved = true; self._dragging = true;
@@ -927,6 +1169,7 @@
               return;
             }
             if (a.kind === "resize") { self.render(); self.save(); return; }
+            if (a.kind === "bend") { self.render(); self.pick([], a.e.id); if (a.moved) self.save(); return; }
             if (a.kind === "arrow") {
               if (!a.moved) { self.addLinked(a.from, a.dir); return; }
               if (a.to && a.to !== a.from) { self.link(a.from, a.to); return; }
@@ -946,6 +1189,12 @@
           }
           c.addEventListener("pointerup", end); c.addEventListener("pointercancel", end);
           c.addEventListener("dblclick", function (e) {
+            var bendEl = e.target.closest(".wdr-bend");
+            if (bendEl && self.edge) {                 // a bend double-clicked: gone
+              self.snapshot(); self.edge.pts.splice(+bendEl.getAttribute("data-bend"), 1);
+              if (!self.edge.pts.length) delete self.edge.pts;
+              self.render(); self.pick([], self.edge.id); self.save(); return;
+            }
             var n = e.target.closest(".wdr-node");
             if (n) { self.editText(n.getAttribute("data-id")); return; }
             if (e.target.closest(".wdr-link") || e.target.closest(".wdr-ui > *")) return;
@@ -960,7 +1209,19 @@
         },
 
         /* ── the picture (export, and the list) ── */
-        toSVG: function () {
+        /* for a download: pictures are put inside it, so it shows anywhere */
+        pictureSVG: function () {
+          var self = this, srcs = {};
+          M.nodes.forEach(function (n) { if (n.shape === "image" && n.src) srcs[n.src] = true; });
+          var list = Object.keys(srcs);
+          if (!list.length) return Promise.resolve(this.toSVG());
+          return Promise.all(list.map(function (src) {
+            return fetch(src, { credentials: "same-origin" }).then(function (r) { return r.blob(); }).then(function (b) {
+              return new Promise(function (res) { var fr = new FileReader(); fr.onload = function () { res([src, fr.result]); }; fr.onerror = function () { res([src, ""]); }; fr.readAsDataURL(b); });
+            }).catch(function () { return [src, ""]; });
+          })).then(function (pairs) { var map = {}; pairs.forEach(function (p) { map[p[0]] = p[1]; }); return self.toSVG(map); });
+        },
+        toSVG: function (inline) {
           if (!M.nodes.length) return null;
           var self = this, b = this.bounds(), pad = 30, out = [];
           M.nodes.forEach(function (n) { if (n.shape === "actor" && n.label) { b.y2 = Math.max(b.y2, n.y + n.h + 24); b.x1 = Math.min(b.x1, n.x - 30); b.x2 = Math.max(b.x2, n.x + n.w + 30); } });
@@ -1016,7 +1277,11 @@
             if (e.fromLabel) { var q1 = endLabel(g.a, g.fromA, 1); out.push(lab(e.fromLabel, q1.x, q1.y)); }
             if (e.toLabel) { var q2 = endLabel(g.b, g.fromB, -1); out.push(lab(e.toLabel, q2.x, q2.y)); }
           });
-          M.nodes.filter(function (n) { return n.shape !== "container"; }).forEach(function (n) { out.push('<g transform="translate(' + n.x + "," + n.y + ')">' + shapeSVG(n, paint(n, false)) + "</g>" + words(n)); });
+          M.nodes.filter(function (n) { return n.shape !== "container"; }).forEach(function (n) {
+            var m = n;
+            if (n.shape === "image") m = Object.assign({}, n, { src: inline && inline[n.src] ? inline[n.src] : "" });      // the list's picture can't load pictures: a box
+            out.push('<g transform="translate(' + n.x + "," + n.y + ')">' + shapeSVG(m, paint(n, false)) + "</g>" + words(n));
+          });
           var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + w + " " + h + '" width="' + w + '" height="' + h + '" font-family="' + esc(FONT) + '">' +
             '<rect width="100%" height="100%" fill="#ffffff"/><g transform="translate(' + ox + "," + oy + ')">' + out.join("") + "</g></svg>";
           return { svg: svg, w: w, h: h };

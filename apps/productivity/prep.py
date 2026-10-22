@@ -25,7 +25,9 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from . import cards
-from .models import Difficulty, PrepAttempt, PrepExam, PrepTopic, Question, QuestionKind, WorkSettings
+from django.db.models import Max
+
+from .models import Difficulty, Level, PrepAttempt, PrepExam, PrepSection, PrepTopic, Question, QuestionKind, WorkSettings
 
 AGAIN, HARD, GOOD, EASY = cards.RATINGS
 SESSION_MAX = 100
@@ -73,6 +75,100 @@ def previews(question):
     return cards.previews(question)
 
 
+# ── The sequence and the numbers ──────────────────────────────────────────
+SEQUENCE = Question._meta.ordering      # topic by topic; outside a section first, then each section; by position
+
+
+def numbering(user, topic_ids=None):
+    """{question id: "PY-2.3"}: the topic's code, the section's place in the topic, the question's place in
+    the section ("PY-4" for a question outside any section)."""
+    sections = PrepSection.objects.filter(owner=user)
+    qs = Question.objects.filter(owner=user)
+    if topic_ids is not None:
+        sections, qs = sections.filter(topic_id__in=topic_ids), qs.filter(topic_id__in=topic_ids)
+    place, seen = {}, defaultdict(int)
+    for sid, tid in sections.order_by("topic_id", "order", "pk").values_list("pk", "topic_id"):
+        seen[tid] += 1
+        place[sid] = seen[tid]
+    out, count = {}, defaultdict(int)
+    for pk, code, tid, sid in qs.order_by(*SEQUENCE).values_list("pk", "topic__code", "topic_id", "section_id"):
+        count[(tid, sid)] += 1
+        out[pk] = f"{code}-{place[sid]}.{count[(tid, sid)]}" if sid else f"{code}-{count[(tid, sid)]}"
+    return out
+
+
+def numbered(user, questions):
+    """Sets `.number` on each question (for lists); returns them."""
+    questions = list(questions)
+    labels = numbering(user, {q.topic_id for q in questions}) if questions else {}
+    for q in questions:
+        q.number = labels.get(q.pk, "")
+    return questions
+
+
+NUMBER = re.compile(r"^\s*([A-Za-z0-9\u0980-\u09ff]{1,6})?[\s-]*(\d+)(?:\.(\d+))?\s*$")
+
+
+def find_number(user, text, topic=None):
+    """The question a number points at: "PY-2.3", "py 2.3", or "2.3" within `topic`."""
+    m = NUMBER.match(text or "")
+    if not m or (not m.group(1) and not topic) or (m.group(1) and m.group(1).isdigit()):
+        return None
+    want = f"{(m.group(1) or topic.code).upper()}-{m.group(2)}" + (f".{m.group(3)}" if m.group(3) else "")
+    topics = [topic.pk] if topic and not m.group(1) else list(PrepTopic.objects.filter(owner=user, code__iexact=m.group(1) or topic.code).values_list("pk", flat=True))
+    for pk, label in numbering(user, topics).items():
+        if label.upper() == want:
+            return Question.objects.filter(pk=pk).first()
+    return None
+
+
+def next_position(topic, section):
+    return (Question.objects.filter(topic=topic, section=section).aggregate(m=Max("order"))["m"] or 0) + 1
+
+
+def neighbours(question):
+    """The questions before and after this one in its topic's sequence."""
+    ids = list(Question.objects.filter(topic_id=question.topic_id).order_by(*SEQUENCE).values_list("pk", flat=True))
+    at = ids.index(question.pk)
+    pick = lambda i: Question.objects.filter(pk=ids[i]).first() if 0 <= i < len(ids) else None
+    return pick(at - 1), pick(at + 1)
+
+
+@transaction.atomic
+def reorder(topic, sections, groups):
+    """Puts a topic in a new order: `sections` is the section ids in order; `groups` maps a section id
+    ("" for none) to its question ids in order. Ids that aren't the topic's are left alone."""
+    mine = set(PrepSection.objects.filter(topic=topic).values_list("pk", flat=True))
+    for i, sid in enumerate([s for s in sections if s in mine], 1):
+        PrepSection.objects.filter(pk=sid).update(order=i)
+    own = set(Question.objects.filter(topic=topic).values_list("pk", flat=True))
+    for key, ids in groups.items():
+        sid = int(key) if str(key).isdigit() and int(key) in mine else None
+        if key not in ("", "0", 0, None) and sid is None:
+            continue
+        for i, qid in enumerate([q for q in ids if q in own], 1):
+            Question.objects.filter(pk=qid).update(section_id=sid, order=i)
+
+
+def move(question, topic, section=None):
+    """To another topic or section: it goes to the end there."""
+    if section is not None and section.topic_id != topic.pk:
+        section = None
+    if question.topic_id != topic.pk or question.section_id != (section.pk if section else None):
+        question.topic, question.section = topic, section
+        question.order = next_position(topic, section)
+        question.save(update_fields=["topic", "section", "order", "updated_at"])
+    return question
+
+
+def section_named(topic, name):
+    name = (name or "").strip()[:120]
+    if not name:
+        return None
+    return (PrepSection.objects.filter(topic=topic, name__iexact=name).first()
+            or PrepSection.objects.create(owner=topic.owner, topic=topic, name=name, order=topic.sections.count() + 1))
+
+
 # ── What to practise ──────────────────────────────────────────────────────
 def _day_start(today):
     return cards._day_start(today)
@@ -89,7 +185,7 @@ def new_left(user, today=None):
 
 def filtered(user, f):
     """The person's questions narrowed by a filter dict: topic, kind, difficulty, status, starred, q, company, tag."""
-    qs = Question.objects.filter(owner=user).select_related("topic")
+    qs = Question.objects.filter(owner=user).select_related("topic", "section")
     if str(f.get("topic", "")).isdigit():
         qs = qs.filter(topic_id=int(f["topic"]))
     if f.get("kind") in QuestionKind.values:
@@ -105,6 +201,10 @@ def filtered(user, f):
         qs = qs.filter(companies__icontains=f["company"])
     if f.get("tag"):
         qs = qs.filter(tags__name=f["tag"].lower())
+    if str(f.get("section", "")).isdigit():
+        qs = qs.filter(section_id=int(f["section"])) if int(f["section"]) else qs.filter(section__isnull=True)
+    if f.get("level") in Level.values and f.get("level"):
+        qs = qs.filter(level=f["level"])
     status = f.get("status")
     if status == "new":
         qs = qs.filter(last_reviewed__isnull=True)
@@ -132,6 +232,9 @@ def today_queue(user, today=None, topic=None):
 
 def practice_queue(user, f, count=20, order="smart"):
     """A practice set from a filter: weakest and most overdue first ("smart"), or shuffled."""
+    if order == "sequence":                 # the topic's own order, from the start (or from a number)
+        items = list(filtered(user, f).order_by(*SEQUENCE)[:SESSION_MAX])
+        return items[:max(1, min(int(count or SESSION_MAX), SESSION_MAX))]
     items = list(filtered(user, f)[:1000])
     if order == "random":
         random.shuffle(items)
@@ -159,6 +262,7 @@ def as_json(q, *, for_exam=False):
         "hints": q.hint_list, "tests": q.tests if q.kind == QuestionKind.CODE else "",
         "multi": sum(1 for o in q.options or [] if o.get("correct")) > 1, "status": q.status, "starred": q.is_starred,
         "url": reverse("work:question", args=[q.pk]), "edit": reverse("work:question_edit", args=[q.pk]),
+        "number": getattr(q, "number", ""), "level": q.level, "levelLabel": q.get_level_display() if q.level else "",
     }
     if not for_exam:
         data.update({"answer": q.answer, "explanation": q.explanation, "points": q.points_list,
@@ -338,6 +442,8 @@ KIND_WORDS = {"choice": QuestionKind.CHOICE, "mcq": QuestionKind.CHOICE, "short"
               "coding": QuestionKind.CODE, "long": QuestionKind.LONG, "design": QuestionKind.LONG, "essay": QuestionKind.LONG,
               "behavioral": QuestionKind.LONG, "behavioural": QuestionKind.LONG}
 LEVEL_WORDS = {"easy": Difficulty.EASY, "medium": Difficulty.MEDIUM, "hard": Difficulty.HARD}
+SENIORITY = {"fresher": Level.FRESHER, "intern": Level.FRESHER, "junior": Level.JUNIOR, "mid": Level.MID, "mid-level": Level.MID,
+             "senior": Level.SENIOR, "lead": Level.LEAD, "architect": Level.LEAD}
 LANGS = {"python", "javascript", "typescript", "java", "go", "c", "cpp", "c++", "csharp", "c#", "rust", "kotlin", "swift", "ruby", "php", "sql", "bash", "shell"}
 SECTION = re.compile(r"^###\s*(answer|solution|key points|why|explanation|starter|starting code|notes|hints?|tests?|checks)\s*:?\s*$", re.I)
 OPTION = re.compile(r"^\s*[-*]\s*\[( |x|X)\]\s+(.+)$")
@@ -379,7 +485,7 @@ def reverse(head):
 def parse_markdown(text, default_topic=""):
     """Questions from the Markdown format shown on the import page:
     "# Topic", then "## Question {easy, choice}", "- [x] options", "### Answer", "### Key points", "### Why", "### Starter"."""
-    out, topic, cur, section = [], default_topic, None, "prompt"
+    out, topic, group, cur, section = [], default_topic, "", None, "prompt"
 
     def close():
         if cur and cur["prompt"].strip():
@@ -395,7 +501,9 @@ def parse_markdown(text, default_topic=""):
     for line in (text or "").replace("\r\n", "\n").split("\n"):
         if line.startswith("# ") and not line.startswith("## "):
             close()
-            cur, topic = None, line[2:].strip()[:80]
+            head = line[2:].strip()
+            topic, _sep, group = (part.strip() for part in head.partition(" / "))       # "# Python / Basics": a topic and its section
+            cur, topic, group = None, topic[:80], group[:120]
             continue
         m = HEAD.match(line) if line.startswith("##") and not line.startswith("###") else None
         if m:
@@ -403,7 +511,8 @@ def parse_markdown(text, default_topic=""):
             words = [w.strip().lower() for w in re.split(r"[,\s]+", m.group(2) or "") if w.strip()]
             kind = next((KIND_WORDS[w] for w in words if w in KIND_WORDS), QuestionKind.SHORT)
             lang = next((w.replace("c++", "cpp").replace("c#", "csharp") for w in words if w in LANGS), "")
-            cur = {"topic": topic or _("General"), "prompt": m.group(1).strip() + "\n", "answer": "", "key_points": "", "explanation": "",
+            cur = {"topic": topic or _("General"), "section": group, "level": next((SENIORITY[w] for w in words if w in SENIORITY), ""),
+                   "prompt": m.group(1).strip() + "\n", "answer": "", "key_points": "", "explanation": "",
                    "starter": "", "notes": "", "hints": "", "tests": "", "options": [], "language": lang, "kind": QuestionKind.CODE if lang and kind == QuestionKind.SHORT else kind,
                    "kind_set": any(w in KIND_WORDS for w in words) or bool(lang),
                    "difficulty": next((LEVEL_WORDS[w] for w in words if w in LEVEL_WORDS), Difficulty.MEDIUM)}
@@ -447,6 +556,7 @@ def parse_json(text):
                     "key_points": "\n".join(points) if isinstance(points, list) else str(points), "explanation": str(x.get("explanation") or ""),
                     "starter": str(x.get("starter") or ""), "notes": str(x.get("notes") or ""), "options": opts, "language": str(x.get("language") or "")[:20],
                     "hints": "\n".join(map(str, hints)) if isinstance(hints, list) else str(hints), "tests": str(x.get("tests") or ""),
+                    "section": str(x.get("section") or "")[:120], "level": x.get("level") if x.get("level") in Level.values else SENIORITY.get(str(x.get("level") or "").lower(), ""),
                     "kind": QuestionKind.CHOICE if opts and kind == QuestionKind.SHORT else kind, "difficulty": diff,
                     "companies": str(x.get("companies") or "")[:200], "source": str(x.get("source") or "")[:500]})
     return out
@@ -456,7 +566,8 @@ def parse_json(text):
 COLUMNS = {"question": "prompt", "prompt": "prompt", "front": "prompt", "term": "prompt", "q": "prompt",
            "answer": "answer", "back": "answer", "definition": "answer", "a": "answer", "solution": "answer",
            "topic": "topic", "deck": "topic", "subject": "topic", "difficulty": "difficulty", "level": "difficulty",
-           "type": "kind", "kind": "kind", "key points": "key_points", "key_points": "key_points", "hints": "hints", "hint": "hints",
+           "type": "kind", "kind": "kind", "section": "section", "chapter": "section", "level": "level", "seniority": "level",
+           "key points": "key_points", "key_points": "key_points", "hints": "hints", "hint": "hints",
            "explanation": "explanation", "why": "explanation", "language": "language", "companies": "companies", "tags": "tags"}
 
 
@@ -498,7 +609,8 @@ def parse_table(text, default_topic=""):
             continue
         kind = KIND_WORDS.get(str(x.get("kind", "")).lower(), QuestionKind.SHORT)
         lang = str(x.get("language", "")).lower()[:20]
-        out.append({"topic": (x.get("topic") or default_topic or _("General"))[:80], "prompt": x["prompt"], "answer": x.get("answer", ""),
+        out.append({"topic": (x.get("topic") or default_topic or _("General"))[:80], "section": x.get("section", "")[:120],
+                    "level": SENIORITY.get(str(x.get("level", "")).lower(), ""), "prompt": x["prompt"], "answer": x.get("answer", ""),
                     "key_points": x.get("key_points", "").replace(";", "\n"), "hints": x.get("hints", "").replace(";", "\n"),
                     "explanation": x.get("explanation", ""), "starter": "", "tests": "", "notes": "", "options": [], "language": lang,
                     "kind": QuestionKind.CODE if lang and kind == QuestionKind.SHORT else kind,
@@ -520,7 +632,7 @@ def parse_any(text):
 @transaction.atomic
 def add_many(user, items, topic=None):
     """Saves parsed questions; topics are found by name (or made). `topic` overrides theirs."""
-    topics, n = {}, 0
+    topics, sections, n = {}, {}, 0
     for x in items[:2000]:
         t = topic
         if t is None:
@@ -530,8 +642,15 @@ def add_many(user, items, topic=None):
                 topics[key] = (PrepTopic.objects.filter(owner=user, name__iexact=name).first()
                                or PrepTopic.objects.create(owner=user, name=name, order=PrepTopic.objects.filter(owner=user).count()))
             t = topics[key]
+        part = None
+        if (x.get("section") or "").strip():
+            key = (t.pk, x["section"].strip().lower())
+            if key not in sections:
+                sections[key] = section_named(t, x["section"])
+            part = sections[key]
         source = x.get("source") or ""
-        Question.objects.create(owner=user, topic=t, kind=x.get("kind") or QuestionKind.SHORT, difficulty=x.get("difficulty") or Difficulty.MEDIUM,
+        Question.objects.create(owner=user, topic=t, section=part, order=next_position(t, part), level=x.get("level") or "",
+                                kind=x.get("kind") or QuestionKind.SHORT, difficulty=x.get("difficulty") or Difficulty.MEDIUM,
                                 prompt=x["prompt"][:20000], answer=(x.get("answer") or "")[:50000], key_points=(x.get("key_points") or "")[:5000],
                                 options=x.get("options") or [], explanation=(x.get("explanation") or "")[:20000], language=(x.get("language") or "")[:20],
                                 starter=(x.get("starter") or "")[:20000], notes=(x.get("notes") or "")[:20000],
@@ -543,9 +662,10 @@ def add_many(user, items, topic=None):
 
 def export(user, qs=None):
     """The bank as JSON (it imports back here, or into another account)."""
-    qs = qs if qs is not None else Question.objects.filter(owner=user).select_related("topic")
+    qs = qs if qs is not None else Question.objects.filter(owner=user).select_related("topic", "section")
     return {"format": "fintrack-prep/1", "questions": [{
-        "topic": q.topic.name, "kind": q.kind, "difficulty": q.difficulty, "prompt": q.prompt, "answer": q.answer,
+        "topic": q.topic.name, "section": q.section.name if q.section_id else "", "level": q.level,
+        "kind": q.kind, "difficulty": q.difficulty, "prompt": q.prompt, "answer": q.answer,
         "key_points": q.points_list, "options": q.options, "explanation": q.explanation, "language": q.language, "starter": q.starter,
         "companies": q.companies, "source": q.source, "notes": q.notes, "hints": q.hint_list, "tests": q.tests} for q in qs]}
 

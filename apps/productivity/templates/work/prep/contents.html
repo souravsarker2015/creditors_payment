@@ -1,0 +1,44 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% translate "Contents" %} | {% translate "Interview prep" %}{% endblock %}
+
+{% block work %}
+<header class="wp-head">
+  <div class="min-w-0">
+    <a href="{% url 'work:prep' %}" class="back-link">{% icon "chevron-left" %}{% translate "Interview prep" %}</a>
+    <h1 class="wp-title">{% translate "Contents" %}</h1>
+    <p class="wp-sub">{% blocktranslate count counter=total %}{{ counter }} question, numbered by topic and section{% plural %}{{ counter }} questions, numbered by topic and section{% endblocktranslate %}</p>
+  </div>
+  <div class="wp-actions">
+    <a href="{% url 'work:prep_sheet' %}" class="btn btn-secondary">{% icon "printer" %}{% translate "Revision sheet" %}</a>
+    <a href="{% url 'work:question_new' %}" class="btn btn-primary">{% icon "plus" %}{% translate "Question" %}</a>
+  </div>
+</header>
+
+<div class="wpx" x-data="{ find: '' }">
+  <div class="input-icon wf-search wpx-find">{% icon "search" %}
+    <input type="search" x-model="find" class="form-input input-compact" placeholder="{% translate 'Find a question or a number…' %}" aria-label="{% translate 'Find' %}"></div>
+  {% for b in book %}
+  <section class="card wpx-topic" x-data="{ open: true }">
+    <header class="wpx-topic-head">
+      <button type="button" class="icon-btn" @click="open = !open" :aria-expanded="open.toString()" aria-label="{% translate 'Fold or unfold' %}"><span class="wdx-fold" x-text="open ? '−' : '+'"></span></button>
+      <a href="{% url 'work:prep_topic' b.t.pk %}" class="wpx-topic-name"><span class="wt-dot" data-color="{{ b.t.color }}"></span>{{ b.t.name }} <span class="wpq-code">{{ b.t.code }}</span></a>
+      <a href="{% url 'work:prep_topic' b.t.pk %}" class="btn btn-ghost btn-sm">{% icon "edit" %}{% translate "Edit contents" %}</a>
+    </header>
+    <div class="wpx-body" x-show="open">
+      {% for s, qs in b.parts %}{% if s or qs %}
+      <div class="wpx-part">
+        {% if s %}<h3 class="wpx-part-name"><b>{{ forloop.counter0 }}.</b> {{ s.name }} <small>{{ qs|length }}</small></h3>{% elif b.parts|length > 1 %}<h3 class="wpx-part-name is-loose">{% translate "Not in a section" %}</h3>{% endif %}
+        <ol class="wpx-list">{% for q in qs %}
+          <li x-show="!find || $el.textContent.toLowerCase().includes(find.toLowerCase())"><a href="{% url 'work:question' q.pk %}"><span class="wpc-num num">{{ q.number }}</span><span class="wpq-dot" data-status="{{ q.status }}"></span><span class="wpx-title">{{ q.title }}</span>{% if q.level %}<span class="wpq-level">{{ q.get_level_display }}</span>{% endif %}</a></li>
+        {% empty %}<li class="help">{% translate "No questions yet." %}</li>{% endfor %}</ol>
+      </div>
+      {% endif %}{% endfor %}
+    </div>
+  </section>
+  {% empty %}
+  <div class="empty"><h3 class="empty-title">{% translate "No topics yet" %}</h3><p class="empty-text"><a href="{% url 'work:prep' %}">{% translate "Start from a starter pack or add a topic." %}</a></p></div>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,10 +1,13 @@
 {% load i18n work %}<li class="wpq-row" data-status="{{ q.status }}">
+  {% if pick %}<input type="checkbox" name="ids" value="{{ q.pk }}" class="wpq-pick" aria-label="{% translate 'Pick' %}">{% endif %}
+  {% if q.number %}<span class="wpc-num num">{{ q.number }}</span>{% endif %}
   <span class="wpq-dot" data-status="{{ q.status }}" title="{{ q.status_label }}"></span>
   <div class="wpq-row-main">
     <a href="{% url 'work:question' q.pk %}" class="wpq-row-title">{{ q.title }}</a>
     <div class="wpq-row-meta">
-      <span class="wt-proj"><span class="wt-dot" data-color="{{ q.topic.color }}"></span>{{ q.topic.name }}</span>
+      <a href="{% url 'work:prep_topic' q.topic_id %}" class="wt-proj"><span class="wt-dot" data-color="{{ q.topic.color }}"></span>{{ q.topic.name }}{% if q.section_id and q.section %} › {{ q.section.name }}{% endif %}</a>
       <span class="wpq-diff" data-d="{{ q.difficulty }}">{{ q.get_difficulty_display }}</span>
+      {% if q.level %}<span class="wpq-level">{{ q.get_level_display }}</span>{% endif %}
       <span class="wpq-kind">{{ q.get_kind_display }}</span>
       {% for c in q.company_list|slice:":3" %}<span class="wpq-company">{{ c }}</span>{% endfor %}
       {% if q.attempts %}<span class="wpq-acc" title="{% translate 'Answered right' %}">{% blocktranslate with a=q.accuracy n=q.attempts %}{{ a }}% of {{ n }}{% endblocktranslate %}</span>{% endif %}

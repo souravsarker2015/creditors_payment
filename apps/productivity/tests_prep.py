@@ -12,7 +12,7 @@ from apps.trash.models import DeletedItem
 from apps.trash.services import restore
 
 from . import prep
-from .models import PrepAttempt, PrepExam, PrepTopic, Question, QuestionKind, WorkSettings
+from .models import PrepAttempt, PrepExam, PrepSection, PrepTopic, Question, QuestionKind, WorkSettings
 from .prep_packs import PACKS
 
 PW = "Str0ng-pass-123"
@@ -368,3 +368,132 @@ class RunAndHintTests(Base):
                 if x.get("kind") == QuestionKind.CODE:
                     self.assertTrue(x.get("tests"), x["prompt"])
                     self.assertTrue(x.get("hints"), x["prompt"])
+
+
+class ContentsTests(Base):
+    """Sections, levels, the sequence and numbers (PY-2.3), and editing a topic's contents in place."""
+    def setUp(self):
+        super().setUp()
+        self.basics = PrepSection.objects.create(owner=self.me, topic=self.topic, name="Basics", order=1)
+        self.more = PrepSection.objects.create(owner=self.me, topic=self.topic, name="Concurrency", order=2)
+        self.loose = self.q("Why Python?", order=1)
+        self.a = self.q("What is a list?", section=self.basics, order=1)
+        self.b = self.q("What is a dict?", section=self.basics, order=2)
+        self.c = self.q("What is the GIL?", section=self.more, order=1)
+
+    def api(self, **data):
+        return self.client.post(reverse("work:api_prep_topic", args=[self.topic.pk]), data).json()
+
+    def test_codes(self):
+        self.assertEqual(self.topic.code, "PY")
+        for name, code in (("SQL & databases", "SQL"), ("System design", "SD"), ("Data structures & algorithms", "DSA"), ("Git", "GI")):
+            self.assertEqual(PrepTopic.objects.create(owner=self.me, name=name).code, code)
+        self.assertEqual(PrepTopic.objects.create(owner=self.me, name="Rust", code="rs!").code, "RS")
+
+    def test_numbers_follow_sections_and_order(self):
+        labels = prep.numbering(self.me)
+        self.assertEqual([labels[q.pk] for q in (self.loose, self.a, self.b, self.c)], ["PY-1", "PY-1.1", "PY-1.2", "PY-2.1"])
+        self.assertEqual(list(Question.objects.filter(owner=self.me)), [self.loose, self.a, self.b, self.c])      # the sequence
+        self.assertEqual(prep.find_number(self.me, "py-1.2"), self.b)
+        self.assertEqual(prep.find_number(self.me, "2.1", self.topic), self.c)
+        self.assertIsNone(prep.find_number(self.me, "PY-9.9"))
+        r = self.client.get(reverse("work:questions") + "?q=PY-2.1")
+        self.assertRedirects(r, reverse("work:question", args=[self.c.pk]))
+
+    def test_reorder_moves_between_sections(self):
+        r = self.api(action="order", order=json.dumps({"sections": [self.more.pk, self.basics.pk],
+                                                       "questions": {"0": [], str(self.more.pk): [self.c.pk, self.loose.pk], str(self.basics.pk): [self.b.pk, self.a.pk]}}))
+        self.assertTrue(r["ok"])
+        labels = prep.numbering(self.me)
+        self.assertEqual([labels[q.pk] for q in (self.c, self.loose, self.b, self.a)], ["PY-1.1", "PY-1.2", "PY-2.1", "PY-2.2"])
+        stranger = PrepTopic.objects.create(owner=self.me, name="Other")
+        other = self.q("Elsewhere", topic=stranger)
+        self.api(action="order", order=json.dumps({"sections": [], "questions": {"0": [other.pk]}}))
+        other.refresh_from_db()
+        self.assertEqual(other.topic, stranger)                # not this topic's: left alone
+
+    def test_sections_and_questions_in_place(self):
+        r = self.api(action="section_add", name="Testing")
+        self.assertTrue(r["ok"])
+        sid = r["section"]["id"]
+        self.api(action="section_rename", section=sid, name="Tests")
+        self.assertEqual(PrepSection.objects.get(pk=sid).name, "Tests")
+        r = self.api(action="question_add", section=sid, prompt="What is a fixture?", answer="Setup for a test.", kind="long", difficulty=1, level="junior")
+        q = Question.objects.get(pk=r["question"]["id"])
+        self.assertEqual((q.section_id, q.kind, q.difficulty, q.level, q.order), (sid, "long", 1, "junior", 1))
+        # edit in place, and move to another section
+        url = reverse("work:api_question_action", args=[q.pk])
+        r = self.client.post(url, {"action": "update", "prompt": "What is a pytest fixture?", "answer": "Reusable setup.", "level": "mid",
+                                   "difficulty": "3", "section": self.basics.pk}).json()
+        q.refresh_from_db()
+        self.assertEqual((q.prompt, q.level, q.difficulty, q.section, q.order), ("What is a pytest fixture?", "mid", 3, self.basics, 3))
+        self.assertFalse(self.client.post(url, {"action": "update", "prompt": " "}).json()["ok"])
+        # a section deleted: its questions stay, outside any section
+        self.api(action="section_delete", section=self.more.pk)
+        self.c.refresh_from_db()
+        self.assertIsNone(self.c.section)
+        self.assertEqual(prep.numbering(self.me)[self.c.pk], "PY-2")
+        # deleted in place, and brought back
+        r = self.client.post(url, {"action": "delete"}).json()
+        self.assertFalse(Question.objects.filter(pk=q.pk).exists())
+        self.client.post(r["undo"])
+        self.assertTrue(Question.objects.filter(pk=q.pk).exists())
+
+    def test_a_question_comes_back_even_when_its_section_is_gone(self):
+        self.client.post(reverse("work:api_question_action", args=[self.c.pk]), {"action": "delete"})
+        self.more.delete()
+        restore(DeletedItem.objects.latest("pk"))
+        self.c.refresh_from_db()
+        self.assertIsNone(self.c.section)
+
+    def test_bulk_actions(self):
+        ids = [self.a.pk, self.c.pk]
+        self.client.post(reverse("work:questions"), {"action": "level", "level": "senior", "ids": ids})
+        self.assertEqual(Question.objects.filter(level="senior").count(), 2)
+        self.client.post(reverse("work:questions"), {"action": "move", "to": f"s{self.more.pk}", "ids": [self.a.pk]})
+        self.a.refresh_from_db()
+        self.assertEqual((self.a.section, self.a.order), (self.more, 2))
+        other = PrepTopic.objects.create(owner=self.me, name="Go")
+        self.client.post(reverse("work:questions"), {"action": "move", "to": f"t{other.pk}", "ids": [self.b.pk]})
+        self.b.refresh_from_db()
+        self.assertEqual((self.b.topic, self.b.section), (other, None))
+        self.client.post(reverse("work:questions"), {"action": "delete", "ids": [self.loose.pk, self.a.pk]})
+        self.assertEqual(Question.objects.count(), 2)
+        self.assertEqual(self.client.get(reverse("work:questions") + "?level=senior").context["total"], 1)
+
+    def test_the_form_places_questions(self):
+        r = self.client.post(reverse("work:question_new"), {"topic": self.topic.pk, "new_section": "Typing", "kind": "short", "difficulty": 2,
+                                                             "level": "fresher", "prompt": "What is a type hint?", "options_json": "[]"})
+        self.assertEqual(r.status_code, 302)
+        q = Question.objects.get(prompt="What is a type hint?")
+        self.assertEqual((q.section.name, q.level, q.order), ("Typing", "fresher", 1))
+        # moved to another section in the form: to its end
+        r = self.client.post(reverse("work:question_edit", args=[q.pk]), {"topic": self.topic.pk, "section": self.basics.pk, "kind": "short",
+                                                                          "difficulty": 2, "prompt": q.prompt, "options_json": "[]"})
+        q.refresh_from_db()
+        self.assertEqual((q.section, q.order), (self.basics, 3))
+
+    def test_markdown_carries_sections_and_levels(self):
+        md = "# Go / Basics\n## What is a goroutine? {easy, short, junior}\n### Answer\nA light thread.\n# Go / Channels\n## Buffered vs unbuffered? {senior}\n"
+        prep.add_many(self.me, prep.parse_markdown(md))
+        g1, g2 = Question.objects.filter(topic__name="Go").order_by(*prep.SEQUENCE)
+        self.assertEqual((g1.section.name, g1.level, g2.section.name, g2.level), ("Basics", "junior", "Channels", "senior"))
+        out = self.client.get(reverse("work:prep_export") + "?format=md").content.decode()
+        self.assertIn("# Go / Channels", out)
+        again = prep.parse_markdown(out)
+        self.assertIn(("Go", "Basics", "junior"), [(x["topic"], x["section"], x["level"]) for x in again])
+
+    def test_pages(self):
+        r = self.client.get(reverse("work:prep_topic", args=[self.topic.pk]))
+        self.assertEqual([s["name"] for s in r.context["contents"]["sections"]], ["", "Basics", "Concurrency"])
+        self.assertEqual(r.context["contents"]["sections"][1]["questions"][1]["number"], "PY-1.2")
+        r = self.client.get(reverse("work:prep_contents"))
+        self.assertContains(r, "PY-2.1")
+        r = self.client.get(reverse("work:question", args=[self.b.pk]))
+        self.assertEqual((r.context["before"], r.context["after"]), (self.a, self.c))
+        self.assertContains(r, "PY-1.2")
+        r = self.client.get(reverse("work:prep_practice") + f"?topic={self.topic.pk}&order=sequence")
+        self.assertEqual([q["number"] for q in r.context["session"]["questions"]], ["PY-1", "PY-1.1", "PY-1.2", "PY-2.1"])
+        r = self.client.get(reverse("work:prep_practice") + f"?topic={self.topic.pk}&section={self.basics.pk}&order=sequence")
+        self.assertEqual(len(r.context["session"]["questions"]), 2)
+        self.assertContains(self.client.get(reverse("work:prep_sheet")), "Concurrency")

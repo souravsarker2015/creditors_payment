@@ -891,7 +891,10 @@ def _drawing_texts():
             "start": _("Start"), "state": _("State"), "choice": _("Choice"), "fork": _("Fork / join"), "end": _("End"),
             "class": _("Class"), "interface": _("Interface"), "abstract": _("Abstract class"), "enum": _("Enumeration"), "entity": _("Table"),
             "rect": _("Box"), "ellipse": _("Ellipse"), "triangle": _("Triangle"), "trapezoid": _("Trapezoid"), "cloud": _("Cloud"), "actor": _("Person"),
+            "picture": _("Picture"),
         },
+        "uploading": _("Uploading…"), "imageFailed": _("The picture couldn't be uploaded."), "drawioEmpty": _("No shapes found in that file."),
+        "drawioOpened": _("Shapes brought in"), "drawioBad": _("That file couldn't be read as a draw.io drawing."),
         "starts": {"terminal": _("Start"), "io": _("Input"), "subroutine": _("Sub-process"), "manual": _("Manual step")},
         "shapeGroups": {"basic": _("Shapes"), "uml": _("UML and data")},
         "marks": {
@@ -1703,9 +1706,10 @@ def export_view(request):
     rows += json.loads(serializers.serialize("json", SavedView.objects.filter(owner=user)))
     rows += json.loads(serializers.serialize("json", TaskTemplate.objects.filter(owner=user)))
     rows += json.loads(serializers.serialize("json", Sprint.objects.filter(owner=user)))
-    from .models import PrepTopic, Question
+    from .models import PrepSection, PrepTopic, Question
 
     rows += json.loads(serializers.serialize("json", PrepTopic.objects.filter(owner=user)))
+    rows += json.loads(serializers.serialize("json", PrepSection.objects.filter(owner=user)))
     rows += json.loads(serializers.serialize("json", Question.objects.filter(owner=user)))
     ext = {"python": "py", "javascript": "js", "typescript": "ts", "bash": "sh", "plaintext": "txt", "markdown": "md", "xml": "html",
            "csharp": "cs", "cpp": "cpp", "dockerfile": "Dockerfile", "kotlin": "kt", "ruby": "rb", "rust": "rs", "yaml": "yml"}

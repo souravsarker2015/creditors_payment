@@ -20,11 +20,21 @@
 
 <form method="get" class="wf-bar has-more" x-data="{ more: false }" @change="$el.requestSubmit()">
   <div class="input-icon wf-search">{% icon "search" %}
-    <input type="search" name="q" value="{{ f.q }}" class="form-input input-compact" placeholder="{% translate 'Search questions, answers, companies…' %}" aria-label="{% translate 'Search questions' %}"></div>
+    <input type="search" name="q" value="{{ f.q }}" class="form-input input-compact" placeholder="{% translate 'Search, or go to a number like PY-2.3' %}" aria-label="{% translate 'Search questions' %}"></div>
+  <select name="sort" class="form-input input-compact wpq-sort" aria-label="{% translate 'Order' %}">
+    <option value="">{% translate "In order (by number)" %}</option>
+    <option value="hard"{% if sort == 'hard' %} selected{% endif %}>{% translate "Hardest first" %}</option>
+    <option value="weak"{% if sort == 'weak' %} selected{% endif %}>{% translate "Most often wrong" %}</option>
+    <option value="new"{% if sort == 'new' %} selected{% endif %}>{% translate "Newest" %}</option></select>
   <button type="button" class="btn btn-secondary wf-toggle" @click="more = !more" :aria-expanded="more" aria-controls="prep-filters">{% icon "filter" %}<span>{% translate "Filters" %}</span>{% if filtered %}<i class="wf-on"></i>{% endif %}</button>
   <div class="wf-more" id="prep-filters" :class="more && 'is-open'">
     <select name="topic" class="form-input input-compact" aria-label="{% translate 'Topic' %}"><option value="">{% translate "All topics" %}</option>
       {% for t in topics %}<option value="{{ t.pk }}"{% if f.topic == t.pk|stringformat:'s' %} selected{% endif %}>{{ t.name }}</option>{% endfor %}</select>
+    {% if sections %}<select name="section" class="form-input input-compact" aria-label="{% translate 'Section' %}"><option value="">{% translate "All sections" %}</option>
+      <option value="0"{% if f.section == '0' %} selected{% endif %}>{% translate "Not in a section" %}</option>
+      {% for s in sections %}<option value="{{ s.pk }}"{% if f.section == s.pk|stringformat:'s' %} selected{% endif %}>{{ forloop.counter }}. {{ s.name }}</option>{% endfor %}</select>{% endif %}
+    <select name="level" class="form-input input-compact" aria-label="{% translate 'Level' %}"><option value="">{% translate "Any level" %}</option>
+      {% for v, l in levels %}<option value="{{ v }}"{% if f.level == v %} selected{% endif %}>{{ l }}</option>{% endfor %}</select>
     <select name="difficulty" class="form-input input-compact" aria-label="{% translate 'Difficulty' %}"><option value="">{% translate "Any difficulty" %}</option>
       {% for v, l in difficulties %}<option value="{{ v }}"{% if f.difficulty == v|stringformat:'s' %} selected{% endif %}>{{ l }}</option>{% endfor %}</select>
     <select name="kind" class="form-input input-compact" aria-label="{% translate 'Type' %}"><option value="">{% translate "Any type" %}</option>
@@ -41,7 +51,25 @@
 </form>
 
 {% if page.object_list %}
-<ul class="wpq-list card">{% for q in page.object_list %}{% include "work/prep/_row.html" %}{% endfor %}</ul>
+<form method="post" class="wpq-bulk-form" x-data="{ n: 0, all: false }" @change="n = $el.querySelectorAll('input[name=ids]:checked').length"
+      data-confirm-delete="{{ _("Delete the picked questions? You can bring them back from Recently deleted.") }}"
+      @submit="if ($event.submitter && $event.submitter.value === 'delete' && !confirm($el.dataset.confirmDelete)) $event.preventDefault()">
+  {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+  <div class="wpq-bulk" :class="n && 'is-on'">
+    <label class="wf-check"><input type="checkbox" x-model="all" @change="$el.closest('form').querySelectorAll('input[name=ids]').forEach(b => b.checked = all)" aria-label="{% translate 'Pick all on this page' %}"><span x-text="n ? n + ' {{ _("picked")|escapejs }}' : '{{ _("Pick all")|escapejs }}'"></span></label>
+    <div class="wpq-bulk-acts" x-show="n" x-cloak>
+      <select name="to" class="form-input input-compact" aria-label="{% translate 'Move to' %}"><option value="">{% translate "Move to…" %}</option>
+        {% for t in topics %}<option value="t{{ t.pk }}">{{ t.name }}</option>{% for s in all_sections %}{% if s.topic_id == t.pk %}<option value="s{{ s.pk }}">&nbsp;&nbsp;› {{ s.name }}</option>{% endif %}{% endfor %}{% endfor %}</select>
+      <button type="submit" name="action" value="move" class="btn btn-secondary btn-sm">{% translate "Move" %}</button>
+      <select name="level" class="form-input input-compact" aria-label="{% translate 'Level' %}">{% for v, l in levels %}<option value="{{ v }}">{{ l }}</option>{% endfor %}<option value="">{% translate "Any level" %}</option></select>
+      <button type="submit" name="action" value="level" class="btn btn-secondary btn-sm">{% translate "Set level" %}</button>
+      <select name="difficulty" class="form-input input-compact" aria-label="{% translate 'Difficulty' %}">{% for v, l in difficulties %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select>
+      <button type="submit" name="action" value="difficulty" class="btn btn-secondary btn-sm">{% translate "Set difficulty" %}</button>
+      <button type="submit" name="action" value="delete" class="btn btn-ghost btn-sm is-danger">{% icon "trash" %}{% translate "Delete" %}</button>
+    </div>
+  </div>
+  <ul class="wpq-list card">{% for q in page.object_list %}{% include "work/prep/_row.html" with pick=True %}{% endfor %}</ul>
+</form>
 {% include "partials/pagination.html" with page_obj=page %}
 <p class="wpq-export">{% icon "download" %}{% translate "Export these:" %} <a href="{% url 'work:prep_export' %}?{{ query }}">JSON</a> · <a href="{% url 'work:prep_export' %}?{{ query }}&format=md">Markdown</a></p>
 {% else %}

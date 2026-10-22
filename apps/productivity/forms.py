@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from . import services
-from .models import Deck, Goal, GoalStatus, Habit, LearningItem, LearningStatus, PrepTopic, Project, Question, QuestionKind, Snippet, Sprint, Tag, Task, TaskKind, TimeEntry, WorkSettings
+from .models import Deck, Goal, GoalStatus, Habit, LearningItem, LearningStatus, PrepSection, PrepTopic, Project, Question, QuestionKind, Snippet, Sprint, Tag, Task, TaskKind, TimeEntry, WorkSettings
 
 DATE = forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d")
 SWATCHES = forms.RadioSelect   # colours are picked from swatches (templates: .w-swatches)
@@ -364,7 +364,7 @@ class DeckForm(OwnedForm):
 class PrepTopicForm(forms.ModelForm):
     class Meta:
         model = PrepTopic
-        fields = ("name", "color", "description")
+        fields = ("name", "code", "color", "description")
         widgets = {"color": SWATCHES}
 
     def __init__(self, *args, owner=None, **kwargs):
@@ -382,11 +382,12 @@ class QuestionForm(forms.ModelForm):
     """A question. Choices come from the page's editor as JSON; a new topic can be typed in place."""
     tags_text = TagsField()
     new_topic = forms.CharField(label=_("…or a new topic"), max_length=80, required=False)
+    new_section = forms.CharField(label=_("…or a new section"), max_length=120, required=False)
     options_json = forms.CharField(required=False, widget=forms.HiddenInput)
 
     class Meta:
         model = Question
-        fields = ("topic", "kind", "difficulty", "prompt", "hints", "answer", "key_points", "explanation", "language", "starter", "tests",
+        fields = ("topic", "section", "kind", "difficulty", "level", "prompt", "hints", "answer", "key_points", "explanation", "language", "starter", "tests",
                   "companies", "source", "notes", "is_starred")
         widgets = {
             "prompt": forms.Textarea(attrs={"rows": 5, "data-paste-images": "1"}),
@@ -408,6 +409,10 @@ class QuestionForm(forms.ModelForm):
         self.fields["topic"].queryset = PrepTopic.objects.filter(owner=owner)
         self.fields["topic"].required = False
         self.fields["topic"].empty_label = _("— Pick a topic —")
+        self.fields["section"].queryset = PrepSection.objects.filter(owner=owner).select_related("topic").order_by("topic__order", "topic__name", "order", "pk")
+        self.fields["section"].empty_label = _("— Not in a section —")
+        self.fields["section"].label_from_instance = lambda s: f"{s.topic.name} › {s.name}"
+        self.fields["level"].required = False
         if self.instance.pk:
             self.fields["tags_text"].initial = " ".join(self.instance.tags.values_list("name", flat=True))
         self.fields["options_json"].initial = json.dumps(self.instance.options or [], ensure_ascii=False)
@@ -416,6 +421,8 @@ class QuestionForm(forms.ModelForm):
         data = super().clean()
         if not data.get("topic") and not (data.get("new_topic") or "").strip():
             self.add_error("new_topic", _("Pick a topic, or type a new one."))
+        if data.get("section") and data.get("topic") and data["section"].topic_id != data["topic"].pk:
+            data["section"] = None            # a section of another topic: the question goes outside the sections
         try:
             raw = json.loads(data.get("options_json") or "[]")
         except ValueError:
@@ -438,6 +445,18 @@ class QuestionForm(forms.ModelForm):
             name = self.cleaned_data["new_topic"].strip()[:80]
             q.topic = (PrepTopic.objects.filter(owner=self.owner, name__iexact=name).first()
                        or PrepTopic.objects.create(owner=self.owner, name=name, order=PrepTopic.objects.filter(owner=self.owner).count()))
+        if (self.cleaned_data.get("new_section") or "").strip():
+            from .prep import section_named
+
+            q.section = section_named(q.topic, self.cleaned_data["new_section"])
+        if q.section_id and q.section.topic_id != q.topic_id:
+            q.section = None
+        before = (self.initial.get("topic"), self.initial.get("section")) if self.instance.pk else None
+        if before != (q.topic_id, q.section_id):          # new, or moved: to the end of its section
+            from .prep import next_position
+
+            q.order = next_position(q.topic, q.section)
+        q.level = q.level or ""
         if commit:
             q.save()
             q.tags.set(services.tags_named(self.owner, self.cleaned_data.get("tags_text") or []))

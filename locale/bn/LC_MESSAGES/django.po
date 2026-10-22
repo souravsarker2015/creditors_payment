@@ -22857,3 +22857,317 @@ msgstr "ডায়াগ্রাম (g m): মুক্ত আঁকা, ম�
 
 msgid "Coding questions in Python, JavaScript and SQL can be run right on the page, with checks — and hints show one at a time when you're stuck."
 msgstr "Python, JavaScript ও SQL-এর কোডিং প্রশ্ন যাচাইসহ পাতাতেই চালানো যায় — আর আটকে গেলে ইঙ্গিত একটি একটি করে দেখা যায়।"
+
+#, python-format
+msgid "%(counter)s question, numbered by topic and section"
+msgid_plural "%(counter)s questions, numbered by topic and section"
+msgstr[0] "বিষয় ও অংশ অনুযায়ী নম্বর দেওয়া %(counter)sটি প্রশ্ন"
+msgstr[1] "বিষয় ও অংশ অনুযায়ী নম্বর দেওয়া %(counter)sটি প্রশ্ন"
+
+#, python-format
+msgid "%(n)s question changed."
+msgid_plural "%(n)s questions changed."
+msgstr[0] "%(n)sটি প্রশ্ন বদলানো হয়েছে।"
+msgstr[1] "%(n)sটি প্রশ্ন বদলানো হয়েছে।"
+
+#, python-format
+msgid "%(n)s question deleted. You can bring it back from Recently deleted."
+msgid_plural "%(n)s questions deleted. You can bring them back from Recently deleted."
+msgstr[0] "%(n)sটি প্রশ্ন মুছে ফেলা হয়েছে। সাম্প্রতিক মুছে ফেলা থেকে ফিরিয়ে আনতে পারবেন।"
+msgstr[1] "%(n)sটি প্রশ্ন মুছে ফেলা হয়েছে। সাম্প্রতিক মুছে ফেলা থেকে ফিরিয়ে আনতে পারবেন।"
+
+#, python-format
+msgid "%(n)s question moved."
+msgid_plural "%(n)s questions moved."
+msgstr[0] "%(n)sটি প্রশ্ন সরানো হয়েছে।"
+msgstr[1] "%(n)sটি প্রশ্ন সরানো হয়েছে।"
+
+#, python-format
+msgid "%(r)s%% ready"
+msgstr "%(r)s%% প্রস্তুত"
+
+#, python-format
+msgid "%(topic)s, in order"
+msgstr "%(topic)s, ক্রম অনুযায়ী"
+
+msgid "+ Write a question and press Enter for its answer…"
+msgstr "+ একটি প্রশ্ন লিখুন, উত্তর লিখতে Enter চাপুন…"
+
+msgid "Add a picture here"
+msgstr "এখানে একটি ছবি যোগ করুন"
+
+msgid "Add a section"
+msgstr "একটি অংশ যোগ করুন"
+
+msgid "Add a shape here"
+msgstr "এখানে একটি আকার যোগ করুন"
+
+msgid "All fields (hints, choices, code…)"
+msgstr "সব ঘর (ইঙ্গিত, বিকল্প, কোড…)"
+
+msgid "All sections"
+msgstr "সব অংশ"
+
+msgid "Any level"
+msgstr "যেকোনো স্তর"
+
+msgid "Contents"
+msgstr "সূচিপত্র"
+
+msgid "Cut"
+msgstr "কাটুন"
+
+msgid "Delete the picked questions? You can bring them back from Recently deleted."
+msgstr "বাছাই করা প্রশ্নগুলো মুছবেন? সাম্প্রতিক মুছে ফেলা থেকে ফিরিয়ে আনতে পারবেন।"
+
+msgid "Delete the section"
+msgstr "অংশটি মুছুন"
+
+msgid "Delete the section (its questions stay)"
+msgstr "অংশটি মুছুন (এর প্রশ্নগুলো থাকবে)"
+
+msgid "Delete this section? Its questions stay, outside any section."
+msgstr "এই অংশটি মুছবেন? এর প্রশ্নগুলো থাকবে, কোনো অংশের বাইরে।"
+
+msgid "Drag a round end onto another shape to move the link. Drag a small middle dot to bend it; double-click a bend to take it out."
+msgstr "সংযোগ সরাতে গোল প্রান্তটি অন্য আকারের ওপর টেনে নিন। বাঁকাতে মাঝের ছোট বিন্দু টানুন; বাঁক সরাতে তাতে ডাবল-ক্লিক করুন।"
+
+msgid "Drag the handles to change the order — between sections too. Numbers follow the order: 2.3 is the third question of section 2."
+msgstr "ক্রম বদলাতে হাতল টানুন — অংশের মধ্যেও। নম্বর ক্রম অনুসরণ করে: ২.৩ মানে অংশ ২-এর তৃতীয় প্রশ্ন।"
+
+msgid "Drag to move the section"
+msgstr "অংশটি সরাতে টানুন"
+
+msgid "Edit contents"
+msgstr "সূচি সম্পাদনা"
+
+msgid "Edit here"
+msgstr "এখানেই সম্পাদনা"
+
+msgid "Edit the label"
+msgstr "লেবেল সম্পাদনা"
+
+msgid "Edit the topic"
+msgstr "বিষয় সম্পাদনা"
+
+msgid "Edit the words"
+msgstr "লেখা সম্পাদনা"
+
+msgid "Every question from the first, in this order"
+msgstr "প্রথম থেকে প্রতিটি প্রশ্ন, এই ক্রমে"
+
+msgid "Export (Markdown)"
+msgstr "এক্সপোর্ট (Markdown)"
+
+msgid "Find a question or a number…"
+msgstr "একটি প্রশ্ন বা নম্বর খুঁজুন…"
+
+msgid "Find a shape"
+msgstr "একটি আকার খুঁজুন"
+
+msgid "Find a shape (Ctrl+F)"
+msgstr "একটি আকার খুঁজুন (Ctrl+F)"
+
+msgid "Find a shape…"
+msgstr "একটি আকার খুঁজুন…"
+
+msgid "Find in this topic"
+msgstr "এই বিষয়ে খুঁজুন"
+
+msgid "Find in this topic, or a number like 2.3"
+msgstr "এই বিষয়ে খুঁজুন, বা ২.৩-এর মতো নম্বর"
+
+msgid "Fresher / intern"
+msgstr "ফ্রেশার / ইন্টার্ন"
+
+msgid "Give the section a name."
+msgstr "অংশটির একটি নাম দিন।"
+
+msgid "Hardest first"
+msgstr "কঠিনতম আগে"
+
+msgid "In order"
+msgstr "ক্রম অনুযায়ী"
+
+msgid "In order (by number)"
+msgstr "ক্রম অনুযায়ী (নম্বর ধরে)"
+
+msgid "In the question bank"
+msgstr "প্রশ্নভান্ডারে"
+
+msgid "Junior"
+msgstr "জুনিয়র"
+
+msgid "Lead / architect"
+msgstr "লিড / আর্কিটেক্ট"
+
+msgid "Level"
+msgstr "স্তর"
+
+msgid "Mid-level"
+msgstr "মিড-লেভেল"
+
+msgid "Most often wrong"
+msgstr "সবচেয়ে বেশি ভুল"
+
+msgid "Move to…"
+msgstr "সরান…"
+
+msgid "New section"
+msgstr "নতুন অংশ"
+
+msgid "New section, e.g. Basics, Concurrency, Data model"
+msgstr "নতুন অংশ, যেমন মৌলিক, কনকারেন্সি, ডেটা মডেল"
+
+msgid "Newest"
+msgstr "নতুনতম"
+
+msgid "Next question"
+msgstr "পরের প্রশ্ন"
+
+msgid "No answer written yet."
+msgstr "এখনো কোনো উত্তর লেখা হয়নি।"
+
+msgid "No questions yet."
+msgstr "এখনো কোনো প্রশ্ন নেই।"
+
+msgid "No shapes found in that file."
+msgstr "ফাইলটিতে কোনো আকার পাওয়া যায়নি।"
+
+msgid "No topics yet"
+msgstr "এখনো কোনো বিষয় নেই"
+
+msgid "Not in a section"
+msgstr "কোনো অংশে নেই"
+
+msgid "Open a draw.io file"
+msgstr "একটি draw.io ফাইল খুলুন"
+
+msgid "Open a draw.io file (.drawio) — its shapes are added here"
+msgstr "একটি draw.io ফাইল (.drawio) খুলুন — এর আকারগুলো এখানে যোগ হবে"
+
+msgid "Open and practise"
+msgstr "খুলুন ও অনুশীলন করুন"
+
+msgid "Order"
+msgstr "ক্রম"
+
+msgid "Paste or drop a picture onto the page to add it; drop a .drawio file to bring in a draw.io drawing."
+msgstr "ছবি যোগ করতে পাতায় পেস্ট করুন বা ফেলে দিন; draw.io আঁকা আনতে একটি .drawio ফাইল ফেলে দিন।"
+
+msgid "Pick"
+msgstr "বাছুন"
+
+msgid "Pick all"
+msgstr "সব বাছুন"
+
+msgid "Pick all on this page"
+msgstr "এই পাতার সব বাছুন"
+
+msgid "Pick everything"
+msgstr "সব বাছুন"
+
+msgid "Pick some questions first."
+msgstr "আগে কিছু প্রশ্ন বাছুন।"
+
+msgid "Pick where to move them."
+msgstr "কোথায় সরাবেন তা বাছুন।"
+
+msgid "Picture"
+msgstr "ছবি"
+
+msgid "Position"
+msgstr "অবস্থান"
+
+msgid "Previous question"
+msgstr "আগের প্রশ্ন"
+
+msgid "Question added"
+msgstr "প্রশ্ন যোগ হয়েছে"
+
+msgid "Question deleted"
+msgstr "প্রশ্ন মুছে ফেলা হয়েছে"
+
+msgid "Rename"
+msgstr "নাম বদলান"
+
+msgid "Rename the section"
+msgstr "অংশের নাম বদলান"
+
+msgid "Right-click (or press and hold) for more: copy, paste, order, group, bends…"
+msgstr "আরও কিছুর জন্য রাইট-ক্লিক করুন (বা চেপে ধরে রাখুন): কপি, পেস্ট, ক্রম, গ্রুপ, বাঁক…"
+
+msgid "Search, or go to a number like PY-2.3"
+msgstr "খুঁজুন, বা PY-2.3-এর মতো নম্বরে যান"
+
+msgid "Section name"
+msgstr "অংশের নাম"
+
+msgid "Sections"
+msgstr "অংশ"
+
+msgid "Sections group a topic's questions, like chapters; numbers follow them (PY-2.3)."
+msgstr "অংশগুলো একটি বিষয়ের প্রশ্নকে অধ্যায়ের মতো সাজায়; নম্বর সেগুলো অনুসরণ করে (PY-2.3)।"
+
+msgid "Senior"
+msgstr "সিনিয়র"
+
+msgid "Set difficulty"
+msgstr "কঠিনতা ঠিক করুন"
+
+msgid "Set level"
+msgstr "স্তর ঠিক করুন"
+
+msgid "Shapes brought in"
+msgstr "আকার আনা হয়েছে"
+
+msgid "Shuffled"
+msgstr "এলোমেলো"
+
+msgid "Start from a starter pack or add a topic."
+msgstr "একটি স্টার্টার প্যাক থেকে শুরু করুন বা একটি বিষয় যোগ করুন।"
+
+msgid "Starts each question's number, like PY in PY-2.3. Made from the name when left empty."
+msgstr "প্রতিটি প্রশ্নের নম্বরের শুরু, যেমন PY-2.3-এ PY। খালি রাখলে নাম থেকে বানানো হয়।"
+
+msgid "Study in order"
+msgstr "ক্রম অনুযায়ী পড়ুন"
+
+msgid "Study this section in order"
+msgstr "এই অংশটি ক্রম অনুযায়ী পড়ুন"
+
+msgid "Take out the bends"
+msgstr "বাঁকগুলো সরান"
+
+msgid "That file couldn't be read as a draw.io drawing."
+msgstr "ফাইলটি draw.io আঁকা হিসেবে পড়া যায়নি।"
+
+msgid "The answer (Markdown works). Ctrl+Enter adds it."
+msgstr "উত্তর (Markdown চলে)। Ctrl+Enter চাপলে যোগ হবে।"
+
+msgid "The topic"
+msgstr "বিষয়টি"
+
+msgid "Write the question first."
+msgstr "আগে প্রশ্নটি লিখুন।"
+
+msgid "draw.io file (.drawio)"
+msgstr "draw.io ফাইল (.drawio)"
+
+msgid "mastered"
+msgstr "আয়ত্ত"
+
+msgid "one per line"
+msgstr "প্রতি লাইনে একটি"
+
+msgid "picked"
+msgstr "বাছাই"
+
+msgid "— Not in a section —"
+msgstr "— কোনো অংশে নেই —"
+
+msgid "…or a new section"
+msgstr "…অথবা নতুন অংশ"
+
+msgid "Each topic has its contents: put questions in sections, drag them into order, and add, edit or delete them right there. Every question gets a number like PY-2.3 — type it in the bank's search to jump to it."
+msgstr "প্রতিটি বিষয়ের নিজস্ব সূচিপত্র আছে: প্রশ্নগুলো অংশে রাখুন, টেনে ক্রম সাজান, আর সেখানেই যোগ, সম্পাদনা বা মুছে ফেলুন। প্রতিটি প্রশ্ন PY-2.3-এর মতো একটি নম্বর পায় — প্রশ্নভান্ডারের খোঁজে সেটি লিখলেই সেখানে চলে যাবেন।"

@@ -297,3 +297,11 @@ class DrawingTests(TestCase):
         res = self.client.post(reverse("work:api_diagram_action", args=[d.pk]), {"action": "note"}).json()
         self.assertTrue(res["ok"])
         self.assertIn("- Engineering", Note.objects.get().body)
+
+    def test_pictures_only_from_here_or_the_web(self):
+        d = self.start(DiagramKind.DRAWING)
+        nodes = [{"id": k, "shape": "image", "x": 0, "y": 0, "w": 10, "h": 10, "src": src}
+                 for k, src in (("a", "/media/work/1.png"), ("b", "https://example.com/x.png"), ("c", "javascript:alert(1)"), ("d", "//evil.example/x.png"), ("e", 5))]
+        self.save(d, data=json.dumps({"nodes": nodes, "edges": []}))
+        d.refresh_from_db()
+        self.assertEqual([n.get("src") for n in d.data["nodes"]], ["/media/work/1.png", "https://example.com/x.png", None, None, None])

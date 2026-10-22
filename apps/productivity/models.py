@@ -967,6 +967,8 @@ class PrepTopic(models.Model):
     """A subject to prepare: Python, SQL, System design, Behavioural…"""
     owner = models.ForeignKey(**OWNER)
     name = models.CharField(_("Topic"), max_length=80)
+    code = models.CharField(_("Short code"), max_length=6, blank=True,
+                            help_text=_("Starts each question's number, like PY in PY-2.3. Made from the name when left empty."))
     color = models.CharField(_("Colour"), max_length=10, choices=Color.choices, default=Color.BLUE)
     description = models.CharField(_("About"), max_length=200, blank=True)
     order = models.PositiveIntegerField(default=0)
@@ -978,6 +980,47 @@ class PrepTopic(models.Model):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        self.code = (re.sub(r"[^A-Za-z0-9\u0980-\u09ff]", "", self.code or "")[:6] or topic_code(self.name)).upper()
+        super().save(*args, **kwargs)
+
+
+def topic_code(name):
+    """A short code from a topic's name: "SQL & databases" → SQL, "System design" → SD, "Python" → PY."""
+    words = re.findall(r"[A-Za-z0-9\u0980-\u09ff]+", name or "")
+    if not words:
+        return "Q"
+    if words[0].isupper() and 2 <= len(words[0]) <= 4:
+        return words[0]
+    if len(words) > 1:
+        return "".join(w[0] for w in words[:3]).upper()
+    return words[0][:2].upper()
+
+
+class PrepSection(models.Model):
+    """A part of a topic, like a chapter: Basics, Data model, Concurrency… Questions are numbered within it."""
+    owner = models.ForeignKey(**OWNER)
+    topic = models.ForeignKey(PrepTopic, on_delete=models.CASCADE, related_name="sections", verbose_name=_("Topic"))
+    name = models.CharField(_("Section"), max_length=120)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        verbose_name, verbose_name_plural = _("Section"), _("Sections")
+        ordering = ["order", "pk"]
+
+    def __str__(self):
+        return self.name
+
+
+class Level(models.TextChoices):
+    """Who a question is asked of — separate from how hard it is."""
+    ANY = "", _("Any level")
+    FRESHER = "fresher", _("Fresher / intern")
+    JUNIOR = "junior", _("Junior")
+    MID = "mid", _("Mid-level")
+    SENIOR = "senior", _("Senior")
+    LEAD = "lead", _("Lead / architect")
 
 
 class QuestionKind(models.TextChoices):
@@ -999,8 +1042,11 @@ class Question(models.Model):
     The schedule fields work as a flashcard's do (cards.next_state)."""
     owner = models.ForeignKey(**OWNER)
     topic = models.ForeignKey(PrepTopic, on_delete=models.CASCADE, related_name="questions", verbose_name=_("Topic"))
+    section = models.ForeignKey(PrepSection, on_delete=models.SET_NULL, null=True, blank=True, related_name="questions", verbose_name=_("Section"))
+    order = models.PositiveIntegerField(_("Position"), default=0, db_index=True)
     kind = models.CharField(_("Type"), max_length=8, choices=QuestionKind.choices, default=QuestionKind.SHORT)
     difficulty = models.PositiveSmallIntegerField(_("Difficulty"), choices=Difficulty.choices, default=Difficulty.MEDIUM)
+    level = models.CharField(_("Level"), max_length=8, choices=Level.choices, default=Level.ANY, blank=True)
     prompt = models.TextField(_("Question"), help_text=_("Markdown works: `code`, ```code blocks```, lists, tables."))
     answer = models.TextField(_("Answer"), blank=True, help_text=_("The model answer or solution. Markdown works."))
     key_points = models.TextField(_("Key points"), blank=True,
@@ -1035,7 +1081,8 @@ class Question(models.Model):
 
     class Meta:
         verbose_name, verbose_name_plural = _("Question"), _("Questions")
-        ordering = ["topic", "difficulty", "pk"]
+        # the sequence: topic by topic, questions outside a section first, then section by section, each in its order
+        ordering = ["topic__order", "topic__name", "topic_id", models.F("section__order").asc(nulls_first=True), "section_id", "order", "pk"]
         indexes = [models.Index(fields=["owner", "due"])]
 
     def __str__(self):

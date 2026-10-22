@@ -38,11 +38,12 @@
     ["actor", "actor", 46, 80], ["terminal", "stadium", 140, 50], ["subroutine", "subroutine", 150, 64], ["note", "note", 170, 90],
     ["text", "text", 140, 40], ["container", "container", 320, 220],
     ["class", "class", 190, 110], ["entity", "entity", 220, 120], ["start", "start", 32, 32], ["end", "end", 34, 34], ["fork", "fork", 140, 10],
+    ["picture", "image", 200, 140],
   ];
   // the shapes that hold their words in rows (and grow to fit them)
   var ROWS = { "class": true, entity: true };
   var ROUND = { ellipse: true, circle: true, dcircle: true, start: true, end: true };
-  var TIGHT = { start: true, end: true, fork: true };      // no words inside
+  var TIGHT = { start: true, end: true, fork: true, image: true };      // no words inside
 
   function libraryItem(kind, key) {
     var lib = LIBRARY[kind] || LIBRARY.drawing;
@@ -684,7 +685,7 @@
     dir = (dir || g.dir || "TD").toUpperCase();
     var across = dir === "LR" || dir === "RL", ids = {}, kids = childrenOf(g), virt = {}, chains = [], vseq = 0;
     g.nodes.forEach(function (n) { ids[n.id] = n; });
-    g.edges.forEach(function (e) { delete e.pts; });
+    g.edges.forEach(function (e) { delete e.pts; delete e.auto; });
     function box(id) { return ids[id] || virt[id]; }
     // which top shape of a group a shape is in (for links between groups)
     function under(n, scope) { var cur = n; while (cur && (cur.parent || "") !== scope) cur = cur.parent ? ids[cur.parent] : null; return cur; }
@@ -847,8 +848,8 @@
         b.band.forEach(function (at) { pts.push(across ? [Math.round(at + ox), cy] : [cx, Math.round(at + oy)]); });
       });
       g.edges.forEach(function (e) {
-        if (e.from === c.from && e.to === c.to) e.pts = pts;
-        else if (e.from === c.to && e.to === c.from) e.pts = pts.slice().reverse();
+        if (e.from === c.from && e.to === c.to) { e.pts = pts; e.auto = true; }
+        else if (e.from === c.to && e.to === c.from) { e.pts = pts.slice().reverse(); e.auto = true; }
       });
     });
     return g;
@@ -890,10 +891,72 @@
     return g;
   }
 
+  // ── draw.io files ────────────────────────────────────────────────────────
+  var DRAWIO_SHAPE = {
+    rect: "rounded=0;", rounded: "rounded=1;", stadium: "rounded=1;arcSize=50;", ellipse: "ellipse;", circle: "ellipse;aspect=fixed;",
+    dcircle: "ellipse;shape=doubleEllipse;", diamond: "rhombus;", triangle: "triangle;direction=north;", hexagon: "shape=hexagon;perimeter=hexagonPerimeter2;fixedSize=1;",
+    parallelogram: "shape=parallelogram;perimeter=parallelogramPerimeter;fixedSize=1;", parallelogram2: "shape=parallelogram;perimeter=parallelogramPerimeter;fixedSize=1;flipH=1;",
+    trapezoid: "shape=trapezoid;perimeter=trapezoidPerimeter;fixedSize=1;", trapezoid2: "shape=trapezoid;perimeter=trapezoidPerimeter;fixedSize=1;flipV=1;",
+    cylinder: "shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=12;", document: "shape=document;boundedLbl=1;", cloud: "ellipse;shape=cloud;",
+    actor: "shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;outlineConnect=0;", note: "shape=note;size=14;fillColor=#fff4bf;strokeColor=#e0b84c;",
+    text: "text;strokeColor=none;fillColor=none;", container: "rounded=1;dashed=1;verticalAlign=top;align=left;spacingLeft=8;arcSize=4;fillColor=none;",
+    subroutine: "shape=process;", flag: "shape=step;perimeter=stepPerimeter;fixedSize=1;flipH=1;", start: "ellipse;fillColor=#000000;", end: "ellipse;shape=endState;fillColor=#000000;",
+    fork: "rounded=0;fillColor=#000000;strokeColor=none;", "class": "verticalAlign=top;align=left;overflow=fill;html=1;", entity: "verticalAlign=top;align=left;overflow=fill;html=1;rounded=1;arcSize=4;",
+    image: "shape=image;imageAspect=1;aspect=fixed;",
+  };
+  var DRAWIO_MARK = { arrow: "classic", open: "open", triangle: "block;FILL=0", diamond: "diamond;FILL=1", odiamond: "diamond;FILL=0", circle: "oval;FILL=1",
+                      cross: "cross", one: "ERmandOne", zone: "ERzeroToOne", many: "ERoneToMany", zmany: "ERzeroToMany", none: "none" };
+  function xmlAttr(v) { return String(v == null ? "" : v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/\n/g, "&#10;"); }
+  function html(v) { return String(v == null ? "" : v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+  /* A drawing as a draw.io file (opens in draw.io / diagrams.net). `marks(e, end)` gives a link's end marks; `origin` makes picture links whole. */
+  function toDrawio(g, marks, origin) {
+    var cells = ['<mxCell id="0"/>', '<mxCell id="1" parent="0"/>'], ids = {}, k = 0;
+    g.nodes.forEach(function (n) { ids[n.id] = "v" + (++k); });
+    function style(n) {
+      var st = (DRAWIO_SHAPE[n.shape] || DRAWIO_SHAPE.rect) + "whiteSpace=wrap;";
+      if (n.shape === "image" && n.src) st += "image=" + (/^\//.test(n.src) ? (origin || "") + n.src : n.src) + ";";
+      if (n.fill) st += "fillColor=" + (n.fill === "none" ? "none" : n.fill) + ";";
+      if (n.stroke) st += "strokeColor=" + n.stroke + ";";
+      if (n.size) st += "fontSize=" + n.size + ";";
+      if (n.bold) st += "fontStyle=1;";
+      return st;
+    }
+    function value(n) {
+      if (n.shape === "class") {
+        return (n.stereo ? '<p style="margin:0;text-align:center"><i>&laquo;' + html(n.stereo) + "&raquo;</i></p>" : "") + '<p style="margin:4px 0 0;text-align:center"><b>' + html(n.label) + '</b></p><hr size="1">' +
+          '<p style="margin:0 0 0 4px">' + lines(n.attrs).map(html).join("<br>") + '</p><hr size="1"><p style="margin:0 0 0 4px">' + lines(n.methods).map(html).join("<br>") + "</p>";
+      }
+      if (n.shape === "entity") {
+        return '<p style="margin:4px 0 0;text-align:center"><b>' + html(n.label) + '</b></p><hr size="1"><p style="margin:0 0 0 4px">' +
+          columns(n).map(function (c) { return html([c.type, c.name, c.keys].filter(Boolean).join(" ")); }).join("<br>") + "</p>";
+      }
+      return n.label || "";
+    }
+    // groups first, so they sit behind
+    g.nodes.slice().sort(function (a, b) { return (a.shape === "container" ? 0 : 1) - (b.shape === "container" ? 0 : 1); }).forEach(function (n) {
+      cells.push('<mxCell id="' + ids[n.id] + '" value="' + xmlAttr(value(n)) + '" style="' + xmlAttr(style(n)) + '" vertex="1" parent="1">' +
+                 '<mxGeometry x="' + Math.round(n.x) + '" y="' + Math.round(n.y) + '" width="' + Math.round(n.w) + '" height="' + Math.round(n.h) + '" as="geometry"/></mxCell>');
+    });
+    g.edges.forEach(function (e, i) {
+      if (!ids[e.from] || !ids[e.to]) return;
+      var m = marks ? marks(e) : { start: e.start || "none", end: e.end || "arrow" };
+      var st = "html=1;rounded=1;endArrow=" + DRAWIO_MARK[m.end || "none"].replace(";FILL=", ";endFill=") + ";startArrow=" + DRAWIO_MARK[m.start || "none"].replace(";FILL=", ";startFill=") + ";";
+      if (e.line === "dashed") st += "dashed=1;";
+      if (e.line === "thick") st += "strokeWidth=3;";
+      if (e.route === "elbow" && !e.pts) st += "edgeStyle=orthogonalEdgeStyle;";
+      if (e.route === "curve") st += "curved=1;";
+      var pts = (e.pts || []).map(function (q) { return '<mxPoint x="' + Math.round(q[0]) + '" y="' + Math.round(q[1]) + '"/>'; }).join("");
+      cells.push('<mxCell id="e' + (i + 1) + '" value="' + xmlAttr(e.label || "") + '" style="' + xmlAttr(st) + '" edge="1" parent="1" source="' + ids[e.from] + '" target="' + ids[e.to] + '">' +
+                 '<mxGeometry relative="1" as="geometry">' + (pts ? '<Array as="points">' + pts + "</Array>" : "") + "</mxGeometry></mxCell>");
+    });
+    return '<mxfile host="FinTrack" type="device"><diagram id="page1" name="Page-1"><mxGraphModel grid="1" gridSize="10" guides="1" connect="1" arrows="1" page="0">' +
+           "<root>" + cells.join("") + "</root></mxGraphModel></diagram></mxfile>\n";
+  }
+
   root.WorkDrawModel = {
     LIBRARY: LIBRARY, ROWS: ROWS, ROUND: ROUND, TIGHT: TIGHT, FONT: FONT, ROW_H: ROW_H, HEAD_H: HEAD_H,
     libraryItem: libraryItem, shapesOf: shapesOf, textWidth: textWidth, wrap: wrap, lines: lines, textBox: textBox, columns: columns,
-    rowsHeight: rowsHeight, fitSize: fitSize, fromMermaid: fromMermaid, toMermaid: toMermaid, layout: layout, importText: importText,
+    rowsHeight: rowsHeight, fitSize: fitSize, fromMermaid: fromMermaid, toMermaid: toMermaid, layout: layout, importText: importText, toDrawio: toDrawio,
     KINDS: Object.keys(PARSERS),
   };
   if (typeof module !== "undefined" && module.exports) module.exports = root.WorkDrawModel;

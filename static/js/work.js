@@ -333,7 +333,7 @@
   })();
 
   /* ── Expose for the page components ──────────────────────────────────── */
-  window.Work = { api: api, toast: toast, undoable: undoable, play: play, notify: notify, askNotify: askNotify, clock: clock, hm: hm, cfg: CFG, flush: flush, recall: recall, store: store, putImages: putImages, zen: { on: zenOn, off: zenOff, toggle: zenToggle } };
+  window.Work = { api: api, toast: toast, undoable: undoable, play: play, notify: notify, askNotify: askNotify, clock: clock, hm: hm, cfg: CFG, flush: flush, recall: recall, store: store, putImages: putImages, shrinkImage: shrinkImage, zen: { on: zenOn, off: zenOff, toggle: zenToggle } };
 
   /* ── Focus (Pomodoro): one engine for every page ──────────────────────
    * The session lives in localStorage (by its end time), so it keeps going

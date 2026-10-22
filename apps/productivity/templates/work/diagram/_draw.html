@@ -48,6 +48,10 @@
         <button type="button" class="icon-btn" :class="grid && 'is-on'" @click="setGrid()" :aria-pressed="grid.toString()" aria-label="{% translate 'Grid' %}" data-tip="{% translate 'Show the grid' %}">{% icon "grid" %}</button>
         <button type="button" class="icon-btn" :class="snap && 'is-on'" @click="setSnap()" :aria-pressed="snap.toString()" aria-label="{% translate 'Snap to grid' %}" data-tip="{% translate 'Snap to the grid (hold Alt to place freely)' %}">{% icon "magnet" %}</button>
       </div>
+      <div class="wdx-group">
+        <button type="button" class="icon-btn" :class="findOpen && 'is-on'" @click="openFind()" aria-label="{% translate 'Find' %}" data-tip="{% translate 'Find a shape (Ctrl+F)' %}">{% icon "search" %}</button>
+        {% if diagram.kind == "drawing" %}<button type="button" class="icon-btn" @click="$refs.drawioFile.click()" aria-label="{% translate 'Open a draw.io file' %}" data-tip="{% translate 'Open a draw.io file (.drawio) — its shapes are added here' %}">{% icon "upload" %}</button>{% endif %}
+      </div>
       <div class="wdx-group wdx-group-end menu-wrap" @click.outside="menu = false" @keydown.escape="menu = false">
         <button type="button" class="btn btn-ghost btn-sm" @click="menu = !menu" :aria-expanded="menu.toString()" aria-haspopup="true" data-tip="{% translate 'Lay everything out neatly' %}">{% icon "sparkles" %}<span class="wn-hide-xs">{% translate "Tidy up" %}</span></button>
         <div class="menu" x-show="menu" x-cloak role="menu">
@@ -67,6 +71,53 @@
       </div>
       <p class="wsb-empty" x-show="empty" x-cloak>{% icon "shapes" %}<span>{% translate "Drag shapes in from the left (or double-click the page). Point at a shape and drag one of its blue arrows to link it to another — or click an arrow to add a linked shape." %}</span></p>
       <div class="wsb-box" x-ref="box" hidden></div>
+
+      {# find a shape #}
+      <form class="wmm-find wdr-find" x-show="findOpen" x-cloak x-transition.opacity.duration.120ms @submit.prevent="findNext(1)" @keydown.escape.prevent.stop="closeFind()" @keydown.stop @pointerdown.stop>
+        {% icon "search" %}
+        <input x-ref="find" x-model="findText" @input="find()" class="wmm-find-input" placeholder="{% translate 'Find a shape…' %}" aria-label="{% translate 'Find a shape' %}" enterkeyhint="search">
+        <span class="wmm-find-n" x-text="findText ? (hits.length ? (hitAt + 1) + '/' + hits.length : texts.noMatch) : ''"></span>
+        <button type="button" class="icon-btn" @click="findNext(-1)" :disabled="!hits.length" aria-label="{% translate 'Previous' %}">{% icon "chevron-left" %}</button>
+        <button type="button" class="icon-btn" @click="findNext(1)" :disabled="!hits.length" aria-label="{% translate 'Next' %}">{% icon "chevron-right" %}</button>
+        <button type="button" class="icon-btn" @click="closeFind()" aria-label="{% translate 'Close' %}">{% icon "x" %}</button>
+      </form>
+
+      {# the right-click (long-press) menu #}
+      <div class="menu wdr-ctx" x-show="ctx" x-cloak role="menu" :style="ctx && ('left:' + ctx.x + 'px;top:' + ctx.y + 'px')" @click.outside="ctx = null" @pointerdown.stop @keydown.escape.stop="ctx = null">
+        <template x-if="ctx && ctx.on === 'node'"><div>
+          <button type="button" class="menu-item" role="menuitem" x-show="node" @click="menuDo('edit')">{% icon "edit" %}{% translate "Edit the words" %}<kbd>F2</kbd></button>
+          <button type="button" class="menu-item" role="menuitem" @click="menuDo('duplicate')">{% icon "copy" %}{% translate "Duplicate" %}<kbd>Ctrl+D</kbd></button>
+          <button type="button" class="menu-item" role="menuitem" @click="menuDo('copy')">{% translate "Copy" %}<kbd>Ctrl+C</kbd></button>
+          <button type="button" class="menu-item" role="menuitem" @click="menuDo('cut')">{% translate "Cut" %}<kbd>Ctrl+X</kbd></button>
+          <div class="menu-sep"></div>
+          <button type="button" class="menu-item" role="menuitem" @click="menuDo('front')">{% icon "to-front" %}{% translate "Bring to front" %}</button>
+          <button type="button" class="menu-item" role="menuitem" @click="menuDo('back')">{% icon "to-back" %}{% translate "Send to back" %}</button>
+          <button type="button" class="menu-item" role="menuitem" x-show="sel.length > 1 && kind !== 'class' && kind !== 'er'" @click="menuDo('group')">{% icon "group" %}{% translate "Group" %}<kbd>Ctrl+G</kbd></button>
+          <button type="button" class="menu-item" role="menuitem" x-show="node && node.shape === 'container'" @click="menuDo('ungroup')">{% translate "Ungroup" %}</button>
+          <div class="menu-sep"></div>
+          <button type="button" class="menu-item is-danger" role="menuitem" @click="menuDo('remove')">{% icon "trash" %}{% translate "Delete" %}<kbd>Del</kbd></button>
+        </div></template>
+        <template x-if="ctx && ctx.on === 'edge'"><div>
+          <button type="button" class="menu-item" role="menuitem" @click="menuDo('edit')">{% icon "edit" %}{% translate "Edit the label" %}</button>
+          <button type="button" class="menu-item" role="menuitem" @click="menuDo('straight')">{% translate "Straight" %}</button>
+          <button type="button" class="menu-item" role="menuitem" @click="menuDo('curve')">{% translate "Curved" %}</button>
+          <button type="button" class="menu-item" role="menuitem" @click="menuDo('elbow')">{% translate "Right angles" %}</button>
+          <button type="button" class="menu-item" role="menuitem" x-show="edge && edge.pts" @click="menuDo('straighten')">{% translate "Take out the bends" %}</button>
+          <button type="button" class="menu-item" role="menuitem" @click="menuDo('reverse')">⇄ {% translate "Turn around" %}</button>
+          <div class="menu-sep"></div>
+          <button type="button" class="menu-item is-danger" role="menuitem" @click="menuDo('remove')">{% icon "trash" %}{% translate "Delete" %}</button>
+        </div></template>
+        <template x-if="ctx && ctx.on === 'page'"><div>
+          <button type="button" class="menu-item" role="menuitem" @click="menuDo('add')">{% icon "plus" %}{% translate "Add a shape here" %}</button>
+          <button type="button" class="menu-item" role="menuitem" @click="menuDo('paste')">{% translate "Paste here" %}<kbd>Ctrl+V</kbd></button>
+          {% if diagram.kind == "drawing" %}<button type="button" class="menu-item" role="menuitem" @click="menuDo('picture')">{% icon "image" %}{% translate "Add a picture here" %}</button>{% endif %}
+          <button type="button" class="menu-item" role="menuitem" @click="menuDo('all')">{% icon "select" %}{% translate "Pick everything" %}<kbd>Ctrl+A</kbd></button>
+          <button type="button" class="menu-item" role="menuitem" @click="menuDo('find')">{% icon "search" %}{% translate "Find a shape" %}<kbd>Ctrl+F</kbd></button>
+          <button type="button" class="menu-item" role="menuitem" @click="menuDo('fit')">{% icon "fit" %}{% translate "Fit to screen" %}<kbd>0</kbd></button>
+        </div></template>
+      </div>
+      <input type="file" x-ref="file" accept="image/png,image/jpeg,image/gif,image/webp" multiple hidden @change="filePicked($event)">
+      <input type="file" x-ref="drawioFile" accept=".drawio,.xml,application/xml" hidden @change="openDrawio($event)">
     </div>
     <p class="wdx-hint"><kbd>{% translate "Double-click" %}</kbd> {% translate "write" %} · <kbd>Del</kbd> {% translate "delete" %} · <kbd>Ctrl</kbd>+<kbd>D</kbd> {% translate "duplicate" %} · <kbd>Ctrl</kbd>+<kbd>G</kbd> {% translate "group" %} · <kbd>←↑→↓</kbd> {% translate "nudge" %} · <kbd>Shift</kbd> {% translate "keeps the shape while resizing" %} · <kbd>Space</kbd>+{% translate "drag or the mouse wheel moves the page; Ctrl+wheel zooms" %} · {% translate "Pick a shape and just type to change its words." %}</p>
   </section>
@@ -181,8 +232,9 @@
           <button type="button" class="seg-item" :class="edge.route === 'curve' && 'is-active'" @click="setEdge('route', 'curve')">{% translate "Curved" %}</button>
           <button type="button" class="seg-item" :class="edge.route === 'elbow' && 'is-active'" @click="setEdge('route', 'elbow')">{% translate "Right angles" %}</button>
         </div>
+        <button type="button" class="btn btn-ghost btn-sm" x-show="edge.pts" @click="straighten()">{% translate "Take out the bends" %}</button>
         <div class="wsb-row"><button type="button" class="btn btn-secondary btn-sm" @click="reverse()">⇄ {% translate "Turn around" %}</button><button type="button" class="btn btn-ghost btn-sm is-danger" @click="removeSelected()">{% icon "trash" %}{% translate "Delete" %}</button></div>
-        <p class="wsb-tip">{% translate "Drag a round end onto another shape to move the link." %}</p>
+        <p class="wsb-tip">{% translate "Drag a round end onto another shape to move the link. Drag a small middle dot to bend it; double-click a bend to take it out." %}</p>
       </div>
     </template>
 
@@ -195,6 +247,8 @@
           <li>{% translate "Point at a shape: drag a blue arrow to another shape to link them, or click it for a new linked shape." %}</li>
           <li>{% translate "Drag a shape into a group to put it inside; moving the group moves what's in it." %}</li>
           <li>{% translate "Drag on the empty page to pick several shapes; guides show when they line up." %}</li>
+          <li>{% translate "Right-click (or press and hold) for more: copy, paste, order, group, bends…" %}</li>
+          {% if diagram.kind == "drawing" %}<li>{% translate "Paste or drop a picture onto the page to add it; drop a .drawio file to bring in a draw.io drawing." %}</li>{% endif %}
           {% if draggable %}<li>{% translate "The text version is written for you as you draw — switch to Text to see or change it." %}</li>{% endif %}
         </ul>
       </div>
