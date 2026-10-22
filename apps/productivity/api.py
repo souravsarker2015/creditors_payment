@@ -27,7 +27,7 @@ from . import cards, diagrams, services
 from .access import work_required
 from .models import (
     Card, ChecklistItem, Deck, Diagram, DiagramKind, DiagramVersion, EntryKind, Goal, GoalStatus, GoalStep, Habit, HabitCheck, JournalEntry, LearningItem, LearningKind, LearningStatus,
-    LearningUnit, Note, NoteVersion, Priority, Project, SavedView, Snippet, Sprint, Status, Task, TaskActivity, TimeEntry, link_label,
+    LearningUnit, Note, NoteVersion, Priority, Project, SavedView, Snippet, Sprint, Status, Task, TaskActivity, TimeEntry, WorkSettings, link_label,
 )
 
 
@@ -271,7 +271,7 @@ def comment_delete(request, pk):
     return ok()
 
 
-VIEW_KEYS = ("view", "q", "project", "tag", "priority", "due", "goal", "done", "blocked", "sub", "by", "sort", "sprint")
+VIEW_KEYS = ("view", "q", "project", "tag", "priority", "due", "goal", "done", "blocked", "sub", "by", "sort", "sprint", "kind")
 
 
 @work_required
@@ -914,7 +914,8 @@ def search(request):
         return ok(results=[])
     user, out = request.user, []
     tasks = Task.objects.filter(owner=user).select_related("project")
-    number = re.fullmatch(r"#?(\d+)", q)
+    prefix = WorkSettings.for_user(user).key_prefix or "T"
+    number = re.fullmatch(rf"(?:#|{re.escape(prefix)}-)?(\d+)", q, re.I)       # "#42", "T-42" or "42": that task
     first = list(tasks.filter(pk=int(number.group(1)))) if number else []      # "#42": that task
     by_title = Q(title__icontains=q) | Q(link__icontains=q)
     deeper = (Q(notes__icontains=q) | Q(files__name__icontains=q)
@@ -924,7 +925,7 @@ def search(request):
         found += list(tasks.filter(deeper).exclude(by_title).distinct().order_by("status", "-updated_at")[:7 - len(found)])
     for t in first + [t for t in found if t not in first]:
         out.append({"kind": "task", "title": t.title, "url": reverse("work:task", args=[t.pk]), "done": t.is_done, "id": t.pk,
-                    "meta": " · ".join(x for x in (f"#{t.pk}", t.project.name if t.project_id else "", t.link_label) if x)})
+                    "meta": " · ".join(x for x in (f"{prefix}-{t.pk}", t.project.name if t.project_id else "", t.link_label) if x)})
     for n in Note.objects.filter(owner=user, is_archived=False).filter(Q(title__icontains=q) | Q(body__icontains=q))[:5]:
         out.append({"kind": "note", "title": n.display_title, "url": reverse("work:note", args=[n.pk])})
     for p in Project.objects.filter(owner=user, name__icontains=q)[:3]:

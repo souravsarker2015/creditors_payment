@@ -15,7 +15,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from . import services
-from .models import Priority, Project, Status, Task
+from .models import Priority, Project, Status, Task, TaskKind
 
 MAX_ROWS = 2000
 
@@ -31,7 +31,13 @@ COLUMNS = {
     "tags": ["labels", "label", "tags", "tag"],
     "estimate": ["estimate", "time estimate", "original estimate", "estimate (minutes)"],
     "type": ["type"],          # Todoist: task / section / note rows
+    "kind": ["issue type", "work type", "task type"],
+    "points": ["story points", "story point estimate", "custom field (story points)", "custom field (story point estimate)", "points", "estimate (points)"],
 }
+KIND_WORDS = {"bug": TaskKind.BUG, "defect": TaskKind.BUG, "incident": TaskKind.BUG, "story": TaskKind.FEATURE, "feature": TaskKind.FEATURE,
+              "new feature": TaskKind.FEATURE, "improvement": TaskKind.FEATURE, "epic": TaskKind.FEATURE, "enhancement": TaskKind.FEATURE,
+              "spike": TaskKind.RESEARCH, "research": TaskKind.RESEARCH, "chore": TaskKind.CHORE, "tech debt": TaskKind.CHORE,
+              "maintenance": TaskKind.CHORE, "documentation": TaskKind.DOCS, "docs": TaskKind.DOCS}
 DONE_WORDS = {"done", "complete", "completed", "closed", "resolved", "finished", "true", "yes", "1"}
 DOING_WORDS = {"in progress", "doing", "in review", "review", "started", "active", "ongoing"}
 BACKLOG_WORDS = {"backlog", "someday", "icebox", "later", "ideas"}
@@ -116,6 +122,14 @@ def _minutes(value):
     return int(round(n))
 
 
+def _points(value):
+    try:
+        n = round(float((value or "").strip()))
+    except ValueError:
+        return None
+    return n if 0 < n <= 100 else None
+
+
 @dataclass
 class Parsed:
     source: str = "csv"
@@ -174,6 +188,7 @@ def read(data, today=None):
             "title": title, "notes": get(row, "notes")[:10000], "due": parse_date(get(row, "due"), today), "start": parse_date(get(row, "start"), today),
             "priority": _priority(get(row, "priority"), out.source), "project": get(row, "project")[:120],
             "status": _status(get(row, "status")), "tags": [t.strip().lstrip("#@")[:40] for t in tags][:10], "estimate": _minutes(get(row, "estimate")),
+            "kind": KIND_WORDS.get(get(row, "kind").lower(), TaskKind.TASK), "points": _points(get(row, "points")),
         })
     return out
 
@@ -197,6 +212,7 @@ def save(user, rows, project=None):
         t = Task.objects.create(owner=user, title=r["title"], notes=r.get("notes") or "", due_date=due,
                                 start_date=start if (start and (not due or start <= due)) else None,
                                 priority=r.get("priority") or 0, project=p, status=status, estimate_minutes=r.get("estimate"),
+                                kind=r.get("kind") or TaskKind.TASK, points=r.get("points"),
                                 completed_at=timezone.now() if status == Status.DONE else None,
                                 order=services.next_order(user, status))
         if r.get("tags"):

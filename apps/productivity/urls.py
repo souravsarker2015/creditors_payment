@@ -65,6 +65,7 @@ urlpatterns = [
     path("share/", views.share_view, name="share"),
     path("wrap-up/", views.wrapup_view, name="wrapup"),
     path("feed/<str:token>.ics", views.feed_view, name="feed"),
+    path("hooks/git/<str:token>/", views.git_hook_view, name="git_hook"),
     # Background saves (static/js/work.js)
     path("api/timer/start/", api.timer_start, name="api_timer_start"),
     path("api/timer/stop/", api.timer_stop, name="api_timer_stop"),

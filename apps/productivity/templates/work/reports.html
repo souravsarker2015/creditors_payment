@@ -60,6 +60,12 @@
     <header class="card-header"><h2 class="card-title">{% translate "By project" %}</h2></header>
     <ul class="wr-rank">{% for r in projects %}<li><span class="wr-rank-name">{% if r.p %}<span class="wt-dot" data-color="{{ r.p.color }}"></span>{{ r.p.name }}{% else %}<span class="ws-none">{% translate "No project" %}</span>{% endif %}</span><span class="wr-rank-val num">{{ r.secs|hm }} · {{ r.pct }}%{% if r.earned is not None %} · {{ r.earned|money }}{% endif %}</span><span class="wr-rank-bar" data-color="{{ r.p.color|default:'slate' }}"><i style="width: {{ r.pct }}%"></i></span></li>{% endfor %}</ul>
   </section>
+  {% if kinds %}
+  <section class="card">
+    <header class="card-header"><div><h2 class="card-title">{% translate "By type of work" %}</h2><p class="card-subtitle">{% translate "Building features, fixing bugs, upkeep… — where the time really went." %}</p></div></header>
+    <ul class="wr-rank">{% for r in kinds %}<li><span class="wr-rank-name"><span class="wt-kind" data-kind="{{ r.k.value }}">{% icon r.icon %}{{ r.k.label }}</span></span><span class="wr-rank-val num">{{ r.secs|hm }} · {{ r.pct }}%</span><span class="wr-rank-bar wr-kind-bar" data-kind="{{ r.k.value }}"><i style="width: {{ r.pct }}%"></i></span></li>{% endfor %}</ul>
+  </section>
+  {% endif %}
   <section class="card">
     <header class="card-header"><h2 class="card-title">{% translate "When you work" %}</h2><p class="card-subtitle">{% translate "Time started in each hour" %}</p></header>
     <div class="card-body !pt-0"><div class="wr-hours">{% for h in hours %}<div class="wr-hour" data-tip="{{ h.h }}:00 · {{ h.secs|hm }}" data-level="{{ h.level }}"><span></span><small>{% if h.h|divisibleby:3 %}{{ h.h }}{% endif %}</small></div>{% endfor %}</div></div>

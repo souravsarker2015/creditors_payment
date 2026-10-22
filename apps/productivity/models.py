@@ -8,7 +8,7 @@ from datetime import time, timedelta
 from urllib.parse import urlparse
 
 from django.conf import settings
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
@@ -82,6 +82,20 @@ class Priority(models.IntegerChoices):
     URGENT = 4, _("Urgent")
 
 
+class TaskKind(models.TextChoices):
+    """What sort of work it is, as an issue tracker sorts it."""
+    TASK = "task", _("Task")
+    FEATURE = "feature", _("Feature")
+    BUG = "bug", _("Bug")
+    CHORE = "chore", _("Chore")            # refactoring, tests, CI, upgrades
+    RESEARCH = "research", _("Research")   # a spike: find out before building
+    DOCS = "docs", _("Docs")
+
+
+KIND_ICONS = {"feature": "sparkles", "bug": "bug", "chore": "wrench", "research": "beaker", "docs": "book", "task": "check"}
+KIND_BRANCH = {"feature": "feat", "bug": "fix", "chore": "chore", "research": "spike", "docs": "docs", "task": "task"}    # branch and commit prefixes
+
+
 class Repeat(models.TextChoices):
     NONE = "", _("Doesn't repeat")
     DAILY = "daily", _("Every day")
@@ -128,7 +142,10 @@ class Task(models.Model):
     title = models.CharField(_("Title"), max_length=300)
     notes = models.TextField(_("Notes"), blank=True, help_text=_("Markdown works: **bold**, `code`, lists, links."))
     status = models.CharField(_("Status"), max_length=10, choices=Status.choices, default=Status.TODO, db_index=True)
+    kind = models.CharField(_("Type"), max_length=10, choices=TaskKind.choices, default=TaskKind.TASK)
     priority = models.PositiveSmallIntegerField(_("Priority"), choices=Priority.choices, default=Priority.NONE)
+    points = models.PositiveSmallIntegerField(_("Story points"), null=True, blank=True, validators=[MaxValueValidator(100)],
+                                              help_text=_("How big it is, not how long: 1, 2, 3, 5, 8, 13."))
     due_date = models.DateField(_("Due"), null=True, blank=True)
     remind_at = models.DateTimeField(_("Remind me"), null=True, blank=True)
     estimate_minutes = models.PositiveIntegerField(_("Estimate (minutes)"), null=True, blank=True)
@@ -187,6 +204,14 @@ class Task(models.Model):
     @property
     def link_label(self):
         return link_label(self.link)
+
+    @property
+    def kind_icon(self):
+        return KIND_ICONS.get(self.kind, "check")
+
+    def key(self, prefix="T"):
+        """Its short name, like an issue key: T-42."""
+        return f"{prefix}-{self.pk}"
 
     @property
     def open_blockers(self):
@@ -511,6 +536,11 @@ class WorkSettings(models.Model):
                                                     validators=[MinValueValidator(0), MaxValueValidator(240)],
                                                     help_text=_("When you come back to a running timer after this long away. 0 = never ask."))
     feed_token = models.CharField(max_length=40, blank=True, help_text="Secret part of the calendar feed address.")
+    key_prefix = models.CharField(_("Task key prefix"), max_length=8, default="T", validators=[RegexValidator(r"^[A-Za-z][A-Za-z0-9]{0,7}$")],
+                                  help_text=_("Tasks are named with it and their number — T-42 — in branches, commits and search."))
+    branch_format = models.CharField(_("Branch name"), max_length=80, default="{type}/{key}-{slug}",
+                                     help_text=_("For “Copy branch name”. Use {type} (feat, fix…), {key} (T-42), {id} (42) and {slug} (the title)."))
+    git_token = models.CharField(max_length=40, blank=True, help_text="Secret part of the Git webhook address (and its signing secret).")
     day_start = models.TimeField(_("Work day starts"), default=time(9, 0),
                                  help_text=_("The day planner opens here, and “Fill my day” plans from here."))
     day_end = models.TimeField(_("Work day ends"), default=time(18, 0))
@@ -542,6 +572,12 @@ class WorkSettings(models.Model):
 
     def is_work_day(self, day):
         return str(day.weekday()) in self.work_days
+
+    def new_git_token(self):
+        import secrets
+        self.git_token = secrets.token_urlsafe(24)
+        self.save(update_fields=["git_token"])
+        return self.git_token
 
     def new_feed_token(self):
         import secrets

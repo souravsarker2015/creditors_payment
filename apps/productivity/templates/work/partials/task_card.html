@@ -2,14 +2,14 @@
 <article class="wb-card{% if t.is_done %} is-done{% endif %}" data-task="{{ t.pk }}" data-p="{{ t.priority }}" data-est="{{ t.estimate_minutes|default:0 }}">
   <a href="{% url 'work:task' t.pk %}" class="wb-card-title">{{ t.title }}</a>
   <div class="wt-task-meta">
-    {% if t.priority >= 3 %}<span class="wt-prio" data-p="{{ t.priority }}">{{ t.get_priority_display }}</span>{% endif %}
+    {% if t.kind and t.kind != "task" %}<span class="wt-kind" data-kind="{{ t.kind }}" title="{{ t.get_kind_display }}">{% icon t.kind_icon %}{{ t.get_kind_display }}</span>{% endif %}{% if t.priority >= 3 %}<span class="wt-prio" data-p="{{ t.priority }}">{{ t.get_priority_display }}</span>{% endif %}
     {% if t.waiting_for %}<span class="wt-wait">{% icon "clock" %}{{ t.waiting_for }}</span>{% endif %}
     {% if t.is_blocked %}<span class="wt-blocked" title="{% translate 'Blocked by' %}: {% for b in t.open_blockers %}{{ b.title }}{% if not forloop.last %}, {% endif %}{% endfor %}">{% icon "lock" %}{% translate "Blocked" %}</span>{% endif %}
     {% if t.project %}<span class="wt-proj"><span class="wt-dot" data-color="{{ t.project.color }}"></span>{{ t.project.name }}</span>{% endif %}
     {% if t.due_date %}<span class="wt-due" data-tone="{{ t|due_tone }}">{% icon "calendar" %}{{ t.due_date|due_label }}</span>{% endif %}
     {% if t.link %}<a href="{{ t.link }}" class="wt-link" target="_blank" rel="noopener noreferrer">{% icon "link" %}{{ t.link_label }}</a>{% endif %}
     {% with c=t|checklist_counts %}{% if c %}<span class="wt-est">{% icon "check" %}{{ c }}</span>{% endif %}{% endwith %}
-    {% if t.estimate_minutes %}<span class="wt-est">~{{ t.estimate_minutes|minutes_hm }}</span>{% endif %}
+    {% if t.estimate_minutes %}<span class="wt-est">~{{ t.estimate_minutes|minutes_hm }}</span>{% endif %}{% if t.points %}<span class="wt-est wt-pts" title="{% translate 'Story points' %}">{{ t.points }} pt</span>{% endif %}
     {% for tag in t.tags.all %}<span class="wt-tag">#{{ tag.name }}</span>{% endfor %}
   </div>
 </article>

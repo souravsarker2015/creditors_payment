@@ -15,7 +15,7 @@ from django.utils.translation import gettext as _
 
 from .models import (
     EntryKind, Goal, GoalStatus, GoalStep, Habit, HabitCheck, JournalEntry, LearningItem, LearningStatus, Note, Priority, Project,
-    Repeat, Status, Tag, Task, TimeEntry, WorkSettings, link_label,
+    Repeat, Status, Tag, Task, TaskKind, TimeEntry, WorkSettings, link_label,
 )
 
 
@@ -106,7 +106,7 @@ class Totals:
         self.user, self.start, self.end = user, start, end
         self.seconds = self.billable_seconds = self.focus_sessions = 0
         self.by_day = {start + timedelta(days=i): 0 for i in range((end - start).days + 1)}
-        self.by_project, self.by_tag, self.by_task = [], [], []
+        self.by_project, self.by_tag, self.by_task, self.by_kind = [], [], [], []
         self.by_hour = [0] * 24
         self._lo, self._hi = day_bounds(start)[0], day_bounds(end)[1]
 
@@ -178,6 +178,12 @@ def totals(user, start, end):
     top = sorted(tasks.items(), key=lambda kv: -kv[1])[:10]
     found = Task.objects.select_related("project").in_bulk([k for k, _v in top])
     out.by_task = [(found[k], v) for k, v in top if k in found]
+    kinds = defaultdict(int)          # features, bugs, chores… (time not on a task counts as "task")
+    kind_of = dict(Task.objects.filter(pk__in=list(tasks)).values_list("pk", "kind"))
+    for task_id, secs in tasks.items():
+        kinds[kind_of.get(task_id, TaskKind.TASK)] += secs
+    kinds[TaskKind.TASK] += out.seconds - sum(tasks.values())
+    out.by_kind = sorted(((TaskKind(k), v) for k, v in kinds.items() if v > 0), key=lambda kv: -kv[1])
     return out
 
 
@@ -269,6 +275,8 @@ class Parsed:
     repeat_days: str = ""           # "every mon, thu" → "0,3"
     repeat_from_done: bool = False  # "every! week": counted from the day it's done
     later: date | None = None       # "snooze:fri": out of sight until then
+    kind: str = ""                  # "fix: …" → a bug, "feat(api): …" → a feature (dev.take_prefix)
+    points: int | None = None       # "3pt", "5sp": story points
 
 
 def parse_due(word, today):
@@ -344,10 +352,19 @@ def parse_quick(text, today=None):
     #tag  @project  !high (or !1–!4)  ~30m / ~2h  *  (My Day)
     a due date: today, tomorrow, friday, +3d, +2w, 2026-10-20, due:mon, due:25/12
     a reminder: at 3pm, at 15:30   ·   a repeat: every day / weekday / week / month / monday
+    a type, conventional-commit style: "fix(auth): …" (bug, tag auth), "feat: …", "chore: …", "docs: …"
+    story points: 3pt, 5sp
     out of sight until a day: snooze:fri, snooze:+3d.
     A pasted link (a PR, an issue…) is kept as the task's link."""
+    from .dev import take_prefix
+
     today = today or timezone.localdate()
     p = Parsed(title="")
+    kind, scope, text = take_prefix(text)
+    if kind:
+        p.kind = kind
+        if scope:
+            p.tags.append(scope)
     m = EVERY.search(text)
     if m:
         p.repeat_from_done = m.group(1) == "!"
@@ -385,6 +402,8 @@ def parse_quick(text, today=None):
             p.estimate = int(round(amount * 60)) if (m.group(2) or "m").startswith("h") else int(round(amount))
         elif word == "*":
             p.my_day = True
+        elif re.fullmatch(r"\d{1,3}(pts?|sp)", low):
+            p.points = int(re.match(r"\d+", low).group())
         elif re.match(r"https?://\S+\.\S+", word) and not p.link:
             p.link = word[:500]
         elif low.startswith("snooze:") and parse_due(low[7:].lstrip("+"), today):
@@ -397,6 +416,8 @@ def parse_quick(text, today=None):
             words.append(word)
         i += 1
     p.title = " ".join(words).strip() or link_label(p.link)
+    if p.kind and p.title:
+        p.title = p.title[0].upper() + p.title[1:]      # "fix: login loop" → "Login loop"
     return p
 
 
@@ -446,7 +467,7 @@ def create_from_quick(user, text, *, status=Status.TODO, project=None, today=Non
         due_date=p.due or due or (today if p.repeat else None), estimate_minutes=p.estimate,
         my_day=p.later or (today if p.my_day else (my_day if isinstance(my_day, date) else (today if my_day else None))),
         order=next_order(user, status),
-        link=p.link, goal=goal, repeat=p.repeat, remind_at=reminder_time(p, today),
+        link=p.link, goal=goal, repeat=p.repeat, remind_at=reminder_time(p, today), kind=p.kind or TaskKind.TASK, points=p.points,
         repeat_every=p.repeat_every, repeat_days=p.repeat_days, repeat_from_done=p.repeat_from_done,
     )
     if p.tags:

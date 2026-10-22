@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from . import services
-from .models import Deck, Goal, GoalStatus, Habit, LearningItem, LearningStatus, Project, Snippet, Sprint, Tag, Task, TimeEntry, WorkSettings
+from .models import Deck, Goal, GoalStatus, Habit, LearningItem, LearningStatus, Project, Snippet, Sprint, Tag, Task, TaskKind, TimeEntry, WorkSettings
 
 DATE = forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d")
 SWATCHES = forms.RadioSelect   # colours are picked from swatches (templates: .w-swatches)
@@ -60,6 +60,7 @@ class TaskForm(OwnedForm):
         super().__init__(*args, **kwargs)
         self.fields["scheduled_at"].help_text = _("A block on your day planner, as long as the estimate (else 30 minutes).")
         self.fields["repeat_every"].required = False      # left out: once each day / week / month
+        self.fields["kind"].required = False              # left out: kept as it was (a plain task when new)
         parents = Task.objects.filter(owner=self.owner, parent__isnull=True).exclude(status="done")
         if self.instance.pk:
             parents = parents.exclude(pk=self.instance.pk)
@@ -70,7 +71,7 @@ class TaskForm(OwnedForm):
 
     class Meta:
         model = Task
-        fields = ("title", "parent", "project", "sprint", "status", "priority", "start_date", "due_date", "estimate_minutes", "repeat", "repeat_every", "repeat_from_done",
+        fields = ("title", "parent", "project", "sprint", "status", "kind", "points", "priority", "start_date", "due_date", "estimate_minutes", "repeat", "repeat_every", "repeat_from_done",
                   "remind_at", "scheduled_at", "link", "goal", "waiting_for", "notes")
         widgets = {
             "link": forms.URLInput(attrs={"placeholder": "https://github.com/…/pull/482", "inputmode": "url"}),
@@ -81,6 +82,7 @@ class TaskForm(OwnedForm):
             "scheduled_at": forms.DateTimeInput(attrs={"type": "datetime-local", "step": 900}, format="%Y-%m-%dT%H:%M"),
             "notes": forms.Textarea(attrs={"rows": 8, "data-markdown": "1"}),
             "estimate_minutes": forms.NumberInput(attrs={"inputmode": "numeric", "min": 0, "step": 5}),
+            "points": forms.NumberInput(attrs={"inputmode": "numeric", "min": 0, "max": 100, "list": "story-points"}),
         }
 
     def clean(self):
@@ -90,6 +92,8 @@ class TaskForm(OwnedForm):
             self.add_error("start_date", _("The start can't be after the due date."))
         if not data.get("repeat_every"):
             data["repeat_every"] = 1
+        if not data.get("kind"):
+            data["kind"] = self.instance.kind or TaskKind.TASK
         parent = data.get("parent")
         if parent and not services.can_be_parent(self.instance, parent):
             self.add_error("parent", _("Subtasks go one level deep: pick a task that isn't a subtask, and this one can't have subtasks of its own."))
@@ -249,7 +253,7 @@ class SettingsForm(forms.ModelForm):
         fields = ("week_start", "focus_minutes", "short_break_minutes", "long_break_minutes", "long_break_every",
                   "auto_start_breaks", "auto_start_focus", "sound_enabled", "sound", "volume", "tick_sound",
                   "notifications", "long_timer_hours", "idle_minutes", "default_project", "day_start", "day_end", "cards_remind_at",
-                  "daily_email", "reminder_emails", "wip_limit", "invoice_from", "currency")
+                  "daily_email", "reminder_emails", "wip_limit", "invoice_from", "currency", "key_prefix", "branch_format")
         widgets = {"invoice_from": forms.Textarea(attrs={"rows": 4, "placeholder": _("Your name\nAddress\nPhone\nPay to: bank account or bKash number")}),
                    "volume": forms.NumberInput(attrs={"type": "range", "min": 0, "max": 100, "step": 5}),
                    "day_start": forms.TimeInput(attrs={"type": "time"}, format="%H:%M"),
@@ -258,7 +262,7 @@ class SettingsForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for name in ("day_start", "day_end", "currency"):      # left empty: keep what it was
+        for name in ("day_start", "day_end", "currency", "key_prefix", "branch_format"):      # left empty: keep what it was
             self.fields[name].required = False
         self.fields["default_project"].queryset = Project.objects.filter(owner=self.instance.owner, is_archived=False)
         self.fields["work_day_list"].initial = list(self.instance.work_days)
@@ -270,6 +274,10 @@ class SettingsForm(forms.ModelForm):
         end = data.get("day_end") or self.instance.day_end
         data["day_start"], data["day_end"] = start, end
         data["currency"] = (data.get("currency") or "").strip() or self.instance.currency or "৳"
+        data["key_prefix"] = (data.get("key_prefix") or self.instance.key_prefix or "T").upper()
+        data["branch_format"] = (data.get("branch_format") or "").strip() or self.instance.branch_format or "{type}/{key}-{slug}"
+        if "{key}" not in data["branch_format"] and "{id}" not in data["branch_format"]:
+            self.add_error("branch_format", _("Put {key} or {id} in it, so the branch can be traced back to its task."))
         if start and end and end <= start:
             self.add_error("day_end", _("The day has to end after it starts."))
         return data

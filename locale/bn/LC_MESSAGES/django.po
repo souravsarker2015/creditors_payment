@@ -21541,3 +21541,177 @@ msgstr "টাইমলাইনে বার টেনে কাজ সরা�
 
 msgid "Every task has a number (#42 at the bottom of its page): type it in search to jump straight there. Search also reads notes, comments and file names."
 msgstr "প্রতিটি কাজের একটি নম্বর আছে (পাতার নিচে #42): সার্চে লিখলেই সরাসরি সেখানে যাবেন। সার্চ নোট, মন্তব্য আর ফাইলের নামও খোঁজে।"
+
+#, python-format
+msgid ""
+"%(pr)s merged — done.\n"
+"%(url)s"
+msgstr ""
+"%(pr)s মার্জ হয়েছে — কাজ শেষ।\n"
+"%(url)s"
+
+#, python-format
+msgid ""
+"%(pr)s opened: %(title)s\n"
+"%(url)s"
+msgstr ""
+"%(pr)s খোলা হয়েছে: %(title)s\n"
+"%(url)s"
+
+#, python-format
+msgid "About %(n)s story points finished a sprint"
+msgstr "প্রতি স্প্রিন্টে প্রায় %(n)s স্টোরি পয়েন্ট শেষ"
+
+msgid "Actual"
+msgstr "আসলে যা হচ্ছে"
+
+msgid "Any type"
+msgstr "যেকোনো ধরন"
+
+msgid "Branch name"
+msgstr "ব্রাঞ্চের নাম"
+
+msgid "Bug"
+msgstr "বাগ"
+
+msgid "Building features, fixing bugs, upkeep… — where the time really went."
+msgstr "ফিচার বানানো, বাগ ঠিক করা, রক্ষণাবেক্ষণ… — সময় আসলে কোথায় গেল।"
+
+msgid "By type of work"
+msgstr "কাজের ধরন অনুযায়ী"
+
+msgid "Chore"
+msgstr "রক্ষণাবেক্ষণ"
+
+#, python-format
+msgid ""
+"Commit %(sha)s on %(branch)s%(by)s: %(msg)s\n"
+"%(url)s"
+msgstr ""
+"%(branch)s-এ কমিট %(sha)s%(by)s: %(msg)s\n"
+"%(url)s"
+
+msgid "Commits and pull requests that name a task (T-42) show up on it; “fixes T-42” or a merged pull request ticks it off."
+msgstr "যে কমিট আর পুল রিকোয়েস্টে কাজের নাম (T-42) থাকে, সেগুলো কাজে দেখা যায়; “fixes T-42” বা মার্জ হওয়া পুল রিকোয়েস্ট কাজটি শেষ করে দেয়।"
+
+msgid "Connect GitHub or GitLab"
+msgstr "GitHub বা GitLab যুক্ত করুন"
+
+msgid "Copy branch name"
+msgstr "ব্রাঞ্চের নাম কপি করুন"
+
+msgid "Copy commit message"
+msgstr "কমিট মেসেজ কপি করুন"
+
+msgid "Copy the task key"
+msgstr "কাজের কি কপি করুন"
+
+msgid "Docs"
+msgstr "ডকস"
+
+#, python-format
+msgid "Done by commit %(sha)s."
+msgstr "কমিট %(sha)s দিয়ে শেষ।"
+
+msgid "Expected"
+msgstr "যা হওয়ার কথা"
+
+msgid "Feature"
+msgstr "ফিচার"
+
+msgid "Fix the login redirect"
+msgstr "লগইন রিডাইরেক্ট ঠিক করুন"
+
+#, python-format
+msgid "For example: <code>%(example)s</code>"
+msgstr "যেমন: <code>%(example)s</code>"
+
+msgid "For “Copy branch name”. Use {type} (feat, fix…), {key} (T-42), {id} (42) and {slug} (the title)."
+msgstr "“ব্রাঞ্চের নাম কপি”-র জন্য। ব্যবহার করুন {type} (feat, fix…), {key} (T-42), {id} (42) আর {slug} (শিরোনাম)।"
+
+msgid "Git connection turned off."
+msgstr "Git সংযোগ বন্ধ করা হয়েছে।"
+
+msgid "GitHub & GitLab"
+msgstr "GitHub ও GitLab"
+
+msgid "GitHub: the repository → Settings → Webhooks → Add webhook. Paste the URL, choose application/json, paste the secret, and pick “Pushes” and “Pull requests”."
+msgstr "GitHub: রিপোজিটরি → Settings → Webhooks → Add webhook। URL পেস্ট করুন, application/json বেছে নিন, সিক্রেট পেস্ট করুন, আর “Pushes” ও “Pull requests” বেছে নিন।"
+
+msgid "GitLab: the project → Settings → Webhooks. Paste the URL, put the secret in “Secret token”, and tick “Push events” and “Merge request events”."
+msgstr "GitLab: প্রজেক্ট → Settings → Webhooks। URL পেস্ট করুন, “Secret token”-এ সিক্রেট দিন, আর “Push events” ও “Merge request events” টিক দিন।"
+
+msgid "Group: by type"
+msgstr "ভাগ: ধরন অনুযায়ী"
+
+msgid "How big it is, not how long: 1, 2, 3, 5, 8, 13."
+msgstr "কাজটা কত বড়, কত সময় নয়: 1, 2, 3, 5, 8, 13।"
+
+msgid "How tasks are named in branches and commits."
+msgstr "ব্রাঞ্চ আর কমিটে কাজের নাম কীভাবে লেখা হবে।"
+
+msgid "On a task's page (or its ⋯ menu): copy its branch name or commit message. Connect GitHub or GitLab in Settings and “fixes T-42” in a commit, or a merged pull request, ticks it off."
+msgstr "কাজের পাতায় (বা ⋯ মেনুতে): ব্রাঞ্চের নাম বা কমিট মেসেজ কপি করুন। সেটিংসে GitHub বা GitLab যুক্ত করলে কমিটে “fixes T-42” বা মার্জ হওয়া পুল রিকোয়েস্ট কাজটি শেষ করে দেয়।"
+
+msgid "Payload URL"
+msgstr "Payload URL"
+
+msgid "Put {key} or {id} in it, so the branch can be traced back to its task."
+msgstr "এতে {key} বা {id} রাখুন, যাতে ব্রাঞ্চ থেকে কাজটি খুঁজে পাওয়া যায়।"
+
+msgid "Release notes"
+msgstr "রিলিজ নোট"
+
+msgid "Research"
+msgstr "গবেষণা"
+
+msgid "Secret"
+msgstr "সিক্রেট"
+
+msgid "Software work"
+msgstr "সফটওয়্যারের কাজ"
+
+msgid "Start a task like a commit — “fix(auth): login loop 3pt” — and it's a Bug tagged #auth with 3 story points. feat:, chore:, docs: and spike: work too."
+msgstr "কমিটের মতো করে কাজ লিখুন — “fix(auth): login loop 3pt” — এটি হবে #auth ট্যাগসহ ৩ স্টোরি পয়েন্টের একটি বাগ। feat:, chore:, docs: আর spike:-ও চলে।"
+
+msgid "Steps to reproduce"
+msgstr "কীভাবে সমস্যাটি ঘটে"
+
+msgid "Story points"
+msgstr "স্টোরি পয়েন্ট"
+
+msgid "Story points done"
+msgstr "স্টোরি পয়েন্ট শেষ"
+
+#, python-format
+msgid "Story points: %(old)s → %(new)s"
+msgstr "স্টোরি পয়েন্ট: %(old)s → %(new)s"
+
+msgid "Task key prefix"
+msgstr "কাজের কি-এর শুরু"
+
+msgid "Tasks are named with it and their number — T-42 — in branches, commits and search."
+msgstr "ব্রাঞ্চ, কমিট আর সার্চে কাজের নাম হবে এটি আর নম্বর দিয়ে — T-42।"
+
+msgid "The address must be reachable from the internet (this app on a real server, not on your own computer)."
+msgstr "ঠিকানাটি ইন্টারনেট থেকে পৌঁছানো যেতে হবে (অ্যাপটি আসল সার্ভারে, নিজের কম্পিউটারে নয়)।"
+
+#, python-format
+msgid "Then name the task in your work: a branch like <code>fix/%(key)s-login</code>, a commit like <code>fixes %(key)s</code>, or a pull request title."
+msgstr "তারপর কাজে কাজটির নাম দিন: ব্রাঞ্চ যেমন <code>fix/%(key)s-login</code>, কমিট যেমন <code>fixes %(key)s</code>, বা পুল রিকোয়েস্টের শিরোনামে।"
+
+#, python-format
+msgid "Type: %(old)s → %(new)s"
+msgstr "ধরন: %(old)s → %(new)s"
+
+msgid "Webhook address made. Add it to your repository (the steps are below)."
+msgstr "Webhook ঠিকানা তৈরি হয়েছে। এটি আপনার রিপোজিটরিতে যোগ করুন (ধাপগুলো নিচে)।"
+
+msgid "What this sprint finished, as a changelog grouped by type — for a release, a pull request or the team chat."
+msgstr "এই স্প্রিন্টে যা শেষ হয়েছে, ধরন অনুযায়ী চেঞ্জলগ হিসেবে — রিলিজ, পুল রিকোয়েস্ট বা টিম চ্যাটের জন্য।"
+
+msgid "Where"
+msgstr "কোথায়"
+
+msgid "browser, device, version"
+msgstr "ব্রাউজার, ডিভাইস, ভার্সন"

@@ -8,7 +8,7 @@
   <div class="min-w-0">
     <a href="{% url 'work:tasks' %}" class="back-link">{% icon "chevron-left" %}{% translate "Tasks" %}</a>
     <h1 class="wp-title">{% if task %}{{ task.title }}{% else %}{% translate "New task" %}{% endif %}</h1>
-    {% if task %}<p class="wp-sub">{{ task.get_status_display }}{% if task.project %} · <a href="{% url 'work:project' task.project_id %}" class="wt-proj"><span class="wt-dot" data-color="{{ task.project.color }}"></span>{{ task.project.name }}</a>{% endif %}{% if task.completed_at %} · {% blocktranslate with when=task.completed_at|date:"j M, H:i" %}done {{ when }}{% endblocktranslate %}{% endif %}{% if task.goal %} · <a href="{% url 'work:goal' task.goal_id %}" class="wt-proj">{% icon "flag" %}{{ task.goal.title }}</a>{% endif %}</p>
+    {% if task %}<p class="wp-sub"><button type="button" class="wtd-key" data-copy="{{ dev.key }}" data-tip="{% translate 'Copy the task key' %}">{% icon task.kind_icon %}{{ dev.key }}</button> · {{ task.get_status_display }}{% if task.project %} · <a href="{% url 'work:project' task.project_id %}" class="wt-proj"><span class="wt-dot" data-color="{{ task.project.color }}"></span>{{ task.project.name }}</a>{% endif %}{% if task.completed_at %} · {% blocktranslate with when=task.completed_at|date:"j M, H:i" %}done {{ when }}{% endblocktranslate %}{% endif %}{% if task.goal %} · <a href="{% url 'work:goal' task.goal_id %}" class="wt-proj">{% icon "flag" %}{{ task.goal.title }}</a>{% endif %}</p>
     {% if task.parent %}<p class="wtd-parent">{% icon "arrow-up" %}{% translate "Subtask of" %} <a href="{% url 'work:task' task.parent_id %}">{{ task.parent.title }}</a></p>{% endif %}{% endif %}
   </div>
   {% if task %}
@@ -21,6 +21,8 @@
     <a href="{% url 'work:focus' %}?task={{ task.pk }}" class="btn btn-secondary">{% icon "bolt" %}{% translate "Focus" %}</a>
     {% endif %}
     {% if task.link %}<a href="{{ task.link }}" class="btn btn-secondary" target="_blank" rel="noopener noreferrer" title="{{ task.link }}">{% icon "external" %}{{ task.link_label }}</a>{% endif %}
+    <button type="button" class="icon-btn" data-copy="{{ dev.branch }}" data-tip="{% translate 'Copy branch name' %}: {{ dev.branch }}" aria-label="{% translate 'Copy branch name' %}">{% icon "git" %}</button>
+    <button type="button" class="icon-btn" data-copy="{{ dev.commit }}" data-tip="{% translate 'Copy commit message' %}: {{ dev.commit }}" aria-label="{% translate 'Copy commit message' %}">{% icon "code" %}</button>
     <button type="button" class="icon-btn" data-tip="{% translate 'Duplicate' %}" aria-label="{% translate 'Duplicate' %}" data-duplicate
             @click="Work.api(Work.cfg.urls.taskBase + '{{ task.pk }}/duplicate/').then(r => { if (r.url) location.href = r.url; })">{% icon "copy" %}</button>
     <button type="button" class="icon-btn" data-tip="{% translate 'Save as a template' %}" aria-label="{% translate 'Save as a template' %}" data-save-template
@@ -31,15 +33,18 @@
 </header>
 
 <div class="wtd">
-  <form method="post" class="card wtd-form" novalidate>
+  <form method="post" class="card wtd-form" novalidate data-bug-template="{{ bug_template }}">
     {% csrf_token %}
     <div class="card-body form-stack">
       {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
       {% with field=form.title %}{% include "partials/field.html" %}{% endwith %}
       <div class="form-grid form-grid-2">
         {% if not task or not task.subtasks.exists %}<div class="sm:col-span-2">{% with field=form.parent %}{% include "partials/field.html" %}{% endwith %}</div>{% endif %}
+        {% with field=form.kind %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.status %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.priority %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.points %}{% include "partials/field.html" %}{% endwith %}
+        <datalist id="story-points"><option value="1"><option value="2"><option value="3"><option value="5"><option value="8"><option value="13"><option value="21"></datalist>
         {% with field=form.project %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.estimate_minutes %}{% include "partials/field.html" %}{% endwith %}
         {% if form.sprint.field.queryset.exists %}<div class="sm:col-span-2">{% with field=form.sprint %}{% include "partials/field.html" %}{% endwith %}</div>{% endif %}
@@ -150,7 +155,7 @@
         {% for a in activity %}{% include "work/partials/activity_item.html" %}{% endfor %}
       </ol>
     </section>
-    <p class="wtd-dates"><span class="num" data-tip="{% translate 'Its number — type it in search (Ctrl+K) to come back here' %}">#{{ task.pk }}</span> · {% blocktranslate with c=task.created_at|date:"j M Y" u=task.updated_at|timesince %}Added {{ c }} · changed {{ u }} ago{% endblocktranslate %}</p>
+    <p class="wtd-dates"><span class="num" data-tip="{% translate 'Its number — type it in search (Ctrl+K) to come back here' %}">{{ dev.key }}</span> · {% blocktranslate with c=task.created_at|date:"j M Y" u=task.updated_at|timesince %}Added {{ c }} · changed {{ u }} ago{% endblocktranslate %}</p>
   </aside>
   {% endif %}
 </div>

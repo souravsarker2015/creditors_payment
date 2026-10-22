@@ -17,16 +17,17 @@ from django.utils.formats import date_format
 from django.utils.http import http_date, parse_http_date_safe
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy, ngettext
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from apps.trash.undo import delete_with_undo
 
-from . import cards, diagrams, services
+from . import cards, dev, diagrams, services
 from .api import card_json, entry_json
 from .access import can_use, work_required
 from .forms import DeckForm, EntryForm, GoalForm, HabitForm, LearningForm, ProjectForm, SettingsForm, SnippetForm, SprintForm, TagForm, TaskForm
 from .models import (
-    Card, Color, Deck, Diagram, DiagramKind, DiagramVersion, Goal, GoalStatus, Habit, JournalEntry, Language, LearningItem, LearningKind, LearningStatus, LearningUnit, Note, Priority, Project, SavedView, Snippet, Sprint, TaskTemplate,
+    Card, Color, Deck, Diagram, DiagramKind, DiagramVersion, Goal, GoalStatus, Habit, JournalEntry, Language, LearningItem, LearningKind, LearningStatus, LearningUnit, KIND_ICONS, Note, Priority, Project, SavedView, Snippet, Sprint, TaskKind, TaskTemplate,
     Status, Tag, Task, TimeEntry, WorkSettings,
 )
 
@@ -180,6 +181,7 @@ def render_work(request, template, ctx=None):
         "ws": s,
         "work_config": {
             "running": entry_json(running), "todaySeconds": today_secs, "urls": _urls(), "text": _texts(),
+            "dev": {"prefix": s.key_prefix or "T", "branch": s.branch_format or "{type}/{key}-{slug}"},
             "commands": _commands() + [{"id": f"view-{v.pk}", "title": _("View: %(name)s") % {"name": v.name}, "icon": "filter", "kind": "page",
                                         "url": reverse("work:tasks") + "?" + v.query + ("&" if v.query else "") + f"sv={v.pk}", "words": "saved view filter"}
                                        for v in SavedView.objects.filter(owner=user)],
@@ -255,7 +257,7 @@ BOARD_DONE = 30
 
 
 TASK_VIEWS = ("list", "board", "matrix", "timeline")
-GROUP_BY = ("project", "priority", "status")        # the list's other groupings ("" = by when it's due)
+GROUP_BY = ("project", "priority", "status", "kind")        # the list's other groupings ("" = by when it's due)
 SORTS = {
     "due": lambda t: (t.due_date is None, t.due_date or date.max, -t.priority),
     "priority": lambda t: (-t.priority, t.due_date is None, t.due_date or date.max),
@@ -275,6 +277,8 @@ def _grouped(tasks, by):
         return out + ([("p-none", _("No project"), groups[None])] if None in groups else [])
     if by == "priority":
         return [(f"pr{value}", label, [t for t in tasks if t.priority == value]) for value, label in reversed(Priority.choices)]
+    if by == "kind":
+        return [(f"k-{value}", label, [t for t in tasks if t.kind == value]) for value, label in TaskKind.choices]
     return [(value, Status(value).label, [t for t in tasks if t.status == value]) for value in (Status.DOING, Status.TODO, Status.BACKLOG)]
 
 
@@ -337,7 +341,7 @@ def tasks_view(request):
     view = request.GET.get("view") or request.COOKIES.get("work_task_view") or "list"
     view = view if view in TASK_VIEWS else "list"
     qs = Task.objects.filter(owner=user).select_related("project")
-    f = {k: request.GET.get(k, "").strip() for k in ("q", "project", "tag", "priority", "due", "goal", "blocked", "sprint")}
+    f = {k: request.GET.get(k, "").strip() for k in ("q", "project", "tag", "priority", "due", "goal", "blocked", "sprint", "kind")}
     if f["q"]:
         qs = qs.filter(Q(title__icontains=f["q"]) | Q(notes__icontains=f["q"]))
     if f["project"] == "none":
@@ -350,6 +354,8 @@ def tasks_view(request):
         qs = qs.filter(priority__gte=int(f["priority"]))
     if f["goal"].isdigit():
         qs = qs.filter(goal_id=int(f["goal"]))
+    if f["kind"] in TaskKind.values:
+        qs = qs.filter(kind=f["kind"])
     if f["sprint"] == "current":
         from .sprints import current
         qs = qs.filter(sprint=current(user, today))
@@ -383,7 +389,7 @@ def tasks_view(request):
            "by": by, "sort": sort, "custom": any(f.values()) or bool(by or sort),
            "projects": Project.objects.filter(owner=user, is_archived=False), "tags": Tag.objects.filter(owner=user),
            "goals": Goal.objects.filter(owner=user, status=GoalStatus.ACTIVE),
-           "priorities": Priority.choices, "statuses": Status.choices,
+           "priorities": Priority.choices, "statuses": Status.choices, "kinds": TaskKind.choices,
            "saved_views": SavedView.objects.filter(owner=user), "sv": request.GET.get("sv", ""), "show_subs": show_subs,
            "has_subs": Task.objects.filter(owner=user, parent__isnull=False).exclude(status=Status.DONE).exists(),
            "templates": TaskTemplate.objects.filter(owner=user).only("pk", "name"),
@@ -488,8 +494,10 @@ def task_view(request, pk=None):
                 obj.save(update_fields=["status", "updated_at"])
         messages.success(request, _("Task saved."))
         return redirect("work:task", pk=obj.pk)
-    ctx = {"form": form, "task": task}
+    ctx = {"form": form, "task": task, "bug_template": dev.bug_template()}
     if task:
+        s = WorkSettings.for_user(user)
+        ctx["dev"] = {"key": task.key(s.key_prefix), "branch": dev.branch_name(task, s), "commit": dev.commit_message(task, s)}
         entries = list(task.entries.select_related("project").order_by("-started_at")[:30])
         spent = services.task_seconds(task)
         subs = list(task.subtasks.all())
@@ -925,6 +933,31 @@ def note_image_view(request, pk):
     return response
 
 
+@csrf_exempt
+@require_POST
+def git_hook_view(request, token):
+    """GitHub / GitLab webhooks (no sign-in: the secret address, and the body signed
+    with the same secret). See dev.handle for what a delivery does."""
+    import json
+
+    from django.http import JsonResponse
+
+    s = WorkSettings.objects.filter(git_token=token).exclude(git_token="").select_related("owner").first()
+    if s is None or len(token) < 20 or not s.owner.is_active or not can_use(s.owner):
+        raise Http404
+    if not dev.signed(request, s.git_token):
+        return JsonResponse({"ok": False, "error": "The signature doesn't match: use the secret from Settings."}, status=403)
+    event = request.headers.get("X-GitHub-Event") or request.headers.get("X-Gitlab-Event") or ""
+    if event == "ping":
+        return JsonResponse({"ok": True, "pong": True})
+    try:
+        raw = request.POST.get("payload") if request.content_type == "application/x-www-form-urlencoded" else request.body
+        data = json.loads(raw or b"{}")
+    except ValueError:
+        return JsonResponse({"ok": False, "error": "Send JSON."}, status=400)
+    return JsonResponse({"ok": True, **dev.handle(s.owner, s, event, data)})
+
+
 @work_required
 def task_file_view(request, pk):
     """A file kept with a task — only ever to the person it belongs to. Pictures
@@ -1227,6 +1260,8 @@ def reports_view(request):
         "projects": [{"p": p, "secs": secs, "pct": round(100 * secs / t.seconds) if t.seconds else 0,
                       "earned": float(p.hourly_rate) * secs / 3600 if p and p.hourly_rate else None} for p, secs in t.by_project],
         "earned": _earned(t.by_project),
+        "kinds": [{"k": k, "icon": KIND_ICONS.get(k, "check"), "secs": secs, "pct": round(100 * secs / t.seconds) if t.seconds else 0} for k, secs in t.by_kind]
+        if any(k != TaskKind.TASK for k, _secs in t.by_kind) else [],
         "tags": [{"tag": tg, "secs": secs, "pct": round(100 * secs / t.seconds) if t.seconds else 0} for tg, secs in t.by_tag[:12]],
         "tasks": t.by_task, "completed": completed.count(), "created": Task.objects.filter(owner=user, created_at__gte=lo, created_at__lt=hi).count(),
         "est": est,
@@ -1263,6 +1298,15 @@ def settings_view(request):
             else:
                 messages.error(request, _("The email couldn't be sent. Try again later."))
             return redirect(reverse("work:settings") + "#emails")
+        if action == "git":
+            s.new_git_token()
+            messages.success(request, _("Webhook address made. Add it to your repository (the steps are below)."))
+            return redirect(reverse("work:settings") + "#git")
+        if action == "git_off":
+            s.git_token = ""
+            s.save(update_fields=["git_token"])
+            messages.success(request, _("Git connection turned off."))
+            return redirect(reverse("work:settings") + "#git")
         if action == "feed_off":
             s.feed_token = ""
             s.save(update_fields=["feed_token"])
@@ -1289,7 +1333,12 @@ def settings_view(request):
     tags = Tag.objects.filter(owner=request.user).annotate(n_tasks=Count("tasks", distinct=True), n_notes=Count("notes", distinct=True),
                                                            n_entries=Count("entries", distinct=True))
     feed = request.build_absolute_uri(reverse("work:feed", args=[s.feed_token])) if s.feed_token else ""
-    return render_work(request, "work/settings.html", {"form": form, "tags": tags, "tag_form": tag_form, "feed": feed})
+    sample = Task(pk=42, title=_("Fix the login redirect"), kind=TaskKind.BUG)
+    return render_work(request, "work/settings.html", {
+        "form": form, "tags": tags, "tag_form": tag_form, "feed": feed,
+        "git_hook": request.build_absolute_uri(reverse("work:git_hook", args=[s.git_token])) if s.git_token else "",
+        "branch_example": dev.branch_name(sample, s), "key_example": sample.key(s.key_prefix),
+    })
 
 
 BACKUP_LIMIT = 30 * 1024 * 1024
@@ -1738,13 +1787,13 @@ def sprints_view(request):
         counts = sp.tasks.aggregate(total=Count("pk"), done=Count("pk", filter=Q(status=Status.DONE)))
         rows.append({"s": sp, "state": sp.state(today), **counts, "pct": round(100 * counts["done"] / counts["total"]) if counts["total"] else 0,
                      "days_left": (sp.end_date - today).days})
-    velocity = sprints.velocity(user)
+    velocity, unit = sprints.velocity(user)
     top = max([d + left for _s, d, left in velocity] + [1])
     return render_work(request, "work/sprints.html", {
         "form": form, "rows": rows, "today": today,
         "closed": Sprint.objects.filter(owner=user, completed_at__isnull=False).order_by("-end_date", "-pk")[:30],
         "velocity": [{"s": s, "done": d, "left": left, "h": round(100 * d / top), "lh": round(100 * left / top)} for s, d, left in velocity],
-        "average": round(sum(d for _s, d, _l in velocity) / len(velocity), 1) if velocity else None,
+        "average": round(sum(d for _s, d, _l in velocity) / len(velocity), 1) if velocity else None, "unit": unit,
     })
 
 
@@ -1796,10 +1845,17 @@ def sprint_view(request, pk):
                        .select_related("project").order_by("-priority", F("due_date").asc(nulls_last=True), "order")[:200])
     est_total = sum(t.estimate_minutes or 0 for t in tasks)
     est_done = sum(t.estimate_minutes or 0 for t in done)
+    ws = WorkSettings.for_user(user)
+    notes = dev.release_notes(tasks, f"{sp.name} ({date_format(sp.start_date, 'j M')} – {date_format(sp.end_date, 'j M Y')})", ws)
+    if request.GET.get("notes") == "md":
+        response = HttpResponse(notes, content_type="text/markdown; charset=utf-8")
+        response["Content-Disposition"] = f'attachment; filename="release-notes-{dev.slug(sp.name) or sp.pk}.md"'
+        return response
     return render_work(request, "work/sprint.html", {
         "sp": sp, "form": form, "state": sp.state(today), "today": today, "columns": [c for c in columns if c[2] or c[0] in (Status.TODO, Status.DOING)],
         "total": len(tasks), "done": len(done), "pct": round(100 * len(done) / len(tasks)) if tasks else 0,
-        "est_total": est_total, "est_done": est_done, "chart": sprints.chart(sp, today), "backlog": backlog,
+        "est_total": est_total, "est_done": est_done, "chart": sprints.chart(sp, today), "backlog": backlog, "release_notes": notes,
+        "pts_total": sum(t.points or 0 for t in tasks), "pts_done": sum(t.points or 0 for t in done),
         "days_left": (sp.end_date - today).days, "day_no": min(max((today - sp.start_date).days + 1, 0), sp.length),
         "others": sprints.open_sprints(user).exclude(pk=sp.pk),
     })
@@ -1869,7 +1925,8 @@ def import_view(request):
                 ctx["error"] = _("No tasks found in that file.")
             else:
                 request.session[IMPORT_KEY] = importer.to_session(parsed)
-                preview = [{**r, "priority_label": Priority(r["priority"]).label if r["priority"] else "", "status_label": Status(r["status"]).label}
+                preview = [{**r, "priority_label": Priority(r["priority"]).label if r["priority"] else "", "status_label": Status(r["status"]).label,
+                            "kind_label": TaskKind(r["kind"]).label if r.get("kind") and r["kind"] != TaskKind.TASK else ""}
                            for r in parsed.rows[:30]]
                 ctx.update({"parsed": parsed, "preview": preview, "file_name": f.name})
     return render_work(request, "work/import.html", ctx)

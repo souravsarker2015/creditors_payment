@@ -76,6 +76,15 @@
         </div>
         {% with field=form.invoice_from %}{% include "partials/field.html" %}{% endwith %}
       </div></section>
+    <section class="card" id="dev"><header class="card-header"><div><h2 class="card-title">{% icon "git" %}{% translate "Software work" %}</h2>
+      <p class="card-subtitle">{% translate "How tasks are named in branches and commits." %}</p></div></header>
+      <div class="card-body form-stack">
+        <div class="form-grid form-grid-2">
+          {% with field=form.key_prefix %}{% include "partials/field.html" %}{% endwith %}
+          {% with field=form.branch_format %}{% include "partials/field.html" %}{% endwith %}
+        </div>
+        <p class="help">{% blocktranslate with example=branch_example %}For example: <code>{{ example }}</code>{% endblocktranslate %}</p>
+      </div></section>
     <div class="form-actions"><button type="submit" class="btn btn-primary">{% icon "check" %}{% translate "Save settings" %}</button></div>
   </form>
   <form method="post" id="work-test-brief" hidden>{% csrf_token %}<input type="hidden" name="action" value="test_brief"></form>
@@ -106,6 +115,30 @@
         <button type="submit" name="action" value="feed_off" class="btn btn-ghost btn-sm">{% translate "Turn off" %}</button></form>
       {% else %}
       <form method="post">{% csrf_token %}<button type="submit" name="action" value="feed" class="btn btn-secondary">{% icon "calendar" %}{% translate "Make my calendar address" %}</button></form>
+      {% endif %}
+    </div></section>
+
+  <section class="card" id="git"><header class="card-header"><div><h2 class="card-title">{% icon "git" %}{% translate "GitHub & GitLab" %}</h2>
+    <p class="card-subtitle">{% translate "Commits and pull requests that name a task (T-42) show up on it; “fixes T-42” or a merged pull request ticks it off." %}</p></div></header>
+    <div class="card-body !pt-0 form-stack">
+      {% if git_hook %}
+      <label class="label" for="git-url">{% translate "Payload URL" %}</label>
+      <div class="ws-feed"><input id="git-url" class="form-input input-compact" value="{{ git_hook }}" readonly @focus="$el.select()" x-data>
+        <button type="button" class="btn btn-secondary btn-sm" data-copy="{{ git_hook }}">{% icon "copy" %}{% translate "Copy" %}</button></div>
+      <label class="label" for="git-secret">{% translate "Secret" %}</label>
+      <div class="ws-feed"><input id="git-secret" class="form-input input-compact" value="{{ ws.git_token }}" readonly @focus="$el.select()" x-data>
+        <button type="button" class="btn btn-secondary btn-sm" data-copy="{{ ws.git_token }}">{% icon "copy" %}{% translate "Copy" %}</button></div>
+      <ol class="ws-steps">
+        <li>{% translate "GitHub: the repository → Settings → Webhooks → Add webhook. Paste the URL, choose application/json, paste the secret, and pick “Pushes” and “Pull requests”." %}</li>
+        <li>{% translate "GitLab: the project → Settings → Webhooks. Paste the URL, put the secret in “Secret token”, and tick “Push events” and “Merge request events”." %}</li>
+        <li>{% blocktranslate with key=key_example %}Then name the task in your work: a branch like <code>fix/{{ key }}-login</code>, a commit like <code>fixes {{ key }}</code>, or a pull request title.{% endblocktranslate %}</li>
+      </ol>
+      <p class="help">{% translate "The address must be reachable from the internet (this app on a real server, not on your own computer)." %}</p>
+      <form method="post" class="flex flex-wrap gap-2">{% csrf_token %}
+        <button type="submit" name="action" value="git" class="btn btn-ghost btn-sm">{% translate "Make a new address" %}</button>
+        <button type="submit" name="action" value="git_off" class="btn btn-ghost btn-sm">{% translate "Turn off" %}</button></form>
+      {% else %}
+      <form method="post">{% csrf_token %}<button type="submit" name="action" value="git" class="btn btn-secondary">{% icon "git" %}{% translate "Connect GitHub or GitLab" %}</button></form>
       {% endif %}
     </div></section>
 

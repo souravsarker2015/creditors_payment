@@ -4,13 +4,13 @@ list draws fast: clicks are handled once for the whole page in work.js
 ([data-act]), and the ⋯ menu is one shared menu (partials/task_menu.html).
 Needs: t, today.
 {% endcomment %}
-<li class="wt-task{% if t.is_done %} is-done{% endif %}" data-task="{{ t.pk }}" data-title="{{ t.title }}" data-project="{{ t.project_id|default:'' }}" data-status="{{ t.status }}"{% if t.my_day == today %} data-myday{% endif %}{% if t.link %} data-link="{{ t.link }}"{% endif %}{% if t.waiting_for %} data-waiting="{{ t.waiting_for }}"{% endif %}{% if hide_done %} data-hide-done{% endif %}>
+<li class="wt-task{% if t.is_done %} is-done{% endif %}" data-task="{{ t.pk }}" data-title="{{ t.title }}" data-kind="{{ t.kind }}" data-project="{{ t.project_id|default:'' }}" data-status="{{ t.status }}"{% if t.my_day == today %} data-myday{% endif %}{% if t.link %} data-link="{{ t.link }}"{% endif %}{% if t.waiting_for %} data-waiting="{{ t.waiting_for }}"{% endif %}{% if hide_done %} data-hide-done{% endif %}>
   <button type="button" class="wt-check" data-act="done" aria-label="{% translate 'Done' %}" data-p="{{ t.priority }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
   <div class="wt-task-main">
     <a href="{% url 'work:task' t.pk %}" class="wt-task-title">{{ t.title }}</a>
     {% if t.parent_id and not in_parent %}<span class="wt-parent">{% icon "arrow-up" %}{{ t.parent.title|truncatechars:40 }}</span>{% endif %}
     <div class="wt-task-meta">
-      {% if t.priority >= 3 %}<span class="wt-prio" data-p="{{ t.priority }}">{{ t.get_priority_display }}</span>{% endif %}
+      {% if t.kind and t.kind != "task" %}<span class="wt-kind" data-kind="{{ t.kind }}" title="{{ t.get_kind_display }}">{% icon t.kind_icon %}{{ t.get_kind_display }}</span>{% endif %}{% if t.priority >= 3 %}<span class="wt-prio" data-p="{{ t.priority }}">{{ t.get_priority_display }}</span>{% endif %}
       {% if t.waiting_for %}<span class="wt-wait" title="{% translate 'Waiting on' %}">{% icon "clock" %}{{ t.waiting_for }}</span>{% endif %}
       {% if t.is_blocked %}{% with first=t.open_blockers.0 %}<span class="wt-blocked" title="{% translate 'Blocked by' %}: {% for b in t.open_blockers %}{{ b.title }}{% if not forloop.last %}, {% endif %}{% endfor %}">{% icon "lock" %}{{ first.title|truncatechars:28 }}{% if t.open_blockers|length > 1 %} +{{ t.open_blockers|length|add:-1 }}{% endif %}</span>{% endwith %}{% endif %}
       {% if t.project %}<span class="wt-proj"><span class="wt-dot" data-color="{{ t.project.color }}"></span>{{ t.project.name }}</span>{% endif %}
@@ -18,7 +18,7 @@ Needs: t, today.
       {% if t.scheduled_at and not t.is_done %}<span class="wt-est" title="{% translate 'Planned for' %}">{% icon "clock" %}{% if t.scheduled_at|date:"Y-m-d" != today|date:"Y-m-d" %}{{ t.scheduled_at|date:"D" }} {% endif %}{{ t.scheduled_at|time:"H:i" }}</span>{% endif %}
       {% if t.due_date %}<span class="wt-due" data-tone="{{ t|due_tone }}">{% icon "calendar" %}{{ t.due_date|due_label }}</span>{% endif %}
       {% if t.link %}<a href="{{ t.link }}" class="wt-link" target="_blank" rel="noopener noreferrer" title="{{ t.link }}">{% icon "link" %}{{ t.link_label }}</a>{% endif %}
-      {% if t.estimate_minutes %}<span class="wt-est">~{{ t.estimate_minutes|minutes_hm }}</span>{% endif %}
+      {% if t.estimate_minutes %}<span class="wt-est">~{{ t.estimate_minutes|minutes_hm }}</span>{% endif %}{% if t.points %}<span class="wt-est wt-pts" title="{% translate 'Story points' %}">{{ t.points }} pt</span>{% endif %}
       {% with c=t|checklist_counts %}{% if c %}<span class="wt-est">{% icon "check" %}{{ c }}</span>{% endif %}{% endwith %}
       {% if t.subtask_counts %}<span class="wt-est wt-subs" title="{% translate 'Subtasks done' %}">{% icon "list" %}{{ t.subtask_counts }}</span>{% endif %}
       {% if t.repeat %}<span class="wt-est" title="{{ t.repeat_label }}">{% icon "repeat" %}</span>{% endif %}

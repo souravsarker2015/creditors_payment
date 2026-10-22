@@ -81,6 +81,7 @@ def close(sprint, move_to=None):
     left = [t for t in tasks if not t.is_done]
     sprint.summary = {
         "done": len(done), "left": len(left), "done_minutes": sum(t.estimate_minutes or 0 for t in done),
+        "done_points": sum(t.points or 0 for t in done), "left_points": sum(t.points or 0 for t in left),
         "burndown": [[d.isoformat(), n] for d, n in b["points"]],
     }
     sprint.completed_at = timezone.now()
@@ -92,9 +93,13 @@ def close(sprint, move_to=None):
 
 
 def velocity(user, n=6):
-    """The last few closed sprints: [(sprint, done, left)], oldest first."""
+    """The last few closed sprints: [(sprint, done, left)], oldest first — in story
+    points when those sprints used them, else in tasks. Returns (rows, "points" | "tasks")."""
     closed = list(Sprint.objects.filter(owner=user, completed_at__isnull=False).order_by("-end_date", "-pk")[:n])
-    return [(s, s.summary.get("done", 0), s.summary.get("left", 0)) for s in reversed(closed)]
+    unit = "points" if any(s.summary.get("done_points") or s.summary.get("left_points") for s in closed) else "tasks"
+    if unit == "points":
+        return [(s, s.summary.get("done_points", 0), s.summary.get("left_points", 0)) for s in reversed(closed)], unit
+    return [(s, s.summary.get("done", 0), s.summary.get("left", 0)) for s in reversed(closed)], unit
 
 
 def add_tasks(sprint, ids):

@@ -1457,6 +1457,32 @@
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function () { prompt("", text); });
     else prompt("", text);
   }
+  ["change", "input"].forEach(function (type) {     // a task made a bug gets a bug report's headings, if its notes are empty
+    d.addEventListener(type, function (e) {
+      var sel = e.target; if (!sel || sel.name !== "kind" || sel.value !== "bug") return;
+      var form = sel.closest("form[data-bug-template]"), notes = form && form.querySelector("textarea[name=notes]");
+      if (!notes || notes.value.trim()) return;
+      notes.value = form.getAttribute("data-bug-template");
+      notes.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+  });
+  d.addEventListener("click", function (e) {         // [data-copy="text"]: a branch name, a commit message, release notes…
+    var b = e.target.closest("[data-copy]"); if (!b) return;
+    e.preventDefault(); copyText(b.getAttribute("data-copy"));
+  });
+  /* A task's branch name and commit message (the same as dev.py makes on the task's page). */
+  function devName(what, id, kind, title) {
+    var dev = CFG.dev || {}, key = (dev.prefix || "T") + "-" + id;
+    if (what === "commit") {
+      var type = { feature: "feat", bug: "fix", docs: "docs" }[kind] || "chore";
+      var tt = title.trim(); if (tt.slice(0, 2) !== tt.slice(0, 2).toUpperCase()) tt = tt.charAt(0).toLowerCase() + tt.slice(1);
+      return type + ": " + tt + " (" + key + ")";
+    }
+    var slug = title.normalize("NFKD").replace(/[^\x00-\x7f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40).replace(/-+$/, "") || "task";
+    var prefix = { feature: "feat", bug: "fix", chore: "chore", research: "spike", docs: "docs" }[kind] || "task";
+    var name = (dev.branch || "{type}/{key}-{slug}").split("{type}").join(prefix).split("{key}").join(key).split("{id}").join(String(id)).split("{slug}").join(slug);
+    return name.replace(/[\s~^:?*\[\\]+/g, "-").replace(/-{2,}/g, "-").replace(/^[-\/.]+|[-\/.]+$/g, "");
+  }
   function isoDay(offset) { var x = new Date(); x.setDate(x.getDate() + (offset || 0)); return x.getFullYear() + "-" + pad(x.getMonth() + 1) + "-" + pad(x.getDate()); }
 
   /* ── Task rows: one handler for every row on the page ────────────────── */
@@ -1540,6 +1566,7 @@
     else if (name === "waiting") taskUpdate(row, "waiting_for", "");
     else if (name === "open-link" && link) window.open(link, "_blank", "noopener");
     else if (name === "copy") copyText(row.getAttribute("data-title") + (link ? " " + link : ""));
+    else if (name === "branch" || name === "commit") copyText(devName(name, id, row.getAttribute("data-kind") || "task", row.getAttribute("data-title") || ""));
     else if (name === "duplicate") api(CFG.urls.taskBase + id + "/duplicate/", {}).then(function (res) {
       if (!res.ok) return;
       row.insertAdjacentHTML("afterend", res.html);

@@ -197,7 +197,7 @@ class SprintTests(Base):
         self.assertEqual(left.sprint, nxt)
         self.assertEqual((self.sp.summary["done"], self.sp.summary["left"], self.sp.summary["done_minutes"]), (1, 1, 60))
         self.assertEqual(self.sp.state(), "done")
-        self.assertEqual(sprints.velocity(self.me), [(self.sp, 1, 1)])
+        self.assertEqual(sprints.velocity(self.me), ([(self.sp, 1, 1)], "tasks"))
         page = self.client.get(reverse("work:sprints"))
         self.assertEqual(page.context["average"], 1.0)
         # a closed sprint keeps its burndown, and can't be closed again

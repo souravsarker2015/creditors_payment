@@ -36,7 +36,7 @@
     {% if velocity %}
     <section class="card wsp-velocity">
       <header class="card-header"><div><h2 class="card-title">{% translate "Velocity" %}{% include "partials/info.html" with text=_("Tasks finished in each closed sprint (green) and the ones that were carried on (grey). The average tells you how much to plan for the next one.") %}</h2>
-        <p class="card-subtitle">{% blocktranslate with n=average %}About {{ n }} tasks finished a sprint{% endblocktranslate %}</p></div></header>
+        <p class="card-subtitle">{% if unit == "points" %}{% blocktranslate with n=average %}About {{ n }} story points finished a sprint{% endblocktranslate %}{% else %}{% blocktranslate with n=average %}About {{ n }} tasks finished a sprint{% endblocktranslate %}{% endif %}</p></div></header>
       <div class="card-body">
         <div class="wsp-bars">
           {% for v in velocity %}

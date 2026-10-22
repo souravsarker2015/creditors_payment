@@ -10,9 +10,9 @@ from django.utils import timezone
 from django.utils.formats import date_format
 from django.utils.translation import gettext as _
 
-from .models import Goal, Priority, Project, Sprint, Status, Task, TaskActivity
+from .models import Goal, Priority, Project, Sprint, Status, Task, TaskActivity, TaskKind
 
-TRACKED = ("title", "status", "priority", "due_date", "start_date", "project_id", "goal_id", "sprint_id", "estimate_minutes", "waiting_for")
+TRACKED = ("title", "status", "kind", "priority", "points", "due_date", "start_date", "project_id", "goal_id", "sprint_id", "estimate_minutes", "waiting_for")
 NAMED = {"project_id": Project, "goal_id": Goal, "sprint_id": Sprint}     # kept with their name, in case they're deleted later
 
 
@@ -120,6 +120,11 @@ def describe(a):
         return _("Start date: %(old)s → %(new)s") % {"old": _day(old), "new": _day(new)}
     if f == "project_id":
         return _("Project: %(old)s → %(new)s") % {"old": d.get("old_label") or "—", "new": d.get("new_label") or "—"}
+    if f == "kind":
+        label = lambda v: TaskKind(v).label if v in TaskKind.values else "—"  # noqa: E731
+        return _("Type: %(old)s → %(new)s") % {"old": label(old), "new": label(new)}
+    if f == "points":
+        return _("Story points: %(old)s → %(new)s") % {"old": old or "—", "new": new or "—"}
     if f == "sprint_id":
         return _("Sprint: %(old)s → %(new)s") % {"old": d.get("old_label") or "—", "new": d.get("new_label") or "—"}
     if f == "goal_id":

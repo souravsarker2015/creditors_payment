@@ -64,6 +64,10 @@
     <option value="week"{% if f.due == 'week' %} selected{% endif %}>{% translate "Next 7 days" %}</option>
     <option value="none"{% if f.due == 'none' %} selected{% endif %}>{% translate "No date" %}</option>
   </select>
+  <select name="kind" class="form-input input-compact" aria-label="{% translate 'Type' %}">
+    <option value="">{% translate "Any type" %}</option>
+    {% for value, label in kinds %}<option value="{{ value }}"{% if f.kind == value %} selected{% endif %}>{{ label }}</option>{% endfor %}
+  </select>
   <select name="priority" class="form-input input-compact" aria-label="{% translate 'Priority' %}">
     <option value="">{% translate "Any priority" %}</option>
     <option value="4"{% if f.priority == '4' %} selected{% endif %}>{% translate "Urgent" %}</option>
@@ -102,6 +106,7 @@
     <option value="project"{% if by == 'project' %} selected{% endif %}>{% translate "Group: by project" %}</option>
     <option value="priority"{% if by == 'priority' %} selected{% endif %}>{% translate "Group: by priority" %}</option>
     <option value="status"{% if by == 'status' %} selected{% endif %}>{% translate "Group: by status" %}</option>
+    <option value="kind"{% if by == 'kind' %} selected{% endif %}>{% translate "Group: by type" %}</option>
   </select>
   <select name="sort" class="form-input input-compact" aria-label="{% translate 'Sort by' %}">
     <option value="">{% translate "Sort: your order" %}</option>

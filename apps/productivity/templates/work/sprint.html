@@ -26,6 +26,7 @@
 <dl class="stat-grid wsp-stats">
   <div class="stat"><dt class="stat-label">{% translate "Done" %}</dt><dd class="stat-value num">{{ done }} / {{ total }}</dd></div>
   <div class="stat"><dt class="stat-label">{% translate "Progress" %}</dt><dd class="stat-value num">{{ pct }}%</dd></div>
+  {% if pts_total %}<div class="stat"><dt class="stat-label">{% translate "Story points done" %}</dt><dd class="stat-value num">{{ pts_done }} / {{ pts_total }}</dd></div>{% endif %}
   {% if est_total %}<div class="stat"><dt class="stat-label">{% translate "Estimated work done" %}</dt><dd class="stat-value num">{{ est_done|minutes_hm }} / {{ est_total|minutes_hm }}</dd></div>{% endif %}
 </dl>
 
@@ -59,6 +60,20 @@
     <p class="empty-text">{% translate "Pick them from your backlog below." %}</p></div>
   {% endfor %}
 </div>
+
+{% if done %}
+<details class="card wsp-notes">
+  <summary class="card-header"><div><h2 class="card-title">{% icon "note" %}{% translate "Release notes" %}</h2>
+    <p class="card-subtitle">{% translate "What this sprint finished, as a changelog grouped by type — for a release, a pull request or the team chat." %}</p></div></summary>
+  <div class="card-body !pt-0">
+    <pre class="wsp-notes-text">{{ release_notes }}</pre>
+    <div class="wsp-notes-foot">
+      <button type="button" class="btn btn-secondary btn-sm" data-copy="{{ release_notes }}">{% icon "copy" %}{% translate "Copy" %}</button>
+      <a href="?notes=md" class="btn btn-ghost btn-sm">{% icon "download" %}{% translate "Download .md" %}</a>
+    </div>
+  </div>
+</details>
+{% endif %}
 
 {% if state != "done" %}
 {% if backlog %}

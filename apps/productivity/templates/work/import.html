@@ -28,7 +28,7 @@
     <table class="wim-table">
       <thead><tr><th>{% translate "Title" %}</th><th>{% translate "Due" %}</th><th>{% translate "Priority" %}</th><th>{% translate "Project" %}</th><th>{% translate "Status" %}</th><th>{% translate "Tags" %}</th></tr></thead>
       <tbody>{% for r in preview %}<tr>
-        <td>{{ r.title|truncatechars:70 }}{% if r.notes %}<small>{{ r.notes|truncatechars:80 }}</small>{% endif %}</td>
+        <td>{% if r.kind_label %}<span class="wt-kind" data-kind="{{ r.kind }}">{{ r.kind_label }}</span> {% endif %}{{ r.title|truncatechars:70 }}{% if r.points %} <span class="wt-est wt-pts">{{ r.points }} pt</span>{% endif %}{% if r.notes %}<small>{{ r.notes|truncatechars:80 }}</small>{% endif %}</td>
         <td>{{ r.due|date:"j M Y"|default:"—" }}</td>
         <td>{% if r.priority %}<span class="wt-prio" data-p="{{ r.priority }}">{{ r.priority_label }}</span>{% else %}—{% endif %}</td>
         <td>{{ r.project|default:"—" }}</td><td>{{ r.status_label }}</td><td>{{ r.tags|join:", "|default:"—" }}</td>
