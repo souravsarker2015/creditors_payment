@@ -31,16 +31,16 @@
   </div>
 </header>
 
-{% if saved_views or filtered %}
+{% if saved_views or custom %}
 <nav class="wsv" aria-label="{% translate 'Saved views' %}" x-data="workSavedViews('{{ query|escapejs }}')">
-  <a href="{% url 'work:tasks' %}?view={{ view }}" class="wsv-chip{% if not sv and not filtered %} is-active{% endif %}">{% translate "All tasks" %}</a>
+  <a href="{% url 'work:tasks' %}?view={{ view }}" class="wsv-chip{% if not sv and not custom %} is-active{% endif %}">{% translate "All tasks" %}</a>
   {% for v in saved_views %}
   <span class="wsv-chip{% if sv == v.pk|stringformat:'s' %} is-active{% endif %}" data-view="{{ v.pk }}">
     <a href="{% url 'work:tasks' %}?{{ v.query }}{% if v.query %}&{% endif %}sv={{ v.pk }}">{% icon "filter" %}{{ v.name }}</a>
     <button type="button" class="wsv-x" @click="drop({{ v.pk }})" aria-label="{% blocktranslate with name=v.name %}Remove the view {{ name }}{% endblocktranslate %}">×</button>
   </span>
   {% endfor %}
-  {% if filtered and not sv %}<button type="button" class="wsv-chip wsv-save" @click="save()" data-save-view>{% icon "plus" %}{% translate "Save these filters as a view" %}</button>{% endif %}
+  {% if custom and not sv %}<button type="button" class="wsv-chip wsv-save" @click="save()" data-save-view>{% icon "plus" %}{% translate "Save these filters as a view" %}</button>{% endif %}
 </nav>
 {% endif %}
 
@@ -50,7 +50,7 @@
     {% icon "search" %}
     <input type="search" name="q" value="{{ f.q }}" class="form-input input-compact" placeholder="{% translate 'Search tasks  ( / )' %}" data-work-search aria-label="{% translate 'Search tasks' %}">
   </div>
-  <button type="button" class="btn btn-secondary wf-toggle" @click="more = !more" :aria-expanded="more" aria-controls="task-filters">{% icon "filter" %}<span>{% translate "Filters" %}</span>{% if filtered %}<i class="wf-on" aria-label="{% translate 'Some filters are on' %}"></i>{% endif %}</button>
+  <button type="button" class="btn btn-secondary wf-toggle" @click="more = !more" :aria-expanded="more" aria-controls="task-filters">{% icon "filter" %}<span>{% translate "Filters" %}</span>{% if custom %}<i class="wf-on" aria-label="{% translate 'Some filters are on' %}"></i>{% endif %}</button>
   <div class="wf-more" id="task-filters" :class="more && 'is-open'">
   <select name="project" class="form-input input-compact" aria-label="{% translate 'Project' %}">
     <option value="">{% translate "All projects" %}</option>
@@ -88,7 +88,22 @@
     <option value="no"{% if f.blocked == 'no' %} selected{% endif %}>{% translate "Ready to start" %}</option>
     <option value="yes"{% if f.blocked == 'yes' %} selected{% endif %}>{% translate "Blocked" %}</option>
   </select>
-  {% if filtered %}<a href="{% url 'work:tasks' %}?view={{ view }}" class="btn btn-ghost btn-sm">{% translate "Clear" %}</a>{% endif %}
+  {% if view == "list" %}
+  <select name="by" class="form-input input-compact" aria-label="{% translate 'Group by' %}">
+    <option value="">{% translate "Group: by when" %}</option>
+    <option value="project"{% if by == 'project' %} selected{% endif %}>{% translate "Group: by project" %}</option>
+    <option value="priority"{% if by == 'priority' %} selected{% endif %}>{% translate "Group: by priority" %}</option>
+    <option value="status"{% if by == 'status' %} selected{% endif %}>{% translate "Group: by status" %}</option>
+  </select>
+  <select name="sort" class="form-input input-compact" aria-label="{% translate 'Sort by' %}">
+    <option value="">{% translate "Sort: your order" %}</option>
+    <option value="due"{% if sort == 'due' %} selected{% endif %}>{% translate "Sort: due date" %}</option>
+    <option value="priority"{% if sort == 'priority' %} selected{% endif %}>{% translate "Sort: priority" %}</option>
+    <option value="title"{% if sort == 'title' %} selected{% endif %}>{% translate "Sort: A–Z" %}</option>
+    <option value="new"{% if sort == 'new' %} selected{% endif %}>{% translate "Sort: newest" %}</option>
+  </select>
+  {% endif %}
+  {% if custom %}<a href="{% url 'work:tasks' %}?view={{ view }}" class="btn btn-ghost btn-sm">{% translate "Clear" %}</a>{% endif %}
   </div>
 </form>
 

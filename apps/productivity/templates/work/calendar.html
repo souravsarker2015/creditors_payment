@@ -14,22 +14,24 @@
   </div>
 </header>
 
-<div x-data="{ pick: '{% if month.month == today.month and month.year == today.year %}{{ today|date:'Y-m-d' }}{% endif %}' }">
+<div x-data="workCalendar('{% if month.month == today.month and month.year == today.year %}{{ today|date:'Y-m-d' }}{% endif %}')">
   <section class="card wcal">
     <div class="wcal-head">{% for d in weekdays %}<span>{{ d|date:"D" }}</span>{% endfor %}</div>
     <div class="wcal-grid">
       {% for d in days %}
-      <button type="button" class="wcal-day{% if not d.in_month %} is-out{% endif %}{% if d.today %} is-today{% endif %}{% if not d.work %} is-off{% endif %}" data-level="{{ d.level }}"
-              :class="pick === '{{ d.date|date:'Y-m-d' }}' && 'is-picked'" @click="pick = '{{ d.date|date:'Y-m-d' }}'"
+      <div role="button" tabindex="0" class="wcal-day{% if not d.in_month %} is-out{% endif %}{% if d.today %} is-today{% endif %}{% if not d.work %} is-off{% endif %}" data-level="{{ d.level }}"
+              :class="{ 'is-picked': pick === '{{ d.date|date:'Y-m-d' }}', 'is-drop': over === '{{ d.date|date:'Y-m-d' }}' }" @click="pick = '{{ d.date|date:'Y-m-d' }}'"
+              @keydown.enter.prevent="pick = '{{ d.date|date:'Y-m-d' }}'" @keydown.space.prevent="pick = '{{ d.date|date:'Y-m-d' }}'"
+              @dragover.prevent="if (dragging) over = '{{ d.date|date:'Y-m-d' }}'" @drop.prevent="drop('{{ d.date|date:'Y-m-d' }}')"
               aria-label="{{ d.date|date:'l j F' }}{% if d.secs %} · {{ d.secs|hm }}{% endif %}{% if d.tasks %} · {% blocktranslate count counter=d.tasks|length %}{{ counter }} task due{% plural %}{{ counter }} tasks due{% endblocktranslate %}{% endif %}">
         <span class="wcal-num">{{ d.date|date:"j" }}{% if d.mood %}<i class="wcal-mood">{{ moods|get_item:d.mood }}</i>{% endif %}</span>
         {% if d.secs %}<span class="wcal-time num">{{ d.secs|hm }}</span>{% endif %}
         <span class="wcal-tasks">
-          {% for t in d.tasks|slice:":3" %}<span class="wcal-task{% if t.is_done %} is-done{% endif %}" data-p="{{ t.priority }}">{% if t.project %}<i class="wt-dot" data-color="{{ t.project.color }}"></i>{% endif %}{{ t.title }}</span>{% endfor %}
+          {% for t in d.tasks|slice:":3" %}<span class="wcal-task{% if t.is_done %} is-done{% endif %}" data-p="{{ t.priority }}"{% if not t.is_done %} draggable="true" @dragstart.stop="grab($event, {{ t.pk }})" @dragend="dragging = null; over = ''" data-tip="{% translate 'Drag to another day to move its due date' %}"{% endif %}>{% if t.project %}<i class="wt-dot" data-color="{{ t.project.color }}"></i>{% endif %}{{ t.title }}</span>{% endfor %}
           {% if d.tasks|length > 3 %}<span class="wcal-more">+{{ d.tasks|length|add:"-3" }}</span>{% endif %}
         </span>
         <span class="wcal-dots" aria-hidden="true">{% for t in d.tasks|slice:":4" %}<i{% if t.is_done %} class="is-done"{% endif %}></i>{% endfor %}{% if d.done %}<b>✓{{ d.done }}</b>{% endif %}</span>
-      </button>
+      </div>
       {% endfor %}
     </div>
   </section>
@@ -44,7 +46,8 @@
         <a href="{% url 'work:time' %}?week={{ d.date|date:'Y-m-d' }}" class="btn btn-ghost btn-sm">{% translate "Time" %}</a>
         <a href="{% url 'work:journal' %}?date={{ d.date|date:'Y-m-d' }}" class="btn btn-ghost btn-sm">{% translate "Journal" %}</a>
       </div></header>
-    {% if d.tasks %}<ul class="wv-list">{% for t in d.tasks %}<li><a href="{% url 'work:task' t.pk %}"{% if t.is_done %} class="is-done"{% endif %}>{% if t.project %}<span class="wt-dot" data-color="{{ t.project.color }}"></span> {% endif %}{{ t.title }}</a><time>{{ t.get_status_display }}</time></li>{% endfor %}</ul>
+    {% if d.tasks %}<ul class="wv-list">{% for t in d.tasks %}<li><a href="{% url 'work:task' t.pk %}"{% if t.is_done %} class="is-done"{% endif %}>{% if t.project %}<span class="wt-dot" data-color="{{ t.project.color }}"></span> {% endif %}{{ t.title }}</a>
+      {% if t.is_done %}<time>{{ t.get_status_display }}</time>{% else %}<input type="date" class="form-input input-compact wcal-move" value="{{ t.due_date|date:'Y-m-d' }}" data-tip="{% translate 'Move to another day' %}" @change="move({{ t.pk }}, $event.target.value)" aria-label="{% blocktranslate with title=t.title %}Move “{{ title }}” to another day{% endblocktranslate %}">{% endif %}</li>{% endfor %}</ul>
     {% else %}<p class="wd-muted">{% translate "No tasks due this day." %}</p>{% endif %}
   </section>
   {% endfor %}

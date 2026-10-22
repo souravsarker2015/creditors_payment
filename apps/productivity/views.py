@@ -45,7 +45,7 @@ def _urls():
     r = reverse
     return {
         "timerState": r("work:api_timer_state"), "timerStart": r("work:api_timer_start"), "timerStop": r("work:api_timer_stop"),
-        "timerUpdate": r("work:api_timer_update"), "taskAdd": r("work:api_task_add"), "taskBase": "/work/api/tasks/", "commentBase": "/work/api/comments/",
+        "timerUpdate": r("work:api_timer_update"), "taskAdd": r("work:api_task_add"), "taskBase": "/work/api/tasks/", "commentBase": "/work/api/comments/", "fileBase": "/work/api/files/",
         "viewSave": r("work:api_view_save"), "viewBase": "/work/api/views/",
         "taskBulk": r("work:api_task_bulk"), "wrapup": r("work:wrapup"),
         "checklist": "/work/api/checklist/", "noteSave": r("work:api_note_save"), "noteBase": "/work/api/notes/",
@@ -73,6 +73,7 @@ def _texts():
         "focusSession": _("Focus session"), "focusDone": _("Focus session done"), "takeBreak": _("Time for a break."),
         "focusSavedLate": _("A focus session finished while you were away — it's in your timesheet."),
         "unblocked": _("Ready to start now:"), "deleteComment": _("Delete this comment?"),
+        "removeFile": _("Remove this file? It can't be brought back."), "fileOffline": _("Files need a connection — try again when you're online."),
         "duplicated": _("Copy made"), "open": _("Open"), "wipOver": _("“In progress” is over your limit of %(n)s — finish one before starting another?"),
         "viewName": _("Name this view (e.g. “Urgent at work”):"), "viewDelete": _("Remove this saved view?"), "viewSaved": _("View saved"),
         "breakOver": _("Break's over"), "backToWork": _("Ready to focus again?"), "myDay": _("My Day"), "noAccess": _("Not allowed."),
@@ -247,6 +248,27 @@ BOARD_DONE = 30
 
 
 TASK_VIEWS = ("list", "board", "matrix", "timeline")
+GROUP_BY = ("project", "priority", "status")        # the list's other groupings ("" = by when it's due)
+SORTS = {
+    "due": lambda t: (t.due_date is None, t.due_date or date.max, -t.priority),
+    "priority": lambda t: (-t.priority, t.due_date is None, t.due_date or date.max),
+    "title": lambda t: t.title.lower(),
+    "new": lambda t: -t.created_at.timestamp(),
+}
+
+
+def _grouped(tasks, by):
+    """Open tasks as (key, label, items) by project, priority or status."""
+    if by == "project":
+        groups = {}
+        for t in tasks:
+            groups.setdefault(t.project_id, []).append(t)
+        named = sorted((k for k in groups if k), key=lambda k: (groups[k][0].project.order, groups[k][0].project.name.lower()))
+        out = [(f"p{k}", groups[k][0].project.name, groups[k]) for k in named]
+        return out + ([("p-none", _("No project"), groups[None])] if None in groups else [])
+    if by == "priority":
+        return [(f"pr{value}", label, [t for t in tasks if t.priority == value]) for value, label in reversed(Priority.choices)]
+    return [(value, Status(value).label, [t for t in tasks if t.status == value]) for value in (Status.DOING, Status.TODO, Status.BACKLOG)]
 
 
 def _with_rows(tasks):
@@ -341,7 +363,10 @@ def tasks_view(request):
     qs = qs.select_related("parent")
     show_done = request.GET.get("done") == "1"
     one = request.GET.get("group", "")
+    by = request.GET.get("by", "") if request.GET.get("by", "") in GROUP_BY else ""
+    sort = request.GET.get("sort", "") if request.GET.get("sort", "") in SORTS else ""
     ctx = {"view": view, "f": f, "filtered": any(f.values()), "show_done": show_done, "today": today, "one_group": one,
+           "by": by, "sort": sort, "custom": any(f.values()) or bool(by or sort),
            "projects": Project.objects.filter(owner=user, is_archived=False), "tags": Tag.objects.filter(owner=user),
            "goals": Goal.objects.filter(owner=user, status=GoalStatus.ACTIVE),
            "priorities": Priority.choices, "statuses": Status.choices,
@@ -363,7 +388,8 @@ def tasks_view(request):
             columns.append({"status": value, "label": label, "tasks": items, "total": total, "hidden": total - len(items)})
         ctx["columns"] = columns
     else:
-        open_ = list(qs.exclude(status=Status.DONE).prefetch_related("blocked_by"))
+        open_ = all_open = list(qs.exclude(status=Status.DONE).prefetch_related("blocked_by"))
+        ctx["open_count"] = len(open_)
         waiting = [t for t in open_ if t.waiting_for]
         open_ = [t for t in open_ if not t.waiting_for]
         blocked = [t for t in open_ if t.is_blocked and t.status != Status.DOING]
@@ -384,6 +410,10 @@ def tasks_view(request):
             ("backlog", _("Backlog"), [t for t in open_ if t.status == Status.BACKLOG and not t.due_date and t.my_day != today]),
             ("later", _("Later"), later),
         ]
+        if by:
+            groups = _grouped(all_open, by)
+        if sort:
+            groups = [(key, label, sorted(items, key=SORTS[sort])) for key, label, items in groups]
         groups = [(key, label, items) for key, label, items in groups if items and (not one or key == one)]
         shown, page = [], None
         for i, (key, label, items) in enumerate(groups):
@@ -400,7 +430,6 @@ def tasks_view(request):
             base = request.GET.copy()
             base.pop("page", None)
             ctx.update({"base_query_string": base.urlencode(), "pagination_window": _page_window(page)})
-        ctx["open_count"] = len(open_) + len(waiting) + len(later) + len(blocked)
         ctx["done"] = list(qs.filter(status=Status.DONE).order_by("-completed_at")[:50]) if show_done and not one else []
         ctx["done_count"] = qs.filter(status=Status.DONE).count()
         prefetch_related_objects(shown + ctx["done"], *ROW_RELATED)
@@ -418,29 +447,39 @@ def task_view(request, pk=None):
                     initial=None if task else {"project": request.GET.get("project") or None, "due_date": request.GET.get("due") or None,
                                                "goal": request.GET.get("goal") or None, "title": request.GET.get("title", ""),
                                                "link": request.GET.get("link", "")})
+    old_status = task.status if task else None      # the form writes the new one onto the task as it checks it
     if request.method == "POST" and form.is_valid():
-        was_done = task.is_done if task else False
+        was_done = old_status == Status.DONE
         obj = form.save(commit=False)
         obj.owner = user
+        wanted = obj.status
+        tick = bool(task) and (wanted == Status.DONE) != was_done
+        if tick:                          # ticked off (or back on) the one way: the next repeat, its subtasks, a running timer
+            obj.status = old_status
         if not obj.pk:
             obj.order = services.next_order(user, obj.status)
-        if obj.status == Status.DONE and not was_done:
-            obj.completed_at = timezone.now()
-        elif obj.status != Status.DONE:
-            obj.completed_at = None
+            obj.completed_at = timezone.now() if obj.status == Status.DONE else None
         if obj.scheduled_at:              # planned for a day: it's on that day's list too
             day = timezone.localtime(obj.scheduled_at).date()
             if obj.my_day != day and obj.due_date != day:
                 obj.my_day = day
         obj.save()
         form.save_tags(obj)
+        if tick:
+            services.set_done(obj, wanted == Status.DONE)
+            if obj.status != wanted:      # reopened straight into "In progress" or the backlog
+                obj.status = wanted
+                obj.save(update_fields=["status", "updated_at"])
         messages.success(request, _("Task saved."))
         return redirect("work:task", pk=obj.pk)
     ctx = {"form": form, "task": task}
     if task:
         entries = list(task.entries.select_related("project").order_by("-started_at")[:30])
         spent = services.task_seconds(task)
-        ctx.update({"entries": entries, "spent": spent, "checklist": task.checklist.all(),
+        subs = list(task.subtasks.all())
+        ctx["with_subs"] = {"spent": spent + sum(services.task_seconds(t) for t in subs),
+                            "estimate": (task.estimate_minutes or 0) + sum(t.estimate_minutes or 0 for t in subs)} if subs else None
+        ctx.update({"entries": entries, "spent": spent, "checklist": task.checklist.all(), "files": list(task.files.all()),
                     "estimate_pct": min(round(100 * spent / (task.estimate_minutes * 60)), 999) if task.estimate_minutes else None,
                     "activity": list(task.activity.all()[:60]),
                     "subtasks": _with_rows(sorted(task.subtasks.select_related("project"), key=lambda t: (t.is_done, t.order, t.pk))),
@@ -865,6 +904,30 @@ def note_image_view(request, pk):
     response = FileResponse(handle, content_type=mimetypes.guess_type(img.file.name)[0] or "application/octet-stream")
     response["Content-Disposition"] = f'inline; filename="{os.path.basename(img.file.name)}"'
     response["Cache-Control"] = "private, max-age=31536000, immutable"     # a picture never changes
+    response["X-Content-Type-Options"] = "nosniff"
+    response["Content-Security-Policy"] = "default-src 'none'; sandbox"
+    return response
+
+
+@work_required
+def task_file_view(request, pk):
+    """A file kept with a task — only ever to the person it belongs to. Pictures
+    open in the browser; everything else is downloaded, under its own name."""
+    import mimetypes
+
+    from django.http import FileResponse
+
+    from .models import TaskFile
+
+    tf = get_object_or_404(TaskFile, pk=pk, owner=request.user)
+    try:
+        handle = tf.file.open("rb")
+    except (FileNotFoundError, OSError):
+        raise Http404
+    inline = tf.is_image and request.GET.get("download") != "1"
+    kind = mimetypes.guess_type(tf.file.name)[0] if inline else "application/octet-stream"
+    response = FileResponse(handle, content_type=kind or "application/octet-stream", as_attachment=not inline, filename=tf.name)
+    response["Cache-Control"] = "private, max-age=31536000, immutable"     # a kept file never changes
     response["X-Content-Type-Options"] = "nosniff"
     response["Content-Security-Policy"] = "default-src 'none'; sandbox"
     return response
@@ -1564,6 +1627,14 @@ def export_view(request):
             try:
                 with img.file.open("rb") as fh:
                     z.writestr(f"notes/images/{img.pk}{os.path.splitext(img.file.name)[1]}", fh.read())
+            except (FileNotFoundError, OSError):
+                pass
+        from .models import TaskFile
+
+        for tf in TaskFile.objects.filter(owner=user).select_related("task"):
+            try:
+                with tf.file.open("rb") as fh:
+                    z.writestr(f"tasks/files/{slug(tf.task.title, tf.task_id)}/{tf.pk}-{tf.name}", fh.read())
             except (FileNotFoundError, OSError):
                 pass
         for dk in Deck.objects.filter(owner=user):    # tab-separated: Anki and spreadsheets open these

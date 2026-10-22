@@ -21217,3 +21217,86 @@ msgstr "“চলমান” আপনার %(n)sটির সীমা ছা
 #, python-format
 msgid "…and %(n)s more."
 msgstr "…আর %(n)sটি।"
+
+#, python-format
+msgid "%(t)s with its subtasks"
+msgstr "সাব-টাস্কসহ %(t)s"
+
+#, python-format
+msgid "A task can keep up to %(n)s files."
+msgstr "একটি কাজে সর্বোচ্চ %(n)sটি ফাইল রাখা যায়।"
+
+#, python-format
+msgid "Attached “%(name)s”"
+msgstr "“%(name)s” যুক্ত করা হয়েছে"
+
+msgid "Choose a file."
+msgstr "একটি ফাইল বেছে নিন।"
+
+msgid "Drag to another day to move its due date"
+msgstr "শেষ তারিখ বদলাতে অন্য দিনে টেনে নিন"
+
+msgid "Drop files here — a brief, a design, a PDF… (up to 20 MB each)"
+msgstr "ফাইল এখানে ছেড়ে দিন — ব্রিফ, ডিজাইন, PDF… (প্রতিটি ২০ MB পর্যন্ত)"
+
+msgid "Files"
+msgstr "ফাইল"
+
+msgid "Files need a connection — try again when you're online."
+msgstr "ফাইলের জন্য ইন্টারনেট লাগবে — অনলাইনে এসে আবার চেষ্টা করুন।"
+
+msgid "Group by"
+msgstr "যেভাবে ভাগ করবেন"
+
+msgid "Group: by priority"
+msgstr "ভাগ: অগ্রাধিকার অনুযায়ী"
+
+msgid "Group: by project"
+msgstr "ভাগ: প্রজেক্ট অনুযায়ী"
+
+msgid "Group: by status"
+msgstr "ভাগ: অবস্থা অনুযায়ী"
+
+msgid "Group: by when"
+msgstr "ভাগ: কখন করবেন"
+
+msgid "Move to another day"
+msgstr "অন্য দিনে সরান"
+
+#, python-format
+msgid "Move “%(title)s” to another day"
+msgstr "“%(title)s” অন্য দিনে সরান"
+
+#, python-format
+msgid "Remove %(name)s"
+msgstr "%(name)s সরান"
+
+msgid "Remove this file? It can't be brought back."
+msgstr "এই ফাইলটি সরাবেন? আর ফেরত আনা যাবে না।"
+
+#, python-format
+msgid "Removed the file “%(name)s”"
+msgstr "“%(name)s” ফাইলটি সরানো হয়েছে"
+
+msgid "Sort: A–Z"
+msgstr "সাজান: অ–ঔ / A–Z"
+
+msgid "Sort: due date"
+msgstr "সাজান: শেষ তারিখ"
+
+msgid "Sort: newest"
+msgstr "সাজান: নতুন আগে"
+
+msgid "Sort: priority"
+msgstr "সাজান: অগ্রাধিকার"
+
+msgid "Sort: your order"
+msgstr "সাজান: আপনার ক্রম"
+
+#, python-format
+msgid "~%(est)s planned in all"
+msgstr "সব মিলিয়ে ~%(est)s পরিকল্পিত"
+
+#, python-format
+msgid "“%(name)s” is too big (over %(mb)s MB)."
+msgstr "“%(name)s” অনেক বড় (%(mb)s MB-এর বেশি)।"

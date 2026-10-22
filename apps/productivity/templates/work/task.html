@@ -109,11 +109,20 @@
       <form class="work-check-add" @submit.prevent="add()"><input x-model="text" class="form-input input-compact" placeholder="{% translate 'Add a step…' %}" aria-label="{% translate 'Add a step' %}"><button type="submit" class="btn btn-secondary btn-sm">{% translate "Add" %}</button></form>
     </section>
 
+    <section class="card wtf" x-data="workFiles({{ task.pk }})" :class="over && 'is-over'" @dragover.prevent="over = true" @dragleave.self="over = false" @drop.prevent="over = false; send($event.dataTransfer.files)">
+      <header class="card-header"><h2 class="card-title">{% icon "paperclip" %}{% translate "Files" %}</h2><span class="wtf-count" x-ref="count">{% if files %}{{ files|length }}{% endif %}</span>
+        <label class="btn btn-ghost btn-sm">{% icon "upload" %}{% translate "Add" %}<input type="file" multiple class="sr-only" @change="send($event.target.files); $event.target.value = ''"></label></header>
+      <ul class="wtf-list" x-ref="list">{% for f in files %}{% include "work/partials/task_file.html" %}{% endfor %}</ul>
+      <p class="wtf-drop" x-show="!busy">{% translate "Drop files here — a brief, a design, a PDF… (up to 20 MB each)" %}</p>
+      <p class="wtf-drop" x-show="busy" x-cloak>{% translate "Uploading…" %}</p>
+    </section>
+
     <section class="card">
       <header class="card-header"><h2 class="card-title">{% translate "Time" %}</h2><a href="{% url 'work:entry_new' %}?task={{ task.pk }}" class="btn btn-ghost btn-sm">{% icon "plus" %}{% translate "Add" %}</a></header>
       <div class="card-body !pt-0">
         <p class="wtd-spent"><strong class="num">{{ spent|hm }}</strong>{% if task.estimate_minutes %} <span>{% blocktranslate with est=task.estimate_minutes|minutes_hm %}of ~{{ est }} planned{% endblocktranslate %}</span>{% endif %}</p>
         {% if estimate_pct is not None %}<div class="wtd-meter{% if estimate_pct > 100 %} is-over{% endif %}"><span style="width: {% if estimate_pct > 100 %}100{% else %}{{ estimate_pct }}{% endif %}%"></span></div>{% endif %}
+        {% if with_subs.spent or with_subs.estimate %}<p class="wtd-rollup">{% icon "list" %}<span>{% if with_subs.spent %}{% blocktranslate with t=with_subs.spent|hm %}{{ t }} with its subtasks{% endblocktranslate %}{% endif %}{% if with_subs.spent and with_subs.estimate %} · {% endif %}{% if with_subs.estimate %}{% blocktranslate with est=with_subs.estimate|minutes_hm %}~{{ est }} planned in all{% endblocktranslate %}{% endif %}</span></p>{% endif %}
       </div>
       {% if entries %}<ul class="we-list">{% for e in entries %}{% include "work/partials/entry_row.html" %}{% endfor %}</ul>{% endif %}
     </section>

@@ -774,6 +774,39 @@ class NoteImage(models.Model):
         return self.name or self.file.name
 
 
+def task_file_path(instance, filename):
+    import uuid
+    ext = os.path.splitext(filename)[1].lower()[:10]
+    return f"work/files/{instance.owner_id}/{uuid.uuid4().hex}{ext}"
+
+
+class TaskFile(models.Model):
+    """A file kept with a task — a brief, a design, a PDF, a spreadsheet.
+    Served only to its owner (views.task_file_view), never as a public media address."""
+    IMAGE_EXTS = (".png", ".jpg", ".jpeg", ".gif", ".webp")
+
+    owner = models.ForeignKey(**OWNER)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="files")
+    file = models.FileField(upload_to=task_file_path)
+    name = models.CharField(max_length=200)
+    size = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def ext(self):
+        return os.path.splitext(self.file.name)[1].lower()
+
+    @property
+    def is_image(self):
+        return self.ext in self.IMAGE_EXTS
+
+
 class NoteVersion(models.Model):
     """An earlier state of a note, kept before each new round of editing (see services.remember_note)."""
     note = models.ForeignKey(Note, on_delete=models.CASCADE, related_name="versions")

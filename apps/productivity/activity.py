@@ -55,7 +55,16 @@ def _after(sender, instance, created, raw=False, **kwargs):
         return
     for change in getattr(instance, "_activity", []):
         TaskActivity.objects.create(task=instance, data=change)
+        if change["field"] == "project_id" and instance.parent_id is None:
+            _subtasks_follow(instance, change["old"])
     instance._activity = []
+
+
+def _subtasks_follow(task, old_project):
+    """A task moved to another project takes the subtasks that were in its old one along."""
+    for sub in task.subtasks.filter(project_id=old_project):
+        sub.project_id = task.project_id
+        sub.save(update_fields=["project", "updated_at"])
 
 
 def note(task, **data):
@@ -111,4 +120,6 @@ def describe(a):
         return (_("Now blocked by “%(title)s”") if d.get("added") else _("No longer blocked by “%(title)s”")) % {"title": d.get("title", "")}
     if f == "unblocked":
         return _("Ready: “%(title)s” is done") % {"title": d.get("title", "")}
+    if f == "file":
+        return (_("Attached “%(name)s”") if d.get("added") else _("Removed the file “%(name)s”")) % {"name": d.get("name", "")}
     return ""

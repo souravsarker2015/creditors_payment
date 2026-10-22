@@ -16,7 +16,7 @@ class CannotRestore(Exception):
     pass
 
 
-FILE_FIELDS = ("receipt",)
+FILE_FIELDS = ("receipt", "file")      # file: a task's attachments, deleted with the task
 
 
 def drop_files(items):

@@ -973,6 +973,63 @@
       };
     });
 
+    /* ── The month calendar: a task dragged to another day (or given one in the day's list) is due then ── */
+    Alpine.data("workCalendar", function (pick) {
+      return {
+        pick: pick, dragging: null, over: "",
+        grab: function (e, id) {
+          this.dragging = id;
+          e.dataTransfer.effectAllowed = "move";
+          e.dataTransfer.setData("text/plain", String(id));
+        },
+        drop: function (day) {
+          var id = this.dragging; this.dragging = null; this.over = "";
+          if (id) this.move(id, day);
+        },
+        move: function (id, day) {
+          if (!day) return;
+          api(CFG.urls.taskBase + id + "/update/", { due_date: day }).then(function (res) {
+            if (res.queued) toast(t("savedOffline", "Saved on this device — it will sync when you're online."));
+            else if (res.ok) location.reload(); else toast(res.error, "warn");
+          });
+        },
+      };
+    });
+
+    /* ── A task's files: picked or dropped, uploaded straight away (needs a connection) ── */
+    Alpine.data("workFiles", function (taskId) {
+      return {
+        over: false, busy: false,
+        init: function () {
+          var self = this;
+          this.$el.addEventListener("click", function (e) {
+            var b = e.target.closest("[data-remove-file]"); if (!b) return;
+            if (!confirm(t("removeFile", "Remove this file? It can't be brought back."))) return;
+            api(CFG.urls.fileBase + b.getAttribute("data-remove-file") + "/delete/", {}).then(function (res) {
+              if (!res.ok) return toast(res.error, "warn");
+              b.closest("[data-file]").remove(); self.$refs.count.textContent = res.count || "";
+            });
+          });
+        },
+        send: function (files) {
+          files = Array.prototype.slice.call(files || []);
+          if (!files.length || this.busy) return;
+          var self = this, fd = new FormData();
+          files.forEach(function (f) { fd.append("file", f, f.name); });
+          this.busy = true;
+          fetch(CFG.urls.taskBase + taskId + "/files/", { method: "POST", body: fd, credentials: "same-origin",
+                                                         headers: { "X-CSRFToken": csrf(), "X-Requested-With": "fetch", Accept: "application/json" } })
+            .then(function (r) { return r.json(); })
+            .then(function (res) {
+              if (res.ok) { self.$refs.list.insertAdjacentHTML("afterbegin", res.html); self.$refs.count.textContent = res.count || ""; }
+              else toast(res.error, "warn");
+            })
+            .catch(function () { toast(t("fileOffline", "Files need a connection — try again when you're online."), "warn"); })
+            .then(function () { self.busy = false; });
+        },
+      };
+    });
+
     /* ── Saved views: the task list's filters, kept under a name ───────── */
     Alpine.data("workSavedViews", function (query) {
       return {

@@ -185,6 +185,49 @@ def task_template(request, pk):
     return ok(id=tpl.pk, name=tpl.name, url=reverse("work:templates"))
 
 
+FILE_MAX_MB = 20
+FILES_PER_TASK = 50
+
+
+@work_required
+@require_POST
+def task_files(request, pk):
+    """Files dropped or picked onto a task (any kind; the picture formats show as thumbnails)."""
+    from .activity import note
+    from .models import TaskFile
+
+    task = get_object_or_404(Task, pk=pk, owner=request.user)
+    files = request.FILES.getlist("file")
+    if not files:
+        return bad(_("Choose a file."))
+    if task.files.count() + len(files) > FILES_PER_TASK:
+        return bad(_("A task can keep up to %(n)s files.") % {"n": FILES_PER_TASK})
+    too_big = [f.name for f in files if f.size > FILE_MAX_MB * 1024 * 1024]
+    if too_big:
+        return bad(_("“%(name)s” is too big (over %(mb)s MB).") % {"name": too_big[0], "mb": FILE_MAX_MB})
+    rows = []
+    for f in files:
+        name = (f.name or "file").replace("\\", "/").rsplit("/", 1)[-1].strip()[:200] or "file"
+        tf = TaskFile.objects.create(owner=request.user, task=task, file=f, name=name, size=f.size)
+        note(task, field="file", added=True, name=name)
+        rows.append(render_to_string("work/partials/task_file.html", {"f": tf}, request=request))
+    return ok(html="".join(rows), count=task.files.count())
+
+
+@work_required
+@require_POST
+def task_file_delete(request, pk):
+    from .activity import note
+    from .models import TaskFile
+
+    tf = get_object_or_404(TaskFile, pk=pk, owner=request.user)
+    task, name = tf.task, tf.name
+    tf.file.delete(save=False)
+    tf.delete()
+    note(task, field="file", added=False, name=name)
+    return ok(count=task.files.count())
+
+
 # ── Task dependencies, comments and saved views ─────────────────────────────
 @work_required
 @require_POST
@@ -228,7 +271,7 @@ def comment_delete(request, pk):
     return ok()
 
 
-VIEW_KEYS = ("view", "q", "project", "tag", "priority", "due", "goal", "done", "blocked")
+VIEW_KEYS = ("view", "q", "project", "tag", "priority", "due", "goal", "done", "blocked", "sub", "by", "sort")
 
 
 @work_required
@@ -350,6 +393,8 @@ def task_update(request, pk):
     if "my_day" in request.POST and "scheduled_at" not in request.POST and task.scheduled_at:
         if timezone.localtime(task.scheduled_at).date() != task.my_day:     # moved to another day: off the old timeline
             task.scheduled_at = None
+    if task.start_date and task.due_date and task.start_date > task.due_date:
+        task.start_date = task.due_date        # due sooner than it was to start: it starts that day too
     task.save()
     return ok(html=task_row(request, task), scheduled_at=timezone.localtime(task.scheduled_at).strftime("%Y-%m-%dT%H:%M") if task.scheduled_at else "",
               my_day=task.my_day.isoformat() if task.my_day else "")
