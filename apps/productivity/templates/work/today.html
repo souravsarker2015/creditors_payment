@@ -12,6 +12,8 @@
       <span>{% blocktranslate with done=sprint.counts.done total=sprint.counts.total %}{{ done }} of {{ total }} done{% endblocktranslate %} · {% if sprint.days_left > 0 %}{% blocktranslate count counter=sprint.days_left %}{{ counter }} day left{% plural %}{{ counter }} days left{% endblocktranslate %}{% elif sprint.days_left == 0 %}{% translate "last day" %}{% else %}{% translate "time's up — close it" %}{% endif %}</span></a>{% endif %}
     {% if prep_due %}<a href="{% url 'work:prep_practice' %}?set=today" class="wd-sprint">{% icon "target" %}<strong>{% translate "Interview prep" %}</strong>
       <span>{% blocktranslate count counter=prep_due %}{{ counter }} question to practise today{% plural %}{{ counter }} questions to practise today{% endblocktranslate %}</span></a>{% endif %}
+    {% if exam_soon %}{% with d=exam_soon.days_left %}<a href="{% url 'work:exam_review' exam_soon.pk %}" class="wd-sprint">{% icon "exam" %}<strong>{{ exam_soon.name }}</strong>
+      <span>{% if d == 0 %}{% translate "Exam today — good luck!" %}{% else %}{% blocktranslate count counter=d %}Exam in {{ counter }} day{% plural %}Exam in {{ counter }} days{% endblocktranslate %}{% endif %} · {% if exam_soon.left %}{% blocktranslate count counter=exam_soon.left %}{{ counter }} question to learn{% plural %}{{ counter }} questions to learn{% endblocktranslate %}{% else %}{% translate "all known" %}{% endif %}</span></a>{% endwith %}{% endif %}
   </div>
   <div class="wp-actions">
     <a href="{% url 'work:wrapup' %}" class="btn {% if hour_late %}btn-primary{% else %}btn-ghost{% endif %}">{% icon "sun" %}{% translate "Wrap up the day" %}</a>

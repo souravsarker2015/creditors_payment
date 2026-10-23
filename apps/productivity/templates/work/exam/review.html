@@ -10,6 +10,10 @@
   <header class="wfr-head">
     <a :href="back" class="icon-btn" aria-label="{% translate 'Stop' %}" data-tip="{% translate 'Stop (Esc)' %}">{% icon "x" %}</a>
     <div class="wfr-title"><b>{{ s.name }}</b><small class="wex-left" x-show="stage === 'card'" x-text="leftText()"></small></div>
+    <button type="button" class="icon-btn" @click="undo()" :disabled="!history.length" aria-label="{% translate 'Undo the last answer' %}" data-tip="{% translate 'Undo the last answer (Z)' %}">{% icon "undo" %}</button>
+    <button type="button" class="icon-btn" @click="startEdit()" x-show="stage === 'card'" aria-label="{% translate 'Edit this question' %}" data-tip="{% translate 'Edit this question (E)' %}">{% icon "edit" %}</button>
+  </header>
+  <div class="wex-review-bar">
     <select class="form-input input-compact wex-review-chapter" x-show="chapters.length" x-model="chapter" @change="start(which)" aria-label="{% translate 'Chapter' %}">
       <option value="">{% translate "All chapters" %}</option>
       <template x-for="c in chapters" :key="c"><option :value="c" x-text="c" :selected="c === chapter"></option></template>
@@ -21,25 +25,30 @@
       <button type="button" class="seg-item" :class="which === 'starred' && 'is-active'" @click="start('starred')" aria-label="{% translate 'Important' %}">{% icon "star" %}</button>
     </div>
     <button type="button" class="icon-btn" :class="shuffle && 'is-on'" @click="shuffle = !shuffle; start(which)" :aria-pressed="shuffle.toString()" aria-label="{% translate 'Shuffle' %}" data-tip="{% translate 'Shuffle' %}">{% icon "repeat" %}</button>
-    <button type="button" class="icon-btn" @click="startEdit()" x-show="stage === 'card'" aria-label="{% translate 'Edit this question' %}" data-tip="{% translate 'Edit this question (E)' %}">{% icon "edit" %}</button>
-  </header>
+    <button type="button" class="icon-btn" :class="writeFirst && 'is-on'" @click="writeFirst = !writeFirst" :aria-pressed="writeFirst.toString()" aria-label="{% translate 'Write my answer first' %}" data-tip="{% translate 'Write my answer first' %}">{% icon "journal" %}</button>
+  </div>
   <div class="wfr-progress" role="progressbar" :aria-valuenow="pos" aria-valuemin="0" :aria-valuemax="queue.length"><i :style="'width:' + (queue.length ? 100 * pos / queue.length : 0) + '%'"></i></div>
 
   <section class="wfr-stage" x-show="stage === 'card'">
-    <div class="wfr-card-wrap">
-      <div class="wfr-card" :class="flipped && 'is-flipped'" @click="flip()" role="button" tabindex="0"
+    <div class="wfr-card-wrap" :style="swipeStyle()" @pointerdown="down($event)" @pointermove="move($event)" @pointerup="up()" @pointercancel="swipe = null">
+      <div class="wfr-card" :class="flipped && 'is-flipped'" @click="if (Date.now() - swiped > 400 && (!writeFirst || flipped)) flip()" role="button" tabindex="0"
            :aria-label="flipped ? '{% translate "Answer" %}' : '{% translate "Question — tap to see the answer" %}'">
         <div class="wfr-face wfr-front">
           <span class="wfr-tag"><span x-text="card && ('{% translate "Question" %} ' + card.number + (card.chapter ? ' · ' + card.chapter : ''))"></span><span class="wex-tag-star" x-show="card && card.starred">★</span><span class="wex-tag-missed" x-show="card && card.misses" x-text="card && '✗ ' + card.misses"></span></span>
           <div class="wfr-text wn-md" x-ref="front"></div>
-          <span class="wfr-tap">{% icon "repeat" %}{% translate "Think of the answer, then tap or press Space" %}</span>
+          <textarea class="form-input wex-mine" x-show="writeFirst" x-ref="mine" x-model="mine" rows="4" @click.stop
+                    placeholder="{% translate 'Write your answer, then Shift+Enter to compare' %}" aria-label="{% translate 'Your answer' %}"></textarea>
+          <span class="wfr-tap" x-show="!writeFirst">{% icon "repeat" %}{% translate "Think of the answer, then tap or press Space" %}</span>
         </div>
         <div class="wfr-face wfr-back">
           <div class="wfr-q wn-md" x-ref="q"></div>
+          <div class="wex-mine-shown" x-show="writeFirst && mine.trim()"><small>{% translate "Your answer" %}</small><p x-text="mine"></p></div>
           <hr>
           <div class="wfr-text wex-answer wn-md" x-ref="back"></div>
         </div>
       </div>
+      <span class="wfr-swipe is-left" aria-hidden="true">{% translate "Not yet" %}</span>
+      <span class="wfr-swipe is-right" aria-hidden="true">{% translate "I knew it" %}</span>
     </div>
     <div class="wfr-actions">
       <button type="button" class="btn btn-primary btn-lg wfr-show" x-show="!flipped" @click="flip()">{% translate "Show the answer" %} <kbd>Space</kbd></button>
@@ -47,6 +56,7 @@
         <button type="button" class="wfr-btn" data-r="1" @click="mark(false)"><b>{% translate "Not yet" %}</b><small>{% translate "comes back at the end" %}</small><kbd>1</kbd></button>
         <button type="button" class="wfr-btn" data-r="3" @click="mark(true)"><b>{% translate "I knew it" %}</b><small>{% translate "marked as known" %}</small><kbd>2</kbd></button>
       </div>
+      <p class="wfr-help" x-show="flipped" x-cloak>{% translate "On a phone: swipe right if you knew it, left if not yet." %}</p>
     </div>
   </section>
 
@@ -71,6 +81,7 @@
     </dl>
     <div class="wfr-end-acts">
       <a :href="back" class="btn btn-primary">{% translate "Done" %}</a>
+      <button type="button" class="btn btn-secondary" x-show="missed.length" @click="againMissed()">{% icon "alert" %}<span x-text="'{{ _("Go over the missed ones")|escapejs }} (' + missed.length + ')'"></span></button>
       <button type="button" class="btn btn-secondary" @click="start(which)">{% icon "repeat" %}{% translate "Go again" %}</button>
     </div>
   </section>

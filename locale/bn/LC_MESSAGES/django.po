@@ -23531,3 +23531,129 @@ msgstr "%(n)sটির মধ্যে %(k)sটি জানা"
 #, python-format
 msgid "%(n)s new questions found"
 msgstr "%(n)sটি নতুন প্রশ্ন পাওয়া গেছে"
+
+#, python-format
+msgid "%(counter)s question to learn"
+msgid_plural "%(counter)s questions to learn"
+msgstr[0] "%(counter)sটি প্রশ্ন শেখা বাকি"
+msgstr[1] "%(counter)sটি প্রশ্ন শেখা বাকি"
+
+#, python-format
+msgid "%(n)s picked"
+msgstr "%(n)sটি বাছাই করা"
+
+#, python-format
+msgid "%(n)s question moved to %(name)s."
+msgid_plural "%(n)s questions moved to %(name)s."
+msgstr[0] "%(n)sটি প্রশ্ন %(name)s-এ সরানো হয়েছে।"
+msgstr[1] "%(n)sটি প্রশ্ন %(name)s-এ সরানো হয়েছে।"
+
+#, python-format
+msgid "%(n)s questions deleted"
+msgstr "%(n)sটি প্রশ্ন মুছে ফেলা হয়েছে"
+
+msgid "Add a subject"
+msgstr "একটি বিষয় যোগ করুন"
+
+msgid "Chapter for the picked questions (empty: no chapter):"
+msgstr "বাছাই করা প্রশ্নগুলোর অধ্যায় (খালি রাখলে: কোনো অধ্যায় নয়):"
+
+msgid "Chapter…"
+msgstr "অধ্যায়…"
+
+msgid "Drag the handles to change the order — into another chapter too. Keys: A add a question · / find · R review."
+msgstr "ক্রম বদলাতে হাতলগুলো টেনে আনুন — অন্য অধ্যায়েও। কী: A প্রশ্ন যোগ · / খুঁজুন · R রিভিউ।"
+
+msgid "Drag to change the order"
+msgstr "ক্রম বদলাতে টেনে আনুন"
+
+msgid "Find in this subject  ( / )"
+msgstr "এই বিষয়ে খুঁজুন  ( / )"
+
+msgid "Fold every chapter"
+msgstr "সব অধ্যায় ভাঁজ করুন"
+
+msgid "Go over the missed ones"
+msgstr "ভুলগুলো আবার দেখুন"
+
+msgid "Known"
+msgstr "জানা"
+
+msgid "Move down"
+msgstr "নিচে সরান"
+
+msgid "Move the chapter down"
+msgstr "অধ্যায়টি নিচে সরান"
+
+msgid "Move the chapter up"
+msgstr "অধ্যায়টি ওপরে সরান"
+
+msgid "Move to another subject"
+msgstr "অন্য বিষয়ে সরান"
+
+msgid "Move up"
+msgstr "ওপরে সরান"
+
+msgid "On a phone: swipe right if you knew it, left if not yet."
+msgstr "ফোনে: জানলে ডানে সোয়াইপ করুন, না জানলে বাঁয়ে।"
+
+msgid "One by one while you study, or paste a whole list — from your notes, ChatGPT or Claude. Group them by chapter if you like."
+msgstr "পড়ার সময় একটি একটি করে, অথবা পুরো তালিকা পেস্ট করুন — আপনার নোট, ChatGPT বা Claude থেকে। চাইলে অধ্যায় অনুযায়ী সাজান।"
+
+msgid "Open a file"
+msgstr "ফাইল খুলুন"
+
+msgid "Open every chapter"
+msgstr "সব অধ্যায় খুলুন"
+
+msgid "Pick all shown"
+msgstr "দেখানো সবগুলো বাছুন"
+
+msgid "Pick questions to change together"
+msgstr "একসাথে বদলাতে প্রশ্ন বাছুন"
+
+msgid "Print the questions only (a test)"
+msgstr "শুধু প্রশ্নগুলো প্রিন্ট করুন (একটি পরীক্ষা)"
+
+msgid "Read them through, or flip through them: think of the answer, turn the card, say whether you knew it. What you miss comes back."
+msgstr "পড়ে নিন, অথবা একটি একটি করে উল্টে দেখুন: উত্তরটি ভাবুন, কার্ড উল্টান, জানতেন কি না বলুন। যা ভুল হয় তা আবার আসে।"
+
+msgid "Revise"
+msgstr "রিভিশন করুন"
+
+msgid "Tick all"
+msgstr "সব টিক দিন"
+
+msgid "Type its name above — and the exam date, if you know it, for a countdown."
+msgstr "ওপরে এর নাম লিখুন — আর জানা থাকলে পরীক্ষার তারিখ, দিন গোনার জন্য।"
+
+msgid "Untick all"
+msgstr "সব টিক তুলে দিন"
+
+msgid "Write my answer first"
+msgstr "আগে আমার উত্তর লিখব"
+
+msgid "Write questions and answers"
+msgstr "প্রশ্ন ও উত্তর লিখুন"
+
+msgid "Write your answer, then Shift+Enter to compare"
+msgstr "আপনার উত্তর লিখুন, তারপর মেলাতে Shift+Enter চাপুন"
+
+msgid "You have changes that aren't saved yet. Leave anyway?"
+msgstr "কিছু পরিবর্তন এখনো সংরক্ষিত হয়নি। তবুও চলে যাবেন?"
+
+msgid "You know them all — keep them fresh with a quick review."
+msgstr "সবগুলোই আপনার জানা — একটি দ্রুত রিভিউ দিয়ে মনে রাখুন।"
+
+msgid "Your unsaved question is back."
+msgstr "আপনার সংরক্ষণ না করা প্রশ্নটি ফিরে এসেছে।"
+
+msgid "a .txt or .md file — or drop it on the box"
+msgstr "একটি .txt বা .md ফাইল — অথবা বাক্সে টেনে ছাড়ুন"
+
+#, python-format
+msgid "about %(n)s a day to learn them all before the exam"
+msgstr "পরীক্ষার আগে সব শিখতে দিনে প্রায় %(n)sটি"
+
+msgid "all known"
+msgstr "সব জানা"

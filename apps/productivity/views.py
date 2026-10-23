@@ -238,8 +238,12 @@ def today_view(request):
 
         due = Question.objects.filter(owner=user, last_reviewed__isnull=False, due__lte=today).count()
         prep_due = due + min(new_left(user, today), Question.objects.filter(owner=user, last_reviewed__isnull=True).count())
+    from .models import ExamSubject
+
+    exam_soon = (ExamSubject.objects.filter(owner=user, exam_date__gte=today, exam_date__lte=today + timedelta(days=14))
+                 .annotate(n=Count("notes"), left=Count("notes", filter=Q(notes__is_known=False))).filter(n__gt=0).order_by("exam_date").first())
     return render_work(request, "work/today.html", {
-        "today": today, "greeting": greeting, "hour_late": hour >= 16, "sprint": sprint, "prep_due": prep_due,
+        "today": today, "greeting": greeting, "hour_late": hour >= 16, "sprint": sprint, "prep_due": prep_due, "exam_soon": exam_soon,
         "open_tasks": open_tasks, "done_today": done_today, "more_tasks": more, "cap": cap,
         "next_block": services.next_block(user), "now": timezone.now(),
         "leftovers": services.leftovers(user, today), "waiting": services.waiting_tasks(user)[:6],

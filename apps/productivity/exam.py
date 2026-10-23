@@ -148,8 +148,9 @@ def _marked(rows):
 
 
 def _headed(rows):
-    """Markdown headings. The level that repeats (## mostly) holds the questions;
-    a level above it whose headings only hold other headings gives the chapters;
+    """Markdown headings. The level that repeats (## mostly) holds the questions —
+    unless its headings only hold other headings: then those are the questions.
+    A heading above the questions' level names the chapter of the ones under it;
     deeper headings stay inside the answers."""
     heads = {i: (len(m.group(1)), m.group(2)) for i, (line, code) in enumerate(rows) if not code and (m := HEADING.match(line))}
     if not heads:
@@ -170,10 +171,8 @@ def _headed(rows):
         return first in heads and heads[first][0] > heads[i][0]
 
     tops = [i for i, (lv, _t) in heads.items() if lv == level]
-    chapter_level = None
     if all(holds_headings(i) for i in tops):
-        deeper = [heads[j][0] for i in tops for j in body(i) if j in heads]
-        chapter_level, level = level, min(deeper)
+        level = min(heads[j][0] for i in tops for j in body(i) if j in heads)
     out = _Notes()
     for i, row in enumerate(rows):
         if i in heads and heads[i][0] <= level:
@@ -182,8 +181,7 @@ def _headed(rows):
                 out.start(text)
             else:
                 out.finish()
-                if lv == chapter_level:
-                    out.chapter = _chapter(text)
+                out.chapter = _chapter(text)
             continue
         out.add(row)
     out.finish()
@@ -249,11 +247,17 @@ def same(text):
 
 
 def ordered(notes):
-    """Questions without a chapter first, then each chapter in the order it was first used."""
+    """Each chapter's questions together, the chapters in the order their first question comes."""
     groups = {}
-    for n in notes:
+    for n in sorted(notes, key=lambda n: (n.order, n.pk or 0)):
         groups.setdefault(n.chapter, []).append(n)
-    return [n for key in sorted(groups, key=lambda c: c != "") for n in groups[key]]
+    return [n for group in groups.values() for n in group]
+
+
+def next_order(subject):
+    from django.db.models import Max
+
+    return (subject.notes.aggregate(m=Max("order"))["m"] or 0) + 1
 
 
 def as_text(subject, notes):

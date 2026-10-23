@@ -1192,8 +1192,9 @@ class ExamSubject(models.Model):
 
 
 class ExamNote(models.Model):
-    """One question and its answer (Markdown), in the order they were written —
-    grouped by chapter when they have one."""
+    """One question and its answer (Markdown). `order` is its place in the
+    subject; a chapter's questions are shown together, chapters in the order
+    their first question comes."""
     owner = models.ForeignKey(**OWNER)
     subject = models.ForeignKey(ExamSubject, on_delete=models.CASCADE, related_name="notes", verbose_name=_("Subject"))
     chapter = models.CharField(_("Chapter"), max_length=120, blank=True, help_text=_("Optional: questions with the same chapter are shown together."))
@@ -1203,12 +1204,13 @@ class ExamNote(models.Model):
     is_known = models.BooleanField(_("I know it"), default=False)
     misses = models.PositiveIntegerField(default=0, help_text="Times answered \"Not yet\" in a review.")
     reviewed_at = models.DateTimeField(null=True, blank=True)
+    order = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name, verbose_name_plural = _("Exam question"), _("Exam questions")
-        ordering = ["subject_id", "pk"]
+        ordering = ["subject_id", "order", "pk"]
 
     def __str__(self):
         return self.question[:60]

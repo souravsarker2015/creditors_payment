@@ -1,6 +1,8 @@
 """Exam notes pages (see exam.py): the subjects, a subject's questions and
 answers (added, pasted, edited and deleted in place), flipping through them,
 and the text download."""
+import json
+
 from django.contrib import messages
 from django.db.models import Count, Max, Q
 from django.http import HttpResponse, JsonResponse
@@ -30,7 +32,11 @@ def _texts():
         "countOne": ngettext("%(counter)s question", "%(counter)s questions", 1), "count": ngettext("%(counter)s question", "%(counter)s questions", 2),
         "copied": _("Copied — paste it into ChatGPT or Claude."), "moved": _("Moved to %(name)s"), "noChapter": _("No chapter"),
         "renameAsk": _("New name for this chapter (empty: no chapter):"), "saved": _("Saved"),
-        "found": _("%(n)s new questions found"),
+        "found": _("%(n)s new questions found"), "picked": _("%(n)s picked"),
+        "bulkDeleteAsk": _("Delete the picked questions? You can bring them back from Recently deleted."),
+        "deletedMany": _("%(n)s questions deleted"), "undo": _("Undo"), "chapterAsk": _("Chapter for the picked questions (empty: no chapter):"),
+        "leave": _("You have changes that aren't saved yet. Leave anyway?"), "draftBack": _("Your unsaved question is back."),
+        "perDay": _("about %(n)s a day to learn them all before the exam"), "allKnown": _("You know them all — keep them fresh with a quick review."),
     }
 
 
@@ -97,7 +103,7 @@ def exam_subject_view(request, pk):
     return render_work(request, "work/exam/subject.html", {
         "s": s, "form": form, "n": len(notes), "prompt": _ai_prompt(s),
         "data": {"api": reverse("work:api_exam_subject", args=[s.pk]), "noteBase": reverse("work:api_exam_note", args=[0])[:-2], "notes": notes,
-                 "review": reverse("work:exam_review", args=[s.pk]), "subject": s.pk,
+                 "review": reverse("work:exam_review", args=[s.pk]), "subject": s.pk, "daysLeft": s.days_left,
                  "subjects": [{"id": x.pk, "name": x.name} for x in ExamSubject.objects.filter(owner=request.user)]},
         "exam_text": _texts(),
     })
@@ -144,7 +150,7 @@ def subject_api(request, pk):
         question = (request.POST.get("question") or "").strip()[:exam.MAX_QUESTION]
         if not question:
             return JsonResponse({"ok": False, "error": _("Write the question first.")}, status=400)
-        n = ExamNote.objects.create(owner=request.user, subject=s, question=question, chapter=_chapter_of(request),
+        n = ExamNote.objects.create(owner=request.user, subject=s, question=question, chapter=_chapter_of(request), order=exam.next_order(s),
                                     answer=(request.POST.get("answer") or "").rstrip()[:exam.MAX_ANSWER])
         return JsonResponse({"ok": True, "note": exam.as_json(n)})
     if action == "add_many":
@@ -159,14 +165,51 @@ def subject_api(request, pk):
         fresh = [n for n in found if not n["dupe"]]
         if request.POST.get("preview"):
             return JsonResponse({"ok": True, "found": [dict(n, answer=n["answer"][:600]) for n in found], "new": len(fresh)})
-        made = ExamNote.objects.bulk_create([ExamNote(owner=request.user, subject=s, question=n["question"], answer=n["answer"], chapter=n["chapter"])
-                                             for n in fresh])
+        if "pick" in request.POST:            # the ones ticked in the preview (numbers in the found list)
+            picked = {int(i) for i in request.POST["pick"].split(",") if i.strip().isdigit()}
+            fresh = [n for i, n in enumerate(found) if i in picked]
+        start = exam.next_order(s)
+        made = ExamNote.objects.bulk_create([ExamNote(owner=request.user, subject=s, question=n["question"], answer=n["answer"], chapter=n["chapter"],
+                                                      order=start + i) for i, n in enumerate(fresh)])
         made = list(s.notes.order_by("-pk")[:len(made)])[::-1] if made else []     # bulk_create gives no ids on every database
         message = ngettext("%(n)s question added.", "%(n)s questions added.", len(made)) % {"n": len(made)}
-        if len(found) > len(fresh):
-            skipped = len(found) - len(fresh)
+        skipped = sum(1 for n in found if n["dupe"])
+        if skipped and "pick" not in request.POST:
             message += " " + ngettext("%(n)s was already there.", "%(n)s were already there.", skipped) % {"n": skipped}
         return JsonResponse({"ok": True, "notes": [exam.as_json(n) for n in made], "message": message})
+    if action == "order":                    # after a drag: [[id, chapter], …] top to bottom
+        try:
+            rows = [(int(i), str(c or "")[:exam.MAX_CHAPTER]) for i, c in json.loads(request.POST.get("rows") or "[]")]
+        except (TypeError, ValueError):
+            return JsonResponse({"ok": False, "error": "rows"}, status=400)
+        notes = {n.pk: n for n in s.notes.filter(pk__in=[i for i, _c in rows])}
+        for place, (i, chapter) in enumerate(rows, 1):
+            if i in notes:
+                notes[i].order, notes[i].chapter = place, chapter.strip()
+        ExamNote.objects.bulk_update(notes.values(), ["order", "chapter"])
+        return JsonResponse({"ok": True})
+    if action == "bulk":                     # picked questions: delete, mark, chapter, move
+        picked = list(s.notes.filter(pk__in=[int(i) for i in (request.POST.get("ids") or "").split(",") if i.strip().isdigit()]))
+        op = request.POST.get("op")
+        if op == "delete":
+            undo = [reverse("trash_restore", args=[trash(request.user, n, _("Exam question: %(title)s") % {"title": n.question[:80]},
+                                                          reverse("work:exam_subject", args=[s.pk])).pk]) for n in picked]
+            return JsonResponse({"ok": True, "undo": undo})
+        if op in ("known", "unknown"):
+            s.notes.filter(pk__in=[n.pk for n in picked]).update(is_known=op == "known", updated_at=timezone.now())
+        elif op == "chapter":
+            s.notes.filter(pk__in=[n.pk for n in picked]).update(chapter=_chapter_of(request), updated_at=timezone.now())
+        elif op == "move":
+            to = get_object_or_404(ExamSubject, pk=request.POST.get("subject"), owner=request.user)
+            start = exam.next_order(to)
+            for i, n in enumerate(picked):
+                n.subject, n.order = to, start + i
+            ExamNote.objects.bulk_update(picked, ["subject", "order"])
+            return JsonResponse({"ok": True, "message": ngettext("%(n)s question moved to %(name)s.", "%(n)s questions moved to %(name)s.", len(picked))
+                                 % {"n": len(picked), "name": to.name}})
+        else:
+            return JsonResponse({"ok": False, "error": "op"}, status=400)
+        return JsonResponse({"ok": True})
     if action == "rename_chapter":
         s.notes.filter(chapter=request.POST.get("old", "")).update(chapter=_chapter_of(request), updated_at=timezone.now())
         return JsonResponse({"ok": True})
@@ -188,8 +231,9 @@ def note_api(request, pk):
         n.question, n.answer = question[:exam.MAX_QUESTION], (request.POST.get("answer", n.answer) or "").rstrip()[:exam.MAX_ANSWER]
         if "chapter" in request.POST:
             n.chapter = _chapter_of(request)
-        if request.POST.get("subject"):
+        if request.POST.get("subject") and str(request.POST["subject"]) != str(n.subject_id):
             n.subject = get_object_or_404(ExamSubject, pk=request.POST["subject"], owner=request.user)
+            n.order = exam.next_order(n.subject)
         n.save()
         return JsonResponse({"ok": True, "note": exam.as_json(n)})
     if action in ("star", "known"):
@@ -198,6 +242,12 @@ def note_api(request, pk):
         setattr(n, field, value in ("1", "true") if value is not None else not getattr(n, field))
         n.save(update_fields=[field, "updated_at"])
         return JsonResponse({"ok": True, "value": getattr(n, field)})
+    if action == "unreview":                 # "Undo" in a review: back to how it was before that answer
+        n.is_known = request.POST.get("known") == "1"
+        if (request.POST.get("misses") or "").isdigit():
+            n.misses = int(request.POST["misses"])
+        n.save(update_fields=["is_known", "misses", "updated_at"])
+        return JsonResponse({"ok": True})
     if action == "review":                   # an answer in a review: knew it, or not yet
         n.is_known = request.POST.get("knew") == "1"
         n.misses += 0 if n.is_known else 1

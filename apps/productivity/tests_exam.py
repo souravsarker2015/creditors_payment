@@ -1,5 +1,6 @@
 """Exam notes: subjects with plain questions and answers, added one by one or
 pasted as a list, flipped through, and downloaded."""
+import json
 from datetime import timedelta
 
 from django.contrib.auth.models import User
@@ -59,6 +60,9 @@ class ParseTests(TestCase):
         self.assertEqual([(n["chapter"], n["question"]) for n in exam.parse(text, chapter="Ignored")],
                          [("Basics", "What is a list?"), ("Basics", "What is a tuple?"), ("OOP", "What is a class?")])
 
+    def test_one_heading_above_the_questions_is_their_chapter(self):
+        self.assertEqual({n["chapter"] for n in exam.parse("# Waves\n## What is a wave?\nA disturbance.\n## Frequency?\n$f = 1/T$")}, {"Waves"})
+
     def test_chapter_given_when_the_text_has_none(self):
         self.assertEqual({n["chapter"] for n in exam.parse("## A?\na\n## B?\nb", chapter="Ch 2")}, {"Ch 2"})
 
@@ -81,8 +85,8 @@ class ParseTests(TestCase):
                          [("Q one?", "line 1\n\nline 2", ""), ("Q two?", "", "Cells"), ("Q three?", "```\nx\n```", "Cells")])
 
     def test_ordered_by_chapter(self):
-        notes = [ExamNote(pk=1, question="a", chapter="B"), ExamNote(pk=2, question="b"), ExamNote(pk=3, question="c", chapter="A"),
-                 ExamNote(pk=4, question="d", chapter="B")]
+        notes = [ExamNote(pk=1, question="a", chapter="B", order=2), ExamNote(pk=2, question="b", order=1), ExamNote(pk=3, question="c", chapter="A", order=3),
+                 ExamNote(pk=4, question="d", chapter="B", order=4)]
         self.assertEqual([n.question for n in exam.ordered(notes)], ["b", "a", "d", "c"])
 
     def test_plain_snippet(self):
@@ -103,6 +107,12 @@ class PageTests(Base):
         self.assertRedirects(r, reverse("work:exam_subject", args=[s.pk]))
         self.assertEqual(s.days_left, 3)
         self.assertContains(self.client.get(reverse("work:exam")), "Exam in 3 days")
+
+    def test_first_visit_explains_how_it_works(self):
+        self.s.delete()
+        r = self.client.get(reverse("work:exam"))
+        self.assertContains(r, "Add a subject")
+        self.assertContains(r, "Write questions and answers")
 
     def test_same_name_twice_is_refused(self):
         r = self.client.post(reverse("work:exam"), {"name": "physics", "color": "teal"})
@@ -234,7 +244,78 @@ class RevisionTests(Base):
         self.note("Loose?")
         self.note("Early?", chapter="A")
         notes = self.client.get(reverse("work:exam_subject", args=[self.s.pk])).context["data"]["notes"]
-        self.assertEqual([(n["number"], n["question"]) for n in notes], [(1, "Loose?"), (2, "Late?"), (3, "Early?")])
+        self.assertEqual([(n["number"], n["question"]) for n in notes], [(1, "Late?"), (2, "Loose?"), (3, "Early?")])
+        self.note("More B?", chapter="B")                   # joins its chapter, not the end
+        notes = self.client.get(reverse("work:exam_subject", args=[self.s.pk])).context["data"]["notes"]
+        self.assertEqual([n["question"] for n in notes], ["Late?", "More B?", "Loose?", "Early?"])
+
+
+class OrganiseTests(Base):
+    def api(self, **data):
+        return self.client.post(reverse("work:api_exam_subject", args=[self.s.pk]), data)
+
+    def test_new_questions_go_last(self):
+        a = self.note(order=5)
+        self.api(action="add", question="Second?")
+        self.api(action="add_many", text="Q: Third?\nA: x\nQ: Fourth?\nA: y")
+        self.assertEqual(list(self.s.notes.values_list("question", flat=True)), [a.question, "Second?", "Third?", "Fourth?"])
+
+    def test_only_the_ticked_ones_are_added(self):
+        r = self.api(action="add_many", text="Q: A?\nA: 1\nQ: B?\nA: 2\nQ: C?\nA: 3", pick="0,2").json()
+        self.assertEqual([n["question"] for n in r["notes"]], ["A?", "C?"])
+
+    def test_drag_order_and_chapter(self):
+        a, b, c = self.note("A?"), self.note("B?", chapter="X"), self.note("C?")
+        other = ExamNote.objects.create(owner=User.objects.create_superuser("o", "o@example.com", PW),
+                                        subject=ExamSubject.objects.create(owner=User.objects.get(username="o"), name="Theirs"), question="?")
+        self.api(action="order", rows=json.dumps([[c.pk, "X"], [a.pk, ""], [b.pk, "X"], [other.pk, "hack"]]))
+        self.assertEqual([(n.question, n.chapter) for n in self.s.notes.all()], [("C?", "X"), ("A?", ""), ("B?", "X")])
+        other.refresh_from_db()
+        self.assertEqual((other.order, other.chapter), (0, ""))
+        self.assertEqual(self.api(action="order", rows="nope").status_code, 400)
+
+    def test_bulk(self):
+        a, b, c = self.note("A?"), self.note("B?"), self.note("C?")
+        ids = f"{a.pk},{b.pk}"
+        self.api(action="bulk", op="known", ids=ids)
+        self.assertEqual(set(self.s.notes.filter(is_known=True).values_list("pk", flat=True)), {a.pk, b.pk})
+        self.api(action="bulk", op="chapter", ids=ids, chapter="Ch")
+        self.assertEqual(set(self.s.notes.filter(chapter="Ch").values_list("pk", flat=True)), {a.pk, b.pk})
+        maths = ExamSubject.objects.create(owner=self.me, name="Maths")
+        r = self.api(action="bulk", op="move", ids=str(c.pk), subject=maths.pk).json()
+        self.assertEqual((r["message"], ExamNote.objects.get(pk=c.pk).subject), ("1 question moved to Maths.", maths))
+        r = self.api(action="bulk", op="delete", ids=ids).json()
+        self.assertEqual((len(r["undo"]), self.s.notes.count()), (2, 0))
+        for url in r["undo"]:
+            self.client.post(url)
+        self.assertEqual(self.s.notes.count(), 2)
+        self.assertEqual(self.api(action="bulk", op="weird", ids=ids).status_code, 400)
+
+    def test_undo_a_review_answer(self):
+        n = self.note(misses=1)
+        url = reverse("work:api_exam_note", args=[n.pk])
+        self.client.post(url, {"action": "review", "knew": "0"})
+        self.client.post(url, {"action": "unreview", "known": "0", "misses": "1"})
+        n.refresh_from_db()
+        self.assertEqual((n.misses, n.is_known), (1, False))
+
+    def test_moving_one_puts_it_last_in_the_other_subject(self):
+        maths = ExamSubject.objects.create(owner=self.me, name="Maths")
+        ExamNote.objects.create(owner=self.me, subject=maths, question="Old?", order=7)
+        n = self.note()
+        self.client.post(reverse("work:api_exam_note", args=[n.pk]), {"action": "update", "question": n.question, "subject": maths.pk})
+        self.assertEqual(list(maths.notes.values_list("question", flat=True)), ["Old?", n.question])
+
+    def test_today_shows_a_close_exam(self):
+        self.s.exam_date = timezone.localdate() + timedelta(days=3)
+        self.s.save()
+        self.note()
+        r = self.client.get(reverse("work:today"))
+        self.assertContains(r, "Exam in 3 days")
+        self.assertContains(r, "1 question to learn")
+        self.s.exam_date = timezone.localdate() + timedelta(days=30)
+        self.s.save()
+        self.assertNotContains(self.client.get(reverse("work:today")), "Exam in 30 days")
 
 
 class BackupTests(Base):

@@ -58,8 +58,10 @@
   {% endfor %}
 </ul>
 {% else %}
-<div class="empty"><div class="empty-icon">{% icon "exam" %}</div>
-  <h3 class="empty-title">{% translate "No subjects yet" %}</h3>
-  <p class="empty-text">{% translate "Add the subject you're studying above, then write its questions and answers as you go." %}</p></div>
+<ol class="wex-how">
+  <li><b>1</b><div><h3>{% translate "Add a subject" %}</h3><p>{% translate "Type its name above — and the exam date, if you know it, for a countdown." %}</p></div></li>
+  <li><b>2</b><div><h3>{% translate "Write questions and answers" %}</h3><p>{% translate "One by one while you study, or paste a whole list — from your notes, ChatGPT or Claude. Group them by chapter if you like." %}</p></div></li>
+  <li><b>3</b><div><h3>{% translate "Revise" %}</h3><p>{% translate "Read them through, or flip through them: think of the answer, turn the card, say whether you knew it. What you miss comes back." %}</p></div></li>
+</ol>
 {% endif %}
 {% endblock %}
