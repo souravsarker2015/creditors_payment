@@ -1,0 +1,150 @@
+"""Exam notes pages (see exam.py): the subjects, a subject's questions and
+answers (added, edited and deleted in place), flipping through them, and the
+text download."""
+from django.contrib import messages
+from django.db.models import Count, Q
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse
+from django.utils.translation import gettext as _, ngettext
+from django.views.decorators.http import require_POST
+
+from apps.trash.services import trash
+
+from . import exam
+from .access import work_required
+from .forms import ExamSubjectForm
+from .models import ExamNote, ExamSubject
+from .views import render_work
+
+
+def _texts():
+    return {
+        "notSaved": _("Not saved — check your connection."), "writeFirst": _("Write the question first."), "added": _("Added"),
+        "deleted": _("Question deleted"), "show": _("Show the answer"), "hide": _("Hide the answer"), "noAnswer": _("No answer written yet."),
+        "pasteFirst": _("Paste some questions first."), "resetAsk": _("Mark every question as not known yet?"),
+        "leftOne": _("1 question left"), "left": _("%(n)s questions left"),
+        "countOne": ngettext("%(counter)s question", "%(counter)s questions", 1), "count": ngettext("%(counter)s question", "%(counter)s questions", 2),
+    }
+
+
+def _subjects(user):
+    return ExamSubject.objects.filter(owner=user).annotate(
+        n=Count("notes"), known=Count("notes", filter=Q(notes__is_known=True)), starred=Count("notes", filter=Q(notes__is_starred=True)))
+
+
+@work_required
+def exam_home_view(request):
+    """Every subject, soonest exam first, and a search through all the questions."""
+    form = ExamSubjectForm(request.POST or None, owner=request.user)
+    if request.method == "POST" and form.is_valid():
+        s = form.save(commit=False)
+        s.owner = request.user
+        s.save()
+        return redirect("work:exam_subject", pk=s.pk)
+    subjects = sorted(_subjects(request.user), key=lambda s: (s.exam_date is None or s.days_left < 0, s.exam_date or s.created_at.date(), s.name.lower()))
+    q = (request.GET.get("q") or "").strip()
+    found = []
+    if q:
+        found = list(ExamNote.objects.filter(owner=request.user).filter(Q(question__icontains=q) | Q(answer__icontains=q))
+                     .select_related("subject")[:100])
+    return render_work(request, "work/exam/home.html", {"subjects": subjects, "form": form, "q": q, "found": found,
+                                                        "total": sum(s.n for s in subjects)})
+
+
+@work_required
+def exam_subject_view(request, pk):
+    """A subject's questions, numbered in the order they were written. Edit the subject here too."""
+    s = get_object_or_404(ExamSubject, pk=pk, owner=request.user)
+    form = ExamSubjectForm(request.POST or None, instance=s, owner=request.user)
+    if request.method == "POST":
+        if request.POST.get("action") == "delete":
+            n = s.notes.count()
+            trash(request.user, s, _("Subject: %(name)s (%(n)s questions)") % {"name": s.name, "n": n}, reverse("work:exam"))
+            messages.success(request, _("Subject deleted with its questions. You can bring it back from Recently deleted."))
+            return redirect("work:exam")
+        if form.is_valid():
+            form.save()
+            messages.success(request, _("Subject saved."))
+            return redirect("work:exam_subject", pk=s.pk)
+    notes = [exam.as_json(n, i) for i, n in enumerate(s.notes.all(), 1)]
+    return render_work(request, "work/exam/subject.html", {
+        "s": s, "form": form, "notes": notes, "n": len(notes), "known": sum(1 for n in notes if n["known"]),
+        "data": {"api": reverse("work:api_exam_subject", args=[s.pk]), "noteBase": reverse("work:api_exam_note", args=[0])[:-2], "notes": notes},
+        "exam_text": _texts(),
+    })
+
+
+@work_required
+def exam_review_view(request, pk):
+    """Flip through the questions one at a time: think of the answer, show it, say whether you knew it."""
+    s = get_object_or_404(ExamSubject, pk=pk, owner=request.user)
+    notes = [exam.as_json(n, i) for i, n in enumerate(s.notes.all(), 1)]
+    which = request.GET.get("which") if request.GET.get("which") in ("all", "unknown", "starred") else "unknown"
+    if which == "unknown" and notes and all(n["known"] for n in notes):
+        which = "all"
+    return render_work(request, "work/exam/review.html", {
+        "s": s, "n": len(notes), "exam_text": _texts(),
+        "data": {"notes": notes, "noteBase": reverse("work:api_exam_note", args=[0])[:-2], "which": which,
+                 "shuffle": request.GET.get("shuffle") == "1", "back": reverse("work:exam_subject", args=[s.pk])},
+    })
+
+
+@work_required
+def exam_export_view(request, pk):
+    s = get_object_or_404(ExamSubject, pk=pk, owner=request.user)
+    resp = HttpResponse(exam.as_text(s, s.notes.all()), content_type="text/plain; charset=utf-8")
+    name = "".join(c if c.isalnum() or c in "-_" else "-" for c in s.name).strip("-")[:60] or "exam-notes"
+    resp["Content-Disposition"] = f'attachment; filename="{name}.txt"'
+    return resp
+
+
+# ── In-page changes (Work.api) ───────────────────────────────────────────
+@work_required
+@require_POST
+def subject_api(request, pk):
+    s = get_object_or_404(ExamSubject, pk=pk, owner=request.user)
+    action = request.POST.get("action")
+    if action == "add":
+        question = (request.POST.get("question") or "").strip()[:exam.MAX_QUESTION]
+        if not question:
+            return JsonResponse({"ok": False, "error": _("Write the question first.")}, status=400)
+        n = ExamNote.objects.create(owner=request.user, subject=s, question=question, answer=(request.POST.get("answer") or "").rstrip()[:exam.MAX_ANSWER])
+        return JsonResponse({"ok": True, "note": exam.as_json(n, s.notes.count())})
+    if action == "add_many":
+        pairs = exam.parse(request.POST.get("text"))
+        if not pairs:
+            return JsonResponse({"ok": False, "error": _("No questions found. Start each with Q: and its answer with A:, or leave an empty line between them.")}, status=400)
+        start = s.notes.count()
+        made = ExamNote.objects.bulk_create([ExamNote(owner=request.user, subject=s, question=q, answer=a) for q, a in pairs])
+        made = list(s.notes.order_by("-pk")[:len(made)])[::-1]      # bulk_create gives no ids on every database
+        return JsonResponse({"ok": True, "notes": [exam.as_json(n, start + i) for i, n in enumerate(made, 1)],
+                             "message": ngettext("%(n)s question added.", "%(n)s questions added.", len(made)) % {"n": len(made)}})
+    if action == "reset":
+        s.notes.update(is_known=False)
+        return JsonResponse({"ok": True})
+    return JsonResponse({"ok": False, "error": "action"}, status=400)
+
+
+@work_required
+@require_POST
+def note_api(request, pk):
+    n = get_object_or_404(ExamNote, pk=pk, owner=request.user)
+    action = request.POST.get("action")
+    if action == "update":
+        question = (request.POST.get("question", n.question) or "").strip()
+        if not question:
+            return JsonResponse({"ok": False, "error": _("Write the question first.")}, status=400)
+        n.question, n.answer = question[:exam.MAX_QUESTION], (request.POST.get("answer", n.answer) or "").rstrip()[:exam.MAX_ANSWER]
+        n.save(update_fields=["question", "answer", "updated_at"])
+        return JsonResponse({"ok": True})
+    if action in ("star", "known"):
+        field = "is_starred" if action == "star" else "is_known"
+        value = request.POST.get("value")
+        setattr(n, field, value in ("1", "true") if value is not None else not getattr(n, field))
+        n.save(update_fields=[field, "updated_at"])
+        return JsonResponse({"ok": True, "value": getattr(n, field)})
+    if action == "delete":
+        item = trash(request.user, n, _("Exam question: %(title)s") % {"title": n.question[:80]}, reverse("work:exam_subject", args=[n.subject_id]))
+        return JsonResponse({"ok": True, "undo": reverse("trash_restore", args=[item.pk])})
+    return JsonResponse({"ok": False, "error": "action"}, status=400)

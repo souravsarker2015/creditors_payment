@@ -105,7 +105,7 @@
 
         {# add a question to this section, right here #}
         <form class="wpc-add" @submit.prevent="add(s)" @keydown.ctrl.enter.prevent="add(s)" @keydown.meta.enter.prevent="add(s)">
-          <textarea class="form-input" rows="1" x-model="adding[s.id].prompt" @focus="adding[s.id].open = true" @keydown.enter.exact.prevent="$el.closest('form').querySelector('[data-answer]').focus()"
+          <textarea class="form-input" rows="1" x-model="adding[s.id].prompt" @focus="adding[s.id].open = true" @keydown.enter="if (!$event.shiftKey && !$event.ctrlKey && !$event.metaKey && !$event.altKey && !$event.isComposing) { $event.preventDefault(); $el.closest('form').querySelector('[data-answer]').focus() }"
                     placeholder="{% translate '+ Write a question and press Enter for its answer…' %}" aria-label="{% translate 'New question' %}"></textarea>
           <div class="wpc-add-more" x-show="adding[s.id].open" x-cloak>
             <textarea class="form-input" rows="4" data-answer x-model="adding[s.id].answer" placeholder="{% translate 'The answer (Markdown works). Ctrl+Enter adds it.' %}" aria-label="{% translate 'Answer' %}"></textarea>

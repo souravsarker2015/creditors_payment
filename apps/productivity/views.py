@@ -62,7 +62,7 @@ def _urls():
         "diagrams": r("work:diagrams"), "diagramBase": "/work/api/diagrams/", "diagramList": r("work:api_diagram_list"),
         "cardsDue": r("work:api_cards_due"), "cardReview": r("work:card_review"), "imageUpload": r("work:api_image_upload"),
         "cards": r("work:cards"), "cardBase": "/work/api/cards/", "cardAdd": r("work:api_card_add"),
-        "prep": r("work:prep"), "prepBase": "/work/api/prep/questions/",
+        "prep": r("work:prep"), "prepBase": "/work/api/prep/questions/", "exam": r("work:exam"),
     }
 
 
@@ -90,7 +90,8 @@ def _texts():
         "tasksMade": _("Tasks made"), "openTasks": _("See them"), "tomorrow": _("Tomorrow"),
         "error": _("Couldn't save. Try again."), "later": _("Moved to"),
         "kinds": {"task": _("Task"), "note": _("Note"), "project": _("Project"), "goal": _("Goal"), "learning": _("Learning"),
-                  "snippet": _("Snippet"), "diagram": _("Diagram"), "card": _("Flashcard"), "question": _("Question")},
+                  "snippet": _("Snippet"), "diagram": _("Diagram"), "card": _("Flashcard"), "question": _("Question"),
+                  "exam": _("Exam notes")},
         "restoreNote": _("Bring back this version? What's there now is kept as a version too."),
         "uploading": _("Uploading…"), "imageFailed": _("The picture couldn't be uploaded."),
         "imageOffline": _("Pictures need a connection — try again when you're online."),
@@ -1711,6 +1712,10 @@ def export_view(request):
     rows += json.loads(serializers.serialize("json", PrepTopic.objects.filter(owner=user)))
     rows += json.loads(serializers.serialize("json", PrepSection.objects.filter(owner=user)))
     rows += json.loads(serializers.serialize("json", Question.objects.filter(owner=user)))
+    from .models import ExamNote, ExamSubject
+
+    rows += json.loads(serializers.serialize("json", ExamSubject.objects.filter(owner=user)))
+    rows += json.loads(serializers.serialize("json", ExamNote.objects.filter(owner=user)))
     ext = {"python": "py", "javascript": "js", "typescript": "ts", "bash": "sh", "plaintext": "txt", "markdown": "md", "xml": "html",
            "csharp": "cs", "cpp": "cpp", "dockerfile": "Dockerfile", "kotlin": "kt", "ruby": "rb", "rust": "rs", "yaml": "yml"}
 

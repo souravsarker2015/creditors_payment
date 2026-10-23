@@ -1,7 +1,7 @@
 """Productivity lives under /work/ in the "work" namespace."""
 from django.urls import path
 
-from . import api, views, views_prep
+from . import api, views, views_exam, views_prep
 
 app_name = "work"
 
@@ -33,6 +33,10 @@ urlpatterns = [
     path("prep/import/", views_prep.prep_import_view, name="prep_import"),
     path("prep/export/", views_prep.prep_export_view, name="prep_export"),
     path("prep/sheet/", views_prep.prep_sheet_view, name="prep_sheet"),
+    path("exam/", views_exam.exam_home_view, name="exam"),
+    path("exam/<int:pk>/", views_exam.exam_subject_view, name="exam_subject"),
+    path("exam/<int:pk>/review/", views_exam.exam_review_view, name="exam_review"),
+    path("exam/<int:pk>/download/", views_exam.exam_export_view, name="exam_export"),
     path("sprints/", views.sprints_view, name="sprints"),
     path("sprints/<int:pk>/", views.sprint_view, name="sprint"),
     path("import/", views.import_view, name="import"),
@@ -126,6 +130,8 @@ urlpatterns = [
     path("api/prep/questions/<int:pk>/", views_prep.question_action, name="api_question_action"),
     path("api/prep/exams/<int:pk>/save/", views_prep.exam_save, name="api_exam_save"),
     path("api/prep/topics/<int:pk>/", views_prep.topic_api, name="api_prep_topic"),
+    path("api/exam/subjects/<int:pk>/", views_exam.subject_api, name="api_exam_subject"),
+    path("api/exam/notes/<int:pk>/", views_exam.note_api, name="api_exam_note"),
     path("api/goals/<int:pk>/steps/", api.goal_step, name="api_goal_step"),
     path("api/goals/<int:pk>/value/", api.goal_value, name="api_goal_value"),
     path("api/learning/add/", api.learning_add, name="api_learning_add"),

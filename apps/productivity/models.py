@@ -1166,3 +1166,45 @@ class PrepAttempt(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+
+
+# ── Exam notes: questions and answers written down to revise before an exam ──
+class ExamSubject(models.Model):
+    """A subject to revise (Physics, AWS exam, Chapter 4…): a plain list of
+    questions and answers. No scheduling — read them, or flip through them."""
+    owner = models.ForeignKey(**OWNER)
+    name = models.CharField(_("Subject"), max_length=120)
+    exam_date = models.DateField(_("Exam date"), null=True, blank=True, help_text=_("Optional: shows how many days are left."))
+    color = models.CharField(_("Colour"), max_length=10, choices=Color.choices, default=Color.PURPLE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name, verbose_name_plural = _("Subject"), _("Subjects")
+        ordering = ["name", "pk"]
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def days_left(self):
+        return (self.exam_date - timezone.localdate()).days if self.exam_date else None
+
+
+class ExamNote(models.Model):
+    """One question and its answer, in the order they were written."""
+    owner = models.ForeignKey(**OWNER)
+    subject = models.ForeignKey(ExamSubject, on_delete=models.CASCADE, related_name="notes", verbose_name=_("Subject"))
+    question = models.TextField(_("Question"))
+    answer = models.TextField(_("Answer"), blank=True)
+    is_starred = models.BooleanField(_("Important"), default=False)
+    is_known = models.BooleanField(_("I know it"), default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name, verbose_name_plural = _("Exam question"), _("Exam questions")
+        ordering = ["subject_id", "pk"]
+
+    def __str__(self):
+        return self.question[:60]

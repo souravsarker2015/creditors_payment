@@ -1,0 +1,64 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% translate "Exam notes" %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+<header class="wp-head">
+  <div class="min-w-0">
+    <h1 class="wp-title">{% translate "Exam notes" %}</h1>
+    <p class="wp-sub">{% translate "Write down questions and answers while you study. Before the exam, read through them or flip through them one by one." %}</p>
+  </div>
+</header>
+
+<form method="post" class="card wex-new" novalidate>{% csrf_token %}
+  <input type="hidden" name="color" value="{{ form.color.value|default:'purple' }}">
+  <label class="field wex-new-name"><span class="label">{% translate "New subject" %}</span>
+    <input type="text" name="name" value="{{ form.name.value|default:'' }}" maxlength="120" class="form-input" required
+           placeholder="{% translate 'e.g. Physics, AWS exam, Chapter 4' %}"{% if not subjects %} autofocus{% endif %}>
+    {% for e in form.name.errors %}<span class="field-error">{{ e }}</span>{% endfor %}</label>
+  <label class="field"><span class="label">{% translate "Exam date" %} <span class="opt">{% translate "(optional)" %}</span></span>
+    <input type="date" name="exam_date" value="{{ form.exam_date.value|default:''|stringformat:'s' }}" class="form-input">
+    {% for e in form.exam_date.errors %}<span class="field-error">{{ e }}</span>{% endfor %}</label>
+  <button type="submit" class="btn btn-primary">{% icon "plus" %}{% translate "Add" %}</button>
+</form>
+
+{% if total %}
+<form method="get" class="wex-search">
+  <div class="input-icon wf-search">{% icon "search" %}
+    <input type="search" name="q" value="{{ q }}" class="form-input" placeholder="{% translate 'Search every question and answer' %}" aria-label="{% translate 'Search exam notes' %}"></div>
+</form>
+{% endif %}
+
+{% if q %}
+<section class="card wex-found">
+  <header class="card-header"><h2 class="card-title">{% blocktranslate count counter=found|length %}{{ counter }} match{% plural %}{{ counter }} matches{% endblocktranslate %}</h2>
+    <a href="{% url 'work:exam' %}" class="btn btn-ghost btn-sm">{% translate "Clear" %}</a></header>
+  {% if found %}<ul class="wex-found-list">{% for n in found %}
+    <li><a href="{% url 'work:exam_subject' n.subject_id %}#q{{ n.pk }}"><span class="wt-dot" data-color="{{ n.subject.color }}"></span><b>{{ n.question|truncatechars:140 }}</b><small>{{ n.subject.name }}</small></a>
+      {% if n.answer %}<p>{{ n.answer|truncatechars:220 }}</p>{% endif %}</li>{% endfor %}</ul>
+  {% else %}<p class="card-body help">{% translate "Nothing matches. Try another word." %}</p>{% endif %}
+</section>
+{% endif %}
+
+{% if subjects %}
+<ul class="wex-subjects">
+  {% for s in subjects %}
+  <li class="card wex-subject" data-color="{{ s.color }}">
+    <a href="{% url 'work:exam_subject' s.pk %}" class="wex-subject-main">
+      <span class="wex-subject-name">{{ s.name }}</span>
+      <span class="wex-subject-meta">{% blocktranslate count counter=s.n %}{{ counter }} question{% plural %}{{ counter }} questions{% endblocktranslate %}{% if s.n %} · {% blocktranslate with k=s.known %}{{ k }} known{% endblocktranslate %}{% endif %}</span>
+      {% with d=s.days_left %}{% if d is not None %}<span class="wex-days{% if d >= 0 and d <= 7 %} is-soon{% endif %}{% if d < 0 %} is-past{% endif %}">{% icon "calendar" %}
+        {% if d > 0 %}{% blocktranslate count counter=d %}Exam in {{ counter }} day{% plural %}Exam in {{ counter }} days{% endblocktranslate %}{% elif d == 0 %}{% translate "Exam today — good luck!" %}{% else %}{% translate "Exam over" %}{% endif %}</span>{% endif %}{% endwith %}
+      <span class="wex-bar" role="img" aria-label="{% blocktranslate with k=s.known n=s.n %}{{ k }} of {{ n }} known{% endblocktranslate %}"><i style="width: {% if s.n %}{% widthratio s.known s.n 100 %}{% else %}0{% endif %}%"></i></span>
+    </a>
+    {% if s.n %}<a href="{% url 'work:exam_review' s.pk %}" class="btn btn-secondary btn-sm wex-subject-go">{% icon "play" %}{% translate "Review" %}</a>{% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<div class="empty"><div class="empty-icon">{% icon "exam" %}</div>
+  <h3 class="empty-title">{% translate "No subjects yet" %}</h3>
+  <p class="empty-text">{% translate "Add the subject you're studying above, then write its questions and answers as you go." %}</p></div>
+{% endif %}
+{% endblock %}

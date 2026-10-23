@@ -1,0 +1,124 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{{ s.name }} | {% translate "Exam notes" %}{% endblock %}
+
+{% block work %}
+{{ data|json_script:"exam-data" }}
+{{ exam_text|json_script:"exam-text" }}
+<div class="wex" x-data="examSubject">
+<header class="wp-head">
+  <div class="min-w-0">
+    <a href="{% url 'work:exam' %}" class="back-link">{% icon "chevron-left" %}{% translate "Exam notes" %}</a>
+    <h1 class="wp-title"><span class="wt-dot" data-color="{{ s.color }}"></span> {{ s.name }}</h1>
+    <p class="wp-sub"><span x-text="count()">{% blocktranslate count counter=n %}{{ counter }} question{% plural %}{{ counter }} questions{% endblocktranslate %}</span>
+      <template x-if="notes.length"><span> · <span x-text="known()"></span> {% translate "known" %}</span></template>
+      {% with d=s.days_left %}{% if d is not None %} · <span class="wex-days{% if d >= 0 and d <= 7 %} is-soon{% endif %}">{% if d > 0 %}{% blocktranslate count counter=d %}Exam in {{ counter }} day{% plural %}Exam in {{ counter }} days{% endblocktranslate %}{% elif d == 0 %}{% translate "Exam today — good luck!" %}{% else %}{% translate "Exam over" %}{% endif %}</span>{% endif %}{% endwith %}</p>
+  </div>
+  <div class="wp-actions">
+    <a href="{% url 'work:exam_review' s.pk %}" class="btn btn-primary" x-show="notes.length" {% if not n %}x-cloak{% endif %}>{% icon "play" %}{% translate "Review" %}</a>
+    <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
+      <button type="button" class="icon-btn" @click="open = !open" :aria-expanded="open" aria-label="{% translate 'More actions' %}">{% icon "dots" %}</button>
+      <div class="menu" x-show="open" x-cloak role="menu">
+        <a class="menu-item" role="menuitem" href="{% url 'work:exam_review' s.pk %}?which=starred">{% icon "star" %}{% translate "Review the important ones" %}</a>
+        <a class="menu-item" role="menuitem" href="{% url 'work:exam_review' s.pk %}?which=all&amp;shuffle=1">{% icon "repeat" %}{% translate "Review all, shuffled" %}</a>
+        <button type="button" class="menu-item" role="menuitem" @click="open = false; printAll()">{% icon "printer" %}{% translate "Print with answers" %}</button>
+        <a class="menu-item" role="menuitem" href="{% url 'work:exam_export' s.pk %}">{% icon "download" %}{% translate "Download as text" %}</a>
+        <button type="button" class="menu-item" role="menuitem" @click="open = false; reset()">{% icon "undo" %}{% translate "Mark all as not known" %}</button>
+        <button type="button" class="menu-item" role="menuitem" @click="open = false; document.getElementById('subject-details').open = true; document.getElementById('subject-details').scrollIntoView({ behavior: 'smooth' })">{% icon "edit" %}{% translate "Edit the subject" %}</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+{# ── add: type the question, Enter, type the answer, Ctrl+Enter ── #}
+<form class="card wex-add" @submit.prevent="add()" @keydown.ctrl.enter.prevent="add()" @keydown.meta.enter.prevent="add()">
+  <div class="wex-add-head">
+    <h2 class="card-title">{% icon "plus" %}{% translate "Add a question" %}</h2>
+    <button type="button" class="btn btn-ghost btn-sm" @click="many = !many" x-text="many ? '{{ _("Add one by one")|escapejs }}' : '{{ _("Paste many at once")|escapejs }}'"></button>
+  </div>
+    <div class="wex-add-body" x-show="!many">
+      <textarea class="form-input wex-grow" rows="1" x-model="draft.question" x-ref="question" maxlength="2000" {% if not n %}autofocus{% endif %}
+                @keydown.enter="if (!$event.shiftKey && !$event.ctrlKey && !$event.metaKey && !$event.altKey && !$event.isComposing) { $event.preventDefault(); $refs.answer.focus() }" placeholder="{% translate 'Question — then press Enter' %}" aria-label="{% translate 'Question' %}"></textarea>
+      <textarea class="form-input wex-grow" rows="3" x-model="draft.answer" x-ref="answer" placeholder="{% translate 'Answer — Ctrl+Enter adds it' %}" aria-label="{% translate 'Answer' %}"></textarea>
+      <div class="wex-add-foot">
+        <button type="submit" class="btn btn-primary btn-sm" :disabled="!draft.question.trim()">{% icon "plus" %}{% translate "Add" %} <kbd class="wp-kbd">Ctrl+Enter</kbd></button>
+        <span class="help">{% translate "Lists, **bold** and `code` work in answers." %}</span>
+      </div>
+    </div>
+    <div class="wex-add-body" x-show="many" x-cloak>
+      <textarea class="form-input" rows="9" x-model="paste" aria-label="{% translate 'Questions and answers' %}"
+                placeholder="Q: {% translate 'What is photosynthesis?' %}&#10;A: {% translate 'How plants make food from sunlight.' %}&#10;&#10;Q: …&#10;A: …"></textarea>
+      <div class="wex-add-foot">
+        <button type="button" class="btn btn-primary btn-sm" @click="addMany()">{% icon "plus" %}{% translate "Add them all" %}</button>
+        <span class="help">{% translate "Start each question with Q: and its answer with A: — or leave an empty line between them (first line the question, the rest its answer). Two columns copied from a spreadsheet work too." %}</span>
+      </div>
+    </div>
+</form>
+
+{# ── the list ── #}
+<template x-if="notes.length">
+<section class="wex-list-wrap">
+  <div class="wpc-bar">
+    <div class="input-icon wf-search">{% icon "search" %}
+      <input type="search" x-model="find" class="form-input input-compact" placeholder="{% translate 'Find in this subject' %}" aria-label="{% translate 'Find in this subject' %}"></div>
+    <div class="seg" role="radiogroup" aria-label="{% translate 'Show' %}">
+      <button type="button" class="seg-item" :class="show === 'all' && 'is-active'" @click="show = 'all'">{% translate "All" %}</button>
+      <button type="button" class="seg-item" :class="show === 'unknown' && 'is-active'" @click="show = 'unknown'">{% translate "To learn" %}</button>
+      <button type="button" class="seg-item" :class="show === 'starred' && 'is-active'" @click="show = 'starred'">{% icon "star" %}<span class="sr-only">{% translate "Important" %}</span></button>
+    </div>
+    <button type="button" class="btn btn-secondary btn-sm" @click="openAll = !openAll" x-text="openAll ? '{{ _("Hide the answers")|escapejs }}' : '{{ _("Show the answers")|escapejs }}'"></button>
+  </div>
+
+  <ol class="card wex-list">
+    <template x-for="q in notes" :key="q.id">
+      <li class="wex-q" :id="'q' + q.id" x-show="visible(q)" :class="{ 'is-open': isOpen(q), 'is-known': q.known }">
+        <div class="wex-q-row">
+          <span class="wex-no num" x-text="q.number + '.'"></span>
+          <button type="button" class="wex-q-text" @click="toggle(q)" :aria-expanded="isOpen(q).toString()" x-text="q.question"></button>
+          <span class="wex-acts">
+            <button type="button" class="icon-btn wex-star" :class="q.starred && 'is-on'" @click="flag(q, 'star')" :aria-pressed="q.starred.toString()" aria-label="{% translate 'Important' %}" data-tip="{% translate 'Important' %}">{% icon "star" %}</button>
+            <button type="button" class="icon-btn wex-known" :class="q.known && 'is-on'" @click="flag(q, 'known')" :aria-pressed="q.known.toString()" aria-label="{% translate 'I know it' %}" data-tip="{% translate 'I know it' %}">{% icon "check" %}</button>
+            <button type="button" class="icon-btn" @click="startEdit(q)" aria-label="{% translate 'Edit' %}" data-tip="{% translate 'Edit' %}">{% icon "edit" %}</button>
+            <button type="button" class="icon-btn is-danger" @click="remove(q)" aria-label="{% translate 'Delete' %}" data-tip="{% translate 'Delete' %}">{% icon "trash" %}</button>
+          </span>
+        </div>
+        <div class="wex-a wn-md" x-show="isOpen(q) && editing !== q.id" x-cloak x-html="q.answer ? md(q.answer) : '<p class=help>' + t('noAnswer') + '</p>'"></div>
+        <form class="wpc-edit" x-show="editing === q.id" x-cloak @submit.prevent="saveEdit(q)" @keydown.ctrl.enter.prevent="saveEdit(q)" @keydown.meta.enter.prevent="saveEdit(q)" @keydown.escape.stop="editing = null">
+          <label class="label">{% translate "Question" %}<textarea class="form-input" rows="2" x-model="edit.question" maxlength="2000" required></textarea></label>
+          <label class="label">{% translate "Answer" %}<textarea class="form-input" rows="6" x-model="edit.answer"></textarea></label>
+          <div class="wpc-edit-acts">
+            <button type="submit" class="btn btn-primary btn-sm">{% icon "check" %}{% translate "Save" %} <kbd class="wp-kbd">Ctrl+Enter</kbd></button>
+            <button type="button" class="btn btn-ghost btn-sm" @click="editing = null">{% translate "Cancel" %}</button>
+          </div>
+        </form>
+      </li>
+    </template>
+  </ol>
+  <p class="help wex-none" x-show="!notes.some(q => visible(q))" x-cloak>{% translate "Nothing to show here." %}</p>
+</section>
+</template>
+<div class="empty" x-show="!notes.length" {% if n %}x-cloak{% endif %}><div class="empty-icon">{% icon "exam" %}</div>
+  <h3 class="empty-title">{% translate "No questions yet" %}</h3>
+  <p class="empty-text">{% translate "Write your first question above. Add a few each time you study — they'll be here to revise before the exam." %}</p></div>
+</div>
+
+<details class="card wpq-more" id="subject-details"{% if form.errors %} open{% endif %}>
+  <summary class="card-header"><h2 class="card-title">{% icon "edit" %}{% translate "The subject" %}</h2></summary>
+  <form method="post" novalidate>{% csrf_token %}
+    <div class="card-body form-stack">
+      <div class="form-grid form-grid-2">
+        {% with field=form.name %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.exam_date %}{% include "partials/field.html" %}{% endwith %}
+      </div>
+      {% with field=form.color %}{% include "partials/field.html" %}{% endwith %}
+    </div>
+    <div class="form-actions"><button type="submit" class="btn btn-primary">{% icon "check" %}{% translate "Save" %}</button></div>
+  </form>
+  <form method="post" class="card-body wpq-danger" data-confirm="{{ _("Delete this subject and all its questions? You can bring them back from Recently deleted.") }}">{% csrf_token %}<input type="hidden" name="action" value="delete">
+    <button type="submit" class="btn btn-ghost btn-sm">{% icon "trash" %}{% translate "Delete the subject and its questions" %}</button></form>
+</details>
+{% endblock %}
+
+{% block work_libs %}{% include "work/prep/_libs.html" %}{% endblock %}
+{% block work_js %}<script src="{% asset 'js/exam.js' %}"></script>{% endblock %}

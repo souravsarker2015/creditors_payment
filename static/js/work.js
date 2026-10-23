@@ -1879,7 +1879,7 @@
   /* ── Keyboard: the whole module without a mouse ─────────────────────── */
   var pending = null;
   var GO = { h: "today", t: "tasks", b: "board", p: "projects", i: "time", f: "focus_page", n: "notes", s: "snippets", a: "habits", j: "journal", r: "reports", ",": "settings",
-             c: "calendar", o: "goals", l: "learning", v: "review", d: "plan", w: "week", m: "diagrams", k: "cards", q: "prep" };
+             c: "calendar", o: "goals", l: "learning", v: "review", d: "plan", w: "week", m: "diagrams", k: "cards", q: "prep", e: "exam" };
   d.addEventListener("keydown", function (e) {
     if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || typing(e)) return;
     var k = e.key;

@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from . import services
-from .models import Deck, Goal, GoalStatus, Habit, LearningItem, LearningStatus, PrepSection, PrepTopic, Project, Question, QuestionKind, Snippet, Sprint, Tag, Task, TaskKind, TimeEntry, WorkSettings
+from .models import Deck, ExamSubject, Goal, GoalStatus, Habit, LearningItem, LearningStatus, PrepSection, PrepTopic, Project, Question, QuestionKind, Snippet, Sprint, Tag, Task, TaskKind, TimeEntry, WorkSettings
 
 DATE = forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d")
 SWATCHES = forms.RadioSelect   # colours are picked from swatches (templates: .w-swatches)
@@ -375,6 +375,23 @@ class PrepTopicForm(forms.ModelForm):
         name = self.cleaned_data["name"].strip()
         if PrepTopic.objects.filter(owner=self.owner, name__iexact=name).exclude(pk=self.instance.pk).exists():
             raise forms.ValidationError(_("You already have a topic with this name."))
+        return name
+
+
+class ExamSubjectForm(forms.ModelForm):
+    class Meta:
+        model = ExamSubject
+        fields = ("name", "exam_date", "color")
+        widgets = {"exam_date": DATE, "color": SWATCHES}
+
+    def __init__(self, *args, owner=None, **kwargs):
+        self.owner = owner
+        super().__init__(*args, **kwargs)
+
+    def clean_name(self):
+        name = self.cleaned_data["name"].strip()
+        if ExamSubject.objects.filter(owner=self.owner, name__iexact=name).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError(_("You already have a subject with this name."))
         return name
 
 

@@ -947,6 +947,11 @@ def search(request):
 
     for qn in Question.objects.filter(owner=user).filter(Q(prompt__icontains=q) | Q(companies__icontains=q)).select_related("topic")[:4]:
         out.append({"kind": "question", "title": qn.title, "url": reverse("work:question", args=[qn.pk]), "meta": f"{qn.topic.name} · {qn.get_difficulty_display()}"})
+    from .models import ExamNote
+
+    for x in ExamNote.objects.filter(owner=user).filter(Q(question__icontains=q) | Q(answer__icontains=q)).select_related("subject")[:3]:
+        out.append({"kind": "exam", "title": " ".join(x.question.split())[:120], "url": reverse("work:exam_subject", args=[x.subject_id]) + f"#q{x.pk}",
+                    "meta": x.subject.name})
     for sn in Snippet.objects.filter(owner=user).filter(Q(title__icontains=q) | Q(description__icontains=q))[:3]:
         out.append({"kind": "snippet", "title": sn.title, "url": reverse("work:snippets") + "?q=" + quote(sn.title), "meta": sn.get_language_display()})
     return ok(results=out)

@@ -1,0 +1,74 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% translate "Review" %} | {{ s.name }}{% endblock %}
+
+{% block work %}
+{{ data|json_script:"exam-data" }}
+{{ exam_text|json_script:"exam-text" }}
+<div class="wfr wex-review" x-data="examReview" data-own-keys @keydown.window="key($event)">
+  <header class="wfr-head">
+    <a :href="back" class="icon-btn" aria-label="{% translate 'Stop' %}" data-tip="{% translate 'Stop (Esc)' %}">{% icon "x" %}</a>
+    <div class="wfr-title"><b>{{ s.name }}</b><small class="wex-left" x-show="stage === 'card'" x-text="leftText()"></small></div>
+    <div class="seg" role="radiogroup" aria-label="{% translate 'Which questions' %}">
+      <button type="button" class="seg-item" :class="which === 'unknown' && 'is-active'" @click="start('unknown')">{% translate "To learn" %}</button>
+      <button type="button" class="seg-item" :class="which === 'all' && 'is-active'" @click="start('all')">{% translate "All" %}</button>
+      <button type="button" class="seg-item" :class="which === 'starred' && 'is-active'" @click="start('starred')" aria-label="{% translate 'Important' %}">{% icon "star" %}</button>
+    </div>
+    <button type="button" class="icon-btn" :class="shuffle && 'is-on'" @click="shuffle = !shuffle; start(which)" :aria-pressed="shuffle.toString()" aria-label="{% translate 'Shuffle' %}" data-tip="{% translate 'Shuffle' %}">{% icon "repeat" %}</button>
+  </header>
+  <div class="wfr-progress" role="progressbar" :aria-valuenow="pos" aria-valuemin="0" :aria-valuemax="queue.length"><i :style="'width:' + (queue.length ? 100 * pos / queue.length : 0) + '%'"></i></div>
+
+  <section class="wfr-stage" x-show="stage === 'card'">
+    <div class="wfr-card-wrap">
+      <div class="wfr-card" :class="flipped && 'is-flipped'" @click="flip()" role="button" tabindex="0"
+           :aria-label="flipped ? '{% translate "Answer" %}' : '{% translate "Question — tap to see the answer" %}'">
+        <div class="wfr-face wfr-front">
+          <span class="wfr-tag"><span x-text="card && ('{% translate "Question" %} ' + card.number)"></span><span class="wex-tag-star" x-show="card && card.starred">★</span></span>
+          <div class="wfr-text wn-md" x-ref="front"></div>
+          <span class="wfr-tap">{% icon "repeat" %}{% translate "Think of the answer, then tap or press Space" %}</span>
+        </div>
+        <div class="wfr-face wfr-back">
+          <div class="wfr-q wn-md" x-ref="q"></div>
+          <hr>
+          <div class="wfr-text wex-answer wn-md" x-ref="back"></div>
+        </div>
+      </div>
+    </div>
+    <div class="wfr-actions">
+      <button type="button" class="btn btn-primary btn-lg wfr-show" x-show="!flipped" @click="flip()">{% translate "Show the answer" %} <kbd>Space</kbd></button>
+      <div class="wex-rate" x-show="flipped" x-cloak role="group" aria-label="{% translate 'Did you know it?' %}">
+        <button type="button" class="wfr-btn" data-r="1" @click="mark(false)"><b>{% translate "Not yet" %}</b><small>{% translate "comes back at the end" %}</small><kbd>1</kbd></button>
+        <button type="button" class="wfr-btn" data-r="3" @click="mark(true)"><b>{% translate "I knew it" %}</b><small>{% translate "marked as known" %}</small><kbd>2</kbd></button>
+      </div>
+    </div>
+  </section>
+
+  <section class="wfr-end" x-show="stage === 'empty'" x-cloak>
+    <div class="wfc-hero-stack is-big" aria-hidden="true"><i></i><i></i><i>✓</i></div>
+    <h2 x-text="which === 'starred' ? '{{ _("No important questions yet")|escapejs }}' : '{{ _("Nothing here")|escapejs }}'"></h2>
+    <p x-show="which === 'starred'">{% translate "Tap the star on a question to mark it as important." %}</p>
+    <div class="wfr-end-acts">
+      <button type="button" class="btn btn-primary" @click="start('all')">{% icon "repeat" %}{% translate "Review all of them" %}</button>
+      <a :href="back" class="btn btn-secondary">{% translate "Back" %}</a>
+    </div>
+  </section>
+
+  <section class="wfr-end is-finished" x-show="stage === 'done'" x-cloak>
+    <div class="wfc-hero-stack is-big" aria-hidden="true"><i></i><i></i><i x-text="missed.length ? '💪' : '🎉'"></i></div>
+    <h2>{% translate "Done!" %}</h2>
+    <dl class="wfr-sum">
+      <div><dt>{% translate "Questions" %}</dt><dd x-text="seen"></dd></div>
+      <div><dt>{% translate "Knew at once" %}</dt><dd x-text="firstTry"></dd></div>
+      <div><dt>{% translate "Time" %}</dt><dd x-text="took"></dd></div>
+    </dl>
+    <div class="wfr-end-acts">
+      <a :href="back" class="btn btn-primary">{% translate "Done" %}</a>
+      <button type="button" class="btn btn-secondary" @click="start(which)">{% icon "repeat" %}{% translate "Go again" %}</button>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block work_libs %}{% include "work/prep/_libs.html" %}{% endblock %}
+{% block work_js %}<script src="{% asset 'js/exam.js' %}"></script>{% endblock %}

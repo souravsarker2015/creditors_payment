@@ -23171,3 +23171,236 @@ msgstr "…অথবা নতুন অংশ"
 
 msgid "Each topic has its contents: put questions in sections, drag them into order, and add, edit or delete them right there. Every question gets a number like PY-2.3 — type it in the bank's search to jump to it."
 msgstr "প্রতিটি বিষয়ের নিজস্ব সূচিপত্র আছে: প্রশ্নগুলো অংশে রাখুন, টেনে ক্রম সাজান, আর সেখানেই যোগ, সম্পাদনা বা মুছে ফেলুন। প্রতিটি প্রশ্ন PY-2.3-এর মতো একটি নম্বর পায় — প্রশ্নভান্ডারের খোঁজে সেটি লিখলেই সেখানে চলে যাবেন।"
+
+#, python-format
+msgid "%(counter)s match"
+msgid_plural "%(counter)s matches"
+msgstr[0] "%(counter)sটি মিল"
+msgstr[1] "%(counter)sটি মিল"
+
+#, python-format
+msgid "%(k)s known"
+msgstr "%(k)sটি জানা"
+
+#, python-format
+msgid "%(k)s of %(n)s known"
+msgstr "%(n)sটির মধ্যে %(k)sটি জানা"
+
+#, python-format
+msgid "%(n)s questions left"
+msgstr "আর %(n)sটি প্রশ্ন বাকি"
+
+msgid "1 question left"
+msgstr "আর ১টি প্রশ্ন বাকি"
+
+msgid "Add a question"
+msgstr "একটি প্রশ্ন যোগ করুন"
+
+msgid "Add one by one"
+msgstr "একটি একটি করে যোগ করুন"
+
+msgid "Add the subject you're studying above, then write its questions and answers as you go."
+msgstr "যে বিষয়টি পড়ছেন তা ওপরে যোগ করুন, তারপর পড়তে পড়তে এর প্রশ্ন ও উত্তর লিখে রাখুন।"
+
+msgid "Add them all"
+msgstr "সবগুলো যোগ করুন"
+
+msgid "Added"
+msgstr "যোগ হয়েছে"
+
+msgid "Answer — Ctrl+Enter adds it"
+msgstr "উত্তর — Ctrl+Enter চাপলে যোগ হবে"
+
+msgid "Delete the subject and its questions"
+msgstr "বিষয়টি ও এর প্রশ্নগুলো মুছুন"
+
+msgid "Delete this subject and all its questions? You can bring them back from Recently deleted."
+msgstr "এই বিষয় ও এর সব প্রশ্ন মুছবেন? সাম্প্রতিক মুছে ফেলা থেকে ফিরিয়ে আনতে পারবেন।"
+
+msgid "Did you know it?"
+msgstr "আপনি কি জানতেন?"
+
+msgid "Done!"
+msgstr "শেষ!"
+
+msgid "Download as text"
+msgstr "টেক্সট হিসেবে ডাউনলোড করুন"
+
+msgid "Edit the subject"
+msgstr "বিষয়টি সম্পাদনা করুন"
+
+msgid "Exam date"
+msgstr "পরীক্ষার তারিখ"
+
+#, python-format
+msgid "Exam in %(counter)s day"
+msgid_plural "Exam in %(counter)s days"
+msgstr[0] "পরীক্ষা আর %(counter)s দিন পর"
+msgstr[1] "পরীক্ষা আর %(counter)s দিন পর"
+
+msgid "Exam notes"
+msgstr "পরীক্ষার নোট"
+
+msgid "Exam over"
+msgstr "পরীক্ষা শেষ"
+
+msgid "Exam question"
+msgstr "পরীক্ষার প্রশ্ন"
+
+#, python-format
+msgid "Exam question: %(title)s"
+msgstr "পরীক্ষার প্রশ্ন: %(title)s"
+
+msgid "Exam questions"
+msgstr "পরীক্ষার প্রশ্ন"
+
+msgid "Exam today — good luck!"
+msgstr "আজ পরীক্ষা — শুভকামনা!"
+
+msgid "Find in this subject"
+msgstr "এই বিষয়ে খুঁজুন"
+
+msgid "Go again"
+msgstr "আবার করুন"
+
+msgid "Hide the answer"
+msgstr "উত্তর লুকান"
+
+msgid "How plants make food from sunlight."
+msgstr "উদ্ভিদ কীভাবে সূর্যালোক থেকে খাদ্য তৈরি করে।"
+
+msgid "I knew it"
+msgstr "জানতাম"
+
+msgid "I know it"
+msgstr "আমি জানি"
+
+msgid "Important"
+msgstr "গুরুত্বপূর্ণ"
+
+msgid "Knew at once"
+msgstr "প্রথমবারেই জানা"
+
+msgid "Lists, **bold** and `code` work in answers."
+msgstr "উত্তরে তালিকা, **বোল্ড** ও `code` লেখা যায়।"
+
+msgid "Mark all as not known"
+msgstr "সবগুলো অজানা হিসেবে চিহ্নিত করুন"
+
+msgid "Mark every question as not known yet?"
+msgstr "সব প্রশ্ন এখনো অজানা হিসেবে চিহ্নিত করবেন?"
+
+msgid "New subject"
+msgstr "নতুন বিষয়"
+
+msgid "No important questions yet"
+msgstr "এখনো কোনো গুরুত্বপূর্ণ প্রশ্ন নেই"
+
+msgid "No questions found. Start each with Q: and its answer with A:, or leave an empty line between them."
+msgstr "কোনো প্রশ্ন পাওয়া যায়নি। প্রতিটি প্রশ্ন Q: দিয়ে আর উত্তর A: দিয়ে শুরু করুন, অথবা প্রশ্নগুলোর মাঝে একটি ফাঁকা লাইন রাখুন।"
+
+msgid "No subjects yet"
+msgstr "এখনো কোনো বিষয় নেই"
+
+msgid "Not yet"
+msgstr "এখনো না"
+
+msgid "Nothing here"
+msgstr "এখানে কিছু নেই"
+
+msgid "Nothing matches. Try another word."
+msgstr "কিছু মেলেনি। অন্য শব্দ দিয়ে চেষ্টা করুন।"
+
+msgid "Nothing to show here."
+msgstr "এখানে দেখানোর মতো কিছু নেই।"
+
+msgid "Optional: shows how many days are left."
+msgstr "ঐচ্ছিক: আর কত দিন বাকি তা দেখায়।"
+
+msgid "Paste many at once"
+msgstr "একসাথে অনেকগুলো পেস্ট করুন"
+
+msgid "Paste some questions first."
+msgstr "আগে কিছু প্রশ্ন পেস্ট করুন।"
+
+msgid "Print with answers"
+msgstr "উত্তরসহ প্রিন্ট করুন"
+
+msgid "Question — then press Enter"
+msgstr "প্রশ্ন — তারপর Enter চাপুন"
+
+msgid "Questions and answers"
+msgstr "প্রশ্ন ও উত্তর"
+
+msgid "Review all of them"
+msgstr "সবগুলো রিভিউ করুন"
+
+msgid "Review all, shuffled"
+msgstr "সবগুলো এলোমেলোভাবে রিভিউ করুন"
+
+msgid "Review the important ones"
+msgstr "গুরুত্বপূর্ণগুলো রিভিউ করুন"
+
+msgid "Search every question and answer"
+msgstr "সব প্রশ্ন ও উত্তরে খুঁজুন"
+
+msgid "Search exam notes"
+msgstr "পরীক্ষার নোটে খুঁজুন"
+
+msgid "Start each question with Q: and its answer with A: — or leave an empty line between them (first line the question, the rest its answer). Two columns copied from a spreadsheet work too."
+msgstr "প্রতিটি প্রশ্ন Q: দিয়ে আর এর উত্তর A: দিয়ে শুরু করুন — অথবা মাঝে একটি ফাঁকা লাইন রাখুন (প্রথম লাইন প্রশ্ন, বাকিটা উত্তর)। স্প্রেডশিট থেকে কপি করা দুটি কলামও চলবে।"
+
+msgid "Subject"
+msgstr "বিষয়"
+
+msgid "Subject deleted with its questions. You can bring it back from Recently deleted."
+msgstr "বিষয়টি এর প্রশ্নসহ মুছে ফেলা হয়েছে। সাম্প্রতিক মুছে ফেলা থেকে ফিরিয়ে আনতে পারবেন।"
+
+msgid "Subject saved."
+msgstr "বিষয় সংরক্ষিত হয়েছে।"
+
+#, python-format
+msgid "Subject: %(name)s (%(n)s questions)"
+msgstr "বিষয়: %(name)s (%(n)sটি প্রশ্ন)"
+
+msgid "Subjects"
+msgstr "বিষয়সমূহ"
+
+msgid "Tap the star on a question to mark it as important."
+msgstr "কোনো প্রশ্নকে গুরুত্বপূর্ণ চিহ্নিত করতে এর তারায় চাপুন।"
+
+msgid "The subject"
+msgstr "বিষয়টি"
+
+msgid "Think of the answer, then tap or press Space"
+msgstr "উত্তরটি ভাবুন, তারপর চাপুন বা Space দিন"
+
+msgid "To learn"
+msgstr "শিখতে বাকি"
+
+msgid "What is photosynthesis?"
+msgstr "সালোকসংশ্লেষণ কী?"
+
+msgid "Which questions"
+msgstr "কোন প্রশ্নগুলো"
+
+msgid "Write down questions and answers while you study. Before the exam, read through them or flip through them one by one."
+msgstr "পড়ার সময় প্রশ্ন ও উত্তর লিখে রাখুন। পরীক্ষার আগে সেগুলো পড়ে নিন, অথবা একটি একটি করে উল্টে দেখুন।"
+
+msgid "Write your first question above. Add a few each time you study — they'll be here to revise before the exam."
+msgstr "ওপরে আপনার প্রথম প্রশ্নটি লিখুন। প্রতিবার পড়ার সময় কয়েকটি যোগ করুন — পরীক্ষার আগে রিভিশনের জন্য এখানেই থাকবে।"
+
+msgid "You already have a subject with this name."
+msgstr "এই নামে আপনার একটি বিষয় আগে থেকেই আছে।"
+
+msgid "comes back at the end"
+msgstr "শেষে আবার আসবে"
+
+msgid "e.g. Physics, AWS exam, Chapter 4"
+msgstr "যেমন: পদার্থবিজ্ঞান, AWS পরীক্ষা, অধ্যায় ৪"
+
+msgid "known"
+msgstr "জানা"
+
+msgid "marked as known"
+msgstr "জানা হিসেবে চিহ্নিত"
