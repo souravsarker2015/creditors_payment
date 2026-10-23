@@ -10,12 +10,18 @@
   <header class="wfr-head">
     <a :href="back" class="icon-btn" aria-label="{% translate 'Stop' %}" data-tip="{% translate 'Stop (Esc)' %}">{% icon "x" %}</a>
     <div class="wfr-title"><b>{{ s.name }}</b><small class="wex-left" x-show="stage === 'card'" x-text="leftText()"></small></div>
+    <select class="form-input input-compact wex-review-chapter" x-show="chapters.length" x-model="chapter" @change="start(which)" aria-label="{% translate 'Chapter' %}">
+      <option value="">{% translate "All chapters" %}</option>
+      <template x-for="c in chapters" :key="c"><option :value="c" x-text="c" :selected="c === chapter"></option></template>
+    </select>
     <div class="seg" role="radiogroup" aria-label="{% translate 'Which questions' %}">
       <button type="button" class="seg-item" :class="which === 'unknown' && 'is-active'" @click="start('unknown')">{% translate "To learn" %}</button>
+      <button type="button" class="seg-item" :class="which === 'missed' && 'is-active'" @click="start('missed')" data-tip="{% translate 'The most missed first' %}">{% translate "Missed" %}</button>
       <button type="button" class="seg-item" :class="which === 'all' && 'is-active'" @click="start('all')">{% translate "All" %}</button>
       <button type="button" class="seg-item" :class="which === 'starred' && 'is-active'" @click="start('starred')" aria-label="{% translate 'Important' %}">{% icon "star" %}</button>
     </div>
     <button type="button" class="icon-btn" :class="shuffle && 'is-on'" @click="shuffle = !shuffle; start(which)" :aria-pressed="shuffle.toString()" aria-label="{% translate 'Shuffle' %}" data-tip="{% translate 'Shuffle' %}">{% icon "repeat" %}</button>
+    <button type="button" class="icon-btn" @click="startEdit()" x-show="stage === 'card'" aria-label="{% translate 'Edit this question' %}" data-tip="{% translate 'Edit this question (E)' %}">{% icon "edit" %}</button>
   </header>
   <div class="wfr-progress" role="progressbar" :aria-valuenow="pos" aria-valuemin="0" :aria-valuemax="queue.length"><i :style="'width:' + (queue.length ? 100 * pos / queue.length : 0) + '%'"></i></div>
 
@@ -24,7 +30,7 @@
       <div class="wfr-card" :class="flipped && 'is-flipped'" @click="flip()" role="button" tabindex="0"
            :aria-label="flipped ? '{% translate "Answer" %}' : '{% translate "Question — tap to see the answer" %}'">
         <div class="wfr-face wfr-front">
-          <span class="wfr-tag"><span x-text="card && ('{% translate "Question" %} ' + card.number)"></span><span class="wex-tag-star" x-show="card && card.starred">★</span></span>
+          <span class="wfr-tag"><span x-text="card && ('{% translate "Question" %} ' + card.number + (card.chapter ? ' · ' + card.chapter : ''))"></span><span class="wex-tag-star" x-show="card && card.starred">★</span><span class="wex-tag-missed" x-show="card && card.misses" x-text="card && '✗ ' + card.misses"></span></span>
           <div class="wfr-text wn-md" x-ref="front"></div>
           <span class="wfr-tap">{% icon "repeat" %}{% translate "Think of the answer, then tap or press Space" %}</span>
         </div>
@@ -46,8 +52,9 @@
 
   <section class="wfr-end" x-show="stage === 'empty'" x-cloak>
     <div class="wfc-hero-stack is-big" aria-hidden="true"><i></i><i></i><i>✓</i></div>
-    <h2 x-text="which === 'starred' ? '{{ _("No important questions yet")|escapejs }}' : '{{ _("Nothing here")|escapejs }}'"></h2>
+    <h2 x-text="which === 'starred' ? '{{ _("No important questions yet")|escapejs }}' : which === 'missed' ? '{{ _("Nothing missed yet")|escapejs }}' : '{{ _("Nothing here")|escapejs }}'"></h2>
     <p x-show="which === 'starred'">{% translate "Tap the star on a question to mark it as important." %}</p>
+    <p x-show="which === 'missed'">{% translate "Questions you answer “Not yet” in a review show up here, the most missed first." %}</p>
     <div class="wfr-end-acts">
       <button type="button" class="btn btn-primary" @click="start('all')">{% icon "repeat" %}{% translate "Review all of them" %}</button>
       <a :href="back" class="btn btn-secondary">{% translate "Back" %}</a>
@@ -67,8 +74,21 @@
       <button type="button" class="btn btn-secondary" @click="start(which)">{% icon "repeat" %}{% translate "Go again" %}</button>
     </div>
   </section>
+
+  {# ── fix a question mid-review ── #}
+  <div class="wc-backdrop" x-show="editing" x-cloak x-transition.opacity @click="editing = false"></div>
+  <section class="wc wex-edit-dialog" x-show="editing" x-cloak x-transition @keydown.escape.stop="editing = false" role="dialog" aria-modal="true" aria-labelledby="exam-edit-title">
+    <h2 id="exam-edit-title" class="card-title">{% translate "Edit this question" %}</h2>
+    <form class="wfc-form" @submit.prevent="saveEdit()" @keydown.ctrl.enter.prevent="saveEdit()" @keydown.meta.enter.prevent="saveEdit()">
+      <label class="label" for="ee-q">{% translate "Question" %}</label>
+      <textarea id="ee-q" x-ref="editQuestion" x-model="draft.question" class="form-input" rows="2"></textarea>
+      <label class="label" for="ee-a">{% translate "Answer" %}</label>
+      <textarea id="ee-a" x-model="draft.answer" class="form-input" rows="10" data-md-paste data-paste-images></textarea>
+      <div class="wc-foot"><span class="spacer"></span><button type="button" class="btn btn-ghost" @click="editing = false">{% translate "Cancel" %}</button><button type="submit" class="btn btn-primary">{% translate "Save" %}</button></div>
+    </form>
+  </section>
 </div>
 {% endblock %}
 
-{% block work_libs %}{% include "work/prep/_libs.html" %}{% endblock %}
+{% block work_libs %}{% include "work/exam/_libs.html" %}{% endblock %}
 {% block work_js %}<script src="{% asset 'js/exam.js' %}"></script>{% endblock %}

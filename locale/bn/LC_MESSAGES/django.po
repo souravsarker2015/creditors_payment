@@ -23173,43 +23173,17 @@ msgid "Each topic has its contents: put questions in sections, drag them into or
 msgstr "প্রতিটি বিষয়ের নিজস্ব সূচিপত্র আছে: প্রশ্নগুলো অংশে রাখুন, টেনে ক্রম সাজান, আর সেখানেই যোগ, সম্পাদনা বা মুছে ফেলুন। প্রতিটি প্রশ্ন PY-2.3-এর মতো একটি নম্বর পায় — প্রশ্নভান্ডারের খোঁজে সেটি লিখলেই সেখানে চলে যাবেন।"
 
 #, python-format
-msgid "%(counter)s match"
-msgid_plural "%(counter)s matches"
-msgstr[0] "%(counter)sটি মিল"
-msgstr[1] "%(counter)sটি মিল"
-
-#, python-format
-msgid "%(k)s known"
-msgstr "%(k)sটি জানা"
-
-#, python-format
-msgid "%(k)s of %(n)s known"
-msgstr "%(n)sটির মধ্যে %(k)sটি জানা"
-
-#, python-format
 msgid "%(n)s questions left"
 msgstr "আর %(n)sটি প্রশ্ন বাকি"
 
 msgid "1 question left"
 msgstr "আর ১টি প্রশ্ন বাকি"
 
-msgid "Add a question"
-msgstr "একটি প্রশ্ন যোগ করুন"
-
-msgid "Add one by one"
-msgstr "একটি একটি করে যোগ করুন"
-
 msgid "Add the subject you're studying above, then write its questions and answers as you go."
 msgstr "যে বিষয়টি পড়ছেন তা ওপরে যোগ করুন, তারপর পড়তে পড়তে এর প্রশ্ন ও উত্তর লিখে রাখুন।"
 
-msgid "Add them all"
-msgstr "সবগুলো যোগ করুন"
-
 msgid "Added"
 msgstr "যোগ হয়েছে"
-
-msgid "Answer — Ctrl+Enter adds it"
-msgstr "উত্তর — Ctrl+Enter চাপলে যোগ হবে"
 
 msgid "Delete the subject and its questions"
 msgstr "বিষয়টি ও এর প্রশ্নগুলো মুছুন"
@@ -23281,9 +23255,6 @@ msgstr "গুরুত্বপূর্ণ"
 msgid "Knew at once"
 msgstr "প্রথমবারেই জানা"
 
-msgid "Lists, **bold** and `code` work in answers."
-msgstr "উত্তরে তালিকা, **বোল্ড** ও `code` লেখা যায়।"
-
 msgid "Mark all as not known"
 msgstr "সবগুলো অজানা হিসেবে চিহ্নিত করুন"
 
@@ -23295,9 +23266,6 @@ msgstr "নতুন বিষয়"
 
 msgid "No important questions yet"
 msgstr "এখনো কোনো গুরুত্বপূর্ণ প্রশ্ন নেই"
-
-msgid "No questions found. Start each with Q: and its answer with A:, or leave an empty line between them."
-msgstr "কোনো প্রশ্ন পাওয়া যায়নি। প্রতিটি প্রশ্ন Q: দিয়ে আর উত্তর A: দিয়ে শুরু করুন, অথবা প্রশ্নগুলোর মাঝে একটি ফাঁকা লাইন রাখুন।"
 
 msgid "No subjects yet"
 msgstr "এখনো কোনো বিষয় নেই"
@@ -23316,9 +23284,6 @@ msgstr "এখানে দেখানোর মতো কিছু নেই�
 
 msgid "Optional: shows how many days are left."
 msgstr "ঐচ্ছিক: আর কত দিন বাকি তা দেখায়।"
-
-msgid "Paste many at once"
-msgstr "একসাথে অনেকগুলো পেস্ট করুন"
 
 msgid "Paste some questions first."
 msgstr "আগে কিছু প্রশ্ন পেস্ট করুন।"
@@ -23346,9 +23311,6 @@ msgstr "সব প্রশ্ন ও উত্তরে খুঁজুন"
 
 msgid "Search exam notes"
 msgstr "পরীক্ষার নোটে খুঁজুন"
-
-msgid "Start each question with Q: and its answer with A: — or leave an empty line between them (first line the question, the rest its answer). Two columns copied from a spreadsheet work too."
-msgstr "প্রতিটি প্রশ্ন Q: দিয়ে আর এর উত্তর A: দিয়ে শুরু করুন — অথবা মাঝে একটি ফাঁকা লাইন রাখুন (প্রথম লাইন প্রশ্ন, বাকিটা উত্তর)। স্প্রেডশিট থেকে কপি করা দুটি কলামও চলবে।"
 
 msgid "Subject"
 msgstr "বিষয়"
@@ -23387,9 +23349,6 @@ msgstr "কোন প্রশ্নগুলো"
 msgid "Write down questions and answers while you study. Before the exam, read through them or flip through them one by one."
 msgstr "পড়ার সময় প্রশ্ন ও উত্তর লিখে রাখুন। পরীক্ষার আগে সেগুলো পড়ে নিন, অথবা একটি একটি করে উল্টে দেখুন।"
 
-msgid "Write your first question above. Add a few each time you study — they'll be here to revise before the exam."
-msgstr "ওপরে আপনার প্রথম প্রশ্নটি লিখুন। প্রতিবার পড়ার সময় কয়েকটি যোগ করুন — পরীক্ষার আগে রিভিশনের জন্য এখানেই থাকবে।"
-
 msgid "You already have a subject with this name."
 msgstr "এই নামে আপনার একটি বিষয় আগে থেকেই আছে।"
 
@@ -23404,3 +23363,171 @@ msgstr "জানা"
 
 msgid "marked as known"
 msgstr "জানা হিসেবে চিহ্নিত"
+
+#, python-format
+msgid "%(counter)s missed in reviews"
+msgid_plural "%(counter)s missed in reviews"
+msgstr[0] "রিভিউতে %(counter)sটি ভুল হয়েছে"
+msgstr[1] "রিভিউতে %(counter)sটি ভুল হয়েছে"
+
+#, python-format
+msgid "%(n)s was already there."
+msgid_plural "%(n)s were already there."
+msgstr[0] "%(n)sটি আগে থেকেই ছিল।"
+msgstr[1] "%(n)sটি আগে থেকেই ছিল।"
+
+msgid "Add questions"
+msgstr "প্রশ্ন যোগ করুন"
+
+msgid "All chapters"
+msgstr "সব অধ্যায়"
+
+msgid "Answer — type it, or paste it from ChatGPT or Claude. Ctrl+Enter adds it."
+msgstr "উত্তর — লিখুন, অথবা ChatGPT বা Claude থেকে পেস্ট করুন। Ctrl+Enter চাপলে যোগ হবে।"
+
+msgid "Chapter"
+msgstr "অধ্যায়"
+
+msgid "Chapter (optional)"
+msgstr "অধ্যায় (ঐচ্ছিক)"
+
+msgid "Chapter (optional) — e.g. Chapter 3, Thermodynamics"
+msgstr "অধ্যায় (ঐচ্ছিক) — যেমন: অধ্যায় ৩, তাপগতিবিদ্যা"
+
+msgid "Chapter for these (optional)"
+msgstr "এগুলোর অধ্যায় (ঐচ্ছিক)"
+
+msgid "Check the questions found, then add them."
+msgstr "পাওয়া প্রশ্নগুলো দেখে নিন, তারপর যোগ করুন।"
+
+msgid "Checking…"
+msgstr "দেখা হচ্ছে…"
+
+msgid "Copied — paste it into ChatGPT or Claude."
+msgstr "কপি হয়েছে — ChatGPT বা Claude-এ পেস্ট করুন।"
+
+msgid "Copy its whole reply — its copy button is best — and paste it below."
+msgstr "এর পুরো উত্তর কপি করুন — এর কপি বোতামটি সবচেয়ে ভালো — এবং নিচে পেস্ট করুন।"
+
+msgid "Copy the prompt"
+msgstr "প্রম্পট কপি করুন"
+
+msgid "Copy this prompt (change it as you like) and send it to ChatGPT or Claude."
+msgstr "এই প্রম্পটটি কপি করুন (ইচ্ছেমতো বদলে নিন) এবং ChatGPT বা Claude-কে পাঠান।"
+
+msgid "Each question on a ## heading with its answer below — or Q: … A: …, or bold questions, or an empty line between them. # headings above the questions become chapters. Two columns copied from a spreadsheet work too."
+msgstr "প্রতিটি প্রশ্ন একটি ## শিরোনামে, নিচে তার উত্তর — অথবা Q: … A: …, অথবা বোল্ড প্রশ্ন, অথবা মাঝে একটি ফাঁকা লাইন। প্রশ্নের ওপরের # শিরোনামগুলো অধ্যায় হয়ে যায়। স্প্রেডশিট থেকে কপি করা দুটি কলামও চলবে।"
+
+msgid "Edit this question"
+msgstr "এই প্রশ্নটি সম্পাদনা করুন"
+
+msgid "Edit this question (E)"
+msgstr "এই প্রশ্নটি সম্পাদনা করুন (E)"
+
+msgid "Get questions from ChatGPT or Claude"
+msgstr "ChatGPT বা Claude থেকে প্রশ্ন নিন"
+
+#, python-format
+msgid ""
+"Make revision notes for my exam on %(subject)s: the 20 most important questions, each with a clear, complete answer.\n"
+"\n"
+"Write them in Markdown, exactly like this:\n"
+"\n"
+"# Chapter name\n"
+"## The question?\n"
+"The answer — short paragraphs, lists, tables, code or formulas where they help.\n"
+"\n"
+"Use # only for chapters and ## only for questions. Write formulas as $…$."
+msgstr ""
+"আমার %(subject)s পরীক্ষার জন্য রিভিশন নোট বানাও: সবচেয়ে গুরুত্বপূর্ণ ২০টি প্রশ্ন, প্রতিটির স্পষ্ট ও পূর্ণাঙ্গ উত্তরসহ।\n"
+"\n"
+"Markdown-এ ঠিক এভাবে লেখো:\n"
+"\n"
+"# অধ্যায়ের নাম\n"
+"## প্রশ্নটি?\n"
+"উত্তর — দরকার হলে ছোট অনুচ্ছেদ, তালিকা, টেবিল, কোড বা সূত্র দিয়ে।\n"
+"\n"
+"# শুধু অধ্যায়ের জন্য আর ## শুধু প্রশ্নের জন্য ব্যবহার করো। সূত্র $…$ হিসেবে লেখো।"
+
+msgid "Markdown works: lists, tables, **bold**, `code`, formulas like $E = mc^2$, and pictures (paste or drop them)."
+msgstr "Markdown চলে: তালিকা, টেবিল, **বোল্ড**, `code`, $E = mc^2$-এর মতো সূত্র, আর ছবি (পেস্ট করুন বা টেনে আনুন)।"
+
+msgid "Missed"
+msgstr "ভুল হয়েছে"
+
+#, python-format
+msgid "Moved to %(name)s"
+msgstr "%(name)s-এ সরানো হয়েছে"
+
+msgid "New name for this chapter (empty: no chapter):"
+msgstr "এই অধ্যায়ের নতুন নাম (খালি রাখলে: কোনো অধ্যায় নয়):"
+
+msgid "No answer"
+msgstr "উত্তর নেই"
+
+msgid "No chapter"
+msgstr "কোনো অধ্যায় নেই"
+
+msgid "No questions found. Put each question on a ## heading, or start it with Q: — or leave an empty line between them."
+msgstr "কোনো প্রশ্ন পাওয়া যায়নি। প্রতিটি প্রশ্ন একটি ## শিরোনামে রাখুন, অথবা Q: দিয়ে শুরু করুন — অথবা মাঝে একটি ফাঁকা লাইন রাখুন।"
+
+msgid "Not revised yet"
+msgstr "এখনো রিভিশন হয়নি"
+
+msgid "Nothing missed yet"
+msgstr "এখনো কিছু ভুল হয়নি"
+
+msgid "One by one"
+msgstr "একটি একটি করে"
+
+msgid "Optional: questions with the same chapter are shown together."
+msgstr "ঐচ্ছিক: একই অধ্যায়ের প্রশ্নগুলো একসাথে দেখানো হয়।"
+
+msgid "Prompt"
+msgstr "প্রম্পট"
+
+msgid "Questions you answer “Not yet” in a review show up here, the most missed first."
+msgstr "রিভিউতে যেসব প্রশ্নে “এখনো না” বলেন সেগুলো এখানে আসে, সবচেয়ে বেশি ভুলগুলো আগে।"
+
+msgid "Rename the chapter"
+msgstr "অধ্যায়ের নাম বদলান"
+
+msgid "Review the most missed"
+msgstr "সবচেয়ে বেশি ভুলগুলো রিভিউ করুন"
+
+msgid "Review this chapter"
+msgstr "এই অধ্যায় রিভিউ করুন"
+
+#, python-format
+msgid "Revised %(t)s ago"
+msgstr "%(t)s আগে রিভিশন হয়েছে"
+
+msgid "The most missed first"
+msgstr "সবচেয়ে বেশি ভুলগুলো আগে"
+
+msgid "Times you didn’t know it in a review"
+msgstr "রিভিউতে কতবার জানতেন না"
+
+msgid "Write your first question above, or paste a list — from your notes, ChatGPT or Claude. Add a few each time you study; they'll be here to revise before the exam."
+msgstr "ওপরে আপনার প্রথম প্রশ্নটি লিখুন, অথবা একটি তালিকা পেস্ট করুন — আপনার নোট, ChatGPT বা Claude থেকে। প্রতিবার পড়ার সময় কয়েকটি যোগ করুন; পরীক্ষার আগে রিভিশনের জন্য এখানেই থাকবে।"
+
+msgid "already there"
+msgstr "আগে থেকেই আছে"
+
+#, python-format
+msgid "%(counter)s match"
+msgid_plural "%(counter)s matches"
+msgstr[0] "%(counter)sটি মিল"
+msgstr[1] "%(counter)sটি মিল"
+
+#, python-format
+msgid "%(k)s known"
+msgstr "%(k)sটি জানা"
+
+#, python-format
+msgid "%(k)s of %(n)s known"
+msgstr "%(n)sটির মধ্যে %(k)sটি জানা"
+
+#, python-format
+msgid "%(n)s new questions found"
+msgstr "%(n)sটি নতুন প্রশ্ন পাওয়া গেছে"

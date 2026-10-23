@@ -1192,13 +1192,17 @@ class ExamSubject(models.Model):
 
 
 class ExamNote(models.Model):
-    """One question and its answer, in the order they were written."""
+    """One question and its answer (Markdown), in the order they were written —
+    grouped by chapter when they have one."""
     owner = models.ForeignKey(**OWNER)
     subject = models.ForeignKey(ExamSubject, on_delete=models.CASCADE, related_name="notes", verbose_name=_("Subject"))
+    chapter = models.CharField(_("Chapter"), max_length=120, blank=True, help_text=_("Optional: questions with the same chapter are shown together."))
     question = models.TextField(_("Question"))
     answer = models.TextField(_("Answer"), blank=True)
     is_starred = models.BooleanField(_("Important"), default=False)
     is_known = models.BooleanField(_("I know it"), default=False)
+    misses = models.PositiveIntegerField(default=0, help_text="Times answered \"Not yet\" in a review.")
+    reviewed_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

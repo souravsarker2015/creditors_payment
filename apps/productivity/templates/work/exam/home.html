@@ -35,8 +35,8 @@
   <header class="card-header"><h2 class="card-title">{% blocktranslate count counter=found|length %}{{ counter }} match{% plural %}{{ counter }} matches{% endblocktranslate %}</h2>
     <a href="{% url 'work:exam' %}" class="btn btn-ghost btn-sm">{% translate "Clear" %}</a></header>
   {% if found %}<ul class="wex-found-list">{% for n in found %}
-    <li><a href="{% url 'work:exam_subject' n.subject_id %}#q{{ n.pk }}"><span class="wt-dot" data-color="{{ n.subject.color }}"></span><b>{{ n.question|truncatechars:140 }}</b><small>{{ n.subject.name }}</small></a>
-      {% if n.answer %}<p>{{ n.answer|truncatechars:220 }}</p>{% endif %}</li>{% endfor %}</ul>
+    <li><a href="{% url 'work:exam_subject' n.subject_id %}#q{{ n.pk }}"><span class="wt-dot" data-color="{{ n.subject.color }}"></span><b>{{ n.question|truncatechars:140 }}</b><small>{{ n.subject.name }}{% if n.chapter %} › {{ n.chapter }}{% endif %}</small></a>
+      {% if n.snippet %}<p>{{ n.snippet|truncatechars:220 }}</p>{% endif %}</li>{% endfor %}</ul>
   {% else %}<p class="card-body help">{% translate "Nothing matches. Try another word." %}</p>{% endif %}
 </section>
 {% endif %}
@@ -47,7 +47,8 @@
   <li class="card wex-subject" data-color="{{ s.color }}">
     <a href="{% url 'work:exam_subject' s.pk %}" class="wex-subject-main">
       <span class="wex-subject-name">{{ s.name }}</span>
-      <span class="wex-subject-meta">{% blocktranslate count counter=s.n %}{{ counter }} question{% plural %}{{ counter }} questions{% endblocktranslate %}{% if s.n %} · {% blocktranslate with k=s.known %}{{ k }} known{% endblocktranslate %}{% endif %}</span>
+      <span class="wex-subject-meta">{% blocktranslate count counter=s.n %}{{ counter }} question{% plural %}{{ counter }} questions{% endblocktranslate %}{% if s.n %} · {% blocktranslate with k=s.known %}{{ k }} known{% endblocktranslate %}{% endif %}{% if s.missed %} · <span class="wex-missed-text">{% blocktranslate count counter=s.missed %}{{ counter }} missed in reviews{% plural %}{{ counter }} missed in reviews{% endblocktranslate %}</span>{% endif %}</span>
+      <span class="wex-subject-meta">{% if s.revised %}{% blocktranslate with t=s.revised|timesince %}Revised {{ t }} ago{% endblocktranslate %}{% elif s.n %}{% translate "Not revised yet" %}{% endif %}</span>
       {% with d=s.days_left %}{% if d is not None %}<span class="wex-days{% if d >= 0 and d <= 7 %} is-soon{% endif %}{% if d < 0 %} is-past{% endif %}">{% icon "calendar" %}
         {% if d > 0 %}{% blocktranslate count counter=d %}Exam in {{ counter }} day{% plural %}Exam in {{ counter }} days{% endblocktranslate %}{% elif d == 0 %}{% translate "Exam today — good luck!" %}{% else %}{% translate "Exam over" %}{% endif %}</span>{% endif %}{% endwith %}
       <span class="wex-bar" role="img" aria-label="{% blocktranslate with k=s.known n=s.n %}{{ k }} of {{ n }} known{% endblocktranslate %}"><i style="width: {% if s.n %}{% widthratio s.known s.n 100 %}{% else %}0{% endif %}%"></i></span>
