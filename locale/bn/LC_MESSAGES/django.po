@@ -9276,9 +9276,6 @@ msgstr "ব্যাকআপ ডাউনলোড করুন"
 msgid "One .zip file with everything in this system."
 msgstr "এই সিস্টেমের সবকিছু একটি .zip ফাইলে।"
 
-msgid "Every user and their sign-in, the personal ledgers, the fish farm, and uploaded photos and receipts."
-msgstr "প্রত্যেক ব্যবহারকারী ও তাঁদের লগইন, ব্যক্তিগত হিসাব, মাছের খামার, আর আপলোড করা ছবি ও রসিদ।"
-
 msgid "Restores on any server — SQLite or PostgreSQL — with every record exactly as it is now."
 msgstr "যেকোনো সার্ভারে রিস্টোর হয় — SQLite বা PostgreSQL — প্রতিটি রেকর্ড ঠিক এখনকার মতো।"
 
@@ -15796,9 +15793,6 @@ msgstr[1] "%(counter)s দিনে %(t)s"
 
 msgid "Your data"
 msgstr "আপনার ডেটা"
-
-msgid "Everything in your tracker as one .zip: all data as JSON, plus notes, snippets and journal days as plain files you can open anywhere."
-msgstr "আপনার ট্র্যাকারের সবকিছু একটি .zip-এ: সব ডেটা JSON হিসেবে, সাথে নোট, স্নিপেট ও জার্নাল আলাদা ফাইলে — যেকোনো জায়গায় খোলা যায়।"
 
 msgid "Download everything (.zip)"
 msgstr "সব ডাউনলোড করুন (.zip)"
@@ -23657,3 +23651,12 @@ msgstr "পরীক্ষার আগে সব শিখতে দিনে �
 
 msgid "all known"
 msgstr "সব জানা"
+
+msgid "Every table of every part of the app is included by itself — features added later too."
+msgstr "অ্যাপের প্রতিটি অংশের প্রতিটি টেবিল নিজে থেকেই অন্তর্ভুক্ত — পরে যোগ হওয়া ফিচারগুলোও।"
+
+msgid "Every user and their sign-in, the personal ledgers, the work tracker, the fish farm, and every uploaded photo, receipt and file."
+msgstr "প্রত্যেক ব্যবহারকারী ও তাদের সাইন-ইন, ব্যক্তিগত খাতা, কাজের ট্র্যাকার, মাছের খামার, এবং আপলোড করা প্রতিটি ছবি, রসিদ ও ফাইল।"
+
+msgid "Everything in your tracker as one .zip — every record, with its pictures and attached files — plus notes, snippets and journal days as plain files you can open anywhere."
+msgstr "আপনার ট্র্যাকারের সবকিছু একটি .zip-এ — প্রতিটি রেকর্ড, তার ছবি ও সংযুক্ত ফাইলসহ — আর নোট, স্নিপেট ও জার্নালের দিনগুলো সাধারণ ফাইল হিসেবে, যা যেকোনো জায়গায় খোলা যায়।"

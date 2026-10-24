@@ -16,9 +16,10 @@ The file (made by my_data.build_zip)
 
 Restoring REPLACES the person's records with the backup's — it never merges,
 so restoring the same file twice can't duplicate anything. Records get new
-ids, and every link inside the backup is pointed at the new ones; a link to
-anything outside it is dropped, so a backup can never reach someone else's
-data. It runs as one transaction, and the records from before are saved on
+ids, and every link inside the backup is pointed at the new ones — links
+between records, and ids written inside text and JSON (pictures in notes, a
+mock exam's questions: see relink.py); a link to anything outside it is
+dropped, so a backup can never reach someone else's data. It runs as one transaction, and the records from before are saved on
 the server first, so the restore can be undone.
 """
 import hashlib
@@ -40,6 +41,7 @@ from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
 
 from . import backup as bk
+from .relink import relink
 
 FORMAT = "fintrack-my-backup"
 VERSION = 1
@@ -84,8 +86,8 @@ def owned_models():
         for m in apps.get_models():
             if m in lookups or not _personal_app(m) or m._meta.label_lower in SKIP_MODELS:
                 continue
-            parent = next((f for f in m._meta.concrete_fields
-                           if f.many_to_one and f.related_model in lookups and not f.null), None)
+            parent = next((f for f in m._meta.concrete_fields      # a goal's auto-save is one-to-one with it
+                           if (f.many_to_one or f.one_to_one) and f.related_model in lookups and not f.null), None)
             if parent is not None:
                 lookups[m] = f"{parent.name}__{lookups[parent.related_model]}"
                 grew = True
@@ -322,6 +324,7 @@ def restore(user, backup, keep_copy=True):
             _clear(user)
             ids = defaultdict(dict)        # label -> {old pk: new pk}
             later = []                     # (model, new pk, field, old target) links to rows not made yet
+            restored = []                  # every new record: ids inside its text and JSON are relinked at the end
             with zipfile.ZipFile(backup.path) as z:
                 for model, _lookup in owned_models():
                     label = model._meta.label_lower
@@ -368,6 +371,7 @@ def restore(user, backup, keep_copy=True):
                                                    ignorenonexistent=True)
                     made = [o.object for o in objs]
                     _insert(model, made)
+                    restored += made
                     links = defaultdict(list)
                     for (old_pk, _fields, m2m, waiting), obj in zip(batch, made):
                         new_pk = obj.pk
@@ -383,6 +387,7 @@ def restore(user, backup, keep_copy=True):
                 new = ids[tl].get(old)
                 if new:
                     model._base_manager.filter(pk=pk).update(**{attname: new})
+            relink(restored, lambda label, old: ids[label].get(old))
             counts = counts_for(user)
             expected = {k: v for k, v in backup.manifest.get("counts", {}).items() if v}
             if {k: v for k, v in counts.items() if v} != expected:

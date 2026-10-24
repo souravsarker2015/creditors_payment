@@ -946,30 +946,69 @@ def remember_note(note, force=False):
 
 
 # ── Restore from a backup (the export .zip / data.json) ───────────────────
-BACKUP_ORDER = ["project", "tag", "goal", "goalstep", "note", "sprint", "task", "checklistitem", "taskactivity", "timeentry", "snippet",
-                "habit", "habitcheck", "journalentry", "learningitem", "diagram", "deck", "card", "savedview", "tasktemplate", "preptopic", "prepsection", "question",
-                "examsubject", "examnote"]
+def backup_models():
+    """[(model, lookup)] for every work-tracker table one person owns, each after
+    what it points at — the same list as “My data” (core/personal_backup.py),
+    so a table added by a new feature is in the work backup by itself."""
+    from apps.core.personal_backup import owned_models
+
+    return [(m, lookup) for m, lookup in owned_models() if m._meta.app_label == "productivity"]
+
+
+LEFT_OUT = {"diagram": ("preview",)}      # drawn again from the diagram itself
+
+
+def backup_rows(user):
+    """(rows in Django's JSON format, [uploaded file names]) of everything in this person's tracker."""
+    import json
+
+    from django.core import serializers
+
+    from apps.core.backup import _file_fields
+
+    rows, files = [], []
+    for model, lookup in backup_models():
+        qs = model._base_manager.filter(**{lookup: user}).order_by("pk")
+        skip = LEFT_OUT.get(model._meta.model_name, ())
+        fields = [f.name for f in [*model._meta.concrete_fields, *model._meta.many_to_many] if not f.primary_key and f.name not in skip] if skip else None
+        rows += json.loads(serializers.serialize("json", qs, fields=fields))
+        names = _file_fields(model)
+        if names:
+            files += [v for values in qs.values_list(*names) for v in values if v]
+    return rows, files
 
 
 @transaction.atomic
-def restore(user, rows):
+def restore(user, rows, media=None):
     """Adds everything in a backup to this person's tracker, with new ids.
     Only Productivity records are read; anything else in the file is ignored.
-    Tags and journal days that already exist are kept as they are."""
+    Tags and journal days that already exist are kept as they are; the work
+    settings are replaced by the backup's. `media(name)` gives an uploaded
+    file's bytes (or None): a picture or attachment whose file isn't in the
+    backup is left out. Ids written inside text and JSON follow (core/relink.py)."""
     import json
+    import os
+    from types import SimpleNamespace
 
-    from django.apps import apps as django_apps
     from django.core import serializers
+    from django.core.files.base import ContentFile
+    from django.core.files.storage import default_storage
 
+    from apps.core.backup import _file_fields
+    from apps.core.relink import relink
+
+    order = {m._meta.model_name: i for i, (m, _lookup) in enumerate(backup_models())}
+    models_by_name = {m._meta.model_name: m for m, _lookup in backup_models()}
     rows = [r for r in rows if isinstance(r, dict) and str(r.get("model", "")).startswith("productivity.")
-            and r["model"].split(".", 1)[1] in BACKUP_ORDER]
-    rows.sort(key=lambda r: (BACKUP_ORDER.index(r["model"].split(".", 1)[1]), bool((r.get("fields") or {}).get("parent"))))   # a subtask after the task it's part of
+            and r["model"].split(".", 1)[1] in order]
+    rows.sort(key=lambda r: (order[r["model"].split(".", 1)[1]], bool((r.get("fields") or {}).get("parent"))))   # a subtask after the task it's part of
     ids, counts = defaultdict(dict), defaultdict(int)
     later = []      # tasks blocked by other tasks: linked once every task exists
+    restored = []
     running = TimeEntry.objects.filter(owner=user, ended_at__isnull=True).exists()
     for row in rows:
         name = row["model"].split(".", 1)[1]
-        model = django_apps.get_model("productivity", name)
+        model = models_by_name[name]
         fields = dict(row.get("fields") or {})
         if "owner" in fields:
             fields["owner"] = user.pk
@@ -989,12 +1028,21 @@ def restore(user, rows):
                     break
         if fields is None:
             continue
+        for fname in _file_fields(model):          # a picture or attachment comes with its file, under a new name
+            old = fields.get(fname)
+            blob = media(old) if old and media else None
+            if old and blob is None:
+                fields = None
+                break
+            if old:
+                holder = SimpleNamespace(owner_id=user.pk, user_id=user.pk, pk=None)       # the path rule puts it in this person's folder
+                fields[fname] = default_storage.save(model._meta.get_field(fname).generate_filename(holder, os.path.basename(old)), ContentFile(blob))
+        if fields is None:
+            continue
         if name == "tag":
             tag, _created = Tag.objects.get_or_create(owner=user, name=fields["name"], defaults={"color": fields.get("color", "slate")})
             ids["tag"][old_pk] = tag.pk
             continue
-        if name == "tasktemplate" and isinstance(fields.get("data"), dict) and fields["data"].get("project"):
-            fields["data"] = {**fields["data"], "project": ids["project"].get(fields["data"]["project"])}   # its project, by its new id
         if name == "journalentry" and JournalEntry.objects.filter(owner=user, date=fields.get("date")).exists():
             continue
         if name == "habitcheck" and HabitCheck.objects.filter(habit_id=fields.get("habit"), date=fields.get("date")).exists():
@@ -1003,19 +1051,26 @@ def restore(user, rows):
             if running:
                 fields["ended_at"] = fields.get("started_at")
             running = True
-        obj = next(serializers.deserialize("json", json.dumps([{"model": row["model"], "fields": fields}])))
-        obj.object.pk = None
-        obj.object._no_activity = True     # its history comes from the backup, not from being added now
-        obj.object.save()
-        ids[name][old_pk] = obj.object.pk
+        obj = next(serializers.deserialize("json", json.dumps([{"model": row["model"], "fields": fields}]))).object
+        if name == "worksettings":                 # one per person: the backup's settings replace the ones here
+            here = WorkSettings.objects.filter(owner=user).first()
+            obj.pk = here.pk if here else None
+            obj.feed_token = here.feed_token if here else ""      # the calendar link's secret stays this account's own
+        else:
+            obj.pk = None
+        obj._no_activity = True     # its history comes from the backup, not from being added now
+        obj.save()
+        ids[name][old_pk] = obj.pk
+        restored.append(obj)
         for fname, values in m2m.items():
-            getattr(obj.object, fname).set([v for v in values if v])
+            getattr(obj, fname).set([v for v in values if v])
         counts[name] += 1
     for name, old_pk, fname, values in later:
         new_pk = ids[name].get(old_pk)
         if new_pk:
-            model = django_apps.get_model("productivity", name)
+            model = models_by_name[name]
             getattr(model.objects.get(pk=new_pk), fname).set([ids[name][v] for v in values if ids[name].get(v)])
+    relink(restored, lambda label, old: ids[label.split(".", 1)[1]].get(old) if label.startswith("productivity.") else None)
     return dict(counts)
 
 

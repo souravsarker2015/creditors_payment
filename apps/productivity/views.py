@@ -1405,13 +1405,22 @@ def _restore(request):
         if zipfile.is_zipfile(upload):
             with zipfile.ZipFile(upload) as z:
                 names = set(z.namelist())     # this page's download, or "My data & backup"'s
-                rows = json.loads(z.read("data.json" if "data.json" in names else "backup/data.json").decode("utf-8"))
+                base = "" if "data.json" in names else "backup/"
+                rows = json.loads(z.read(base + "data.json").decode("utf-8"))
+                if not isinstance(rows, list):
+                    raise ValueError
+
+                def media(name):              # an uploaded file kept in the backup
+                    member = base + "media/" + name
+                    return z.read(member) if member in names and ".." not in name.split("/") else None
+
+                counts = services.restore(request.user, rows, media=media)
         else:
             upload.seek(0)
             rows = json.loads(upload.read().decode("utf-8"))
-        if not isinstance(rows, list):
-            raise ValueError
-        counts = services.restore(request.user, rows)
+            if not isinstance(rows, list):
+                raise ValueError
+            counts = services.restore(request.user, rows)
     except (KeyError, ValueError, UnicodeDecodeError, zipfile.BadZipFile):
         messages.error(request, _("That file isn't a Productivity backup."))
         return back
@@ -1682,44 +1691,19 @@ def week_view(request):
 # ── Your data ─────────────────────────────────────────────────────────────
 @work_required
 def export_view(request):
-    """Everything in the tracker as one .zip: data.json, plus notes,
-    snippets, diagrams and flashcards as plain files you can open anywhere."""
+    """Everything in the tracker as one .zip: data.json and media/ (what
+    "Add from a backup" reads), plus notes, snippets, diagrams and flashcards
+    as plain files you can open anywhere."""
     import io
     import json
     import os
     import re
     import zipfile
 
-    from django.core import serializers
+    from django.core.files.storage import default_storage
 
     user = request.user
-    models = [Project, Tag, Goal, Task, TimeEntry, Note, Snippet, Habit, JournalEntry, LearningItem]
-    from .models import ChecklistItem, GoalStep, HabitCheck
-    rows = []
-    for model in models:
-        rows += json.loads(serializers.serialize("json", model.objects.filter(owner=user)))
-    rows += json.loads(serializers.serialize("json", ChecklistItem.objects.filter(task__owner=user)))
-    rows += json.loads(serializers.serialize("json", GoalStep.objects.filter(goal__owner=user)))
-    rows += json.loads(serializers.serialize("json", HabitCheck.objects.filter(habit__owner=user)))
-    diagram_fields = [f.name for f in Diagram._meta.fields if f.name not in ("id", "preview")]
-    rows += json.loads(serializers.serialize("json", Diagram.objects.filter(owner=user), fields=diagram_fields))
-    rows += json.loads(serializers.serialize("json", Deck.objects.filter(owner=user)))
-    rows += json.loads(serializers.serialize("json", Card.objects.filter(owner=user)))
-    from .models import TaskActivity
-
-    rows += json.loads(serializers.serialize("json", TaskActivity.objects.filter(task__owner=user)))
-    rows += json.loads(serializers.serialize("json", SavedView.objects.filter(owner=user)))
-    rows += json.loads(serializers.serialize("json", TaskTemplate.objects.filter(owner=user)))
-    rows += json.loads(serializers.serialize("json", Sprint.objects.filter(owner=user)))
-    from .models import PrepSection, PrepTopic, Question
-
-    rows += json.loads(serializers.serialize("json", PrepTopic.objects.filter(owner=user)))
-    rows += json.loads(serializers.serialize("json", PrepSection.objects.filter(owner=user)))
-    rows += json.loads(serializers.serialize("json", Question.objects.filter(owner=user)))
-    from .models import ExamNote, ExamSubject
-
-    rows += json.loads(serializers.serialize("json", ExamSubject.objects.filter(owner=user)))
-    rows += json.loads(serializers.serialize("json", ExamNote.objects.filter(owner=user)))
+    rows, media = services.backup_rows(user)       # every table of the tracker (a new feature's too), and its uploaded files
     ext = {"python": "py", "javascript": "js", "typescript": "ts", "bash": "sh", "plaintext": "txt", "markdown": "md", "xml": "html",
            "csharp": "cs", "cpp": "cpp", "dockerfile": "Dockerfile", "kotlin": "kt", "ruby": "rb", "rust": "rs", "yaml": "yml"}
 
@@ -1729,6 +1713,12 @@ def export_view(request):
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
         z.writestr("data.json", json.dumps(rows, ensure_ascii=False, indent=1))
+        for name in sorted(set(media)):              # read back by "Add from a backup"
+            try:
+                with default_storage.open(name, "rb") as fh:
+                    z.writestr("media/" + name, fh.read())
+            except (FileNotFoundError, OSError):
+                pass
         for n in Note.objects.filter(owner=user):
             z.writestr(f"notes/{slug(n.display_title, n.pk)}.md", (f"# {n.title}\n\n" if n.title else "") + n.body)
         for sn in Snippet.objects.filter(owner=user):

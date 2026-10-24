@@ -282,6 +282,18 @@ class TaskActivity(models.Model):
 
         return describe(self)
 
+    ID_FIELDS = {"project_id": "productivity.project", "goal_id": "productivity.goal", "sprint_id": "productivity.sprint"}
+
+    def backup_ids(self, new_id):
+        """After a restore with new ids (core/relink.py): a project/goal/sprint change names the new ones."""
+        label = self.ID_FIELDS.get((self.data or {}).get("field"))
+        if not label:
+            return []
+        for side in ("old", "new"):
+            if isinstance(self.data.get(side), int):
+                self.data[side] = new_id(label, self.data[side]) or self.data[side]
+        return ["data"]
+
 
 class TaskTemplate(models.Model):
     """A task kept to make again: its notes, checklist and subtasks — "Release
@@ -298,6 +310,13 @@ class TaskTemplate(models.Model):
 
     def __str__(self):
         return self.name
+
+    def backup_ids(self, new_id):
+        """After a restore with new ids (core/relink.py): its project by the new id."""
+        if not isinstance(self.data, dict) or not self.data.get("project"):
+            return []
+        self.data["project"] = new_id("productivity.project", self.data["project"])
+        return ["data"]
 
 
 class SavedView(models.Model):
@@ -1151,6 +1170,24 @@ class PrepExam(models.Model):
     @property
     def ends_at(self):
         return self.started_at + timedelta(minutes=self.minutes)
+
+    def backup_ids(self, new_id):
+        """After a restore with new ids (core/relink.py): its questions, answers and marks by the new ids."""
+        from apps.core.relink import new_ids
+
+        label = "productivity.question"
+
+        def keyed(d):
+            out = {}
+            for k, v in (d or {}).items():
+                new = new_id(label, int(k)) if str(k).isdigit() else None
+                if new is not None:
+                    out[str(new)] = v
+            return out
+
+        self.question_ids = new_ids(self.question_ids, label, new_id)
+        self.answers, self.marks = keyed(self.answers), keyed(self.marks)
+        return ["question_ids", "answers", "marks"]
 
 
 class PrepAttempt(models.Model):

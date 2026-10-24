@@ -89,7 +89,7 @@
   </form>
   <form method="post" id="work-test-brief" hidden>{% csrf_token %}<input type="hidden" name="action" value="test_brief"></form>
 
-  <section class="card" id="data"><header class="card-header"><div><h2 class="card-title">{% translate "Your data" %}</h2><p class="card-subtitle">{% translate "Everything in your tracker as one .zip: all data as JSON, plus notes, snippets and journal days as plain files you can open anywhere." %}</p></div></header>
+  <section class="card" id="data"><header class="card-header"><div><h2 class="card-title">{% translate "Your data" %}</h2><p class="card-subtitle">{% translate "Everything in your tracker as one .zip — every record, with its pictures and attached files — plus notes, snippets and journal days as plain files you can open anywhere." %}</p></div></header>
     <div class="card-body !pt-0 flex flex-wrap gap-2">
       <a href="{% url 'work:export' %}" class="btn btn-secondary">{% icon "download" %}{% translate "Download everything (.zip)" %}</a>
       <a href="{% url 'work:reports' %}?range=year&export=csv" class="btn btn-ghost">{% icon "download" %}{% translate "This year's time (CSV)" %}</a>
