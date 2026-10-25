@@ -33,6 +33,7 @@ def _texts():
         "copied": _("Copied — paste it into ChatGPT or Claude."), "moved": _("Moved to %(name)s"), "noChapter": _("No chapter"),
         "renameAsk": _("New name for this chapter (empty: no chapter):"), "saved": _("Saved"),
         "found": _("%(n)s new questions found"), "picked": _("%(n)s picked"),
+        "showMore": _("Show all"), "showLess": _("Show less"), "flipThese": _("Flip through these"),
         "bulkDeleteAsk": _("Delete the picked questions? You can bring them back from Recently deleted."),
         "deletedMany": _("%(n)s questions deleted"), "undo": _("Undo"), "chapterAsk": _("Chapter for the picked questions (empty: no chapter):"),
         "leave": _("You have changes that aren't saved yet. Leave anyway?"), "draftBack": _("Your unsaved question is back."),
@@ -106,6 +107,19 @@ def exam_subject_view(request, pk):
                  "review": reverse("work:exam_review", args=[s.pk]), "subject": s.pk, "daysLeft": s.days_left,
                  "subjects": [{"id": x.pk, "name": x.name} for x in ExamSubject.objects.filter(owner=request.user)]},
         "exam_text": _texts(),
+    })
+
+
+@work_required
+def exam_overview_view(request, pk):
+    """Every question and answer of a subject on one page, chapter by chapter —
+    to read through quickly before the exam or interview (on a phone too)."""
+    s = get_object_or_404(ExamSubject, pk=pk, owner=request.user)
+    notes = _notes(s)
+    return render_work(request, "work/exam/overview.html", {
+        "s": s, "n": len(notes), "exam_text": _texts(),
+        "data": {"notes": notes, "noteBase": reverse("work:api_exam_note", args=[0])[:-2], "subject": s.pk,
+                 "review": reverse("work:exam_review", args=[s.pk]), "back": reverse("work:exam_subject", args=[s.pk])},
     })
 
 

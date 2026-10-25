@@ -426,6 +426,9 @@ def exam_view(request, pk):
             messages.success(request, _("Exam deleted."))
             return redirect("work:prep")
     questions = prep.exam_questions(exam)
+    if not questions and not exam.finished_at:      # every question was deleted since: nothing to sit
+        messages.warning(request, _("“%(title)s” has no questions left — they were deleted — so it can't be taken. You can delete it from the list.") % {"title": exam.title})
+        return redirect("work:prep")
     if not exam.finished_at:
         return render_work(request, "work/prep/exam.html", {
             "exam": exam, "prep_text": _texts(),

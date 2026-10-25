@@ -44,6 +44,7 @@ class ReceiptInput(forms.ClearableFileInput):
 
     def get_context(self, name, value, attrs):
         ctx = super().get_context(name, value, attrs)
+        ctx["widget"]["attrs"].pop("class", None)      # the input stays hidden (sr-only, in the template): its label is the button
         ctx["widget"]["view_url"] = self.view_url
         ctx["widget"]["view_label"] = self.view_label
         return ctx

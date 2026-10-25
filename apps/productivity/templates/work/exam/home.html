@@ -11,10 +11,12 @@
   </div>
 </header>
 
-<form method="post" class="card wex-new" novalidate>{% csrf_token %}
+<div x-data="{ open: {% if subjects and not form.errors %}false{% else %}true{% endif %} }">
+<button type="button" class="btn btn-secondary wex-new-open" x-show="!open" @click="open = true; $nextTick(() => $refs.newName.focus())">{% icon "plus" %}{% translate "New subject" %}</button>
+<form method="post" class="card wex-new" novalidate x-show="open" {% if subjects and not form.errors %}x-cloak{% endif %}>{% csrf_token %}
   <input type="hidden" name="color" value="{{ form.color.value|default:'purple' }}">
   <label class="field wex-new-name"><span class="label">{% translate "New subject" %}</span>
-    <input type="text" name="name" value="{{ form.name.value|default:'' }}" maxlength="120" class="form-input" required
+    <input type="text" name="name" x-ref="newName" value="{{ form.name.value|default:'' }}" maxlength="120" class="form-input" required
            placeholder="{% translate 'e.g. Physics, AWS exam, Chapter 4' %}"{% if not subjects %} autofocus{% endif %}>
     {% for e in form.name.errors %}<span class="field-error">{{ e }}</span>{% endfor %}</label>
   <label class="field"><span class="label">{% translate "Exam date" %} <span class="opt">{% translate "(optional)" %}</span></span>
@@ -22,6 +24,7 @@
     {% for e in form.exam_date.errors %}<span class="field-error">{{ e }}</span>{% endfor %}</label>
   <button type="submit" class="btn btn-primary">{% icon "plus" %}{% translate "Add" %}</button>
 </form>
+</div>
 
 {% if total %}
 <form method="get" class="wex-search">
@@ -53,7 +56,9 @@
         {% if d > 0 %}{% blocktranslate count counter=d %}Exam in {{ counter }} day{% plural %}Exam in {{ counter }} days{% endblocktranslate %}{% elif d == 0 %}{% translate "Exam today — good luck!" %}{% else %}{% translate "Exam over" %}{% endif %}</span>{% endif %}{% endwith %}
       <span class="wex-bar" role="img" aria-label="{% blocktranslate with k=s.known n=s.n %}{{ k }} of {{ n }} known{% endblocktranslate %}"><i style="width: {% if s.n %}{% widthratio s.known s.n 100 %}{% else %}0{% endif %}%"></i></span>
     </a>
-    {% if s.n %}<a href="{% url 'work:exam_review' s.pk %}" class="btn btn-secondary btn-sm wex-subject-go">{% icon "play" %}{% translate "Review" %}</a>{% endif %}
+    {% if s.n %}<div class="wex-subject-go">
+      <a href="{% url 'work:exam_overview' s.pk %}" class="btn btn-secondary btn-sm">{% icon "book" %}{% translate "Overview" %}</a>
+      <a href="{% url 'work:exam_review' s.pk %}" class="btn btn-primary btn-sm">{% icon "play" %}{% translate "Review" %}</a></div>{% endif %}
   </li>
   {% endfor %}
 </ul>

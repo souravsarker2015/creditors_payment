@@ -1,0 +1,97 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% translate "Overview" %} | {{ s.name }}{% endblock %}
+
+{% block work %}
+{{ data|json_script:"exam-data" }}
+{{ exam_text|json_script:"exam-text" }}
+<div class="wexo" x-data="examOverview" @keydown.document="key($event)" :style="'--wexo-size:' + size">
+  <header class="wp-head">
+    <div class="min-w-0">
+      <a href="{% url 'work:exam_subject' s.pk %}" class="back-link">{% icon "chevron-left" %}{{ s.name }}</a>
+      <h1 class="wp-title"><span class="wt-dot" data-color="{{ s.color }}"></span> {% translate "Overview" %}</h1>
+      <p class="wp-sub"><span x-text="known() + ' / ' + notes.length"></span> {% translate "known" %}
+        {% with d=s.days_left %}{% if d is not None %} · <span class="wex-days{% if d >= 0 and d <= 7 %} is-soon{% endif %}">{% if d > 0 %}{% blocktranslate count counter=d %}Exam in {{ counter }} day{% plural %}Exam in {{ counter }} days{% endblocktranslate %}{% elif d == 0 %}{% translate "Exam today — good luck!" %}{% else %}{% translate "Exam over" %}{% endif %}</span>{% endif %}{% endwith %}</p>
+      <span class="wex-bar wexo-progress" role="progressbar" :aria-valuenow="pct()" aria-valuemin="0" aria-valuemax="100"><i :style="'width:' + pct() + '%'"></i></span>
+    </div>
+  </header>
+
+  {% if n %}
+  {# ── what to show: sticks to the top while scrolling ── #}
+  <div class="wexo-bar">
+    <div class="wexo-filters" role="radiogroup" aria-label="{% translate 'Show' %}">
+      <button type="button" class="wexo-chip" :class="show === 'all' && 'is-on'" @click="setShow('all')">{% translate "All" %} <b x-text="count('all')"></b></button>
+      <button type="button" class="wexo-chip" :class="show === 'unknown' && 'is-on'" @click="setShow('unknown')">{% translate "To learn" %} <b x-text="count('unknown')"></b></button>
+      <button type="button" class="wexo-chip" :class="show === 'missed' && 'is-on'" @click="setShow('missed')" x-show="count('missed')">{% translate "Missed" %} <b x-text="count('missed')"></b></button>
+      <button type="button" class="wexo-chip" :class="show === 'starred' && 'is-on'" @click="setShow('starred')" x-show="count('starred')">★ <b x-text="count('starred')"></b></button>
+    </div>
+    <div class="wexo-tools">
+      <button type="button" class="wexo-tool" :class="answers && 'is-on'" @click="answers = !answers" :aria-pressed="answers.toString()"
+              :data-tip="answers ? '{{ _("Hide the answers — test yourself")|escapejs }}' : '{{ _("Show every answer")|escapejs }}'">
+        {% icon "book" %}<span x-text="answers ? '{{ _("Hide answers")|escapejs }}' : '{{ _("Show answers")|escapejs }}'"></span></button>
+      <button type="button" class="wexo-tool" @click="zoom(-1)" :disabled="size <= 0.85" aria-label="{% translate 'Smaller text' %}" data-tip="{% translate 'Smaller text' %}"><small>A</small></button>
+      <button type="button" class="wexo-tool" @click="zoom(1)" :disabled="size >= 1.4" aria-label="{% translate 'Bigger text' %}" data-tip="{% translate 'Bigger text' %}"><b>A</b></button>
+      <button type="button" class="wexo-tool" :class="searching && 'is-on'" @click="toggleSearch()" aria-label="{% translate 'Find' %}" data-tip="{% translate 'Find ( / )' %}">{% icon "search" %}</button>
+      <button type="button" class="wexo-tool" @click="printIt()" aria-label="{% translate 'Print' %}" data-tip="{% translate 'Print' %}">{% icon "printer" %}</button>
+    </div>
+    <div class="input-icon wexo-search" x-show="searching" x-cloak>{% icon "search" %}
+      <input type="search" x-ref="find" x-model="find" data-work-search class="form-input input-compact" placeholder="{% translate 'Find a word in the questions and answers' %}" aria-label="{% translate 'Find' %}" @keydown.escape="find = ''; searching = false"></div>
+  </div>
+  {# ── stays at the top while reading: the chapters, and answers on or off ── #}
+  <div class="wexo-nav">
+    <nav class="wexo-chapters" aria-label="{% translate 'Chapters' %}">
+      <template x-for="(g, gi) in groups()" :key="g.chapter">
+        <button type="button" class="wexo-chap" x-show="shown(g) && groups().length > 1" @click="jump(gi)" :class="current === gi && 'is-on'">
+          <span x-text="g.chapter || t('noChapter')"></span> <small x-text="g.notes.filter(q => visible(q)).length"></small></button>
+      </template>
+      <span class="wexo-nav-count" x-show="groups().length < 2" x-text="notes.filter(q => visible(q)).length + ' / ' + notes.length"></span>
+    </nav>
+    <button type="button" class="wexo-eye" :class="answers && 'is-on'" @click="answers = !answers" :aria-pressed="answers.toString()"
+            :aria-label="answers ? '{{ _("Hide answers")|escapejs }}' : '{{ _("Show answers")|escapejs }}'" :data-tip="answers ? '{{ _("Hide answers")|escapejs }}' : '{{ _("Show answers")|escapejs }}'">{% icon "book" %}</button>
+  </div>
+
+  {# ── the questions, chapter by chapter ── #}
+  <template x-for="(g, gi) in groups()" :key="g.chapter">
+    <section class="wexo-group" :id="'chapter-' + gi" x-show="shown(g)" :data-index="gi">
+      <h2 class="wexo-group-name" x-show="groups().length > 1"><span x-text="g.chapter || t('noChapter')"></span> <small x-text="knownIn(g) + ' / ' + g.notes.length"></small></h2>
+      <ol class="wexo-list">
+        <template x-for="q in g.notes" :key="q.id">
+          <li class="wexo-q" x-show="visible(q)" :class="{ 'is-known': q.known, 'is-open': answers || open[q.id] }">
+            <div class="wexo-q-head">
+              <span class="wexo-no num" x-text="q.number"></span>
+              <div class="wexo-q-text wn-md" role="button" tabindex="0" @click="if (!$event.target.closest('a')) reveal(q)" @keydown.enter.prevent="reveal(q)"
+                   :aria-expanded="(answers || !!open[q.id]).toString()" x-effect="paint($el, q.question)"></div>
+              <span class="wexo-flags">
+                <span class="wex-missed" x-show="q.misses" x-text="'✗ ' + q.misses" title="{% translate 'Times you didn’t know it in a review' %}"></span>
+                <button type="button" class="wexo-flag wex-star" :class="q.starred && 'is-on'" @click="flag(q, 'star')" :aria-pressed="q.starred.toString()" aria-label="{% translate 'Important' %}">{% icon "star" %}</button>
+                <button type="button" class="wexo-flag wex-known" :class="q.known && 'is-on'" @click="flag(q, 'known')" :aria-pressed="q.known.toString()" aria-label="{% translate 'I know it' %}">{% icon "check" %}</button>
+              </span>
+            </div>
+            <div class="wexo-a-wrap" x-show="answers || open[q.id]">
+              <div class="wexo-a wn-md" :class="{ 'is-clamped': !full[q.id], 'is-long': long[q.id] }" x-effect="(answers || open[q.id]) && paint($el, q.answer || '*' + t('noAnswer') + '*', q)"></div>
+              <button type="button" class="wexo-more" x-show="long[q.id]" @click="full[q.id] = !full[q.id]" x-text="full[q.id] ? t('showLess') : t('showMore')"></button>
+            </div>
+            <p class="wexo-tap" x-show="!answers && !open[q.id]">{% translate "Tap the question to see its answer" %}</p>
+          </li>
+        </template>
+      </ol>
+    </section>
+  </template>
+  <p class="help wex-none" x-show="!notes.some(q => visible(q))" x-cloak>{% translate "Nothing to show here." %}</p>
+
+  {# ── flip through the same questions ── #}
+  <div class="wexo-dock">
+    <a :href="reviewUrl()" class="btn btn-primary wexo-go" x-show="notes.some(q => visible(q))">{% icon "play" %}<span x-text="t('flipThese') + ' (' + notes.filter(q => visible(q)).length + ')'"></span></a>
+    <button type="button" class="icon-btn wexo-top" x-show="scrolled" x-cloak @click="window.scrollTo({ top: 0, behavior: 'smooth' })" aria-label="{% translate 'Back to the top' %}">{% icon "arrow-up" %}</button>
+  </div>
+  {% else %}
+  <div class="empty"><div class="empty-icon">{% icon "exam" %}</div>
+    <h3 class="empty-title">{% translate "No questions yet" %}</h3>
+    <p class="empty-text"><a href="{% url 'work:exam_subject' s.pk %}">{% translate "Add some questions first." %}</a></p></div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block work_libs %}{% include "work/exam/_libs.html" %}{% endblock %}
+{% block work_js %}<script src="{% asset 'js/exam.js' %}"></script>{% endblock %}

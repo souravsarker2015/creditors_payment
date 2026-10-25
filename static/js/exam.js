@@ -114,6 +114,19 @@
       var r = new FileReader(); r.onload = function () { resolve(String(r.result || "")); }; r.onerror = reject; r.readAsText(file);
     });
   }
+  /* Where a bar of ours can stick: under the app's top bar and the work timer card, which stick too. */
+  function stickyTop() {
+    var top = 0;
+    d.querySelectorAll(".topbar, .wt-bar").forEach(function (el) {
+      var st = getComputedStyle(el);
+      if (st.position === "sticky" && el.offsetParent) top = Math.max(top, (parseFloat(st.top) || 0) + el.offsetHeight);
+    });
+    d.documentElement.style.setProperty("--work-sticky-top", (top + 8) + "px");
+    return top + 8;
+  }
+  window.addEventListener("resize", stickyTop);
+  d.addEventListener("DOMContentLoaded", stickyTop);
+
   function copy(text) {
     if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
     var ta = d.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
@@ -129,7 +142,7 @@
         notes: D.notes || [], subjects: D.subjects || [], draft: { question: "", answer: "", chapter: "" },
         many: false, paste: "", pasteChapter: "", preview: null, checking: false, previewTimer: null,
         find: "", show: "all", openAll: false, open: {}, folded: {}, editing: null, edit: {}, editFrom: null,
-        writeView: { add: false, edit: false }, selecting: false, picked: {}, moveTo: "",
+        writeView: { add: false, edit: false }, selecting: false, picked: {}, moveTo: "", adding: !(D.notes || []).length,
         t: t,
         init: function () {
           var self = this, hash = /^#q(\d+)$/.exec(location.hash);     // from a search result: open that one
@@ -141,6 +154,7 @@
           if (saved && (saved.question || saved.answer || saved.paste)) {
             this.draft = { question: saved.question || "", answer: saved.answer || "", chapter: saved.chapter || "" };
             this.paste = saved.paste || ""; this.many = !!saved.paste && !saved.question;
+            this.adding = true;
             toast(t("draftBack"), "good");
           }
           this.$watch("draft", function () { self.keepDraft(); }, { deep: true });
@@ -158,11 +172,19 @@
         },
         key: function (e) {             // a: add a question · r: review · (/ finds: the search box has data-work-search)
           if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || typing(e)) return;
-          if (e.key === "a") { e.preventDefault(); this.many = false; var self = this; this.$nextTick(function () { self.$refs.question.focus(); self.$refs.question.scrollIntoView({ block: "center" }); }); }
+          if (e.key === "a") { e.preventDefault(); this.openAdd(false); }
           else if (e.key === "r" && this.notes.length) { e.preventDefault(); location.href = D.review; }
           else if (e.key === "Escape" && this.selecting) this.endSelect();
         },
         paint: function (el, text) { if (el._md !== text) { el._md = text; paint(el, text); } },
+        openAdd: function (many) {
+          var self = this;
+          this.adding = true; this.many = many;
+          this.$nextTick(function () {
+            var box = many ? self.$root.querySelector(".wex-paste") : self.$refs.question;
+            if (box) { box.focus(); box.scrollIntoView({ block: "center", behavior: "smooth" }); }
+          });
+        },
         count: function () { var n = this.notes.length; return t(n === 1 ? "countOne" : "count").replace("%(counter)s", n); },
         known: function () { return this.notes.filter(function (q) { return q.known; }).length; },
         pct: function () { return this.notes.length ? Math.round(100 * this.known() / this.notes.length) : 0; },
@@ -398,6 +420,95 @@
           d.body.classList.toggle("wex-print-quiz", !!questionsOnly);
           this.openAll = !questionsOnly; this.folded = {};
           this.$nextTick(function () { setTimeout(function () { window.print(); d.body.classList.remove("wex-print-quiz"); }, 300); });
+        },
+      };
+    });
+
+    /* ── one page to read everything through before the exam ── */
+    Alpine.data("examOverview", function () {
+      var D = data("exam-data"), KEEP = "exam-overview-" + D.subject, kept = recall(KEEP, {}) || {};
+      return {
+        notes: D.notes || [], show: kept.show || "all", answers: kept.answers !== false, size: kept.size || 1,
+        find: "", searching: false, open: {}, full: {}, long: {}, current: 0, scrolled: false,
+        t: t,
+        init: function () {
+          var self = this, timer = null;
+          ["show", "answers", "size"].forEach(function (k) { self.$watch(k, function () { self.keep(); }); });
+          window.addEventListener("scroll", function () {
+            self.scrolled = window.scrollY > 600;
+            clearTimeout(timer);
+            timer = setTimeout(function () { self.keep(); self.whereAmI(); }, 150);
+          }, { passive: true });
+          if (kept.y) this.$nextTick(function () { setTimeout(function () { window.scrollTo(0, kept.y); }, 120); });   // back where you were reading
+        },
+        keep: function () { store(KEEP, { show: this.show, answers: this.answers, size: this.size, y: Math.round(window.scrollY) }); },
+        paint: function (el, text, q) {
+          if (el._md !== text) { el._md = text; paint(el, text); }
+          if (q && !this.full[q.id]) {
+            var self = this;
+            requestAnimationFrame(function () { if (el.clientHeight) self.long[q.id] = el.scrollHeight > el.clientHeight + 4; });      // trimmed: offer "Show all"
+          }
+        },
+        known: function () { return this.notes.filter(function (q) { return q.known; }).length; },
+        pct: function () { return this.notes.length ? Math.round(100 * this.known() / this.notes.length) : 0; },
+        groups: function () {
+          var by = {}, keys = [];
+          this.notes.forEach(function (q) { if (!by[q.chapter]) { by[q.chapter] = []; keys.push(q.chapter); } by[q.chapter].push(q); });
+          return keys.map(function (k) { return { chapter: k, notes: by[k] }; });
+        },
+        matches: function (q, show) {
+          if (show === "unknown" && q.known) return false;
+          if (show === "starred" && !q.starred) return false;
+          if (show === "missed" && !q.misses) return false;
+          return true;
+        },
+        visible: function (q) {
+          if (!this.matches(q, this.show)) return false;
+          var f = this.find.trim().toLowerCase();
+          return !f || (q.question + "\n" + q.answer).toLowerCase().indexOf(f) >= 0;
+        },
+        count: function (show) { var self = this; return this.notes.filter(function (q) { return self.matches(q, show); }).length; },
+        shown: function (g) { var self = this; return g.notes.some(function (q) { return self.visible(q); }); },
+        knownIn: function (g) { return g.notes.filter(function (q) { return q.known; }).length; },
+        setShow: function (show) { this.show = show; window.scrollTo({ top: 0 }); },
+        reveal: function (q) { if (!this.answers) this.open[q.id] = !this.open[q.id]; },
+        zoom: function (step) { this.size = Math.round(Math.min(1.4, Math.max(0.85, this.size + step * 0.1)) * 100) / 100; },
+        toggleSearch: function () {
+          var self = this;
+          this.searching = !this.searching;
+          if (!this.searching) { this.find = ""; return; }
+          this.$nextTick(function () { self.$refs.find && self.$refs.find.focus(); });
+        },
+        barHeight: function () { var bar = this.$root.querySelector(".wexo-nav"); return bar ? bar.getBoundingClientRect().height : 0; },
+        jump: function (gi) {
+          var el = d.getElementById("chapter-" + gi);
+          if (!el) return;
+          window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - stickyTop() - this.barHeight() - 8, behavior: "smooth" });
+        },
+        whereAmI: function () {           // the chapter being read, lit up in the chapter row
+          var line = stickyTop() + this.barHeight() + 24, at = 0;
+          this.$root.querySelectorAll(".wexo-group").forEach(function (el) { if (el.offsetParent && el.getBoundingClientRect().top < line) at = +el.dataset.index; });
+          this.current = at;
+          var chip = this.$root.querySelectorAll(".wexo-chap")[at];
+          if (chip && chip.scrollIntoView) chip.scrollIntoView({ inline: "nearest", block: "nearest" });
+        },
+        flag: function (q, what) {
+          var key = what === "star" ? "starred" : "known";
+          q[key] = !q[key];
+          api(D.noteBase + q.id + "/", { action: what, value: q[key] ? "1" : "0" }).then(function (r) { if (!r.ok && !r.queued) q[key] = !q[key]; });
+        },
+        reviewUrl: function () { return D.review + "?which=" + (this.show === "unknown" ? "unknown" : this.show); },
+        printIt: function () {
+          var self = this;
+          this.answers = true;
+          this.notes.forEach(function (q) { self.full[q.id] = true; });
+          this.$nextTick(function () { setTimeout(function () { window.print(); }, 300); });
+        },
+        key: function (e) {
+          if (e.ctrlKey || e.metaKey || e.altKey || typing(e)) return;
+          if (e.key === "/") { e.preventDefault(); if (!this.searching) this.toggleSearch(); else this.$refs.find.focus(); }
+          else if (e.defaultPrevented) return;
+          else if (e.key === "a") { e.preventDefault(); this.answers = !this.answers; }
         },
       };
     });

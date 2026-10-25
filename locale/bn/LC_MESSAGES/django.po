@@ -23660,3 +23660,55 @@ msgstr "প্রত্যেক ব্যবহারকারী ও তাদ
 
 msgid "Everything in your tracker as one .zip — every record, with its pictures and attached files — plus notes, snippets and journal days as plain files you can open anywhere."
 msgstr "আপনার ট্র্যাকারের সবকিছু একটি .zip-এ — প্রতিটি রেকর্ড, তার ছবি ও সংযুক্ত ফাইলসহ — আর নোট, স্নিপেট ও জার্নালের দিনগুলো সাধারণ ফাইল হিসেবে, যা যেকোনো জায়গায় খোলা যায়।"
+
+msgid "Add a question"
+msgstr "একটি প্রশ্ন যোগ করুন"
+
+msgid "Add some questions first."
+msgstr "আগে কিছু প্রশ্ন যোগ করুন।"
+
+msgid "Back to the top"
+msgstr "ওপরে ফিরে যান"
+
+msgid "Bigger text"
+msgstr "বড় লেখা"
+
+msgid "Chapters"
+msgstr "অধ্যায়গুলো"
+
+msgid "Every question and answer on one page, to read through before the exam"
+msgstr "সব প্রশ্ন ও উত্তর এক পাতায়, পরীক্ষার আগে একবার পড়ে নেওয়ার জন্য"
+
+msgid "Find ( / )"
+msgstr "খুঁজুন ( / )"
+
+msgid "Find a word in the questions and answers"
+msgstr "প্রশ্ন ও উত্তরে কোনো শব্দ খুঁজুন"
+
+msgid "Flip through these"
+msgstr "এগুলো একটি একটি করে দেখুন"
+
+msgid "Hide answers"
+msgstr "উত্তর লুকান"
+
+msgid "Hide the answers — test yourself"
+msgstr "উত্তর লুকান — নিজেকে যাচাই করুন"
+
+msgid "Show answers"
+msgstr "উত্তর দেখান"
+
+msgid "Show every answer"
+msgstr "সব উত্তর দেখান"
+
+msgid "Show less"
+msgstr "কম দেখান"
+
+msgid "Smaller text"
+msgstr "ছোট লেখা"
+
+msgid "Tap the question to see its answer"
+msgstr "উত্তর দেখতে প্রশ্নে চাপুন"
+
+#, python-format
+msgid "“%(title)s” has no questions left — they were deleted — so it can't be taken. You can delete it from the list."
+msgstr "“%(title)s”-এ আর কোনো প্রশ্ন নেই — সেগুলো মুছে ফেলা হয়েছে — তাই এটি দেওয়া যাবে না। তালিকা থেকে এটি মুছে ফেলতে পারেন।"

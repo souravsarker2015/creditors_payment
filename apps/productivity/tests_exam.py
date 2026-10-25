@@ -160,6 +160,25 @@ class PageTests(Base):
         self.assertNotContains(self.client.get(reverse("work:exam"), {"q": "?"}), "Secret")
 
 
+class OverviewTests(Base):
+    def test_every_question_in_order_for_reading(self):
+        self.note("Late?", chapter="B")
+        self.note("Loose?")
+        r = self.client.get(reverse("work:exam_overview", args=[self.s.pk]))
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual([n["question"] for n in r.context["data"]["notes"]], ["Late?", "Loose?"])
+        self.assertEqual(r.context["data"]["review"], reverse("work:exam_review", args=[self.s.pk]))
+        self.assertContains(self.client.get(reverse("work:exam_subject", args=[self.s.pk])), reverse("work:exam_overview", args=[self.s.pk]))
+        self.assertContains(self.client.get(reverse("work:exam")), reverse("work:exam_overview", args=[self.s.pk]))
+
+    def test_empty_subject_says_so(self):
+        self.assertContains(self.client.get(reverse("work:exam_overview", args=[self.s.pk])), "Add some questions first.")
+
+    def test_someone_elses_is_hidden(self):
+        theirs = ExamSubject.objects.create(owner=User.objects.create_superuser("o2", "o2@example.com", PW), name="X")
+        self.assertEqual(self.client.get(reverse("work:exam_overview", args=[theirs.pk])).status_code, 404)
+
+
 class ApiTests(Base):
     def test_add_one(self):
         self.note()

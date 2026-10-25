@@ -20,6 +20,7 @@
     </div>
   </div>
   <div class="wp-actions">
+    <a href="{% url 'work:exam_overview' s.pk %}" class="btn btn-secondary" x-show="notes.length" {% if not n %}x-cloak{% endif %} data-tip="{% translate 'Every question and answer on one page, to read through before the exam' %}">{% icon "book" %}{% translate "Overview" %}</a>
     <a href="{% url 'work:exam_review' s.pk %}" class="btn btn-primary" x-show="notes.length" {% if not n %}x-cloak{% endif %}>{% icon "play" %}{% translate "Review" %}</a>
     <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
       <button type="button" class="icon-btn" @click="open = !open" :aria-expanded="open" aria-label="{% translate 'More actions' %}">{% icon "dots" %}</button>
@@ -40,10 +41,15 @@
 
 <datalist id="exam-chapters"><template x-for="c in chapters()" :key="c"><option :value="c"></option></template></datalist>
 
-{# ── add: one by one, or a whole list pasted (from ChatGPT, Claude, a document…) ── #}
-<section class="card wex-add">
+{# ── add: one by one, or a whole list pasted (from ChatGPT, Claude, a document…) — folded away once there are questions ── #}
+<div class="wex-add-bar" x-show="!adding" {% if not n %}x-cloak{% endif %}>
+  <button type="button" class="btn btn-secondary" @click="openAdd(false)">{% icon "plus" %}{% translate "Add a question" %}</button>
+  <button type="button" class="btn btn-ghost" @click="openAdd(true)">{% icon "upload" %}{% translate "Paste a list" %}</button>
+</div>
+<section class="card wex-add" x-show="adding" {% if n %}x-cloak{% endif %}>
   <div class="wex-add-head">
     <h2 class="card-title">{% icon "plus" %}{% translate "Add questions" %}</h2>
+    <button type="button" class="icon-btn wex-add-close" x-show="notes.length" @click="adding = false" aria-label="{% translate 'Close' %}">{% icon "x" %}</button>
     <div class="seg" role="radiogroup" aria-label="{% translate 'How to add' %}">
       <button type="button" class="seg-item" :class="!many && 'is-active'" @click="many = false">{% translate "One by one" %}</button>
       <button type="button" class="seg-item" :class="many && 'is-active'" @click="many = true">{% translate "Paste a list" %}</button>
@@ -181,6 +187,7 @@
               <span class="wex-no num" x-text="q.number + '.'"></span>
               <div class="wex-q-text wn-md" role="button" tabindex="0" @click="if (!$event.target.closest('a')) toggle(q)" @keydown.enter.prevent="toggle(q)" @keydown.space.prevent="toggle(q)"
                    :aria-expanded="isOpen(q).toString()" x-effect="paint($el, q.question)"></div>
+              <span class="wex-marks" aria-hidden="true"><b class="is-star" x-show="q.starred">★</b><b class="is-known" x-show="q.known">✓</b></span>
               <span class="wex-missed" x-show="q.misses" x-text="'✗ ' + q.misses" title="{% translate 'Times you didn’t know it in a review' %}"></span>
               <span class="wex-acts" x-show="!selecting">
                 <button type="button" class="icon-btn wex-star" :class="q.starred && 'is-on'" @click="flag(q, 'star')" :aria-pressed="q.starred.toString()" aria-label="{% translate 'Important' %}" data-tip="{% translate 'Important' %}">{% icon "star" %}</button>

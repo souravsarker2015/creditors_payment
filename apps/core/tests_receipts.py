@@ -83,3 +83,15 @@ class ReceiptTests(TestCase):
         self.assertContains(self.client.get(reverse("business:transactions") + "?period=all"), url)
         self.client.force_login(staff)
         self.assertEqual(self.client.get(url).status_code, 404)
+
+
+class ReceiptPickerTests(TestCase):
+    def test_the_file_input_stays_hidden_behind_its_button(self):
+        """Forms that give every input a class (the farm's) mustn't make the picker's own file input show."""
+        import re
+
+        from apps.core.receipts import ReceiptInput
+
+        html = ReceiptInput(attrs={"class": "form-input"}).render("receipt", None, {"id": "id_receipt", "class": "form-input"})
+        tag = re.search(r"<input type=\"file\"[^>]*>", html).group(0)
+        self.assertEqual(re.findall(r'class="([^"]*)"', tag), ["sr-only"])

@@ -24,7 +24,7 @@
     <header class="wpx-topic-head">
       <button type="button" class="icon-btn" @click="open = !open" :aria-expanded="open.toString()" aria-label="{% translate 'Fold or unfold' %}"><span class="wdx-fold" x-text="open ? '−' : '+'"></span></button>
       <a href="{% url 'work:prep_topic' b.t.pk %}" class="wpx-topic-name"><span class="wt-dot" data-color="{{ b.t.color }}"></span>{{ b.t.name }} <span class="wpq-code">{{ b.t.code }}</span></a>
-      <a href="{% url 'work:prep_topic' b.t.pk %}" class="btn btn-ghost btn-sm">{% icon "edit" %}{% translate "Edit contents" %}</a>
+      <a href="{% url 'work:prep_topic' b.t.pk %}" class="btn btn-ghost btn-sm" aria-label="{% translate 'Edit contents' %}">{% icon "edit" %}<span class="hide-sm">{% translate "Edit contents" %}</span></a>
     </header>
     <div class="wpx-body" x-show="open">
       {% for s, qs in b.parts %}{% if s or qs %}

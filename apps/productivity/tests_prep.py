@@ -497,3 +497,11 @@ class ContentsTests(Base):
         r = self.client.get(reverse("work:prep_practice") + f"?topic={self.topic.pk}&section={self.basics.pk}&order=sequence")
         self.assertEqual(len(r.context["session"]["questions"]), 2)
         self.assertContains(self.client.get(reverse("work:prep_sheet")), "Concurrency")
+
+
+class EmptyExamTests(Base):
+    def test_an_exam_whose_questions_were_all_deleted_is_explained(self):
+        exam = PrepExam.objects.create(owner=self.me, title="Old mock", question_ids=[999999])
+        r = self.client.get(reverse("work:exam", args=[exam.pk]), follow=True)
+        self.assertRedirects(r, reverse("work:prep"))
+        self.assertContains(r, "has no questions left")
