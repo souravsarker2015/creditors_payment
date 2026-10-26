@@ -14,8 +14,8 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from .models import (
-    EntryKind, Goal, GoalStatus, GoalStep, Habit, HabitCheck, JournalEntry, LearningItem, LearningStatus, Note, Priority, Project,
-    Repeat, Status, Tag, Task, TaskKind, TimeEntry, WorkSettings, link_label,
+    KIND_ICONS, EntryKind, Goal, GoalStatus, GoalStep, Habit, HabitCheck, JournalEntry, LearningItem, LearningStatus, Note, Priority, Project,
+    Repeat, Status, Tag, Task, TaskActivity, TaskKind, TimeEntry, WorkSettings, link_label,
 )
 
 
@@ -708,16 +708,90 @@ def standup(user, today=None):
     blockers = [line.strip("-* ").strip() for line in (journal.blockers if journal else "").splitlines() if line.strip()]
     blockers += [_("Waiting on %(who)s: %(task)s") % {"who": t.waiting_for, "task": t.title} for t in waiting_tasks(user)[:8]]
 
+    git = git_activity(user, lo, hi)          # commits and pull requests the Git webhook saw
+
     def line(task):
-        return f"{task.title}" + (f" ({task.project.name})" if task.project_id else "")
+        return f"{task.title}" + (f" ({task.project.name})" if task.project_id else "") + (f" — {git.pop(task.pk)[1]}" if task.pk in git else "")
 
     yesterday = [line(t) for t in done]
     seen = {t.pk for t in done}
-    yesterday += [f"{t.title} — {hm(sec)}" for t, sec in worked.by_task if t.pk not in seen]
+    for t, sec in worked.by_task:
+        if t.pk not in seen:
+            seen.add(t.pk)
+            yesterday.append(f"{t.title} — {hm(sec)}" + (f" · {git.pop(t.pk)[1]}" if t.pk in git else ""))
+    yesterday += [f"{t.title} — {words}" for t, words in git.values()]      # code written, but no time tracked on it
     if not yesterday and worked.seconds:
         yesterday = [f"{(p.name if p else _('Other work'))} — {hm(sec)}" for p, sec in worked.by_project]
     today_list = [line(t) for t in plan[:8]]
+    today_list += [_("Waiting on review: %(task)s") % {"task": t.title + (f" ({t.link_label})" if t.link_label else "")}
+                   for t in Task.objects.filter(owner=user, status=Status.REVIEW).order_by("updated_at")[:6]]
     return {"since": prev, "yesterday": yesterday, "today": today_list, "blockers": blockers, "seconds": worked.seconds}
+
+
+def delivery(user, start, end, weeks=8):
+    """How work gets shipped, as Linear's and Jira's insights show it: tasks finished in [start, end]
+    by type and points, the cycle time (work started → done; started = first moved to in progress or
+    in review, or first time tracked on it), the lead time (added → done), the tasks finished each of
+    the last `weeks` weeks up to `end`, and what's in progress and in review now."""
+    from statistics import median
+
+    from django.db.models import Min
+
+    s = WorkSettings.for_user(user)
+    lo, hi = day_bounds(start)[0], day_bounds(end)[1]
+    done = list(Task.objects.filter(owner=user, status=Status.DONE, completed_at__gte=lo, completed_at__lt=hi)
+                .only("pk", "kind", "points", "created_at", "completed_at"))
+    ids = [t.pk for t in done]
+    started = {}
+    moves = (TaskActivity.objects.filter(task_id__in=ids, kind=TaskActivity.Kind.CHANGE, data__field="status", data__new__in=[Status.DOING, Status.REVIEW])
+             .values("task_id").annotate(first=Min("created_at")))
+    clocked = TimeEntry.objects.filter(task_id__in=ids).values("task_id").annotate(first=Min("started_at"))
+    for row in list(moves) + list(clocked):
+        started[row["task_id"]] = min(started.get(row["task_id"], row["first"]), row["first"])
+    # (time logged by hand before the task was added counts from when it was added)
+    cycle = [(t.completed_at - max(started[t.pk], t.created_at)).total_seconds() for t in done if t.pk in started and started[t.pk] < t.completed_at]
+    lead = [max(0, (t.completed_at - t.created_at).total_seconds()) for t in done]
+    by_kind = defaultdict(int)
+    for t in done:
+        by_kind[t.kind] += 1
+    first_week = s.week_of(end)[0] - timedelta(weeks=weeks - 1)
+    counts = defaultdict(int)
+    for when in Task.objects.filter(owner=user, status=Status.DONE, completed_at__gte=day_bounds(first_week)[0], completed_at__lt=hi).values_list("completed_at", flat=True):
+        counts[s.week_of(timezone.localtime(when).date())[0]] += 1
+    week_list = [first_week + timedelta(weeks=i) for i in range(weeks)]
+    peak = max([counts[w] for w in week_list] + [1])
+    review = Task.objects.filter(owner=user, status=Status.REVIEW)
+    oldest = review.order_by("updated_at").values_list("updated_at", flat=True).first()
+    return {
+        "done": len(done), "points": sum(t.points or 0 for t in done),
+        "kinds": [(TaskKind(k), KIND_ICONS.get(k, "check"), n) for k, n in sorted(by_kind.items(), key=lambda kv: -kv[1])],
+        "cycle": median(cycle) if cycle else None, "cycle_n": len(cycle), "lead": median(lead) if lead else None,
+        "weeks": [{"start": w, "n": counts[w], "pct": round(100 * counts[w] / peak)} for w in week_list],
+        "doing": Task.objects.filter(owner=user, status=Status.DOING).count(), "review": review.count(),
+        "review_days": (timezone.now() - oldest).days if oldest else None,
+    }
+
+
+def git_activity(user, lo, hi):
+    """{task id: (task, "3 commits · PR #45 opened")} — what the Git webhook recorded on the person's tasks in [lo, hi)."""
+    from django.utils.translation import ngettext
+
+    rows = (TaskActivity.objects.filter(task__owner=user, kind=TaskActivity.Kind.COMMENT, created_at__gte=lo, created_at__lt=hi, data__has_key="git")
+            .select_related("task").order_by("created_at"))
+    found = {}
+    for a in rows:
+        task, commits, prs = found.get(a.task_id, (a.task, set(), {}))
+        if a.data.get("git") == "commit":
+            commits.add(a.data.get("ref") or a.pk)
+        elif a.data.get("ref"):
+            prs[a.data["ref"]] = a.data["git"]           # the last word wins: opened, then merged
+        found[a.task_id] = (task, commits, prs)
+    out = {}
+    for pk, (task, commits, prs) in found.items():
+        parts = [ngettext("%(n)s commit", "%(n)s commits", len(commits)) % {"n": len(commits)}] if commits else []
+        parts += [(_("%(pr)s merged") if what == "merged" else _("%(pr)s opened")) % {"pr": ref} for ref, what in prs.items()]
+        out[pk] = (task, " · ".join(parts))
+    return out
 
 
 def standup_text(data, markdown=True):
@@ -873,7 +947,7 @@ def leftovers(user, today=None):
     """Picked for an earlier day (this past week), not done, and not already on today's list."""
     today = today or timezone.localdate()
     return list(Task.objects.filter(owner=user, my_day__lt=today, my_day__gte=today - timedelta(days=7))
-                .exclude(status__in=[Status.DONE, Status.DOING]).exclude(due_date__lte=today).select_related("project"))
+                .exclude(status__in=[Status.DONE, Status.DOING, Status.REVIEW]).exclude(due_date__lte=today).select_related("project"))
 
 
 def capacity(tasks, user, today=None):

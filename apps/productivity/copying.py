@@ -100,7 +100,7 @@ def duplicate_project(project, keep_dates=False):
                                   estimate_hours=project.estimate_hours, hourly_rate=project.hourly_rate, order=project.order + 1)
     dates = {} if keep_dates else {"due_date": None, "start_date": None}
     for t in project.tasks.filter(parent__isnull=True).exclude(status=Status.DONE).order_by("order", "pk"):
-        new = _clone(t, project=copy, status=Status.TODO if t.status == Status.DOING else t.status, **dates)
+        new = _clone(t, project=copy, status=Status.TODO if t.status in (Status.DOING, Status.REVIEW) else t.status, **dates)
         for sub in t.subtasks.exclude(status=Status.DONE):
             _clone(sub, project=copy, parent=new, status=Status.TODO, **dates)
     return copy

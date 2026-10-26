@@ -127,7 +127,7 @@ class WebhookTests(Base):
             {"id": "abc1234def", "message": f"Fixes T-{a.pk}: handle expired session\n\nRefs T-{b.pk}", "url": "https://github.com/me/app/commit/abc1234",
              "author": {"name": "Sourov"}},
             {"id": "fff0000", "message": f"wip T-{other.pk}", "url": ""}]})
-        self.assertEqual(r.json(), {"ok": True, "comments": 2, "done": 1, "started": 0, "linked": 0})
+        self.assertEqual(r.json(), {"ok": True, "comments": 2, "done": 1, "started": 0, "linked": 0, "review": 0})
         a.refresh_from_db(); b.refresh_from_db(); other.refresh_from_db()
         self.assertEqual((a.status, b.status, other.status), (Status.DONE, Status.TODO, Status.TODO))
         note = TaskActivity.objects.filter(task=a, kind="comment").first()
@@ -146,7 +146,7 @@ class WebhookTests(Base):
         pr = {"number": 7, "title": "Dark mode", "html_url": "https://github.com/me/app/pull/7", "head": {"ref": f"feat/T-{t.pk}-dark-mode"}, "body": "", "merged": False}
         self.github("pull_request", {"action": "opened", "pull_request": pr})
         t.refresh_from_db()
-        self.assertEqual((t.status, t.link, t.link_label), (Status.DOING, pr["html_url"], "PR #7"))
+        self.assertEqual((t.status, t.link, t.link_label), (Status.REVIEW, pr["html_url"], "PR #7"))        # waiting on code review
         self.github("pull_request", {"action": "closed", "pull_request": {**pr, "merged": True}})
         t.refresh_from_db()
         self.assertEqual(t.status, Status.DONE)

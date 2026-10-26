@@ -23,6 +23,7 @@
     {% if task.link %}<a href="{{ task.link }}" class="btn btn-secondary" target="_blank" rel="noopener noreferrer" title="{{ task.link }}">{% icon "external" %}{{ task.link_label }}</a>{% endif %}
     <button type="button" class="icon-btn" data-copy="{{ dev.branch }}" data-tip="{% translate 'Copy branch name' %}: {{ dev.branch }}" aria-label="{% translate 'Copy branch name' %}">{% icon "git" %}</button>
     <button type="button" class="icon-btn" data-copy="{{ dev.commit }}" data-tip="{% translate 'Copy commit message' %}: {{ dev.commit }}" aria-label="{% translate 'Copy commit message' %}">{% icon "code" %}</button>
+    <button type="button" class="icon-btn" data-copy="{{ dev.pr }}" data-tip="{% translate 'Copy pull request description (with “Closes” the task)' %}" aria-label="{% translate 'Copy pull request description' %}">{% icon "upload" %}</button>
     <button type="button" class="icon-btn" data-tip="{% translate 'Duplicate' %}" aria-label="{% translate 'Duplicate' %}" data-duplicate
             @click="Work.api(Work.cfg.urls.taskBase + '{{ task.pk }}/duplicate/').then(r => { if (r.url) location.href = r.url; })">{% icon "copy" %}</button>
     <button type="button" class="icon-btn" data-tip="{% translate 'Save as a template' %}" aria-label="{% translate 'Save as a template' %}" data-save-template

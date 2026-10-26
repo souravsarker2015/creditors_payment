@@ -23925,3 +23925,75 @@ msgstr "আজকের নোট"
 
 msgid "Write… Markdown works — type / for headings, to-dos, code, tables and more."
 msgstr "লিখুন… Markdown চলে — শিরোনাম, টু-ডু, কোড, টেবিল ইত্যাদির জন্য / লিখুন।"
+
+#, python-format
+msgid "%(counter)s point"
+msgid_plural "%(counter)s points"
+msgstr[0] "%(counter)s পয়েন্ট"
+msgstr[1] "%(counter)s পয়েন্ট"
+
+#, python-format
+msgid "%(n)s commit"
+msgid_plural "%(n)s commits"
+msgstr[0] "%(n)sটি কমিট"
+msgstr[1] "%(n)sটি কমিট"
+
+#, python-format
+msgid "%(n)s days"
+msgstr "%(n)s দিন"
+
+#, python-format
+msgid "%(n)s h"
+msgstr "%(n)s ঘণ্টা"
+
+#, python-format
+msgid "%(n)s min"
+msgstr "%(n)s মিনিট"
+
+#, python-format
+msgid "%(pr)s merged"
+msgstr "%(pr)s মার্জ হয়েছে"
+
+#, python-format
+msgid "%(pr)s opened"
+msgstr "%(pr)s খোলা হয়েছে"
+
+msgid "Copy pull request description"
+msgstr "পুল রিকোয়েস্টের বিবরণ কপি করুন"
+
+msgid "Copy pull request description (with “Closes” the task)"
+msgstr "পুল রিকোয়েস্টের বিবরণ কপি করুন (টাস্কটি “Closes” সহ)"
+
+msgid "Cycle time"
+msgstr "সাইকেল টাইম"
+
+msgid "Delivery"
+msgstr "ডেলিভারি"
+
+msgid "Finished each week"
+msgstr "প্রতি সপ্তাহে শেষ"
+
+msgid "How much you ship, and how long work takes from starting it to done."
+msgstr "কতটা কাজ শেষ করছেন, আর শুরু থেকে শেষ হতে কাজে কত সময় লাগে।"
+
+msgid "In progress now"
+msgstr "এখন চলছে"
+
+msgid "In review"
+msgstr "রিভিউতে"
+
+msgid "In review now"
+msgstr "এখন রিভিউতে"
+
+msgid "Lead time"
+msgstr "লিড টাইম"
+
+msgid "Median time from adding the task to done"
+msgstr "টাস্ক যোগ করা থেকে শেষ হওয়া পর্যন্ত মাঝামাঝি সময়"
+
+msgid "Median time from first moving it to In progress (or tracking time on it) to done"
+msgstr "প্রথম “চলছে”-তে নেওয়া (বা সময় গোনা শুরু) থেকে শেষ হওয়া পর্যন্ত মাঝামাঝি সময়"
+
+#, python-format
+msgid "Waiting on review: %(task)s"
+msgstr "রিভিউয়ের অপেক্ষায়: %(task)s"

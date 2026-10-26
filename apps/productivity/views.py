@@ -302,7 +302,7 @@ def _grouped(tasks, by):
         return [(f"pr{value}", label, [t for t in tasks if t.priority == value]) for value, label in reversed(Priority.choices)]
     if by == "kind":
         return [(f"k-{value}", label, [t for t in tasks if t.kind == value]) for value, label in TaskKind.choices]
-    return [(value, Status(value).label, [t for t in tasks if t.status == value]) for value in (Status.DOING, Status.TODO, Status.BACKLOG)]
+    return [(value, Status(value).label, [t for t in tasks if t.status == value]) for value in (Status.DOING, Status.REVIEW, Status.TODO, Status.BACKLOG)]
 
 
 def _with_rows(tasks):
@@ -436,20 +436,22 @@ def tasks_view(request):
         ctx["open_count"] = len(open_)
         waiting = [t for t in open_ if t.waiting_for]
         open_ = [t for t in open_ if not t.waiting_for]
-        blocked = [t for t in open_ if t.is_blocked and t.status != Status.DOING]
+        active = (Status.DOING, Status.REVIEW)        # started: in their own groups, whatever their dates
+        blocked = [t for t in open_ if t.is_blocked and t.status not in active]
         blocked_ids = {t.pk for t in blocked}
         open_ = [t for t in open_ if t.pk not in blocked_ids]
-        later = sorted([t for t in open_ if t.my_day and t.my_day > today and t.status != Status.DOING
+        later = sorted([t for t in open_ if t.my_day and t.my_day > today and t.status not in active
                         and not (t.due_date and t.due_date <= t.my_day)], key=lambda t: t.my_day)
         later_ids = {t.pk for t in later}
         open_ = [t for t in open_ if t.pk not in later_ids]
         groups = [
             ("doing", _("In progress"), [t for t in open_ if t.status == Status.DOING]),
+            ("review", _("In review"), [t for t in open_ if t.status == Status.REVIEW]),
             ("waiting", _("Waiting on others"), waiting),
             ("blocked", _("Blocked by other tasks"), blocked),
-            ("overdue", _("Late"), [t for t in open_ if t.status != Status.DOING and t.due_date and t.due_date < today]),
-            ("today", _("Today"), [t for t in open_ if t.status != Status.DOING and (t.due_date == today or (t.my_day == today and not t.due_date))]),
-            ("upcoming", _("Coming up"), sorted([t for t in open_ if t.status != Status.DOING and t.due_date and t.due_date > today], key=lambda t: t.due_date)),
+            ("overdue", _("Late"), [t for t in open_ if t.status not in active and t.due_date and t.due_date < today]),
+            ("today", _("Today"), [t for t in open_ if t.status not in active and (t.due_date == today or (t.my_day == today and not t.due_date))]),
+            ("upcoming", _("Coming up"), sorted([t for t in open_ if t.status not in active and t.due_date and t.due_date > today], key=lambda t: t.due_date)),
             ("todo", _("To do"), [t for t in open_ if t.status == Status.TODO and not t.due_date and t.my_day != today]),
             ("backlog", _("Backlog"), [t for t in open_ if t.status == Status.BACKLOG and not t.due_date and t.my_day != today]),
             ("later", _("Later"), later),
@@ -520,7 +522,8 @@ def task_view(request, pk=None):
     ctx = {"form": form, "task": task, "bug_template": dev.bug_template()}
     if task:
         s = WorkSettings.for_user(user)
-        ctx["dev"] = {"key": task.key(s.key_prefix), "branch": dev.branch_name(task, s), "commit": dev.commit_message(task, s)}
+        ctx["dev"] = {"key": task.key(s.key_prefix), "branch": dev.branch_name(task, s), "commit": dev.commit_message(task, s),
+                      "pr": dev.pr_description(task, s)}
         entries = list(task.entries.select_related("project").order_by("-started_at")[:30])
         spent = services.task_seconds(task)
         subs = list(task.subtasks.all())
@@ -1346,7 +1349,7 @@ def reports_view(request):
         if any(k != TaskKind.TASK for k, _secs in t.by_kind) else [],
         "tags": [{"tag": tg, "secs": secs, "pct": round(100 * secs / t.seconds) if t.seconds else 0} for tg, secs in t.by_tag[:12]],
         "tasks": t.by_task, "completed": completed.count(), "created": Task.objects.filter(owner=user, created_at__gte=lo, created_at__lt=hi).count(),
-        "est": est,
+        "est": est, "delivery": services.delivery(user, start, end),
         "hours": [{"h": h, "secs": v, "pct": round(100 * v / hpeak), "level": 0 if not v else min(4, 1 + int(3.999 * v / hpeak))} for h, v in enumerate(hours)],
         "heat": services.heatmap(year, today, s.week_start), "year_total": sum(year.values()),
         "year_days": sum(1 for v in year.values() if v),
@@ -1606,7 +1609,7 @@ def review_view(request):
         "late": Task.objects.filter(owner=user, due_date__lt=today).exclude(status=Status.DONE).count(),
         "coming": Task.objects.filter(owner=user, due_date__gte=today, due_date__lte=today + timedelta(days=7)).exclude(status=Status.DONE)
                   .select_related("project").order_by("due_date")[:12],
-        "stale": Task.objects.filter(owner=user, status=Status.DOING, updated_at__lt=lo - timedelta(days=7)).count(),
+        "stale": Task.objects.filter(owner=user, status__in=[Status.DOING, Status.REVIEW], updated_at__lt=lo - timedelta(days=7)).count(),
         "waiting": Task.objects.filter(owner=user).exclude(waiting_for="").exclude(status=Status.DONE).count(),
     })
 
@@ -1826,7 +1829,7 @@ def wrapup_view(request):
     next_plan = JournalEntry.objects.filter(owner=user, date=tomorrow).values_list("plan", flat=True).first() or ""
     s = WorkSettings.for_user(user)
     return render_work(request, "work/wrapup.html", {
-        "today": today, "tomorrow": tomorrow, "left": [x for x in open_tasks if x.status != Status.DOING or x.my_day == today][:30],
+        "today": today, "tomorrow": tomorrow, "left": [x for x in open_tasks if x.status not in (Status.DOING, Status.REVIEW) or x.my_day == today][:30],
         "doing": [x for x in open_tasks if x.status == Status.DOING], "done_today": done_today, "t": t, "journal": journal,
         "next_plan": next_plan, "done_lines": "\n".join(f"- {x.title}" for x in done_today),
         "target": s.daily_target_minutes * 60, "moods": range(1, 6),
@@ -1918,7 +1921,7 @@ def sprint_view(request, pk):
             messages.success(request, _("Sprint deleted. Its tasks are kept."))
             return redirect("work:sprints")
     tasks = _with_rows(list(sp.tasks.select_related("project", "parent").order_by("order", "-priority", "pk")))
-    columns = [(value, Status(value).label, [t for t in tasks if t.status == value]) for value in (Status.DOING, Status.TODO, Status.BACKLOG, Status.DONE)]
+    columns = [(value, Status(value).label, [t for t in tasks if t.status == value]) for value in (Status.DOING, Status.REVIEW, Status.TODO, Status.BACKLOG, Status.DONE)]
     done = [t for t in tasks if t.is_done]
     backlog = []
     if not sp.completed_at:

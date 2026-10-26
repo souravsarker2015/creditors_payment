@@ -30,6 +30,26 @@
   {% if earned is not None %}<div class="stat" data-tone="good"><dt class="stat-label">{% translate "Worth at your rates" %}</dt><dd class="stat-value num">{{ earned|money }}</dd></div>{% endif %}
 </dl>
 
+{# ── shipping: how much gets done, and how long it takes from start to done ── #}
+{% with d=delivery %}{% if d.done or d.doing or d.review %}
+<section class="card">
+  <header class="card-header"><div><h2 class="card-title">{% translate "Delivery" %}</h2>
+    <p class="card-subtitle">{% translate "How much you ship, and how long work takes from starting it to done." %}</p></div></header>
+  <div class="card-body !pt-0 wr-dlv">
+    <dl class="wr-dlv-stats">
+      <div><dt>{% translate "Finished" %}</dt><dd class="num">{{ d.done }}{% if d.points %} <small>· {% blocktranslate count counter=d.points %}{{ counter }} point{% plural %}{{ counter }} points{% endblocktranslate %}</small>{% endif %}</dd></div>
+      <div data-tip="{% translate 'Median time from first moving it to In progress (or tracking time on it) to done' %}"><dt>{% translate "Cycle time" %}</dt><dd class="num">{{ d.cycle|span }}</dd></div>
+      <div data-tip="{% translate 'Median time from adding the task to done' %}"><dt>{% translate "Lead time" %}</dt><dd class="num">{{ d.lead|span }}</dd></div>
+      <div><dt>{% translate "In progress now" %}</dt><dd class="num">{{ d.doing }}</dd></div>
+      <div{% if d.review_days and d.review_days >= 3 %} data-tone="warn"{% endif %}><dt>{% translate "In review now" %}</dt><dd class="num">{{ d.review }}{% if d.review_days %} <small>· {% blocktranslate count counter=d.review_days %}oldest {{ counter }} day{% plural %}oldest {{ counter }} days{% endblocktranslate %}</small>{% endif %}</dd></div>
+    </dl>
+    {% if d.kinds %}<p class="wr-dlv-kinds">{% for k, icon, n in d.kinds %}<span class="wt-kind" data-kind="{{ k.value }}">{% icon icon %}{{ k.label }} <b class="num">{{ n }}</b></span>{% endfor %}</p>{% endif %}
+    <p class="wr-dlv-label">{% translate "Finished each week" %}</p>
+    <div class="wr-dlv-weeks">{% for w in d.weeks %}<div class="wr-dlv-week" data-tip="{{ w.start|date:'j M' }} · {{ w.n }}"><em class="num">{{ w.n }}</em><span style="--h: {{ w.pct }}"></span><small>{{ w.start|date:"j M" }}</small></div>{% endfor %}</div>
+  </div>
+</section>
+{% endif %}{% endwith %}
+
 {% if heat.weeks %}
 <section class="card">
   <header class="card-header"><div><h2 class="card-title">{% translate "Last 12 months" %}</h2>

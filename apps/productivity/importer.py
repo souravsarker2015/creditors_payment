@@ -39,7 +39,8 @@ KIND_WORDS = {"bug": TaskKind.BUG, "defect": TaskKind.BUG, "incident": TaskKind.
               "spike": TaskKind.RESEARCH, "research": TaskKind.RESEARCH, "chore": TaskKind.CHORE, "tech debt": TaskKind.CHORE,
               "maintenance": TaskKind.CHORE, "documentation": TaskKind.DOCS, "docs": TaskKind.DOCS}
 DONE_WORDS = {"done", "complete", "completed", "closed", "resolved", "finished", "true", "yes", "1"}
-DOING_WORDS = {"in progress", "doing", "in review", "review", "started", "active", "ongoing"}
+DOING_WORDS = {"in progress", "doing", "started", "active", "ongoing"}
+REVIEW_WORDS = {"in review", "review", "code review", "in code review", "awaiting review", "ready for review", "pr open"}
 BACKLOG_WORDS = {"backlog", "someday", "icebox", "later", "ideas"}
 PRIORITY_WORDS = {"urgent": Priority.URGENT, "highest": Priority.URGENT, "critical": Priority.URGENT, "blocker": Priority.URGENT, "p1": Priority.URGENT,
                   "high": Priority.HIGH, "p2": Priority.HIGH, "major": Priority.HIGH,
@@ -103,6 +104,8 @@ def _status(value):
         return Status.DONE
     if v in DOING_WORDS:
         return Status.DOING
+    if v in REVIEW_WORDS:
+        return Status.REVIEW
     if v in BACKLOG_WORDS:
         return Status.BACKLOG
     return Status.TODO

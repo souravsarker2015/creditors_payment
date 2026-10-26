@@ -71,6 +71,7 @@ class Status(models.TextChoices):
     BACKLOG = "backlog", _("Backlog")
     TODO = "todo", _("To do")
     DOING = "doing", _("In progress")
+    REVIEW = "review", _("In review")       # a pull request open, waiting on code review
     DONE = "done", _("Done")
 
 

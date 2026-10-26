@@ -179,6 +179,19 @@ def note_card_lines(note, length=420):
 
 
 @register.filter
+def span(seconds):
+    """How long something took, to the right unit: "40 min", "5.5 h", "3.2 days"."""
+    if seconds is None:
+        return "—"
+    hours = seconds / 3600
+    if hours < 1:
+        return _("%(n)s min") % {"n": max(1, round(seconds / 60))}
+    if hours < 24:
+        return _("%(n)s h") % {"n": f"{hours:.1f}".rstrip("0").rstrip(".")}
+    return _("%(n)s days") % {"n": f"{hours / 24:.1f}".rstrip("0").rstrip(".")}
+
+
+@register.filter
 def split_words(text):
     return (text or "").split()
 
