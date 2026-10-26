@@ -1466,6 +1466,10 @@
       notes.dispatchEvent(new Event("input", { bubbles: true }));
     });
   });
+  d.addEventListener("click", function (e) {         // a link with [data-copy-first]: its text is copied as it opens (a pull request's description)
+    var a = e.target.closest("a[data-copy-first]"); if (!a) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(a.getAttribute("data-copy-first")).then(function () { toast(t("copied", "Copied")); }, function () {});
+  });
   d.addEventListener("click", function (e) {         // [data-copy="text"]: a branch name, a commit message, release notes…
     var b = e.target.closest("[data-copy]"); if (!b) return;
     e.preventDefault(); copyText(b.getAttribute("data-copy"));

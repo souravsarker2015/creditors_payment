@@ -23997,3 +23997,58 @@ msgstr "প্রথম “চলছে”-তে নেওয়া (বা স
 #, python-format
 msgid "Waiting on review: %(task)s"
 msgstr "রিভিউয়ের অপেক্ষায়: %(task)s"
+
+msgid ""
+"## Went well\n"
+"- \n"
+"\n"
+"## To improve\n"
+"- \n"
+"\n"
+"## Action items\n"
+"- [ ] "
+msgstr ""
+"## যা ভালো হয়েছে\n"
+"- \n"
+"\n"
+"## যা আরও ভালো করা যায়\n"
+"- \n"
+"\n"
+"## করণীয়\n"
+"- [ ] "
+
+msgid "Its GitHub, GitLab or Bitbucket page — tasks then open their branch and a pull request in one click."
+msgstr "এর GitHub, GitLab বা Bitbucket পাতা — তখন টাস্ক থেকে এক ক্লিকে তার ব্রাঞ্চ আর পুল রিকোয়েস্ট খোলা যায়।"
+
+msgid "Make tasks from action items"
+msgstr "করণীয় থেকে টাস্ক বানান"
+
+msgid "No change for 3 days or more — a nudge to the reviewer helps."
+msgstr "৩ দিন বা তার বেশি কোনো পরিবর্তন নেই — রিভিউয়ারকে একবার মনে করিয়ে দিন।"
+
+msgid "No open action items. Write them as “- [ ] something to do”."
+msgstr "কোনো খোলা করণীয় নেই। “- [ ] যা করতে হবে” — এভাবে লিখুন।"
+
+msgid "Open its branch"
+msgstr "এর ব্রাঞ্চ খুলুন"
+
+msgid "Open its pull request"
+msgstr "এর পুল রিকোয়েস্ট খুলুন"
+
+msgid "Opens a new pull request from its branch — its description is copied, ready to paste"
+msgstr "এর ব্রাঞ্চ থেকে নতুন পুল রিকোয়েস্ট খোলে — বিবরণ কপি হয়ে যায়, শুধু পেস্ট করুন"
+
+msgid "Pull request"
+msgstr "পুল রিকোয়েস্ট"
+
+msgid "Repository"
+msgstr "রিপোজিটরি"
+
+msgid "Retrospective"
+msgstr "রেট্রোস্পেকটিভ"
+
+msgid "Waiting on code review"
+msgstr "কোড রিভিউয়ের অপেক্ষায়"
+
+msgid "What went well, what to improve, and what you'll do about it. Action items become tasks — in the next sprint."
+msgstr "যা ভালো হয়েছে, যা আরও ভালো করা যায়, আর সে জন্য কী করবেন। করণীয়গুলো টাস্ক হয়ে পরের স্প্রিন্টে যায়।"

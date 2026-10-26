@@ -128,8 +128,9 @@ class SprintForm(forms.ModelForm):
 class ProjectForm(forms.ModelForm):
     class Meta:
         model = Project
-        fields = ("name", "color", "client", "estimate_hours", "hourly_rate", "description", "is_archived")
-        widgets = {"description": forms.Textarea(attrs={"rows": 3}), "color": SWATCHES}
+        fields = ("name", "color", "client", "repo_url", "estimate_hours", "hourly_rate", "description", "is_archived")
+        widgets = {"description": forms.Textarea(attrs={"rows": 3}), "color": SWATCHES,
+                   "repo_url": forms.URLInput(attrs={"placeholder": "https://github.com/acme/web", "spellcheck": "false", "autocapitalize": "off"})}
 
     def __init__(self, *args, owner=None, **kwargs):
         self.owner = owner

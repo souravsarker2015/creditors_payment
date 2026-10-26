@@ -75,6 +75,31 @@
 </details>
 {% endif %}
 
+{# ── the retrospective: what went well, what to improve — and action items that become tasks ── #}
+{{ retro|json_script:"sprint-retro" }}
+<details class="card wsp-retro"{% if retro_open %} open{% endif %}
+         x-data="{ text: JSON.parse(document.getElementById('sprint-retro').textContent), state: '', timer: null, busy: false,
+                   save() { clearTimeout(this.timer); this.state = 'dirty';
+                            this.timer = setTimeout(() => { this.state = 'saving';
+                              Work.api('{% url 'work:sprint' sp.pk %}', { action: 'retro', retro: this.text }).then(r => this.state = r && (r.ok || r.queued) ? 'saved' : 'error'); }, 700); },
+                   tasks() { this.busy = true; clearTimeout(this.timer);
+                             Work.api('{% url 'work:sprint' sp.pk %}', { action: 'retro', retro: this.text })
+                               .then(() => Work.api('{% url 'work:sprint' sp.pk %}', { action: 'retro_tasks' }))
+                               .then(r => { this.busy = false;
+                                 if (r && r.ok) { this.text = r.retro; this.state = 'saved';
+                                   Work.toast('{{ _("Tasks made")|escapejs }}: ' + r.count + (r.sprint ? ' → ' + r.sprint : ''), 'good'); }
+                                 else if (r && r.error) Work.toast(r.error, 'warn'); }); } }">
+  <summary class="card-header"><div><h2 class="card-title">{% icon "chat" %}{% translate "Retrospective" %}</h2>
+    <p class="card-subtitle">{% translate "What went well, what to improve, and what you'll do about it. Action items become tasks — in the next sprint." %}</p></div></summary>
+  <div class="card-body !pt-0 wsp-retro-body">
+    <textarea class="form-input wsp-retro-text" data-md rows="10" x-model="text" @input="save()" aria-label="{% translate 'Retrospective' %}"></textarea>
+    <div class="wsp-notes-foot">
+      <button type="button" class="btn btn-secondary btn-sm" @click="tasks()" :disabled="busy">{% icon "check" %}{% translate "Make tasks from action items" %}</button>
+      <span class="wn-state" :data-state="state" role="status" aria-live="polite"><i aria-hidden="true"></i><span x-text="{ saving: '{% translate "Saving…" %}', saved: '{% translate "Saved" %}', dirty: '{% translate "Editing…" %}', error: '{% translate "Not saved" %}' }[state] || ''"></span></span>
+    </div>
+  </div>
+</details>
+
 {% if state != "done" %}
 {% if backlog %}
 <section class="card wsp-pick" x-data="{ n: 0, q: '' }">

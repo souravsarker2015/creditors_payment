@@ -16,6 +16,7 @@
       <fieldset><legend class="label">{{ form.color.label }}</legend>
         <div class="w-swatches">{% for radio in form.color %}<label class="w-swatch" data-color="{{ radio.data.value }}" title="{{ radio.choice_label }}">{{ radio.tag }}<span class="sr-only">{{ radio.choice_label }}</span></label>{% endfor %}</div></fieldset>
       {% with field=form.client %}{% include "partials/field.html" %}{% endwith %}
+      {% with field=form.repo_url %}{% include "partials/field.html" %}{% endwith %}
       <div class="form-grid form-grid-2">
         {% with field=form.estimate_hours %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.hourly_rate %}{% include "partials/field.html" %}{% endwith %}

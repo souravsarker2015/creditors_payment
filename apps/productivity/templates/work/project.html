@@ -12,6 +12,7 @@
   </div>
   <div class="wp-actions">
     <button type="button" class="btn btn-primary" @click="$store.timer.start({ project: {{ project.pk }}, label: '{{ project.name|escapejs }}', description: '' })">{% icon "play" %}{% translate "Start timer" %}</button>
+    {% if project.repo_url %}<a href="{{ project.repo_url }}" target="_blank" rel="noopener" class="btn btn-secondary" data-tip="{{ project.repo_url }}">{% icon "git" %}{% translate "Repository" %}</a>{% endif %}
     <a href="{% url 'work:project_edit' project.pk %}" class="btn btn-secondary">{% icon "edit" %}{% translate "Edit" %}</a>
     <a href="{% url 'work:invoice' %}?project={{ project.pk }}" class="btn btn-secondary" data-tip="{% translate 'An invoice or timesheet from the time tracked here' %}">{% icon "note" %}{% translate "Invoice" %}{% if unbilled %}<i class="wpj-dot" aria-label="{% translate 'Some billable time isn’t billed yet' %}"></i>{% endif %}</a>
     <form method="post" action="{% url 'work:project_duplicate' project.pk %}" data-confirm="{{ _("Make a copy of this project with its open tasks (and their subtasks and checklists)? Dates are left empty, for you to set.") }}">{% csrf_token %}

@@ -8,7 +8,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import BooleanField, Count, ExpressionWrapper, F, Q, prefetch_related_objects
-from django.http import Http404, HttpResponse, HttpResponseNotModified
+from django.http import Http404, HttpResponse, HttpResponseNotModified, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -268,7 +268,13 @@ def today_view(request):
         "journal": journal,
         "suggest": Task.objects.filter(owner=user, status__in=[Status.TODO, Status.BACKLOG], my_day__isnull=True, due_date__isnull=True).order_by("-priority", "order")[:5],
         "cards_due": cards.due_count(user, today) if Deck.objects.filter(owner=user, is_archived=False).exists() else 0,
+        # pull requests waiting on code review for days: a nudge to chase the reviewer
+        "stuck_reviews": list(Task.objects.filter(owner=user, status=Status.REVIEW, updated_at__lt=timezone.now() - timedelta(days=REVIEW_NUDGE_DAYS))
+                              .order_by("updated_at")[:5]),
     })
+
+
+REVIEW_NUDGE_DAYS = 3
 
 
 # ── Tasks ─────────────────────────────────────────────────────────────────
@@ -523,7 +529,8 @@ def task_view(request, pk=None):
     if task:
         s = WorkSettings.for_user(user)
         ctx["dev"] = {"key": task.key(s.key_prefix), "branch": dev.branch_name(task, s), "commit": dev.commit_message(task, s),
-                      "pr": dev.pr_description(task, s)}
+                      "pr": dev.pr_description(task, s), "repo": dev.repo_links(task, s),
+                      "has_pr": task.link_label.startswith(("PR ", "MR "))}
         entries = list(task.entries.select_related("project").order_by("-started_at")[:30])
         spent = services.task_seconds(task)
         subs = list(task.subtasks.all())
@@ -1892,6 +1899,15 @@ def sprint_view(request, pk):
     form = SprintForm(instance=sp)
     if request.method == "POST":
         action = request.POST.get("action")
+        if action == "retro":                 # the retrospective, saved as it's written (static/js/work.js api)
+            sp.retro = request.POST.get("retro", "").replace("\r\n", "\n")[:20000]
+            sp.save(update_fields=["retro"])
+            return JsonResponse({"ok": True})
+        if action == "retro_tasks":           # its open action items become tasks
+            made = services.retro_actions_to_tasks(user, sp, today)
+            if not made:
+                return JsonResponse({"ok": False, "error": _("No open action items. Write them as “- [ ] something to do”.")}, status=400)
+            return JsonResponse({"ok": True, "count": len(made), "retro": sp.retro, "sprint": made[0].sprint.name if made[0].sprint_id else ""})
         if action == "edit":
             form = SprintForm(request.POST, instance=sp)
             if form.is_valid():
@@ -1942,7 +1958,11 @@ def sprint_view(request, pk):
         "pts_total": sum(t.points or 0 for t in tasks), "pts_done": sum(t.points or 0 for t in done),
         "days_left": (sp.end_date - today).days, "day_no": min(max((today - sp.start_date).days + 1, 0), sp.length),
         "others": sprints.open_sprints(user).exclude(pk=sp.pk),
+        "retro": sp.retro or str(RETRO_TEMPLATE), "retro_open": bool(sp.retro) or sp.state(today) == "done" or (sp.end_date - today).days <= 1,
     })
+
+
+RETRO_TEMPLATE = gettext_lazy("## Went well\n- \n\n## To improve\n- \n\n## Action items\n- [ ] ")
 
 
 # ── Templates, copying a project, importing, invoices ──────────────────────

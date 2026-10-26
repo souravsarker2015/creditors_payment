@@ -163,3 +163,83 @@ class PullRequestTextTests(Base):
         t.link = "https://github.com/me/app/pull/9"          # the task's link is this pull request: not repeated
         self.assertNotIn("Ticket:", dev.pr_description(t, self.ws))
         self.assertContains(self.client.get(reverse("work:task", args=[t.pk])), "Copy pull request description")
+
+
+class RetroTests(Base):
+    def setUp(self):
+        super().setUp()
+        from .models import Sprint
+        today = timezone.localdate()
+        self.sp = Sprint.objects.create(owner=self.me, name="S1", start_date=today - timedelta(days=13), end_date=today)
+        self.next = Sprint.objects.create(owner=self.me, name="S2", start_date=today + timedelta(days=1), end_date=today + timedelta(days=14))
+        self.url = reverse("work:sprint", args=[self.sp.pk])
+
+    def test_an_empty_one_starts_from_the_template_and_saves_as_written(self):
+        r = self.client.get(self.url)
+        self.assertContains(r, "## Went well")
+        self.assertTrue(r.context["retro_open"])               # the last day: open
+        self.assertEqual(self.client.post(self.url, {"action": "retro", "retro": "## Went well\r\n- deploys"}).json(), {"ok": True})
+        self.sp.refresh_from_db()
+        self.assertEqual(self.sp.retro, "## Went well\n- deploys")
+
+    def test_action_items_become_tasks_in_the_next_sprint_once(self):
+        self.sp.retro = "## Action items\n- [ ] Add a smoke test #ci\n- [x] already done\n- [ ] pair on reviews"
+        self.sp.save()
+        res = self.client.post(self.url, {"action": "retro_tasks"}).json()
+        self.assertEqual((res["count"], res["sprint"]), (2, "S2"))
+        made = Task.objects.filter(sprint=self.next).order_by("pk")
+        self.assertEqual([t.title for t in made], ["Add a smoke test", "pair on reviews"])
+        self.assertEqual(list(made[0].tags.values_list("name", flat=True)), ["ci"])
+        self.sp.refresh_from_db()
+        self.assertIn(f"](/work/tasks/{made[0].pk}/)", self.sp.retro)
+        self.assertEqual(self.client.post(self.url, {"action": "retro_tasks"}).status_code, 400)       # nothing new the second time
+
+    def test_someone_elses_sprint(self):
+        other = User.objects.create_superuser("o", "o@example.com", PW)      # can use Productivity, not this sprint
+        self.client.force_login(other)
+        self.assertEqual(self.client.post(self.url, {"action": "retro", "retro": "x"}).status_code, 404)
+
+
+class RepoLinkTests(Base):
+    def task_in(self, repo, **kw):
+        from .models import Project
+        p = Project.objects.create(owner=self.me, name=repo or "None", repo_url=repo)
+        return self.task("Dark mode", project=p, kind=TaskKind.FEATURE, **kw)
+
+    def test_github_gitlab_bitbucket_and_others(self):
+        t = self.task_in("https://github.com/acme/web.git/")
+        branch = dev.branch_name(t, self.ws)
+        self.assertIn("/", branch)                                   # "feat/T-1-dark-mode": a path on GitHub
+        links = dev.repo_links(t, self.ws)
+        self.assertEqual(links["branch"], f"https://github.com/acme/web/tree/{branch}")
+        self.assertEqual(links["new_pr"], f"https://github.com/acme/web/compare/{branch}?expand=1")
+        self.assertIn("/-/merge_requests/new?merge_request%5Bsource_branch%5D=", dev.repo_links(self.task_in("https://gitlab.com/acme/api"), self.ws)["new_pr"])
+        self.assertIn("/pull-requests/new?source=", dev.repo_links(self.task_in("https://bitbucket.org/acme/app"), self.ws)["new_pr"])
+        self.assertEqual(dev.repo_links(self.task_in("https://git.acme.dev/web"), self.ws), {"repo": "https://git.acme.dev/web"})
+        self.assertEqual(dev.repo_links(self.task("No project"), self.ws), {})
+
+    def test_the_task_page_opens_the_branch_and_a_pull_request(self):
+        t = self.task_in("https://github.com/acme/web")
+        html = self.client.get(reverse("work:task", args=[t.pk])).content.decode()
+        self.assertIn("https://github.com/acme/web/compare/", html)
+        self.assertIn("data-copy-first=", html)
+        t.link = "https://github.com/acme/web/pull/12"          # already has one: that one is opened
+        t.save()
+        html = self.client.get(reverse("work:task", args=[t.pk])).content.decode()
+        self.assertNotIn("/compare/", html)
+        self.assertIn(">PR #12</a>", html.replace("\n", "").replace('{% icon "git" %}', ""))
+
+    def test_the_project_form_keeps_it(self):
+        r = self.client.post(reverse("work:project_new"), {"name": "Web", "color": "blue", "repo_url": "https://github.com/acme/web"})
+        from .models import Project
+        self.assertEqual(Project.objects.get(name="Web").repo_url, "https://github.com/acme/web")
+
+
+class StuckReviewTests(Base):
+    def test_today_nudges_about_reviews_waiting_for_days(self):
+        old = self.task("Old PR", status=Status.REVIEW, link="https://github.com/a/b/pull/5")
+        Task.objects.filter(pk=old.pk).update(updated_at=timezone.now() - timedelta(days=4))
+        self.task("Fresh PR", status=Status.REVIEW)
+        r = self.client.get(reverse("work:today"))
+        self.assertEqual([t.title for t in r.context["stuck_reviews"]], ["Old PR"])
+        self.assertContains(r, "Waiting on code review")

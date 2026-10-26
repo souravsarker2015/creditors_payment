@@ -35,6 +35,8 @@ class Project(models.Model):
     name = models.CharField(_("Name"), max_length=120)
     color = models.CharField(_("Colour"), max_length=10, choices=Color.choices, default=Color.BLUE)
     client = models.CharField(_("Client / team"), max_length=120, blank=True)
+    repo_url = models.URLField(_("Repository"), max_length=300, blank=True,
+                               help_text=_("Its GitHub, GitLab or Bitbucket page — tasks then open their branch and a pull request in one click."))
     description = models.TextField(_("Description"), blank=True)
     estimate_hours = models.DecimalField(_("Time budget (hours)"), max_digits=7, decimal_places=1, null=True, blank=True,
                                          validators=[MinValueValidator(0)], help_text=_("Optional: how many hours this should take."))
@@ -115,6 +117,7 @@ class Sprint(models.Model):
     start_date = models.DateField(_("Starts"))
     end_date = models.DateField(_("Ends"))
     completed_at = models.DateTimeField(null=True, blank=True, help_text="When it was closed (what was left went on).")
+    retro = models.TextField(_("Retrospective"), blank=True, help_text="What went well, what to improve, action items (Markdown).")
     summary = models.JSONField(default=dict, blank=True, help_text="Kept when it's closed: done, left, done_minutes, burndown [[day, open]…].")
     created_at = models.DateTimeField(auto_now_add=True)
 

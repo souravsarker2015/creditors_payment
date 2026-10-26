@@ -59,6 +59,28 @@ def pr_description(task, settings):
     return "\n".join(parts)
 
 
+def repo_links(task, settings):
+    """With the project's repository: where the task's branch is, and the page that opens a pull request
+    from it (GitHub, GitLab, Bitbucket — any other host: just the repository). {} without one."""
+    from urllib.parse import quote
+
+    repo = (task.project.repo_url if task.project_id else "").strip().rstrip("/").removesuffix(".git")
+    if not repo:
+        return {}
+    name = branch_name(task, settings)
+    path, query = quote(name, safe="/"), quote(name, safe="")         # "feat/T-4-x" stays a path; in a query it's encoded
+    host = repo.lower()
+    if "gitlab" in host:
+        links = {"branch": f"{repo}/-/tree/{path}", "new_pr": f"{repo}/-/merge_requests/new?merge_request%5Bsource_branch%5D={query}"}
+    elif "bitbucket" in host:
+        links = {"branch": f"{repo}/branch/{path}", "new_pr": f"{repo}/pull-requests/new?source={query}"}
+    elif "github" in host:
+        links = {"branch": f"{repo}/tree/{path}", "new_pr": f"{repo}/compare/{path}?expand=1"}
+    else:
+        links = {}
+    return {"repo": repo, **links}
+
+
 # ── Quick add: a conventional-commit start ("fix(auth): login loop") ────────
 PREFIX = re.compile(r"^(feat|feature|fix|bug|bugfix|hotfix|chore|refactor|perf|test|tests|ci|build|style|docs?|spike|research)(?:\(([\w./-]{1,30})\))?!?:\s*", re.I)
 PREFIX_KIND = {"feat": TaskKind.FEATURE, "feature": TaskKind.FEATURE, "fix": TaskKind.BUG, "bug": TaskKind.BUG, "bugfix": TaskKind.BUG,

@@ -1405,6 +1405,37 @@ def note_todos_to_tasks(user, note, today=None):
     return made
 
 
+@transaction.atomic
+def retro_actions_to_tasks(user, sprint, today=None):
+    """A sprint retrospective's open action items ("- [ ] …") become tasks — in the next sprint when
+    there is one — and each line links to its task, so doing it again skips them. Returns the tasks."""
+    from django.urls import reverse
+
+    from . import sprints
+
+    later = sprints.open_sprints(user).exclude(pk=sprint.pk).filter(start_date__gte=sprint.start_date).order_by("start_date").first()
+    made = []
+
+    def swap(m):
+        text = m.group(2)
+        if TASK_URL.search(text):
+            return m.group(0)
+        task = create_from_quick(user, text, today=today)
+        if task is None:
+            return m.group(0)
+        if later:
+            task.sprint = later
+            task.save(update_fields=["sprint", "updated_at"])
+        made.append(task)
+        return f"{m.group(1)}[ ] [{task.title.replace('[', '(').replace(']', ')')}]({reverse('work:task', args=[task.pk])})"
+
+    text = TODO_LINE.sub(swap, sprint.retro)
+    if made:
+        sprint.retro = text
+        sprint.save(update_fields=["retro"])
+    return made
+
+
 def tick_note_line(task, done):
     """Ticks (or unticks) the note line a task was made from."""
     note = Note.objects.filter(pk=task.from_note_id).first()
