@@ -38,7 +38,7 @@
   <header class="card-header"><h2 class="card-title">{% blocktranslate count counter=found|length %}{{ counter }} match{% plural %}{{ counter }} matches{% endblocktranslate %}</h2>
     <a href="{% url 'work:exam' %}" class="btn btn-ghost btn-sm">{% translate "Clear" %}</a></header>
   {% if found %}<ul class="wex-found-list">{% for n in found %}
-    <li><a href="{% url 'work:exam_subject' n.subject_id %}#q{{ n.pk }}"><span class="wt-dot" data-color="{{ n.subject.color }}"></span><b>{{ n.question|truncatechars:140 }}</b><small>{{ n.subject.name }}{% if n.chapter %} › {{ n.chapter }}{% endif %}</small></a>
+    <li><a href="{% url 'work:exam_subject' n.subject_id %}?open={{ n.pk }}"><span class="wt-dot" data-color="{{ n.subject.color }}"></span><b>{{ n.question|truncatechars:140 }}</b><small>{{ n.subject.name }}{% if n.chapter %} › {{ n.chapter }}{% endif %}</small></a>
       {% if n.snippet %}<p>{{ n.snippet|truncatechars:220 }}</p>{% endif %}</li>{% endfor %}</ul>
   {% else %}<p class="card-body help">{% translate "Nothing matches. Try another word." %}</p>{% endif %}
 </section>

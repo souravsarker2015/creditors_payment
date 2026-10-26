@@ -62,9 +62,9 @@
     <h2 id="card-edit-title" class="card-title">{% translate "Edit this card" %}</h2>
     <form class="wfc-form" @submit.prevent="saveEdit()" @keydown.ctrl.enter.prevent="saveEdit()" @keydown.meta.enter.prevent="saveEdit()">
       <label class="label" for="re-front">{% translate "Question" %}</label>
-      <textarea id="re-front" x-ref="editFront" x-model="draft.front" class="form-input" rows="3"></textarea>
+      <textarea id="re-front" data-md x-ref="editFront" x-model="draft.front" class="form-input" rows="3"></textarea>
       <label class="label" for="re-back">{% translate "Answer" %}</label>
-      <textarea id="re-back" x-model="draft.back" class="form-input" rows="4"></textarea>
+      <textarea id="re-back" data-md x-model="draft.back" class="form-input" rows="4"></textarea>
       <div class="wc-foot"><span class="spacer"></span><button type="button" class="btn btn-ghost" @click="editing = false">{% translate "Cancel" %}</button><button type="submit" class="btn btn-primary">{% translate "Save" %}</button></div>
     </form>
   </section>

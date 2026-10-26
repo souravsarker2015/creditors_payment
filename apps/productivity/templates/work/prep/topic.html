@@ -84,7 +84,7 @@
               <form class="wpc-edit" x-show="editing === q.id" x-cloak @submit.prevent="saveEdit(q)" @keydown.ctrl.enter.prevent="saveEdit(q)" @keydown.meta.enter.prevent="saveEdit(q)" @keydown.escape.stop="editing = null">
                 <label class="label">{% translate "Question" %}<textarea class="form-input" rows="2" x-model="draft.prompt" required></textarea></label>
                 <label class="label">{% translate "Answer" %}<textarea class="form-input" rows="6" x-model="draft.answer" data-paste-images></textarea></label>
-                <label class="label">{% translate "Key points" %} <span class="help">{% translate "one per line" %}</span><textarea class="form-input" rows="3" x-model="draft.key_points"></textarea></label>
+                <label class="label">{% translate "Key points" %} <span class="help">{% translate "one per line" %}</span><textarea class="form-input" rows="3" x-model="draft.key_points" data-md></textarea></label>
                 <div class="wpc-edit-row">
                   <select class="form-input input-compact" x-model="draft.kind" aria-label="{% translate 'Type' %}" :disabled="q.kind === 'choice'">{% for v, l in kinds %}<option value="{{ v }}"{% if v == "choice" %} disabled{% endif %}>{{ l }}</option>{% endfor %}</select>
                   <select class="form-input input-compact" x-model.number="draft.difficulty" aria-label="{% translate 'Difficulty' %}">{% for v, l in difficulties %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select>
@@ -108,7 +108,7 @@
           <textarea class="form-input" rows="1" x-model="adding[s.id].prompt" @focus="adding[s.id].open = true" @keydown.enter="if (!$event.shiftKey && !$event.ctrlKey && !$event.metaKey && !$event.altKey && !$event.isComposing) { $event.preventDefault(); $el.closest('form').querySelector('[data-answer]').focus() }"
                     placeholder="{% translate '+ Write a question and press Enter for its answer…' %}" aria-label="{% translate 'New question' %}"></textarea>
           <div class="wpc-add-more" x-show="adding[s.id].open" x-cloak>
-            <textarea class="form-input" rows="4" data-answer x-model="adding[s.id].answer" placeholder="{% translate 'The answer (Markdown works). Ctrl+Enter adds it.' %}" aria-label="{% translate 'Answer' %}"></textarea>
+            <textarea class="form-input" rows="4" data-md data-answer x-model="adding[s.id].answer" placeholder="{% translate 'The answer (Markdown works). Ctrl+Enter adds it.' %}" aria-label="{% translate 'Answer' %}"></textarea>
             <div class="wpc-edit-row">
               <select class="form-input input-compact" x-model="adding[s.id].kind" aria-label="{% translate 'Type' %}"><option value="short">{% translate "Short answer" %}</option><option value="long">{% translate "Explain / design" %}</option><option value="code">{% translate "Coding" %}</option></select>
               <select class="form-input input-compact" x-model.number="adding[s.id].difficulty" aria-label="{% translate 'Difficulty' %}">{% for v, l in difficulties %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select>

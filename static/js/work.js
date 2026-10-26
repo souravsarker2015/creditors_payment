@@ -1306,7 +1306,7 @@
             if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); this.chooseLink(this.suggest[this.pick]); return; }
             if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); this.suggest = []; return; }
           }
-          if (e.key === "Tab") { e.preventDefault(); this.insert("  "); }
+          // (Tab, Enter in lists and the other writing keys: static/js/writing.js)
         },
         get draftKey() { return "work-note-draft:" + ME + ":" + (this.id || "new"); },
         init: function () {
@@ -1784,12 +1784,59 @@
     text = wikiLinks(text);
     if (window.marked && window.DOMPurify) {
       var html = marked.parse(text || "", { gfm: true, breaks: true });
-      return DOMPurify.sanitize(html);
+      // to-do boxes can be ticked where the preview allows it ([data-tick]); elsewhere CSS keeps them still
+      return codeBoxes(DOMPurify.sanitize(html)).replace(/<input (?=[^>]*type="checkbox")(?=[^>]*disabled="")([^>]*)>/g, function (all, attrs) {
+        return '<input type="checkbox" class="md-tick" tabindex="-1"' + (/checked=""/.test(attrs) ? ' checked=""' : "") + ">";
+      });
     }
     var esc = (text || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     return "<p>" + esc.replace(/\n\n+/g, "</p><p>").replace(/\n/g, "<br>") + "</p>";
   }
   window.Work.markdown = renderMarkdown;
+  /* Ticking a box in a drawn note: the index-th to-do line of the Markdown is turned over
+     (the same lines as services.todo_lines on the server: none inside a ``` block) */
+  var CHECK_LINE = /^([ \t]*(?:>[ \t]?)*[ \t]*(?:[-*+]|\d+[.)])[ \t]+)\[( |x|X)\]/, FENCE = /^[ \t]*(```|~~~)/;
+  window.Work.tickMarkdown = function (text, index) {
+    var lines = String(text || "").split("\n"), code = false, n = -1;
+    for (var i = 0; i < lines.length; i++) {
+      if (FENCE.test(lines[i])) { code = !code; continue; }
+      var m = !code && CHECK_LINE.exec(lines[i]);
+      if (m && ++n === index) {
+        var at = m[1].length + 1;
+        lines[i] = lines[i].slice(0, at) + (m[2] === " " ? "x" : " ") + lines[i].slice(at + 1);
+        return lines.join("\n");
+      }
+    }
+    return text;
+  };
+  d.addEventListener("click", function (e) {
+    var box = e.target.closest && e.target.closest("input.md-tick"), area = box && box.closest("[data-tick]");
+    if (!area) return;
+    e.preventDefault();               // the note changes, and is drawn again with the box ticked
+    var index = Array.prototype.indexOf.call(area.querySelectorAll("input.md-tick"), box);
+    area.dispatchEvent(new CustomEvent("md-tick", { detail: { index: index }, bubbles: true }));
+  });
+
+  // A code block gets its language and a Copy button (outside the box that scrolls sideways); diagrams don't.
+  function codeBoxes(html) {
+    return html.replace(/<pre><code(?: class="language-([\w+#.-]+)")?>([\s\S]*?)<\/code><\/pre>/g, function (all, lang, code) {
+      if (lang === "mermaid") return all;
+      var label = t("copyCode", "Copy code");
+      return '<div class="wn-code"' + (lang ? ' data-lang="' + lang + '"' : "") + ">" + all + '<span class="wn-code-bar">' +
+        (lang ? '<span class="wn-code-lang">' + lang + "</span>" : "") +
+        '<button type="button" class="wn-code-copy" data-copy-code aria-label="' + label + '" title="' + label + '">' + COPY_ICON + "</button></span></div>";
+    });
+  }
+  var COPY_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+  d.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("[data-copy-code]"); if (!b) return;
+    var pre = b.closest(".wn-code").querySelector("pre"); if (!pre) return;
+    e.preventDefault(); e.stopPropagation();
+    var text = pre.textContent.replace(/\n$/, "");
+    var done = function () { b.classList.add("is-done"); setTimeout(function () { b.classList.remove("is-done"); }, 1300); toast(t("copied", "Copied")); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function () { prompt("", text); });
+    else prompt("", text);
+  });
 
   /* ── Mermaid: diagrams written as text (Diagrams, and ```mermaid blocks in notes) ── */
   var MERMAID = "https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js", mermaidLoading = null, mermaidTheme = "";
@@ -1905,6 +1952,9 @@
       else if (k === "m") openMenu(focused.querySelector('[data-act="menu"]')); else location.href = focused.querySelector(".wt-task-title").href;
       return;
     }
+    // a page that uses some of these keys itself (the exam board: c = a new question) says so: data-page-keys="c a"
+    var own = d.querySelector("[data-page-keys]");
+    if (own && own.getAttribute("data-page-keys").split(" ").indexOf(k) >= 0) return;
     if (k === "c" || k === "t") { e.preventDefault(); d.dispatchEvent(new CustomEvent("work:capture", { detail: "task" })); }
     else if (k === "n") { e.preventDefault(); d.dispatchEvent(new CustomEvent("work:capture", { detail: "note" })); }
     else if (k === "s" && window.Alpine) { e.preventDefault(); var tm = Alpine.store("timer"); tm.running ? tm.stop() : d.dispatchEvent(new CustomEvent("work:capture", { detail: "time" })); }

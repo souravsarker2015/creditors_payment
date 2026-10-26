@@ -23787,3 +23787,141 @@ msgstr "আপনার ক্রম"
 
 msgid "just now"
 msgstr "এইমাত্র"
+
+msgid "A code block, closed for you"
+msgstr "কোড ব্লক — বন্ধও হয়ে যায় নিজে থেকে"
+
+msgid "Blanks to fill in when copying:"
+msgstr "কপি করার সময় যে ফাঁকা ঘরগুলো পূরণ করবেন:"
+
+msgid "Bold · italic"
+msgstr "বোল্ড · ইটালিক"
+
+msgid "Copy as it is"
+msgstr "যেমন আছে তেমন কপি"
+
+msgid "Copy code"
+msgstr "কোড কপি করুন"
+
+msgid "In a note: tags it"
+msgstr "নোটে লিখলে: সেটাই ট্যাগ"
+
+msgid "Indent · outdent the line or the chosen lines"
+msgstr "লাইন বা বেছে নেওয়া লাইনগুলো ভেতরে · বাইরে সরান"
+
+msgid "Leave the box with the keyboard"
+msgstr "কিবোর্ড দিয়ে বক্স থেকে বের হন"
+
+msgid "Makes them a link"
+msgstr "শব্দগুলো লিংক হয়ে যায়"
+
+msgid "Move the line up or down"
+msgstr "লাইন ওপরে বা নিচে সরান"
+
+msgid "Next list item or to-do (on an empty one: the list ends)"
+msgstr "তালিকার পরের আইটেম বা টু-ডু (ফাঁকা আইটেমে: তালিকা শেষ)"
+
+msgid "Paste a link on words"
+msgstr "শব্দের ওপর লিংক পেস্ট"
+
+msgid "Take a note… Markdown works: - [ ] to-do, `code`, ``` blocks, #tag"
+msgstr "নোট লিখুন… Markdown চলে: - [ ] টু-ডু, `code`, ``` ব্লক, #ট্যাগ"
+
+msgid "Writing (notes, answers, cards)"
+msgstr "লেখা (নোট, উত্তর, কার্ড)"
+
+msgid "as in VS Code"
+msgstr "VS Code-এর মতো"
+
+msgid "with a default"
+msgstr "ডিফল্ট মানসহ"
+
+msgid "Bulleted list"
+msgstr "বুলেট তালিকা"
+
+msgid "Callout"
+msgstr "নজরকাড়া নোট"
+
+msgid "Collapsible section"
+msgstr "ভাঁজ করা অংশ"
+
+msgid "Diagram (Mermaid)"
+msgstr "ডায়াগ্রাম (Mermaid)"
+
+msgid "Divider"
+msgstr "বিভাজক রেখা"
+
+msgid "Edit the note"
+msgstr "নোট সম্পাদনা"
+
+msgid "Flashcard (question :: answer)"
+msgstr "ফ্ল্যাশকার্ড (প্রশ্ন :: উত্তর)"
+
+msgid "Formula"
+msgstr "সূত্র"
+
+msgid "Heading 1"
+msgstr "শিরোনাম ১"
+
+msgid "Heading 2"
+msgstr "শিরোনাম ২"
+
+msgid "Heading 3"
+msgstr "শিরোনাম ৩"
+
+msgid "JSON"
+msgstr "JSON"
+
+msgid "JavaScript code"
+msgstr "JavaScript কোড"
+
+msgid "Keys: C new question · / find · J K from card to card · E edit · X known · S important · R review · O overview. Drag a card to change the order."
+msgstr "কী: C নতুন প্রশ্ন · / খুঁজুন · J K এক কার্ড থেকে আরেকটিতে · E সম্পাদনা · X জানি · S গুরুত্বপূর্ণ · R রিভিউ · O ওভারভিউ। ক্রম বদলাতে কার্ড টেনে নিন।"
+
+msgid "Link to a note"
+msgstr "অন্য নোটের লিংক"
+
+msgid "Next question (Alt+→)"
+msgstr "পরের প্রশ্ন (Alt+→)"
+
+msgid "Numbered list"
+msgstr "নম্বরযুক্ত তালিকা"
+
+msgid "Open in the full editor"
+msgstr "পূর্ণ এডিটরে খুলুন"
+
+msgid "Open in the full editor: history, links, diagrams"
+msgstr "পূর্ণ এডিটরে খুলুন: ইতিহাস, লিংক, ডায়াগ্রাম"
+
+msgid "Opens today’s daily note — or starts it"
+msgstr "আজকের দৈনিক নোট খোলে — না থাকলে শুরু করে"
+
+msgid "Previous question (Alt+←)"
+msgstr "আগের প্রশ্ন (Alt+←)"
+
+msgid "Python code"
+msgstr "Python কোড"
+
+msgid "SQL"
+msgstr "SQL"
+
+msgid "Shell command"
+msgstr "শেল কমান্ড"
+
+msgid "That to-do isn't there any more."
+msgstr "এই টু-ডু আর নেই।"
+
+msgid "Time now"
+msgstr "এখনকার সময়"
+
+msgid "Today's note"
+msgstr "আজকের নোট"
+
+msgid "Today’s date"
+msgstr "আজকের তারিখ"
+
+msgid "Today’s note"
+msgstr "আজকের নোট"
+
+msgid "Write… Markdown works — type / for headings, to-dos, code, tables and more."
+msgstr "লিখুন… Markdown চলে — শিরোনাম, টু-ডু, কোড, টেবিল ইত্যাদির জন্য / লিখুন।"

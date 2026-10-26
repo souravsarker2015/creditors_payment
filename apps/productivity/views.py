@@ -79,7 +79,14 @@ def _texts():
         "duplicated": _("Copy made"), "open": _("Open"), "wipOver": _("“In progress” is over your limit of %(n)s — finish one before starting another?"),
         "viewName": _("Name this view (e.g. “Urgent at work”):"), "viewDelete": _("Remove this saved view?"), "viewSaved": _("View saved"),
         "breakOver": _("Break's over"), "backToWork": _("Ready to focus again?"), "myDay": _("My Day"), "noAccess": _("Not allowed."),
-        "link": _("Link"), "copied": _("Copied"),
+        "link": _("Link"), "copied": _("Copied"), "copyCode": _("Copy code"),
+        "slash": {      # "/" in a Markdown box (static/js/writing.js)
+            "h1": _("Heading 1"), "h2": _("Heading 2"), "h3": _("Heading 3"), "todo": _("To-do"), "bullet": _("Bulleted list"),
+            "numbered": _("Numbered list"), "quote": _("Quote"), "callout": _("Callout"), "code": _("Code block"), "python": _("Python code"),
+            "js": _("JavaScript code"), "sql": _("SQL"), "bash": _("Shell command"), "json": _("JSON"), "mermaid": _("Diagram (Mermaid)"),
+            "table": _("Table"), "details": _("Collapsible section"), "divider": _("Divider"), "math": _("Formula"), "link": _("Link to a note"),
+            "card": _("Flashcard (question :: answer)"), "date": _("Today’s date"), "time": _("Time now"),
+        },
         "units": {k: str(v) for k, v in LearningUnit.choices},
         "kindCommand": _("Command"), "kindRecent": _("Recent"), "kindCreate": _("Create"),
         "addTask": _("Add task"), "addNote": _("Save as a note"), "trackThis": _("Start the timer for"),
@@ -151,6 +158,7 @@ def _commands():
         {"id": "start", "title": _("Start the timer"), "icon": "play", "action": "capture:time", "hint": "s", "words": "track", "when": "idle"},
         {"id": "stop", "title": _("Stop the timer"), "icon": "stop", "action": "timer:stop", "hint": "s", "words": "track", "when": "running"},
         {"id": "wrapup", "title": _("Wrap up the day"), "icon": "sun", "url": r("work:wrapup"), "words": "shutdown end of day evening plan tomorrow"},
+        {"id": "note-today", "title": _("Today's note"), "icon": "sun", "url": r("work:note_today"), "words": "daily journal log scratch"},
         {"id": "note-meeting", "title": _("New meeting notes"), "icon": "note", "url": r("work:notes") + "?new=1&template=meeting", "words": "template"},
         {"id": "note-adr", "title": _("New decision record (ADR)"), "icon": "note", "url": r("work:notes") + "?new=1&template=adr", "words": "template architecture"},
         {"id": "note-study", "title": _("New study notes"), "icon": "note", "url": r("work:notes") + "?new=1&template=study", "words": "template learning flashcards revise"},
@@ -741,6 +749,19 @@ def notes_view(request, pk=None):
 
 
 @work_required
+def note_today_view(request):
+    """Today's note (like Obsidian's or Bear's daily note): opened if it's there, made from the
+    "Daily note" template if not — one click from the notes board, the palette or the Today page."""
+    today = _today()
+    note = (Note.objects.filter(owner=request.user, is_archived=False, tags__name="daily", created_at__date=today).order_by("pk").first())
+    if note is None:
+        title, body, tags = NOTE_TEMPLATES["daily"]
+        note = Note.objects.create(owner=request.user, title=f"{title} — {date_format(today, 'j M Y')}", body=str(body))
+        note.tags.set(services.tags_named(request.user, [tags]))
+    return redirect("work:note", pk=note.pk)
+
+
+@work_required
 def note_go_view(request):
     """Where a [[Note title]] link goes: that note, or a new one with that title."""
     title = request.GET.get("title", "").strip()[:200]
@@ -1171,14 +1192,20 @@ def snippets_view(request):
     q, lang, tag = request.GET.get("q", "").strip(), request.GET.get("lang", ""), request.GET.get("tag", "").strip().lower()
     snippets = Snippet.objects.filter(owner=user).prefetch_related("tags")
     if q:
-        snippets = snippets.filter(Q(title__icontains=q) | Q(code__icontains=q) | Q(description__icontains=q))
+        snippets = snippets.filter(Q(title__icontains=q) | Q(code__icontains=q) | Q(description__icontains=q) | Q(tags__name__icontains=q))
     if lang:
         snippets = snippets.filter(language=lang)
     if tag:
         snippets = snippets.filter(tags__name=tag)
     used = set(Snippet.objects.filter(owner=user).values_list("language", flat=True))
+    from apps.accounts.views import _page_window as page_window
+
+    page = Paginator(snippets.distinct(), 30).get_page(request.GET.get("page"))
+    keep = request.GET.copy()
+    keep.pop("page", None)
     return render_work(request, "work/snippets.html", {
-        "snippets": snippets.distinct()[:200], "q": q, "lang": lang, "tag": tag,
+        "snippets": page.object_list, "page_obj": page, "base_query_string": keep.urlencode(), "pagination_window": page_window(page),
+        "q": q, "lang": lang, "tag": tag,
         "languages": [(v, l) for v, l in Language.choices if v in used],
         "tags": Tag.objects.filter(owner=user, snippets__isnull=False).distinct(),
     })

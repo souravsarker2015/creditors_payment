@@ -17,7 +17,7 @@
       <p class="wc-hint">{% translate "#tag  @project  !high  ~30m  tomorrow / friday / +3d  at 3pm  every monday  ·  Enter to add, Shift+Enter to add and start the timer" %}</p>
     </div>
     <div x-show="mode === 'note'">
-      <textarea x-ref="note" x-model="text" class="wc-input wc-area" rows="5" placeholder="{% translate 'Write it down before it slips away… (Markdown works)' %}"
+      <textarea x-ref="note" x-model="text" data-md class="wc-input wc-area" rows="5" placeholder="{% translate 'Write it down before it slips away… (Markdown works)' %}"
                 @keydown.ctrl.enter.prevent="save()" @keydown.meta.enter.prevent="save()" aria-label="{% translate 'New note' %}"></textarea>
       <p class="wc-hint">{% translate "Ctrl+Enter to save. The first line becomes the title." %}</p>
     </div>

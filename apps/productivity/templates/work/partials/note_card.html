@@ -1,5 +1,5 @@
-{% load i18n work %}{% comment %}One note on the notes board (like a Keep card): pin, colour, archive and delete right on it; a click opens it.{% endcomment %}
-<article class="wkc wnc" x-data="noteCard({{ n.pk }}, {{ n.is_pinned|yesno:'true,false' }}, '{{ n.color }}')" x-show="!gone" :data-color="color || null"{% if n.color %} data-color="{{ n.color }}"{% endif %}
+{% load i18n work %}{% comment %}One note on the notes board (like a Keep card): tick its to-dos, pin, colour, archive and delete right on it; a click opens it to edit on the board.{% endcomment %}
+<article class="wkc wnc" data-note-card="{{ n.pk }}" x-data="noteCard({{ n.pk }}, {{ n.is_pinned|yesno:'true,false' }}, '{{ n.color }}')" x-show="!gone" :data-color="color || null"{% if n.color %} data-color="{{ n.color }}"{% endif %}
          @click="go($event)" data-url="{% url 'work:note' n.pk %}">
   <div class="wkc-top">
     {% if n.project %}<span class="wkc-label"><span class="wt-dot" data-color="{{ n.project.color }}"></span> {{ n.project.name }}</span>{% endif %}
@@ -7,7 +7,7 @@
     <button type="button" class="wkc-btn wnc-pin" :class="pinned && 'is-on'" @click.stop="pin()" :aria-pressed="pinned.toString()" aria-label="{% translate 'Pin to top' %}" data-tip="{% translate 'Pin to top' %}">{% icon "pin" %}</button>
   </div>
   <a href="{% url 'work:note' n.pk %}" class="wnc-title">{{ n.display_title }}</a>
-  {% with snip=n|note_preview %}{% if snip %}<p class="wnc-body">{{ snip }}</p>{% endif %}{% endwith %}
+  {% with lines=n|note_card_lines %}{% if lines %}<div class="wnc-body">{% for ln in lines %}{% if ln.todo %}<button type="button" class="wnc-todo{% if ln.done %} is-done{% endif %}" role="checkbox" aria-checked="{{ ln.done|yesno:'true,false' }}" @click.stop="tick({{ ln.i }}, $el)"><span class="wnc-box" aria-hidden="true">{% icon "check" %}</span><span class="wnc-todo-text">{{ ln.text }}</span></button>{% else %}<span class="wnc-line">{{ ln.text }}</span>{% endif %}{% endfor %}</div>{% endif %}{% endwith %}
   {% if n.tags.all %}<p class="wnc-tags">{% for tg in n.tags.all %}<span>#{{ tg.name }}</span>{% endfor %}</p>{% endif %}
   <div class="wkc-foot">
     <div class="wkc-palette" x-data="{ open: false }" @click.outside="open = false">

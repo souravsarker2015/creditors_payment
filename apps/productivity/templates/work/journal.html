@@ -23,13 +23,13 @@
       <span class="wn-state" x-text="{ saving: '{% translate "Saving…" %}', saved: '{% translate "Saved" %}', offline: '{% translate "Saved on this device" %}', dirty: '…', error: '{% translate "Not saved" %}' }[state] || ''"></span></header>
     <div class="card-body form-stack">
       <div class="field"><label class="label" for="j-plan">{% translate "Plan" %}</label>
-        <textarea id="j-plan" rows="3" class="form-input" placeholder="{% translate 'What will make today a success?' %}" @input="save('plan', $event.target.value)">{{ entry.plan }}</textarea></div>
+        <textarea id="j-plan" data-md rows="3" class="form-input" placeholder="{% translate 'What will make today a success?' %}" @input="save('plan', $event.target.value)">{{ entry.plan }}</textarea></div>
       <div class="field"><label class="label" for="j-wins">{% translate "Done & learnt" %}</label>
-        <textarea id="j-wins" rows="4" class="form-input" placeholder="{% translate 'Shipped, fixed, figured out…' %}" @input="save('wins', $event.target.value)">{{ entry.wins }}</textarea></div>
+        <textarea id="j-wins" data-md rows="4" class="form-input" placeholder="{% translate 'Shipped, fixed, figured out…' %}" @input="save('wins', $event.target.value)">{{ entry.wins }}</textarea></div>
       <div class="field"><label class="label" for="j-block">{% translate "Blockers" %}</label>
-        <textarea id="j-block" rows="2" class="form-input" placeholder="{% translate 'Waiting on review, unclear spec… (one per line — they go in the standup)' %}" @input="save('blockers', $event.target.value)">{{ entry.blockers }}</textarea></div>
+        <textarea id="j-block" data-md rows="2" class="form-input" placeholder="{% translate 'Waiting on review, unclear spec… (one per line — they go in the standup)' %}" @input="save('blockers', $event.target.value)">{{ entry.blockers }}</textarea></div>
       <div class="field"><label class="label" for="j-notes">{% translate "Notes" %}</label>
-        <textarea id="j-notes" rows="3" class="form-input" @input="save('notes', $event.target.value)">{{ entry.notes }}</textarea></div>
+        <textarea id="j-notes" data-md rows="3" class="form-input" @input="save('notes', $event.target.value)">{{ entry.notes }}</textarea></div>
       <div class="wj-scales">
         <div x-data="{ v: {{ entry.mood|default:0 }} }"><p class="label">{% translate "Mood" %}</p>
           <div class="wj-scale">{% for i in moods %}<button type="button" :class="v === {{ i }} && 'is-on'" @click="v = v === {{ i }} ? 0 : {{ i }}; save('mood', v ? String(v) : '')" aria-label="{{ i }}/5">{% cycle '😞' '😕' '😐' '🙂' '😄' %}</button>{% endfor %}</div></div>

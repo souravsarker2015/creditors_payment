@@ -66,6 +66,7 @@
               <span class="wex-missed" x-show="q.misses" x-text="'✗ ' + q.misses" title="{% translate 'Times you didn’t know it in a review' %}"></span>
               <button type="button" class="wexo-flag wex-star" :class="q.starred && 'is-on'" @click="flag(q, 'star')" :aria-pressed="q.starred.toString()" aria-label="{% translate 'Important' %}">{% icon "star" %}</button>
               <button type="button" class="wexo-flag wex-known" :class="q.known && 'is-on'" @click="flag(q, 'known')" :aria-pressed="q.known.toString()" aria-label="{% translate 'I know it' %}">{% icon "check" %}</button>
+              <a class="wexo-flag" :href="'{% url 'work:exam_subject' s.pk %}?open=' + q.id" aria-label="{% translate 'Edit' %}" data-tip="{% translate 'Edit' %}">{% icon "edit" %}</a>
             </span>
           </div>
           <div class="wexo-a-wrap" x-show="answers || open[q.id]">

@@ -39,7 +39,7 @@
       <div class="field" x-data="{ preview: false, text: '' }">
         <div class="field-head"><label class="label" for="{{ form.takeaways.id_for_label }}">{{ form.takeaways.label }}</label>
           <div class="seg seg-sm"><button type="button" class="seg-item" :class="!preview && 'is-active'" @click="preview = false">{% translate "Write" %}</button><button type="button" class="seg-item" :class="preview && 'is-active'" @click="text = $refs.take.value; preview = true">{% translate "Preview" %}</button></div></div>
-        <textarea x-ref="take" x-show="!preview" name="{{ form.takeaways.html_name }}" id="{{ form.takeaways.id_for_label }}" rows="10" class="form-input" placeholder="{% translate '- The 3 ideas worth keeping&#10;- What I will do differently&#10;- Quotes, code, links' %}">{{ form.takeaways.value|default:'' }}</textarea>
+        <textarea x-ref="take" data-md x-show="!preview" name="{{ form.takeaways.html_name }}" id="{{ form.takeaways.id_for_label }}" rows="10" class="form-input" placeholder="{% translate '- The 3 ideas worth keeping&#10;- What I will do differently&#10;- Quotes, code, links' %}">{{ form.takeaways.value|default:'' }}</textarea>
         <div x-show="preview" x-cloak class="wn-md wtd-preview" x-html="Work.markdown(text)"></div>
         <p class="help">{{ form.takeaways.help_text }}</p>
       </div>

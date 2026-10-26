@@ -14,9 +14,13 @@
   "use strict";
   var d = document;
 
+  // The element before the pager — or, for a pager wrapped in a box of its own (to be swapped), before that box.
   function before(nav) {
-    for (var el = nav.previousElementSibling; el; el = el.previousElementSibling) {
-      if (!/^(SCRIPT|TEMPLATE|STYLE)$/.test(el.tagName)) return el;
+    for (var at = nav; at && at !== d.body; at = at.parentElement) {
+      for (var el = at.previousElementSibling; el; el = el.previousElementSibling) {
+        if (!/^(SCRIPT|TEMPLATE|STYLE)$/.test(el.tagName)) return el;
+      }
+      if (at.parentElement && at.parentElement.children.length !== 1) break;      // only a box holding just the pager
     }
     return null;
   }

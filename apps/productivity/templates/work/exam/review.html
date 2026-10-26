@@ -92,7 +92,7 @@
     <h2 id="exam-edit-title" class="card-title">{% translate "Edit this question" %}</h2>
     <form class="wfc-form" @submit.prevent="saveEdit()" @keydown.ctrl.enter.prevent="saveEdit()" @keydown.meta.enter.prevent="saveEdit()">
       <label class="label" for="ee-q">{% translate "Question" %}</label>
-      <textarea id="ee-q" x-ref="editQuestion" x-model="draft.question" class="form-input" rows="2"></textarea>
+      <textarea id="ee-q" data-md x-ref="editQuestion" x-model="draft.question" class="form-input" rows="2"></textarea>
       <label class="label" for="ee-a">{% translate "Answer" %}</label>
       <textarea id="ee-a" x-model="draft.answer" class="form-input" rows="10" data-md-paste data-paste-images></textarea>
       <div class="wc-foot"><span class="spacer"></span><button type="button" class="btn btn-ghost" @click="editing = false">{% translate "Cancel" %}</button><button type="submit" class="btn btn-primary">{% translate "Save" %}</button></div>

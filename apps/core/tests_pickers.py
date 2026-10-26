@@ -23,7 +23,7 @@ class PickerSetupTests(TestCase):
     def test_bangla_gets_bangla_calendar_and_words(self):
         self.client.post(reverse("update_preferences"), {"language": "bn"})
         html = self.client.get(reverse("expense_create")).content.decode()
-        self.assertIn("flatpickr/dist/l10n/bn.js", html)
+        self.assertIn("flatpickr@4.6.13/dist/l10n/bn.js", html)
         self.assertIn('yesterday: "গতকাল"', html)
         self.assertIn('last7: "গত ৭ দিন"', html)
 

@@ -503,8 +503,26 @@ def note_save(request):
     note.save()
     if "tags" in request.POST:
         note.tags.set(services.tags_named(user, request.POST["tags"].replace(",", " ").split()))
-    return ok(id=note.pk, title=note.display_title, url=reverse("work:note", args=[note.pk]),
-              saved=timezone.localtime(note.updated_at).strftime("%H:%M"))
+    if "body" in request.POST:          # #tags written in the note are its tags too
+        note.tags.add(*services.tags_named(user, services.hashtags(note.body)))
+    extra = {"card": _note_card(request, note)} if request.POST.get("card") == "1" else {}
+    return ok(id=note.pk, title=note.display_title, url=reverse("work:note", args=[note.pk]), tags=sorted(t.name for t in note.tags.all()),
+              saved=timezone.localtime(note.updated_at).strftime("%H:%M"), **extra)
+
+
+def _note_card(request, note):
+    """The note's card on the notes board, drawn again after a change (static/js/notes-board.js swaps it in)."""
+    return render_to_string("work/partials/note_card.html", {"n": note, "colors": Color.choices}, request=request)
+
+
+@work_required
+@require_GET
+def note_get(request, pk):
+    """One note, to edit it on the board without leaving it."""
+    note = get_object_or_404(Note, pk=pk, owner=request.user)
+    return ok(id=note.pk, title=note.title, body=note.body, color=note.color, pinned=note.is_pinned, archived=note.is_archived,
+              tags=" ".join(note.tags.values_list("name", flat=True)), url=reverse("work:note", args=[note.pk]),
+              updated=int(note.updated_at.timestamp() * 1000))
 
 
 @work_required
@@ -520,6 +538,17 @@ def note_action(request, pk):
         note.is_archived = not note.is_archived
     elif action == "delete":
         return _trash(request, note, _("Note: %(title)s") % {"title": note.display_title}, reverse("work:notes"))
+    elif action == "tick":             # one to-do ticked right on the card or in the preview: the index-th box
+        try:
+            index = int(request.POST.get("index", ""))
+        except ValueError:
+            return bad("index")
+        done = {"1": True, "0": False}.get(request.POST.get("done"))
+        now = services.tick_todo(request.user, note, index, done)
+        if now is None:
+            return bad(_("That to-do isn't there any more."))
+        return ok(done=now, body=note.body, card=_note_card(request, note) if request.POST.get("card") == "1" else "",
+                  saved=timezone.localtime(note.updated_at).strftime("%H:%M"), updated=int(note.updated_at.timestamp() * 1000))
     elif action == "todos":            # every "- [ ] …" line becomes a task
         made = services.note_todos_to_tasks(request.user, note)
         if not made:
@@ -555,7 +584,8 @@ def note_action(request, pk):
         task.tags.set(note.tags.all())
         return ok(url=reverse("work:task", args=[task.pk]))
     note.save(update_fields=["is_pinned", "is_archived", "color", "updated_at"])
-    return ok(pinned=note.is_pinned, archived=note.is_archived, color=note.color)
+    return ok(pinned=note.is_pinned, archived=note.is_archived, color=note.color,
+              card=_note_card(request, note) if request.POST.get("card") == "1" else "")
 
 
 # ── Habits, journal, focus, entries, snippets ─────────────────────────────
@@ -956,9 +986,9 @@ def search(request):
     from .models import ExamNote
 
     for x in ExamNote.objects.filter(owner=user).filter(Q(question__icontains=q) | Q(answer__icontains=q)).select_related("subject")[:3]:
-        out.append({"kind": "exam", "title": " ".join(x.question.split())[:120], "url": reverse("work:exam_subject", args=[x.subject_id]) + f"#q{x.pk}",
+        out.append({"kind": "exam", "title": " ".join(x.question.split())[:120], "url": reverse("work:exam_subject", args=[x.subject_id]) + f"?open={x.pk}",
                     "meta": x.subject.name})
-    for sn in Snippet.objects.filter(owner=user).filter(Q(title__icontains=q) | Q(description__icontains=q))[:3]:
+    for sn in Snippet.objects.filter(owner=user).filter(Q(title__icontains=q) | Q(description__icontains=q) | Q(code__icontains=q))[:3]:
         out.append({"kind": "snippet", "title": sn.title, "url": reverse("work:snippets") + "?q=" + quote(sn.title), "meta": sn.get_language_display()})
     return ok(results=out)
 

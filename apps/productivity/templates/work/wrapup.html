@@ -50,9 +50,9 @@
     <div class="card-body !pt-0 form-stack">
       <div class="field"><div class="field-head"><label class="label" for="w-wins">{% translate "Done & learnt" %}</label>
         {% if done_lines %}<button type="button" class="btn btn-ghost btn-sm" @click="const ta = $refs.wins; ta.value = (ta.value.trim() ? ta.value.trim() + '\n' : '') + {{ done_lines|escapejs_json }}; save('wins', ta.value)">{% icon "plus" %}{% translate "Add today's done tasks" %}</button>{% endif %}</div>
-        <textarea id="w-wins" x-ref="wins" rows="4" class="form-input" placeholder="{% translate 'Shipped, fixed, figured out…' %}" @input="save('wins', $event.target.value)">{{ journal.wins }}</textarea></div>
+        <textarea id="w-wins" data-md x-ref="wins" rows="4" class="form-input" placeholder="{% translate 'Shipped, fixed, figured out…' %}" @input="save('wins', $event.target.value)">{{ journal.wins }}</textarea></div>
       <div class="field"><label class="label" for="w-block">{% translate "Blockers" %}</label>
-        <textarea id="w-block" rows="2" class="form-input" placeholder="{% translate 'Waiting on review, unclear spec… (one per line — they go in the standup)' %}" @input="save('blockers', $event.target.value)">{{ journal.blockers }}</textarea></div>
+        <textarea id="w-block" data-md rows="2" class="form-input" placeholder="{% translate 'Waiting on review, unclear spec… (one per line — they go in the standup)' %}" @input="save('blockers', $event.target.value)">{{ journal.blockers }}</textarea></div>
       <div class="wj-scales">
         <div x-data="{ v: {{ journal.mood|default:0 }} }"><p class="label">{% translate "Mood" %}</p>
           <div class="wj-scale">{% for i in moods %}<button type="button" :class="v === {{ i }} && 'is-on'" @click="v = v === {{ i }} ? 0 : {{ i }}; save('mood', v ? String(v) : '')" aria-label="{{ i }}/5">{% cycle '😞' '😕' '😐' '🙂' '😄' %}</button>{% endfor %}</div></div>
@@ -66,7 +66,7 @@
     <header class="card-header"><div class="ww-row"><span class="ww-num">3</span><div><h2 class="card-title">{% translate "Plan tomorrow" %}</h2>
       <p class="card-subtitle">{% blocktranslate with d=tomorrow|date:"l" %}It's waiting on Today when you start on {{ d }}.{% endblocktranslate %}</p></div></div>
       <span class="wn-state" x-text="{ saving: '{% translate "Saving…" %}', saved: '{% translate "Saved" %}', offline: '{% translate "Saved on this device" %}', dirty: '…' }[state] || ''"></span></header>
-    <div class="card-body !pt-0"><textarea rows="3" class="form-input" placeholder="{% translate 'The one thing that would make tomorrow a good day…' %}" @input="save('plan', $event.target.value)">{{ next_plan }}</textarea></div>
+    <div class="card-body !pt-0"><textarea rows="3" data-md class="form-input" placeholder="{% translate 'The one thing that would make tomorrow a good day…' %}" @input="save('plan', $event.target.value)">{{ next_plan }}</textarea></div>
   </section>
 
   {% if cards_due %}

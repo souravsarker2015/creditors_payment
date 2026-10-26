@@ -6,7 +6,7 @@
 {% block work %}
 {{ data|json_script:"exam-data" }}
 {{ exam_text|json_script:"exam-text" }}
-<div class="wex wkb" x-data="examBoard" @keydown.document="key($event)">
+<div class="wex wkb" x-data="examBoard" @keydown.document="key($event)" data-page-keys="c a r o j k x s e">
 <header class="wp-head">
   <div class="min-w-0">
     <a href="{% url 'work:exam' %}" class="back-link">{% icon "chevron-left" %}{% translate "Exam notes" %}</a>
@@ -208,13 +208,17 @@
 <div class="empty" x-show="!loading && !shows.all" {% if n %}x-cloak{% endif %}><div class="empty-icon">{% icon "exam" %}</div>
   <h3 class="empty-title">{% translate "No questions yet" %}</h3>
   <p class="empty-text">{% translate "Write your first question above, or paste a list — from your notes, ChatGPT or Claude. Add a few each time you study; they'll be here to revise before the exam." %}</p></div>
-<p class="wpq-keys wex-keys" x-show="shows.all">{% translate "Keys: C new question · / find · R review · O overview. Drag a card to change the order." %}</p>
+<p class="wpq-keys wex-keys" x-show="shows.all">{% translate "Keys: C new question · / find · J K from card to card · E edit · X known · S important · R review · O overview. Drag a card to change the order." %}</p>
 
 {# ── one question, opened (like a Keep note) ── #}
 <div class="wc-backdrop" x-show="editing" x-cloak x-transition.opacity @click="closeEditor()"></div>
 <section class="wc wkc-editor" x-show="editing" x-cloak x-transition :data-color="edit.color || null" role="dialog" aria-modal="true" aria-label="{% translate 'Edit the question' %}"
-         @keydown.escape.stop="closeEditor()" @keydown.ctrl.enter.prevent="closeEditor()" @keydown.meta.enter.prevent="closeEditor()">
+         @keydown.escape.stop="closeEditor()" @keydown.ctrl.enter.prevent="closeEditor()" @keydown.meta.enter.prevent="closeEditor()" @keydown="editorKey($event)">
   <div class="wkc-editor-head">
+    <span class="wkc-steps">
+      <button type="button" class="icon-btn" @click="stepEditor(-1)" :disabled="!canStep(-1)" aria-label="{% translate 'Previous question' %}" data-tip="{% translate 'Previous question (Alt+←)' %}">{% icon "chevron-left" %}</button>
+      <button type="button" class="icon-btn" @click="stepEditor(1)" :disabled="!canStep(1)" aria-label="{% translate 'Next question' %}" data-tip="{% translate 'Next question (Alt+→)' %}">{% icon "chevron-right" %}</button>
+    </span>
     <span class="wkc-num num" x-text="edit.number ? '#' + edit.number : ''"></span>
     <input type="text" class="wkc-chip-input" x-model="edit.chapter" list="exam-chapters" maxlength="120" placeholder="{% translate '+ Label' %}" aria-label="{% translate 'Chapter' %}">
     <span class="spacer"></span>

@@ -143,6 +143,42 @@ def note_preview(note, length=420):
 
 
 @register.filter
+def note_card_lines(note, length=420):
+    """A note's card, line by line: to-dos as boxes to tick right there (with their place among the
+    note's to-dos), the rest as text, as note_preview cuts it. [{"text", "todo", "done", "i"}]"""
+    import re
+
+    from ..services import CHECK_LINE, FENCE, todo_lines
+
+    lines = (note.body or "").replace("\r", "").split("\n")
+    todos = {n: i for i, n in enumerate(todo_lines(note.body))}
+    skip = None
+    if not (note.title or "").strip():        # the first line is the card's title
+        skip = next((n for n, line in enumerate(lines) if line.strip()), None)
+    out, used = [], 0
+    for n, line in enumerate(lines):
+        if n == skip or FENCE.match(line):
+            continue
+        if n in todos:
+            m = CHECK_LINE.match(line)
+            text = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", line[m.end():]).strip()     # a task link: just its words
+            row = {"todo": True, "done": m.group(2) != " ", "i": todos[n], "text": re.sub(r"[*_`]", "", text)}
+        else:
+            row = {"todo": False, "text": re.sub(r"^\s{0,3}(#{1,6}\s+|>\s?)|[*_`]|!\[[^\]]*\]\([^)]*\)", "", line)}
+        if not row["todo"] and not row["text"].strip() and (not out or not out[-1]["text"].strip()):
+            continue                          # no blank lines at the top, or two in a row
+        if used + len(row["text"]) > length:
+            row["text"] = row["text"][:max(0, length - used)].rstrip() + "…"
+            out.append(row)
+            break
+        used += len(row["text"]) + 1
+        out.append(row)
+    while out and not out[-1]["todo"] and not out[-1]["text"].strip():
+        out.pop()
+    return out
+
+
+@register.filter
 def split_words(text):
     return (text or "").split()
 

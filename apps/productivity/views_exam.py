@@ -119,8 +119,12 @@ def _board_data(request, s):
 @work_required
 def notes_api(request, pk):
     """A page of a subject's questions (30), filtered and searched on the server:
-    ?show=all|unknown|missed|starred &chapter= &q= &sort=order|new &pinned=1 &page=N."""
+    ?show=all|unknown|missed|starred &chapter= &q= &sort=order|new &pinned=1 &page=N
+    — or ?id=N: that one question (opened from search, wherever it is in the list)."""
     s = get_object_or_404(ExamSubject, pk=pk, owner=request.user)
+    if request.GET.get("id", "").isdigit():
+        one = get_object_or_404(ExamNote, pk=request.GET["id"], subject=s)
+        return JsonResponse({"ok": True, "notes": [exam.as_json(one, exam.numbers(s).get(one.pk))], "next": None})
     show = request.GET.get("show") if request.GET.get("show") in exam.SHOWS else "all"
     chapter = request.GET["chapter"] if "chapter" in request.GET else None
     qs = exam.filtered(s, show, chapter, request.GET.get("q", ""))

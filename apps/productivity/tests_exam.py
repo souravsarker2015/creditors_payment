@@ -415,5 +415,5 @@ class SearchTests(Base):
     def test_found_by_both_searches(self):
         n = self.note("What is entropy?", "Disorder.")
         res = self.client.get(reverse("work:api_search") + "?q=entropy").json()
-        self.assertEqual([(x["kind"], x["url"]) for x in res["results"]], [("exam", reverse("work:exam_subject", args=[self.s.pk]) + f"#q{n.pk}")])
+        self.assertEqual([(x["kind"], x["url"]) for x in res["results"]], [("exam", reverse("work:exam_subject", args=[self.s.pk]) + f"?open={n.pk}")])
         self.assertContains(self.client.get(reverse("search") + "?q=entropy"), "What is entropy?")

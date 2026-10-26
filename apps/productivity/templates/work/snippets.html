@@ -18,24 +18,37 @@
   {% if q or lang or tag %}<a href="{% url 'work:snippets' %}" class="btn btn-ghost btn-sm">{% translate "Clear" %}</a>{% endif %}
 </form>
 
-<div class="wsn-list">
+<div class="wsn-list" data-infinite-items>
   {% for s in snippets %}
-  <article class="card wsn" id="snippet-{{ s.pk }}" x-data="{ fav: {{ s.is_favorite|yesno:'true,false' }}, open: {% if forloop.counter <= 6 or q %}true{% else %}false{% endif %} }">
+  <article class="card wsn" id="snippet-{{ s.pk }}" x-data="snippet({{ s.pk }}, '{% url 'work:api_snippet_action' s.pk %}', {{ s.is_favorite|yesno:'true,false' }}, {% if forloop.counter <= 6 and page_obj.number == 1 or q %}true{% else %}false{% endif %})">
     <header class="wsn-head">
-      <button type="button" class="wsn-star" :class="fav && 'is-on'" @click="fav = !fav; Work.api('{% url 'work:api_snippet_action' s.pk %}', { action: 'favorite' })" :aria-label="fav ? '{% translate "Remove from favourites" %}' : '{% translate "Add to favourites" %}'">{% icon "star" %}</button>
+      <button type="button" class="wsn-star" :class="fav && 'is-on'" @click="star()" :aria-label="fav ? '{% translate "Remove from favourites" %}' : '{% translate "Add to favourites" %}'">{% icon "star" %}</button>
       <button type="button" class="wsn-title" @click="open = !open" :aria-expanded="open">{{ s.title }}</button>
       <span class="wsn-lang">{{ s.get_language_display }}</span>
-      <button type="button" class="btn btn-secondary btn-sm wsn-copy" @click="navigator.clipboard.writeText($root.querySelector('code').textContent).then(() => { Work.toast('{% translate "Copied" %}'); $el.classList.add('is-done'); setTimeout(() => $el.classList.remove('is-done'), 1200); Work.api('{% url 'work:api_snippet_action' s.pk %}', { action: 'copied' }); })">{% icon "copy" %}<span>{% translate "Copy" %}</span></button>
+      <button type="button" class="btn btn-secondary btn-sm wsn-copy" :class="done && 'is-done'" @click="copy()">{% icon "copy" %}<span>{% translate "Copy" %}</span></button>
       <div class="menu-wrap" x-data="{ m: false }" @click.outside="m = false">
         <button type="button" class="icon-btn" @click="m = !m" aria-label="{% translate 'More actions' %}">{% icon "dots" %}</button>
         <div class="menu" x-show="m" x-cloak role="menu">
           <a href="{% url 'work:snippet' s.pk %}" class="menu-item">{% icon "edit" %}{% translate "Edit" %}</a>
-          <button type="button" class="menu-item is-danger" @click="Work.api('{% url 'work:api_snippet_action' s.pk %}', { action: 'delete' }).then(r => { $root.remove(); Work.undoable('{% translate "Snippet deleted" %}', r.undo); })">{% icon "trash" %}{% translate "Delete" %}</button>
+          <button type="button" class="menu-item" x-show="fields.length" @click="m = false; send(code)">{% icon "copy" %}{% translate "Copy as it is" %}</button>
+          <button type="button" class="menu-item is-danger" data-deleted="{% translate 'Snippet deleted' %}" @click="remove()">{% icon "trash" %}{% translate "Delete" %}</button>
         </div>
       </div>
     </header>
+    {# the blanks to fill in before copying: ${1:name} or {{name}} #}
+    <form class="wsn-fill" x-show="filling" x-cloak @submit.prevent="copyFilled()" @keydown.escape.stop="filling = false">
+      <template x-for="f in fields" :key="f.key">
+        <label class="wsn-fill-field"><span x-text="f.key"></span>
+          <input type="text" class="form-input input-compact" x-model="values[f.key]" :placeholder="f.fallback || f.key" spellcheck="false" autocapitalize="off" autocomplete="off"></label>
+      </template>
+      <div class="wsn-fill-actions">
+        <button type="submit" class="btn btn-primary btn-sm">{% icon "copy" %}{% translate "Copy" %}</button>
+        <button type="button" class="btn btn-ghost btn-sm" @click="filling = false">{% translate "Cancel" %}</button>
+      </div>
+      <pre class="wsn-fill-preview" x-text="filled()"></pre>
+    </form>
     {% if s.description %}<p class="wsn-desc" x-show="open">{{ s.description }}</p>{% endif %}
-    <pre class="wsn-code" x-show="open"><code class="language-{{ s.language }}">{{ s.code }}</code></pre>
+    <pre class="wsn-code" x-show="open && !filling"><code class="language-{{ s.language }}">{{ s.code }}</code></pre>
     <footer class="wsn-foot" x-show="open">{% for tg in s.tags.all %}<a href="?tag={{ tg.name|urlencode }}" class="wt-tag">#{{ tg.name }}</a>{% endfor %}{% if s.uses %}<span>{% blocktranslate count counter=s.uses %}copied {{ counter }} time{% plural %}copied {{ counter }} times{% endblocktranslate %}</span>{% endif %}</footer>
   </article>
   {% empty %}
@@ -45,10 +58,11 @@
     <a href="{% url 'work:snippet_new' %}" class="btn btn-primary">{% icon "plus" %}{% translate "Add a snippet" %}</a></div>
   {% endfor %}
 </div>
+{% include "partials/pagination.html" %}
 {% endblock %}
 
 {% block work_libs %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.10.0/styles/github-dark.min.css">
 <script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.10.0/highlight.min.js"></script>
 {% endblock %}
-{% block work_js %}<script>document.addEventListener("DOMContentLoaded", function () { if (window.hljs) document.querySelectorAll(".wsn-code code").forEach(function (c) { hljs.highlightElement(c); }); });</script>{% endblock %}
+{% block work_js %}<script src="{% asset 'js/snippets.js' %}"></script>{% endblock %}

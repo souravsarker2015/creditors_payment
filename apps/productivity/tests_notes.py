@@ -31,7 +31,9 @@ class NotesBoardTests(TestCase):
         Note.objects.create(owner=self.me, body="Shopping\n- milk\n- **eggs**")
         html = self.client.get(reverse("work:notes")).content.decode()
         self.assertIn(">Shopping</a>", html)
-        self.assertIn("- milk\n- eggs", html)              # the first line is the title, not said twice; ** dropped
+        # the first line is the title, not said twice; then a line each, ** dropped
+        self.assertIn('<span class="wnc-line">- milk</span><span class="wnc-line">- eggs</span>', html)
+        self.assertEqual(html.count(">Shopping<"), 1)
 
     def test_pages_of_forty_for_infinite_scrolling(self):
         for i in range(45):

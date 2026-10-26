@@ -562,6 +562,14 @@ textarea.form-input, textarea.form-control, .form-stack textarea { min-height: 5
 input.flatpickr-input[readonly] { cursor: pointer; }
 /* Hide number spinners — amounts are typed, not nudged. */
 input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+/* a box with suggestions (<datalist>, e.g. story points): the same chevron as a select, not Chrome's black ▼
+   (its own button stays there, unseen, to open the list) */
+input[list] {
+    padding-right: 2.5rem;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none'%3e%3cpath stroke='%238a9086' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.7' d='M6.5 8l3.5 3.5L13.5 8'/%3e%3c/svg%3e");
+    background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1.125rem;
+}
+input[list]::-webkit-calendar-picker-indicator { opacity: 0; width: 1.75rem; margin-right: -2rem; cursor: pointer; }
 input[type="number"] { -moz-appearance: textfield; }
 .input-compact { min-height: 2.375rem !important; padding-top: 0.375rem !important; padding-bottom: 0.375rem !important; font-size: 0.875rem !important; border-radius: 0.625rem !important; }
 

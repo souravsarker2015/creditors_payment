@@ -6,15 +6,16 @@
 {% block work %}
 {% if board %}
 {# ── the notes as a board of cards (like Keep): take a note at the top, open one to write ── #}
-<div class="wnb" x-data="noteBoard">
+<div class="wnb" x-data="noteBoard" @keydown.escape.window="ed && closeNote()">
   <header class="wp-head">
     <div class="min-w-0">
       <h1 class="wp-title">{% translate "Notes" %}</h1>
       <p class="wp-sub">{% blocktranslate count counter=total %}{{ counter }} note{% plural %}{{ counter }} notes{% endblocktranslate %}{% if archived %} · {% translate "Archived" %}{% endif %}</p>
     </div>
     <div class="wp-actions">
+      <a href="{% url 'work:note_today' %}" class="btn btn-secondary" data-tip="{% translate 'Opens today’s daily note — or starts it' %}">{% icon "sun" %}{% translate "Today’s note" %}</a>
       <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
-        <button type="button" class="btn btn-secondary" @click="open = !open" :aria-expanded="open" aria-haspopup="true">{% icon "note" %}{% translate "Template" %}{% icon "chevron-down" %}</button>
+        <button type="button" class="btn btn-secondary" @click="open = !open" :aria-expanded="open" aria-haspopup="true">{% icon "note" %}<span class="wn-hide-xs">{% translate "Template" %}</span>{% icon "chevron-down" %}</button>
         <div class="menu" x-show="open" x-cloak role="menu">{% for key, label in templates %}<a href="{% url 'work:notes' %}?new=1&template={{ key }}" class="menu-item" role="menuitem">{% icon "note" %}{{ label }}</a>{% endfor %}</div>
       </div>
       <a href="{% url 'work:notes' %}?view=list{% if q %}&q={{ q|urlencode }}{% endif %}" class="icon-btn" aria-label="{% translate 'As a list, with the editor beside it' %}" data-tip="{% translate 'As a list, with the editor beside it' %}">{% icon "list" %}</a>
@@ -31,7 +32,7 @@
       <div class="wkc-compose-form">
         <input type="text" class="wkc-q-input" x-model="title" x-ref="title" maxlength="200" placeholder="{% translate 'Title' %}" aria-label="{% translate 'Title' %}"
                @keydown.enter.prevent="$refs.body.focus()">
-        <textarea class="wkc-a-input" rows="3" x-model="body" x-ref="body" data-paste-images placeholder="{% translate 'Take a note… Markdown works: - [ ] to-do, `code`, ``` blocks' %}" aria-label="{% translate 'Note' %}"></textarea>
+        <textarea class="wkc-a-input" rows="3" x-model="body" x-ref="body" data-paste-images placeholder="{% translate 'Take a note… Markdown works: - [ ] to-do, `code`, ``` blocks, #tag' %}" aria-label="{% translate 'Note' %}"></textarea>
         <div class="wkc-compose-foot">
           <div class="wkc-colors" role="radiogroup" aria-label="{% translate 'Colour' %}">
             <button type="button" class="wkc-swatch is-none" :class="!color && 'is-on'" @click="color = ''" aria-label="{% translate 'No colour' %}"></button>
@@ -47,9 +48,11 @@
   </section>
 
   <div class="wn-filter wnb-filter">
-    <form method="get" class="input-icon wn-search">
+    {# searches as you type (the cards below are swapped, no page load); Enter works without JavaScript #}
+    <form method="get" class="input-icon wn-search" @submit.prevent="find($el)" @input.debounce.300ms="find($el)">
       {% icon "search" %}
       <input type="search" name="q" value="{{ q }}" class="form-input input-compact" placeholder="{% translate 'Search notes  ( / )' %}" data-work-search aria-label="{% translate 'Search notes' %}">
+      {% if tag %}<input type="hidden" name="tag" value="{{ tag }}">{% endif %}
       {% if archived %}<input type="hidden" name="archived" value="1">{% endif %}
     </form>
     <div class="chip-row wn-tags">
@@ -71,8 +74,40 @@
     </div>
     {% endfor %}
   </div>
-  {% include "partials/pagination.html" %}
-  <template x-ref="cardTpl">{% include "work/partials/note_card_new.html" %}</template>
+  <div x-ref="pager">{% include "partials/pagination.html" %}</div>
+
+  {# ── a note opened on the board (like Keep): written in place, saved as you go ── #}
+  <div class="wc-backdrop" x-show="ed" x-cloak x-transition.opacity @click="closeNote()"></div>
+  <template x-if="ed">
+  <section class="wc wkc-editor wnb-editor" x-transition :data-color="ed.color || null" role="dialog" aria-modal="true" aria-label="{% translate 'Edit the note' %}"
+           @keydown.escape.stop="closeNote()" @keydown.ctrl.enter.prevent="closeNote()" @keydown.meta.enter.prevent="closeNote()">
+    <div class="wkc-editor-head">
+      <input type="text" class="wkc-q-input" x-model="ed.title" maxlength="200" placeholder="{% translate 'Title' %}" aria-label="{% translate 'Title' %}"
+             @keydown.enter.prevent="$refs.edBody && $refs.edBody.focus()">
+      <button type="button" class="icon-btn wnc-pin" :class="ed.pinned && 'is-on'" @click="noteAct('pin')" :aria-pressed="(!!ed.pinned).toString()" aria-label="{% translate 'Pin to top' %}" data-tip="{% translate 'Pin to top' %}">{% icon "pin" %}</button>
+    </div>
+    <div class="seg seg-sm wex-write-seg" role="radiogroup" aria-label="{% translate 'Note' %}">
+      <button type="button" class="seg-item" :class="!edPreview && 'is-active'" @click="edPreview = false">{% translate "Write" %}</button>
+      <button type="button" class="seg-item" :class="edPreview && 'is-active'" @click="edPreview = true">{% translate "Preview" %}</button>
+    </div>
+    <textarea class="wkc-a-input is-big" x-ref="edBody" x-model="ed.body" x-show="!edPreview" data-paste-images :data-note="ed.id" aria-label="{% translate 'Note' %}"
+              placeholder="{% translate 'Write… Markdown works — type / for headings, to-dos, code, tables and more.' %}"></textarea>
+    <article class="wn-md wkc-preview" x-show="edPreview" data-tick @md-tick="ed.body = Work.tickMarkdown(ed.body, $event.detail.index)"
+             x-html="Work.markdown(ed.body)" x-effect="edPreview && ed.body !== undefined && $nextTick(() => { Work.mermaidIn($el); window.hljs && $el.querySelectorAll('pre code:not(.language-mermaid)').forEach(c => hljs.highlightElement(c)); })"></article>
+    <div class="wkc-editor-foot">
+      <div class="wkc-colors" role="radiogroup" aria-label="{% translate 'Colour' %}">
+        <button type="button" class="wkc-swatch is-none" :class="!ed.color && 'is-on'" @click="noteColor('')" aria-label="{% translate 'No colour' %}"></button>
+        {% for v, l in colors %}<button type="button" class="wkc-swatch" data-color="{{ v }}" :class="ed.color === '{{ v }}' && 'is-on'" @click="noteColor('{{ v }}')" aria-label="{{ l }}"></button>{% endfor %}
+      </div>
+      <span class="spacer"></span>
+      <span class="wn-state" :data-state="edState" role="status" aria-live="polite"><i aria-hidden="true"></i><span x-text="{ saving: '{% translate "Saving…" %}', saved: '{% translate "Saved" %}', dirty: '{% translate "Editing…" %}', offline: '{% translate "Saved on this device" %}', error: '{% translate "Not saved" %}' }[edState]"></span></span>
+      <a :href="ed.url" class="icon-btn" @click="flushNote()" aria-label="{% translate 'Open in the full editor' %}" data-tip="{% translate 'Open in the full editor: history, links, diagrams' %}">{% icon "maximize" %}</a>
+      <button type="button" class="icon-btn" @click="noteAct('archive')" aria-label="{% translate 'Archive' %}" data-tip="{% translate 'Archive' %}">{% icon "archive" %}</button>
+      <button type="button" class="icon-btn is-danger" @click="noteAct('delete')" aria-label="{% translate 'Delete' %}" data-tip="{% translate 'Delete' %}">{% icon "trash" %}</button>
+      <button type="button" class="btn btn-primary btn-sm" @click="closeNote()">{% translate "Done" %} <kbd class="wp-kbd">Esc</kbd></button>
+    </div>
+  </section>
+  </template>
 </div>
 {% else %}
 <div class="wn{% if note or request.GET.new %} has-note{% endif %}">
@@ -204,7 +239,7 @@
           </template>
         </ul>
       </div>
-      <article x-show="preview" x-cloak class="wn-md" x-html="html" x-effect="html; preview && $nextTick(() => { Work.mermaidIn($el); window.hljs && $el.querySelectorAll('pre code:not(.language-mermaid)').forEach(c => hljs.highlightElement(c)); })"></article>
+      <article x-show="preview" x-cloak class="wn-md" data-tick @md-tick="body = Work.tickMarkdown(body, $event.detail.index)" x-html="html" x-effect="html; preview && $nextTick(() => { Work.mermaidIn($el); window.hljs && $el.querySelectorAll('pre code:not(.language-mermaid)').forEach(c => hljs.highlightElement(c)); })"></article>
       <p class="wn-stats" x-show="words" x-cloak><span x-text="words + ' ' + (words === 1 ? '{% translate "word" %}' : '{% translate "words" %}')"></span> · <span x-text="'~' + readMins + ' {% translate "min read" %}'"></span><template x-if="todoTotal"><span> · <span x-text="todoDone + '/' + todoTotal"></span> {% translate "to-dos done" %}</span></template></p>
       {# ── earlier versions ── #}
       <div class="wc-backdrop" x-show="histOpen" x-cloak x-transition.opacity @click="histOpen = false"></div>

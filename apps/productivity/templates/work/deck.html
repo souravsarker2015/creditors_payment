@@ -109,8 +109,8 @@
         </template>
         <template x-if="editing === c.id">
           <form class="wfc-row-edit" @submit.prevent="saveEdit(c)" @keydown.escape.stop="editing = null" @keydown.ctrl.enter.prevent="saveEdit(c)">
-            <textarea x-model="draft.front" class="form-input" rows="3" aria-label="{% translate 'Question' %}" x-init="$nextTick(() => $el.focus())"></textarea>
-            <textarea x-model="draft.back" class="form-input" rows="3" aria-label="{% translate 'Answer' %}"></textarea>
+            <textarea x-model="draft.front" data-md class="form-input" rows="3" aria-label="{% translate 'Question' %}" x-init="$nextTick(() => $el.focus())"></textarea>
+            <textarea x-model="draft.back" data-md class="form-input" rows="3" aria-label="{% translate 'Answer' %}"></textarea>
             <div class="wfc-row-edit-foot"><button type="button" class="btn btn-ghost btn-sm" @click="editing = null">{% translate "Cancel" %}</button><button type="submit" class="btn btn-primary btn-sm">{% translate "Save" %}</button></div>
           </form>
         </template>

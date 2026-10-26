@@ -16,8 +16,10 @@
       </div>
       <div class="field{% if form.code.errors %} has-error{% endif %}">
         <label class="label" for="{{ form.code.id_for_label }}">{{ form.code.label }}<span class="req">*</span></label>
-        <textarea name="{{ form.code.html_name }}" id="{{ form.code.id_for_label }}" rows="16" class="form-input code-input" spellcheck="false" autocapitalize="off" autocomplete="off"
-                  @keydown.tab.prevent="const t = $el, s = t.selectionStart; t.value = t.value.slice(0, s) + '    ' + t.value.slice(t.selectionEnd); t.selectionStart = t.selectionEnd = s + 4">{{ form.code.value|default:'' }}</textarea>
+        <textarea name="{{ form.code.html_name }}" id="{{ form.code.id_for_label }}" rows="16" class="form-input code-input" spellcheck="false" autocapitalize="off" autocomplete="off" data-code>{{ form.code.value|default:'' }}</textarea>
+        <p class="help">{% translate "Blanks to fill in when copying:" %} <code>{% templatetag openvariable %}container{% templatetag closevariable %}</code>
+          · <code>{% templatetag openvariable %}branch:main{% templatetag closevariable %}</code> ({% translate "with a default" %})
+          · <code>${1:name}</code> ({% translate "as in VS Code" %})</p>
         {% for e in form.code.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
       </div>
       {% with field=form.description %}{% include "partials/field.html" %}{% endwith %}

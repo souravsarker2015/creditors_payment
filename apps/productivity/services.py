@@ -449,6 +449,18 @@ def tags_named(user, names):
     return out
 
 
+HASHTAG = re.compile(r"(?<![\w#/&])#([^\W\d_][\w\u0900-\u0dff-]{0,39})")      # (Bangla's vowel signs aren't \w)
+HEX_COLOUR = re.compile(r"[0-9a-f]{3}|[0-9a-f]{6}", re.I)
+
+
+def hashtags(text):
+    """'#redis' and '#system-design' written in a note — not in code, not a heading
+    ('# Title'), not a link's #anchor, not a colour (#fff)."""
+    plain = re.sub(r"```[\s\S]*?(?:```|$)|~~~[\s\S]*?(?:~~~|$)|`[^`\n]*`|\]\([^)]*\)|<[^>\n]*>", " ", text or "")
+    found = [m.group(1).rstrip("-") for m in HASHTAG.finditer(plain)]
+    return [t for t in dict.fromkeys(found) if t and not HEX_COLOUR.fullmatch(t)]
+
+
 def next_order(user, status):
     top = Task.objects.filter(owner=user, status=status).aggregate(m=Max("order"))["m"]
     return (top or 0) + 1
@@ -1245,6 +1257,44 @@ def estimate_accuracy(user, start, end):
 # ── Notes: to-dos into tasks, and links between notes ─────────────────────
 TODO_LINE = re.compile(r"^([ \t]*[-*+][ \t]+)\[ \][ \t]+(\S.*?)[ \t]*$", re.M)
 TASK_URL = re.compile(r"/work/tasks/(\d+)/")
+
+
+# a to-do line as Markdown draws a box for it: "- [ ] …", "1. [x] …", also in a quote ("> - [ ] …")
+CHECK_LINE = re.compile(r"^([ \t]*(?:>[ \t]?)*[ \t]*(?:[-*+]|\d+[.)])[ \t]+)\[( |x|X)\]")
+FENCE = re.compile(r"^[ \t]*(```|~~~)")
+
+
+def todo_lines(body):
+    """The line numbers of the note's to-do lines, in order (none inside a ``` block) — the n-th
+    is the n-th box in the drawn note and on its card."""
+    out, code = [], False
+    for i, line in enumerate((body or "").split("\n")):
+        if FENCE.match(line):
+            code = not code
+        elif not code and CHECK_LINE.match(line):
+            out.append(i)
+    return out
+
+
+@transaction.atomic
+def tick_todo(user, note, index, done=None):
+    """Ticks (or unticks; done=None turns it over) the note's index-th to-do, right from its card or
+    its preview. A line made into a task ticks that task too. Returns whether it's ticked, or None."""
+    rows = todo_lines(note.body)
+    if not 0 <= index < len(rows):
+        return None
+    lines = note.body.split("\n")
+    line = lines[rows[index]]
+    m = CHECK_LINE.match(line)
+    now = (m.group(2) == " ") if done is None else bool(done)
+    lines[rows[index]] = line[:m.start(2)] + ("x" if now else " ") + line[m.end(2):]
+    note.body = "\n".join(lines)
+    note.save(update_fields=["body", "updated_at"])
+    linked = TASK_URL.search(line)
+    task = Task.objects.filter(owner=user, pk=linked.group(1)).first() if linked else None
+    if task and task.is_done != now:
+        set_done(task, now)
+    return now
 
 
 def open_todos(body):

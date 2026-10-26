@@ -38,7 +38,7 @@
   <aside class="wpq-side">
     <section class="card" x-data="prepNotes({{ q.pk }})">
       <header class="card-header"><h2 class="card-title">{% icon "note" %}{% translate "My notes" %}</h2><span class="help" x-text="state"></span></header>
-      <div class="card-body !pt-0"><textarea class="form-input" rows="5" @input="changed($event.target.value)" placeholder="{% translate 'Mnemonics, links, how you got it wrong…' %}" aria-label="{% translate 'My notes' %}">{{ q.notes }}</textarea></div>
+      <div class="card-body !pt-0"><textarea class="form-input" rows="5" data-md @input="changed($event.target.value)" placeholder="{% translate 'Mnemonics, links, how you got it wrong…' %}" aria-label="{% translate 'My notes' %}">{{ q.notes }}</textarea></div>
     </section>
     {% if history %}
     <section class="card">

@@ -144,7 +144,7 @@
       <header class="card-header"><h2 class="card-title">{% translate "Plan for today" %}</h2>
         <span class="wn-state" x-text="{ saving: '{% translate "Saving…" %}', saved: '{% translate "Saved" %}', offline: '{% translate "Saved on this device" %}', dirty: '…' }[state] || ''"></span></header>
       <div class="card-body !pt-0">
-        <textarea class="form-input wd-plan" rows="4" placeholder="{% translate 'The one thing that would make today a good day…' %}" @input="save('plan', $event.target.value)">{{ journal.plan }}</textarea>
+        <textarea data-md class="form-input wd-plan" rows="4" placeholder="{% translate 'The one thing that would make today a good day…' %}" @input="save('plan', $event.target.value)">{{ journal.plan }}</textarea>
         <a href="{% url 'work:journal' %}" class="wd-link">{% translate "Open the journal & standup" %}{% icon "arrow-right" %}</a>
       </div>
     </section>

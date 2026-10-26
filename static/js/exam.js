@@ -6,7 +6,7 @@
    Answers are Markdown: lists, tables, code, ```mermaid diagrams, pictures,
    and formulas ($…$, $$…$$, \(…\), \[…\] — what ChatGPT and Claude write).
    Pasting a ChatGPT or Claude reply that was copied as formatted text turns
-   it back into Markdown (textarea[data-md-paste]).
+   it back into Markdown (static/js/writing.js, for every Markdown box).
 
    On the subject's page questions are dragged into order (and into another
    chapter), picked to be changed together, and a question being written is
@@ -60,47 +60,7 @@
     if (window.hljs) el.querySelectorAll("pre code:not(.language-mermaid)").forEach(function (c) { hljs.highlightElement(c); });
   }
 
-  /* ── A ChatGPT / Claude reply copied as formatted text → Markdown again ── */
-  var turndown = null;
-  function toMarkdown(html) {
-    if (!turndown) {
-      turndown = new TurndownService({ headingStyle: "atx", codeBlockStyle: "fenced", bulletListMarker: "-", emDelimiter: "*", hr: "---" });
-      if (window.turndownPluginGfm) turndown.use(turndownPluginGfm.gfm);
-      turndown.remove(["button", "style", "script", "svg"]);           // "Copy code" buttons and icons
-      turndown.addRule("math", {                                        // KaTeX keeps the formula it drew
-        filter: function (n) { return n.classList && (n.classList.contains("katex-display") || n.classList.contains("katex")); },
-        replacement: function (content, n) {
-          var a = n.querySelector('annotation[encoding="application/x-tex"]');
-          if (!a) return content;
-          var tex = a.textContent.trim();
-          return n.classList.contains("katex-display") ? "\n\n$$" + tex + "$$\n\n" : "$" + tex + "$";
-        },
-      });
-      turndown.addRule("code", {                                        // a code box: its language and its code, not its toolbar
-        filter: function (n) { return n.nodeName === "PRE"; },
-        replacement: function (content, n) {
-          var c = n.querySelector("code") || n, lang = ((c.className || "").match(/language-([\w+#.-]+)/) || [])[1] || "";
-          return "\n\n```" + lang + "\n" + c.textContent.replace(/\n+$/, "") + "\n```\n\n";
-        },
-      });
-    }
-    return turndown.turndown(html).replace(/\n{3,}/g, "\n\n").trim();
-  }
-  function looksLikeMarkdown(text) {
-    return /(^|\n)\s{0,3}(#{1,6}\s|```|[-*+]\s|\d+[.)]\s|>\s|\|.*\|)|\*\*[^*\n]+\*\*|`[^`\n]+`|\$[^$\n]+\$/.test(text || "");
-  }
-  d.addEventListener("paste", function (e) {
-    var ta = e.target && e.target.closest && e.target.closest("textarea[data-md-paste]");
-    if (!ta || e.defaultPrevented || !e.clipboardData || !window.TurndownService) return;
-    var html = e.clipboardData.getData("text/html"), text = e.clipboardData.getData("text/plain");
-    if (!html || !/<(h[1-6]|li|pre|strong|b|em|table|code|blockquote|span class="katex)[\s>"]/i.test(html) || looksLikeMarkdown(text)) return;
-    var md = "";
-    try { md = toMarkdown(html); } catch (err) { return; }
-    if (!md) return;
-    e.preventDefault();
-    ta.setRangeText(md, ta.selectionStart, ta.selectionEnd, "end");
-    ta.dispatchEvent(new Event("input", { bubbles: true }));
-  });
+  /* (A ChatGPT / Claude reply pasted as formatted text comes in as Markdown: static/js/writing.js) */
 
   function store(k, v) { if (window.Work && Work.store) Work.store(k, v); }
   function recall(k, fallback) { return window.Work && Work.recall ? Work.recall(k, fallback) : fallback; }
@@ -217,7 +177,20 @@
           });
           if (!this.shows.all) this.composing = true;
           this.watchEnd();
-          this.load();
+          this.load().then(function () { self.openAsked(); });
+        },
+        /* ?open=N (a question found in search): its editor opens, wherever it is in the list */
+        openAsked: function () {
+          var url = new URL(location.href), id = +(url.searchParams.get("open") || (/^#q(\d+)$/.exec(location.hash) || [])[1] || 0), self = this;
+          if (!id) return;
+          url.searchParams.delete("open"); url.hash = "";
+          history.replaceState(history.state, "", url.pathname + url.search);
+          var here = this.notes.find(function (n) { return n.id === id; });
+          if (here) return this.openEditor(here);
+          fetch(D.notes + "?id=" + id, { credentials: "same-origin", headers: { "X-Requested-With": "fetch" } })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (r) { if (r && r.notes && r.notes[0]) self.openEditor(r.notes[0]); })
+            .catch(function () {});
         },
         keepPrefs: function () { store(PREFS, { answers: this.answers, sort: this.sort }); },
         keepDraft: function () {
@@ -363,6 +336,30 @@
           if (e.known !== was.known) this.flag(q, "known");
           this.editing = null;
         },
+        /* the next or previous question, without closing the editor (this one is saved first); past the
+           last loaded one, the next page comes */
+        canStep: function (dir) {
+          var i = this.notes.indexOf(this.editing);
+          return i >= 0 && (dir < 0 ? i > 0 : i < this.notes.length - 1 || !!this.next);
+        },
+        stepEditor: function (dir) {
+          var self = this, i = this.notes.indexOf(this.editing);
+          if (i < 0) return;
+          function go(q) {
+            self.closeEditor();
+            if (self.editing) return;                     // not closed: the question is empty
+            self.openEditor(q);
+            var card = self.$refs.grid.querySelector('[data-id="' + q.id + '"]');
+            if (card) card.scrollIntoView({ block: "nearest" });
+          }
+          if (this.notes[i + dir]) return go(this.notes[i + dir]);
+          if (dir > 0 && this.next) this.load().then(function () { if (self.notes[i + 1]) go(self.notes[i + 1]); });
+        },
+        editorKey: function (e) {
+          if (e.altKey && !e.ctrlKey && !e.metaKey && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
+            e.preventDefault(); this.stepEditor(e.key === "ArrowLeft" ? -1 : 1);
+          }
+        },
         removeEditing: function () { var q = this.editing; this.editing = null; this.remove(q); },
         remove: function (q) {
           var self = this;
@@ -417,6 +414,22 @@
         },
         key: function (e) {
           if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || typing(e) || this.editing) return;
+          var cards = Array.prototype.slice.call(this.$refs.grid.querySelectorAll(".wkc"));
+          var card = d.activeElement && d.activeElement.closest && d.activeElement.closest(".wkc");
+          var q = card && this.notes.find(function (n) { return String(n.id) === card.getAttribute("data-id"); });
+          if (e.key === "j" || e.key === "k") {         // from card to card, without the mouse
+            if (!cards.length) return;
+            e.preventDefault();
+            var at = cards.indexOf(card), to = cards[at < 0 ? 0 : Math.max(0, Math.min(cards.length - 1, at + (e.key === "j" ? 1 : -1)))];
+            to.focus(); to.scrollIntoView({ block: "nearest" });
+            if (e.key === "j" && cards.indexOf(to) >= cards.length - 3) this.more();
+            return;
+          }
+          if (q && (e.key === "x" || e.key === "s" || e.key === "e")) {
+            e.preventDefault();
+            if (e.key === "e") this.openEditor(q); else this.flag(q, e.key === "x" ? "known" : "star");
+            return;
+          }
           if (e.key === "c" || e.key === "a") { e.preventDefault(); this.openComposer(false); }
           else if (e.key === "r" && this.shows.all) { e.preventDefault(); location.href = D.review; }
           else if (e.key === "o" && this.shows.all) { e.preventDefault(); location.href = D.overview; }
