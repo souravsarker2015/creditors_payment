@@ -132,6 +132,7 @@
   <div class="wexo-filters" role="radiogroup" aria-label="{% translate 'Show' %}">
     <button type="button" class="wexo-chip" :class="show === 'all' && 'is-on'" @click="setShow('all')">{% translate "All" %} <b x-text="shows.all"></b></button>
     <button type="button" class="wexo-chip" :class="show === 'unknown' && 'is-on'" @click="setShow('unknown')">{% translate "To learn" %} <b x-text="shows.unknown"></b></button>
+    <button type="button" class="wexo-chip wex-due-chip" :class="show === 'due' && 'is-on'" @click="setShow('due')" x-show="shows.due" data-tip="{% translate 'Known, and due again today — spaced repetition brings them back before you forget' %}">{% translate "Revise today" %} <b x-text="shows.due"></b></button>
     <button type="button" class="wexo-chip" :class="show === 'missed' && 'is-on'" @click="setShow('missed')" x-show="shows.missed">{% translate "Missed" %} <b x-text="shows.missed"></b></button>
     <button type="button" class="wexo-chip" :class="show === 'starred' && 'is-on'" @click="setShow('starred')" x-show="shows.starred">★ <b x-text="shows.starred"></b></button>
   </div>
@@ -179,6 +180,7 @@
         <span class="wkc-num num" x-text="q.number ? '#' + q.number : ''"></span>
         <span class="wkc-label" x-show="q.chapter" x-text="q.chapter"></span>
         <span class="wex-missed" x-show="q.misses" x-text="'✗ ' + q.misses" title="{% translate 'Times you didn’t know it in a review' %}"></span>
+        <span class="wex-due" x-show="q.due" title="{% translate 'Due again today' %}">{% icon "repeat" %}{% translate "Revise" %}</span>
         <span class="spacer"></span>
         <span class="wkc-pick" x-show="selecting" aria-hidden="true">{% icon "check" %}</span>
         <button type="button" class="wkc-btn wex-star" x-show="!selecting" :class="q.starred && 'is-on'" @click.stop="flag(q, 'star')" :aria-pressed="q.starred.toString()" aria-label="{% translate 'Important' %}" data-tip="{% translate 'Important' %}">{% icon "star" %}</button>

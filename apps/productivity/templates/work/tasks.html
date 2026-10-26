@@ -64,6 +64,10 @@
     <option value="week"{% if f.due == 'week' %} selected{% endif %}>{% translate "Next 7 days" %}</option>
     <option value="none"{% if f.due == 'none' %} selected{% endif %}>{% translate "No date" %}</option>
   </select>
+  <select name="status" class="form-input input-compact" aria-label="{% translate 'Status' %}">
+    <option value="">{% translate "Any status" %}</option>
+    {% for value, label in statuses %}{% if value != "done" %}<option value="{{ value }}"{% if f.status == value %} selected{% endif %}>{{ label }}</option>{% endif %}{% endfor %}
+  </select>
   <select name="kind" class="form-input input-compact" aria-label="{% translate 'Type' %}">
     <option value="">{% translate "Any type" %}</option>
     {% for value, label in kinds %}<option value="{{ value }}"{% if f.kind == value %} selected{% endif %}>{{ label }}</option>{% endfor %}

@@ -24052,3 +24052,107 @@ msgstr "কোড রিভিউয়ের অপেক্ষায়"
 
 msgid "What went well, what to improve, and what you'll do about it. Action items become tasks — in the next sprint."
 msgstr "যা ভালো হয়েছে, যা আরও ভালো করা যায়, আর সে জন্য কী করবেন। করণীয়গুলো টাস্ক হয়ে পরের স্প্রিন্টে যায়।"
+
+msgid "Back to in progress"
+msgstr "আবার চলছে-তে ফেরান"
+
+msgid "Moving a task to In progress starts its timer; to In review or Done stops it."
+msgstr "টাস্ক “চলছে”-তে নিলে তার টাইমার শুরু হয়; “রিভিউতে” বা “হয়ে গেছে”-তে নিলে থামে।"
+
+msgid "Send to review"
+msgstr "রিভিউতে পাঠান"
+
+msgid "The timer follows the task's status"
+msgstr "টাইমার টাস্কের অবস্থা অনুযায়ী চলবে"
+
+msgid "Timer started"
+msgstr "টাইমার শুরু হয়েছে"
+
+msgid "Timer stopped"
+msgstr "টাইমার থেমেছে"
+
+msgid "Write a comment — Markdown works: `code`, ``` blocks, lists, links. Type / for more."
+msgstr "মন্তব্য লিখুন — Markdown চলে: `code`, ``` ব্লক, তালিকা, লিংক। আরও কিছুর জন্য / লিখুন।"
+
+#, python-format
+msgid "%(counter)s question is due again today"
+msgid_plural "%(counter)s questions are due again today"
+msgstr[0] "আজ আবার ঝালাই করার %(counter)sটি প্রশ্ন"
+msgstr[1] "আজ আবার ঝালাই করার %(counter)sটি প্রশ্ন"
+
+#, python-format
+msgid "%(n)s note brought in."
+msgid_plural "%(n)s notes brought in."
+msgstr[0] "%(n)sটি নোট আনা হয়েছে।"
+msgstr[1] "%(n)sটি নোট আনা হয়েছে।"
+
+#, python-format
+msgid "%(n)s was here already."
+msgid_plural "%(n)s were here already."
+msgstr[0] "%(n)sটি আগে থেকেই ছিল।"
+msgstr[1] "%(n)sটি আগে থেকেই ছিল।"
+
+msgid "All of them were here already."
+msgstr "সবগুলো আগে থেকেই ছিল।"
+
+msgid "Due again today"
+msgstr "আজ আবার ঝালাই করার"
+
+msgid "Import notes"
+msgstr "নোট আনুন"
+
+msgid "Import notes: Markdown or text files, or a .zip (Obsidian vault, Bear, Notion export)"
+msgstr "নোট আনুন: Markdown বা টেক্সট ফাইল, অথবা .zip (Obsidian ভল্ট, Bear, Notion এক্সপোর্ট)"
+
+msgid "Known, and due again today — spaced repetition brings them back before you forget"
+msgstr "জানা, তবে আজ আবার ঝালাইয়ের দিন — ভুলে যাওয়ার আগেই স্পেসড রিপিটিশন এগুলো ফিরিয়ে আনে"
+
+msgid "No notes found — pick .md or .txt files, or a .zip of them."
+msgstr "কোনো নোট পাওয়া যায়নি — .md বা .txt ফাইল, অথবা সেগুলোর .zip বেছে নিন।"
+
+msgid "Revise today"
+msgstr "আজ ঝালাই"
+
+msgid "That's more than 30 MB of notes — split it into smaller zips."
+msgstr "এটা ৩০ MB-এর বেশি নোট — ছোট ছোট zip-এ ভাগ করুন।"
+
+#, python-format
+msgid "Too many files in one go (%(n)s) — at most %(max)s."
+msgstr "একবারে অনেক বেশি ফাইল (%(n)s) — সর্বোচ্চ %(max)s।"
+
+msgid "What to learn, and what’s due again today"
+msgstr "যা শিখতে বাকি, আর আজ যা আবার ঝালাই করার"
+
+#, python-format
+msgid "“%(name)s” isn't a zip file that can be opened."
+msgstr "“%(name)s” খোলা যায় এমন zip ফাইল নয়।"
+
+msgid "A template"
+msgstr "একটি টেমপ্লেট"
+
+msgid "Any note can be a template: ⋯ → Use as a template. {{date}}, {{time}}, {{weekday}} and {{week}} are filled in."
+msgstr "যেকোনো নোট টেমপ্লেট হতে পারে: ⋯ → টেমপ্লেট হিসেবে ব্যবহার করুন। {{date}}, {{time}}, {{weekday}} আর {{week}} নিজে থেকে বসে যায়।"
+
+msgid "Highlight (a blank in reviews)"
+msgstr "হাইলাইট (রিভিউতে ফাঁকা থাকে)"
+
+msgid "Offered under Template; {{date}} and {{time}} are filled in"
+msgstr "টেমপ্লেট মেনুতে থাকবে; {{date}} আর {{time}} নিজে থেকে বসে যায়"
+
+msgid "Outline"
+msgstr "রূপরেখা"
+
+msgid "Outline: jump to a heading"
+msgstr "রূপরেখা: কোনো শিরোনামে চলে যান"
+
+msgid "Stop using as a template"
+msgstr "টেমপ্লেট হিসেবে আর নয়"
+
+msgid "Templates"
+msgstr "টেমপ্লেট"
+
+msgid "Use as a template"
+msgstr "টেমপ্লেট হিসেবে ব্যবহার করুন"
+
+msgid "Your templates"
+msgstr "আপনার টেমপ্লেট"

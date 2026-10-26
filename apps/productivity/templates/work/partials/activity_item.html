@@ -1,5 +1,6 @@
-{% load i18n %}{% if a.kind == "comment" %}<li class="wtd-act is-comment" data-comment="{{ a.pk }}">
-  <div class="wtd-act-body">{{ a.text|urlize|linebreaksbr }}</div>
+{% load i18n work %}{% if a.kind == "comment" %}<li class="wtd-act is-comment{% if a.data.git %} is-git{% endif %}" data-comment="{{ a.pk }}">
+  {# Markdown (code, lists, links) drawn by static/js/work.js; the plain text is there until then, and without JavaScript #}
+  <div class="wtd-act-body wn-md" data-md-text="{{ a.text }}">{% if a.data.git %}<span class="wtd-git" aria-hidden="true">{% icon "git" %}</span>{% endif %}{{ a.text|urlize|linebreaksbr }}</div>
   <p class="wtd-act-when"><time datetime="{{ a.created_at|date:'c' }}" title="{{ a.created_at|date:'j M Y, H:i' }}">{% blocktranslate with t=a.created_at|timesince %}{{ t }} ago{% endblocktranslate %}</time> · <button type="button" class="wtd-act-del" data-delete-comment="{{ a.pk }}">{% translate "Delete" %}</button></p>
 </li>{% elif a.words %}<li class="wtd-act">
   <span class="wtd-act-dot" aria-hidden="true"></span><span class="wtd-act-text">{{ a.words }}</span>

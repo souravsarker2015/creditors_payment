@@ -10,14 +10,20 @@
   <header class="wp-head">
     <div class="min-w-0">
       <h1 class="wp-title">{% translate "Notes" %}</h1>
-      <p class="wp-sub">{% blocktranslate count counter=total %}{{ counter }} note{% plural %}{{ counter }} notes{% endblocktranslate %}{% if archived %} · {% translate "Archived" %}{% endif %}</p>
+      <p class="wp-sub">{% blocktranslate count counter=total %}{{ counter }} note{% plural %}{{ counter }} notes{% endblocktranslate %}{% if archived %} · {% translate "Archived" %}{% endif %}{% if templates_only %} · {% translate "Templates" %}{% endif %}</p>
     </div>
     <div class="wp-actions">
       <a href="{% url 'work:note_today' %}" class="btn btn-secondary" data-tip="{% translate 'Opens today’s daily note — or starts it' %}">{% icon "sun" %}{% translate "Today’s note" %}</a>
       <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
         <button type="button" class="btn btn-secondary" @click="open = !open" :aria-expanded="open" aria-haspopup="true">{% icon "note" %}<span class="wn-hide-xs">{% translate "Template" %}</span>{% icon "chevron-down" %}</button>
-        <div class="menu" x-show="open" x-cloak role="menu">{% for key, label in templates %}<a href="{% url 'work:notes' %}?new=1&template={{ key }}" class="menu-item" role="menuitem">{% icon "note" %}{{ label }}</a>{% endfor %}</div>
+        <div class="menu" x-show="open" x-cloak role="menu">{% if own_templates %}<p class="menu-label">{% translate "Your templates" %}</p>{% for tp in own_templates %}<a href="{% url 'work:notes' %}?new=1&from={{ tp.pk }}" class="menu-item" role="menuitem">{% icon "star" %}{{ tp.display_title }}</a>{% endfor %}<div class="menu-sep"></div>{% endif %}{% for key, label in templates %}<a href="{% url 'work:notes' %}?new=1&template={{ key }}" class="menu-item" role="menuitem">{% icon "note" %}{{ label }}</a>{% endfor %}
+          <div class="menu-sep"></div><p class="menu-help">{% translate "Any note can be a template: ⋯ → Use as a template. {{date}}, {{time}}, {{weekday}} and {{week}} are filled in." %}</p></div>
       </div>
+      {# bring notes in from Obsidian, Bear, Notion…: .md / .txt files or a .zip #}
+      <form method="post" action="{% url 'work:note_import' %}" enctype="multipart/form-data" class="wnb-import">{% csrf_token %}
+        <label class="icon-btn" data-tip="{% translate 'Import notes: Markdown or text files, or a .zip (Obsidian vault, Bear, Notion export)' %}" aria-label="{% translate 'Import notes' %}">{% icon "upload" %}
+          <input type="file" name="files" multiple accept=".md,.markdown,.txt,.zip,text/markdown,text/plain,application/zip" class="sr-only" @change="$el.files.length && $el.form.submit()"></label>
+      </form>
       <a href="{% url 'work:notes' %}?view=list{% if q %}&q={{ q|urlencode }}{% endif %}" class="icon-btn" aria-label="{% translate 'As a list, with the editor beside it' %}" data-tip="{% translate 'As a list, with the editor beside it' %}">{% icon "list" %}</a>
     </div>
   </header>
@@ -56,9 +62,9 @@
       {% if archived %}<input type="hidden" name="archived" value="1">{% endif %}
     </form>
     <div class="chip-row wn-tags">
-      <a href="{% url 'work:notes' %}" class="chip{% if not tag and not archived %} is-active{% endif %}">{% translate "All" %}</a>
+      <a href="{% url 'work:notes' %}" class="chip{% if not tag and not archived and not templates_only %} is-active{% endif %}">{% translate "All" %}</a>
       {% for tg in tags %}<a href="?tag={{ tg.name|urlencode }}" class="chip{% if tag == tg.name %} is-active{% endif %}">#{{ tg.name }}</a>{% endfor %}
-      <a href="?archived=1" class="chip{% if archived %} is-active{% endif %}">{% icon "archive" %}{% translate "Archived" %}</a>
+      <a href="?archived=1" class="chip{% if archived %} is-active{% endif %}">{% icon "archive" %}{% translate "Archived" %}</a>{% if own_templates or templates_only %}<a href="?templates=1" class="chip{% if templates_only %} is-active{% endif %}">{% icon "star" %}{% translate "Templates" %}</a>{% endif %}
     </div>
   </div>
 
@@ -115,12 +121,13 @@
     <div class="wn-list-head">
       <div class="min-w-0">
         <h1 class="wp-title">{% translate "Notes" %}</h1>
-        <p class="wn-count">{% blocktranslate count counter=total %}{{ counter }} note{% plural %}{{ counter }} notes{% endblocktranslate %}{% if archived %} · {% translate "Archived" %}{% endif %}</p>
+        <p class="wn-count">{% blocktranslate count counter=total %}{{ counter }} note{% plural %}{{ counter }} notes{% endblocktranslate %}{% if archived %} · {% translate "Archived" %}{% endif %}{% if templates_only %} · {% translate "Templates" %}{% endif %}</p>
       </div>
       <div class="wpg">
         <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
           <button type="button" class="btn btn-secondary btn-sm" @click="open = !open" :aria-expanded="open" aria-haspopup="true">{% icon "note" %}<span class="wn-hide-xs">{% translate "Template" %}</span>{% icon "chevron-down" %}</button>
-          <div class="menu" x-show="open" x-cloak role="menu">{% for key, label in templates %}<a href="{% url 'work:notes' %}?new=1&template={{ key }}" class="menu-item" role="menuitem">{% icon "note" %}{{ label }}</a>{% endfor %}</div>
+          <div class="menu" x-show="open" x-cloak role="menu">{% if own_templates %}<p class="menu-label">{% translate "Your templates" %}</p>{% for tp in own_templates %}<a href="{% url 'work:notes' %}?new=1&from={{ tp.pk }}" class="menu-item" role="menuitem">{% icon "star" %}{{ tp.display_title }}</a>{% endfor %}<div class="menu-sep"></div>{% endif %}{% for key, label in templates %}<a href="{% url 'work:notes' %}?new=1&template={{ key }}" class="menu-item" role="menuitem">{% icon "note" %}{{ label }}</a>{% endfor %}
+          <div class="menu-sep"></div><p class="menu-help">{% translate "Any note can be a template: ⋯ → Use as a template. {{date}}, {{time}}, {{weekday}} and {{week}} are filled in." %}</p></div>
         </div>
         <a href="{% url 'work:notes' %}" class="icon-btn" aria-label="{% translate 'As cards' %}" data-tip="{% translate 'As cards' %}">{% icon "grid" %}</a>
         <a href="{% url 'work:notes' %}?new=1" class="btn btn-primary btn-sm">{% icon "plus" %}{% translate "New" %}</a>
@@ -133,9 +140,9 @@
         {% if archived %}<input type="hidden" name="archived" value="1">{% endif %}
       </form>
       <div class="chip-row wn-tags">
-        <a href="{% url 'work:notes' %}" class="chip{% if not tag and not archived %} is-active{% endif %}">{% translate "All" %}</a>
+        <a href="{% url 'work:notes' %}" class="chip{% if not tag and not archived and not templates_only %} is-active{% endif %}">{% translate "All" %}</a>
         {% for tg in tags %}<a href="?tag={{ tg.name|urlencode }}" class="chip{% if tag == tg.name %} is-active{% endif %}">#{{ tg.name }}</a>{% endfor %}
-        <a href="?archived=1" class="chip{% if archived %} is-active{% endif %}">{% icon "archive" %}{% translate "Archived" %}</a>
+        <a href="?archived=1" class="chip{% if archived %} is-active{% endif %}">{% icon "archive" %}{% translate "Archived" %}</a>{% if own_templates or templates_only %}<a href="?templates=1" class="chip{% if templates_only %} is-active{% endif %}">{% icon "star" %}{% translate "Templates" %}</a>{% endif %}
       </div>
     </div>
     <ul class="wn-items">
@@ -165,6 +172,15 @@
         <a href="{% url 'work:notes' %}" class="icon-btn wn-back" aria-label="{% translate 'All notes' %}">{% icon "chevron-left" %}</a>
         <div class="seg seg-sm wn-mode"><button type="button" class="seg-item" :class="!preview && 'is-active'" @click="preview = false">{% icon "edit" %}<span>{% translate "Write" %}</span></button><button type="button" class="seg-item" :class="preview && 'is-active'" @click="preview = true">{% icon "words" %}<span>{% translate "Preview" %}</span></button></div>
         <button type="button" class="icon-btn wn-zen" data-zen-toggle="write" aria-label="{% translate 'Focus writing' %}" data-tip="{% translate 'Focus writing: just this note, full screen (Ctrl+Shift+F)' %}"><span class="wt-zen-on">{% icon "maximize" %}</span><span class="wt-zen-off">{% icon "minimize" %}</span></button>
+        {# the headings, to jump to one (a long design doc or study note) #}
+        <div class="menu-wrap" x-data="{ open: false }" x-show="outline.length > 1" x-cloak @click.outside="open = false" @keydown.escape="open = false">
+          <button type="button" class="icon-btn" @click="open = !open" :aria-expanded="open" aria-label="{% translate 'Outline' %}" data-tip="{% translate 'Outline: jump to a heading' %}">{% icon "list" %}</button>
+          <div class="menu wn-outline" x-show="open" x-cloak role="menu">
+            <template x-for="(h, n) in outline" :key="h.line">
+              <button type="button" class="menu-item" role="menuitem" :style="'padding-left:' + (0.5 + (h.level - 1) * 0.75) + 'rem'" :data-level="h.level" @click="open = false; goHeading(h, n)" x-text="h.text"></button>
+            </template>
+          </div>
+        </div>
         <span class="spacer"></span>
         <span class="wn-state" :data-state="state" role="status" aria-live="polite"><i aria-hidden="true"></i><span x-text="{ saving: '{% translate "Saving…" %}', saved: savedAt ? '{% translate "Saved" %} ' + savedAt : '', offline: '{% translate "Saved on this device" %}', dirty: '{% translate "Editing…" %}', error: '{% translate "Not saved" %}' }[state]"></span></span>
         <button type="button" class="btn btn-secondary btn-sm wn-todos" x-show="id && todoCount" x-cloak @click="todosToTasks()" :disabled="making"
@@ -179,6 +195,7 @@
               <button type="button" class="menu-item" @click="Promise.resolve(saveNow()).then(() => action('mindmap'))" data-tip="{% translate 'Headings and lists become the branches' %}">{% icon "mindmap" %}{% translate "Turn into a mind map" %}</button>
               <button type="button" class="menu-item" @click="Promise.resolve(saveNow()).then(() => action('cards'))" data-tip="{% translate 'Each “question :: answer” line becomes a flashcard' %}">{% icon "cards" %}{% translate "Make flashcards" %}</button>
               <button type="button" class="menu-item" @click="navigator.clipboard && navigator.clipboard.writeText(body).then(() => Work.toast('{% translate "Copied" %}'))">{% icon "copy" %}{% translate "Copy Markdown" %}</button>
+              <button type="button" class="menu-item" @click="action('template')" data-tip="{% translate 'Offered under Template; {{date}} and {{time}} are filled in' %}">{% icon "star" %}{% if note.is_template %}{% translate "Stop using as a template" %}{% else %}{% translate "Use as a template" %}{% endif %}</button>
               <button type="button" class="menu-item" @click="action('archive')">{% icon "archive" %}{% if note.is_archived %}{% translate "Unarchive" %}{% else %}{% translate "Archive" %}{% endif %}</button>
               <button type="button" class="menu-item is-danger" @click="action('delete')">{% icon "trash" %}{% translate "Delete" %}</button>
             </div>

@@ -243,3 +243,68 @@ class StuckReviewTests(Base):
         r = self.client.get(reverse("work:today"))
         self.assertEqual([t.title for t in r.context["stuck_reviews"]], ["Old PR"])
         self.assertContains(r, "Waiting on code review")
+
+
+class CommentTests(Base):
+    def test_comments_are_markdown_and_git_events_are_marked(self):
+        t = self.task("Bug")
+        TaskActivity.objects.create(task=t, kind=TaskActivity.Kind.COMMENT, text="Tried:\n```py\nx = 1\n```")
+        TaskActivity.objects.create(task=t, kind=TaskActivity.Kind.COMMENT, text="Commit abc on main: fix", data={"git": "commit", "ref": "abc"})
+        html = self.client.get(reverse("work:task", args=[t.pk])).content.decode()
+        self.assertIn('data-md-text="Tried:\n```py\nx = 1\n```"', html)
+        self.assertIn("wtd-act is-comment is-git", html)
+        self.assertIn("highlight.min.js", html)
+        self.assertIn('data-md placeholder="', html)                # the comment box has the writing keys
+        res = self.client.post(reverse("work:api_task_comment", args=[t.pk]), {"text": "**ok**"}).json()
+        self.assertIn('data-md-text="**ok**"', res["html"])
+
+
+class StatusFilterTests(Base):
+    def test_only_tasks_in_review(self):
+        self.task("In review", status=Status.REVIEW)
+        self.task("Doing", status=Status.DOING)
+        r = self.client.get(reverse("work:tasks"), {"view": "list", "status": "review"})
+        titles = [t.title for _k, _l, items, _n in r.context["groups"] for t in items]
+        self.assertEqual(titles, ["In review"])
+        self.assertTrue(r.context["filtered"])
+
+    def test_the_menu_sends_to_review(self):
+        html = self.client.get(reverse("work:tasks")).content.decode()
+        self.assertIn('data-menu="review"', html)
+
+
+class TimerFollowsTests(Base):
+    def setUp(self):
+        super().setUp()
+        self.ws.timer_follows_status = True
+        self.ws.save()
+
+    def update(self, t, status):
+        return self.client.post(reverse("work:api_task_update", args=[t.pk]), {"status": status}).json()
+
+    def test_in_progress_starts_and_review_stops(self):
+        t = self.task("Dark mode")
+        self.assertEqual(self.update(t, "doing")["timer"], "started")
+        self.assertEqual(services.running_entry(self.me).task_id, t.pk)
+        self.assertEqual(self.update(t, "review")["timer"], "stopped")
+        self.assertIsNone(services.running_entry(self.me))
+
+    def test_dragging_on_the_board_and_switching_tasks(self):
+        a, b = self.task("A"), self.task("B")
+        self.client.post(reverse("work:api_task_move", args=[a.pk]), {"status": "doing"})
+        res = self.client.post(reverse("work:api_task_move", args=[b.pk]), {"status": "doing"}).json()
+        self.assertEqual(res["timer"], "started")
+        self.assertEqual(services.running_entry(self.me).task_id, b.pk)          # A's timer stopped, B's runs
+        self.assertEqual(TimeEntry.objects.filter(owner=self.me).count(), 2)
+
+    def test_a_timer_on_another_task_is_left_alone_when_this_one_goes_to_review(self):
+        a, b = self.task("A", status=Status.DOING), self.task("B")
+        services.start_timer(self.me, task=b)
+        self.assertIsNone(self.update(a, "review")["timer"])
+        self.assertEqual(services.running_entry(self.me).task_id, b.pk)
+
+    def test_off_by_default(self):
+        self.ws.timer_follows_status = False
+        self.ws.save()
+        self.assertIsNone(self.update(self.task("X"), "doing")["timer"])
+        self.assertIsNone(services.running_entry(self.me))

@@ -324,6 +324,7 @@ def task_move(request, pk):
         task.order = after.order - 1
     else:
         task.order = services.next_order(request.user, status)
+    old_status = task.status
     if status != task.status:
         if status == Status.DONE:
             services.set_done(task, True)
@@ -331,7 +332,7 @@ def task_move(request, pk):
             services.set_done(task, False)
         task.status = status
     task.save(update_fields=["order", "status", "updated_at"])
-    return ok(status=task.status, order=task.order)
+    return ok(status=task.status, order=task.order, timer=services.timer_follows(request.user, task, old_status))
 
 
 TASK_FIELDS = {"title", "priority", "due_date", "start_date", "sprint", "my_day", "project", "status", "notes", "estimate_minutes", "link", "goal", "waiting_for",
@@ -350,6 +351,7 @@ def _local_dt(value):
 @require_POST
 def task_update(request, pk):
     task = get_object_or_404(Task, pk=pk, owner=request.user)
+    old_status = task.status
     for name in TASK_FIELDS & set(request.POST):
         value = request.POST[name].strip()
         if name == "title":
@@ -403,8 +405,9 @@ def task_update(request, pk):
         else:
             task.start_date = task.due_date    # due sooner than it was to start: it starts that day too
     task.save()
+    timer = services.timer_follows(request.user, task, old_status)
     return ok(html=task_row(request, task), scheduled_at=timezone.localtime(task.scheduled_at).strftime("%Y-%m-%dT%H:%M") if task.scheduled_at else "",
-              my_day=task.my_day.isoformat() if task.my_day else "")
+              my_day=task.my_day.isoformat() if task.my_day else "", timer=timer)
 
 
 @work_required
@@ -536,6 +539,10 @@ def note_action(request, pk):
         note.color = request.POST.get("color") if request.POST.get("color") in Color.values else ""
     elif action == "archive":
         note.is_archived = not note.is_archived
+    elif action == "template":         # a template of its own: offered under Template, out of the notes lists
+        note.is_template = not note.is_template
+        note.save(update_fields=["is_template", "updated_at"])
+        return ok(template=note.is_template)
     elif action == "delete":
         return _trash(request, note, _("Note: %(title)s") % {"title": note.display_title}, reverse("work:notes"))
     elif action == "tick":             # one to-do ticked right on the card or in the preview: the index-th box

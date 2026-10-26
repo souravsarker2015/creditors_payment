@@ -126,7 +126,7 @@
 
     {% if stuck_reviews %}
     <section class="card wd-review">
-      <header class="card-header"><div><h2 class="card-title">{% icon "git" %}{% translate "Waiting on code review" %}</h2><p class="card-subtitle">{% translate "No change for 3 days or more — a nudge to the reviewer helps." %}</p></div><a href="{% url 'work:tasks' %}?view=board" class="btn btn-ghost btn-sm">{% translate "Board" %}</a></header>
+      <header class="card-header"><div><h2 class="card-title">{% icon "git" %}{% translate "Waiting on code review" %}</h2><p class="card-subtitle">{% translate "No change for 3 days or more — a nudge to the reviewer helps." %}</p></div><a href="{% url 'work:tasks' %}?view=list&status=review" class="btn btn-ghost btn-sm">{% translate "All" %}</a></header>
       <ul class="wd-notes">{% for t in stuck_reviews %}<li><a href="{% if t.link %}{{ t.link }}{% else %}{% url 'work:task' t.pk %}{% endif %}"{% if t.link %} target="_blank" rel="noopener"{% endif %}><span class="truncate">{{ t.title }}</span><time class="wt-wait">{% if t.link_label %}{{ t.link_label }} · {% endif %}{{ t.updated_at|timesince }}</time></a></li>{% endfor %}</ul>
     </section>
     {% endif %}

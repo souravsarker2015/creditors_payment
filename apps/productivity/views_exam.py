@@ -2,6 +2,7 @@
 answers (added, pasted, edited and deleted in place), flipping through them,
 and the text download."""
 import json
+from datetime import timedelta
 
 from django.contrib import messages
 from django.db.models import Count, Max, Q
@@ -9,6 +10,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.dateparse import parse_date
 from django.utils.translation import gettext as _, ngettext
 from django.views.decorators.http import require_POST
 
@@ -20,7 +22,7 @@ from .forms import ExamSubjectForm
 from .models import Color, ExamNote, ExamSubject
 from .views import render_work
 
-WHICH = ("unknown", "all", "starred", "missed")
+WHICH = ("today", "due", "unknown", "all", "starred", "missed")      # today: to learn, and the ones due again
 
 
 def _texts():
@@ -54,6 +56,7 @@ def _ai_prompt(subject):
 def _subjects(user):
     return ExamSubject.objects.filter(owner=user).annotate(
         n=Count("notes"), known=Count("notes", filter=Q(notes__is_known=True)), missed=Count("notes", filter=Q(notes__misses__gt=0)),
+        due=Count("notes", filter=Q(notes__is_known=True, notes__due_on__lte=timezone.localdate())),
         revised=Max("notes__reviewed_at"))
 
 
@@ -75,6 +78,8 @@ def exam_home_view(request):
         s.save()
         return redirect("work:exam_subject", pk=s.pk)
     subjects = sorted(_subjects(request.user), key=lambda s: (s.exam_date is None or s.days_left < 0, s.exam_date or s.created_at.date(), s.name.lower()))
+    for s in subjects:
+        s.today = s.n - s.known + s.due          # what a review today goes through: to learn, and due again
     q = (request.GET.get("q") or "").strip()
     found = []
     if q:
@@ -161,9 +166,9 @@ def exam_review_view(request, pk):
     """Flip through the questions one at a time: think of the answer, show it, say whether you knew it."""
     s = get_object_or_404(ExamSubject, pk=pk, owner=request.user)
     notes = _notes(s)
-    which = request.GET.get("which") if request.GET.get("which") in WHICH else "unknown"
-    if which == "unknown" and notes and all(n["known"] for n in notes):
-        which = "all"
+    which = request.GET.get("which") if request.GET.get("which") in WHICH else "today"
+    if which in ("today", "unknown") and notes and not any(not n["known"] or (which == "today" and n["due"]) for n in notes):
+        which = "all"                         # nothing left for today: the whole subject
     chapters = _chapters(notes)
     chapter = request.GET.get("chapter", "")
     return render_work(request, "work/exam/review.html", {
@@ -266,6 +271,8 @@ def subject_api(request, pk):
             return JsonResponse({"ok": True, "undo": undo})
         if op in ("known", "unknown"):
             s.notes.filter(pk__in=[n.pk for n in picked]).update(is_known=op == "known", updated_at=timezone.now())
+            if op == "known":                # marked by hand: it comes back for a check in a few days
+                s.notes.filter(pk__in=[n.pk for n in picked], due_on__isnull=True).update(interval=exam.STEPS[1], due_on=timezone.localdate() + timedelta(days=exam.STEPS[1]))
         elif op == "chapter":
             s.notes.filter(pk__in=[n.pk for n in picked]).update(chapter=_chapter_of(request), updated_at=timezone.now())
         elif op == "move":
@@ -283,7 +290,7 @@ def subject_api(request, pk):
         s.notes.filter(chapter=request.POST.get("old", "")).update(chapter=_chapter_of(request), updated_at=timezone.now())
         return JsonResponse({"ok": True})
     if action == "reset":
-        s.notes.update(is_known=False)
+        s.notes.update(is_known=False, due_on=None, interval=0)
         return JsonResponse({"ok": True})
     return JsonResponse({"ok": False, "error": "action"}, status=400)
 
@@ -315,20 +322,27 @@ def note_api(request, pk):
         field = "is_starred" if action == "star" else "is_known"
         value = request.POST.get("value")
         setattr(n, field, value in ("1", "true") if value is not None else not getattr(n, field))
-        n.save(update_fields=[field, "updated_at"])
+        if field == "is_known" and n.is_known and not n.due_on:      # known by hand: a check in a few days
+            n.interval, n.due_on = exam.STEPS[1], timezone.localdate() + timedelta(days=exam.STEPS[1])
+        n.save(update_fields=[field, "due_on", "interval", "updated_at"])
         return JsonResponse({"ok": True, "value": getattr(n, field)})
     if action == "unreview":                 # "Undo" in a review: back to how it was before that answer
         n.is_known = request.POST.get("known") == "1"
         if (request.POST.get("misses") or "").isdigit():
             n.misses = int(request.POST["misses"])
-        n.save(update_fields=["is_known", "misses", "updated_at"])
+        if "dueOn" in request.POST:
+            n.due_on = parse_date(request.POST["dueOn"] or "")
+        if (request.POST.get("interval") or "").isdigit():
+            n.interval = min(int(request.POST["interval"]), 999)
+        n.save(update_fields=["is_known", "misses", "due_on", "interval", "updated_at"])
         return JsonResponse({"ok": True})
     if action == "review":                   # an answer in a review: knew it, or not yet
         n.is_known = request.POST.get("knew") == "1"
         n.misses += 0 if n.is_known else 1
         n.reviewed_at = timezone.now()
-        n.save(update_fields=["is_known", "misses", "reviewed_at", "updated_at"])
-        return JsonResponse({"ok": True, "misses": n.misses})
+        exam.schedule(n, n.is_known, exam_date=n.subject.exam_date)
+        n.save(update_fields=["is_known", "misses", "reviewed_at", "due_on", "interval", "updated_at"])
+        return JsonResponse({"ok": True, "misses": n.misses, "dueOn": n.due_on.isoformat(), "interval": n.interval})
     if action == "delete":
         item = trash(request.user, n, _("Exam question: %(title)s") % {"title": n.question[:80]}, reverse("work:exam_subject", args=[n.subject_id]))
         return JsonResponse({"ok": True, "undo": reverse("trash_restore", args=[item.pk])})

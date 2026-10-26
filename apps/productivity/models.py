@@ -404,6 +404,7 @@ class Note(models.Model):
     tags = models.ManyToManyField(Tag, blank=True, related_name="notes", verbose_name=_("Tags"))
     is_pinned = models.BooleanField(_("Pinned"), default=False)
     is_archived = models.BooleanField(_("Archived"), default=False)
+    is_template = models.BooleanField(_("A template"), default=False, help_text="Offered under Template → Your templates; not in the notes lists.")
     color = models.CharField(_("Colour"), max_length=10, choices=Color.choices, blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True, db_index=True)
@@ -559,6 +560,8 @@ class WorkSettings(models.Model):
     idle_minutes = models.PositiveSmallIntegerField(_("Ask about idle time after (minutes)"), default=15,
                                                     validators=[MinValueValidator(0), MaxValueValidator(240)],
                                                     help_text=_("When you come back to a running timer after this long away. 0 = never ask."))
+    timer_follows_status = models.BooleanField(_("The timer follows the task's status"), default=False,
+                                               help_text=_("Moving a task to In progress starts its timer; to In review or Done stops it."))
     feed_token = models.CharField(max_length=40, blank=True, help_text="Secret part of the calendar feed address.")
     key_prefix = models.CharField(_("Task key prefix"), max_length=8, default="T", validators=[RegexValidator(r"^[A-Za-z][A-Za-z0-9]{0,7}$")],
                                   help_text=_("Tasks are named with it and their number — T-42 — in branches, commits and search."))
@@ -1246,6 +1249,9 @@ class ExamNote(models.Model):
     is_known = models.BooleanField(_("I know it"), default=False)
     color = models.CharField(_("Colour"), max_length=10, choices=Color.choices, blank=True, default="")
     misses = models.PositiveIntegerField(default=0, help_text="Times answered \"Not yet\" in a review.")
+    # spaced repetition (as Anki): when it should come back, and how many days the last gap was
+    due_on = models.DateField(_("Due"), null=True, blank=True, db_index=True)
+    interval = models.PositiveSmallIntegerField(default=0, help_text="Days until it comes back after the last “I knew it”.")
     reviewed_at = models.DateTimeField(null=True, blank=True)
     order = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)

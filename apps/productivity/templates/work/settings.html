@@ -20,6 +20,7 @@
         {% with field=form.default_project %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.long_timer_hours %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.idle_minutes %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.timer_follows_status %}{% include "partials/field.html" %}{% endwith %}
         <div x-data="{ state: 'IdleDetector' in window ? 'ask' : 'unsupported' }" x-init="if (state === 'ask' && navigator.permissions) navigator.permissions.query({ name: 'idle-detection' }).then(p => { if (p.state === 'granted') state = 'on' }).catch(() => {})">
           <button type="button" class="btn btn-secondary btn-sm btn-wrap" x-show="state === 'ask'" @click="Work.allowIdle().then(r => { state = r === 'granted' ? 'on' : 'ask' })">{% icon "clock" %}{% translate "Also notice when I step away from the computer" %}</button>
           <p class="help" x-show="state === 'on'" x-cloak>{% translate "On: this browser tells the tracker when you're away from the keyboard." %}</p>

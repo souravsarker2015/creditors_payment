@@ -80,12 +80,13 @@ def _texts():
         "viewName": _("Name this view (e.g. “Urgent at work”):"), "viewDelete": _("Remove this saved view?"), "viewSaved": _("View saved"),
         "breakOver": _("Break's over"), "backToWork": _("Ready to focus again?"), "myDay": _("My Day"), "noAccess": _("Not allowed."),
         "link": _("Link"), "copied": _("Copied"), "copyCode": _("Copy code"),
+        "timerStarted": _("Timer started"), "timerStopped": _("Timer stopped"),
         "slash": {      # "/" in a Markdown box (static/js/writing.js)
             "h1": _("Heading 1"), "h2": _("Heading 2"), "h3": _("Heading 3"), "todo": _("To-do"), "bullet": _("Bulleted list"),
             "numbered": _("Numbered list"), "quote": _("Quote"), "callout": _("Callout"), "code": _("Code block"), "python": _("Python code"),
             "js": _("JavaScript code"), "sql": _("SQL"), "bash": _("Shell command"), "json": _("JSON"), "mermaid": _("Diagram (Mermaid)"),
             "table": _("Table"), "details": _("Collapsible section"), "divider": _("Divider"), "math": _("Formula"), "link": _("Link to a note"),
-            "card": _("Flashcard (question :: answer)"), "date": _("Today’s date"), "time": _("Time now"),
+            "card": _("Flashcard (question :: answer)"), "mark": _("Highlight (a blank in reviews)"), "date": _("Today’s date"), "time": _("Time now"),
         },
         "units": {k: str(v) for k, v in LearningUnit.choices},
         "kindCommand": _("Command"), "kindRecent": _("Recent"), "kindCreate": _("Create"),
@@ -264,7 +265,7 @@ def today_view(request):
         "streak": services.focus_streak(user, today),
         "habits": [h for h in habits if h["due_today"]],
         "timeline": [e for e in week.entries if timezone.localtime(e.started_at).date() == today or (e.ended_at and timezone.localtime(e.ended_at).date() == today) or e.is_running],
-        "notes": Note.objects.filter(owner=user, is_archived=False)[:5],
+        "notes": Note.objects.filter(owner=user, is_archived=False, is_template=False)[:5],
         "journal": journal,
         "suggest": Task.objects.filter(owner=user, status__in=[Status.TODO, Status.BACKLOG], my_day__isnull=True, due_date__isnull=True).order_by("-priority", "order")[:5],
         "cards_due": cards.due_count(user, today) if Deck.objects.filter(owner=user, is_archived=False).exists() else 0,
@@ -370,7 +371,7 @@ def tasks_view(request):
     view = request.GET.get("view") or request.COOKIES.get("work_task_view") or "list"
     view = view if view in TASK_VIEWS else "list"
     qs = Task.objects.filter(owner=user).select_related("project")
-    f = {k: request.GET.get(k, "").strip() for k in ("q", "project", "tag", "priority", "due", "goal", "blocked", "sprint", "kind")}
+    f = {k: request.GET.get(k, "").strip() for k in ("q", "project", "tag", "priority", "due", "goal", "blocked", "sprint", "kind", "status")}
     if f["q"]:
         qs = qs.filter(Q(title__icontains=f["q"]) | Q(notes__icontains=f["q"]))
     if f["project"] == "none":
@@ -385,6 +386,8 @@ def tasks_view(request):
         qs = qs.filter(goal_id=int(f["goal"]))
     if f["kind"] in TaskKind.values:
         qs = qs.filter(kind=f["kind"])
+    if f["status"] in Status.values and f["status"] != Status.DONE:       # (done ones: "Show done")
+        qs = qs.filter(status=f["status"])
     if f["sprint"] == "current":
         from .sprints import current
         qs = qs.filter(sprint=current(user, today))
@@ -523,6 +526,8 @@ def task_view(request, pk=None):
             if obj.status != wanted:      # reopened straight into "In progress" or the backlog
                 obj.status = wanted
                 obj.save(update_fields=["status", "updated_at"])
+        if task:
+            services.timer_follows(user, obj, old_status)
         messages.success(request, _("Task saved."))
         return redirect("work:task", pk=obj.pk)
     ctx = {"form": form, "task": task, "bug_template": dev.bug_template()}
@@ -602,7 +607,7 @@ def project_view(request, pk):
         "open_tasks": open_tasks, "done_tasks": done_tasks,
         "entries": TimeEntry.objects.filter(owner=user, project=project).select_related("task", "project").prefetch_related("tags")[:20],
         "goals": services.with_progress(project.goals.filter(status=GoalStatus.ACTIVE)),
-        "notes": Note.objects.filter(owner=user, project=project, is_archived=False)[:10],
+        "notes": Note.objects.filter(owner=user, project=project, is_archived=False, is_template=False)[:10],
         "diagrams": Diagram.objects.filter(owner=user, project=project, is_archived=False).only("pk", "title", "kind", "updated_at")[:8],
         "today": today, "burnup": _burnup(project, today),
         "unbilled": TimeEntry.objects.filter(owner=user, project=project, billable=True, invoiced_at__isnull=True, ended_at__isnull=False).exists(),
@@ -721,7 +726,10 @@ def notes_view(request, pk=None):
     user = request.user
     q, tag = request.GET.get("q", "").strip(), request.GET.get("tag", "").strip().lower()
     archived = request.GET.get("archived") == "1"
-    notes = Note.objects.filter(owner=user, is_archived=archived).select_related("project").prefetch_related("tags")
+    templates_only = request.GET.get("templates") == "1"       # the person's own templates, to change them
+    notes = Note.objects.filter(owner=user, is_template=templates_only).select_related("project").prefetch_related("tags")
+    if not templates_only:
+        notes = notes.filter(is_archived=archived)
     if q:
         notes = notes.filter(Q(title__icontains=q) | Q(body__icontains=q))
     if tag:
@@ -729,7 +737,12 @@ def notes_view(request, pk=None):
     note = get_object_or_404(Note, pk=pk, owner=user) if pk else None
     note_data = {"id": None, "title": "", "body": "", "tags": "", "project": "", "updated": 0, "saved": ""}
     template = NOTE_TEMPLATES.get(request.GET.get("template", "")) if not note else None
-    if template:
+    own = (Note.objects.filter(owner=user, is_template=True, pk=request.GET["from"]).first()
+           if not note and request.GET.get("from", "").isdigit() else None)
+    if own:                                              # a new note from one of the person's own templates
+        note_data.update({"title": services.fill_template(own.title), "body": services.fill_template(own.body),
+                          "tags": " ".join(own.tags.values_list("name", flat=True)), "project": str(own.project_id or "")})
+    elif template:
         stamp = date_format(_today(), "j M Y")
         note_data.update({"title": f"{template[0]} — {stamp}", "body": str(template[1]), "tags": template[2]})
     elif not note and request.GET.get("title"):        # a [[link]] to a note that isn't written yet
@@ -751,7 +764,8 @@ def notes_view(request, pk=None):
         "notes": page.object_list, "total": page.paginator.count, "note": note, "q": q, "tag": tag, "archived": archived,
         "tags": Tag.objects.filter(owner=user, notes__isnull=False).distinct(),
         "projects": Project.objects.filter(owner=user, is_archived=False),
-        "templates": [(key, t[0]) for key, t in NOTE_TEMPLATES.items()],
+        "templates": [(key, t[0]) for key, t in NOTE_TEMPLATES.items()], "templates_only": templates_only,
+        "own_templates": Note.objects.filter(owner=user, is_template=True).order_by("title").only("pk", "title", "body")[:30],
         "backlinks": services.backlinks(note) if note else [],
         "titles": list(Note.objects.filter(owner=user, is_archived=False).exclude(title="").order_by("-updated_at")
                        .values_list("title", flat=True)[:500]),
@@ -769,6 +783,28 @@ def note_today_view(request):
         note = Note.objects.create(owner=request.user, title=f"{title} — {date_format(today, 'j M Y')}", body=str(body))
         note.tags.set(services.tags_named(request.user, [tags]))
     return redirect("work:note", pk=note.pk)
+
+
+@work_required
+def note_import_view(request):
+    """Notes from another app (Obsidian, Bear, Notion…): Markdown or text files, or a .zip of them."""
+    from . import notes_import
+
+    if request.method != "POST":
+        return redirect("work:notes")
+    try:
+        added, skipped = notes_import.save(request.user, notes_import.read(request.FILES.getlist("files")))
+    except notes_import.ImportError_ as e:
+        messages.error(request, str(e))
+        return redirect("work:notes")
+    if added:
+        messages.success(request, ngettext("%(n)s note brought in.", "%(n)s notes brought in.", added) % {"n": added}
+                         + (" " + ngettext("%(n)s was here already.", "%(n)s were here already.", skipped) % {"n": skipped} if skipped else ""))
+    elif skipped:
+        messages.info(request, _("All of them were here already."))
+    else:
+        messages.error(request, _("No notes found — pick .md or .txt files, or a .zip of them."))
+    return redirect("work:notes")
 
 
 @work_required

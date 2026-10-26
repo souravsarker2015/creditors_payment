@@ -25,6 +25,9 @@ splits a question.
 """
 import re
 from collections import Counter
+from datetime import timedelta
+
+from django.utils import timezone
 
 MAX_QUESTION, MAX_ANSWER, MAX_CHAPTER, MAX_PASTE = 2000, 20000, 120, 500
 
@@ -273,14 +276,38 @@ def as_text(subject, notes):
     return "\n".join(out)
 
 
-def as_json(note, number=None):
+def as_json(note, number=None, today=None):
     return {"id": note.pk, "question": note.question, "answer": note.answer, "chapter": note.chapter, "starred": note.is_starred,
-            "known": note.is_known, "misses": note.misses, "color": note.color, "number": number}
+            "known": note.is_known, "misses": note.misses, "color": note.color, "number": number,
+            "due": is_due(note, today), "dueOn": note.due_on.isoformat() if note.due_on else "", "interval": note.interval}
+
+
+# ── Spaced repetition: a question you knew comes back later each time (1, 3, 7, 16, 35… days, as
+#    Anki does); one you didn't, tomorrow. Before an exam, nothing is put off past the day before it. ──
+STEPS = (1, 3, 7, 16, 35, 75, 150)
+
+
+def schedule(note, knew, today=None, exam_date=None):
+    """Sets note.interval and note.due_on after an answer (not saved)."""
+    today = today or timezone.localdate()
+    if not knew:
+        note.interval, note.due_on = 0, today + timedelta(days=1)
+        return note
+    note.interval = next((s for s in STEPS if s > note.interval), STEPS[-1])
+    note.due_on = today + timedelta(days=note.interval)
+    if exam_date and today < exam_date - timedelta(days=1) and note.due_on >= exam_date:
+        note.due_on = exam_date - timedelta(days=1)          # one last look the day before the exam
+    return note
+
+
+def is_due(note, today=None):
+    """Known, and its day to come back has come. (Questions not known yet are "to learn" anyway.)"""
+    return bool(note.is_known and note.due_on and note.due_on <= (today or timezone.localdate()))
 
 
 # ── Pages of questions, from the database (a subject can hold thousands) ────
 PAGE = 30
-SHOWS = ("all", "unknown", "missed", "starred")
+SHOWS = ("all", "unknown", "due", "missed", "starred")
 
 
 def in_order(qs):
@@ -304,6 +331,8 @@ def filtered(subject, show="all", chapter=None, q=""):
     qs = subject.notes.all()
     if show == "unknown":
         qs = qs.filter(is_known=False)
+    elif show == "due":
+        qs = qs.filter(is_known=True, due_on__lte=timezone.localdate())
     elif show == "missed":
         qs = qs.filter(misses__gt=0)
     elif show == "starred":
@@ -319,6 +348,7 @@ def counts(subject):
     from django.db.models import Count, Q
 
     c = subject.notes.aggregate(all=Count("pk"), unknown=Count("pk", filter=Q(is_known=False)),
+                                due=Count("pk", filter=Q(is_known=True, due_on__lte=timezone.localdate())),
                                 missed=Count("pk", filter=Q(misses__gt=0)), starred=Count("pk", filter=Q(is_starred=True)))
     return {"shows": c, "chapters": chapter_list(subject)}
 
@@ -359,5 +389,5 @@ def plain(text):
     text = re.sub(r"```\w*|~~~\w*|!\[[^\]]*\]\([^)]*\)", " ", text or "")
     text = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", text)
     text = re.sub(r"(?m)^\s{0,3}(?:#{1,6}\s+|>\s?|[-*+]\s+|\d+[.)]\s+)", "", text)
-    text = re.sub(r"[*_`|]|\\[()[\]]|\$\$?", "", text)
+    text = re.sub(r"[*_`|]|==|\\[()[\]]|\$\$?", "", text)
     return " ".join(text.split())

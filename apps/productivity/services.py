@@ -73,6 +73,22 @@ def start_timer(user, *, task=None, project=None, description="", at=None, kind=
     return entry
 
 
+def timer_follows(user, task, old_status):
+    """With "the timer follows the task's status" on: a task moved to In progress starts its timer (the one
+    running stops), and the running timer on a task moved to In review or Done stops. Returns "started",
+    "stopped" or None — so the page can catch up."""
+    if task.status == old_status or not WorkSettings.for_user(user).timer_follows_status:
+        return None
+    running = running_entry(user)
+    if task.status == Status.DOING and not (running and running.task_id == task.pk):
+        start_timer(user, task=task)
+        return "started"
+    if task.status in (Status.REVIEW, Status.DONE) and running and running.task_id == task.pk:
+        stop_timer(user)
+        return "stopped"
+    return None
+
+
 def stop_timer(user, at=None):
     entry = TimeEntry.objects.select_for_update().filter(owner=user, ended_at__isnull=True).first()
     if entry is None:
@@ -1336,6 +1352,17 @@ TASK_URL = re.compile(r"/work/tasks/(\d+)/")
 # a to-do line as Markdown draws a box for it: "- [ ] …", "1. [x] …", also in a quote ("> - [ ] …")
 CHECK_LINE = re.compile(r"^([ \t]*(?:>[ \t]?)*[ \t]*(?:[-*+]|\d+[.)])[ \t]+)\[( |x|X)\]")
 FENCE = re.compile(r"^[ \t]*(```|~~~)")
+
+
+def fill_template(text, today=None, now=None):
+    """A template's {{date}}, {{time}}, {{weekday}} and {{week}} — as Notion's or Obsidian's — filled in for today."""
+    from django.utils.formats import date_format
+
+    now = timezone.localtime(now or timezone.now())
+    today = today or now.date()
+    values = {"date": today.isoformat(), "time": now.strftime("%H:%M"), "weekday": date_format(today, "l"),
+              "week": f"{today.isocalendar()[0]}-W{today.isocalendar()[1]:02d}"}
+    return re.sub(r"\{\{\s*(date|time|weekday|week)\s*\}\}", lambda m: values[m.group(1)], text or "")
 
 
 def todo_lines(body):

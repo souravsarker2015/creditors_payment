@@ -582,7 +582,7 @@
                   if (status === "done" && e.from !== e.to) play(CFG.sound ? "chime" : "");
                   api(CFG.urls.taskBase + card.getAttribute("data-task") + "/move/", {
                     status: status, after: prev ? prev.getAttribute("data-task") : "", before: next ? next.getAttribute("data-task") : "",
-                  });
+                  }).then(function (res) { Work.timerFollowed(res); });
                   self.count();
                   if (status === "doing" && e.from !== e.to && CFG.wip && e.to.children.length > CFG.wip)
                     toast(t("wipOver", "“In progress” is over your limit.").replace("%(n)s", CFG.wip), "warn");
@@ -1171,6 +1171,7 @@
       return {
         busy: false,
         init: function () {
+          this.$el.querySelectorAll("[data-md-text]").forEach(Work.paintMarkdown);
           this.$el.addEventListener("click", function (e) {
             var b = e.target.closest("[data-delete-comment]"); if (!b) return;
             if (!confirm(t("deleteComment", "Delete this comment?"))) return;
@@ -1184,7 +1185,10 @@
           this.busy = true;
           api(CFG.urls.taskBase + taskId + "/comment/", { text: text }).then(function (res) {
             self.busy = false;
-            if (res.ok && res.html) { self.$refs.list.insertAdjacentHTML("afterbegin", res.html); box.value = ""; }
+            if (res.ok && res.html) {
+              self.$refs.list.insertAdjacentHTML("afterbegin", res.html); box.value = "";
+              var made = self.$refs.list.querySelector("[data-md-text]"); if (made) Work.paintMarkdown(made);
+            }
             else if (res.queued) box.value = "";
             else if (res.error) toast(res.error, "warn");
           });
@@ -1379,6 +1383,29 @@
           var ta = this.$refs.body; if (!ta) return;
           ta.style.height = "auto"; ta.style.height = ta.scrollHeight + "px";
         },
+        /* The note's headings (not those in a ``` block), to jump to one — Obsidian's outline */
+        get outline() {
+          var out = [], code = false;
+          this.body.split("\n").forEach(function (line, i) {
+            if (/^[ \t]*(```|~~~)/.test(line)) { code = !code; return; }
+            var m = !code && /^(#{1,6})[ \t]+(.+?)[ \t#]*$/.exec(line);
+            if (m) out.push({ level: m[1].length, text: m[2].replace(/[*_`]/g, ""), line: i });
+          });
+          return out;
+        },
+        goHeading: function (h, n) {
+          if (this.preview) {
+            var el = this.$root.querySelectorAll(".wn-md h1, .wn-md h2, .wn-md h3, .wn-md h4, .wn-md h5, .wn-md h6")[n];
+            if (el) el.scrollIntoView({ block: "start", behavior: "smooth" });
+            return;
+          }
+          var ta = this.$refs.body, pos = this.body.split("\n").slice(0, h.line).join("\n").length + (h.line ? 1 : 0);
+          ta.focus({ preventScroll: true }); ta.setSelectionRange(pos, pos);
+          var y = window.FTWriting ? FTWriting.caretXY(ta, pos).y : ta.getBoundingClientRect().top;
+          var box = ta.closest(".wn-pane");
+          if (box && box.scrollHeight > box.clientHeight + 1 && getComputedStyle(box).overflowY !== "visible") box.scrollTop += y - box.getBoundingClientRect().top - 80;
+          else window.scrollTo({ top: window.scrollY + y - 140, behavior: "smooth" });
+        },
         get words() { var m = this.body.match(/[^\s#>*`_\-\[\]()]+/g); return m ? m.length : 0; },
         get readMins() { return Math.max(1, Math.round(this.words / 200)); },
         get todoTotal() { return (this.body.match(/^[ \t]*[-*+][ \t]+\[[ xX]\]/gm) || []).length; },
@@ -1524,9 +1551,17 @@
     var data = {}; data[field] = value;
     return api(CFG.urls.taskBase + row.getAttribute("data-task") + "/update/", data).then(function (res) {
       if (res.ok && res.html && row.isConnected) freshRow(row, res.html);
+      timerFollowed(res);
       return res;
     });
   }
+  // the server started or stopped the timer with the task's status (Settings → the timer follows the status)
+  function timerFollowed(res) {
+    if (!res || !res.timer || !window.Alpine) return;
+    Alpine.store("timer").sync();
+    toast(res.timer === "started" ? t("timerStarted", "Timer started") : t("timerStopped", "Timer stopped"));
+  }
+  window.Work.timerFollowed = timerFollowed;
   function taskDelete(row) {
     row.classList.add("is-leaving");
     api(CFG.urls.taskBase + row.getAttribute("data-task") + "/delete/", {}).then(function (res) {
@@ -1550,6 +1585,7 @@
     var label = function (name, on) { var el = menu.querySelector('[data-menu="' + name + '"] span'); el.textContent = el.getAttribute(on ? "data-label-on" : "data-label-off"); };
     label("myday", row.hasAttribute("data-myday"));
     label("doing", row.getAttribute("data-status") === "doing");
+    label("review", row.getAttribute("data-status") === "review");
     label("waiting", row.hasAttribute("data-waiting"));
     menu.querySelectorAll("[data-menu-form]").forEach(function (f) { f.hidden = true; });
     menu.querySelector("[data-needs-link]").hidden = !row.getAttribute("data-link");
@@ -1566,6 +1602,7 @@
     else if (name === "today") taskUpdate(row, "due_date", isoDay(0));
     else if (name === "tomorrow") taskUpdate(row, "due_date", isoDay(1));
     else if (name === "doing") taskUpdate(row, "status", row.getAttribute("data-status") === "doing" ? "todo" : "doing");
+    else if (name === "review") taskUpdate(row, "status", row.getAttribute("data-status") === "review" ? "doing" : "review");
     else if (name === "prio") taskUpdate(row, "priority", value);
     else if (name === "waiting") taskUpdate(row, "waiting_for", "");
     else if (name === "open-link" && link) window.open(link, "_blank", "noopener");
@@ -1784,8 +1821,14 @@
       return "[" + title.replace(/([\\*_`])/g, "\\$1") + "](" + CFG.urls.noteGo + "?title=" + encodeURIComponent(title.trim()).replace(/\(/g, "%28").replace(/\)/g, "%29") + ")";
     });
   }
+  // ==highlighted== words (as Obsidian writes them) — outside code; on a review card's front they're the blanks (cloze)
+  function highlights(text) {
+    return String(text || "").split(/(```[\s\S]*?(?:```|$)|~~~[\s\S]*?(?:~~~|$)|`[^`\n]+`)/).map(function (part, i) {
+      return i % 2 ? part : part.replace(/==(?=\S)([^=\n]+?)(?<=\S)==/g, "<mark>$1</mark>");
+    }).join("");
+  }
   function renderMarkdown(text) {
-    text = wikiLinks(text);
+    text = highlights(wikiLinks(text));
     if (window.marked && window.DOMPurify) {
       var html = marked.parse(text || "", { gfm: true, breaks: true });
       // to-do boxes can be ticked where the preview allows it ([data-tick]); elsewhere CSS keeps them still
@@ -1891,6 +1934,17 @@
         });
       }, Promise.resolve());
     }).catch(function () { /* offline and never loaded: the text stays */ });
+  };
+  // An element with its Markdown in data-md-text (a comment): drawn, with diagrams and coloured code. A Git
+  // event's icon (the element's first child, if it's .wtd-git) is kept in front.
+  window.Work.paintMarkdown = function (el) {
+    if (!window.marked || el._painted) return;
+    el._painted = true;
+    var icon = el.querySelector(":scope > .wtd-git");
+    el.innerHTML = renderMarkdown(el.getAttribute("data-md-text") || "");
+    if (icon) el.insertBefore(icon, el.firstChild);
+    Work.mermaidIn(el);
+    if (window.hljs) el.querySelectorAll("pre code:not(.language-mermaid)").forEach(function (c) { hljs.highlightElement(c); });
   };
   d.addEventListener("DOMContentLoaded", function () {
     d.querySelectorAll("[data-render-markdown]").forEach(function (el) {

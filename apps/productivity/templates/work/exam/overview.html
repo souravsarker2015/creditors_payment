@@ -23,6 +23,7 @@
     <div class="wexo-filters" role="radiogroup" aria-label="{% translate 'Show' %}">
       <button type="button" class="wexo-chip" :class="show === 'all' && 'is-on'" @click="setShow('all')">{% translate "All" %} <b x-text="count('all')"></b></button>
       <button type="button" class="wexo-chip" :class="show === 'unknown' && 'is-on'" @click="setShow('unknown')">{% translate "To learn" %} <b x-text="count('unknown')"></b></button>
+      <button type="button" class="wexo-chip wex-due-chip" :class="show === 'due' && 'is-on'" @click="setShow('due')" x-show="count('due')">{% translate "Revise today" %} <b x-text="count('due')"></b></button>
       <button type="button" class="wexo-chip" :class="show === 'missed' && 'is-on'" @click="setShow('missed')" x-show="count('missed')">{% translate "Missed" %} <b x-text="count('missed')"></b></button>
       <button type="button" class="wexo-chip" :class="show === 'starred' && 'is-on'" @click="setShow('starred')" x-show="count('starred')">★ <b x-text="count('starred')"></b></button>
     </div>

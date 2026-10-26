@@ -509,6 +509,8 @@
           this.which = which;
           var list = only ? only.slice() : this.all.filter(function (q) {
             if (chapter && q.chapter !== chapter) return false;
+            if (which === "today") return !q.known || q.due;          // to learn, and due again (spaced repetition)
+            if (which === "due") return q.due;
             return which === "all" || (which === "starred" ? q.starred : which === "missed" ? q.misses > 0 : !q.known);
           });
           if (this.shuffle) {
@@ -538,11 +540,11 @@
         mark: function (knew) {
           var q = this.card;
           if (!q || !this.flipped) return;
-          this.history.push({ q: q, knew: knew, known: q.known, misses: q.misses, firstTry: this.firstTry, missed: this.missed.slice() });
+          this.history.push({ q: q, knew: knew, known: q.known, misses: q.misses, due: q.due, dueOn: q.dueOn, interval: q.interval, firstTry: this.firstTry, missed: this.missed.slice() });
           if (knew && this.missed.indexOf(q) < 0) this.firstTry++;
           if (!knew) { if (this.missed.indexOf(q) < 0) this.missed.push(q); this.queue.push(q); q.misses++; }
-          q.known = knew;
-          api(D.noteBase + q.id + "/", { action: "review", knew: knew ? "1" : "0" });
+          q.known = knew; q.due = false;
+          api(D.noteBase + q.id + "/", { action: "review", knew: knew ? "1" : "0" }).then(function (r) { if (r && r.dueOn) { q.dueOn = r.dueOn; q.interval = r.interval; } });
           this.pos++;
           if (this.pos >= this.queue.length) {
             var secs = Math.round((Date.now() - this.started) / 1000);
@@ -555,8 +557,9 @@
           var h = this.history.pop();
           if (!h) return;
           if (!h.knew) this.queue.pop();
-          h.q.known = h.known; h.q.misses = h.misses; this.firstTry = h.firstTry; this.missed = h.missed;
-          api(D.noteBase + h.q.id + "/", { action: "unreview", known: h.known ? "1" : "0", misses: String(h.misses) });
+          h.q.known = h.known; h.q.misses = h.misses; h.q.due = h.due; h.q.dueOn = h.dueOn; h.q.interval = h.interval;
+          this.firstTry = h.firstTry; this.missed = h.missed;
+          api(D.noteBase + h.q.id + "/", { action: "unreview", known: h.known ? "1" : "0", misses: String(h.misses), dueOn: h.dueOn || "", interval: String(h.interval || 0) });
           this.pos--; this.stage = "card"; this.showCard(); this.flipped = true;
         },
         /* swipe the turned card: right — knew it, left — not yet */

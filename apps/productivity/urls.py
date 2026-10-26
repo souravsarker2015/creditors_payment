@@ -47,6 +47,7 @@ urlpatterns = [
     path("notes/<int:pk>/", views.notes_view, name="note"),
     path("notes/go/", views.note_go_view, name="note_go"),
     path("notes/today/", views.note_today_view, name="note_today"),
+    path("notes/import/", views.note_import_view, name="note_import"),
     path("plan/week/", views.week_view, name="week"),
     path("diagrams/", views.diagrams_view, name="diagrams"),
     path("diagrams/new/", views.diagram_new_view, name="diagram_new"),

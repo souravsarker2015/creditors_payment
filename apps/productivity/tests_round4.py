@@ -222,7 +222,8 @@ class TaskFileTests(Base):
 class CalendarMoveTests(Base):
     def test_calendar_moves_a_task_and_keeps_its_start_before_its_due_date(self):
         t = self.task("Report", start_date=TODAY + timedelta(days=3), due_date=TODAY + timedelta(days=5))
-        r = self.client.get(reverse("work:calendar"))
+        # the month the task is due in: near the end of a month that's the next one
+        r = self.client.get(reverse("work:calendar"), {"month": t.due_date.strftime("%Y-%m")})
         self.assertContains(r, 'draggable="true"')
         self.assertContains(r, "wcal-move")
         self.client.post(reverse("work:api_task_update", args=[t.pk]), {"due_date": (TODAY + timedelta(days=1)).isoformat()})

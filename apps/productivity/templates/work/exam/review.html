@@ -19,6 +19,7 @@
       <template x-for="c in chapters" :key="c"><option :value="c" x-text="c" :selected="c === chapter"></option></template>
     </select>
     <div class="seg" role="radiogroup" aria-label="{% translate 'Which questions' %}">
+      <button type="button" class="seg-item" :class="which === 'today' && 'is-active'" @click="start('today')" data-tip="{% translate 'What to learn, and what’s due again today' %}">{% translate "Today" %}</button>
       <button type="button" class="seg-item" :class="which === 'unknown' && 'is-active'" @click="start('unknown')">{% translate "To learn" %}</button>
       <button type="button" class="seg-item" :class="which === 'missed' && 'is-active'" @click="start('missed')" data-tip="{% translate 'The most missed first' %}">{% translate "Missed" %}</button>
       <button type="button" class="seg-item" :class="which === 'all' && 'is-active'" @click="start('all')">{% translate "All" %}</button>
@@ -35,7 +36,7 @@
            :aria-label="flipped ? '{% translate "Answer" %}' : '{% translate "Question — tap to see the answer" %}'">
         <div class="wfr-face wfr-front">
           <span class="wfr-tag"><span x-text="card && ('{% translate "Question" %} ' + card.number + (card.chapter ? ' · ' + card.chapter : ''))"></span><span class="wex-tag-star" x-show="card && card.starred">★</span><span class="wex-tag-missed" x-show="card && card.misses" x-text="card && '✗ ' + card.misses"></span></span>
-          <div class="wfr-text wn-md" x-ref="front"></div>
+          <div class="wfr-text wn-md is-cloze" x-ref="front"></div>
           <textarea class="form-input wex-mine" x-show="writeFirst" x-ref="mine" x-model="mine" rows="4" @click.stop
                     placeholder="{% translate 'Write your answer, then Shift+Enter to compare' %}" aria-label="{% translate 'Your answer' %}"></textarea>
           <span class="wfr-tap" x-show="!writeFirst">{% icon "repeat" %}{% translate "Think of the answer, then tap or press Space" %}</span>

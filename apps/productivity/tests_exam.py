@@ -134,7 +134,7 @@ class PageTests(Base):
         self.assertEqual(self.client.get(reverse("work:exam_subject", args=[self.s.pk])).status_code, 200)
         self.assertEqual(self.page()["notes"][0]["question"], "What is a force?")
         r = self.client.get(reverse("work:exam_review", args=[self.s.pk]))
-        self.assertEqual(r.context["data"]["which"], "unknown")
+        self.assertEqual(r.context["data"]["which"], "today")             # to learn, and due again
         r = self.client.get(reverse("work:exam_export", args=[self.s.pk]))
         self.assertIn("attachment", r["Content-Disposition"])
         self.assertIn("Q: What is a force?\nA: A push or a pull.", r.content.decode())
@@ -417,3 +417,60 @@ class SearchTests(Base):
         res = self.client.get(reverse("work:api_search") + "?q=entropy").json()
         self.assertEqual([(x["kind"], x["url"]) for x in res["results"]], [("exam", reverse("work:exam_subject", args=[self.s.pk]) + f"?open={n.pk}")])
         self.assertContains(self.client.get(reverse("search") + "?q=entropy"), "What is entropy?")
+
+
+class SpacedRepetitionTests(TestCase):
+    """Questions come back for review later each time you know them (1, 3, 7, 16… days), as in Anki."""
+
+    def setUp(self):
+        self.me = User.objects.create_superuser("me", "me@example.com", PW)
+        self.client.force_login(self.me)
+        self.s = ExamSubject.objects.create(owner=self.me, name="Databases")
+        self.n = ExamNote.objects.create(owner=self.me, subject=self.s, question="What is an index?", answer="A lookup structure.")
+
+    def review(self, knew):
+        return self.client.post(reverse("work:api_exam_note", args=[self.n.pk]), {"action": "review", "knew": "1" if knew else "0"}).json()
+
+    def test_the_gaps_grow_and_a_miss_starts_over(self):
+        today = timezone.localdate()
+        self.assertEqual([self.review(True)["interval"] for _i in range(4)], [1, 3, 7, 16])
+        self.n.refresh_from_db()
+        self.assertEqual(self.n.due_on, today + timedelta(days=16))
+        res = self.review(False)
+        self.assertEqual((res["interval"], res["dueOn"]), (0, (today + timedelta(days=1)).isoformat()))
+
+    def test_nothing_is_put_off_past_the_day_before_the_exam(self):
+        today = timezone.localdate()
+        self.s.exam_date = today + timedelta(days=5)
+        self.s.save()
+        for _i in range(3):
+            res = self.review(True)
+        self.assertEqual(res["dueOn"], (today + timedelta(days=4)).isoformat())
+
+    def test_due_today_on_the_board_and_in_review(self):
+        today = timezone.localdate()
+        ExamNote.objects.filter(pk=self.n.pk).update(is_known=True, due_on=today - timedelta(days=1), interval=3)
+        ExamNote.objects.create(owner=self.me, subject=self.s, question="Later", is_known=True, due_on=today + timedelta(days=3))
+        page = self.client.get(reverse("work:api_exam_notes", args=[self.s.pk]), {"show": "due"}).json()
+        self.assertEqual([q["question"] for q in page["notes"]], ["What is an index?"])
+        self.assertEqual(page["shows"]["due"], 1)
+        self.assertTrue(page["notes"][0]["due"])
+        r = self.client.get(reverse("work:exam_review", args=[self.s.pk]))
+        self.assertEqual(r.context["data"]["which"], "today")
+        self.assertEqual(r.context["data"]["notes"][0]["due"], True)
+        home = self.client.get(reverse("work:exam"))
+        self.assertEqual(home.context["subjects"][0].today, 1)
+
+    def test_undo_puts_the_schedule_back(self):
+        self.review(True)
+        self.client.post(reverse("work:api_exam_note", args=[self.n.pk]), {"action": "unreview", "known": "0", "misses": "0", "dueOn": "", "interval": "0"})
+        self.n.refresh_from_db()
+        self.assertEqual((self.n.is_known, self.n.due_on, self.n.interval), (False, None, 0))
+
+    def test_marked_known_by_hand_comes_back_for_a_check(self):
+        self.client.post(reverse("work:api_exam_note", args=[self.n.pk]), {"action": "known", "value": "1"})
+        self.n.refresh_from_db()
+        self.assertEqual(self.n.due_on, timezone.localdate() + timedelta(days=3))
+        self.client.post(reverse("work:api_exam_subject", args=[self.s.pk]), {"action": "reset"})
+        self.n.refresh_from_db()
+        self.assertEqual((self.n.is_known, self.n.due_on), (False, None))

@@ -137,7 +137,7 @@ def note_preview(note, length=420):
             lines.pop(0)
         lines = lines[1:]
     lines = [line for line in lines if not re.match(r"^\s*(```|~~~)", line)]        # a code block's fences (and its language) aren't text
-    text = "\n".join(re.sub(r"^\s{0,3}(#{1,6}\s+|>\s?)|[*_`]|!\[[^\]]*\]\([^)]*\)", "", line) for line in lines)
+    text = "\n".join(re.sub(r"^\s{0,3}(#{1,6}\s+|>\s?)|[*_`]|==|!\[[^\]]*\]\([^)]*\)", "", line) for line in lines)
     text = re.sub(r"\n{3,}", "\n\n", text).strip()
     return text[:length - 1].rstrip() + "…" if len(text) > length else text
 
@@ -164,7 +164,7 @@ def note_card_lines(note, length=420):
             text = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", line[m.end():]).strip()     # a task link: just its words
             row = {"todo": True, "done": m.group(2) != " ", "i": todos[n], "text": re.sub(r"[*_`]", "", text)}
         else:
-            row = {"todo": False, "text": re.sub(r"^\s{0,3}(#{1,6}\s+|>\s?)|[*_`]|!\[[^\]]*\]\([^)]*\)", "", line)}
+            row = {"todo": False, "text": re.sub(r"^\s{0,3}(#{1,6}\s+|>\s?)|[*_`]|==|!\[[^\]]*\]\([^)]*\)", "", line)}
         if not row["todo"] and not row["text"].strip() and (not out or not out[-1]["text"].strip()):
             continue                          # no blank lines at the top, or two in a row
         if used + len(row["text"]) > length:

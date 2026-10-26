@@ -31,7 +31,7 @@
            :aria-label="flipped ? '{% translate "Answer" %}' : '{% translate "Question — tap to see the answer" %}'">
         <div class="wfr-face wfr-front">
           <span class="wfr-tag" x-text="card && card.isNew ? '{% translate "New" %}' : '{% translate "Question" %}'"></span>
-          <div class="wfr-text wn-md" x-ref="front"></div>
+          <div class="wfr-text wn-md is-cloze" x-ref="front"></div>
           <span class="wfr-tap">{% icon "repeat" %}{% translate "Tap or press Space to turn over" %}</span>
         </div>
         <div class="wfr-face wfr-back">

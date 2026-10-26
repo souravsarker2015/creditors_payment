@@ -9,6 +9,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from . import services
 from .models import ExamNote, ExamSubject, Note, Snippet, Task
@@ -239,3 +240,101 @@ class NoteBoardEditTests(TestCase):
     def test_the_palette_offers_todays_note(self):
         html = self.client.get(reverse("work:today")).content.decode()
         self.assertIn(reverse("work:note_today"), html)
+
+
+class NotesImportTests(TestCase):
+    """Notes brought in from Obsidian, Bear, Notion…: Markdown files or a zip of them."""
+
+    def setUp(self):
+        self.me = User.objects.create_superuser("me", "me@example.com", PW)
+        self.client.force_login(self.me)
+
+    def upload(self, *files):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        return self.client.post(reverse("work:note_import"), {"files": [SimpleUploadedFile(name, data) for name, data in files]}, follow=True)
+
+    def vault(self):
+        import io
+        import zipfile
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w") as z:
+            z.writestr("Vault/Backend/Caching.md", "---\ntitle: Caching notes\ntags: [redis, perf]\n---\nLRU evicts the oldest. See [[Kafka]].\n")
+            z.writestr("Vault/Backend/Kafka.md", "# Kafka\n\nPartitions keep order per key. #queues\n")
+            z.writestr("Vault/Daily/2026-10-26.md", "---\ntags:\n  - daily\n  - log\n---\n- [ ] ship it\n")
+            z.writestr("Notion Export/Meeting with Ana 0123456789abcdef0123456789abcdef.md", "Decided to split the service.\n")
+            z.writestr("Vault/.obsidian/workspace.json", "{}")
+            z.writestr("__MACOSX/Vault/._Kafka.md", "junk")
+            z.writestr("Vault/picture.png", b"\x89PNG")
+        return buf.getvalue()
+
+    def test_a_vault_zip(self):
+        r = self.upload(("vault.zip", self.vault()))
+        self.assertContains(r, "4 notes brought in.")
+        notes = {n.title: n for n in Note.objects.prefetch_related("tags")}
+        self.assertEqual(sorted(notes), ["2026-10-26", "Caching notes", "Kafka", "Meeting with Ana"])
+        self.assertEqual(notes["Caching notes"].body, "LRU evicts the oldest. See [[Kafka]].")
+        self.assertEqual(sorted(t.name for t in notes["Caching notes"].tags.all()), ["backend", "perf", "redis"])
+        self.assertEqual(notes["Kafka"].body, "Partitions keep order per key. #queues")
+        self.assertEqual(sorted(t.name for t in notes["Kafka"].tags.all()), ["backend", "queues"])
+        self.assertEqual(sorted(t.name for t in notes["2026-10-26"].tags.all()), ["daily", "log"])
+        self.assertEqual(sorted(t.name for t in notes["Meeting with Ana"].tags.all()), ["notion-export"])
+
+    def test_the_same_again_is_not_added_twice(self):
+        self.upload(("vault.zip", self.vault()))
+        r = self.upload(("vault.zip", self.vault()))
+        self.assertContains(r, "All of them were here already.")
+        self.assertEqual(Note.objects.count(), 4)
+
+    def test_plain_files_and_bear_tags(self):
+        r = self.upload(("Shopping.txt", "milk\neggs".encode()), ("Bear note.md", "# Idea #product\nA thing\n".encode()))
+        self.assertContains(r, "2 notes brought in.")
+        self.assertEqual(Note.objects.get(title="Shopping").body, "milk\neggs")
+        self.assertTrue(Note.objects.filter(title="Idea #product").exists())
+
+    def test_not_a_zip_and_nothing_to_bring(self):
+        self.assertContains(self.upload(("broken.zip", b"nope")), "a zip file that can be opened")
+        self.assertContains(self.upload(("photo.png", b"\x89PNG")), "No notes found")
+        self.assertEqual(Note.objects.count(), 0)
+
+    def test_the_board_has_the_import_button(self):
+        self.assertContains(self.client.get(reverse("work:notes")), reverse("work:note_import"))
+
+
+class NoteTemplateTests(TestCase):
+    """The person's own note templates (as Notion's or Obsidian's), with {{date}} and friends filled in."""
+
+    def setUp(self):
+        self.me = User.objects.create_superuser("me", "me@example.com", PW)
+        self.client.force_login(self.me)
+        self.tpl = Note.objects.create(owner=self.me, title="Incident {{date}}", body="## Impact\nStarted {{time}} on {{weekday}} ({{week}})\n## Timeline\n- ")
+        self.tpl.tags.set(services.tags_named(self.me, ["incident"]))
+
+    def test_any_note_becomes_a_template_and_leaves_the_lists(self):
+        res = self.client.post(reverse("work:api_note_action", args=[self.tpl.pk]), {"action": "template"}).json()
+        self.assertTrue(res["template"])
+        Note.objects.create(owner=self.me, title="Plain note")
+        board = self.client.get(reverse("work:notes"))
+        self.assertEqual([n.title for n in board.context["notes"]], ["Plain note"])
+        self.assertContains(board, f"?new=1&from={self.tpl.pk}")
+        self.assertEqual([n.pk for n in self.client.get(reverse("work:notes") + "?templates=1").context["notes"]], [self.tpl.pk])
+
+    def test_a_new_note_from_it_is_filled_in(self):
+        self.tpl.is_template = True
+        self.tpl.save()
+        data = self.client.get(reverse("work:notes") + f"?new=1&from={self.tpl.pk}").context["note_data"]
+        today = timezone.localdate()
+        self.assertEqual(data["title"], f"Incident {today.isoformat()}")
+        self.assertIn(f"({today.isocalendar()[0]}-W{today.isocalendar()[1]:02d})", data["body"])
+        self.assertNotIn("{{", data["body"])
+        self.assertEqual(data["tags"], "incident")
+        self.assertIsNone(data["id"])                    # a new note: the template stays as it is
+
+    def test_someone_elses_template_or_a_plain_note_is_not_used(self):
+        data = self.client.get(reverse("work:notes") + f"?new=1&from={self.tpl.pk}").context["note_data"]
+        self.assertEqual(data["title"], "")              # not marked as a template
+
+    def test_highlights_are_plain_words_on_cards(self):
+        n = Note.objects.create(owner=self.me, title="TCP", body="A ==three-way== handshake")
+        self.assertContains(self.client.get(reverse("work:notes")), ">A three-way handshake<")
+        self.assertEqual(services.fill_template("{{ date }}", today=timezone.localdate()), timezone.localdate().isoformat())
+        n.delete()

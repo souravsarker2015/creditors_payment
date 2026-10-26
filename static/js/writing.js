@@ -174,13 +174,14 @@
     { id: "math", icon: "∑", block: "$$\n|\n$$", words: "math formula equation latex katex", when: function () { return !!window.katex; } },
     { id: "link", icon: "[[", text: "[[|]]", words: "link note wiki page", when: function (ta) { return ta.matches(".wn-body"); } },
     { id: "card", icon: "::", text: " :: |", words: "flashcard card question answer" },
+    { id: "mark", icon: "==", text: "==|==", words: "highlight mark cloze blank hide" },
     { id: "date", icon: "📅", words: "date today now day", text: function () { var n = new Date(); return n.getFullYear() + "-" + pad(n.getMonth() + 1) + "-" + pad(n.getDate()) + "|"; } },
     { id: "time", icon: "🕑", words: "time now clock", text: function () { var n = new Date(); return pad(n.getHours()) + ":" + pad(n.getMinutes()) + "|"; } },
   ];
   var NAMES = { h1: "Heading 1", h2: "Heading 2", h3: "Heading 3", todo: "To-do", bullet: "Bulleted list", numbered: "Numbered list", quote: "Quote",
                 callout: "Callout", code: "Code block", python: "Python code", js: "JavaScript code", sql: "SQL", bash: "Shell command", json: "JSON",
                 mermaid: "Diagram (Mermaid)", table: "Table", details: "Collapsible section", divider: "Divider", math: "Formula",
-                link: "Link to a note", card: "Flashcard (question :: answer)", date: "Today’s date", time: "Time now" };
+                link: "Link to a note", card: "Flashcard (question :: answer)", mark: "Highlight (a blank in reviews)", date: "Today’s date", time: "Time now" };
   var slash = null;          // { ta, at, items, pick, el }
 
   function caretXY(ta, pos) {          // where the caret is on the page: a copy of the box, measured
@@ -330,7 +331,7 @@
   function looksLikeMarkdown(text) {
     return /(^|\n)\s{0,3}(#{1,6}\s|```|[-*+]\s|\d+[.)]\s|>\s|\|.*\|)|\*\*[^*\n]+\*\*|`[^`\n]+`|\$[^$\n]+\$/.test(text || "");
   }
-  window.FTWriting = { toMarkdown: function (html) { return loadTurndown().then(function () { return toMarkdown(html); }); } };
+  window.FTWriting = { toMarkdown: function (html) { return loadTurndown().then(function () { return toMarkdown(html); }); }, caretXY: caretXY };
 
   d.addEventListener("paste", function (e) {
     if (box(e) !== "md" || e.defaultPrevented || !e.clipboardData) return;
