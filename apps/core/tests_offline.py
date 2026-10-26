@@ -136,7 +136,8 @@ class KeptPagesTests(TestCase):
 
     def test_service_worker_keeps_pages_and_the_outbox(self):
         sw = self.client.get(reverse("service_worker")).content.decode()
-        for part in ("ftpages-v1", "fintrack-offline", "Response.redirect", "X-FT-Offline", "ft-cached", "warm", 'searchParams.has("export")'):
+        for part in ("ftpages-v2", "fintrack-offline", "Response.redirect", "X-FT-Offline", "ft-cached", "warm", 'searchParams.has("export")',
+                     "res.redirected", 'OLD_PAGES = ["ftpages-v1"]'):     # a page reached by a redirect is never kept under the address asked for
             self.assertIn(part, sw)
         page = self.client.get(reverse("home")).content.decode()
         self.assertIn("js/offline.js", page)

@@ -26,7 +26,7 @@ from apps.trash.services import trash
 from . import cards, diagrams, services
 from .access import work_required
 from .models import (
-    Card, ChecklistItem, Deck, Diagram, DiagramKind, DiagramVersion, EntryKind, Goal, GoalStatus, GoalStep, Habit, HabitCheck, JournalEntry, LearningItem, LearningKind, LearningStatus,
+    Card, ChecklistItem, Color, Deck, Diagram, DiagramKind, DiagramVersion, EntryKind, Goal, GoalStatus, GoalStep, Habit, HabitCheck, JournalEntry, LearningItem, LearningKind, LearningStatus,
     LearningUnit, Note, NoteVersion, Priority, Project, SavedView, Snippet, Sprint, Status, Task, TaskActivity, TimeEntry, WorkSettings, link_label,
 )
 
@@ -494,6 +494,10 @@ def note_save(request):
             setattr(note, name, request.POST[name])
     if "project" in request.POST:
         note.project = Project.objects.filter(owner=user, pk=request.POST["project"] or 0).first()
+    if "color" in request.POST:
+        note.color = request.POST["color"] if request.POST["color"] in Color.values else ""
+    if request.POST.get("pinned") == "1" and not note.pk:
+        note.is_pinned = True
     if not note.pk and not (note.title.strip() or note.body.strip()):
         return bad(_("The note is empty."))
     note.save()
@@ -510,6 +514,8 @@ def note_action(request, pk):
     action = request.POST.get("action")
     if action == "pin":
         note.is_pinned = not note.is_pinned
+    elif action == "color":
+        note.color = request.POST.get("color") if request.POST.get("color") in Color.values else ""
     elif action == "archive":
         note.is_archived = not note.is_archived
     elif action == "delete":
@@ -548,8 +554,8 @@ def note_action(request, pk):
                                    order=services.next_order(request.user, Status.TODO))
         task.tags.set(note.tags.all())
         return ok(url=reverse("work:task", args=[task.pk]))
-    note.save(update_fields=["is_pinned", "is_archived", "updated_at"])
-    return ok(pinned=note.is_pinned, archived=note.is_archived)
+    note.save(update_fields=["is_pinned", "is_archived", "color", "updated_at"])
+    return ok(pinned=note.is_pinned, archived=note.is_archived, color=note.color)
 
 
 # ── Habits, journal, focus, entries, snippets ─────────────────────────────

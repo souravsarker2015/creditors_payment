@@ -398,7 +398,7 @@
     }
     function keptCount() {
         if (!window.caches) return Promise.resolve(0);
-        return caches.open("ftpages-v1").then(function (c) { return c.keys(); }).then(function (k) {
+        return caches.open("ftpages-v2").then(function (c) { return c.keys(); }).then(function (k) {
             return k.filter(function (r) { return r.url.indexOf("__ft_list=1") === -1; }).length;
         }).catch(function () { return 0; });
     }
@@ -416,7 +416,7 @@
     function forget() {
         try { localStorage.removeItem("ft-offline-index"); } catch (e) {}
         if ("serviceWorker" in navigator && navigator.serviceWorker.controller) navigator.serviceWorker.controller.postMessage({ type: "forget" });
-        if (window.caches) caches.delete("ftpages-v1");
+        if (window.caches) caches.delete("ftpages-v2");
     }
 
     window.FT = Object.assign(window.FT || {}, { offlineSync: sync, offlineWarm: warm, offlineOutbox: all, offlineQueue: queue, offlineKept: keptCount, offlineList: openList });

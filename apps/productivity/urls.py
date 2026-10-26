@@ -132,6 +132,7 @@ urlpatterns = [
     path("api/prep/exams/<int:pk>/save/", views_prep.exam_save, name="api_exam_save"),
     path("api/prep/topics/<int:pk>/", views_prep.topic_api, name="api_prep_topic"),
     path("api/exam/subjects/<int:pk>/", views_exam.subject_api, name="api_exam_subject"),
+    path("api/exam/subjects/<int:pk>/notes/", views_exam.notes_api, name="api_exam_notes"),
     path("api/exam/notes/<int:pk>/", views_exam.note_api, name="api_exam_note"),
     path("api/goals/<int:pk>/steps/", api.goal_step, name="api_goal_step"),
     path("api/goals/<int:pk>/value/", api.goal_value, name="api_goal_value"),

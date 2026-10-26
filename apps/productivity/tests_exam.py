@@ -20,6 +20,9 @@ class Base(TestCase):
         self.client.force_login(self.me)
         self.s = ExamSubject.objects.create(owner=self.me, name="Physics")
 
+    def page(self, **params):
+        return self.client.get(reverse("work:api_exam_notes", args=[self.s.pk]), params).json()
+
     def note(self, question="What is a force?", answer="A push or a pull.", **kw):
         return ExamNote.objects.create(owner=self.me, subject=self.s, question=question, answer=answer, **kw)
 
@@ -128,7 +131,8 @@ class PageTests(Base):
 
     def test_subject_review_and_download(self):
         self.note()
-        self.assertContains(self.client.get(reverse("work:exam_subject", args=[self.s.pk])), "What is a force?")
+        self.assertEqual(self.client.get(reverse("work:exam_subject", args=[self.s.pk])).status_code, 200)
+        self.assertEqual(self.page()["notes"][0]["question"], "What is a force?")
         r = self.client.get(reverse("work:exam_review", args=[self.s.pk]))
         self.assertEqual(r.context["data"]["which"], "unknown")
         r = self.client.get(reverse("work:exam_export", args=[self.s.pk]))
@@ -160,13 +164,67 @@ class PageTests(Base):
         self.assertNotContains(self.client.get(reverse("work:exam"), {"q": "?"}), "Secret")
 
 
+class BoardTests(Base):
+    """The board and the overview read the questions a page at a time, filtered on the server."""
+
+    def test_pages_of_thirty_with_numbers(self):
+        for i in range(65):
+            self.note(f"Q{i}?", order=i + 1)
+        first = self.page()
+        self.assertEqual((len(first["notes"]), first["next"], first["total"], first["shows"]["all"]), (30, 2, 65, 65))
+        self.assertEqual([n["number"] for n in first["notes"][:3]], [1, 2, 3])
+        third = self.page(page=3)
+        self.assertEqual((len(third["notes"]), third["next"]), (5, None))
+        self.assertNotIn("shows", third)                     # the counts come with the first page only
+
+    def test_filters_search_and_labels(self):
+        self.note("Alpha?", chapter="A", is_known=True, order=1)
+        self.note("Beta?", answer="mentions kafka", chapter="B", is_starred=True, order=2)
+        self.note("Gamma?", chapter="B", misses=2, order=3)
+        q = lambda **p: [n["question"] for n in self.page(**p)["notes"]]      # noqa: E731
+        self.assertEqual(q(show="unknown"), ["Beta?", "Gamma?"])
+        self.assertEqual(q(show="starred"), ["Beta?"])
+        self.assertEqual(q(show="missed"), ["Gamma?"])
+        self.assertEqual(q(chapter="B"), ["Beta?", "Gamma?"])
+        self.assertEqual(q(q="KAFKA"), ["Beta?"])
+        self.assertEqual(q(pinned="1"), ["Beta?", "Alpha?", "Gamma?"])      # the board: important ones first
+        self.assertEqual(q(sort="new"), ["Gamma?", "Beta?", "Alpha?"])
+        self.assertEqual(self.page()["chapters"], [{"name": "A", "n": 1, "known": 1}, {"name": "B", "n": 2, "known": 0}])
+
+    def test_move_a_card_and_a_chapter(self):
+        a, b, c = self.note("A?", chapter="X", order=1), self.note("B?", chapter="X", order=2), self.note("C?", chapter="Y", order=3)
+        url = reverse("work:api_exam_subject", args=[self.s.pk])
+        r = self.client.post(url, {"action": "move", "id": c.pk, "before": a.pk}).json()
+        self.assertEqual(r["chapter"], "X")                  # dropped among X's cards: it's in X now
+        self.assertEqual([n["question"] for n in self.page()["notes"]], ["C?", "A?", "B?"])
+        self.client.post(url, {"action": "move", "id": a.pk, "before": ""})
+        self.assertEqual([n["question"] for n in self.page()["notes"]], ["C?", "B?", "A?"])
+        d = self.note("D?", chapter="Z", order=9)
+        self.client.post(url, {"action": "chapter_move", "chapter": "Z", "step": "-1"})
+        self.assertEqual([n["question"] for n in self.page()["notes"]], ["D?", "C?", "B?", "A?"])
+        self.assertEqual(self.client.post(url, {"action": "move", "id": d.pk + 999}).status_code, 404)
+
+    def test_colour_and_a_new_card(self):
+        n = self.note()
+        url = reverse("work:api_exam_note", args=[n.pk])
+        self.assertEqual(self.client.post(url, {"action": "color", "color": "teal"}).json()["color"], "teal")
+        self.assertEqual(self.client.post(url, {"action": "color", "color": "nope"}).json()["color"], "")
+        r = self.client.post(reverse("work:api_exam_subject", args=[self.s.pk]), {"action": "add", "question": "New?", "color": "red", "starred": "1"}).json()
+        self.assertEqual((r["note"]["color"], r["note"]["starred"], r["note"]["number"], r["shows"]["all"]), ("red", True, 2, 2))
+
+    def test_someone_elses_pages_are_hidden(self):
+        theirs = ExamSubject.objects.create(owner=User.objects.create_superuser("o3", "o3@example.com", PW), name="Y")
+        self.assertEqual(self.client.get(reverse("work:api_exam_notes", args=[theirs.pk])).status_code, 404)
+
+
 class OverviewTests(Base):
     def test_every_question_in_order_for_reading(self):
         self.note("Late?", chapter="B")
         self.note("Loose?")
         r = self.client.get(reverse("work:exam_overview", args=[self.s.pk]))
         self.assertEqual(r.status_code, 200)
-        self.assertEqual([n["question"] for n in r.context["data"]["notes"]], ["Late?", "Loose?"])
+        self.assertEqual(r.context["data"]["notes"], reverse("work:api_exam_notes", args=[self.s.pk]))      # read a page at a time
+        self.assertEqual([n["question"] for n in self.page()["notes"]], ["Late?", "Loose?"])
         self.assertEqual(r.context["data"]["review"], reverse("work:exam_review", args=[self.s.pk]))
         self.assertContains(self.client.get(reverse("work:exam_subject", args=[self.s.pk])), reverse("work:exam_overview", args=[self.s.pk]))
         self.assertContains(self.client.get(reverse("work:exam")), reverse("work:exam_overview", args=[self.s.pk]))
@@ -262,11 +320,10 @@ class RevisionTests(Base):
         self.note("Late?", chapter="B")
         self.note("Loose?")
         self.note("Early?", chapter="A")
-        notes = self.client.get(reverse("work:exam_subject", args=[self.s.pk])).context["data"]["notes"]
+        notes = self.page()["notes"]
         self.assertEqual([(n["number"], n["question"]) for n in notes], [(1, "Late?"), (2, "Loose?"), (3, "Early?")])
         self.note("More B?", chapter="B")                   # joins its chapter, not the end
-        notes = self.client.get(reverse("work:exam_subject", args=[self.s.pk])).context["data"]["notes"]
-        self.assertEqual([n["question"] for n in notes], ["Late?", "More B?", "Loose?", "Early?"])
+        self.assertEqual([n["question"] for n in self.page()["notes"]], ["Late?", "More B?", "Loose?", "Early?"])
 
 
 class OrganiseTests(Base):

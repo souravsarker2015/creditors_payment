@@ -126,6 +126,23 @@ def icon(name):
 
 
 @register.filter
+def note_preview(note, length=420):
+    """A note's text for a card on the notes board: its lines kept, light Markdown marks dropped, and
+    without the first line when that line is already the card's title (a note with no title)."""
+    import re
+
+    lines = (note.body or "").replace("\r", "").split("\n")
+    if not (note.title or "").strip():
+        while lines and not lines[0].strip():
+            lines.pop(0)
+        lines = lines[1:]
+    lines = [line for line in lines if not re.match(r"^\s*(```|~~~)", line)]        # a code block's fences (and its language) aren't text
+    text = "\n".join(re.sub(r"^\s{0,3}(#{1,6}\s+|>\s?)|[*_`]|!\[[^\]]*\]\([^)]*\)", "", line) for line in lines)
+    text = re.sub(r"\n{3,}", "\n\n", text).strip()
+    return text[:length - 1].rstrip() + "…" if len(text) > length else text
+
+
+@register.filter
 def split_words(text):
     return (text or "").split()
 

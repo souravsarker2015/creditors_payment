@@ -957,6 +957,12 @@ a.pager-link:hover { background: var(--surface-sunken); color: var(--text-primar
 .pager-link.is-current { background: var(--accent); color: var(--accent-on); }
 .pager-link.is-disabled { color: var(--text-muted); opacity: .45; }
 .pager-link svg { width: 1rem; height: 1rem; }
+/* With infinite scrolling (static/js/infinite.js) the numbers give way to "Show more", which also loads by itself. */
+.pager.is-infinite { justify-content: center; flex-direction: column; }
+.pager.is-infinite > .pager-nav, .pager.is-infinite > form { display: none !important; }
+.pager.is-infinite .pager-more { min-width: 12rem; justify-content: center; }
+.pager.is-loading .pager-more { opacity: 0.7; pointer-events: none; }
+.pager.is-done .pager-info { display: none; }
 @media (max-width: 639.98px) {
     .pager { justify-content: center; }
     .pager-nav .pager-num { display: none; }

@@ -135,148 +135,155 @@
   }
 
   document.addEventListener("alpine:init", function () {
-    /* ── a subject's page ── */
-    Alpine.data("examSubject", function () {
-      var D = data("exam-data"), DRAFT = "exam-draft-" + D.subject;
+    /* ── pages of questions from the server: shared by the board and the overview ── */
+    function pager(D) {
       return {
-        notes: D.notes || [], subjects: D.subjects || [], draft: { question: "", answer: "", chapter: "" },
-        many: false, paste: "", pasteChapter: "", preview: null, checking: false, previewTimer: null,
-        find: "", show: "all", openAll: false, open: {}, folded: {}, editing: null, edit: {}, editFrom: null,
-        writeView: { add: false, edit: false }, selecting: false, picked: {}, moveTo: "", adding: !(D.notes || []).length,
-        t: t,
-        init: function () {
-          var self = this, hash = /^#q(\d+)$/.exec(location.hash);     // from a search result: open that one
-          if (hash) {
-            this.open[+hash[1]] = true;
-            this.$nextTick(function () { var el = d.getElementById("q" + hash[1]); if (el) el.scrollIntoView({ block: "center" }); });
+        notes: [], next: 1, loading: false, query: "", show: "all", chapter: null, sort: "order",
+        shows: D.shows || { all: 0, unknown: 0, missed: 0, starred: 0 }, chapters: D.chapters || [],
+        params: function (page) {
+          var p = new URLSearchParams({ show: this.show, sort: this.sort, page: page });
+          if (this.chapter !== null) p.set("chapter", this.chapter);
+          if (this.query.trim()) p.set("q", this.query.trim());
+          if (this.pinnedFirst && this.pinnedFirst()) p.set("pinned", "1");
+          return p.toString();
+        },
+        load: function () {
+          var self = this, page = this.next;
+          if (this.loading || !page) return Promise.resolve();
+          this.loading = true;
+          var asked = this.params(page);
+          return fetch(D.notes + "?" + asked, { credentials: "same-origin", headers: { "X-Requested-With": "fetch" } })
+            .then(function (r) { return r.json(); })
+            .then(function (r) {
+              if (self.params(page) !== asked) return;            // the filters changed meanwhile: a newer load follows
+              if (page === 1) { self.notes = []; if (r.shows) { self.shows = r.shows; self.chapters = r.chapters; } }
+              r.notes.forEach(function (n) { self.notes.push(n); });
+              self.next = r.next;
+              self.$nextTick(function () { if (self.loaded) self.loaded(); self.more(); });
+            })
+            .catch(function () { toast(t("notSaved"), "warn"); })
+            .then(function () { self.loading = false; });
+        },
+        reload: function () { this.next = 1; this.loading = false; return this.load(); },
+        more: function () {            // the end of the list is in view: the next page (the observer only fires on changes)
+          var el = this.$refs.more;
+          if (el && this.next && !this.loading && el.getBoundingClientRect().top < window.innerHeight + 700) this.load();
+        },
+        watchEnd: function () {
+          var self = this;
+          if ("IntersectionObserver" in window && this.$refs.more) {
+            new IntersectionObserver(function (es) { if (es.some(function (e) { return e.isIntersecting; })) self.load(); }, { rootMargin: "0px 0px 700px 0px" }).observe(this.$refs.more);
           }
-          var saved = recall(DRAFT, null);                               // a question that wasn't added last time
+        },
+        updateCounts: function (r) { if (r && r.shows) { this.shows = r.shows; this.chapters = r.chapters; } },
+        setShow: function (show) { this.show = show; this.reload(); },
+        setChapter: function (name) { this.chapter = name; this.reload(); },
+        pct: function () { return this.shows.all ? Math.round(100 * (this.shows.all - this.shows.unknown) / this.shows.all) : 0; },
+        flag: function (q, what) {
+          var self = this, key = what === "star" ? "starred" : "known";
+          q[key] = !q[key];
+          api(D.noteBase + q.id + "/", { action: what, value: q[key] ? "1" : "0" }).then(function (r) {
+            if (!r.ok && !r.queued) { q[key] = !q[key]; return; }
+            self.shows[key === "starred" ? "starred" : "unknown"] += (key === "starred") === q[key] ? 1 : -1;
+          });
+        },
+      };
+    }
+
+    /* ── a subject's board: cards like Google Keep, a page at a time ── */
+    Alpine.data("examBoard", function () {
+      var D = data("exam-data"), DRAFT = "exam-draft-" + D.subject, PREFS = "exam-board", prefs = recall(PREFS, {}) || {};
+      function blank(keep) { return { question: "", answer: "", chapter: keep ? keep.chapter : "", color: "", starred: false }; }      // the label stays for the next one
+      return Object.assign(pager(D), {
+        D: D, t: t, answers: prefs.answers !== false, composing: false, many: false, draft: blank(), writeView: { add: false, edit: false },
+        paste: "", pasteChapter: "", preview: null, checking: false, previewTimer: null,
+        selecting: false, picked: {}, moveTo: "", editing: null, edit: {}, editFrom: "", labelsOpen: false,
+        init: function () {
+          var self = this;
+          if (prefs.sort === "new") this.sort = "new";
+          var saved = recall(DRAFT, null);                       // a question that wasn't added last time
           if (saved && (saved.question || saved.answer || saved.paste)) {
-            this.draft = { question: saved.question || "", answer: saved.answer || "", chapter: saved.chapter || "" };
-            this.paste = saved.paste || ""; this.many = !!saved.paste && !saved.question;
-            this.adding = true;
+            this.draft = Object.assign(blank(), saved); this.paste = saved.paste || "";
+            this.composing = true; this.many = !!saved.paste && !saved.question;
             toast(t("draftBack"), "good");
           }
           this.$watch("draft", function () { self.keepDraft(); }, { deep: true });
           this.$watch("paste", function () { self.keepDraft(); self.schedulePreview(); });
           this.$watch("pasteChapter", function () { if (self.paste.trim()) self.schedulePreview(); });
-          window.addEventListener("beforeprint", function () { self.openAll = true; self.folded = {}; });
-          window.addEventListener("beforeunload", function (e) {           // an edit in place isn't kept as a draft
-            if (self.editing !== null && JSON.stringify(self.edit) !== self.editFrom) { e.preventDefault(); e.returnValue = t("leave"); }
+          this.$watch("answers", function () { self.keepPrefs(); });
+          this.$watch("sort", function () { self.keepPrefs(); });
+          window.addEventListener("beforeunload", function (e) {
+            if (self.editing && JSON.stringify(self.edit) !== self.editFrom) { e.preventDefault(); e.returnValue = t("leave"); }
           });
-          this.$nextTick(function () { self.sortable(); });
+          if (!this.shows.all) this.composing = true;
+          this.watchEnd();
+          this.load();
         },
+        keepPrefs: function () { store(PREFS, { answers: this.answers, sort: this.sort }); },
         keepDraft: function () {
-          var x = this.draft, v = x.question.trim() || x.answer.trim() || this.paste.trim() ? { question: x.question, answer: x.answer, chapter: x.chapter, paste: this.paste } : null;
-          store(DRAFT, v);
-        },
-        key: function (e) {             // a: add a question · r: review · (/ finds: the search box has data-work-search)
-          if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || typing(e)) return;
-          if (e.key === "a") { e.preventDefault(); this.openAdd(false); }
-          else if (e.key === "r" && this.notes.length) { e.preventDefault(); location.href = D.review; }
-          else if (e.key === "Escape" && this.selecting) this.endSelect();
+          var x = this.draft, has = x.question.trim() || x.answer.trim() || this.paste.trim();
+          store(DRAFT, has ? Object.assign({}, x, { paste: this.paste }) : null);
         },
         paint: function (el, text) { if (el._md !== text) { el._md = text; paint(el, text); } },
-        openAdd: function (many) {
-          var self = this;
-          this.adding = true; this.many = many;
-          this.$nextTick(function () {
-            var box = many ? self.$root.querySelector(".wex-paste") : self.$refs.question;
-            if (box) { box.focus(); box.scrollIntoView({ block: "center", behavior: "smooth" }); }
-          });
-        },
-        count: function () { var n = this.notes.length; return t(n === 1 ? "countOne" : "count").replace("%(counter)s", n); },
-        known: function () { return this.notes.filter(function (q) { return q.known; }).length; },
-        pct: function () { return this.notes.length ? Math.round(100 * this.known() / this.notes.length) : 0; },
-        pace: function () {             // "about 4 a day to learn them all before the exam"
-          var left = this.notes.length - this.known();
-          if (!this.notes.length) return "";
+        countText: function () { var n = this.shows.all; return t(n === 1 ? "countOne" : "count").replace("%(counter)s", n); },
+        pace: function () {
+          var left = this.shows.unknown;
+          if (!this.shows.all) return "";
           if (!left) return t("allKnown");
           if (D.daysLeft === null || D.daysLeft === undefined || D.daysLeft < 1) return "";
           return t("perDay").replace("%(n)s", Math.ceil(left / D.daysLeft));
         },
-        chapters: function () {
-          var out = [];
-          this.notes.forEach(function (q) { if (q.chapter && out.indexOf(q.chapter) < 0) out.push(q.chapter); });
-          return out;
-        },
-        groups: function () {           // each chapter's questions together, chapters in the order their first question comes
-          var by = {}, keys = [];
-          this.notes.forEach(function (q) { if (!by[q.chapter]) { by[q.chapter] = []; keys.push(q.chapter); } by[q.chapter].push(q); });
-          return keys.map(function (k) { return { chapter: k, notes: by[k] }; });
-        },
-        flatten: function (groups) {
-          var n = 0, order = [];
-          groups.forEach(function (g) { g.notes.forEach(function (q) { q.chapter = g.chapter; q.number = ++n; order.push(q); }); });
-          Array.prototype.splice.apply(this.notes, [0, this.notes.length].concat(order));
-          var self = this; this.$nextTick(function () { self.sortable(); });
-        },
-        renumber: function () { this.flatten(this.groups()); },
-        saveOrder: function () {
-          api(D.api, { action: "order", rows: JSON.stringify(this.notes.map(function (q) { return [q.id, q.chapter]; })) });
-        },
-        canDrag: function () { return this.show === "all" && !this.find.trim() && !this.selecting && this.editing === null; },
+        pinnedFirst: function () { return this.sort === "order" && this.show === "all" && this.chapter === null && !this.query.trim(); },
+        firstOther: function (i) { return this.pinnedFirst() && i > 0 && this.notes[i - 1].starred && !this.notes[i].starred; },
+        firstPinned: function (i) { return this.pinnedFirst() && i === 0 && this.notes[0].starred; },
+        canDrag: function () { return this.pinnedFirst() && !this.selecting; },
+        loaded: function () { this.sortable(); },
         sortable: function () {
           if (!window.Sortable) { var self0 = this; setTimeout(function () { self0.sortable(); }, 150); return; }
-          var self = this;
-          // Sortable drags a copy of the row: Alpine is told to leave it alone (and forgets that afterwards)
+          var self = this, grid = this.$refs.grid;
+          if (!grid || grid._sortable) return;
           function start(evt) { evt.item.setAttribute("x-ignore", ""); }
           function done(evt) { evt.item.removeAttribute("x-ignore"); delete evt.item._x_ignore; }
-          this.$root.querySelectorAll(".wex-list").forEach(function (list) {
-            if (list._sortable) return;
-            list._sortable = Sortable.create(list, {
-              group: "wex-questions", handle: ".wex-grip", draggable: ".wex-q", animation: 150, forceFallback: true, fallbackOnBody: true,
-              emptyInsertThreshold: 28, onChoose: start, onUnchoose: done,
-              onEnd: function (evt) {
-                if (evt.from === evt.to && evt.oldDraggableIndex === evt.newDraggableIndex) { done(evt); return; }
-                done(evt);
-                evt.item.remove();      // put the row back: Alpine draws the new order from the data
-                evt.from.insertBefore(evt.item, evt.from.querySelectorAll(":scope > .wex-q")[evt.oldDraggableIndex] || null);
-                var groups = self.groups(), find = function (el) { var c = el.getAttribute("data-chapter"); return groups.filter(function (g) { return g.chapter === c; })[0]; };
-                var from = find(evt.from), to = find(evt.to);
-                if (!from || !to) return;
-                to.notes.splice(evt.newDraggableIndex, 0, from.notes.splice(evt.oldDraggableIndex, 1)[0]);
-                self.flatten(groups.filter(function (g) { return g.notes.length; })); self.saveOrder();
-              },
-            });
+          grid._sortable = Sortable.create(grid, {
+            handle: ".wkc-grip", draggable: ".wkc", animation: 150, forceFallback: true, fallbackOnBody: true, onChoose: start, onUnchoose: done,
+            onEnd: function (evt) {
+              done(evt);
+              if (evt.oldDraggableIndex === evt.newDraggableIndex) return;
+              var moved = self.notes[evt.oldDraggableIndex];
+              evt.item.remove();      // put the card back: Alpine draws the new order from the data
+              grid.insertBefore(evt.item, grid.querySelectorAll(":scope > .wkc")[evt.oldDraggableIndex] || null);
+              self.notes.splice(evt.oldDraggableIndex, 1);
+              self.notes.splice(evt.newDraggableIndex, 0, moved);
+              var before = self.notes[evt.newDraggableIndex + 1];
+              api(D.api, { action: "move", id: moved.id, before: before ? before.id : "" }).then(function (r) {
+                if (!r.ok) return;
+                moved.chapter = r.chapter; self.updateCounts(r);
+              });
+            },
           });
         },
-        moveChapter: function (g, step) {
-          var groups = this.groups(), i = groups.map(function (x) { return x.chapter; }).indexOf(g.chapter), j = i + step;
-          if (i < 0 || j < 0 || j >= groups.length) return;
-          groups.splice(j, 0, groups.splice(i, 1)[0]);
-          this.flatten(groups); this.saveOrder();
+        /* taking a note */
+        openComposer: function (many) {
+          var self = this;
+          this.composing = true; this.many = many;
+          this.$nextTick(function () { var box = many ? self.$root.querySelector(".wex-paste") : self.$refs.question; if (box) box.focus(); });
         },
-        firstGroup: function (g) { var gs = this.groups(); return gs.length && gs[0].chapter === g.chapter; },
-        lastGroup: function (g) { var gs = this.groups(); return gs.length && gs[gs.length - 1].chapter === g.chapter; },
-        foldAll: function (on) { var self = this; this.groups().forEach(function (g) { self.folded[g.chapter] = on; }); },
-        anyFolded: function () { var self = this; return this.groups().some(function (g) { return self.folded[g.chapter]; }); },
-        visible: function (q) {
-          if (this.show === "unknown" && q.known) return false;
-          if (this.show === "starred" && !q.starred) return false;
-          if (this.show === "missed" && !q.misses) return false;
-          var f = this.find.trim().toLowerCase();
-          return !f || (q.question + "\n" + q.answer + "\n" + q.chapter).toLowerCase().indexOf(f) >= 0 || String(q.number) === f;
+        closeComposer: function () {
+          if (!this.many && this.draft.question.trim()) { this.add(false); return; }     // like Keep: closing keeps what was written
+          this.composing = !this.shows.all; this.many = false; this.writeView.add = false;
         },
-        shown: function (g) { var self = this; return g.notes.some(function (q) { return self.visible(q); }); },
-        knownIn: function (g) { return g.notes.filter(function (q) { return q.known; }).length; },
-        reviewUrl: function (g) { return D.review + "?which=all&chapter=" + encodeURIComponent(g.chapter); },
-        isOpen: function (q) { return this.openAll || !!this.open[q.id]; },
-        toggle: function (q) {
-          if (this.selecting) { this.pick(q); return; }
-          this.open[q.id] = !this.isOpen(q); if (this.openAll && !this.open[q.id]) this.openAll = false;
-        },
-        /* adding */
-        add: function () {
-          var self = this, q = this.draft.question.trim();
-          if (!q) { toast(t("writeFirst"), "warn"); return; }
-          api(D.api, { action: "add", question: q, answer: this.draft.answer, chapter: this.draft.chapter }).then(function (r) {
+        add: function (keepOpen) {
+          var self = this, x = this.draft;
+          if (!x.question.trim()) { toast(t("writeFirst"), "warn"); return; }
+          api(D.api, { action: "add", question: x.question.trim(), answer: x.answer, chapter: x.chapter, color: x.color, starred: x.starred ? "1" : "0" }).then(function (r) {
             if (!r.ok || !r.note) return;
-            self.notes.push(r.note); self.renumber();
-            self.draft = { question: "", answer: "", chapter: self.draft.chapter };        // the chapter stays for the next one
-            self.writeView.add = false;
-            toast(t("added", "Added") + " · " + r.note.number, "good");
-            self.$nextTick(function () { self.$refs.question && self.$refs.question.focus(); });
+            r.note._new = true;
+            self.notes.splice(r.note.starred || !self.pinnedFirst() ? 0 : self.notes.filter(function (n) { return n.starred; }).length, 0, r.note);
+            self.updateCounts(r);
+            self.draft = blank(x); self.writeView.add = false;
+            toast(t("added", "Added") + (r.note.number ? " · #" + r.note.number : ""), "good");
+            if (keepOpen) self.$nextTick(function () { self.$refs.question && self.$refs.question.focus(); });
+            else self.composing = false;
           });
         },
         schedulePreview: function () {
@@ -291,8 +298,8 @@
           this.checking = true;
           Work.api(D.api, { action: "add_many", text: text, chapter: this.pasteChapter, preview: "1" }).then(function (r) {
             self.checking = false;
-            if (text !== self.paste) return;                 // changed meanwhile: a newer check is on its way
-            if (r && r.ok) r.found.forEach(function (p) { p.on = !p.dupe; });           // ones already there start unticked
+            if (text !== self.paste) return;
+            if (r && r.ok) r.found.forEach(function (p) { p.on = !p.dupe; });
             self.preview = r && r.ok ? r : { found: [], error: r && r.error };
           });
         },
@@ -305,9 +312,9 @@
           if (!pick.length) return;
           api(D.api, { action: "add_many", text: this.paste, chapter: this.pasteChapter, pick: pick.join(",") }).then(function (r) {
             if (!r.ok || !r.notes) return;
-            r.notes.forEach(function (n) { self.notes.push(n); });
-            self.renumber(); self.paste = ""; self.preview = null; self.many = false;
+            self.paste = ""; self.preview = null; self.many = false; self.composing = false;
             toast(r.message, "good");
+            self.reload();
           });
         },
         openFile: function (file) {
@@ -319,57 +326,61 @@
           if (f && (/^text\//.test(f.type) || /\.(md|markdown|txt|csv|tsv)$/i.test(f.name))) { e.preventDefault(); this.openFile(f); }
         },
         copyPrompt: function () { copy(this.$refs.prompt.value).then(function () { toast(t("copied"), "good"); }); },
-        /* one question */
-        flag: function (q, what) {
-          var key = what === "star" ? "starred" : "known";
-          q[key] = !q[key];
-          api(D.noteBase + q.id + "/", { action: what, value: q[key] ? "1" : "0" }).then(function (r) { if (!r.ok && !r.queued) q[key] = !q[key]; });
+        /* one card */
+        cardClick: function (e, q) {
+          if (this.selecting) { this.picked[q.id] = !this.picked[q.id]; return; }
+          if (e.target.closest("a, button, input, select, textarea, .wkc-colors")) return;
+          this.openEditor(q);
         },
-        startEdit: function (q) {
-          this.edit = { question: q.question, answer: q.answer, chapter: q.chapter, subject: D.subject }; this.editing = q.id;
-          this.editFrom = JSON.stringify(this.edit); this.writeView.edit = false;
-          this.$nextTick(function () { var box = d.querySelector("#q" + q.id + " .wpc-edit textarea"); if (box) box.focus(); });
+        setColor: function (q, color) {
+          var was = q.color; q.color = color;
+          api(D.noteBase + q.id + "/", { action: "color", color: color }).then(function (r) { if (!r.ok && !r.queued) q.color = was; });
         },
-        saveEdit: function (q) {
-          var self = this, e = this.edit;
+        openEditor: function (q) {
+          this.edit = { id: q.id, question: q.question, answer: q.answer, chapter: q.chapter, color: q.color || "", starred: q.starred, known: q.known, number: q.number, subject: D.subject };
+          this.editFrom = JSON.stringify(this.edit); this.editing = q; this.writeView.edit = false;
+          var self = this; this.$nextTick(function () { self.$refs.editQuestion && self.$refs.editQuestion.focus(); });
+        },
+        closeEditor: function () {
+          var self = this, q = this.editing, e = this.edit;
+          if (!q) return;
+          if (JSON.stringify(e) === this.editFrom) { this.editing = null; return; }
           if (!e.question.trim()) { toast(t("writeFirst"), "warn"); return; }
-          api(D.noteBase + q.id + "/", { action: "update", question: e.question, answer: e.answer, chapter: e.chapter, subject: e.subject }).then(function (r) {
+          var was = JSON.parse(this.editFrom);
+          api(D.noteBase + q.id + "/", { action: "update", question: e.question, answer: e.answer, chapter: e.chapter, color: e.color, subject: e.subject }).then(function (r) {
             if (!r.ok && !r.queued) return;
-            self.editing = null;
-            if (String(e.subject) !== String(D.subject)) {       // moved to another subject
-              self.notes.splice(self.notes.indexOf(q), 1); self.renumber();
-              var to = self.subjects.find(function (s) { return String(s.id) === String(e.subject); });
+            if (String(e.subject) !== String(D.subject)) {           // moved to another subject
+              self.notes.splice(self.notes.indexOf(q), 1);
+              var to = D.subjects.find(function (s) { return String(s.id) === String(e.subject); });
               toast(t("moved").replace("%(name)s", to ? to.name : ""), "good");
+              self.reload();
               return;
             }
-            q.question = e.question.trim(); q.answer = e.answer; self.open[q.id] = true;
-            var chapter = (e.chapter || "").trim();
-            if (chapter !== q.chapter) {                         // into another chapter: at its end
-              var groups = self.groups(), from = groups.filter(function (g) { return g.chapter === q.chapter; })[0];
-              from.notes.splice(from.notes.indexOf(q), 1);
-              var to = groups.filter(function (g) { return g.chapter === chapter; })[0];
-              if (to) to.notes.push(q); else groups.push({ chapter: chapter, notes: [q] });
-              self.flatten(groups.filter(function (g) { return g.notes.length; })); self.saveOrder();
-            }
+            q.question = e.question.trim(); q.answer = e.answer; q.chapter = (e.chapter || "").trim(); q.color = e.color;
+            if (r.note && r.note.chapter !== was.chapter) self.reload();
           });
+          if (e.starred !== was.starred) this.flag(q, "star");
+          if (e.known !== was.known) this.flag(q, "known");
+          this.editing = null;
         },
+        removeEditing: function () { var q = this.editing; this.editing = null; this.remove(q); },
         remove: function (q) {
           var self = this;
           api(D.noteBase + q.id + "/", { action: "delete" }).then(function (r) {
             if (!r.ok) return;
-            self.notes.splice(self.notes.indexOf(q), 1); self.renumber();
-            Work.undoable(t("deleted", "Question deleted"), r.undo, function () { location.reload(); });
+            self.notes.splice(self.notes.indexOf(q), 1);
+            self.shows.all--; if (!q.known) self.shows.unknown--; if (q.starred) self.shows.starred--; if (q.misses) self.shows.missed--;
+            Work.undoable(t("deleted", "Question deleted"), r.undo, function () { self.reload(); });
           });
         },
         /* picking several */
-        startSelect: function () { this.selecting = true; this.picked = {}; this.editing = null; },
+        startSelect: function () { this.selecting = true; this.picked = {}; },
         endSelect: function () { this.selecting = false; this.picked = {}; },
-        pick: function (q) { this.picked[q.id] = !this.picked[q.id]; },
         pickedIds: function () { var self = this; return this.notes.filter(function (q) { return self.picked[q.id]; }).map(function (q) { return q.id; }); },
         pickedText: function () { return t("picked").replace("%(n)s", this.pickedIds().length); },
         pickAll: function () {
-          var self = this, all = this.notes.filter(function (q) { return self.visible(q); }), on = !all.every(function (q) { return self.picked[q.id]; });
-          all.forEach(function (q) { self.picked[q.id] = on; });
+          var self = this, on = !this.notes.every(function (q) { return self.picked[q.id]; });
+          this.notes.forEach(function (q) { self.picked[q.id] = on; });
         },
         bulk: function (op) {
           var self = this, ids = this.pickedIds(), fields = { action: "bulk", op: op, ids: ids.join(",") };
@@ -379,69 +390,56 @@
           if (op === "move") { if (!this.moveTo) return; fields.subject = this.moveTo; }
           api(D.api, fields).then(function (r) {
             if (!r.ok) return;
-            var picked = self.notes.filter(function (q) { return ids.indexOf(q.id) >= 0; });
-            if (op === "delete" || op === "move") {
-              picked.forEach(function (q) { self.notes.splice(self.notes.indexOf(q), 1); });
-              self.renumber(); self.endSelect();
-              if (op === "move") { toast(r.message, "good"); self.moveTo = ""; return; }
+            self.endSelect(); self.moveTo = "";
+            if (op === "move") toast(r.message, "good");
+            if (op === "delete") {
               Work.toast(t("deletedMany").replace("%(n)s", ids.length), "good", { label: t("undo", "Undo"), run: function () {
-                Promise.all((r.undo || []).map(function (u) { return Work.api(u, {}); })).then(function () { location.reload(); });
+                Promise.all((r.undo || []).map(function (u) { return Work.api(u, {}); })).then(function () { self.reload(); });
               } });
-              return;
             }
-            if (op === "known" || op === "unknown") picked.forEach(function (q) { q.known = op === "known"; });
-            if (op === "chapter") {
-              var groups = self.groups().map(function (g) { return { chapter: g.chapter, notes: g.notes.filter(function (q) { return picked.indexOf(q) < 0; }) }; });
-              var to = groups.filter(function (g) { return g.chapter === fields.chapter; })[0];
-              if (to) to.notes = to.notes.concat(picked); else groups.push({ chapter: fields.chapter, notes: picked });
-              self.flatten(groups.filter(function (g) { return g.notes.length; })); self.saveOrder();
-            }
-            self.endSelect();
+            self.reload();
           });
         },
-        /* chapters and the whole subject */
-        renameChapter: function (g) {
-          var self = this, name = prompt(t("renameAsk"), g.chapter);
-          if (name === null || name.trim() === g.chapter) return;
-          name = name.trim();
-          api(D.api, { action: "rename_chapter", old: g.chapter, chapter: name }).then(function (r) {
-            if (!r.ok) return;
-            self.notes.forEach(function (q) { if (q.chapter === g.chapter) q.chapter = name; });
-            self.renumber();
-          });
+        /* labels (chapters) */
+        renameChapter: function (c) {
+          var self = this, name = prompt(t("renameAsk"), c.name);
+          if (name === null || name.trim() === c.name) return;
+          api(D.api, { action: "rename_chapter", old: c.name, chapter: name.trim() }).then(function (r) { if (r.ok) self.reload(); });
+        },
+        moveChapter: function (i, step) {
+          var self = this, c = this.chapters[i];
+          api(D.api, { action: "chapter_move", chapter: c.name, step: step }).then(function (r) { if (r.ok) { self.updateCounts(r); self.reload(); } });
         },
         reset: function () {
           var self = this;
           if (!confirm(t("resetAsk"))) return;
-          api(D.api, { action: "reset" }).then(function (r) { if (r.ok) self.notes.forEach(function (q) { q.known = false; }); });
+          api(D.api, { action: "reset" }).then(function (r) { if (r.ok) self.reload(); });
         },
-        printAll: function (questionsOnly) {
-          var self = this;
-          d.body.classList.toggle("wex-print-quiz", !!questionsOnly);
-          this.openAll = !questionsOnly; this.folded = {};
-          this.$nextTick(function () { setTimeout(function () { window.print(); d.body.classList.remove("wex-print-quiz"); }, 300); });
+        key: function (e) {
+          if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || typing(e) || this.editing) return;
+          if (e.key === "c" || e.key === "a") { e.preventDefault(); this.openComposer(false); }
+          else if (e.key === "r" && this.shows.all) { e.preventDefault(); location.href = D.review; }
+          else if (e.key === "o" && this.shows.all) { e.preventDefault(); location.href = D.overview; }
+          else if (e.key === "Escape" && this.selecting) this.endSelect();
         },
-      };
+      });
     });
 
-    /* ── one page to read everything through before the exam ── */
+    /* ── one page to read everything through before the exam (a page at a time) ── */
     Alpine.data("examOverview", function () {
       var D = data("exam-data"), KEEP = "exam-overview-" + D.subject, kept = recall(KEEP, {}) || {};
-      return {
-        notes: D.notes || [], show: kept.show || "all", answers: kept.answers !== false, size: kept.size || 1,
-        find: "", searching: false, open: {}, full: {}, long: {}, current: 0, scrolled: false,
-        t: t,
+      return Object.assign(pager(D), {
+        D: D, t: t, answers: kept.answers !== false, size: kept.size || 1,
+        searching: false, open: {}, full: {}, long: {}, scrolled: false,
         init: function () {
-          var self = this, timer = null;
+          var self = this;
+          if (["all", "unknown", "missed", "starred"].indexOf(kept.show) >= 0) this.show = kept.show;
           ["show", "answers", "size"].forEach(function (k) { self.$watch(k, function () { self.keep(); }); });
-          window.addEventListener("scroll", function () {
-            self.scrolled = window.scrollY > 600;
-            clearTimeout(timer);
-            timer = setTimeout(function () { self.keep(); self.whereAmI(); }, 150);
-          }, { passive: true });
-          if (kept.y) this.$nextTick(function () { setTimeout(function () { window.scrollTo(0, kept.y); }, 120); });   // back where you were reading
+          window.addEventListener("scroll", function () { self.scrolled = window.scrollY > 600; }, { passive: true });
+          this.watchEnd();
+          this.load();
         },
-        keep: function () { store(KEEP, { show: this.show, answers: this.answers, size: this.size, y: Math.round(window.scrollY) }); },
+        keep: function () { store(KEEP, { show: this.show, answers: this.answers, size: this.size }); },
         paint: function (el, text, q) {
           if (el._md !== text) { el._md = text; paint(el, text); }
           if (q && !this.full[q.id]) {
@@ -449,60 +447,26 @@
             requestAnimationFrame(function () { if (el.clientHeight) self.long[q.id] = el.scrollHeight > el.clientHeight + 4; });      // trimmed: offer "Show all"
           }
         },
-        known: function () { return this.notes.filter(function (q) { return q.known; }).length; },
-        pct: function () { return this.notes.length ? Math.round(100 * this.known() / this.notes.length) : 0; },
-        groups: function () {
-          var by = {}, keys = [];
-          this.notes.forEach(function (q) { if (!by[q.chapter]) { by[q.chapter] = []; keys.push(q.chapter); } by[q.chapter].push(q); });
-          return keys.map(function (k) { return { chapter: k, notes: by[k] }; });
-        },
-        matches: function (q, show) {
-          if (show === "unknown" && q.known) return false;
-          if (show === "starred" && !q.starred) return false;
-          if (show === "missed" && !q.misses) return false;
-          return true;
-        },
-        visible: function (q) {
-          if (!this.matches(q, this.show)) return false;
-          var f = this.find.trim().toLowerCase();
-          return !f || (q.question + "\n" + q.answer).toLowerCase().indexOf(f) >= 0;
-        },
-        count: function (show) { var self = this; return this.notes.filter(function (q) { return self.matches(q, show); }).length; },
-        shown: function (g) { var self = this; return g.notes.some(function (q) { return self.visible(q); }); },
-        knownIn: function (g) { return g.notes.filter(function (q) { return q.known; }).length; },
-        setShow: function (show) { this.show = show; window.scrollTo({ top: 0 }); },
+        known: function () { return this.shows.all - this.shows.unknown; },
+        heading: function (i) { return i === 0 || this.notes[i - 1].chapter !== this.notes[i].chapter; },     // a chapter starts here
+        count: function (show) { return this.shows[show] || 0; },
         reveal: function (q) { if (!this.answers) this.open[q.id] = !this.open[q.id]; },
         zoom: function (step) { this.size = Math.round(Math.min(1.4, Math.max(0.85, this.size + step * 0.1)) * 100) / 100; },
         toggleSearch: function () {
           var self = this;
           this.searching = !this.searching;
-          if (!this.searching) { this.find = ""; return; }
+          if (!this.searching) { if (this.query) { this.query = ""; this.reload(); } return; }
           this.$nextTick(function () { self.$refs.find && self.$refs.find.focus(); });
         },
-        barHeight: function () { var bar = this.$root.querySelector(".wexo-nav"); return bar ? bar.getBoundingClientRect().height : 0; },
-        jump: function (gi) {
-          var el = d.getElementById("chapter-" + gi);
-          if (!el) return;
-          window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - stickyTop() - this.barHeight() - 8, behavior: "smooth" });
-        },
-        whereAmI: function () {           // the chapter being read, lit up in the chapter row
-          var line = stickyTop() + this.barHeight() + 24, at = 0;
-          this.$root.querySelectorAll(".wexo-group").forEach(function (el) { if (el.offsetParent && el.getBoundingClientRect().top < line) at = +el.dataset.index; });
-          this.current = at;
-          var chip = this.$root.querySelectorAll(".wexo-chap")[at];
-          if (chip && chip.scrollIntoView) chip.scrollIntoView({ inline: "nearest", block: "nearest" });
-        },
-        flag: function (q, what) {
-          var key = what === "star" ? "starred" : "known";
-          q[key] = !q[key];
-          api(D.noteBase + q.id + "/", { action: what, value: q[key] ? "1" : "0" }).then(function (r) { if (!r.ok && !r.queued) q[key] = !q[key]; });
-        },
-        reviewUrl: function () { return D.review + "?which=" + (this.show === "unknown" ? "unknown" : this.show); },
+        reviewUrl: function () { return D.review + "?which=" + this.show + (this.chapter !== null ? "&chapter=" + encodeURIComponent(this.chapter) : ""); },
         printIt: function () {
           var self = this;
           this.answers = true;
-          this.notes.forEach(function (q) { self.full[q.id] = true; });
-          this.$nextTick(function () { setTimeout(function () { window.print(); }, 300); });
+          (function all() {          // every page first, then print
+            if (self.next) { self.load().then(all); return; }
+            self.notes.forEach(function (q) { self.full[q.id] = true; });
+            self.$nextTick(function () { setTimeout(function () { window.print(); }, 400); });
+          })();
         },
         key: function (e) {
           if (e.ctrlKey || e.metaKey || e.altKey || typing(e)) return;
@@ -510,7 +474,7 @@
           else if (e.defaultPrevented) return;
           else if (e.key === "a") { e.preventDefault(); this.answers = !this.answers; }
         },
-      };
+      });
     });
 
     /* ── flip through them ── */

@@ -23712,3 +23712,78 @@ msgstr "উত্তর দেখতে প্রশ্নে চাপুন"
 #, python-format
 msgid "“%(title)s” has no questions left — they were deleted — so it can't be taken. You can delete it from the list."
 msgstr "“%(title)s”-এ আর কোনো প্রশ্ন নেই — সেগুলো মুছে ফেলা হয়েছে — তাই এটি দেওয়া যাবে না। তালিকা থেকে এটি মুছে ফেলতে পারেন।"
+
+msgid "+ Label"
+msgstr "+ লেবেল"
+
+msgid "All labels"
+msgstr "সব লেবেল"
+
+msgid "Answer — Markdown, code, formulas; paste from ChatGPT or Claude"
+msgstr "উত্তর — Markdown, কোড, সূত্র; ChatGPT বা Claude থেকে পেস্ট করুন"
+
+msgid "As a list, with the editor beside it"
+msgstr "তালিকা হিসেবে, পাশে এডিটরসহ"
+
+msgid "As cards"
+msgstr "কার্ড হিসেবে"
+
+msgid "Back from the archive"
+msgstr "আর্কাইভ থেকে ফিরেছে"
+
+msgid "Couldn’t load — try again"
+msgstr "লোড হয়নি — আবার চেষ্টা করুন"
+
+msgid "Edit the question"
+msgstr "প্রশ্নটি সম্পাদনা করুন"
+
+msgid "Keys: C new question · / find · R review · O overview. Drag a card to change the order."
+msgstr "কী: C নতুন প্রশ্ন · / খুঁজুন · R রিভিউ · O সারসংক্ষেপ। ক্রম বদলাতে কার্ড টেনে আনুন।"
+
+msgid "Labels (chapters)"
+msgstr "লেবেল (অধ্যায়)"
+
+msgid "Loading…"
+msgstr "লোড হচ্ছে…"
+
+msgid "New note in the full editor"
+msgstr "পূর্ণ এডিটরে নতুন নোট"
+
+msgid "No colour"
+msgstr "কোনো রং নয়"
+
+msgid "No notes yet. Take one above — or press n on any Productivity page."
+msgstr "এখনো কোনো নোট নেই। ওপরে একটি লিখুন — অথবা প্রোডাক্টিভিটির যেকোনো পাতায় n চাপুন।"
+
+msgid "Others"
+msgstr "অন্যগুলো"
+
+msgid "Paste a list — from ChatGPT, Claude, a file…"
+msgstr "তালিকা পেস্ট করুন — ChatGPT, Claude বা কোনো ফাইল থেকে…"
+
+msgid "Print (from the overview)"
+msgstr "প্রিন্ট (সারসংক্ষেপ থেকে)"
+
+msgid "Questions with the same label are kept together, in this order, in the overview and in reviews."
+msgstr "একই লেবেলের প্রশ্নগুলো সারসংক্ষেপ ও রিভিউতে এই ক্রমে একসাথে থাকে।"
+
+msgid "Search questions and answers  ( / )"
+msgstr "প্রশ্ন ও উত্তরে খুঁজুন  ( / )"
+
+msgid "Show more"
+msgstr "আরও দেখান"
+
+msgid "Take a note…"
+msgstr "একটি নোট লিখুন…"
+
+msgid "Take a note… (a question)"
+msgstr "একটি নোট লিখুন… (একটি প্রশ্ন)"
+
+msgid "Take a note… Markdown works: - [ ] to-do, `code`, ``` blocks"
+msgstr "একটি নোট লিখুন… Markdown চলে: - [ ] করণীয়, `code`, ``` ব্লক"
+
+msgid "Your order"
+msgstr "আপনার ক্রম"
+
+msgid "just now"
+msgstr "এইমাত্র"

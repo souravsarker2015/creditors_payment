@@ -70,7 +70,7 @@ def _texts():
     return {
         "savedOffline": _("Saved on this device — it will sync when you're online."), "synced": _("Synced changes made offline."),
         "undo": _("Undo"), "reminder": _("Reminder"), "stillWorking": _("Still working on this?"), "noDescription": _("No description"),
-        "tracked": _("Tracked"), "notSaved": _("Not saved."), "taskAdded": _("Task added"), "noteSaved": _("Note saved"),
+        "tracked": _("Tracked"), "notSaved": _("Not saved."), "taskAdded": _("Task added"), "noteSaved": _("Note saved"), "noteArchived": _("Archived"), "noteUnarchived": _("Back from the archive"),
         "repeatMade": _("Next one added"), "taskDeleted": _("Task deleted"), "noteDeleted": _("Note deleted"),
         "focusSession": _("Focus session"), "focusDone": _("Focus session done"), "takeBreak": _("Time for a break."),
         "focusSavedLate": _("A focus session finished while you were away — it's in your timesheet."),
@@ -720,9 +720,17 @@ def notes_view(request, pk=None):
         note_data = {"id": note.pk, "title": note.title, "body": note.body, "tags": " ".join(note.tags.values_list("name", flat=True)),
                      "project": str(note.project_id or ""), "updated": int(note.updated_at.timestamp() * 1000),
                      "saved": timezone.localtime(note.updated_at).strftime("%H:%M")}
+    from django.core.paginator import Paginator
+
+    # Nothing open: the notes as a board of cards (like Keep), unless the list was asked for.
+    board = not note and not request.GET.get("new") and request.GET.get("view") != "list"
+    page = Paginator(notes.distinct(), 40).get_page(request.GET.get("page"))
+    keep = request.GET.copy()
+    keep.pop("page", None)
     return render_work(request, "work/notes.html", {
-        "note_data": note_data,
-        "notes": notes.distinct()[:200], "note": note, "q": q, "tag": tag, "archived": archived,
+        "note_data": note_data, "board": board, "page_obj": page, "base_query_string": keep.urlencode(),
+        "pagination_window": [], "colors": Color.choices,
+        "notes": page.object_list, "total": page.paginator.count, "note": note, "q": q, "tag": tag, "archived": archived,
         "tags": Tag.objects.filter(owner=user, notes__isnull=False).distinct(),
         "projects": Project.objects.filter(owner=user, is_archived=False),
         "templates": [(key, t[0]) for key, t in NOTE_TEMPLATES.items()],

@@ -79,7 +79,9 @@ def offline_view(request):
 
 SW_BODY = r"""
 const CACHE = "fintrack-" + CONFIG.version;        // app files: replaced with each update
-const PAGES = "ftpages-v1";                        // pages you opened, kept for when there's no signal
+const PAGES = "ftpages-v2";                        // pages you opened, kept for when there's no signal
+// v1 could hold a page under the wrong address (see remember): dropped once, refilled as pages are opened.
+const OLD_PAGES = ["ftpages-v1"];
 const MAX_PAGES = 500;
 const CDN = ["cdn.jsdelivr.net", "fonts.googleapis.com", "fonts.gstatic.com"];
 
@@ -90,7 +92,7 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k.startsWith("fintrack-") && k !== CACHE).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => (k.startsWith("fintrack-") && k !== CACHE) || OLD_PAGES.includes(k)).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
@@ -123,6 +125,9 @@ function keyOf(req) {
 
 async function remember(req, res) {
   if (!res || res.status !== 200 || res.headers.get("X-FT-Offline") !== "1") return;
+  // Sent somewhere else (signed out, no access yet…): that page isn't this address's — keeping it
+  // would show, say, the personal home page for /work/ the next time the network is slow.
+  if (res.redirected) return;
   const headers = new Headers(res.headers);
   headers.set("X-FT-Saved-At", String(Date.now()));
   const copy = new Response(await res.clone().blob(), { status: 200, headers });

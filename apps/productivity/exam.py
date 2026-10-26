@@ -275,7 +275,83 @@ def as_text(subject, notes):
 
 def as_json(note, number=None):
     return {"id": note.pk, "question": note.question, "answer": note.answer, "chapter": note.chapter, "starred": note.is_starred,
-            "known": note.is_known, "misses": note.misses, "number": number}
+            "known": note.is_known, "misses": note.misses, "color": note.color, "number": number}
+
+
+# ── Pages of questions, from the database (a subject can hold thousands) ────
+PAGE = 30
+SHOWS = ("all", "unknown", "missed", "starred")
+
+
+def in_order(qs):
+    """Chapter by chapter (chapters in the order their first question comes), then by place — what ordered() does, in SQL."""
+    from django.db.models import Min, OuterRef, Subquery
+
+    same = qs.model.objects.filter(subject=OuterRef("subject"), chapter=OuterRef("chapter")).values("chapter")
+    first = same.annotate(m=Min("order")).values("m")
+    first_pk = same.annotate(m=Min("pk")).values("m")          # questions with no place yet (0): the chapter's oldest decides
+    return qs.annotate(chapter_first=Subquery(first[:1]), chapter_pk=Subquery(first_pk[:1])).order_by("chapter_first", "chapter_pk", "order", "pk")
+
+
+def numbers(subject):
+    """{note id: its number} — the place in the subject, the same everywhere."""
+    return {pk: i for i, pk in enumerate(in_order(subject.notes.all()).values_list("pk", flat=True), 1)}
+
+
+def filtered(subject, show="all", chapter=None, q=""):
+    from django.db.models import Q
+
+    qs = subject.notes.all()
+    if show == "unknown":
+        qs = qs.filter(is_known=False)
+    elif show == "missed":
+        qs = qs.filter(misses__gt=0)
+    elif show == "starred":
+        qs = qs.filter(is_starred=True)
+    if chapter is not None:
+        qs = qs.filter(chapter=chapter)
+    for word in (q or "").split()[:6]:
+        qs = qs.filter(Q(question__icontains=word) | Q(answer__icontains=word) | Q(chapter__icontains=word))
+    return qs
+
+
+def counts(subject):
+    from django.db.models import Count, Q
+
+    c = subject.notes.aggregate(all=Count("pk"), unknown=Count("pk", filter=Q(is_known=False)),
+                                missed=Count("pk", filter=Q(misses__gt=0)), starred=Count("pk", filter=Q(is_starred=True)))
+    return {"shows": c, "chapters": chapter_list(subject)}
+
+
+def chapter_list(subject):
+    """[{name, n, known}] in the subject's order."""
+    from collections import OrderedDict
+
+    out = OrderedDict()
+    for chapter, known in in_order(subject.notes.all()).values_list("chapter", "is_known"):
+        row = out.setdefault(chapter, {"name": chapter, "n": 0, "known": 0})
+        row["n"] += 1
+        row["known"] += 1 if known else 0
+    return list(out.values())
+
+
+def move(note, before_id=None):
+    """Put a question just before another (or last) and into that one's chapter, renumbering the subject."""
+    ids = list(in_order(note.subject.notes.all()).values_list("pk", flat=True))
+    ids.remove(note.pk)
+    if before_id and before_id in ids:
+        ids.insert(ids.index(before_id), note.pk)
+        neighbour = before_id
+    else:
+        ids.append(note.pk)
+        neighbour = ids[-2] if len(ids) > 1 else None
+    if neighbour:
+        note.chapter = type(note).objects.filter(pk=neighbour).values_list("chapter", flat=True).first() or ""
+    rows = {n.pk: n for n in note.subject.notes.all()}
+    rows[note.pk].chapter = note.chapter
+    for place, pk in enumerate(ids, 1):
+        rows[pk].order = place
+    type(note).objects.bulk_update(rows.values(), ["order", "chapter"])
 
 
 def plain(text):

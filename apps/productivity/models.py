@@ -400,6 +400,7 @@ class Note(models.Model):
     tags = models.ManyToManyField(Tag, blank=True, related_name="notes", verbose_name=_("Tags"))
     is_pinned = models.BooleanField(_("Pinned"), default=False)
     is_archived = models.BooleanField(_("Archived"), default=False)
+    color = models.CharField(_("Colour"), max_length=10, choices=Color.choices, blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True, db_index=True)
 
@@ -1239,6 +1240,7 @@ class ExamNote(models.Model):
     answer = models.TextField(_("Answer"), blank=True)
     is_starred = models.BooleanField(_("Important"), default=False)
     is_known = models.BooleanField(_("I know it"), default=False)
+    color = models.CharField(_("Colour"), max_length=10, choices=Color.choices, blank=True, default="")
     misses = models.PositiveIntegerField(default=0, help_text="Times answered \"Not yet\" in a review.")
     reviewed_at = models.DateTimeField(null=True, blank=True)
     order = models.PositiveIntegerField(default=0)

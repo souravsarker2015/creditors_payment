@@ -17,7 +17,7 @@ from apps.trash.services import trash
 from . import exam
 from .access import work_required
 from .forms import ExamSubjectForm
-from .models import ExamNote, ExamSubject
+from .models import Color, ExamNote, ExamSubject
 from .views import render_work
 
 WHICH = ("unknown", "all", "starred", "missed")
@@ -34,6 +34,7 @@ def _texts():
         "renameAsk": _("New name for this chapter (empty: no chapter):"), "saved": _("Saved"),
         "found": _("%(n)s new questions found"), "picked": _("%(n)s picked"),
         "showMore": _("Show all"), "showLess": _("Show less"), "flipThese": _("Flip through these"),
+        "important": _("Important"), "others": _("Others"),
         "bulkDeleteAsk": _("Delete the picked questions? You can bring them back from Recently deleted."),
         "deletedMany": _("%(n)s questions deleted"), "undo": _("Undo"), "chapterAsk": _("Chapter for the picked questions (empty: no chapter):"),
         "leave": _("You have changes that aren't saved yet. Leave anyway?"), "draftBack": _("Your unsaved question is back."),
@@ -100,14 +101,47 @@ def exam_subject_view(request, pk):
             form.save()
             messages.success(request, _("Subject saved."))
             return redirect("work:exam_subject", pk=s.pk)
-    notes = _notes(s)
     return render_work(request, "work/exam/subject.html", {
-        "s": s, "form": form, "n": len(notes), "prompt": _ai_prompt(s),
-        "data": {"api": reverse("work:api_exam_subject", args=[s.pk]), "noteBase": reverse("work:api_exam_note", args=[0])[:-2], "notes": notes,
-                 "review": reverse("work:exam_review", args=[s.pk]), "subject": s.pk, "daysLeft": s.days_left,
-                 "subjects": [{"id": x.pk, "name": x.name} for x in ExamSubject.objects.filter(owner=request.user)]},
-        "exam_text": _texts(),
+        "s": s, "form": form, "n": s.notes.count(), "prompt": _ai_prompt(s), "colors": Color.choices,
+        "data": _board_data(request, s), "exam_text": _texts(),
     })
+
+
+def _board_data(request, s):
+    """What the board and the overview start with; the questions themselves come a page at a time (notes_api)."""
+    return {"api": reverse("work:api_exam_subject", args=[s.pk]), "noteBase": reverse("work:api_exam_note", args=[0])[:-2],
+            "notes": reverse("work:api_exam_notes", args=[s.pk]), "review": reverse("work:exam_review", args=[s.pk]),
+            "overview": reverse("work:exam_overview", args=[s.pk]), "back": reverse("work:exam_subject", args=[s.pk]),
+            "subject": s.pk, "daysLeft": s.days_left, **exam.counts(s),
+            "subjects": [{"id": x.pk, "name": x.name} for x in ExamSubject.objects.filter(owner=request.user)]}
+
+
+@work_required
+def notes_api(request, pk):
+    """A page of a subject's questions (30), filtered and searched on the server:
+    ?show=all|unknown|missed|starred &chapter= &q= &sort=order|new &pinned=1 &page=N."""
+    s = get_object_or_404(ExamSubject, pk=pk, owner=request.user)
+    show = request.GET.get("show") if request.GET.get("show") in exam.SHOWS else "all"
+    chapter = request.GET["chapter"] if "chapter" in request.GET else None
+    qs = exam.filtered(s, show, chapter, request.GET.get("q", ""))
+    if request.GET.get("sort") == "new":
+        qs = qs.order_by("-created_at", "-pk")
+    else:
+        qs = exam.in_order(qs)
+        if request.GET.get("pinned") == "1":            # the board: important ones first, as Keep's pinned notes
+            qs = qs.order_by("-is_starred", "chapter_first", "chapter_pk", "order", "pk")
+    try:
+        page = max(1, int(request.GET.get("page") or 1))
+    except ValueError:
+        page = 1
+    rows = list(qs[(page - 1) * exam.PAGE: page * exam.PAGE + 1])
+    more = len(rows) > exam.PAGE
+    number = exam.numbers(s)
+    out = {"ok": True, "notes": [exam.as_json(n, number.get(n.pk)) for n in rows[:exam.PAGE]], "next": page + 1 if more else None}
+    if page == 1:
+        out["total"] = qs.count()
+        out.update(exam.counts(s))
+    return JsonResponse(out)
 
 
 @work_required
@@ -115,12 +149,7 @@ def exam_overview_view(request, pk):
     """Every question and answer of a subject on one page, chapter by chapter —
     to read through quickly before the exam or interview (on a phone too)."""
     s = get_object_or_404(ExamSubject, pk=pk, owner=request.user)
-    notes = _notes(s)
-    return render_work(request, "work/exam/overview.html", {
-        "s": s, "n": len(notes), "exam_text": _texts(),
-        "data": {"notes": notes, "noteBase": reverse("work:api_exam_note", args=[0])[:-2], "subject": s.pk,
-                 "review": reverse("work:exam_review", args=[s.pk]), "back": reverse("work:exam_subject", args=[s.pk])},
-    })
+    return render_work(request, "work/exam/overview.html", {"s": s, "n": s.notes.count(), "exam_text": _texts(), "data": _board_data(request, s)})
 
 
 @work_required
@@ -165,8 +194,10 @@ def subject_api(request, pk):
         if not question:
             return JsonResponse({"ok": False, "error": _("Write the question first.")}, status=400)
         n = ExamNote.objects.create(owner=request.user, subject=s, question=question, chapter=_chapter_of(request), order=exam.next_order(s),
+                                    color=request.POST.get("color") if request.POST.get("color") in Color.values else "",
+                                    is_starred=request.POST.get("starred") == "1",
                                     answer=(request.POST.get("answer") or "").rstrip()[:exam.MAX_ANSWER])
-        return JsonResponse({"ok": True, "note": exam.as_json(n)})
+        return JsonResponse({"ok": True, "note": exam.as_json(n, exam.numbers(s).get(n.pk)), **exam.counts(s)})
     if action == "add_many":
         found = exam.parse(request.POST.get("text"), chapter=_chapter_of(request))
         if not found:
@@ -190,7 +221,27 @@ def subject_api(request, pk):
         skipped = sum(1 for n in found if n["dupe"])
         if skipped and "pick" not in request.POST:
             message += " " + ngettext("%(n)s was already there.", "%(n)s were already there.", skipped) % {"n": skipped}
-        return JsonResponse({"ok": True, "notes": [exam.as_json(n) for n in made], "message": message})
+        number = exam.numbers(s)
+        return JsonResponse({"ok": True, "notes": [exam.as_json(n, number.get(n.pk)) for n in made], "message": message, **exam.counts(s)})
+    if action == "move":                     # a card dropped before another (or last): it takes that one's chapter
+        note = get_object_or_404(ExamNote, pk=request.POST.get("id"), subject=s)
+        before = request.POST.get("before")
+        exam.move(note, int(before) if (before or "").isdigit() else None)
+        return JsonResponse({"ok": True, "chapter": ExamNote.objects.get(pk=note.pk).chapter, **exam.counts(s)})
+    if action == "chapter_move":             # a whole chapter one place up or down
+        names = [c["name"] for c in exam.chapter_list(s)]
+        name, step = request.POST.get("chapter", ""), 1 if request.POST.get("step") == "1" else -1
+        if name in names and 0 <= names.index(name) + step < len(names):
+            i = names.index(name)
+            names[i], names[i + step] = names[i + step], names[i]
+            by = {}
+            for pk, chapter in exam.in_order(s.notes.all()).values_list("pk", "chapter"):
+                by.setdefault(chapter, []).append(pk)
+            rows = {n.pk: n for n in s.notes.all()}
+            for place, pk in enumerate((pk for n in names for pk in by.get(n, [])), 1):
+                rows[pk].order = place
+            ExamNote.objects.bulk_update(rows.values(), ["order"])
+        return JsonResponse({"ok": True, **exam.counts(s)})
     if action == "order":                    # after a drag: [[id, chapter], …] top to bottom
         try:
             rows = [(int(i), str(c or "")[:exam.MAX_CHAPTER]) for i, c in json.loads(request.POST.get("rows") or "[]")]
@@ -245,11 +296,17 @@ def note_api(request, pk):
         n.question, n.answer = question[:exam.MAX_QUESTION], (request.POST.get("answer", n.answer) or "").rstrip()[:exam.MAX_ANSWER]
         if "chapter" in request.POST:
             n.chapter = _chapter_of(request)
+        if request.POST.get("color", None) is not None and request.POST["color"] in ("", *Color.values):
+            n.color = request.POST["color"]
         if request.POST.get("subject") and str(request.POST["subject"]) != str(n.subject_id):
             n.subject = get_object_or_404(ExamSubject, pk=request.POST["subject"], owner=request.user)
             n.order = exam.next_order(n.subject)
         n.save()
         return JsonResponse({"ok": True, "note": exam.as_json(n)})
+    if action == "color":
+        n.color = request.POST.get("color") if request.POST.get("color") in Color.values else ""
+        n.save(update_fields=["color", "updated_at"])
+        return JsonResponse({"ok": True, "color": n.color})
     if action in ("star", "known"):
         field = "is_starred" if action == "star" else "is_known"
         value = request.POST.get("value")

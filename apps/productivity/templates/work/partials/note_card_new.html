@@ -1,0 +1,22 @@
+{% load i18n work %}{% comment %}A note just taken on the board: filled in and started by static/js/notes-board.js (the same card as note_card.html).{% endcomment %}
+<article class="wkc wnc is-new" x-show="!gone" :data-color="color || null" @click="go($event)" data-url="">
+  <div class="wkc-top">
+    <span class="spacer"></span>
+    <button type="button" class="wkc-btn wnc-pin" :class="pinned && 'is-on'" @click.stop="pin()" :aria-pressed="pinned.toString()" aria-label="{% translate 'Pin to top' %}" data-tip="{% translate 'Pin to top' %}">{% icon "pin" %}</button>
+  </div>
+  <a href="" class="wnc-title"></a>
+  <p class="wnc-body"></p>
+  <div class="wkc-foot">
+    <div class="wkc-palette" x-data="{ open: false }" @click.outside="open = false">
+      <button type="button" class="wkc-btn" @click.stop="open = !open" aria-label="{% translate 'Colour' %}" data-tip="{% translate 'Colour' %}">{% icon "palette" %}</button>
+      <div class="wkc-colors is-pop" x-show="open" x-cloak @click.stop>
+        <button type="button" class="wkc-swatch is-none" :class="!color && 'is-on'" @click="paint(''); open = false" aria-label="{% translate 'No colour' %}"></button>
+        {% for v, l in colors %}<button type="button" class="wkc-swatch" data-color="{{ v }}" :class="color === '{{ v }}' && 'is-on'" @click="paint('{{ v }}'); open = false" aria-label="{{ l }}"></button>{% endfor %}
+      </div>
+    </div>
+    <button type="button" class="wkc-btn" @click.stop="act('archive')" aria-label="{% translate 'Archive' %}" data-tip="{% translate 'Archive' %}">{% icon "archive" %}</button>
+    <button type="button" class="wkc-btn is-danger" @click.stop="act('delete')" aria-label="{% translate 'Delete' %}" data-tip="{% translate 'Delete' %}">{% icon "trash" %}</button>
+    <span class="spacer"></span>
+    <time class="wnc-time">{% translate "just now" %}</time>
+  </div>
+</article>

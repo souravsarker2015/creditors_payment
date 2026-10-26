@@ -11,7 +11,7 @@
     <div class="min-w-0">
       <a href="{% url 'work:exam_subject' s.pk %}" class="back-link">{% icon "chevron-left" %}{{ s.name }}</a>
       <h1 class="wp-title"><span class="wt-dot" data-color="{{ s.color }}"></span> {% translate "Overview" %}</h1>
-      <p class="wp-sub"><span x-text="known() + ' / ' + notes.length"></span> {% translate "known" %}
+      <p class="wp-sub"><span x-text="known() + ' / ' + shows.all"></span> {% translate "known" %}
         {% with d=s.days_left %}{% if d is not None %} · <span class="wex-days{% if d >= 0 and d <= 7 %} is-soon{% endif %}">{% if d > 0 %}{% blocktranslate count counter=d %}Exam in {{ counter }} day{% plural %}Exam in {{ counter }} days{% endblocktranslate %}{% elif d == 0 %}{% translate "Exam today — good luck!" %}{% else %}{% translate "Exam over" %}{% endif %}</span>{% endif %}{% endwith %}</p>
       <span class="wex-bar wexo-progress" role="progressbar" :aria-valuenow="pct()" aria-valuemin="0" aria-valuemax="100"><i :style="'width:' + pct() + '%'"></i></span>
     </div>
@@ -36,53 +36,56 @@
       <button type="button" class="wexo-tool" @click="printIt()" aria-label="{% translate 'Print' %}" data-tip="{% translate 'Print' %}">{% icon "printer" %}</button>
     </div>
     <div class="input-icon wexo-search" x-show="searching" x-cloak>{% icon "search" %}
-      <input type="search" x-ref="find" x-model="find" data-work-search class="form-input input-compact" placeholder="{% translate 'Find a word in the questions and answers' %}" aria-label="{% translate 'Find' %}" @keydown.escape="find = ''; searching = false"></div>
+      <input type="search" x-ref="find" x-model="query" @input.debounce.350ms="reload()" data-work-search class="form-input input-compact" placeholder="{% translate 'Find a word in the questions and answers' %}" aria-label="{% translate 'Find' %}" @keydown.escape="toggleSearch()"></div>
   </div>
-  {# ── stays at the top while reading: the chapters, and answers on or off ── #}
+  {# ── stays at the top while reading: the chapters (each opens on its own), and answers on or off ── #}
   <div class="wexo-nav">
     <nav class="wexo-chapters" aria-label="{% translate 'Chapters' %}">
-      <template x-for="(g, gi) in groups()" :key="g.chapter">
-        <button type="button" class="wexo-chap" x-show="shown(g) && groups().length > 1" @click="jump(gi)" :class="current === gi && 'is-on'">
-          <span x-text="g.chapter || t('noChapter')"></span> <small x-text="g.notes.filter(q => visible(q)).length"></small></button>
+      <button type="button" class="wexo-chap" x-show="chapters.length > 1" :class="chapter === null && 'is-on'" @click="setChapter(null)">{% translate "All chapters" %}</button>
+      <template x-for="c in chapters" :key="c.name">
+        <button type="button" class="wexo-chap" x-show="chapters.length > 1" @click="setChapter(c.name)" :class="chapter === c.name && 'is-on'">
+          <span x-text="c.name || t('noChapter')"></span> <small x-text="c.known + '/' + c.n"></small></button>
       </template>
-      <span class="wexo-nav-count" x-show="groups().length < 2" x-text="notes.filter(q => visible(q)).length + ' / ' + notes.length"></span>
+      <span class="wexo-nav-count" x-show="chapters.length < 2" x-text="known() + ' / ' + shows.all"></span>
     </nav>
     <button type="button" class="wexo-eye" :class="answers && 'is-on'" @click="answers = !answers" :aria-pressed="answers.toString()"
             :aria-label="answers ? '{{ _("Hide answers")|escapejs }}' : '{{ _("Show answers")|escapejs }}'" :data-tip="answers ? '{{ _("Hide answers")|escapejs }}' : '{{ _("Show answers")|escapejs }}'">{% icon "book" %}</button>
   </div>
 
-  {# ── the questions, chapter by chapter ── #}
-  <template x-for="(g, gi) in groups()" :key="g.chapter">
-    <section class="wexo-group" :id="'chapter-' + gi" x-show="shown(g)" :data-index="gi">
-      <h2 class="wexo-group-name" x-show="groups().length > 1"><span x-text="g.chapter || t('noChapter')"></span> <small x-text="knownIn(g) + ' / ' + g.notes.length"></small></h2>
-      <ol class="wexo-list">
-        <template x-for="q in g.notes" :key="q.id">
-          <li class="wexo-q" x-show="visible(q)" :class="{ 'is-known': q.known, 'is-open': answers || open[q.id] }">
-            <div class="wexo-q-head">
-              <span class="wexo-no num" x-text="q.number"></span>
-              <div class="wexo-q-text wn-md" role="button" tabindex="0" @click="if (!$event.target.closest('a')) reveal(q)" @keydown.enter.prevent="reveal(q)"
-                   :aria-expanded="(answers || !!open[q.id]).toString()" x-effect="paint($el, q.question)"></div>
-              <span class="wexo-flags">
-                <span class="wex-missed" x-show="q.misses" x-text="'✗ ' + q.misses" title="{% translate 'Times you didn’t know it in a review' %}"></span>
-                <button type="button" class="wexo-flag wex-star" :class="q.starred && 'is-on'" @click="flag(q, 'star')" :aria-pressed="q.starred.toString()" aria-label="{% translate 'Important' %}">{% icon "star" %}</button>
-                <button type="button" class="wexo-flag wex-known" :class="q.known && 'is-on'" @click="flag(q, 'known')" :aria-pressed="q.known.toString()" aria-label="{% translate 'I know it' %}">{% icon "check" %}</button>
-              </span>
-            </div>
-            <div class="wexo-a-wrap" x-show="answers || open[q.id]">
-              <div class="wexo-a wn-md" :class="{ 'is-clamped': !full[q.id], 'is-long': long[q.id] }" x-effect="(answers || open[q.id]) && paint($el, q.answer || '*' + t('noAnswer') + '*', q)"></div>
-              <button type="button" class="wexo-more" x-show="long[q.id]" @click="full[q.id] = !full[q.id]" x-text="full[q.id] ? t('showLess') : t('showMore')"></button>
-            </div>
-            <p class="wexo-tap" x-show="!answers && !open[q.id]">{% translate "Tap the question to see its answer" %}</p>
-          </li>
-        </template>
-      </ol>
-    </section>
-  </template>
-  <p class="help wex-none" x-show="!notes.some(q => visible(q))" x-cloak>{% translate "Nothing to show here." %}</p>
+  {# ── the questions, chapter by chapter, a page at a time ── #}
+  <ol class="wexo-list">
+    <template x-for="(q, i) in notes" :key="q.id">
+      <li class="wexo-item">
+        <h2 class="wexo-group-name" x-show="heading(i) && (chapters.length > 1 || q.chapter)" x-text="q.chapter || t('noChapter')"></h2>
+        <div class="wexo-q" :class="{ 'is-known': q.known, 'is-open': answers || open[q.id] }">
+          <div class="wexo-q-head">
+            <span class="wexo-no num" x-text="q.number"></span>
+            <div class="wexo-q-text wn-md" role="button" tabindex="0" @click="if (!$event.target.closest('a')) reveal(q)" @keydown.enter.prevent="reveal(q)"
+                 :aria-expanded="(answers || !!open[q.id]).toString()" x-effect="paint($el, q.question)"></div>
+            <span class="wexo-flags">
+              <span class="wex-missed" x-show="q.misses" x-text="'✗ ' + q.misses" title="{% translate 'Times you didn’t know it in a review' %}"></span>
+              <button type="button" class="wexo-flag wex-star" :class="q.starred && 'is-on'" @click="flag(q, 'star')" :aria-pressed="q.starred.toString()" aria-label="{% translate 'Important' %}">{% icon "star" %}</button>
+              <button type="button" class="wexo-flag wex-known" :class="q.known && 'is-on'" @click="flag(q, 'known')" :aria-pressed="q.known.toString()" aria-label="{% translate 'I know it' %}">{% icon "check" %}</button>
+            </span>
+          </div>
+          <div class="wexo-a-wrap" x-show="answers || open[q.id]">
+            <div class="wexo-a wn-md" :class="{ 'is-clamped': !full[q.id], 'is-long': long[q.id] }" x-effect="(answers || open[q.id]) && paint($el, q.answer || '*' + t('noAnswer') + '*', q)"></div>
+            <button type="button" class="wexo-more" x-show="long[q.id]" @click="full[q.id] = !full[q.id]" x-text="full[q.id] ? t('showLess') : t('showMore')"></button>
+          </div>
+          <p class="wexo-tap" x-show="!answers && !open[q.id]">{% translate "Tap the question to see its answer" %}</p>
+        </div>
+      </li>
+    </template>
+  </ol>
+  <div class="wkb-more" x-ref="more">
+    <span class="help" x-show="loading">{% translate "Loading…" %}</span>
+    <button type="button" class="btn btn-secondary btn-sm" x-show="next && !loading" @click="load()">{% translate "Show more" %}</button>
+    <p class="help wex-none" x-show="!loading && !notes.length" x-cloak>{% translate "Nothing to show here." %}</p>
+  </div>
 
   {# ── flip through the same questions ── #}
   <div class="wexo-dock">
-    <a :href="reviewUrl()" class="btn btn-primary wexo-go" x-show="notes.some(q => visible(q))">{% icon "play" %}<span x-text="t('flipThese') + ' (' + notes.filter(q => visible(q)).length + ')'"></span></a>
+    <a :href="reviewUrl()" class="btn btn-primary wexo-go" x-show="notes.length">{% icon "play" %}<span x-text="t('flipThese')"></span></a>
     <button type="button" class="icon-btn wexo-top" x-show="scrolled" x-cloak @click="window.scrollTo({ top: 0, behavior: 'smooth' })" aria-label="{% translate 'Back to the top' %}">{% icon "arrow-up" %}</button>
   </div>
   {% else %}

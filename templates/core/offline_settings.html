@@ -111,7 +111,7 @@
           var self = this;
           if (!confirm("{{ _('Remove the saved pages from this phone? Entries waiting to send are kept.')|escapejs }}")) return;
           try { var info = JSON.parse(localStorage.getItem("ft-offline-index") || "{}"); localStorage.setItem("ft-offline-index", JSON.stringify({ user: info.user })); } catch (e) {}
-          (window.caches ? caches.delete("ftpages-v1") : Promise.resolve()).then(function () { self.kept = 0; self.updated = ""; });
+          (window.caches ? caches.delete("ftpages-v2") : Promise.resolve()).then(function () { self.kept = 0; self.updated = ""; });
         },
       };
     });

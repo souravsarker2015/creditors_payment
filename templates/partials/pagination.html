@@ -2,11 +2,13 @@
 {% comment %}
 Needs: page_obj, pagination_window, base_query_string.
 On phones only Prev / current / Next show; the numbered window and the
-jump-to-page box appear from sm up.
+jump-to-page box appear from sm up. With JavaScript (static/js/infinite.js)
+the next pages are added below as the list is scrolled, instead.
 {% endcomment %}
 {% if page_obj.paginator.num_pages > 1 %}
 {% with q=base_query_string %}
-<nav class="pager mt-6" aria-label="{% translate 'Pagination' %}">
+<nav class="pager mt-6" aria-label="{% translate 'Pagination' %}"{% if page_obj.has_next %} data-next="?{{ q }}{% if q %}&{% endif %}page={{ page_obj.next_page_number }}"{% endif %}
+     data-more="{% translate 'Show more' %}" data-loading="{% translate 'Loading…' %}" data-retry="{% translate 'Couldn’t load — try again' %}">
   <p class="pager-info">{% blocktranslate with current=page_obj.number total=page_obj.paginator.num_pages %}Page {{ current }} of {{ total }}{% endblocktranslate %}</p>
   <div class="pager-nav">
     {% if page_obj.has_previous %}

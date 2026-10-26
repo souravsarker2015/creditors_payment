@@ -4,18 +4,90 @@
 {% block title %}{% if note %}{{ note.display_title }}{% else %}{% translate "Notes" %}{% endif %} | {% translate "Productivity" %}{% endblock %}
 
 {% block work %}
+{% if board %}
+{# ── the notes as a board of cards (like Keep): take a note at the top, open one to write ── #}
+<div class="wnb" x-data="noteBoard">
+  <header class="wp-head">
+    <div class="min-w-0">
+      <h1 class="wp-title">{% translate "Notes" %}</h1>
+      <p class="wp-sub">{% blocktranslate count counter=total %}{{ counter }} note{% plural %}{{ counter }} notes{% endblocktranslate %}{% if archived %} · {% translate "Archived" %}{% endif %}</p>
+    </div>
+    <div class="wp-actions">
+      <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
+        <button type="button" class="btn btn-secondary" @click="open = !open" :aria-expanded="open" aria-haspopup="true">{% icon "note" %}{% translate "Template" %}{% icon "chevron-down" %}</button>
+        <div class="menu" x-show="open" x-cloak role="menu">{% for key, label in templates %}<a href="{% url 'work:notes' %}?new=1&template={{ key }}" class="menu-item" role="menuitem">{% icon "note" %}{{ label }}</a>{% endfor %}</div>
+      </div>
+      <a href="{% url 'work:notes' %}?view=list{% if q %}&q={{ q|urlencode }}{% endif %}" class="icon-btn" aria-label="{% translate 'As a list, with the editor beside it' %}" data-tip="{% translate 'As a list, with the editor beside it' %}">{% icon "list" %}</a>
+    </div>
+  </header>
+
+  <section class="wkc-compose" :class="open && 'is-open'" :data-color="color || null" @click.outside="open && close()" @keydown.escape.stop="close()"
+           @keydown.ctrl.enter.prevent="save(true)" @keydown.meta.enter.prevent="save(true)">
+    <div class="wkc-compose-line" x-show="!open" @click="start()">
+      <span class="wkc-compose-hint">{% translate "Take a note…" %}</span>
+      <a href="{% url 'work:notes' %}?new=1" class="icon-btn" @click.stop aria-label="{% translate 'New note in the full editor' %}" data-tip="{% translate 'New note in the full editor' %}">{% icon "maximize" %}</a>
+    </div>
+    <div class="wkc-compose-body" x-show="open" x-cloak>
+      <div class="wkc-compose-form">
+        <input type="text" class="wkc-q-input" x-model="title" x-ref="title" maxlength="200" placeholder="{% translate 'Title' %}" aria-label="{% translate 'Title' %}"
+               @keydown.enter.prevent="$refs.body.focus()">
+        <textarea class="wkc-a-input" rows="3" x-model="body" x-ref="body" data-paste-images placeholder="{% translate 'Take a note… Markdown works: - [ ] to-do, `code`, ``` blocks' %}" aria-label="{% translate 'Note' %}"></textarea>
+        <div class="wkc-compose-foot">
+          <div class="wkc-colors" role="radiogroup" aria-label="{% translate 'Colour' %}">
+            <button type="button" class="wkc-swatch is-none" :class="!color && 'is-on'" @click="color = ''" aria-label="{% translate 'No colour' %}"></button>
+            {% for v, l in colors %}<button type="button" class="wkc-swatch" data-color="{{ v }}" :class="color === '{{ v }}' && 'is-on'" @click="color = '{{ v }}'" aria-label="{{ l }}"></button>{% endfor %}
+          </div>
+          <button type="button" class="icon-btn wnc-pin" :class="pinned && 'is-on'" @click="pinned = !pinned" :aria-pressed="pinned.toString()" aria-label="{% translate 'Pin to top' %}" data-tip="{% translate 'Pin to top' %}">{% icon "pin" %}</button>
+          <span class="spacer"></span>
+          <button type="button" class="btn btn-ghost btn-sm" @click="close()">{% translate "Close" %}</button>
+          <button type="button" class="btn btn-primary btn-sm" @click="save(true)" :disabled="!title.trim() && !body.trim()">{% icon "check" %}{% translate "Save" %} <kbd class="wp-kbd">Ctrl+Enter</kbd></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="wn-filter wnb-filter">
+    <form method="get" class="input-icon wn-search">
+      {% icon "search" %}
+      <input type="search" name="q" value="{{ q }}" class="form-input input-compact" placeholder="{% translate 'Search notes  ( / )' %}" data-work-search aria-label="{% translate 'Search notes' %}">
+      {% if archived %}<input type="hidden" name="archived" value="1">{% endif %}
+    </form>
+    <div class="chip-row wn-tags">
+      <a href="{% url 'work:notes' %}" class="chip{% if not tag and not archived %} is-active{% endif %}">{% translate "All" %}</a>
+      {% for tg in tags %}<a href="?tag={{ tg.name|urlencode }}" class="chip{% if tag == tg.name %} is-active{% endif %}">#{{ tg.name }}</a>{% endfor %}
+      <a href="?archived=1" class="chip{% if archived %} is-active{% endif %}">{% icon "archive" %}{% translate "Archived" %}</a>
+    </div>
+  </div>
+
+  <div class="wkb-grid wnb-grid" x-ref="grid" data-infinite-items>
+    {% for n in notes %}
+      {% if forloop.first and n.is_pinned %}<h2 class="wnb-head" data-head="pinned">{% icon "pin" %}{% translate "Pinned" %}</h2>{% endif %}
+      {% ifchanged n.is_pinned %}{% if not forloop.first and not n.is_pinned %}<h2 class="wnb-head" data-head="others">{% translate "Others" %}</h2>{% endif %}{% endifchanged %}
+      {% include "work/partials/note_card.html" %}
+    {% empty %}
+    <div class="wn-none wnb-none">
+      <span class="wd-empty-icon">{% if q %}{% icon "search" %}{% else %}{% icon "note" %}{% endif %}</span>
+      <p>{% if q %}{% translate "No notes match." %}{% else %}{% translate "No notes yet. Take one above — or press n on any Productivity page." %}{% endif %}</p>
+    </div>
+    {% endfor %}
+  </div>
+  {% include "partials/pagination.html" %}
+  <template x-ref="cardTpl">{% include "work/partials/note_card_new.html" %}</template>
+</div>
+{% else %}
 <div class="wn{% if note or request.GET.new %} has-note{% endif %}">
   <aside class="wn-list">
     <div class="wn-list-head">
       <div class="min-w-0">
         <h1 class="wp-title">{% translate "Notes" %}</h1>
-        <p class="wn-count">{% blocktranslate count counter=notes|length %}{{ counter }} note{% plural %}{{ counter }} notes{% endblocktranslate %}{% if archived %} · {% translate "Archived" %}{% endif %}</p>
+        <p class="wn-count">{% blocktranslate count counter=total %}{{ counter }} note{% plural %}{{ counter }} notes{% endblocktranslate %}{% if archived %} · {% translate "Archived" %}{% endif %}</p>
       </div>
       <div class="wpg">
         <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
           <button type="button" class="btn btn-secondary btn-sm" @click="open = !open" :aria-expanded="open" aria-haspopup="true">{% icon "note" %}<span class="wn-hide-xs">{% translate "Template" %}</span>{% icon "chevron-down" %}</button>
           <div class="menu" x-show="open" x-cloak role="menu">{% for key, label in templates %}<a href="{% url 'work:notes' %}?new=1&template={{ key }}" class="menu-item" role="menuitem">{% icon "note" %}{{ label }}</a>{% endfor %}</div>
         </div>
+        <a href="{% url 'work:notes' %}" class="icon-btn" aria-label="{% translate 'As cards' %}" data-tip="{% translate 'As cards' %}">{% icon "grid" %}</a>
         <a href="{% url 'work:notes' %}?new=1" class="btn btn-primary btn-sm">{% icon "plus" %}{% translate "New" %}</a>
       </div>
     </div>
@@ -33,7 +105,7 @@
     </div>
     <ul class="wn-items">
       {% for n in notes %}
-      <li data-note-id="{{ n.pk }}"><a href="{% url 'work:note' n.pk %}{% if q %}?q={{ q|urlencode }}{% endif %}" class="wn-item{% if note and note.pk == n.pk %} is-active{% endif %}"{% if n.project %} data-color="{{ n.project.color }}"{% endif %}>
+      <li data-note-id="{{ n.pk }}"><a href="{% url 'work:note' n.pk %}{% if q %}?q={{ q|urlencode }}{% endif %}" class="wn-item{% if note and note.pk == n.pk %} is-active{% endif %}{% if n.color %} has-color{% endif %}"{% if n.color %} data-color="{{ n.color }}"{% elif n.project %} data-color="{{ n.project.color }}"{% endif %}>
         <span class="wn-item-top">{% if n.is_pinned %}<span class="wd-pin" aria-label="{% translate 'Pinned' %}">{% icon "pin" %}</span>{% endif %}<span class="work-note-item-title wn-item-title">{{ n.display_title }}</span><time class="wn-item-time" datetime="{{ n.updated_at|date:'c' }}">{{ n.updated_at|when_short }}</time></span>
         {% with snip=n|note_snippet %}{% if snip %}<span class="wn-item-snip">{{ snip }}</span>{% endif %}{% endwith %}
         {% if n.project or n.tags.all %}<span class="wn-item-foot">{% if n.project %}<span class="wt-proj"><span class="wt-dot" data-color="{{ n.project.color }}"></span>{{ n.project.name }}</span>{% endif %}{% for tg in n.tags.all %}<span class="wn-item-tag">#{{ tg.name }}</span>{% endfor %}</span>{% endif %}
@@ -45,6 +117,7 @@
       </li>
       {% endfor %}
     </ul>
+    {% include "partials/pagination.html" %}
     <a href="{% url 'work:notes' %}?new=1" class="wn-fab" aria-label="{% translate 'New note' %}">{% icon "plus" %}</a>
   </aside>
 
@@ -117,6 +190,10 @@
         <label class="wn-field">{% icon "tag" %}
           <input x-model.lazy="tags" placeholder="{% translate 'tags: idea, backend…' %}" aria-label="{% translate 'Tags' %}">
         </label>
+        <div class="wkc-colors wn-colors" role="radiogroup" aria-label="{% translate 'Colour' %}" x-show="id" x-data="{ c: '{{ note.color|default:'' }}' }">
+          <button type="button" class="wkc-swatch is-none" :class="!c && 'is-on'" @click="c = ''; Work.api(Work.cfg.urls.noteBase + id + '/', { action: 'color', color: '' })" aria-label="{% translate 'No colour' %}"></button>
+          {% for v, l in colors %}<button type="button" class="wkc-swatch" data-color="{{ v }}" :class="c === '{{ v }}' && 'is-on'" @click="c = '{{ v }}'; Work.api(Work.cfg.urls.noteBase + id + '/', { action: 'color', color: '{{ v }}' })" aria-label="{{ l }}"></button>{% endfor %}
+        </div>
       </div>
       <div class="wn-body-wrap" x-show="!preview">
         <textarea x-ref="body" x-model="body" class="wn-body" data-paste-images :data-note="id || ''" placeholder="{% translate 'Start writing… Markdown works: # heading, **bold**, `code`, - [ ] to-do, ``` code blocks, [[Another note]].' %}" aria-label="{% translate 'Note' %}"
@@ -175,7 +252,10 @@
     {% endif %}
   </section>
 </div>
+{% endif %}
 {% endblock %}
+
+{% block work_js %}<script src="{% asset 'js/notes-board.js' %}"></script>{% endblock %}
 
 {% block work_libs %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.10.0/styles/github-dark.min.css">
