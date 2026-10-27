@@ -22,7 +22,7 @@ from django.views.decorators.http import require_POST
 
 from apps.trash.undo import delete_with_undo
 
-from . import cards, dev, diagrams, services
+from . import cards, dev, diagrams, linked, services
 from .api import card_json, entry_json
 from .access import can_use, work_required
 from .forms import DeckForm, EntryForm, GoalForm, HabitForm, LearningForm, ProjectForm, SettingsForm, SnippetForm, SprintForm, TagForm, TaskForm
@@ -59,6 +59,7 @@ def _urls():
         "learning_new": r("work:learning_new"), "snippet_new": r("work:snippet_new"), "export": r("work:export"),
         "learningBase": "/work/api/learning/", "goalBase": "/work/api/goals/",
         "plan": r("work:plan"), "planAction": r("work:api_plan"), "week": r("work:week"), "noteGo": r("work:note_go"),
+        "noteEmbed": r("work:api_note_embed"), "taskQuery": r("work:api_task_query"),
         "diagrams": r("work:diagrams"), "diagramBase": "/work/api/diagrams/", "diagramList": r("work:api_diagram_list"),
         "cardsDue": r("work:api_cards_due"), "cardReview": r("work:card_review"), "imageUpload": r("work:api_image_upload"),
         "cards": r("work:cards"), "cardBase": "/work/api/cards/", "cardAdd": r("work:api_card_add"),
@@ -87,7 +88,16 @@ def _texts():
             "js": _("JavaScript code"), "sql": _("SQL"), "bash": _("Shell command"), "json": _("JSON"), "mermaid": _("Diagram (Mermaid)"),
             "table": _("Table"), "details": _("Collapsible section"), "divider": _("Divider"), "math": _("Formula"), "link": _("Link to a note"),
             "card": _("Flashcard (question :: answer)"), "mark": _("Highlight (a blank in reviews)"), "date": _("Today’s date"), "time": _("Time now"),
+            "tasks": _("List of tasks (live)"), "embed": _("Show another note here"), "dictate": _("Dictate (speak to type)"),
         },
+        # in a drawn note (Work.enrich): ```tasks lists and ![[embedded notes]]
+        "loading": _("Loading…"), "emptyNote": _("Nothing written yet."), "openTasksAll": _("Open tasks"), "openInTasks": _("Open in Tasks"),
+        "noTasksMatch": _("No tasks match — nothing to do here."), "markDone": _("Done"), "andMore": _("and %s more"),
+        "listOffline": _("This list needs a connection."), "mentionsLinked": _("Linked"),
+        # speaking instead of typing (static/js/writing.js)
+        "dictate": _("Dictate"), "listening": _("Listening… speak, then press the microphone again to stop."),
+        "micBlocked": _("The microphone is blocked for this site — allow it in the browser's address bar."),
+        "dictateFailed": _("Couldn't hear that — try again."),
         "units": {k: str(v) for k, v in LearningUnit.choices},
         "kindCommand": _("Command"), "kindRecent": _("Recent"), "kindCreate": _("Create"),
         "addTask": _("Add task"), "addNote": _("Save as a note"), "trackThis": _("Start the timer for"),
@@ -371,44 +381,8 @@ def tasks_view(request):
     view = request.GET.get("view") or request.COOKIES.get("work_task_view") or "list"
     view = view if view in TASK_VIEWS else "list"
     qs = Task.objects.filter(owner=user).select_related("project")
-    f = {k: request.GET.get(k, "").strip() for k in ("q", "project", "tag", "priority", "due", "goal", "blocked", "sprint", "kind", "status")}
-    if f["q"]:
-        qs = qs.filter(Q(title__icontains=f["q"]) | Q(notes__icontains=f["q"]))
-    if f["project"] == "none":
-        qs = qs.filter(project__isnull=True)
-    elif f["project"].isdigit():
-        qs = qs.filter(project_id=int(f["project"]))
-    if f["tag"]:
-        qs = qs.filter(tags__name=f["tag"].lower())
-    if f["priority"].isdigit():
-        qs = qs.filter(priority__gte=int(f["priority"]))
-    if f["goal"].isdigit():
-        qs = qs.filter(goal_id=int(f["goal"]))
-    if f["kind"] in TaskKind.values:
-        qs = qs.filter(kind=f["kind"])
-    if f["status"] in Status.values and f["status"] != Status.DONE:       # (done ones: "Show done")
-        qs = qs.filter(status=f["status"])
-    if f["sprint"] == "current":
-        from .sprints import current
-        qs = qs.filter(sprint=current(user, today))
-    elif f["sprint"] == "none":
-        qs = qs.filter(sprint__isnull=True)
-    elif f["sprint"].isdigit():
-        qs = qs.filter(sprint_id=int(f["sprint"]))
-    if f["due"] == "overdue":
-        qs = qs.filter(due_date__lt=today).exclude(status=Status.DONE)
-    elif f["due"] == "today":
-        qs = qs.filter(due_date=today)
-    elif f["due"] == "week":
-        qs = qs.filter(due_date__gte=today, due_date__lte=today + timedelta(days=7))
-    elif f["due"] == "none":
-        qs = qs.filter(due_date__isnull=True)
-    open_blocker = Q(blocked_by__isnull=False) & ~Q(blocked_by__status=Status.DONE)
-    if f["blocked"] == "yes":
-        qs = qs.filter(open_blocker).exclude(status=Status.DONE)
-    elif f["blocked"] == "no":
-        qs = qs.exclude(pk__in=Task.objects.filter(owner=user).filter(open_blocker).values("pk"))
-    qs = qs.distinct()
+    f = {k: request.GET.get(k, "").strip() for k in services.TASK_FILTERS}
+    qs = services.filter_tasks(user, qs, f, today)
     show_subs = request.GET.get("sub") == "1" or bool(f["q"])
     if view in ("list", "board") and not show_subs:
         qs = qs.filter(parent__isnull=True)      # subtasks show under their task (and on Today, the matrix and the timeline)
@@ -766,7 +740,7 @@ def notes_view(request, pk=None):
         "projects": Project.objects.filter(owner=user, is_archived=False),
         "templates": [(key, t[0]) for key, t in NOTE_TEMPLATES.items()], "templates_only": templates_only,
         "own_templates": Note.objects.filter(owner=user, is_template=True).order_by("title").only("pk", "title", "body")[:30],
-        "backlinks": services.backlinks(note) if note else [],
+        **(linked.links_context(note) if note else {"backlinks": [], "mentions": []}),
         "titles": list(Note.objects.filter(owner=user, is_archived=False).exclude(title="").order_by("-updated_at")
                        .values_list("title", flat=True)[:500]),
     })

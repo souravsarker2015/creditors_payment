@@ -1480,11 +1480,58 @@ def tick_note_line(task, done):
 
 
 def backlinks(note):
-    """Other notes that link here with [[Title]]."""
-    if not note.title.strip():
+    """Other notes that link here with [[Title]] (or show it, or one of its headings: ![[Title#Heading]])."""
+    title = note.title.strip()
+    if not title:
         return []
-    return list(Note.objects.filter(owner=note.owner, body__icontains=f"[[{note.title.strip()}]]").exclude(pk=note.pk)
-                .order_by("-updated_at")[:30])
+    return list(Note.objects.filter(owner=note.owner).filter(Q(body__icontains=f"[[{title}]]") | Q(body__icontains=f"[[{title}#"))
+                .exclude(pk=note.pk).order_by("-updated_at")[:30])
+
+
+# ── The Tasks page's filters ──────────────────────────────────────────────
+TASK_FILTERS = ("q", "project", "tag", "priority", "due", "goal", "blocked", "sprint", "kind", "status")
+
+
+def filter_tasks(user, qs, f, today):
+    """`qs` narrowed by the Tasks page's filters (`f`: TASK_FILTERS → text; project, goal and sprint by
+    id) — the same rules for the page and for a ```tasks list in a note (linked.py)."""
+    if f["q"]:
+        qs = qs.filter(Q(title__icontains=f["q"]) | Q(notes__icontains=f["q"]))
+    if f["project"] == "none":
+        qs = qs.filter(project__isnull=True)
+    elif f["project"].isdigit():
+        qs = qs.filter(project_id=int(f["project"]))
+    if f["tag"]:
+        qs = qs.filter(tags__name=f["tag"].lower())
+    if f["priority"].isdigit():
+        qs = qs.filter(priority__gte=int(f["priority"]))
+    if f["goal"].isdigit():
+        qs = qs.filter(goal_id=int(f["goal"]))
+    if f["kind"] in TaskKind.values:
+        qs = qs.filter(kind=f["kind"])
+    if f["status"] in Status.values and f["status"] != Status.DONE:       # (done ones: "Show done")
+        qs = qs.filter(status=f["status"])
+    if f["sprint"] == "current":
+        from .sprints import current
+        qs = qs.filter(sprint=current(user, today))
+    elif f["sprint"] == "none":
+        qs = qs.filter(sprint__isnull=True)
+    elif f["sprint"].isdigit():
+        qs = qs.filter(sprint_id=int(f["sprint"]))
+    if f["due"] == "overdue":
+        qs = qs.filter(due_date__lt=today).exclude(status=Status.DONE)
+    elif f["due"] == "today":
+        qs = qs.filter(due_date=today)
+    elif f["due"] == "week":
+        qs = qs.filter(due_date__gte=today, due_date__lte=today + timedelta(days=7))
+    elif f["due"] == "none":
+        qs = qs.filter(due_date__isnull=True)
+    open_blocker = Q(blocked_by__isnull=False) & ~Q(blocked_by__status=Status.DONE)
+    if f["blocked"] == "yes":
+        qs = qs.filter(open_blocker).exclude(status=Status.DONE)
+    elif f["blocked"] == "no":
+        qs = qs.exclude(pk__in=Task.objects.filter(owner=user).filter(open_blocker).values("pk"))
+    return qs.distinct()
 
 
 # ── Week planner ──────────────────────────────────────────────────────────

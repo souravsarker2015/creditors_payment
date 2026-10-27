@@ -1,0 +1,22 @@
+{% load i18n work %}{# The foot of a note: notes that link here, and notes that name it without a link (linked in one click: static/js/work.js) #}
+<div class="wn-links" id="note-links" data-note-links="{{ note.pk }}">
+  {% if backlinks %}
+  <aside class="wn-backlinks">
+    <p class="wn-backlinks-label">{% icon "link" %}{% blocktranslate count counter=backlinks|length %}Linked from {{ counter }} note{% plural %}Linked from {{ counter }} notes{% endblocktranslate %}</p>
+    <ul>{% for b in backlinks %}<li><a href="{% url 'work:note' b.pk %}">{{ b.display_title }}</a><time>{{ b.updated_at|date:"j M" }}</time></li>{% endfor %}</ul>
+  </aside>
+  {% endif %}
+  {% if mentions %}
+  <details class="wn-backlinks wn-mentions">
+    <summary class="wn-backlinks-label">{% icon "chevron-right" %}{% blocktranslate count counter=mentions|length %}Named in {{ counter }} note without a link{% plural %}Named in {{ counter }} notes without a link{% endblocktranslate %}</summary>
+    <ul>{% for m in mentions %}<li>
+      <div class="wn-mention">
+        <a href="{% url 'work:note' m.note.pk %}">{{ m.note.display_title }}</a>
+        <p class="wn-mention-text">{{ m.before }}<mark>{{ m.match }}</mark>{{ m.after }}</p>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm" data-link-mention="{{ m.note.pk }}">{% icon "link" %}{% translate "Link" %}</button>
+    </li>{% endfor %}</ul>
+    {% if mentions|length > 1 %}<button type="button" class="btn btn-ghost btn-sm wn-mentions-all" data-link-mention="all">{% icon "link" %}{% blocktranslate count counter=mentions|length %}Link it in {{ counter }} note{% plural %}Link it in all {{ counter }} notes{% endblocktranslate %}</button>{% endif %}
+  </details>
+  {% endif %}
+</div>

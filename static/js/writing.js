@@ -172,16 +172,20 @@
     { id: "details", icon: "▸", block: "<details><summary>|</summary>\n\n\n\n</details>", words: "collapsible toggle details fold spoiler" },
     { id: "divider", icon: "—", block: "---\n|", words: "divider line rule hr separator" },
     { id: "math", icon: "∑", block: "$$\n|\n$$", words: "math formula equation latex katex", when: function () { return !!window.katex; } },
-    { id: "link", icon: "[[", text: "[[|]]", words: "link note wiki page", when: function (ta) { return ta.matches(".wn-body"); } },
+    { id: "link", icon: "[[", text: "[[|]]", words: "link note wiki page", when: notes },
+    { id: "embed", icon: "![[", block: "![[|]]", words: "embed transclude include note show insert", when: notes },
+    { id: "tasks", icon: "☑", block: "```tasks\ndue: week|\n```", words: "tasks list query filter live database board", when: notes },
     { id: "card", icon: "::", text: " :: |", words: "flashcard card question answer" },
     { id: "mark", icon: "==", text: "==|==", words: "highlight mark cloze blank hide" },
     { id: "date", icon: "📅", words: "date today now day", text: function () { var n = new Date(); return n.getFullYear() + "-" + pad(n.getMonth() + 1) + "-" + pad(n.getDate()) + "|"; } },
     { id: "time", icon: "🕑", words: "time now clock", text: function () { var n = new Date(); return pad(n.getHours()) + ":" + pad(n.getMinutes()) + "|"; } },
+    { id: "dictate", icon: "🎙", words: "dictate voice speak speech microphone mic talk", when: function () { return !!Speech; }, run: function (ta) { dictate(ta); } },
   ];
+  function notes(ta) { return ta.matches(".wn-body, textarea[data-note]"); }      // a note (the page, or opened on the board)
   var NAMES = { h1: "Heading 1", h2: "Heading 2", h3: "Heading 3", todo: "To-do", bullet: "Bulleted list", numbered: "Numbered list", quote: "Quote",
                 callout: "Callout", code: "Code block", python: "Python code", js: "JavaScript code", sql: "SQL", bash: "Shell command", json: "JSON",
                 mermaid: "Diagram (Mermaid)", table: "Table", details: "Collapsible section", divider: "Divider", math: "Formula",
-                link: "Link to a note", card: "Flashcard (question :: answer)", mark: "Highlight (a blank in reviews)", date: "Today’s date", time: "Time now" };
+                link: "Link to a note", embed: "Show another note here", tasks: "List of tasks (live)", dictate: "Dictate (speak to type)", card: "Flashcard (question :: answer)", mark: "Highlight (a blank in reviews)", date: "Today’s date", time: "Time now" };
   var slash = null;          // { ta, at, items, pick, el }
 
   function caretXY(ta, pos) {          // where the caret is on the page: a copy of the box, measured
@@ -235,6 +239,7 @@
   function useSlash(b) {
     var ta = slash.ta, at = slash.at, end = ta.selectionStart, v = ta.value;
     closeSlash();
+    if (b.run) { put(ta, at, end, ""); b.run(ta); return; }          // (the "/word" typed goes)
     var ls = lineStart(v, at), before = v.slice(ls, at), text, caret;
     if (b.line) {                       // marks the line: "/h2" on "Plan" → "## Plan"
       var rest = v.slice(end, lineEnd(v, end));
@@ -285,6 +290,66 @@
   d.addEventListener("focusout", function (e) { if (slash && e.target === slash.ta) setTimeout(function () { if (slash && d.activeElement !== slash.ta) closeSlash(); }, 0); });
   window.addEventListener("resize", closeSlash);
   d.addEventListener("scroll", function (e) { if (slash && e.target !== slash.el) closeSlash(); }, true);
+
+  /* ── Speaking instead of typing: a microphone button ([data-dictate="selector"] — the box it types
+     into, near the button) or "/dictate". The browser turns speech into text (Chrome and Edge send
+     the sound to their speech service; Firefox has none, so there's no microphone there). The words
+     go in where the caret is, as typed (Ctrl+Z takes them back), in the page's language (Bangla or
+     English); pressing the button again, Esc, or leaving the box stops it. ── */
+  var Speech = window.SpeechRecognition || window.webkitSpeechRecognition, hearing = null;
+  function tell(key, fallback, tone) { if (window.Work && Work.toast) Work.toast(((Work.cfg && Work.cfg.text) || {})[key] || fallback, tone); }
+  function listenFor() {
+    var lang = (d.documentElement.lang || "en").toLowerCase();
+    if (lang.indexOf("bn") === 0) return "bn-BD";
+    return navigator.language && navigator.language.toLowerCase().indexOf(lang) === 0 ? navigator.language : "en-US";
+  }
+  function listening(on) {
+    if (!hearing) return;
+    hearing.field.classList.toggle("is-listening", on);
+    d.querySelectorAll("[data-dictate]").forEach(function (b) {
+      var mine = on && target(b) === hearing.field;
+      b.classList.toggle("is-on", mine); b.setAttribute("aria-pressed", String(mine));
+    });
+  }
+  function stopDictating() { if (hearing) hearing.rec.stop(); }
+  function dictate(field) {
+    if (hearing) { var same = hearing.field === field; hearing.rec.abort(); listening(false); hearing = null; if (same) return; }
+    var rec = new Speech();
+    rec.lang = listenFor(); rec.continuous = true; rec.interimResults = false;
+    hearing = { rec: rec, field: field };
+    rec.onresult = function (e) {
+      for (var i = e.resultIndex; i < e.results.length; i++) {
+        if (!e.results[i].isFinal) continue;
+        var words = e.results[i][0].transcript.trim(); if (!words) continue;
+        var s = field.selectionStart, end = field.selectionEnd, prev = field.value.charAt(s - 1);
+        put(field, s, end, (s && prev && !/\s/.test(prev) ? " " : "") + words);
+      }
+    };
+    rec.onerror = function (e) {
+      if (e.error === "not-allowed" || e.error === "service-not-allowed") tell("micBlocked", "The microphone is blocked for this site.", "warn");
+      else if (e.error !== "no-speech" && e.error !== "aborted") tell("dictateFailed", "Couldn't hear that — try again.", "warn");
+    };
+    rec.onend = function () { if (hearing && hearing.rec === rec) { listening(false); hearing = null; } };
+    try { rec.start(); } catch (err) { hearing = null; return; }
+    listening(true);
+    field.focus();
+    tell("listening", "Listening…");
+  }
+  function target(btn) {
+    var sel = btn.getAttribute("data-dictate"), scope = btn.closest("[data-dictate-scope]") || d;
+    return Array.prototype.find.call(scope.querySelectorAll(sel), function (el) { return el.offsetParent !== null || el.getClientRects().length; }) || null;
+  }
+  if (Speech) d.documentElement.classList.add("can-dictate");
+  d.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("[data-dictate]"); if (!b || !Speech) return;
+    e.preventDefault();
+    var field = target(b); if (field) dictate(field);
+  });
+  d.addEventListener("mousedown", function (e) { if (e.target.closest && e.target.closest("[data-dictate]")) e.preventDefault(); });   // the box keeps the caret
+  d.addEventListener("keydown", function (e) { if (hearing && e.key === "Escape" && e.target === hearing.field) stopDictating(); }, true);
+  d.addEventListener("focusout", function (e) {
+    if (hearing && e.target === hearing.field) setTimeout(function () { if (hearing && d.activeElement !== hearing.field && !(d.activeElement && d.activeElement.closest("[data-dictate]"))) stopDictating(); }, 200);
+  });
 
   /* ── Pasting ── */
   var turndown = null, loading = null;

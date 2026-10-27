@@ -3061,3 +3061,60 @@ button.wpq-option:not(:disabled):active { translate: 0 1px; }
 .wkc.is-new { animation: wkc-in .5s ease-out; }
 .wn-colors { padding: 0.25rem 0; }
 .wn-item.has-color { border-left: 3px solid var(--c); }
+
+/* ── What a note pulls in (static/js/work.js: Work.enrich) ─────────────── */
+/* ```tasks: a live list of tasks */
+.wn-md .wn-tasks { margin: 0.75rem 0; padding: 0.5rem 0.75rem 0.625rem; border: 1px solid var(--border-soft); border-radius: var(--radius); background: var(--surface-raised); }
+.wn-tasks-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; padding-bottom: 0.375rem; margin-bottom: 0.25rem; border-bottom: 1px solid var(--border-soft); }
+.wn-tasks-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem; min-width: 0; }
+.wn-tasks-chip { padding: 0.0625rem 0.5rem; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 0.75rem; font-weight: 600; }
+.wn-tasks-count { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-left: 0.125rem; }
+.wn-md a.wn-tasks-open, .wn-md a.wn-tasks-more { font-size: 0.75rem; font-weight: 600; text-decoration: none; white-space: nowrap; }
+.wn-md .wn-tasks-list { list-style: none; margin: 0; padding: 0; }
+.wn-md .wn-task { display: flex; align-items: center; gap: 0.5rem; margin: 0; padding: 0.3125rem 0; border-bottom: 1px dashed var(--border-soft); font-size: 0.9rem; }
+.wn-md .wn-task:last-child { border-bottom: 0; }
+.wn-task-tick { flex: none; width: 1rem; height: 1rem; margin: 0; accent-color: var(--accent); cursor: pointer; }
+.wn-md a.wn-task-title { flex: 1 1 auto; min-width: 0; color: var(--text-primary); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wn-md a.wn-task-title:hover { color: var(--accent); text-decoration: underline; }
+.wn-task.is-done .wn-task-title { color: var(--text-muted); text-decoration: line-through; }
+.wn-task-meta { flex: none; display: flex; align-items: center; gap: 0.375rem; font-size: 0.75rem; color: var(--text-muted); }
+.wn-task-prio { font-weight: 800; color: var(--status-warn); } .wn-task-prio[data-p="4"] { color: var(--status-critical); }
+.wn-task-status { padding: 0 0.375rem; border-radius: 999px; background: var(--surface-sunken); font-weight: 600; }
+.wn-task-status[data-status="review"] { color: var(--status-info); }
+.wn-task-proj { display: inline-flex; align-items: center; gap: 0.25rem; max-width: 9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wn-task-proj[data-color]::before { content: ""; flex: none; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--c); }
+.wn-task-due.is-late { color: var(--status-critical); font-weight: 600; }
+.wn-tasks-note { margin: 0.375rem 0 0; font-size: 0.8125rem; color: var(--text-muted); }
+.wn-tasks-err { margin: 0.375rem 0 0; font-size: 0.8125rem; color: var(--status-critical); }
+.wn-md a.wn-tasks-more { display: inline-block; margin-top: 0.375rem; }
+@media (max-width: 640px) {
+  .wn-md .wn-task { flex-wrap: wrap; row-gap: 0.125rem; }
+  .wn-task-meta { flex-basis: 100%; padding-left: 1.5rem; }
+}
+/* ![[Another note]]: shown inside this one */
+.wn-md .wn-embed { margin: 0.75rem 0; border-left: 3px solid color-mix(in srgb, var(--accent) 55%, transparent); border-radius: 0 var(--radius) var(--radius) 0; background: var(--surface-sunken); padding: 0.5rem 0.875rem 0.625rem; }
+.wn-md .wn-embed.is-missing { border-left-color: var(--border); }
+.wn-md .wn-embed.is-missing .wn-embed-link { color: var(--text-muted); }
+.wn-embed-head { margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 600; }
+.wn-md .wn-embed-head a { display: inline-flex; align-items: center; gap: 0.3125rem; color: var(--text-secondary); text-decoration: none; }
+.wn-md .wn-embed-head a:hover { color: var(--accent); }
+.wn-embed-body > :first-child { margin-top: 0; } .wn-embed-body > :last-child { margin-bottom: 0; }
+/* Notes that name this one without a link */
+.wn-links { display: contents; }
+.wn-mentions summary { cursor: pointer; list-style: none; margin-bottom: 0; }
+.wn-mentions summary::-webkit-details-marker { display: none; }
+.wn-mentions summary svg { transition: transform 0.15s; }
+.wn-mentions[open] summary { margin-bottom: 0.375rem; }
+.wn-mentions[open] summary svg { transform: rotate(90deg); }
+.wn-backlinks.wn-mentions li { align-items: center; }
+.wn-mention { min-width: 0; display: grid; gap: 0.125rem; }
+.wn-mention-text { margin: 0; font-size: 0.8125rem; color: var(--text-secondary); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.wn-mention-text mark { padding: 0 0.125rem; border-radius: 0.1875rem; background: color-mix(in srgb, #facc15 38%, transparent); color: inherit; }
+.wn-mentions .btn { flex: none; }
+.wn-mentions-all { margin-top: 0.375rem; }
+/* Dictation: only where the browser can turn speech into text */
+html:not(.can-dictate) [data-dictate] { display: none !important; }
+[data-dictate].is-on { color: var(--status-critical); background: var(--status-critical-bg); animation: wn-listen 1.4s ease-in-out infinite; }
+.is-listening { box-shadow: 0 0 0 2px color-mix(in srgb, var(--status-critical) 45%, transparent) !important; }
+@keyframes wn-listen { 50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--status-critical) 22%, transparent); } }
+@media (prefers-reduced-motion: reduce) { [data-dictate].is-on { animation: none; } }

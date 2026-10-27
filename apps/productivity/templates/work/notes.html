@@ -85,7 +85,7 @@
   {# ── a note opened on the board (like Keep): written in place, saved as you go ── #}
   <div class="wc-backdrop" x-show="ed" x-cloak x-transition.opacity @click="closeNote()"></div>
   <template x-if="ed">
-  <section class="wc wkc-editor wnb-editor" x-transition :data-color="ed.color || null" role="dialog" aria-modal="true" aria-label="{% translate 'Edit the note' %}"
+  <section class="wc wkc-editor wnb-editor" data-dictate-scope x-transition :data-color="ed.color || null" role="dialog" aria-modal="true" aria-label="{% translate 'Edit the note' %}"
            @keydown.escape.stop="closeNote()" @keydown.ctrl.enter.prevent="closeNote()" @keydown.meta.enter.prevent="closeNote()">
     <div class="wkc-editor-head">
       <input type="text" class="wkc-q-input" x-model="ed.title" maxlength="200" placeholder="{% translate 'Title' %}" aria-label="{% translate 'Title' %}"
@@ -99,7 +99,7 @@
     <textarea class="wkc-a-input is-big" x-ref="edBody" x-model="ed.body" x-show="!edPreview" data-paste-images :data-note="ed.id" aria-label="{% translate 'Note' %}"
               placeholder="{% translate 'Write… Markdown works — type / for headings, to-dos, code, tables and more.' %}"></textarea>
     <article class="wn-md wkc-preview" x-show="edPreview" data-tick @md-tick="ed.body = Work.tickMarkdown(ed.body, $event.detail.index)"
-             x-html="Work.markdown(ed.body)" x-effect="edPreview && ed.body !== undefined && $nextTick(() => { Work.mermaidIn($el); window.hljs && $el.querySelectorAll('pre code:not(.language-mermaid)').forEach(c => hljs.highlightElement(c)); })"></article>
+             x-html="Work.markdown(ed.body)" x-effect="edPreview && ed.body !== undefined && $nextTick(() => Work.enrich($el, { note: ed.id }))"></article>
     <div class="wkc-editor-foot">
       <div class="wkc-colors" role="radiogroup" aria-label="{% translate 'Colour' %}">
         <button type="button" class="wkc-swatch is-none" :class="!ed.color && 'is-on'" @click="noteColor('')" aria-label="{% translate 'No colour' %}"></button>
@@ -107,6 +107,7 @@
       </div>
       <span class="spacer"></span>
       <span class="wn-state" :data-state="edState" role="status" aria-live="polite"><i aria-hidden="true"></i><span x-text="{ saving: '{% translate "Saving…" %}', saved: '{% translate "Saved" %}', dirty: '{% translate "Editing…" %}', offline: '{% translate "Saved on this device" %}', error: '{% translate "Not saved" %}' }[edState]"></span></span>
+      <button type="button" class="icon-btn" data-dictate="textarea[data-note]" aria-pressed="false" aria-label="{% translate 'Dictate' %}" data-tip="{% translate 'Dictate: speak, and it’s typed' %}">{% icon "mic" %}</button>
       <a :href="ed.url" class="icon-btn" @click="flushNote()" aria-label="{% translate 'Open in the full editor' %}" data-tip="{% translate 'Open in the full editor: history, links, diagrams' %}">{% icon "maximize" %}</a>
       <button type="button" class="icon-btn" @click="noteAct('archive')" aria-label="{% translate 'Archive' %}" data-tip="{% translate 'Archive' %}">{% icon "archive" %}</button>
       <button type="button" class="icon-btn is-danger" @click="noteAct('delete')" aria-label="{% translate 'Delete' %}" data-tip="{% translate 'Delete' %}">{% icon "trash" %}</button>
@@ -217,6 +218,7 @@
           <span class="wn-fmt-sep" aria-hidden="true"></span>
           <label class="icon-btn wn-pic" aria-label="{% translate 'Add a picture' %}" data-tip="{% translate 'Add a picture (or paste / drop one)' %}">{% icon "image" %}<input type="file" accept="image/png,image/jpeg,image/gif,image/webp" multiple class="sr-only" @change="$refs.body.focus(); Work.putImages($refs.body, $event.target.files); $event.target.value = ''"></label>
           <button type="button" class="icon-btn" @click="insert(' :: ', '')" aria-label="{% translate 'Flashcard' %}" data-tip="{% translate 'Flashcard: question :: answer' %}">{% icon "cards" %}</button>
+          <button type="button" class="icon-btn" data-dictate="textarea.wn-body" aria-pressed="false" aria-label="{% translate 'Dictate' %}" data-tip="{% translate 'Dictate: speak, and it’s typed' %}">{% icon "mic" %}</button>
           <div class="menu-wrap wn-dg" @click.outside="dgOpen = false" @keydown.escape.stop="dgOpen = false">
             <button type="button" class="icon-btn" @click="openDiagrams()" :aria-expanded="dgOpen" aria-label="{% translate 'Insert a diagram' %}" data-tip="{% translate 'Insert a diagram' %}">{% icon "diagram" %}</button>
             <div class="menu wn-dg-menu" x-show="dgOpen" x-cloak x-transition.opacity.duration.120ms>
@@ -256,7 +258,7 @@
           </template>
         </ul>
       </div>
-      <article x-show="preview" x-cloak class="wn-md" data-tick @md-tick="body = Work.tickMarkdown(body, $event.detail.index)" x-html="html" x-effect="html; preview && $nextTick(() => { Work.mermaidIn($el); window.hljs && $el.querySelectorAll('pre code:not(.language-mermaid)').forEach(c => hljs.highlightElement(c)); })"></article>
+      <article x-show="preview" x-cloak class="wn-md" data-tick @md-tick="body = Work.tickMarkdown(body, $event.detail.index)" x-html="html" x-effect="html; preview && $nextTick(() => Work.enrich($el, { note: id }))"></article>
       <p class="wn-stats" x-show="words" x-cloak><span x-text="words + ' ' + (words === 1 ? '{% translate "word" %}' : '{% translate "words" %}')"></span> · <span x-text="'~' + readMins + ' {% translate "min read" %}'"></span><template x-if="todoTotal"><span> · <span x-text="todoDone + '/' + todoTotal"></span> {% translate "to-dos done" %}</span></template></p>
       {# ── earlier versions ── #}
       <div class="wc-backdrop" x-show="histOpen" x-cloak x-transition.opacity @click="histOpen = false"></div>
@@ -287,12 +289,7 @@
           </div>
         </template>
       </aside>
-      {% if backlinks %}
-      <aside class="wn-backlinks">
-        <p class="wn-backlinks-label">{% icon "link" %}{% blocktranslate count counter=backlinks|length %}Linked from {{ counter }} note{% plural %}Linked from {{ counter }} notes{% endblocktranslate %}</p>
-        <ul>{% for b in backlinks %}<li><a href="{% url 'work:note' b.pk %}">{{ b.display_title }}</a><time>{{ b.updated_at|date:"j M" }}</time></li>{% endfor %}</ul>
-      </aside>
-      {% endif %}
+      {% if note %}{% include "work/partials/note_links.html" %}{% endif %}
     </div>
     {% else %}
     <div class="wn-blank">

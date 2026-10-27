@@ -24156,3 +24156,142 @@ msgstr "টেমপ্লেট হিসেবে ব্যবহার কর
 
 msgid "Your templates"
 msgstr "আপনার টেমপ্লেট"
+
+#, python-format
+msgid "%(priority)s or more"
+msgstr "%(priority)s বা তার বেশি"
+
+msgid "A note can't be shown inside itself."
+msgstr "কোনো নোট নিজের ভেতরে দেখানো যায় না।"
+
+msgid "Couldn't hear that — try again."
+msgstr "শোনা যায়নি — আবার চেষ্টা করুন।"
+
+msgid "Dictate"
+msgstr "বলে লিখুন"
+
+msgid "Dictate (speak to type)"
+msgstr "বলে লিখুন (কথা বললেই লেখা হবে)"
+
+msgid "Dictate: speak, and it’s typed"
+msgstr "বলে লিখুন: কথা বলুন, লেখা হয়ে যাবে"
+
+msgid "Due is one of: today, week, overdue, none."
+msgstr "due-এর মান হতে পারে: today, week, overdue, none।"
+
+msgid "Due this week"
+msgstr "এই সপ্তাহে শেষ তারিখ"
+
+#, python-format
+msgid "Kind is one of: %(names)s."
+msgstr "kind-এর মান হতে পারে: %(names)s।"
+
+#, python-format
+msgid "Limit is a number, up to %(max)s."
+msgstr "limit একটি সংখ্যা, সর্বোচ্চ %(max)s।"
+
+#, python-format
+msgid "Link it in %(counter)s note"
+msgid_plural "Link it in all %(counter)s notes"
+msgstr[0] "%(counter)sটি নোটেই লিংক করুন"
+msgstr[1] "%(counter)sটি নোটেই লিংক করুন"
+
+msgid "Linked"
+msgstr "লিংক করা হয়েছে"
+
+msgid "List of tasks (live)"
+msgstr "টাস্কের তালিকা (লাইভ)"
+
+msgid "Listening… speak, then press the microphone again to stop."
+msgstr "শুনছি… কথা বলুন, থামাতে আবার মাইক্রোফোনে চাপুন।"
+
+#, python-format
+msgid "Named in %(counter)s note without a link"
+msgid_plural "Named in %(counter)s notes without a link"
+msgstr[0] "লিংক ছাড়া %(counter)sটি নোটে নাম আছে"
+msgstr[1] "লিংক ছাড়া %(counter)sটি নোটে নাম আছে"
+
+msgid "No due date"
+msgstr "শেষ তারিখ নেই"
+
+#, python-format
+msgid "No goal called “%(name)s”."
+msgstr "“%(name)s” নামে কোনো লক্ষ্য নেই।"
+
+#, python-format
+msgid "No note called “%(title)s” yet."
+msgstr "“%(title)s” নামে এখনও কোনো নোট নেই।"
+
+#, python-format
+msgid "No project called “%(name)s”."
+msgstr "“%(name)s” নামে কোনো প্রজেক্ট নেই।"
+
+msgid "No sprint"
+msgstr "স্প্রিন্ট নেই"
+
+#, python-format
+msgid "No sprint called “%(name)s”."
+msgstr "“%(name)s” নামে কোনো স্প্রিন্ট নেই।"
+
+msgid "No tasks match — nothing to do here."
+msgstr "মিলছে এমন কোনো টাস্ক নেই — এখানে করার কিছু নেই।"
+
+msgid "Not blocked"
+msgstr "আটকে নেই"
+
+msgid "Nothing written yet."
+msgstr "এখনও কিছু লেখা হয়নি।"
+
+msgid "Open in Tasks"
+msgstr "টাস্কে খুলুন"
+
+msgid "Priority is one of: urgent, high, medium, low."
+msgstr "priority-এর মান হতে পারে: urgent, high, medium, low।"
+
+msgid "Show another note here"
+msgstr "অন্য নোট এখানে দেখান"
+
+#, python-format
+msgid "Status is one of: %(names)s."
+msgstr "status-এর মান হতে পারে: %(names)s।"
+
+msgid "The microphone is blocked for this site — allow it in the browser's address bar."
+msgstr "এই সাইটের জন্য মাইক্রোফোন বন্ধ — ব্রাউজারের ঠিকানা-বার থেকে অনুমতি দিন।"
+
+msgid "This list needs a connection."
+msgstr "এই তালিকা দেখতে ইন্টারনেট সংযোগ লাগবে।"
+
+msgid "This sprint"
+msgstr "এই স্প্রিন্ট"
+
+msgid "With done ones"
+msgstr "শেষ হওয়াগুলোসহ"
+
+msgid "and %s more"
+msgstr "আরও %sটি"
+
+#, python-format
+msgid "“%(key)s” isn't a filter. These are: %(keys)s."
+msgstr "“%(key)s” কোনো ফিল্টার নয়। ফিল্টারগুলো হলো: %(keys)s।"
+
+#, python-format
+msgid "“%(title)s” has no heading “%(heading)s”."
+msgstr "“%(title)s”-এ “%(heading)s” নামে কোনো শিরোনাম নেই।"
+
+msgid "A live list of tasks, ticked off right in the note (type /tasks). One filter a line, or several on one: “due:week #api !high @Website”; other words are searched for."
+msgstr "টাস্কের একটি লাইভ তালিকা, নোটের ভেতরেই টিক দিয়ে শেষ করা যায় (/tasks লিখুন)। প্রতি লাইনে একটি ফিল্টার, বা এক লাইনে কয়েকটি: “due:week #api !high @Website”; বাকি শব্দগুলো খোঁজা হয়।"
+
+msgid "Dictate: press the microphone (or type /dictate) and speak — in Bangla or English, as the app is set."
+msgstr "বলে লিখুন: মাইক্রোফোনে চাপুন (বা /dictate লিখুন) আর কথা বলুন — অ্যাপ যে ভাষায় আছে সেই ভাষায়, বাংলা বা ইংরেজি।"
+
+msgid "Inside a note"
+msgstr "নোটের ভেতরে"
+
+msgid "Link notes with [[Note title]] — type [[ to pick one. A note shows which notes link to it, and which only name it — “Link” turns those into links."
+msgstr "[[নোটের শিরোনাম]] দিয়ে নোট যুক্ত করুন — বেছে নিতে [[ লিখুন। একটি নোট দেখায় কোন নোটগুলো এতে লিংক করেছে, আর কোনগুলো শুধু নাম লিখেছে — “লিংক” চাপলে সেগুলোও লিংক হয়ে যায়।"
+
+msgid "Shows another note — or one of its headings — inside this one, always up to date (type /embed)."
+msgstr "অন্য একটি নোট — বা তার একটি শিরোনামের অংশ — এই নোটের ভেতরে দেখায়, সবসময় হালনাগাদ (/embed লিখুন)।"
+
+msgid "The filters. due: today, week, overdue or none; status: todo, doing, review or done; sprint: current; done: yes adds finished ones; sort: due, priority, updated or created."
+msgstr "ফিল্টারগুলো। due: today, week, overdue বা none; status: todo, doing, review বা done; sprint: current; done: yes দিলে শেষ হওয়াগুলোও আসে; sort: due, priority, updated বা created।"

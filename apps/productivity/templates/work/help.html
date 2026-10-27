@@ -23,11 +23,18 @@
       <div><dt><code>*</code></dt><dd>{% translate "Add to My Day." %}</dd></div>
       <div><dt><code>https://github.com/…/pull/482</code></dt><dd>{% translate "A pasted link is kept on the task (shown as “PR #482”, “#91”, “ABC-123”…)." %}</dd></div>
     </dl>
+    <h2 class="card-title mt-6">{% translate "Inside a note" %}</h2>
+    <dl>
+      <div><dt><code>```tasks<br>project: Payments API<br>due: week<br>```</code></dt><dd>{% translate "A live list of tasks, ticked off right in the note (type /tasks). One filter a line, or several on one: “due:week #api !high @Website”; other words are searched for." %}</dd></div>
+      <div><dt><code>project · tag · priority · due · status · kind · sprint · goal · blocked · done · sort · limit</code></dt><dd>{% translate "The filters. due: today, week, overdue or none; status: todo, doing, review or done; sprint: current; done: yes adds finished ones; sort: due, priority, updated or created." %}</dd></div>
+      <div><dt><code>![[Deploy runbook]]  ![[Deploy runbook#Rollback]]</code></dt><dd>{% translate "Shows another note — or one of its headings — inside this one, always up to date (type /embed)." %}</dd></div>
+      <div><dt><code>🎙</code></dt><dd>{% translate "Dictate: press the microphone (or type /dictate) and speak — in Bangla or English, as the app is set." %}</dd></div>
+    </dl>
     <h2 class="card-title mt-6">{% translate "Good to know" %}</h2>
     <ul class="wk-list">
       <li>{% translate "Plan the week (g w): drag tasks to the day you'll do them; Plan my day (g d): drag them onto hours. “Fill my day” does it for you." %}</li>
       <li>{% translate "In a note, write to-dos as “- [ ] …” and press “Make tasks”. Ticking a task ticks its line in the note." %}</li>
-      <li>{% translate "Link notes with [[Note title]] — type [[ to pick one. A note shows which notes link to it." %}</li>
+      <li>{% translate "Link notes with [[Note title]] — type [[ to pick one. A note shows which notes link to it, and which only name it — “Link” turns those into links." %}</li>
       <li>{% translate "On a phone, swipe a task right to finish it, or left to move it to tomorrow." %}</li>
       <li>{% translate "No signal? Keep working: changes wait on this device and sync when you're back online. The timer keeps the right time." %}</li>
       <li>{% translate "The focus timer runs by the clock, so it stays right when the phone sleeps. When it ends you get a sound and a notification." %}</li>

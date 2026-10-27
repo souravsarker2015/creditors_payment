@@ -1827,8 +1827,20 @@
       return i % 2 ? part : part.replace(/==(?=\S)([^=\n]+?)(?<=\S)==/g, "<mark>$1</mark>");
     }).join("");
   }
+  /* ![[Another note]] (or ![[Note#Heading]]) on a line of its own: a box that Work.enrich fills with that
+     note (a plain link until then, and where nothing fills it); written in a sentence it's just a link */
+  function embeds(text) {
+    if (!CFG.urls || !CFG.urls.noteGo) return text;
+    return String(text || "").split(/(```[\s\S]*?(?:```|$)|~~~[\s\S]*?(?:~~~|$)|`[^`\n]+`)/).map(function (part, i) {
+      return i % 2 ? part : part.replace(/^[ \t]*!\[\[([^\[\]\n]{1,300})\]\][ \t]*$/gm, function (all, ref) {
+        var title = ref.split("#")[0].trim() || ref.trim(), attr = escAttr(ref.trim());
+        return '\n<div class="wn-embed" data-embed="' + attr + '"><a class="wn-embed-link" href="' + CFG.urls.noteGo + "?title=" + encodeURIComponent(title) + '">' + escAttr(ref.trim()) + "</a></div>\n";
+      }).replace(/!\[\[([^\[\]\n]{1,300})\]\]/g, "[[$1]]");
+    }).join("");
+  }
+  function escAttr(v) { return String(v).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
   function renderMarkdown(text) {
-    text = highlights(wikiLinks(text));
+    text = highlights(wikiLinks(embeds(text)));
     if (window.marked && window.DOMPurify) {
       var html = marked.parse(text || "", { gfm: true, breaks: true });
       // to-do boxes can be ticked where the preview allows it ([data-tick]); elsewhere CSS keeps them still
@@ -1867,7 +1879,7 @@
   // A code block gets its language and a Copy button (outside the box that scrolls sideways); diagrams don't.
   function codeBoxes(html) {
     return html.replace(/<pre><code(?: class="language-([\w+#.-]+)")?>([\s\S]*?)<\/code><\/pre>/g, function (all, lang, code) {
-      if (lang === "mermaid") return all;
+      if (lang === "mermaid" || lang === "tasks") return all;      // (drawn by Work.enrich)
       var label = t("copyCode", "Copy code");
       return '<div class="wn-code"' + (lang ? ' data-lang="' + lang + '"' : "") + ">" + all + '<span class="wn-code-bar">' +
         (lang ? '<span class="wn-code-lang">' + lang + "</span>" : "") +
@@ -1943,17 +1955,111 @@
     var icon = el.querySelector(":scope > .wtd-git");
     el.innerHTML = renderMarkdown(el.getAttribute("data-md-text") || "");
     if (icon) el.insertBefore(icon, el.firstChild);
-    Work.mermaidIn(el);
-    if (window.hljs) el.querySelectorAll("pre code:not(.language-mermaid)").forEach(function (c) { hljs.highlightElement(c); });
+    Work.enrich(el);
   };
   d.addEventListener("DOMContentLoaded", function () {
     d.querySelectorAll("[data-render-markdown]").forEach(function (el) {
       var draw = function () {
         el.innerHTML = renderMarkdown(el.getAttribute("data-render-markdown"));
-        Work.mermaidIn(el);
-        if (window.hljs) el.querySelectorAll("pre code:not(.language-mermaid)").forEach(function (c) { hljs.highlightElement(c); });
+        Work.enrich(el);
       };
       if (window.marked) draw(); else setTimeout(draw, 300);
+    });
+  });
+
+  /* ── What a drawn note pulls in (apps/productivity/linked.py) ──────────────
+     Work.enrich(el, {note: id}) after Markdown is drawn into el: diagrams, coloured code, ```tasks lists
+     (the tasks a filter finds, ticked off right there) and ![[embedded notes]] — one level deep
+     (`note`: the note being drawn, which can't show itself). */
+  var pulled = {};          // url → { at, p }: the preview is drawn again at every key, the lists aren't fetched again
+  function pull(url, fresh) {
+    var hit = pulled[url];
+    if (!fresh && hit && Date.now() - hit.at < 60000) return hit.p;
+    var p = fetch(url, { credentials: "same-origin", headers: { Accept: "application/json" } }).then(function (r) { return r.json(); });
+    pulled[url] = { at: Date.now(), p: p };
+    p.catch(function () { delete pulled[url]; });
+    return p;
+  }
+  function esc(v) { return escAttr(v == null ? "" : v); }
+  window.Work.enrich = function (el, opts) {
+    if (!el) return;
+    opts = opts || {};
+    Work.mermaidIn(el);
+    if (window.hljs) el.querySelectorAll("pre code:not(.language-mermaid):not(.language-tasks)").forEach(function (c) { if (!c.dataset.highlighted) hljs.highlightElement(c); });
+    if (!CFG.urls || !CFG.urls.taskQuery) return;
+    el.querySelectorAll("pre > code.language-tasks").forEach(function (code) {
+      var box = d.createElement("div");
+      box.className = "wn-tasks"; box.setAttribute("data-task-query", code.textContent);
+      box.innerHTML = '<p class="wn-tasks-note">' + esc(t("loading", "Loading…")) + "</p>";
+      code.parentNode.replaceWith(box);
+      drawTasks(box);
+    });
+    if (opts.inside) return;           // a note shown inside another shows its own ![[…]] as links
+    el.querySelectorAll(".wn-embed[data-embed]").forEach(function (box) {
+      var ref = box.getAttribute("data-embed");
+      pull(CFG.urls.noteEmbed + "?" + new URLSearchParams({ ref: ref, from: opts.note || "" })).then(function (res) {
+        if (!box.isConnected) return;
+        if (!res.ok) { box.classList.add("is-missing"); box.title = res.error || ""; return; }
+        box.innerHTML = '<div class="wn-embed-head"><a href="' + esc(res.url) + '">' + NOTE_ICON + "<span>" + esc(res.title) + (res.heading ? " › " + esc(res.heading) : "") +
+          '</span></a></div><div class="wn-embed-body"></div>';
+        var inner = box.querySelector(".wn-embed-body");
+        inner.innerHTML = res.body.trim() ? renderMarkdown(res.body) : '<p class="wn-tasks-note">' + esc(t("emptyNote", "Nothing written yet.")) + "</p>";
+        Work.enrich(inner, { inside: true });
+      }, function () { /* offline: the link stays */ });
+    });
+  };
+  var NOTE_ICON = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>';
+  function drawTasks(box, fresh) {
+    var query = box.getAttribute("data-task-query");
+    pull(CFG.urls.taskQuery + "?q=" + encodeURIComponent(query), fresh).then(function (res) {
+      if (!box.isConnected) return;
+      var h = '<div class="wn-tasks-head"><span class="wn-tasks-chips">' +
+        (res.chips.length ? res.chips.map(function (c) { return '<span class="wn-tasks-chip">' + esc(c) + "</span>"; }).join("") : '<span class="wn-tasks-chip">' + esc(t("openTasksAll", "Open tasks")) + "</span>") +
+        '<b class="wn-tasks-count">' + res.total + '</b></span><a class="wn-tasks-open" href="' + esc(res.link) + '">' + esc(t("openInTasks", "Open in Tasks")) + " →</a></div>";
+      res.errors.forEach(function (e) { h += '<p class="wn-tasks-err">' + esc(e) + "</p>"; });
+      if (!res.items.length) h += '<p class="wn-tasks-note">' + esc(t("noTasksMatch", "No tasks match — nothing to do here.")) + "</p>";
+      else h += '<ul class="wn-tasks-list">' + res.items.map(function (x) {
+        return '<li class="wn-task' + (x.done ? " is-done" : "") + '"><input type="checkbox" class="wn-task-tick" data-task-tick="' + x.id + '"' + (x.done ? " checked" : "") +
+          ' aria-label="' + esc(t("markDone", "Done")) + '"><a class="wn-task-title" href="' + esc(x.url) + '">' + esc(x.title) + '</a><span class="wn-task-meta">' +
+          (x.priority >= 3 ? '<span class="wn-task-prio" data-p="' + x.priority + '">!' + (x.priority === 4 ? "!" : "") + "</span>" : "") +
+          (x.status === "doing" || x.status === "review" ? '<span class="wn-task-status" data-status="' + x.status + '">' + esc(x.statusLabel) + "</span>" : "") +
+          (x.project ? '<span class="wn-task-proj"' + (x.color ? ' data-color="' + esc(x.color) + '"' : "") + ">" + esc(x.project) + "</span>" : "") +
+          (x.due ? '<span class="wn-task-due' + (x.late ? " is-late" : "") + '">' + esc(x.due) + "</span>" : "") + "</span></li>";
+      }).join("") + "</ul>";
+      if (res.more) h += '<a class="wn-tasks-more" href="' + esc(res.link) + '">' + esc(t("andMore", "and %s more").replace("%s", res.more)) + "</a>";
+      box.innerHTML = h;
+    }, function () {
+      if (box.isConnected) box.innerHTML = '<p class="wn-tasks-err">' + esc(t("listOffline", "This list needs a connection.")) + "</p>";
+    });
+  }
+  d.addEventListener("change", function (e) {
+    var tick = e.target.closest && e.target.closest("[data-task-tick]"); if (!tick) return;
+    var id = tick.getAttribute("data-task-tick"), on = tick.checked, row = tick.closest(".wn-task");
+    row.classList.toggle("is-done", on);
+    if (on) play(CFG.sound ? "chime" : "");
+    api(CFG.urls.taskBase + id + "/done/", { done: on ? "1" : "0" }).then(function (res) {
+      if (!res.ok) { tick.checked = !on; row.classList.toggle("is-done", !on); return; }
+      if (res.next) toast(t("repeatMade", "Next one added") + (res.next.due ? " · " + res.next.due : ""));
+      if (res.unblocked && res.unblocked.length) toast(t("unblocked", "Ready to start now:") + " " + res.unblocked.join(", "));
+      if (res.queued) return;
+      pulled = {};
+      // a moment to see it ticked, then every list on the page as it is now (the done one leaves)
+      setTimeout(function () { d.querySelectorAll(".wn-tasks[data-task-query]").forEach(function (b) { drawTasks(b, true); }); }, 900);
+    });
+  });
+  // "Link": where another note names this one in plain text, it becomes a [[link]] (apps/productivity/linked.py)
+  d.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("[data-link-mention]"); if (!b) return;
+    var links = b.closest("[data-note-links]"); if (!links) return;
+    e.preventDefault(); b.disabled = true;
+    var source = b.getAttribute("data-link-mention");
+    api(CFG.urls.noteBase + links.getAttribute("data-note-links") + "/", { action: "link_mentions", source: source === "all" ? "" : source }).then(function (res) {
+      if (!res.ok || res.queued) { b.disabled = false; return; }
+      var open = !!links.querySelector("details[open]");
+      links.outerHTML = res.links;
+      var now = d.getElementById("note-links"), more = now && now.querySelector("details");
+      if (more && open) more.open = true;
+      toast(t("mentionsLinked", "Linked") + (res.count > 1 ? " · " + res.count : ""), "good");
     });
   });
 

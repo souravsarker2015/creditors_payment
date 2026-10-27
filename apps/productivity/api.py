@@ -23,7 +23,7 @@ from django.views.decorators.http import require_GET, require_POST
 
 from apps.trash.services import trash
 
-from . import cards, diagrams, services
+from . import cards, diagrams, linked, services
 from .access import work_required
 from .models import (
     Card, ChecklistItem, Color, Deck, Diagram, DiagramKind, DiagramVersion, EntryKind, Goal, GoalStatus, GoalStep, Habit, HabitCheck, JournalEntry, LearningItem, LearningKind, LearningStatus,
@@ -529,6 +529,22 @@ def note_get(request, pk):
 
 
 @work_required
+@require_GET
+def note_embed(request):
+    """![[Another note]] in a note: that note (or one heading of it), to show inside it."""
+    current = request.GET.get("from", "")
+    data, why = linked.embed(request.user, request.GET.get("ref", ""), int(current) if current.isdigit() else None)
+    return ok(**data) if data else JsonResponse({"ok": False, "error": why})      # (not an error page: a note not written yet)
+
+
+@work_required
+@require_GET
+def task_query(request):
+    """A ```tasks block in a note: the tasks its filter finds."""
+    return ok(**linked.run_query(request.user, request.GET.get("q", "")[:2000], timezone.localdate()))
+
+
+@work_required
 @require_POST
 def note_action(request, pk):
     note = get_object_or_404(Note, pk=pk, owner=request.user)
@@ -556,6 +572,10 @@ def note_action(request, pk):
             return bad(_("That to-do isn't there any more."))
         return ok(done=now, body=note.body, card=_note_card(request, note) if request.POST.get("card") == "1" else "",
                   saved=timezone.localtime(note.updated_at).strftime("%H:%M"), updated=int(note.updated_at.timestamp() * 1000))
+    elif action == "link_mentions":    # other notes that name this one in plain text: [[linked]] (one of them, or all)
+        source = request.POST.get("source", "")
+        count = linked.link_from(note, int(source) if source.isdigit() else None)
+        return ok(count=count, links=render_to_string("work/partials/note_links.html", linked.links_context(note), request=request))
     elif action == "todos":            # every "- [ ] …" line becomes a task
         made = services.note_todos_to_tasks(request.user, note)
         if not made:
