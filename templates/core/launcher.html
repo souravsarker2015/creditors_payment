@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "All shortcuts" %} | FinTrack{% endblock %}
+
+{% block content %}
+<div class="page-narrow stack">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "All shortcuts" %}</h1>
+      <p class="page-subtitle">{% translate "Every part of the app, one tap away. Long-press the app's icon on your phone to come straight here." %}</p>
+    </div>
+  </header>
+
+  {% for key, label, items in groups %}
+  <section class="launch-group" aria-labelledby="launch-{{ key }}">
+    <h2 id="launch-{{ key }}" class="launch-label">{{ label }}</h2>
+    <div class="launch-grid">
+      {% for s in items %}<a href="{{ s.url }}" class="launch-tile" data-group="{{ s.group }}"><span class="launch-icon">{% include "partials/icon.html" with name=s.icon %}</span><span class="launch-name">{{ s.name }}</span></a>{% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+
+  <section class="card" id="app-icon">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title">{% translate "On the app icon" %}</h2>
+        <p class="card-subtitle">{% translate "What a long press on the installed app's icon shows, in this order. Most phones show the first 3 or 4 — keep “All shortcuts” among them to reach everything else." %}</p>
+      </div>
+    </div>
+    <form method="post" class="card-body launch-slots">{% csrf_token %}
+      {% for n, key in slots %}
+      <label class="launch-slot"><span class="launch-slot-n num">{{ n }}</span>
+        <select name="slot{{ n }}" class="form-input" aria-label="{% blocktranslate %}Shortcut {{ n }}{% endblocktranslate %}">
+          <option value="">{% translate "— none —" %}</option>
+          {% for s in items %}<option value="{{ s.key }}"{% if s.key == key %} selected{% endif %}>{{ s.name }}</option>{% endfor %}
+        </select>
+      </label>
+      {% endfor %}
+      <p class="launch-note">{% translate "Your phone picks up a change when it next refreshes the app — usually within a day. To see it at once, remove the app from the home screen and install it again." %}</p>
+      <div><button type="submit" class="btn btn-primary">{% translate "Save" %}</button></div>
+    </form>
+  </section>
+</div>
+{% endblock %}

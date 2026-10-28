@@ -27,6 +27,10 @@ The menu sections: the sidebar shows them as a list, and the app view's
         {% include "partials/icon.html" with name="info" %}
         {% translate "How this app works" %}
     </a>
+    <a href="{% url 'launcher' %}" class="nav-link {% if p == '/core/shortcuts/' %}is-active{% endif %}" data-tip="{% translate 'Every part of the app as tiles — and what the app icon offers' %}">
+        {% include "partials/icon.html" with name="grid" %}
+        {% translate "All shortcuts" %}
+    </a>
     <a href="{% url 'offline_settings' %}" class="nav-link {% if p == '/core/offline/' %}is-active{% endif %}">
         {% include "partials/icon.html" with name="cloud" %}
         {% translate "Use without internet" %}

@@ -63,14 +63,33 @@
             Work.toast(t("noteSaved", "Note saved"), "good");
           });
         },
-        // A card under its heading: "Pinned" for a pinned one, "Others" for the rest; at the top when there are no headings.
+        // A card first in its group — the pinned ones, then the others (as the server orders them: the one just
+        // changed is the newest) — gliding there from where it was; the headings follow.
         place: function (card, pinned) {
-          var grid = this.$refs.grid, none = grid.querySelector(".wnb-none");
-          if (none) none.remove();
-          var head = grid.querySelector(pinned ? '[data-head="pinned"]' : '[data-head="others"]');
-          if (head) head.after(card);
-          else if (!pinned && grid.querySelector('[data-head="pinned"]')) grid.append(card);
-          else grid.prepend(card);
+          var grid = this.$refs.grid, self = this;
+          card.toggleAttribute("data-pinned", !!pinned);
+          return Work.flip(grid, function () {
+            var none = grid.querySelector(".wnb-none");
+            if (none) none.remove();
+            var cards = Array.prototype.filter.call(grid.querySelectorAll("[data-note-card]"), function (c) { return c !== card; });
+            var firstOther = cards.find(function (c) { return !c.hasAttribute("data-pinned"); });
+            var lastPinned = cards.filter(function (c) { return c.hasAttribute("data-pinned"); }).pop();
+            if (pinned || !lastPinned) grid.prepend(card);
+            else if (firstOther) firstOther.before(card);
+            else lastPinned.after(card);
+            self.heads();
+          });
+        },
+        // "Pinned" over the pinned cards and "Others" over the rest — only while some are pinned (as Keep)
+        heads: function () {
+          var grid = this.$refs.grid;
+          grid.querySelectorAll(".wnb-head").forEach(function (h) { h.remove(); });
+          var cards = Array.prototype.slice.call(grid.querySelectorAll("[data-note-card]"));
+          if (!cards.some(function (c) { return c.hasAttribute("data-pinned"); })) return;
+          var tpl = this.$refs.heads;
+          grid.prepend(tpl.content.querySelector('[data-head="pinned"]').cloneNode(true));
+          var other = cards.find(function (c) { return !c.hasAttribute("data-pinned"); });
+          if (other) other.before(tpl.content.querySelector('[data-head="others"]').cloneNode(true));
         },
 
         /* ── search as you type: the cards (and the pages after them) come from the server ── */
@@ -165,8 +184,9 @@
             var card = cardOf(n.id);
             if (what === "pin") {
               n.pinned = r.pinned;                     // the card moves under "Pinned" (or back under "Others")
-              if (card) card.remove();
-              if (r.card) self.place(fromHTML(r.card), n.pinned);
+              var fresh = r.card ? fromHTML(r.card) : null;
+              if (card && fresh) card.replaceWith(fresh);
+              if (fresh || card) self.place(fresh || card, n.pinned);
               return;
             }
             self.ed = null;
@@ -203,10 +223,14 @@
             }
           });
         },
+        // pinned (or not) at once: the card moves to its group straight away, and back if the server says no
         pin: function () {
-          var self = this;
+          var self = this, card = this.$el.closest("[data-note-card]");
           this.pinned = !this.pinned;
-          Work.api(urls().noteBase + this.id + "/", { action: "pin" }).then(function (r) { if (r && r.ok) self.pinned = r.pinned; });
+          this.$dispatch("note-pin", { card: card, pinned: this.pinned });
+          Work.api(urls().noteBase + this.id + "/", { action: "pin" }).then(function (r) {
+            if (r && !r.ok && !r.queued) { self.pinned = !self.pinned; self.$dispatch("note-pin", { card: card, pinned: self.pinned }); }
+          });
         },
         paint: function (c) {
           var was = this.color, self = this;

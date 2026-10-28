@@ -22,6 +22,7 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.cache import cache_control
 
+from . import launcher
 from .templatetags.ui import asset
 
 
@@ -42,12 +43,8 @@ def manifest_view(request):
         "background_color": "#f7f6f1",
         "theme_color": "#16241f",
         "icons": icons,
-        "shortcuts": [
-            {"name": _("New Expense"), "url": reverse("expense_create"), "icons": icons[:1]},
-            {"name": _("Household (Bazar)"), "url": reverse("household_dashboard"), "icons": icons[:1]},
-            {"name": _("Budgets"), "url": reverse("budget_list"), "icons": icons[:1]},
-            {"name": _("Savings Goals"), "url": reverse("goal_list"), "icons": icons[:1]},
-        ],
+        # A long press on the app's icon: the person's own choice (All shortcuts → apps/core/launcher.py)
+        "shortcuts": launcher.manifest_shortcuts(request, icons[:1]),
         # Share a link or text from another app → keep it in Productivity (a task, a note, something to read).
         "share_target": {"action": reverse("work:share"), "method": "GET", "params": {"title": "title", "text": "text", "url": "url"}},
     }

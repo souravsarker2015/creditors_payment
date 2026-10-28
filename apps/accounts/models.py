@@ -74,6 +74,8 @@ class UserProfile(models.Model):
     # Morning email of money that's late or due soon (apps/overview/reminders.py).
     money_reminders = models.BooleanField(_("Morning money reminders"), default=False)
     reminders_sent_on = models.DateField(null=True, blank=True, editable=False)
+    # What a long press on the installed app's icon offers, in order (apps/core/launcher.py); empty = the usual ones.
+    app_shortcuts = models.JSONField(_("App icon shortcuts"), default=list, blank=True)
 
     def __str__(self):
         return f"Preferences for {self.user.username}"

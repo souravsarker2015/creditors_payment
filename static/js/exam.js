@@ -117,7 +117,9 @@
             .then(function (r) {
               if (self.params(page) !== asked) return;            // the filters changed meanwhile: a newer load follows
               if (page === 1) { self.notes = []; if (r.shows) { self.shows = r.shows; self.chapters = r.chapters; } }
-              r.notes.forEach(function (n) { self.notes.push(n); });
+              // (a card that moved — starred, or added — may come again on the next page: it's there once)
+              var have = {}; self.notes.forEach(function (n) { have[n.id] = true; });
+              r.notes.forEach(function (n) { if (!have[n.id]) self.notes.push(n); });
               self.next = r.next;
               self.$nextTick(function () { if (self.loaded) self.loaded(); self.more(); });
             })
@@ -142,10 +144,25 @@
         flag: function (q, what) {
           var self = this, key = what === "star" ? "starred" : "known";
           q[key] = !q[key];
+          if (key === "starred") this.restar(q);
           api(D.noteBase + q.id + "/", { action: what, value: q[key] ? "1" : "0" }).then(function (r) {
-            if (!r.ok && !r.queued) { q[key] = !q[key]; return; }
+            if (!r.ok && !r.queued) { q[key] = !q[key]; if (key === "starred") self.restar(q); return; }
             self.shows[key === "starred" ? "starred" : "unknown"] += (key === "starred") === q[key] ? 1 : -1;
           });
+        },
+        /* Starred (pinned) or not: on the board the card moves at once — the important ones first, the rest in
+           the subject's order (their numbers), as the server lists them; under "Important", an unstarred one leaves. */
+        restar: function (q) {
+          var self = this, grid = this.$refs.grid;
+          if (!grid || !this.notes) return;
+          if (this.show === "starred" && !q.starred) {
+            Work.flip(grid, function () { self.notes.splice(self.notes.indexOf(q), 1); return self.$nextTick(); });
+          } else if (this.pinnedFirst && this.pinnedFirst()) {
+            Work.flip(grid, function () {
+              self.notes.sort(function (a, b) { return (b.starred - a.starred) || ((a.number || 1e9) - (b.number || 1e9)) || (a.id - b.id); });
+              return self.$nextTick();
+            });
+          }
         },
       };
     }

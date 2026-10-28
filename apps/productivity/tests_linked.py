@@ -226,3 +226,18 @@ class FrontEndTests(SimpleTestCase):
         html = self.read("apps/productivity/templates/work/notes.html")
         self.assertEqual(html.count("Work.enrich($el"), 2)
         self.assertEqual(html.count("data-dictate="), 2)
+
+
+class PinMovesAtOnceTests(Base):
+    def test_a_pinned_card_says_so_and_the_boards_move_it(self):
+        n = self.note("Pinned one", "x", is_pinned=True)
+        self.note("Other one", "y")
+        r = self.client.get(reverse("work:notes"))
+        self.assertContains(r, f'data-note-card="{n.pk}" data-pinned', html=False)
+        self.assertContains(r, 'x-ref="heads"', html=False)
+        board = (Path(settings.BASE_DIR) / "static/js/notes-board.js").read_text()
+        self.assertIn('$dispatch("note-pin"', board)
+        self.assertIn("heads: function", board)
+        exam = (Path(settings.BASE_DIR) / "static/js/exam.js").read_text()
+        self.assertIn("restar: function", exam)
+        self.assertIn("window.Work.flip", (Path(settings.BASE_DIR) / "static/js/work.js").read_text())

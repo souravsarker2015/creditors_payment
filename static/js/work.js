@@ -1967,6 +1967,22 @@
     });
   });
 
+  /* ── Cards that change place (pinned, unpinned…) glide there instead of jumping: each child of `box`
+     is measured, mutate() moves things (it may return a promise, e.g. Alpine's next tick), and each
+     is animated from where it was (FLIP). Without motion, they just move. ── */
+  window.Work.flip = function (box, mutate) {
+    var still = !box || !box.animate || matchMedia("(prefers-reduced-motion: reduce)").matches, was = [];
+    if (!still) Array.prototype.forEach.call(box.children, function (el) { was.push([el, el.getBoundingClientRect()]); });
+    return Promise.resolve(mutate()).then(function () {
+      if (still) return;
+      was.forEach(function (x) {
+        var el = x[0], a = x[1]; if (!el.isConnected) return;
+        var b = el.getBoundingClientRect(), dx = a.left - b.left, dy = a.top - b.top;
+        if ((dx || dy) && b.width) el.animate([{ transform: "translate(" + dx + "px, " + dy + "px)" }, { transform: "none" }], { duration: 280, easing: "cubic-bezier(.2, .7, .2, 1)" });
+      });
+    });
+  };
+
   /* ── What a drawn note pulls in (apps/productivity/linked.py) ──────────────
      Work.enrich(el, {note: id}) after Markdown is drawn into el: diagrams, coloured code, ```tasks lists
      (the tasks a filter finds, ticked off right there) and ![[embedded notes]] — one level deep

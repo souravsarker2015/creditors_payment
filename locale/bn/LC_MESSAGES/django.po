@@ -24295,3 +24295,46 @@ msgstr "অন্য একটি নোট — বা তার একটি �
 
 msgid "The filters. due: today, week, overdue or none; status: todo, doing, review or done; sprint: current; done: yes adds finished ones; sort: due, priority, updated or created."
 msgstr "ফিল্টারগুলো। due: today, week, overdue বা none; status: todo, doing, review বা done; sprint: current; done: yes দিলে শেষ হওয়াগুলোও আসে; sort: due, priority, updated বা created।"
+
+msgid "Focus & time"
+msgstr "ফোকাস ও সময়"
+
+msgid "Notes & know-how"
+msgstr "নোট ও জ্ঞান"
+
+msgid "Study"
+msgstr "পড়াশোনা"
+
+msgid "Review & grow"
+msgstr "পর্যালোচনা ও উন্নতি"
+
+msgid "All shortcuts"
+msgstr "সব শর্টকাট"
+
+msgid "Saved. The app icon shows them once your phone refreshes the app — usually within a day."
+msgstr "সেভ হয়েছে। ফোন অ্যাপটি হালনাগাদ করলেই অ্যাপের আইকনে এগুলো দেখাবে — সাধারণত এক দিনের মধ্যে।"
+
+msgid "App icon shortcuts"
+msgstr "অ্যাপ আইকনের শর্টকাট"
+
+msgid "Every part of the app, one tap away. Long-press the app's icon on your phone to come straight here."
+msgstr "অ্যাপের সব অংশ, এক ট্যাপেই। ফোনে অ্যাপের আইকন চেপে ধরে রাখলে সরাসরি এখানে আসবেন।"
+
+msgid "On the app icon"
+msgstr "অ্যাপ আইকনে"
+
+msgid "What a long press on the installed app's icon shows, in this order. Most phones show the first 3 or 4 — keep “All shortcuts” among them to reach everything else."
+msgstr "ইনস্টল করা অ্যাপের আইকন চেপে ধরলে এগুলো এই ক্রমে দেখায়। বেশিরভাগ ফোন প্রথম ৩ বা ৪টি দেখায় — বাকি সবকিছুতে যেতে “সব শর্টকাট” এর মধ্যে রাখুন।"
+
+#, python-format
+msgid "Shortcut %(n)s"
+msgstr "শর্টকাট %(n)s"
+
+msgid "— none —"
+msgstr "— কিছু না —"
+
+msgid "Your phone picks up a change when it next refreshes the app — usually within a day. To see it at once, remove the app from the home screen and install it again."
+msgstr "ফোন পরের বার অ্যাপটি হালনাগাদ করলে পরিবর্তন দেখা যাবে — সাধারণত এক দিনের মধ্যে। সঙ্গে সঙ্গে দেখতে চাইলে হোম স্ক্রিন থেকে অ্যাপটি সরিয়ে আবার ইনস্টল করুন।"
+
+msgid "Every part of the app as tiles — and what the app icon offers"
+msgstr "অ্যাপের সব অংশ টাইল হিসেবে — আর অ্যাপ আইকনে কী দেখাবে"

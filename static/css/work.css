@@ -3014,6 +3014,21 @@ button.wpq-option:not(:disabled):active { translate: 0 1px; }
 .wnc-todo.is-done .wnc-box { background: var(--status-good); border-color: var(--status-good); color: #fff; }
 .wnc-todo.is-done .wnc-todo-text { color: var(--text-muted); text-decoration: line-through; }
 .wnb-editor .wkc-editor-head .wkc-q-input { flex: 1; min-width: 0; }
+/* A note open on the board: title, Write / Preview and pin stay at the top, the buttons at the foot;
+   only the text (or its preview) scrolls between them — a long note never runs over the buttons. */
+.wnb-editor { overflow: hidden; top: max(1rem, min(12vh, 6rem)); max-height: calc(100dvh - max(1rem, min(12vh, 6rem)) - 1rem); }
+.wnb-editor .wkc-editor-head { flex: none; flex-wrap: wrap; row-gap: 0.25rem; }
+.wnb-editor .wkc-editor-head .wex-write-seg { align-self: center; flex: none; }
+.wnb-editor > .wkc-a-input, .wnb-editor > .wkc-preview { flex: 1 1 auto; min-height: 12rem; max-height: none; overflow-y: auto; overscroll-behavior: contain; }
+.wnb-editor > .wkc-preview { padding-right: 0.25rem; }
+.wnb-editor .wkc-editor-foot { flex: none; flex-wrap: nowrap; padding-top: 0.5rem; border-top: 1px solid var(--card-line, var(--border-soft)); }
+.wnb-editor .wkc-editor-foot .wn-state { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 479.98px) {
+  .wnb-editor .wkc-editor-head .wkc-q-input { flex-basis: 100%; }
+  .wnb-editor .wkc-editor-head .wex-write-seg { margin-right: auto; }
+  .wnb-editor .wkc-editor-foot { gap: 0.125rem; }
+  .wnb-editor .wkc-editor-foot .wn-state span { display: none; }
+}
 .wnb-editor .wn-state { font-size: 0.75rem; }
 /* Reports → Delivery */
 .wr-dlv { display: flex; flex-direction: column; gap: 0.875rem; }

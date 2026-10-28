@@ -34,7 +34,8 @@
         window.FTView = { resolve: resolve, standalone: standalone, isApp: function () { return d.getAttribute("data-view") === "app"; } };
     })();
     </script>
-    <link rel="manifest" href="{% url 'manifest' %}">
+    {# with the sign-in cookie: the app icon's shortcuts are each person's own (apps/core/launcher.py) #}
+    <link rel="manifest" href="{% url 'manifest' %}" crossorigin="use-credentials">
     <link rel="apple-touch-icon" href="{% static 'img/icons/apple-touch-icon.png' %}">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
@@ -61,7 +62,7 @@
 <body class="h-full" x-data="{ sidebarOpen: false, sheet: null }" @keydown.escape.window="sidebarOpen = false" @app-sheet-close.window="sheet = null" @ft:view.document="if (!FTView.isApp()) sheet = null">
     {% if user.is_authenticated %}
     <!-- Off-canvas menu for phones & tablets -->
-    <div x-cloak x-show="sidebarOpen" class="relative z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="{% translate 'Navigation' %}">
+    <div x-cloak x-show="sidebarOpen" class="relative z-50 lg:hidden" data-nav-overlay role="dialog" aria-modal="true" aria-label="{% translate 'Navigation' %}">
         <div x-show="sidebarOpen" x-transition.opacity.duration.200ms class="fixed inset-0 bg-black/50" @click="sidebarOpen = false"></div>
         <div class="fixed inset-0 flex pointer-events-none">
             <div x-show="sidebarOpen"
@@ -601,8 +602,21 @@
         paint();
         document.addEventListener("ft:view", function () { setTimeout(paint, 0); });
 
-        // Back from another page (bfcache): no sheet left open.
-        window.addEventListener("pageshow", function (e) { if (e.persisted) window.dispatchEvent(new CustomEvent("app-sheet-close")); });
+        // Back from another page (bfcache): no sheet or menu left open.
+        function closeOverlays() {
+            window.dispatchEvent(new CustomEvent("app-sheet-close"));
+            var body = window.Alpine && Alpine.$data(document.body);
+            if (body) body.sidebarOpen = false;
+        }
+        window.addEventListener("pageshow", function (e) { if (e.persisted) closeOverlays(); });
+        // A page picked in the phone menu or a sheet: they close at once, so the next page isn't waited for
+        // behind a dimmed screen (nor faded in from one).
+        document.addEventListener("click", function (e) {
+            var a = e.target.closest && e.target.closest("a[href]");
+            if (!a || e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+            if (a.target === "_blank" || a.hasAttribute("download") || a.getAttribute("href").charAt(0) === "#") return;
+            if (a.closest("[data-nav-overlay], .app-sheet-root")) closeOverlays();
+        });
 
         // Swipe a sheet down by its handle or header to close it.
         var drag = null;

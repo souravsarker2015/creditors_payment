@@ -1,5 +1,5 @@
 {% load i18n work %}{% comment %}One note on the notes board (like a Keep card): tick its to-dos, pin, colour, archive and delete right on it; a click opens it to edit on the board.{% endcomment %}
-<article class="wkc wnc" data-note-card="{{ n.pk }}" x-data="noteCard({{ n.pk }}, {{ n.is_pinned|yesno:'true,false' }}, '{{ n.color }}')" x-show="!gone" :data-color="color || null"{% if n.color %} data-color="{{ n.color }}"{% endif %}
+<article class="wkc wnc" data-note-card="{{ n.pk }}"{% if n.is_pinned %} data-pinned{% endif %} x-data="noteCard({{ n.pk }}, {{ n.is_pinned|yesno:'true,false' }}, '{{ n.color }}')" x-show="!gone" :data-color="color || null"{% if n.color %} data-color="{{ n.color }}"{% endif %}
          @click="go($event)" data-url="{% url 'work:note' n.pk %}">
   <div class="wkc-top">
     {% if n.project %}<span class="wkc-label"><span class="wt-dot" data-color="{{ n.project.color }}"></span> {{ n.project.name }}</span>{% endif %}

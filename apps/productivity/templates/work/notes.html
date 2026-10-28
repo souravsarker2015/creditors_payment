@@ -6,7 +6,7 @@
 {% block work %}
 {% if board %}
 {# ── the notes as a board of cards (like Keep): take a note at the top, open one to write ── #}
-<div class="wnb" x-data="noteBoard" @keydown.escape.window="ed && closeNote()">
+<div class="wnb" x-data="noteBoard" @keydown.escape.window="ed && closeNote()" @note-pin="place($event.detail.card, $event.detail.pinned)">
   <header class="wp-head">
     <div class="min-w-0">
       <h1 class="wp-title">{% translate "Notes" %}</h1>
@@ -68,6 +68,7 @@
     </div>
   </div>
 
+  <template x-ref="heads"><h2 class="wnb-head" data-head="pinned">{% icon "pin" %}{% translate "Pinned" %}</h2><h2 class="wnb-head" data-head="others">{% translate "Others" %}</h2></template>
   <div class="wkb-grid wnb-grid" x-ref="grid" data-infinite-items>
     {% for n in notes %}
       {% if forloop.first and n.is_pinned %}<h2 class="wnb-head" data-head="pinned">{% icon "pin" %}{% translate "Pinned" %}</h2>{% endif %}
@@ -90,20 +91,24 @@
     <div class="wkc-editor-head">
       <input type="text" class="wkc-q-input" x-model="ed.title" maxlength="200" placeholder="{% translate 'Title' %}" aria-label="{% translate 'Title' %}"
              @keydown.enter.prevent="$refs.edBody && $refs.edBody.focus()">
+      {# Write / Preview stay up here, in sight, however long the note is (only the text below scrolls) #}
+      <div class="seg seg-sm wex-write-seg" role="radiogroup" aria-label="{% translate 'Note' %}">
+        <button type="button" class="seg-item" :class="!edPreview && 'is-active'" @click="edPreview = false">{% translate "Write" %}</button>
+        <button type="button" class="seg-item" :class="edPreview && 'is-active'" @click="edPreview = true">{% translate "Preview" %}</button>
+      </div>
       <button type="button" class="icon-btn wnc-pin" :class="ed.pinned && 'is-on'" @click="noteAct('pin')" :aria-pressed="(!!ed.pinned).toString()" aria-label="{% translate 'Pin to top' %}" data-tip="{% translate 'Pin to top' %}">{% icon "pin" %}</button>
-    </div>
-    <div class="seg seg-sm wex-write-seg" role="radiogroup" aria-label="{% translate 'Note' %}">
-      <button type="button" class="seg-item" :class="!edPreview && 'is-active'" @click="edPreview = false">{% translate "Write" %}</button>
-      <button type="button" class="seg-item" :class="edPreview && 'is-active'" @click="edPreview = true">{% translate "Preview" %}</button>
     </div>
     <textarea class="wkc-a-input is-big" x-ref="edBody" x-model="ed.body" x-show="!edPreview" data-paste-images :data-note="ed.id" aria-label="{% translate 'Note' %}"
               placeholder="{% translate 'Write… Markdown works — type / for headings, to-dos, code, tables and more.' %}"></textarea>
     <article class="wn-md wkc-preview" x-show="edPreview" data-tick @md-tick="ed.body = Work.tickMarkdown(ed.body, $event.detail.index)"
              x-html="Work.markdown(ed.body)" x-effect="edPreview && ed.body !== undefined && $nextTick(() => Work.enrich($el, { note: ed.id }))"></article>
     <div class="wkc-editor-foot">
-      <div class="wkc-colors" role="radiogroup" aria-label="{% translate 'Colour' %}">
-        <button type="button" class="wkc-swatch is-none" :class="!ed.color && 'is-on'" @click="noteColor('')" aria-label="{% translate 'No colour' %}"></button>
-        {% for v, l in colors %}<button type="button" class="wkc-swatch" data-color="{{ v }}" :class="ed.color === '{{ v }}' && 'is-on'" @click="noteColor('{{ v }}')" aria-label="{{ l }}"></button>{% endfor %}
+      <div class="wkc-palette" x-data="{ open: false }" @click.outside="open = false" @keydown.escape.stop="open = false">
+        <button type="button" class="icon-btn" @click="open = !open" :aria-expanded="open" aria-label="{% translate 'Colour' %}" data-tip="{% translate 'Colour' %}">{% icon "palette" %}</button>
+        <div class="wkc-colors is-pop" x-show="open" x-cloak role="radiogroup" aria-label="{% translate 'Colour' %}">
+          <button type="button" class="wkc-swatch is-none" :class="!ed.color && 'is-on'" @click="noteColor(''); open = false" aria-label="{% translate 'No colour' %}"></button>
+          {% for v, l in colors %}<button type="button" class="wkc-swatch" data-color="{{ v }}" :class="ed.color === '{{ v }}' && 'is-on'" @click="noteColor('{{ v }}'); open = false" aria-label="{{ l }}"></button>{% endfor %}
+        </div>
       </div>
       <span class="spacer"></span>
       <span class="wn-state" :data-state="edState" role="status" aria-live="polite"><i aria-hidden="true"></i><span x-text="{ saving: '{% translate "Saving…" %}', saved: '{% translate "Saved" %}', dirty: '{% translate "Editing…" %}', offline: '{% translate "Saved on this device" %}', error: '{% translate "Not saved" %}' }[edState]"></span></span>
