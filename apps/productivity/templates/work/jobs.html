@@ -17,8 +17,8 @@
 </header>
 
 {# ── add one: company and role are enough to start ── #}
-<form method="post" class="card wj-add" id="add">{% csrf_token %}
-  <input name="company" class="form-input" placeholder="{% translate 'Company' %}" aria-label="{% translate 'Company' %}" required maxlength="120">
+<form method="post" class="card wj-add" id="add" x-data x-init="location.hash === '#add' && $nextTick(() => $refs.company.focus())">{% csrf_token %}
+  <input name="company" x-ref="company" class="form-input" placeholder="{% translate 'Company' %}" aria-label="{% translate 'Company' %}" required maxlength="120">
   <input name="role" class="form-input" placeholder="{% translate 'Role, e.g. Backend Engineer' %}" aria-label="{% translate 'Role' %}" required maxlength="160">
   <input name="url" type="url" class="form-input" placeholder="{% translate 'Job link (optional)' %}" aria-label="{% translate 'Job posting' %}">
   <select name="stage" class="form-input" aria-label="{% translate 'Stage' %}">

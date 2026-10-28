@@ -218,3 +218,33 @@ class ShortSkillTests(Base):
         Question.objects.create(owner=self.me, topic=topic, prompt="What is a goroutine in Go?")
         counts = {s["skill"]: s["questions"] for s in jobs.skill_readiness(self.me, ["Go", "Data structures & algorithms"])}
         self.assertEqual(counts, {"Go": 1, "Data structures & algorithms": 2})
+
+
+class SafetyNetTests(Base):
+    def test_a_deleted_application_comes_back_with_its_rounds(self):
+        from apps.trash.models import DeletedItem
+        from apps.trash.services import restore
+
+        a = self.app(company="Undo Inc")
+        JobRound.objects.create(application=a, kind="technical", questions="Two sum")
+        self.client.post(reverse("work:job", args=[a.pk]), {"action": "delete"})
+        self.assertFalse(JobApplication.objects.exists())
+        restore(DeletedItem.objects.get(user=self.me))
+        back = JobApplication.objects.get(company="Undo Inc")
+        self.assertEqual(back.rounds.get().questions, "Two sum")
+
+    def test_an_interview_reminder_an_hour_before(self):
+        a = self.app(company="Remind Co")
+        r = JobRound.objects.create(application=a, kind="design", at=timezone.now() + timedelta(hours=3))
+        page = self.client.get(reverse("work:jobs"))
+        self.assertContains(page, f"interview-{r.pk}")
+        self.assertContains(page, "Remind Co")
+
+    def test_open_applications_are_kept_for_offline(self):
+        from apps.core.offline import _detail_pages
+
+        a = self.app(stage=JobStage.INTERVIEW)
+        closed = self.app(company="Old", stage=JobStage.CLOSED)
+        urls = _detail_pages(self.me, False, None, work=True)
+        self.assertIn(reverse("work:job", args=[a.pk]), urls)
+        self.assertNotIn(reverse("work:job", args=[closed.pk]), urls)

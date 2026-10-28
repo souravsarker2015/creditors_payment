@@ -80,6 +80,8 @@
     <div class="empty-icon">{% icon "star" %}</div>
     <h3 class="empty-title">{% translate "No stories yet" %}</h3>
     <p class="empty-text">{% translate "Start with your proudest project, a hard bug, a disagreement and a mistake. Your Review & brag doc has the wins to build them from." %}</p>
+    <div class="wj-row" style="justify-content: center;"><a href="{% url 'work:story_new' %}" class="btn btn-primary">{% icon "plus" %}{% translate "New story" %}</a>
+      <a href="{% url 'work:review' %}" class="btn btn-secondary">{% icon "trophy" %}{% translate "Review & brag doc" %}</a></div>
   </div>
   {% endfor %}
 </div>

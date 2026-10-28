@@ -195,7 +195,8 @@ def offline_pages_view(request):
     add(_("Use without internet"), "offline_settings")
     from apps.productivity.access import can_use as can_use_work
 
-    more = [u for u in _every_page(personal, m is not None, can_use_work(user)) + _detail_pages(user, personal, m) if u not in seen]
+    work = can_use_work(user)
+    more = [u for u in _every_page(personal, m is not None, work) + _detail_pages(user, personal, m, work) if u not in seen]
     more = list(dict.fromkeys(more))[:MORE_LIMIT]
     # "start": where the installed app opens (for someone with only the farm it leads to the farm).
     # "fallback": the "You're offline" screen, in this person's language.
@@ -234,7 +235,7 @@ def _every_page(personal, business, work=False):
     return urls
 
 
-def _detail_pages(user, personal, membership):
+def _detail_pages(user, personal, membership, work=False):
     """The pages of each person, pond, loan… — newest and most used first."""
     urls = []
 
@@ -291,6 +292,11 @@ def _detail_pages(user, personal, membership):
             except (ImportError, AttributeError):
                 continue
             each(name, model.objects.filter(business=b, **filters).order_by("-pk").values_list("pk", flat=True), cap=30)
+
+    if work:      # the job search's open applications: the questions and notes to read just before an interview
+        from apps.productivity.models import OPEN_STAGES, JobApplication
+
+        each("work:job", JobApplication.objects.filter(owner=user, stage__in=OPEN_STAGES).order_by("-updated_at").values_list("pk", flat=True), cap=30)
     return urls
 
 

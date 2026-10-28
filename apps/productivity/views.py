@@ -190,6 +190,16 @@ def _commands():
     return out
 
 
+def _interview_reminders(user, now):
+    """The job search's interviews in the next day: a reminder an hour before each (as a task's reminder)."""
+    from .models import JobRound
+
+    rounds = JobRound.objects.filter(application__owner=user, at__gt=now, at__lte=now + timedelta(hours=25)).select_related("application")
+    return [{"id": f"interview-{r.pk}", "at": (r.at - timedelta(hours=1)).isoformat(), "url": reverse("work:job", args=[r.application_id]),
+             "title": _("Interview in an hour: %(round)s — %(company)s") % {"round": r.get_kind_display(), "company": r.application.company}}
+            for r in rounds]
+
+
 def render_work(request, template, ctx=None):
     """Every Productivity page gets the running timer, the settings the page
     scripts need (sounds, focus lengths…) and today's reminders."""
@@ -218,7 +228,7 @@ def render_work(request, template, ctx=None):
             "notify": s.notifications, "longTimer": s.long_timer_hours, "target": s.daily_target_minutes, "idle": s.idle_minutes,
             "cardsRemind": s.cards_remind_at.strftime("%H:%M") if s.cards_remind_at else "",
             "reminders": [{"id": r["pk"], "title": r["title"], "at": r["remind_at"].isoformat(),
-                           "url": reverse("work:task", args=[r["pk"]])} for r in reminders],
+                           "url": reverse("work:task", args=[r["pk"]])} for r in reminders] + _interview_reminders(user, now),
         },
         "nav_projects": Project.objects.filter(owner=user, is_archived=False)[:12],
     }

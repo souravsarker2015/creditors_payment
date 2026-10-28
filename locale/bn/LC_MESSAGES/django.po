@@ -24870,3 +24870,7 @@ msgstr "চাকরি খোঁজা"
 
 msgid "Interviews today"
 msgstr "আজকের ইন্টারভিউ"
+
+#, python-format
+msgid "Interview in an hour: %(round)s — %(company)s"
+msgstr "এক ঘণ্টা পরে ইন্টারভিউ: %(round)s — %(company)s"
