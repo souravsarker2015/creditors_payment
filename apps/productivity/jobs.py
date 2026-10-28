@@ -102,12 +102,31 @@ def skills_in(text):
     return list(dict.fromkeys(SKILLS[m.group(1).lower()] for m in _SKILL_RX.finditer(text or "")))
 
 
+# what else a skill is called in a question bank (its topic's name, or the question's words)
+SKILL_ALIASES = {
+    "Data structures & algorithms": ("algorithm", "data structure", "DSA", "leetcode"),
+    "System design": ("system design", "scalab", "architecture"),
+    "Distributed systems": ("distributed", "consensus", "replication"),
+    "REST APIs": ("REST", "HTTP API"), "Node.js": ("Node",), "PostgreSQL": ("Postgres",), "Kubernetes": ("k8s",),
+    "CI/CD": ("CI/CD", "pipeline", "GitHub Actions"), "Testing": ("test",), "Machine learning": ("ML ", "model training"),
+}
+
+
 def skill_readiness(user, skills):
-    """Each skill with how many bank questions touch it (by topic name or the question's text)."""
+    """Each skill with how many bank questions touch it — by the topic's name or the question's text.
+    A short name ("Go", "Git", "AWS") must be a word of its own: "Go" isn't in "Google" or "algorithms"."""
     out = []
     for s in skills:
-        word = s.split(" ")[0].rstrip("s") if s not in SKILLS.values() or " " in s else s
-        n = Question.objects.filter(owner=user).filter(Q(topic__name__icontains=word) | Q(prompt__icontains=s)).count()
+        words = (s,) + SKILL_ALIASES.get(s, ())
+        cond = Q()
+        for word in words:
+            cond |= Q(topic__name__icontains=word) | Q(prompt__icontains=word)
+        qs = Question.objects.filter(owner=user).filter(cond)
+        if len(s) <= 3:
+            rx = re.compile(r"(?<![\w#+.])(?:" + "|".join(re.escape(w) for w in words) + r")(?![\w#+])", re.I)
+            n = sum(1 for topic, prompt in qs.values_list("topic__name", "prompt") if rx.search(topic) or rx.search(prompt))
+        else:
+            n = qs.count()
         out.append({"skill": s, "questions": n})
     return out
 

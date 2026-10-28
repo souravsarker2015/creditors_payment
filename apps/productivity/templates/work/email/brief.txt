@@ -3,7 +3,13 @@
 {{ b.headline }}
 {% if b.note %}
 {% translate "Your plan:" %} {{ b.note }}
-{% endif %}{% if b.late %}
+{% endif %}{% if b.interviews %}
+{% translate "INTERVIEWS TODAY" %}
+{% for r in b.interviews %}- {{ r.at|time:"H:i" }} {{ r.get_kind_display }} — {{ r.application.company }} ({{ r.application.role }})
+{% endfor %}{% endif %}{% if b.job_steps %}
+{% translate "JOB SEARCH" %}
+{% for a in b.job_steps %}- {{ a.next_step|default:_("Next step") }} — {{ a.company }}
+{% endfor %}{% endif %}{% if b.late %}
 {% translate "LATE" %}
 {% for t in b.late %}- {{ t.title }} ({{ t.due_date|date:"j M" }})
 {% endfor %}{% endif %}{% if b.plan %}

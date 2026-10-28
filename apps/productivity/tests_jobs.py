@@ -174,3 +174,47 @@ class FindItTests(Base):
         from apps.core import launcher
 
         self.assertIn("jobs", [s["key"] for s in launcher.available(self.me)])
+
+
+class EverywhereTests(Base):
+    """An interview shows wherever the day is planned: the calendar, the calendar feed and the morning email."""
+
+    def setUp(self):
+        super().setUp()
+        self.a = self.app(company="Shopify", stage=JobStage.INTERVIEW, next_step="Send thank-you note", next_on=self.today)
+        self.at = timezone.localtime(timezone.now()).replace(hour=23, minute=0, second=0, microsecond=0)
+        self.r = JobRound.objects.create(application=self.a, kind="design", at=self.at, with_whom="Staff engineer")
+
+    def test_on_the_calendar(self):
+        page = self.client.get(reverse("work:calendar"))
+        self.assertContains(page, "💼 Shopify")
+        self.assertContains(page, reverse("work:job", args=[self.a.pk]) + "#rounds")
+
+    def test_in_the_calendar_feed_with_an_alarm_an_hour_before(self):
+        from . import services
+
+        ics = services.calendar_feed(self.me)
+        self.assertIn(f"UID:interview-{self.r.pk}@fintrack-work", ics)
+        self.assertIn("TRIGGER:-PT1H", ics)
+        self.assertIn(f"UID:job-next-{self.a.pk}@fintrack-work", ics)
+
+    def test_in_the_morning_email(self):
+        from . import emails
+
+        b = emails.brief(self.me, self.today)
+        self.assertEqual(([r.pk for r in b.interviews], [a.pk for a in b.job_steps]), ([self.r.pk], [self.a.pk]))
+        self.assertTrue(b.worth_sending)
+        self.assertIn("1 interview", b.headline())
+
+    def test_found_by_name_in_search(self):
+        r = self.client.get(reverse("search"), {"q": "job search"})
+        self.assertContains(r, reverse("work:jobs"))
+
+
+class ShortSkillTests(Base):
+    def test_go_is_not_in_google(self):
+        topic = PrepTopic.objects.create(owner=self.me, name="Algorithms")
+        Question.objects.create(owner=self.me, topic=topic, prompt="Why did Google pick this?")
+        Question.objects.create(owner=self.me, topic=topic, prompt="What is a goroutine in Go?")
+        counts = {s["skill"]: s["questions"] for s in jobs.skill_readiness(self.me, ["Go", "Data structures & algorithms"])}
+        self.assertEqual(counts, {"Go": 1, "Data structures & algorithms": 2})

@@ -24851,3 +24851,22 @@ msgstr "চাকরি খোঁজা: সব আবেদন ধাপ অন
 
 msgid "STAR stories: your behavioural answers — Situation, Task, Action, Result — tagged by what they show, with the gaps marked and a two-minute practice round."
 msgstr "STAR গল্প: আপনার আচরণগত উত্তর — পরিস্থিতি, দায়িত্ব, কাজ, ফলাফল — কী বোঝায় সেই অনুযায়ী ট্যাগ করা, কোথায় ঘাটতি তা চিহ্নিত, আর দুই মিনিটের অনুশীলন।"
+
+#, python-format
+msgid "%(round)s — %(company)s"
+msgstr "%(round)s — %(company)s"
+
+#, python-format
+msgid "%(n)s interview"
+msgid_plural "%(n)s interviews"
+msgstr[0] "%(n)sটি ইন্টারভিউ"
+msgstr[1] "%(n)sটি ইন্টারভিউ"
+
+msgid "INTERVIEWS TODAY"
+msgstr "আজকের ইন্টারভিউ"
+
+msgid "JOB SEARCH"
+msgstr "চাকরি খোঁজা"
+
+msgid "Interviews today"
+msgstr "আজকের ইন্টারভিউ"

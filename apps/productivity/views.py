@@ -1660,12 +1660,17 @@ def calendar_view(request):
         day = timezone.localtime(when).date()
         done[day] = done.get(day, 0) + 1
     moods = dict(JournalEntry.objects.filter(owner=user, date__gte=first_cell, date__lte=last_cell, mood__isnull=False).values_list("date", "mood"))
+    from .models import JobRound
+
+    interviews = {}                      # the job search's interview rounds, on their day
+    for r in JobRound.objects.filter(application__owner=user, at__gte=lo, at__lt=hi).select_related("application").order_by("at"):
+        interviews.setdefault(timezone.localtime(r.at).date(), []).append(r)
     peak = max(secs.values(), default=0) or 1
     days, day = [], first_cell
     while day <= last_cell:
         v = secs.get(day, 0)
         days.append({"date": day, "secs": v, "level": 0 if not v else min(4, 1 + int(4 * v / (peak + 1))),
-                     "tasks": due.get(day, []), "done": done.get(day, 0), "mood": moods.get(day),
+                     "tasks": due.get(day, []), "done": done.get(day, 0), "mood": moods.get(day), "interviews": interviews.get(day, []),
                      "in_month": day.month == month.month, "today": day == today, "work": s.is_work_day(day)})
         day += timedelta(days=1)
     prev = (month - timedelta(days=1)).replace(day=1)

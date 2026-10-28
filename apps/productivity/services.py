@@ -1194,7 +1194,8 @@ def _fold(line):
 
 def calendar_feed(user, base_url=""):
     """Open tasks with a due date (all-day), reminders and day-planner blocks
-    (timed, with an alarm) and goal deadlines, for Google / Apple / Outlook calendars."""
+    (timed, with an alarm), goal deadlines, and the job search's interviews (an alarm an hour
+    before) and next steps, for Google / Apple / Outlook calendars."""
     from django.urls import reverse
 
     now = timezone.now()
@@ -1209,8 +1210,8 @@ def calendar_feed(user, base_url=""):
             lines.append(_fold("URL:" + base_url + url))
         if description or url:
             lines.append(_fold("DESCRIPTION:" + _ics("\n".join(x for x in (description, base_url + url if url else "") if x))))
-        if alarm:
-            lines += ["BEGIN:VALARM", "ACTION:DISPLAY", _fold("DESCRIPTION:" + _ics(summary)), "TRIGGER:PT0M", "END:VALARM"]
+        if alarm:            # True: at the start; or a trigger such as "-PT1H"
+            lines += ["BEGIN:VALARM", "ACTION:DISPLAY", _fold("DESCRIPTION:" + _ics(summary)), "TRIGGER:" + (alarm if isinstance(alarm, str) else "PT0M"), "END:VALARM"]
         lines.append("END:VEVENT")
 
     open_tasks = Task.objects.filter(owner=user).exclude(status=Status.DONE).select_related("project")
@@ -1233,6 +1234,17 @@ def calendar_feed(user, base_url=""):
     for g in Goal.objects.filter(owner=user, status=GoalStatus.ACTIVE, target_date__isnull=False):
         event(f"goal-{g.pk}", "🎯 " + g.title, reverse("work:goal", args=[g.pk]),
               [f"DTSTART;VALUE=DATE:{g.target_date:%Y%m%d}", f"DTEND;VALUE=DATE:{g.target_date + timedelta(days=1):%Y%m%d}"])
+    from .models import JobApplication, JobRound, JobStage
+
+    for r in JobRound.objects.filter(application__owner=user, at__gte=now - timedelta(days=7)).select_related("application"):
+        at = r.at.astimezone(dt_timezone.utc)
+        event(f"interview-{r.pk}", "💼 " + _("%(round)s — %(company)s") % {"round": r.get_kind_display(), "company": r.application.company},
+              reverse("work:job", args=[r.application_id]), [f"DTSTART:{at:%Y%m%dT%H%M%SZ}", f"DTEND:{at + timedelta(hours=1):%Y%m%dT%H%M%SZ}"],
+              alarm="-PT1H", description=" · ".join(x for x in (r.application.role, r.with_whom) if x))
+    for a in (JobApplication.objects.filter(owner=user, next_on__gte=timezone.localdate() - timedelta(days=7))
+              .exclude(stage__in=(JobStage.ACCEPTED, JobStage.CLOSED))):
+        event(f"job-next-{a.pk}", "💼 " + (a.next_step or _("Next step")) + f" — {a.company}", reverse("work:job", args=[a.pk]),
+              [f"DTSTART;VALUE=DATE:{a.next_on:%Y%m%d}", f"DTEND;VALUE=DATE:{a.next_on + timedelta(days=1):%Y%m%d}"])
     lines.append("END:VCALENDAR")
     return "\r\n".join(lines) + "\r\n"
 

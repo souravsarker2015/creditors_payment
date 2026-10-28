@@ -3257,3 +3257,6 @@ html:not(.can-dictate) [data-dictate] { display: none !important; }
 .wj-details[open] > summary > svg { transform: rotate(180deg); }
 .wj-details:not([open]) > summary { border-bottom: 0; }
 .wj-details-hint { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.8125rem; color: var(--text-muted); }
+.wcal-task.is-interview { background: var(--accent-soft); color: var(--accent); font-weight: 650; cursor: default; }
+.wj-qs { list-style: decimal; } .wj-asked { list-style: disc; }
+.wj-qs li::marker, .wj-asked li::marker { color: var(--text-muted); }

@@ -123,6 +123,10 @@ PAGES = [
     (gettext_noop("Flashcards"), "work:cards", "work", ""),
     (gettext_noop("Interview prep"), "work:prep", "work", ""),
     (gettext_noop("Exam notes"), "work:exam", "work", ""),
+    (gettext_noop("Job search"), "work:jobs", "work", ""),
+    (gettext_noop("Job applications"), "work:jobs", "work", ""),
+    (gettext_noop("STAR stories"), "work:stories", "work", ""),
+    (gettext_noop("All shortcuts"), "launcher", "personal", ""),
     (gettext_noop("Habits"), "work:habits", "work", ""),
 ]
 

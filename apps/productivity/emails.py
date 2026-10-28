@@ -65,13 +65,18 @@ class Brief:
     habits: list = field(default_factory=list)
     cards_due: int = 0
     note: str = ""                                    # "Plan for the day" from the journal
+    interviews: list = field(default_factory=list)    # the job search: today's interview rounds
+    job_steps: list = field(default_factory=list)     # … and the applications whose next step is due
 
     @property
     def worth_sending(self):
-        return bool(self.late or self.today_tasks or self.plan or self.reminders or self.habits or self.cards_due or self.note)
+        return bool(self.late or self.today_tasks or self.plan or self.reminders or self.habits or self.cards_due or self.note
+                    or self.interviews or self.job_steps)
 
     def headline(self):
         parts = []
+        if self.interviews:
+            parts.append(ngettext("%(n)s interview", "%(n)s interviews", len(self.interviews)) % {"n": len(self.interviews)})
         if self.late:
             parts.append(ngettext("%(n)s late", "%(n)s late", len(self.late)) % {"n": len(self.late)})
         if self.today_tasks:
@@ -98,6 +103,11 @@ def brief(user, today=None):
     if Deck.objects.filter(owner=user, is_archived=False).exists():
         b.cards_due = cards.due_count(user, today)
     b.note = (JournalEntry.objects.filter(owner=user, date=today).values_list("plan", flat=True).first() or "").strip()
+    from .models import JobApplication, JobRound, JobStage
+
+    b.interviews = list(JobRound.objects.filter(application__owner=user, at__gte=lo, at__lt=hi).select_related("application").order_by("at"))
+    b.job_steps = list(JobApplication.objects.filter(owner=user, next_on__lte=today).exclude(stage__in=(JobStage.ACCEPTED, JobStage.CLOSED))
+                       .order_by("next_on")[:10])
     return b
 
 
