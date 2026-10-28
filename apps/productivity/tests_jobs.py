@@ -248,3 +248,19 @@ class SafetyNetTests(Base):
         urls = _detail_pages(self.me, False, None, work=True)
         self.assertIn(reverse("work:job", args=[a.pk]), urls)
         self.assertNotIn(reverse("work:job", args=[closed.pk]), urls)
+
+
+class CarefulReadingTests(Base):
+    def test_everyday_words_are_not_technologies(self):
+        text = "Ready to go! The rest of the team will react quickly in the spring. We use Go, REST, React, unit testing and algorithms."
+        self.assertEqual(jobs.skills_in(text), ["Go", "REST APIs", "React", "Testing", "Data structures & algorithms"])
+
+    def test_a_closed_one_that_says_no_offer_is_not_an_offer(self):
+        self.app(stage=JobStage.CLOSED, closed_reason="Rejected — no offer")
+        self.assertEqual(jobs.funnel(self.me)["offers"], 0)
+
+    def test_the_same_job_twice_opens_the_first(self):
+        a = self.app(company="Pathao", role="Backend Engineer")
+        r = self.client.post(reverse("work:jobs"), {"company": "pathao", "role": "backend engineer"})
+        self.assertRedirects(r, reverse("work:job", args=[a.pk]))
+        self.assertEqual(JobApplication.objects.count(), 1)

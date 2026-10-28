@@ -32,7 +32,7 @@ def funnel(user):
     applied = sent.count()
     answered = sent.filter(Q(stage__in=(JobStage.SCREEN, JobStage.INTERVIEW, JobStage.OFFER, JobStage.ACCEPTED)) | Q(pk__in=with_rounds)).count()
     interviews = sent.filter(Q(stage__in=(JobStage.INTERVIEW, JobStage.OFFER, JobStage.ACCEPTED)) | Q(pk__in=with_rounds)).count()
-    offers = sent.filter(Q(stage__in=(JobStage.OFFER, JobStage.ACCEPTED)) | Q(closed_reason__icontains="offer")).count()
+    offers = sent.filter(stage__in=(JobStage.OFFER, JobStage.ACCEPTED)).count()
 
     def pct(n):
         return round(100 * n / applied) if applied else None
@@ -97,9 +97,22 @@ SKILLS = {
 _SKILL_RX = re.compile(r"(?<![\w.#+])(" + "|".join(sorted((re.escape(k) for k in SKILLS), key=len, reverse=True)) + r")(?![\w#+])", re.I)
 
 
+# Everyday words that are also technologies: only as the technology is written ("Go", "REST", "React"…),
+# not "ready to go", "the rest of the team", "react quickly", "a swift reply", "in the spring".
+AS_WRITTEN = {"go": "Go", "rest": "REST", "react": "React", "swift": "Swift", "spark": "Spark", "spring": "Spring",
+              "rails": "Rails", "ruby": "Ruby", "node": "Node", "oracle": "Oracle", "flutter": "Flutter", "airflow": "Airflow"}
+
+
 def skills_in(text):
     """The skills a job description names, each once, in the order they come."""
-    return list(dict.fromkeys(SKILLS[m.group(1).lower()] for m in _SKILL_RX.finditer(text or "")))
+    found = []
+    for m in _SKILL_RX.finditer(text or ""):
+        word = m.group(1)
+        written = AS_WRITTEN.get(word.lower())
+        if written and word not in (written, written.upper()):
+            continue
+        found.append(SKILLS[word.lower()])
+    return list(dict.fromkeys(found))
 
 
 # what else a skill is called in a question bank (its topic's name, or the question's words)

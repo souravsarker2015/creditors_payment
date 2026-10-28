@@ -28,6 +28,11 @@ def jobs_view(request):
         if not company or not role:
             messages.error(request, _("Write the company and the role."))
             return redirect("work:jobs")
+        same = (JobApplication.objects.filter(owner=user, company__iexact=company, role__iexact=role)
+                .exclude(stage=JobStage.CLOSED).first())
+        if same:                                       # already on the board: open it instead of making a second
+            messages.info(request, _("It's on your board already — here it is."))
+            return redirect("work:job", pk=same.pk)
         url = request.POST.get("url", "").strip()[:500]
         app = JobApplication.objects.create(owner=user, company=company, role=role, stage=stage, url=url if url.startswith(("http://", "https://")) else "",
                                             applied_on=today if stage != JobStage.WISHLIST else None, order=0)
