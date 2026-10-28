@@ -1263,3 +1263,122 @@ class ExamNote(models.Model):
 
     def __str__(self):
         return self.question[:60]
+
+
+# ── The job search (as Huntr or Teal): applications by stage, their interview rounds, and STAR stories ──
+class JobStage(models.TextChoices):
+    WISHLIST = "wishlist", _("Wishlist")
+    APPLIED = "applied", _("Applied")
+    SCREEN = "screen", _("Screening")           # a recruiter call or an online test
+    INTERVIEW = "interview", _("Interviewing")
+    OFFER = "offer", _("Offer")
+    ACCEPTED = "accepted", _("Accepted")
+    CLOSED = "closed", _("Closed")              # turned down, withdrawn or no answer
+
+
+OPEN_STAGES = (JobStage.APPLIED, JobStage.SCREEN, JobStage.INTERVIEW, JobStage.OFFER)
+
+
+class JobApplication(models.Model):
+    """One job: the company, the role and where it stands. `next_step` and `next_on` are what to do next
+    and when (follow up, send the take-home…) — shown on Today when the day comes."""
+    owner = models.ForeignKey(**OWNER)
+    company = models.CharField(_("Company"), max_length=120)
+    role = models.CharField(_("Role"), max_length=160)
+    stage = models.CharField(_("Stage"), max_length=10, choices=JobStage.choices, default=JobStage.WISHLIST, db_index=True)
+    url = models.URLField(_("Job posting"), max_length=500, blank=True)
+    location = models.CharField(_("Location"), max_length=120, blank=True, help_text=_("City, or Remote."))
+    salary = models.CharField(_("Salary"), max_length=80, blank=True, help_text=_("The range posted, or the offer."))
+    source = models.CharField(_("Found on"), max_length=80, blank=True, help_text=_("LinkedIn, a referral, the company's site…"))
+    contact = models.CharField(_("Contact"), max_length=200, blank=True, help_text=_("Recruiter or referrer: name, email, LinkedIn."))
+    interest = models.PositiveSmallIntegerField(_("How much you want it"), default=3, validators=[MinValueValidator(1), MaxValueValidator(5)])
+    applied_on = models.DateField(_("Applied on"), null=True, blank=True)
+    next_step = models.CharField(_("Next step"), max_length=200, blank=True, help_text=_("Follow up, send the take-home, prepare system design…"))
+    next_on = models.DateField(_("Next step on"), null=True, blank=True, db_index=True)
+    description = models.TextField(_("Job description"), blank=True, help_text=_("Paste it: the skills it asks for are what to prepare."))
+    notes = models.TextField(_("Notes"), blank=True, help_text=_("Why this company, what you found out, questions to ask them."))
+    closed_reason = models.CharField(_("Why it closed"), max_length=120, blank=True)
+    order = models.PositiveIntegerField(default=0)
+    stage_changed_at = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name, verbose_name_plural = _("Job application"), _("Job applications")
+        ordering = ["order", "-updated_at", "pk"]
+
+    def __str__(self):
+        return f"{self.role} · {self.company}"
+
+    @property
+    def is_open(self):
+        return self.stage in OPEN_STAGES
+
+    def days_quiet(self, today=None):
+        """Days since it last moved — an application with no answer for two weeks wants a follow-up."""
+        return ((today or timezone.localdate()) - timezone.localdate(self.stage_changed_at)).days
+
+
+class RoundKind(models.TextChoices):
+    RECRUITER = "recruiter", _("Recruiter call")
+    TEST = "test", _("Online test")
+    TECHNICAL = "technical", _("Technical / coding")
+    DESIGN = "design", _("System design")
+    BEHAVIOURAL = "behavioural", _("Behavioural")
+    TAKEHOME = "takehome", _("Take-home")
+    MANAGER = "manager", _("Hiring manager")
+    ONSITE = "onsite", _("Onsite / final")
+    OTHER = "other", _("Other")
+
+
+class RoundResult(models.TextChoices):
+    WAITING = "", _("Waiting")
+    PASSED = "passed", _("Passed")
+    FAILED = "failed", _("Didn't pass")
+
+
+class JobRound(models.Model):
+    """One interview round of an application: when, with whom, the questions asked and how it went."""
+    application = models.ForeignKey(JobApplication, on_delete=models.CASCADE, related_name="rounds", verbose_name=_("Application"))
+    kind = models.CharField(_("Round"), max_length=12, choices=RoundKind.choices, default=RoundKind.TECHNICAL)
+    at = models.DateTimeField(_("When"), null=True, blank=True)
+    with_whom = models.CharField(_("With"), max_length=160, blank=True)
+    result = models.CharField(_("Result"), max_length=8, choices=RoundResult.choices, blank=True, default="")
+    questions = models.TextField(_("Questions asked"), blank=True, help_text=_("One a line — they can go into your question bank."))
+    notes = models.TextField(_("How it went"), blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name, verbose_name_plural = _("Interview round"), _("Interview rounds")
+        ordering = [models.F("at").asc(nulls_last=True), "pk"]
+
+    def __str__(self):
+        return f"{self.get_kind_display()} · {self.application.company}"
+
+    @property
+    def question_list(self):
+        return [q.strip(" -*•\t") for q in self.questions.splitlines() if q.strip(" -*•\t")]
+
+
+class Story(models.Model):
+    """A behavioural story told the STAR way — what happened, what you had to do, what you did, what came
+    of it — tagged with what it shows (leadership, conflict…), so one is ready for any "Tell me about a time…"."""
+    owner = models.ForeignKey(**OWNER)
+    title = models.CharField(_("Title"), max_length=160, help_text=_("A few words to recall it by: “The payments outage”."))
+    situation = models.TextField(_("Situation"), blank=True, help_text=_("Where and when: the team, the project, what was at stake."))
+    task = models.TextField(_("Task"), blank=True, help_text=_("What you had to do — your part, not the team's."))
+    action = models.TextField(_("Action"), blank=True, help_text=_("What you did, step by step. Say “I”."))
+    result = models.TextField(_("Result"), blank=True, help_text=_("What came of it — with numbers — and what you learnt."))
+    competencies = models.JSONField(_("Shows"), default=list, blank=True)
+    is_starred = models.BooleanField(_("Favourite"), default=False)
+    practised = models.PositiveIntegerField(default=0)
+    practised_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name, verbose_name_plural = _("Story"), _("Stories")
+        ordering = ["-is_starred", "-updated_at", "pk"]
+
+    def __str__(self):
+        return self.title

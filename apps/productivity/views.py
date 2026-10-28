@@ -22,7 +22,7 @@ from django.views.decorators.http import require_POST
 
 from apps.trash.undo import delete_with_undo
 
-from . import cards, dev, diagrams, linked, services
+from . import cards, dev, diagrams, jobs, linked, services
 from .api import card_json, entry_json
 from .access import can_use, work_required
 from .forms import DeckForm, EntryForm, GoalForm, HabitForm, LearningForm, ProjectForm, SettingsForm, SnippetForm, SprintForm, TagForm, TaskForm
@@ -98,6 +98,7 @@ def _texts():
         "dictate": _("Dictate"), "listening": _("Listening… speak, then press the microphone again to stop."),
         "micBlocked": _("The microphone is blocked for this site — allow it in the browser's address bar."),
         "dictateFailed": _("Couldn't hear that — try again."),
+        "jobMoved": _("Moved"), "storyTold": _("Nice — counted"),
         "units": {k: str(v) for k, v in LearningUnit.choices},
         "kindCommand": _("Command"), "kindRecent": _("Recent"), "kindCreate": _("Create"),
         "addTask": _("Add task"), "addNote": _("Save as a note"), "trackThis": _("Start the timer for"),
@@ -109,7 +110,7 @@ def _texts():
         "error": _("Couldn't save. Try again."), "later": _("Moved to"),
         "kinds": {"task": _("Task"), "note": _("Note"), "project": _("Project"), "goal": _("Goal"), "learning": _("Learning"),
                   "snippet": _("Snippet"), "diagram": _("Diagram"), "card": _("Flashcard"), "question": _("Question"),
-                  "exam": _("Exam notes")},
+                  "exam": _("Exam notes"), "job": _("Job application"), "story": _("STAR story")},
         "restoreNote": _("Bring back this version? What's there now is kept as a version too."),
         "uploading": _("Uploading…"), "imageFailed": _("The picture couldn't be uploaded."),
         "imageOffline": _("Pictures need a connection — try again when you're online."),
@@ -141,6 +142,8 @@ def _commands():
         ("snippets", _("Snippets"), "code", "work:snippets", "g s", "code"),
         ("cards", _("Flashcards"), "cards", "work:cards", "g k", "flashcards spaced repetition anki memorise memorize study quiz revise"),
         ("prep", _("Interview prep"), "target", "work:prep", "g q", "interview exam questions answers quiz practice mock test leetcode prepare dsa system design"),
+        ("jobs", _("Job search"), "map", "work:jobs", "", "jobs applications companies career offer hire interview pipeline huntr teal recruiter"),
+        ("stories", _("STAR stories"), "star", "work:stories", "", "behavioural behavioral interview tell me about a time star situation task action result"),
         ("diagrams", _("Diagrams"), "diagram", "work:diagrams", "g m", "mind map mindmap system design architecture flowchart sequence er uml whiteboard"),
         ("settings", _("Timer, focus & sounds"), "key", "work:settings", "g ,", "settings preferences tags"),
     ]
@@ -158,6 +161,8 @@ def _commands():
         {"id": "go-invoice", "title": _("Invoice & timesheet"), "icon": "note", "url": r("work:invoice"), "words": "bill client billing hours rate money", "kind": "page"},
         {"id": "go-import", "title": _("Import tasks"), "icon": "upload", "url": r("work:import"), "words": "csv todoist trello jira asana clickup move migrate", "kind": "page"},
         {"id": "new-task", "title": _("New task"), "icon": "plus", "action": "capture:task", "hint": "c", "words": "add create"},
+        {"id": "new-application", "title": _("New job application"), "icon": "map", "url": r("work:jobs") + "#add", "words": "add job apply company role"},
+        {"id": "new-story", "title": _("New STAR story"), "icon": "star", "url": r("work:story_new"), "words": "add behavioural interview story"},
         {"id": "new-note", "title": _("New note"), "icon": "note", "action": "capture:note", "hint": "n", "words": "add create write"},
         {"id": "new-mindmap", "title": _("New mind map"), "icon": "mindmap", "url": r("work:diagrams") + "?start=mindmap", "words": "add create brainstorm diagram"},
         {"id": "review-cards", "title": _("Review flashcards"), "icon": "cards", "url": r("work:card_review"), "words": "study quiz spaced repetition anki"},
@@ -279,6 +284,7 @@ def today_view(request):
         "journal": journal,
         "suggest": Task.objects.filter(owner=user, status__in=[Status.TODO, Status.BACKLOG], my_day__isnull=True, due_date__isnull=True).order_by("-priority", "order")[:5],
         "cards_due": cards.due_count(user, today) if Deck.objects.filter(owner=user, is_archived=False).exists() else 0,
+        "job_coming": jobs.coming_up(user, today),           # interviews this week, job follow-ups due (the job search)
         # pull requests waiting on code review for days: a nudge to chase the reviewer
         "stuck_reviews": list(Task.objects.filter(owner=user, status=Status.REVIEW, updated_at__lt=timezone.now() - timedelta(days=REVIEW_NUDGE_DAYS))
                               .order_by("updated_at")[:5]),

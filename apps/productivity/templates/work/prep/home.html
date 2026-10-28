@@ -12,6 +12,8 @@
   <div class="wp-actions">
     {% if o.total %}<a href="{% url 'work:prep_contents' %}" class="btn btn-secondary">{% icon "book" %}{% translate "Contents" %}</a>
     <a href="{% url 'work:questions' %}" class="btn btn-secondary">{% icon "list" %}{% translate "Question bank" %}</a>{% endif %}
+    <a href="{% url 'work:stories' %}" class="btn btn-secondary">{% icon "star" %}{% translate "STAR stories" %}</a>
+    <a href="{% url 'work:jobs' %}" class="btn btn-secondary">{% icon "map" %}{% translate "Job search" %}</a>
     <a href="{% url 'work:prep_import' %}" class="btn btn-secondary">{% icon "upload" %}{% translate "Import" %}</a>
     <a href="{% url 'work:question_new' %}" class="btn btn-primary">{% icon "plus" %}{% translate "Question" %}</a>
   </div>

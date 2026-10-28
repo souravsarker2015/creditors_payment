@@ -1,0 +1,122 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+{% comment %}One job application: its interview rounds (and the questions asked, into the bank), what to prepare for it, and its details.{% endcomment %}
+
+{% block title %}{{ app.company }} — {{ app.role }} | {% translate "Job search" %}{% endblock %}
+
+{% block work %}
+<header class="wp-head">
+  <div class="min-w-0">
+    <a href="{% url 'work:jobs' %}" class="back-link">{% icon "chevron-left" %}{% translate "Job search" %}</a>
+    <h1 class="wp-title">{{ app.role }}</h1>
+    <p class="wp-sub wj-sub"><b>{{ app.company }}</b>{% if app.location %} · {{ app.location }}{% endif %}{% if app.salary %} · {{ app.salary }}{% endif %}
+      <span class="wj-pill wj-stage" data-stage="{{ app.stage }}">{{ app.get_stage_display }}</span>
+      {% if app.url %}<a href="{{ app.url }}" target="_blank" rel="noopener" class="wj-link">{% icon "external" %}{% translate "The posting" %}</a>{% endif %}</p>
+  </div>
+</header>
+
+<div class="wj-page">
+  <div class="wj-main">
+    {% if app.next_step or app.next_on %}
+    <section class="card card-body wj-next{% if app.next_on and app.next_on <= today %} is-late{% endif %}">
+      <p class="wj-next-label">{% icon "flag" %}{% translate "Next step" %}{% if app.next_on %} · {{ app.next_on|date:"D j M" }}{% endif %}</p>
+      <p class="wj-next-text">{{ app.next_step|default:"—" }}</p>
+    </section>
+    {% endif %}
+
+    {# ── interview rounds ── #}
+    <section class="card" id="rounds">
+      <div class="card-header"><div><h2 class="card-title">{% translate "Interview rounds" %}</h2>
+        <p class="card-subtitle">{% translate "Write down the questions right after each round — they go into your question bank to practise." %}</p></div></div>
+      <div class="card-body wj-rounds">
+        {% for r, f in rounds %}
+        <article class="wj-round" data-result="{{ r.result|default:'waiting' }}">
+          <header class="wj-round-head">
+            <b>{{ r.get_kind_display }}</b>
+            {% if r.at %}<time datetime="{{ r.at|date:'c' }}">{{ r.at|date:"D j M Y, H:i" }}</time>{% endif %}
+            {% if r.with_whom %}<span>· {{ r.with_whom }}</span>{% endif %}
+            <span class="wj-pill" data-tone="{% if r.result == 'passed' %}good{% elif r.result == 'failed' %}critical{% elif r.at and r.at > now %}accent{% endif %}">{% if not r.result and r.at and r.at > now %}{% translate "Upcoming" %}{% else %}{{ r.get_result_display }}{% endif %}</span>
+          </header>
+          {% if r.question_list %}<ol class="wj-qs">{% for q in r.question_list %}<li>{{ q }}</li>{% endfor %}</ol>{% endif %}
+          {% if r.notes %}<div class="wn-md wj-round-notes" data-render-markdown="{{ r.notes }}">{{ r.notes|linebreaksbr }}</div>{% endif %}
+          <div class="wj-round-acts">
+            {% if r.question_list %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="to_bank"><input type="hidden" name="round" value="{{ r.pk }}">
+              <button type="submit" class="btn btn-secondary btn-sm">{% icon "target" %}{% blocktranslate count counter=r.question_list|length %}Practise this question{% plural %}Practise these {{ counter }} questions{% endblocktranslate %}</button></form>{% endif %}
+            <details class="wj-edit"><summary class="btn btn-ghost btn-sm">{% icon "edit" %}{% translate "Edit" %}</summary>
+              <form method="post" class="form-stack wj-round-form">{% csrf_token %}<input type="hidden" name="action" value="round_save"><input type="hidden" name="round" value="{{ r.pk }}">
+                <div class="form-grid form-grid-2">{% with field=f.kind %}{% include "partials/field.html" %}{% endwith %}{% with field=f.at %}{% include "partials/field.html" %}{% endwith %}
+                  {% with field=f.with_whom %}{% include "partials/field.html" %}{% endwith %}{% with field=f.result %}{% include "partials/field.html" %}{% endwith %}</div>
+                {% with field=f.questions %}{% include "partials/field.html" %}{% endwith %}{% with field=f.notes %}{% include "partials/field.html" %}{% endwith %}
+                <div class="wj-row"><button type="submit" class="btn btn-primary btn-sm">{% translate "Save" %}</button>
+                  <button type="submit" name="action" value="round_delete" class="btn btn-ghost btn-sm is-danger" formnovalidate onclick="return confirm('{% translate "Delete this round?" %}')">{% icon "trash" %}{% translate "Delete" %}</button></div>
+              </form>
+            </details>
+          </div>
+        </article>
+        {% empty %}<p class="wj-none">{% translate "No rounds yet. Add the first when it's booked — the recruiter call counts." %}</p>{% endfor %}
+        <details class="wj-add-round"{% if round_form.errors or not rounds %} open{% endif %}><summary class="btn btn-secondary btn-sm">{% icon "plus" %}{% translate "Add a round" %}</summary>
+          <form method="post" class="form-stack wj-round-form">{% csrf_token %}<input type="hidden" name="action" value="round">
+            <div class="form-grid form-grid-2">{% with field=round_form.kind %}{% include "partials/field.html" %}{% endwith %}{% with field=round_form.at %}{% include "partials/field.html" %}{% endwith %}
+              {% with field=round_form.with_whom %}{% include "partials/field.html" %}{% endwith %}{% with field=round_form.result %}{% include "partials/field.html" %}{% endwith %}</div>
+            {% with field=round_form.questions %}{% include "partials/field.html" %}{% endwith %}
+            <div><button type="submit" class="btn btn-primary btn-sm">{% translate "Add round" %}</button></div>
+          </form>
+        </details>
+      </div>
+    </section>
+
+    {# ── the details ── #}
+    {# folded away once it's filled in (open while new, or to fix a mistake) — the rounds and Prepare matter more #}
+    <details class="card wj-details"{% if form.errors or not app.description and not rounds %} open{% endif %}>
+    <summary class="card-header wj-details-head"><h2 class="card-title">{% translate "Details" %}</h2><span class="wj-details-hint">{% translate "Stage, next step, salary, contact, the job description, notes" %}</span>{% icon "chevron-down" %}</summary>
+    <form method="post" novalidate>{% csrf_token %}<input type="hidden" name="action" value="save">
+      <div class="card-body form-stack">
+        <div class="form-grid form-grid-2">
+          {% with field=form.company %}{% include "partials/field.html" %}{% endwith %}{% with field=form.role %}{% include "partials/field.html" %}{% endwith %}
+          {% with field=form.stage %}{% include "partials/field.html" %}{% endwith %}{% with field=form.interest %}{% include "partials/field.html" %}{% endwith %}
+          {% with field=form.next_step %}{% include "partials/field.html" %}{% endwith %}{% with field=form.next_on %}{% include "partials/field.html" %}{% endwith %}
+          {% with field=form.applied_on %}{% include "partials/field.html" %}{% endwith %}{% with field=form.url %}{% include "partials/field.html" %}{% endwith %}
+          {% with field=form.location %}{% include "partials/field.html" %}{% endwith %}{% with field=form.salary %}{% include "partials/field.html" %}{% endwith %}
+          {% with field=form.source %}{% include "partials/field.html" %}{% endwith %}{% with field=form.contact %}{% include "partials/field.html" %}{% endwith %}
+        </div>
+        {% if app.stage == "closed" or form.closed_reason.value %}{% with field=form.closed_reason %}{% include "partials/field.html" %}{% endwith %}{% endif %}
+        {% with field=form.description %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.notes %}{% include "partials/field.html" %}{% endwith %}
+      </div>
+      <div class="card-footer wj-row">
+        <button type="submit" class="btn btn-primary">{% icon "check" %}{% translate "Save" %}</button>
+        <span class="spacer"></span>
+        <button type="submit" name="action" value="delete" class="btn btn-ghost is-danger" formnovalidate onclick="return confirm('{% translate "Delete this application and its rounds? You can bring it back from Recently deleted." %}')">{% icon "trash" %}{% translate "Delete" %}</button>
+      </div>
+    </form>
+    </details>
+  </div>
+
+  {# ── what to prepare ── #}
+  <aside class="wj-side">
+    <section class="card card-body wj-prep">
+      <h2 class="card-title">{% icon "target" %}{% translate "Prepare" %}</h2>
+      {% if skills %}
+      <p class="wj-prep-label">{% translate "What the job asks for" %}</p>
+      <ul class="wj-skills">{% for s in skills %}<li><a href="{% url 'work:questions' %}?q={{ s.skill|urlencode }}" class="wj-skill{% if not s.questions %} is-gap{% endif %}" data-tip="{% if s.questions %}{% blocktranslate count counter=s.questions %}{{ counter }} question in your bank{% plural %}{{ counter }} questions in your bank{% endblocktranslate %}{% else %}{% translate 'Nothing in your bank yet' %}{% endif %}">{{ s.skill }}<b>{{ s.questions }}</b></a></li>{% endfor %}</ul>
+      {% else %}<p class="wj-none">{% translate "Paste the job description in Details: the skills it names show here, next to what you've prepared." %}</p>{% endif %}
+
+      <p class="wj-prep-label">{% blocktranslate with company=app.company %}Asked at {{ company }}{% endblocktranslate %}</p>
+      {% if asked_count %}
+      <ul class="wj-asked">{% for q in asked %}<li><a href="{% url 'work:question' q.pk %}">{{ q.title }}</a></li>{% endfor %}</ul>
+      <a href="{% url 'work:prep_practice' %}?company={{ app.company|urlencode }}" class="btn btn-primary btn-sm">{% icon "play" %}{% blocktranslate count counter=asked_count %}Practise {{ counter }} question{% plural %}Practise {{ counter }} questions{% endblocktranslate %}</a>
+      {% else %}<p class="wj-none">{% translate "None in your bank yet. After a round, “Practise these questions” puts them there." %}</p>{% endif %}
+
+      <p class="wj-prep-label">{% translate "Behavioural" %}</p>
+      {% if stories %}<ul class="wj-asked">{% for s in stories %}<li><a href="{% url 'work:story_edit' s.pk %}">{{ s.title }}</a></li>{% endfor %}</ul>
+      <a href="{% url 'work:stories' %}#practice" class="btn btn-secondary btn-sm">{% icon "play" %}{% translate "Practise your stories" %}</a>
+      {% else %}<a href="{% url 'work:story_new' %}" class="btn btn-secondary btn-sm">{% icon "plus" %}{% translate "Write your first STAR story" %}</a>{% endif %}
+    </section>
+  </aside>
+</div>
+{% endblock %}
+
+{% block work_libs %}
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+{% endblock %}

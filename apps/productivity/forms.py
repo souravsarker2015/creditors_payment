@@ -486,3 +486,51 @@ class PrepGoalForm(forms.ModelForm):
         model = WorkSettings
         fields = ("prep_exam", "prep_exam_date", "prep_new_per_day")
         widgets = {"prep_exam_date": DATE}
+
+
+# ── The job search ─────────────────────────────────────────────────────────
+class JobApplicationForm(forms.ModelForm):
+    class Meta:
+        from .models import JobApplication
+
+        model = JobApplication
+        fields = ("company", "role", "stage", "url", "location", "salary", "source", "contact", "interest", "applied_on",
+                  "next_step", "next_on", "closed_reason", "description", "notes")
+        widgets = {
+            "applied_on": DATE, "next_on": DATE, "interest": forms.NumberInput(attrs={"min": 1, "max": 5}),
+            "description": forms.Textarea(attrs={"rows": 6, "data-md": ""}), "notes": forms.Textarea(attrs={"rows": 4, "data-md": ""}),
+        }
+
+
+class JobRoundForm(forms.ModelForm):
+    at = forms.DateTimeField(label=_("When"), required=False, input_formats=["%Y-%m-%dT%H:%M", "%Y-%m-%d %H:%M"],
+                             widget=forms.DateTimeInput(attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"))
+
+    class Meta:
+        from .models import JobRound
+
+        model = JobRound
+        fields = ("kind", "at", "with_whom", "result", "questions", "notes")
+        widgets = {"questions": forms.Textarea(attrs={"rows": 3, "data-md": ""}), "notes": forms.Textarea(attrs={"rows": 3, "data-md": ""})}
+
+
+class StoryForm(forms.ModelForm):
+    shows = forms.MultipleChoiceField(label=_("What it shows"), required=False, widget=forms.CheckboxSelectMultiple)
+
+    class Meta:
+        from .models import Story
+
+        model = Story
+        fields = ("title", "situation", "task", "action", "result", "is_starred")
+        widgets = {k: forms.Textarea(attrs={"rows": 3, "data-md": ""}) for k in ("situation", "task", "action", "result")}
+
+    def __init__(self, *args, **kwargs):
+        from .jobs import COMPETENCIES
+
+        super().__init__(*args, **kwargs)
+        self.fields["shows"].choices = [(k, label) for k, (label, _qs) in COMPETENCIES.items()]
+        self.fields["shows"].initial = list(self.instance.competencies or [])
+
+    def save(self, commit=True):
+        self.instance.competencies = self.cleaned_data.get("shows") or []
+        return super().save(commit)

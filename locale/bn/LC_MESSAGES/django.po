@@ -24338,3 +24338,516 @@ msgstr "ফোন পরের বার অ্যাপটি হালনা�
 
 msgid "Every part of the app as tiles — and what the app icon offers"
 msgstr "অ্যাপের সব অংশ টাইল হিসেবে — আর অ্যাপ আইকনে কী দেখাবে"
+
+msgid "Added — fill in the rest when you have it."
+msgstr "যোগ হয়েছে — বাকিটা পরে হাতে এলে লিখে দিন।"
+
+msgid "Deleted. You can bring it back from Recently deleted."
+msgstr "মুছে ফেলা হয়েছে। “সম্প্রতি মুছে ফেলা” থেকে ফিরিয়ে আনতে পারবেন।"
+
+msgid "Story saved."
+msgstr "গল্পটি সেভ হয়েছে।"
+
+msgid "Write the company and the role."
+msgstr "কোম্পানি আর পদের নাম লিখুন।"
+
+#, python-format
+msgid "Story: %(title)s"
+msgstr "গল্প: %(title)s"
+
+msgid "Round added."
+msgstr "রাউন্ড যোগ হয়েছে।"
+
+msgid "Round deleted."
+msgstr "রাউন্ড মুছে ফেলা হয়েছে।"
+
+#, python-format
+msgid "Job application: %(role)s at %(company)s"
+msgstr "চাকরির আবেদন: %(company)s-এ %(role)s"
+
+msgid "They're in your question bank already."
+msgstr "এগুলো আগেই আপনার প্রশ্ন-ব্যাংকে আছে।"
+
+#, python-format
+msgid "%(n)s question is in your question bank now."
+msgid_plural "%(n)s questions are in your question bank now."
+msgstr[0] "%(n)sটি প্রশ্ন এখন আপনার প্রশ্ন-ব্যাংকে।"
+msgstr[1] "%(n)sটি প্রশ্ন এখন আপনার প্রশ্ন-ব্যাংকে।"
+
+msgid "When"
+msgstr "কখন"
+
+msgid "What it shows"
+msgstr "এতে কী বোঝা যায়"
+
+msgid "Nice — counted"
+msgstr "চমৎকার — গোনা হলো"
+
+msgid "Job application"
+msgstr "চাকরির আবেদন"
+
+msgid "STAR story"
+msgstr "STAR গল্প"
+
+msgid "Job search"
+msgstr "চাকরি খোঁজা"
+
+msgid "STAR stories"
+msgstr "STAR গল্প"
+
+msgid "New job application"
+msgstr "নতুন চাকরির আবেদন"
+
+msgid "New STAR story"
+msgstr "নতুন STAR গল্প"
+
+msgid "Wishlist"
+msgstr "ইচ্ছের তালিকা"
+
+msgid "Applied"
+msgstr "আবেদন করা"
+
+msgid "Screening"
+msgstr "বাছাই"
+
+msgid "Interviewing"
+msgstr "ইন্টারভিউ চলছে"
+
+msgid "Offer"
+msgstr "অফার"
+
+msgid "Accepted"
+msgstr "গ্রহণ করা"
+
+msgid "Company"
+msgstr "কোম্পানি"
+
+msgid "Job posting"
+msgstr "চাকরির বিজ্ঞপ্তি"
+
+msgid "Found on"
+msgstr "কোথায় পেয়েছেন"
+
+msgid "Contact"
+msgstr "যোগাযোগ"
+
+msgid "How much you want it"
+msgstr "কতটা চান"
+
+msgid "Applied on"
+msgstr "আবেদনের তারিখ"
+
+msgid "Next step"
+msgstr "পরের ধাপ"
+
+msgid "Next step on"
+msgstr "পরের ধাপের তারিখ"
+
+msgid "Job description"
+msgstr "চাকরির বিবরণ"
+
+msgid "Why it closed"
+msgstr "কেন বন্ধ হলো"
+
+msgid "Recruiter call"
+msgstr "রিক্রুটারের কল"
+
+msgid "Online test"
+msgstr "অনলাইন পরীক্ষা"
+
+msgid "Technical / coding"
+msgstr "টেকনিক্যাল / কোডিং"
+
+msgid "Behavioural"
+msgstr "আচরণগত"
+
+msgid "Take-home"
+msgstr "বাড়ির কাজ (টেক-হোম)"
+
+msgid "Hiring manager"
+msgstr "হায়ারিং ম্যানেজার"
+
+msgid "Onsite / final"
+msgstr "অনসাইট / শেষ রাউন্ড"
+
+msgid "Waiting"
+msgstr "অপেক্ষায়"
+
+msgid "Passed"
+msgstr "পাস"
+
+msgid "Didn't pass"
+msgstr "পাস হয়নি"
+
+msgid "Round"
+msgstr "রাউন্ড"
+
+msgid "With"
+msgstr "যার সঙ্গে"
+
+msgid "Result"
+msgstr "ফলাফল"
+
+msgid "Questions asked"
+msgstr "যে প্রশ্নগুলো করা হয়েছে"
+
+msgid "How it went"
+msgstr "কেমন হলো"
+
+msgid "Situation"
+msgstr "পরিস্থিতি"
+
+msgid "Action"
+msgstr "কাজ"
+
+msgid "Shows"
+msgstr "যা বোঝায়"
+
+msgid "City, or Remote."
+msgstr "শহর, বা রিমোট।"
+
+msgid "The range posted, or the offer."
+msgstr "বিজ্ঞপ্তিতে দেওয়া সীমা, বা অফার।"
+
+msgid "LinkedIn, a referral, the company's site…"
+msgstr "লিংকডইন, রেফারেল, কোম্পানির সাইট…"
+
+msgid "Recruiter or referrer: name, email, LinkedIn."
+msgstr "রিক্রুটার বা রেফারকারী: নাম, ইমেইল, লিংকডইন।"
+
+msgid "Follow up, send the take-home, prepare system design…"
+msgstr "খোঁজ নেওয়া, টেক-হোম পাঠানো, সিস্টেম ডিজাইনের প্রস্তুতি…"
+
+msgid "Paste it: the skills it asks for are what to prepare."
+msgstr "এখানে পেস্ট করুন: যে দক্ষতাগুলো চাওয়া হয়েছে সেগুলোরই প্রস্তুতি নিতে হবে।"
+
+msgid "Why this company, what you found out, questions to ask them."
+msgstr "কেন এই কোম্পানি, কী জানলেন, তাদের কী জিজ্ঞেস করবেন।"
+
+msgid "Job applications"
+msgstr "চাকরির আবেদন"
+
+msgid "Application"
+msgstr "আবেদন"
+
+msgid "One a line — they can go into your question bank."
+msgstr "প্রতি লাইনে একটি — এগুলো আপনার প্রশ্ন-ব্যাংকে যেতে পারে।"
+
+msgid "Interview round"
+msgstr "ইন্টারভিউ রাউন্ড"
+
+msgid "Interview rounds"
+msgstr "ইন্টারভিউ রাউন্ড"
+
+msgid "A few words to recall it by: “The payments outage”."
+msgstr "মনে রাখার মতো কয়েকটি শব্দ: “পেমেন্ট বন্ধ হয়ে যাওয়া”।"
+
+msgid "Where and when: the team, the project, what was at stake."
+msgstr "কোথায় ও কখন: দল, প্রজেক্ট, কী ঝুঁকিতে ছিল।"
+
+msgid "What you had to do — your part, not the team's."
+msgstr "আপনাকে কী করতে হতো — আপনার অংশ, দলের নয়।"
+
+msgid "What you did, step by step. Say “I”."
+msgstr "আপনি কী করলেন, ধাপে ধাপে। “আমি” বলুন।"
+
+msgid "What came of it — with numbers — and what you learnt."
+msgstr "ফল কী হলো — সংখ্যা দিয়ে — আর কী শিখলেন।"
+
+msgid "Story"
+msgstr "গল্প"
+
+msgid "Stories"
+msgstr "গল্প"
+
+msgid "Impact"
+msgstr "প্রভাব"
+
+msgid "Leadership"
+msgstr "নেতৃত্ব"
+
+msgid "Conflict"
+msgstr "মতবিরোধ"
+
+msgid "Failure"
+msgstr "ব্যর্থতা"
+
+msgid "Ambiguity"
+msgstr "অস্পষ্টতা"
+
+msgid "Pressure"
+msgstr "চাপ"
+
+msgid "Hard problem"
+msgstr "কঠিন সমস্যা"
+
+msgid "Customer focus"
+msgstr "গ্রাহকের প্রতি মনোযোগ"
+
+msgid "Teamwork"
+msgstr "দলগত কাজ"
+
+msgid "Mentoring"
+msgstr "মেন্টরিং"
+
+msgid "Tell me about a time you took on something nobody asked you to."
+msgstr "এমন একটি সময়ের কথা বলুন যখন কেউ না বললেও আপনি নিজে থেকে কোনো দায়িত্ব নিয়েছিলেন।"
+
+msgid "Describe a project you drove from start to finish."
+msgstr "এমন একটি প্রজেক্টের কথা বলুন যা আপনি শুরু থেকে শেষ পর্যন্ত চালিয়েছেন।"
+
+msgid "What's the work you're proudest of, and why?"
+msgstr "কোন কাজ নিয়ে আপনি সবচেয়ে গর্বিত, আর কেন?"
+
+msgid "Tell me about a time you improved something measurably."
+msgstr "এমন একটি সময়ের কথা বলুন যখন আপনি কোনো কিছু মাপার মতো করে উন্নত করেছেন।"
+
+msgid "Tell me about a time you led a team or a project."
+msgstr "এমন একটি সময়ের কথা বলুন যখন আপনি কোনো দল বা প্রজেক্টের নেতৃত্ব দিয়েছেন।"
+
+msgid "Describe a time you had to motivate others."
+msgstr "এমন একটি সময়ের কথা বলুন যখন আপনাকে অন্যদের উৎসাহ দিতে হয়েছে।"
+
+msgid "Tell me about a disagreement with a colleague. How did you resolve it?"
+msgstr "কোনো সহকর্মীর সঙ্গে মতবিরোধের কথা বলুন। কীভাবে মিটিয়েছিলেন?"
+
+msgid "Describe a time you pushed back on a manager's decision."
+msgstr "এমন একটি সময়ের কথা বলুন যখন আপনি ম্যানেজারের সিদ্ধান্তে আপত্তি জানিয়েছিলেন।"
+
+msgid "Tell me about a time you failed. What did you learn?"
+msgstr "এমন একটি সময়ের কথা বলুন যখন আপনি ব্যর্থ হয়েছিলেন। কী শিখলেন?"
+
+msgid "Describe a mistake you made in production."
+msgstr "প্রোডাকশনে আপনার করা একটি ভুলের কথা বলুন।"
+
+msgid "Tell me about a time you had to act without clear requirements."
+msgstr "এমন একটি সময়ের কথা বলুন যখন স্পষ্ট চাহিদা ছাড়াই আপনাকে কাজ করতে হয়েছে।"
+
+msgid "Describe a decision you made with incomplete information."
+msgstr "অসম্পূর্ণ তথ্য নিয়ে নেওয়া একটি সিদ্ধান্তের কথা বলুন।"
+
+msgid "Tell me about a time you had a tight deadline."
+msgstr "এমন একটি সময়ের কথা বলুন যখন আপনার হাতে খুব কম সময় ছিল।"
+
+msgid "Describe a time you had to juggle competing priorities."
+msgstr "এমন একটি সময়ের কথা বলুন যখন একসঙ্গে কয়েকটি জরুরি কাজ সামলাতে হয়েছে।"
+
+msgid "Tell me about the hardest bug you've fixed."
+msgstr "আপনার ঠিক করা সবচেয়ে কঠিন বাগের কথা বলুন।"
+
+msgid "Describe a technical decision you made and its trade-offs."
+msgstr "আপনার নেওয়া একটি টেকনিক্যাল সিদ্ধান্ত আর তার সুবিধা-অসুবিধার কথা বলুন।"
+
+msgid "Tell me about a time you went out of your way for a user or customer."
+msgstr "এমন একটি সময়ের কথা বলুন যখন আপনি কোনো ইউজার বা গ্রাহকের জন্য বাড়তি চেষ্টা করেছেন।"
+
+msgid "Describe a time you changed a plan because of feedback."
+msgstr "এমন একটি সময়ের কথা বলুন যখন মতামত পেয়ে আপনি পরিকল্পনা বদলেছেন।"
+
+msgid "Tell me about a time you helped a teammate succeed."
+msgstr "এমন একটি সময়ের কথা বলুন যখন আপনি কোনো সহকর্মীকে সফল হতে সাহায্য করেছেন।"
+
+msgid "Describe working with a difficult person."
+msgstr "কঠিন স্বভাবের কারও সঙ্গে কাজ করার অভিজ্ঞতা বলুন।"
+
+msgid "Tell me about a time you learnt something new quickly."
+msgstr "এমন একটি সময়ের কথা বলুন যখন আপনি দ্রুত নতুন কিছু শিখেছেন।"
+
+msgid "Describe feedback you received and what you changed."
+msgstr "আপনি যে মতামত পেয়েছিলেন আর তারপর কী বদলেছেন, তা বলুন।"
+
+msgid "Tell me about a time you mentored or taught someone."
+msgstr "এমন একটি সময়ের কথা বলুন যখন আপনি কাউকে শিখিয়েছেন বা গাইড করেছেন।"
+
+msgid "Describe how you've raised the bar for your team."
+msgstr "আপনি কীভাবে আপনার দলের কাজের মান বাড়িয়েছেন, তা বলুন।"
+
+msgid "New story"
+msgstr "নতুন গল্প"
+
+msgid "Edit story"
+msgstr "গল্প সম্পাদনা"
+
+msgid "Keep it to two minutes told: a line of situation, a line of task, most of it action, and a result with a number."
+msgstr "বলতে দুই মিনিটের বেশি নয়: এক লাইন পরিস্থিতি, এক লাইন দায়িত্ব, বেশিরভাগটা আপনার কাজ, আর সংখ্যাসহ ফলাফল।"
+
+msgid "Delete this story? You can bring it back from Recently deleted."
+msgstr "গল্পটি মুছবেন? “সম্প্রতি মুছে ফেলা” থেকে ফিরিয়ে আনতে পারবেন।"
+
+msgid "Interviews this week and follow-ups due."
+msgstr "এই সপ্তাহের ইন্টারভিউ আর যেগুলোর খোঁজ নেওয়ার সময় হয়েছে।"
+
+#, python-format
+msgid "Follow up with %(company)s"
+msgstr "%(company)s-এ খোঁজ নিন"
+
+#, python-format
+msgid "%(n)s days quiet"
+msgstr "%(n)s দিন কোনো খবর নেই"
+
+msgid "The posting"
+msgstr "বিজ্ঞপ্তি"
+
+msgid "Write down the questions right after each round — they go into your question bank to practise."
+msgstr "প্রতিটি রাউন্ডের পরপরই প্রশ্নগুলো লিখে রাখুন — অনুশীলনের জন্য এগুলো আপনার প্রশ্ন-ব্যাংকে যায়।"
+
+msgid "Practise this question"
+msgid_plural "Practise these %(counter)s questions"
+msgstr[0] "এই %(counter)sটি প্রশ্ন অনুশীলন করুন"
+msgstr[1] "এই %(counter)sটি প্রশ্ন অনুশীলন করুন"
+
+msgid "Delete this round?"
+msgstr "এই রাউন্ডটি মুছবেন?"
+
+msgid "No rounds yet. Add the first when it's booked — the recruiter call counts."
+msgstr "এখনও কোনো রাউন্ড নেই। ঠিক হলে প্রথমটি যোগ করুন — রিক্রুটারের কলও গোনা হয়।"
+
+msgid "Add a round"
+msgstr "রাউন্ড যোগ করুন"
+
+msgid "Add round"
+msgstr "রাউন্ড যোগ করুন"
+
+msgid "Stage, next step, salary, contact, the job description, notes"
+msgstr "ধাপ, পরের কাজ, বেতন, যোগাযোগ, চাকরির বিবরণ, নোট"
+
+msgid "Delete this application and its rounds? You can bring it back from Recently deleted."
+msgstr "এই আবেদন আর তার রাউন্ডগুলো মুছবেন? “সম্প্রতি মুছে ফেলা” থেকে ফিরিয়ে আনতে পারবেন।"
+
+msgid "Prepare"
+msgstr "প্রস্তুতি"
+
+msgid "What the job asks for"
+msgstr "চাকরিটিতে যা চাওয়া হয়েছে"
+
+#, python-format
+msgid "%(counter)s question in your bank"
+msgid_plural "%(counter)s questions in your bank"
+msgstr[0] "আপনার ব্যাংকে %(counter)sটি প্রশ্ন"
+msgstr[1] "আপনার ব্যাংকে %(counter)sটি প্রশ্ন"
+
+msgid "Nothing in your bank yet"
+msgstr "আপনার ব্যাংকে এখনও কিছু নেই"
+
+msgid "Paste the job description in Details: the skills it names show here, next to what you've prepared."
+msgstr "বিবরণ অংশে চাকরির বিবরণ পেস্ট করুন: এতে যে দক্ষতাগুলোর নাম আছে সেগুলো এখানে দেখাবে, আপনার প্রস্তুতির পাশে।"
+
+#, python-format
+msgid "Asked at %(company)s"
+msgstr "%(company)s-এ জিজ্ঞেস করা হয়েছে"
+
+#, python-format
+msgid "Practise %(counter)s question"
+msgid_plural "Practise %(counter)s questions"
+msgstr[0] "%(counter)sটি প্রশ্ন অনুশীলন করুন"
+msgstr[1] "%(counter)sটি প্রশ্ন অনুশীলন করুন"
+
+msgid "None in your bank yet. After a round, “Practise these questions” puts them there."
+msgstr "আপনার ব্যাংকে এখনও নেই। রাউন্ডের পরে “এই প্রশ্নগুলো অনুশীলন করুন” চাপলে সেগুলো সেখানে যাবে।"
+
+msgid "Practise your stories"
+msgstr "আপনার গল্পগুলো অনুশীলন করুন"
+
+msgid "Write your first STAR story"
+msgstr "আপনার প্রথম STAR গল্প লিখুন"
+
+msgid "Behavioural interviews ask “Tell me about a time…”. Have 6–8 true stories ready — Situation, Task, Action, Result — and one story answers several questions."
+msgstr "আচরণগত ইন্টারভিউতে জিজ্ঞেস করা হয় “এমন একটি সময়ের কথা বলুন…”। ৬–৮টি সত্যি গল্প তৈরি রাখুন — পরিস্থিতি, দায়িত্ব, কাজ, ফলাফল — একটি গল্পেই কয়েকটি প্রশ্নের উত্তর হয়ে যায়।"
+
+msgid "What your stories cover"
+msgstr "আপনার গল্পগুলো কী কী বোঝায়"
+
+msgid "Write one"
+msgstr "একটি লিখুন"
+
+msgid "Practise out loud"
+msgstr "জোরে বলে অনুশীলন করুন"
+
+msgid "Another question"
+msgstr "আরেকটি প্রশ্ন"
+
+msgid "No story shows this yet."
+msgstr "এটি বোঝায় এমন কোনো গল্প এখনও নেই।"
+
+msgid "Your stories for it — tell one, then check it:"
+msgstr "এর জন্য আপনার গল্প — একটি বলুন, তারপর মিলিয়ে দেখুন:"
+
+msgid "I told it"
+msgstr "বলেছি"
+
+msgid "Improve it"
+msgstr "আরও ভালো করুন"
+
+#, python-format
+msgid "told %(counter)s time"
+msgid_plural "told %(counter)s times"
+msgstr[0] "%(counter)s বার বলা হয়েছে"
+msgstr[1] "%(counter)s বার বলা হয়েছে"
+
+msgid "No stories yet"
+msgstr "এখনও কোনো গল্প নেই"
+
+msgid "Start with your proudest project, a hard bug, a disagreement and a mistake. Your Review & brag doc has the wins to build them from."
+msgstr "আপনার সবচেয়ে গর্বের প্রজেক্ট, একটি কঠিন বাগ, একটি মতবিরোধ আর একটি ভুল দিয়ে শুরু করুন। “রিভিউ ও অর্জন” পাতায় এগুলোর উপকরণ পাবেন।"
+
+msgid "Every application on one board — drag it on as it moves. Interviews and follow-ups show on Today."
+msgstr "সব আবেদন এক বোর্ডে — এগোলে টেনে পরের ধাপে নিন। ইন্টারভিউ আর খোঁজ নেওয়ার কাজ “আজ” পাতায় দেখাবে।"
+
+msgid "Role, e.g. Backend Engineer"
+msgstr "পদ, যেমন Backend Engineer"
+
+msgid "Job link (optional)"
+msgstr "চাকরির লিংক (ঐচ্ছিক)"
+
+msgid "Got an answer"
+msgstr "উত্তর পেয়েছেন"
+
+msgid "Interviews"
+msgstr "ইন্টারভিউ"
+
+msgid "Offers"
+msgstr "অফার"
+
+msgid "Few answers so far: tailor the CV to each job's description, and ask for referrals — they get answered far more often."
+msgstr "এখনও কম উত্তর এসেছে: প্রতিটি চাকরির বিবরণ অনুযায়ী সিভি সাজান, আর রেফারেল চান — রেফারেলে উত্তর অনেক বেশি আসে।"
+
+msgid "Interviews but no offer yet: write down the questions after each round and practise them — they come back."
+msgstr "ইন্টারভিউ হচ্ছে কিন্তু অফার আসেনি: প্রতি রাউন্ডের পরে প্রশ্নগুলো লিখে অনুশীলন করুন — এগুলো আবার আসে।"
+
+msgid "Interview"
+msgstr "ইন্টারভিউ"
+
+#, python-format
+msgid "Follow up with %(company)s — no news for %(n)s days"
+msgstr "%(company)s-এ খোঁজ নিন — %(n)s দিন কোনো খবর নেই"
+
+msgid "Quiet"
+msgstr "চুপচাপ"
+
+msgid "Follow up"
+msgstr "খোঁজ নিন"
+
+#, python-format
+msgid "Want it: %(n)s of 5"
+msgstr "কতটা চান: ৫-এর মধ্যে %(n)s"
+
+#, python-format
+msgid "Show %(counter)s closed one"
+msgid_plural "Show %(counter)s closed ones"
+msgstr[0] "বন্ধ হওয়া %(counter)sটি দেখান"
+msgstr[1] "বন্ধ হওয়া %(counter)sটি দেখান"
+
+msgid "Hide the closed ones"
+msgstr "বন্ধ হওয়াগুলো লুকান"
+
+msgid "Your job search, in one place"
+msgstr "আপনার চাকরি খোঁজা, এক জায়গায়"
+
+msgid "Add the jobs you want above — the dream ones in Wishlist. Each gets its interview rounds, the questions you were asked and what to do next."
+msgstr "যে চাকরিগুলো চান ওপরে যোগ করুন — স্বপ্নের চাকরিগুলো “ইচ্ছের তালিকা”য়। প্রতিটিতে থাকবে ইন্টারভিউ রাউন্ড, জিজ্ঞেস করা প্রশ্ন আর পরের কাজ।"
+
+msgid "Job search: every application on a board by stage, its interview rounds and the next step (shown on Today). The questions asked in a round go into your question bank in one click, and each job shows the skills its description asks for next to what you've prepared."
+msgstr "চাকরি খোঁজা: সব আবেদন ধাপ অনুযায়ী এক বোর্ডে, তাদের ইন্টারভিউ রাউন্ড আর পরের কাজ (“আজ” পাতায় দেখায়)। রাউন্ডে জিজ্ঞেস করা প্রশ্ন এক ক্লিকে আপনার প্রশ্ন-ব্যাংকে যায়, আর প্রতিটি চাকরির বিবরণে চাওয়া দক্ষতাগুলো আপনার প্রস্তুতির পাশে দেখায়।"
+
+msgid "STAR stories: your behavioural answers — Situation, Task, Action, Result — tagged by what they show, with the gaps marked and a two-minute practice round."
+msgstr "STAR গল্প: আপনার আচরণগত উত্তর — পরিস্থিতি, দায়িত্ব, কাজ, ফলাফল — কী বোঝায় সেই অনুযায়ী ট্যাগ করা, কোথায় ঘাটতি তা চিহ্নিত, আর দুই মিনিটের অনুশীলন।"

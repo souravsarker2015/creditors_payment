@@ -1015,6 +1015,12 @@ def search(request):
     for x in ExamNote.objects.filter(owner=user).filter(Q(question__icontains=q) | Q(answer__icontains=q)).select_related("subject")[:3]:
         out.append({"kind": "exam", "title": " ".join(x.question.split())[:120], "url": reverse("work:exam_subject", args=[x.subject_id]) + f"?open={x.pk}",
                     "meta": x.subject.name})
+    from .models import JobApplication, Story
+
+    for a in JobApplication.objects.filter(owner=user).filter(Q(company__icontains=q) | Q(role__icontains=q) | Q(notes__icontains=q))[:3]:
+        out.append({"kind": "job", "title": f"{a.role} · {a.company}", "url": reverse("work:job", args=[a.pk]), "meta": a.get_stage_display()})
+    for st in Story.objects.filter(owner=user).filter(Q(title__icontains=q) | Q(situation__icontains=q) | Q(action__icontains=q) | Q(result__icontains=q))[:3]:
+        out.append({"kind": "story", "title": st.title, "url": reverse("work:story_edit", args=[st.pk])})
     for sn in Snippet.objects.filter(owner=user).filter(Q(title__icontains=q) | Q(description__icontains=q) | Q(code__icontains=q))[:3]:
         out.append({"kind": "snippet", "title": sn.title, "url": reverse("work:snippets") + "?q=" + quote(sn.title), "meta": sn.get_language_display()})
     return ok(results=out)

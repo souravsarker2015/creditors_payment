@@ -1,5 +1,5 @@
 {% load i18n work %}{% comment %}Productivity sidebar menu (and the app view's "More" sheet), in the order of a working
-day: plan it and do it, focus and track the time, write things down, study, then look back. The pages used
+day: plan it and do it, focus and track the time, write things down, study, land the job, then look back. The pages used
 most come first in each group.{% endcomment %}
 {% with p=request.path %}
 <div class="space-y-0.5">
@@ -28,14 +28,19 @@ most come first in each group.{% endcomment %}
   <p class="nav-section-label">{% translate "Study" %}</p>
   <a href="{% url 'work:exam' %}" class="nav-link {% if '/work/exam/' in p %}is-active{% endif %}">{% icon "exam" %}{% translate "Exam notes" %}</a>
   <a href="{% url 'work:cards' %}" class="nav-link {% if '/work/cards/' in p %}is-active{% endif %}">{% icon "cards" %}{% translate "Flashcards" %}</a>
-  <a href="{% url 'work:prep' %}" class="nav-link {% if '/work/prep/' in p %}is-active{% endif %}">{% icon "target" %}{% translate "Interview prep" %}</a>
   <a href="{% url 'work:learning' %}" class="nav-link {% if '/work/learning/' in p %}is-active{% endif %}">{% icon "book" %}{% translate "Learning" %}</a>
+</div>
+<div class="space-y-0.5">
+  <p class="nav-section-label">{% translate "Career" %}</p>
+  <a href="{% url 'work:jobs' %}" class="nav-link {% if '/work/jobs/' in p %}is-active{% endif %}">{% icon "map" %}{% translate "Job search" %}</a>
+  <a href="{% url 'work:prep' %}" class="nav-link {% if '/work/prep/' in p %}is-active{% endif %}">{% icon "target" %}{% translate "Interview prep" %}</a>
+  <a href="{% url 'work:stories' %}" class="nav-link {% if '/work/stories/' in p %}is-active{% endif %}">{% icon "star" %}{% translate "STAR stories" %}</a>
+  <a href="{% url 'work:review' %}" class="nav-link {% if '/work/review/' in p %}is-active{% endif %}">{% icon "trophy" %}{% translate "Review & brag doc" %}</a>
 </div>
 <div class="space-y-0.5">
   <p class="nav-section-label">{% translate "Review & grow" %}</p>
   <a href="{% url 'work:wrapup' %}" class="nav-link {% if '/work/wrap-up/' in p %}is-active{% endif %}">{% icon "history" %}{% translate "Wrap up the day" %}</a>
   <a href="{% url 'work:journal' %}" class="nav-link {% if '/work/journal/' in p %}is-active{% endif %}">{% icon "journal" %}{% translate "Journal & standup" %}</a>
-  <a href="{% url 'work:review' %}" class="nav-link {% if '/work/review/' in p %}is-active{% endif %}">{% icon "trophy" %}{% translate "Review & brag doc" %}</a>
   <a href="{% url 'work:goals' %}" class="nav-link {% if '/work/goals/' in p %}is-active{% endif %}">{% icon "flag" %}{% translate "Goals" %}</a>
   <a href="{% url 'work:reports' %}" class="nav-link {% if '/work/reports/' in p %}is-active{% endif %}">{% icon "chart" %}{% translate "Reports" %}</a>
 </div>

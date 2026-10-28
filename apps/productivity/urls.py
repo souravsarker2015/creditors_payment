@@ -1,7 +1,7 @@
 """Productivity lives under /work/ in the "work" namespace."""
 from django.urls import path
 
-from . import api, views, views_exam, views_prep
+from . import api, views, views_exam, views_jobs, views_prep
 
 app_name = "work"
 
@@ -20,6 +20,12 @@ urlpatterns = [
     path("time/<int:pk>/", views.entry_form_view, name="entry"),
     path("focus/", views.focus_view, name="focus"),
     path("templates/", views.templates_view, name="templates"),
+    path("jobs/", views_jobs.jobs_view, name="jobs"),
+    path("jobs/<int:pk>/", views_jobs.job_view, name="job"),
+    path("api/jobs/<int:pk>/move/", views_jobs.job_move, name="api_job_move"),
+    path("stories/", views_jobs.stories_view, name="stories"),
+    path("stories/new/", views_jobs.story_form_view, name="story_new"),
+    path("stories/<int:pk>/", views_jobs.story_form_view, name="story_edit"),
     path("prep/", views_prep.prep_view, name="prep"),
     path("prep/questions/", views_prep.questions_view, name="questions"),
     path("prep/questions/new/", views_prep.question_form_view, name="question_new"),

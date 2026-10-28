@@ -1,0 +1,31 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% if story %}{{ story.title }}{% else %}{% translate "New story" %}{% endif %} | {% translate "STAR stories" %}{% endblock %}
+
+{% block work %}
+<div class="page-medium">
+  <header class="wp-head"><div><a href="{% url 'work:stories' %}" class="back-link">{% icon "chevron-left" %}{% translate "STAR stories" %}</a>
+    <h1 class="wp-title">{% if story %}{% translate "Edit story" %}{% else %}{% translate "New story" %}{% endif %}</h1>
+    <p class="wp-sub">{% translate "Keep it to two minutes told: a line of situation, a line of task, most of it action, and a result with a number." %}</p></div></header>
+  <form method="post" class="card" novalidate>
+    {% csrf_token %}
+    <div class="card-body form-stack ws-form">
+      {% with field=form.title %}{% include "partials/field.html" %}{% endwith %}
+      {% with field=form.situation %}{% include "partials/field.html" %}{% endwith %}
+      {% with field=form.task %}{% include "partials/field.html" %}{% endwith %}
+      {% with field=form.action %}{% include "partials/field.html" %}{% endwith %}
+      {% with field=form.result %}{% include "partials/field.html" %}{% endwith %}
+      <fieldset class="field"><legend class="label">{{ form.shows.label }}</legend>
+        <div class="ws-shows">{% for cb in form.shows %}<label class="chip ws-show">{{ cb.tag }}<span>{{ cb.choice_label }}</span></label>{% endfor %}</div></fieldset>
+      {% with field=form.is_starred %}{% include "partials/field.html" %}{% endwith %}
+    </div>
+    <div class="card-footer wj-row">
+      <button type="submit" class="btn btn-primary">{% icon "check" %}{% translate "Save" %}</button>
+      <a href="{% url 'work:stories' %}" class="btn btn-ghost">{% translate "Cancel" %}</a>
+      <span class="spacer"></span>
+      {% if story %}<button type="submit" name="action" value="delete" class="btn btn-ghost is-danger" formnovalidate onclick="return confirm('{% translate "Delete this story? You can bring it back from Recently deleted." %}')">{% icon "trash" %}{% translate "Delete" %}</button>{% endif %}
+    </div>
+  </form>
+</div>
+{% endblock %}

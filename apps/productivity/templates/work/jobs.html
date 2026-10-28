@@ -1,0 +1,86 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+{% comment %}The job search (as Huntr or Teal): applications by stage — drag one on — with what's coming up and the funnel.{% endcomment %}
+
+{% block title %}{% translate "Job search" %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+<header class="wp-head">
+  <div class="min-w-0">
+    <h1 class="wp-title">{% translate "Job search" %}</h1>
+    <p class="wp-sub">{% translate "Every application on one board — drag it on as it moves. Interviews and follow-ups show on Today." %}</p>
+  </div>
+  <div class="wp-actions">
+    <a href="{% url 'work:stories' %}" class="btn btn-secondary">{% icon "star" %}{% translate "STAR stories" %}</a>
+    <a href="{% url 'work:prep' %}" class="btn btn-secondary">{% icon "target" %}{% translate "Interview prep" %}</a>
+  </div>
+</header>
+
+{# ── add one: company and role are enough to start ── #}
+<form method="post" class="card wj-add" id="add">{% csrf_token %}
+  <input name="company" class="form-input" placeholder="{% translate 'Company' %}" aria-label="{% translate 'Company' %}" required maxlength="120">
+  <input name="role" class="form-input" placeholder="{% translate 'Role, e.g. Backend Engineer' %}" aria-label="{% translate 'Role' %}" required maxlength="160">
+  <input name="url" type="url" class="form-input" placeholder="{% translate 'Job link (optional)' %}" aria-label="{% translate 'Job posting' %}">
+  <select name="stage" class="form-input" aria-label="{% translate 'Stage' %}">
+    <option value="wishlist">{% translate "Wishlist" %}</option><option value="applied">{% translate "Applied" %}</option>
+  </select>
+  <button type="submit" class="btn btn-primary">{% icon "plus" %}{% translate "Add" %}</button>
+</form>
+
+{% if funnel.applied %}
+{# ── the funnel: where the search leaks ── #}
+<dl class="stat-grid wj-funnel">
+  <div class="stat"><dt class="stat-label">{% translate "Applied" %}</dt><dd class="stat-value num">{{ funnel.applied }}</dd></div>
+  <div class="stat"><dt class="stat-label">{% translate "Got an answer" %}</dt><dd class="stat-value num">{{ funnel.answered }}<small class="wr-of"> · {{ funnel.answer_rate }}%</small></dd></div>
+  <div class="stat" data-tone="accent"><dt class="stat-label">{% translate "Interviews" %}</dt><dd class="stat-value num">{{ funnel.interviews }}<small class="wr-of"> · {{ funnel.interview_rate }}%</small></dd></div>
+  <div class="stat" data-tone="good"><dt class="stat-label">{% translate "Offers" %}</dt><dd class="stat-value num">{{ funnel.offers }}<small class="wr-of"> · {{ funnel.offer_rate }}%</small></dd></div>
+</dl>
+{% if funnel.applied >= 10 and funnel.answer_rate < 10 %}<p class="wj-tip">{% icon "info" %}{% translate "Few answers so far: tailor the CV to each job's description, and ask for referrals — they get answered far more often." %}</p>
+{% elif funnel.interviews >= 3 and not funnel.offers %}<p class="wj-tip">{% icon "info" %}{% translate "Interviews but no offer yet: write down the questions after each round and practise them — they come back." %}</p>{% endif %}
+{% endif %}
+
+{% if coming.count %}
+{# ── coming up: interviews this week, next steps due, applications gone quiet ── #}
+<section class="card wj-coming">
+  <h2 class="card-title">{% icon "calendar" %}{% translate "Coming up" %}</h2>
+  <ul class="wj-coming-list">
+    {% for r in coming.rounds %}<li><a href="{% url 'work:job' r.application.pk %}#rounds"><b>{{ r.at|date:"D j M, H:i" }}</b> · {{ r.get_kind_display }} — {{ r.application.company }}</a><span class="wj-pill" data-tone="accent">{% translate "Interview" %}</span></li>{% endfor %}
+    {% for a in coming.due %}<li><a href="{% url 'work:job' a.pk %}"><b>{{ a.next_step|default:_("Next step") }}</b> — {{ a.company }}</a><span class="wj-pill" data-tone="{% if a.next_on < today %}critical{% else %}warn{% endif %}">{% if a.next_on < today %}{% translate "Late" %}{% else %}{% translate "Today" %}{% endif %}</span></li>{% endfor %}
+    {% for a in coming.quiet %}<li><a href="{% url 'work:job' a.pk %}">{% blocktranslate with company=a.company n=a.days_quiet %}Follow up with {{ company }} — no news for {{ n }} days{% endblocktranslate %}</a><span class="wj-pill">{% translate "Quiet" %}</span></li>{% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<div class="wb wj-board" x-data="jobBoard" data-move-url="/work/api/jobs/">
+  {% for value, label, cards in columns %}
+  <section class="wb-col" data-stage="{{ value }}">
+    <header class="wb-col-head"><span class="wb-col-dot wj-dot" data-stage="{{ value }}"></span><h2>{{ label }}</h2><span class="wb-count" data-count>{{ cards|length }}</span></header>
+    <div class="wb-cards" data-column="{{ value }}">
+      {% for a in cards %}
+      <a href="{% url 'work:job' a.pk %}" class="wb-card wj-card{% if a.late %} is-late{% endif %}" data-job="{{ a.pk }}">
+        <span class="wj-card-company">{{ a.company }}</span>
+        <span class="wb-card-title">{{ a.role }}</span>
+        <span class="wj-card-meta">
+          {% if a.next_round %}<span class="wj-pill" data-tone="accent">{% icon "calendar" %}{{ a.next_round.at|date:"j M" }}</span>{% endif %}
+          {% if a.next_on %}<span class="wj-pill"{% if a.late %} data-tone="critical"{% endif %}>{% icon "flag" %}{{ a.next_on|date:"j M" }}</span>{% endif %}
+          {% if a.quiet %}<span class="wj-pill" data-tone="warn">{% translate "Follow up" %}</span>{% endif %}
+          {% if a.location %}<span>{{ a.location }}</span>{% endif %}
+          <span class="wj-stars" aria-label="{% blocktranslate with n=a.interest %}Want it: {{ n }} of 5{% endblocktranslate %}">{% for i in "12345" %}<i{% if forloop.counter <= a.interest %} class="is-on"{% endif %}></i>{% endfor %}</span>
+        </span>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+</div>
+{% if closed_count and not show_closed %}<a href="?closed=1" class="wb-more">{% blocktranslate count counter=closed_count %}Show {{ counter }} closed one{% plural %}Show {{ counter }} closed ones{% endblocktranslate %}</a>{% elif show_closed %}<a href="?" class="wb-more">{% translate "Hide the closed ones" %}</a>{% endif %}
+{% if not total %}
+<div class="empty">
+  <div class="empty-icon">{% icon "target" %}</div>
+  <h3 class="empty-title">{% translate "Your job search, in one place" %}</h3>
+  <p class="empty-text">{% translate "Add the jobs you want above — the dream ones in Wishlist. Each gets its interview rounds, the questions you were asked and what to do next." %}</p>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block work_libs %}<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>{% endblock %}

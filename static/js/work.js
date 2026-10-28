@@ -565,6 +565,62 @@
       };
     });
 
+    /* ── Job search board: drag an application to its new stage (SortableJS), as on the task board ── */
+    Alpine.data("jobBoard", function () {
+      return {
+        init: function () {
+          var self = this, base = this.$root.getAttribute("data-move-url");
+          function setup() {
+            if (!window.Sortable) return setTimeout(setup, 80);
+            self.$root.querySelectorAll("[data-column]").forEach(function (col) {
+              Sortable.create(col, {
+                group: "jobs", animation: 160, ghostClass: "is-ghost", dragClass: "is-dragging", delay: 120, delayOnTouchOnly: true,
+                onEnd: function (e) {
+                  var ids = Array.prototype.map.call(e.to.children, function (c) { return c.getAttribute("data-job"); });
+                  api(base + e.item.getAttribute("data-job") + "/move/", { stage: e.to.getAttribute("data-column"), order: ids.join(",") }).then(function (res) {
+                    if (res && res.ok && !res.queued && e.from !== e.to) toast(t("jobMoved", "Moved"), "good");
+                  });
+                  self.$root.querySelectorAll("[data-column]").forEach(function (c) { var n = c.parentElement.querySelector("[data-count]"); if (n) n.textContent = c.children.length; });
+                },
+              });
+            });
+          }
+          setup();
+        },
+      };
+    });
+
+    /* ── STAR stories: a behavioural question at random, two minutes to tell a story out loud, then the
+       story to check it against — or, when none answers it, a link to write one ── */
+    Alpine.data("storyPractice", function () {
+      var P = {}; try { P = JSON.parse(d.getElementById("story-practice").textContent); } catch (e) { P = { deck: [], stories: [] }; }
+      return {
+        q: null, shown: null, running: false, left: 120, timer: null, last: -1,
+        get matches() { var q = this.q; return q ? P.stories.filter(function (s) { return (s.shows || []).indexOf(q.key) >= 0; }) : []; },
+        init: function () { this.next(); },
+        next: function () {
+          this.stop(); this.left = 120; this.shown = null;
+          if (!P.deck.length) return;
+          var i; do { i = Math.floor(Math.random() * P.deck.length); } while (P.deck.length > 1 && i === this.last);
+          this.last = i; this.q = P.deck[i];
+        },
+        toggle: function () {
+          if (this.running) return this.stop();
+          var self = this, end = Date.now() + this.left * 1000;
+          this.running = true;
+          this.timer = setInterval(function () {
+            self.left = Math.round((end - Date.now()) / 1000);
+            if (self.left <= 0) { self.stop(); play(CFG.sound ? "chime" : ""); }
+          }, 250);
+        },
+        stop: function () { clearInterval(this.timer); this.running = false; },
+        clock: function () { var n = Math.max(0, this.left); return Math.floor(n / 60) + ":" + String(n % 60).padStart(2, "0"); },
+        practised: function (s) {
+          api(P.practisedUrl, { action: "practised", story: s.id }).then(function (r) { if (r && r.ok) toast(t("storyTold", "Nice — counted"), "good"); });
+        },
+      };
+    });
+
     /* ── Board: drag cards between columns (SortableJS) ───────────────── */
     Alpine.data("workBoard", function () {
       return {

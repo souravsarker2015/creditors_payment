@@ -1,0 +1,91 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+{% comment %}STAR stories for behavioural interviews: what each shows, which common questions have no story yet, and a timed practice round.{% endcomment %}
+
+{% block title %}{% translate "STAR stories" %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+<header class="wp-head">
+  <div class="min-w-0">
+    <h1 class="wp-title">{% translate "STAR stories" %}</h1>
+    <p class="wp-sub">{% translate "Behavioural interviews ask “Tell me about a time…”. Have 6–8 true stories ready — Situation, Task, Action, Result — and one story answers several questions." %}</p>
+  </div>
+  <div class="wp-actions">
+    <a href="{% url 'work:jobs' %}" class="btn btn-secondary">{% icon "map" %}{% translate "Job search" %}</a>
+    <a href="{% url 'work:story_new' %}" class="btn btn-primary">{% icon "plus" %}{% translate "New story" %}</a>
+  </div>
+</header>
+
+{# ── what's covered: each thing interviewers look for, and the stories that show it ── #}
+<section class="card card-body">
+  <h2 class="card-title">{% translate "What your stories cover" %}</h2>
+  <ul class="ws-cover">
+    {% for c in coverage %}
+    <li class="ws-cover-item{% if not c.stories %} is-gap{% endif %}">
+      <span class="ws-cover-name">{{ c.label }}</span>
+      {% if c.stories %}<span class="ws-cover-n">{{ c.stories|length }}</span>
+      {% else %}<a href="{% url 'work:story_new' %}?shows={{ c.key }}" class="ws-cover-add">{% icon "plus" %}{% translate "Write one" %}</a>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+
+{# ── practice: a question, a story to answer it, two minutes ── #}
+{{ practice|json_script:"story-practice" }}
+<section class="card card-body ws-practice" id="practice" x-data="storyPractice">
+  <div class="ws-practice-head">
+    <h2 class="card-title">{% icon "play" %}{% translate "Practise out loud" %}</h2>
+    <span class="ws-timer num" :class="{ 'is-on': running, 'is-over': left <= 0 }" x-text="clock()" aria-live="off"></span>
+  </div>
+  <p class="ws-q" x-text="q ? q.q : ''"></p>
+  <p class="ws-q-what" x-show="q"><span x-text="q && q.label"></span></p>
+  <div class="ws-practice-acts">
+    <button type="button" class="btn btn-primary btn-sm" @click="toggle()" x-text="running ? '{{ _("Stop")|escapejs }}' : '{{ _("Answer — 2 minutes")|escapejs }}'"></button>
+    <button type="button" class="btn btn-secondary btn-sm" @click="next()">{% icon "repeat" %}{% translate "Another question" %}</button>
+  </div>
+  <template x-if="q && !matches.length">
+    <p class="ws-none">{% translate "No story shows this yet." %} <a :href="'{% url 'work:story_new' %}?shows=' + q.key">{% translate "Write one" %}</a></p>
+  </template>
+  <template x-if="matches.length">
+    <div class="ws-match">
+      <p class="ws-match-label">{% translate "Your stories for it — tell one, then check it:" %}</p>
+      <div class="chip-row"><template x-for="s in matches" :key="s.id"><button type="button" class="chip" :class="shown && shown.id === s.id && 'is-active'" @click="shown = shown && shown.id === s.id ? null : s" x-text="s.title"></button></template></div>
+      <template x-if="shown">
+        <div class="ws-star">
+          <dl>
+            <div><dt>S</dt><dd class="wn-md" x-html="Work.markdown(shown.situation || '—')"></dd></div>
+            <div><dt>T</dt><dd class="wn-md" x-html="Work.markdown(shown.task || '—')"></dd></div>
+            <div><dt>A</dt><dd class="wn-md" x-html="Work.markdown(shown.action || '—')"></dd></div>
+            <div><dt>R</dt><dd class="wn-md" x-html="Work.markdown(shown.result || '—')"></dd></div>
+          </dl>
+          <div class="ws-star-acts"><button type="button" class="btn btn-secondary btn-sm" @click="practised(shown)">{% icon "check" %}{% translate "I told it" %}</button>
+            <a :href="shown.url" class="btn btn-ghost btn-sm">{% icon "edit" %}{% translate "Improve it" %}</a></div>
+        </div>
+      </template>
+    </div>
+  </template>
+</section>
+
+{# ── the stories ── #}
+<div class="ws-list">
+  {% for s in stories %}
+  <article class="card card-body ws-story" id="story-{{ s.pk }}">
+    <header class="ws-story-head"><a href="{% url 'work:story_edit' s.pk %}" class="ws-story-title">{% if s.is_starred %}★ {% endif %}{{ s.title }}</a>
+      <span class="ws-story-n">{% if s.practised %}{% blocktranslate count counter=s.practised %}told {{ counter }} time{% plural %}told {{ counter }} times{% endblocktranslate %}{% endif %}</span></header>
+    <p class="chip-row">{% for k in s.competencies %}{% for key, label in labels.items %}{% if key == k %}<span class="chip">{{ label }}</span>{% endif %}{% endfor %}{% endfor %}</p>
+    {% if s.result %}<p class="ws-story-result"><b>{% translate "Result" %}:</b> {{ s.result|truncatechars:180 }}</p>{% endif %}
+  </article>
+  {% empty %}
+  <div class="empty">
+    <div class="empty-icon">{% icon "star" %}</div>
+    <h3 class="empty-title">{% translate "No stories yet" %}</h3>
+    <p class="empty-text">{% translate "Start with your proudest project, a hard bug, a disagreement and a mistake. Your Review & brag doc has the wins to build them from." %}</p>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block work_libs %}
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+{% endblock %}
