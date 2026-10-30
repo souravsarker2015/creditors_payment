@@ -118,7 +118,7 @@
         <p class="help wex-preview-none" x-show="preview && !preview.found.length" x-text="preview && preview.error"></p>
       </div>
       <div class="wex-add-foot">
-        <button type="button" class="btn btn-primary btn-sm" @click="addMany()" :disabled="!ticked()">{% icon "plus" %}
+        <button type="button" class="btn btn-primary btn-sm" @click="addMany()" :disabled="preview && !ticked()">{% icon "plus" %}
           <span x-text="ticked() ? '{{ _("Add them")|escapejs }} (' + ticked() + ')' : '{{ _("Add them")|escapejs }}'"></span></button>
         <button type="button" class="btn btn-ghost btn-sm" x-show="paste" @click="paste = ''; preview = null">{% translate "Clear" %}</button>
       </div>
@@ -216,7 +216,7 @@
 {# ── one question, opened (like a Keep note) ── #}
 <div class="wc-backdrop" x-show="editing" x-cloak x-transition.opacity @click="closeEditor()"></div>
 <section class="wc wkc-editor" x-show="editing" x-cloak x-transition :data-color="edit.color || null" role="dialog" aria-modal="true" aria-label="{% translate 'Edit the question' %}"
-         @keydown.escape.stop="closeEditor()" @keydown.ctrl.enter.prevent="closeEditor()" @keydown.meta.enter.prevent="closeEditor()" @keydown="editorKey($event)">
+         @keydown.escape.stop="histOpen ? histOpen = false : closeEditor()" @keydown.ctrl.enter.prevent="closeEditor()" @keydown.meta.enter.prevent="closeEditor()" @keydown="editorKey($event)">
   <div class="wkc-editor-head">
     <span class="wkc-steps">
       <button type="button" class="icon-btn" @click="stepEditor(-1)" :disabled="!canStep(-1)" aria-label="{% translate 'Previous question' %}" data-tip="{% translate 'Previous question (Alt+←)' %}">{% icon "chevron-left" %}</button>
@@ -245,10 +245,36 @@
       <template x-for="o in D.subjects" :key="o.id"><option :value="o.id" x-text="o.name" :selected="String(o.id) === String(edit.subject)"></option></template>
     </select>
     <span class="spacer"></span>
+    <button type="button" class="icon-btn" @click="openHistory()" aria-label="{% translate 'History' %}" data-tip="{% translate 'History' %}">{% icon "history" %}</button>
     <button type="button" class="icon-btn is-danger" @click="removeEditing()" aria-label="{% translate 'Delete' %}" data-tip="{% translate 'Delete' %}">{% icon "trash" %}</button>
     <button type="button" class="btn btn-primary btn-sm" @click="closeEditor()">{% translate "Done" %} <kbd class="wp-kbd">Esc</kbd></button>
   </div>
 </section>
+
+{# ── earlier versions of the question ── #}
+<aside class="wdx-hist wn-hist wex-hist" x-show="histOpen" x-cloak x-trap="histOpen" x-transition:enter="wdx-hist-in" x-transition:leave="wdx-hist-out"
+       @keydown.escape.stop="histOpen = false" role="dialog" aria-modal="true" aria-labelledby="exam-hist-title">
+  <header class="wdx-hist-head">
+    <h2 id="exam-hist-title" class="card-title">{% icon "history" %}{% translate "History" %}</h2>
+    <button type="button" class="icon-btn" @click="histOpen = false" aria-label="{% translate 'Close' %}">{% icon "x" %}</button>
+  </header>
+  <ol class="wn-vers" x-show="versions.length">
+    <template x-for="v in versions" :key="v.id">
+      <li><button type="button" class="wn-ver" :class="shown && shown.id === v.id && 'is-on'" @click="shown = v"><b x-text="v.time"></b></button></li>
+    </template>
+  </ol>
+  <p class="wdx-hist-empty" x-show="!histLoading && !versions.length">{% translate "No earlier versions yet. They appear as you write." %}</p>
+  <template x-if="shown">
+    <div class="wn-ver-read">
+      <div class="wn-ver-acts">
+        <button type="button" class="btn btn-primary btn-sm" @click="restoreVersion(shown)">{% icon "restore" %}{% translate "Bring back" %}</button>
+        <button type="button" class="btn btn-ghost btn-sm" @click="navigator.clipboard && navigator.clipboard.writeText(shown.answer).then(() => Work.toast('{% translate "Copied" %}'))">{% icon "copy" %}{% translate "Copy" %}</button>
+      </div>
+      <h3 class="wn-ver-title" x-text="shown.question"></h3>
+      <article class="wn-md wn-ver-md" x-html="Work.markdown(shown.answer)"></article>
+    </div>
+  </template>
+</aside>
 
 {# ── labels: rename and order the chapters ── #}
 <div class="wc-backdrop" x-show="labelsOpen" x-cloak x-transition.opacity @click="labelsOpen = false"></div>

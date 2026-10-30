@@ -186,7 +186,7 @@
       function blank(keep) { return { question: "", answer: "", chapter: keep ? keep.chapter : "", color: "", starred: false }; }      // the label stays for the next one
       return Object.assign(pager(D), {
         D: D, t: t, answers: prefs.answers !== false, composing: false, many: false, draft: blank(), writeView: { add: false, edit: false },
-        paste: "", pasteChapter: "", preview: null, checking: false, previewTimer: null,
+        paste: "", pasteChapter: "", preview: null, checking: false, previewTimer: null, histOpen: false, histLoading: false, versions: [], shown: null,
         selecting: false, picked: {}, moveTo: "", editing: null, edit: {}, editFrom: "", editFirst: null, editState: "saved", editTimer: null, editSending: null, labelsOpen: false,
         init: function () {
           var self = this;
@@ -201,6 +201,12 @@
           this.$watch("paste", function () { self.keepDraft(); self.schedulePreview(); });
           this.$watch("pasteChapter", function () { if (self.paste.trim()) self.schedulePreview(); });
           this.$watch("edit", function () { self.editChanged(); }, { deep: true });
+          document.addEventListener("work:synced", function (e) {     // written offline, and it's there now
+            var q = self.notes.find(function (n) { return "exam:" + n.id === e.detail.same; });
+            if (!q) return;
+            q.rev = e.detail.rev || "";
+            if (self.editing === q && self.editState === "offline") self.editState = "saved";
+          });
           this.$watch("answers", function () { self.keepPrefs(); });
           this.$watch("sort", function () { self.keepPrefs(); });
           window.addEventListener("beforeunload", function (e) {
@@ -306,9 +312,10 @@
           var self = this, text = this.paste;
           if (!text.trim()) { this.preview = null; return; }
           this.checking = true;
-          Work.api(D.api, { action: "add_many", text: text, chapter: this.pasteChapter, preview: "1" }).then(function (r) {
+          Work.ask(D.api, { action: "add_many", text: text, chapter: this.pasteChapter, preview: "1" }).then(function (r) {
             self.checking = false;
             if (text !== self.paste) return;
+            if (!r) { self.preview = null; return; }           // no connection: no preview, and it can be added all the same
             if (r && r.ok) r.found.forEach(function (p) { p.on = !p.dupe; });
             self.preview = r && r.ok ? r : { found: [], error: r && r.error };
           });
@@ -318,9 +325,13 @@
         addMany: function () {
           var self = this, pick = [];
           if (!this.paste.trim()) { toast(t("pasteFirst"), "warn"); return; }
-          if (this.preview) this.preview.found.forEach(function (p, i) { if (p.on) pick.push(i); });
-          if (!pick.length) return;
-          api(D.api, { action: "add_many", text: this.paste, chapter: this.pasteChapter, pick: pick.join(",") }).then(function (r) {
+          var fields = { action: "add_many", text: this.paste, chapter: this.pasteChapter };
+          if (this.preview) {
+            this.preview.found.forEach(function (p, i) { if (p.on) pick.push(i); });
+            if (!pick.length) return;
+            fields.pick = pick.join(",");
+          }
+          api(D.api, fields).then(function (r) {
             if (r.queued) { self.paste = ""; self.preview = null; self.many = false; self.composing = false; return; }
             if (!r.ok || !r.notes) return;
             self.paste = ""; self.preview = null; self.many = false; self.composing = false;
@@ -370,18 +381,43 @@
         /* What's in the editor, to the server (`to`: a subject to move it to). One save at a time, in order. */
         sendEdit: function (q, e, to) {
           var self = this, fields = { action: "update", question: e.question, answer: e.answer, chapter: e.chapter, color: e.color };
-          if (to) fields.subject = to;
+          if (to) fields.subject = to; else fields._ft_same = "exam:" + q.id;
           var sent = JSON.stringify(e);
           this.editSending = Promise.resolve(this.editSending).then(function () {
+            fields.rev = q.rev || "";                     // (as the save before this one left it)
             return api(D.noteBase + q.id + "/", fields);
           }).then(function (r) {
             self.editSending = null;
             if (!r.ok && !r.queued) return r;
             if (r.ok) { q.question = e.question.trim(); q.answer = e.answer; q.chapter = (e.chapter || "").trim(); q.color = e.color; }
+            if (r.rev) q.rev = r.rev;
+            if (r.conflict) toast(t("conflict"), "warn");
             if (JSON.stringify(self.edit) === sent || self.editing !== q) store(EDIT, null);
             return r;
           });
           return this.editSending;
+        },
+        /* earlier versions of this question: one can be read and brought back */
+        openHistory: function () {
+          var self = this, q = this.editing;
+          if (!q) return;
+          this.histOpen = true; this.histLoading = true; this.versions = []; this.shown = null;
+          this.saveEditing();
+          Promise.resolve(this.editSending).then(function () {
+            return fetch(D.noteBase + q.id + "/versions/", { credentials: "same-origin", headers: { Accept: "application/json" } });
+          }).then(function (r) { return r.json(); }).then(function (r) { self.versions = r.versions || []; self.shown = self.versions[0] || null; })
+            .catch(function () { self.versions = []; }).then(function () { self.histLoading = false; });
+        },
+        restoreVersion: function (v) {
+          var self = this, q = this.editing;
+          if (!v || !q || !confirm(t("restoreAsk"))) return;
+          api(D.noteBase + q.id + "/", { action: "restore", version: v.id }).then(function (r) {
+            if (!r.ok || r.queued) return;
+            q.question = r.note.question; q.answer = r.note.answer; q.rev = r.rev;
+            self.edit.question = q.question; self.edit.answer = q.answer;
+            self.editFrom = JSON.stringify(self.edit); self.editState = "saved"; self.histOpen = false;
+            store(EDIT, null);
+          });
         },
         saveEditing: function () {
           var self = this, q = this.editing, e = this.edit, sent = JSON.stringify(e);
@@ -711,9 +747,10 @@
         saveEdit: function () {
           var self = this, q = this.card, e = this.draft;
           if (!e.question.trim()) { toast(t("writeFirst"), "warn"); return; }
-          api(D.noteBase + q.id + "/", { action: "update", question: e.question, answer: e.answer }).then(function (r) {
+          api(D.noteBase + q.id + "/", { action: "update", question: e.question, answer: e.answer, rev: q.rev || "" }).then(function (r) {
             if (!r.ok && !r.queued) return;
-            q.question = e.question.trim(); q.answer = e.answer; self.editing = false;
+            q.question = e.question.trim(); q.answer = e.answer; self.editing = false; q.rev = r.rev || "";
+            if (r.conflict) toast(t("conflict"), "warn");
             paint(self.$refs.front, q.question); paint(self.$refs.q, q.question); paint(self.$refs.back, q.answer || t("noAnswer"));
             toast(t("saved", "Saved"), "good");
           });

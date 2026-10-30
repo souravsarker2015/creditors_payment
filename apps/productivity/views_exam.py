@@ -11,9 +11,10 @@ from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_date
+from django.utils.formats import date_format
 from django.utils.http import content_disposition_header
 from django.utils.translation import gettext as _, ngettext, pgettext
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_GET, require_POST
 
 from apps.trash.services import trash
 
@@ -42,6 +43,8 @@ def _texts():
         "notHere": _("This subject isn't on this device yet. Open it once with a connection."),
         "deletedMany": _("%(n)s questions deleted"), "undo": _("Undo"), "chapterAsk": _("Chapter for the picked questions (empty: no chapter):"),
         "leave": _("You have changes that aren't saved yet. Leave anyway?"), "draftBack": _("Your unsaved question is back."),
+        "conflict": _("This question was changed somewhere else too. That text is kept in History."),
+        "restoreAsk": _("Bring back this version? What's there now is kept as a version too."),
         "perDay": _("about %(n)s a day to learn them all before the exam"), "allKnown": _("You know them all — keep them fresh with a quick review."),
     }
 
@@ -187,7 +190,7 @@ def exam_review_view(request, pk):
 @work_required
 def exam_export_view(request, pk):
     s = get_object_or_404(ExamSubject, pk=pk, owner=request.user)
-    resp = HttpResponse(exam.as_text(s, s.notes.all()), content_type="text/plain; charset=utf-8")
+    resp = HttpResponse(services.image_links(exam.as_text(s, s.notes.all()), request.build_absolute_uri(reverse("work:notes").rsplit("notes/", 1)[0] + "images/")), content_type="text/plain; charset=utf-8")
     resp["Content-Disposition"] = content_disposition_header(True, f"{s.name.strip()[:60] or 'exam-notes'}.txt".replace("/", "-"))
     return resp
 
@@ -195,6 +198,15 @@ def exam_export_view(request, pk):
 # ── In-page changes (Work.api) ───────────────────────────────────────────
 def _chapter_of(request):
     return (request.POST.get("chapter") or "").strip()[:exam.MAX_CHAPTER]
+
+
+def _answer_of(request, default=""):
+    return services.one_line_end(request.POST.get("answer", default)).rstrip()
+
+
+def _too_long():
+    """Refused, not cut: the end of an answer must never go missing while the page says it's saved."""
+    return JsonResponse({"ok": False, "error": _("This answer is too long (over %(n)s characters). Split it into two questions.") % {"n": exam.MAX_ANSWER}}, status=400)
 
 
 @work_required
@@ -206,10 +218,12 @@ def subject_api(request, pk):
         question = services.one_line_end(request.POST.get("question")).strip()[:exam.MAX_QUESTION]
         if not question:
             return JsonResponse({"ok": False, "error": _("Write the question first.")}, status=400)
+        answer = _answer_of(request)
+        if len(answer) > exam.MAX_ANSWER:
+            return _too_long()
         n = ExamNote.objects.create(owner=request.user, subject=s, question=question, chapter=_chapter_of(request), order=exam.next_order(s),
                                     color=request.POST.get("color") if request.POST.get("color") in Color.values else "",
-                                    is_starred=request.POST.get("starred") == "1",
-                                    answer=services.one_line_end(request.POST.get("answer")).rstrip()[:exam.MAX_ANSWER])
+                                    is_starred=request.POST.get("starred") == "1", answer=answer)
         return JsonResponse({"ok": True, "note": exam.as_json(n, exam.numbers(s).get(n.pk)), **exam.counts(s)})
     if action == "add_many":
         found = exam.parse(request.POST.get("text"), chapter=_chapter_of(request))
@@ -302,7 +316,16 @@ def note_api(request, pk):
         question = services.one_line_end(request.POST.get("question", n.question)).strip()
         if not question:
             return JsonResponse({"ok": False, "error": _("Write the question first.")}, status=400)
-        n.question, n.answer = question[:exam.MAX_QUESTION], services.one_line_end(request.POST.get("answer", n.answer)).rstrip()[:exam.MAX_ANSWER]
+        answer = _answer_of(request, n.answer)
+        if len(answer) > exam.MAX_ANSWER:
+            return _too_long()
+        question = question[:exam.MAX_QUESTION]
+        changed = (question, answer) != (n.question, n.answer)
+        # Written over a text the editor never saw (another device, another tab): that text stays in History.
+        conflict = bool(changed and request.POST.get("rev") and request.POST["rev"] != exam.rev(n))
+        if changed:
+            exam.remember(n, force=conflict)
+        n.question, n.answer = question, answer
         if "chapter" in request.POST:
             n.chapter = _chapter_of(request)
         if request.POST.get("color", None) is not None and request.POST["color"] in ("", *Color.values):
@@ -311,7 +334,13 @@ def note_api(request, pk):
             n.subject = get_object_or_404(ExamSubject, pk=request.POST["subject"], owner=request.user)
             n.order = exam.next_order(n.subject)
         n.save()
-        return JsonResponse({"ok": True, "note": exam.as_json(n)})
+        return JsonResponse({"ok": True, "note": exam.as_json(n), "rev": exam.rev(n), "conflict": conflict})
+    if action == "restore":                  # an earlier version comes back (what's there now is kept too)
+        version = get_object_or_404(n.versions, pk=request.POST.get("version") or 0)
+        exam.remember(n, force=True)
+        n.question, n.answer = version.question, version.answer
+        n.save()
+        return JsonResponse({"ok": True, "note": exam.as_json(n), "rev": exam.rev(n)})
     if action == "color":
         n.color = request.POST.get("color") if request.POST.get("color") in Color.values else ""
         n.save(update_fields=["color", "updated_at"])
@@ -345,3 +374,11 @@ def note_api(request, pk):
         item = trash(request.user, n, _("Exam question: %(title)s") % {"title": n.question[:80]}, reverse("work:exam_subject", args=[n.subject_id]))
         return JsonResponse({"ok": True, "undo": reverse("trash_restore", args=[item.pk])})
     return JsonResponse({"ok": False, "error": "action"}, status=400)
+
+
+@work_required
+@require_GET
+def note_versions_api(request, pk):
+    n = get_object_or_404(ExamNote, pk=pk, owner=request.user)
+    return JsonResponse({"ok": True, "versions": [{"id": v.pk, "question": v.question, "answer": v.answer, "time": date_format(timezone.localtime(v.created_at), "j M, H:i"),
+                                                   "words": len(v.answer.split())} for v in n.versions.all()]})

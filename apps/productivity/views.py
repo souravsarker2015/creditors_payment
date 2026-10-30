@@ -73,6 +73,7 @@ def _texts():
         "savedOffline": _("Saved on this device — it will sync when you're online."), "synced": _("Synced changes made offline."),
         "undo": _("Undo"), "reminder": _("Reminder"), "stillWorking": _("Still working on this?"), "noDescription": _("No description"),
         "tracked": _("Tracked"), "notSaved": _("Not saved."), "taskAdded": _("Task added"), "noteSaved": _("Note saved"), "noteArchived": _("Archived"), "noteConflict": _("This note was changed somewhere else too. That text is kept in History."),
+        "syncLost": _("A change made offline couldn't be saved: what it belonged to is gone or was refused."), "deviceFull": _("This device's storage is full, so this wasn't kept. Check your connection and try again."),
         "signedOut": _("You're signed out. What you wrote is kept on this device and is sent once you sign in."), "signIn": _("Sign in"),
         "linksUpdated": ngettext("Links updated in %(n)s note", "Links updated in %(n)s notes", 2), "linksUpdatedOne": ngettext("Links updated in %(n)s note", "Links updated in %(n)s notes", 1), "examMade": ngettext("%(n)s question added.", "%(n)s questions added.", 2), "examMadeOne": ngettext("%(n)s question added.", "%(n)s questions added.", 1), "seeThem": _("See them"), "noteDraftBack": _("Your unsaved writing is back."), "noteUnarchived": _("Back from the archive"),
         "repeatMade": _("Next one added"), "taskDeleted": _("Task deleted"), "noteDeleted": _("Note deleted"),
@@ -825,7 +826,8 @@ def note_go_view(request):
 def note_export_view(request, pk):
     """One note as a Markdown file, its tags in a front matter block (as note import reads them)."""
     note = get_object_or_404(Note, pk=pk, owner=request.user)
-    resp = HttpResponse(services.note_file(note), content_type="text/markdown; charset=utf-8")
+    resp = HttpResponse(services.image_links(services.note_file(note), request.build_absolute_uri(reverse("work:notes").rsplit("notes/", 1)[0] + "images/")),
+                        content_type="text/markdown; charset=utf-8")
     resp["Content-Disposition"] = content_disposition_header(True, f"{note.display_title[:80].strip()}.md".replace("/", "-"))
     return resp
 
@@ -1825,6 +1827,9 @@ def export_view(request):
         return f"{pk}-" + (re.sub(r"[^\w-]+", "-", text.lower()).strip("-")[:60] or "untitled")
 
     buf = io.BytesIO()
+    from .models import NoteImage
+
+    image_ext = {img.pk: os.path.splitext(img.file.name)[1] for img in NoteImage.objects.filter(owner=user)}
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
         z.writestr("data.json", json.dumps(rows, ensure_ascii=False, indent=1))
         for name in sorted(set(media)):              # read back by "Add from a backup"
@@ -1834,9 +1839,9 @@ def export_view(request):
             except (FileNotFoundError, OSError):
                 pass
         for n in Note.objects.filter(owner=user).prefetch_related("tags"):
-            z.writestr(f"notes/{slug(n.display_title, n.pk)}.md", services.note_file(n))
+            z.writestr(f"notes/{slug(n.display_title, n.pk)}.md", services.image_links(services.note_file(n), "images/", image_ext))
         for x in ExamSubject.objects.filter(owner=user):
-            z.writestr(f"exam-notes/{slug(x.name, x.pk)}.txt", exam.as_text(x, x.notes.all()))
+            z.writestr(f"exam-notes/{slug(x.name, x.pk)}.txt", services.image_links(exam.as_text(x, x.notes.all()), "../notes/images/", image_ext))
         for sn in Snippet.objects.filter(owner=user):
             z.writestr(f"snippets/{slug(sn.title, sn.pk)}.{ext.get(sn.language, sn.language)}", sn.code)
         for j in JournalEntry.objects.filter(owner=user):
@@ -1849,8 +1854,6 @@ def export_view(request):
                 z.writestr(f"{name}.md", diagrams.outline_text(dg.data))
             elif not dg.is_visual:
                 z.writestr(f"{name}.mmd", dg.source)
-        from .models import NoteImage
-
         for img in NoteImage.objects.filter(owner=user):
             try:
                 with img.file.open("rb") as fh:

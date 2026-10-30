@@ -34,12 +34,13 @@ a "#" inside one never splits a question.
 import csv
 import io
 import re
+import zlib
 from collections import Counter
 from datetime import timedelta
 
 from django.utils import timezone
 
-MAX_QUESTION, MAX_ANSWER, MAX_CHAPTER, MAX_PASTE = 2000, 20000, 120, 500
+MAX_QUESTION, MAX_ANSWER, MAX_CHAPTER, MAX_PASTE = 2000, 100000, 120, 500
 
 B = r"(?:\*\*|__)?"                                     # bold around a label: **Q1:**
 FENCE = re.compile(r"^\s{0,3}(?:(?:A|Ans|Answer|উত্তর)\s*:\s*)?(```|~~~)", re.I)    # "A: ```python" opens one too
@@ -48,8 +49,8 @@ RULE = re.compile(r"^\s{0,3}([-*_])(?:\s*\1){2,}\s*$")   # --- between questions
 # After a label: a colon, or . ) - with a number before it or a space after it — so "Q-learning", "Q.E.D." and
 # "A-star" are words, not labels.
 END = r"(?:[:：]|(?<=[\d০-৯])\s*[.)\-–—]|\s*[.)\-–—](?=[\s*_]|$))"
-Q_LINE = re.compile(r"^\s*(?:#{1,6}\s+)?" + B + r"\s*(?:Q\.\s*(?:\d+|[০-৯]+)[.):]?(?=\s)|(?:Q|Ques|Question|প্রশ্ন)\s*-?\s*(?:\d+|[০-৯]+)?\s*" + END + r")\s*" + B + r"\s*", re.I)
-A_LINE = re.compile(r"^\s*" + B + r"\s*(?:A|Ans|Answer|উত্তর)\s*(?:\d+|[০-৯]+)?\s*" + END + r"\s*" + B + r"\s*", re.I)
+Q_LINE = re.compile(r"^\s*(?:#{1,6}\s+)?" + B + r"\s*(?:Q\.\s*(?:\d+|[০-৯]+)[.):]?(?=\s)|(?:Q|Ques|Question|প্রশ্ন)\s*-?\s*(?:\d+|[০-৯]+)?\s*" + END + r"(?!:))\s*" + B + r"\s*", re.I)   # ("q1 :: a1" is a pair, not a Q1:)
+A_LINE = re.compile(r"^\s*" + B + r"\s*(?:A|Ans|Answer|উত্তর)\s*(?:\d+|[০-৯]+)?\s*" + END + r"(?!:)\s*" + B + r"\s*", re.I)
 A_LABEL = re.compile(r"^\s*" + B + r"\s*(?:A|Ans|Answer|উত্তর)\s*(?:\d+|[০-৯]+)?\s*" + B + r"\s*[:：]", re.I)
 A_ALONE = re.compile(r"^\s*" + B + r"\s*(?:Answer|Ans|উত্তর)\s*" + B + r"\s*:?\s*" + B + r"\s*$", re.I)
 NUMBER = re.compile(r"^\s*(\d+|[০-৯]+)\s*[.):]\s+")    # "1. ", "2) " in front of a question
@@ -418,8 +419,29 @@ def as_text(subject, notes):
     return "\n".join(out)
 
 
+def rev(note):
+    """What the editor was given: a save written over any other text was written without seeing that text."""
+    return format(zlib.crc32(f"{note.question}\0{note.answer}".encode()), "x")
+
+
+VERSION_EVERY, VERSION_KEEP = timedelta(minutes=10), 20       # a new copy at most this often while writing
+
+
+def remember(note, force=False):
+    """Keep the question as it is now, before a new round of edits (or on purpose with `force`)."""
+    last = note.versions.first()
+    now = timezone.now()
+    if last and ((not force and now - last.created_at < VERSION_EVERY) or (last.question, last.answer) == (note.question, note.answer)):
+        return None
+    version = note.versions.create(question=note.question, answer=note.answer, created_at=now)
+    old = list(note.versions.values_list("pk", flat=True)[VERSION_KEEP:])
+    if old:
+        note.versions.filter(pk__in=old).delete()
+    return version
+
+
 def as_json(note, number=None, today=None):
-    return {"id": note.pk, "question": note.question, "answer": note.answer, "chapter": note.chapter, "starred": note.is_starred,
+    return {"id": note.pk, "question": note.question, "answer": note.answer, "rev": rev(note), "chapter": note.chapter, "starred": note.is_starred,
             "known": note.is_known, "misses": note.misses, "color": note.color, "number": number,
             "due": is_due(note, today), "dueOn": note.due_on.isoformat() if note.due_on else "", "interval": note.interval}
 

@@ -27,7 +27,7 @@
   /* ── Small helpers ─────────────────────────────────────────────────── */
   function csrf() { var m = d.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/); return m ? decodeURIComponent(m[1]) : ""; }
   function uid() { return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2, 12); }
-  function store(k, v) { try { if (v === null || v === undefined) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage off */ } }
+  function store(k, v) { try { if (v === null || v === undefined) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; /* storage off or full */ } }
   function recall(k, fallback) { try { var v = localStorage.getItem(k); return v === null ? fallback : JSON.parse(v); } catch (e) { return fallback; } }
   function pad(n) { return (n < 10 ? "0" : "") + n; }
   function clock(sec) {
@@ -61,10 +61,18 @@
   // Signed out meanwhile: the server sends the save to the sign-in page, and that page isn't an answer that it was saved.
   function signedOut(res) { return res.redirected && /\/accounts\/login\//.test(res.url); }
   var toldSignedOut = 0;
+  // _ft_same: a save that replaces the one before it (a note, as it's written): what's waiting to go for it isn't sent as well.
+  // _ft_draft: the local draft that this save makes needless. Without these, every pause while writing offline would queue a whole
+  // copy of the note, fill the device's storage, and — for a new note — make a new note each time.
   var api = function (url, data) {
     var fields = Object.assign({}, data || {}, { _ft_key: uid(), _ft_user: ME });
+    if (fields._ft_same && queued().some(function (x) { return x.fields._ft_same === fields._ft_same; })) {
+      store(OUTBOX, queued().filter(function (x) { return x.fields._ft_same !== fields._ft_same; }));
+    }
     function keep() {
-      var box = queued(); box.push({ url: url, fields: fields, at: Date.now() }); store(OUTBOX, box); badge();
+      var box = queued(); box.push({ url: url, fields: fields, at: Date.now() });
+      if (!store(OUTBOX, box)) { toast(t("deviceFull", "This device's storage is full, so this wasn't kept. Check your connection and try again."), "warn"); return { ok: false }; }
+      badge();
       return { ok: true, queued: true };
     }
     return post(url, fields).then(function (res) {
@@ -79,30 +87,53 @@
       if (res.status === 403) return { ok: false, error: t("noAccess", "Not allowed.") };
       return res.json().catch(function () { return { ok: res.ok }; });
     }).catch(function () {
-      toast(t("savedOffline", "Saved on this device — it will sync when you're online."), "warn");
-      return keep();
+      var kept = keep();
+      if (kept.ok) toast(t("savedOffline", "Saved on this device — it will sync when you're online."), "warn");
+      return kept;
     });
   };
+  /* A question to the server that isn't a change (a preview): nothing to keep for later. null when it can't be asked now. */
+  function ask(url, data) {
+    return post(url, data).then(function (res) {
+      return signedOut(res) ? null : res.json().catch(function () { return null; });
+    }).catch(function () { return null; });
+  }
+  function reached(item, ans) {              // this save has reached the server
+    var f = item.fields, kept = f._ft_draft ? recall(f._ft_draft, null) : null;
+    if (kept && kept.at <= item.at && (!kept.same || kept.same === f._ft_same)) store(f._ft_draft, null);
+    if (f._ft_same) d.dispatchEvent(new CustomEvent("work:synced", { detail: { same: f._ft_same, location: ans.location, rev: ans.rev } }));
+  }
   var flushing = false;
   function flush() {
     if (flushing || !navigator.onLine) return Promise.resolve();
     var box = queued(); if (!box.length) return Promise.resolve();
     flushing = true;
-    var sent = 0;
+    var sent = 0, lost = 0;
+    function others(item) { return queued().filter(function (x) { return x.fields._ft_key !== item.fields._ft_key; }); }
     function next() {
       var item = queued()[0];
       if (!item) return Promise.resolve();
       return post(item.url, item.fields, true).then(function (res) {
         if (signedOut(res)) return { ok: false, why: "signin" };
+        // (the host's own error page, a deploy under way say: the server never saw this, so it isn't an answer)
+        if (res.status >= 500 || res.status === 429) return { ok: false, why: "error" };
         return res.json().catch(function () { return { ok: res.ok }; });
       }).then(function (ans) {
         var retry = !ans.ok && (ans.why === "busy" || ans.why === "error" || ans.why === "signin");
         if (retry) throw new Error("later");
-        store(OUTBOX, queued().slice(1)); sent++; return next();
+        if (ans.why === "gone" && item.url === CFG.urls.noteSave && item.fields.body !== undefined) {
+          // the note was deleted elsewhere: what was written on it comes back as a note of its own
+          store(OUTBOX, [{ url: item.url, fields: Object.assign({}, item.fields, { id: "", rev: "", _ft_key: uid() }), at: item.at }].concat(others(item)));
+          return next();
+        }
+        store(OUTBOX, others(item));
+        if (ans.ok) { sent++; reached(item, ans); } else lost++;
+        return next();
       });
     }
     return next().catch(function () { /* still offline: try again later */ }).then(function () {
       flushing = false; badge();
+      if (lost) toast(t("syncLost", "A change made offline couldn't be saved: what it belonged to is gone or was refused."), "warn");
       if (sent) { toast(t("synced", "Synced changes made offline.")); if (d.querySelector("[data-work-refresh]")) location.reload(); }
     });
   }
@@ -351,7 +382,7 @@
   })();
 
   /* ── Expose for the page components ──────────────────────────────────── */
-  window.Work = { api: api, toast: toast, undoable: undoable, play: play, notify: notify, askNotify: askNotify, clock: clock, hm: hm, cfg: CFG, flush: flush, recall: recall, store: store, putImages: putImages, shrinkImage: shrinkImage, zen: { on: zenOn, off: zenOff, toggle: zenToggle } };
+  window.Work = { api: api, ask: ask, toast: toast, undoable: undoable, play: play, notify: notify, askNotify: askNotify, clock: clock, hm: hm, cfg: CFG, flush: flush, recall: recall, store: store, putImages: putImages, shrinkImage: shrinkImage, zen: { on: zenOn, off: zenOff, toggle: zenToggle } };
 
   /* ── Focus (Pomodoro): one engine for every page ──────────────────────
    * The session lives in localStorage (by its end time), so it keeps going
@@ -1301,7 +1332,7 @@
     Alpine.data("workNote", function (initial) {
       return {
         id: initial.id || null, title: initial.title || "", body: initial.body || "", tags: initial.tags || "", project: initial.project || "", rev: initial.rev || "",
-        linkedTitle: initial.title || "", examOpen: false, examSubject: "", examName: "",
+        linkedTitle: initial.title || "", examOpen: false, examSubject: "", examName: "", same: "note:" + (initial.id || uid()),
         state: "saved", savedAt: initial.saved || "", preview: false, timer: null, inflight: null, again: false,
         making: false, suggest: [], pick: 0, dgOpen: false, dgItems: [], dgQ: "", dgLoading: false,
         histOpen: false, histLoading: false, versions: [], shown: null,
@@ -1391,8 +1422,9 @@
         init: function () {
           var draft = recall(this.draftKey, null), self = this;
           if (draft && draft.at > (initial.updated || 0) && (draft.body !== this.body || draft.title !== this.title)) {
-            this.title = draft.title; this.body = draft.body; this.state = "dirty"; this.queue();
+            this.title = draft.title; this.body = draft.body; this.same = draft.same || this.same; this.state = "dirty"; this.queue();
           }
+          d.addEventListener("work:synced", function (e) { self.synced(e.detail); });
           ["title", "body", "tags", "project"].forEach(function (k) { self.$watch(k, function () { self.changed(); }); });
           this.$watch("preview", function (on) { if (!on) self.$nextTick(function () { self.grow(); }); });
           this.$nextTick(function () { self.grow(); });
@@ -1428,7 +1460,15 @@
             toast(t(res.count === 1 ? "examMadeOne" : "examMade", "Questions added: %(n)s").replace("%(n)s", res.count), "good", { label: t("seeThem", "See them"), run: function () { location.href = res.url; } });
           });
         },
-        changed: function () { this.state = "dirty"; store(this.draftKey, { title: this.title, body: this.body, at: Date.now() }); this.queue(); },
+        changed: function () { this.state = "dirty"; store(this.draftKey, { title: this.title, body: this.body, at: Date.now(), same: this.same }); this.queue(); },
+        /* what was written offline has reached the server: this page goes on from there */
+        synced: function (x) {
+          if (x.same !== this.same) return;
+          this.rev = x.rev || "";
+          var made = /\/notes\/(\d+)\//.exec(x.location || "");
+          if (!this.id && made) { this.id = Number(made[1]); history.replaceState(null, "", x.location); }
+          if (this.state === "offline") { var now = new Date(); this.state = "saved"; this.savedAt = pad(now.getHours()) + ":" + pad(now.getMinutes()); }
+        },
         queue: function () { clearTimeout(this.timer); var self = this; this.timer = setTimeout(function () { self.saveNow(); }, 900); },
         saveNow: function () {
           var self = this;
@@ -1438,7 +1478,7 @@
           this.state = "saving";
           var key = this.draftKey;
           var sent = [this.title, this.body];
-          this.inflight = api(CFG.urls.noteSave, { id: this.id || "", title: this.title, body: this.body, tags: this.tags, project: this.project, rev: this.rev || "" }).then(function (res) {
+          this.inflight = api(CFG.urls.noteSave, { id: this.id || "", title: this.title, body: this.body, tags: this.tags, project: this.project, rev: this.rev || "", _ft_same: this.same, _ft_draft: key }).then(function (res) {
             self.inflight = null;
             if (res.rev) self.rev = res.rev;
             if (res.conflict) toast(t("noteConflict", "This note was changed somewhere else too. That text is kept in History."), "warn");

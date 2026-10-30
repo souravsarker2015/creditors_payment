@@ -247,7 +247,7 @@
           </div>
         </div>
       </div>
-      <input x-model="title" class="wn-title" placeholder="{% translate 'Title' %}" aria-label="{% translate 'Title' %}" @change="titleChanged()">
+      <input x-model="title" class="wn-title" maxlength="200" placeholder="{% translate 'Title' %}" aria-label="{% translate 'Title' %}" @change="titleChanged()">
       <div class="wn-meta">
         <label class="wn-field">{% icon "folder" %}
           <select x-model="project" data-native aria-label="{% translate 'Project' %}">

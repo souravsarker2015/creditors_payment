@@ -58,7 +58,9 @@ def front_matter(text):
             key = "tags"
             fields.setdefault("tags", []).extend(_tags_from(value))
         elif key == "title":
-            fields["title"] = value.strip().strip("'\"")
+            value = value.strip()
+            quoted = len(value) > 1 and value[0] == value[-1] == '"'      # (as a note's download writes it)
+            fields["title"] = value[1:-1].replace('\\"', '"').replace("\\\\", "\\") if quoted else value.strip("'\"")
     return fields, text[m.end():]
 
 

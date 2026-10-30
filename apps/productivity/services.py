@@ -504,11 +504,26 @@ def one_line_end(text):
 
 def note_file(note):
     """A note as a Markdown file: its title and tags in a front matter block, as note import reads them back."""
-    head = [f'title: "{note.title}"'] if note.title else []
+    title = note.title.replace("\\", "\\\\").replace('"', '\\"')
+    head = [f'title: "{title}"'] if note.title else []
     tags = [t.name for t in note.tags.all()]
     if tags:
         head.append(f"tags: [{', '.join(tags)}]")
     return ("---\n" + "\n".join(head) + "\n---\n\n" if head else "") + note.body
+
+
+IMAGE_LINK = re.compile(r"/work/images/(\d+)/")
+
+
+def image_links(text, base, ext=None):
+    """A text for outside the app: its pictures' private addresses point at `base` (the site, or a folder beside
+    the file, where each is <id><ext> — ext: {id: ".png"}; one not there keeps its address)."""
+    def to(m):
+        pk = int(m.group(1))
+        if ext is None:
+            return f"{base}{pk}/"
+        return f"{base}{pk}{ext[pk]}" if pk in ext else m.group(0)
+    return IMAGE_LINK.sub(to, text)
 
 
 def next_order(user, status):

@@ -493,6 +493,8 @@ def note_save(request):
     note = get_object_or_404(Note, pk=pk, owner=user) if pk else Note(owner=user)
     hashtags_before = services.hashtags(note.body)
     posted = {name: services.one_line_end(request.POST[name]) for name in ("title", "body") if name in request.POST}
+    if "title" in posted:
+        posted["title"] = posted["title"][:200]
     changed = any(text != services.one_line_end(getattr(note, name)) for name, text in posted.items())
     # Written over a text the editor never saw (another device, another tab): that text stays in History.
     conflict = bool(note.pk and changed and request.POST.get("rev") and request.POST["rev"] != services.note_rev(note))
@@ -517,8 +519,10 @@ def note_save(request):
         gone = {t.lower() for t in hashtags_before} - {t.lower() for t in now}
         note.tags.remove(*note.tags.filter(name__in=gone))
     extra = {"card": _note_card(request, note)} if request.POST.get("card") == "1" else {}
-    return ok(id=note.pk, title=note.display_title, url=reverse("work:note", args=[note.pk]), tags=sorted(t.name for t in note.tags.all()),
-              saved=timezone.localtime(note.updated_at).strftime("%H:%M"), rev=services.note_rev(note), conflict=conflict, **extra)
+    answer = ok(id=note.pk, title=note.display_title, url=reverse("work:note", args=[note.pk]), tags=sorted(t.name for t in note.tags.all()),
+                saved=timezone.localtime(note.updated_at).strftime("%H:%M"), rev=services.note_rev(note), conflict=conflict, **extra)
+    answer["Location"] = reverse("work:note", args=[note.pk])     # (a save sent from the outbox finds its new note by this)
+    return answer
 
 
 def _note_card(request, note):

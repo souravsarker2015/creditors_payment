@@ -25282,3 +25282,19 @@ msgstr "নোট: যেকোনো শব্দ বা #ট্যাগ দ�
 msgctxt "state"
 msgid "Saved"
 msgstr "সেভ হয়েছে"
+
+msgid "This question was changed somewhere else too. That text is kept in History."
+msgstr "এই প্রশ্নটি অন্য কোথাও থেকেও বদলানো হয়েছে। সেই লেখাটি ইতিহাসে রাখা আছে।"
+
+#, python-format
+msgid "This answer is too long (over %(n)s characters). Split it into two questions."
+msgstr "এই উত্তরটি অনেক বড় (%(n)s অক্ষরের বেশি)। দুটি প্রশ্নে ভাগ করে নিন।"
+
+msgid "A change made offline couldn't be saved: what it belonged to is gone or was refused."
+msgstr "অফলাইনে করা একটি পরিবর্তন সেভ করা যায়নি: যেটির জন্য করা হয়েছিল সেটি আর নেই, অথবা গ্রহণ করা হয়নি।"
+
+msgid "This device's storage is full, so this wasn't kept. Check your connection and try again."
+msgstr "এই ডিভাইসের জায়গা ভরে গেছে, তাই এটি রাখা যায়নি। সংযোগ দেখে আবার চেষ্টা করুন।"
+
+msgid "Changed your mind? Notes, exam questions and diagrams keep earlier versions — open History to read or bring one back."
+msgstr "মত বদলেছেন? নোট, পরীক্ষার প্রশ্ন আর ডায়াগ্রাম আগের সংস্করণ রেখে দেয় — পড়তে বা ফিরিয়ে আনতে ইতিহাস খুলুন।"

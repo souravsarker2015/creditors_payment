@@ -18,6 +18,7 @@ on the phone and sends it later. This module makes that safe:
   so are the lists a search or filter brings in (htmx), so a search done
   before still works with no signal.
 """
+import json
 import re
 from datetime import timedelta
 
@@ -39,8 +40,19 @@ def _is_replay(request):
     return request.META.get(REPLAY) == "1"
 
 
-def _answer(request, ok, why="", location=""):
-    return JsonResponse({"ok": ok, "why": why, "location": location})
+def _answer(request, ok, why="", location="", rev=None):
+    out = {"ok": ok, "why": why, "location": location}
+    if rev:
+        out["rev"] = rev
+    return JsonResponse(out)
+
+
+def _rev(response):
+    """The version a saved note or question is at now, for the page still open on it."""
+    try:
+        return json.loads(response.content).get("rev")
+    except (ValueError, AttributeError):
+        return None
 
 
 class OfflineMiddleware:
@@ -89,7 +101,7 @@ class OfflineMiddleware:
             receipt.save(update_fields=["location"])
             if replay:
                 _drop_messages(request)
-                return _answer(request, True, "saved", receipt.location)
+                return _answer(request, True, "saved", receipt.location, _rev(response))
             return response
         # Not saved (errors on the form, signed out, refused…): forget the key so it can be sent again.
         receipt.delete()
@@ -100,7 +112,9 @@ class OfflineMiddleware:
             return _answer(request, False, "signin")
         if status == 403:
             return _answer(request, False, "refused")
-        if 200 <= status < 300:
+        if status == 404:                    # deleted meanwhile: sending it again can't help, and what's behind it in the queue must go on
+            return _answer(request, False, "gone")
+        if 200 <= status < 300 or 400 <= status < 500:
             return _answer(request, False, "fix")
         return _answer(request, False, "error")
 

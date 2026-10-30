@@ -1265,6 +1265,20 @@ class ExamNote(models.Model):
         return self.question[:60]
 
 
+class ExamNoteVersion(models.Model):
+    """An earlier state of a question and its answer (see exam.remember)."""
+    note = models.ForeignKey(ExamNote, on_delete=models.CASCADE, related_name="versions")
+    question = models.TextField(blank=True)
+    answer = models.TextField(blank=True)
+    created_at = models.DateTimeField(default=timezone.now, db_index=True)
+
+    class Meta:
+        ordering = ["-created_at", "-pk"]
+
+    def __str__(self):
+        return f"{self.note_id} @ {self.created_at:%Y-%m-%d %H:%M}"
+
+
 # ── The job search (as Huntr or Teal): applications by stage, their interview rounds, and STAR stories ──
 class JobStage(models.TextChoices):
     WISHLIST = "wishlist", _("Wishlist")

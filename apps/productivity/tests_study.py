@@ -3,6 +3,7 @@ ran out, a save that failed, a second device), a pasted list reads as it was mea
 thousands stays quick, links survive a rename, and exams reach the calendar, Today and the morning email."""
 import io
 import json
+import uuid
 import zipfile
 from datetime import timedelta
 from pathlib import Path
@@ -453,3 +454,118 @@ class BanglaWordsTests(SimpleTestCase):
 
         with translation.override("bn"):
             self.assertNotEqual(pgettext("state", "Saved"), gettext("Saved"))
+
+
+class SyncSafetyTests(Base):
+    """What was written offline: one save per note, nothing lost, and the queue never stuck behind one bad item."""
+    def replay(self, url, **fields):
+        return self.client.post(url, {**fields, "_ft_key": uuid.uuid4().hex, "_ft_user": str(self.me.pk)}, HTTP_X_FT_REPLAY="1").json()
+
+    def test_a_save_for_something_deleted_is_not_retried_for_ever(self):
+        self.assertEqual(self.replay(reverse("work:api_note_save"), id="99999999", title="x", body="y")["why"], "gone")
+        self.assertEqual(self.replay(reverse("work:api_exam_note", args=[99999999]), action="update", question="q")["why"], "gone")
+
+    def test_a_refused_save_is_not_retried_for_ever(self):
+        note = self.note("t", "no to-dos")
+        answer = self.replay(reverse("work:api_note_action", args=[note.pk]), action="tick", index="5", done="1")
+        self.assertEqual((answer["ok"], answer["why"]), (False, "fix"))
+
+    def test_a_queued_new_note_tells_the_page_where_it_went_and_at_what_version(self):
+        answer = self.replay(reverse("work:api_note_save"), id="", title="Written offline", body="text")
+        note = Note.objects.get(title="Written offline")
+        self.assertEqual(answer["location"], reverse("work:note", args=[note.pk]))
+        self.assertEqual(answer["rev"], services.note_rev(note))
+
+    def test_a_queued_exam_save_gives_its_version(self):
+        q = self.question(self.subject(), "q", "a")
+        answer = self.replay(reverse("work:api_exam_note", args=[q.pk]), action="update", question="q", answer="b")
+        q.refresh_from_db()
+        self.assertEqual(answer["rev"], exam.rev(q))
+
+    def test_a_title_past_the_column_is_cut_not_a_server_error(self):
+        self.assertEqual(len(Note.objects.get(pk=self.save(title="t" * 500, body="b")["id"]).title), 200)
+
+    def test_the_outbox_keeps_one_save_per_note_and_what_it_cannot_send_yet(self):
+        work = (settings.BASE_DIR / "static/js/work.js").read_text()
+        self.assertIn("x.fields._ft_same !== fields._ft_same", work)
+        self.assertIn("res.status >= 500", work)
+        self.assertIn("_ft_same: this.same", work)
+
+
+class ExamHistoryTests(Base):
+    def update(self, q, **fields):
+        return self.client.post(reverse("work:api_exam_note", args=[q.pk]), {"action": "update", "question": q.question, **fields})
+
+    def test_text_written_over_unseen_stays_in_history(self):
+        q = self.question(self.subject(), "q", "first")
+        rev = exam.rev(q)
+        self.update(q, answer="from the laptop", rev=rev)
+        answer = self.update(q, answer="from the phone", rev=rev).json()
+        self.assertTrue(answer["conflict"])
+        self.assertEqual([v.answer for v in q.versions.all()], ["from the laptop", "first"])
+
+    def test_saving_on_from_the_same_editor_is_no_conflict(self):
+        q = self.question(self.subject(), "q", "first")
+        answer = self.update(q, answer="second", rev=exam.rev(q)).json()
+        self.assertFalse(self.update(q, answer="third", rev=answer["rev"]).json()["conflict"])
+        self.assertEqual(q.versions.count(), 1)         # one round of writing, one copy
+
+    def test_an_earlier_version_comes_back_and_what_was_there_is_kept(self):
+        q = self.question(self.subject(), "q", "first")
+        self.update(q, answer="second")
+        version = q.versions.get()
+        out = self.client.post(reverse("work:api_exam_note", args=[q.pk]), {"action": "restore", "version": version.pk}).json()
+        self.assertEqual(out["note"]["answer"], "first")
+        self.assertIn("second", [v.answer for v in q.versions.all()])
+
+    def test_history_stays_short(self):
+        q = self.question(self.subject(), "q", "0")
+        for i in range(1, exam.VERSION_KEEP + 5):
+            q.answer = str(i)
+            exam.remember(q, force=True)
+        self.assertEqual(q.versions.count(), exam.VERSION_KEEP)
+
+    def test_only_the_owner_sees_it(self):
+        q = self.question(self.subject(), "q", "secret")
+        self.update(q, answer="second")
+        self.client.force_login(User.objects.create_superuser("other", "o@example.com", PW))
+        self.assertEqual(self.client.get(reverse("work:api_exam_note_versions", args=[q.pk])).status_code, 404)
+
+    def test_a_long_answer_is_saved_whole(self):
+        q = self.question(self.subject(), "q", "a")
+        self.update(q, answer="x" * 25000 + " THE END")
+        q.refresh_from_db()
+        self.assertTrue(q.answer.endswith("THE END"))
+
+    def test_an_answer_past_the_limit_is_refused_not_cut(self):
+        q = self.question(self.subject(), "q", "a")
+        response = self.update(q, answer="x" * (exam.MAX_ANSWER + 1))
+        q.refresh_from_db()
+        self.assertEqual((response.status_code, q.answer), (400, "a"))
+
+    def test_a_new_question_past_the_limit_is_refused_not_cut(self):
+        s = self.subject()
+        r = self.client.post(reverse("work:api_exam_subject", args=[s.pk]), {"action": "add", "question": "q", "answer": "x" * (exam.MAX_ANSWER + 1)})
+        self.assertEqual((r.status_code, s.notes.count()), (400, 0))
+
+
+class OutsideTheAppTests(Base):
+    def test_a_pair_starting_with_q1_is_not_a_q1_label(self):
+        found = exam.parse_note("## First?\nOne\n\n## Second?\nTwo\n\nq1 :: a1\n")
+        self.assertEqual([n["question"] for n in found], ["First?", "Second?"])
+
+    def test_q1_labels_still_work(self):
+        self.assertEqual([n["question"] for n in exam.parse("Q1: What?\nA1: That\n\nQ2: Why?\nA2: So\n")], ["What?", "Why?"])
+
+    def test_a_title_with_quotes_survives_download_and_import(self):
+        note = self.note('He said "hi": part \\ two', "body")
+        fields, _body = notes_import.front_matter(services.note_file(note))
+        self.assertEqual(fields["title"], note.title)
+
+    def test_a_downloaded_note_keeps_its_pictures_address(self):
+        note = self.note("pic", "![shot](/work/images/5/)")
+        text = self.client.get(reverse("work:note_export", args=[note.pk])).content.decode()
+        self.assertIn("(http://testserver/work/images/5/)", text)
+
+    def test_the_export_points_at_the_pictures_beside_the_notes(self):
+        self.assertEqual(services.image_links("![a](/work/images/5/) ![b](/work/images/6/)", "images/", {5: ".png"}), "![a](images/5.png) ![b](/work/images/6/)")

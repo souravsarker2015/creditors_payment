@@ -23,16 +23,23 @@
 
   document.addEventListener("alpine:init", function () {
     Alpine.data("noteBoard", function () {
-      var DRAFT = "work-note-quick";
+      var DRAFT = Work.noteDraftKey("quick");
       return {
         open: false, title: "", body: "", color: "", pinned: false, saving: false,
         ed: null, edPreview: false, edState: "saved", edTimer: null, edSending: null, edAgain: false, edSaved: "", edTitle: "", finding: null,
         init: function () {
-          var self = this, saved = Work.recall(DRAFT, null);           // what was being written when the page closed
+          var self = this, older = Work.recall("work-note-quick", null);
+          if (older) { Work.store(DRAFT, older); Work.store("work-note-quick", null); }      // (kept for everyone on this browser until now)
+          var saved = Work.recall(DRAFT, null);                        // what was being written when the page closed
           if (saved && (saved.title || saved.body)) { Object.assign(this, saved); this.open = true; }
           ["title", "body", "color", "pinned"].forEach(function (k) { self.$watch(k, function () { self.keep(); }); });
           this.$watch("ed", function () { self.edChanged(); }, { deep: true });
           d.addEventListener("note-open", function (e) { self.openNote(e.detail.id); });
+          d.addEventListener("work:synced", function (e) {            // written offline, and it's there now
+            if (!self.ed || e.detail.same !== "note:" + self.ed.id) return;
+            self.ed.rev = e.detail.rev || "";
+            if (self.edState === "offline") self.edState = "saved";
+          });
           window.addEventListener("beforeunload", function () { self.flushNote(); });
           var asked = new URLSearchParams(location.search).get("open");          // ?open=N: that note, opened
           if (/^\d+$/.test(asked || "")) this.openNote(+asked);
@@ -153,7 +160,7 @@
           if (this.edSending) { this.edAgain = true; return this.edSending; }       // one save at a time
           this.edState = "saving";
           var sent = { title: n.title, body: n.body };
-          this.edSending = Work.api(urls().noteSave, { id: n.id, title: n.title, body: n.body, rev: n.rev || "", card: "1" }).then(function (r) {
+          this.edSending = Work.api(urls().noteSave, { id: n.id, title: n.title, body: n.body, rev: n.rev || "", card: "1", _ft_same: "note:" + n.id, _ft_draft: Work.noteDraftKey(n.id) }).then(function (r) {
             self.edSending = null;
             if (r && r.queued) { if (self.ed === n) self.edState = "offline"; return; }
             if (!r || !r.ok) {
