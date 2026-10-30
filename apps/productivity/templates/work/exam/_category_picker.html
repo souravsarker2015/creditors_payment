@@ -1,0 +1,54 @@
+{% load i18n work %}{# ── categories: your own tree. Pick any number for a question (or none), or one to show ── #}
+<div class="wc-backdrop wcat-back" x-show="catOpen" x-cloak x-transition.opacity @click="catDone()"></div>
+<section class="wc wcat" x-show="catOpen" x-cloak x-trap="catOpen" x-transition role="dialog" aria-modal="true" aria-labelledby="wcat-title"
+         @keydown.escape.stop="catDone()" @click.stop>
+  <header class="wcat-head">
+    <h2 id="wcat-title" class="card-title">{% icon "folder" %}<span x-text="catMode === 'filter' ? '{{ _("Show a category")|escapejs }}' : '{{ _("Categories")|escapejs }}'"></span></h2>
+    <button type="button" class="btn btn-ghost btn-sm" :class="catManage && 'is-on'" x-show="cats.length" @click="catManage = !catManage; catEdit = null" :aria-pressed="catManage.toString()">{% icon "edit" %}{% translate "Manage" %}</button>
+    <button type="button" class="icon-btn" @click="catDone()" aria-label="{% translate 'Close' %}">{% icon "x" %}</button>
+  </header>
+  <div class="input-icon">{% icon "search" %}
+    <input type="search" x-ref="catFind" x-model="catQuery" class="form-input input-compact" maxlength="200" @keydown.enter.prevent="catEnter()"
+           placeholder="{% translate 'Find or add a category' %}" aria-label="{% translate 'Find or add a category' %}"></div>
+  <button type="button" class="wcat-make" x-show="catCanMake()" @click="catMake(catQuery, '')">{% icon "plus" %}<span>{% translate "Add" %} “<b x-text="catQuery.trim()"></b>”</span></button>
+  <p class="help" x-show="!cats.length && !catCanMake()">{% translate "None yet. Type a name to add the first one — “Backend > Databases” makes both, one inside the other." %}</p>
+
+  <ul class="wcat-list">
+    <template x-if="catMode === 'filter'">
+      <li class="wcat-item"><div class="wcat-row"><button type="button" class="wcat-name" :class="category === null && 'is-on'" @click="catOpen = false; setCategory(null)"><span x-text="t('catAll')"></span></button></div>
+        <div class="wcat-row"><button type="button" class="wcat-name" :class="category === 'none' && 'is-on'" @click="catOpen = false; setCategory('none')"><span x-text="t('catNone')"></span><small x-text="catN.none || 0"></small></button></div></li>
+    </template>
+    <template x-for="c in catRows()" :key="c.id">
+      <li class="wcat-item" :style="'--d:' + (catQuery.trim() ? 0 : Math.min(c.depth, 5))">
+        <div class="wcat-row">
+          <button type="button" class="wcat-twist" :class="catShut[c.id] && 'is-shut'" :style="(c.kids && !catQuery.trim()) ? '' : 'visibility:hidden'" @click="catShut[c.id] = !catShut[c.id]"
+                  :aria-expanded="(!catShut[c.id]).toString()" :aria-label="c.name">{% icon "chevron-down" %}</button>
+          <button type="button" class="wcat-name" role="checkbox" :aria-checked="(catMode === 'pick' ? catList.includes(c.id) : category === c.id).toString()"
+                  :class="(catMode === 'pick' ? catList.includes(c.id) : category === c.id) && 'is-on'" @click="catChoose(c)">
+            <i class="wcat-box" x-show="catMode === 'pick'" aria-hidden="true">{% icon "check" %}</i>
+            <span x-text="catQuery.trim() ? c.path : c.name"></span><small x-show="catCount(c)" x-text="catCount(c)"></small></button>
+          <button type="button" class="icon-btn" @click="catAddUnder(c)" :aria-label="'{{ _("Add a category inside")|escapejs }}: ' + c.name" data-tip="{% translate 'Add a category inside' %}">{% icon "plus" %}</button>
+          <button type="button" class="icon-btn" x-show="catManage" @click="catStartEdit(c)" :aria-label="'{{ _("Rename or move")|escapejs }}: ' + c.name" data-tip="{% translate 'Rename or move' %}">{% icon "edit" %}</button>
+          <button type="button" class="icon-btn is-danger" x-show="catManage" @click="catDelete(c)" :aria-label="'{{ _("Delete")|escapejs }}: ' + c.name" data-tip="{% translate 'Delete' %}">{% icon "trash" %}</button>
+        </div>
+        <div class="wcat-form" x-show="catUnder === c.id">
+          <input type="text" class="form-input input-compact" x-model="catNewName" maxlength="200" @keydown.enter.prevent="catMake(catNewName, c.id)" @keydown.escape.stop="catUnder = null"
+                 x-effect="catUnder === c.id && $nextTick(() => $el.focus())" placeholder="{% translate 'Name of the new category' %}" aria-label="{% translate 'Name of the new category' %}">
+          <button type="button" class="btn btn-primary btn-sm" @click="catMake(catNewName, c.id)" :disabled="!catNewName.trim()">{% translate "Add" %}</button>
+        </div>
+        <template x-if="catEdit && catEdit.id === c.id">
+          <div class="wcat-form">
+            <input type="text" class="form-input input-compact" x-model="catEdit.name" maxlength="80" @keydown.enter.prevent="catSaveEdit()" @keydown.escape.stop="catEdit = null" aria-label="{% translate 'Name' %}">
+            <select class="form-input input-compact" x-model="catEdit.parent" aria-label="{% translate 'Inside' %}">
+              <option value="">{% translate "At the top" %}</option>
+              <template x-for="o in catParents(c)" :key="o.id"><option :value="String(o.id)" x-text="o.path" :selected="String(o.id) === catEdit.parent"></option></template>
+            </select>
+            <button type="button" class="btn btn-primary btn-sm" @click="catSaveEdit()">{% translate "Save" %}</button>
+          </div>
+        </template>
+      </li>
+    </template>
+  </ul>
+  <div class="wc-foot" x-show="catMode === 'pick'"><span class="help" x-show="catList.length" x-text="catList.length + ' {{ _("picked")|escapejs }}'"></span><span class="spacer"></span>
+    <button type="button" class="btn btn-primary" @click="catDone()">{% translate "Done" %}</button></div>
+</section>

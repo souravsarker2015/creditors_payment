@@ -441,9 +441,124 @@ def remember(note, force=False):
 
 
 def as_json(note, number=None, today=None):
-    return {"id": note.pk, "question": note.question, "answer": note.answer, "rev": rev(note), "chapter": note.chapter, "starred": note.is_starred,
+    return {"id": note.pk, "question": note.question, "answer": note.answer, "rev": rev(note), "chapter": note.chapter,
+            "categories": [c.pk for c in note.categories.all()], "starred": note.is_starred,
             "known": note.is_known, "misses": note.misses, "color": note.color, "number": number,
             "due": is_due(note, today), "dueOn": note.due_on.isoformat() if note.due_on else "", "interval": note.interval}
+
+
+# ── Categories: one tree per person, any number on a question, none needed ──
+MAX_CATEGORY = 80
+
+
+def category_tree(user):
+    """[{id, parent, name, depth, path, kids}]: each parent before what's inside it, each level by name."""
+    from .models import ExamCategory
+
+    inside = {}
+    for row in ExamCategory.objects.filter(owner=user).values("id", "parent_id", "name"):
+        inside.setdefault(row["parent_id"], []).append(row)
+    out = []
+
+    def walk(parent, path):
+        for row in sorted(inside.get(parent, []), key=lambda r: r["name"].casefold()):
+            here = [*path, row["name"]]
+            out.append({"id": row["id"], "parent": parent, "name": row["name"], "depth": len(path), "path": " › ".join(here),
+                        "kids": len(inside.get(row["id"], []))})
+            walk(row["id"], here)
+    walk(None, [])
+    return out
+
+
+def branch(user, pk):
+    """The category's id and those of everything under it."""
+    from .models import ExamCategory
+
+    inside, own = {}, set()
+    for child, parent in ExamCategory.objects.filter(owner=user).values_list("pk", "parent_id"):
+        own.add(child)
+        inside.setdefault(parent, []).append(child)
+    out, todo = set(), [pk] if pk in own else []
+    while todo:
+        at = todo.pop()
+        if at not in out:
+            out.add(at)
+            todo += inside.get(at, [])
+    return out
+
+
+def in_category(qs, user, category):
+    """category: an id (with what's under it), "none" (the questions in no category), or None (all)."""
+    from .models import ExamNote
+
+    if category == "none":
+        return qs.filter(categories__isnull=True)
+    if category is None:
+        return qs
+    links = ExamNote.categories.through.objects.filter(examcategory_id__in=branch(user, category))
+    return qs.filter(pk__in=links.values("examnote_id"))
+
+
+def asked_category(value):
+    """The ?category= of a page: an id, "none", or None for anything else."""
+    return value if value == "none" else int(value) if (value or "").isdigit() else None
+
+
+def owned_categories(user, text):
+    """The person's own categories out of a "3,8,12" sent by a page."""
+    from .models import ExamCategory
+
+    return list(ExamCategory.objects.filter(owner=user, pk__in=[int(i) for i in (text or "").split(",") if i.strip().isdigit()]))
+
+
+def add_to_categories(notes, categories):
+    """Puts these questions in these categories too (those already in one stay in it)."""
+    from .models import ExamNote
+
+    through = ExamNote.categories.through
+    through.objects.bulk_create([through(examnote_id=n.pk, examcategory_id=c.pk) for n in notes for c in categories], ignore_conflicts=True, batch_size=500)
+
+
+def _rolled_up(links, user):
+    """{category id: questions in it or under it}, each question once however many of them it's in."""
+    from .models import ExamCategory
+
+    parents, seen = dict(ExamCategory.objects.filter(owner=user).values_list("pk", "parent_id")), {}
+    for note, category in links:
+        while category and note not in seen.setdefault(category, set()):
+            seen[category].add(note)
+            category = parents.get(category)
+    return {category: len(notes) for category, notes in seen.items()}
+
+
+def category_totals(user):
+    from .models import ExamNote
+
+    return _rolled_up(ExamNote.categories.through.objects.filter(examnote__owner=user).values_list("examnote_id", "examcategory_id"), user)
+
+
+def category_counts(subject):
+    """How many of the subject's questions each category holds, and "none": how many are in no category."""
+    from .models import ExamNote
+
+    links = list(ExamNote.categories.through.objects.filter(examnote__subject=subject).values_list("examnote_id", "examcategory_id"))
+    return {**_rolled_up(links, subject.owner), "none": subject.notes.count() - len({note for note, _c in links})}
+
+
+def add_category(user, parent, name):
+    """The category `name` in `parent`, made if it isn't there. "Backend > Databases" goes through both."""
+    at = parent
+    for part in re.split(r"\s*[>›]\s*", (name or "").strip()):
+        if part.strip():
+            at = category_in(user, at, part)
+    return None if at == parent else at
+
+
+def category_in(user, parent, name):
+    from .models import ExamCategory
+
+    name = name.strip()[:MAX_CATEGORY]
+    return ExamCategory.objects.filter(owner=user, parent=parent, name__iexact=name).first() or ExamCategory.objects.create(owner=user, parent=parent, name=name)
 
 
 # ── Spaced repetition: a question you knew comes back later each time (1, 3, 7, 16, 35… days, as
@@ -499,8 +614,8 @@ def matching(qs, text):
     return qs
 
 
-def filtered(subject, show="all", chapter=None, q=""):
-    qs = subject.notes.all()
+def filtered(subject, show="all", chapter=None, q="", category=None):
+    qs = in_category(subject.notes.all(), subject.owner, category)
     if show == "unknown":
         qs = qs.filter(is_known=False)
     elif show == "due":
@@ -532,7 +647,7 @@ def counts(subject):
     c = subject.notes.aggregate(all=Count("pk"), unknown=Count("pk", filter=Q(is_known=False)),
                                 due=Count("pk", filter=Q(is_known=True, due_on__lte=timezone.localdate())),
                                 missed=Count("pk", filter=Q(misses__gt=0)), starred=Count("pk", filter=Q(is_starred=True)))
-    return {"shows": c, "chapters": chapter_list(subject)}
+    return {"shows": c, "chapters": chapter_list(subject), "categoryN": category_counts(subject)}
 
 
 def chapter_list(subject):

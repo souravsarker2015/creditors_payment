@@ -7,6 +7,7 @@ import uuid
 import zipfile
 from datetime import timedelta
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -17,7 +18,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from . import emails, exam, linked, notes_import, services
-from .models import ExamNote, ExamSubject, Note, NoteVersion, Project, Tag
+from .models import ExamCategory, ExamNote, ExamSubject, Note, NoteVersion, Project, Tag
 
 PW = "Str0ng-pass-123"
 
@@ -569,3 +570,191 @@ class OutsideTheAppTests(Base):
 
     def test_the_export_points_at_the_pictures_beside_the_notes(self):
         self.assertEqual(services.image_links("![a](/work/images/5/) ![b](/work/images/6/)", "images/", {5: ".png"}), "![a](images/5.png) ![b](/work/images/6/)")
+
+
+class CategoryTests(Base):
+    """Any number on a question or none, a tree of any depth, shared by the subjects, and safe in every restore."""
+    def post(self, **fields):
+        return self.client.post(reverse("work:api_exam_categories"), fields)
+
+    def tree(self):
+        return [c["path"] for c in exam.category_tree(self.me)]
+
+    def cat(self, path):
+        return exam.add_category(self.me, None, path)
+
+    def notes(self, s, **params):
+        return [n["question"] for n in self.client.get(reverse("work:api_exam_notes", args=[s.pk]), params).json()["notes"]]
+
+    def test_a_path_makes_the_tree_and_goes_through_what_is_there(self):
+        first = self.post(action="add", name="Backend > Databases > Indexing").json()
+        self.post(action="add", name="backend > caching")
+        self.assertEqual(self.tree(), ["Backend", "Backend › caching", "Backend › Databases", "Backend › Databases › Indexing"])
+        self.assertEqual(ExamCategory.objects.get(pk=first["id"]).name, "Indexing")
+
+    def test_a_name_is_needed(self):
+        self.assertEqual(self.post(action="add", name="  ").status_code, 400)
+
+    def test_a_question_needs_none(self):
+        s = self.subject()
+        r = self.client.post(reverse("work:api_exam_subject", args=[s.pk]), {"action": "add", "question": "q"}).json()
+        self.assertEqual(r["note"]["categories"], [])
+
+    def test_a_question_can_have_several_and_can_lose_them(self):
+        s, a, b = self.subject(), self.cat("A"), self.cat("B > C")
+        r = self.client.post(reverse("work:api_exam_subject", args=[s.pk]), {"action": "add", "question": "q", "categories": f"{a.pk},{b.pk}"}).json()
+        self.assertEqual(set(r["note"]["categories"]), {a.pk, b.pk})
+        q = ExamNote.objects.get(pk=r["note"]["id"])
+        self.client.post(reverse("work:api_exam_note", args=[q.pk]), {"action": "update", "question": "q", "categories": str(b.pk)})
+        self.assertEqual(list(q.categories.all()), [b])
+        self.client.post(reverse("work:api_exam_note", args=[q.pk]), {"action": "update", "question": "q", "categories": ""})
+        self.assertEqual(q.categories.count(), 0)
+
+    def test_a_save_that_does_not_mention_them_leaves_them(self):
+        q = self.question(self.subject(), "q", "a")
+        q.categories.add(self.cat("A"))
+        self.client.post(reverse("work:api_exam_note", args=[q.pk]), {"action": "update", "question": "q", "answer": "b"})
+        self.assertEqual(q.categories.count(), 1)
+
+    def test_somebody_elses_category_is_not_taken(self):
+        other = User.objects.create_user("other", "o@example.com", PW)
+        theirs = ExamCategory.objects.create(owner=other, name="Theirs")
+        q = self.question(self.subject(), "q")
+        self.client.post(reverse("work:api_exam_note", args=[q.pk]), {"action": "update", "question": "q", "categories": str(theirs.pk)})
+        self.assertEqual(q.categories.count(), 0)
+        self.assertEqual(self.post(action="delete", id=theirs.pk).status_code, 404)
+        self.assertEqual(self.post(action="add", name="x", parent=theirs.pk).status_code, 404)
+
+    def test_a_category_shows_what_is_inside_it_each_question_once(self):
+        s, top = self.subject(), self.cat("Backend")
+        deep, side = self.cat("Backend > Databases > Indexing"), self.cat("Backend > Caching")
+        both, plain = self.question(s, "both", order=1), self.question(s, "plain", order=2)
+        both.categories.add(deep, side)
+        self.assertEqual(self.notes(s, category=top.pk), ["both"])
+        self.assertEqual(self.notes(s, category="none"), ["plain"])
+        self.assertEqual(exam.category_counts(s)[top.pk], 1)
+        self.assertEqual(exam.category_counts(s)["none"], 1)
+        self.assertEqual(self.notes(s), ["both", "plain"])
+
+    def test_a_review_can_be_of_a_category(self):
+        s, top, deep = self.subject(), self.cat("Backend"), self.cat("Backend > Databases")
+        self.question(s, "in", order=1).categories.add(deep)
+        self.question(s, "out", order=2)
+        page = self.client.get(reverse("work:exam_review", args=[s.pk]), {"category": top.pk})
+        self.assertEqual([n["question"] for n in page.context["data"]["notes"]], ["in"])
+
+    def test_the_same_category_works_across_subjects_and_goes_with_a_move(self):
+        one, two, cat = self.subject("One"), self.subject("Two"), self.cat("Shared")
+        q = self.question(one, "q")
+        q.categories.add(cat)
+        self.question(two, "r").categories.add(cat)
+        page = self.client.get(reverse("work:exam"), {"category": cat.pk})
+        self.assertEqual({n.question for n in page.context["found"]}, {"q", "r"})
+        self.client.post(reverse("work:api_exam_note", args=[q.pk]), {"action": "update", "question": "q", "subject": two.pk})
+        self.assertEqual(list(ExamNote.objects.get(pk=q.pk).categories.all()), [cat])
+
+    def test_picked_questions_get_it_added_to_what_they_have(self):
+        s, a, b = self.subject(), self.cat("A"), self.cat("B")
+        q, r = self.question(s, "q"), self.question(s, "r")
+        q.categories.add(a)
+        ids = f"{q.pk},{r.pk}"
+        for _time in (1, 2):
+            self.client.post(reverse("work:api_exam_subject", args=[s.pk]), {"action": "bulk", "op": "categories", "ids": ids, "categories": str(b.pk)})
+        self.assertEqual({c.name for c in q.categories.all()}, {"A", "B"})
+        self.assertEqual(list(r.categories.all()), [b])
+
+    def test_a_pasted_list_can_all_go_in_one(self):
+        s, a = self.subject(), self.cat("A")
+        self.client.post(reverse("work:api_exam_subject", args=[s.pk]), {"action": "add_many", "text": "Q: one?\nA: 1\n\nQ: two?\nA: 2\n", "categories": str(a.pk)})
+        self.assertEqual(a.notes.count(), 2)
+
+    def test_a_category_cannot_go_inside_itself_or_what_is_inside_it(self):
+        top, low = self.cat("A"), self.cat("A > B > C")
+        self.assertEqual(self.post(action="change", id=top.pk, name="A", parent=low.pk).status_code, 400)
+        self.assertEqual(self.post(action="change", id=top.pk, name="A", parent=top.pk).status_code, 400)
+        self.assertEqual(self.tree(), ["A", "A › B", "A › B › C"])
+
+    def test_moving_takes_what_is_inside_along(self):
+        self.cat("A > B > C")
+        other = self.cat("Z")
+        b = ExamCategory.objects.get(name="B")
+        self.post(action="change", id=b.pk, name="B", parent=other.pk)
+        self.assertEqual(self.tree(), ["A", "Z", "Z › B", "Z › B › C"])
+
+    def test_two_with_one_name_in_one_place_are_refused(self):
+        self.cat("A > B")
+        c = self.cat("A > C")
+        self.assertEqual(self.post(action="change", id=c.pk, name="b", parent=c.parent_id).status_code, 400)
+
+    def test_deleting_keeps_the_questions_and_undo_brings_it_all_back(self):
+        q = self.question(self.subject(), "q")
+        deep = self.cat("A > B")
+        q.categories.add(deep)
+        undo = self.post(action="delete", id=deep.parent_id).json()["undo"]
+        self.assertEqual((ExamCategory.objects.count(), q.categories.count()), (0, 0))
+        self.assertTrue(ExamNote.objects.filter(pk=q.pk).exists())
+        self.client.post(undo)
+        self.assertEqual(self.tree(), ["A", "A › B"])
+        self.assertEqual(q.categories.count(), 1)
+
+    def test_a_deleted_question_comes_back_with_its_categories(self):
+        q, a = self.question(self.subject(), "q"), self.cat("A")
+        q.categories.add(a)
+        pk, undo = q.pk, self.client.post(reverse("work:api_exam_note", args=[q.pk]), {"action": "delete"}).json()["undo"]
+        self.client.post(undo)
+        self.assertEqual(list(ExamNote.objects.get(pk=pk).categories.all()), [a])
+
+    def test_a_deleted_question_still_comes_back_when_its_category_has_gone_for_good(self):
+        q, a, b = self.question(self.subject(), "q"), self.cat("A"), self.cat("B")
+        q.categories.add(a, b)
+        pk, undo = q.pk, self.client.post(reverse("work:api_exam_note", args=[q.pk]), {"action": "delete"}).json()["undo"]
+        a.delete()
+        self.client.post(undo)
+        self.assertEqual(list(ExamNote.objects.get(pk=pk).categories.all()), [b])
+
+    def test_the_board_asks_once_for_all_the_categories(self):
+        s, a = self.subject(), self.cat("A")
+        for i in range(25):
+            self.question(s, f"q{i}", order=i).categories.add(a)
+        url = reverse("work:api_exam_notes", args=[s.pk])
+        with CaptureQueriesContext(connection) as ctx:
+            self.client.get(url, {"show": "all"})
+        self.assertLess(sum("productivity_examcategory" in q["sql"] and "INNER JOIN" in q["sql"] for q in ctx), 6)
+
+    def deep_tree(self):
+        """A child made before its parent: the order a tree is in after moving things about."""
+        low = ExamCategory.objects.create(owner=self.me, name="Low")
+        mid = ExamCategory.objects.create(owner=self.me, name="Mid")
+        top = ExamCategory.objects.create(owner=self.me, name="Top")
+        ExamCategory.objects.filter(pk=low.pk).update(parent=mid)
+        ExamCategory.objects.filter(pk=mid.pk).update(parent=top)
+        q = self.question(self.subject(), "q")
+        q.categories.add(low, top)
+
+    def test_a_deep_tree_survives_the_work_backup(self):
+        self.deep_tree()
+        rows, _files = services.backup_rows(self.me)
+        other = User.objects.create_superuser("other", "o@example.com", PW)
+        services.restore(other, rows)
+        self.assertEqual([c["path"] for c in exam.category_tree(other)], ["Top", "Top › Mid", "Top › Mid › Low"])
+        self.assertEqual({c.name for c in ExamNote.objects.get(owner=other).categories.all()}, {"Low", "Top"})
+
+    def test_restoring_the_work_backup_twice_makes_no_second_tree(self):
+        self.deep_tree()
+        rows, _files = services.backup_rows(self.me)
+        services.restore(self.me, rows)
+        self.assertEqual(ExamCategory.objects.filter(owner=self.me).count(), 3)
+
+    def test_a_deep_tree_survives_my_data(self):
+        from apps.core import personal_backup as pb
+        from apps.core.my_data import build_zip
+
+        self.deep_tree()
+        data, _made = build_zip(self.me)
+        with TemporaryDirectory() as folder:
+            path = Path(folder) / "mine.zip"
+            path.write_bytes(data)
+            other = User.objects.create_superuser("other", "o@example.com", PW)
+            pb.restore(other, pb.read(path), keep_copy=False)
+        self.assertEqual([c["path"] for c in exam.category_tree(other)], ["Top", "Top › Mid", "Top › Mid › Low"])
+        self.assertEqual({c.name for c in ExamNote.objects.get(owner=other).categories.all()}, {"Low", "Top"})

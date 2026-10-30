@@ -28,12 +28,20 @@
 
 {% if total %}
 <form method="get" class="wex-search">
+  {% if current %}<input type="hidden" name="category" value="{{ current.id }}">{% endif %}
   <div class="input-icon wf-search">{% icon "search" %}
     <input type="search" name="q" value="{{ q }}" class="form-input" placeholder="{% translate 'Search every question and answer' %}" aria-label="{% translate 'Search exam notes' %}"></div>
 </form>
 {% endif %}
 
-{% if q %}
+{% if branches or current %}
+<nav class="wexo-chapters wcat-browse" aria-label="{% translate 'Categories' %}">
+  {% if current %}<a class="wexo-chap is-on" href="{% url 'work:exam' %}{% if q %}?q={{ q|urlencode }}{% endif %}">{% icon "x" %}<span>{{ current.path }}</span></a>{% endif %}
+  {% for c in branches %}<a class="wexo-chap" href="?category={{ c.id }}{% if q %}&amp;q={{ q|urlencode }}{% endif %}"><span>{{ c.name }}</span> <small>{{ c.n }}</small></a>{% endfor %}
+</nav>
+{% endif %}
+
+{% if q or current %}
 <section class="card wex-found">
   <header class="card-header"><h2 class="card-title">{% blocktranslate count counter=found|length %}{{ counter }} match{% plural %}{{ counter }} matches{% endblocktranslate %}</h2>
     <a href="{% url 'work:exam' %}" class="btn btn-ghost btn-sm">{% translate "Clear" %}</a></header>

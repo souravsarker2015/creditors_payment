@@ -81,9 +81,12 @@
       return {
         notes: [], next: 1, loading: false, query: "", show: "all", chapter: null, sort: "order", kept: null,
         shows: D.shows || { all: 0, unknown: 0, missed: 0, starred: 0 }, chapters: D.chapters || [],
+        cats: D.categories || [], catN: D.categoryN || {}, category: null, catOpen: false, catMode: "pick", catList: [], catThen: null,
+        catQuery: "", catShut: {}, catManage: false, catUnder: null, catNewName: "", catEdit: null,
         params: function (page) {
           var p = new URLSearchParams({ show: this.show, sort: this.sort, page: page });
           if (this.chapter !== null) p.set("chapter", this.chapter);
+          if (this.category !== null) p.set("category", this.category);
           if (this.query.trim()) p.set("q", this.query.trim());
           if (this.pinnedFirst && this.pinnedFirst()) p.set("pinned", "1");
           return p.toString();
@@ -97,7 +100,7 @@
             .then(function (r) { return r.json(); })
             .then(function (r) {
               if (self.params(page) !== asked) return;            // the filters changed meanwhile: a newer load follows
-              if (page === 1) { self.notes = []; if (r.shows) { self.shows = r.shows; self.chapters = r.chapters; } }
+              if (page === 1) { self.notes = []; self.updateCounts(r); }
               // (a card that moved — starred, or added — may come again on the next page: it's there once)
               var have = {}; self.notes.forEach(function (n) { have[n.id] = true; });
               r.notes.forEach(function (n) { if (!have[n.id]) self.notes.push(n); });
@@ -121,16 +124,21 @@
             .then(function (html) { return JSON.parse(new DOMParser().parseFromString(html, "text/html").getElementById("exam-data").textContent).notes; });
           return got.then(function (all) {
             var words = self.query.toLowerCase().split(/\s+/).filter(Boolean), chapters = [], by = {}, shows = { all: all.length, unknown: 0, due: 0, missed: 0, starred: 0 };
+            var inBranch = self.category === null || self.category === "none" ? null : self.catBranch(self.category), catN = { none: 0 };
             self.kept = all;
             all.forEach(function (n) {
+              if (!(n.categories || []).length) catN.none++;
+              self.catUp(n.categories || []).forEach(function (id) { catN[id] = (catN[id] || 0) + 1; });
               shows.unknown += n.known ? 0 : 1; shows.due += n.due ? 1 : 0; shows.missed += n.misses ? 1 : 0; shows.starred += n.starred ? 1 : 0;
               if (!by[n.chapter]) { by[n.chapter] = { name: n.chapter, n: 0, known: 0 }; chapters.push(by[n.chapter]); }
               by[n.chapter].n++; by[n.chapter].known += n.known ? 1 : 0;
             });
-            self.shows = shows; self.chapters = chapters; self.next = null;
+            self.shows = shows; self.chapters = chapters; self.catN = catN; self.next = null;
             self.notes = all.filter(function (n) {
               var text = (n.question + " " + n.answer + " " + n.chapter).toLowerCase();
+              var mine = n.categories || [];
               return (self.chapter === null || n.chapter === self.chapter)
+                && (self.category === null || (inBranch ? mine.some(function (id) { return inBranch[id]; }) : !mine.length))
                 && (self.show === "all" || (self.show === "unknown" ? !n.known : self.show === "due" ? n.due : self.show === "missed" ? n.misses : n.starred))
                 && words.every(function (w) { return text.indexOf(w) >= 0; });
             });
@@ -149,9 +157,112 @@
             new IntersectionObserver(function (es) { if (es.some(function (e) { return e.isIntersecting; })) self.load(); }, { rootMargin: "0px 0px 700px 0px" }).observe(this.$refs.more);
           }
         },
-        updateCounts: function (r) { if (r && r.shows) { this.shows = r.shows; this.chapters = r.chapters; } },
+        updateCounts: function (r) { if (r && r.shows) { this.shows = r.shows; this.chapters = r.chapters; this.catN = r.categoryN || this.catN; } },
         setShow: function (show) { this.show = show; this.reload(); },
         setChapter: function (name) { this.chapter = name; this.reload(); },
+        /* ── categories: the popup (pick any number for a question, or one to show), and the chips ── */
+        setCategory: function (id) { this.category = id; this.reload(); },
+        catOf: function (id) { return this.cats.find(function (c) { return c.id === id; }); },
+        catChips: function (ids) { var self = this; return (ids || []).map(function (id) { return self.catOf(id); }).filter(Boolean); },
+        catLabel: function () {
+          if (this.category === null) return t("catAll");
+          if (this.category === "none") return t("catNone");
+          var c = this.catOf(this.category);
+          return c ? c.name : t("catAll");
+        },
+        catBranch: function (id) {       // {id: true} for the category and what's under it
+          var out = {}, cats = this.cats, grew = true;
+          out[id] = true;
+          while (grew) { grew = false; cats.forEach(function (c) { if (out[c.parent] && !out[c.id]) { out[c.id] = true; grew = true; } }); }
+          return out;
+        },
+        catUp: function (ids) {          // these categories and all they're inside, each once
+          var self = this, out = {};
+          ids.forEach(function (id) { for (var c = self.catOf(id); c && !out[c.id]; c = self.catOf(c.parent)) out[c.id] = true; });
+          return Object.keys(out);
+        },
+        catCount: function (c) { return this.catN[c.id] || 0; },
+        catRows: function () {
+          var q = this.catQuery.trim().toLowerCase(), shut = this.catShut, hidden = {};
+          if (q) return this.cats.filter(function (c) { return c.path.toLowerCase().indexOf(q) >= 0; });
+          return this.cats.filter(function (c) {
+            if (hidden[c.parent] || shut[c.parent]) { hidden[c.id] = true; return false; }
+            return true;
+          });
+        },
+        catCanMake: function () {
+          var q = this.catQuery.trim().toLowerCase();
+          return !!q && !this.cats.some(function (c) { return c.name.toLowerCase() === q || c.path.toLowerCase() === q; });
+        },
+        catOpenUp: function () {
+          var self = this;
+          this.catOpen = true; this.catQuery = ""; this.catManage = false; this.catUnder = null; this.catEdit = null;
+          fetch(D.categoriesUrl, { credentials: "same-origin", headers: { Accept: "application/json" } }).then(function (r) { return r.json(); })
+            .then(function (r) { if (r.ok) self.cats = r.categories; }).catch(function () { /* no signal: the ones on this page */ });
+          this.$nextTick(function () { if (self.$refs.catFind && window.matchMedia("(min-width: 640px)").matches) self.$refs.catFind.focus(); });
+        },
+        pickCats: function (list, then) { this.catMode = "pick"; this.catList = list; this.catThen = then || null; this.catOpenUp(); },
+        showCats: function () { this.catMode = "filter"; this.catThen = null; this.catOpenUp(); },
+        catDone: function () { this.catOpen = false; var then = this.catThen; this.catThen = null; if (then) then(); },
+        catRemove: function (list, id) { var i = list.indexOf(id); if (i >= 0) list.splice(i, 1); },
+        catChoose: function (c) {
+          if (this.catMode === "filter") { this.catOpen = false; this.setCategory(c.id); return; }
+          var i = this.catList.indexOf(c.id);
+          if (i >= 0) this.catList.splice(i, 1); else this.catList.push(c.id);
+        },
+        catEnter: function () {
+          if (this.catCanMake()) return this.catMake(this.catQuery, "");
+          var rows = this.catRows();
+          if (this.catQuery.trim() && rows.length) { this.catChoose(rows[0]); this.catQuery = ""; }
+        },
+        /* what changes the tree needs the server: an answer with the new tree, or a word that it didn't happen */
+        catSend: function (fields) {
+          var self = this;
+          return Work.ask(D.categoriesUrl, fields).then(function (r) {
+            if (!r) { toast(t("catOffline"), "warn"); return null; }
+            if (!r.ok) { toast(r.error || t("notSaved"), "warn"); return null; }
+            self.cats = r.categories;
+            return r;
+          });
+        },
+        catMake: function (name, parent) {
+          var self = this;
+          this.catSend({ action: "add", name: name, parent: parent }).then(function (r) {
+            if (!r) return;
+            self.catQuery = ""; self.catUnder = null; self.catNewName = "";
+            if (parent) self.catShut[parent] = false;
+            if (self.catMode === "pick" && self.catList.indexOf(r.id) < 0) self.catList.push(r.id);
+          });
+        },
+        catAddUnder: function (c) { this.catEdit = null; this.catNewName = ""; this.catUnder = c.id; },
+        catStartEdit: function (c) { this.catUnder = null; this.catEdit = { id: c.id, name: c.name, parent: c.parent === null ? "" : String(c.parent) }; },
+        catParents: function (c) {       // where it can go: anywhere but inside itself
+          var mine = this.catBranch(c.id);
+          return this.cats.filter(function (x) { return !mine[x.id]; });
+        },
+        catSaveEdit: function () {
+          var self = this, e = this.catEdit;
+          this.catSend({ action: "change", id: e.id, name: e.name, parent: e.parent }).then(function (r) { if (r) self.catEdit = null; });
+        },
+        catDelete: function (c) {
+          var self = this;
+          if (!confirm(t("catDeleteAsk").replace("%(name)s", c.name))) return;
+          this.catSend({ action: "delete", id: c.id }).then(function (r) {
+            if (!r) return;
+            if (self.category !== null && !self.catOf(self.category) && self.category !== "none") self.category = null;
+            self.catRemove(self.catList, c.id);
+            self.reload();
+            Work.undoable(t("catDeleted"), r.undo, function () { self.catRefresh(); });
+          });
+        },
+        catRefresh: function () {
+          var self = this;
+          fetch(D.categoriesUrl, { credentials: "same-origin", headers: { Accept: "application/json" } }).then(function (r) { return r.json(); })
+            .then(function (r) { if (r.ok) { self.cats = r.categories; self.reload(); } });
+        },
+        withCategory: function (url) {   // a review of what's being shown
+          return this.category === null ? url : url + (url.indexOf("?") < 0 ? "?" : "&") + "category=" + this.category;
+        },
         pct: function () { return this.shows.all ? Math.round(100 * (this.shows.all - this.shows.unknown) / this.shows.all) : 0; },
         flag: function (q, what) {
           var self = this, key = what === "star" ? "starred" : "known";
@@ -183,10 +294,10 @@
     /* ── a subject's board: cards like Google Keep, a page at a time ── */
     Alpine.data("examBoard", function () {
       var D = data("exam-data"), DRAFT = "exam-draft-" + D.subject, EDIT = "exam-edit-" + D.subject, PREFS = "exam-board", prefs = recall(PREFS, {}) || {};
-      function blank(keep) { return { question: "", answer: "", chapter: keep ? keep.chapter : "", color: "", starred: false }; }      // the label stays for the next one
+      function blank(keep) { return { question: "", answer: "", chapter: keep ? keep.chapter : "", categories: keep ? keep.categories.slice() : [], color: "", starred: false }; }      // the label and categories stay for the next one
       return Object.assign(pager(D), {
         D: D, t: t, answers: prefs.answers !== false, composing: false, many: false, draft: blank(), writeView: { add: false, edit: false },
-        paste: "", pasteChapter: "", preview: null, checking: false, previewTimer: null, histOpen: false, histLoading: false, versions: [], shown: null,
+        paste: "", pasteChapter: "", pasteCats: [], preview: null, checking: false, previewTimer: null, histOpen: false, histLoading: false, versions: [], shown: null,
         selecting: false, picked: {}, moveTo: "", editing: null, edit: {}, editFrom: "", editFirst: null, editState: "saved", editTimer: null, editSending: null, labelsOpen: false,
         init: function () {
           var self = this;
@@ -247,7 +358,7 @@
           if (D.daysLeft === null || D.daysLeft === undefined || D.daysLeft < 1) return "";
           return t("perDay").replace("%(n)s", Math.ceil(left / D.daysLeft));
         },
-        pinnedFirst: function () { return this.sort === "order" && this.show === "all" && this.chapter === null && !this.query.trim(); },
+        pinnedFirst: function () { return this.sort === "order" && this.show === "all" && this.chapter === null && this.category === null && !this.query.trim(); },
         firstOther: function (i) { return this.pinnedFirst() && i > 0 && this.notes[i - 1].starred && !this.notes[i].starred; },
         firstPinned: function (i) { return this.pinnedFirst() && i === 0 && this.notes[0].starred; },
         canDrag: function () { return this.pinnedFirst() && !this.selecting; },
@@ -290,7 +401,7 @@
         add: function (keepOpen) {
           var self = this, x = this.draft;
           if (!x.question.trim()) { toast(t("writeFirst"), "warn"); return; }
-          api(D.api, { action: "add", question: x.question.trim(), answer: x.answer, chapter: x.chapter, color: x.color, starred: x.starred ? "1" : "0" }).then(function (r) {
+          api(D.api, { action: "add", question: x.question.trim(), answer: x.answer, chapter: x.chapter, categories: x.categories.join(","), color: x.color, starred: x.starred ? "1" : "0" }).then(function (r) {
             if (r.queued) { self.draft = blank(x); self.writeView.add = false; return; }        // sent when there's signal (or after signing in)
             if (!r.ok || !r.note) return;
             r.note._new = true;
@@ -325,16 +436,16 @@
         addMany: function () {
           var self = this, pick = [];
           if (!this.paste.trim()) { toast(t("pasteFirst"), "warn"); return; }
-          var fields = { action: "add_many", text: this.paste, chapter: this.pasteChapter };
+          var fields = { action: "add_many", text: this.paste, chapter: this.pasteChapter, categories: this.pasteCats.join(",") };
           if (this.preview) {
             this.preview.found.forEach(function (p, i) { if (p.on) pick.push(i); });
             if (!pick.length) return;
             fields.pick = pick.join(",");
           }
           api(D.api, fields).then(function (r) {
-            if (r.queued) { self.paste = ""; self.preview = null; self.many = false; self.composing = false; return; }
+            if (r.queued) { self.paste = ""; self.pasteCats = []; self.preview = null; self.many = false; self.composing = false; return; }
             if (!r.ok || !r.notes) return;
-            self.paste = ""; self.preview = null; self.many = false; self.composing = false;
+            self.paste = ""; self.pasteCats = []; self.preview = null; self.many = false; self.composing = false;
             toast(r.message, "good");
             self.reload();
           });
@@ -359,11 +470,12 @@
           api(D.noteBase + q.id + "/", { action: "color", color: color }).then(function (r) { if (!r.ok && !r.queued) q.color = was; });
         },
         openEditor: function (q) {
-          this.edit = { id: q.id, question: q.question, answer: q.answer, chapter: q.chapter, color: q.color || "", starred: q.starred, known: q.known, number: q.number, subject: D.subject };
+          this.edit = { id: q.id, question: q.question, answer: q.answer, chapter: q.chapter, categories: (q.categories || []).slice(), color: q.color || "", starred: q.starred, known: q.known, number: q.number, subject: D.subject };
           this.editFrom = JSON.stringify(this.edit); this.editFirst = JSON.parse(this.editFrom); this.editing = q; this.writeView.edit = false; this.editState = "saved";
           var kept = recall(EDIT, null);                  // what wasn't saved last time comes back
           if (kept && kept.id === q.id) {
             this.edit.question = kept.question; this.edit.answer = kept.answer; this.edit.chapter = kept.chapter; this.edit.color = kept.color;
+            this.edit.categories = kept.categories || this.edit.categories;
             toast(t("draftBack"), "good");
           }
           var self = this; this.$nextTick(function () { self.$refs.editQuestion && self.$refs.editQuestion.focus(); });
@@ -374,13 +486,13 @@
           var self = this, e = this.edit;
           if (JSON.stringify(e) === this.editFrom) return;
           this.editState = "dirty";
-          store(EDIT, { id: e.id, question: e.question, answer: e.answer, chapter: e.chapter, color: e.color });
+          store(EDIT, { id: e.id, question: e.question, answer: e.answer, chapter: e.chapter, categories: e.categories, color: e.color });
           clearTimeout(this.editTimer);
           if (e.question.trim()) this.editTimer = setTimeout(function () { self.saveEditing(); }, 900);
         },
         /* What's in the editor, to the server (`to`: a subject to move it to). One save at a time, in order. */
         sendEdit: function (q, e, to) {
-          var self = this, fields = { action: "update", question: e.question, answer: e.answer, chapter: e.chapter, color: e.color };
+          var self = this, fields = { action: "update", question: e.question, answer: e.answer, chapter: e.chapter, categories: (e.categories || []).join(","), color: e.color };
           if (to) fields.subject = to; else fields._ft_same = "exam:" + q.id;
           var sent = JSON.stringify(e);
           this.editSending = Promise.resolve(this.editSending).then(function () {
@@ -389,7 +501,7 @@
           }).then(function (r) {
             self.editSending = null;
             if (!r.ok && !r.queued) return r;
-            if (r.ok) { q.question = e.question.trim(); q.answer = e.answer; q.chapter = (e.chapter || "").trim(); q.color = e.color; }
+            if (r.ok) { q.question = e.question.trim(); q.answer = e.answer; q.chapter = (e.chapter || "").trim(); q.categories = (e.categories || []).slice(); q.color = e.color; }
             if (r.rev) q.rev = r.rev;
             if (r.conflict) toast(t("conflict"), "warn");
             if (JSON.stringify(self.edit) === sent || self.editing !== q) store(EDIT, null);
@@ -440,7 +552,7 @@
           if (unsent && !e.question.trim()) { toast(t("writeFirst"), "warn"); return; }
           this.editing = null;
           function done() {
-            if ((e.chapter || "").trim() !== was.chapter) self.reload();
+            if ((e.chapter || "").trim() !== was.chapter || JSON.stringify(e.categories) !== JSON.stringify(was.categories)) self.reload();
           }
           if (!unsent) { this.flags(q, e, was); done(); return; }
           this.sendEdit(q, e, to).then(function (r) {
@@ -512,6 +624,17 @@
           if (op === "delete" && !confirm(t("bulkDeleteAsk"))) return;
           if (op === "chapter") { var name = prompt(t("chapterAsk"), ""); if (name === null) return; fields.chapter = name.trim(); }
           if (op === "move") { if (!this.moveTo) return; fields.subject = this.moveTo; }
+          if (op === "categories") {               // chosen in the popup, added on Done
+            var chosen = [];
+            this.pickCats(chosen, function () {
+              if (!chosen.length) return;
+              api(D.api, Object.assign(fields, { categories: chosen.join(",") })).then(function (r) {
+                if (!r.ok) return;
+                self.endSelect(); toast(t("catAdded"), "good"); self.reload();
+              });
+            });
+            return;
+          }
           api(D.api, fields).then(function (r) {
             if (!r.ok) return;
             self.endSelect(); self.moveTo = "";
@@ -544,7 +667,7 @@
           api(D.api, { action: "reset" }).then(function (r) { if (r.ok) self.reload(); });
         },
         key: function (e) {
-          if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || typing(e) || this.editing) return;
+          if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || typing(e) || this.editing || this.catOpen) return;
           var cards = Array.prototype.slice.call(this.$refs.grid.querySelectorAll(".wkc"));
           var card = d.activeElement && d.activeElement.closest && d.activeElement.closest(".wkc");
           var q = card && this.notes.find(function (n) { return String(n.id) === card.getAttribute("data-id"); });
@@ -603,8 +726,8 @@
           this.$nextTick(function () { self.$refs.find && self.$refs.find.focus(); });
         },
         reviewUrl: function () {         // these questions: what's shown here, search and "No chapter" too
-          return D.review + "?which=" + this.show + (this.chapter ? "&chapter=" + encodeURIComponent(this.chapter) : this.chapter === "" ? "&nochapter=1" : "")
-            + (this.query.trim() ? "&q=" + encodeURIComponent(this.query.trim()) : "");
+          return this.withCategory(D.review + "?which=" + this.show + (this.chapter ? "&chapter=" + encodeURIComponent(this.chapter) : this.chapter === "" ? "&nochapter=1" : "")
+            + (this.query.trim() ? "&q=" + encodeURIComponent(this.query.trim()) : ""));
         },
         printIt: function () {
           var self = this;
@@ -616,7 +739,7 @@
           })();
         },
         key: function (e) {
-          if (e.ctrlKey || e.metaKey || e.altKey || typing(e)) return;
+          if (e.ctrlKey || e.metaKey || e.altKey || typing(e) || this.catOpen) return;
           if (e.key === "/") { e.preventDefault(); if (!this.searching) this.toggleSearch(); else this.$refs.find.focus(); }
           else if (e.defaultPrevented) return;
           else if (e.key === "a") { e.preventDefault(); this.answers = !this.answers; }

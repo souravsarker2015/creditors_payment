@@ -31,6 +31,7 @@
       <button type="button" class="wexo-tool" :class="answers && 'is-on'" @click="answers = !answers" :aria-pressed="answers.toString()"
               :data-tip="answers ? '{{ _("Hide the answers — test yourself")|escapejs }}' : '{{ _("Show every answer")|escapejs }}'">
         {% icon "book" %}<span x-text="answers ? '{{ _("Hide answers")|escapejs }}' : '{{ _("Show answers")|escapejs }}'"></span></button>
+      {% include "work/exam/_category_filter.html" %}
       <button type="button" class="wexo-tool" @click="zoom(-1)" :disabled="size <= 0.85" aria-label="{% translate 'Smaller text' %}" data-tip="{% translate 'Smaller text' %}"><small>A</small></button>
       <button type="button" class="wexo-tool" @click="zoom(1)" :disabled="size >= 1.4" aria-label="{% translate 'Bigger text' %}" data-tip="{% translate 'Bigger text' %}"><b>A</b></button>
       <button type="button" class="wexo-tool" :class="searching && 'is-on'" @click="toggleSearch()" aria-label="{% translate 'Find' %}" data-tip="{% translate 'Find ( / )' %}">{% icon "search" %}</button>
@@ -70,6 +71,7 @@
               <a class="wexo-flag" :href="'{% url 'work:exam_subject' s.pk %}?open=' + q.id" aria-label="{% translate 'Edit' %}" data-tip="{% translate 'Edit' %}">{% icon "edit" %}</a>
             </span>
           </div>
+          {% include "work/exam/_category_card.html" %}
           <div class="wexo-a-wrap" x-show="answers || open[q.id]">
             <div class="wexo-a wn-md" :class="{ 'is-clamped': !full[q.id], 'is-long': long[q.id] }" x-effect="(answers || open[q.id]) && paint($el, q.answer || '*' + t('noAnswer') + '*', q)"></div>
             <button type="button" class="wexo-more" x-show="long[q.id]" @click="full[q.id] = !full[q.id]" x-text="full[q.id] ? t('showLess') : t('showMore')"></button>
@@ -95,8 +97,10 @@
     <h3 class="empty-title">{% translate "No questions yet" %}</h3>
     <p class="empty-text"><a href="{% url 'work:exam_subject' s.pk %}">{% translate "Add some questions first." %}</a></p></div>
   {% endif %}
+{% include "work/exam/_category_picker.html" %}
 </div>
 {% endblock %}
 
 {% block work_libs %}{% include "work/exam/_libs.html" %}{% endblock %}
 {% block work_js %}<script src="{% asset 'js/exam.js' %}"></script>{% endblock %}
+

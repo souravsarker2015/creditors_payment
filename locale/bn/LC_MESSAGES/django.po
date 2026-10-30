@@ -25298,3 +25298,77 @@ msgstr "এই ডিভাইসের জায়গা ভরে গেছ�
 
 msgid "Changed your mind? Notes, exam questions and diagrams keep earlier versions — open History to read or bring one back."
 msgstr "মত বদলেছেন? নোট, পরীক্ষার প্রশ্ন আর ডায়াগ্রাম আগের সংস্করণ রেখে দেয় — পড়তে বা ফিরিয়ে আনতে ইতিহাস খুলুন।"
+
+#, python-format
+msgid "Delete “%(name)s” and everything inside it? The questions stay. You can bring it back from Recently deleted."
+msgstr "“%(name)s” এবং এর ভেতরের সবকিছু মুছবেন? প্রশ্নগুলো থাকবে। সম্প্রতি মুছে ফেলা থেকে আবার ফিরিয়ে আনতে পারবেন।"
+
+msgid "Category deleted"
+msgstr "ক্যাটাগরি মুছে ফেলা হয়েছে"
+
+msgid "Adding or changing a category needs a connection."
+msgstr "ক্যাটাগরি যোগ বা বদল করতে সংযোগ লাগবে।"
+
+msgid "Added to categories"
+msgstr "ক্যাটাগরিতে যোগ হয়েছে"
+
+msgid "Write a name first."
+msgstr "আগে একটি নাম লিখুন।"
+
+msgid "A category can't go inside itself."
+msgstr "কোনো ক্যাটাগরি নিজের ভেতরে যেতে পারে না।"
+
+msgid "There's already a category with this name here."
+msgstr "এখানে এই নামে একটি ক্যাটাগরি আগে থেকেই আছে।"
+
+#, python-format
+msgid "Exam category: %(name)s"
+msgstr "পরীক্ষার ক্যাটাগরি: %(name)s"
+
+msgid "Exam category"
+msgstr "পরীক্ষার ক্যাটাগরি"
+
+msgid "Exam categories"
+msgstr "পরীক্ষার ক্যাটাগরি"
+
+msgid "Exam notes: a chapter is a question's one place in a subject's order; categories are your own tree (Backend › Databases), shared by every subject. Press + on a question to pick any number of them, or none. A category's questions include those of the categories inside it."
+msgstr "পরীক্ষার নোট: চ্যাপ্টার হলো বিষয়ের ক্রমে একটি প্রশ্নের একটিমাত্র জায়গা; ক্যাটাগরি হলো আপনার নিজের গাছ (Backend › Databases), যা সব বিষয়ে একই। প্রশ্নের + চেপে যতগুলো খুশি বেছে নিন, অথবা একটিও নয়। কোনো ক্যাটাগরির প্রশ্নের মধ্যে তার ভেতরের ক্যাটাগরিগুলোর প্রশ্নও থাকে।"
+
+msgid "Choose categories"
+msgstr "ক্যাটাগরি বেছে নিন"
+
+msgid "Choose categories (optional)"
+msgstr "ক্যাটাগরি বেছে নিন (ঐচ্ছিক)"
+
+msgid "Show one category, with what’s inside it"
+msgstr "একটি ক্যাটাগরি দেখান, ভেতরের সবকিছুসহ"
+
+msgid "Show all categories"
+msgstr "সব ক্যাটাগরি দেখান"
+
+msgid "Categories…"
+msgstr "ক্যাটাগরি…"
+
+msgid "Find or add a category"
+msgstr "ক্যাটাগরি খুঁজুন বা যোগ করুন"
+
+msgid "None yet. Type a name to add the first one — “Backend > Databases” makes both, one inside the other."
+msgstr "এখনো নেই। প্রথমটি যোগ করতে নাম লিখুন — “Backend > Databases” লিখলে দুটোই হবে, একটির ভেতরে আরেকটি।"
+
+msgid "Add a category inside"
+msgstr "ভেতরে ক্যাটাগরি যোগ করুন"
+
+msgid "Rename or move"
+msgstr "নাম বদলান বা সরান"
+
+msgid "Name of the new category"
+msgstr "নতুন ক্যাটাগরির নাম"
+
+msgid "At the top"
+msgstr "একদম উপরে"
+
+msgid "Take out of this category"
+msgstr "এই ক্যাটাগরি থেকে সরান"
+
+msgid "Show a category"
+msgstr "একটি ক্যাটাগরি দেখান"

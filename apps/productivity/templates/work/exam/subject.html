@@ -21,11 +21,11 @@
   </div>
   <div class="wp-actions">
     <a :href="D.overview" class="btn btn-secondary" x-show="shows.all" {% if not n %}x-cloak{% endif %} data-tip="{% translate 'Every question and answer on one page, to read through before the exam' %}">{% icon "book" %}{% translate "Overview" %}</a>
-    <a :href="D.review" class="btn btn-primary" x-show="shows.all" {% if not n %}x-cloak{% endif %}>{% icon "play" %}{% translate "Review" %}</a>
+    <a :href="withCategory(D.review)" class="btn btn-primary" x-show="shows.all" {% if not n %}x-cloak{% endif %}>{% icon "play" %}{% translate "Review" %}</a>
     <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
       <button type="button" class="icon-btn" @click="open = !open" :aria-expanded="open" aria-label="{% translate 'More actions' %}">{% icon "dots" %}</button>
       <div class="menu" x-show="open" x-cloak role="menu">
-        <a class="menu-item" role="menuitem" href="{% url 'work:exam_review' s.pk %}?test=1">{% icon "timer" %}{% translate "Practice test" %}</a>
+        <a class="menu-item" role="menuitem" :href="withCategory('{% url 'work:exam_review' s.pk %}?test=1')">{% icon "timer" %}{% translate "Practice test" %}</a>
         <a class="menu-item" role="menuitem" href="{% url 'work:exam_review' s.pk %}?which=missed">{% icon "alert" %}{% translate "Review the most missed" %}</a>
         <a class="menu-item" role="menuitem" href="{% url 'work:exam_review' s.pk %}?which=starred">{% icon "star" %}{% translate "Review the important ones" %}</a>
         <a class="menu-item" role="menuitem" href="{% url 'work:exam_review' s.pk %}?which=all&amp;shuffle=1">{% icon "repeat" %}{% translate "Review all, shuffled" %}</a>
@@ -43,7 +43,7 @@
 <datalist id="exam-chapters"><template x-for="c in chapters" :key="c.name"><option :value="c.name"></option></template></datalist>
 
 {# ── take a note: one line, which opens into a question and its answer (like Keep) ── #}
-<section class="wkc-compose" :class="composing && 'is-open'" :data-color="draft.color || null" @click.outside="composing && !many && closeComposer()"
+<section class="wkc-compose" :class="composing && 'is-open'" :data-color="draft.color || null" @click.outside="composing && !many && !catOpen && closeComposer()"
          @keydown.ctrl.enter.prevent="!many && add(true)" @keydown.meta.enter.prevent="!many && add(true)" @keydown.escape.stop="closeComposer()">
   <div class="wkc-compose-line" x-show="!composing" @click="openComposer(false)">
     <span class="wkc-compose-hint">{% translate "Take a note… (a question)" %}</span>
@@ -59,6 +59,7 @@
       <div class="wex-a wn-md wex-md-preview" x-show="writeView.add" x-effect="writeView.add && paint($el, draft.answer)"></div>
       <div class="wkc-compose-foot">
         <input type="text" class="wkc-chip-input" x-model="draft.chapter" list="exam-chapters" maxlength="120" placeholder="{% translate '+ Label' %}" aria-label="{% translate 'Chapter' %}">
+        {% include "work/exam/_category_chips.html" with list="draft.categories" %}
         <div class="wkc-colors" role="radiogroup" aria-label="{% translate 'Colour' %}">
           <button type="button" class="wkc-swatch is-none" :class="!draft.color && 'is-on'" @click="draft.color = ''" aria-label="{% translate 'No colour' %}"></button>
           {% for v, l in colors %}<button type="button" class="wkc-swatch" data-color="{{ v }}" :class="draft.color === '{{ v }}' && 'is-on'" @click="draft.color = '{{ v }}'" aria-label="{{ l }}"></button>{% endfor %}
@@ -90,6 +91,7 @@
       </div>
       <input type="text" class="form-input input-compact wex-chapter" x-model="pasteChapter" list="exam-chapters" maxlength="120"
              placeholder="{% translate 'Chapter for these (optional)' %}" aria-label="{% translate 'Chapter' %}">
+      {% include "work/exam/_category_chips.html" with list="pasteCats" %}
       <textarea class="form-input wex-paste" rows="10" x-model="paste" data-md-paste aria-label="{% translate 'Questions and answers' %}" @drop="dropFile($event)"
                 placeholder="## {% translate 'What is photosynthesis?' %}&#10;{% translate 'How plants make food from sunlight.' %}&#10;&#10;## …&#10;…"></textarea>
       <p class="help">{% translate "Each question on a ## heading with its answer below — or Q: … A: …, or bold questions, or an empty line between them. # headings above the questions become chapters. A numbered list, multiple-choice questions (a) b) c) with Answer: under them) and two columns from a spreadsheet work too." %}</p>
@@ -143,6 +145,7 @@
       <option value="order">{% translate "Your order" %}</option>
       <option value="new">{% translate "Newest first" %}</option>
     </select>
+    {% include "work/exam/_category_filter.html" %}
     <button type="button" class="wexo-tool" :class="selecting && 'is-on'" @click="selecting ? endSelect() : startSelect()" aria-label="{% translate 'Pick questions to change together' %}" data-tip="{% translate 'Pick questions to change together' %}">{% icon "check" %}</button>
   </div>
   <nav class="wexo-chapters" x-show="chapters.length > 1 || (chapters.length === 1 && chapters[0].name)" aria-label="{% translate 'Labels' %}">
@@ -161,6 +164,7 @@
     <button type="button" class="btn btn-secondary btn-sm" @click="bulk('known')">{% icon "check" %}{% translate "Known" %}</button>
     <button type="button" class="btn btn-secondary btn-sm" @click="bulk('unknown')">{% translate "Not known" %}</button>
     <button type="button" class="btn btn-secondary btn-sm" @click="bulk('chapter')">{% translate "Chapter…" %}</button>
+    <button type="button" class="btn btn-secondary btn-sm" @click="bulk('categories')">{% translate "Categories…" %}</button>
     <select class="form-input input-compact" x-model="moveTo" @change="bulk('move')" x-show="D.subjects.length > 1" aria-label="{% translate 'Move to another subject' %}">
       <option value="">{% translate "Move to…" %}</option>
       <template x-for="o in D.subjects.filter(x => x.id !== D.subject)" :key="o.id"><option :value="o.id" x-text="o.name"></option></template>
@@ -188,6 +192,7 @@
       </div>
       <div class="wkc-q wn-md" x-effect="paint($el, q.question)"></div>
       <div class="wkc-a wn-md" x-show="answers && q.answer" x-effect="answers && paint($el, q.answer)"></div>
+      {% include "work/exam/_category_card.html" %}
       <div class="wkc-foot" x-show="!selecting">
         <button type="button" class="wkc-btn wex-known" :class="q.known && 'is-on'" @click.stop="flag(q, 'known')" :aria-pressed="q.known.toString()" aria-label="{% translate 'I know it' %}" data-tip="{% translate 'I know it' %}">{% icon "check" %}</button>
         <div class="wkc-palette" x-data="{ open: false }" @click.outside="open = false">
@@ -206,7 +211,7 @@
 <div class="wkb-more" x-ref="more">
   <span class="help" x-show="loading">{% translate "Loading…" %}</span>
   <button type="button" class="btn btn-secondary btn-sm" x-show="next && !loading" @click="load()">{% translate "Show more" %}</button>
-  <p class="help wex-none" x-show="!loading && !notes.length && (query || show !== 'all' || chapter !== null)" x-cloak>{% translate "Nothing to show here." %}</p>
+  <p class="help wex-none" x-show="!loading && !notes.length && (query || show !== 'all' || chapter !== null || category !== null)" x-cloak>{% translate "Nothing to show here." %}</p>
 </div>
 <div class="empty" x-show="!loading && !shows.all" {% if n %}x-cloak{% endif %}><div class="empty-icon">{% icon "exam" %}</div>
   <h3 class="empty-title">{% translate "No questions yet" %}</h3>
@@ -229,6 +234,7 @@
     <button type="button" class="icon-btn wex-known" :class="edit.known && 'is-on'" @click="edit.known = !edit.known" :aria-pressed="(!!edit.known).toString()" aria-label="{% translate 'I know it' %}">{% icon "check" %}</button>
   </div>
   <textarea class="wkc-q-input" rows="2" x-model="edit.question" x-ref="editQuestion" maxlength="2000" aria-label="{% translate 'Question' %}" placeholder="{% translate 'Question' %}"></textarea>
+  {% include "work/exam/_category_chips.html" with list="edit.categories" %}
   <div class="seg wex-write-seg" role="radiogroup" aria-label="{% translate 'Answer' %}">
     <button type="button" class="seg-item" :class="!writeView.edit && 'is-active'" @click="writeView.edit = false">{% translate "Write" %}</button>
     <button type="button" class="seg-item" :class="writeView.edit && 'is-active'" @click="writeView.edit = true">{% translate "Preview" %}</button>
@@ -275,6 +281,8 @@
     </div>
   </template>
 </aside>
+
+{% include "work/exam/_category_picker.html" %}
 
 {# ── labels: rename and order the chapters ── #}
 <div class="wc-backdrop" x-show="labelsOpen" x-cloak x-transition.opacity @click="labelsOpen = false"></div>

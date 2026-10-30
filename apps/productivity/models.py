@@ -1236,6 +1236,23 @@ class ExamSubject(models.Model):
         return (self.exam_date - timezone.localdate()).days if self.exam_date else None
 
 
+class ExamCategory(models.Model):
+    """A person's own tree of categories, shared by all their subjects (Backend › Databases › Indexing).
+    Where a chapter is the one place a question has in a subject's order, a question can be in any number
+    of these, or none; a category's questions are also those of the categories under it (exam.branch)."""
+    owner = models.ForeignKey(**OWNER)
+    parent = models.ForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="children", verbose_name=_("Inside"))
+    name = models.CharField(_("Name"), max_length=80)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name, verbose_name_plural = _("Exam category"), _("Exam categories")
+        ordering = ["name", "pk"]
+
+    def __str__(self):
+        return self.name
+
+
 class ExamNote(models.Model):
     """One question and its answer (Markdown). `order` is its place in the
     subject; a chapter's questions are shown together, chapters in the order
@@ -1243,6 +1260,7 @@ class ExamNote(models.Model):
     owner = models.ForeignKey(**OWNER)
     subject = models.ForeignKey(ExamSubject, on_delete=models.CASCADE, related_name="notes", verbose_name=_("Subject"))
     chapter = models.CharField(_("Chapter"), max_length=120, blank=True, help_text=_("Optional: questions with the same chapter are shown together."))
+    categories = models.ManyToManyField(ExamCategory, blank=True, related_name="notes", verbose_name=_("Categories"))
     question = models.TextField(_("Question"))
     answer = models.TextField(_("Answer"), blank=True)
     is_starred = models.BooleanField(_("Important"), default=False)

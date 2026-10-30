@@ -5,7 +5,7 @@ import json
 from datetime import timedelta
 
 from django.contrib import messages
-from django.db.models import Count, Max, Q
+from django.db.models import Count, Max, Q, prefetch_related_objects
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
@@ -21,7 +21,7 @@ from apps.trash.services import trash
 from . import exam, services
 from .access import work_required
 from .forms import ExamSubjectForm
-from .models import Color, ExamNote, ExamSubject
+from .models import Color, ExamCategory, ExamNote, ExamSubject
 from .views import render_work
 
 WHICH = ("today", "due", "unknown", "all", "starred", "missed")      # today: to learn, and the ones due again
@@ -44,6 +44,9 @@ def _texts():
         "deletedMany": _("%(n)s questions deleted"), "undo": _("Undo"), "chapterAsk": _("Chapter for the picked questions (empty: no chapter):"),
         "leave": _("You have changes that aren't saved yet. Leave anyway?"), "draftBack": _("Your unsaved question is back."),
         "conflict": _("This question was changed somewhere else too. That text is kept in History."),
+        "catDeleteAsk": _("Delete “%(name)s” and everything inside it? The questions stay. You can bring it back from Recently deleted."),
+        "catDeleted": _("Category deleted"), "catOffline": _("Adding or changing a category needs a connection."),
+        "catAll": _("All categories"), "catNone": _("No category"), "catAdded": _("Added to categories"),
         "restoreAsk": _("Bring back this version? What's there now is kept as a version too."),
         "perDay": _("about %(n)s a day to learn them all before the exam"), "allKnown": _("You know them all — keep them fresh with a quick review."),
     }
@@ -66,7 +69,7 @@ def _subjects(user):
 
 
 def _notes(s):
-    return [exam.as_json(n, i) for i, n in enumerate(exam.ordered(s.notes.all()), 1)]
+    return [exam.as_json(n, i) for i, n in enumerate(exam.ordered(s.notes.prefetch_related("categories")), 1)]
 
 
 def _chapters(notes):
@@ -86,13 +89,18 @@ def exam_home_view(request):
     for s in subjects:
         s.today = s.n - s.known + s.due          # what a review today goes through: to learn, and due again
     q = (request.GET.get("q") or "").strip()
+    tree, totals = exam.category_tree(request.user), exam.category_totals(request.user)
+    current = next((c for c in tree if str(c["id"]) == request.GET.get("category")), None)
     found = []
-    if q:
-        found = list(exam.matching(ExamNote.objects.filter(owner=request.user), q).select_related("subject")[:100])
+    if q or current:
+        mine = exam.in_category(ExamNote.objects.filter(owner=request.user), request.user, current["id"] if current else None)
+        found = list(exam.matching(mine, q).select_related("subject")[:100])
         for n in found:
             n.snippet = exam.plain(n.answer)
-    return render_work(request, "work/exam/home.html", {"subjects": subjects, "form": form, "q": q, "found": found,
-                                                        "total": sum(s.n for s in subjects)})
+    return render_work(request, "work/exam/home.html", {
+        "subjects": subjects, "form": form, "q": q, "found": found, "total": sum(s.n for s in subjects), "current": current,
+        "branches": [dict(c, n=totals[c["id"]]) for c in tree if c["id"] in totals and c["parent"] == (current["id"] if current else None)],
+    })
 
 
 @work_required
@@ -121,7 +129,8 @@ def _board_data(request, s):
     return {"api": reverse("work:api_exam_subject", args=[s.pk]), "noteBase": reverse("work:api_exam_note", args=[0])[:-2],
             "notes": reverse("work:api_exam_notes", args=[s.pk]), "review": reverse("work:exam_review", args=[s.pk]),
             "overview": reverse("work:exam_overview", args=[s.pk]), "back": reverse("work:exam_subject", args=[s.pk]),
-            "subject": s.pk, "daysLeft": s.days_left, **exam.counts(s),
+            "subject": s.pk, "daysLeft": s.days_left, **exam.counts(s), "categories": exam.category_tree(request.user),
+            "categoriesUrl": reverse("work:api_exam_categories"),
             "subjects": [{"id": x.pk, "name": x.name} for x in ExamSubject.objects.filter(owner=request.user)]}
 
 
@@ -136,7 +145,7 @@ def notes_api(request, pk):
         return JsonResponse({"ok": True, "notes": [exam.as_json(one, exam.numbers(s).get(one.pk))], "next": None})
     show = request.GET.get("show") if request.GET.get("show") in exam.SHOWS else "all"
     chapter = request.GET["chapter"] if "chapter" in request.GET else None
-    qs = exam.filtered(s, show, chapter, request.GET.get("q", ""))
+    qs = exam.filtered(s, show, chapter, request.GET.get("q", ""), exam.asked_category(request.GET.get("category"))).prefetch_related("categories")
     if request.GET.get("sort") == "new":
         qs = qs.order_by("-created_at", "-pk")
     else:
@@ -174,6 +183,10 @@ def exam_review_view(request, pk):
     if q or request.GET.get("nochapter") == "1":      # "Flip through these" from the overview: what it was showing
         found = set(exam.matching(s.notes.all(), q).values_list("pk", flat=True))
         notes = [n for n in notes if n["id"] in found and (n["chapter"] == "" or request.GET.get("nochapter") != "1")]
+    category = exam.asked_category(request.GET.get("category"))
+    if category is not None:                          # a category picked on the board: those questions, what's under it too
+        found = set(exam.in_category(s.notes.all(), request.user, category).values_list("pk", flat=True))
+        notes = [n for n in notes if n["id"] in found]
     which = request.GET.get("which") if request.GET.get("which") in WHICH else "today"
     if which in ("today", "unknown") and notes and not any(not n["known"] or (which == "today" and n["due"]) for n in notes):
         which = "all"                         # nothing left for today: the whole subject
@@ -224,6 +237,7 @@ def subject_api(request, pk):
         n = ExamNote.objects.create(owner=request.user, subject=s, question=question, chapter=_chapter_of(request), order=exam.next_order(s),
                                     color=request.POST.get("color") if request.POST.get("color") in Color.values else "",
                                     is_starred=request.POST.get("starred") == "1", answer=answer)
+        n.categories.set(exam.owned_categories(request.user, request.POST.get("categories")))
         return JsonResponse({"ok": True, "note": exam.as_json(n, exam.numbers(s).get(n.pk)), **exam.counts(s)})
     if action == "add_many":
         found = exam.parse(request.POST.get("text"), chapter=_chapter_of(request))
@@ -236,6 +250,8 @@ def subject_api(request, pk):
             picked = {int(i) for i in request.POST["pick"].split(",") if i.strip().isdigit()}
             fresh = [n for i, n in enumerate(found) if i in picked]
         made = exam.add_found(request.user, s, fresh)
+        exam.add_to_categories(made, exam.owned_categories(request.user, request.POST.get("categories")))
+        prefetch_related_objects(made, "categories")
         message = ngettext("%(n)s question added.", "%(n)s questions added.", len(made)) % {"n": len(made)}
         skipped = sum(1 for n in found if n["dupe"])
         if skipped and "pick" not in request.POST:
@@ -287,6 +303,8 @@ def subject_api(request, pk):
                 s.notes.filter(pk__in=[n.pk for n in picked], due_on__isnull=True).update(interval=exam.STEPS[1], due_on=timezone.localdate() + timedelta(days=exam.STEPS[1]))
         elif op == "chapter":
             s.notes.filter(pk__in=[n.pk for n in picked]).update(chapter=_chapter_of(request), updated_at=timezone.now())
+        elif op == "categories":             # added to what each one has already
+            exam.add_to_categories(picked, exam.owned_categories(request.user, request.POST.get("categories")))
         elif op == "move":
             to = get_object_or_404(ExamSubject, pk=request.POST.get("subject"), owner=request.user)
             start = exam.next_order(to)
@@ -334,6 +352,8 @@ def note_api(request, pk):
             n.subject = get_object_or_404(ExamSubject, pk=request.POST["subject"], owner=request.user)
             n.order = exam.next_order(n.subject)
         n.save()
+        if "categories" in request.POST:
+            n.categories.set(exam.owned_categories(request.user, request.POST["categories"]))
         return JsonResponse({"ok": True, "note": exam.as_json(n), "rev": exam.rev(n), "conflict": conflict})
     if action == "restore":                  # an earlier version comes back (what's there now is kept too)
         version = get_object_or_404(n.versions, pk=request.POST.get("version") or 0)
@@ -382,3 +402,39 @@ def note_versions_api(request, pk):
     n = get_object_or_404(ExamNote, pk=pk, owner=request.user)
     return JsonResponse({"ok": True, "versions": [{"id": v.pk, "question": v.question, "answer": v.answer, "time": date_format(timezone.localtime(v.created_at), "j M, H:i"),
                                                    "words": len(v.answer.split())} for v in n.versions.all()]})
+
+
+@work_required
+def categories_api(request):
+    """The person's category tree. Each change answers with the whole tree, for the picker to draw again."""
+    user, action = request.user, request.POST.get("action")
+
+    def tree(**more):
+        return JsonResponse({"ok": True, "categories": exam.category_tree(user), **more})
+
+    def refuse(text):
+        return JsonResponse({"ok": False, "error": text}, status=400)
+
+    if request.method != "POST":
+        return tree()
+    if action == "add":
+        parent = get_object_or_404(ExamCategory, pk=request.POST["parent"], owner=user) if (request.POST.get("parent") or "").isdigit() else None
+        made = exam.add_category(user, parent, request.POST.get("name"))
+        return tree(id=made.pk) if made else refuse(_("Write a name first."))
+    category = get_object_or_404(ExamCategory, pk=request.POST["id"] if (request.POST.get("id") or "").isdigit() else 0, owner=user)
+    if action == "change":                   # its name, and what it's inside
+        name = (request.POST.get("name") or "").strip()[:exam.MAX_CATEGORY]
+        parent_id = int(request.POST["parent"]) if (request.POST.get("parent") or "").isdigit() else None
+        if not name:
+            return refuse(_("Write a name first."))
+        if parent_id is not None and (parent_id in exam.branch(user, category.pk) or not ExamCategory.objects.filter(owner=user, pk=parent_id).exists()):
+            return refuse(_("A category can't go inside itself."))
+        if ExamCategory.objects.filter(owner=user, parent_id=parent_id, name__iexact=name).exclude(pk=category.pk).exists():
+            return refuse(_("There's already a category with this name here."))
+        category.name, category.parent_id = name, parent_id
+        category.save(update_fields=["name", "parent"])
+        return tree()
+    if action == "delete":                   # what's under it goes too; the questions stay, and it can all come back
+        item = trash(user, category, _("Exam category: %(name)s") % {"name": category.name}, reverse("work:exam"))
+        return tree(undo=reverse("trash_restore", args=[item.pk]))
+    return refuse("action")

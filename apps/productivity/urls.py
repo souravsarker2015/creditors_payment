@@ -146,6 +146,7 @@ urlpatterns = [
     path("api/prep/questions/<int:pk>/", views_prep.question_action, name="api_question_action"),
     path("api/prep/exams/<int:pk>/save/", views_prep.exam_save, name="api_exam_save"),
     path("api/prep/topics/<int:pk>/", views_prep.topic_api, name="api_prep_topic"),
+    path("api/exam/categories/", views_exam.categories_api, name="api_exam_categories"),
     path("api/exam/subjects/<int:pk>/", views_exam.subject_api, name="api_exam_subject"),
     path("api/exam/subjects/<int:pk>/notes/", views_exam.notes_api, name="api_exam_notes"),
     path("api/exam/notes/<int:pk>/", views_exam.note_api, name="api_exam_note"),

@@ -1,0 +1,6 @@
+{% load i18n work %}<span class="wcat-chips">
+  <template x-for="c in catChips({{ list }})" :key="c.id">
+    <span class="wcat-chip" :title="c.path"><span x-text="c.name"></span><button type="button" @click.stop="catRemove({{ list }}, c.id)" :aria-label="'{{ _("Take out of this category")|escapejs }}: ' + c.name">{% icon "x" %}</button></span>
+  </template>
+  <button type="button" class="wcat-add" @click.stop="pickCats({{ list }})" aria-label="{% translate 'Choose categories' %}" data-tip="{% translate 'Choose categories (optional)' %}">{% icon "plus" %}<span x-show="!({{ list }} || []).length">{% translate "Category" %}</span></button>
+</span>

@@ -97,6 +97,10 @@ def restore(item):
             coming = {(type(d.object), d.object.pk) for d in rows}
             for d in rows:
                 model = type(d.object)
+                if model._meta.auto_created and any(
+                        f.is_relation and (f.related_model, getattr(d.object, f.attname)) not in coming
+                        and not f.related_model._base_manager.filter(pk=getattr(d.object, f.attname)).exists() for f in model._meta.concrete_fields):
+                    continue          # a link to a tag or a category deleted since: the rest comes back without it
                 if model._base_manager.filter(pk=d.object.pk).exists():
                     raise CannotRestore("already there")
                 # An optional link to something gone since (e.g. a question's section) is let go rather than refused.

@@ -1,0 +1,4 @@
+{% load i18n work %}<span class="wcat-filter">
+  <button type="button" class="wexo-tool" :class="category !== null && 'is-on'" @click="showCats()" data-tip="{% translate 'Show one category, with what’s inside it' %}">{% icon "folder" %}<span x-text="catLabel()"></span></button>
+  <button type="button" class="wexo-tool" x-show="category !== null" x-cloak @click="setCategory(null)" aria-label="{% translate 'Show all categories' %}">{% icon "x" %}</button>
+</span>

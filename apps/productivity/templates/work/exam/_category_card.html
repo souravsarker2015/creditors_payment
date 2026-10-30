@@ -1,0 +1,6 @@
+<div class="wcat-chips is-card" x-show="catChips(q.categories).length">
+  <template x-for="c in catChips(q.categories).slice(0, 3)" :key="c.id">
+    <button type="button" class="wcat-chip" :title="c.path" @click.stop="(typeof selecting !== 'undefined' && selecting) ? cardClick($event, q) : setCategory(c.id)" x-text="c.name"></button>
+  </template>
+  <span class="wcat-more" x-show="catChips(q.categories).length > 3" x-text="'+' + (catChips(q.categories).length - 3)"></span>
+</div>

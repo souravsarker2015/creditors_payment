@@ -1148,11 +1148,23 @@ def restore(user, rows, media=None):
     from apps.core.backup import _file_fields
     from apps.core.relink import relink
 
+    from .exam import category_in
+    from .models import ExamCategory
+
     order = {m._meta.model_name: i for i, (m, _lookup) in enumerate(backup_models())}
     models_by_name = {m._meta.model_name: m for m, _lookup in backup_models()}
     rows = [r for r in rows if isinstance(r, dict) and str(r.get("model", "")).startswith("productivity.")
             and r["model"].split(".", 1)[1] in order]
-    rows.sort(key=lambda r: (order[r["model"].split(".", 1)[1]], bool((r.get("fields") or {}).get("parent"))))   # a subtask after the task it's part of
+    parents = {(r["model"], r.get("pk")): (r.get("fields") or {}).get("parent") for r in rows}
+
+    def depth(row):                 # a subtask after the task it's part of, a category after the one it's in, however deep
+        at, seen = (row.get("fields") or {}).get("parent"), set()
+        while at and at not in seen:
+            seen.add(at)
+            at = parents.get((row["model"], at))
+        return len(seen)
+
+    rows.sort(key=lambda r: (order[r["model"].split(".", 1)[1]], depth(r)))
     ids, counts = defaultdict(dict), defaultdict(int)
     later = []      # tasks blocked by other tasks: linked once every task exists
     restored = []
@@ -1193,6 +1205,9 @@ def restore(user, rows, media=None):
         if name == "tag":
             tag, _created = Tag.objects.get_or_create(owner=user, name=fields["name"], defaults={"color": fields.get("color", "slate")})
             ids["tag"][old_pk] = tag.pk
+            continue
+        if name == "examcategory":
+            ids["examcategory"][old_pk] = category_in(user, ExamCategory.objects.filter(pk=fields.get("parent")).first(), fields["name"]).pk
             continue
         if name == "journalentry" and JournalEntry.objects.filter(owner=user, date=fields.get("date")).exists():
             continue
