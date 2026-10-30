@@ -142,6 +142,9 @@ def _commands():
         ("snippets", _("Snippets"), "code", "work:snippets", "g s", "code"),
         ("cards", _("Flashcards"), "cards", "work:cards", "g k", "flashcards spaced repetition anki memorise memorize study quiz revise"),
         ("prep", _("Interview prep"), "target", "work:prep", "g q", "interview exam questions answers quiz practice mock test leetcode prepare dsa system design"),
+        ("tools", _("Dev tools"), "wrench", "work:tools", "", "json jwt base64 regex cron uuid hash diff timestamp epoch url encode format decode camelcase devutils"),
+        ("patterns", _("Coding patterns"), "sequence", "work:patterns", "", "leetcode neetcode problems dsa algorithms two pointers sliding window dynamic programming roadmap"),
+        ("offers", _("Compare offers"), "scale", "work:offers", "", "salary compensation pay package negotiate"),
         ("jobs", _("Job search"), "map", "work:jobs", "", "jobs applications companies career offer hire interview pipeline huntr teal recruiter"),
         ("stories", _("STAR stories"), "star", "work:stories", "", "behavioural behavioral interview tell me about a time star situation task action result"),
         ("diagrams", _("Diagrams"), "diagram", "work:diagrams", "g m", "mind map mindmap system design architecture flowchart sequence er uml whiteboard"),
@@ -1245,6 +1248,19 @@ def snippets_view(request):
         "languages": [(v, l) for v, l in Language.choices if v in used],
         "tags": Tag.objects.filter(owner=user, snippets__isnull=False).distinct(),
     })
+
+
+@work_required
+def tools_view(request):
+    """Dev tools: the small jobs of a developer's day, done in the browser (static/js/devtools.js)."""
+    tools = [("json", "JSON"), ("jwt", "JWT"), ("base64", "Base64"), ("url", _("URL encode")), ("time", _("Timestamp")), ("regex", "Regex"),
+             ("cron", "Cron"), ("uuid", "UUID"), ("hash", _("Hash")), ("diff", _("Diff")), ("case", _("Naming case"))]
+    return render_work(request, "work/tools.html", {"tools": tools, "texts": {
+        "copied": _("Copied"), "badJwt": _("That isn't a JWT: it should be parts joined by dots."), "badB64": _("That isn't Base64 text."),
+        "badUrl": _("That isn't validly encoded."), "rxSlow": _("Stopped: this pattern takes too long on this text."),
+        "badCron": _("That isn't a cron line: it needs five fields."), "cronNever": _("This never runs."),
+        "noHash": _("Hashes need a secure (https) page."), "diffBig": _("Too long to compare: at most 2,000 changed lines."),
+    }})
 
 
 @work_required

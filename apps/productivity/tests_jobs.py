@@ -264,3 +264,149 @@ class CarefulReadingTests(Base):
         r = self.client.post(reverse("work:jobs"), {"company": "pathao", "role": "backend engineer"})
         self.assertRedirects(r, reverse("work:job", args=[a.pk]))
         self.assertEqual(JobApplication.objects.count(), 1)
+
+
+class OfferTests(Base):
+    def offer(self, company, base, currency="BDT", **kw):
+        return self.app(company=company, stage=JobStage.OFFER, offer_base=base, offer_currency=currency, **kw)
+
+    def test_ranked_on_a_normal_year_a_joining_bonus_only_counts_once(self):
+        a = self.offer("Steady", 3000000, offer_bonus=300000)
+        b = self.offer("Signing", 2800000, offer_signing=1000000)
+        self.assertEqual((a.yearly_pay, b.yearly_pay, b.first_year_pay), (3300000, 2800000, 3800000))
+        rows, comparable = jobs.offers(self.me)
+        self.assertTrue(comparable)
+        self.assertEqual([r.company for r in rows], ["Steady", "Signing"])
+        self.assertTrue(rows[0].best)
+        self.assertEqual(rows[1].behind, 500000)
+        self.assertTrue(rows[1].best_first_year)                        # … but it's said which pays more in the first year
+        self.assertFalse(rows[0].best_first_year)
+
+    def test_different_currencies_are_not_ranked(self):
+        self.offer("Local", 3000000, "BDT")
+        self.offer("Remote", 90000, "USD")
+        rows, comparable = jobs.offers(self.me)
+        self.assertFalse(comparable)
+        self.assertFalse(any(r.best for r in rows))
+        page = self.client.get(reverse("work:offers"))
+        self.assertContains(page, "can't be ranked")
+        self.assertNotContains(page, "Pays most")
+
+    def test_an_offer_without_numbers_is_listed_not_counted(self):
+        self.offer("Numbers", 3000000)
+        self.app(company="Blank", stage=JobStage.OFFER)
+        rows, comparable = jobs.offers(self.me)
+        self.assertEqual(({r.company for r in rows}, comparable), ({"Numbers", "Blank"}, False))
+        page = self.client.get(reverse("work:offers"))
+        self.assertContains(page, "Write in the numbers")
+        self.assertContains(page, "3,000,000")
+
+    def test_two_with_numbers_are_ranked_and_a_blank_one_goes_last(self):
+        self.offer("Blank first", None, "")
+        self.offer("Lower", 2000000)
+        self.offer("Higher", 3000000)
+        rows, comparable = jobs.offers(self.me)
+        self.assertTrue(comparable)
+        self.assertEqual([r.company for r in rows], ["Higher", "Lower", "Blank first"])
+        self.assertEqual(self.client.get(reverse("work:offers")).status_code, 200)
+
+    def test_thousands_are_marked_in_bangla_too(self):
+        from django.utils import translation
+
+        self.offer("Figures", 3600000, offer_bonus=360000.5)
+        with translation.override("bn"):
+            page = self.client.get(reverse("work:offers"), HTTP_ACCEPT_LANGUAGE="bn")
+        self.assertContains(page, "3,600,000")
+        self.assertContains(page, "360,000.50")
+
+    def test_numbers_saved_from_the_application(self):
+        a = self.app(stage=JobStage.OFFER, description="x")
+        url = reverse("work:job", args=[a.pk])
+        self.assertContains(self.client.get(url), "app-offer_base")
+        self.client.post(url, {"action": "save", "app-company": a.company, "app-role": a.role, "app-stage": "offer", "app-interest": 3,
+                               "app-offer_base": "2400000", "app-offer_currency": "BDT", "app-offer_deadline": self.today.isoformat()})
+        a.refresh_from_db()
+        self.assertEqual((a.offer_base, a.offer_deadline), (2400000, self.today))
+
+    def test_the_answer_by_date_shows_wherever_days_are_planned(self):
+        from . import emails, services
+
+        a = self.offer("Deadline Co", 1000000, offer_deadline=self.today + timedelta(days=2))
+        self.assertEqual([x.pk for x in jobs.coming_up(self.me, self.today)["deadlines"]], [a.pk])
+        self.assertContains(self.client.get(reverse("work:today")), "Answer Deadline Co's offer")
+        self.assertIn(f"UID:offer-{a.pk}@fintrack-work", services.calendar_feed(self.me))
+        self.assertEqual([x.pk for x in emails.brief(self.me, self.today).offer_deadlines], [a.pk])
+        self.assertEqual(jobs.coming_up(self.me, self.today + timedelta(days=3))["deadlines"], [])       # gone once it's past
+
+
+class PatternTests(Base):
+    def log(self, **kw):
+        data = {"title": "Two Sum", "url": "https://leetcode.com/problems/two-sum/", "pattern": "Arrays & hashing", "difficulty": 1, "outcome": "alone", "minutes": 12}
+        data.update(kw)
+        return self.client.post(reverse("work:patterns"), data)
+
+    def test_a_problem_goes_into_the_bank_under_its_pattern_and_is_scheduled(self):
+        from . import patterns
+
+        self.log()
+        q = Question.objects.get(owner=self.me, topic__name=patterns.TOPIC)
+        self.assertEqual((q.title, q.section.name, q.difficulty, q.status), ("Two Sum", "Arrays & hashing", 1, "learning"))
+        self.assertIn("leetcode.com/problems/two-sum", q.prompt)         # to open it when it comes back
+        self.assertGreater(q.due, self.today)
+
+    def test_solving_it_again_is_another_try_not_a_second_problem(self):
+        self.log()
+        self.log(title="two sum again", outcome="stuck")                # the same link
+        self.log(url="", title="Two Sum", outcome="hints")              # the same name
+        q = Question.objects.get(owner=self.me)
+        self.assertEqual((q.attempts, q.last_rating), (3, 2))
+
+    def test_the_roadmap_shows_weak_and_not_started_patterns(self):
+        from . import patterns
+
+        self.log()
+        self.log(title="Min Window", url="", pattern="Sliding window", outcome="stuck")
+        m = patterns.roadmap(self.me, self.today)
+        rows = {r["name"]: r for r in m["rows"]}
+        self.assertEqual((rows["Arrays & hashing"]["solved"], rows["Sliding window"]["weak"], rows["Graphs"]["total"]), (1, 1, 0))
+        self.assertEqual(m["next"]["name"], "Sliding window")
+        self.assertEqual(len(m["rows"]), len(patterns.PATTERNS))
+        page = self.client.get(reverse("work:patterns"))
+        self.assertContains(page, "Weakest now")
+        self.assertContains(page, f"section={rows['Sliding window']['section']}")
+
+    def test_nothing_logged_without_a_name_and_a_pattern(self):
+        self.log(title="  ")
+        self.log(pattern="Nope")
+        self.assertFalse(Question.objects.exists())
+        self.assertContains(self.client.get(reverse("work:patterns")), "Not started")
+
+    def test_mine_only(self):
+        from . import patterns
+
+        self.log()
+        other = User.objects.create_user("o", "o@example.com", PW)
+        self.assertEqual(patterns.roadmap(other, self.today)["total"], 0)
+
+
+class DevToolsPageTests(Base):
+    def test_the_page_and_nothing_sent(self):
+        page = self.client.get(reverse("work:tools"))
+        for key in ("json", "jwt", "base64", "regex", "cron", "uuid", "hash", "diff"):
+            self.assertContains(page, f'data-tool="{key}"')
+        from pathlib import Path
+
+        from django.conf import settings
+
+        js = (Path(settings.BASE_DIR) / "static/js/devtools.js").read_text()
+        self.assertNotIn("fetch(", js)                                  # the promise on the page: nothing leaves the browser
+        self.assertNotIn("Work.api", js)
+        self.assertNotIn("XMLHttpRequest", js)
+
+    def test_found_from_every_door(self):
+        from apps.core import launcher
+
+        keys = [s["key"] for s in launcher.available(self.me)]
+        self.assertTrue({"tools", "patterns"} <= set(keys))
+        for url in ("work:tools", "work:patterns"):
+            self.assertContains(self.client.get(reverse("work:today")), reverse(url))

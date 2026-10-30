@@ -129,6 +129,7 @@
       <header class="card-header"><div><h2 class="card-title">{% icon "map" %}{% translate "Job search" %}</h2><p class="card-subtitle">{% translate "Interviews this week and follow-ups due." %}</p></div><a href="{% url 'work:jobs' %}" class="btn btn-ghost btn-sm">{% translate "All" %}</a></header>
       <ul class="wd-notes">
         {% for r in job_coming.rounds %}<li><a href="{% url 'work:job' r.application.pk %}#rounds"><span class="truncate">{{ r.get_kind_display }} — {{ r.application.company }}</span><time class="wt-wait">{{ r.at|date:"D j M, H:i" }}</time></a></li>{% endfor %}
+        {% for a in job_coming.deadlines %}<li><a href="{% url 'work:offers' %}"><span class="truncate">{% blocktranslate with company=a.company %}Answer {{ company }}'s offer{% endblocktranslate %}</span><time class="wt-wait">{{ a.offer_deadline|date:"j M" }}</time></a></li>{% endfor %}
         {% for a in job_coming.due %}<li><a href="{% url 'work:job' a.pk %}"><span class="truncate">{{ a.next_step|default:_("Next step") }} — {{ a.company }}</span><time class="wt-wait">{{ a.next_on|date:"j M" }}</time></a></li>{% endfor %}
         {% for a in job_coming.quiet %}<li><a href="{% url 'work:job' a.pk %}"><span class="truncate">{% blocktranslate with company=a.company %}Follow up with {{ company }}{% endblocktranslate %}</span><time class="wt-wait">{% blocktranslate with n=a.days_quiet %}{{ n }} days quiet{% endblocktranslate %}</time></a></li>{% endfor %}
       </ul>

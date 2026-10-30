@@ -1,0 +1,34 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+{% comment %}The offers side by side. Money is only added up across offers in one currency.{% endcomment %}
+
+{% block title %}{% translate "Compare offers" %} | {% translate "Job search" %}{% endblock %}
+
+{% block work %}
+<header class="wp-head"><div class="min-w-0">
+  <a href="{% url 'work:jobs' %}" class="back-link">{% icon "chevron-left" %}{% translate "Job search" %}</a>
+  <h1 class="wp-title">{% translate "Compare offers" %}</h1>
+  <p class="wp-sub">{% translate "Ranked on a normal year, because a joining bonus is only paid once. The numbers are what you wrote on each application." %}</p>
+</div></header>
+
+{% if rows %}
+{% if not comparable and rows|length > 1 %}<p class="wj-tip">{% icon "info" %}{% translate "These can't be ranked yet: each needs its base pay, all in the same currency." %}</p>{% endif %}
+<div class="card wo-wrap"><table class="wo-table">
+  <thead><tr><th scope="col">{% translate "Offer" %}</th><th scope="col" class="num">{% translate "Base pay a year" %}</th><th scope="col" class="num">{% translate "Bonus a year" %}</th><th scope="col" class="num">{% translate "Stock a year" %}</th><th scope="col" class="num">{% translate "A normal year" %}</th><th scope="col" class="num">{% translate "First year" %}</th><th scope="col">{% translate "Answer by" %}</th></tr></thead>
+  <tbody>{% for a in rows %}
+    <tr{% if a.best %} class="is-best"{% endif %}>
+      <th scope="row"><a href="{% url 'work:job' a.pk %}"><b>{{ a.company }}</b><small>{{ a.role }}</small></a>{% if a.best %}<span class="wj-pill" data-tone="good">{% translate "Pays most" %}</span>{% endif %}{% if a.best_first_year %}<span class="wj-pill" data-tone="accent">{% translate "Most in the first year" %}</span>{% endif %}{% if a.stage == "accepted" %}<span class="wj-pill" data-tone="accent">{% translate "Accepted" %}</span>{% endif %}{% if a.offer_notes %}<small class="wo-notes">{{ a.offer_notes }}</small>{% endif %}</th>
+      {% if a.offer_base is None %}<td colspan="5" class="wo-empty"><a href="{% url 'work:job' a.pk %}">{% translate "Write in the numbers" %}</a></td>
+      {% else %}<td class="num" data-label="{% translate 'Base pay a year' %}">{{ a.offer_base|pay }}</td>
+      <td class="num" data-label="{% translate 'Bonus a year' %}">{% if a.offer_bonus is None %}—{% else %}{{ a.offer_bonus|pay }}{% endif %}</td>
+      <td class="num" data-label="{% translate 'Stock a year' %}">{% if a.offer_equity is None %}—{% else %}{{ a.offer_equity|pay }}{% endif %}</td>
+      <td class="num" data-label="{% translate 'A normal year' %}"><span><b>{{ a.yearly_pay|pay }}</b> {{ a.offer_currency }}{% if a.behind %}<small class="wo-behind">−{{ a.behind|pay }}</small>{% endif %}</span></td>
+      <td class="num" data-label="{% translate 'First year' %}"><b>{{ a.first_year_pay|pay }}</b></td>{% endif %}
+      <td data-label="{% translate 'Answer by' %}">{% if a.offer_deadline %}<time{% if a.offer_deadline <= today %} class="is-late"{% endif %}>{{ a.offer_deadline|date:"j M" }}</time>{% else %}—{% endif %}</td>
+    </tr>{% endfor %}</tbody>
+</table></div>
+{% else %}
+<div class="empty"><div class="empty-icon">{% icon "scale" %}</div><h3 class="empty-title">{% translate "No offers yet" %}</h3>
+  <p class="empty-text">{% translate "Move an application to Offer and write in the numbers. They line up here." %}</p></div>
+{% endif %}
+{% endblock %}

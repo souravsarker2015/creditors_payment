@@ -24877,3 +24877,301 @@ msgstr "এক ঘণ্টা পরে ইন্টারভিউ: %(round)s 
 
 msgid "It's on your board already — here it is."
 msgstr "এটি আগে থেকেই আপনার বোর্ডে আছে — এই যে।"
+
+#, python-format
+msgid "Answer %(company)s's offer"
+msgstr "%(company)s-এর অফারের উত্তর দিন"
+
+msgid "Write the problem's name and pick its pattern."
+msgstr "সমস্যার নাম লিখুন আর প্যাটার্ন বেছে নিন।"
+
+msgid "Logged. It comes back in your practice when it's time."
+msgstr "লেখা হয়েছে। সময় হলে এটি আপনার অনুশীলনে ফিরে আসবে।"
+
+msgid "Logged as another try at this problem."
+msgstr "এই সমস্যার আরেকটি চেষ্টা হিসেবে লেখা হয়েছে।"
+
+msgid "Dev tools"
+msgstr "ডেভ টুলস"
+
+msgid "Coding patterns"
+msgstr "কোডিং প্যাটার্ন"
+
+msgid "Compare offers"
+msgstr "অফার তুলনা"
+
+msgid "URL encode"
+msgstr "URL এনকোড"
+
+msgid "Timestamp"
+msgstr "টাইমস্ট্যাম্প"
+
+msgid "Hash"
+msgstr "হ্যাশ"
+
+msgid "Diff"
+msgstr "ডিফ"
+
+msgid "Naming case"
+msgstr "নামের কেস"
+
+msgid "That isn't a JWT: it should be parts joined by dots."
+msgstr "এটি JWT নয়: ডট দিয়ে জোড়া কয়েকটি অংশ থাকার কথা।"
+
+msgid "That isn't Base64 text."
+msgstr "এটি Base64 লেখা নয়।"
+
+msgid "That isn't validly encoded."
+msgstr "এটি ঠিকভাবে এনকোড করা নয়।"
+
+msgid "Stopped: this pattern takes too long on this text."
+msgstr "থামানো হয়েছে: এই লেখায় প্যাটার্নটি খুব বেশি সময় নিচ্ছে।"
+
+msgid "That isn't a cron line: it needs five fields."
+msgstr "এটি cron লাইন নয়: পাঁচটি ঘর লাগবে।"
+
+msgid "This never runs."
+msgstr "এটি কখনও চলবে না।"
+
+msgid "Hashes need a secure (https) page."
+msgstr "হ্যাশের জন্য নিরাপদ (https) পেজ লাগবে।"
+
+msgid "Too long to compare: at most 2,000 changed lines."
+msgstr "তুলনার জন্য খুব লম্বা: সর্বোচ্চ ২,০০০টি বদলানো লাইন।"
+
+msgid "Base pay a year"
+msgstr "বছরে মূল বেতন"
+
+msgid "Bonus a year"
+msgstr "বছরে বোনাস"
+
+msgid "Stock a year"
+msgstr "বছরে স্টক"
+
+msgid "Joining bonus"
+msgstr "জয়েনিং বোনাস"
+
+msgid "Answer by"
+msgstr "উত্তরের শেষ তারিখ"
+
+msgid "About the offer"
+msgstr "অফার সম্পর্কে"
+
+msgid "BDT, USD… Offers can only be added up in the same one."
+msgstr "BDT, USD… একই মুদ্রায় হলেই অফারগুলো তুলনা করা যায়।"
+
+msgid "The grant divided by its vesting years."
+msgstr "মোট গ্রান্টকে ভেস্টিংয়ের বছর দিয়ে ভাগ করে।"
+
+msgid "One time, counted in the first year only."
+msgstr "এককালীন, শুধু প্রথম বছরে গোনা হয়।"
+
+msgid "Leave, remote days, insurance, growth…"
+msgstr "ছুটি, রিমোট দিন, বিমা, উন্নতির সুযোগ…"
+
+msgid "Arrays & hashing"
+msgstr "অ্যারে ও হ্যাশিং"
+
+msgid "Two pointers"
+msgstr "টু পয়েন্টার"
+
+msgid "Sliding window"
+msgstr "স্লাইডিং উইন্ডো"
+
+msgid "Stack"
+msgstr "স্ট্যাক"
+
+msgid "Binary search"
+msgstr "বাইনারি সার্চ"
+
+msgid "Linked list"
+msgstr "লিংকড লিস্ট"
+
+msgid "Trees"
+msgstr "ট্রি"
+
+msgid "Tries"
+msgstr "ট্রাই"
+
+msgid "Heap / priority queue"
+msgstr "হিপ / প্রায়োরিটি কিউ"
+
+msgid "Backtracking"
+msgstr "ব্যাকট্র্যাকিং"
+
+msgid "Graphs"
+msgstr "গ্রাফ"
+
+msgid "Dynamic programming"
+msgstr "ডায়নামিক প্রোগ্রামিং"
+
+msgid "Greedy"
+msgstr "গ্রিডি"
+
+msgid "Intervals"
+msgstr "ইন্টারভাল"
+
+msgid "Math & geometry"
+msgstr "গণিত ও জ্যামিতি"
+
+msgid "Bit manipulation"
+msgstr "বিট ম্যানিপুলেশন"
+
+msgid "Solved alone"
+msgstr "নিজে সমাধান করেছি"
+
+msgid "Needed hints"
+msgstr "হিন্ট লেগেছে"
+
+msgid "Couldn't solve it"
+msgstr "পারিনি"
+
+msgid "The offer"
+msgstr "অফার"
+
+msgid "Most interview problems are a handful of patterns. Log what you solve on LeetCode or anywhere: you'll see which patterns are weak, and each problem comes back to solve again."
+msgstr "ইন্টারভিউয়ের বেশিরভাগ সমস্যা অল্প কয়েকটি প্যাটার্নের। LeetCode বা অন্য কোথাও যা সমাধান করেন লিখে রাখুন: কোন প্যাটার্নে দুর্বল তা দেখবেন, আর প্রতিটি সমস্যা আবার সমাধানের জন্য ফিরে আসবে।"
+
+#, python-format
+msgid "Revise %(counter)s problem"
+msgid_plural "Revise %(counter)s problems"
+msgstr[0] "%(counter)sটি সমস্যা ঝালাই করুন"
+msgstr[1] "%(counter)sটি সমস্যা ঝালাই করুন"
+
+msgid "Problem, e.g. Two Sum"
+msgstr "সমস্যা, যেমন Two Sum"
+
+msgid "Problem"
+msgstr "সমস্যা"
+
+msgid "Link (optional)"
+msgstr "লিংক (ঐচ্ছিক)"
+
+msgid "Pattern"
+msgstr "প্যাটার্ন"
+
+msgid "Pattern…"
+msgstr "প্যাটার্ন…"
+
+msgid "Min"
+msgstr "মিনিট"
+
+msgid "Minutes it took"
+msgstr "কত মিনিট লেগেছে"
+
+#, python-format
+msgid "Weakest now: %(name)s — %(n)s you couldn't finish last time."
+msgstr "এখন সবচেয়ে দুর্বল: %(name)s — গতবার %(n)sটি শেষ করতে পারেননি।"
+
+#, python-format
+msgid "Not started yet: %(name)s. Try an easy one next."
+msgstr "এখনও শুরু হয়নি: %(name)s। এবার একটি সহজ সমস্যা চেষ্টা করুন।"
+
+#, python-format
+msgid "%(n)s mastered"
+msgstr "%(n)sটি আয়ত্তে"
+
+msgid "Lately"
+msgstr "সাম্প্রতিক"
+
+msgid "Ranked on a normal year, because a joining bonus is only paid once. The numbers are what you wrote on each application."
+msgstr "সাধারণ এক বছরের হিসাবে সাজানো, কারণ জয়েনিং বোনাস একবারই মেলে। সংখ্যাগুলো প্রতিটি আবেদনে আপনার লেখা।"
+
+msgid "These can't be ranked yet: each needs its base pay, all in the same currency."
+msgstr "এখনও সাজানো যাচ্ছে না: অন্তত দুটিতে মূল বেতন লাগবে, সব একই মুদ্রায়।"
+
+msgid "A normal year"
+msgstr "সাধারণ এক বছর"
+
+msgid "First year"
+msgstr "প্রথম বছর"
+
+msgid "Pays most"
+msgstr "সবচেয়ে বেশি বেতন"
+
+msgid "Most in the first year"
+msgstr "প্রথম বছরে সবচেয়ে বেশি"
+
+msgid "Write in the numbers"
+msgstr "সংখ্যাগুলো লিখুন"
+
+msgid "No offers yet"
+msgstr "এখনও কোনো অফার নেই"
+
+msgid "Move an application to Offer and write in the numbers. They line up here."
+msgstr "কোনো আবেদন “অফার” ধাপে নিয়ে সংখ্যাগুলো লিখুন। এখানে পাশাপাশি দেখাবে।"
+
+msgid "Compare offers: write the numbers on each offer and they line up, best first, with the day to answer by on Today and in your calendar."
+msgstr "অফার তুলনা: প্রতিটি অফারে সংখ্যাগুলো লিখলে সেরাটি আগে রেখে পাশাপাশি দেখাবে, আর উত্তরের শেষ তারিখ “আজ” পাতা ও ক্যালেন্ডারে থাকবে।"
+
+msgid "Coding patterns: log the problems you solve on LeetCode or anywhere under their pattern. You see which patterns are weak, and each problem comes back in your practice to solve again."
+msgstr "কোডিং প্যাটার্ন: LeetCode বা অন্য কোথাও সমাধান করা সমস্যা তার প্যাটার্নের নিচে লিখুন। কোন প্যাটার্নে দুর্বল তা দেখবেন, আর প্রতিটি সমস্যা অনুশীলনে আবার ফিরে আসবে।"
+
+msgid "Dev tools: JSON, JWT, Base64, URLs, timestamps, regex, cron, UUIDs, hashes, diffs and naming cases. They run in your browser, so nothing you paste is sent anywhere."
+msgstr "ডেভ টুলস: JSON, JWT, Base64, URL, টাইমস্ট্যাম্প, regex, cron, UUID, হ্যাশ, ডিফ ও নামের কেস। এগুলো আপনার ব্রাউজারেই চলে, তাই পেস্ট করা কিছুই কোথাও পাঠানো হয় না।"
+
+msgid "Everything here runs in your browser — nothing you type is sent anywhere, so a real token is safe to paste."
+msgstr "এখানে সবকিছু আপনার ব্রাউজারেই চলে — যা লেখেন তা কোথাও পাঠানো হয় না, তাই আসল টোকেনও পেস্ট করা নিরাপদ।"
+
+msgid "Minify"
+msgstr "ছোট করুন"
+
+msgid "Sort keys"
+msgstr "কী সাজান"
+
+msgid "This only reads the token. It doesn't check the signature, so don't trust what it says."
+msgstr "এটি শুধু টোকেন পড়ে। সিগনেচার যাচাই করে না, তাই এর লেখায় ভরসা করবেন না।"
+
+msgid "Header"
+msgstr "হেডার"
+
+msgid "Payload"
+msgstr "পেলোড"
+
+msgid "Encode"
+msgstr "এনকোড"
+
+msgid "Decode"
+msgstr "ডিকোড"
+
+msgid "Your time"
+msgstr "আপনার সময়"
+
+msgid "From now"
+msgstr "এখন থেকে"
+
+msgid "That isn't a time or a date."
+msgstr "এটি সময় বা তারিখ নয়।"
+
+msgid "Flags"
+msgstr "ফ্ল্যাগ"
+
+msgid "Text to test"
+msgstr "পরীক্ষার লেখা"
+
+msgid "matches"
+msgstr "টি মিল"
+
+msgid "minute · hour · day of month · month · weekday — in your time. @daily and @hourly work too."
+msgstr "মিনিট · ঘণ্টা · মাসের দিন · মাস · সপ্তাহের দিন — আপনার সময়ে। @daily ও @hourly-ও চলে।"
+
+msgid "Runs next"
+msgstr "পরের বার চলবে"
+
+msgid "New ones"
+msgstr "নতুনগুলো"
+
+msgid "Copy all"
+msgstr "সব কপি করুন"
+
+msgid "Before"
+msgstr "আগে"
+
+msgid "After"
+msgstr "পরে"
+
+msgid "The two are the same."
+msgstr "দুটি একই।"
+
+msgid "user profile picture"
+msgstr "user profile picture"

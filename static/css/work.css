@@ -3260,3 +3260,75 @@ html:not(.can-dictate) [data-dictate] { display: none !important; }
 .wcal-task.is-interview { background: var(--accent-soft); color: var(--accent); font-weight: 650; cursor: default; }
 .wj-qs { list-style: decimal; } .wj-asked { list-style: disc; }
 .wj-qs li::marker, .wj-asked li::marker { color: var(--text-muted); }
+
+/* ── Compare offers (offers.html): a table on a computer, a card for each on a phone ── */
+.wo-wrap { overflow-x: auto; }
+.wo-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.wo-table th, .wo-table td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--border-soft); vertical-align: top; }
+.wo-table thead th { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted); white-space: nowrap; }
+.wo-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.wo-table tbody tr:last-child > * { border-bottom: 0; }
+.wo-table tbody th { font-weight: 400; min-width: 12rem; }
+.wo-table tbody th a { display: block; color: var(--text-primary); }
+.wo-table tbody th small { display: block; color: var(--text-muted); }
+.wo-table tr.is-best { background: var(--status-good-bg); }
+.wo-notes { margin-top: 0.25rem; }
+.wo-behind { display: block; color: var(--status-critical); }
+.wo-empty a { color: var(--accent); font-weight: 600; }
+.wo-table time.is-late { color: var(--status-critical); font-weight: 650; }
+@media (max-width: 767.98px) {
+  .wo-table thead { display: none; }
+  .wo-table, .wo-table tbody, .wo-table tr, .wo-table th, .wo-table td { display: block; }
+  .wo-table tr { padding: 0.5rem 0; border-bottom: 1px solid var(--border-soft); }
+  .wo-table tbody th, .wo-table td { padding: 0.25rem 1rem; border: 0; }
+  .wo-table td[data-label] { display: flex; justify-content: space-between; gap: 1rem; text-align: right; }
+  .wo-table td[data-label]::before { content: attr(data-label); color: var(--text-muted); }
+}
+/* ── Coding patterns (patterns.html) ── */
+.wcp-log { display: grid; grid-template-columns: 2fr 1.5fr 1.3fr 1fr 1.2fr 4.5rem auto; gap: 0.5rem; padding: 0.75rem; margin-bottom: 1rem; }
+@media (max-width: 1023.98px) { .wcp-log { grid-template-columns: 1fr 1fr; } .wcp-title, .wcp-url { grid-column: 1 / -1; } }
+.wcp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 13.5rem), 1fr)); gap: 0.625rem; margin: 0 0 1rem; padding: 0; list-style: none; }
+.wcp-card { position: relative; display: flex; flex-direction: column; gap: 0.375rem; padding: 0.75rem 0.875rem; border-radius: var(--radius); border: 1px solid var(--border-soft); background: var(--surface-raised); }
+.wcp-card.is-empty { background: var(--surface-sunken); border-style: dashed; }
+.wcp-card.is-weak { border-left: 3px solid var(--status-critical); }
+.wcp-card header { display: flex; justify-content: space-between; gap: 0.5rem; font-size: 0.875rem; color: var(--text-primary); }
+.wcp-card header span { color: var(--text-muted); font-size: 0.8125rem; white-space: nowrap; }
+.wcp-bar { display: block; height: 0.3125rem; border-radius: 999px; background: var(--surface-sunken); overflow: hidden; }
+.wcp-bar i { display: block; height: 100%; background: var(--accent); }
+.wcp-meta { display: flex; flex-wrap: wrap; gap: 0.125rem 0.5rem; margin: 0; font-size: 0.75rem; color: var(--text-muted); }
+.wcp-meta .is-weak { color: var(--status-critical); font-weight: 650; }
+.wcp-go { align-self: flex-start; font-size: 0.75rem; font-weight: 650; color: var(--accent); }
+.wcp-recent ul { margin: 0; padding: 0 1rem 0.5rem; list-style: none; }
+.wcp-recent li { display: flex; flex-wrap: wrap; align-items: center; gap: 0.375rem; padding: 0.375rem 0; border-bottom: 1px dashed var(--border-soft); font-size: 0.875rem; }
+.wcp-recent li:last-child { border-bottom: 0; }
+.wcp-recent li a { flex: 1 1 10rem; min-width: 0; color: var(--text-primary); }
+
+/* ── Dev tools (tools.html) ── */
+.wp-sub svg { display: inline-block; width: 0.875rem; height: 0.875rem; margin-right: 0.25rem; vertical-align: -0.125rem; }
+.wdv-tabs { display: flex; flex-wrap: wrap; gap: 0.375rem; margin-bottom: 0.75rem; }
+.wdv-pane { display: flex; flex-direction: column; gap: 0.625rem; }
+.wdv-pane h3 { margin: 0 0 0.25rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); }
+.wdv-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.wdv-grow { flex: 1 1 12rem; min-width: 0; }
+.wdv-flags { width: 4.5rem; }
+.wdv-slash { color: var(--text-muted); font-family: var(--font-mono, monospace); }
+.wdv-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: 0.625rem; }
+.wdv-grid > * { min-width: 0; }
+.wdv-out { margin: 0; padding: 0.75rem; max-height: 26rem; overflow: auto; border-radius: var(--radius); background: var(--surface-sunken); color: var(--text-primary); font-size: 0.8125rem; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+.wdv-hl mark { padding: 0 0.0625rem; border-radius: 0.1875rem; background: color-mix(in srgb, #facc15 45%, transparent); color: inherit; }
+.wdv-diff span { display: block; white-space: pre-wrap; }
+.wdv-diff span[data-k="+"] { background: var(--status-good-bg); color: var(--status-good); }
+.wdv-diff span[data-k="-"] { background: var(--status-critical-bg); color: var(--status-critical); }
+.wdv-diff span[data-k="="] { color: var(--text-muted); }
+.wdv-error { margin: 0; font-size: 0.8125rem; color: var(--status-critical); overflow-wrap: anywhere; }
+.wdv-note { margin: 0; font-size: 0.8125rem; color: var(--text-muted); }
+.wdv-list { display: flex; flex-direction: column; gap: 0.25rem; margin: 0.25rem 0 0; padding: 0; list-style: none; font-size: 0.875rem; overflow-wrap: anywhere; }
+.wdv-group { margin-left: 0.5rem; color: var(--text-secondary); }
+.wdv-group b { color: var(--accent); }
+.wdv-copy { text-align: left; color: var(--text-primary); }
+.wdv-copy:hover { color: var(--accent); }
+.wdv-dl { display: grid; gap: 0.375rem; margin: 0; }
+.wdv-dl > div { display: grid; grid-template-columns: 8.5rem 1fr; gap: 0.5rem; align-items: baseline; font-size: 0.875rem; }
+.wdv-dl dt { color: var(--text-muted); font-size: 0.8125rem; }
+.wdv-dl dd { margin: 0; color: var(--text-primary); font-family: var(--font-mono, monospace); overflow-wrap: anywhere; cursor: copy; }
+@media (max-width: 479.98px) { .wdv-dl > div { grid-template-columns: 1fr; gap: 0; } }

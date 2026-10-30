@@ -23,6 +23,7 @@ most come first in each group.{% endcomment %}
   <a href="{% url 'work:notes' %}" class="nav-link {% if '/work/notes/' in p %}is-active{% endif %}">{% icon "note" %}{% translate "Notes" %}</a>
   <a href="{% url 'work:diagrams' %}" class="nav-link {% if '/work/diagrams/' in p %}is-active{% endif %}">{% icon "diagram" %}{% translate "Diagrams" %}</a>
   <a href="{% url 'work:snippets' %}" class="nav-link {% if '/work/snippets/' in p %}is-active{% endif %}">{% icon "code" %}{% translate "Snippets" %}</a>
+  <a href="{% url 'work:tools' %}" class="nav-link {% if '/work/tools/' in p %}is-active{% endif %}">{% icon "wrench" %}{% translate "Dev tools" %}</a>
 </div>
 <div class="space-y-0.5">
   <p class="nav-section-label">{% translate "Study" %}</p>
@@ -33,7 +34,8 @@ most come first in each group.{% endcomment %}
 <div class="space-y-0.5">
   <p class="nav-section-label">{% translate "Career" %}</p>
   <a href="{% url 'work:jobs' %}" class="nav-link {% if '/work/jobs/' in p %}is-active{% endif %}">{% icon "map" %}{% translate "Job search" %}</a>
-  <a href="{% url 'work:prep' %}" class="nav-link {% if '/work/prep/' in p %}is-active{% endif %}">{% icon "target" %}{% translate "Interview prep" %}</a>
+  <a href="{% url 'work:prep' %}" class="nav-link {% if '/work/prep/' in p and '/work/prep/patterns/' not in p %}is-active{% endif %}">{% icon "target" %}{% translate "Interview prep" %}</a>
+  <a href="{% url 'work:patterns' %}" class="nav-link {% if '/work/prep/patterns/' in p %}is-active{% endif %}">{% icon "sequence" %}{% translate "Coding patterns" %}</a>
   <a href="{% url 'work:stories' %}" class="nav-link {% if '/work/stories/' in p %}is-active{% endif %}">{% icon "star" %}{% translate "STAR stories" %}</a>
   <a href="{% url 'work:review' %}" class="nav-link {% if '/work/review/' in p %}is-active{% endif %}">{% icon "trophy" %}{% translate "Review & brag doc" %}</a>
 </div>

@@ -52,7 +52,9 @@ def coming_up(user, today=None, days=SOON_DAYS):
                .order_by("next_on", "pk"))
     quiet = [a for a in JobApplication.objects.filter(owner=user, stage=JobStage.APPLIED, next_on__isnull=True).order_by("stage_changed_at")
              if a.days_quiet(today) >= QUIET_DAYS][:5]
-    return {"rounds": rounds, "due": due, "quiet": quiet, "count": len(rounds) + len(due) + len(quiet)}
+    deadlines = list(JobApplication.objects.filter(owner=user, stage=JobStage.OFFER, offer_deadline__gte=today,
+                                                   offer_deadline__lte=today + timedelta(days=days)).order_by("offer_deadline"))
+    return {"rounds": rounds, "due": due, "quiet": quiet, "deadlines": deadlines, "count": len(rounds) + len(due) + len(quiet) + len(deadlines)}
 
 
 # ── Moving along ──────────────────────────────────────────────────────────
@@ -170,6 +172,31 @@ def to_bank(rnd):
         have.add(line)
         made += 1
     return made
+
+
+# ── Offers side by side ───────────────────────────────────────────────────
+def offers(user):
+    """Offers to weigh up, best first: (rows, comparable). `comparable` is False with fewer than two that have
+    numbers, or in different currencies — then none is called the best; one with no numbers yet is listed
+    last. They're ranked on a normal year, what
+    keeps being paid: a joining bonus only counts once. `best` is the top one, `behind` how far under it
+    the others are, and `best_first_year` marks another offer that pays more in the first year alone."""
+    rows = list(JobApplication.objects.filter(owner=user, stage__in=(JobStage.OFFER, JobStage.ACCEPTED)))
+    priced = [a for a in rows if a.first_year_pay is not None]
+    money = {a.offer_currency.strip().upper() for a in priced}
+    comparable = len(priced) > 1 and len(money) == 1
+    for a in rows:
+        a.best, a.best_first_year, a.behind = False, False, None
+    if comparable:
+        rows.sort(key=lambda a: (a.yearly_pay is None, -(a.yearly_pay or 0)))
+        top = rows[0]
+        top.best = True
+        for a in priced:
+            if a is not top:
+                a.behind = top.yearly_pay - a.yearly_pay
+        first = max(priced, key=lambda a: a.first_year_pay)
+        first.best_first_year = first.first_year_pay > top.first_year_pay
+    return rows, comparable
 
 
 # ── STAR stories ──────────────────────────────────────────────────────────

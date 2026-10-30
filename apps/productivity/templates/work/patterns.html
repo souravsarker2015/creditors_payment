@@ -1,0 +1,47 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+{% comment %}Coding patterns (as NeetCode's roadmap): problems solved anywhere, logged by pattern; they live in the question bank and come back in spaced practice.{% endcomment %}
+
+{% block title %}{% translate "Coding patterns" %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+<header class="wp-head">
+  <div class="min-w-0">
+    <h1 class="wp-title">{% translate "Coding patterns" %}</h1>
+    <p class="wp-sub">{% translate "Most interview problems are a handful of patterns. Log what you solve on LeetCode or anywhere: you'll see which patterns are weak, and each problem comes back to solve again." %}</p>
+  </div>
+  <div class="wp-actions">
+    {% if map.due and map.topic %}<a href="{% url 'work:prep_practice' %}?set=today&topic={{ map.topic.pk }}" class="btn btn-primary">{% icon "play" %}{% blocktranslate count counter=map.due %}Revise {{ counter }} problem{% plural %}Revise {{ counter }} problems{% endblocktranslate %}</a>{% endif %}
+    <a href="{% url 'work:prep' %}" class="btn btn-secondary">{% icon "target" %}{% translate "Interview prep" %}</a>
+  </div>
+</header>
+
+<form method="post" class="card wcp-log">{% csrf_token %}
+  <input name="title" class="form-input wcp-title" placeholder="{% translate 'Problem, e.g. Two Sum' %}" aria-label="{% translate 'Problem' %}" required maxlength="200">
+  <input name="url" type="url" class="form-input wcp-url" placeholder="{% translate 'Link (optional)' %}" aria-label="{% translate 'Link' %}">
+  <select name="pattern" class="form-input" aria-label="{% translate 'Pattern' %}" required><option value="">{% translate "Pattern…" %}</option>{% for name, label in patterns %}<option value="{{ name }}">{{ label }}</option>{% endfor %}</select>
+  <select name="difficulty" class="form-input" aria-label="{% translate 'Difficulty' %}">{% for v, l in difficulties %}<option value="{{ v }}"{% if v == 2 %} selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+  <select name="outcome" class="form-input" aria-label="{% translate 'How it went' %}">{% for key, label, r in outcomes %}<option value="{{ key }}">{{ label }}</option>{% endfor %}</select>
+  <input name="minutes" type="number" min="0" max="600" class="form-input wcp-min" placeholder="{% translate 'Min' %}" aria-label="{% translate 'Minutes it took' %}">
+  <button type="submit" class="btn btn-primary">{% icon "plus" %}{% translate "Log" %}</button>
+</form>
+
+{% if map.next %}<p class="wj-tip">{% icon "info" %}{% if map.next.weak %}{% blocktranslate with name=map.next.label n=map.next.weak %}Weakest now: {{ name }} — {{ n }} you couldn't finish last time.{% endblocktranslate %}{% else %}{% blocktranslate with name=map.next.label %}Not started yet: {{ name }}. Try an easy one next.{% endblocktranslate %}{% endif %}</p>{% endif %}
+
+<ul class="wcp-grid">
+  {% for r in map.rows %}
+  <li class="wcp-card{% if not r.total %} is-empty{% elif r.weak %} is-weak{% endif %}">
+    <header><b>{{ r.label }}</b><span class="num">{{ r.solved }} / {{ r.total }}</span></header>
+    <span class="wcp-bar" aria-hidden="true"><i style="width: {{ r.pct }}%"></i></span>
+    <p class="wcp-meta">{% if r.mastered %}<span>{% blocktranslate with n=r.mastered %}{{ n }} mastered{% endblocktranslate %}</span>{% endif %}{% if r.weak %}<span class="is-weak">{% blocktranslate with n=r.weak %}{{ n }} weak{% endblocktranslate %}</span>{% endif %}{% if r.due %}<span>{% blocktranslate with n=r.due %}{{ n }} due{% endblocktranslate %}</span>{% endif %}{% if not r.total %}<span>{% translate "Not started" %}</span>{% endif %}</p>
+    {% if r.total %}<a href="{% url 'work:prep_practice' %}?topic={{ map.topic.pk }}&section={{ r.section }}" class="wcp-go">{% translate "Practise" %}</a>{% endif %}
+  </li>
+  {% endfor %}
+</ul>
+
+{% if map.recent %}
+<section class="card wcp-recent"><div class="card-header"><h2 class="card-title">{% translate "Lately" %}</h2></div>
+  <ul>{% for q in map.recent %}<li><a href="{% url 'work:question' q.pk %}">{{ q.title }}</a><span class="wj-pill">{{ q.pattern }}</span><span class="wj-pill"{% if q.status == "weak" %} data-tone="critical"{% elif q.status == "mastered" %} data-tone="good"{% endif %}>{{ q.status_label }}</span></li>{% endfor %}</ul>
+</section>
+{% endif %}
+{% endblock %}

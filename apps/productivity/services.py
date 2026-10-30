@@ -1245,6 +1245,9 @@ def calendar_feed(user, base_url=""):
               .exclude(stage__in=(JobStage.ACCEPTED, JobStage.CLOSED))):
         event(f"job-next-{a.pk}", "💼 " + (a.next_step or _("Next step")) + f" — {a.company}", reverse("work:job", args=[a.pk]),
               [f"DTSTART;VALUE=DATE:{a.next_on:%Y%m%d}", f"DTEND;VALUE=DATE:{a.next_on + timedelta(days=1):%Y%m%d}"])
+    for a in JobApplication.objects.filter(owner=user, stage=JobStage.OFFER, offer_deadline__gte=timezone.localdate()):
+        event(f"offer-{a.pk}", "💼 " + _("Answer %(company)s's offer") % {"company": a.company}, reverse("work:offers"),
+              [f"DTSTART;VALUE=DATE:{a.offer_deadline:%Y%m%d}", f"DTEND;VALUE=DATE:{a.offer_deadline + timedelta(days=1):%Y%m%d}"])
     lines.append("END:VCALENDAR")
     return "\r\n".join(lines) + "\r\n"
 

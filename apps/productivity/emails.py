@@ -67,11 +67,12 @@ class Brief:
     note: str = ""                                    # "Plan for the day" from the journal
     interviews: list = field(default_factory=list)    # the job search: today's interview rounds
     job_steps: list = field(default_factory=list)     # … and the applications whose next step is due
+    offer_deadlines: list = field(default_factory=list)   # … and offers to answer within the next days
 
     @property
     def worth_sending(self):
         return bool(self.late or self.today_tasks or self.plan or self.reminders or self.habits or self.cards_due or self.note
-                    or self.interviews or self.job_steps)
+                    or self.interviews or self.job_steps or self.offer_deadlines)
 
     def headline(self):
         parts = []
@@ -108,6 +109,8 @@ def brief(user, today=None):
     b.interviews = list(JobRound.objects.filter(application__owner=user, at__gte=lo, at__lt=hi).select_related("application").order_by("at"))
     b.job_steps = list(JobApplication.objects.filter(owner=user, next_on__lte=today).exclude(stage__in=(JobStage.ACCEPTED, JobStage.CLOSED))
                        .order_by("next_on")[:10])
+    b.offer_deadlines = list(JobApplication.objects.filter(owner=user, stage=JobStage.OFFER, offer_deadline__gte=today,
+                                                           offer_deadline__lte=today + timedelta(days=3)).order_by("offer_deadline"))
     return b
 
 

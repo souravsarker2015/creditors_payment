@@ -495,9 +495,10 @@ class JobApplicationForm(forms.ModelForm):
 
         model = JobApplication
         fields = ("company", "role", "stage", "url", "location", "salary", "source", "contact", "interest", "applied_on",
-                  "next_step", "next_on", "closed_reason", "description", "notes")
+                  "next_step", "next_on", "closed_reason", "offer_currency", "offer_base", "offer_bonus", "offer_equity", "offer_signing",
+                  "offer_deadline", "offer_notes", "description", "notes")
         widgets = {
-            "applied_on": DATE, "next_on": DATE, "interest": forms.NumberInput(attrs={"min": 1, "max": 5}),
+            "applied_on": DATE, "next_on": DATE, "offer_deadline": DATE, "interest": forms.NumberInput(attrs={"min": 1, "max": 5}),
             "description": forms.Textarea(attrs={"rows": 6, "data-md": ""}), "notes": forms.Textarea(attrs={"rows": 4, "data-md": ""}),
         }
 

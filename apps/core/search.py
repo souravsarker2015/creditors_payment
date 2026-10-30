@@ -126,6 +126,9 @@ PAGES = [
     (gettext_noop("Job search"), "work:jobs", "work", ""),
     (gettext_noop("Job applications"), "work:jobs", "work", ""),
     (gettext_noop("STAR stories"), "work:stories", "work", ""),
+    (gettext_noop("Compare offers"), "work:offers", "work", ""),
+    (gettext_noop("Coding patterns"), "work:patterns", "work", ""),
+    (gettext_noop("Dev tools"), "work:tools", "work", ""),
     (gettext_noop("All shortcuts"), "launcher", "personal", ""),
     (gettext_noop("Habits"), "work:habits", "work", ""),
 ]

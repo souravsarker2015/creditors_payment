@@ -126,6 +126,14 @@ def icon(name):
 
 
 @register.filter
+def pay(value):
+    """A pay figure with its thousands marked, in every language ("3,600,000"): whole numbers stay whole."""
+    if value is None:
+        return ""
+    return f"{value:,.2f}".removesuffix(".00")
+
+
+@register.filter
 def note_preview(note, length=420):
     """A note's text for a card on the notes board: its lines kept, light Markdown marks dropped, and
     without the first line when that line is already the card's title (a note with no title)."""

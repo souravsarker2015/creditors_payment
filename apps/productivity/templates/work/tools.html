@@ -1,0 +1,103 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+{% comment %}Dev tools (static/js/devtools.js): everything runs in this browser; nothing typed here is sent to the server.{% endcomment %}
+
+{% block title %}{% translate "Dev tools" %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+<header class="wp-head"><div class="min-w-0">
+  <h1 class="wp-title">{% translate "Dev tools" %}</h1>
+  <p class="wp-sub">{% icon "lock" %}{% translate "Everything here runs in your browser — nothing you type is sent anywhere, so a real token is safe to paste." %}</p>
+</div></header>
+
+{{ texts|json_script:"devtools-text" }}
+<div x-data="devTools" class="wdv" data-page-keys>
+  <nav class="wdv-tabs" role="tablist" aria-label="{% translate 'Dev tools' %}">
+    {% for key, label in tools %}<button type="button" class="chip" role="tab" data-tool="{{ key }}" :class="tool === '{{ key }}' && 'is-active'" :aria-selected="(tool === '{{ key }}').toString()" @click="tool = '{{ key }}'">{{ label }}</button>{% endfor %}
+  </nav>
+
+  <section class="card card-body wdv-pane" x-show="tool === 'json'" x-cloak>
+    <textarea x-model="json" class="form-input code-input" data-code rows="10" spellcheck="false" placeholder='{"paste": "JSON here"}' aria-label="JSON" @input.debounce.300ms="runJson(2)"></textarea>
+    <div class="wdv-row"><button type="button" class="btn btn-primary btn-sm" @click="runJson(2)">{% translate "Format" %}</button><button type="button" class="btn btn-secondary btn-sm" @click="runJson(0)">{% translate "Minify" %}</button>
+      <label class="check"><input type="checkbox" x-model="jsonSort" @change="runJson(2)"> <span>{% translate "Sort keys" %}</span></label>
+      <button type="button" class="btn btn-ghost btn-sm" x-show="jsonOut" @click="copy(jsonOut)">{% icon "copy" %}{% translate "Copy" %}</button></div>
+    <p class="wdv-error" x-show="jsonError" x-text="jsonError"></p><pre class="wdv-out" x-show="jsonOut" x-text="jsonOut"></pre>
+  </section>
+
+  <section class="card card-body wdv-pane" x-show="tool === 'jwt'" x-cloak>
+    <textarea x-model="jwt" class="form-input code-input" data-code rows="4" spellcheck="false" placeholder="eyJhbGciOi…" aria-label="JWT" @input="runJwt()"></textarea>
+    <p class="wdv-note">{% translate "This only reads the token. It doesn't check the signature, so don't trust what it says." %}</p>
+    <p class="wdv-error" x-show="jwtError" x-text="jwtError"></p>
+    <template x-if="jwtOut"><div class="wdv-grid">
+      <div><h3>{% translate "Header" %}</h3><pre class="wdv-out" x-text="jwtOut.header"></pre></div>
+      <div><h3>{% translate "Payload" %}</h3><pre class="wdv-out" x-text="jwtOut.payload"></pre>
+        <ul class="wdv-list"><template x-for="x in jwtOut.times" :key="x.key"><li><b x-text="x.key"></b> <span x-text="when(x.at)"></span></li></template>
+          <li x-show="jwtOut.expired !== null"><span class="wj-pill" :data-tone="jwtOut.expired ? 'critical' : 'good'" x-text="jwtOut.expired ? '{{ _("Expired")|escapejs }}' : '{{ _("Not expired")|escapejs }}'"></span></li></ul></div>
+    </div></template>
+  </section>
+
+  <section class="card card-body wdv-pane" x-show="tool === 'base64'" x-cloak>
+    <textarea x-model="b64" class="form-input code-input" data-code rows="5" spellcheck="false" aria-label="Base64"></textarea>
+    <div class="wdv-row"><button type="button" class="btn btn-primary btn-sm" @click="runB64('encode')">{% translate "Encode" %}</button><button type="button" class="btn btn-secondary btn-sm" @click="runB64('decode')">{% translate "Decode" %}</button>
+      <button type="button" class="btn btn-ghost btn-sm" x-show="b64Out" @click="copy(b64Out)">{% icon "copy" %}{% translate "Copy" %}</button></div>
+    <p class="wdv-error" x-show="b64Error" x-text="b64Error"></p><pre class="wdv-out" x-show="b64Out" x-text="b64Out"></pre>
+  </section>
+
+  <section class="card card-body wdv-pane" x-show="tool === 'url'" x-cloak>
+    <textarea x-model="url" class="form-input code-input" data-code rows="4" spellcheck="false" aria-label="URL"></textarea>
+    <div class="wdv-row"><button type="button" class="btn btn-primary btn-sm" @click="runUrl('encode')">{% translate "Encode" %}</button><button type="button" class="btn btn-secondary btn-sm" @click="runUrl('decode')">{% translate "Decode" %}</button>
+      <button type="button" class="btn btn-ghost btn-sm" x-show="urlOut" @click="copy(urlOut)">{% icon "copy" %}{% translate "Copy" %}</button></div>
+    <p class="wdv-error" x-show="urlError" x-text="urlError"></p><pre class="wdv-out" x-show="urlOut" x-text="urlOut"></pre>
+  </section>
+
+  <section class="card card-body wdv-pane" x-show="tool === 'time'" x-cloak>
+    <div class="wdv-row"><input x-model="time" class="form-input code-input wdv-grow" spellcheck="false" placeholder="1767225600 · 2026-01-01T00:00:00Z" aria-label="{% translate 'Time' %}" @input="runTime()"><button type="button" class="btn btn-secondary btn-sm" @click="now()">{% translate "Now" %}</button></div>
+    <dl class="wdv-dl" x-show="timeAt">
+      <div><dt>{% translate "Your time" %}</dt><dd x-text="when(timeAt)"></dd></div><div><dt>UTC (ISO 8601)</dt><dd x-text="iso(timeAt)" @click="copy(iso(timeAt))"></dd></div>
+      <div><dt>Unix</dt><dd x-text="secs(timeAt)" @click="copy(secs(timeAt))"></dd></div><div><dt>{% translate "From now" %}</dt><dd x-text="ago(timeAt)"></dd></div>
+    </dl>
+    <p class="wdv-error" x-show="time.trim() && !timeAt">{% translate "That isn't a time or a date." %}</p>
+  </section>
+
+  <section class="card card-body wdv-pane" x-show="tool === 'regex'" x-cloak>
+    <div class="wdv-row"><span class="wdv-slash">/</span><input x-model="rx" class="form-input code-input wdv-grow" spellcheck="false" autocapitalize="off" placeholder="(\d{4})-(\d{2})" aria-label="{% translate 'Pattern' %}" @input="runRx()"><span class="wdv-slash">/</span><input x-model="rxFlags" class="form-input code-input wdv-flags" spellcheck="false" autocapitalize="off" aria-label="{% translate 'Flags' %}" @input="runRx()"></div>
+    <textarea x-model="rxText" class="form-input code-input" data-code rows="6" spellcheck="false" placeholder="{% translate 'Text to test' %}" aria-label="{% translate 'Text to test' %}" @input="runRx()"></textarea>
+    <p class="wdv-error" x-show="rxError" x-text="rxError"></p>
+    <template x-if="rxHits.length"><div><p class="wdv-note"><b x-text="rxHits.length"></b> {% translate "matches" %}</p><pre class="wdv-out wdv-hl" x-html="rxHtml"></pre>
+      <ol class="wdv-list"><template x-for="(h, i) in rxHits.slice(0, 50)" :key="i"><li><code x-text="h.t"></code><template x-for="(g, n) in h.g" :key="n"><span class="wdv-group"><b x-text="n + 1"></b> <span x-text="g === null || g === undefined ? '—' : g"></span></span></template></li></template></ol></div></template>
+  </section>
+
+  <section class="card card-body wdv-pane" x-show="tool === 'cron'" x-cloak>
+    <input x-model="cron" class="form-input code-input" spellcheck="false" autocapitalize="off" aria-label="Cron" @input="runCron()">
+    <p class="wdv-note">{% translate "minute · hour · day of month · month · weekday — in your time. @daily and @hourly work too." %}</p>
+    <p class="wdv-error" x-show="cronError" x-text="cronError"></p>
+    <template x-if="cronRuns.length"><div><h3>{% translate "Runs next" %}</h3><ol class="wdv-list"><template x-for="r in cronRuns" :key="r.getTime()"><li x-text="when(r)"></li></template></ol></div></template>
+  </section>
+
+  <section class="card card-body wdv-pane" x-show="tool === 'uuid'" x-cloak>
+    <ul class="wdv-list"><template x-for="u in uuids" :key="u"><li><button type="button" class="wdv-copy" @click="copy(u)"><code x-text="u"></code></button></li></template></ul>
+    <div class="wdv-row"><button type="button" class="btn btn-primary btn-sm" @click="moreUuids()">{% translate "New ones" %}</button><button type="button" class="btn btn-ghost btn-sm" @click="copy(uuids.join('\n'))">{% icon "copy" %}{% translate "Copy all" %}</button></div>
+  </section>
+
+  <section class="card card-body wdv-pane" x-show="tool === 'hash'" x-cloak>
+    <textarea x-model="hashIn" class="form-input code-input" data-code rows="4" spellcheck="false" aria-label="{% translate 'Text' %}" @input.debounce.150ms="runHash()"></textarea>
+    <p class="wdv-error" x-show="hashError" x-text="hashError"></p>
+    <dl class="wdv-dl"><template x-for="h in hashes" :key="h.name"><div><dt x-text="h.name"></dt><dd x-text="h.hex" @click="copy(h.hex)"></dd></div></template></dl>
+  </section>
+
+  <section class="card card-body wdv-pane" x-show="tool === 'diff'" x-cloak>
+    <div class="wdv-grid"><textarea x-model="left" class="form-input code-input" data-code rows="8" spellcheck="false" placeholder="{% translate 'Before' %}" aria-label="{% translate 'Before' %}" @input.debounce.200ms="runDiff()"></textarea>
+      <textarea x-model="right" class="form-input code-input" data-code rows="8" spellcheck="false" placeholder="{% translate 'After' %}" aria-label="{% translate 'After' %}" @input.debounce.200ms="runDiff()"></textarea></div>
+    <p class="wdv-error" x-show="diffError" x-text="diffError"></p>
+    <p class="wdv-note" x-show="(left || right) && !diffError && !diffCount">{% translate "The two are the same." %}</p>
+    <pre class="wdv-out wdv-diff" x-show="diffCount"><template x-for="(d, i) in diff" :key="i"><span :data-k="d.k" x-text="d.k + ' ' + d.t + '\n'"></span></template></pre>
+  </section>
+
+  <section class="card card-body wdv-pane" x-show="tool === 'case'" x-cloak>
+    <input x-model="caseIn" class="form-input" spellcheck="false" autocapitalize="off" placeholder="{% translate 'user profile picture' %}" aria-label="{% translate 'Text' %}" @input="runCase()">
+    <dl class="wdv-dl"><template x-for="c in caseOut" :key="c[0]"><div><dt x-text="c[0]"></dt><dd x-text="c[1]" @click="copy(c[1])"></dd></div></template></dl>
+  </section>
+</div>
+{% endblock %}
+
+{% block work_js %}<script src="{% asset 'js/devtools.js' %}"></script>{% endblock %}

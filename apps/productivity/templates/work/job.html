@@ -67,7 +67,7 @@
 
     {# ── the details ── #}
     {# folded away once it's filled in (open while new, or to fix a mistake) — the rounds and Prepare matter more #}
-    <details class="card wj-details"{% if form.errors or not app.description and not rounds %} open{% endif %}>
+    <details class="card wj-details"{% if form.errors or not app.description and not rounds or app.stage == "offer" and app.offer_base is None %} open{% endif %}>
     <summary class="card-header wj-details-head"><h2 class="card-title">{% translate "Details" %}</h2><span class="wj-details-hint">{% translate "Stage, next step, salary, contact, the job description, notes" %}</span>{% icon "chevron-down" %}</summary>
     <form method="post" novalidate>{% csrf_token %}<input type="hidden" name="action" value="save">
       <div class="card-body form-stack">
@@ -80,6 +80,16 @@
           {% with field=form.source %}{% include "partials/field.html" %}{% endwith %}{% with field=form.contact %}{% include "partials/field.html" %}{% endwith %}
         </div>
         {% if app.stage == "closed" or form.closed_reason.value %}{% with field=form.closed_reason %}{% include "partials/field.html" %}{% endwith %}{% endif %}
+        {% if app.stage == "offer" or app.stage == "accepted" or app.offer_base is not None %}
+        <fieldset class="field wj-offer"><legend class="label">{% translate "The offer" %}</legend>
+          <div class="form-grid form-grid-2">
+            {% with field=form.offer_currency %}{% include "partials/field.html" %}{% endwith %}{% with field=form.offer_base %}{% include "partials/field.html" %}{% endwith %}
+            {% with field=form.offer_bonus %}{% include "partials/field.html" %}{% endwith %}{% with field=form.offer_equity %}{% include "partials/field.html" %}{% endwith %}
+            {% with field=form.offer_signing %}{% include "partials/field.html" %}{% endwith %}{% with field=form.offer_deadline %}{% include "partials/field.html" %}{% endwith %}
+          </div>
+          {% with field=form.offer_notes %}{% include "partials/field.html" %}{% endwith %}
+        </fieldset>
+        {% endif %}
         {% with field=form.description %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.notes %}{% include "partials/field.html" %}{% endwith %}
       </div>

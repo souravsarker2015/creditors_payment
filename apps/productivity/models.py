@@ -1298,6 +1298,16 @@ class JobApplication(models.Model):
     description = models.TextField(_("Job description"), blank=True, help_text=_("Paste it: the skills it asks for are what to prepare."))
     notes = models.TextField(_("Notes"), blank=True, help_text=_("Why this company, what you found out, questions to ask them."))
     closed_reason = models.CharField(_("Why it closed"), max_length=120, blank=True)
+    # An offer, in numbers, to compare with the others (a year's worth of each)
+    offer_currency = models.CharField(_("Currency"), max_length=8, blank=True, help_text=_("BDT, USD… Offers can only be added up in the same one."))
+    offer_base = models.DecimalField(_("Base pay a year"), max_digits=12, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)])
+    offer_bonus = models.DecimalField(_("Bonus a year"), max_digits=12, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)])
+    offer_equity = models.DecimalField(_("Stock a year"), max_digits=12, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)],
+                                       help_text=_("The grant divided by its vesting years."))
+    offer_signing = models.DecimalField(_("Joining bonus"), max_digits=12, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)],
+                                        help_text=_("One time, counted in the first year only."))
+    offer_deadline = models.DateField(_("Answer by"), null=True, blank=True, db_index=True)
+    offer_notes = models.CharField(_("About the offer"), max_length=300, blank=True, help_text=_("Leave, remote days, insurance, growth…"))
     order = models.PositiveIntegerField(default=0)
     stage_changed_at = models.DateTimeField(default=timezone.now)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -1313,6 +1323,17 @@ class JobApplication(models.Model):
     @property
     def is_open(self):
         return self.stage in OPEN_STAGES
+
+    @property
+    def yearly_pay(self):
+        """What a normal year pays; None until the offer's base pay is written."""
+        if self.offer_base is None:
+            return None
+        return self.offer_base + (self.offer_bonus or 0) + (self.offer_equity or 0)
+
+    @property
+    def first_year_pay(self):
+        return None if self.yearly_pay is None else self.yearly_pay + (self.offer_signing or 0)
 
     def days_quiet(self, today=None):
         """Days since it last moved — an application with no answer for two weeks wants a follow-up."""

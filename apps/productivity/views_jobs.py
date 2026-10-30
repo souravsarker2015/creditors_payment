@@ -11,10 +11,10 @@ from django.views.decorators.http import require_POST
 
 from apps.trash.services import trash
 
-from . import jobs
+from . import jobs, patterns
 from .access import work_required
 from .forms import JobApplicationForm, JobRoundForm, StoryForm
-from .models import JobApplication, JobRound, JobStage, Story
+from .models import Difficulty, JobApplication, JobRound, JobStage, Story
 from .views import render_work
 
 
@@ -51,6 +51,13 @@ def jobs_view(request):
         "columns": columns, "funnel": jobs.funnel(user), "coming": jobs.coming_up(user, today), "show_closed": show_closed,
         "closed_count": sum(1 for a in apps if a.stage == JobStage.CLOSED), "stages": JobStage.choices, "total": len(apps), "today": today,
     })
+
+
+@work_required
+def offers_view(request):
+    """The offers side by side: what each pays in a normal year and in the first, and when to answer."""
+    rows, comparable = jobs.offers(request.user)
+    return render_work(request, "work/offers.html", {"rows": rows, "comparable": comparable, "today": timezone.localdate()})
 
 
 @work_required
@@ -168,3 +175,23 @@ def story_form_view(request, pk=None):
         messages.success(request, _("Story saved."))
         return redirect(reverse("work:stories") + f"#story-{obj.pk}")
     return render_work(request, "work/story_form.html", {"form": form, "story": story})
+
+
+# ── Coding patterns ───────────────────────────────────────────────────────
+@work_required
+def patterns_view(request):
+    user = request.user
+    if request.method == "POST":
+        try:
+            minutes, difficulty = int(request.POST.get("minutes") or 0), int(request.POST.get("difficulty") or 2)
+        except ValueError:
+            minutes, difficulty = 0, 2
+        q, is_new = patterns.log(user, request.POST.get("title", ""), request.POST.get("url", ""), request.POST.get("pattern", ""),
+                                 difficulty, request.POST.get("outcome", ""), minutes)
+        if q is None:
+            messages.error(request, _("Write the problem's name and pick its pattern."))
+        else:
+            messages.success(request, _("Logged. It comes back in your practice when it's time.") if is_new else _("Logged as another try at this problem."))
+        return redirect("work:patterns")
+    return render_work(request, "work/patterns.html", {"map": patterns.roadmap(user, timezone.localdate()), "patterns": patterns.PATTERNS,
+                                                       "outcomes": patterns.OUTCOMES, "difficulties": Difficulty.choices})

@@ -11,6 +11,7 @@
     <p class="wp-sub">{% translate "Every application on one board — drag it on as it moves. Interviews and follow-ups show on Today." %}</p>
   </div>
   <div class="wp-actions">
+    {% if funnel.by_stage.offer or funnel.by_stage.accepted %}<a href="{% url 'work:offers' %}" class="btn btn-secondary">{% icon "scale" %}{% translate "Compare offers" %}</a>{% endif %}
     <a href="{% url 'work:stories' %}" class="btn btn-secondary">{% icon "star" %}{% translate "STAR stories" %}</a>
     <a href="{% url 'work:prep' %}" class="btn btn-secondary">{% icon "target" %}{% translate "Interview prep" %}</a>
   </div>
@@ -45,6 +46,7 @@
   <h2 class="card-title">{% icon "calendar" %}{% translate "Coming up" %}</h2>
   <ul class="wj-coming-list">
     {% for r in coming.rounds %}<li><a href="{% url 'work:job' r.application.pk %}#rounds"><b>{{ r.at|date:"D j M, H:i" }}</b> · {{ r.get_kind_display }} — {{ r.application.company }}</a><span class="wj-pill" data-tone="accent">{% translate "Interview" %}</span></li>{% endfor %}
+    {% for a in coming.deadlines %}<li><a href="{% url 'work:offers' %}"><b>{{ a.offer_deadline|date:"D j M" }}</b> · {% blocktranslate with company=a.company %}Answer {{ company }}'s offer{% endblocktranslate %}</a><span class="wj-pill" data-tone="warn">{% translate "Offer" %}</span></li>{% endfor %}
     {% for a in coming.due %}<li><a href="{% url 'work:job' a.pk %}"><b>{{ a.next_step|default:_("Next step") }}</b> — {{ a.company }}</a><span class="wj-pill" data-tone="{% if a.next_on < today %}critical{% else %}warn{% endif %}">{% if a.next_on < today %}{% translate "Late" %}{% else %}{% translate "Today" %}{% endif %}</span></li>{% endfor %}
     {% for a in coming.quiet %}<li><a href="{% url 'work:job' a.pk %}">{% blocktranslate with company=a.company n=a.days_quiet %}Follow up with {{ company }} — no news for {{ n }} days{% endblocktranslate %}</a><span class="wj-pill">{% translate "Quiet" %}</span></li>{% endfor %}
   </ul>

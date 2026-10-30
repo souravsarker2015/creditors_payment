@@ -50,6 +50,8 @@ SHORTCUTS = {
     "flashcards": (gettext_lazy("Flashcards"), "work:cards", "", "cards", "work", "work"),
     "jobs": (gettext_lazy("Job search"), "work:jobs", "", "map", "work", "work"),
     "prep": (gettext_lazy("Interview prep"), "work:prep", "", "target", "work", "work"),
+    "patterns": (gettext_lazy("Coding patterns"), "work:patterns", "", "sequence", "work", "work"),
+    "tools": (gettext_lazy("Dev tools"), "work:tools", "", "wrench", "work", "work"),
     "stories": (gettext_lazy("STAR stories"), "work:stories", "", "star", "work", "work"),
     "focus": (gettext_lazy("Focus timer"), "work:focus", "", "bolt", "work", "work"),
     "time": (gettext_lazy("Time"), "work:time", "", "timer", "work", "work"),

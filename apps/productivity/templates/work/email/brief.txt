@@ -6,9 +6,10 @@
 {% endif %}{% if b.interviews %}
 {% translate "INTERVIEWS TODAY" %}
 {% for r in b.interviews %}- {{ r.at|time:"H:i" }} {{ r.get_kind_display }} — {{ r.application.company }} ({{ r.application.role }})
-{% endfor %}{% endif %}{% if b.job_steps %}
+{% endfor %}{% endif %}{% if b.job_steps or b.offer_deadlines %}
 {% translate "JOB SEARCH" %}
-{% for a in b.job_steps %}- {{ a.next_step|default:_("Next step") }} — {{ a.company }}
+{% for a in b.offer_deadlines %}- {% blocktranslate with company=a.company %}Answer {{ company }}'s offer{% endblocktranslate %} ({{ a.offer_deadline|date:"j M" }})
+{% endfor %}{% for a in b.job_steps %}- {{ a.next_step|default:_("Next step") }} — {{ a.company }}
 {% endfor %}{% endif %}{% if b.late %}
 {% translate "LATE" %}
 {% for t in b.late %}- {{ t.title }} ({{ t.due_date|date:"j M" }})
