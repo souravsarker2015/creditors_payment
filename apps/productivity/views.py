@@ -14,19 +14,20 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_date
 from django.utils.formats import date_format
-from django.utils.http import http_date, parse_http_date_safe
+from django.utils.http import content_disposition_header, http_date, parse_http_date_safe
 from django.utils.translation import gettext as _
-from django.utils.translation import gettext_lazy, ngettext
+from django.utils.translation import gettext_lazy, ngettext, pgettext
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from apps.trash.undo import delete_with_undo
 
-from . import cards, dev, diagrams, jobs, linked, services
+from . import cards, dev, diagrams, exam, jobs, linked, services
 from .api import card_json, entry_json
 from .access import can_use, work_required
 from .forms import DeckForm, EntryForm, GoalForm, HabitForm, LearningForm, ProjectForm, SettingsForm, SnippetForm, SprintForm, TagForm, TaskForm
 from .models import (
+    ExamSubject,
     Card, Color, Deck, Diagram, DiagramKind, DiagramVersion, Goal, GoalStatus, Habit, JournalEntry, Language, LearningItem, LearningKind, LearningStatus, LearningUnit, KIND_ICONS, Note, Priority, Project, SavedView, Snippet, Sprint, TaskKind, TaskTemplate,
     Status, Tag, Task, TimeEntry, WorkSettings, DRAG_KINDS, VISUAL_KINDS,
 )
@@ -71,7 +72,9 @@ def _texts():
     return {
         "savedOffline": _("Saved on this device — it will sync when you're online."), "synced": _("Synced changes made offline."),
         "undo": _("Undo"), "reminder": _("Reminder"), "stillWorking": _("Still working on this?"), "noDescription": _("No description"),
-        "tracked": _("Tracked"), "notSaved": _("Not saved."), "taskAdded": _("Task added"), "noteSaved": _("Note saved"), "noteArchived": _("Archived"), "noteUnarchived": _("Back from the archive"),
+        "tracked": _("Tracked"), "notSaved": _("Not saved."), "taskAdded": _("Task added"), "noteSaved": _("Note saved"), "noteArchived": _("Archived"), "noteConflict": _("This note was changed somewhere else too. That text is kept in History."),
+        "signedOut": _("You're signed out. What you wrote is kept on this device and is sent once you sign in."), "signIn": _("Sign in"),
+        "linksUpdated": ngettext("Links updated in %(n)s note", "Links updated in %(n)s notes", 2), "linksUpdatedOne": ngettext("Links updated in %(n)s note", "Links updated in %(n)s notes", 1), "examMade": ngettext("%(n)s question added.", "%(n)s questions added.", 2), "examMadeOne": ngettext("%(n)s question added.", "%(n)s questions added.", 1), "seeThem": _("See them"), "noteDraftBack": _("Your unsaved writing is back."), "noteUnarchived": _("Back from the archive"),
         "repeatMade": _("Next one added"), "taskDeleted": _("Task deleted"), "noteDeleted": _("Note deleted"),
         "focusSession": _("Focus session"), "focusDone": _("Focus session done"), "takeBreak": _("Time for a break."),
         "focusSavedLate": _("A focus session finished while you were away — it's in your timesheet."),
@@ -275,12 +278,11 @@ def today_view(request):
 
         due = Question.objects.filter(owner=user, last_reviewed__isnull=False, due__lte=today).count()
         prep_due = due + min(new_left(user, today), Question.objects.filter(owner=user, last_reviewed__isnull=True).count())
-    from .models import ExamSubject
-
     exam_soon = (ExamSubject.objects.filter(owner=user, exam_date__gte=today, exam_date__lte=today + timedelta(days=14))
                  .annotate(n=Count("notes"), left=Count("notes", filter=Q(notes__is_known=False))).filter(n__gt=0).order_by("exam_date").first())
     return render_work(request, "work/today.html", {
         "today": today, "greeting": greeting, "hour_late": hour >= 16, "sprint": sprint, "prep_due": prep_due, "exam_soon": exam_soon,
+        "exam_due": exam.due_today(user, today),
         "open_tasks": open_tasks, "done_today": done_today, "more_tasks": more, "cap": cap,
         "next_block": services.next_block(user), "now": timezone.now(),
         "leftovers": services.leftovers(user, today), "waiting": services.waiting_tasks(user)[:6],
@@ -723,10 +725,12 @@ def notes_view(request, pk=None):
     notes = Note.objects.filter(owner=user, is_template=templates_only).select_related("project").prefetch_related("tags")
     if not templates_only:
         notes = notes.filter(is_archived=archived)
-    if q:
-        notes = notes.filter(Q(title__icontains=q) | Q(body__icontains=q))
+    notes = services.search_notes(notes, q)
     if tag:
         notes = notes.filter(tags__name=tag)
+    project = request.GET.get("project", "")
+    if project.isdigit():
+        notes = notes.filter(project_id=int(project))
     note = get_object_or_404(Note, pk=pk, owner=user) if pk else None
     note_data = {"id": None, "title": "", "body": "", "tags": "", "project": "", "updated": 0, "saved": ""}
     template = NOTE_TEMPLATES.get(request.GET.get("template", "")) if not note else None
@@ -741,9 +745,9 @@ def notes_view(request, pk=None):
     elif not note and request.GET.get("title"):        # a [[link]] to a note that isn't written yet
         note_data["title"] = request.GET["title"].strip()[:200]
     if note:
-        note_data = {"id": note.pk, "title": note.title, "body": note.body, "tags": " ".join(note.tags.values_list("name", flat=True)),
+        note_data = {"id": note.pk, "title": note.title, "body": services.one_line_end(note.body), "tags": " ".join(note.tags.values_list("name", flat=True)),
                      "project": str(note.project_id or ""), "updated": int(note.updated_at.timestamp() * 1000),
-                     "saved": timezone.localtime(note.updated_at).strftime("%H:%M")}
+                     "saved": timezone.localtime(note.updated_at).strftime("%H:%M"), "rev": services.note_rev(note)}
     from django.core.paginator import Paginator
 
     # Nothing open: the notes as a board of cards (like Keep), unless the list was asked for.
@@ -754,7 +758,8 @@ def notes_view(request, pk=None):
     return render_work(request, "work/notes.html", {
         "note_data": note_data, "board": board, "page_obj": page, "base_query_string": keep.urlencode(),
         "pagination_window": [], "colors": Color.choices,
-        "notes": page.object_list, "total": page.paginator.count, "note": note, "q": q, "tag": tag, "archived": archived,
+        "notes": page.object_list, "total": page.paginator.count, "note": note, "q": q, "tag": tag, "archived": archived, "project": project,
+        "subjects": ExamSubject.objects.filter(owner=user).only("pk", "name") if not board else [],
         "tags": Tag.objects.filter(owner=user, notes__isnull=False).distinct(),
         "projects": Project.objects.filter(owner=user, is_archived=False),
         "templates": [(key, t[0]) for key, t in NOTE_TEMPLATES.items()], "templates_only": templates_only,
@@ -802,13 +807,27 @@ def note_import_view(request):
 
 @work_required
 def note_go_view(request):
-    """Where a [[Note title]] link goes: that note, or a new one with that title."""
+    """Where a [[Note title]] link goes: that note, or a new one with that title. [[Title#Heading]]: that
+    heading of it (the note's page goes there), [[Title|other words]]: just the note."""
     title = request.GET.get("title", "").strip()[:200]
-    notes = Note.objects.filter(owner=request.user, title__iexact=title).order_by("is_archived", "-updated_at")
-    note = notes.first() if title else None
+    def named(text):
+        return Note.objects.filter(owner=request.user, title__iexact=text).order_by("is_archived", "-updated_at").first() if text else None
+    note, heading = named(title), ""
+    if note is None and ("#" in title or "|" in title):      # (a title may have a # in it: "C# notes")
+        base, _sep, heading = title.split("|")[0].partition("#")
+        title, note = base.strip(), named(base.strip())
     if note:
-        return redirect("work:note", pk=note.pk)
+        return redirect(reverse("work:note", args=[note.pk]) + ("?" + urlencode({"heading": heading.strip()}) if heading.strip() else ""))
     return redirect(reverse("work:notes") + "?" + urlencode({"new": "1", "title": title}))
+
+
+@work_required
+def note_export_view(request, pk):
+    """One note as a Markdown file, its tags in a front matter block (as note import reads them)."""
+    note = get_object_or_404(Note, pk=pk, owner=request.user)
+    resp = HttpResponse(services.note_file(note), content_type="text/markdown; charset=utf-8")
+    resp["Content-Disposition"] = content_disposition_header(True, f"{note.display_title[:80].strip()}.md".replace("/", "-"))
+    return resp
 
 
 # ── Diagrams ──────────────────────────────────────────────────────────────
@@ -938,7 +957,7 @@ def _diagram_texts(kind=""):
     return {
         "kindLabel": str(DiagramKind(kind).label) if kind in DiagramKind.values else "",
         "snips": _snippets(kind),
-        "saving": _("Saving…"), "saved": _("Saved"), "editing": _("Editing…"), "offline": _("Saved on this device"), "error": _("Not saved"),
+        "saving": _("Saving…"), "saved": pgettext("state", "Saved"), "editing": _("Editing…"), "offline": _("Saved on this device"), "error": _("Not saved"),
         "newIdea": _("New idea"), "copied": _("Copied"), "exported": _("Downloaded"),
         "deleted": _("Diagram deleted"), "tasksMade": _("Tasks made"), "seeTasks": _("See them"),
         "pickIdea": _("Pick an idea first."), "importEmpty": _("Paste a list first: one idea per line, indent to go deeper."),
@@ -1199,7 +1218,7 @@ def _card_texts():
     return {
         "again": _("Again"), "hard": _("Hard"), "good": _("Good"), "easy": _("Easy"), "show": _("Show the answer"),
         "deleted": _("Card deleted"), "added": _("Card added"), "addedMany": _("Cards added"), "skipped": _("already in the deck"),
-        "saved": _("Saved"), "paused": _("Paused: it won't come up until you start it again"), "resumed": _("It will come up again"),
+        "saved": pgettext("state", "Saved"), "paused": _("Paused: it won't come up until you start it again"), "resumed": _("It will come up again"),
         "reset": _("It will come up as new"), "resetConfirm": _("Forget how well you know this card and start it again as new?"),
         "deleteDeck": _("Delete this deck and all its cards? You can bring it back from Recently deleted."),
         "noAnswer": _("(no answer written)"), "moved": _("Moved"), "undone": _("Answer taken back"),
@@ -1688,6 +1707,9 @@ def calendar_view(request):
     moods = dict(JournalEntry.objects.filter(owner=user, date__gte=first_cell, date__lte=last_cell, mood__isnull=False).values_list("date", "mood"))
     from .models import JobRound
 
+    exams = {}                           # exam days (Exam notes)
+    for x in ExamSubject.objects.filter(owner=user, exam_date__gte=first_cell, exam_date__lte=last_cell):
+        exams.setdefault(x.exam_date, []).append(x)
     interviews = {}                      # the job search's interview rounds, on their day
     for r in JobRound.objects.filter(application__owner=user, at__gte=lo, at__lt=hi).select_related("application").order_by("at"):
         interviews.setdefault(timezone.localtime(r.at).date(), []).append(r)
@@ -1696,7 +1718,7 @@ def calendar_view(request):
     while day <= last_cell:
         v = secs.get(day, 0)
         days.append({"date": day, "secs": v, "level": 0 if not v else min(4, 1 + int(4 * v / (peak + 1))),
-                     "tasks": due.get(day, []), "done": done.get(day, 0), "mood": moods.get(day), "interviews": interviews.get(day, []),
+                     "tasks": due.get(day, []), "done": done.get(day, 0), "mood": moods.get(day), "interviews": interviews.get(day, []), "exams": exams.get(day, []),
                      "in_month": day.month == month.month, "today": day == today, "work": s.is_work_day(day)})
         day += timedelta(days=1)
     prev = (month - timedelta(days=1)).replace(day=1)
@@ -1811,8 +1833,10 @@ def export_view(request):
                     z.writestr("media/" + name, fh.read())
             except (FileNotFoundError, OSError):
                 pass
-        for n in Note.objects.filter(owner=user):
-            z.writestr(f"notes/{slug(n.display_title, n.pk)}.md", (f"# {n.title}\n\n" if n.title else "") + n.body)
+        for n in Note.objects.filter(owner=user).prefetch_related("tags"):
+            z.writestr(f"notes/{slug(n.display_title, n.pk)}.md", services.note_file(n))
+        for x in ExamSubject.objects.filter(owner=user):
+            z.writestr(f"exam-notes/{slug(x.name, x.pk)}.txt", exam.as_text(x, x.notes.all()))
         for sn in Snippet.objects.filter(owner=user):
             z.writestr(f"snippets/{slug(sn.title, sn.pk)}.{ext.get(sn.language, sn.language)}", sn.code)
         for j in JournalEntry.objects.filter(owner=user):

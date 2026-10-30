@@ -25175,3 +25175,110 @@ msgstr "দুটি একই।"
 
 msgid "user profile picture"
 msgstr "user profile picture"
+
+#, python-format
+msgid "Exam: %(name)s"
+msgstr "পরীক্ষা: %(name)s"
+
+msgid "This subject isn't on this device yet. Open it once with a connection."
+msgstr "এই বিষয়টি এখনও এই ডিভাইসে নেই। ইন্টারনেট থাকা অবস্থায় একবার খুলুন।"
+
+msgid "This note was changed somewhere else too. That text is kept in History."
+msgstr "এই নোটটি অন্য কোথাও থেকেও বদলানো হয়েছে। সেই লেখাটি ইতিহাসে রাখা আছে।"
+
+msgid "You're signed out. What you wrote is kept on this device and is sent once you sign in."
+msgstr "আপনি সাইন আউট হয়ে গেছেন। আপনার লেখা এই ডিভাইসে রাখা আছে, সাইন ইন করলেই পাঠানো হবে।"
+
+#, python-format
+msgid "Links updated in %(n)s note"
+msgid_plural "Links updated in %(n)s notes"
+msgstr[0] "%(n)sটি নোটে লিংক ঠিক করা হয়েছে"
+msgstr[1] "%(n)sটি নোটে লিংক ঠিক করা হয়েছে"
+
+msgid "Your unsaved writing is back."
+msgstr "আপনার সেভ না হওয়া লেখা ফিরে এসেছে।"
+
+#, python-format
+msgid "%(n)s exam question"
+msgid_plural "%(n)s exam questions"
+msgstr[0] "%(n)sটি পরীক্ষার প্রশ্ন"
+msgstr[1] "%(n)sটি পরীক্ষার প্রশ্ন"
+
+msgid "No questions here. Write each one as a ## heading with its answer under it — or Q: … A: …, or “question :: answer”."
+msgstr "এখানে কোনো প্রশ্ন নেই। প্রতিটি প্রশ্ন ## হেডিংয়ে আর তার নিচে উত্তর লিখুন — অথবা Q: … A: …, অথবা “প্রশ্ন :: উত্তর”।"
+
+msgid "Exam"
+msgstr "পরীক্ষা"
+
+#, python-format
+msgid "%(counter)s exam question to revise today"
+msgid_plural "%(counter)s exam questions to revise today"
+msgstr[0] "আজ %(counter)sটি পরীক্ষার প্রশ্ন ঝালাই করার আছে"
+msgstr[1] "আজ %(counter)sটি পরীক্ষার প্রশ্ন ঝালাই করার আছে"
+
+msgid "Each ## heading (or Q: … A: …, or question :: answer) becomes a question"
+msgstr "প্রতিটি ## হেডিং (অথবা Q: … A: …, অথবা প্রশ্ন :: উত্তর) একটি প্রশ্ন হবে"
+
+msgid "Make exam questions"
+msgstr "পরীক্ষার প্রশ্ন বানান"
+
+msgid "Download as Markdown"
+msgstr "মার্কডাউন হিসেবে নামান"
+
+msgid "Print or save as PDF"
+msgstr "প্রিন্ট করুন বা PDF রাখুন"
+
+msgid "Each ## heading becomes a question and what's under it the answer (Q: … A: …, numbered lists and “question :: answer” lines work too). Questions already in the subject are left out."
+msgstr "প্রতিটি ## হেডিং একটি প্রশ্ন হবে, আর তার নিচের লেখা হবে উত্তর (Q: … A: …, নম্বর দেওয়া তালিকা আর “প্রশ্ন :: উত্তর” লাইনও চলবে)। যে প্রশ্ন বিষয়টিতে আগে থেকেই আছে, সেগুলো বাদ যাবে।"
+
+msgid "Pick a subject"
+msgstr "একটি বিষয় বাছুন"
+
+msgid "Or a new subject"
+msgstr "অথবা নতুন বিষয়"
+
+msgid "Make them"
+msgstr "বানান"
+
+msgid "EXAMS"
+msgstr "পরীক্ষা"
+
+#, python-format
+msgid "%(name)s: %(counter)s question to revise"
+msgid_plural "%(name)s: %(counter)s questions to revise"
+msgstr[0] "%(name)s: %(counter)sটি প্রশ্ন ঝালাই করার আছে"
+msgstr[1] "%(name)s: %(counter)sটি প্রশ্ন ঝালাই করার আছে"
+
+msgid "Exams"
+msgstr "পরীক্ষা"
+
+msgid "Practice test"
+msgstr "অনুশীলন পরীক্ষা"
+
+msgid "a .txt, .md or .csv file, or an export from Anki or Quizlet — or drop it on the box"
+msgstr ".txt, .md বা .csv ফাইল, অথবা Anki বা Quizlet থেকে নামানো ফাইল — অথবা বাক্সে ছেড়ে দিন"
+
+msgid "Each question on a ## heading with its answer below — or Q: … A: …, or bold questions, or an empty line between them. # headings above the questions become chapters. A numbered list, multiple-choice questions (a) b) c) with Answer: under them) and two columns from a spreadsheet work too."
+msgstr "প্রতিটি প্রশ্ন ## হেডিংয়ে আর নিচে তার উত্তর — অথবা Q: … A: …, অথবা মোটা অক্ষরের প্রশ্ন, অথবা মাঝে একটি ফাঁকা লাইন। প্রশ্নের ওপরের # হেডিং অধ্যায় হবে। নম্বর দেওয়া তালিকা, বহু-নির্বাচনী প্রশ্ন (a) b) c) আর নিচে Answer:) এবং স্প্রেডশিটের দুই কলামও চলবে।"
+
+msgid "The questions you know least come first. Each comes once, against the clock — then you see your score, chapter by chapter."
+msgstr "যেগুলো সবচেয়ে কম জানেন সেগুলো আগে আসবে। প্রতিটি একবার করে আসবে, সময় ধরে — তারপর অধ্যায় ধরে আপনার ফল দেখবেন।"
+
+msgid "Start the test"
+msgstr "পরীক্ষা শুরু করুন"
+
+msgid "Knew"
+msgstr "জানা ছিল"
+
+msgid "Another test"
+msgstr "আরেকটি পরীক্ষা"
+
+msgid "Exam notes: questions and answers by subject and chapter. Paste a list from ChatGPT, Claude, Anki, Quizlet or a .csv file. Spaced repetition brings each question back before you forget it, and ⋯ → Practice test times you and scores you chapter by chapter. Opened once, a subject also works with no internet."
+msgstr "পরীক্ষার নোট: বিষয় আর অধ্যায় ধরে প্রশ্ন ও উত্তর। ChatGPT, Claude, Anki, Quizlet বা .csv ফাইল থেকে তালিকা পেস্ট করুন। ভুলে যাওয়ার আগেই স্পেসড রিপিটিশন প্রতিটি প্রশ্ন ফিরিয়ে আনে, আর ⋯ → অনুশীলন পরীক্ষা সময় ধরে অধ্যায় অনুযায়ী ফল দেখায়। একবার খোলা বিষয় ইন্টারনেট ছাড়াও চলে।"
+
+msgid "Notes: search by any words or a #tag, and write formulas with $…$. Renaming a note keeps the [[links]] to it, and ⋯ → Make exam questions turns its headings into questions. If a note changes on two devices, the other text stays in History."
+msgstr "নোট: যেকোনো শব্দ বা #ট্যাগ দিয়ে খুঁজুন, আর $…$ দিয়ে সূত্র লিখুন। নোটের নাম বদলালেও তার [[লিংক]] ঠিক থাকে, আর ⋯ → পরীক্ষার প্রশ্ন বানান দিয়ে হেডিংগুলো প্রশ্ন হয়ে যায়। দুই ডিভাইসে একই নোট বদলালে অন্য লেখাটি ইতিহাসে থাকে।"
+
+msgctxt "state"
+msgid "Saved"
+msgstr "সেভ হয়েছে"

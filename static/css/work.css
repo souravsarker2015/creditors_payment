@@ -2884,7 +2884,7 @@ button.wpq-option:not(:disabled):active { translate: 0 1px; }
   .wexo-bar, .wexo-nav, .wexo-dock, .wexo-flags, .wexo-more, .wexo-tap, .wexo-progress, .wexo .wp-actions { display: none !important; }
   .wexo .wp-head { display: block !important; }
   .wexo-q { break-inside: avoid; box-shadow: none; }
-  .wexo-a.is-clamped { max-height: none; -webkit-mask-image: none; mask-image: none; }
+  .wexo-a.is-clamped, .wexo-a.is-clamped.is-long { max-height: none; -webkit-mask-image: none; mask-image: none; }
 }
 
 /* the subject page: once there are questions, adding is two buttons until it's wanted */
@@ -3332,3 +3332,25 @@ html:not(.can-dictate) [data-dictate] { display: none !important; }
 .wdv-dl dt { color: var(--text-muted); font-size: 0.8125rem; }
 .wdv-dl dd { margin: 0; color: var(--text-primary); font-family: var(--font-mono, monospace); overflow-wrap: anywhere; cursor: copy; }
 @media (max-width: 479.98px) { .wdv-dl > div { grid-template-columns: 1fr; gap: 0; } }
+
+/* Notes: printing one (⋯ → Print or save as PDF): just the title and the text */
+@media print {
+  .work-nav, .wn-list, .wn-toolbar, .wn-meta, .wn-stats, .wn-links, .wn-suggest, .wn-body-wrap, .wn-code-bar, .topbar, .sidebar, .wt-bar { display: none !important; }
+  .wn, .wn-editor, .wn-pane { display: block !important; width: auto !important; max-width: none !important; height: auto !important; max-height: none !important; overflow: visible !important; margin: 0 !important; padding: 0 !important; border: 0 !important; box-shadow: none !important; }
+  .wn-title { padding: 0 0 0.75rem; font-size: 1.75rem; }
+  .wn-pane .wn-md { min-height: 0; padding: 0; }
+  .wn-pane .wn-md pre { white-space: pre-wrap; }
+}
+/* … the filter by project, and a note's questions into Exam notes */
+.wnb-filter .wnb-project { width: auto; max-width: 12rem; }
+.wn-to-exam { display: flex; flex-direction: column; gap: 0.75rem; }
+.wn .katex-display, .wnb .katex-display { overflow-x: auto; overflow-y: hidden; padding: 0.25rem 0; }
+/* Exam notes: the practice test */
+.wex-clock { padding: 0.125rem 0.625rem; border-radius: 9999px; font-size: 0.9375rem; background: var(--surface-sunken); color: var(--text-primary); }
+.wex-clock.is-low { background: var(--status-critical-bg); color: var(--status-critical); }
+.wex-setup { align-items: stretch; gap: 0.875rem; max-width: 28rem; margin-inline: auto; width: 100%; text-align: left; }
+.wex-setup .form-input { width: 100%; }
+.wex-setup .wfr-end-acts { justify-content: flex-start; }
+.wex-result { display: flex; flex-direction: column; gap: 0.5rem; width: 100%; max-width: 26rem; margin: 0 auto; }
+.wex-result li { display: grid; grid-template-columns: minmax(0, 1fr) 6rem auto; align-items: center; gap: 0.625rem; font-size: 0.875rem; color: var(--text-secondary); }
+.wex-result li > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

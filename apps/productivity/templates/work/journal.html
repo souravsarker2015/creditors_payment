@@ -20,7 +20,7 @@
 <div class="wj">
   <section class="card wj-entry" x-data="workJournal('{{ day|date:"Y-m-d" }}')">
     <header class="card-header"><h2 class="card-title">{% translate "Log" %}</h2>
-      <span class="wn-state" x-text="{ saving: '{% translate "Saving…" %}', saved: '{% translate "Saved" %}', offline: '{% translate "Saved on this device" %}', dirty: '…', error: '{% translate "Not saved" %}' }[state] || ''"></span></header>
+      <span class="wn-state" x-text="{ saving: '{% translate "Saving…" %}', saved: '{% translate "Saved" context "state" %}', offline: '{% translate "Saved on this device" %}', dirty: '…', error: '{% translate "Not saved" %}' }[state] || ''"></span></header>
     <div class="card-body form-stack">
       <div class="field"><label class="label" for="j-plan">{% translate "Plan" %}</label>
         <textarea id="j-plan" data-md rows="3" class="form-input" placeholder="{% translate 'What will make today a success?' %}" @input="save('plan', $event.target.value)">{{ entry.plan }}</textarea></div>

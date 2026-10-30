@@ -223,6 +223,21 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // Asked for by a page that wants a copy of another page on the phone (exam notes: the review page holds every
+  // question of a subject): the network, and what's kept when there's no signal.
+  if (url.origin === self.location.origin && req.headers.get("X-FT-Keep")) {
+    event.respondWith((async () => {
+      try {
+        const res = await fetch(req);
+        event.waitUntil(remember(req, res.clone()));
+        return res;
+      } catch (e) {
+        return (await savedCopy(req)) || Response.error();
+      }
+    })());
+    return;
+  }
+
   // Static files and CDN libraries: serve from cache, refresh in the background.
   const isStatic = url.origin === self.location.origin && url.pathname.startsWith("/static/");
   if (isStatic || CDN.includes(url.hostname)) {

@@ -60,9 +60,15 @@
       <input type="search" name="q" value="{{ q }}" class="form-input input-compact" placeholder="{% translate 'Search notes  ( / )' %}" data-work-search aria-label="{% translate 'Search notes' %}">
       {% if tag %}<input type="hidden" name="tag" value="{{ tag }}">{% endif %}
       {% if archived %}<input type="hidden" name="archived" value="1">{% endif %}
+      {% if templates_only %}<input type="hidden" name="templates" value="1">{% endif %}
+      {% if project %}<input type="hidden" name="project" value="{{ project }}">{% endif %}
     </form>
+    {% if projects %}<select class="form-input input-compact wnb-project" data-native aria-label="{% translate 'Project' %}" onchange="location.href = '?' + (this.value ? 'project=' + this.value : '')">
+      <option value="">{% translate "All projects" %}</option>
+      {% for p in projects %}<option value="{{ p.pk }}"{% if project == p.pk|stringformat:'s' %} selected{% endif %}>{{ p.name }}</option>{% endfor %}
+    </select>{% endif %}
     <div class="chip-row wn-tags">
-      <a href="{% url 'work:notes' %}" class="chip{% if not tag and not archived and not templates_only %} is-active{% endif %}">{% translate "All" %}</a>
+      <a href="{% url 'work:notes' %}" class="chip{% if not tag and not archived and not templates_only and not project %} is-active{% endif %}">{% translate "All" %}</a>
       {% for tg in tags %}<a href="?tag={{ tg.name|urlencode }}" class="chip{% if tag == tg.name %} is-active{% endif %}">#{{ tg.name }}</a>{% endfor %}
       <a href="?archived=1" class="chip{% if archived %} is-active{% endif %}">{% icon "archive" %}{% translate "Archived" %}</a>{% if own_templates or templates_only %}<a href="?templates=1" class="chip{% if templates_only %} is-active{% endif %}">{% icon "star" %}{% translate "Templates" %}</a>{% endif %}
     </div>
@@ -90,7 +96,7 @@
            @keydown.escape.stop="closeNote()" @keydown.ctrl.enter.prevent="closeNote()" @keydown.meta.enter.prevent="closeNote()">
     <div class="wkc-editor-head">
       <input type="text" class="wkc-q-input" x-model="ed.title" maxlength="200" placeholder="{% translate 'Title' %}" aria-label="{% translate 'Title' %}"
-             @keydown.enter.prevent="$refs.edBody && $refs.edBody.focus()">
+             @change="titleChanged()" @keydown.enter.prevent="$refs.edBody && $refs.edBody.focus()">
       {# Write / Preview stay up here, in sight, however long the note is (only the text below scrolls) #}
       <div class="seg seg-sm wex-write-seg" role="radiogroup" aria-label="{% translate 'Note' %}">
         <button type="button" class="seg-item" :class="!edPreview && 'is-active'" @click="edPreview = false">{% translate "Write" %}</button>
@@ -111,7 +117,7 @@
         </div>
       </div>
       <span class="spacer"></span>
-      <span class="wn-state" :data-state="edState" role="status" aria-live="polite"><i aria-hidden="true"></i><span x-text="{ saving: '{% translate "Saving…" %}', saved: '{% translate "Saved" %}', dirty: '{% translate "Editing…" %}', offline: '{% translate "Saved on this device" %}', error: '{% translate "Not saved" %}' }[edState]"></span></span>
+      <span class="wn-state" :data-state="edState" role="status" aria-live="polite"><i aria-hidden="true"></i><span x-text="{ saving: '{% translate "Saving…" %}', saved: '{% translate "Saved" context "state" %}', dirty: '{% translate "Editing…" %}', offline: '{% translate "Saved on this device" %}', error: '{% translate "Not saved" %}' }[edState]"></span></span>
       <button type="button" class="icon-btn" data-dictate="textarea[data-note]" aria-pressed="false" aria-label="{% translate 'Dictate' %}" data-tip="{% translate 'Dictate: speak, and it’s typed' %}">{% icon "mic" %}</button>
       <a :href="ed.url" class="icon-btn" @click="flushNote()" aria-label="{% translate 'Open in the full editor' %}" data-tip="{% translate 'Open in the full editor: history, links, diagrams' %}">{% icon "maximize" %}</a>
       <button type="button" class="icon-btn" @click="noteAct('archive')" aria-label="{% translate 'Archive' %}" data-tip="{% translate 'Archive' %}">{% icon "archive" %}</button>
@@ -188,7 +194,7 @@
           </div>
         </div>
         <span class="spacer"></span>
-        <span class="wn-state" :data-state="state" role="status" aria-live="polite"><i aria-hidden="true"></i><span x-text="{ saving: '{% translate "Saving…" %}', saved: savedAt ? '{% translate "Saved" %} ' + savedAt : '', offline: '{% translate "Saved on this device" %}', dirty: '{% translate "Editing…" %}', error: '{% translate "Not saved" %}' }[state]"></span></span>
+        <span class="wn-state" :data-state="state" role="status" aria-live="polite"><i aria-hidden="true"></i><span x-text="{ saving: '{% translate "Saving…" %}', saved: savedAt ? '{% translate "Saved" context "state" %} ' + savedAt : '', offline: '{% translate "Saved on this device" %}', dirty: '{% translate "Editing…" %}', error: '{% translate "Not saved" %}' }[state]"></span></span>
         <button type="button" class="btn btn-secondary btn-sm wn-todos" x-show="id && todoCount" x-cloak @click="todosToTasks()" :disabled="making"
                 data-tip="{% translate 'Each “- [ ] …” line becomes a task. Ticking the task ticks the line.' %}" aria-label="{% translate 'Make tasks' %}">{% icon "check" %}<span>{% translate "Make tasks" %}</span><b class="wn-todos-n" x-text="todoCount"></b></button>
         <template x-if="id">
@@ -200,7 +206,10 @@
               <button type="button" class="menu-item" @click="action('to_task')">{% icon "check" %}{% translate "Turn into a task" %}</button>
               <button type="button" class="menu-item" @click="Promise.resolve(saveNow()).then(() => action('mindmap'))" data-tip="{% translate 'Headings and lists become the branches' %}">{% icon "mindmap" %}{% translate "Turn into a mind map" %}</button>
               <button type="button" class="menu-item" @click="Promise.resolve(saveNow()).then(() => action('cards'))" data-tip="{% translate 'Each “question :: answer” line becomes a flashcard' %}">{% icon "cards" %}{% translate "Make flashcards" %}</button>
+              <button type="button" class="menu-item" @click="open = false; examOpen = true" data-tip="{% translate 'Each ## heading (or Q: … A: …, or question :: answer) becomes a question' %}">{% icon "exam" %}{% translate "Make exam questions" %}</button>
               <button type="button" class="menu-item" @click="navigator.clipboard && navigator.clipboard.writeText(body).then(() => Work.toast('{% translate "Copied" %}'))">{% icon "copy" %}{% translate "Copy Markdown" %}</button>
+              <a class="menu-item" role="menuitem" :href="Work.cfg.urls.notes + id + '/download/'" @click="saveNow()">{% icon "download" %}{% translate "Download as Markdown" %}</a>
+              <button type="button" class="menu-item" @click="open = false; preview = true; $nextTick(() => setTimeout(() => window.print(), 250))">{% icon "printer" %}{% translate "Print or save as PDF" %}</button>
               <button type="button" class="menu-item" @click="action('template')" data-tip="{% translate 'Offered under Template; {{date}} and {{time}} are filled in' %}">{% icon "star" %}{% if note.is_template %}{% translate "Stop using as a template" %}{% else %}{% translate "Use as a template" %}{% endif %}</button>
               <button type="button" class="menu-item" @click="action('archive')">{% icon "archive" %}{% if note.is_archived %}{% translate "Unarchive" %}{% else %}{% translate "Archive" %}{% endif %}</button>
               <button type="button" class="menu-item is-danger" @click="action('delete')">{% icon "trash" %}{% translate "Delete" %}</button>
@@ -238,7 +247,7 @@
           </div>
         </div>
       </div>
-      <input x-model="title" class="wn-title" placeholder="{% translate 'Title' %}" aria-label="{% translate 'Title' %}">
+      <input x-model="title" class="wn-title" placeholder="{% translate 'Title' %}" aria-label="{% translate 'Title' %}" @change="titleChanged()">
       <div class="wn-meta">
         <label class="wn-field">{% icon "folder" %}
           <select x-model="project" data-native aria-label="{% translate 'Project' %}">
@@ -265,6 +274,18 @@
       </div>
       <article x-show="preview" x-cloak class="wn-md" data-tick @md-tick="body = Work.tickMarkdown(body, $event.detail.index)" x-html="html" x-effect="html; preview && $nextTick(() => Work.enrich($el, { note: id }))"></article>
       <p class="wn-stats" x-show="words" x-cloak><span x-text="words + ' ' + (words === 1 ? '{% translate "word" %}' : '{% translate "words" %}')"></span> · <span x-text="'~' + readMins + ' {% translate "min read" %}'"></span><template x-if="todoTotal"><span> · <span x-text="todoDone + '/' + todoTotal"></span> {% translate "to-dos done" %}</span></template></p>
+      {# ── the note's questions into Exam notes ── #}
+      <div class="wc-backdrop" x-show="examOpen" x-cloak x-transition.opacity @click="examOpen = false"></div>
+      <section class="wc wn-to-exam" x-show="examOpen" x-cloak x-transition role="dialog" aria-modal="true" aria-labelledby="to-exam-title" @keydown.escape.stop="examOpen = false">
+        <h2 id="to-exam-title" class="card-title">{% icon "exam" %}{% translate "Make exam questions" %}</h2>
+        <p class="help">{% translate "Each ## heading becomes a question and what's under it the answer (Q: … A: …, numbered lists and “question :: answer” lines work too). Questions already in the subject are left out." %}</p>
+        {% if subjects %}<label class="field"><span class="label">{% translate "Subject" %}</span>
+          <select class="form-input" x-model="examSubject" data-native :disabled="examName.trim() !== ''"><option value="">{% translate "Pick a subject" %}</option>{% for x in subjects %}<option value="{{ x.pk }}">{{ x.name }}</option>{% endfor %}</select></label>{% endif %}
+        <label class="field"><span class="label">{% if subjects %}{% translate "Or a new subject" %}{% else %}{% translate "New subject" %}{% endif %}</span>
+          <input type="text" class="form-input" x-model="examName" maxlength="120"></label>
+        <div class="wc-foot"><span class="spacer"></span><button type="button" class="btn btn-ghost" @click="examOpen = false">{% translate "Cancel" %}</button>
+          <button type="button" class="btn btn-primary" @click="toExam()" :disabled="!examName.trim() && !examSubject">{% translate "Make them" %}</button></div>
+      </section>
       {# ── earlier versions ── #}
       <div class="wc-backdrop" x-show="histOpen" x-cloak x-transition.opacity @click="histOpen = false"></div>
       <aside class="wdx-hist wn-hist" x-show="histOpen" x-cloak x-trap="histOpen" x-transition:enter="wdx-hist-in" x-transition:leave="wdx-hist-out"
@@ -316,4 +337,6 @@
 <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.10.0/highlight.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 {% endblock %}

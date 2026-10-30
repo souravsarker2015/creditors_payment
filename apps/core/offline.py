@@ -297,6 +297,13 @@ def _detail_pages(user, personal, membership, work=False):
         from apps.productivity.models import OPEN_STAGES, JobApplication
 
         each("work:job", JobApplication.objects.filter(owner=user, stage__in=OPEN_STAGES).order_by("-updated_at").values_list("pk", flat=True), cap=30)
+        # exam notes to revise anywhere: the review page holds the questions for the subject's board and overview too
+        from apps.productivity.models import ExamSubject, Note
+
+        subjects = list(ExamSubject.objects.filter(owner=user).order_by("-updated_at").values_list("pk", flat=True)[:20])
+        for name in ("work:exam_review", "work:exam_subject", "work:exam_overview"):
+            each(name, subjects)
+        each("work:note", Note.objects.filter(owner=user, is_archived=False, is_template=False).order_by("-is_pinned", "-updated_at").values_list("pk", flat=True), cap=40)
     return urls
 
 

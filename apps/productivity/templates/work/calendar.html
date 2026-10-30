@@ -27,6 +27,7 @@
         <span class="wcal-num">{{ d.date|date:"j" }}{% if d.mood %}<i class="wcal-mood">{{ moods|get_item:d.mood }}</i>{% endif %}</span>
         {% if d.secs %}<span class="wcal-time num">{{ d.secs|hm }}</span>{% endif %}
         <span class="wcal-tasks">
+          {% for x in d.exams %}<span class="wcal-task is-interview" data-tip="{% translate 'Exam' %}">📝 {{ x.name }}</span>{% endfor %}
           {% for r in d.interviews %}<span class="wcal-task is-interview" data-tip="{{ r.get_kind_display }} · {{ r.at|time:'H:i' }}">💼 {{ r.application.company }}</span>{% endfor %}
           {% for t in d.tasks|slice:":3" %}<span class="wcal-task{% if t.is_done %} is-done{% endif %}" data-p="{{ t.priority }}"{% if not t.is_done %} draggable="true" @dragstart.stop="grab($event, {{ t.pk }})" @dragend="dragging = null; over = ''" data-tip="{% translate 'Drag to another day to move its due date' %}"{% endif %}>{% if t.project %}<i class="wt-dot" data-color="{{ t.project.color }}"></i>{% endif %}{{ t.title }}</span>{% endfor %}
           {% if d.tasks|length > 3 %}<span class="wcal-more">+{{ d.tasks|length|add:"-3" }}</span>{% endif %}
@@ -47,10 +48,11 @@
         <a href="{% url 'work:time' %}?week={{ d.date|date:'Y-m-d' }}" class="btn btn-ghost btn-sm">{% translate "Time" %}</a>
         <a href="{% url 'work:journal' %}?date={{ d.date|date:'Y-m-d' }}" class="btn btn-ghost btn-sm">{% translate "Journal" %}</a>
       </div></header>
+    {% if d.exams %}<ul class="wv-list">{% for x in d.exams %}<li><a href="{% url 'work:exam_subject' x.pk %}">📝 {{ x.name }}</a><time>{% translate "Exam" %}</time></li>{% endfor %}</ul>{% endif %}
     {% if d.interviews %}<ul class="wv-list">{% for r in d.interviews %}<li><a href="{% url 'work:job' r.application_id %}#rounds">💼 {{ r.get_kind_display }} — {{ r.application.company }}</a><time>{{ r.at|time:"H:i" }}</time></li>{% endfor %}</ul>{% endif %}
     {% if d.tasks %}<ul class="wv-list">{% for t in d.tasks %}<li><a href="{% url 'work:task' t.pk %}"{% if t.is_done %} class="is-done"{% endif %}>{% if t.project %}<span class="wt-dot" data-color="{{ t.project.color }}"></span> {% endif %}{{ t.title }}</a>
       {% if t.is_done %}<time>{{ t.get_status_display }}</time>{% else %}<input type="date" class="form-input input-compact wcal-move" value="{{ t.due_date|date:'Y-m-d' }}" data-tip="{% translate 'Move to another day' %}" @change="move({{ t.pk }}, $event.target.value)" aria-label="{% blocktranslate with title=t.title %}Move “{{ title }}” to another day{% endblocktranslate %}">{% endif %}</li>{% endfor %}</ul>
-    {% elif not d.interviews %}<p class="wd-muted">{% translate "No tasks due this day." %}</p>{% endif %}
+    {% elif not d.interviews and not d.exams %}<p class="wd-muted">{% translate "No tasks due this day." %}</p>{% endif %}
   </section>
   {% endfor %}
 </div>

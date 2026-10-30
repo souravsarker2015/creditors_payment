@@ -46,7 +46,7 @@
   <section class="card ww-step" x-data="workJournal('{{ today|date:"Y-m-d" }}')">
     <header class="card-header"><div class="ww-row"><span class="ww-num">2</span><div><h2 class="card-title">{% translate "Write down the day" %}</h2>
       <p class="card-subtitle">{% translate "It goes in your journal, your standup and your review." %}</p></div></div>
-      <span class="wn-state" x-text="{ saving: '{% translate "Saving…" %}', saved: '{% translate "Saved" %}', offline: '{% translate "Saved on this device" %}', dirty: '…', error: '{% translate "Not saved" %}' }[state] || ''"></span></header>
+      <span class="wn-state" x-text="{ saving: '{% translate "Saving…" %}', saved: '{% translate "Saved" context "state" %}', offline: '{% translate "Saved on this device" %}', dirty: '…', error: '{% translate "Not saved" %}' }[state] || ''"></span></header>
     <div class="card-body !pt-0 form-stack">
       <div class="field"><div class="field-head"><label class="label" for="w-wins">{% translate "Done & learnt" %}</label>
         {% if done_lines %}<button type="button" class="btn btn-ghost btn-sm" @click="const ta = $refs.wins; ta.value = (ta.value.trim() ? ta.value.trim() + '\n' : '') + {{ done_lines|escapejs_json }}; save('wins', ta.value)">{% icon "plus" %}{% translate "Add today's done tasks" %}</button>{% endif %}</div>
@@ -65,7 +65,7 @@
   <section class="card ww-step" x-data="workJournal('{{ tomorrow|date:"Y-m-d" }}')">
     <header class="card-header"><div class="ww-row"><span class="ww-num">3</span><div><h2 class="card-title">{% translate "Plan tomorrow" %}</h2>
       <p class="card-subtitle">{% blocktranslate with d=tomorrow|date:"l" %}It's waiting on Today when you start on {{ d }}.{% endblocktranslate %}</p></div></div>
-      <span class="wn-state" x-text="{ saving: '{% translate "Saving…" %}', saved: '{% translate "Saved" %}', offline: '{% translate "Saved on this device" %}', dirty: '…' }[state] || ''"></span></header>
+      <span class="wn-state" x-text="{ saving: '{% translate "Saving…" %}', saved: '{% translate "Saved" context "state" %}', offline: '{% translate "Saved on this device" %}', dirty: '…' }[state] || ''"></span></header>
     <div class="card-body !pt-0"><textarea rows="3" data-md class="form-input" placeholder="{% translate 'The one thing that would make tomorrow a good day…' %}" @input="save('plan', $event.target.value)">{{ next_plan }}</textarea></div>
   </section>
 

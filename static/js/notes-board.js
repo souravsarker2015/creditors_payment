@@ -26,7 +26,7 @@
       var DRAFT = "work-note-quick";
       return {
         open: false, title: "", body: "", color: "", pinned: false, saving: false,
-        ed: null, edPreview: false, edState: "saved", edTimer: null, edSending: null, edAgain: false, edSaved: "", finding: null,
+        ed: null, edPreview: false, edState: "saved", edTimer: null, edSending: null, edAgain: false, edSaved: "", edTitle: "", finding: null,
         init: function () {
           var self = this, saved = Work.recall(DRAFT, null);           // what was being written when the page closed
           if (saved && (saved.title || saved.body)) { Object.assign(this, saved); this.open = true; }
@@ -121,9 +121,14 @@
             .then(function (r) { return r.ok ? r.json() : null; })
             .then(function (n) {
               if (!n || !n.ok) { location.href = (urls().notes || "/work/notes/") + id + "/"; return; }
-              self.edSaved = JSON.stringify([n.title, n.body]);
-              self.ed = { id: n.id, title: n.title, body: n.body, color: n.color, pinned: n.pinned, url: n.url, archived: n.archived };
+              self.edSaved = JSON.stringify([n.title, n.body]); self.edTitle = n.title;
+              self.ed = { id: n.id, title: n.title, body: n.body, color: n.color, pinned: n.pinned, url: n.url, archived: n.archived, rev: n.rev };
               self.edState = "saved"; self.edPreview = false;
+              var draft = Work.recall(Work.noteDraftKey(n.id), null);      // what wasn't saved last time comes back, and is saved now
+              if (draft && draft.at > n.updated && (draft.title !== n.title || draft.body !== n.body)) {
+                self.ed.title = draft.title; self.ed.body = draft.body;
+                Work.toast(t("noteDraftBack", "Your unsaved writing is back."), "good");
+              }
               var url = new URL(location.href); url.searchParams.set("open", n.id);
               history.replaceState(history.state, "", url.pathname + url.search);
               self.$nextTick(function () {
@@ -137,26 +142,45 @@
           if (!this.ed || JSON.stringify([this.ed.title, this.ed.body]) === this.edSaved) return;      // (colour and pin save themselves)
           var self = this;
           this.edState = "dirty";
+          Work.store(Work.noteDraftKey(this.ed.id), { title: this.ed.title, body: this.ed.body, at: Date.now() });     // kept here until the server has it
           clearTimeout(this.edTimer);
           this.edTimer = setTimeout(function () { self.saveNote(); }, 700);
         },
         saveNote: function () {
           var self = this, n = this.ed;
           clearTimeout(this.edTimer);
-          if (!n || this.edState !== "dirty") return this.edSending || Promise.resolve();
+          if (!n || (this.edState !== "dirty" && this.edState !== "error")) return this.edSending || Promise.resolve();
           if (this.edSending) { this.edAgain = true; return this.edSending; }       // one save at a time
           this.edState = "saving";
           var sent = { title: n.title, body: n.body };
-          this.edSending = Work.api(urls().noteSave, { id: n.id, title: n.title, body: n.body, card: "1" }).then(function (r) {
+          this.edSending = Work.api(urls().noteSave, { id: n.id, title: n.title, body: n.body, rev: n.rev || "", card: "1" }).then(function (r) {
             self.edSending = null;
-            if (!r || !r.ok) { if (self.ed === n) self.edState = r && r.queued ? "offline" : "error"; return; }
+            if (r && r.queued) { if (self.ed === n) self.edState = "offline"; return; }
+            if (!r || !r.ok) {
+              if (self.ed === n) { self.edState = "error"; return; }
+              Work.toast(t("notSaved", "Not saved."), "warn");             // closed meanwhile: it opens again, with what was written
+              self.openNote(n.id);
+              return;
+            }
+            n.rev = r.rev;
+            if (r.conflict) Work.toast(t("noteConflict", "This note was changed somewhere else too. That text is kept in History."), "warn");
+            if (n.title === sent.title && n.body === sent.body) Work.store(Work.noteDraftKey(n.id), null);
             self.swap(n.id, r.card);
             if (self.ed === n) { self.edSaved = JSON.stringify([sent.title, sent.body]); self.edState = n.title === sent.title && n.body === sent.body ? "saved" : "dirty"; }
             if (self.edAgain || (self.ed === n && self.edState === "dirty")) { self.edAgain = false; self.saveNote(); }
           });
           return this.edSending;
         },
-        flushNote: function () { if (this.ed && this.edState === "dirty") this.saveNote(); },
+        flushNote: function () { if (this.ed && (this.edState === "dirty" || this.edState === "error")) this.saveNote(); },
+        /* renamed (the title box left): the [[links]] in other notes follow */
+        titleChanged: function () {
+          var self = this, n = this.ed, old = this.edTitle;
+          if (!n || !old.trim() || old.trim() === n.title.trim()) return;
+          this.edTitle = n.title;
+          Promise.resolve(this.saveNote()).then(function () {
+            return Work.api(urls().noteBase + n.id + "/", { action: "relink", old: old });
+          }).then(function (r) { if (r && r.ok && r.count) Work.toast(t(r.count === 1 ? "linksUpdatedOne" : "linksUpdated", "Links updated: %(n)s").replace("%(n)s", r.count), "good"); });
+        },
         swap: function (id, html) {
           var old = cardOf(id);
           if (old && html) old.replaceWith(fromHTML(html));

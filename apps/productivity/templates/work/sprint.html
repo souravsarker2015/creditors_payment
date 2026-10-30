@@ -95,7 +95,7 @@
     <textarea class="form-input wsp-retro-text" data-md rows="10" x-model="text" @input="save()" aria-label="{% translate 'Retrospective' %}"></textarea>
     <div class="wsp-notes-foot">
       <button type="button" class="btn btn-secondary btn-sm" @click="tasks()" :disabled="busy">{% icon "check" %}{% translate "Make tasks from action items" %}</button>
-      <span class="wn-state" :data-state="state" role="status" aria-live="polite"><i aria-hidden="true"></i><span x-text="{ saving: '{% translate "Saving…" %}', saved: '{% translate "Saved" %}', dirty: '{% translate "Editing…" %}', error: '{% translate "Not saved" %}' }[state] || ''"></span></span>
+      <span class="wn-state" :data-state="state" role="status" aria-live="polite"><i aria-hidden="true"></i><span x-text="{ saving: '{% translate "Saving…" %}', saved: '{% translate "Saved" context "state" %}', dirty: '{% translate "Editing…" %}', error: '{% translate "Not saved" %}' }[state] || ''"></span></span>
     </div>
   </div>
 </details>

@@ -17,12 +17,22 @@ Claude usually write when asked for questions and answers:
     **1. What is diffusion?**            whole bold lines are the questions
     Particles spreading out…
 
+    1. What is a cell?                   a numbered list, with or without answers
+    2. What is a tissue?
+
     What is a cell?                      otherwise: blocks split by an empty line,
     The smallest unit of life.           the first line the question
 
-Code blocks (```) are kept whole: an empty line or a "#" inside one never
-splits a question.
+    Which is prime?                      a multiple-choice question: the choices stay
+    a) 4   b) 7   (one a line)           with the question, the answer is what's
+    Answer: b                            under them
+
+A .csv file works too (two columns, or Question / Answer / Chapter headers), and
+what Anki and Quizlet export. Code blocks (```) are kept whole: an empty line or
+a "#" inside one never splits a question.
 """
+import csv
+import io
 import re
 from collections import Counter
 from datetime import timedelta
@@ -32,13 +42,18 @@ from django.utils import timezone
 MAX_QUESTION, MAX_ANSWER, MAX_CHAPTER, MAX_PASTE = 2000, 20000, 120, 500
 
 B = r"(?:\*\*|__)?"                                     # bold around a label: **Q1:**
-FENCE = re.compile(r"^\s{0,3}(```|~~~)")
+FENCE = re.compile(r"^\s{0,3}(?:(?:A|Ans|Answer|উত্তর)\s*:\s*)?(```|~~~)", re.I)    # "A: ```python" opens one too
 HEADING = re.compile(r"^\s{0,3}(#{1,6})\s+(.+?)\s*#*\s*$")
 RULE = re.compile(r"^\s{0,3}([-*_])(?:\s*\1){2,}\s*$")   # --- between questions
-Q_LINE = re.compile(r"^\s*(?:#{1,6}\s+)?" + B + r"\s*(?:Q|Ques|Question|প্রশ্ন)\s*-?\s*(?:\d+|[০-৯]+)?\s*[:.)\-–]\s*" + B + r"\s*", re.I)
-A_LINE = re.compile(r"^\s*" + B + r"\s*(?:A|Ans|Answer|উত্তর)\s*(?:\d+|[০-৯]+)?\s*[:.)\-–]\s*" + B + r"\s*", re.I)
+# After a label: a colon, or . ) - with a number before it or a space after it — so "Q-learning", "Q.E.D." and
+# "A-star" are words, not labels.
+END = r"(?:[:：]|(?<=[\d০-৯])\s*[.)\-–—]|\s*[.)\-–—](?=[\s*_]|$))"
+Q_LINE = re.compile(r"^\s*(?:#{1,6}\s+)?" + B + r"\s*(?:Q\.\s*(?:\d+|[০-৯]+)[.):]?(?=\s)|(?:Q|Ques|Question|প্রশ্ন)\s*-?\s*(?:\d+|[০-৯]+)?\s*" + END + r")\s*" + B + r"\s*", re.I)
+A_LINE = re.compile(r"^\s*" + B + r"\s*(?:A|Ans|Answer|উত্তর)\s*(?:\d+|[০-৯]+)?\s*" + END + r"\s*" + B + r"\s*", re.I)
+A_LABEL = re.compile(r"^\s*" + B + r"\s*(?:A|Ans|Answer|উত্তর)\s*(?:\d+|[০-৯]+)?\s*" + B + r"\s*[:：]", re.I)
 A_ALONE = re.compile(r"^\s*" + B + r"\s*(?:Answer|Ans|উত্তর)\s*" + B + r"\s*:?\s*" + B + r"\s*$", re.I)
-NUMBER = re.compile(r"^\s*(?:\d+|[০-৯]+)\s*[.):]\s+")    # "1. ", "2) " in front of a question
+NUMBER = re.compile(r"^\s*(\d+|[০-৯]+)\s*[.):]\s+")    # "1. ", "2) " in front of a question
+CHOICE = re.compile(r"^\s*\(?[a-fA-Fক-ঘ]\s*[.)]\s+\S")   # a) … B. … (ক) … — the choices of a multiple-choice question
 BOLD_LINE = re.compile(r"^\s*(?:(?:\d+|[০-৯]+)\s*[.)]\s*)?(\*\*|__)(?!\s)(.+?)\1\s*:?\s*$")
 
 
@@ -91,14 +106,44 @@ def _answer(rows):
     while end > start and blank(end - 1):
         end -= 1
     lines = lines[start:end]
-    if lines and not code[start]:
-        if A_ALONE.match(lines[0]):
+    if lines and not code[start] and A_ALONE.match(lines[0]):
+        lines = lines[1:]
+        while lines and not lines[0].strip():
             lines = lines[1:]
-            while lines and not lines[0].strip():
-                lines = lines[1:]
-        elif A_LINE.match(lines[0]):
-            lines[0] = A_LINE.sub("", lines[0], count=1)
+    elif lines and A_LINE.match(lines[0]) and not _listed(lines):
+        lines[0] = A_LINE.sub("", lines[0], count=1)
     return "\n".join(lines).rstrip()[:MAX_ANSWER]
+
+
+def _listed(lines):
+    """A list ("a) … b) …"): its first "a)" is a choice, not the label of an answer."""
+    filled = [line for line in lines if line.strip()]
+    return len(filled) > 1 and all(CHOICE.match(line) for line in filled[:2])
+
+
+def _lift(rows):
+    """(the lines that belong to the question, the rows left for the answer): a multiple-choice question's
+    choices, when something follows them, and the rest of a question that runs on until its "Answer:" label."""
+    filled = [i for i, (line, code) in enumerate(rows) if line.strip()]
+    if not filled or rows[filled[0]][1]:
+        return [], rows
+    choices = 0
+    for i in filled:
+        if rows[i][1] or not CHOICE.match(rows[i][0]):
+            break
+        choices += 1
+    if choices >= 2:
+        if choices == len(filled):               # nothing under them: they're the answer, a list
+            return [], rows
+        return [rows[i][0].strip() for i in filled[:choices]], rows[filled[choices - 1] + 1:]
+    if A_LABEL.match(rows[filled[0]][0]) or A_ALONE.match(rows[filled[0]][0]):
+        return [], rows
+    for k, i in enumerate(filled[1:5], 1):
+        if i != filled[k - 1] + 1 or rows[i][1]:  # an empty line first: this is the answer, it just has no label
+            break
+        if A_LABEL.match(rows[i][0]) or A_ALONE.match(rows[i][0]):
+            return [rows[j][0].strip() for j in filled[:k]], rows[i:]
+    return [], rows
 
 
 class _Notes(list):
@@ -118,9 +163,10 @@ class _Notes(list):
     def finish(self):
         if self.cur:
             q, rows, chapter = self.cur
+            more, rows = _lift(rows)
             q = _question(q)
             if q:
-                self.append({"question": q, "answer": _answer(rows), "chapter": chapter})
+                self.append({"question": "\n".join([q, *more])[:MAX_QUESTION], "answer": _answer(rows), "chapter": chapter})
         self.cur = None
 
 
@@ -208,6 +254,29 @@ def _bolded(rows):
     return out
 
 
+def _numbered(rows):
+    """Every number, 1, 2, 3… in order, starts a question (a list of questions needs no answers under them).
+    Numbers out of order: they're lists inside the answers."""
+    starts, expected = [], 1
+    for i, (line, code) in enumerate(rows):
+        m = None if code else NUMBER.match(line)
+        if m:
+            if int(m.group(1)) != expected:
+                return []
+            starts.append(i)
+            expected += 1
+    if len(starts) < 2 or any(line.strip() for line, _code in rows[:starts[0]]):
+        return []
+    out = _Notes()
+    for i, row in enumerate(rows):
+        if i in starts:
+            out.start(row[0])
+        else:
+            out.add(row)
+    out.finish()
+    return out
+
+
 def _blocks(rows):
     out = _Notes()
     for line, code in rows + [("", False)]:
@@ -220,28 +289,100 @@ def _blocks(rows):
     return out
 
 
+QUESTION_HEADS, ANSWER_HEADS, CHAPTER_HEADS = ("question", "q", "front", "term", "প্রশ্ন"), ("answer", "a", "back", "definition", "উত্তর"), ("chapter", "topic", "label", "deck", "অধ্যায়")
+ANKI_HEADER = re.compile(r"^#(?:separator|html|tags|columns|deck|notetype)\b.*:", re.I)     # the lines Anki puts at the top of its export
+
+
+def _table(cells):
+    """Rows of cells → notes, if they're two columns (or say which column is which in a header row); else None."""
+    if len(cells) < 2:
+        return None
+    head = [c.strip().lower() for c in cells[0]]
+    q = next((head.index(h) for h in QUESTION_HEADS if h in head), None)
+    a = next((head.index(h) for h in ANSWER_HEADS if h in head), None)
+    named = q is not None and a is not None
+    if named:
+        cells = cells[1:]
+    elif any(len(row) != 2 for row in cells):
+        return None
+    q, a = (q, a) if named else (0, 1)
+    ch = next((head.index(h) for h in CHAPTER_HEADS if h in head), None) if named else None
+    notes = []
+    for row in cells:
+        cell = lambda i: row[i].strip() if i is not None and i < len(row) else ""     # noqa: E731
+        if _question(cell(q)):
+            notes.append({"question": _question(cell(q)), "answer": cell(a)[:MAX_ANSWER], "chapter": cell(ch)[:MAX_CHAPTER]})
+    return notes
+
+
+def _columns(text, filled):
+    """Two columns copied from a spreadsheet (tabs, as Anki and Quizlet export), or a .csv file."""
+    if all("\t" in line for line in filled):
+        return _table([line.split("\t", 1) if not _has_head(filled[0]) else line.split("\t") for line in filled])
+    if "," in filled[0]:
+        cells = [row for row in csv.reader(io.StringIO(text)) if any(c.strip() for c in row)]
+        if _has_head(filled[0]) or (len(cells) >= 3 and len(cells) == len(filled)):      # (three rows at least: a line of prose has commas too)
+            return _table(cells)
+    return None
+
+
+def _has_head(line):
+    return {c.strip().strip('"').lower() for c in re.split(r"[\t,]", line)} & set(QUESTION_HEADS) != set()
+
+
 def parse(text, chapter=""):
     """[{question, answer, chapter}, …] from pasted text — at most MAX_PASTE.
     `chapter` is given to the questions the text doesn't put in one."""
     lines = (text or "").replace("\r\n", "\n").replace("\r", "\n").replace("\u00a0", " ").split("\n")
+    lines = [line for line in lines if not ANKI_HEADER.match(line)]
     rows = _scan(lines)
     filled = [line for line in lines if line.strip()]
     if not filled:
         return []
-    if not any(code for _line, code in rows) and all("\t" in line for line in filled):
-        notes = []
-        for line in filled:
-            q, _tab, a = line.partition("\t")
-            if _question(q):
-                notes.append({"question": _question(q), "answer": a.strip()[:MAX_ANSWER], "chapter": ""})
+    table = _columns("\n".join(lines), filled) if not any(code for _line, code in rows) else None
+    if table:
+        notes = table
     elif any(not code and Q_LINE.match(line) for line, code in rows):
         notes = _marked(rows)
     else:
-        notes = _headed(rows) or _bolded(rows) or _blocks(rows)
+        notes = _headed(rows) or _numbered(rows) or _bolded(rows) or _blocks(rows)
     chapter = (chapter or "").strip()[:MAX_CHAPTER]
     for n in notes:
         n["chapter"] = n["chapter"] or chapter
     return list(notes)[:MAX_PASTE]
+
+
+def parse_note(text):
+    """Exam questions from a note: its ## headings, Q:/A: lines, bold questions, numbered list or "question ::
+    answer" lines. Plain paragraphs aren't questions, so unlike parse() this doesn't fall back on them."""
+    from .cards import parse_pairs
+
+    lines = (text or "").replace("\r\n", "\n").split("\n")
+    rows = _scan(lines)
+    if any(not code and Q_LINE.match(line) for line, code in rows):
+        return list(_marked(rows))[:MAX_PASTE]
+    found = list(_headed(rows) or _numbered(rows) or _bolded(rows))
+    return found[:MAX_PASTE] or [{"question": q[:MAX_QUESTION], "answer": a[:MAX_ANSWER], "chapter": ""} for q, a in parse_pairs(text)][:MAX_PASTE]
+
+
+def add_found(user, subject, found):
+    """Saves parsed questions at the end of the subject → the new rows, in order."""
+    from .models import ExamNote
+
+    start = next_order(subject)
+    made = ExamNote.objects.bulk_create([ExamNote(owner=user, subject=subject, question=n["question"], answer=n["answer"], chapter=n["chapter"],
+                                                  order=start + i) for i, n in enumerate(found)])
+    return list(subject.notes.order_by("-pk")[:len(made)])[::-1] if made else []     # bulk_create gives no ids on every database
+
+
+def fresh(subject, found):
+    """Marks each parsed question `dupe` when it's already in the subject, or twice in the text → the others."""
+    seen = {same(q) for q in subject.notes.values_list("question", flat=True)}
+    for n in found:
+        key = same(n["question"])
+        n["dupe"] = key in seen
+        seen.add(key)
+    return [n for n in found if not n["dupe"]]
 
 
 def same(text):
@@ -266,7 +407,8 @@ def next_order(subject):
 def as_text(subject, notes):
     """The subject as a Q:/A: list, chapters as ## headings — reads back in with parse()."""
     out, chapter = [subject.name, ""], ""      # a plain line: a heading right before a Q: would read back as a chapter
-    for n in ordered(notes):
+    # (the ones with no chapter come first: an empty heading can't say "no chapter" for those after a chapter)
+    for n in sorted(ordered(notes), key=lambda n: bool(n.chapter)):
         if n.chapter != chapter:
             chapter = n.chapter
             out += [f"## {chapter}", ""]
@@ -310,24 +452,32 @@ PAGE = 30
 SHOWS = ("all", "unknown", "due", "missed", "starred")
 
 
-def in_order(qs):
-    """Chapter by chapter (chapters in the order their first question comes), then by place — what ordered() does, in SQL."""
-    from django.db.models import Min, OuterRef, Subquery
+def in_order(qs, subject):
+    """Chapter by chapter (chapters in the order their first question comes), then by place — what ordered() does,
+    in SQL. The chapters are ranked once, up front: asking for each row took minutes on a subject of thousands."""
+    from django.db.models import Case, IntegerField, Min, Value, When
 
-    same = qs.model.objects.filter(subject=OuterRef("subject"), chapter=OuterRef("chapter")).values("chapter")
-    first = same.annotate(m=Min("order")).values("m")
-    first_pk = same.annotate(m=Min("pk")).values("m")          # questions with no place yet (0): the chapter's oldest decides
-    return qs.annotate(chapter_first=Subquery(first[:1]), chapter_pk=Subquery(first_pk[:1])).order_by("chapter_first", "chapter_pk", "order", "pk")
+    # (questions with no place yet, 0: the chapter's oldest decides)
+    ranks = subject.notes.order_by().values("chapter").annotate(first=Min("order"), first_pk=Min("pk")).order_by("first", "first_pk")
+    rank = Case(*[When(chapter=r["chapter"], then=Value(i)) for i, r in enumerate(ranks)], default=Value(0), output_field=IntegerField())
+    return qs.annotate(chapter_rank=rank).order_by("chapter_rank", "order", "pk")
 
 
 def numbers(subject):
     """{note id: its number} — the place in the subject, the same everywhere."""
-    return {pk: i for i, pk in enumerate(in_order(subject.notes.all()).values_list("pk", flat=True), 1)}
+    return {pk: i for i, pk in enumerate(in_order(subject.notes.all(), subject).values_list("pk", flat=True), 1)}
+
+
+def matching(qs, text):
+    """Each word in the question, the answer or the chapter, in any order."""
+    from django.db.models import Q
+
+    for word in (text or "").split()[:6]:
+        qs = qs.filter(Q(question__icontains=word) | Q(answer__icontains=word) | Q(chapter__icontains=word))
+    return qs
 
 
 def filtered(subject, show="all", chapter=None, q=""):
-    from django.db.models import Q
-
     qs = subject.notes.all()
     if show == "unknown":
         qs = qs.filter(is_known=False)
@@ -339,9 +489,19 @@ def filtered(subject, show="all", chapter=None, q=""):
         qs = qs.filter(is_starred=True)
     if chapter is not None:
         qs = qs.filter(chapter=chapter)
-    for word in (q or "").split()[:6]:
-        qs = qs.filter(Q(question__icontains=word) | Q(answer__icontains=word) | Q(chapter__icontains=word))
-    return qs
+    return matching(qs, q)
+
+
+def due_today(user, today=None):
+    """Questions that came due again, across every subject: [{subject, n}], most first — one each for the
+    Today page and the morning email, or spaced repetition is only as good as remembering to open it."""
+    from django.db.models import Count, Q
+
+    from .models import ExamSubject
+
+    today = today or timezone.localdate()
+    rows = ExamSubject.objects.filter(owner=user).annotate(n=Count("notes", filter=Q(notes__is_known=True, notes__due_on__lte=today))).filter(n__gt=0)
+    return sorted(rows, key=lambda s: -s.n)
 
 
 def counts(subject):
@@ -358,7 +518,7 @@ def chapter_list(subject):
     from collections import OrderedDict
 
     out = OrderedDict()
-    for chapter, known in in_order(subject.notes.all()).values_list("chapter", "is_known"):
+    for chapter, known in in_order(subject.notes.all(), subject).values_list("chapter", "is_known"):
         row = out.setdefault(chapter, {"name": chapter, "n": 0, "known": 0})
         row["n"] += 1
         row["known"] += 1 if known else 0
@@ -367,7 +527,7 @@ def chapter_list(subject):
 
 def move(note, before_id=None):
     """Put a question just before another (or last) and into that one's chapter, renumbering the subject."""
-    ids = list(in_order(note.subject.notes.all()).values_list("pk", flat=True))
+    ids = list(in_order(note.subject.notes.all(), note.subject).values_list("pk", flat=True))
     ids.remove(note.pk)
     if before_id and before_id in ids:
         ids.insert(ids.index(before_id), note.pk)

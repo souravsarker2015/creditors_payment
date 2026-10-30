@@ -58,15 +58,29 @@
     var n = queued().length;
     d.querySelectorAll("[data-work-outbox]").forEach(function (el) { el.hidden = !n; el.querySelector("b") && (el.querySelector("b").textContent = n); });
   }
+  // Signed out meanwhile: the server sends the save to the sign-in page, and that page isn't an answer that it was saved.
+  function signedOut(res) { return res.redirected && /\/accounts\/login\//.test(res.url); }
+  var toldSignedOut = 0;
   var api = function (url, data) {
     var fields = Object.assign({}, data || {}, { _ft_key: uid(), _ft_user: ME });
+    function keep() {
+      var box = queued(); box.push({ url: url, fields: fields, at: Date.now() }); store(OUTBOX, box); badge();
+      return { ok: true, queued: true };
+    }
     return post(url, fields).then(function (res) {
+      if (signedOut(res)) {
+        if (Date.now() - toldSignedOut > 60000) {
+          toldSignedOut = Date.now();
+          toast(t("signedOut", "You're signed out. What you wrote is kept on this device and is sent once you sign in."), "warn",
+                { label: t("signIn", "Sign in"), run: function () { location.href = res.url.split("?")[0] + "?next=" + encodeURIComponent(location.pathname + location.search); } });
+        }
+        return keep();
+      }
       if (res.status === 403) return { ok: false, error: t("noAccess", "Not allowed.") };
       return res.json().catch(function () { return { ok: res.ok }; });
     }).catch(function () {
-      var box = queued(); box.push({ url: url, fields: fields, at: Date.now() }); store(OUTBOX, box); badge();
       toast(t("savedOffline", "Saved on this device — it will sync when you're online."), "warn");
-      return { ok: true, queued: true };
+      return keep();
     });
   };
   var flushing = false;
@@ -78,7 +92,10 @@
     function next() {
       var item = queued()[0];
       if (!item) return Promise.resolve();
-      return post(item.url, item.fields, true).then(function (res) { return res.json().catch(function () { return { ok: res.ok }; }); }).then(function (ans) {
+      return post(item.url, item.fields, true).then(function (res) {
+        if (signedOut(res)) return { ok: false, why: "signin" };
+        return res.json().catch(function () { return { ok: res.ok }; });
+      }).then(function (ans) {
         var retry = !ans.ok && (ans.why === "busy" || ans.why === "error" || ans.why === "signin");
         if (retry) throw new Error("later");
         store(OUTBOX, queued().slice(1)); sent++; return next();
@@ -91,6 +108,7 @@
   }
   window.addEventListener("online", flush);
   setInterval(flush, 60000);
+  setTimeout(flush, 1500);              // what was kept last time (signed in again, say)
 
   /* ── Toast with an optional action (Undo) ───────────────────────────── */
   function toast(message, tone, action) {
@@ -1282,7 +1300,8 @@
     /* ── Notes: autosave, a copy on this device, Markdown preview ─────── */
     Alpine.data("workNote", function (initial) {
       return {
-        id: initial.id || null, title: initial.title || "", body: initial.body || "", tags: initial.tags || "", project: initial.project || "",
+        id: initial.id || null, title: initial.title || "", body: initial.body || "", tags: initial.tags || "", project: initial.project || "", rev: initial.rev || "",
+        linkedTitle: initial.title || "", examOpen: false, examSubject: "", examName: "",
         state: "saved", savedAt: initial.saved || "", preview: false, timer: null, inflight: null, again: false,
         making: false, suggest: [], pick: 0, dgOpen: false, dgItems: [], dgQ: "", dgLoading: false,
         histOpen: false, histLoading: false, versions: [], shown: null,
@@ -1338,7 +1357,7 @@
             self.making = false;
             if (!res || !res.ok) { if (res && res.error) toast(res.error, "warn"); return; }
             if (res.queued) return;
-            self.body = res.body; self.savedAt = res.saved;
+            self.body = res.body; self.savedAt = res.saved; self.rev = res.rev;
             toast(t("tasksMade", "Tasks made") + ": " + res.count, "good", { label: t("openTasks", "See them"), run: function () { location.href = CFG.urls.tasks; } });
           });
         },
@@ -1368,7 +1387,7 @@
           }
           // (Tab, Enter in lists and the other writing keys: static/js/writing.js)
         },
-        get draftKey() { return "work-note-draft:" + ME + ":" + (this.id || "new"); },
+        get draftKey() { return Work.noteDraftKey(this.id || "new"); },
         init: function () {
           var draft = recall(this.draftKey, null), self = this;
           if (draft && draft.at > (initial.updated || 0) && (draft.body !== this.body || draft.title !== this.title)) {
@@ -1379,6 +1398,35 @@
           this.$nextTick(function () { self.grow(); });
           window.addEventListener("beforeunload", function (e) { if (self.state === "dirty" || self.state === "saving") { self.saveNow(); } });
           this.$el.addEventListener("keydown", function (e) { if ((e.ctrlKey || e.metaKey) && e.key === "s") { e.preventDefault(); self.saveNow(); } });
+          var heading = new URLSearchParams(location.search).get("heading");           // from a [[Note#Heading]] link
+          if (heading) this.$nextTick(function () {
+            var n = self.outline.findIndex(function (h) { return h.text.toLowerCase() === heading.toLowerCase(); });
+            if (n < 0) return;
+            self.preview = true;
+            self.$nextTick(function () { self.goHeading(self.outline[n], n); });
+          });
+        },
+        /* renamed (the title box left): the [[links]] in other notes follow */
+        titleChanged: function () {
+          var self = this, old = this.linkedTitle;
+          if (!this.id || !old.trim() || old.trim() === this.title.trim()) return;
+          this.linkedTitle = this.title;
+          Promise.resolve(this.saveNow()).then(function () {
+            return api(CFG.urls.noteBase + self.id + "/", { action: "relink", old: old });
+          }).then(function (res) { if (res && res.ok && res.count) toast(t(res.count === 1 ? "linksUpdatedOne" : "linksUpdated", "Links updated: %(n)s").replace("%(n)s", res.count), "good"); });
+        },
+        /* the note's headings (or Q:/A: lines…) as exam questions */
+        toExam: function () {
+          var self = this, name = this.examName.trim();
+          if (!name && !this.examSubject) return;
+          Promise.resolve(this.saveNow()).then(function () {
+            return api(CFG.urls.noteBase + self.id + "/", { action: "to_exam", subject: self.examSubject, name: name });
+          }).then(function (res) {
+            if (!res || !res.ok) { if (res && res.error) toast(res.error, "warn"); return; }
+            if (res.queued) return;
+            self.examOpen = false;
+            toast(t(res.count === 1 ? "examMadeOne" : "examMade", "Questions added: %(n)s").replace("%(n)s", res.count), "good", { label: t("seeThem", "See them"), run: function () { location.href = res.url; } });
+          });
         },
         changed: function () { this.state = "dirty"; store(this.draftKey, { title: this.title, body: this.body, at: Date.now() }); this.queue(); },
         queue: function () { clearTimeout(this.timer); var self = this; this.timer = setTimeout(function () { self.saveNow(); }, 900); },
@@ -1389,14 +1437,18 @@
           if (this.inflight) { this.again = true; return this.inflight; }
           this.state = "saving";
           var key = this.draftKey;
-          this.inflight = api(CFG.urls.noteSave, { id: this.id || "", title: this.title, body: this.body, tags: this.tags, project: this.project }).then(function (res) {
+          var sent = [this.title, this.body];
+          this.inflight = api(CFG.urls.noteSave, { id: this.id || "", title: this.title, body: this.body, tags: this.tags, project: this.project, rev: this.rev || "" }).then(function (res) {
             self.inflight = null;
+            if (res.rev) self.rev = res.rev;
+            if (res.conflict) toast(t("noteConflict", "This note was changed somewhere else too. That text is kept in History."), "warn");
             if (self.again) { self.again = false; if (res.ok && res.id) self.id = res.id; setTimeout(function () { self.saveNow(); }, 0); }
             if (!res.ok) { self.state = "error"; return; }
             if (res.queued) { self.state = "offline"; return; }
-            store(key, null);
+            if (self.title === sent[0] && self.body === sent[1]) store(key, null);        // (written on meanwhile: that draft stays)
+            else store(Work.noteDraftKey(res.id), { title: self.title, body: self.body, at: Date.now() });
             if (!self.id && res.id) { self.id = res.id; history.replaceState(null, "", res.url); }
-            self.savedAt = res.saved; self.state = "saved";
+            self.savedAt = res.saved; self.state = self.title === sent[0] && self.body === sent[1] ? "saved" : "dirty";
             var item = d.querySelector('[data-note-id="' + self.id + '"] .work-note-item-title'); if (item) item.textContent = res.title;
           });
           return this.inflight;
@@ -1871,10 +1923,12 @@
   })();
 
   /* ── Markdown (notes, task notes) ───────────────────────────────────── */
-  function wikiLinks(text) {      // [[Note title]] → a link that opens (or starts) that note
+  // [[Note title]] → a link that opens (or starts) that note; [[Note#Heading]] goes to the heading, [[Note|these words]] shows them
+  function wikiLinks(text) {
     if (!CFG.urls || !CFG.urls.noteGo) return text;
-    return (text || "").replace(/\[\[([^\[\]\n]{1,200})\]\]/g, function (all, title) {
-      return "[" + title.replace(/([\\*_`])/g, "\\$1") + "](" + CFG.urls.noteGo + "?title=" + encodeURIComponent(title.trim()).replace(/\(/g, "%28").replace(/\)/g, "%29") + ")";
+    return (text || "").replace(/\[\[([^\[\]\n]{1,200})\]\]/g, function (all, inner) {
+      var bar = inner.indexOf("|"), title = bar < 0 ? inner : inner.slice(0, bar), shown = (bar < 0 ? "" : inner.slice(bar + 1).trim()) || title.trim();
+      return "[" + shown.replace(/([\\*_`\[\]])/g, "\\$1") + "](" + CFG.urls.noteGo + "?title=" + encodeURIComponent(title.trim()).replace(/\(/g, "%28").replace(/\)/g, "%29") + ")";
     });
   }
   // ==highlighted== words (as Obsidian writes them) — outside code; on a review card's front they're the blanks (cloze)
@@ -1895,7 +1949,29 @@
     }).join("");
   }
   function escAttr(v) { return String(v).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+  /* Formulas ($…$, $$…$$, \(…\), \[…\] — what ChatGPT and Claude write) on pages that load KaTeX. Code is left as it
+     is, and $HOME/$PATH stays shell, not maths: a closing $ can't have a letter or digit right after it. */
   function renderMarkdown(text) {
+    if (!window.katex) return drawMarkdown(text);
+    var maths = [];
+    function keep(display) {
+      return function (m, tex) { maths.push({ tex: tex, display: display }); return "@@KM" + (maths.length - 1) + "@@"; };
+    }
+    var parts = String(text || "").split(/(```[\s\S]*?(?:```|$)|~~~[\s\S]*?(?:~~~|$)|`[^`\n]+`)/);
+    for (var i = 0; i < parts.length; i += 2) {
+      parts[i] = parts[i]
+        .replace(/\$\$([\s\S]+?)\$\$/g, keep(true))
+        .replace(/\\\[([\s\S]+?)\\\]/g, keep(true))
+        .replace(/\\\(([\s\S]+?)\\\)/g, keep(false))
+        .replace(/(^|[^\\$\w])\$(?!\s)([^\n$]+?)(?<!\s)\$(?!\w)/g, function (m, pre, tex) { return pre + keep(false)(m, tex); });
+    }
+    return drawMarkdown(parts.join("")).replace(/@@KM(\d+)@@/g, function (m, n) {
+      var x = maths[+n];
+      try { return katex.renderToString(x.tex, { displayMode: x.display, throwOnError: false, output: "htmlAndMathml" }); }
+      catch (e) { return m; }
+    });
+  }
+  function drawMarkdown(text) {
     text = highlights(wikiLinks(embeds(text)));
     if (window.marked && window.DOMPurify) {
       var html = marked.parse(text || "", { gfm: true, breaks: true });
@@ -1908,6 +1984,7 @@
     return "<p>" + esc.replace(/\n\n+/g, "</p><p>").replace(/\n/g, "<br>") + "</p>";
   }
   window.Work.markdown = renderMarkdown;
+  window.Work.noteDraftKey = function (id) { return "work-note-draft:" + ME + ":" + id; };
   /* Ticking a box in a drawn note: the index-th to-do line of the Markdown is turned over
      (the same lines as services.todo_lines on the server: none inside a ``` block) */
   var CHECK_LINE = /^([ \t]*(?:>[ \t]?)*[ \t]*(?:[-*+]|\d+[.)])[ \t]+)\[( |x|X)\]/, FENCE = /^[ \t]*(```|~~~)/;

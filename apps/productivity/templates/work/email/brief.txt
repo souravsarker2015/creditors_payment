@@ -6,6 +6,10 @@
 {% endif %}{% if b.interviews %}
 {% translate "INTERVIEWS TODAY" %}
 {% for r in b.interviews %}- {{ r.at|time:"H:i" }} {{ r.get_kind_display }} — {{ r.application.company }} ({{ r.application.role }})
+{% endfor %}{% endif %}{% if b.exams or b.exam_due %}
+{% translate "EXAMS" %}
+{% for x in b.exams %}- {{ x.name }} ({{ x.exam_date|date:"j M" }})
+{% endfor %}{% for x in b.exam_due %}- {% blocktranslate count counter=x.n with name=x.name %}{{ name }}: {{ counter }} question to revise{% plural %}{{ name }}: {{ counter }} questions to revise{% endblocktranslate %}
 {% endfor %}{% endif %}{% if b.job_steps or b.offer_deadlines %}
 {% translate "JOB SEARCH" %}
 {% for a in b.offer_deadlines %}- {% blocktranslate with company=a.company %}Answer {{ company }}'s offer{% endblocktranslate %} ({{ a.offer_deadline|date:"j M" }})

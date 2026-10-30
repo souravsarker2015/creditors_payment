@@ -246,6 +246,7 @@ def embed(user, ref, current=None):
 
 # ── Unlinked mentions ─────────────────────────────────────────────────────
 MIN_TITLE = 3
+CODE = re.compile(r"(```[\s\S]*?(?:```|$)|~~~[\s\S]*?(?:~~~|$)|`[^`\n]+`)")
 # What's left alone: code, links (and [[links]]), HTML tags and web addresses
 PROTECTED = re.compile(r"(```[\s\S]*?(?:```|$)|~~~[\s\S]*?(?:~~~|$)|`[^`\n]+`|!?\[\[[^\]\n]*\]\]|!?\[[^\]\n]*\]\([^)\n]*\)|<[^>\n]+>|https?://\S+)")
 WORD = r"\wऀ-෿"                     # (Bangla's vowel signs aren't \w)
@@ -296,6 +297,26 @@ def link_mentions(body, title):
         parts[i], k = rx.subn(lambda m: f"[[{m.group(0)}]]", parts[i])
         n += k
     return "".join(parts), n
+
+
+def relink(note, old):
+    """After a rename: [[Old]], [[Old#Heading]], [[Old|other words]] and ![[Old]] in the person's other notes follow
+    the new title (as Obsidian does) → how many notes changed. Left alone when another note goes by the old title."""
+    old, new = old.strip(), note.title.strip()
+    if not old or not new or old.lower() == new.lower() or Note.objects.filter(owner=note.owner, title__iexact=old).exclude(pk=note.pk).exists():
+        return 0
+    link = re.compile(r"(\[\[)" + re.escape(old) + r"(\s*(?:[#|][^\]\n]*)?\]\])", re.I)
+    changed = 0
+    for other in Note.objects.filter(owner=note.owner, body__icontains=f"[[{old}").exclude(pk=note.pk):
+        parts = CODE.split(other.body)
+        parts[::2] = [link.sub(lambda m: m.group(1) + new + m.group(2), part) for part in parts[::2]]
+        body = "".join(parts)
+        if body != other.body:
+            services.remember_note(other, force=True)
+            other.body = body
+            other.save(update_fields=["body", "updated_at"])
+            changed += 1
+    return changed
 
 
 def link_from(note, source=None):

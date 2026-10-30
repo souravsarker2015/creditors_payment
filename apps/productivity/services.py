@@ -2,6 +2,7 @@
 parser, time totals for any period, streaks, and the daily standup."""
 import calendar
 import re
+import zlib
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta
@@ -466,6 +467,7 @@ def tags_named(user, names):
 
 
 HASHTAG = re.compile(r"(?<![\w#/&])#([^\W\d_][\w\u0900-\u0dff-]{0,39})")      # (Bangla's vowel signs aren't \w)
+C_DIRECTIVE = re.compile(r"^[ \t]*#(?:include|define|undef|ifdef|ifndef|if|elif|else|endif|pragma)\b.*$", re.M)     # pasted C, not tags
 HEX_COLOUR = re.compile(r"[0-9a-f]{3}|[0-9a-f]{6}", re.I)
 
 
@@ -473,8 +475,40 @@ def hashtags(text):
     """'#redis' and '#system-design' written in a note — not in code, not a heading
     ('# Title'), not a link's #anchor, not a colour (#fff)."""
     plain = re.sub(r"```[\s\S]*?(?:```|$)|~~~[\s\S]*?(?:~~~|$)|`[^`\n]*`|\]\([^)]*\)|<[^>\n]*>", " ", text or "")
+    plain = C_DIRECTIVE.sub(" ", plain)
     found = [m.group(1).rstrip("-") for m in HASHTAG.finditer(plain)]
     return [t for t in dict.fromkeys(found) if t and not HEX_COLOUR.fullmatch(t)]
+
+
+def search_notes(qs, text):
+    """Every word somewhere in the title, the text or the tags, in any order; "several words" together; #word: that tag."""
+    for quoted, word in re.findall(r'"([^"]+)"|(\S+)', text or "")[:8]:
+        if word.startswith("#") and len(word) > 1:
+            qs = qs.filter(tags__name=word[1:].lower())
+        else:
+            term = quoted or word
+            qs = qs.filter(Q(title__icontains=term) | Q(body__icontains=term) | Q(tags__name__icontains=term))
+    return qs
+
+
+def note_rev(note):
+    """Which text of a note this is: an editor sends back the one it started from, so a save over a change made
+    elsewhere is noticed (api.note_save)."""
+    return format(zlib.crc32(f"{note.title}\0{one_line_end(note.body)}".encode()), "x")
+
+
+def one_line_end(text):
+    """A browser's form data turns every line end into \\r\\n; the text is kept, and read, with \\n."""
+    return (text or "").replace("\r\n", "\n")
+
+
+def note_file(note):
+    """A note as a Markdown file: its title and tags in a front matter block, as note import reads them back."""
+    head = [f'title: "{note.title}"'] if note.title else []
+    tags = [t.name for t in note.tags.all()]
+    if tags:
+        head.append(f"tags: [{', '.join(tags)}]")
+    return ("---\n" + "\n".join(head) + "\n---\n\n" if head else "") + note.body
 
 
 def next_order(user, status):
@@ -1194,8 +1228,8 @@ def _fold(line):
 
 def calendar_feed(user, base_url=""):
     """Open tasks with a due date (all-day), reminders and day-planner blocks
-    (timed, with an alarm), goal deadlines, and the job search's interviews (an alarm an hour
-    before) and next steps, for Google / Apple / Outlook calendars."""
+    (timed, with an alarm), goal deadlines, exams (an alarm the morning before), and the job search's
+    interviews (an alarm an hour before) and next steps, for Google / Apple / Outlook calendars."""
     from django.urls import reverse
 
     now = timezone.now()
@@ -1234,8 +1268,11 @@ def calendar_feed(user, base_url=""):
     for g in Goal.objects.filter(owner=user, status=GoalStatus.ACTIVE, target_date__isnull=False):
         event(f"goal-{g.pk}", "🎯 " + g.title, reverse("work:goal", args=[g.pk]),
               [f"DTSTART;VALUE=DATE:{g.target_date:%Y%m%d}", f"DTEND;VALUE=DATE:{g.target_date + timedelta(days=1):%Y%m%d}"])
-    from .models import JobApplication, JobRound, JobStage
+    from .models import ExamSubject, JobApplication, JobRound, JobStage
 
+    for x in ExamSubject.objects.filter(owner=user, exam_date__gte=timezone.localdate() - timedelta(days=7)):
+        event(f"exam-{x.pk}", "📝 " + _("Exam: %(name)s") % {"name": x.name}, reverse("work:exam_subject", args=[x.pk]),
+              [f"DTSTART;VALUE=DATE:{x.exam_date:%Y%m%d}", f"DTEND;VALUE=DATE:{x.exam_date + timedelta(days=1):%Y%m%d}"], alarm="-PT15H")
     for r in JobRound.objects.filter(application__owner=user, at__gte=now - timedelta(days=7)).select_related("application"):
         at = r.at.astimezone(dt_timezone.utc)
         event(f"interview-{r.pk}", "💼 " + _("%(round)s — %(company)s") % {"round": r.get_kind_display(), "company": r.application.company},
@@ -1495,11 +1532,11 @@ def tick_note_line(task, done):
 
 
 def backlinks(note):
-    """Other notes that link here with [[Title]] (or show it, or one of its headings: ![[Title#Heading]])."""
+    """Other notes that link here with [[Title]], [[Title|other words]] (or show it, or one of its headings: ![[Title#Heading]])."""
     title = note.title.strip()
     if not title:
         return []
-    return list(Note.objects.filter(owner=note.owner).filter(Q(body__icontains=f"[[{title}]]") | Q(body__icontains=f"[[{title}#"))
+    return list(Note.objects.filter(owner=note.owner).filter(Q(body__icontains=f"[[{title}]]") | Q(body__icontains=f"[[{title}#") | Q(body__icontains=f"[[{title}|"))
                 .exclude(pk=note.pk).order_by("-updated_at")[:30])
 
 

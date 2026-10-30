@@ -68,11 +68,13 @@ class Brief:
     interviews: list = field(default_factory=list)    # the job search: today's interview rounds
     job_steps: list = field(default_factory=list)     # … and the applications whose next step is due
     offer_deadlines: list = field(default_factory=list)   # … and offers to answer within the next days
+    exams: list = field(default_factory=list)         # exams in the next days
+    exam_due: list = field(default_factory=list)      # exam questions that came due again, by subject
 
     @property
     def worth_sending(self):
         return bool(self.late or self.today_tasks or self.plan or self.reminders or self.habits or self.cards_due or self.note
-                    or self.interviews or self.job_steps or self.offer_deadlines)
+                    or self.interviews or self.job_steps or self.offer_deadlines or self.exams or self.exam_due)
 
     def headline(self):
         parts = []
@@ -86,6 +88,9 @@ class Brief:
             parts.append(ngettext("%(n)s planned block", "%(n)s planned blocks", len(self.plan)) % {"n": len(self.plan)})
         if self.cards_due:
             parts.append(ngettext("%(n)s flashcard", "%(n)s flashcards", self.cards_due) % {"n": self.cards_due})
+        due = sum(s.n for s in self.exam_due)
+        if due:
+            parts.append(ngettext("%(n)s exam question", "%(n)s exam questions", due) % {"n": due})
         return " · ".join(parts) or _("A clear day")
 
 
@@ -104,13 +109,16 @@ def brief(user, today=None):
     if Deck.objects.filter(owner=user, is_archived=False).exists():
         b.cards_due = cards.due_count(user, today)
     b.note = (JournalEntry.objects.filter(owner=user, date=today).values_list("plan", flat=True).first() or "").strip()
-    from .models import JobApplication, JobRound, JobStage
+    from . import exam
+    from .models import ExamSubject, JobApplication, JobRound, JobStage
 
     b.interviews = list(JobRound.objects.filter(application__owner=user, at__gte=lo, at__lt=hi).select_related("application").order_by("at"))
     b.job_steps = list(JobApplication.objects.filter(owner=user, next_on__lte=today).exclude(stage__in=(JobStage.ACCEPTED, JobStage.CLOSED))
                        .order_by("next_on")[:10])
     b.offer_deadlines = list(JobApplication.objects.filter(owner=user, stage=JobStage.OFFER, offer_deadline__gte=today,
                                                            offer_deadline__lte=today + timedelta(days=3)).order_by("offer_deadline"))
+    b.exams = list(ExamSubject.objects.filter(owner=user, exam_date__gte=today, exam_date__lte=today + timedelta(days=7)).order_by("exam_date"))
+    b.exam_due = exam.due_today(user, today)[:6]
     return b
 
 

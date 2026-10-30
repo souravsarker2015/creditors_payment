@@ -15,7 +15,11 @@
    Review: the question first (optionally: write your answer first); think of
    the answer, turn the card over, then "I knew it" (marked as known) or "Not
    yet" (it comes back at the end of the round, is marked as not known, and
-   counts as missed once more). Swipe right / left on a phone; Z undoes. */
+   counts as missed once more). Swipe right / left on a phone; Z undoes.
+
+   A question being edited is saved as you type and kept on this device until the
+   server has it. With no signal the board and the overview read the subject from
+   the review page kept on the phone (it holds every question). */
 (function () {
   "use strict";
   var d = document;
@@ -30,32 +34,9 @@
     });
   }
 
-  /* ── Markdown with formulas ── */
-  function markdown(text) {
-    var md = window.Work && Work.markdown ? Work.markdown : function (s) { return s; };
-    if (!window.katex) return md(text || "");
-    var maths = [];
-    function keep(display) {
-      return function (m, tex) { maths.push({ tex: tex, display: display }); return "@@KM" + (maths.length - 1) + "@@"; };
-    }
-    // code (``` blocks and `inline`) is left as it is: only the text between gets formulas
-    var parts = String(text || "").split(/(```[\s\S]*?(?:```|$)|~~~[\s\S]*?(?:~~~|$)|`[^`\n]+`)/);
-    for (var i = 0; i < parts.length; i += 2) {
-      parts[i] = parts[i]
-        .replace(/\$\$([\s\S]+?)\$\$/g, keep(true))
-        .replace(/\\\[([\s\S]+?)\\\]/g, keep(true))
-        .replace(/\\\(([\s\S]+?)\\\)/g, keep(false))
-        .replace(/(^|[^\\$\w])\$(?!\s)([^\n$]+?)(?<!\s)\$(?!\d)/g, function (m, pre, tex) { return pre + keep(false)(m, tex); });
-    }
-    return md(parts.join("")).replace(/@@KM(\d+)@@/g, function (m, n) {
-      var x = maths[+n];
-      try { return katex.renderToString(x.tex, { displayMode: x.display, throwOnError: false, output: "htmlAndMathml" }); }
-      catch (e) { return m; }
-    });
-  }
   function paint(el, text) {
     if (!el) return;
-    el.innerHTML = markdown(text);
+    el.innerHTML = Work.markdown(text || "");     // (with formulas: work.js)
     if (window.Work && Work.mermaidIn) Work.mermaidIn(el);
     if (window.hljs) el.querySelectorAll("pre code:not(.language-mermaid)").forEach(function (c) { hljs.highlightElement(c); });
   }
@@ -98,7 +79,7 @@
     /* ── pages of questions from the server: shared by the board and the overview ── */
     function pager(D) {
       return {
-        notes: [], next: 1, loading: false, query: "", show: "all", chapter: null, sort: "order",
+        notes: [], next: 1, loading: false, query: "", show: "all", chapter: null, sort: "order", kept: null,
         shows: D.shows || { all: 0, unknown: 0, missed: 0, starred: 0 }, chapters: D.chapters || [],
         params: function (page) {
           var p = new URLSearchParams({ show: this.show, sort: this.sort, page: page });
@@ -122,9 +103,40 @@
               r.notes.forEach(function (n) { if (!have[n.id]) self.notes.push(n); });
               self.next = r.next;
               self.$nextTick(function () { if (self.loaded) self.loaded(); self.more(); });
+              if (page === 1) self.keepForOffline();
             })
-            .catch(function () { toast(t("notSaved"), "warn"); })
+            .catch(function () { return self.fromPhone(); })
             .then(function () { self.loading = false; });
+        },
+        /* the review page, kept on the phone (an hour old at most, while online): what this page shows with no signal */
+        keepForOffline: function () {
+          var key = "exam-kept-" + D.subject;
+          if (!navigator.serviceWorker || !navigator.serviceWorker.controller || Date.now() - (recall(key, 0) || 0) < 3600000) return;
+          store(key, Date.now());
+          fetch(D.review, { credentials: "same-origin", headers: { "X-FT-Keep": "1" } }).catch(function () {});
+        },
+        fromPhone: function () {
+          var self = this, got = this.kept ? Promise.resolve(this.kept) : fetch(D.review, { credentials: "same-origin", headers: { "X-FT-Keep": "1" } })
+            .then(function (r) { return r.text(); })
+            .then(function (html) { return JSON.parse(new DOMParser().parseFromString(html, "text/html").getElementById("exam-data").textContent).notes; });
+          return got.then(function (all) {
+            var words = self.query.toLowerCase().split(/\s+/).filter(Boolean), chapters = [], by = {}, shows = { all: all.length, unknown: 0, due: 0, missed: 0, starred: 0 };
+            self.kept = all;
+            all.forEach(function (n) {
+              shows.unknown += n.known ? 0 : 1; shows.due += n.due ? 1 : 0; shows.missed += n.misses ? 1 : 0; shows.starred += n.starred ? 1 : 0;
+              if (!by[n.chapter]) { by[n.chapter] = { name: n.chapter, n: 0, known: 0 }; chapters.push(by[n.chapter]); }
+              by[n.chapter].n++; by[n.chapter].known += n.known ? 1 : 0;
+            });
+            self.shows = shows; self.chapters = chapters; self.next = null;
+            self.notes = all.filter(function (n) {
+              var text = (n.question + " " + n.answer + " " + n.chapter).toLowerCase();
+              return (self.chapter === null || n.chapter === self.chapter)
+                && (self.show === "all" || (self.show === "unknown" ? !n.known : self.show === "due" ? n.due : self.show === "missed" ? n.misses : n.starred))
+                && words.every(function (w) { return text.indexOf(w) >= 0; });
+            });
+            if (self.pinnedFirst && self.pinnedFirst()) self.notes.sort(function (a, b) { return (b.starred - a.starred) || (a.number - b.number); });
+            self.$nextTick(function () { if (self.loaded) self.loaded(); });
+          }).catch(function () { toast(t("notHere", "This subject isn't on this device yet. Open it once with a connection."), "warn"); });
         },
         reload: function () { this.next = 1; this.loading = false; return this.load(); },
         more: function () {            // the end of the list is in view: the next page (the observer only fires on changes)
@@ -155,6 +167,7 @@
         restar: function (q) {
           var self = this, grid = this.$refs.grid;
           if (!grid || !this.notes) return;
+          if (this.notes.indexOf(q) < 0) return;           // (moved to another subject meanwhile)
           if (this.show === "starred" && !q.starred) {
             Work.flip(grid, function () { self.notes.splice(self.notes.indexOf(q), 1); return self.$nextTick(); });
           } else if (this.pinnedFirst && this.pinnedFirst()) {
@@ -169,12 +182,12 @@
 
     /* ── a subject's board: cards like Google Keep, a page at a time ── */
     Alpine.data("examBoard", function () {
-      var D = data("exam-data"), DRAFT = "exam-draft-" + D.subject, PREFS = "exam-board", prefs = recall(PREFS, {}) || {};
+      var D = data("exam-data"), DRAFT = "exam-draft-" + D.subject, EDIT = "exam-edit-" + D.subject, PREFS = "exam-board", prefs = recall(PREFS, {}) || {};
       function blank(keep) { return { question: "", answer: "", chapter: keep ? keep.chapter : "", color: "", starred: false }; }      // the label stays for the next one
       return Object.assign(pager(D), {
         D: D, t: t, answers: prefs.answers !== false, composing: false, many: false, draft: blank(), writeView: { add: false, edit: false },
         paste: "", pasteChapter: "", preview: null, checking: false, previewTimer: null,
-        selecting: false, picked: {}, moveTo: "", editing: null, edit: {}, editFrom: "", labelsOpen: false,
+        selecting: false, picked: {}, moveTo: "", editing: null, edit: {}, editFrom: "", editFirst: null, editState: "saved", editTimer: null, editSending: null, labelsOpen: false,
         init: function () {
           var self = this;
           if (prefs.sort === "new") this.sort = "new";
@@ -187,10 +200,11 @@
           this.$watch("draft", function () { self.keepDraft(); }, { deep: true });
           this.$watch("paste", function () { self.keepDraft(); self.schedulePreview(); });
           this.$watch("pasteChapter", function () { if (self.paste.trim()) self.schedulePreview(); });
+          this.$watch("edit", function () { self.editChanged(); }, { deep: true });
           this.$watch("answers", function () { self.keepPrefs(); });
           this.$watch("sort", function () { self.keepPrefs(); });
           window.addEventListener("beforeunload", function (e) {
-            if (self.editing && JSON.stringify(self.edit) !== self.editFrom) { e.preventDefault(); e.returnValue = t("leave"); }
+            if (self.editing && self.editState !== "saved") { e.preventDefault(); e.returnValue = t("leave"); }
           });
           if (!this.shows.all) this.composing = true;
           this.watchEnd();
@@ -198,7 +212,8 @@
         },
         /* ?open=N (a question found in search): its editor opens, wherever it is in the list */
         openAsked: function () {
-          var url = new URL(location.href), id = +(url.searchParams.get("open") || (/^#q(\d+)$/.exec(location.hash) || [])[1] || 0), self = this;
+          var url = new URL(location.href), kept = recall(EDIT, null), self = this;
+          var id = +(url.searchParams.get("open") || (/^#q(\d+)$/.exec(location.hash) || [])[1] || (kept && kept.id) || 0);     // or the one that wasn't saved last time
           if (!id) return;
           url.searchParams.delete("open"); url.hash = "";
           history.replaceState(history.state, "", url.pathname + url.search);
@@ -206,7 +221,10 @@
           if (here) return this.openEditor(here);
           fetch(D.notes + "?id=" + id, { credentials: "same-origin", headers: { "X-Requested-With": "fetch" } })
             .then(function (r) { return r.ok ? r.json() : null; })
-            .then(function (r) { if (r && r.notes && r.notes[0]) self.openEditor(r.notes[0]); })
+            .then(function (r) {
+              if (r && r.notes && r.notes[0]) self.openEditor(r.notes[0]);
+              else if (kept && kept.id === id) store(EDIT, null);       // deleted since
+            })
             .catch(function () {});
         },
         keepPrefs: function () { store(PREFS, { answers: this.answers, sort: this.sort }); },
@@ -245,9 +263,10 @@
               self.notes.splice(evt.oldDraggableIndex, 1);
               self.notes.splice(evt.newDraggableIndex, 0, moved);
               var before = self.notes[evt.newDraggableIndex + 1];
-              api(D.api, { action: "move", id: moved.id, before: before ? before.id : "" }).then(function (r) {
+              api(D.api, { action: "move", id: moved.id, before: before ? before.id : "", ids: self.notes.map(function (n) { return n.id; }).join(",") }).then(function (r) {
                 if (!r.ok) return;
                 moved.chapter = r.chapter; self.updateCounts(r);
+                self.notes.forEach(function (n) { if (r.numbers && r.numbers[n.id]) n.number = r.numbers[n.id]; });
               });
             },
           });
@@ -266,6 +285,7 @@
           var self = this, x = this.draft;
           if (!x.question.trim()) { toast(t("writeFirst"), "warn"); return; }
           api(D.api, { action: "add", question: x.question.trim(), answer: x.answer, chapter: x.chapter, color: x.color, starred: x.starred ? "1" : "0" }).then(function (r) {
+            if (r.queued) { self.draft = blank(x); self.writeView.add = false; return; }        // sent when there's signal (or after signing in)
             if (!r.ok || !r.note) return;
             r.note._new = true;
             self.notes.splice(r.note.starred || !self.pinnedFirst() ? 0 : self.notes.filter(function (n) { return n.starred; }).length, 0, r.note);
@@ -301,6 +321,7 @@
           if (this.preview) this.preview.found.forEach(function (p, i) { if (p.on) pick.push(i); });
           if (!pick.length) return;
           api(D.api, { action: "add_many", text: this.paste, chapter: this.pasteChapter, pick: pick.join(",") }).then(function (r) {
+            if (r.queued) { self.paste = ""; self.preview = null; self.many = false; self.composing = false; return; }
             if (!r.ok || !r.notes) return;
             self.paste = ""; self.preview = null; self.many = false; self.composing = false;
             toast(r.message, "good");
@@ -328,30 +349,83 @@
         },
         openEditor: function (q) {
           this.edit = { id: q.id, question: q.question, answer: q.answer, chapter: q.chapter, color: q.color || "", starred: q.starred, known: q.known, number: q.number, subject: D.subject };
-          this.editFrom = JSON.stringify(this.edit); this.editing = q; this.writeView.edit = false;
+          this.editFrom = JSON.stringify(this.edit); this.editFirst = JSON.parse(this.editFrom); this.editing = q; this.writeView.edit = false; this.editState = "saved";
+          var kept = recall(EDIT, null);                  // what wasn't saved last time comes back
+          if (kept && kept.id === q.id) {
+            this.edit.question = kept.question; this.edit.answer = kept.answer; this.edit.chapter = kept.chapter; this.edit.color = kept.color;
+            toast(t("draftBack"), "good");
+          }
           var self = this; this.$nextTick(function () { self.$refs.editQuestion && self.$refs.editQuestion.focus(); });
         },
+        /* saved as you type, and kept on this device until the server has it (a phone can close the app at any moment) */
+        editChanged: function () {
+          if (!this.editing || !this.editFirst) return;
+          var self = this, e = this.edit;
+          if (JSON.stringify(e) === this.editFrom) return;
+          this.editState = "dirty";
+          store(EDIT, { id: e.id, question: e.question, answer: e.answer, chapter: e.chapter, color: e.color });
+          clearTimeout(this.editTimer);
+          if (e.question.trim()) this.editTimer = setTimeout(function () { self.saveEditing(); }, 900);
+        },
+        /* What's in the editor, to the server (`to`: a subject to move it to). One save at a time, in order. */
+        sendEdit: function (q, e, to) {
+          var self = this, fields = { action: "update", question: e.question, answer: e.answer, chapter: e.chapter, color: e.color };
+          if (to) fields.subject = to;
+          var sent = JSON.stringify(e);
+          this.editSending = Promise.resolve(this.editSending).then(function () {
+            return api(D.noteBase + q.id + "/", fields);
+          }).then(function (r) {
+            self.editSending = null;
+            if (!r.ok && !r.queued) return r;
+            if (r.ok) { q.question = e.question.trim(); q.answer = e.answer; q.chapter = (e.chapter || "").trim(); q.color = e.color; }
+            if (JSON.stringify(self.edit) === sent || self.editing !== q) store(EDIT, null);
+            return r;
+          });
+          return this.editSending;
+        },
+        saveEditing: function () {
+          var self = this, q = this.editing, e = this.edit, sent = JSON.stringify(e);
+          clearTimeout(this.editTimer);
+          if (!q || this.editState !== "dirty") return;
+          this.editState = "saving";
+          this.sendEdit(q, e).then(function (r) {
+            if (self.editing !== q) return;
+            if (!r.ok && !r.queued) { self.editState = "error"; return; }
+            self.editFrom = sent;
+            self.editState = JSON.stringify(self.edit) !== sent ? "dirty" : r.queued ? "offline" : "saved";
+            if (self.editState === "dirty") self.editChanged();
+          });
+        },
         closeEditor: function () {
-          var self = this, q = this.editing, e = this.edit;
+          var self = this, q = this.editing, e = this.edit, was = this.editFirst, from = this.editFrom;
           if (!q) return;
-          if (JSON.stringify(e) === this.editFrom) { this.editing = null; return; }
-          if (!e.question.trim()) { toast(t("writeFirst"), "warn"); return; }
-          var was = JSON.parse(this.editFrom);
-          api(D.noteBase + q.id + "/", { action: "update", question: e.question, answer: e.answer, chapter: e.chapter, color: e.color, subject: e.subject }).then(function (r) {
-            if (!r.ok && !r.queued) return;
-            if (String(e.subject) !== String(D.subject)) {           // moved to another subject
+          clearTimeout(this.editTimer);
+          var unsent = JSON.stringify(e) !== from || this.editState === "error", to = String(e.subject) !== String(D.subject) ? e.subject : "";
+          if (unsent && !e.question.trim()) { toast(t("writeFirst"), "warn"); return; }
+          this.editing = null;
+          function done() {
+            if ((e.chapter || "").trim() !== was.chapter) self.reload();
+          }
+          if (!unsent) { this.flags(q, e, was); done(); return; }
+          this.sendEdit(q, e, to).then(function (r) {
+            if (!r.ok && !r.queued) {                     // not saved: nothing is lost, the editor comes back with what was written
+              self.editFirst = was; self.editFrom = from; self.edit = e; self.editState = "error"; self.editing = q;
+              return;
+            }
+            if (to) {                                     // moved to another subject
               self.notes.splice(self.notes.indexOf(q), 1);
-              var to = D.subjects.find(function (s) { return String(s.id) === String(e.subject); });
-              toast(t("moved").replace("%(name)s", to ? to.name : ""), "good");
+              var named = D.subjects.find(function (s) { return String(s.id) === String(to); });
+              toast(t("moved").replace("%(name)s", named ? named.name : ""), "good");
               self.reload();
               return;
             }
-            q.question = e.question.trim(); q.answer = e.answer; q.chapter = (e.chapter || "").trim(); q.color = e.color;
-            if (r.note && r.note.chapter !== was.chapter) self.reload();
+            done();
           });
+          this.flags(q, e, was);
+        },
+        flags: function (q, e, was) {
           if (e.starred !== was.starred) this.flag(q, "star");
           if (e.known !== was.known) this.flag(q, "known");
-          this.editing = null;
         },
         /* the next or previous question, without closing the editor (this one is saved first); past the
            last loaded one, the next page comes */
@@ -377,7 +451,7 @@
             e.preventDefault(); this.stepEditor(e.key === "ArrowLeft" ? -1 : 1);
           }
         },
-        removeEditing: function () { var q = this.editing; this.editing = null; this.remove(q); },
+        removeEditing: function () { var q = this.editing; clearTimeout(this.editTimer); store(EDIT, null); this.editing = null; this.remove(q); },
         remove: function (q) {
           var self = this;
           api(D.noteBase + q.id + "/", { action: "delete" }).then(function (r) {
@@ -418,7 +492,11 @@
         renameChapter: function (c) {
           var self = this, name = prompt(t("renameAsk"), c.name);
           if (name === null || name.trim() === c.name) return;
-          api(D.api, { action: "rename_chapter", old: c.name, chapter: name.trim() }).then(function (r) { if (r.ok) self.reload(); });
+          api(D.api, { action: "rename_chapter", old: c.name, chapter: name.trim() }).then(function (r) {
+            if (!r.ok) return;
+            if (self.chapter === c.name) self.chapter = name.trim();         // the page stays on it
+            self.reload();
+          });
         },
         moveChapter: function (i, step) {
           var self = this, c = this.chapters[i];
@@ -488,7 +566,10 @@
           if (!this.searching) { if (this.query) { this.query = ""; this.reload(); } return; }
           this.$nextTick(function () { self.$refs.find && self.$refs.find.focus(); });
         },
-        reviewUrl: function () { return D.review + "?which=" + this.show + (this.chapter !== null ? "&chapter=" + encodeURIComponent(this.chapter) : ""); },
+        reviewUrl: function () {         // these questions: what's shown here, search and "No chapter" too
+          return D.review + "?which=" + this.show + (this.chapter ? "&chapter=" + encodeURIComponent(this.chapter) : this.chapter === "" ? "&nochapter=1" : "")
+            + (this.query.trim() ? "&q=" + encodeURIComponent(this.query.trim()) : "");
+        },
         printIt: function () {
           var self = this;
           this.answers = true;
@@ -511,12 +592,14 @@
     Alpine.data("examReview", function () {
       var D = data("exam-data");
       return {
-        all: D.notes || [], chapters: D.chapters || [], chapter: D.chapter || "", which: D.which || "unknown", back: D.back,
+        t: t, all: D.notes || [], chapters: D.chapters || [], chapter: D.chapter || "", which: D.which || "unknown", back: D.back,
         shuffle: D.shuffle || !!recall("exam-shuffle", false), writeFirst: !!recall("exam-write-first", false), mine: "",
         queue: [], pos: 0, card: null, flipped: false, stage: "card", editing: false, draft: {}, history: [],
         seen: 0, firstTry: 0, missed: [], started: 0, took: "", swipe: null, swiped: 0,
+        test: null, testN: 10, testMins: 15, tick: null, left: 0, perChapter: [],
         init: function () {
           var self = this;
+          if (D.test) { this.stage = "setup"; return; }
           this.$watch("shuffle", function (v) { store("exam-shuffle", v || null); });
           this.$watch("writeFirst", function (v) { store("exam-write-first", v || null); });
           this.start(this.which);
@@ -541,6 +624,31 @@
           this.stage = "card"; this.showCard();
         },
         againMissed: function () { this.start(this.which, this.missed); },
+        /* A practice test: a set number of questions, the weakest and least known first, against the clock. Each one
+           comes once ("Not yet" doesn't bring it back) and the end says how it went, chapter by chapter. */
+        startTest: function () {
+          var self = this, score = function (q) { return (q.known ? 0 : 2) + Math.min(q.misses, 3) + Math.random(); };
+          var list = this.all.filter(function (q) { return !self.chapter || q.chapter === self.chapter; });
+          list = list.map(function (q) { return [score(q), q]; }).sort(function (a, b) { return b[0] - a[0]; }).map(function (x) { return x[1]; }).slice(0, Math.max(1, this.testN));
+          this.test = {}; this.left = this.testMins * 60;
+          this.start("all", list);
+          clearInterval(this.tick);
+          this.tick = setInterval(function () { if (--self.left <= 0) self.endTest(); }, 1000);
+        },
+        endTest: function () {
+          var self = this, chapters = {}, order = [];
+          clearInterval(this.tick);
+          this.queue.forEach(function (q, i) {
+            var name = q.chapter, row = chapters[name];
+            if (!row) { row = chapters[name] = { name: name, right: 0, n: 0 }; order.push(row); }
+            row.n++; row.right += self.test[q.id] ? 1 : 0;
+          });
+          this.perChapter = order.sort(function (a, b) { return a.right / a.n - b.right / b.n; });
+          this.took = window.Work && Work.clock ? Work.clock(Math.round((Date.now() - this.started) / 1000)) : "";
+          this.stage = "result";
+        },
+        score: function () { var n = this.queue.length; return n ? Math.round(100 * this.perChapter.reduce(function (s, c) { return s + c.right; }, 0) / n) : 0; },
+        leftClock: function () { var m = Math.floor(this.left / 60), s = this.left % 60; return m + ":" + (s < 10 ? "0" : "") + s; },
         showCard: function () {
           var self = this;
           this.card = this.queue[this.pos]; this.flipped = false; this.mine = "";
@@ -559,10 +667,12 @@
           if (!q || !this.flipped) return;
           this.history.push({ q: q, knew: knew, known: q.known, misses: q.misses, due: q.due, dueOn: q.dueOn, interval: q.interval, firstTry: this.firstTry, missed: this.missed.slice() });
           if (knew && this.missed.indexOf(q) < 0) this.firstTry++;
-          if (!knew) { if (this.missed.indexOf(q) < 0) this.missed.push(q); this.queue.push(q); q.misses++; }
+          if (this.test) this.test[q.id] = knew;
+          if (!knew) { if (this.missed.indexOf(q) < 0) this.missed.push(q); if (!this.test) this.queue.push(q); q.misses++; }
           q.known = knew; q.due = false;
           api(D.noteBase + q.id + "/", { action: "review", knew: knew ? "1" : "0" }).then(function (r) { if (r && r.dueOn) { q.dueOn = r.dueOn; q.interval = r.interval; } });
           this.pos++;
+          if (this.test && this.pos >= this.queue.length) { this.endTest(); return; }
           if (this.pos >= this.queue.length) {
             var secs = Math.round((Date.now() - this.started) / 1000);
             this.took = window.Work && Work.clock ? Work.clock(secs) : secs + "s";
@@ -573,7 +683,8 @@
         undo: function () {
           var h = this.history.pop();
           if (!h) return;
-          if (!h.knew) this.queue.pop();
+          if (!h.knew && !this.test) this.queue.pop();
+          if (this.test) delete this.test[h.q.id];
           h.q.known = h.known; h.q.misses = h.misses; h.q.due = h.due; h.q.dueOn = h.dueOn; h.q.interval = h.interval;
           this.firstTry = h.firstTry; this.missed = h.missed;
           api(D.noteBase + h.q.id + "/", { action: "unreview", known: h.known ? "1" : "0", misses: String(h.misses), dueOn: h.dueOn || "", interval: String(h.interval || 0) });
@@ -614,6 +725,7 @@
             return;
           }
           if (e.key === "Escape") { location.href = this.back; return; }
+          if (this.stage === "setup" || this.stage === "result") return;
           if ((e.key === "z" || e.key === "Z") && this.history.length) { e.preventDefault(); this.undo(); return; }
           if (this.stage !== "card") return;
           if (e.key === " " || e.key === "Enter") { if (e.target.closest && e.target.closest("button, a, select")) return; e.preventDefault(); this.flip(); }

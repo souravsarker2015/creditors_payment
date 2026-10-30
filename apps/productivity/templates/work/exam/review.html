@@ -10,10 +10,11 @@
   <header class="wfr-head">
     <a :href="back" class="icon-btn" aria-label="{% translate 'Stop' %}" data-tip="{% translate 'Stop (Esc)' %}">{% icon "x" %}</a>
     <div class="wfr-title"><b>{{ s.name }}</b><small class="wex-left" x-show="stage === 'card'" x-text="leftText()"></small></div>
+    <b class="wex-clock num" x-show="test && stage === 'card'" x-cloak role="timer" :class="left < 60 && 'is-low'" x-text="leftClock()"></b>
     <button type="button" class="icon-btn" @click="undo()" :disabled="!history.length" aria-label="{% translate 'Undo the last answer' %}" data-tip="{% translate 'Undo the last answer (Z)' %}">{% icon "undo" %}</button>
     <button type="button" class="icon-btn" @click="startEdit()" x-show="stage === 'card'" aria-label="{% translate 'Edit this question' %}" data-tip="{% translate 'Edit this question (E)' %}">{% icon "edit" %}</button>
   </header>
-  <div class="wex-review-bar">
+  <div class="wex-review-bar" x-show="!test && stage !== 'setup'">
     <select class="form-input input-compact wex-review-chapter" x-show="chapters.length" x-model="chapter" @change="start(which)" aria-label="{% translate 'Chapter' %}">
       <option value="">{% translate "All chapters" %}</option>
       <template x-for="c in chapters" :key="c"><option :value="c" x-text="c" :selected="c === chapter"></option></template>
@@ -58,6 +59,38 @@
         <button type="button" class="wfr-btn" data-r="3" @click="mark(true)"><b>{% translate "I knew it" %}</b><small>{% translate "marked as known" %}</small><kbd>2</kbd></button>
       </div>
       <p class="wfr-help" x-show="flipped" x-cloak>{% translate "On a phone: swipe right if you knew it, left if not yet." %}</p>
+    </div>
+  </section>
+
+  {# ── a practice test: how many, how long ── #}
+  <section class="wfr-end wex-setup" x-show="stage === 'setup'" x-cloak>
+    <h2>{% translate "Practice test" %}</h2>
+    <p>{% translate "The questions you know least come first. Each comes once, against the clock — then you see your score, chapter by chapter." %}</p>
+    <div class="form-grid form-grid-2">
+      <label class="field"><span class="label">{% translate "Questions" %}</span><input type="number" min="1" :max="all.length" x-model.number="testN" class="form-input"></label>
+      <label class="field"><span class="label">{% translate "Minutes" %}</span><input type="number" min="1" max="300" x-model.number="testMins" class="form-input"></label>
+    </div>
+    <label class="field" x-show="chapters.length"><span class="label">{% translate "Chapter" %}</span>
+      <select class="form-input" x-model="chapter"><option value="">{% translate "All chapters" %}</option><template x-for="c in chapters" :key="c"><option :value="c" x-text="c"></option></template></select></label>
+    <div class="wfr-end-acts">
+      <button type="button" class="btn btn-primary" @click="startTest()" :disabled="!all.length || testN < 1 || testMins < 1">{% icon "play" %}{% translate "Start the test" %}</button>
+      <a :href="back" class="btn btn-secondary">{% translate "Back" %}</a>
+    </div>
+  </section>
+
+  <section class="wfr-end is-finished" x-show="stage === 'result'" x-cloak>
+    <h2><span class="num" x-text="score() + '%'"></span></h2>
+    <dl class="wfr-sum">
+      <div><dt>{% translate "Questions" %}</dt><dd x-text="queue.length"></dd></div>
+      <div><dt>{% translate "Knew" %}</dt><dd x-text="firstTry"></dd></div>
+      <div><dt>{% translate "Time" %}</dt><dd x-text="took"></dd></div>
+    </dl>
+    <ul class="wex-result" x-show="perChapter.length > 1">
+      <template x-for="c in perChapter" :key="c.name"><li><span x-text="c.name || t('noChapter')"></span><span class="wex-bar"><i :style="'width:' + (100 * c.right / c.n) + '%'"></i></span><b class="num" x-text="c.right + '/' + c.n"></b></li></template>
+    </ul>
+    <div class="wfr-end-acts">
+      <a :href="back" class="btn btn-primary">{% translate "Done" %}</a>
+      <button type="button" class="btn btn-secondary" @click="test = null; stage = 'setup'">{% icon "repeat" %}{% translate "Another test" %}</button>
     </div>
   </section>
 

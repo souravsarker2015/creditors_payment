@@ -53,6 +53,7 @@ urlpatterns = [
     path("projects/<int:pk>/duplicate/", views.project_duplicate_view, name="project_duplicate"),
     path("notes/", views.notes_view, name="notes"),
     path("notes/<int:pk>/", views.notes_view, name="note"),
+    path("notes/<int:pk>/download/", views.note_export_view, name="note_export"),
     path("notes/go/", views.note_go_view, name="note_go"),
     path("notes/today/", views.note_today_view, name="note_today"),
     path("notes/import/", views.note_import_view, name="note_import"),

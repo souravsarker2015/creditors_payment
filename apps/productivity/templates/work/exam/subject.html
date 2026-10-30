@@ -25,6 +25,7 @@
     <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
       <button type="button" class="icon-btn" @click="open = !open" :aria-expanded="open" aria-label="{% translate 'More actions' %}">{% icon "dots" %}</button>
       <div class="menu" x-show="open" x-cloak role="menu">
+        <a class="menu-item" role="menuitem" href="{% url 'work:exam_review' s.pk %}?test=1">{% icon "timer" %}{% translate "Practice test" %}</a>
         <a class="menu-item" role="menuitem" href="{% url 'work:exam_review' s.pk %}?which=missed">{% icon "alert" %}{% translate "Review the most missed" %}</a>
         <a class="menu-item" role="menuitem" href="{% url 'work:exam_review' s.pk %}?which=starred">{% icon "star" %}{% translate "Review the important ones" %}</a>
         <a class="menu-item" role="menuitem" href="{% url 'work:exam_review' s.pk %}?which=all&amp;shuffle=1">{% icon "repeat" %}{% translate "Review all, shuffled" %}</a>
@@ -83,15 +84,15 @@
         <button type="button" class="btn btn-secondary btn-sm" @click="copyPrompt()">{% icon "copy" %}{% translate "Copy the prompt" %}</button>
       </details>
       <div class="wex-file">
-        <input type="file" class="sr-only" x-ref="file" accept=".txt,.md,.markdown,.csv,.tsv,text/plain,text/markdown" @change="openFile($event.target.files[0]); $event.target.value = ''">
+        <input type="file" class="sr-only" x-ref="file" accept=".txt,.md,.markdown,.csv,.tsv,text/plain,text/markdown,text/csv" @change="openFile($event.target.files[0]); $event.target.value = ''">
         <button type="button" class="btn btn-secondary btn-sm" @click="$refs.file.click()">{% icon "upload" %}{% translate "Open a file" %}</button>
-        <span class="help">{% translate "a .txt or .md file — or drop it on the box" %}</span>
+        <span class="help">{% translate "a .txt, .md or .csv file, or an export from Anki or Quizlet — or drop it on the box" %}</span>
       </div>
       <input type="text" class="form-input input-compact wex-chapter" x-model="pasteChapter" list="exam-chapters" maxlength="120"
              placeholder="{% translate 'Chapter for these (optional)' %}" aria-label="{% translate 'Chapter' %}">
       <textarea class="form-input wex-paste" rows="10" x-model="paste" data-md-paste aria-label="{% translate 'Questions and answers' %}" @drop="dropFile($event)"
                 placeholder="## {% translate 'What is photosynthesis?' %}&#10;{% translate 'How plants make food from sunlight.' %}&#10;&#10;## …&#10;…"></textarea>
-      <p class="help">{% translate "Each question on a ## heading with its answer below — or Q: … A: …, or bold questions, or an empty line between them. # headings above the questions become chapters. Two columns copied from a spreadsheet work too." %}</p>
+      <p class="help">{% translate "Each question on a ## heading with its answer below — or Q: … A: …, or bold questions, or an empty line between them. # headings above the questions become chapters. A numbered list, multiple-choice questions (a) b) c) with Answer: under them) and two columns from a spreadsheet work too." %}</p>
       <div class="wex-preview" x-show="preview" x-cloak aria-live="polite">
         <template x-if="preview && preview.found.length">
           <div>
@@ -235,6 +236,7 @@
   <textarea class="wkc-a-input is-big" x-model="edit.answer" data-md-paste data-paste-images x-show="!writeView.edit" aria-label="{% translate 'Answer' %}" placeholder="{% translate 'Answer — Markdown, code, formulas; paste from ChatGPT or Claude' %}"></textarea>
   <div class="wex-a wn-md wex-md-preview wkc-preview" x-show="writeView.edit" x-effect="editing && writeView.edit && paint($el, edit.answer || '')"></div>
   <div class="wkc-editor-foot">
+    <span class="wn-state" :data-state="editState" role="status" aria-live="polite"><i aria-hidden="true"></i><span x-text="{ saving: '{% translate "Saving…" %}', saved: '{% translate "Saved" context "state" %}', dirty: '{% translate "Editing…" %}', offline: '{% translate "Saved on this device" %}', error: '{% translate "Not saved" %}' }[editState]"></span></span>
     <div class="wkc-colors" role="radiogroup" aria-label="{% translate 'Colour' %}">
       <button type="button" class="wkc-swatch is-none" :class="!edit.color && 'is-on'" @click="edit.color = ''" aria-label="{% translate 'No colour' %}"></button>
       {% for v, l in colors %}<button type="button" class="wkc-swatch" data-color="{{ v }}" :class="edit.color === '{{ v }}' && 'is-on'" @click="edit.color = '{{ v }}'" aria-label="{{ l }}"></button>{% endfor %}

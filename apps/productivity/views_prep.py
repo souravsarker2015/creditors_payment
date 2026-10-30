@@ -11,7 +11,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.translation import gettext as _, ngettext
+from django.utils.translation import gettext as _, ngettext, pgettext
 from django.views.decorators.http import require_POST
 
 from apps.trash.services import trash
@@ -37,7 +37,7 @@ def _texts():
         "yourAnswer": _("Your answer"), "pick": _("Pick an answer first."), "pickAll": _("Pick every right answer."),
         "timeUp": _("Time's up — your answers have been handed in."), "leave": _("Leave the exam? Your answers are kept, and the clock keeps running."),
         "unanswered": _("%(n)s questions have no answer yet. Hand in anyway?"), "submit": _("Hand in the exam now?"),
-        "saved": _("Saved"), "offline": _("Not saved — check your connection."), "covered": _("You covered %(n)s of %(total)s key points"),
+        "saved": pgettext("state", "Saved"), "offline": _("Not saved — check your connection."), "covered": _("You covered %(n)s of %(total)s key points"),
         "starred": _("Starred"), "unstarred": _("Star removed"), "noteSaved": _("Note saved"),
         "runLoading": _("Getting ready — the first run takes a few seconds…"), "running": _("Running…"),
         "runTimeout": _("Stopped: it ran too long. Is there an endless loop?"), "runPass": _("All checks passed"),

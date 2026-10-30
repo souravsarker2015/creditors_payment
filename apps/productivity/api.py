@@ -23,9 +23,10 @@ from django.views.decorators.http import require_GET, require_POST
 
 from apps.trash.services import trash
 
-from . import cards, diagrams, linked, services
+from . import cards, diagrams, exam, linked, services
 from .access import work_required
 from .models import (
+    ExamSubject,
     Card, ChecklistItem, Color, Deck, Diagram, DiagramKind, DiagramVersion, EntryKind, Goal, GoalStatus, GoalStep, Habit, HabitCheck, JournalEntry, LearningItem, LearningKind, LearningStatus,
     LearningUnit, Note, NoteVersion, Priority, Project, SavedView, Snippet, Sprint, Status, Task, TaskActivity, TimeEntry, WorkSettings, link_label,
 )
@@ -490,11 +491,15 @@ def note_save(request):
     user = request.user
     pk = request.POST.get("id")
     note = get_object_or_404(Note, pk=pk, owner=user) if pk else Note(owner=user)
-    if note.pk and "body" in request.POST and request.POST["body"] != note.body:
-        services.remember_note(note)        # what it said before this sitting, at most every few minutes
-    for name in ("title", "body"):
-        if name in request.POST:
-            setattr(note, name, request.POST[name])
+    hashtags_before = services.hashtags(note.body)
+    posted = {name: services.one_line_end(request.POST[name]) for name in ("title", "body") if name in request.POST}
+    changed = any(text != services.one_line_end(getattr(note, name)) for name, text in posted.items())
+    # Written over a text the editor never saw (another device, another tab): that text stays in History.
+    conflict = bool(note.pk and changed and request.POST.get("rev") and request.POST["rev"] != services.note_rev(note))
+    if note.pk and changed:
+        services.remember_note(note, force=conflict)        # what it said before this sitting, at most every few minutes
+    for name, text in posted.items():
+        setattr(note, name, text)
     if "project" in request.POST:
         note.project = Project.objects.filter(owner=user, pk=request.POST["project"] or 0).first()
     if "color" in request.POST:
@@ -506,11 +511,14 @@ def note_save(request):
     note.save()
     if "tags" in request.POST:
         note.tags.set(services.tags_named(user, request.POST["tags"].replace(",", " ").split()))
-    if "body" in request.POST:          # #tags written in the note are its tags too
-        note.tags.add(*services.tags_named(user, services.hashtags(note.body)))
+    if "body" in request.POST:          # #tags written in the note are its tags too (and go when they go from the text:
+        now = services.hashtags(note.body)     # saving as you type, "#back" must not stay behind "#backend")
+        note.tags.add(*services.tags_named(user, now))
+        gone = {t.lower() for t in hashtags_before} - {t.lower() for t in now}
+        note.tags.remove(*note.tags.filter(name__in=gone))
     extra = {"card": _note_card(request, note)} if request.POST.get("card") == "1" else {}
     return ok(id=note.pk, title=note.display_title, url=reverse("work:note", args=[note.pk]), tags=sorted(t.name for t in note.tags.all()),
-              saved=timezone.localtime(note.updated_at).strftime("%H:%M"), **extra)
+              saved=timezone.localtime(note.updated_at).strftime("%H:%M"), rev=services.note_rev(note), conflict=conflict, **extra)
 
 
 def _note_card(request, note):
@@ -523,9 +531,9 @@ def _note_card(request, note):
 def note_get(request, pk):
     """One note, to edit it on the board without leaving it."""
     note = get_object_or_404(Note, pk=pk, owner=request.user)
-    return ok(id=note.pk, title=note.title, body=note.body, color=note.color, pinned=note.is_pinned, archived=note.is_archived,
+    return ok(id=note.pk, title=note.title, body=services.one_line_end(note.body), color=note.color, pinned=note.is_pinned, archived=note.is_archived,
               tags=" ".join(note.tags.values_list("name", flat=True)), url=reverse("work:note", args=[note.pk]),
-              updated=int(note.updated_at.timestamp() * 1000))
+              updated=int(note.updated_at.timestamp() * 1000), rev=services.note_rev(note))
 
 
 @work_required
@@ -570,7 +578,7 @@ def note_action(request, pk):
         now = services.tick_todo(request.user, note, index, done)
         if now is None:
             return bad(_("That to-do isn't there any more."))
-        return ok(done=now, body=note.body, card=_note_card(request, note) if request.POST.get("card") == "1" else "",
+        return ok(done=now, body=services.one_line_end(note.body), card=_note_card(request, note) if request.POST.get("card") == "1" else "",
                   saved=timezone.localtime(note.updated_at).strftime("%H:%M"), updated=int(note.updated_at.timestamp() * 1000))
     elif action == "link_mentions":    # other notes that name this one in plain text: [[linked]] (one of them, or all)
         source = request.POST.get("source", "")
@@ -582,7 +590,20 @@ def note_action(request, pk):
             return bad(_("No open to-dos here. Write them as “- [ ] something to do”."))
         note.refresh_from_db()
         return ok(count=len(made), body=note.body, saved=timezone.localtime(note.updated_at).strftime("%H:%M"),
-                  updated=int(note.updated_at.timestamp() * 1000))
+                  updated=int(note.updated_at.timestamp() * 1000), rev=services.note_rev(note))
+    elif action == "relink":           # renamed: the [[links]] to it follow
+        return ok(count=linked.relink(note, request.POST.get("old", "")))
+    elif action == "to_exam":          # headings, Q:/A: lines… become exam questions, in a subject or a new one
+        found = exam.parse_note(note.body)
+        if not found:
+            return bad(_("No questions here. Write each one as a ## heading with its answer under it — or Q: … A: …, or “question :: answer”."))
+        name = request.POST.get("name", "").strip()[:120]
+        if name:
+            subject = ExamSubject.objects.create(owner=request.user, name=name)
+        else:
+            subject = get_object_or_404(ExamSubject, pk=request.POST.get("subject") or 0, owner=request.user)
+        made = exam.add_found(request.user, subject, exam.fresh(subject, found))
+        return ok(count=len(made), skipped=len(found) - len(made), url=reverse("work:exam_subject", args=[subject.pk]))
     elif action == "cards":            # every "question :: answer" line becomes a flashcard
         pairs = cards.parse_pairs(note.body)
         if not pairs:
