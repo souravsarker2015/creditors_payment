@@ -24,7 +24,7 @@
       <button type="submit" class="btn btn-primary">{% icon "check" %}{% translate "Save" %}</button>
       <a href="{% url 'work:stories' %}" class="btn btn-ghost">{% translate "Cancel" %}</a>
       <span class="spacer"></span>
-      {% if story %}<button type="submit" name="action" value="delete" class="btn btn-ghost is-danger" formnovalidate onclick="return confirm('{% translate "Delete this story? You can bring it back from Recently deleted." %}')">{% icon "trash" %}{% translate "Delete" %}</button>{% endif %}
+      {% if story %}<button type="submit" name="action" value="delete" class="btn btn-ghost is-danger" formnovalidate data-confirm="{% translate "Delete this story? You can bring it back from Recently deleted." %}">{% icon "trash" %}{% translate "Delete" %}</button>{% endif %}
     </div>
   </form>
 </div>

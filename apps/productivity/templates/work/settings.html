@@ -101,7 +101,7 @@
       <p class="help">{% translate "Adds everything in the .zip to your tracker (for a new server or a new account). Restoring the same file twice makes copies." %}</p>
       <div class="flex flex-wrap items-center gap-2 mt-2">
         <label class="btn btn-ghost btn-sm">{% icon "upload" %}<span x-text="name || '{% translate "Choose the .zip" %}'"></span><input type="file" name="backup" accept=".zip,.json,application/zip,application/json" class="sr-only" @change="name = $event.target.files[0] ? $event.target.files[0].name : ''"></label>
-        <button type="submit" class="btn btn-secondary btn-sm" :disabled="!name" onclick="return confirm('{% translate "Add everything in this backup to your tracker?" %}')">{% translate "Restore" %}</button>
+        <button type="submit" class="btn btn-secondary btn-sm" :disabled="!name" data-confirm="{% translate "Add everything in this backup to your tracker?" %}" data-confirm-tone="plain">{% translate "Restore" %}</button>
       </div>
     </form></section>
 
@@ -153,7 +153,7 @@
         <select name="tag-color" class="form-input input-compact" data-native aria-label="{% translate 'Colour' %}">{% for v, l in tag_form.color.field.choices %}<option value="{{ v }}"{% if tg.color == v %} selected{% endif %}>{{ l }}</option>{% endfor %}</select>
         <span class="wst-count">{{ tg.n_tasks }} · {{ tg.n_notes }} · {{ tg.n_entries }}</span>
         <button type="submit" class="btn btn-secondary btn-sm">{% translate "Save" %}</button>
-        <button type="submit" name="delete" value="1" class="icon-btn" aria-label="{% translate 'Remove tag' %}" onclick="return confirm('{% translate "Remove this tag from everything?" %}')">{% icon "trash" %}</button>
+        <button type="submit" name="delete" value="1" class="icon-btn" aria-label="{% translate 'Remove tag' %}" data-confirm="{% translate "Remove this tag from everything?" %}" data-confirm-after="gone">{% icon "trash" %}</button>
       </form></li>
       {% endfor %}
     </ul>

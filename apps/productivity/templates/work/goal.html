@@ -21,7 +21,7 @@
       <button type="button" class="icon-btn" @click="open = !open" :aria-expanded="open" aria-haspopup="true" aria-label="{% translate 'More actions' %}">{% icon "dots" %}</button>
       <form method="post" class="menu" x-show="open" x-cloak role="menu">{% csrf_token %}
         {% if goal.status == "active" %}<button type="submit" name="action" value="dropped" class="menu-item" role="menuitem">{% icon "archive" %}{% translate "Drop this goal" %}</button>{% endif %}
-        <button type="submit" name="action" value="delete" class="menu-item is-danger" role="menuitem" onclick="return confirm('{{ _("Delete this goal? Its tasks stay. You can bring it back from Recently deleted.")|escapejs }}')">{% icon "trash" %}{% translate "Delete" %}</button>
+        <button type="submit" name="action" value="delete" class="menu-item is-danger" role="menuitem" data-confirm="{{ _("Delete this goal? Its tasks stay. You can bring it back from Recently deleted.") }}">{% icon "trash" %}{% translate "Delete" %}</button>
       </form>
     </div>
   </div>

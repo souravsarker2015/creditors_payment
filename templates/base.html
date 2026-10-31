@@ -59,7 +59,7 @@
     <link rel="stylesheet" href="{% asset 'css/tailwind.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
-<body class="h-full" x-data="{ sidebarOpen: false, sheet: null }" @keydown.escape.window="sidebarOpen = false" @app-sheet-close.window="sheet = null" @ft:view.document="if (!FTView.isApp()) sheet = null">
+<body class="h-full" x-data="{ sidebarOpen: false, sheet: null }" x-effect="(sidebarOpen || sheet === 'more') && $nextTick(() => FT.showNavItem())" @keydown.escape.window="sidebarOpen = false" @app-sheet-close.window="sheet = null" @ft:view.document="if (!FTView.isApp()) sheet = null">
     {% if user.is_authenticated %}
     <!-- Off-canvas menu for phones & tablets -->
     <div x-cloak x-show="sidebarOpen" class="relative z-50 lg:hidden" data-nav-overlay role="dialog" aria-modal="true" aria-label="{% translate 'Navigation' %}">
@@ -81,6 +81,7 @@
     <!-- Static sidebar for desktop -->
     <div class="app-sidebar hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-64 lg:flex-col">
         {% include "partials/sidebar_nav.html" %}
+        {% include "partials/nav_place.html" %}
     </div>
     {% endif %}
 
@@ -219,6 +220,7 @@
     {% if user.is_authenticated %}{% include "partials/calculator.html" %}{% include "partials/search_modal.html" %}{% include "partials/photo_shrink.html" %}{% include "partials/form_guard.html" %}{% endif %}
     {% include "partials/clamp.html" %}
     <div id="toast-root" class="toast-root" aria-live="polite" aria-atomic="true"></div>
+    {% include "partials/ask.html" %}
     <script>
     /* Shared UI helpers (dropdowns, dates: static/js/pickers.js). */
     /* Toast: a short confirmation at the bottom of the screen. */
@@ -388,12 +390,6 @@
             e.preventDefault(); toggle();
         });
     })();
-
-    // Any form with data-confirm asks before submitting (deletes, irreversible actions).
-    document.addEventListener("submit", function (e) {
-        var msg = e.target.getAttribute && e.target.getAttribute("data-confirm");
-        if (msg && !window.confirm(msg)) e.preventDefault();
-    }, true);
 
     /* One submit per form: a second click, tap or Enter while the first is on
        its way does nothing (no duplicate records). This runs after every other

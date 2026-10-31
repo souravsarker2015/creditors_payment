@@ -25372,3 +25372,21 @@ msgstr "এই ক্যাটাগরি থেকে সরান"
 
 msgid "Show a category"
 msgstr "একটি ক্যাটাগরি দেখান"
+
+msgid "Yes, continue"
+msgstr "হ্যাঁ, এগিয়ে যান"
+
+msgid "Copy this text"
+msgstr "এই লেখাটি কপি করুন"
+
+msgid "Delete this version?"
+msgstr "এই সংস্করণ মুছবেন?"
+
+msgid "This can’t be undone."
+msgstr "এটি আর ফেরানো যাবে না।"
+
+msgid "You can restore it from Deleted."
+msgstr "মুছে ফেলা তালিকা থেকে এটি ফিরিয়ে আনতে পারবেন।"
+
+msgid "You can bring it back from Recently deleted for 30 days."
+msgstr "সম্প্রতি মুছে ফেলা থেকে ৩০ দিনের মধ্যে এটি ফিরিয়ে আনতে পারবেন।"

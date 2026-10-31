@@ -7,7 +7,7 @@
 {% include "partials/form_page.html" %}
 {% if plan %}
 <div class="page-narrow mt-4">
-  <form method="post" action="{% url 'plan_delete' kind party.pk %}" data-confirm="{% translate 'Remove this installment plan? Payments already recorded stay.' %}">
+  <form method="post" action="{% url 'plan_delete' kind party.pk %}" data-confirm="{% translate 'Remove this installment plan? Payments already recorded stay.' %}" data-confirm-after="back">
     {% csrf_token %}
     <button type="submit" class="btn btn-ghost is-danger">{% include "partials/icon.html" with name="trash" %}{% translate "Remove the plan" %}</button>
   </form>

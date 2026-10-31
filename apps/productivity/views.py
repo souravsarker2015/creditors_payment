@@ -73,6 +73,7 @@ def _texts():
         "savedOffline": _("Saved on this device — it will sync when you're online."), "synced": _("Synced changes made offline."),
         "undo": _("Undo"), "reminder": _("Reminder"), "stillWorking": _("Still working on this?"), "noDescription": _("No description"),
         "tracked": _("Tracked"), "notSaved": _("Not saved."), "taskAdded": _("Task added"), "noteSaved": _("Note saved"), "noteArchived": _("Archived"), "noteConflict": _("This note was changed somewhere else too. That text is kept in History."),
+        "forgetVersion": _("Delete this version?"),
         "syncLost": _("A change made offline couldn't be saved: what it belonged to is gone or was refused."), "deviceFull": _("This device's storage is full, so this wasn't kept. Check your connection and try again."),
         "signedOut": _("You're signed out. What you wrote is kept on this device and is sent once you sign in."), "signIn": _("Sign in"),
         "linksUpdated": ngettext("Links updated in %(n)s note", "Links updated in %(n)s notes", 2), "linksUpdatedOne": ngettext("Links updated in %(n)s note", "Links updated in %(n)s notes", 1), "examMade": ngettext("%(n)s question added.", "%(n)s questions added.", 2), "examMadeOne": ngettext("%(n)s question added.", "%(n)s questions added.", 1), "seeThem": _("See them"), "noteDraftBack": _("Your unsaved writing is back."), "noteUnarchived": _("Back from the archive"),

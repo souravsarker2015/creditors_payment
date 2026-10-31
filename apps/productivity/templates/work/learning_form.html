@@ -11,7 +11,7 @@
     {% if item %}
     <div class="wp-actions">
       {% if item.url %}<a href="{{ item.url }}" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">{% icon "external" %}{% translate "Open" %}</a>{% endif %}
-      <form method="post">{% csrf_token %}<button type="submit" name="action" value="delete" class="icon-btn" aria-label="{% translate 'Remove' %}" data-tip="{% translate 'Remove' %}" onclick="return confirm('{% translate "Remove this from your learning list?" %}')">{% icon "trash" %}</button></form>
+      <form method="post">{% csrf_token %}<button type="submit" name="action" value="delete" class="icon-btn" aria-label="{% translate 'Remove' %}" data-tip="{% translate 'Remove' %}" data-confirm="{% translate "Remove this from your learning list?" %}" data-confirm-after="back">{% icon "trash" %}</button></form>
     </div>
     {% endif %}
   </header>

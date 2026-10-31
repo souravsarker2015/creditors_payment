@@ -11,7 +11,7 @@ from apps.business.credit.models import Direction, PartyPayment
 from apps.business.feed.models import FeedProduct, FeedPurchase, FeedPurchaseLine, FeedUsage
 from apps.business.loans.models import Lender, Loan, LoanTransaction
 from apps.business.parties.models import Party
-from apps.business.ponds.models import CultureCycle, Pond, Stocking
+from apps.business.ponds.models import CultureCycle, LeasePayment, Pond, Stocking
 from apps.business.ponds.services import summarize
 from apps.business.sales.models import FishSale
 from apps.business.species.models import Species
@@ -85,6 +85,37 @@ class AccountBalanceTests(MoneyBase):
         self.assertEqual(self.cash.balance, D("-2000"))
         t.soft_delete()
         self.assertEqual(self.cash.balance, D("0"))
+
+
+class AccountBookLinkTests(MoneyBase):
+    """A row of the account book opens what it belongs to, and never "page not found"."""
+    def book(self):
+        return self.client.get(reverse("business:account_detail", args=[self.cash.pk]), {"period": "all"})
+
+    def links(self):
+        return {m.title: m.url for m in self.book().context["rows"]}
+
+    def setUp(self):
+        super().setUp()
+        self.party = Party.objects.create(business=self.b, name="Karim", is_supplier=True)
+        self.pond = Pond.objects.create(business=self.b, name="East pond")
+        PartyPayment.objects.create(business=self.b, party=self.party, direction=Direction.OUT, date=ago(1), amount=D("2000"), account=self.cash)
+        LeasePayment.objects.create(business=self.b, pond=self.pond, date=ago(1), amount=D("500"), account=self.cash)
+
+    def test_every_link_opens(self):
+        for title, url in self.links().items():
+            self.assertTrue(url, title)
+            self.assertEqual(self.client.get(url).status_code, 200, title)
+
+    def test_a_row_of_something_deleted_is_no_link_and_its_money_stays(self):
+        before = self.book().context["closing"]
+        self.party.soft_delete()
+        self.pond.soft_delete()
+        page = self.book()
+        self.assertEqual(page.context["closing"], before)
+        self.assertEqual(set(self.links().values()), {""})
+        self.assertContains(page, "Karim")
+        self.assertNotContains(page, f"/business/baki/party/{self.party.pk}/")
 
 
 class TransferTests(MoneyBase):
@@ -346,7 +377,7 @@ class DeletedRecordsTests(MoneyBase):
 
     def setUp(self):
         super().setUp()
-        from apps.business.ponds.models import CultureCycle, Pond, Stocking
+        from apps.business.ponds.models import CultureCycle, LeasePayment, Pond, Stocking
         from apps.business.species.models import Species
 
         self.buyer = Party.objects.create(business=self.b, name="Hasan", is_buyer=True)

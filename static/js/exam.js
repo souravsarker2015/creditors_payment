@@ -246,13 +246,15 @@
         },
         catDelete: function (c) {
           var self = this;
-          if (!confirm(t("catDeleteAsk").replace("%(name)s", c.name))) return;
-          this.catSend({ action: "delete", id: c.id }).then(function (r) {
-            if (!r) return;
-            if (self.category !== null && !self.catOf(self.category) && self.category !== "none") self.category = null;
-            self.catRemove(self.catList, c.id);
-            self.reload();
-            Work.undoable(t("catDeleted"), r.undo, function () { self.catRefresh(); });
+          FT.ask({ message: t("catDeleteAsk").replace("%(name)s", c.name), danger: true, after: "back" }).then(function (sure) {
+            if (!sure) return;
+            self.catSend({ action: "delete", id: c.id }).then(function (r) {
+              if (!r) return;
+              if (self.category !== null && !self.catOf(self.category) && self.category !== "none") self.category = null;
+              self.catRemove(self.catList, c.id);
+              self.reload();
+              Work.undoable(t("catDeleted"), r.undo, function () { self.catRefresh(); });
+            });
           });
         },
         catRefresh: function () {
@@ -522,13 +524,16 @@
         },
         restoreVersion: function (v) {
           var self = this, q = this.editing;
-          if (!v || !q || !confirm(t("restoreAsk"))) return;
-          api(D.noteBase + q.id + "/", { action: "restore", version: v.id }).then(function (r) {
-            if (!r.ok || r.queued) return;
-            q.question = r.note.question; q.answer = r.note.answer; q.rev = r.rev;
-            self.edit.question = q.question; self.edit.answer = q.answer;
-            self.editFrom = JSON.stringify(self.edit); self.editState = "saved"; self.histOpen = false;
-            store(EDIT, null);
+          if (!v || !q) return;
+          FT.ask(t("restoreAsk")).then(function (sure) {
+            if (!sure) return;
+            api(D.noteBase + q.id + "/", { action: "restore", version: v.id }).then(function (r) {
+              if (!r.ok || r.queued) return;
+              q.question = r.note.question; q.answer = r.note.answer; q.rev = r.rev;
+              self.edit.question = q.question; self.edit.answer = q.answer;
+              self.editFrom = JSON.stringify(self.edit); self.editState = "saved"; self.histOpen = false;
+              store(EDIT, null);
+            });
           });
         },
         saveEditing: function () {
@@ -621,8 +626,13 @@
         bulk: function (op) {
           var self = this, ids = this.pickedIds(), fields = { action: "bulk", op: op, ids: ids.join(",") };
           if (!ids.length) return;
-          if (op === "delete" && !confirm(t("bulkDeleteAsk"))) return;
-          if (op === "chapter") { var name = prompt(t("chapterAsk"), ""); if (name === null) return; fields.chapter = name.trim(); }
+          if (op === "delete") return FT.ask({ message: t("bulkDeleteAsk"), danger: true, after: "back" }).then(function (sure) { if (sure) self.bulkSend(op, ids, fields); });
+          if (op === "chapter") {
+            return FT.ask({ title: t("chapterAsk"), input: {} }).then(function (name) {
+              if (name === null) return;
+              fields.chapter = name.trim(); self.bulkSend(op, ids, fields);
+            });
+          }
           if (op === "move") { if (!this.moveTo) return; fields.subject = this.moveTo; }
           if (op === "categories") {               // chosen in the popup, added on Done
             var chosen = [];
@@ -635,6 +645,10 @@
             });
             return;
           }
+          this.bulkSend(op, ids, fields);
+        },
+        bulkSend: function (op, ids, fields) {
+          var self = this;
           api(D.api, fields).then(function (r) {
             if (!r.ok) return;
             self.endSelect(); self.moveTo = "";
@@ -649,12 +663,14 @@
         },
         /* labels (chapters) */
         renameChapter: function (c) {
-          var self = this, name = prompt(t("renameAsk"), c.name);
-          if (name === null || name.trim() === c.name) return;
-          api(D.api, { action: "rename_chapter", old: c.name, chapter: name.trim() }).then(function (r) {
-            if (!r.ok) return;
-            if (self.chapter === c.name) self.chapter = name.trim();         // the page stays on it
-            self.reload();
+          var self = this;
+          FT.ask({ title: t("renameAsk"), input: { value: c.name } }).then(function (name) {
+            if (name === null || name.trim() === c.name) return;
+            api(D.api, { action: "rename_chapter", old: c.name, chapter: name.trim() }).then(function (r) {
+              if (!r.ok) return;
+              if (self.chapter === c.name) self.chapter = name.trim();         // the page stays on it
+              self.reload();
+            });
           });
         },
         moveChapter: function (i, step) {
@@ -663,8 +679,9 @@
         },
         reset: function () {
           var self = this;
-          if (!confirm(t("resetAsk"))) return;
-          api(D.api, { action: "reset" }).then(function (r) { if (r.ok) self.reload(); });
+          FT.ask(t("resetAsk")).then(function (sure) {
+            if (sure) api(D.api, { action: "reset" }).then(function (r) { if (r.ok) self.reload(); });
+          });
         },
         key: function (e) {
           if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || typing(e) || this.editing || this.catOpen) return;

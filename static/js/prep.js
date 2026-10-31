@@ -275,7 +275,11 @@
         handIn: function (forced) {
           if (this.handedIn) return;
           var n = this.unanswered();
-          if (!forced && !confirm(n ? t("unanswered", "%(n)s questions have no answer yet. Hand in anyway?").replace("%(n)s", n) : t("submit", "Hand in the exam now?"))) return;
+          if (!forced) {
+            var self = this;
+            FT.ask(n ? t("unanswered", "%(n)s questions have no answer yet. Hand in anyway?").replace("%(n)s", n) : t("submit", "Hand in the exam now?")).then(function (sure) { if (sure) self.handIn(true); });
+            return;
+          }
           this.handedIn = true; clearInterval(this.timer); clearTimeout(this.saver); this.dirty = false;
           try { localStorage.removeItem(store); } catch (e) { /* fine */ }
           this.$refs.answers.value = JSON.stringify(this.payload());
@@ -444,12 +448,14 @@
           s.name = name; this.api(C.api, { action: "section_rename", section: s.id, name: name });
         },
         dropSection: function (s) {
-          if (!confirm(t("dropSection", "Delete this section? Its questions stay, outside any section."))) return;
           var self = this;
-          this.api(C.api, { action: "section_delete", section: s.id }).then(function (r) {
-            if (!r.ok) return;
-            self.byId(0).questions = self.byId(0).questions.concat(s.questions);
-            self.sections.splice(self.sections.indexOf(s), 1); self.renumber();
+          FT.ask({ message: t("dropSection", "Delete this section? Its questions stay, outside any section."), danger: true, after: "gone" }).then(function (sure) {
+            if (!sure) return;
+            self.api(C.api, { action: "section_delete", section: s.id }).then(function (r) {
+              if (!r.ok) return;
+              self.byId(0).questions = self.byId(0).questions.concat(s.questions);
+              self.sections.splice(self.sections.indexOf(s), 1); self.renumber();
+            });
           });
         },
       };

@@ -5,7 +5,7 @@
 {% include "partials/form_page.html" %}
 {% if transfer %}
 <div class="page-narrow mt-4">
-  <form method="post" action="{% url 'wallet_transfer_delete' transfer.pk %}" data-confirm="{% translate 'Delete this transfer?' %}">
+  <form method="post" action="{% url 'wallet_transfer_delete' transfer.pk %}" data-confirm="{% translate 'Delete this transfer?' %}" data-confirm-after="back">
     {% csrf_token %}
     <button type="submit" class="btn btn-ghost is-danger">{% include "partials/icon.html" with name="trash" %}{% translate "Delete this transfer" %}</button>
   </form>

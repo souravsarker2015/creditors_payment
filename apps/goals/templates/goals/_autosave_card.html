@@ -32,7 +32,7 @@
       </form>
       <button type="button" class="btn btn-ghost btn-sm" @click="editing = true">{% include "partials/icon.html" with name="edit" %}{% translate "Edit" %}</button>
       {% endif %}
-      <form method="post" action="{% url 'goal_autosave_delete' goal.pk %}" data-confirm="{% translate 'Remove auto-save? Deposits it already made are kept.' %}">{% csrf_token %}
+      <form method="post" action="{% url 'goal_autosave_delete' goal.pk %}" data-confirm="{% translate 'Remove auto-save? Deposits it already made are kept.' %}" data-confirm-after="back">{% csrf_token %}
         <button type="submit" class="btn btn-ghost btn-sm" style="color: var(--status-critical);">{% include "partials/icon.html" with name="trash" %}{% translate "Remove" %}</button>
       </form>
     </div>

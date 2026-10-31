@@ -25,7 +25,7 @@
           {% if biz_can.enter_data and cycle.is_running %}<button type="button" class="menu-item" role="menuitem" @click="open = false; modal = 'move'">{% include "business/partials/icon.html" with name="swap" %}{% translate "Move fish to another pond" %}</button>{% endif %}
           {% if biz_can.enter_data and cycle.is_running %}<button type="button" class="menu-item" role="menuitem" @click="open = false; modal = 'finish'">{% include "business/partials/icon.html" with name="lock" %}{% translate "Finish this cycle" %}</button>{% endif %}
           {% if biz_can.enter_data and not cycle.is_running %}<form method="post" action="{% url 'business:cycle_finish' cycle.pk %}">{% csrf_token %}<button type="submit" class="menu-item" role="menuitem">{% include "partials/icon.html" with name="restore" %}{% translate "Reopen cycle" %}</button></form>{% endif %}
-          {% if biz_can.delete %}<form method="post" action="{% url 'business:cycle_delete' cycle.pk %}" data-confirm="{% translate 'Delete this cycle with everything recorded in it?' %}">{% csrf_token %}<button type="submit" class="menu-item is-danger" role="menuitem">{% include "partials/icon.html" with name="trash" %}{% translate "Delete cycle" %}</button></form>{% endif %}
+          {% if biz_can.delete %}<form method="post" action="{% url 'business:cycle_delete' cycle.pk %}" data-confirm="{% translate 'Delete this cycle with everything recorded in it?' %}" data-confirm-after="gone">{% csrf_token %}<button type="submit" class="menu-item is-danger" role="menuitem">{% include "partials/icon.html" with name="trash" %}{% translate "Delete cycle" %}</button></form>{% endif %}
         </div>
       </div>
     </div>

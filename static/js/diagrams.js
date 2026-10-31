@@ -233,7 +233,9 @@
         },
         action: function (name, extra) {
           var self = this;
-          if (name === "delete" && !confirm(TEXT.deleteConfirm || "Delete?")) return;
+          if (name === "delete" && !(extra && extra.sure)) {
+            return FT.ask({ message: TEXT.deleteConfirm || "Delete?", danger: true, after: "back" }).then(function (sure) { if (sure) return self.action(name, { sure: true }); });
+          }
           return Promise.resolve(this.saveNow()).then(function () {
             return Work.api("/work/api/diagrams/" + self.id + "/", Object.assign({ action: name }, extra || {}));
           }).then(function (res) {
@@ -271,13 +273,16 @@
           });
         },
         restore: function (v) {
-          if (!confirm(TEXT.restoreConfirm)) return;
-          this.action("restore", { version: v.id });       // the page reloads with it
+          var self = this;
+          FT.ask(TEXT.restoreConfirm).then(function (sure) { if (sure) self.action("restore", { version: v.id }); });       // the page reloads with it
         },
         forget: function (v) {
           var self = this;
-          this.action("forget", { version: v.id }).then(function (res) {
-            if (res && res.ok) self.versions = self.versions.filter(function (x) { return x.id !== v.id; });
+          FT.ask({ message: (Work.cfg.text || {}).forgetVersion || "Delete this version?", danger: true, after: "gone" }).then(function (sure) {
+            if (!sure) return;
+            self.action("forget", { version: v.id }).then(function (res) {
+              if (res && res.ok) self.versions = self.versions.filter(function (x) { return x.id !== v.id; });
+            });
           });
         },
       };
@@ -720,9 +725,13 @@
             while (stack.length > 1 && stack[stack.length - 1].ind >= i.ind) stack.pop();
             var n = self.newNode(i.text); if (i.done) n.done = true; stack[stack.length - 1].node.children.push(n); stack.push({ ind: i.ind, node: n });
           });
-          if (M.root.children && M.root.children.length && !confirm(TEXT.replaceMap)) return;
-          this.snapshot(); M.root = rootNode; this.importOpen = false; this.importText = "";
-          this.render(true); this.select("r"); this.save(); var me = this; setTimeout(function () { me.fit(); }, 260);
+          var me = this;
+          function replace() {
+            me.snapshot(); M.root = rootNode; me.importOpen = false; me.importText = "";
+            me.render(true); me.select("r"); me.save(); setTimeout(function () { me.fit(); }, 260);
+          }
+          if (M.root.children && M.root.children.length) FT.ask(TEXT.replaceMap).then(function (sure) { if (sure) replace(); });
+          else replace();
         },
         makeTasks: function () {
           var self = this;

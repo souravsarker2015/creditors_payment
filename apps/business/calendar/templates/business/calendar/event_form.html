@@ -11,7 +11,7 @@
     </div>
     {% if obj and biz_can.delete %}
     <div class="page-actions">
-      <form method="post" action="{% url 'business:calendar_delete' obj.pk %}" data-confirm="{% translate 'Remove this from the calendar?' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ back }}">
+      <form method="post" action="{% url 'business:calendar_delete' obj.pk %}" data-confirm="{% translate 'Remove this from the calendar?' %}" data-confirm-after="gone">{% csrf_token %}<input type="hidden" name="next" value="{{ back }}">
         <button type="submit" class="btn btn-ghost">{% include "partials/icon.html" with name="trash" %}{% translate "Remove" %}</button></form>
     </div>
     {% endif %}

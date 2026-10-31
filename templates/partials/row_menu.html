@@ -6,7 +6,7 @@
   </button>
   <div class="menu{% if up %} menu-up{% endif %}" x-show="open" x-cloak x-transition.opacity.scale.95.duration.100ms role="menu">
     <a href="{{ edit_url }}{% if next %}?next={{ next|urlencode }}{% endif %}" class="menu-item" role="menuitem">{% include "partials/icon.html" with name="edit" %}{% translate "Edit" %}</a>
-    <form method="post" action="{{ delete_url }}" data-confirm="{{ confirm }}">
+    <form method="post" action="{{ delete_url }}" data-confirm="{{ confirm }}" data-confirm-after="{% if active_dashboard == 'business' %}gone{% else %}back{% endif %}">
       {% csrf_token %}{% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
       <button type="submit" class="menu-item is-danger" role="menuitem">{% include "partials/icon.html" with name="trash" %}{% translate "Delete" %}</button>
     </form>

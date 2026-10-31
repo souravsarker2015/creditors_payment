@@ -48,7 +48,7 @@
                   {% with field=f.with_whom %}{% include "partials/field.html" %}{% endwith %}{% with field=f.result %}{% include "partials/field.html" %}{% endwith %}</div>
                 {% with field=f.questions %}{% include "partials/field.html" %}{% endwith %}{% with field=f.notes %}{% include "partials/field.html" %}{% endwith %}
                 <div class="wj-row"><button type="submit" class="btn btn-primary btn-sm">{% translate "Save" %}</button>
-                  <button type="submit" name="action" value="round_delete" class="btn btn-ghost btn-sm is-danger" formnovalidate onclick="return confirm('{% translate "Delete this round?" %}')">{% icon "trash" %}{% translate "Delete" %}</button></div>
+                  <button type="submit" name="action" value="round_delete" class="btn btn-ghost btn-sm is-danger" formnovalidate data-confirm="{% translate "Delete this round?" %}" data-confirm-after="gone">{% icon "trash" %}{% translate "Delete" %}</button></div>
               </form>
             </details>
           </div>
@@ -96,7 +96,7 @@
       <div class="card-footer wj-row">
         <button type="submit" class="btn btn-primary">{% icon "check" %}{% translate "Save" %}</button>
         <span class="spacer"></span>
-        <button type="submit" name="action" value="delete" class="btn btn-ghost is-danger" formnovalidate onclick="return confirm('{% translate "Delete this application and its rounds? You can bring it back from Recently deleted." %}')">{% icon "trash" %}{% translate "Delete" %}</button>
+        <button type="submit" name="action" value="delete" class="btn btn-ghost is-danger" formnovalidate data-confirm="{% translate "Delete this application and its rounds? You can bring it back from Recently deleted." %}" data-confirm-after="gone">{% icon "trash" %}{% translate "Delete" %}</button>
       </div>
     </form>
     </details>

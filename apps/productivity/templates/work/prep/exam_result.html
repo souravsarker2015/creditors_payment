@@ -12,7 +12,7 @@
   </div>
   <div class="wp-actions">
     {% if wrong %}<a href="{% url 'work:prep_practice' %}?ids={{ wrong }}" class="btn btn-primary">{% icon "repeat" %}{% translate "Practise the ones I missed" %}</a>{% endif %}
-    <form method="post" data-confirm="{{ _("Delete this exam? The answers already counted in your practice stay.") }}">{% csrf_token %}<input type="hidden" name="action" value="delete"><button type="submit" class="icon-btn" aria-label="{% translate 'Delete' %}">{% icon "trash" %}</button></form>
+    <form method="post" data-confirm="{{ _("Delete this exam? The answers already counted in your practice stay.") }}" data-confirm-after="gone">{% csrf_token %}<input type="hidden" name="action" value="delete"><button type="submit" class="icon-btn" aria-label="{% translate 'Delete' %}">{% icon "trash" %}</button></form>
   </div>
 </header>
 

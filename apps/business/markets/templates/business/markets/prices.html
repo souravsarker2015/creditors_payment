@@ -87,7 +87,7 @@
         </div>
         <div class="ledger-end">
           {% if biz_can.enter_data %}
-          <form method="post" action="{% url 'business:price_delete' p.pk %}" data-confirm="{% translate 'Delete this price?' %}">{% csrf_token %}
+          <form method="post" action="{% url 'business:price_delete' p.pk %}" data-confirm="{% translate 'Delete this price?' %}" data-confirm-after="gone">{% csrf_token %}
             <button type="submit" class="icon-btn" aria-label="{% translate 'Delete' %}">{% include "partials/icon.html" with name="trash" %}</button>
           </form>
           {% endif %}

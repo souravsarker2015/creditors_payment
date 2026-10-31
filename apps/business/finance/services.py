@@ -55,6 +55,12 @@ class Movement:
         return self.amount > 0
 
 
+def _open(parent, name, *args):
+    """A link to the page of what a movement belongs to. The money stays in the book after that party or pond
+    is deleted, but its page has gone: the row is then plain text, not a link to "page not found"."""
+    return "" if parent.is_deleted else reverse(name, args=args)
+
+
 def movements(business, account=None):
     """Every movement of money, oldest first. `account` limits it to one."""
     rows = []
@@ -84,7 +90,7 @@ def movements(business, account=None):
             is_in = pay.direction == Direction.IN
             add(pay.date, pay.account_id, pay.amount if is_in else -pay.amount,
                 _("Baki received") if is_in else _("Baki paid"), str(pay.party),
-                reverse("business:party_statement", args=[pay.party_id]), "baki_in" if is_in else "baki_out")
+                _open(pay.party, "business:party_statement", pay.party_id), "baki_in" if is_in else "baki_out")
     if _installed("loans"):
         from apps.business.loans.models import Loan, LoanTransaction, LoanTxnKind
 
@@ -108,7 +114,7 @@ def movements(business, account=None):
 
         for lp in LeasePayment.objects.filter(business=business).select_related("pond"):
             add(lp.date, lp.account_id, -lp.amount, _("Pond lease"), str(lp.pond),
-                reverse("business:pond_detail", args=[lp.pond_id]), "expense")
+                _open(lp.pond, "business:pond_detail", lp.pond_id), "expense")
     if _installed("partners"):
         from apps.business.partners.models import PartnerEntry
 

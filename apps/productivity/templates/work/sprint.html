@@ -145,7 +145,7 @@
         <button type="submit" class="btn btn-primary">{% translate "Save" %}</button>
       </div>
     </form>
-    <form method="post" class="card-body !pt-0" data-confirm="{{ _("Delete this sprint? Its tasks are kept, just not in a sprint.") }}">{% csrf_token %}<input type="hidden" name="action" value="delete">
+    <form method="post" class="card-body !pt-0" data-confirm="{{ _("Delete this sprint? Its tasks are kept, just not in a sprint.") }}" data-confirm-after="gone">{% csrf_token %}<input type="hidden" name="action" value="delete">
       <button type="submit" class="btn btn-ghost btn-sm wsp-delete">{% icon "trash" %}{% translate "Delete the sprint" %}</button></form>
   </details>
 </div>

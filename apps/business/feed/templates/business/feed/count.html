@@ -80,7 +80,7 @@
             {% elif c.difference_kg > 0 %}<strong>{% blocktranslate with n=c.difference_bags|num %}{{ n }} bags more{% endblocktranslate %}</strong>{% if biz_can.view_finance %}<span>+{{ c.value|bdt }}</span>{% endif %}
             {% else %}<strong>{% translate "Matched" %}</strong>{% endif %}
           </span>
-          {% if biz_can.delete %}<form method="post" action="{% url 'business:feed_count_delete' c.pk %}" data-confirm="{% translate 'Remove this count? The stock goes back to what the records say.' %}">{% csrf_token %}<button type="submit" class="icon-btn" aria-label="{% translate 'Remove' %}" data-tip="{% translate 'Remove' %}">{% include "partials/icon.html" with name="trash" %}</button></form>{% endif %}
+          {% if biz_can.delete %}<form method="post" action="{% url 'business:feed_count_delete' c.pk %}" data-confirm="{% translate 'Remove this count? The stock goes back to what the records say.' %}" data-confirm-after="gone">{% csrf_token %}<button type="submit" class="icon-btn" aria-label="{% translate 'Remove' %}" data-tip="{% translate 'Remove' %}">{% include "partials/icon.html" with name="trash" %}</button></form>{% endif %}
         </div>
       </li>
       {% endfor %}

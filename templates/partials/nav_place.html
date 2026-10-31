@@ -1,0 +1,24 @@
+{% comment %}Keeps the side menu where it was from page to page (each page is a new one, and would start it at the top), with the
+page you're on always in view. Right after the menu: it's in place before the page is first drawn.{% endcomment %}
+<script>
+(function () {
+  var key = "ft-nav-place:{{ active_dashboard|default:'personal' }}", menu = document.currentScript.parentNode.querySelector(".sidebar");
+  window.FT = window.FT || {};
+  /* The current page's item in view, in the middle of whatever list scrolls it — only if it isn't in view already. */
+  FT.showNavItem = function (root) {
+    Array.prototype.forEach.call((root || document).querySelectorAll(".nav-link.is-active"), function (item) {
+      var box = item.parentNode;
+      while (box && box !== document.body && !(box.scrollHeight > box.clientHeight && /auto|scroll/.test(getComputedStyle(box).overflowY))) box = box.parentNode;
+      if (!item.offsetParent || !box || box === document.body) return;
+      var at = item.getBoundingClientRect(), seen = box.getBoundingClientRect();
+      if (at.top < seen.top || at.bottom > seen.bottom) box.scrollTop += at.top - seen.top - (box.clientHeight - item.offsetHeight) / 2;
+    });
+  };
+  if (!menu || !menu.clientHeight) return;
+  try { menu.scrollTop = Number(sessionStorage.getItem(key)) || 0; } catch (e) { /* storage off */ }
+  FT.showNavItem(menu);
+  function keep() { try { sessionStorage.setItem(key, menu.scrollTop); } catch (e) { /* storage off */ } }
+  menu.addEventListener("click", keep);
+  window.addEventListener("pagehide", keep);
+})();
+</script>

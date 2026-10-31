@@ -203,7 +203,11 @@
         },
         act: function (c, action, extra) {
           var self = this;
-          if (action === "reset" && !confirm(TEXT.resetConfirm)) return;
+          if (action === "reset") return FT.ask(TEXT.resetConfirm).then(function (sure) { if (sure) self.send(c, action, extra); });
+          this.send(c, action, extra);
+        },
+        send: function (c, action, extra) {
+          var self = this;
           Work.api(url("cardBase") + c.id + "/", Object.assign({ action: action }, extra || {})).then(function (res) {
             if (!res || !res.ok) { if (res && res.error) toast(res.error, "warn"); return; }
             if (action === "delete") { self.drop(c); Work.undoable(TEXT.deleted, res.undo); }
@@ -216,12 +220,15 @@
         },
         drop: function (c) { this.list = this.list.filter(function (x) { return x.id !== c.id; }); },
         deckAction: function (name) {
-          if (name === "delete" && !confirm(TEXT.deleteDeck)) return;
-          Work.api("/work/api/decks/" + deckId + "/", { action: name }).then(function (res) {
-            if (!res || !res.ok) return;
-            if (name === "delete") { Work.undoable(TEXT.deleted, res.undo, function () { location.reload(); }); setTimeout(function () { location.href = url("cards"); }, 400); }
-            else location.href = res.url;
-          });
+          function send() {
+            Work.api("/work/api/decks/" + deckId + "/", { action: name }).then(function (res) {
+              if (!res || !res.ok) return;
+              if (name === "delete") { Work.undoable(TEXT.deleted, res.undo, function () { location.reload(); }); setTimeout(function () { location.href = url("cards"); }, 400); }
+              else location.href = res.url;
+            });
+          }
+          if (name === "delete") FT.ask({ message: TEXT.deleteDeck, danger: true, after: "back" }).then(function (sure) { if (sure) send(); });
+          else send();
         },
       };
     });

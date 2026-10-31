@@ -34,7 +34,7 @@
       </select>
       <button type="submit" class="btn btn-primary btn-sm">{% icon "plus" %}{% translate "Use" %}</button>
     </form>
-    <form method="post" data-confirm="{{ _("Remove this template? Tasks made from it stay.") }}">{% csrf_token %}<input type="hidden" name="template" value="{{ tpl.pk }}"><input type="hidden" name="action" value="delete">
+    <form method="post" data-confirm="{{ _("Remove this template? Tasks made from it stay.") }}" data-confirm-after="gone">{% csrf_token %}<input type="hidden" name="template" value="{{ tpl.pk }}"><input type="hidden" name="action" value="delete">
       <button type="submit" class="icon-btn" aria-label="{% translate 'Remove' %}" data-tip="{% translate 'Remove' %}">{% icon "trash" %}</button></form>
   </li>
   {% endfor %}

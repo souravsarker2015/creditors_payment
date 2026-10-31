@@ -1,7 +1,7 @@
 {% load i18n work %}{# ── categories: your own tree. Pick any number for a question (or none), or one to show ── #}
 <div class="wc-backdrop wcat-back" x-show="catOpen" x-cloak x-transition.opacity @click="catDone()"></div>
 <section class="wc wcat" x-show="catOpen" x-cloak x-trap="catOpen" x-transition role="dialog" aria-modal="true" aria-labelledby="wcat-title"
-         @keydown.escape.stop="catDone()" @click.stop>
+         @keydown.escape.window="catOpen && catDone()" @click.stop>
   <header class="wcat-head">
     <h2 id="wcat-title" class="card-title">{% icon "folder" %}<span x-text="catMode === 'filter' ? '{{ _("Show a category")|escapejs }}' : '{{ _("Categories")|escapejs }}'"></span></h2>
     <button type="button" class="btn btn-ghost btn-sm" :class="catManage && 'is-on'" x-show="cats.length" @click="catManage = !catManage; catEdit = null" :aria-pressed="catManage.toString()">{% icon "edit" %}{% translate "Manage" %}</button>

@@ -62,8 +62,8 @@
             self.done = true; setTimeout(function () { self.done = false; }, 1200);
             Work.api(url, { action: "copied" });
           };
-          if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function () { prompt("", text); });
-          else prompt("", text);
+          if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function () { FT.showText(text); });
+          else FT.showText(text);
         },
         remove: function () {
           var self = this, msg = this.$el.getAttribute("data-deleted");

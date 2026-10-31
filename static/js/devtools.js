@@ -148,7 +148,7 @@
         },
         copy: function (text) {
           var done = function () { Work.toast(T.copied || "Copied"); };
-          if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function () { prompt("", text); }); else prompt("", text);
+          if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function () { FT.showText(text); }); else FT.showText(text);
         },
         runJson: function (indent) {
           this.jsonError = "";

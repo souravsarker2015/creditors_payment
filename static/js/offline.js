@@ -247,8 +247,9 @@
                         rm.type = "button"; rm.className = "btn btn-ghost btn-sm";
                         rm.textContent = t("remove", "Remove");
                         rm.addEventListener("click", function () {
-                            if (!confirm(t("removeAsk", "Remove this entry from the phone? It hasn't been saved in the app."))) return;
-                            drop(e.key).then(function () { li.remove(); paint(); if (!ul.children.length) close(); });
+                            FT.ask({ message: t("removeAsk", "Remove this entry from the phone? It hasn't been saved in the app."), danger: true, after: "gone", ok: t("remove", "Remove") }).then(function (sure) {
+                                if (sure) drop(e.key).then(function () { li.remove(); paint(); if (!ul.children.length) close(); });
+                            });
                         });
                         actions.appendChild(rm);
                         ul.appendChild(li);

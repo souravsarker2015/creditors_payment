@@ -855,7 +855,11 @@
         },
         act: function (action) {
           var self = this; if (this.busy) return;
-          if (action === "clear" && !window.confirm(t("clearPlan", "Take every open task off the timeline? They stay on the day's list."))) return;
+          if (action === "clear") return FT.ask(t("clearPlan", "Take every open task off the timeline? They stay on the day's list.")).then(function (sure) { if (sure) self.send(action); });
+          this.send(action);
+        },
+        send: function (action) {
+          var self = this;
           this.busy = true;
           api(CFG.urls.planAction, { action: action, date: this.plan.date }).then(function (res) {
             self.busy = false;
@@ -1199,10 +1203,12 @@
           var self = this;
           this.$el.addEventListener("click", function (e) {
             var b = e.target.closest("[data-remove-file]"); if (!b) return;
-            if (!confirm(t("removeFile", "Remove this file? It can't be brought back."))) return;
-            api(CFG.urls.fileBase + b.getAttribute("data-remove-file") + "/delete/", {}).then(function (res) {
-              if (!res.ok) return toast(res.error, "warn");
-              b.closest("[data-file]").remove(); self.$refs.count.textContent = res.count || "";
+            FT.ask({ message: t("removeFile", "Remove this file? It can't be brought back."), danger: true, ok: t("remove", "Remove") }).then(function (sure) {
+              if (!sure) return;
+              api(CFG.urls.fileBase + b.getAttribute("data-remove-file") + "/delete/", {}).then(function (res) {
+                if (!res.ok) return toast(res.error, "warn");
+                b.closest("[data-file]").remove(); self.$refs.count.textContent = res.count || "";
+              });
             });
           });
         },
@@ -1229,19 +1235,23 @@
     Alpine.data("workSavedViews", function (query) {
       return {
         save: function () {
-          var name = (prompt(t("viewName", "Name this view:")) || "").trim();
-          if (!name) return;
-          api(CFG.urls.viewSave, { name: name, query: query }).then(function (res) {
-            if (res.ok && res.url) { toast(t("viewSaved", "View saved")); location.href = res.url; }
-            else if (res.error) toast(res.error, "warn");
+          FT.ask({ title: t("viewName", "Name this view:"), input: {} }).then(function (name) {
+            name = (name || "").trim();
+            if (!name) return;
+            api(CFG.urls.viewSave, { name: name, query: query }).then(function (res) {
+              if (res.ok && res.url) { toast(t("viewSaved", "View saved")); location.href = res.url; }
+              else if (res.error) toast(res.error, "warn");
+            });
           });
         },
         drop: function (id) {
-          if (!confirm(t("viewDelete", "Remove this saved view?"))) return;
           var chip = this.$root.querySelector('[data-view="' + id + '"]'), active = chip && chip.classList.contains("is-active");
-          api(CFG.urls.viewBase + id + "/", { action: "delete" }).then(function (res) {
-            if (!res.ok) return;
-            if (active) location.href = CFG.urls.tasks; else if (chip) chip.remove();
+          FT.ask({ message: t("viewDelete", "Remove this saved view?"), danger: true, after: "gone", ok: t("remove", "Remove") }).then(function (sure) {
+            if (!sure) return;
+            api(CFG.urls.viewBase + id + "/", { action: "delete" }).then(function (res) {
+              if (!res.ok) return;
+              if (active) location.href = CFG.urls.tasks; else if (chip) chip.remove();
+            });
           });
         },
       };
@@ -1279,9 +1289,10 @@
           this.$el.querySelectorAll("[data-md-text]").forEach(Work.paintMarkdown);
           this.$el.addEventListener("click", function (e) {
             var b = e.target.closest("[data-delete-comment]"); if (!b) return;
-            if (!confirm(t("deleteComment", "Delete this comment?"))) return;
             var li = b.closest("li");
-            api(CFG.urls.commentBase + b.getAttribute("data-delete-comment") + "/delete/", {}).then(function (res) { if (res.ok && li) li.remove(); });
+            FT.ask({ message: t("deleteComment", "Delete this comment?"), danger: true, after: "gone" }).then(function (sure) {
+              if (sure) api(CFG.urls.commentBase + b.getAttribute("data-delete-comment") + "/delete/", {}).then(function (res) { if (res.ok && li) li.remove(); });
+            });
           });
         },
         send: function () {
@@ -1346,18 +1357,24 @@
             .catch(function () { self.versions = []; }).then(function () { self.histLoading = false; });
         },
         restoreVersion: function (v) {
-          if (!v || !confirm(t("restoreNote", "Bring back this version? What's there now is kept as a version too."))) return;
+          if (!v) return;
           var self = this;
-          api(CFG.urls.noteBase + this.id + "/", { action: "restore", version: v.id }).then(function (res) {
-            if (res.ok && res.url) { store(self.draftKey, null); location.href = res.url; }
+          FT.ask(t("restoreNote", "Bring back this version? What's there now is kept as a version too.")).then(function (sure) {
+            if (!sure) return;
+            api(CFG.urls.noteBase + self.id + "/", { action: "restore", version: v.id }).then(function (res) {
+              if (res.ok && res.url) { store(self.draftKey, null); location.href = res.url; }
+            });
           });
         },
         forgetVersion: function (v) {
           var self = this;
-          api(CFG.urls.noteBase + this.id + "/", { action: "forget", version: v.id }).then(function (res) {
-            if (!res.ok) return;
-            self.versions = self.versions.filter(function (x) { return x.id !== v.id; });
-            if (self.shown && self.shown.id === v.id) self.shown = self.versions[0] || null;
+          FT.ask({ message: t("forgetVersion", "Delete this version?"), danger: true, after: "gone" }).then(function (sure) {
+            if (!sure) return;
+            api(CFG.urls.noteBase + self.id + "/", { action: "forget", version: v.id }).then(function (res) {
+              if (!res.ok) return;
+              self.versions = self.versions.filter(function (x) { return x.id !== v.id; });
+              if (self.shown && self.shown.id === v.id) self.shown = self.versions[0] || null;
+            });
           });
         },
         /* Put a diagram in the note: its picture, linking to it (it stays up to date as the diagram changes) */
@@ -1629,8 +1646,8 @@
   }
   function copyText(text) {
     var done = function () { toast(t("copied", "Copied")); };
-    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function () { prompt("", text); });
-    else prompt("", text);
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function () { FT.showText(text); });
+    else FT.showText(text);
   }
   ["change", "input"].forEach(function (type) {     // a task made a bug gets a bug report's headings, if its notes are empty
     d.addEventListener(type, function (e) {
@@ -1890,13 +1907,16 @@
   function bulkRun(action, value) {
     var ids = Array.prototype.map.call(bulkRoot().querySelectorAll(".wt-task.is-selected"), function (r) { return r.getAttribute("data-task"); });
     if (!ids.length) { toast(t("pickSome", "Select some tasks first."), "warn"); return; }
-    if (action === "delete" && !confirm(t("confirmBulkDelete", "Delete the selected tasks?"))) return;
-    if (action === "done") play(CFG.sound ? "chime" : "");
-    api(CFG.urls.taskBulk, { ids: ids.join(","), action: action, value: value || "" }).then(function (res) {
-      if (!res.ok) { toast(res.error || t("notSaved", "Not saved."), "warn"); return; }
-      toast(t("changed", "Updated") + (res.count ? " · " + res.count : ""));
-      if (!res.queued) setTimeout(function () { location.reload(); }, 350);
-    });
+    function send() {
+      if (action === "done") play(CFG.sound ? "chime" : "");
+      api(CFG.urls.taskBulk, { ids: ids.join(","), action: action, value: value || "" }).then(function (res) {
+        if (!res.ok) { toast(res.error || t("notSaved", "Not saved."), "warn"); return; }
+        toast(t("changed", "Updated") + (res.count ? " · " + res.count : ""));
+        if (!res.queued) setTimeout(function () { location.reload(); }, 350);
+      });
+    }
+    if (action === "delete") FT.ask({ message: t("confirmBulkDelete", "Delete the selected tasks?"), danger: true, after: "back" }).then(function (sure) { if (sure) send(); });
+    else send();
   }
   d.addEventListener("click", function (e) {
     var el = e.target.closest("[data-bulk-toggle], [data-bulk-cancel], [data-bulk-all], button[data-bulk]");
@@ -2066,8 +2086,8 @@
     e.preventDefault(); e.stopPropagation();
     var text = pre.textContent.replace(/\n$/, "");
     var done = function () { b.classList.add("is-done"); setTimeout(function () { b.classList.remove("is-done"); }, 1300); toast(t("copied", "Copied")); };
-    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function () { prompt("", text); });
-    else prompt("", text);
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function () { FT.showText(text); });
+    else FT.showText(text);
   });
 
   /* ── Mermaid: diagrams written as text (Diagrams, and ```mermaid blocks in notes) ── */
