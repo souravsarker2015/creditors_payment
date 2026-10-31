@@ -107,15 +107,13 @@ class AccountBookLinkTests(MoneyBase):
             self.assertTrue(url, title)
             self.assertEqual(self.client.get(url).status_code, 200, title)
 
-    def test_a_row_of_something_deleted_is_no_link_and_its_money_stays(self):
+    def test_a_row_of_something_deleted_still_opens_and_its_money_stays(self):
         before = self.book().context["closing"]
         self.party.soft_delete()
         self.pond.soft_delete()
-        page = self.book()
-        self.assertEqual(page.context["closing"], before)
-        self.assertEqual(set(self.links().values()), {""})
-        self.assertContains(page, "Karim")
-        self.assertNotContains(page, f"/business/baki/party/{self.party.pk}/")
+        self.assertEqual(self.book().context["closing"], before)
+        for title, url in self.links().items():
+            self.assertContains(self.client.get(url), "is deleted", msg_prefix=title)
 
 
 class TransferTests(MoneyBase):

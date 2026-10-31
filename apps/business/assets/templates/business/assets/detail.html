@@ -68,7 +68,7 @@
         </div>
         <div class="ledger-end">
           {% if s.cost and biz_can.view_finance %}<span class="party-bal"><strong>{{ s.cost|bdt }}</strong></span>{% endif %}
-          {% if biz_can.enter_data %}{% url 'business:equipment_service_edit' s.pk as edit_url %}{% url 'business:equipment_service_delete' s.pk as delete_url %}{% translate "Delete this entry?" as confirm_text %}
+          {% if biz_can.enter_data %}{% url 'business:equipment_service_edit' s.pk as edit_url %}{% url 'business:equipment_service_delete' s.pk as delete_url %}{% translate "Delete this entry? The equipment's cost and the account's balance are worked out again." as confirm_text %}
           {% if biz_can.delete %}{% include "partials/row_menu.html" with edit_url=edit_url delete_url=delete_url confirm=confirm_text up=forloop.last %}{% else %}<a href="{{ edit_url }}" class="icon-btn" aria-label="{% translate 'Edit' %}">{% include "partials/icon.html" with name="edit" %}</a>{% endif %}{% endif %}
         </div>
       </li>

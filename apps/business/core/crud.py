@@ -105,6 +105,9 @@ def money_field(f, affix="৳"):
 
 # ── Master pages ────────────────────────────────────────────────────────────
 
+MASTERS = {}    # "business:ponds_delete": the Master, for what the delete box says about a record (apps/core/delete_check.py)
+
+
 @dataclass
 class Master:
     name: str                       # URL name, e.g. "species" → business:species, business:species_add …
@@ -143,6 +146,7 @@ class Master:
     # views -------------------------------------------------------------------
     def urls(self):
         guard = business_access_required
+        MASTERS[f"business:{self.name}_delete"] = self
         return [
             path("", guard(capability=self.view_cap)(self.list_view), name=self.name),
             path("add/", guard(capability=self.edit_cap)(self.form_view), name=f"{self.name}_add"),

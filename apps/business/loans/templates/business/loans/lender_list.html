@@ -39,7 +39,7 @@
                 <a href="{% url 'business:loan_add' %}?lender={{ l.pk }}" class="menu-item" role="menuitem">{% include "partials/icon.html" with name="plus" %}{% translate "New loan from them" %}</a>
                 <a href="{% url 'business:lender_edit' l.pk %}" class="menu-item" role="menuitem">{% include "partials/icon.html" with name="edit" %}{% translate "Edit" %}</a>
                 {% if biz_can.delete %}
-                <form method="post" action="{% url 'business:lender_delete' l.pk %}" data-confirm="{{ _("Delete this lender? You can restore it from Deleted.") }}">{% csrf_token %}
+                <form method="post" action="{% url 'business:lender_delete' l.pk %}" data-confirm-check data-confirm="{{ _("Delete this lender? You can restore it from Deleted.") }}">{% csrf_token %}
                   <button type="submit" class="menu-item is-danger" role="menuitem">{% include "partials/icon.html" with name="trash" %}{% translate "Delete" %}</button>
                 </form>
                 {% endif %}

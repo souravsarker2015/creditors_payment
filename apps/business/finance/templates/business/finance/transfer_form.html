@@ -10,7 +10,7 @@
       <p class="page-subtitle">{% translate "Between your own accounts — cash to bank, bank to bKash. It isn't income or spending." %}</p>
     </div>
     {% if obj and biz_can.delete %}
-    <div class="page-actions"><form method="post" action="{% url 'business:transfer_delete' obj.pk %}" data-confirm="{% translate 'Delete this transfer?' %}" data-confirm-after="gone">{% csrf_token %}<button type="submit" class="icon-btn" aria-label="{% translate 'Delete' %}" data-tip="{% translate 'Delete' %}">{% include "partials/icon.html" with name="trash" %}</button></form></div>
+    <div class="page-actions"><form method="post" action="{% url 'business:transfer_delete' obj.pk %}" data-confirm="{% translate 'Delete this transfer? The money goes back to the account it came from.' %}" data-confirm-after="gone">{% csrf_token %}<button type="submit" class="icon-btn" aria-label="{% translate 'Delete' %}" data-tip="{% translate 'Delete' %}">{% include "partials/icon.html" with name="trash" %}</button></form></div>
     {% endif %}
   </header>
   <form method="post" class="stack" novalidate>

@@ -142,7 +142,7 @@
     </div>
     <div class="form-actions"><button type="submit" class="btn btn-primary">{% icon "check" %}{% translate "Save" %}</button></div>
   </form>
-  <form method="post" class="card-body wpq-danger" data-confirm="{{ _("Delete this topic and all its questions? You can bring them back from Recently deleted.") }}">{% csrf_token %}<input type="hidden" name="action" value="delete">
+  <form method="post" action="{% url 'work:prep_topic' t.pk %}" class="card-body wpq-danger" data-confirm-check data-confirm="{{ _("Delete this topic and all its questions? You can bring them back from Recently deleted.") }}">{% csrf_token %}<input type="hidden" name="action" value="delete">
     <button type="submit" class="btn btn-ghost btn-sm">{% icon "trash" %}{% translate "Delete the topic and its questions" %}</button></form>
 </details>
 {% endblock %}

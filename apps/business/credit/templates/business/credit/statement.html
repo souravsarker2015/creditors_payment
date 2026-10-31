@@ -17,9 +17,11 @@
       <button type="button" class="btn btn-secondary" onclick="window.print()">{% include "partials/icon.html" with name="printer" %}{% translate "Print" %}</button>
       {% if sms %}<a href="{{ sms }}" class="btn btn-secondary" data-remind="{% url 'business:party_reminded' party.pk %}">{% include "partials/icon.html" with name="mail" %}{% translate "SMS" %}</a>{% endif %}
       {% if wa %}<a href="{{ wa }}" target="_blank" rel="noopener" class="btn btn-secondary" data-remind="{% url 'business:party_reminded' party.pk %}">{% include "partials/icon.html" with name="chat" %}{% translate "WhatsApp" %}</a>{% endif %}
-      {% if biz_can.enter_data %}<a href="{% if party.is_supplier %}{% url 'business:suppliers_edit' party.pk %}{% else %}{% url 'business:buyers_edit' party.pk %}{% endif %}?next={{ request.path|urlencode }}" class="icon-btn" aria-label="{% translate 'Edit details' %}" data-tip="{% translate 'Edit details' %}">{% include "partials/icon.html" with name="edit" %}</a>{% endif %}
+      {% if biz_can.enter_data and not party.is_deleted %}<a href="{% if party.is_supplier %}{% url 'business:suppliers_edit' party.pk %}{% else %}{% url 'business:buyers_edit' party.pk %}{% endif %}?next={{ request.path|urlencode }}" class="icon-btn" aria-label="{% translate 'Edit details' %}" data-tip="{% translate 'Edit details' %}">{% include "partials/icon.html" with name="edit" %}</a>{% endif %}
     </div>
   </header>
+
+  {% if party.is_deleted %}{% translate "This person is deleted. Their statement is kept. Restore them to work with it again." as note %}{% if party.is_supplier %}{% url 'business:suppliers_restore' party.pk as restore_url %}{% else %}{% url 'business:buyers_restore' party.pk as restore_url %}{% endif %}{% include "business/partials/deleted_note.html" with text=note restore_url=restore_url %}{% endif %}
 
   <section class="hero no-print">
     <div class="hero-inner">
@@ -31,7 +33,7 @@
           {% if led.last_payment %}{% if led.oldest_days is not None %} · {% endif %}{% blocktranslate with date=led.last_payment|date:"j M Y" %}Last payment {{ date }}{% endblocktranslate %}{% endif %}
         </p>
       </div>
-      {% if biz_can.enter_data %}
+      {% if biz_can.enter_data and not party.is_deleted %}
       <div class="flex flex-wrap gap-2">
         {% if led.balance >= 0 %}<a href="{% url 'business:payment_add' %}?party={{ party.pk }}&dir=in" class="btn btn-primary">{% include "partials/icon.html" with name="arrow-down" %}{% translate "Receive money" %}</a>{% endif %}
         {% if led.balance <= 0 %}<a href="{% url 'business:payment_add' %}?party={{ party.pk }}&dir=out" class="btn btn-primary">{% include "partials/icon.html" with name="arrow-up" %}{% translate "Pay money" %}</a>{% endif %}
@@ -61,7 +63,7 @@
           </div>
           <div class="ledger-end">
             <span class="ledger-amount">{{ e.open|bdt }}</span>
-            {% if biz_can.enter_data and e.kind != "opening" and e.kind != "pay_in" and e.kind != "pay_out" and e.kind != "supply" %}<a href="{% url 'business:payment_add' %}?party={{ party.pk }}&dir={% if led.balance > 0 %}in{% else %}out{% endif %}&against={{ e.kind }}:{{ e.pk }}" class="btn btn-soft btn-sm ml-2">{% if led.balance > 0 %}{% translate "Receive" %}{% else %}{% translate "Pay" %}{% endif %}</a>{% endif %}
+            {% if biz_can.enter_data and not party.is_deleted and e.kind != "opening" and e.kind != "pay_in" and e.kind != "pay_out" and e.kind != "supply" %}<a href="{% url 'business:payment_add' %}?party={{ party.pk }}&dir={% if led.balance > 0 %}in{% else %}out{% endif %}&against={{ e.kind }}:{{ e.pk }}" class="btn btn-soft btn-sm ml-2">{% if led.balance > 0 %}{% translate "Receive" %}{% else %}{% translate "Pay" %}{% endif %}</a>{% endif %}
           </div>
         </li>
         {% endfor %}
@@ -81,7 +83,7 @@
             <p class="font-semibold">{{ party.follow_up_on|date:"l, j M Y" }}{% with d=party.follow_up_on|days_until %} · <span class="{% if d < 0 %}tone-critical{% endif %}">{% if d < 0 %}{% blocktranslate count counter=d|absolute %}{{ counter }} day late{% plural %}{{ counter }} days late{% endblocktranslate %}{% elif d == 0 %}{% translate "today" %}{% else %}{% blocktranslate count counter=d %}in {{ counter }} day{% plural %}in {{ counter }} days{% endblocktranslate %}{% endif %}</span>{% endwith %}</p>
             {% if party.follow_up_note %}<p class="help">{{ party.follow_up_note }}</p>{% endif %}
           </div>
-          {% if biz_can.enter_data %}
+          {% if biz_can.enter_data and not party.is_deleted %}
           <div class="flex gap-1">
             <button type="button" class="btn btn-ghost btn-sm" @click="edit = true">{% translate "Change" %}</button>
             <form method="post" action="{% url 'business:party_follow_up' party.pk %}">{% csrf_token %}<button name="clear" value="1" class="btn btn-ghost btn-sm">{% translate "Done" %}</button></form>
@@ -89,7 +91,7 @@
           {% endif %}
         </div>
         {% endif %}
-        {% if biz_can.enter_data %}
+        {% if biz_can.enter_data and not party.is_deleted %}
         <form method="post" action="{% url 'business:party_follow_up' party.pk %}" class="form-stack" {% if party.follow_up_on %}x-show="edit" x-cloak{% endif %}
               x-data="{ inDays(n) { var d = new Date(); d.setDate(d.getDate() + n); var v = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); var i = $el.querySelector('[name=follow_up_on]'); i._flatpickr ? i._flatpickr.setDate(v, true) : (i.value = v); } }">
           {% csrf_token %}

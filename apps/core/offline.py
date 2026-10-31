@@ -28,6 +28,7 @@ from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.urls import NoReverseMatch, reverse
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 
 KEY, USER, REPLAY = "_ft_key", "_ft_user", "HTTP_X_FT_REPLAY"
@@ -106,7 +107,7 @@ class OfflineMiddleware:
         # Not saved (errors on the form, signed out, refused…): forget the key so it can be sent again.
         receipt.delete()
         if not replay:
-            return response
+            return _already_gone(request) if status == 404 else response
         _drop_messages(request)
         if _to_login(response):
             return _answer(request, False, "signin")
@@ -122,6 +123,16 @@ class OfflineMiddleware:
         if (response.status_code == 200 and "text/html" in (response.get("Content-Type") or "")
                 and not request.path.startswith(NOT_OFFLINE) and "export" not in request.GET):
             response["X-FT-Offline"] = "1"
+
+
+def _already_gone(request):
+    """Sent again from an old page or a second window, for something that's no longer there: that's what was
+    wanted (or there's nothing left to save), so back to the page it came from rather than "page not found"."""
+    page = request.POST.get("_ft_page", "")
+    if not url_has_allowed_host_and_scheme(page, {request.get_host()}):
+        page = "/"
+    messages.info(request, _("That's already gone: it was deleted earlier, maybe in another window."))
+    return redirect(page)
 
 
 def _to_login(response):
@@ -143,7 +154,7 @@ def _drop_messages(request):
 # endpoints, and buttons that do something (empty, copy, cancel…).
 SKIP_NAMES = re.compile(
     r"(^admin:|^djdt:|import|template|login|logout|signup|password|account_settings|preferences|my_data|offline|backup|"
-    r"^search$|manifest|service_worker|switch_business|default_dashboard|export|_ics$|^business:setup$|"
+    r"^search$|^delete_check$|manifest|service_worker|switch_business|default_dashboard|export|_ics$|^business:setup$|"
     r"preview|quick|empty|copy|cancel|access_admin|budget_edit|two_factor|^user_|:api_|^work:share$|^work:note_go$|^work:note_today$|_weather$|^sign_out|^money_reminders$|^work:diagram_new$|^work:deck_new$|^work:exam_new$)"
 )
 MORE_LIMIT = 400

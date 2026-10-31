@@ -61,7 +61,7 @@
         </div>
         <div class="ledger-end">
           <span class="ledger-amount" data-tone="{% if e.is_in %}good{% else %}warn{% endif %}">{% if e.is_in %}+{% else %}−{% endif %}{{ e.amount|bdt }}</span>
-          {% url 'business:partner_entry_edit' e.pk as edit_url %}{% url 'business:partner_entry_delete' e.pk as delete_url %}{% translate "Delete this entry?" as confirm_text %}
+          {% url 'business:partner_entry_edit' e.pk as edit_url %}{% url 'business:partner_entry_delete' e.pk as delete_url %}{% translate "Delete this entry? The partner's money and the account's balance are worked out again." as confirm_text %}
           {% if biz_can.delete %}{% include "partials/row_menu.html" with edit_url=edit_url delete_url=delete_url confirm=confirm_text up=forloop.last %}{% else %}<a href="{{ edit_url }}" class="icon-btn" aria-label="{% translate 'Edit' %}">{% include "partials/icon.html" with name="edit" %}</a>{% endif %}
         </div>
       </li>

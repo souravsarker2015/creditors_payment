@@ -16,7 +16,7 @@
         {% if cycle.ended_on %}<span class="meta-item">{% include "business/partials/icon.html" with name="lock" %}{% blocktranslate with date=cycle.ended_on|date:"j M Y" %}Finished {{ date }}{% endblocktranslate %}</span>{% endif %}
       </div>
     </div>
-    <div class="page-actions">
+    <div class="page-actions">{% if not cycle.is_deleted %}
       <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
         <button type="button" class="btn btn-secondary" @click="open = !open" :aria-expanded="open">{% translate "Cycle" %}{% include "partials/icon.html" with name="chevron-down" %}</button>
         <div class="menu" x-show="open" x-cloak x-transition.opacity.scale.95.duration.100ms role="menu">
@@ -25,13 +25,15 @@
           {% if biz_can.enter_data and cycle.is_running %}<button type="button" class="menu-item" role="menuitem" @click="open = false; modal = 'move'">{% include "business/partials/icon.html" with name="swap" %}{% translate "Move fish to another pond" %}</button>{% endif %}
           {% if biz_can.enter_data and cycle.is_running %}<button type="button" class="menu-item" role="menuitem" @click="open = false; modal = 'finish'">{% include "business/partials/icon.html" with name="lock" %}{% translate "Finish this cycle" %}</button>{% endif %}
           {% if biz_can.enter_data and not cycle.is_running %}<form method="post" action="{% url 'business:cycle_finish' cycle.pk %}">{% csrf_token %}<button type="submit" class="menu-item" role="menuitem">{% include "partials/icon.html" with name="restore" %}{% translate "Reopen cycle" %}</button></form>{% endif %}
-          {% if biz_can.delete %}<form method="post" action="{% url 'business:cycle_delete' cycle.pk %}" data-confirm="{% translate 'Delete this cycle with everything recorded in it?' %}" data-confirm-after="gone">{% csrf_token %}<button type="submit" class="menu-item is-danger" role="menuitem">{% include "partials/icon.html" with name="trash" %}{% translate "Delete cycle" %}</button></form>{% endif %}
+          {% if biz_can.delete %}<form method="post" action="{% url 'business:cycle_delete' cycle.pk %}" data-confirm="{% translate "Delete this cycle with everything recorded in it? You can restore it from the pond's page." %}" data-confirm-check>{% csrf_token %}<button type="submit" class="menu-item is-danger" role="menuitem">{% include "partials/icon.html" with name="trash" %}{% translate "Delete cycle" %}</button></form>{% endif %}
         </div>
       </div>
-    </div>
+    {% endif %}</div>
   </header>
 
-  {% if cycle.is_running and biz_can.enter_data %}
+  {% if cycle.is_deleted %}{% translate "This cycle is deleted. Everything recorded in it is still here. Restore it to work with it again." as note %}{% url 'business:cycle_restore' cycle.pk as restore_url %}{% include "business/partials/deleted_note.html" with text=note restore_url=restore_url %}{% endif %}
+
+  {% if cycle.is_running and biz_can.enter_data and not cycle.is_deleted %}
   <nav class="quick-actions quick-actions-9" aria-label="{% translate 'Record' %}">
     <button type="button" class="quick-action" @click="modal = 'feeding'">{% include "business/partials/icon.html" with name="banknotes" %}<span>{% translate "Feed" %}</span></button>
     <button type="button" class="quick-action" @click="modal = 'weighing'">{% include "business/partials/icon.html" with name="scale" %}<span>{% translate "Weigh" %}</span></button>
@@ -105,7 +107,7 @@
     <div class="card-header">
       <div><h2 class="card-title">{% translate "Plan vs now" %}{% include "business/partials/tip.html" with text=_("The targets you set for this cycle, against where it stands. Green is on track, amber is slipping, red is well off.") %}</h2>
         <p class="card-subtitle">{% translate "How the cycle is going against its targets." %}</p></div>
-      {% if biz_can.enter_data %}<a href="{% url 'business:cycle_targets' cycle.pk %}" class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="edit" %}{% translate "Change" %}</a>{% endif %}
+      {% if biz_can.enter_data and not cycle.is_deleted %}<a href="{% url 'business:cycle_targets' cycle.pk %}" class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="edit" %}{% translate "Change" %}</a>{% endif %}
     </div>
     <div class="tgt-wrap">
       <table class="tgt-table">
@@ -122,7 +124,7 @@
       </table>
     </div>
   </section>
-  {% elif cycle.is_running and biz_can.enter_data %}
+  {% elif cycle.is_running and biz_can.enter_data and not cycle.is_deleted %}
   <a href="{% url 'business:cycle_targets' cycle.pk %}" class="callout tgt-invite" data-tone="info">{% include "partials/icon.html" with name="target" %}<div class="flex-1"><p class="callout-title">{% translate "Set targets for this cycle" %}</p><p>{% translate "Selling size, survival, FCR, price and a budget — then see at a glance whether the pond is on track." %}</p></div>{% include "partials/icon.html" with name="chevron-right" %}</a>
   {% endif %}
 

@@ -135,7 +135,7 @@ def _parse(value):
 @business_access_required(capability="view_finance")
 def statement_view(request, pk):
     b = request.business
-    party = get_object_or_404(Party, pk=pk, business=b)
+    party = get_object_or_404(Party.all_objects, pk=pk, business=b)    # (a deleted one says so, and can be restored)
     led = services.ledger(party)
     today = date.today()
     periods = _periods(today)

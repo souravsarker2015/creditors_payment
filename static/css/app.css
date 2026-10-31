@@ -3328,10 +3328,12 @@ a.att-mark:hover { outline: 2px solid var(--tone); outline-offset: 1px; }
 .ask[data-tone="danger"] .ask-icon [data-for="danger"], .ask[data-tone="plain"] .ask-icon [data-for="plain"] { display: block; }
 .ask-title { align-self: center; min-width: 0; font: 700 1.0625rem/1.35 var(--font-heading); overflow-wrap: anywhere; }
 .ask-text { font-size: 0.9375rem; line-height: 1.5; color: var(--text-secondary); overflow-wrap: anywhere; }
+.ask-lines { display: flex; flex-direction: column; gap: 0.25rem; margin: 0; padding: 0.625rem 0.75rem 0.625rem 1.75rem; border-radius: 0.625rem; list-style: disc; font-size: 0.875rem; line-height: 1.45; color: var(--text-primary); background: var(--status-warn-bg, var(--surface-sunken)); overflow-wrap: anywhere; }
 .ask-note { padding: 0.5rem 0.75rem; border-radius: 0.625rem; font-size: 0.8125rem; font-weight: 600; line-height: 1.4; color: var(--text-secondary); background: var(--surface-sunken); }
 .ask-note[data-after="gone"] { color: var(--status-critical); background: var(--status-critical-bg); }
 .ask-foot { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.25rem; }
 .ask-foot .btn { min-height: 2.5rem; }
+.ask-foot .btn[disabled].is-submitting { opacity: .8; }
 @media (max-width: 639.98px) {
     .ask { width: 100%; max-width: none; margin: auto 0 0; border-radius: 1.25rem 1.25rem 0 0; border-width: 1px 0 0; padding-bottom: calc(1.25rem + env(safe-area-inset-bottom)); }
     .ask-foot .btn { flex: 1 1 8rem; }

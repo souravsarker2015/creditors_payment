@@ -6749,8 +6749,9 @@ msgstr "%(name)s-কে %(amount)s দেওয়া হলো।"
 msgid "They still owe %(amount)s."
 msgstr "এখনো পাওনা %(amount)s।"
 
+#, python-format
 msgid "You still owe %(amount)s."
-msgstr "এখনো দেনা %(amount)s।"
+msgstr "আপনি এখনো %(amount)s দেবেন।"
 
 msgid "All settled."
 msgstr "সব হিসাব মিটে গেছে।"
@@ -25390,3 +25391,120 @@ msgstr "মুছে ফেলা তালিকা থেকে এটি ফ�
 
 msgid "You can bring it back from Recently deleted for 30 days."
 msgstr "সম্প্রতি মুছে ফেলা থেকে ৩০ দিনের মধ্যে এটি ফিরিয়ে আনতে পারবেন।"
+
+msgid "Deleting…"
+msgstr "মুছে ফেলা হচ্ছে…"
+
+msgid "Please wait…"
+msgstr "একটু অপেক্ষা করুন…"
+
+#, python-format
+msgid "Delete “%(name)s”? Records that already use it keep it, and you can restore it from Deleted."
+msgstr "“%(name)s” মুছবেন? যেসব হিসাবে এটি আছে সেগুলোতে থেকে যাবে, আর 'মুছে ফেলা' থেকে ফিরিয়ে আনতে পারবেন।"
+
+msgid "This pond is deleted. Its cycles, sales and costs are all still here. Restore it to work with it again."
+msgstr "এই পুকুর মুছে ফেলা হয়েছে। এর চক্র, বিক্রি ও খরচ সবই এখানে আছে। আবার কাজ করতে ফিরিয়ে আনুন।"
+
+msgid "This account is deleted. Its balance no longer counts in your total. Restore it to work with it again."
+msgstr "এই হিসাব মুছে ফেলা হয়েছে। এর ব্যালেন্স আর মোট টাকায় ধরা হচ্ছে না। আবার কাজ করতে ফিরিয়ে আনুন।"
+
+msgid "This cycle is deleted. Everything recorded in it is still here. Restore it to work with it again."
+msgstr "এই চক্র মুছে ফেলা হয়েছে। এতে লেখা সবকিছু এখানে আছে। আবার কাজ করতে ফিরিয়ে আনুন।"
+
+msgid "This person is deleted. Their statement is kept. Restore them to work with it again."
+msgstr "এই ব্যক্তিকে মুছে ফেলা হয়েছে। তার হিসাব রাখা আছে। আবার কাজ করতে ফিরিয়ে আনুন।"
+
+msgid "Deleted cycles"
+msgstr "মুছে ফেলা চক্র"
+
+msgid "Open one to restore it."
+msgstr "ফিরিয়ে আনতে একটি খুলুন।"
+
+msgid "Delete this cycle with everything recorded in it? You can restore it from the pond's page."
+msgstr "এই চক্র ও এতে লেখা সবকিছু মুছবেন? পুকুরের পাতা থেকে ফিরিয়ে আনতে পারবেন।"
+
+msgid "Cycle deleted. You can restore it from the pond's page."
+msgstr "চক্র মুছে ফেলা হয়েছে। পুকুরের পাতা থেকে ফিরিয়ে আনতে পারবেন।"
+
+msgid "Cycle restored."
+msgstr "চক্র ফিরিয়ে আনা হয়েছে।"
+
+msgid "Delete this entry? The cycle's stock and costs are worked out again."
+msgstr "এই এন্ট্রি মুছবেন? চক্রের মজুদ ও খরচ আবার হিসাব হবে।"
+
+msgid "Delete this entry? The partner's money and the account's balance are worked out again."
+msgstr "এই এন্ট্রি মুছবেন? অংশীদারের টাকা ও হিসাবের ব্যালেন্স আবার হিসাব হবে।"
+
+msgid "Delete this entry? The equipment's cost and the account's balance are worked out again."
+msgstr "এই এন্ট্রি মুছবেন? যন্ত্রের খরচ ও হিসাবের ব্যালেন্স আবার হিসাব হবে।"
+
+msgid "Delete this purchase? The stock and the account's balance are worked out again."
+msgstr "এই কেনাকাটাটি মুছবেন? মজুদ ও হিসাবের ব্যালেন্স আবার হিসাব হবে।"
+
+msgid "Delete this payment? What's left on the lease goes up, and the account's balance is worked out again."
+msgstr "এই পরিশোধ মুছবেন? ইজারার বাকি বাড়বে, আর হিসাবের ব্যালেন্স আবার হিসাব হবে।"
+
+msgid "Delete this transfer? The money goes back to the account it came from."
+msgstr "এই স্থানান্তর মুছবেন? টাকা যে হিসাব থেকে এসেছিল সেখানে ফিরে যাবে।"
+
+msgid "Remove this rate change? The schedule will be worked out again."
+msgstr "এই হার পরিবর্তন বাদ দেবেন? কিস্তির তালিকা আবার হিসাব হবে।"
+
+msgid "It may have been deleted, or the link has a mistake in it."
+msgstr "হয়তো এটি মুছে ফেলা হয়েছে, অথবা লিংকে ভুল আছে।"
+
+msgid "That's already gone: it was deleted earlier, maybe in another window."
+msgstr "এটি আগেই মুছে গেছে, হয়তো অন্য কোনো উইন্ডো থেকে।"
+
+#, python-format
+msgid "Fish are in this pond now (%(cycle)s)."
+msgstr "এই পুকুরে এখন মাছ আছে (%(cycle)s)।"
+
+#, python-format
+msgid "%(amount)s of its lease is still unpaid."
+msgstr "এর ইজারার %(amount)s এখনো বাকি।"
+
+#, python-format
+msgid "Its balance is %(amount)s. That stops counting in your total money."
+msgstr "এর ব্যালেন্স %(amount)s। এটি আর আপনার মোট টাকায় ধরা হবে না।"
+
+msgid "This is your default account. Pick another one for new entries."
+msgstr "এটি আপনার মূল হিসাব। নতুন এন্ট্রির জন্য অন্য একটি বেছে নিন।"
+
+#, python-format
+msgid "You still owe them %(amount)s."
+msgstr "আপনি এখনো তাকে %(amount)s দেবেন।"
+
+#, python-format
+msgid "They still hold an advance of %(amount)s."
+msgstr "তার কাছে এখনো %(amount)s অগ্রিম আছে।"
+
+#, python-format
+msgid "%(amount)s of this loan is still to pay."
+msgstr "এই ঋণের %(amount)s এখনো শোধ বাকি।"
+
+#, python-format
+msgid "You're still owed %(amount)s."
+msgstr "আপনি এখনো %(amount)s পাবেন।"
+
+#, python-format
+msgid "%(amount)s is in this wallet."
+msgstr "এই ওয়ালেটে %(amount)s আছে।"
+
+#, python-format
+msgid "%(n)s record uses it, and stays as it is."
+msgid_plural "%(n)s records use it, and stay as they are."
+msgstr[0] "%(n)sটি হিসাবে এটি আছে, সেগুলো যেমন আছে তেমনই থাকবে।"
+msgstr[1] "%(n)sটি হিসাবে এটি আছে, সেগুলো যেমন আছে তেমনই থাকবে।"
+
+#, python-format
+msgid "%(n)s entry goes with it."
+msgid_plural "%(n)s entries go with it."
+msgstr[0] "এর সাথে %(n)sটি এন্ট্রিও যাবে।"
+msgstr[1] "এর সাথে %(n)sটি এন্ট্রিও যাবে।"
+
+#, python-format
+msgid "%(n)s entry stays, without it."
+msgid_plural "%(n)s entries stay, without it."
+msgstr[0] "%(n)sটি এন্ট্রি থেকে যাবে, এটি ছাড়া।"
+msgstr[1] "%(n)sটি এন্ট্রি থেকে যাবে, এটি ছাড়া।"

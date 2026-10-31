@@ -1,12 +1,15 @@
 {% load i18n %}{% comment %}The app's own question box, in place of the browser's confirm() and prompt(), for every part of the app.
 A form or submit button with data-confirm="Delete this? What happens next." asks before it's sent; pages ask with FT.ask().
-data-confirm-after says what a delete leaves you with: "back" (it can be brought back) or "gone" (it can't).{% endcomment %}
+data-confirm-after says what a delete leaves you with: "back" (it can be brought back) or "gone" (it can't).
+data-confirm-check adds what's attached to this very record, from the server (apps/core/delete_check.py).
+After a yes the box stays until the next page comes: behind it the old page still shows a record that's already gone.{% endcomment %}
 <dialog id="ft-ask" class="ask" aria-labelledby="ft-ask-title" aria-describedby="ft-ask-text">
   <div class="ask-head">
     <span class="ask-icon" aria-hidden="true"><span data-for="danger">{% include "partials/icon.html" with name="trash" %}</span><span data-for="plain">{% include "partials/icon.html" with name="info" %}</span></span>
     <h2 id="ft-ask-title" class="ask-title"></h2>
   </div>
   <p id="ft-ask-text" class="ask-text"></p>
+  <ul class="ask-lines" hidden></ul>
   <input id="ft-ask-input" class="form-input" type="text" autocomplete="off" hidden>
   <p class="ask-note" hidden></p>
   <div class="ask-foot">
@@ -17,8 +20,9 @@ data-confirm-after says what a delete leaves you with: "back" (it can be brought
 <script>
 (function () {
   var box = document.getElementById("ft-ask"), title = box.querySelector(".ask-title"), text = box.querySelector(".ask-text"), note = box.querySelector(".ask-note"),
-      input = box.querySelector("input"), yes = box.querySelector('[data-ask="yes"]'), no = box.querySelector('[data-ask="no"]'), answer = null, mode = "ask", term = "";
-  var WORDS = { yes: "{{ _('Yes, continue')|escapejs }}", save: "{{ _('Save')|escapejs }}", no: "{{ _('Cancel')|escapejs }}", del: "{{ _('Delete')|escapejs }}", done: "{{ _('Done')|escapejs }}", copy: "{{ _('Copy this text')|escapejs }}",
+      input = box.querySelector("input"), yes = box.querySelector('[data-ask="yes"]'), no = box.querySelector('[data-ask="no"]'), lines = box.querySelector(".ask-lines"),
+      answer = null, mode = "ask", busy = false, holding = null, holds = false, asked = 0;
+  var WORDS = { yes: "{{ _('Yes, continue')|escapejs }}", save: "{{ _('Save')|escapejs }}", no: "{{ _('Cancel')|escapejs }}", del: "{{ _('Delete')|escapejs }}", done: "{{ _('Done')|escapejs }}", deleting: "{{ _('Deleting…')|escapejs }}", wait: "{{ _('Please wait…')|escapejs }}", copy: "{{ _('Copy this text')|escapejs }}",
                 gone: "{{ _('This can’t be undone.')|escapejs }}",
                 back: {% if active_dashboard == "business" %}"{{ _('You can restore it from Deleted.')|escapejs }}"{% else %}"{{ _('You can bring it back from Recently deleted for 30 days.')|escapejs }}"{% endif %},
                 term: {% if active_dashboard == "business" %}"{{ _('Deleted')|escapejs }}"{% else %}"{{ _('Recently deleted')|escapejs }}"{% endif %} };
@@ -28,14 +32,27 @@ data-confirm-after says what a delete leaves you with: "back" (it can be brought
     box.close();
     give(value);
   }
-  function refuse() { close(mode === "input" ? null : false); }
-  function accept() { close(mode === "input" ? input.value : true); }
+  function refuse() { if (!busy) close(mode === "input" ? null : false); }
+  function accept() {
+    if (holds) hold(); else close(mode === "input" ? input.value : true);
+  }
+  // Yes to a form: "Deleting…" and nothing can be pressed behind it, until the next page comes (or nothing does).
+  function hold() {
+    var give = answer;
+    answer = null; busy = true;
+    yes.textContent = box.getAttribute("data-tone") === "danger" ? WORDS.deleting : WORDS.wait;
+    yes.classList.add("is-submitting"); yes.disabled = true; no.hidden = true;
+    holding = setTimeout(FT.askDone, 30000);
+    give(true);
+  }
   /* FT.ask("Delete this? What happens next.") or FT.ask({ title, text, ok, danger, after: "back"|"gone", input: { value, placeholder, readonly }, alone })
      → a promise of true/false — with `input`, of what was written, or null. The first sentence is the question, the rest explains it. */
   window.FT = window.FT || {};
   FT.ask = function (o) {
     o = typeof o === "string" ? { message: o } : o;
+    if (busy) FT.askDone();
     if (answer) refuse();
+    asked++;
     var message = o.message || "", cut = message.indexOf("?") + 1;
     title.textContent = o.title || (cut ? message.slice(0, cut) : message);
     text.textContent = o.text || (cut ? message.slice(cut).trim() : "");
@@ -47,17 +64,40 @@ data-confirm-after says what a delete leaves you with: "back" (it can be brought
     input.hidden = !o.input;
     if (o.input) { input.value = o.input.value || ""; input.placeholder = o.input.placeholder || ""; input.readOnly = !!o.input.readonly; }
     yes.textContent = o.ok || (o.danger ? WORDS.del : o.input ? WORDS.save : WORDS.yes);
-    yes.className = "btn " + (o.danger ? "btn-danger" : "btn-primary");
+    yes.className = "btn " + (o.danger ? "btn-danger" : "btn-primary"); yes.hidden = false;
     no.textContent = WORDS.no; no.hidden = !!o.alone;
+    holds = !!o.hold;
+    lines.textContent = ""; lines.hidden = true;
     return new Promise(function (resolve) {
       answer = resolve;
       box.showModal();
       if (o.input) { input.focus(); input.select(); } else (o.danger ? no : yes).focus();       // a delete never goes ahead on a stray Enter
     });
   };
+  FT.askDone = function () {
+    if (!busy) return;
+    busy = false; clearTimeout(holding);
+    yes.classList.remove("is-submitting"); yes.disabled = false;
+    box.close();
+  };
+  /* What's attached to this record. The delete waits for it, for a moment: a warning that comes after the click warns no one. */
+  function check(form) {
+    var mine = asked, wait = setTimeout(ready, 2500);
+    function ready() { clearTimeout(wait); if (mine === asked && !busy) yes.disabled = false; }
+    yes.disabled = true;
+    fetch("{% url 'delete_check' %}?url=" + encodeURIComponent(form.getAttribute("action")), { credentials: "same-origin", headers: { Accept: "application/json" } })
+      .then(function (r) { return r.ok ? r.json() : { lines: [] }; })
+      .then(function (data) {
+        if (mine !== asked) return;
+        data.lines.forEach(function (line) { var li = document.createElement("li"); li.textContent = line; lines.appendChild(li); });
+        lines.hidden = !data.lines.length;
+        if (data.blocked) { yes.hidden = true; note.hidden = true; text.hidden = true; }    // it can't be deleted: only why
+      }).catch(function () {}).then(ready);
+  }
   /* When the clipboard won't take it: the text, to copy by hand. */
   FT.showText = function (value) { return FT.ask({ title: WORDS.copy, input: { value: value, readonly: true }, ok: WORDS.done, alone: true }); };
 
+  window.addEventListener("pageshow", function () { FT.askDone(); });       // back to this page: it's usable again
   yes.addEventListener("click", accept);
   no.addEventListener("click", refuse);
   box.addEventListener("cancel", function (e) { e.preventDefault(); refuse(); });
@@ -67,9 +107,10 @@ data-confirm-after says what a delete leaves you with: "back" (it can be brought
   });
   // Keys are this box's alone while it's open: no page shortcut, and no popup underneath holding on to Tab.
   window.addEventListener("keydown", function (e) {
-    if (!answer) return;
+    if (!answer && !busy) return;
     e.stopPropagation();
-    if (e.key === "Escape") { e.preventDefault(); refuse(); }
+    if (busy) e.preventDefault();
+    else if (e.key === "Escape") { e.preventDefault(); refuse(); }
     else if (e.key === "Enter" && e.target === input && !e.isComposing) { e.preventDefault(); accept(); }
     else if (e.key === "Tab") {
       var stops = Array.prototype.filter.call(box.querySelectorAll("input, button"), function (el) { return !el.hidden; }), at = stops.indexOf(document.activeElement);
@@ -82,7 +123,7 @@ data-confirm-after says what a delete leaves you with: "back" (it can be brought
   function words(form, button) {
     var from = button && button.hasAttribute("data-confirm") ? button : form, label = button ? (button.textContent || "").replace(/\s+/g, " ").trim() || button.getAttribute("aria-label") : "";
     var wanted = [form.getAttribute("action"), button && button.value, button && button.className].join(" ");
-    return { message: from.getAttribute("data-confirm"), after: from.getAttribute("data-confirm-after") || "", ok: label || "",
+    return { message: from.getAttribute("data-confirm"), after: from.getAttribute("data-confirm-after") || "", ok: label || "", hold: true,
              danger: from.getAttribute("data-confirm-tone") !== "plain" && (from.hasAttribute("data-confirm-after") || /delete|remove|forget|empty|is-danger|btn-danger/i.test(wanted)) };
   }
   document.addEventListener("submit", function (e) {
@@ -91,10 +132,13 @@ data-confirm-after says what a delete leaves you with: "back" (it can be brought
     if (form.ftAsked) { form.ftAsked = false; return; }
     e.preventDefault(); e.stopImmediatePropagation();
     if (form.closest(".menu")) document.body.click();       // the row's menu closes (a click outside it)
-    FT.ask(words(form, button)).then(function (sure) {
+    var asking = FT.ask(words(form, button));
+    if (form.hasAttribute("data-confirm-check")) check(form);
+    asking.then(function (sure) {
       if (!sure) return;
       form.ftAsked = true;
       form.requestSubmit(button || undefined);
+      if (form.dataset.submitting !== "1") FT.askDone();    // it didn't go: a field to fill in, or it opens elsewhere
     });
   }, true);
 })();

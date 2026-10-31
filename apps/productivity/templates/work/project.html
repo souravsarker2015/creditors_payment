@@ -17,7 +17,7 @@
     <a href="{% url 'work:invoice' %}?project={{ project.pk }}" class="btn btn-secondary" data-tip="{% translate 'An invoice or timesheet from the time tracked here' %}">{% icon "note" %}{% translate "Invoice" %}{% if unbilled %}<i class="wpj-dot" aria-label="{% translate 'Some billable time isn’t billed yet' %}"></i>{% endif %}</a>
     <form method="post" action="{% url 'work:project_duplicate' project.pk %}" data-confirm="{{ _("Make a copy of this project with its open tasks (and their subtasks and checklists)? Dates are left empty, for you to set.") }}">{% csrf_token %}
       <button type="submit" class="icon-btn" aria-label="{% translate 'Copy this project' %}" data-tip="{% translate 'Copy this project' %}">{% icon "copy" %}</button></form>
-    <form method="post" action="{% url 'work:project_delete' project.pk %}" data-confirm="{{ _("Delete this project? Its tasks, time and notes are kept, without a project. You can undo this from Recently deleted.") }}">{% csrf_token %}
+    <form method="post" action="{% url 'work:project_delete' project.pk %}" data-confirm-check data-confirm="{{ _("Delete this project? Its tasks, time and notes are kept, without a project. You can undo this from Recently deleted.") }}">{% csrf_token %}
       <button type="submit" class="icon-btn" aria-label="{% translate 'Delete project' %}" data-tip="{% translate 'Delete project' %}">{% icon "trash" %}</button></form>
   </div>
 </header>

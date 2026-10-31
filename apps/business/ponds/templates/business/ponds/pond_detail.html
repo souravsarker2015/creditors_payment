@@ -18,9 +18,11 @@
       </div>
     </div>
     <div class="page-actions">
-      {% if biz_can.manage_settings %}<a href="{% url 'business:ponds_edit' pond.pk %}?next={{ request.path|urlencode }}" class="btn btn-secondary">{% include "partials/icon.html" with name="edit" %}{% translate "Edit pond" %}</a>{% endif %}
+      {% if biz_can.manage_settings and not pond.is_deleted %}<a href="{% url 'business:ponds_edit' pond.pk %}?next={{ request.path|urlencode }}" class="btn btn-secondary">{% include "partials/icon.html" with name="edit" %}{% translate "Edit pond" %}</a>{% endif %}
     </div>
   </header>
+
+  {% if pond.is_deleted %}{% translate "This pond is deleted. Its cycles, sales and costs are all still here. Restore it to work with it again." as note %}{% url 'business:ponds_restore' pond.pk as restore_url %}{% include "business/partials/deleted_note.html" with text=note restore_url=restore_url %}{% endif %}
 
   {% if pond.photo %}<img src="{{ pond.photo.url }}" alt="{{ pond.name }}" class="pond-hero-photo">{% endif %}
 
@@ -41,7 +43,7 @@
       <div><dt>{% translate "Sold" %}</dt><dd>{{ summary.sales_net|bdt }}</dd></div>
     </dl>
   </a>
-  {% elif biz_can.enter_data %}
+  {% elif biz_can.enter_data and not pond.is_deleted %}
   <section class="card">
     <div class="empty is-plain">
       <div class="empty-icon">{% include "business/partials/icon.html" with name="fish" %}</div>
@@ -57,7 +59,7 @@
     <div class="card-header">
       <div><h2 class="card-title">{% translate "Lease" %}{% include "business/partials/tip.html" with text=_("What you pay the owner for this pond. Each cycle's cost includes its share of the lease, by the days it ran.") %}</h2>
       <p class="card-subtitle">{% if pond.lease_from %}{{ pond.lease_from }} · {% endif %}{% if pond.lease_start and pond.lease_end %}{{ pond.lease_start|date:"j M Y" }} – {{ pond.lease_end|date:"j M Y" }}{% else %}{% translate "Dates not set" %}{% endif %}</p></div>
-      <a href="{% url 'business:lease_pay' pond.pk %}" class="btn btn-primary btn-sm">{% include "partials/icon.html" with name="wallet" %}{% translate "Pay lease" %}</a>
+      {% if not pond.is_deleted %}<a href="{% url 'business:lease_pay' pond.pk %}" class="btn btn-primary btn-sm">{% include "partials/icon.html" with name="wallet" %}{% translate "Pay lease" %}</a>{% endif %}
     </div>
     <div class="card-body stack">
       {% if lease.total %}
@@ -81,10 +83,10 @@
           <p class="ledger-title">{{ lp.amount|bdt }}</p>
           <p class="ledger-meta">{{ lp.date|date:"j M Y" }} · {{ lp.account }}{% if lp.reference %} · {{ lp.reference }}{% endif %}</p>{% include "business/partials/row_note.html" with note=lp.notes %}
         </div>
-        <div class="ledger-end">
-          {% url 'business:lease_payment_edit' pond.pk lp.pk as edit_url %}{% url 'business:lease_payment_delete' lp.pk as delete_url %}{% translate "Delete this payment?" as confirm_text %}
+        <div class="ledger-end">{% if not pond.is_deleted %}
+          {% url 'business:lease_payment_edit' pond.pk lp.pk as edit_url %}{% url 'business:lease_payment_delete' lp.pk as delete_url %}{% translate "Delete this payment? What's left on the lease goes up, and the account's balance is worked out again." as confirm_text %}
           {% if biz_can.delete %}{% include "partials/row_menu.html" with edit_url=edit_url delete_url=delete_url confirm=confirm_text up=forloop.last %}{% else %}<a href="{{ edit_url }}" class="icon-btn" aria-label="{% translate 'Edit' %}">{% include "partials/icon.html" with name="edit" %}</a>{% endif %}
-        </div>
+        {% endif %}</div>
       </li>
       {% endfor %}
     </ul>
@@ -107,5 +109,17 @@
     </ul>
     {% else %}<div class="empty is-plain"><p class="empty-text">{% translate "Finished cycles will be listed here with their results." %}</p></div>{% endif %}
   </section>
+
+  {% if deleted_cycles %}
+  <section class="card">
+    <div class="card-header"><div><h2 class="card-title">{% translate "Deleted cycles" %}</h2><p class="card-subtitle">{% translate "Open one to restore it." %}</p></div></div>
+    <ul class="ledger">{% for c in deleted_cycles %}
+      <li><a href="{% url 'business:cycle_detail' c.pk %}" class="ledger-row">
+        <span class="ledger-icon" data-tone="muted">{% include "partials/icon.html" with name="trash" %}</span>
+        <div class="ledger-main"><p class="ledger-title">{{ c.label }}</p><p class="ledger-meta">{{ c.start_date|date:"M Y" }}</p></div>
+      </a></li>{% endfor %}
+    </ul>
+  </section>
+  {% endif %}
 </div>
 {% endblock %}

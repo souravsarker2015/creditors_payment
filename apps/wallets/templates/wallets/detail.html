@@ -62,7 +62,7 @@
       {% csrf_token %}
       <button type="submit" class="btn btn-ghost btn-sm">{% if w.is_active %}{% include "partials/icon.html" with name="pause" %}{% translate "Stop using this wallet" %}{% else %}{% include "partials/icon.html" with name="play" %}{% translate "Use this wallet again" %}{% endif %}</button>
     </form>
-    <form method="post" action="{% url 'wallet_delete' w.pk %}" data-confirm="{% translate 'Delete this wallet? Its entries are kept, without a wallet. You can undo this from Recently deleted.' %}">
+    <form method="post" action="{% url 'wallet_delete' w.pk %}" data-confirm-check data-confirm="{% translate 'Delete this wallet? Its entries are kept, without a wallet. You can undo this from Recently deleted.' %}">
       {% csrf_token %}
       <button type="submit" class="btn btn-ghost btn-sm is-danger">{% include "partials/icon.html" with name="trash" %}{% translate "Delete wallet" %}</button>
     </form>

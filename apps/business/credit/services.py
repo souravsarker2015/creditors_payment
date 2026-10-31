@@ -214,7 +214,8 @@ def build(business, party_ids=None, today=None):
     """{party id: Ledger} for every party with any entries (or just `party_ids`)."""
     today = today or date.today()
     grouped = _entries(business, party_ids)
-    parties = Party.objects.filter(business=business, pk__in=list(grouped) if party_ids is None else party_ids)
+    people = Party.objects if party_ids is None else Party.all_objects      # (one person's statement, even after they're deleted)
+    parties = people.filter(business=business, pk__in=list(grouped) if party_ids is None else party_ids)
     ledgers = {}
     for p in parties:
         entries = sorted(grouped.get(p.pk, []), key=lambda e: (e.date, e.rank, e.pk))

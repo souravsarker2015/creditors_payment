@@ -88,13 +88,13 @@ def _for_popup(form):
     return form
 
 
-def _cycle(request, pk):
-    return get_object_or_404(CultureCycle.objects.select_related("pond"), pk=pk, business=request.business)
+def _cycle(request, pk, manager=CultureCycle.objects):
+    return get_object_or_404(manager.select_related("pond"), pk=pk, business=request.business)
 
 
 @business_access_required
 def pond_detail_view(request, pk):
-    pond = get_object_or_404(Pond, pk=pk, business=request.business)
+    pond = get_object_or_404(Pond.all_objects, pk=pk, business=request.business)    # (a deleted one says so, and can be restored)
     cycles = list(pond.cycles.all())
     current = next((c for c in cycles if c.is_running), None)
     cache = {}   # the farm's shared costs, worked out once for every cycle on the page
@@ -104,6 +104,7 @@ def pond_detail_view(request, pk):
         "cycle_form": _for_popup(CycleForm(business=request.business, prefix="cycle")),
         "past_summaries": [(c, services.summarize(c, cache=cache)) for c in cycles if not c.is_running],
         "lease": services.lease_status(pond) if pond.is_leased else None,
+        "deleted_cycles": CultureCycle.all_objects.filter(pond=pond, is_deleted=True),
     })
 
 
@@ -151,7 +152,7 @@ def cycle_start_view(request, pk):
 
 @business_access_required
 def cycle_detail_view(request, pk):
-    cycle = _cycle(request, pk)
+    cycle = _cycle(request, pk, CultureCycle.all_objects)
     b = request.business
     popups = [(k, kind, _for_popup(kind.form(business=b, cycle=cycle, prefix=k)), reverse("business:entry_add", args=[cycle.pk, k]))
               for k, kind in ENTRY_KINDS.items()]
@@ -270,8 +271,20 @@ def cycle_finish_view(request, pk):
 def cycle_delete_view(request, pk):
     cycle = _cycle(request, pk)
     cycle.soft_delete()
-    messages.success(request, _g("Cycle deleted. You can ask an admin to restore it."))
+    messages.success(request, _g("Cycle deleted. You can restore it from the pond's page."))
     return redirect("business:pond_detail", cycle.pond_id)
+
+
+@business_access_required(capability="delete")
+@require_POST
+def cycle_restore_view(request, pk):
+    cycle = _cycle(request, pk, CultureCycle.all_objects.filter(is_deleted=True))
+    if cycle.is_running and services.running_cycle(cycle.pond):
+        messages.error(request, _g("%(pond)s already has a running cycle. Finish it first.") % {"pond": cycle.pond})
+        return redirect("business:cycle_detail", cycle.pk)
+    cycle.restore()
+    messages.success(request, _g("Cycle restored."))
+    return redirect("business:cycle_detail", cycle.pk)
 
 
 def _before_save(form, obj):

@@ -15,10 +15,12 @@
     </div>
     <div class="page-actions">
       <button type="button" class="btn btn-secondary" onclick="window.print()">{% include "partials/icon.html" with name="printer" %}{% translate "Print" %}</button>
-      <a href="{% url 'business:transfer_add' %}?from={{ account.pk }}" class="btn btn-secondary">{% include "business/partials/icon.html" with name="swap" %}{% translate "Move money" %}</a>
-      {% if biz_can.enter_data %}<a href="{% url 'business:transaction_add' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add" %}</a>{% endif %}
+      {% if not account.is_deleted %}<a href="{% url 'business:transfer_add' %}?from={{ account.pk }}" class="btn btn-secondary">{% include "business/partials/icon.html" with name="swap" %}{% translate "Move money" %}</a>{% endif %}
+      {% if biz_can.enter_data and not account.is_deleted %}<a href="{% url 'business:transaction_add' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add" %}</a>{% endif %}
     </div>
   </header>
+
+  {% if account.is_deleted %}{% translate "This account is deleted. Its balance no longer counts in your total. Restore it to work with it again." as note %}{% url 'business:accounts_restore' account.pk as restore_url %}{% include "business/partials/deleted_note.html" with text=note restore_url=restore_url %}{% endif %}
 
   <section class="hero no-print">
     <div class="hero-inner">

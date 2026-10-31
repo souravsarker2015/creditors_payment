@@ -11,6 +11,7 @@ urlpatterns = ponds.urls() + [
     path("cycles/<int:pk>/targets/", views.cycle_targets_view, name="cycle_targets"),
     path("cycles/<int:pk>/finish/", views.cycle_finish_view, name="cycle_finish"),
     path("cycles/<int:pk>/delete/", views.cycle_delete_view, name="cycle_delete"),
+    path("cycles/<int:pk>/restore/", views.cycle_restore_view, name="cycle_restore"),
     path("cycles/<int:pk>/add/<slug:kind>/", views.entry_add_view, name="entry_add"),
     path("entries/<slug:kind>/<int:pk>/edit/", views.entry_edit_view, name="entry_edit"),
     path("entries/<slug:kind>/<int:pk>/delete/", views.entry_delete_view, name="entry_delete"),

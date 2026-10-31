@@ -40,7 +40,7 @@
           <button type="button" class="menu-item" role="menuitem" @click="open = false; modal = 'close'">{% include "business/partials/icon.html" with name="lock" %}{% translate "Close loan" %}</button>
           {% endif %}
           {% if biz_can.delete %}
-          <form method="post" action="{% url 'business:loan_delete' loan.pk %}" data-confirm="{{ _("Delete this loan with its payments? You can restore it from Deleted.") }}">{% csrf_token %}
+          <form method="post" action="{% url 'business:loan_delete' loan.pk %}" data-confirm="{{ _("Delete this loan with its payments? You can restore it from Deleted.") }}" data-confirm-check>{% csrf_token %}
             <button type="submit" class="menu-item is-danger" role="menuitem">{% include "partials/icon.html" with name="trash" %}{% translate "Delete loan" %}</button>
           </form>
           {% endif %}
@@ -257,7 +257,7 @@
           <span class="ledger-icon" data-tone="accent">{% include "business/partials/icon.html" with name="percent" %}</span>
           <div class="ledger-main"><p class="ledger-title">{{ c.rate|num }}% {{ loan.get_rate_period_display }}</p><p class="ledger-meta">{% blocktranslate with date=c.effective_from|date:"j M Y" %}From {{ date }}{% endblocktranslate %}</p></div>
           <div class="ledger-end">
-            <form method="post" action="{% url 'business:loan_rate_delete' c.pk %}" data-confirm="{{ _("Remove this rate change?") }}" data-confirm-after="gone">{% csrf_token %}
+            <form method="post" action="{% url 'business:loan_rate_delete' c.pk %}" data-confirm="{{ _("Remove this rate change? The schedule will be worked out again.") }}" data-confirm-after="gone">{% csrf_token %}
               <button type="submit" class="icon-btn" aria-label="{% translate 'Remove' %}" data-tip="{% translate 'Remove' %}">{% include "partials/icon.html" with name="trash" %}</button>
             </form>
           </div>

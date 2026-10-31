@@ -1,0 +1,6 @@
+{% load i18n %}{% comment %}On the page of a deleted record, which still opens: links and redirects to it keep working. Needs: text, restore_url.{% endcomment %}
+<div class="callout" data-tone="warn">
+  {% include "partials/icon.html" with name="trash" %}
+  <div class="flex-1"><p>{{ text }}</p></div>
+  {% if biz_can.delete %}<form method="post" action="{{ restore_url }}">{% csrf_token %}<button class="btn btn-primary btn-sm">{% include "partials/icon.html" with name="restore" %}{% translate "Restore" %}</button></form>{% endif %}
+</div>

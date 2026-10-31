@@ -276,14 +276,14 @@ def transfer_delete_view(request, pk):
 @business_access_required(capability="view_finance")
 def account_detail_view(request, pk):
     b = request.business
-    account = get_object_or_404(Account, pk=pk, business=b)
+    account = get_object_or_404(Account.all_objects, pk=pk, business=b)    # (a deleted one says so, and can be restored)
     today = date.today()
     periods, key, label, start, end = _range(request, today)
     rows, opening, closing = services.account_history(account, start, end)
     money_in = sum((m.amount for m in rows if m.amount > 0), ZERO)
     money_out = -sum((m.amount for m in rows if m.amount < 0), ZERO)
     return render(request, "business/finance/account_detail.html", {
-        "account": account, "rows": rows[:300], "opening": opening, "closing": closing, "balance": account.balance,
+        "account": account, "rows": rows[:300], "opening": opening, "closing": closing, "balance": closing if account.is_deleted else account.balance,
         "money_in": money_in, "money_out": money_out, "periods": periods, "period": key, "period_label": label,
         "start": start, "end": end, "more": max(len(rows) - 300, 0), "today": today,
     })
