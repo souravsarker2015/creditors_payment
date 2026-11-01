@@ -61,7 +61,7 @@
   <section class="card">
     <div class="card-header"><div><h2 class="card-title">{% translate "Who recorded" %}</h2><p class="card-subtitle">{% translate "Records added, changed or deleted on this day." %}</p></div></div>
     {% if s.people %}<ul class="ledger">{% for name, n in s.people %}<li class="ledger-row"><span class="ledger-icon" data-tone="info">{% include "business/partials/icon.html" with name="person" %}</span><div class="ledger-main"><p class="ledger-title">{{ name }}</p></div><div class="ledger-end"><span class="num">{% blocktranslate count counter=n %}{{ counter }} record{% plural %}{{ counter }} records{% endblocktranslate %}</span></div></li>{% endfor %}</ul>
-    <div class="card-body !pt-0"><a href="{% url 'business:activity' %}" class="btn btn-ghost btn-sm">{% translate "See every change" %}{% include "partials/icon.html" with name="arrow-right" %}</a></div>
+    <div class="card-body !pt-0"><a {% if biz_can.manage_settings %}href="{% url 'business:activity' %}"{% else %}hidden{% endif %} class="btn btn-ghost btn-sm">{% translate "See every change" %}{% include "partials/icon.html" with name="arrow-right" %}</a></div>
     {% else %}<div class="card-body"><p class="help">{% translate "Nobody recorded anything." %}</p></div>{% endif %}
   </section>
   {% if s.tasks %}

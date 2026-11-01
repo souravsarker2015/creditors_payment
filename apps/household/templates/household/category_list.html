@@ -106,9 +106,10 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.6.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <script src="{% asset 'js/charts.js' %}"></script>
+{{ category_labels|json_script:"category-labels" }}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const labels = {{ category_labels|safe }};
+        const labels = JSON.parse(document.getElementById('category-labels').textContent);
         const data = {{ category_data|safe }};
 
         if (!document.getElementById('categoryChart')) return;

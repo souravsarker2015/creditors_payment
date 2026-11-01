@@ -34,7 +34,7 @@
       {% for o in r.buyers %}
       <li class="ledger-row">
         <span class="avatar party-avatar" data-kind="buyer" aria-hidden="true">{{ o.label|slice:":1"|upper }}</span>
-        <div class="ledger-main"><p class="ledger-title">{% if o.url %}<a href="{{ o.url }}" class="hover:underline">{{ o.label }}</a>{% else %}{{ o.label }}{% endif %}</p><p class="ledger-meta">{{ o.extra }}</p></div>
+        <div class="ledger-main"><p class="ledger-title">{% if o.url and biz_can.view_finance %}<a href="{{ o.url }}" class="hover:underline">{{ o.label }}</a>{% else %}{{ o.label }}{% endif %}</p><p class="ledger-meta">{{ o.extra }}</p></div>
         <div class="ledger-end"><span class="ledger-amount">{{ o.value|bdt }}</span></div>
       </li>
       {% endfor %}

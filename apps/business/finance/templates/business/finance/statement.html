@@ -60,7 +60,7 @@
           {% for l in s.income %}
           <li class="fin-line">
             <div class="fin-line-top">
-              <span class="fin-name">{% if l.url %}<a href="{{ l.url }}" class="hover:underline">{{ l.label }}</a>{% else %}{{ l.label }}{% endif %}</span>
+              <span class="fin-name">{% if l.url and biz_can.view_finance %}<a href="{{ l.url }}" class="hover:underline">{{ l.label }}</a>{% else %}{{ l.label }}{% endif %}</span>
               <span class="fin-amount">{{ l.amount|bdt }}</span>
             </div>
             <div class="meter" data-tone="good"><span style="width: {% widthratio l.amount max_income 100 %}%"></span></div>
@@ -76,7 +76,7 @@
           {% for l in s.expense %}
           <li class="fin-line">
             <div class="fin-line-top">
-              <span class="fin-name">{% if l.url %}<a href="{{ l.url }}" class="hover:underline">{{ l.label }}</a>{% else %}{{ l.label }}{% endif %}</span>
+              <span class="fin-name">{% if l.url and biz_can.view_finance %}<a href="{{ l.url }}" class="hover:underline">{{ l.label }}</a>{% else %}{{ l.label }}{% endif %}</span>
               <span class="fin-amount">{{ l.amount|bdt }}</span>
             </div>
             <div class="meter" data-tone="critical"><span style="width: {% widthratio l.amount max_expense 100 %}%"></span></div>

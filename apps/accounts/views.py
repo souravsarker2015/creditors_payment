@@ -21,6 +21,8 @@ from django.utils.http import url_has_allowed_host_and_scheme, urlsafe_base64_en
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
+from apps.core.nav import back_to
+
 from . import signins, totp, twofactor
 from .forms import (
     CodeForm, EmailChangeForm, LoginForm, PasswordAndCodeForm, ProfileForm, SecuritySettingsForm, SignupForm,
@@ -174,8 +176,7 @@ def update_preferences_view(request):
     if request.headers.get("X-Preferences-Fetch") == "1" and language not in Language.values:
         return HttpResponse(status=204)
 
-    next_url = request.POST.get("next") or request.META.get("HTTP_REFERER") or reverse("home")
-    response = HttpResponseRedirect(next_url)
+    response = HttpResponseRedirect(back_to(request, request.POST.get("next") or request.META.get("HTTP_REFERER"), reverse("home")))
     if language in Language.values:
         response.set_cookie(settings.LANGUAGE_COOKIE_NAME, language)
     return response

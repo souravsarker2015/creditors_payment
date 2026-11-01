@@ -17,6 +17,7 @@ from apps.business.core.access import can
 from apps.business.core.decorators import business_access_required
 from apps.business.core.templatetags.business import bdt
 from apps.business.parties.models import Party
+from apps.core.nav import back_to
 
 from . import services
 from .forms import AdvanceForm, FollowUpForm, PaymentForm
@@ -260,7 +261,7 @@ def payment_form_view(request, pk=None):
         return redirect("business:payment_add")
     return render(request, "business/credit/payment_form.html", {
         "form": form, "obj": payment, "pay_json": _payment_data(b, form, payment),
-        "back": reverse("business:party_statement", args=[payment.party_id]) if payment else request.GET.get("next") or reverse("business:dues"),
+        "back": reverse("business:party_statement", args=[payment.party_id]) if payment else back_to(request, request.GET.get("next"), reverse("business:dues" if can(request.membership, "view_finance") else "business:home")),
     })
 
 
@@ -361,5 +362,5 @@ def advance_form_view(request, pk=None):
         status = next((a for a in services.advances(b, open_only=False, party=adv.party) if a.payment.pk == adv.pk), None)
     return render(request, "business/credit/advance_form.html", {
         "form": form, "obj": adv, "status": status,
-        "back": request.GET.get("next") or (reverse("business:party_statement", args=[adv.party_id]) if adv else reverse("business:dues")),
+        "back": back_to(request, request.GET.get("next"), reverse("business:party_statement", args=[adv.party_id]) if adv else reverse("business:dues" if can(request.membership, "view_finance") else "business:home")),
     })

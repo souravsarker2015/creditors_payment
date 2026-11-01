@@ -14,7 +14,7 @@ Results come from /search/ as you type (HTMX); Enter opens the first one.
         <label class="sr-only" for="global-search-q">{% translate "Search everything" %}</label>
         <input id="global-search-q" x-ref="q" type="search" name="q" autocomplete="off" enterkeyhint="search"
                placeholder="{% translate 'Search people, ponds, sales, pages…' %}"
-               hx-get="{% url 'search' %}" hx-trigger="input changed delay:250ms, search" hx-target="#search-results" hx-swap="outerHTML">
+               hx-get="{% url 'search' %}" hx-trigger="input changed delay:250ms, search" hx-target=".search-panel .search-results" hx-swap="outerHTML">
         <button type="button" class="icon-btn" @click="open = false" aria-label="{% translate 'Close' %}">{% include "partials/icon.html" with name="x" %}</button>
       </form>
       {% include "core/search_results.html" with groups=None q="" %}

@@ -26,7 +26,14 @@ from .decorators import business_access_required
 
 # ── Forms ───────────────────────────────────────────────────────────────────
 
-class BusinessForm(forms.ModelForm):
+class _ThenKeepWhatItPointsAt(forms.models.ModelFormMetaclass):
+    def __call__(cls, *args, **kwargs):
+        form = super().__call__(*args, **kwargs)
+        form.keep_what_it_points_at()         # (last: a form may narrow its own dropdowns)
+        return form
+
+
+class BusinessForm(forms.ModelForm, metaclass=_ThenKeepWhatItPointsAt):
     """ModelForm for a business record.
 
     * `layout`: rows of field names for the shared form page; a row of two
@@ -68,6 +75,17 @@ class BusinessForm(forms.ModelForm):
             model = getattr(qs, "model", None)
             if model is not None and hasattr(model, "business_id") and hasattr(model, "all_objects"):
                 f.queryset = qs.filter(business=business)
+
+    def keep_what_it_points_at(self):
+        """An old record whose account, buyer or pond was deleted since still says so. Left out of the dropdown it
+        would fail to save, or quietly lose it, and its money would leave that account's book."""
+        if not self.instance.pk:
+            return
+        for name, f in self.fields.items():
+            qs = getattr(f, "queryset", None)
+            current = getattr(self.instance, f"{name}_id", None)
+            if current and qs is not None and hasattr(qs.model, "all_objects") and not qs.filter(pk=current).exists():
+                f.queryset = qs.model.all_objects.filter(Q(pk__in=qs.values("pk")) | Q(pk=current, business=self.business))
 
     def rows(self):
         """The layout as [(title, [bound fields])] for the template."""

@@ -105,12 +105,34 @@ Then add `"apps.<app_name>"` to `LOCAL_APPS` in `config/settings/base.py`.
 
 - **Development** (default): `config.settings.dev` — SQLite, DEBUG=True
 - **Production**: `config.settings.prod` — PostgreSQL, DEBUG=False
+- **Live on PythonAnywhere**: `config.settings.live` — SQLite, DEBUG=False
 
 Switch by setting `DJANGO_SETTINGS_MODULE`:
 
 ```bash
 export DJANGO_SETTINGS_MODULE=config.settings.prod
 ```
+## Going live on PythonAnywhere
+
+`config.settings.dev` must never serve the public site: with DEBUG on, an error page shows your code and settings to
+anyone. Back up `db.sqlite3` first, then:
+
+1. Add a secret key of its own to `.env` on the server (the one in `base.py` is public). Get one with:
+   `python -c "from django.core.management.utils import get_random_secret_key as k; print(k())"`
+   ```bash
+   DJANGO_SECRET_KEY=the-long-random-value
+   ```
+2. In the Web tab → WSGI configuration file, set
+   `os.environ["DJANGO_SETTINGS_MODULE"] = "config.settings.live"`
+3. In the Web tab → Static files, add URL `/media/` → the project's `media` folder, next to `/static/`
+   (with DEBUG off Django no longer serves uploaded photos itself).
+4. Run `python manage.py collectstatic --noinput --settings=config.settings.live` if `/static/` points at `staticfiles`.
+5. Reload the web app. Everyone is signed out once, because the key changed.
+
+Errors and pages not found now go to the site's error log (Web tab → Log files).
+
+To undo: put `config.settings.dev` back in the WSGI file and reload.
+
 ## Secrets and email (`.env`)
 
 Secrets go in a `.env` file at the project root (git-ignored; copy `.env.example`).

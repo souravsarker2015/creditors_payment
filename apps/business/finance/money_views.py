@@ -15,8 +15,10 @@ from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
 from apps.business.core.periods import fy_end, fy_label, fy_start
+from apps.business.core.access import can
 from apps.business.core.decorators import business_access_required
 from apps.business.core.templatetags.business import bdt
+from apps.core.nav import back_to
 
 from . import services
 from .forms import BudgetForm, FamilyIncomeForm, RecurringForm, TransactionForm, TransferForm
@@ -132,7 +134,7 @@ def transaction_form_view(request, pk=None):
         return redirect(reverse("business:transactions") + f"?scope={scope}")
     return render(request, "business/finance/transaction_form.html", {
         "form": form, "obj": obj, "scope": scope, "scope_label": dict(Scope.choices)[scope], "recurring": from_recurring,
-        "back": reverse("business:transactions") + f"?scope={scope}",
+        "back": reverse("business:transactions") + f"?scope={scope}" if can(request.membership, "view_finance") else reverse("business:home"),
     })
 
 
@@ -416,7 +418,7 @@ def recurring_skip_view(request, pk):
     _advance(r, date.today())
     messages.success(request, _("Skipped %(name)s for %(date)s.") % {"name": r.name, "date": date_format(when, "j M Y")} if when
                      else _("Skipped %(name)s.") % {"name": r.name})
-    return redirect(request.POST.get("next") or "business:recurring")
+    return redirect(back_to(request, request.POST.get("next"), reverse("business:recurring")))
 
 
 @business_access_required(capability="delete")

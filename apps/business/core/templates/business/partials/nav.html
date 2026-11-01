@@ -130,6 +130,11 @@
     {% include "business/partials/icon.html" with name="history" %}{% translate "Activity log" %}
   </a>
   {% endif %}
+  {% if biz_can.delete %}
+  <a href="{% url 'business:deleted' %}" class="nav-link {% if '/business/settings/deleted/' in p %}is-active{% endif %}">
+    {% include "partials/icon.html" with name="trash" %}{% translate "Deleted" %}
+  </a>
+  {% endif %}
 </div>
 {% endif %}
 

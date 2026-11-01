@@ -54,7 +54,7 @@ class SearchTests(TestCase):
     def test_live_results_and_short_queries(self):
         Creditor.objects.create(user=self.owner, name="Karim")
         r = self.find("kar", HTTP_HX_REQUEST="true")
-        self.assertContains(r, 'id="search-results"')
+        self.assertContains(r, 'class="search-results"')
         self.assertNotContains(r, "<html")
         self.assertContains(self.find("k"), "at least 2 letters")
 

@@ -47,14 +47,19 @@ class NoBrowserBoxesTests(SimpleTestCase):
 
 
 class DeleteWarningTests(SimpleTestCase):
-    def menu(self, dashboard):
-        return render_to_string("partials/row_menu.html", {"edit_url": "/e/", "delete_url": "/d/", "confirm": "Delete this?", "active_dashboard": dashboard})
+    def menu(self, dashboard, can_delete=True):
+        return render_to_string("partials/row_menu.html", {"edit_url": "/e/", "delete_url": "/d/", "confirm": "Delete this?", "active_dashboard": dashboard,
+                                                           "biz_can": {"delete": can_delete}})
 
     def test_a_personal_record_can_come_back(self):
         self.assertIn('data-confirm-after="back"', self.menu("personal"))
 
-    def test_a_business_entry_has_no_restore_screen_and_says_so(self):
-        self.assertIn('data-confirm-after="gone"', self.menu("business"))
+    def test_a_business_record_can_come_back_too(self):
+        self.assertIn('data-confirm-after="back"', self.menu("business"))
+
+    def test_delete_is_not_offered_to_a_role_that_cant(self):
+        self.assertNotIn("/d/", self.menu("business", can_delete=False))
+        self.assertIn("/d/", self.menu("personal", can_delete=False))
 
     def test_the_box_is_in_bangla_too(self):
         with override("bn"):

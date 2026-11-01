@@ -211,3 +211,7 @@ __marimo__/
 
 # Whole-system backups (Backup & restore) — they hold everyone's data
 /backups/
+
+# Uploaded photos and receipts stay on the server, out of this public repository
+media/*
+!media/.gitkeep

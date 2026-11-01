@@ -12,7 +12,7 @@
         <ul class="fin-list">
           {% for l in w.owns %}
           <li class="fin-line">
-            <div class="fin-line-top"><span class="fin-name">{% if l.url %}<a href="{{ l.url }}" class="hover:underline">{{ l.label }}</a>{% else %}{{ l.label }}{% endif %}</span><span class="fin-amount">{{ l.amount|bdt }}</span></div>
+            <div class="fin-line-top"><span class="fin-name">{% if l.url and biz_can.view_finance %}<a href="{{ l.url }}" class="hover:underline">{{ l.label }}</a>{% else %}{{ l.label }}{% endif %}</span><span class="fin-amount">{{ l.amount|bdt }}</span></div>
             {% if l.detail %}<p class="stmt-detail">{{ l.detail }}</p>{% endif %}
           </li>
           {% empty %}<li class="fin-empty">{% translate "Nothing recorded yet." %}</li>
@@ -24,7 +24,7 @@
         <ul class="fin-list">
           {% for l in w.owes %}
           <li class="fin-line">
-            <div class="fin-line-top"><span class="fin-name">{% if l.url %}<a href="{{ l.url }}" class="hover:underline">{{ l.label }}</a>{% else %}{{ l.label }}{% endif %}</span><span class="fin-amount">{{ l.amount|bdt }}</span></div>
+            <div class="fin-line-top"><span class="fin-name">{% if l.url and biz_can.view_finance %}<a href="{{ l.url }}" class="hover:underline">{{ l.label }}</a>{% else %}{{ l.label }}{% endif %}</span><span class="fin-amount">{{ l.amount|bdt }}</span></div>
             {% if l.detail %}<p class="stmt-detail">{{ l.detail }}</p>{% endif %}
           </li>
           {% empty %}<li class="fin-empty">{% translate "The farm owes nothing." %}</li>

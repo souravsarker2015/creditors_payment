@@ -1,4 +1,4 @@
-{% load i18n %}<div id="search-results" class="search-results">
+{% load i18n %}<div class="search-results">
 {% if groups %}
   <p class="sr-only" role="status">{% blocktranslate count counter=count %}{{ counter }} result{% plural %}{{ counter }} results{% endblocktranslate %}</p>
   {% for g in groups %}

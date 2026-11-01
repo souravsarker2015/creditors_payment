@@ -262,6 +262,8 @@ def _low_feed(business):
 
 def _setup_steps(request):
     """Getting-started steps for the master data, numbered after the fixed ones."""
+    if not can(request.membership, "enter_data"):       # (someone who only reads can't do them)
+        return []
     from apps.business.markets.models import Market
     from apps.business.parties.models import Party
     from apps.business.ponds.models import Pond

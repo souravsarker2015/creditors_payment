@@ -8,6 +8,7 @@ Expects environment variables for secrets and database config.
 import os
 
 from .base import *  # noqa: F401,F403
+from .logs import LOGGING  # noqa: F401
 
 # ──────────────────────────────────────────────
 # Core

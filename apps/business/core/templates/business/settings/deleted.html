@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% translate "Deleted" %} | {{ business.name }}{% endblock %}
+{% block content %}
+<div class="page-medium stack">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "Deleted" %}</h1>
+      <p class="page-subtitle">{% translate "Everything deleted on this farm, newest first. Nothing here is lost: restore it and it's back where it was, with its money and numbers." %}</p>
+    </div>
+  </header>
+  {% if kinds %}
+  <form method="get" class="flex flex-wrap items-center gap-2">
+    <label class="form-label !mb-0" for="deleted-kind">{% translate "Show" %}</label>
+    <select id="deleted-kind" name="kind" class="form-input !w-auto" onchange="this.form.submit()">
+      <option value="">{% blocktranslate with n=total %}Everything ({{ n }}){% endblocktranslate %}</option>
+      {% for key, label, n in kinds %}<option value="{{ key }}"{% if key == shown %} selected{% endif %}>{{ label }} ({{ n }})</option>{% endfor %}
+    </select>
+    <noscript><button class="btn btn-secondary btn-sm">{% translate "Show" %}</button></noscript>
+  </form>
+  {% endif %}
+  <section class="card">
+    {% if rows %}
+    <ul class="ledger">
+      {% for r in rows %}
+      <li class="ledger-row">
+        <span class="ledger-icon" data-tone="muted">{% include "partials/icon.html" with name="trash" %}</span>
+        <div class="ledger-main">
+          <p class="ledger-title">{{ r.obj }}</p>
+          <p class="ledger-meta">{{ r.label }} · {{ r.obj.deleted_at|date:"j M Y, H:i" }}{% if r.obj.updated_by %} · {{ r.obj.updated_by }}{% endif %}</p>
+        </div>
+        <div class="ledger-end">
+          <form method="post" action="{% url 'business:deleted_restore' r.kind r.obj.pk %}">{% csrf_token %}<button class="btn btn-secondary btn-sm">{% include "partials/icon.html" with name="restore" %}{% translate "Restore" %}</button></form>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty is-plain"><p class="empty-text">{% translate "Nothing deleted." %}</p></div>
+    {% endif %}
+  </section>
+  {% if total > 300 and not shown %}<p class="help">{% translate "Showing the newest 300. Pick a kind above to see more of it." %}</p>{% endif %}
+</div>
+{% endblock %}

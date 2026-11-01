@@ -34,7 +34,7 @@
         <tbody>
           {% for r in rows %}
           <tr>
-            <th scope="row" class="att-name"><a href="{% url 'business:staff_worker' r.worker.pk %}" class="hover:underline">{{ r.worker.name }}</a><small>{{ r.worker.get_pay_type_display }}</small></th>
+            <th scope="row" class="att-name"><a {% if biz_can.view_finance %}href="{% url 'business:staff_worker' r.worker.pk %}"{% endif %} class="hover:underline">{{ r.worker.name }}</a><small>{{ r.worker.get_pay_type_display }}</small></th>
             {% for d, state in r.cells %}
             <td class="att-cell{% if d.weekday == 4 %} is-friday{% endif %}">{% if state != "none" %}<a href="{% url 'business:staff_work' %}?date={{ d|date:'Y-m-d' }}" class="att-mark" data-state="{{ state }}" data-tip="{{ d|date:'D j M' }} · {% if state == 'full' %}{% translate 'Worked' %}{% elif state == 'half' %}{% translate 'Half day' %}{% elif state == 'leave' %}{% translate 'Leave' %}{% else %}{% translate 'Absent' %}{% endif %}">{% if state == "full" %}✓{% elif state == "half" %}½{% elif state == "leave" %}L{% else %}✕{% endif %}</a>{% endif %}</td>
             {% endfor %}

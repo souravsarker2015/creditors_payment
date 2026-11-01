@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views
+from . import deleted, views
 from .crud import quick_add_view
 
 urlpatterns = [
@@ -20,6 +20,8 @@ urlpatterns = [
     path("settings/team/<int:pk>/remove/", views.member_remove_view, name="member_remove"),
     path("settings/team/<int:pk>/password/", views.member_password_view, name="member_password"),
     path("settings/activity/", views.activity_view, name="activity"),
+    path("settings/deleted/", deleted.deleted_view, name="deleted"),
+    path("settings/deleted/<str:kind>/<int:pk>/restore/", deleted.deleted_restore_view, name="deleted_restore"),
     path("settings/evening-summary/", views.day_summary_view, name="day_summary"),
     path("quick-add/<slug:kind>/", quick_add_view, name="quick_add"),
     path("settings/export/", views.export_view, name="export"),

@@ -14,6 +14,7 @@ from django.utils import timezone
 from django.utils.translation import gettext as _, ngettext, pgettext
 from django.views.decorators.http import require_POST
 
+from apps.core.nav import back_to
 from apps.trash.services import trash
 
 from . import prep
@@ -130,9 +131,7 @@ def _bulk(request):
     ids = [int(x) for x in request.POST.getlist("ids") if x.isdigit()]
     qs = Question.objects.filter(owner=user, pk__in=ids)
     action, n = request.POST.get("action"), qs.count()
-    back = request.POST.get("next") or reverse("work:questions")
-    if not back.startswith("/"):
-        back = reverse("work:questions")
+    back = back_to(request, request.POST.get("next"), reverse("work:questions"))
     if not n:
         messages.info(request, _("Pick some questions first."))
         return redirect(back)

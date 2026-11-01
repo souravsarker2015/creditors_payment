@@ -25508,3 +25508,79 @@ msgid "%(n)s entry stays, without it."
 msgid_plural "%(n)s entries stay, without it."
 msgstr[0] "%(n)sটি এন্ট্রি থেকে যাবে, এটি ছাড়া।"
 msgstr[1] "%(n)sটি এন্ট্রি থেকে যাবে, এটি ছাড়া।"
+
+msgid "Everything deleted on this farm, newest first. Nothing here is lost: restore it and it's back where it was, with its money and numbers."
+msgstr "এই খামারে মুছে ফেলা সবকিছু, নতুনগুলো আগে। এখানে কিছুই হারায়নি: ফিরিয়ে আনলে টাকা ও হিসাবসহ আগের জায়গায় ফিরে যাবে।"
+
+#, python-format
+msgid "Everything (%(n)s)"
+msgstr "সবকিছু (%(n)s)"
+
+msgid "Showing the newest 300. Pick a kind above to see more of it."
+msgstr "নতুন ৩০০টি দেখানো হচ্ছে। আরও দেখতে ওপরে ধরন বেছে নিন।"
+
+msgid "That's already back."
+msgstr "এটি আগেই ফিরে এসেছে।"
+
+msgid "Something the same is already there, so this can't come back. Change that one first."
+msgstr "একই রকম আরেকটি আগে থেকেই আছে, তাই এটি ফেরানো যাচ্ছে না। আগে সেটি বদলান।"
+
+msgid "Weighing"
+msgstr "ওজন"
+
+msgid "Fish moved"
+msgstr "মাছ স্থানান্তর"
+
+msgid "Lease payment"
+msgstr "ইজারা পরিশোধ"
+
+msgid "Species"
+msgstr "প্রজাতি"
+
+msgid "Market price"
+msgstr "বাজার দর"
+
+msgid "Buyer or supplier"
+msgstr "ক্রেতা বা সরবরাহকারী"
+
+msgid "Feed purchase"
+msgstr "খাবার কেনা"
+
+msgid "Stock count"
+msgstr "মজুদ গণনা"
+
+msgid "Transfer"
+msgstr "স্থানান্তর"
+
+msgid "Loan entry"
+msgstr "ঋণের এন্ট্রি"
+
+msgid "Rate change"
+msgstr "হার পরিবর্তন"
+
+msgid "Staff"
+msgstr "কর্মী"
+
+msgid "Earning"
+msgstr "আয়"
+
+msgid "Staff payment"
+msgstr "কর্মীর পরিশোধ"
+
+msgid "Equipment service"
+msgstr "যন্ত্র সার্ভিস"
+
+msgid "Supply"
+msgstr "সরঞ্জাম"
+
+msgid "Supply purchase"
+msgstr "সরঞ্জাম কেনা"
+
+msgid "Partner entry"
+msgstr "অংশীদারের এন্ট্রি"
+
+msgid "Answer — 2 minutes"
+msgstr "উত্তর — ২ মিনিট"
+
+msgid "Not expired"
+msgstr "মেয়াদ শেষ হয়নি"

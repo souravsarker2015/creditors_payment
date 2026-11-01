@@ -105,7 +105,7 @@
       </li>
       {% endfor %}
     </ul>
-    <div class="card-footer"><a href="{% url 'business:feed_purchases_add' %}" class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="plus" %}{% translate "Buy feed" %}</a></div>
+    <div class="card-footer"><a {% if biz_can.enter_data %}href="{% url 'business:feed_purchases_add' %}"{% else %}hidden{% endif %} class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="plus" %}{% translate "Buy feed" %}</a></div>
   </section>
   {% endif %}
 

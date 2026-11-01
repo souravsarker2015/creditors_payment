@@ -17,7 +17,7 @@
         <ul class="fin-list">
           {% for l in r.s.income %}
           <li class="fin-line">
-            <div class="fin-line-top"><span class="fin-name">{% if l.url %}<a href="{{ l.url }}" class="hover:underline">{{ l.label }}</a>{% else %}{{ l.label }}{% endif %}</span><span class="fin-amount">{{ l.amount|bdt }}</span></div>
+            <div class="fin-line-top"><span class="fin-name">{% if l.url and biz_can.view_finance %}<a href="{{ l.url }}" class="hover:underline">{{ l.label }}</a>{% else %}{{ l.label }}{% endif %}</span><span class="fin-amount">{{ l.amount|bdt }}</span></div>
             <div class="meter" data-tone="good"><span style="width: {% widthratio l.amount r.max_income 100 %}%"></span></div>
             {% if l.has_children %}<ul class="fin-kids">{% for c in l.children %}<li><span>{{ c.label }}</span><span>{{ c.amount|bdt }}</span></li>{% endfor %}</ul>{% endif %}
           </li>
@@ -30,7 +30,7 @@
         <ul class="fin-list">
           {% for l in r.s.expense %}
           <li class="fin-line">
-            <div class="fin-line-top"><span class="fin-name">{% if l.url %}<a href="{{ l.url }}" class="hover:underline">{{ l.label }}</a>{% else %}{{ l.label }}{% endif %}</span><span class="fin-amount">{{ l.amount|bdt }}</span></div>
+            <div class="fin-line-top"><span class="fin-name">{% if l.url and biz_can.view_finance %}<a href="{{ l.url }}" class="hover:underline">{{ l.label }}</a>{% else %}{{ l.label }}{% endif %}</span><span class="fin-amount">{{ l.amount|bdt }}</span></div>
             <div class="meter" data-tone="critical"><span style="width: {% widthratio l.amount r.max_expense 100 %}%"></span></div>
             {% if l.has_children %}<ul class="fin-kids">{% for c in l.children %}<li><span>{{ c.label }}</span><span>{{ c.amount|bdt }}</span></li>{% endfor %}</ul>{% endif %}
           </li>
