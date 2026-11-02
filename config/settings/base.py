@@ -115,6 +115,7 @@ MIDDLEWARE = [
     "apps.core.offline.OfflineMiddleware",  # entries saved with no signal are sent later, never twice
     "apps.business.core.middleware.DashboardMiddleware",  # business module: dashboard access
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "apps.core.bad_input.BadInputMiddleware",  # ?year=99999 is a page not found, not a crash
 ]
 
 # ──────────────────────────────────────────────
@@ -140,6 +141,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "apps.accounts.context_processors.user_preferences",
+                "apps.core.site_health.site_warnings",  # debug mode left on a public site
                 "apps.business.core.context_processors.dashboards",  # business module
             ],
             "builtins": ["apps.core.templatetags.ui"],

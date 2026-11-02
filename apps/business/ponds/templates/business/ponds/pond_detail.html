@@ -24,7 +24,7 @@
 
   {% if pond.is_deleted %}{% translate "This pond is deleted. Its cycles, sales and costs are all still here. Restore it to work with it again." as note %}{% url 'business:ponds_restore' pond.pk as restore_url %}{% include "business/partials/deleted_note.html" with text=note restore_url=restore_url %}{% endif %}
 
-  {% if pond.photo %}<img src="{{ pond.photo.url }}" alt="{{ pond.name }}" class="pond-hero-photo">{% endif %}
+  {% if pond.photo %}<img src="{% url 'receipt_view' 'pond' pond.pk %}?v={{ pond.updated_at|date:'U' }}" alt="{{ pond.name }}" class="pond-hero-photo">{% endif %}
 
   {% if current %}
   <a href="{% url 'business:cycle_detail' current.pk %}" class="card cycle-card">

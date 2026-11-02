@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from django.db.models import DecimalField, OuterRef, Subquery, Sum, Value
 from django.db.models.functions import Coalesce
 from django.contrib.auth.models import User
+from apps.core.validators import above_zero
 
 
 class HouseholdCategory(models.Model):
@@ -127,7 +128,7 @@ class Purchase(models.Model):
         related_name="purchases",
         verbose_name=_("Category"),
     )
-    amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name=_("Amount"))
+    amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name=_("Amount"), validators=[above_zero])
     wallet = models.ForeignKey("wallets.Wallet", on_delete=models.SET_NULL, null=True, blank=True, related_name="+",
                                verbose_name=_("Wallet"))
     receipt = models.FileField(_("Receipt photo"), upload_to=personal_receipt_path, blank=True, validators=RECEIPT_VALIDATORS,
@@ -150,7 +151,7 @@ class Settlement(models.Model):
         HouseholdMember, on_delete=models.CASCADE, related_name="settlements",
         verbose_name=_("Member"),
     )
-    amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name=_("Amount"))
+    amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name=_("Amount"), validators=[above_zero])
     wallet = models.ForeignKey("wallets.Wallet", on_delete=models.SET_NULL, null=True, blank=True, related_name="+",
                                verbose_name=_("Wallet"))
     date = models.DateField(verbose_name=_("Date"))

@@ -699,7 +699,7 @@ class Goal(models.Model):
             now = self.current_value if self.current_value is not None else self.start_value
             pct = float((now - self.start_value) / (self.target_value - self.start_value) * 100)
             return max(0, min(100, round(pct)))
-        for done, total in (steps, tasks):
+        for done, total in (steps or (0, 0), tasks or (0, 0)):
             if total:
                 return round(100 * done / total)
         return 0

@@ -242,7 +242,7 @@ def transaction_restore_view(request, pk):
 
 @business_access_required(capability="view_finance")
 def transaction_deleted_view(request):
-    rows = Transaction.all_objects.filter(business=request.business, is_deleted=True).select_related("category", "account")
+    rows = Transaction.all_objects.filter(business=request.business, is_deleted=True).select_related("category__parent", "account")
     return render(request, "business/finance/transaction_deleted.html", {"rows": rows})
 
 
@@ -386,7 +386,7 @@ def _advance(recurring, after):
 @business_access_required(capability="view_finance")
 def recurring_list_view(request):
     b = request.business
-    rows = list(RecurringTransaction.objects.filter(business=b).select_related("category", "account"))
+    rows = list(RecurringTransaction.objects.filter(business=b).select_related("category__parent", "account"))
     today = date.today()
     return render(request, "business/finance/recurring_list.html", {
         "due": [r for r in rows if r.next_due and r.next_due <= today],

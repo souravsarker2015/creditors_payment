@@ -68,15 +68,13 @@ def sheet(request, settings):
     from apps.creditors.models import Creditor, Transaction as CT
     from apps.debtors.models import Debtor, Transaction as DT
     from apps.shops.models import Shop, Transaction as ST
-    from apps.wallets.models import Wallet
-    from apps.wallets.services import balances
+    from apps.wallets.services import holding
 
     user = request.user
     s = Sheet(settings)
-    wallets = list(Wallet.objects.filter(user=user, is_active=True))
+    wallets = holding(user)
     if wallets:
-        held = balances(user)
-        s.lines.append(Line("wallets", _("Cash, bank & bKash (your wallets)"), sum((max(held.get(w.pk, ZERO), ZERO) for w in wallets), ZERO),
+        s.lines.append(Line("wallets", _("Cash, bank & bKash (your wallets)"), sum((max(w.balance, ZERO) for w in wallets), ZERO),
                             ", ".join(w.name for w in wallets)))
     else:
         from apps.goals.services import totals

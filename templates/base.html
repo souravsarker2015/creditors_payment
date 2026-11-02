@@ -166,6 +166,7 @@
         {% endif %}
 
         <main class="app-main">
+            {% for warning in site_warnings %}<div class="page mb-4"><div class="callout" style="--tone: var(--status-critical);" role="alert">{% include "partials/icon.html" with name="alert" %}<p class="callout-text">{{ warning }}</p></div></div>{% endfor %}
             {% if messages %}
             <div class="page mb-5 space-y-2.5" aria-live="polite">
                 {% for message in messages %}

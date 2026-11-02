@@ -8,6 +8,8 @@ from django.core.cache import cache
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
+from apps.accounts.models import SecuritySettings
+
 PW = "Str0ng-pass-123"
 
 
@@ -142,3 +144,32 @@ class PasswordResetTests(TestCase):
         self.client.cookies["django_language"] = "bn"
         self.client.post(reverse("password_reset"), {"email": "rahim@example.com"}, HTTP_ACCEPT_LANGUAGE="bn")
         self.assertIn("পাসওয়ার্ড", mail.outbox[0].subject)
+
+
+class SignupSwitchTests(TestCase):
+    DATA = {"username": "karim", "email": "karim@example.com", "password1": "a-long-Passw0rd!", "password2": "a-long-Passw0rd!"}
+
+    def setUp(self):
+        self.policy = SecuritySettings.load()
+
+    def test_open_by_default(self):
+        self.assertTrue(self.policy.open_signup)
+        self.assertContains(self.client.get(reverse("login")), reverse("signup"))
+        self.assertEqual(self.client.get(reverse("signup")).status_code, 200)
+
+    def test_closed_means_closed(self):
+        self.policy.open_signup = False
+        self.policy.save()
+        self.assertNotContains(self.client.get(reverse("login")), reverse("signup"))
+        self.assertRedirects(self.client.post(reverse("signup"), self.DATA), reverse("login"))
+        self.assertFalse(User.objects.filter(username="karim").exists())
+
+    def test_only_a_site_admin_can_close_it(self):
+        admin = User.objects.create_superuser("root", password="pw")
+        person = User.objects.create_user("rahim", password="pw")
+        self.client.force_login(person)
+        self.client.post(reverse("account_settings"), {"action": "policy", "policy-two_factor": "optional"})
+        self.assertTrue(SecuritySettings.load().open_signup)
+        self.client.force_login(admin)
+        self.client.post(reverse("account_settings"), {"action": "policy", "policy-two_factor": "optional"})
+        self.assertFalse(SecuritySettings.load().open_signup)

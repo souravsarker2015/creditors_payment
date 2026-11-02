@@ -23,6 +23,7 @@ from apps.core.stats import change, last_n_month_starts, month_start, monthly_se
 
 from .insights import jumps
 from .reminders import REMIND_HOUR
+from .report import Ledger
 
 logger = logging.getLogger(__name__)
 
@@ -88,14 +89,17 @@ def networth_view(request):
     contributions_received = _sum(Contribution.objects.filter(contributor__user=user))
     total_income = income_earned + contributions_received
 
-    # Expense is the standalone expense log. Household purchases are only
-    # counted here when nobody fronted them (buyer is unset) — a purchase a
-    # member fronted is already fully represented above as that member's
-    # payable, so counting it again here as "spent" would double-subtract
+    # Spending is what left your hands. Household purchases are only counted
+    # here when nobody fronted them (buyer is unset) — a purchase a member
+    # fronted, or one on credit at a shop, is a payable above until you pay
+    # it, and only then is it spent. Counting both would double-subtract
     # the same taka from your net position.
-    expense_spent = _sum(Expense.objects.filter(user=user))
-    household_spent_by_you = _sum(Purchase.objects.filter(user=user, buyer__isnull=True))
-    total_expense = expense_spent + household_spent_by_you
+    ledger = Ledger(user)
+    expense_spent = _sum(ledger.expense)
+    household_spent_by_you = _sum(ledger.bazar)
+    shops_paid = _sum(ledger.shops)
+    paid_back = _sum(ledger.paid_back)
+    total_expense = expense_spent + household_spent_by_you + shops_paid + paid_back
 
     net_cash_flow = total_income - total_expense
 
@@ -105,34 +109,19 @@ def networth_view(request):
     today = timezone.localdate()
     this_start, last_start = month_start(today), month_start(today, -1)
     last_same_day = last_start.replace(day=min(today.day, (this_start - timedelta(days=1)).day))
-    income_qs = IncomeTransaction.objects.filter(source__user=user)
-    contrib_qs = Contribution.objects.filter(contributor__user=user)
-    expense_qs = Expense.objects.filter(user=user)
-    bazar_qs = Purchase.objects.filter(user=user, buyer__isnull=True)
-
-    def money_in(start, end):
-        return _sum(income_qs.filter(date__gte=start, date__lte=end)) + _sum(contrib_qs.filter(date__gte=start, date__lte=end))
-
-    def money_out(start, end):
-        return _sum(expense_qs.filter(date__gte=start, date__lte=end)) + _sum(bazar_qs.filter(date__gte=start, date__lte=end))
+    money_in, money_out = ledger.money_in, ledger.money_out
 
     in_month, out_month = money_in(this_start, today), money_out(this_start, today)
     saved_month = in_month - out_month
 
     months = last_n_month_starts(12, today)
-    in_series = [a + b for a, b in zip(monthly_series(income_qs, months), monthly_series(contrib_qs, months))]
-    out_series = [a + b for a, b in zip(monthly_series(expense_qs, months), monthly_series(bazar_qs, months))]
+    in_series = [a + b for a, b in zip(monthly_series(ledger.income, months), monthly_series(ledger.contrib, months))]
+    out_series = [sum(month, ZERO) for month in zip(*(monthly_series(qs, months) for qs in ledger.outgoings))]
     net_series = [a - b for a, b in zip(in_series, out_series)]
 
-    from apps.wallets.models import Wallet
-    from apps.wallets.services import balances as wallet_balances
+    from apps.wallets.services import holding
 
-    wallets = list(Wallet.objects.filter(user=user, is_active=True))
-    if wallets:
-        held = wallet_balances(user)
-        for w in wallets:
-            w.balance = held.get(w.pk, w.opening_balance)
-
+    wallets = holding(user)
     wallets_total = sum((w.balance for w in wallets), ZERO)
     hour = timezone.localtime().hour
     context = {
@@ -175,6 +164,8 @@ def networth_view(request):
         "total_income": total_income,
         "expense_spent": expense_spent,
         "household_spent_by_you": household_spent_by_you,
+        "shops_paid": shops_paid,
+        "paid_back": paid_back,
         "total_expense": total_expense,
         "net_cash_flow": net_cash_flow,
         "net_position": net_position,

@@ -10,7 +10,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.contrib import messages
 
-from apps.core.flow import record_initial, record_next
+from apps.core.flow import record_initial, record_next, warn_if_overpaid
 from django.db.models import Sum, Q, F, DecimalField, Value
 from django.db.models.functions import Coalesce, TruncMonth
 from django.core.paginator import Paginator
@@ -301,6 +301,7 @@ def creditor_detail_view(request, pk):
             transaction.creditor = creditor
             transaction.save()
             messages.success(request, _("Transaction of ৳%(amount)s added.") % {"amount": transaction.amount})
+            warn_if_overpaid(request, creditor.name, creditor.remaining)
             return redirect("creditor_detail", pk=pk)
     else:
         form = TransactionForm(initial=record_initial(request, Transaction.TYPE_CHOICES, {"date": django.utils.timezone.localdate()}))

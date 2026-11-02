@@ -86,7 +86,7 @@
           <p class="ledger-meta">{{ p.date|date:"j M Y" }}{% if p.market %} · {{ p.market }}{% endif %}{% if p.size %} · {{ p.size }}{% endif %}{% if p.unit.symbol != "kg" %} · {{ p.rate_kg|bdt }}/kg{% endif %}</p>
         </div>
         <div class="ledger-end">
-          {% if biz_can.enter_data %}
+          {% if biz_can.delete %}
           <form method="post" action="{% url 'business:price_delete' p.pk %}" data-confirm="{% translate 'Delete this price?' %}" data-confirm-after="back">{% csrf_token %}
             <button type="submit" class="icon-btn" aria-label="{% translate 'Delete' %}">{% include "partials/icon.html" with name="trash" %}</button>
           </form>

@@ -12,7 +12,7 @@ from django.http import Http404, HttpResponse, HttpResponseNotModified, JsonResp
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.dateparse import parse_date
+from apps.core.dates import parse_date
 from django.utils.formats import date_format
 from django.utils.http import content_disposition_header, http_date, parse_http_date_safe
 from django.utils.translation import gettext as _

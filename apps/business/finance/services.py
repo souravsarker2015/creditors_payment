@@ -138,7 +138,7 @@ def movements(business, account=None):
         for t in Treatment.objects.filter(business=business, cost__gt=0, account__isnull=False, cycle__is_deleted=False).select_related("cycle__pond"):
             add(t.date, t.account_id, -t.cost, _("Pond care"), f"{t.product} · {t.cycle.pond}",
                 reverse("business:entry_edit", args=["treatment", t.pk]), "expense")
-    for t in Transaction.objects.filter(business=business).select_related("category", "party"):
+    for t in Transaction.objects.filter(business=business).select_related("category__parent", "party"):
         add(t.date, t.account_id, t.signed, str(t.category), t.description or (str(t.party) if t.party else ""),
             reverse("business:transaction_edit", args=[t.pk]), "income" if t.is_income else "expense")
     for tr in Transfer.objects.filter(business=business).select_related("from_account", "to_account"):

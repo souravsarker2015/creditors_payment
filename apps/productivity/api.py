@@ -16,7 +16,7 @@ from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.dateparse import parse_date, parse_datetime
+from apps.core.dates import parse_date, parse_datetime
 from django.utils.formats import date_format
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_GET, require_POST
@@ -1098,6 +1098,8 @@ def goal_value(request, pk):
         else:
             now = Decimal(request.POST.get("value", ""))
     except InvalidOperation:
+        return bad(_("Type a number."))
+    if not now.is_finite() or abs(now) >= 10 ** 10:      # NaN is a Decimal too; and the column stops here
         return bad(_("Type a number."))
     goal.current_value = now
     goal.save(update_fields=["current_value", "updated_at"])

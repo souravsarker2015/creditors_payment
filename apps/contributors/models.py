@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
+from apps.core.validators import above_zero
 
 
 class ContributorCategory(models.TextChoices):
@@ -45,7 +46,7 @@ class Contributor(models.Model):
 
 class Contribution(models.Model):
     contributor = models.ForeignKey(Contributor, on_delete=models.CASCADE, related_name="contributions", verbose_name=_("Contributor"))
-    amount = models.DecimalField(max_digits=15, decimal_places=2, verbose_name=_("Amount"))
+    amount = models.DecimalField(max_digits=15, decimal_places=2, verbose_name=_("Amount"), validators=[above_zero])
     wallet = models.ForeignKey("wallets.Wallet", on_delete=models.SET_NULL, null=True, blank=True, related_name="+",
                                verbose_name=_("Wallet"))
     date = models.DateField(verbose_name=_("Date"))

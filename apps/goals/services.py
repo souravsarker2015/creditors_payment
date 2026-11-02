@@ -4,6 +4,7 @@ import calendar
 from datetime import date, timedelta
 from decimal import Decimal, ROUND_CEILING
 
+from django.db import transaction
 from django.db.models import Case, DecimalField, F, Min, Q, Sum, Value, When
 from django.db.models.functions import Coalesce, TruncMonth
 from django.utils import timezone
@@ -181,6 +182,8 @@ def run_autosave(schedule, today=None):
     """Post every deposit that's due. Returns (deposits created, goal just reached)."""
     from apps.income.models import RECURRING_CATCHUP_LIMIT
 
+    from .models import AutoSave
+
     today = today or timezone.localdate()
     goal = schedule.goal
     created = 0
@@ -194,9 +197,15 @@ def run_autosave(schedule, today=None):
         if remaining <= 0:
             break
         amount = min(schedule.amount, remaining)  # never overfill
-        GoalEntry.objects.create(goal=goal, kind=GoalEntry.DEPOSIT, amount=amount, date=when, is_auto=True)
+        following = schedule.advance(schedule.next_run_date)
+        with transaction.atomic():
+            # Two pages opening together both find this date due: only the one that moves it on posts.
+            if not AutoSave.objects.filter(pk=schedule.pk, next_run_date=schedule.next_run_date).update(next_run_date=following):
+                schedule.refresh_from_db(fields=["next_run_date"])
+                break
+            GoalEntry.objects.create(goal=goal, kind=GoalEntry.DEPOSIT, amount=amount, date=when, is_auto=True)
         remaining -= amount
-        schedule.next_run_date = schedule.advance(schedule.next_run_date)
+        schedule.next_run_date = following
         created += 1
     if remaining <= 0 and schedule.is_active:
         schedule.is_active = False  # goal reached: nothing more to save

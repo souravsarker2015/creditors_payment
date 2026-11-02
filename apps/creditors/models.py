@@ -6,6 +6,7 @@ from django.db.models import Sum, Q
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from apps.core.validators import above_zero
 
 DUE_SOON_DAYS = 7
 
@@ -295,7 +296,7 @@ class Transaction(models.Model):
         default=BORROW,
         verbose_name=_("Type"),
     )
-    amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name=_("Amount"))
+    amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name=_("Amount"), validators=[above_zero])
     wallet = models.ForeignKey("wallets.Wallet", on_delete=models.SET_NULL, null=True, blank=True, related_name="+",
                                verbose_name=_("Wallet"))
     date = models.DateField(verbose_name=_("Date"))

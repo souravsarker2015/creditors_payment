@@ -26028,3 +26028,48 @@ msgstr ""
 "- [ ] নামগুলো বোঝায় জিনিসটা কী\n"
 "- [ ] ডক ও মাইগ্রেশন আছে\n"
 "- [ ] আগের অবস্থায় ফেরানো যায়\n"
+
+msgid "That's %(extra)s more than the balance with %(name)s. If it was a typing slip, edit the entry."
+msgstr "এটি %(name)s-এর সাথে হিসাবের চেয়ে %(extra)s বেশি। ভুলে লিখে থাকলে এন্ট্রিটি ঠিক করে নিন।"
+
+msgid "This public site is in debug mode: an error page shows your code and settings to anyone. See “Going live” in the README."
+msgstr "এই পাবলিক সাইটটি ডিবাগ মোডে চলছে: কোনো ত্রুটি হলে পাতায় আপনার কোড ও সেটিংস যে কেউ দেখতে পাবে। README-এর “Going live” অংশ দেখুন।"
+
+msgid "This public site uses the secret key from the code, so sign-ins can be forged. Set DJANGO_SECRET_KEY on the server."
+msgstr "এই পাবলিক সাইটে কোডে লেখা সিক্রেট কী চলছে, তাই সাইন-ইন জাল করা সম্ভব। সার্ভারে DJANGO_SECRET_KEY সেট করুন।"
+
+msgid "It still holds %(amount)s, which keeps counting in your money until you move it out."
+msgstr "এতে এখনও %(amount)s আছে, সরিয়ে না নেওয়া পর্যন্ত এটি আপনার টাকার হিসাবে থাকবে।"
+
+msgid "Paid to shops"
+msgstr "দোকানে পরিশোধ"
+
+msgid "Paid back to family"
+msgstr "পরিবারকে ফেরত"
+
+msgid "Expenses, bazar you paid yourself, and what you paid shops and family back this month, compared with the same days of last month."
+msgstr "এই মাসে খরচ, নিজে দেওয়া বাজার, আর দোকান ও পরিবারকে যা দিয়েছেন — গত মাসের একই দিনগুলোর সাথে তুলনা করে।"
+
+msgid "Expenses, bazar, shops + family"
+msgstr "খরচ, বাজার, দোকান + পরিবার"
+
+msgid "A purchase on credit at a shop, or one fronted by a family member, is a balance until you pay it, and counts as spending on the day you do — never twice. Interest that has accrued but not yet been posted to a creditor's balance is not included here; check that creditor's page for the estimate."
+msgstr "দোকানে বাকিতে কেনা, বা পরিবারের কারও আগাম দেওয়া কেনাকাটা শোধ না করা পর্যন্ত ব্যালেন্স হিসেবে থাকে, আর যেদিন শোধ করেন সেদিন ব্যয় হিসেবে গণনা হয় — কখনো দুবার নয়। কোনো পাওনাদারের ব্যালেন্সে এখনও যোগ করা হয়নি এমন সঞ্চিত সুদ এখানে অন্তর্ভুক্ত নয়; আনুমানিক হিসাবের জন্য সেই পাওনাদারের পাতা দেখুন।"
+
+msgid "Expenses by category, bazar you paid for, and what you paid shops and family. Tap one to see each entry."
+msgstr "খাত অনুযায়ী খরচ, আপনার দেওয়া বাজার, আর দোকান ও পরিবারকে যা দিয়েছেন। প্রতিটি এন্ট্রি দেখতে একটিতে চাপুন।"
+
+msgid "See the photo"
+msgstr "ছবি দেখুন"
+
+msgid "That value can't be used here."
+msgstr "এই মানটি এখানে চলবে না।"
+
+msgid "New accounts are added by the site's admin. Ask them for one."
+msgstr "নতুন অ্যাকাউন্ট সাইটের অ্যাডমিন যোগ করেন। তাঁর কাছে চেয়ে নিন।"
+
+msgid "Anyone can create an account"
+msgstr "যে কেউ অ্যাকাউন্ট খুলতে পারবে"
+
+msgid "Turn this off to add people yourself, from People & access."
+msgstr "এটি বন্ধ করলে ব্যবহারকারী ও অনুমতি থেকে আপনি নিজেই লোক যোগ করবেন।"

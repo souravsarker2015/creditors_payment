@@ -1,6 +1,7 @@
 """Receipt photos: where they're stored, how big they may be, and a private
 viewer — a receipt is only ever served to the person it belongs to (or, for
-the farm, to team members who may see money), never as a public media URL."""
+the farm, to team members who may see money), never as a public media URL.
+A pond's photo comes this way too, so nothing uploaded needs /media/ to be public."""
 import mimetypes
 import os
 import uuid
@@ -88,6 +89,14 @@ def _record(request, kind, pk):
         if m is None or m.business_id != t.business_id or not can(m, "view_finance"):
             raise Http404
         return t
+    if kind == "pond":
+        from apps.business.core.access import active_membership
+        from apps.business.ponds.models import Pond
+
+        m = active_membership(request)
+        if m is None:
+            raise Http404
+        return get_object_or_404(Pond, pk=pk, business=m.business)
     if kind in ("sale", "feed"):
         # A memo is seen by whoever on the farm can see the sale or purchase it belongs to.
         from apps.business.core.access import active_membership
@@ -107,7 +116,7 @@ def _record(request, kind, pk):
 @login_required
 def receipt_view(request, kind, pk):
     record = _record(request, kind, pk)
-    f = getattr(record, "receipt", None)
+    f = getattr(record, "receipt", None) or getattr(record, "photo", None)
     if not f:
         raise Http404
     try:

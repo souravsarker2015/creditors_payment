@@ -31,7 +31,7 @@ def wallet_list_view(request):
     active = [w for w in wallets if w.is_active]
     return render(request, "wallets/list.html", {
         "wallets": active, "stopped": [w for w in wallets if not w.is_active],
-        "total": sum((w.balance for w in active), ZERO),
+        "total": sum((w.balance for w in wallets if w.is_active or w.balance), ZERO),
         "by_kind": [(label, sum((w.balance for w in active if w.kind == kind), ZERO))
                     for kind, label in WalletKind.choices if any(w.kind == kind for w in active)],
         "transfers": Transfer.objects.filter(user=request.user).select_related("from_wallet", "to_wallet")[:8],
@@ -104,6 +104,9 @@ def wallet_toggle_view(request, pk):
         w.is_default = False
     w.save(update_fields=["is_active", "is_default"])
     messages.success(request, (_("%(name)s is in use again.") if w.is_active else _("%(name)s is no longer offered for new entries.")) % {"name": w.name})
+    held = services.balances(request.user).get(w.pk)
+    if held and not w.is_active:
+        messages.warning(request, _("It still holds %(amount)s, which keeps counting in your money until you move it out.") % {"amount": money(held)})
     return redirect("wallet_detail", pk=w.pk)
 
 

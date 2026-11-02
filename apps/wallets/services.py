@@ -98,6 +98,16 @@ def balances(user):
     return totals
 
 
+def holding(user):
+    """The wallets that count as your money, each with its .balance: those in use, and any you've stopped
+    using that still hold something (stopping one doesn't spend what's in it)."""
+    totals = balances(user)
+    wallets = list(Wallet.objects.filter(user=user))
+    for w in wallets:
+        w.balance = totals.get(w.pk, w.opening_balance)
+    return [w for w in wallets if w.is_active or w.balance]
+
+
 def history(wallet):
     """(moves newest first with a running balance, balance now)."""
     rows = movements(wallet.user, wallet)

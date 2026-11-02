@@ -195,6 +195,10 @@
         </div>
         <p class="help mt-2">{% translate "When it's required, people without it are asked to set it up right after signing in." %}</p>
       </fieldset>
+      <div>
+        <label class="choice">{{ policy_form.open_signup }}<span>{{ policy_form.open_signup.label }}</span></label>
+        <p class="help mt-2">{{ policy_form.open_signup.help_text }}</p>
+      </div>
       <div class="form-actions"><button type="submit" class="btn btn-primary">{% include "partials/icon.html" with name="check" %}{% translate "Save" %}</button></div>
     </form>
     <div class="card-body !pt-0">

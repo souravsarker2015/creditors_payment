@@ -1,11 +1,12 @@
 import calendar
 from datetime import timedelta
 
-from django.db import models
+from django.db import models, transaction
 from django.db.models import Sum, Q
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from apps.core.validators import above_zero
 
 
 class IncomeSource(models.Model):
@@ -48,7 +49,7 @@ class IncomeTransaction(models.Model):
         related_name="transactions",
         verbose_name=_("Source"),
     )
-    amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name=_("Amount"))
+    amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name=_("Amount"), validators=[above_zero])
     wallet = models.ForeignKey("wallets.Wallet", on_delete=models.SET_NULL, null=True, blank=True, related_name="+",
                                verbose_name=_("Wallet"))
     date = models.DateField(verbose_name=_("Date"))
@@ -103,7 +104,7 @@ class RecurringIncome(models.Model):
         related_name="recurring_incomes",
         verbose_name=_("Source"),
     )
-    amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name=_("Amount"))
+    amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name=_("Amount"), validators=[above_zero])
     wallet = models.ForeignKey("wallets.Wallet", on_delete=models.SET_NULL, null=True, blank=True, related_name="+",
                                verbose_name=_("Wallet"))
     frequency = models.CharField(max_length=10, choices=RecurringFrequency.choices, verbose_name=_("How often"))
@@ -171,19 +172,24 @@ class RecurringIncome(models.Model):
             effective_date = self._effective_date(self.next_run_date)
             if effective_date > today:
                 break
-            IncomeTransaction.objects.create(
-                source=self.source,
-                amount=self.amount,
-                date=effective_date,
-                note=self.note,
-                wallet=self.wallet,
-                recurring_source=self,
-            )
-            self.next_run_date = self._advance(self.next_run_date)
+            following = self._advance(self.next_run_date)
+            with transaction.atomic():
+                # Two pages opening together both find this date due: only the one that moves it on posts.
+                if not RecurringIncome.objects.filter(pk=self.pk, next_run_date=self.next_run_date).update(
+                        next_run_date=following, updated_at=timezone.now()):
+                    self.refresh_from_db(fields=["next_run_date"])
+                    break
+                IncomeTransaction.objects.create(
+                    source=self.source,
+                    amount=self.amount,
+                    date=effective_date,
+                    note=self.note,
+                    wallet=self.wallet,
+                    recurring_source=self,
+                )
+            self.next_run_date = following
             created += 1
 
-        if created:
-            self.save(update_fields=["next_run_date", "updated_at"])
         return created
 
 

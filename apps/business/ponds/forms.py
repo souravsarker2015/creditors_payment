@@ -2,12 +2,14 @@ from datetime import date
 from decimal import Decimal
 
 from django import forms
+from django.urls import reverse
 from django.utils.formats import date_format
 from django.utils.translation import gettext_lazy as _
 
 from apps.business.core.crud import BusinessForm, money_field
 from apps.business.core.models import Unit
 from apps.business.species.models import Species
+from apps.core.receipts import ReceiptInput
 
 from .models import CultureCycle, FishMove, Harvest, LeasePayment, Mortality, Ownership, Pond, PondAlerts, SampleWeighing, Stocking, TimeOfDay, Treatment, TreatmentKind, WaterTest
 
@@ -36,7 +38,7 @@ class PondForm(BusinessForm):
             "location": forms.TextInput(attrs={"placeholder": _("Village / mouza, landmark")}),
             "lease_start": forms.DateInput(), "lease_end": forms.DateInput(),
             "ownership": forms.RadioSelect,
-            "photo": forms.ClearableFileInput(attrs={"accept": "image/*", "class": "form-input"}),
+            "photo": ReceiptInput(attrs={"accept": "image/*"}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -47,6 +49,9 @@ class PondForm(BusinessForm):
             self.initial.setdefault("area_unit", Unit.objects.filter(business=self.business, symbol="dec").first())
         money_field(self.fields["lease_amount"])
         self.fields["lease_amount"].help_text = _("For the whole lease period.")
+        if self.instance.pk and self.instance.photo:
+            self.fields["photo"].widget.view_url = reverse("receipt_view", args=["pond", self.instance.pk])
+            self.fields["photo"].widget.view_label = _("See the photo")
 
     def clean_photo(self):
         photo = self.cleaned_data.get("photo")

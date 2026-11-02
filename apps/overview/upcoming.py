@@ -79,16 +79,14 @@ def forecast(user, today, days):
 
     from apps.expense.models import generate_due_recurring_expense
     from apps.income.models import generate_due_recurring_income
-    from apps.wallets.models import Wallet
-    from apps.wallets.services import balances
+    from apps.wallets.services import holding
 
     # Regular income and spending that's due is written down first (as their
     # own pages do), so it's in the wallets rather than counted as late.
     generate_due_recurring_income(user)
     generate_due_recurring_expense(user)
-    held = balances(user)
-    wallets = list(Wallet.objects.filter(user=user, is_active=True))
-    now = sum((held.get(w.pk, w.opening_balance) for w in wallets), ZERO)
+    wallets = holding(user)
+    now = sum((w.balance for w in wallets), ZERO)
     until = today + timedelta(days=days)
     dues, undated = ledger_items(user, today, until)
     # Wallets are optional: without one there's no "money now", so only the

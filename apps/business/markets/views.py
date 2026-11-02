@@ -74,7 +74,7 @@ def prices_view(request):
     })
 
 
-@business_access_required(capability="enter_data")
+@business_access_required(capability="delete")
 @require_POST
 def price_delete_view(request, pk):
     get_object_or_404(PriceCheck, pk=pk, business=request.business).soft_delete()

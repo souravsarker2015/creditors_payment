@@ -70,3 +70,23 @@ class PriceBoardTests(TestCase):
         self.assertNotContains(r, "Save price")
         self.client.post(reverse("business:prices"), {"species": self.rui.pk, "date": TODAY.isoformat(), "rate": "1", "unit": self.mon.pk})
         self.assertEqual(PriceCheck.objects.count(), 1)
+
+
+class PriceDeleteRightsTests(TestCase):
+    def setUp(self):
+        self.b, self.owner, self.staff = make_farm()
+        species = Species.objects.filter(business=self.b).first()
+        unit = Unit.objects.filter(business=self.b, unit_type="weight").first()
+        self.price = PriceCheck.objects.create(business=self.b, species=species, unit=unit, rate=D("200"), date=date(2025, 3, 1))
+        self.url = reverse("business:price_delete", args=[self.price.pk])
+
+    def test_data_entry_cant_delete_one(self):
+        self.client.force_login(self.staff)
+        self.assertEqual(self.client.post(self.url).status_code, 403)
+        self.assertNotContains(self.client.get(reverse("business:prices")), self.url)
+        self.assertTrue(PriceCheck.objects.filter(pk=self.price.pk).exists())
+
+    def test_the_owner_can(self):
+        self.client.force_login(self.owner)
+        self.assertEqual(self.client.post(self.url).status_code, 302)
+        self.assertFalse(PriceCheck.objects.filter(pk=self.price.pk).exists())

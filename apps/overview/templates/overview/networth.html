@@ -79,9 +79,9 @@
         <dd class="stat-hint">{% translate "Income + contributions" %}</dd>
       </div>
       <div class="stat" data-tone="critical">
-        <div class="stat-top"><dt class="stat-label inline-flex items-center">{% translate "Money out" %}{% translate "Expenses plus household bazar you paid yourself this month, compared with the same days of last month." as info_text %}{% include "partials/info.html" with text=info_text %}</dt>{% include "partials/delta.html" with change=out_change good="down" %}</div>
+        <div class="stat-top"><dt class="stat-label inline-flex items-center">{% translate "Money out" %}{% translate "Expenses, bazar you paid yourself, and what you paid shops and family back this month, compared with the same days of last month." as info_text %}{% include "partials/info.html" with text=info_text %}</dt>{% include "partials/delta.html" with change=out_change good="down" %}</div>
         <dd class="stat-value">{{ out_month|money }}</dd>
-        <dd class="stat-hint">{% translate "Expenses + bazar paid by you" %}</dd>
+        <dd class="stat-hint">{% translate "Expenses, bazar, shops + family" %}</dd>
       </div>
       <div class="stat" data-tone="{% if saved_month >= 0 %}good{% else %}critical{% endif %}">
         <dt class="stat-label">{% if saved_month >= 0 %}{% translate "Saved" %}{% else %}{% translate "Overspent" %}{% endif %}</dt>
@@ -266,6 +266,8 @@
             <div class="kv"><dt><a href="{% url 'contributor_dashboard' %}" class="kv-label">{% translate "Received (Contributors)" %}</a></dt><dd class="kv-value" data-tone="good">{{ contributions_received|signed_money }}</dd></div>
             <div class="kv"><dt><a href="{% url 'expense_dashboard' %}" class="kv-label">{% translate "Spent (Expense Log)" %}</a></dt><dd class="kv-value" data-tone="critical">−{{ expense_spent|money }}</dd></div>
             <div class="kv"><dt><a href="{% url 'household_dashboard' %}" class="kv-label">{% translate "Spent (Household, by you)" %}</a></dt><dd class="kv-value" data-tone="critical">−{{ household_spent_by_you|money }}</dd></div>
+            <div class="kv"><dt><a href="{% url 'shop_dashboard' %}" class="kv-label">{% translate "Paid to shops" %}</a></dt><dd class="kv-value" data-tone="critical">−{{ shops_paid|money }}</dd></div>
+            <div class="kv"><dt><a href="{% url 'household_dashboard' %}" class="kv-label">{% translate "Paid back to family" %}</a></dt><dd class="kv-value" data-tone="critical">−{{ paid_back|money }}</dd></div>
           </dl>
           <div class="mt-3 space-y-1.5" aria-hidden="true">
             <div class="meter" data-tone="good"><span style="width: {{ income_pct }}%"></span></div>
@@ -283,7 +285,7 @@
       {% include "partials/icon.html" with name="alert" %}
       <p class="text-xs leading-relaxed" style="color: var(--text-secondary);">
         <strong style="color: var(--text-primary);">{% translate "How this is calculated:" %}</strong>
-        {% translate "Household purchases fronted by a member are counted once, as that member's balance — not counted again as spending, to avoid double-counting the same taka. Interest that has accrued but not yet been posted to a creditor's balance is not included here; check that creditor's page for the estimate." %}
+        {% translate "A purchase on credit at a shop, or one fronted by a family member, is a balance until you pay it, and counts as spending on the day you do — never twice. Interest that has accrued but not yet been posted to a creditor's balance is not included here; check that creditor's page for the estimate." %}
       </p>
     </div>
     </div>

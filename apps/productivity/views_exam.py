@@ -10,7 +10,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.dateparse import parse_date
+from apps.core.dates import parse_date
 from django.utils.formats import date_format
 from django.utils.http import content_disposition_header
 from django.utils.translation import gettext as _, ngettext, pgettext
@@ -153,7 +153,7 @@ def notes_api(request, pk):
         if request.GET.get("pinned") == "1":            # the board: important ones first, as Keep's pinned notes
             qs = qs.order_by("-is_starred", "chapter_rank", "order", "pk")
     try:
-        page = max(1, int(request.GET.get("page") or 1))
+        page = min(max(1, int(request.GET.get("page") or 1)), 10 ** 6)
     except ValueError:
         page = 1
     rows = list(qs[(page - 1) * exam.PAGE: page * exam.PAGE + 1])

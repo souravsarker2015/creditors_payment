@@ -246,7 +246,7 @@ class SecuritySettingsForm(forms.ModelForm):
         from .models import SecuritySettings
 
         model = SecuritySettings
-        fields = ("two_factor",)
+        fields = ("two_factor", "open_signup")
         widgets = {"two_factor": forms.RadioSelect}
 
 

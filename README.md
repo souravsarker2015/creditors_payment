@@ -142,12 +142,19 @@ anyone. Back up `db.sqlite3` first, then:
    ```
 2. In the Web tab → WSGI configuration file, set
    `os.environ["DJANGO_SETTINGS_MODULE"] = "config.settings.live"`
-3. In the Web tab → Static files, add URL `/media/` → the project's `media` folder, next to `/static/`
-   (with DEBUG off Django no longer serves uploaded photos itself).
-4. Run `python manage.py collectstatic --noinput --settings=config.settings.live` if `/static/` points at `staticfiles`.
+3. Run `python manage.py collectstatic --noinput --settings=config.settings.live` if `/static/` points at `staticfiles`.
+4. In the Web tab → Static files, remove any mapping for `/media/`. Receipts, memos, papers and pond photos are served
+   by the app to the people allowed to see them; a `/media/` mapping would put them on the open internet.
 5. Reload the web app. Everyone is signed out once, because the key changed.
 
 Errors and pages not found now go to the site's error log (Web tab → Log files).
+
+If the browser says "too many redirects", add `DJANGO_SECURE_SSL_REDIRECT=False` to `.env`, turn on **Force HTTPS** in the
+Web tab, and reload.
+
+While a public site is still in debug mode, or on the public secret key, site admins see a red warning on every page.
+
+Anyone can create an account until a site admin turns that off under Account & security → *Anyone can create an account*.
 
 To undo: put `config.settings.dev` back in the WSGI file and reload.
 

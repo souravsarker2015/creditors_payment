@@ -1,13 +1,14 @@
 import calendar
 from datetime import timedelta
 
-from django.db import models
+from django.db import models, transaction
 
 from apps.core.receipts import RECEIPT_VALIDATORS, personal_receipt_path
 from django.db.models import Sum, Q
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from apps.core.validators import above_zero
 
 
 class ExpenseCategory(models.Model):
@@ -53,7 +54,7 @@ class Expense(models.Model):
         related_name="expenses",
         verbose_name=_("Category"),
     )
-    amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name=_("Amount"))
+    amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name=_("Amount"), validators=[above_zero])
     wallet = models.ForeignKey("wallets.Wallet", on_delete=models.SET_NULL, null=True, blank=True, related_name="+",
                                verbose_name=_("Wallet"))
     receipt = models.FileField(_("Receipt photo"), upload_to=personal_receipt_path, blank=True, validators=RECEIPT_VALIDATORS,
@@ -115,7 +116,7 @@ class RecurringExpense(models.Model):
         related_name="recurring_expenses",
         verbose_name=_("Category"),
     )
-    amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name=_("Amount"))
+    amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name=_("Amount"), validators=[above_zero])
     wallet = models.ForeignKey("wallets.Wallet", on_delete=models.SET_NULL, null=True, blank=True, related_name="+",
                                verbose_name=_("Wallet"))
     frequency = models.CharField(max_length=10, choices=RecurringFrequency.choices, verbose_name=_("How often"))
@@ -184,20 +185,25 @@ class RecurringExpense(models.Model):
             effective_date = self._effective_date(self.next_run_date)
             if effective_date > today:
                 break
-            Expense.objects.create(
-                user=self.user,
-                category=self.category,
-                amount=self.amount,
-                date=effective_date,
-                note=self.note,
-                wallet=self.wallet,
-                recurring_source=self,
-            )
-            self.next_run_date = self._advance(self.next_run_date)
+            following = self._advance(self.next_run_date)
+            with transaction.atomic():
+                # Two pages opening together both find this date due: only the one that moves it on posts.
+                if not RecurringExpense.objects.filter(pk=self.pk, next_run_date=self.next_run_date).update(
+                        next_run_date=following, updated_at=timezone.now()):
+                    self.refresh_from_db(fields=["next_run_date"])
+                    break
+                Expense.objects.create(
+                    user=self.user,
+                    category=self.category,
+                    amount=self.amount,
+                    date=effective_date,
+                    note=self.note,
+                    wallet=self.wallet,
+                    recurring_source=self,
+                )
+            self.next_run_date = following
             created += 1
 
-        if created:
-            self.save(update_fields=["next_run_date", "updated_at"])
         return created
 
 

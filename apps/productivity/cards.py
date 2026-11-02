@@ -76,7 +76,7 @@ def answer(card, rating, now=None):
 
 def undo(review):
     """Take an answer back: the card's schedule goes back to how it was before it, and the answer is forgotten."""
-    from django.utils.dateparse import parse_date, parse_datetime
+    from apps.core.dates import parse_date, parse_datetime
 
     card, b = review.card, review.before or {}
     if not b:

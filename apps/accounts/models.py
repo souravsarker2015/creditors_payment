@@ -91,6 +91,8 @@ class SecuritySettings(models.Model):
     """Site-wide security choices, set by an admin. There is only one row."""
 
     two_factor = models.CharField(_("Two-step sign-in"), max_length=10, choices=TwoFactorPolicy.choices, default=TwoFactorPolicy.OPTIONAL)
+    open_signup = models.BooleanField(_("Anyone can create an account"), default=True,
+                                      help_text=_("Turn this off to add people yourself, from People & access."))
     updated_at = models.DateTimeField(auto_now=True)
     updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
 

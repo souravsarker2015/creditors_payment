@@ -63,6 +63,9 @@ def send_set_password_email(request, user, welcome=False):
 
 
 def signup_view(request):
+    if not SecuritySettings.load().open_signup:
+        messages.info(request, _("New accounts are added by the site's admin. Ask them for one."))
+        return redirect("login")
     if request.method == "POST":
         form = SignupForm(request.POST)
         if form.is_valid():
@@ -90,7 +93,7 @@ def login_view(request):
             return twofactor.finish_login(request, user, remember, lambda: redirect(nxt or "home"))
     else:
         form = LoginForm(request)
-    return render(request, "accounts/login.html", {"form": form, "next": _safe_next(request)})
+    return render(request, "accounts/login.html", {"form": form, "next": _safe_next(request), "open_signup": SecuritySettings.load().open_signup})
 
 
 def two_factor_verify_view(request):

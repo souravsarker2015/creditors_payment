@@ -1,6 +1,6 @@
 {% load i18n business %}<article class="card entity pond-card">
   <div class="pond-photo{% if not o.photo %} is-empty{% endif %}">
-    {% if o.photo %}<img src="{{ o.photo.url }}" alt="" loading="lazy">{% else %}{% include "business/partials/icon.html" with name="fish" %}{% endif %}
+    {% if o.photo %}<img src="{% url 'receipt_view' 'pond' o.pk %}?v={{ o.updated_at|date:'U' }}" alt="" loading="lazy">{% else %}{% include "business/partials/icon.html" with name="fish" %}{% endif %}
     <span class="badge pond-status" data-tone="{% if o.status == 'in_use' %}good{% elif o.status == 'preparing' %}warn{% else %}muted{% endif %}">{{ o.get_status_display }}</span>
   </div>
   <div class="entity-head">

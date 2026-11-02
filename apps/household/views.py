@@ -14,7 +14,7 @@ from django.db.models import Q, Sum, Count, DecimalField, Value
 from django.db.models.functions import Coalesce, TruncMonth
 from django.core.paginator import Paginator
 from django.utils import dateformat
-from django.utils.dateparse import parse_date
+from apps.core.dates import parse_date
 from django.utils.translation import gettext as _, gettext_lazy, ngettext
 
 from apps.core.templatetags.ui import bd_number, money
@@ -22,6 +22,7 @@ from apps.trash.undo import delete_with_undo
 from .models import HouseholdCategory, HouseholdMember, Purchase, Settlement
 from apps.budgets.models import Budget, BudgetScope
 from apps.budgets.services import status as budget_status
+from apps.core.flow import warn_if_overpaid
 from apps.core.stats import month_compare, month_start, ranked, total, trend_summary
 from apps.core.status import apply_status_filter, delete_record, toggle_active
 from .forms import HouseholdCategoryForm, HouseholdMemberForm, PurchaseForm, SettlementForm
@@ -325,10 +326,7 @@ def _back_to(request):
 
 
 def _iso_date(raw):
-    try:
-        return parse_date((raw or "").strip())
-    except ValueError:
-        return None
+    return parse_date((raw or "").strip())
 
 
 @login_required
@@ -404,7 +402,7 @@ def purchase_all_view(request):
 
 @login_required
 def month_detail_view(request, year, month):
-    if not 1 <= month <= 12:
+    if not 1 <= month <= 12 or not 1900 <= year <= 2200:
         raise Http404("Invalid month.")
 
     today = timezone.localdate()
@@ -677,6 +675,7 @@ def member_detail_view(request, pk):
             settlement.member = member
             settlement.save()
             messages.success(request, _("Gave back ৳%(amount)s to %(name)s.") % {"amount": settlement.amount, "name": member.name})
+            warn_if_overpaid(request, member.name, HouseholdMember.objects.get(pk=pk).balance_due)
             return redirect("household_member_detail", pk=pk)
     else:
         form = SettlementForm(initial={"date": timezone.localdate()})

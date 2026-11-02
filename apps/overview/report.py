@@ -3,8 +3,9 @@ from, where it went, how that compares with the period before, the biggest
 spends, and loans given and taken. Printable, and downloadable as CSV.
 
 The totals follow the same rules as Home: money in is income plus
-contributions; money out is expenses plus bazar you paid for yourself (a
-purchase a family member paid for is their balance, not your spending)."""
+contributions; money out is what left your hands — expenses, bazar you paid
+for yourself, and what you paid shops and family back (a purchase on credit,
+or one a family member paid for, is a balance until then, not spending)."""
 import calendar
 import csv
 from datetime import date
@@ -27,8 +28,9 @@ from apps.creditors.models import Transaction as CreditorTx
 from apps.debtors.models import Transaction as DebtorTx
 from apps.expense.models import Expense
 from apps.goals.models import GoalEntry
-from apps.household.models import Purchase
+from apps.household.models import Purchase, Settlement
 from apps.income.models import IncomeTransaction
+from apps.shops.models import Transaction as ShopTx
 
 ZERO = Decimal("0.00")
 
@@ -45,7 +47,7 @@ def _period(request, today):
         return "year", date(y, 1, 1), date(y, 12, 31), str(y)
     try:
         y, m = (int(p) for p in raw_month.split("-")[:2])
-        start = date(y, m, 1)
+        start = date(y, m, 1) if 2000 <= y <= 2100 else today.replace(day=1)
     except (TypeError, ValueError):
         start = today.replace(day=1)
     end = start.replace(day=calendar.monthrange(start.year, start.month)[1])
@@ -71,6 +73,9 @@ class Ledger:
         self.contrib = Contribution.objects.filter(contributor__user=user)
         self.expense = Expense.objects.filter(user=user)
         self.bazar = Purchase.objects.filter(user=user, buyer__isnull=True)
+        self.shops = ShopTx.objects.filter(shop__user=user, transaction_type=ShopTx.PAYMENT)
+        self.paid_back = Settlement.objects.filter(member__user=user)
+        self.outgoings = (self.expense, self.bazar, self.shops, self.paid_back)
 
     @staticmethod
     def _in(qs, start, end):
@@ -80,7 +85,7 @@ class Ledger:
         return _total(self._in(self.income, start, end)) + _total(self._in(self.contrib, start, end))
 
     def money_out(self, start, end):
-        return _total(self._in(self.expense, start, end)) + _total(self._in(self.bazar, start, end))
+        return sum((_total(self._in(qs, start, end)) for qs in self.outgoings), ZERO)
 
 
 def build(user, kind, start, end, today):
@@ -111,6 +116,12 @@ def build(user, kind, start, end, today):
     bazar = _total(span(led.bazar))
     if bazar:
         out_rows.append((_("Bazar (household)"), bazar, reverse("household_dashboard")))
+    shops = _total(span(led.shops))
+    if shops:
+        out_rows.append((_("Paid to shops"), shops, reverse("shop_dashboard")))
+    paid_back = _total(span(led.paid_back))
+    if paid_back:
+        out_rows.append((_("Paid back to family"), paid_back, reverse("household_dashboard")))
     in_rows = [(r["source__name"], r["t"], reverse("income_source_detail", args=[r["source_id"]]))
                for r in span(led.income).values("source_id", "source__name").annotate(t=Sum("amount"))]
     in_rows += [(r["contributor__name"], r["t"], reverse("contributor_detail", args=[r["contributor_id"]]))
@@ -142,7 +153,7 @@ def build(user, kind, start, end, today):
             rows = qs.filter(date__gte=start, date__lte=end).annotate(m=TruncMonth("date")).values("m").annotate(t=Sum("amount"))
             return {r["m"]: r["t"] for r in rows}
         ins = [by_month(led.income), by_month(led.contrib)]
-        outs = [by_month(led.expense), by_month(led.bazar)]
+        outs = [by_month(qs) for qs in led.outgoings]
         top = Decimal(0)
         for m in range(1, 13):
             first = date(start.year, m, 1)
@@ -156,7 +167,7 @@ def build(user, kind, start, end, today):
             row["out_bar"] = int(row["out"] / top * 100) if top else 0
 
     days = max((upto - start).days + 1, 1) if start <= today else (end - start).days + 1
-    entries = (span(led.expense).count() + span(led.bazar).count() + span(led.income).count() + span(led.contrib).count())
+    entries = sum(span(qs).count() for qs in (*led.outgoings, led.income, led.contrib))
     net = in_total - out_total
     return {
         "in_total": in_total,

@@ -7,8 +7,12 @@ lands straight on that form too.
 """
 from urllib.parse import urlencode
 
+from django.contrib import messages
 from django.shortcuts import redirect
 from django.urls import reverse
+from django.utils.translation import gettext as _
+
+from .templatetags.ui import money
 
 PARAM = "record"
 
@@ -33,3 +37,11 @@ def record_next(request, url_name, pk):
     if kind:
         url += "?" + urlencode({PARAM: kind})
     return redirect(url + "#record")
+
+
+def warn_if_overpaid(request, name, remaining):
+    """After a payment: one zero too many is easy to type and hard to see later. It's saved all the same
+    (paying ahead is real), but said out loud."""
+    if remaining < 0:
+        messages.warning(request, _("That's %(extra)s more than the balance with %(name)s. If it was a typing slip, edit the entry.") % {
+            "extra": money(-remaining), "name": name})
