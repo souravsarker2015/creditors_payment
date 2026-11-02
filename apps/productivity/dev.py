@@ -17,7 +17,8 @@ from django.utils.translation import gettext as _
 
 from .models import KIND_BRANCH, Status, Task, TaskActivity, TaskKind
 
-COMMIT_TYPE = {"feature": "feat", "bug": "fix", "docs": "docs"}      # conventional commit types; the rest are chores
+COMMIT_TYPE = {"feature": "feat", "bug": "fix", "docs": "docs", "debt": "refactor"}      # conventional commit types; the rest are chores
+SUBJECT_LIMIT = 72      # what git log, GitHub and most hooks keep to
 CLOSE_WORDS = r"(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?|done|complete[sd]?)"
 SECTIONS = [     # in English on purpose: release notes go into repositories and changelogs
 (TaskKind.FEATURE, "Features"), (TaskKind.BUG, "Bug fixes"), (TaskKind.CHORE, "Maintenance"),
@@ -40,10 +41,13 @@ def branch_name(task, settings):
 
 
 def commit_message(task, settings):
-    """A conventional commit line: 'fix: the login redirect loop (T-42)'."""
-    title = task.title.strip()
+    """A conventional commit line: 'fix: the login redirect loop (T-42)', from "Fix the login redirect loop!"."""
+    kind = COMMIT_TYPE.get(task.kind, "chore")
+    title = re.sub(rf"^{kind}(?:e[sd]|ed|ing)?\b[:\s]+", "", task.title.strip(), flags=re.I).rstrip(" .!") or task.title.strip()
     title = title[:1].lower() + title[1:] if title[:2] != title[:2].upper() else title     # keep "API…", lower "Fix…"
-    return f"{COMMIT_TYPE.get(task.kind, 'chore')}: {title} ({task.key(settings.key_prefix)})"
+    start, end = f"{kind}: ", f" ({task.key(settings.key_prefix)})"
+    room = SUBJECT_LIMIT - len(start) - len(end)
+    return start + (title if len(title) <= room else title[:room - 1].rstrip() + "…") + end
 
 
 def pr_description(task, settings):
@@ -82,9 +86,10 @@ def repo_links(task, settings):
 
 
 # ── Quick add: a conventional-commit start ("fix(auth): login loop") ────────
-PREFIX = re.compile(r"^(feat|feature|fix|bug|bugfix|hotfix|chore|refactor|perf|test|tests|ci|build|style|docs?|spike|research)(?:\(([\w./-]{1,30})\))?!?:\s*", re.I)
+PREFIX = re.compile(r"^(feat|feature|fix|bug|bugfix|hotfix|chore|refactor|perf|test|tests|ci|build|style|docs?|spike|research|review|debt)(?:\(([\w./-]{1,30})\))?!?:\s*", re.I)
 PREFIX_KIND = {"feat": TaskKind.FEATURE, "feature": TaskKind.FEATURE, "fix": TaskKind.BUG, "bug": TaskKind.BUG, "bugfix": TaskKind.BUG,
-               "hotfix": TaskKind.BUG, "docs": TaskKind.DOCS, "doc": TaskKind.DOCS, "spike": TaskKind.RESEARCH, "research": TaskKind.RESEARCH}
+               "hotfix": TaskKind.BUG, "docs": TaskKind.DOCS, "doc": TaskKind.DOCS, "spike": TaskKind.RESEARCH, "research": TaskKind.RESEARCH,
+               "review": TaskKind.REVIEW, "debt": TaskKind.DEBT}
 
 
 def take_prefix(text):
@@ -158,10 +163,53 @@ def _finish(task, why, **git):
     return False
 
 
+def _back_to_work(task):
+    """Sent back from review: it's on the author again."""
+    if task.status == Status.REVIEW:
+        task.status = Status.DOING
+        task.save(update_fields=["status", "updated_at"])
+
+
+def _reviewed(user, prefix, data, out):
+    """A review on a pull request: changes wanted puts the task back in progress; an approval is noted."""
+    review, pr = data.get("review") or {}, data.get("pull_request") or {}
+    state = (review.get("state") or "").lower()
+    if data.get("action") != "submitted" or state not in ("changes_requested", "approved"):
+        return out
+    text = " ".join([pr.get("title") or "", (pr.get("head") or {}).get("ref") or "", pr.get("body") or ""])
+    number, who = f"PR #{pr.get('number')}", (review.get("user") or {}).get("login") or "?"
+    for t in _tasks(user, _keys(text, prefix)).values():
+        if state == "approved":
+            _note(t, _("%(pr)s approved by %(who)s.\n%(url)s") % {"pr": number, "who": who, "url": review.get("html_url") or ""}, git="review", ref=number)
+        else:
+            _back_to_work(t)
+            _note(t, _("%(pr)s: %(who)s asked for changes.\n%(url)s") % {"pr": number, "who": who, "url": review.get("html_url") or ""}, git="review", ref=number)
+        out["comments"] += 1
+    return out
+
+
+def _ci(user, prefix, branch, name, failed, url, out):
+    """A failed build, on the task its branch is for."""
+    if failed:
+        for t in _tasks(user, _keys(branch, prefix)).values():
+            _note(t, _("%(name)s failed on %(branch)s.\n%(url)s") % {"name": name, "branch": branch, "url": url}, git="ci", ref=branch)
+            out["comments"] += 1
+    return out
+
+
 def handle(user, settings, event, data):
     """Applies one webhook delivery. Returns what it did, for the reply (and tests)."""
     prefix = settings.key_prefix or "T"
     out = {"comments": 0, "done": 0, "started": 0, "linked": 0, "review": 0}
+    if event == "pull_request_review":
+        return _reviewed(user, prefix, data, out)
+    if event == "workflow_run":
+        run = data.get("workflow_run") or {}
+        return _ci(user, prefix, run.get("head_branch") or "", run.get("name") or "CI",
+                   data.get("action") == "completed" and run.get("conclusion") in ("failure", "timed_out"), run.get("html_url") or "", out)
+    if event == "Pipeline Hook":
+        run = data.get("object_attributes") or {}
+        return _ci(user, prefix, run.get("ref") or "", "CI", run.get("status") == "failed", run.get("url") or "", out)
     if event in ("push", "Push Hook"):
         branch = (data.get("ref") or "").removeprefix("refs/heads/")
         repo = (data.get("repository") or {}).get("full_name") or (data.get("project") or {}).get("path_with_namespace") or ""
@@ -225,4 +273,11 @@ def handle(user, settings, event, data):
         elif merged and action in ("closed", "merge"):
             if _finish(t, _("%(pr)s merged — done.\n%(url)s") % {"pr": number, "url": url}, git="merged", ref=number):
                 out["done"] += 1
+        elif action in ("closed", "close"):        # not merged: the work isn't finished, and isn't in review any more
+            _back_to_work(t)
+            _note(t, _("%(pr)s closed without merging.\n%(url)s") % {"pr": number, "url": url}, git="pr", ref=number)
+            out["comments"] += 1
+        elif action == "approved":                  # GitLab
+            _note(t, _("%(pr)s approved.\n%(url)s") % {"pr": number, "url": url}, git="review", ref=number)
+            out["comments"] += 1
     return out

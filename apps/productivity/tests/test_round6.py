@@ -45,7 +45,7 @@ class NamesTests(Base):
     def test_branch_and_commit(self):
         t = self.task("Fix the login redirect loop!", kind=TaskKind.BUG)
         self.assertEqual(dev.branch_name(t, self.ws), f"fix/T-{t.pk}-fix-the-login-redirect-loop")
-        self.assertEqual(dev.commit_message(t, self.ws), f"fix: fix the login redirect loop! (T-{t.pk})")
+        self.assertEqual(dev.commit_message(t, self.ws), f"fix: the login redirect loop (T-{t.pk})")
         api = self.task("API rate limits", kind=TaskKind.FEATURE)
         self.assertEqual(dev.commit_message(api, self.ws), f"feat: API rate limits (T-{api.pk})")
         bn = self.task("লগইন ঠিক করা", kind=TaskKind.CHORE)

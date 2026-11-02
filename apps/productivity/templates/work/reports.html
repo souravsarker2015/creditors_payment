@@ -50,6 +50,26 @@
 </section>
 {% endif %}{% endwith %}
 
+{% if focus %}
+<section class="card">
+  <header class="card-header"><div><h2 class="card-title">{% translate "How you focus" %}</h2>
+    <p class="card-subtitle">{% blocktranslate with n=focus.deep_minutes %}A deep block is {{ n }} minutes or more on one thing, unbroken.{% endblocktranslate %}</p></div></header>
+  <div class="card-body !pt-0 wr-dlv">
+    <dl class="wr-dlv-stats">
+      <div><dt>{% translate "Deep blocks" %}</dt><dd class="num">{{ focus.deep }} <small>· {{ focus.deep_seconds|hm }}</small></dd></div>
+      <div><dt>{% translate "Longest block" %}</dt><dd class="num">{{ focus.longest|hm }}</dd></div>
+      <div><dt>{% translate "Average block" %}</dt><dd class="num">{{ focus.average|hm }}</dd></div>
+      <div{% if focus.switches >= 6 %} data-tone="warn"{% endif %} data-tip="{% translate 'How many times a day you moved to something else' %}"><dt>{% translate "Switches a day" %}</dt><dd class="num">{{ focus.switches }}</dd></div>
+    </dl>
+    {% if focus.best_from %}
+    <p class="wr-dlv-label">{% blocktranslate with a=focus.best_from|time:"H:i" b=focus.best_to|time:"H:i" %}Your deep work happens most around {{ a }}–{{ b }}. Keep that time clear of meetings.{% endblocktranslate %}</p>
+    <div class="wr-hours" role="img" aria-label="{% translate 'Deep work by hour of the day' %}">{% for h in focus.hours %}<span data-tip="{{ h.hour }}:00" style="--h: {{ h.pct }}%"><i></i></span>{% endfor %}</div>
+    <div class="wr-hours-axis"><span>6:00</span><span>14:00</span><span>22:00</span></div>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
 {% if heat.weeks %}
 <section class="card">
   <header class="card-header"><div><h2 class="card-title">{% translate "Last 12 months" %}</h2>

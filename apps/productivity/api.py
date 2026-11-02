@@ -53,7 +53,7 @@ def entry_json(e):
         "ended_at": e.ended_at.isoformat() if e.ended_at else None, "seconds": e.seconds,
         "task": e.task_id, "task_title": e.task.title if e.task_id else "", "project": e.project_id,
         "project_name": e.project.name if e.project_id else "", "color": e.project.color if e.project_id else "",
-        "task_url": reverse("work:task", args=[e.task_id]) if e.task_id else "",
+        "task_url": reverse("work:task", args=[e.task_id]) if e.task_id else "", "left_off": e.task.left_off if e.task_id else "",
     }
 
 
@@ -336,7 +336,7 @@ def task_move(request, pk):
     return ok(status=task.status, order=task.order, timer=services.timer_follows(request.user, task, old_status))
 
 
-TASK_FIELDS = {"title", "priority", "due_date", "start_date", "sprint", "my_day", "project", "status", "notes", "estimate_minutes", "link", "goal", "waiting_for",
+TASK_FIELDS = {"title", "priority", "due_date", "start_date", "sprint", "my_day", "project", "status", "notes", "estimate_minutes", "link", "goal", "waiting_for", "left_off",
                "scheduled_at"}
 
 
@@ -387,6 +387,8 @@ def task_update(request, pk):
             task.goal = Goal.objects.filter(owner=request.user, pk=value or 0).first()
         elif name == "waiting_for":
             task.waiting_for = value[:120]
+        elif name == "left_off":
+            task.left_off = value[:300]
         elif name == "scheduled_at":       # a block on the day planner (empty = take it off)
             task.scheduled_at = _local_dt(value)
             if value and task.scheduled_at is None:

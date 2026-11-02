@@ -37,6 +37,7 @@
 </header>
 
 <div class="wtd">
+  {% if task.left_off %}<p class="callout" data-tone="info">{% icon "flag" %}<span><strong>{% translate "You left off:" %}</strong> {{ task.left_off }}</span></p>{% endif %}
   <form method="post" class="card wtd-form" novalidate data-bug-template="{{ bug_template }}">
     {% csrf_token %}
     <div class="card-body form-stack">
@@ -85,6 +86,7 @@
         {% with field=form.link %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.goal %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.waiting_for %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.left_off %}{% include "partials/field.html" %}{% endwith %}
       </div>
       <div class="field" x-data="{ preview: false, text: $refs.notes ? $refs.notes.value : '' }">
         <div class="field-head"><label class="label" for="{{ form.notes.id_for_label }}">{{ form.notes.label }}</label>

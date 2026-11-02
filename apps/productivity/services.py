@@ -367,6 +367,7 @@ def _time_word(word):
 def parse_quick(text, today=None):
     """Turns one line into a task's parts:
     #tag  @project  !high (or !1–!4)  ~30m / ~2h  *  (My Day)
+    a priority as Todoist and Linear write it, at the end of the line: p1–p4
     a due date: today, tomorrow, friday, +3d, +2w, 2026-10-20, due:mon, due:25/12
     a reminder: at 3pm, at 15:30   ·   a repeat: every day / weekday / week / month / monday
     a type, conventional-commit style: "fix(auth): …" (bug, tag auth), "feat: …", "chore: …", "docs: …"
@@ -414,6 +415,8 @@ def parse_quick(text, today=None):
             p.project = word[1:].replace("_", " ")
         elif len(word) > 1 and word[0] == "!" and low[1:] in PRIORITY_WORDS:
             p.priority = PRIORITY_WORDS[low[1:]]
+        elif re.fullmatch(r"p[1-4]", word) and all(w[0] in "#@!~*" or _date_word(w.lower(), today) for w in tokens[i + 1:]):    # ("P1 outage" stays a title)
+            p.priority = PRIORITY_WORDS[str(5 - int(word[1]))]          # p1 is the most urgent; !1 here is the least
         elif m:
             amount = float(m.group(1))
             p.estimate = int(round(amount * 60)) if (m.group(2) or "m").startswith("h") else int(round(amount))
@@ -433,7 +436,7 @@ def parse_quick(text, today=None):
             words.append(word)
         i += 1
     p.title = " ".join(words).strip() or link_label(p.link)
-    if p.kind and p.title:
+    if p.kind and p.title and not re.match(r"\S*[/#.]", p.title):     # (acme/app#12 stays as it's written)
         p.title = p.title[0].upper() + p.title[1:]      # "fix: login loop" → "Login loop"
     return p
 
@@ -621,8 +624,8 @@ def set_done(task, done=True):
     if task.from_note_id:
         tick_note_line(task, done)
     if done:
-        task.status, task.completed_at = Status.DONE, timezone.now()
-        task.save(update_fields=["status", "completed_at", "updated_at"])
+        task.status, task.completed_at, task.left_off = Status.DONE, timezone.now(), ""
+        task.save(update_fields=["status", "completed_at", "left_off", "updated_at"])
         for sub in task.subtasks.exclude(status=Status.DONE):    # a finished task's open subtasks are finished with it
             sub.status, sub.completed_at = Status.DONE, task.completed_at
             sub.save(update_fields=["status", "completed_at", "updated_at"])
@@ -791,6 +794,46 @@ def standup(user, today=None):
     today_list += [_("Waiting on review: %(task)s") % {"task": t.title + (f" ({t.link_label})" if t.link_label else "")}
                    for t in Task.objects.filter(owner=user, status=Status.REVIEW).order_by("updated_at")[:6]]
     return {"since": prev, "yesterday": yesterday, "today": today_list, "blockers": blockers, "seconds": worked.seconds}
+
+
+DEEP_MINUTES = 45      # what a block of real concentration takes
+BREAK_MINUTES = 5      # a gap this short on the same work is the same block
+
+
+def focus_pattern(user, start, end):
+    """How the time was worked, not how much: the blocks of unbroken work on one thing, how many were deep, how
+    often the work changed in a day, and the hours of the day the deep work happens in. None with nothing tracked."""
+    tz = timezone.get_current_timezone()
+    first = timezone.make_aware(datetime.combine(start, time.min), tz)
+    last = timezone.make_aware(datetime.combine(end + timedelta(days=1), time.min), tz)
+    blocks, switches, hours = [], {}, [0] * 24
+    for e in entries_between(user, first, last).filter(ended_at__isnull=False):
+        what = (e.task_id, e.project_id, e.description)
+        day = timezone.localtime(e.started_at).date()
+        if blocks and blocks[-1]["what"] == what and (e.started_at - blocks[-1]["end"]).total_seconds() <= BREAK_MINUTES * 60:
+            blocks[-1]["end"] = e.ended_at
+            continue
+        if blocks and blocks[-1]["day"] == day:
+            switches[day] = switches.get(day, 0) + 1
+        switches.setdefault(day, 0)
+        blocks.append({"what": what, "day": day, "start": e.started_at, "end": e.ended_at})
+    for b in blocks:
+        b["minutes"] = int((b["end"] - b["start"]).total_seconds() // 60)
+        if b["minutes"] >= DEEP_MINUTES:
+            at = timezone.localtime(b["start"]).replace(minute=0, second=0, microsecond=0)
+            while at < b["end"]:
+                hours[at.hour] += 1
+                at += timedelta(hours=1)
+    if not blocks:
+        return None
+    deep = [b for b in blocks if b["minutes"] >= DEEP_MINUTES]
+    top = max(hours) or 1
+    best = max(range(23), key=lambda h: hours[h] + hours[h + 1]) if deep else None
+    return {"blocks": len(blocks), "deep": len(deep), "longest": max(b["minutes"] for b in blocks) * 60,
+            "deep_seconds": sum(b["minutes"] for b in deep) * 60, "average": sum(b["minutes"] for b in blocks) // len(blocks) * 60,
+            "switches": round(sum(switches.values()) / len(switches), 1), "deep_minutes": DEEP_MINUTES,
+            "hours": [{"hour": h, "pct": round(100 * n / top)} for h, n in enumerate(hours)][6:23],
+            "best_from": time(best) if best is not None else None, "best_to": time(best + 2 if best < 22 else 23, 59 if best >= 22 else 0) if best is not None else None}
 
 
 def delivery(user, start, end, weeks=8):
@@ -1106,7 +1149,8 @@ def backup_models():
     return [(m, lookup) for m, lookup in owned_models() if m._meta.app_label == "productivity"]
 
 
-LEFT_OUT = {"diagram": ("preview",)}      # drawn again from the diagram itself
+KEYS = ("feed_token", "git_token", "api_token_hash", "api_token_hint", "api_token_used_at")     # this account's own: never in a file
+LEFT_OUT = {"diagram": ("preview",), "worksettings": KEYS}      # (a diagram's preview is drawn again from the diagram itself)
 
 
 def backup_rows(user):
@@ -1221,7 +1265,8 @@ def restore(user, rows, media=None):
         if name == "worksettings":                 # one per person: the backup's settings replace the ones here
             here = WorkSettings.objects.filter(owner=user).first()
             obj.pk = here.pk if here else None
-            obj.feed_token = here.feed_token if here else ""      # the calendar link's secret stays this account's own
+            for key in KEYS:                       # the backup's settings, this account's keys
+                setattr(obj, key, getattr(here, key) if here else WorkSettings._meta.get_field(key).get_default())
         else:
             obj.pk = None
         obj._no_activity = True     # its history comes from the backup, not from being added now

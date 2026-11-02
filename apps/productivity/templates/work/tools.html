@@ -70,13 +70,14 @@
   <section class="card card-body wdv-pane" x-show="tool === 'cron'" x-cloak>
     <input x-model="cron" class="form-input code-input" spellcheck="false" autocapitalize="off" aria-label="Cron" @input="runCron()">
     <p class="wdv-note">{% translate "minute · hour · day of month · month · weekday — in your time. @daily and @hourly work too." %}</p>
+    <p class="wdv-out" x-show="cronText" x-text="cronText"></p>
     <p class="wdv-error" x-show="cronError" x-text="cronError"></p>
     <template x-if="cronRuns.length"><div><h3>{% translate "Runs next" %}</h3><ol class="wdv-list"><template x-for="r in cronRuns" :key="r.getTime()"><li x-text="when(r)"></li></template></ol></div></template>
   </section>
 
   <section class="card card-body wdv-pane" x-show="tool === 'uuid'" x-cloak>
     <ul class="wdv-list"><template x-for="u in uuids" :key="u"><li><button type="button" class="wdv-copy" @click="copy(u)"><code x-text="u"></code></button></li></template></ul>
-    <div class="wdv-row"><button type="button" class="btn btn-primary btn-sm" @click="moreUuids()">{% translate "New ones" %}</button><button type="button" class="btn btn-ghost btn-sm" @click="copy(uuids.join('\n'))">{% icon "copy" %}{% translate "Copy all" %}</button></div>
+    <div class="wdv-row"><button type="button" class="btn btn-primary btn-sm" @click="moreUuids()">{% translate "New ones" %}</button><button type="button" class="chip" :class="uuidV === 4 && 'is-active'" @click="moreUuids(4)">v4</button><button type="button" class="chip" :class="uuidV === 7 && 'is-active'" @click="moreUuids(7)" data-tip="{% translate 'Sorted by time: good as database keys' %}">v7</button><button type="button" class="btn btn-ghost btn-sm" @click="copy(uuids.join('\n'))">{% icon "copy" %}{% translate "Copy all" %}</button></div>
   </section>
 
   <section class="card card-body wdv-pane" x-show="tool === 'hash'" x-cloak>
@@ -91,6 +92,50 @@
     <p class="wdv-error" x-show="diffError" x-text="diffError"></p>
     <p class="wdv-note" x-show="(left || right) && !diffError && !diffCount">{% translate "The two are the same." %}</p>
     <pre class="wdv-out wdv-diff" x-show="diffCount"><template x-for="(d, i) in diff" :key="i"><span :data-k="d.k" x-text="d.k + ' ' + d.t + '\n'"></span></template></pre>
+  </section>
+
+  <section class="card card-body wdv-pane" x-show="tool === 'yaml'" x-cloak>
+    <textarea x-model="yaml" class="form-input code-input" data-code rows="9" spellcheck="false" autocapitalize="off" placeholder="name: api&#10;replicas: 3" aria-label="YAML / JSON"></textarea>
+    <div class="wdv-row"><button type="button" class="btn btn-primary btn-sm" @click="runYaml('json')">YAML → JSON</button><button type="button" class="btn btn-secondary btn-sm" @click="runYaml('yaml')">JSON → YAML</button>
+      <button type="button" class="btn btn-ghost btn-sm" x-show="yamlOut" @click="copy(yamlOut)">{% icon "copy" %}{% translate "Copy" %}</button></div>
+    <p class="wdv-error" x-show="yamlError" x-text="yamlError"></p><pre class="wdv-out" x-show="yamlOut" x-text="yamlOut"></pre>
+  </section>
+
+  <section class="card card-body wdv-pane" x-show="tool === 'sql'" x-cloak>
+    <textarea x-model="sql" class="form-input code-input" data-code rows="7" spellcheck="false" autocapitalize="off" placeholder="select * from users where id = 1" aria-label="SQL" @input.debounce.200ms="runSql()"></textarea>
+    <p class="wdv-note">{% translate "Lays out the query. It isn't checked or run." %}</p>
+    <div class="wdv-row" x-show="sqlOut"><button type="button" class="btn btn-ghost btn-sm" @click="copy(sqlOut)">{% icon "copy" %}{% translate "Copy" %}</button></div>
+    <pre class="wdv-out" x-show="sqlOut" x-text="sqlOut"></pre>
+  </section>
+
+  <section class="card card-body wdv-pane" x-show="tool === 'http'" x-cloak>
+    <input x-model="httpQ" class="form-input" type="search" spellcheck="false" placeholder="{% translate '404, rate limit, redirect…' %}" aria-label="{% translate 'Search' %}">
+    <dl class="wdv-dl"><template x-for="h in httpHits" :key="h[0]"><div><dt><code x-text="h[0]"></code> <span x-text="h[1]"></span></dt><dd x-text="h[2]"></dd></div></template></dl>
+  </section>
+
+  <section class="card card-body wdv-pane" x-show="tool === 'bases'" x-cloak>
+    <input x-model="base" class="form-input code-input" spellcheck="false" autocapitalize="off" placeholder="255, 0xff, 0b1111, 0o17" aria-label="{% translate 'Number' %}" @input="runBase()">
+    <p class="wdv-error" x-show="baseError" x-text="baseError"></p>
+    <dl class="wdv-dl"><template x-for="b in baseOut" :key="b[0]"><div><dt x-text="b[0]"></dt><dd x-text="b[1]" @click="copy(b[1])"></dd></div></template></dl>
+  </section>
+
+  <section class="card card-body wdv-pane" x-show="tool === 'chmod'" x-cloak>
+    <input x-model="mode" class="form-input code-input" spellcheck="false" autocapitalize="off" placeholder="755 / rwxr-xr-x" aria-label="chmod" @input="runMode()">
+    <p class="wdv-error" x-show="modeError" x-text="modeError"></p>
+    <template x-if="modeOut"><div>
+      <table class="wdv-modes"><thead><tr><th></th><th>{% translate "Read" %}</th><th>{% translate "Write" %}</th><th>{% translate "Run" %}</th></tr></thead><tbody>
+        <template x-for="(w, i) in modeOut.who" :key="i"><tr><th x-text="[T.owner, T.group, T.others][i]"></th>
+          <td><input type="checkbox" :checked="w.r" @change="toggleMode(i, 'r')" :aria-label="[T.owner, T.group, T.others][i] + ' r'"></td><td><input type="checkbox" :checked="w.w" @change="toggleMode(i, 'w')" :aria-label="[T.owner, T.group, T.others][i] + ' w'"></td><td><input type="checkbox" :checked="w.x" @change="toggleMode(i, 'x')" :aria-label="[T.owner, T.group, T.others][i] + ' x'"></td></tr></template>
+      </tbody></table>
+      <dl class="wdv-dl"><div><dt>{% translate "Number" %}</dt><dd x-text="modeOut.octal" @click="copy(modeOut.octal)"></dd></div><div><dt>{% translate "Letters" %}</dt><dd x-text="modeOut.symbolic" @click="copy(modeOut.symbolic)"></dd></div><div><dt>{% translate "Command" %}</dt><dd x-text="'chmod ' + modeOut.octal + ' file'" @click="copy('chmod ' + modeOut.octal + ' file')"></dd></div></dl>
+    </div></template>
+  </section>
+
+  <section class="card card-body wdv-pane" x-show="tool === 'lines'" x-cloak>
+    <textarea x-model="text" class="form-input code-input" data-code rows="9" spellcheck="false" autocapitalize="off" aria-label="{% translate 'Text' %}"></textarea>
+    <div class="wdv-row"><button type="button" class="btn btn-secondary btn-sm" @click="runLines('sort')">{% translate "Sort" %}</button><button type="button" class="btn btn-secondary btn-sm" @click="runLines('unique')">{% translate "Remove repeats" %}</button>
+      <button type="button" class="btn btn-secondary btn-sm" @click="runLines('reverse')">{% translate "Reverse" %}</button><button type="button" class="btn btn-secondary btn-sm" @click="runLines('trim')">{% translate "Trim and drop empty" %}</button>
+      <button type="button" class="btn btn-ghost btn-sm" x-show="text" @click="copy(text)">{% icon "copy" %}{% translate "Copy" %}</button><span class="wdv-note" x-show="text" x-text="lineCount + ' ' + (T.linesWord || 'lines')"></span></div>
   </section>
 
   <section class="card card-body wdv-pane" x-show="tool === 'case'" x-cloak>

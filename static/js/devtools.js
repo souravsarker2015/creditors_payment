@@ -1,5 +1,5 @@
 /* Dev tools (work/tools.html): the small jobs of a developer's day, as DevUtils or it-tools do them —
-   JSON, JWT, Base64, URLs, timestamps, regex, cron, UUIDs, hashes, diffs, naming cases.
+   JSON, YAML, JWT, Base64, URLs, timestamps, regex, cron, UUIDs, hashes, diffs, naming cases, SQL, number bases, chmod, lines.
    Everything runs here in the browser: nothing typed is sent anywhere, so a real token can be pasted.
    A JWT is only read, never verified. A regex runs in a worker, stopped after a moment: a pattern that
    backtracks for ever can't freeze the page. */
@@ -15,21 +15,33 @@
     for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
     return dec.decode(bytes);
   }
+  /* JSON.parse keeps numbers as doubles: 12345678901234567890 would come back as …567000, and 1.10 as 1.1, with no
+     sign of it. So a number that wouldn't survive stays exactly as it was written. */
+  var KEEP = "\\u0001num:", JSON_NUMBER = /^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$/;      // (written as an escape: it goes into JSON text)
+  function parseExact(text) {
+    var kept = text.replace(/"(?:[^"\\]|\\.)*"|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/g, function (token) {
+      return token[0] === '"' || !JSON_NUMBER.test(token) || String(Number(token)) === token ? token : '"' + KEEP + token + '"';
+    });
+    return JSON.parse(kept);
+  }
+  function showExact(value, indent) {
+    return JSON.stringify(value, null, indent).replace(/"\\u0001num:([^"]*)"/g, "$1");
+  }
   function fmtJson(text, indent, sortKeys) {
-    var value = JSON.parse(text);
+    var value = parseExact(text);
     function sorted(v) {
       if (Array.isArray(v)) return v.map(sorted);
       if (v && typeof v === "object") return Object.keys(v).sort().reduce(function (o, k) { o[k] = sorted(v[k]); return o; }, {});
       return v;
     }
-    return JSON.stringify(sortKeys ? sorted(value) : value, null, indent);
+    return showExact(sortKeys ? sorted(value) : value, indent);
   }
   function readJwt(token) {
     var parts = token.trim().split(".");
     if (parts.length < 2) throw new Error("jwt");
-    var header = JSON.parse(b64decode(parts[0])), payload = JSON.parse(b64decode(parts[1]));
+    var header = parseExact(b64decode(parts[0])), payload = parseExact(b64decode(parts[1]));
     var times = ["iat", "nbf", "exp"].filter(function (k) { return typeof payload[k] === "number"; }).map(function (k) { return { key: k, at: new Date(payload[k] * 1000) }; });
-    return { header: JSON.stringify(header, null, 2), payload: JSON.stringify(payload, null, 2), times: times,
+    return { header: showExact(header, 2), payload: showExact(payload, 2), times: times,
              expired: typeof payload.exp === "number" ? payload.exp * 1000 < Date.now() : null };
   }
   function readTime(text) {
@@ -87,6 +99,89 @@
     }
     return out;
   }
+  /* Cron in words: the plain cases, in the language of the page's texts; anything else stays the runs below it */
+  function cronWords(expr, T) {
+    var t = expr.trim().toLowerCase(), f = (ALIASES[t] || expr.trim()).split(/\s+/);
+    if (f.length !== 5) return "";
+    var two = function (n) { return (n < 10 ? "0" : "") + n; }, at = /^\d+$/.test(f[0]) && /^\d+$/.test(f[1]) ? two(+f[1]) + ":" + two(+f[0]) : "";
+    var every = /^\*\/(\d+)$/.exec(f[0]), when = at ? (T.cronAt || "at %s").replace("%s", at)
+      : every ? (T.cronMins || "every %s minutes").replace("%s", every[1]) : f[0] === "*" && f[1] === "*" ? (T.cronMinute || "every minute")
+      : f[0] === "0" && f[1] === "*" ? (T.cronHour || "every hour") : "";
+    if (!when) return "";
+    var hours = /^(\d+)-(\d+)$/.exec(f[1]), out = when;
+    if (every && hours) out += ", " + two(+hours[1]) + ":00–" + two(+hours[2]) + ":59";
+    else if (every && f[1] !== "*") return "";
+    if (f[3] !== "*") return "";
+    if (f[2] !== "*" && f[4] !== "*") return "";
+    if (f[2] !== "*") return /^\d+$/.test(f[2]) ? out + ", " + (T.cronDay || "on day %s of the month").replace("%s", f[2]) : "";
+    if (f[4] === "1-5") return out + ", " + (T.cronWeekdays || "Monday to Friday");
+    if (f[4] !== "*") {
+      var names = f[4].split(",").map(function (d) { var n = /^\d$/.test(d) ? +d % 7 : DAYS.indexOf(d.toLowerCase()); return n < 0 ? null : new Intl.DateTimeFormat(document.documentElement.lang || "en", { weekday: "long", timeZone: "UTC" }).format(new Date(Date.UTC(2023, 0, n + 1))); });
+      return names.indexOf(null) < 0 ? out + ", " + names.join(", ") : "";
+    }
+    return out + (at ? ", " + (T.cronDaily || "every day") : "");
+  }
+  /* UUID v7: time first, so ids sort by when they were made (good as database keys) */
+  function uuid7() {
+    var b = crypto.getRandomValues(new Uint8Array(16)), ms = Date.now();
+    for (var i = 5; i >= 0; i--) { b[i] = ms % 256; ms = Math.floor(ms / 256); }
+    b[6] = (b[6] & 15) | 112; b[8] = (b[8] & 63) | 128;
+    var h = Array.prototype.map.call(b, function (x) { return (x + 256).toString(16).slice(1); });
+    return [h.slice(0, 4).join(""), h.slice(4, 6).join(""), h.slice(6, 8).join(""), h.slice(8, 10).join(""), h.slice(10).join("")].join("-");
+  }
+  /* SQL: keywords in capitals and each clause on its line. Strings, quoted names and comments are left alone. */
+  var SQL_WORDS = "select from where and or join inner left right full outer cross on group by order having limit offset union all insert into values update set delete create table alter drop index as in not null is like between exists case when then else end distinct asc desc with returning primary key foreign references default".split(" ");
+  var SQL_BREAK = /^(SELECT|FROM|WHERE|GROUP BY|ORDER BY|HAVING|LIMIT|OFFSET|UNION|UNION ALL|INSERT INTO|VALUES|UPDATE|SET|DELETE|WITH|RETURNING|(?:(?:INNER|LEFT|RIGHT|FULL|CROSS)(?: OUTER)? )?JOIN)$/;
+  function fmtSql(text) {
+    var tokens = text.match(/--[^\n]*|\/\*[\s\S]*?\*\/|'(?:[^']|'')*'|"(?:[^"]|"")*"|`[^`]*`|[A-Za-z_][\w$]*|\d+(?:\.\d+)?|<=|>=|<>|!=|::|\S/g) || [];
+    var out = "", line = "";
+    function flush() { if (line.trim()) { out += line.replace(/\s+$/, "") + "\n"; } line = ""; }
+    for (var i = 0; i < tokens.length; i++) {
+      var tk = tokens[i], low = tk.toLowerCase(), word = SQL_WORDS.indexOf(low) >= 0 ? tk.toUpperCase() : tk, two = word;
+      var next = (tokens[i + 1] || "").toLowerCase();
+      if ((low === "group" || low === "order" || low === "primary" || low === "foreign") && next === "by") { two = word + " BY"; i++; }
+      else if (low === "union" && next === "all") { two = "UNION ALL"; i++; }
+      else if (low === "insert" && next === "into") { two = "INSERT INTO"; i++; }
+      else if (["inner", "left", "right", "full", "cross"].indexOf(low) >= 0) {
+        while (["outer", "join"].indexOf((tokens[i + 1] || "").toLowerCase()) >= 0) { two += " " + tokens[++i].toUpperCase(); if (/JOIN$/.test(two)) break; }
+      }
+      if (SQL_BREAK.test(two)) { flush(); line = two + " "; }
+      else if (two === "AND" || two === "OR") { flush(); line = "  " + two + " "; }
+      else if (tk === ",") { line = line.replace(/\s+$/, "") + ", "; }
+      else if (tk === ";") { line = line.replace(/\s+$/, "") + ";"; flush(); out += "\n"; }
+      else if (tk === "(") { line += "("; }
+      else if (tk === ")") { line = line.replace(/\s+$/, "") + ") "; }
+      else if (tk === "." || (tokens[i + 1] === "." )) { line += tk; }
+      else line += two + ((tokens[i + 1] === "(" && word === tk) || tokens[i + 1] === ")" ? "" : " ");      // count(*), but IN (…)
+    }
+    flush();
+    return out.trim();
+  }
+  /* A number in any base: 255, 0xff, 0b1111, 0o17. BigInt, so a 64-bit id stays exact. */
+  function bases(text) {
+    var t = text.trim().replace(/[_,\s]/g, "");
+    if (!/^-?(0[xX][0-9a-fA-F]+|0[bB][01]+|0[oO][0-7]+|\d+)$/.test(t)) throw new Error("number");
+    var minus = t[0] === "-", n = BigInt(minus ? t.slice(1) : t), sign = minus ? "-" : "";
+    return [["Decimal", sign + n.toString(10)], ["Hex", sign + "0x" + n.toString(16)], ["Octal", sign + "0o" + n.toString(8)], ["Binary", sign + "0b" + n.toString(2)]];
+  }
+  /* chmod: 755 ↔ rwxr-xr-x */
+  function chmod(text) {
+    var t = text.trim(), digits;
+    if (/^[0-7]{3,4}$/.test(t)) digits = t.slice(-3);
+    else if (/^-?[rwxsStT-]{9}$/.test(t)) {
+      var s = t.slice(-9); digits = [0, 3, 6].map(function (i) { return (s[i] === "r" ? 4 : 0) + (s[i + 1] === "w" ? 2 : 0) + (/[xst]/.test(s[i + 2]) ? 1 : 0); }).join("");
+    } else throw new Error("mode");
+    var who = digits.split("").map(function (d) { d = +d; return { r: !!(d & 4), w: !!(d & 2), x: !!(d & 1), text: (d & 4 ? "r" : "-") + (d & 2 ? "w" : "-") + (d & 1 ? "x" : "-") }; });
+    return { octal: digits, symbolic: who.map(function (w) { return w.text; }).join(""), who: who };
+  }
+  function lines(text, how) {
+    var ls = text.split("\n");
+    if (how === "sort") return ls.slice().sort(function (a, b) { return a.localeCompare(b, undefined, { numeric: true }); });
+    if (how === "reverse") return ls.slice().reverse();
+    if (how === "unique") return ls.filter(function (l, i) { return ls.indexOf(l) === i; });
+    if (how === "trim") return ls.map(function (l) { return l.trim(); }).filter(Boolean);
+    return ls;
+  }
   function uuid() {
     if (crypto.randomUUID) return crypto.randomUUID();
     var b = crypto.getRandomValues(new Uint8Array(16)), h = [];
@@ -122,7 +217,15 @@
   function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
   var RX_WORKER = "onmessage=function(e){var d=e.data,o=[],r,m,f=d.f;if(f.indexOf('g')<0)f+='g';try{r=new RegExp(d.p,f)}catch(x){postMessage({error:x.message});return}" +
                   "while((m=r.exec(d.t))&&o.length<1000){o.push({i:m.index,t:m[0],g:m.slice(1)});if(!m[0].length)r.lastIndex++}postMessage({m:o})}";
-  window.FTDevTools = { b64encode: b64encode, b64decode: b64decode, fmtJson: fmtJson, readJwt: readJwt, readTime: readTime, cronNext: cronNext, uuid: uuid, diffLines: diffLines, cases: cases };
+  window.FTDevTools = { b64encode: b64encode, b64decode: b64decode, fmtJson: fmtJson, readJwt: readJwt, readTime: readTime, cronNext: cronNext, cronWords: cronWords, uuid: uuid, uuid7: uuid7, diffLines: diffLines, cases: cases,
+                        fmtSql: fmtSql, bases: bases, chmod: chmod, lines: lines };
+  var YAML = "https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js", yamlLoading = null;
+  function loadYaml() {
+    if (window.jsyaml) return Promise.resolve(window.jsyaml);
+    return yamlLoading = yamlLoading || new Promise(function (resolve, reject) {
+      var s = document.createElement("script"); s.src = YAML; s.onload = function () { resolve(window.jsyaml); }; s.onerror = reject; document.head.appendChild(s);
+    });
+  }
 
   document.addEventListener("alpine:init", function () {
     Alpine.data("devTools", function () {
@@ -136,15 +239,16 @@
         url: "", urlOut: "", urlError: "",
         time: "", timeAt: null,
         rx: "", rxFlags: "gi", rxText: "", rxHits: [], rxError: "", rxBusy: false,
-        cron: "*/15 9-17 * * 1-5", cronRuns: [], cronError: "",
-        uuids: [], hashIn: "", hashes: [], hashError: "",
+        cron: "*/15 9-17 * * 1-5", cronRuns: [], cronError: "", cronText: "",
+        uuids: [], uuidV: 4, hashIn: "", hashes: [], hashError: "",
+        yaml: "", yamlOut: "", yamlError: "", sql: "", sqlOut: "", httpQ: "", base: "", baseOut: [], baseError: "", mode: "755", modeOut: null, modeError: "", text: "",
         left: "", right: "", diff: [], diffError: "",
         caseIn: "", caseOut: [],
         init: function () {
           var self = this, saved = location.hash.slice(1) || Work.recall(KEY, "");
           if (document.querySelector('[data-tool="' + saved + '"]')) this.tool = saved;
           this.$watch("tool", function (v) { Work.store(KEY, v); history.replaceState(null, "", "#" + v); });
-          this.runCron(); this.moreUuids();
+          this.runCron(); this.moreUuids(); this.runMode();
         },
         copy: function (text) {
           var done = function () { Work.toast(T.copied || "Copied"); };
@@ -203,10 +307,46 @@
         },
         runCron: function () {
           this.cronError = "";
+          this.cronText = FTDevTools.cronWords(this.cron, T);
           try { this.cronRuns = FTDevTools.cronNext(this.cron, 6, new Date()); if (!this.cronRuns.length) this.cronError = T.cronNever || "Never runs."; }
           catch (e) { this.cronRuns = []; this.cronError = T.badCron || "Not a cron line."; }
         },
-        moreUuids: function () { var o = []; for (var i = 0; i < 5; i++) o.push(FTDevTools.uuid()); this.uuids = o; },
+        moreUuids: function (v) {
+          if (v) this.uuidV = v;
+          var o = []; for (var i = 0; i < 5; i++) o.push(this.uuidV === 7 ? FTDevTools.uuid7() : FTDevTools.uuid());
+          this.uuids = o;
+        },
+        runYaml: function (to) {
+          var self = this;
+          this.yamlError = ""; this.yamlOut = "";
+          if (!this.yaml.trim()) return;
+          loadYaml().then(function (y) {
+            try { self.yamlOut = to === "json" ? JSON.stringify(y.load(self.yaml), null, 2) : y.dump(JSON.parse(self.yaml), { lineWidth: -1, noRefs: true }); }
+            catch (e) { self.yamlError = e.message.split("\n")[0]; }
+          }, function () { self.yamlError = T.noYaml || "Couldn't load the YAML reader."; });
+        },
+        runSql: function () { this.sqlOut = FTDevTools.fmtSql(this.sql); },
+        get httpHits() {
+          var q = this.httpQ.trim().toLowerCase(), all = (T.http || []);
+          return q ? all.filter(function (h) { return (h[0] + " " + h[1] + " " + h[2]).toLowerCase().indexOf(q) >= 0; }) : all;
+        },
+        runBase: function () {
+          this.baseError = "";
+          if (!this.base.trim()) { this.baseOut = []; return; }
+          try { this.baseOut = FTDevTools.bases(this.base); } catch (e) { this.baseOut = []; this.baseError = T.badNumber || "Not a number."; }
+        },
+        runMode: function () {
+          this.modeError = "";
+          try { this.modeOut = FTDevTools.chmod(this.mode); } catch (e) { this.modeOut = null; this.modeError = T.badMode || "Not a mode."; }
+        },
+        toggleMode: function (who, what) {
+          var m = this.modeOut; if (!m) return;
+          m.who[who][what] = !m.who[who][what];
+          this.mode = m.who.map(function (w) { return (w.r ? 4 : 0) + (w.w ? 2 : 0) + (w.x ? 1 : 0); }).join("");
+          this.runMode();
+        },
+        runLines: function (how) { this.text = FTDevTools.lines(this.text, how).join("\n"); },
+        get lineCount() { return this.text ? this.text.split("\n").length : 0; },
         runHash: function () {
           var self = this, text = this.hashIn;
           this.hashError = "";

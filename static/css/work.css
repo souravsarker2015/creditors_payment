@@ -3396,3 +3396,24 @@ html:not(.can-dictate) [data-dictate] { display: none !important; }
 .wcat-form .form-input { flex: 1 1 8rem; min-width: 0; }
 @media (max-width: 639.98px) { .wcat { top: auto; bottom: 0; left: 0; width: 100%; max-height: 80dvh; } }
 @media print { .wcat-add, .wcat-filter { display: none; } }
+
+/* ── Where I left off ── */
+.wlo { position: fixed; z-index: 70; left: 50%; bottom: calc(5rem + env(safe-area-inset-bottom)); transform: translateX(-50%); width: min(32rem, calc(100vw - 2rem)); padding: 0.75rem 1rem; box-shadow: var(--shadow-lg); }
+.wlo-label { display: block; margin-bottom: 0.375rem; font-size: 0.8125rem; font-weight: 600; }
+.wlo-task { font-weight: 400; color: var(--text-muted); }
+.wlo-row { display: flex; gap: 0.5rem; align-items: center; }
+.wlo-row .form-input { flex: 1; min-width: 0; }
+.wt-kind[data-kind="review"] { background: color-mix(in srgb, #6366f1 14%, transparent); color: #4f46e5; }
+.wt-kind[data-kind="debt"] { background: var(--status-warn-bg); color: var(--status-warn); }
+:root[data-theme="dark"] .wt-kind[data-kind="review"] { color: #a5b4fc; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .wt-kind[data-kind="review"] { color: #a5b4fc; } }
+
+/* Deep work by hour (Reports) */
+.wr-hours { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 3px; height: 4rem; align-items: end; }
+.wr-hours span { display: flex; align-items: end; height: 100%; }
+.wr-hours i { display: block; width: 100%; height: var(--h); min-height: 2px; border-radius: 3px 3px 0 0; background: var(--accent); }
+.wr-hours-axis { display: flex; justify-content: space-between; margin-top: 0.25rem; font-size: 0.6875rem; color: var(--text-muted); }
+
+.wdv-modes { border-collapse: collapse; margin-bottom: 0.75rem; font-size: 0.875rem; }
+.wdv-modes th, .wdv-modes td { padding: 0.375rem 0.75rem; text-align: center; }
+.wdv-modes tbody th { text-align: left; font-weight: 600; }

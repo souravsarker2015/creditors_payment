@@ -1,0 +1,9 @@
+{% load i18n %}{% comment %}A line for coming back: on stopping the timer on a task, what to do next. It asks and goes away by itself; nothing waits for it.{% endcomment %}
+<form class="wlo card" x-data="workLeftOff" x-show="task" x-cloak x-transition.opacity @submit.prevent="save" @keydown.escape.stop="close" @work:left-off.document="ask($event.detail)" aria-label="{% translate 'Where did you leave off?' %}">
+  <label class="wlo-label" for="wlo-line">{% translate "Where did you leave off?" %} <span class="wlo-task" x-text="label"></span></label>
+  <div class="wlo-row">
+    <input id="wlo-line" x-ref="line" class="form-input input-compact" x-model="text" maxlength="300" autocomplete="off" placeholder="{% translate 'Next: check the retry in payments.py' %}" @input="keep">
+    <button type="submit" class="btn btn-primary btn-sm">{% translate "Save" %}</button>
+    <button type="button" class="btn btn-ghost btn-sm" @click="close">{% translate "Skip" %}</button>
+  </div>
+</form>

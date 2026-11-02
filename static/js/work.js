@@ -531,18 +531,20 @@
         return api(CFG.urls.timerStart, { task: opts.task || "", project: opts.project || "", description: opts.description || "", at: at }).then(function (res) {
           if (res.ok && res.running) { self.running = res.running; self.today = res.today - self.elapsedToday(); self.share(); }
           d.dispatchEvent(new CustomEvent("work:timer", { detail: self.running }));
+          if (res.ok && res.running && res.running.left_off) toast(t("leftOffAt", "You left off:") + " " + res.running.left_off);
           return res;
         });
       },
       stop: function () {
         if (!this.running) return Promise.resolve();
         var self = this, at = new Date().toISOString();
-        this.today += this.elapsedToday(); var label = this.running.label, took = this.text;
+        this.today += this.elapsedToday(); var label = this.running.label, took = this.text, task = this.running.task, leftOff = this.running.left_off;
         this.running = null; this.share(); this.title();
         return api(CFG.urls.timerStop, { at: at }).then(function (res) {
           if (res.ok && !res.queued) self.today = res.today;
           toast(t("tracked", "Tracked") + " " + took + " · " + label);
           d.dispatchEvent(new CustomEvent("work:timer", { detail: null }));
+          if (task && CFG.leftOff) d.dispatchEvent(new CustomEvent("work:left-off", { detail: { task: task, label: label, text: leftOff || "" } }));
           if (d.querySelector("[data-work-refresh-on-stop]")) setTimeout(function () { location.reload(); }, 400);
           return res;
         });
@@ -1258,6 +1260,29 @@
     });
 
     /* ── A task's blockers ("Blocked by") and its activity / comments ──── */
+    Alpine.data("workLeftOff", function () {
+      return {
+        task: null, label: "", text: "", leave: null,
+        ask: function (o) {
+          var self = this;
+          this.task = o.task; this.label = o.label; this.text = o.text;
+          this.keep(30000);
+          this.$nextTick(function () { if (d.activeElement === d.body) self.$refs.line.focus(); });      // never out of something being typed
+        },
+        keep: function (ms) {       // goes by itself, unless it's being written in
+          var self = this;
+          clearTimeout(this.leave);
+          this.leave = setTimeout(function () { self.close(); }, typeof ms === "number" ? ms : 60000);
+        },
+        close: function () { clearTimeout(this.leave); this.task = null; },
+        save: function () {
+          var task = this.task;
+          this.close();
+          if (task) api(CFG.urls.taskBase + task + "/update/", { left_off: this.text });
+        },
+      };
+    });
+
     Alpine.data("workBlockers", function (taskId) {
       return {
         init: function () {

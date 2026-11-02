@@ -1,7 +1,7 @@
 """Productivity lives under /work/ in the "work" namespace."""
 from django.urls import path
 
-from . import api, views, views_exam, views_jobs, views_prep
+from . import api, rest, views, views_exam, views_jobs, views_prep
 
 app_name = "work"
 
@@ -96,6 +96,14 @@ urlpatterns = [
     path("wrap-up/", views.wrapup_view, name="wrapup"),
     path("feed/<str:token>.ics", views.feed_view, name="feed"),
     path("hooks/git/<str:token>/", views.git_hook_view, name="git_hook"),
+    path("cli/ft", rest.cli, name="cli"),
+    path("api/v1/me/", rest.me, name="api_v1_me"),
+    path("api/v1/tasks/", rest.tasks, name="api_v1_tasks"),
+    path("api/v1/tasks/<str:ref>/", rest.task, name="api_v1_task"),
+    path("api/v1/timer/", rest.timer, name="api_v1_timer"),
+    path("api/v1/log/", rest.log, name="api_v1_log"),
+    path("api/v1/snippets/", rest.snippets, name="api_v1_snippets"),
+    path("api/v1/standup/", rest.standup, name="api_v1_standup"),
     # Background saves (static/js/work.js)
     path("api/timer/start/", api.timer_start, name="api_timer_start"),
     path("api/timer/stop/", api.timer_stop, name="api_timer_stop"),

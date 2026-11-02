@@ -93,10 +93,12 @@ class TaskKind(models.TextChoices):
     CHORE = "chore", _("Chore")            # refactoring, tests, CI, upgrades
     RESEARCH = "research", _("Research")   # a spike: find out before building
     DOCS = "docs", _("Docs")
+    REVIEW = "review", _("Code review")    # someone else's pull request to read
+    DEBT = "debt", _("Tech debt")
 
 
-KIND_ICONS = {"feature": "sparkles", "bug": "bug", "chore": "wrench", "research": "beaker", "docs": "book", "task": "check"}
-KIND_BRANCH = {"feature": "feat", "bug": "fix", "chore": "chore", "research": "spike", "docs": "docs", "task": "task"}    # branch and commit prefixes
+KIND_ICONS = {"feature": "sparkles", "bug": "bug", "chore": "wrench", "research": "beaker", "docs": "book", "task": "check", "review": "code", "debt": "alert"}
+KIND_BRANCH = {"feature": "feat", "bug": "fix", "chore": "chore", "research": "spike", "docs": "docs", "task": "task", "review": "review", "debt": "refactor"}    # branch and commit prefixes
 
 
 class Repeat(models.TextChoices):
@@ -175,6 +177,7 @@ class Task(models.Model):
     goal = models.ForeignKey("Goal", on_delete=models.SET_NULL, null=True, blank=True, related_name="tasks", verbose_name=_("Goal"))
     from_note = models.ForeignKey("Note", on_delete=models.SET_NULL, null=True, blank=True, related_name="action_tasks",
                                   verbose_name=_("From note"), help_text="Made from a to-do line in this note (ticked there too).")
+    left_off = models.CharField(_("Where I left off"), max_length=300, blank=True, help_text="The next thing to do, written on stopping work on it.")
     waiting_for = models.CharField(_("Waiting on"), max_length=120, blank=True,
                                    help_text=_("Who or what it's stuck on: a code review, Rahim, the client, a deploy…"))
     order = models.FloatField(default=0, help_text="Position in its column (smaller first).")
@@ -567,6 +570,10 @@ class WorkSettings(models.Model):
                                   help_text=_("Tasks are named with it and their number — T-42 — in branches, commits and search."))
     branch_format = models.CharField(_("Branch name"), max_length=80, default="{type}/{key}-{slug}",
                                      help_text=_("For “Copy branch name”. Use {type} (feat, fix…), {key} (T-42), {id} (42) and {slug} (the title)."))
+    api_token_hash = models.CharField(max_length=64, blank=True, db_index=True, help_text="SHA-256 of the personal API token: the token itself is only shown once.")
+    api_token_hint = models.CharField(max_length=12, blank=True, help_text="The token's last characters, to recognise it by.")
+    api_token_used_at = models.DateTimeField(null=True, blank=True)
+    ask_left_off = models.BooleanField(_("Ask where I left off"), default=True, help_text=_("On stopping the timer on a task, a line for what to do next."))
     git_token = models.CharField(max_length=40, blank=True, help_text="Secret part of the Git webhook address (and its signing secret).")
     day_start = models.TimeField(_("Work day starts"), default=time(9, 0),
                                  help_text=_("The day planner opens here, and “Fill my day” plans from here."))
@@ -609,6 +616,16 @@ class WorkSettings(models.Model):
         self.git_token = secrets.token_urlsafe(24)
         self.save(update_fields=["git_token"])
         return self.git_token
+
+    def new_api_token(self):
+        """A new token, returned this once: only its hash is kept."""
+        import hashlib
+        import secrets
+
+        token = "ftk_" + secrets.token_urlsafe(32)
+        self.api_token_hash, self.api_token_hint, self.api_token_used_at = hashlib.sha256(token.encode()).hexdigest(), token[-6:], None
+        self.save(update_fields=["api_token_hash", "api_token_hint", "api_token_used_at"])
+        return token
 
     def new_feed_token(self):
         import secrets

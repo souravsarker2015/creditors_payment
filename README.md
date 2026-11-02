@@ -112,6 +112,24 @@ Switch by setting `DJANGO_SETTINGS_MODULE`:
 ```bash
 export DJANGO_SETTINGS_MODULE=config.settings.prod
 ```
+## Personal API and the `ft` command
+
+Productivity → Settings → API makes a token. Only its hash is kept, and personal backups never carry it.
+
+```bash
+curl -fsSL https://your-site/work/cli/ft -o ~/.local/bin/ft && chmod +x ~/.local/bin/ft
+ft login                            # paste the token (or set FT_TOKEN)
+ft add "fix(auth): login loop p1"
+ft start T-42
+ft stop "next: check the retry"     # where you left off
+git switch -c $(ft branch T-42)
+ft hook                             # in a repository: commits name the task of their branch
+ft help
+```
+
+The API is under `/work/api/v1/` with `Authorization: Bearer <token>`: `GET /me/`, `GET|POST /tasks/`, `GET|POST /tasks/T-42/`,
+`GET|POST /timer/`, `POST /log/`, `GET /snippets/`, `GET /standup/`. Answers are JSON, or plain lines with `Accept: text/plain`.
+
 ## Going live on PythonAnywhere
 
 `config.settings.dev` must never serve the public site: with DEBUG on, an error page shows your code and settings to

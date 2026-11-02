@@ -25584,3 +25584,447 @@ msgstr "উত্তর — ২ মিনিট"
 
 msgid "Not expired"
 msgstr "মেয়াদ শেষ হয়নি"
+
+#, python-format
+msgid ""
+"%(pr)s approved by %(who)s.\n"
+"%(url)s"
+msgstr ""
+"%(pr)s অনুমোদন করেছেন %(who)s।\n"
+"%(url)s"
+
+#, python-format
+msgid ""
+"%(pr)s: %(who)s asked for changes.\n"
+"%(url)s"
+msgstr ""
+"%(pr)s: %(who)s পরিবর্তন চেয়েছেন।\n"
+"%(url)s"
+
+#, python-format
+msgid ""
+"%(name)s failed on %(branch)s.\n"
+"%(url)s"
+msgstr ""
+"%(branch)s-এ %(name)s ব্যর্থ হয়েছে।\n"
+"%(url)s"
+
+#, python-format
+msgid ""
+"%(pr)s closed without merging.\n"
+"%(url)s"
+msgstr ""
+"%(pr)s মার্জ না করেই বন্ধ হয়েছে।\n"
+"%(url)s"
+
+#, python-format
+msgid ""
+"%(pr)s approved.\n"
+"%(url)s"
+msgstr ""
+"%(pr)s অনুমোদিত।\n"
+"%(url)s"
+
+msgid "Code review"
+msgstr "কোড রিভিউ"
+
+msgid "Tech debt"
+msgstr "টেক ডেট"
+
+msgid "Where I left off"
+msgstr "যেখানে থেমেছিলাম"
+
+msgid "Ask where I left off"
+msgstr "কোথায় থেমেছি জিজ্ঞেস করুন"
+
+msgid "On stopping the timer on a task, a line for what to do next."
+msgstr "কোনো কাজের টাইমার থামালে, এরপর কী করবেন তার জন্য এক লাইন।"
+
+msgid "That token isn't valid. Make one in Productivity → Settings → API."
+msgstr "টোকেনটি সঠিক নয়। Productivity → Settings → API থেকে একটি বানান।"
+
+#, python-format
+msgid "Use %(methods)s here."
+msgstr "এখানে %(methods)s ব্যবহার করুন।"
+
+msgid "Send JSON."
+msgstr "JSON পাঠান।"
+
+msgid "Send a JSON object."
+msgstr "একটি JSON অবজেক্ট পাঠান।"
+
+msgid "Send what needs doing as “text”."
+msgstr "কী করতে হবে তা “text” হিসেবে পাঠান।"
+
+#, python-format
+msgid "status can be open, all, or one of: %(values)s."
+msgstr "status হতে পারে open, all, অথবা: %(values)s।"
+
+#, python-format
+msgid "There's no task %(ref)s."
+msgstr "%(ref)s নামে কোনো কাজ নেই।"
+
+#, python-format
+msgid "status can be: %(values)s."
+msgstr "status হতে পারে: %(values)s।"
+
+#, python-format
+msgid "Stopped: %(what)s"
+msgstr "থামানো হয়েছে: %(what)s"
+
+#, python-format
+msgid "Started: %(what)s"
+msgstr "শুরু হয়েছে: %(what)s"
+
+msgid "Send the line as “text”."
+msgstr "লাইনটি “text” হিসেবে পাঠান।"
+
+msgid "Added to today's note."
+msgstr "আজকের নোটে যোগ হয়েছে।"
+
+msgid "Priority as Todoist and Linear write it, at the end of the line: p1 is the most urgent."
+msgstr "Todoist ও Linear-এর মতো অগ্রাধিকার, লাইনের শেষে: p1 সবচেয়ে জরুরি।"
+
+msgid "The type of work, written as a conventional commit."
+msgstr "কাজের ধরন, conventional commit-এর মতো করে লেখা।"
+
+msgid "Where did you leave off?"
+msgstr "কোথায় থেমেছিলেন?"
+
+msgid "Next: check the retry in payments.py"
+msgstr "এরপর: payments.py-এর retry দেখা"
+
+msgid "How you focus"
+msgstr "আপনি কীভাবে মনোযোগ দেন"
+
+msgid "Deep blocks"
+msgstr "গভীর মনোযোগের সময়"
+
+msgid "Longest block"
+msgstr "দীর্ঘতম সময়"
+
+msgid "Average block"
+msgstr "গড় সময়"
+
+msgid "How many times a day you moved to something else"
+msgstr "দিনে কতবার অন্য কাজে গেছেন"
+
+msgid "Switches a day"
+msgstr "দিনে কাজ বদল"
+
+msgid "Deep work by hour of the day"
+msgstr "দিনের কোন ঘণ্টায় গভীর কাজ হয়"
+
+#, python-format
+msgid "A deep block is %(n)s minutes or more on one thing, unbroken."
+msgstr "একটানা একই কাজে %(n)s মিনিট বা তার বেশি সময়কে গভীর মনোযোগ ধরা হয়েছে।"
+
+#, python-format
+msgid "Your deep work happens most around %(a)s–%(b)s. Keep that time clear of meetings."
+msgstr "আপনার গভীর কাজ বেশি হয় %(a)s–%(b)s-এর দিকে। ওই সময়টা মিটিংমুক্ত রাখুন।"
+
+msgid "Commits and pull requests that name a task (T-42) show up on it; “fixes T-42” or a merged pull request ticks it off. Changes asked for in review, and a failed build on its branch, show up too."
+msgstr "যেসব কমিট ও পুল রিকোয়েস্টে কাজের নাম (T-42) থাকে সেগুলো কাজে দেখা যায়; “fixes T-42” বা মার্জ হওয়া পুল রিকোয়েস্ট কাজটি শেষ করে দেয়। রিভিউতে চাওয়া পরিবর্তন আর ব্রাঞ্চের ব্যর্থ বিল্ডও দেখা যায়।"
+
+msgid "GitHub: the repository → Settings → Webhooks → Add webhook. Paste the URL, choose application/json, paste the secret, and pick “Pushes”, “Pull requests”, “Pull request reviews” and “Workflow runs”."
+msgstr "GitHub: রিপোজিটরি → Settings → Webhooks → Add webhook। URL পেস্ট করুন, application/json বেছে নিন, সিক্রেট পেস্ট করুন, এবং “Pushes”, “Pull requests”, “Pull request reviews” ও “Workflow runs” বেছে নিন।"
+
+msgid "GitLab: the project → Settings → Webhooks. Paste the URL, put the secret in “Secret token”, and tick “Push events”, “Merge request events” and “Pipeline events”."
+msgstr "GitLab: প্রজেক্ট → Settings → Webhooks। URL পেস্ট করুন, “Secret token”-এ সিক্রেট দিন, এবং “Push events”, “Merge request events” ও “Pipeline events” টিক দিন।"
+
+msgid "API & command line"
+msgstr "API ও কমান্ড লাইন"
+
+msgid "Add tasks, run the timer and write to today's note from your terminal, scripts and git hooks."
+msgstr "টার্মিনাল, স্ক্রিপ্ট ও git hook থেকে কাজ যোগ করুন, টাইমার চালান, আজকের নোটে লিখুন।"
+
+msgid "Your token"
+msgstr "আপনার টোকেন"
+
+msgid "Copy it now: it's only shown this once. It can do anything you can do in Productivity, so keep it like a password."
+msgstr "এখনই কপি করুন: এটি শুধু এই একবারই দেখানো হবে। Productivity-তে আপনি যা পারেন এটিও তা পারে, তাই পাসওয়ার্ডের মতো রাখুন।"
+
+#, python-format
+msgid "A token ending in …%(hint)s is on."
+msgstr "…%(hint)s দিয়ে শেষ হওয়া একটি টোকেন চালু আছে।"
+
+#, python-format
+msgid "Last used %(when)s."
+msgstr "শেষ ব্যবহার %(when)s।"
+
+msgid "Not used yet."
+msgstr "এখনো ব্যবহার হয়নি।"
+
+msgid "Install the command:"
+msgstr "কমান্ডটি ইনস্টল করুন:"
+
+msgid "Sign in with your token:"
+msgstr "টোকেন দিয়ে সাইন ইন করুন:"
+
+msgid "Then:"
+msgstr "এরপর:"
+
+msgid "Or call it yourself:"
+msgstr "অথবা নিজে কল করুন:"
+
+msgid "Make a new token"
+msgstr "নতুন টোকেন বানান"
+
+msgid "Make a token"
+msgstr "টোকেন বানান"
+
+msgid "Token made. Copy it now: it won't be shown again."
+msgstr "টোকেন তৈরি হয়েছে। এখনই কপি করুন: আর দেখানো হবে না।"
+
+msgid "Token turned off. Anything using it has stopped working."
+msgstr "টোকেন বন্ধ হয়েছে। যা কিছু এটি ব্যবহার করছিল তা আর কাজ করবে না।"
+
+msgid "Open points"
+msgstr "বাকি পয়েন্ট"
+
+msgid "You left off:"
+msgstr "আপনি থেমেছিলেন:"
+
+msgid "Pick up where you left off"
+msgstr "যেখানে থেমেছিলেন সেখান থেকে শুরু করুন"
+
+#, python-format
+msgid "This sprint holds %(planned)s points. You usually finish about %(usual)s."
+msgstr "এই স্প্রিন্টে %(planned)s পয়েন্ট আছে। আপনি সাধারণত প্রায় %(usual)s শেষ করেন।"
+
+#, python-format
+msgid "This sprint holds %(planned)s tasks. You usually finish about %(usual)s."
+msgstr "এই স্প্রিন্টে %(planned)sটি কাজ আছে। আপনি সাধারণত প্রায় %(usual)sটি শেষ করেন।"
+
+msgid "Sorted by time: good as database keys"
+msgstr "সময় অনুযায়ী সাজানো: ডাটাবেস কী হিসেবে ভালো"
+
+msgid "Lays out the query. It isn't checked or run."
+msgstr "কুয়েরি গুছিয়ে দেখায়। এটি যাচাই বা চালানো হয় না।"
+
+msgid "404, rate limit, redirect…"
+msgstr "404, rate limit, redirect…"
+
+msgid "Read"
+msgstr "পড়া"
+
+msgid "Letters"
+msgstr "অক্ষরে"
+
+msgid "Remove repeats"
+msgstr "পুনরাবৃত্তি বাদ দিন"
+
+msgid "Reverse"
+msgstr "উল্টে দিন"
+
+msgid "Trim and drop empty"
+msgstr "ফাঁকা ছাঁটুন ও বাদ দিন"
+
+msgid "HTTP status"
+msgstr "HTTP স্ট্যাটাস"
+
+msgid "Number bases"
+msgstr "সংখ্যার ভিত্তি"
+
+msgid "Lines"
+msgstr "লাইন"
+
+msgid "Everyone else"
+msgstr "অন্য সবাই"
+
+msgid "lines"
+msgstr "লাইন"
+
+msgid "That isn't a number."
+msgstr "এটি সংখ্যা নয়।"
+
+msgid "Write it as 755 or rwxr-xr-x."
+msgstr "755 বা rwxr-xr-x এভাবে লিখুন।"
+
+msgid "The YAML reader couldn't load. Are you online?"
+msgstr "YAML রিডার লোড হয়নি। আপনি কি অনলাইনে আছেন?"
+
+#, python-format
+msgid "At %s"
+msgstr "%s-এ"
+
+#, python-format
+msgid "Every %s minutes"
+msgstr "প্রতি %s মিনিটে"
+
+msgid "Every minute"
+msgstr "প্রতি মিনিটে"
+
+msgid "Every hour"
+msgstr "প্রতি ঘণ্টায়"
+
+msgid "every day"
+msgstr "প্রতিদিন"
+
+msgid "Monday to Friday"
+msgstr "সোমবার থেকে শুক্রবার"
+
+#, python-format
+msgid "on day %s of the month"
+msgstr "মাসের %s তারিখে"
+
+msgid "Runbook"
+msgstr "রানবুক"
+
+msgid "Today I learned"
+msgstr "আজ যা শিখলাম"
+
+msgid "Code review checklist"
+msgstr "কোড রিভিউ চেকলিস্ট"
+
+msgid "It worked."
+msgstr "কাজ হয়েছে।"
+
+msgid "A new thing was made."
+msgstr "নতুন কিছু তৈরি হয়েছে।"
+
+msgid "Taken in; the work happens later."
+msgstr "গ্রহণ করা হয়েছে; কাজ পরে হবে।"
+
+msgid "It worked, and there's nothing to send back."
+msgstr "কাজ হয়েছে, ফেরত পাঠানোর কিছু নেই।"
+
+msgid "A new address for good; browsers remember it."
+msgstr "স্থায়ী নতুন ঠিকানা; ব্রাউজার মনে রাখে।"
+
+msgid "A new address for now."
+msgstr "আপাতত নতুন ঠিকানা।"
+
+msgid "Your cached copy is still right."
+msgstr "আপনার ক্যাশে থাকা কপিটি এখনো ঠিক আছে।"
+
+msgid "A new address for now; the method stays the same."
+msgstr "আপাতত নতুন ঠিকানা; মেথড একই থাকে।"
+
+msgid "A new address for good; the method stays the same."
+msgstr "স্থায়ী নতুন ঠিকানা; মেথড একই থাকে।"
+
+msgid "The request itself is wrong."
+msgstr "রিকোয়েস্টটিই ভুল।"
+
+msgid "Not signed in, or the token is bad."
+msgstr "সাইন ইন করা নেই, অথবা টোকেন ভুল।"
+
+msgid "Signed in, but not allowed."
+msgstr "সাইন ইন আছে, কিন্তু অনুমতি নেই।"
+
+msgid "Nothing at that address."
+msgstr "ওই ঠিকানায় কিছু নেই।"
+
+msgid "This address doesn't take that method."
+msgstr "এই ঠিকানা ওই মেথড নেয় না।"
+
+msgid "It clashes with the current state, such as a duplicate."
+msgstr "বর্তমান অবস্থার সাথে মিলছে না, যেমন একই জিনিস দুবার।"
+
+msgid "It was here, and it's gone for good."
+msgstr "এখানে ছিল, স্থায়ীভাবে চলে গেছে।"
+
+msgid "The body is too big."
+msgstr "বডি খুব বড়।"
+
+msgid "The Content-Type isn't accepted."
+msgstr "এই Content-Type গ্রহণ করা হয় না।"
+
+msgid "Well formed, but the values don't validate."
+msgstr "গঠন ঠিক আছে, কিন্তু মানগুলো সঠিক নয়।"
+
+msgid "Rate limited: slow down, see Retry-After."
+msgstr "সীমা ছাড়িয়েছে: ধীরে করুন, Retry-After দেখুন।"
+
+msgid "The server broke: look in its logs."
+msgstr "সার্ভারে সমস্যা: লগ দেখুন।"
+
+msgid "The server can't do this at all."
+msgstr "সার্ভার এটি একেবারেই করতে পারে না।"
+
+msgid "A proxy got a bad answer from the app behind it."
+msgstr "প্রক্সি পেছনের অ্যাপ থেকে খারাপ উত্তর পেয়েছে।"
+
+msgid "Down or overloaded for now."
+msgstr "আপাতত বন্ধ বা অতিরিক্ত চাপে।"
+
+msgid "A proxy gave up waiting for the app behind it."
+msgstr "প্রক্সি পেছনের অ্যাপের জন্য অপেক্ষা করে হাল ছেড়েছে।"
+
+#, python-format
+msgid "%(counter)s point still open"
+msgid_plural "%(counter)s points still open"
+msgstr[0] "%(counter)s পয়েন্ট বাকি"
+msgstr[1] "%(counter)s পয়েন্ট বাকি"
+
+msgid ""
+"## What this is for\n"
+"\n"
+"## How to tell something's wrong\n"
+"- Alert / dashboard: \n"
+"\n"
+"## Steps\n"
+"1. \n"
+"2. \n"
+"\n"
+"## If that doesn't work\n"
+"Who to call, how to roll back.\n"
+"\n"
+"## Last checked\n"
+msgstr ""
+"## এটি কীসের জন্য\n"
+"\n"
+"## সমস্যা হলে কীভাবে বুঝবেন\n"
+"- অ্যালার্ট / ড্যাশবোর্ড: \n"
+"\n"
+"## ধাপগুলো\n"
+"1. \n"
+"2. \n"
+"\n"
+"## তাতেও কাজ না হলে\n"
+"কাকে ডাকবেন, কীভাবে আগের অবস্থায় ফিরবেন।\n"
+"\n"
+"## শেষ যাচাই\n"
+
+msgid ""
+"## What I learned\n"
+"\n"
+"## Why it surprised me\n"
+"\n"
+"## Example\n"
+"```\n"
+"\n"
+"```\n"
+"\n"
+"## Where I found it\n"
+msgstr ""
+"## যা শিখলাম\n"
+"\n"
+"## কেন অবাক হলাম\n"
+"\n"
+"## উদাহরণ\n"
+"```\n"
+"\n"
+"```\n"
+"\n"
+"## কোথায় পেলাম\n"
+
+msgid ""
+"- [ ] It does what the ticket asks\n"
+"- [ ] Tests cover the change and the edge cases\n"
+"- [ ] Errors are handled, and logged where it matters\n"
+"- [ ] No secrets, no personal data in logs\n"
+"- [ ] Queries are indexed; no N+1\n"
+"- [ ] Names say what things are\n"
+"- [ ] Docs and migrations are in\n"
+"- [ ] It can be rolled back\n"
+msgstr ""
+"- [ ] টিকিটে যা চাওয়া হয়েছে তা করে\n"
+"- [ ] পরিবর্তন ও প্রান্তিক ক্ষেত্রের টেস্ট আছে\n"
+"- [ ] ত্রুটি সামলানো হয়েছে, দরকারি জায়গায় লগ আছে\n"
+"- [ ] লগে কোনো সিক্রেট বা ব্যক্তিগত তথ্য নেই\n"
+"- [ ] কুয়েরিতে ইনডেক্স আছে; N+1 নেই\n"
+"- [ ] নামগুলো বোঝায় জিনিসটা কী\n"
+"- [ ] ডক ও মাইগ্রেশন আছে\n"
+"- [ ] আগের অবস্থায় ফেরানো যায়\n"

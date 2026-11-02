@@ -41,22 +41,27 @@ def _done_on(task):
 
 
 def burndown(sprint, today=None):
-    """[(day, open tasks at the end of it)] from the start to today (or the end), and the
-    straight line from all of them to none — or what was kept when it was closed."""
+    """[(day, what's open at the end of it)] from the start to today (or the end), and the straight line from all
+    of it to none — or what was kept when it was closed. In story points when the sprint's tasks have them
+    (a 13-point task isn't a 1-point one), else in tasks."""
     today = today or timezone.localdate()
     if sprint.completed_at and sprint.summary.get("burndown"):
         from datetime import date
         points = [(date.fromisoformat(d), n) for d, n in sprint.summary["burndown"]]
-        total = sprint.summary.get("done", 0) + sprint.summary.get("left", 0)
+        unit = sprint.summary.get("unit", "tasks")
+        names = ("done_points", "left_points") if unit == "points" else ("done", "left")
+        total = sum(sprint.summary.get(n, 0) for n in names)
     else:
-        tasks = list(sprint.tasks.only("status", "completed_at"))
-        total = len(tasks)
+        tasks = list(sprint.tasks.only("status", "completed_at", "points"))
+        unit = "points" if any(t.points for t in tasks) else "tasks"
+        weight = (lambda t: t.points or 0) if unit == "points" else (lambda t: 1)
+        total = sum(weight(t) for t in tasks)
         last = min(today, sprint.end_date)
         points, day = [], sprint.start_date
         while day <= last:
-            points.append((day, sum(1 for t in tasks if not (_done_on(t) and _done_on(t) <= day))))
+            points.append((day, sum(weight(t) for t in tasks if not (_done_on(t) and _done_on(t) <= day))))
             day += timedelta(days=1)
-    return {"points": points, "total": total, "days": sprint.length}
+    return {"points": points, "total": total, "days": sprint.length, "unit": unit}
 
 
 def chart(sprint, today=None, width=600, height=180):
@@ -66,7 +71,7 @@ def chart(sprint, today=None, width=600, height=180):
     step = width / max(b["days"] - 1, 1)
     y = lambda n: round(height - n * height / top, 1)  # noqa: E731
     real = " ".join(f"{round(i * step, 1)},{y(n)}" for i, (_d, n) in enumerate(b["points"]))
-    return {"ideal": f"0,{y(b['total'])} {width},{height}", "real": real, "w": width, "h": height, "total": b["total"],
+    return {"ideal": f"0,{y(b['total'])} {width},{height}", "real": real, "w": width, "h": height, "total": b["total"], "unit": b["unit"],
             "left": b["points"][-1][1] if b["points"] else b["total"],
             "dot": {"x": round(100 * (len(b["points"]) - 1) * step / width, 2), "y": round(100 * (y(b["points"][-1][1]) + 8) / (height + 16), 2)} if b["points"] else None}   # the latest day, in % of the chart
 
@@ -82,7 +87,7 @@ def close(sprint, move_to=None):
     sprint.summary = {
         "done": len(done), "left": len(left), "done_minutes": sum(t.estimate_minutes or 0 for t in done),
         "done_points": sum(t.points or 0 for t in done), "left_points": sum(t.points or 0 for t in left),
-        "burndown": [[d.isoformat(), n] for d, n in b["points"]],
+        "burndown": [[d.isoformat(), n] for d, n in b["points"]], "unit": b["unit"],
     }
     sprint.completed_at = timezone.now()
     sprint.save(update_fields=["summary", "completed_at"])
@@ -100,6 +105,18 @@ def velocity(user, n=6):
     if unit == "points":
         return [(s, s.summary.get("done_points", 0), s.summary.get("left_points", 0)) for s in reversed(closed)], unit
     return [(s, s.summary.get("done", 0), s.summary.get("left", 0)) for s in reversed(closed)], unit
+
+
+def capacity(sprint, n=3):
+    """What this sprint holds against what's usually finished: {"planned", "usual", "unit", "over"}, or None
+    until there's a closed sprint to go by. Counted the way those sprints were."""
+    rows, unit = velocity(sprint.owner, n)
+    if not rows:
+        return None
+    tasks = list(sprint.tasks.only("points"))
+    planned = sum(t.points or 0 for t in tasks) if unit == "points" else len(tasks)
+    usual = round(sum(done for _s, done, _left in rows) / len(rows))
+    return {"planned": planned, "usual": usual, "unit": unit, "over": planned > usual > 0}
 
 
 def add_tasks(sprint, ids):

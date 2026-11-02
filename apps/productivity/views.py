@@ -86,7 +86,7 @@ def _texts():
         "viewName": _("Name this view (e.g. “Urgent at work”):"), "viewDelete": _("Remove this saved view?"), "viewSaved": _("View saved"),
         "breakOver": _("Break's over"), "backToWork": _("Ready to focus again?"), "myDay": _("My Day"), "noAccess": _("Not allowed."),
         "link": _("Link"), "copied": _("Copied"), "copyCode": _("Copy code"),
-        "timerStarted": _("Timer started"), "timerStopped": _("Timer stopped"),
+        "timerStarted": _("Timer started"), "timerStopped": _("Timer stopped"), "leftOffAt": _("You left off:"),
         "slash": {      # "/" in a Markdown box (static/js/writing.js)
             "h1": _("Heading 1"), "h2": _("Heading 2"), "h3": _("Heading 3"), "todo": _("To-do"), "bullet": _("Bulleted list"),
             "numbered": _("Numbered list"), "quote": _("Quote"), "callout": _("Callout"), "code": _("Code block"), "python": _("Python code"),
@@ -233,7 +233,7 @@ def render_work(request, template, ctx=None):
             "wip": s.wip_limit, "focus": s.focus_minutes, "short": s.short_break_minutes, "long": s.long_break_minutes, "every": s.long_break_every,
             "autoBreaks": s.auto_start_breaks, "autoFocus": s.auto_start_focus,
             "sound": s.sound if s.sound_enabled else "", "volume": s.volume, "tick": s.tick_sound,
-            "notify": s.notifications, "longTimer": s.long_timer_hours, "target": s.daily_target_minutes, "idle": s.idle_minutes,
+            "leftOff": s.ask_left_off, "notify": s.notifications, "longTimer": s.long_timer_hours, "target": s.daily_target_minutes, "idle": s.idle_minutes,
             "cardsRemind": s.cards_remind_at.strftime("%H:%M") if s.cards_remind_at else "",
             "reminders": [{"id": r["pk"], "title": r["title"], "at": r["remind_at"].isoformat(),
                            "url": reverse("work:task", args=[r["pk"]])} for r in reminders] + _interview_reminders(user, now),
@@ -303,6 +303,7 @@ def today_view(request):
         "cards_due": cards.due_count(user, today) if Deck.objects.filter(owner=user, is_archived=False).exists() else 0,
         "job_coming": jobs.coming_up(user, today),           # interviews this week, job follow-ups due (the job search)
         # pull requests waiting on code review for days: a nudge to chase the reviewer
+        "left_off": Task.objects.filter(owner=user, status__in=[Status.DOING, Status.TODO]).exclude(left_off="").order_by("-updated_at")[:3],
         "stuck_reviews": list(Task.objects.filter(owner=user, status=Status.REVIEW, updated_at__lt=timezone.now() - timedelta(days=REVIEW_NUDGE_DAYS))
                               .order_by("updated_at")[:5]),
     })
@@ -714,6 +715,9 @@ NOTE_TEMPLATES = {   # key: (title, Markdown body, tags)
     "postmortem": (gettext_lazy("Post-mortem"), gettext_lazy("## Summary\n\n## Impact\nWho was affected, for how long?\n\n## Timeline\n- 00:00 — \n\n## Root cause\n\n## What went well\n- \n\n## What went badly\n- \n\n## Action items\n- [ ] "), "postmortem"),
     "daily": (gettext_lazy("Daily note"), gettext_lazy("## Top 3 today\n1. \n2. \n3. \n\n## Notes\n- \n\n## Learnt today\n- "), "daily"),
     "study": (gettext_lazy("Study notes"), gettext_lazy("## In one sentence\n\n## Key ideas\n- \n- \n\n## How it fits together\n```mermaid\nflowchart LR\n    A[Idea] --> B[Another idea]\n```\n\n## Flashcards\nQuestion :: Answer\n\n## Questions I still have\n- "), "study"),
+    "runbook": (gettext_lazy("Runbook"), gettext_lazy("## What this is for\n\n## How to tell something's wrong\n- Alert / dashboard: \n\n## Steps\n1. \n2. \n\n## If that doesn't work\nWho to call, how to roll back.\n\n## Last checked\n"), "runbook"),
+    "til": (gettext_lazy("Today I learned"), gettext_lazy("## What I learned\n\n## Why it surprised me\n\n## Example\n```\n\n```\n\n## Where I found it\n"), "til"),
+    "review": (gettext_lazy("Code review checklist"), gettext_lazy("- [ ] It does what the ticket asks\n- [ ] Tests cover the change and the edge cases\n- [ ] Errors are handled, and logged where it matters\n- [ ] No secrets, no personal data in logs\n- [ ] Queries are indexed; no N+1\n- [ ] Names say what things are\n- [ ] Docs and migrations are in\n- [ ] It can be rolled back\n"), "code-review"),
     "design": (gettext_lazy("Design doc"), gettext_lazy("## Problem\n\n## Goals / non-goals\n- \n\n## Proposal\n\n## Alternatives considered\n\n## Rollout & risks\n\n## Open questions\n- "), "design"),
 }
 
@@ -776,13 +780,17 @@ def notes_view(request, pk=None):
 def note_today_view(request):
     """Today's note (like Obsidian's or Bear's daily note): opened if it's there, made from the
     "Daily note" template if not — one click from the notes board, the palette or the Today page."""
+    return redirect("work:note", pk=daily_note(request.user).pk)
+
+
+def daily_note(user):
     today = _today()
-    note = (Note.objects.filter(owner=request.user, is_archived=False, tags__name="daily", created_at__date=today).order_by("pk").first())
+    note = (Note.objects.filter(owner=user, is_archived=False, tags__name="daily", created_at__date=today).order_by("pk").first())
     if note is None:
         title, body, tags = NOTE_TEMPLATES["daily"]
-        note = Note.objects.create(owner=request.user, title=f"{title} — {date_format(today, 'j M Y')}", body=str(body))
-        note.tags.set(services.tags_named(request.user, [tags]))
-    return redirect("work:note", pk=note.pk)
+        note = Note.objects.create(owner=user, title=f"{title} — {date_format(today, 'j M Y')}", body=str(body))
+        note.tags.set(services.tags_named(user, [tags]))
+    return note
 
 
 @work_required
@@ -1272,12 +1280,33 @@ def snippets_view(request):
     })
 
 
+HTTP_CODES = [
+    ("200", "OK", gettext_lazy("It worked.")), ("201", "Created", gettext_lazy("A new thing was made.")), ("202", "Accepted", gettext_lazy("Taken in; the work happens later.")),
+    ("204", "No Content", gettext_lazy("It worked, and there's nothing to send back.")), ("301", "Moved Permanently", gettext_lazy("A new address for good; browsers remember it.")),
+    ("302", "Found", gettext_lazy("A new address for now.")), ("304", "Not Modified", gettext_lazy("Your cached copy is still right.")),
+    ("307", "Temporary Redirect", gettext_lazy("A new address for now; the method stays the same.")), ("308", "Permanent Redirect", gettext_lazy("A new address for good; the method stays the same.")),
+    ("400", "Bad Request", gettext_lazy("The request itself is wrong.")), ("401", "Unauthorized", gettext_lazy("Not signed in, or the token is bad.")),
+    ("403", "Forbidden", gettext_lazy("Signed in, but not allowed.")), ("404", "Not Found", gettext_lazy("Nothing at that address.")), ("405", "Method Not Allowed", gettext_lazy("This address doesn't take that method.")),
+    ("409", "Conflict", gettext_lazy("It clashes with the current state, such as a duplicate.")), ("410", "Gone", gettext_lazy("It was here, and it's gone for good.")),
+    ("413", "Content Too Large", gettext_lazy("The body is too big.")), ("415", "Unsupported Media Type", gettext_lazy("The Content-Type isn't accepted.")),
+    ("422", "Unprocessable Content", gettext_lazy("Well formed, but the values don't validate.")), ("429", "Too Many Requests", gettext_lazy("Rate limited: slow down, see Retry-After.")),
+    ("500", "Internal Server Error", gettext_lazy("The server broke: look in its logs.")), ("501", "Not Implemented", gettext_lazy("The server can't do this at all.")),
+    ("502", "Bad Gateway", gettext_lazy("A proxy got a bad answer from the app behind it.")), ("503", "Service Unavailable", gettext_lazy("Down or overloaded for now.")),
+    ("504", "Gateway Timeout", gettext_lazy("A proxy gave up waiting for the app behind it.")),
+]
+
+
 @work_required
 def tools_view(request):
     """Dev tools: the small jobs of a developer's day, done in the browser (static/js/devtools.js)."""
     tools = [("json", "JSON"), ("jwt", "JWT"), ("base64", "Base64"), ("url", _("URL encode")), ("time", _("Timestamp")), ("regex", "Regex"),
-             ("cron", "Cron"), ("uuid", "UUID"), ("hash", _("Hash")), ("diff", _("Diff")), ("case", _("Naming case"))]
+             ("cron", "Cron"), ("uuid", "UUID"), ("hash", _("Hash")), ("diff", _("Diff")), ("case", _("Naming case")), ("yaml", "YAML"), ("sql", "SQL"),
+             ("http", _("HTTP status")), ("bases", _("Number bases")), ("chmod", "chmod"), ("lines", _("Lines"))]
     return render_work(request, "work/tools.html", {"tools": tools, "texts": {
+        "http": HTTP_CODES, "owner": _("Owner"), "group": _("Group"), "others": _("Everyone else"), "linesWord": _("lines"),
+        "badNumber": _("That isn't a number."), "badMode": _("Write it as 755 or rwxr-xr-x."), "noYaml": _("The YAML reader couldn't load. Are you online?"),
+        "cronAt": _("At %s"), "cronMins": _("Every %s minutes"), "cronMinute": _("Every minute"), "cronHour": _("Every hour"), "cronDaily": _("every day"),
+        "cronWeekdays": _("Monday to Friday"), "cronDay": _("on day %s of the month"),
         "copied": _("Copied"), "badJwt": _("That isn't a JWT: it should be parts joined by dots."), "badB64": _("That isn't Base64 text."),
         "badUrl": _("That isn't validly encoded."), "rxSlow": _("Stopped: this pattern takes too long on this text."),
         "badCron": _("That isn't a cron line: it needs five fields."), "cronNever": _("This never runs."),
@@ -1420,7 +1449,7 @@ def reports_view(request):
         if any(k != TaskKind.TASK for k, _secs in t.by_kind) else [],
         "tags": [{"tag": tg, "secs": secs, "pct": round(100 * secs / t.seconds) if t.seconds else 0} for tg, secs in t.by_tag[:12]],
         "tasks": t.by_task, "completed": completed.count(), "created": Task.objects.filter(owner=user, created_at__gte=lo, created_at__lt=hi).count(),
-        "est": est, "delivery": services.delivery(user, start, end),
+        "est": est, "delivery": services.delivery(user, start, end), "focus": services.focus_pattern(user, start, end),
         "hours": [{"h": h, "secs": v, "pct": round(100 * v / hpeak), "level": 0 if not v else min(4, 1 + int(3.999 * v / hpeak))} for h, v in enumerate(hours)],
         "heat": services.heatmap(year, today, s.week_start), "year_total": sum(year.values()),
         "year_days": sum(1 for v in year.values() if v),
@@ -1454,6 +1483,15 @@ def settings_view(request):
             else:
                 messages.error(request, _("The email couldn't be sent. Try again later."))
             return redirect(reverse("work:settings") + "#emails")
+        if action == "api":
+            request.session["new_api_token"] = s.new_api_token()
+            messages.success(request, _("Token made. Copy it now: it won't be shown again."))
+            return redirect(reverse("work:settings") + "#api")
+        if action == "api_off":
+            s.api_token_hash, s.api_token_hint = "", ""
+            s.save(update_fields=["api_token_hash", "api_token_hint"])
+            messages.success(request, _("Token turned off. Anything using it has stopped working."))
+            return redirect(reverse("work:settings") + "#api")
         if action == "git":
             s.new_git_token()
             messages.success(request, _("Webhook address made. Add it to your repository (the steps are below)."))
@@ -1493,6 +1531,8 @@ def settings_view(request):
     return render_work(request, "work/settings.html", {
         "form": form, "tags": tags, "tag_form": tag_form, "feed": feed,
         "git_hook": request.build_absolute_uri(reverse("work:git_hook", args=[s.git_token])) if s.git_token else "",
+        "new_api_token": request.session.pop("new_api_token", ""), "api_base": request.build_absolute_uri("/work/api/v1"),
+        "cli_url": request.build_absolute_uri(reverse("work:cli")),
         "branch_example": dev.branch_name(sample, s), "key_example": sample.key(s.key_prefix),
     })
 
@@ -2029,7 +2069,7 @@ def sprint_view(request, pk):
     return render_work(request, "work/sprint.html", {
         "sp": sp, "form": form, "state": sp.state(today), "today": today, "columns": [c for c in columns if c[2] or c[0] in (Status.TODO, Status.DOING)],
         "total": len(tasks), "done": len(done), "pct": round(100 * len(done) / len(tasks)) if tasks else 0,
-        "est_total": est_total, "est_done": est_done, "chart": sprints.chart(sp, today), "backlog": backlog, "release_notes": notes,
+        "est_total": est_total, "est_done": est_done, "chart": sprints.chart(sp, today), "capacity": sprints.capacity(sp), "backlog": backlog, "release_notes": notes,
         "pts_total": sum(t.points or 0 for t in tasks), "pts_done": sum(t.points or 0 for t in done),
         "days_left": (sp.end_date - today).days, "day_no": min(max((today - sp.start_date).days + 1, 0), sp.length),
         "others": sprints.open_sprints(user).exclude(pk=sp.pk),

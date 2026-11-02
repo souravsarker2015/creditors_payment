@@ -19,7 +19,7 @@ from django.utils.text import capfirst
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
-SKIP_FIELDS = {"user", "owner", "feed_token"}   # whose it is, and a private calendar address
+SKIP_FIELDS = {"user", "owner", "feed_token", "git_token", "api_token_hash", "api_token_hint", "api_token_used_at"}   # whose it is, and private keys
 
 
 def personal_models():

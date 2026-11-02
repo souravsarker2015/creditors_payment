@@ -21,6 +21,7 @@
         {% with field=form.long_timer_hours %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.idle_minutes %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.timer_follows_status %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.ask_left_off %}{% include "partials/field.html" %}{% endwith %}
         <div x-data="{ state: 'IdleDetector' in window ? 'ask' : 'unsupported' }" x-init="if (state === 'ask' && navigator.permissions) navigator.permissions.query({ name: 'idle-detection' }).then(p => { if (p.state === 'granted') state = 'on' }).catch(() => {})">
           <button type="button" class="btn btn-secondary btn-sm btn-wrap" x-show="state === 'ask'" @click="Work.allowIdle().then(r => { state = r === 'granted' ? 'on' : 'ask' })">{% icon "clock" %}{% translate "Also notice when I step away from the computer" %}</button>
           <p class="help" x-show="state === 'on'" x-cloak>{% translate "On: this browser tells the tracker when you're away from the keyboard." %}</p>
@@ -120,7 +121,7 @@
     </div></section>
 
   <section class="card" id="git"><header class="card-header"><div><h2 class="card-title">{% icon "git" %}{% translate "GitHub & GitLab" %}</h2>
-    <p class="card-subtitle">{% translate "Commits and pull requests that name a task (T-42) show up on it; “fixes T-42” or a merged pull request ticks it off." %}</p></div></header>
+    <p class="card-subtitle">{% translate "Commits and pull requests that name a task (T-42) show up on it; “fixes T-42” or a merged pull request ticks it off. Changes asked for in review, and a failed build on its branch, show up too." %}</p></div></header>
     <div class="card-body !pt-0 form-stack">
       {% if git_hook %}
       <label class="label" for="git-url">{% translate "Payload URL" %}</label>
@@ -130,8 +131,8 @@
       <div class="ws-feed"><input id="git-secret" class="form-input input-compact" value="{{ ws.git_token }}" readonly @focus="$el.select()" x-data>
         <button type="button" class="btn btn-secondary btn-sm" data-copy="{{ ws.git_token }}">{% icon "copy" %}{% translate "Copy" %}</button></div>
       <ol class="ws-steps">
-        <li>{% translate "GitHub: the repository → Settings → Webhooks → Add webhook. Paste the URL, choose application/json, paste the secret, and pick “Pushes” and “Pull requests”." %}</li>
-        <li>{% translate "GitLab: the project → Settings → Webhooks. Paste the URL, put the secret in “Secret token”, and tick “Push events” and “Merge request events”." %}</li>
+        <li>{% translate "GitHub: the repository → Settings → Webhooks → Add webhook. Paste the URL, choose application/json, paste the secret, and pick “Pushes”, “Pull requests”, “Pull request reviews” and “Workflow runs”." %}</li>
+        <li>{% translate "GitLab: the project → Settings → Webhooks. Paste the URL, put the secret in “Secret token”, and tick “Push events”, “Merge request events” and “Pipeline events”." %}</li>
         <li>{% blocktranslate with key=key_example %}Then name the task in your work: a branch like <code>fix/{{ key }}-login</code>, a commit like <code>fixes {{ key }}</code>, or a pull request title.{% endblocktranslate %}</li>
       </ol>
       <p class="help">{% translate "The address must be reachable from the internet (this app on a real server, not on your own computer)." %}</p>
@@ -141,6 +142,28 @@
       {% else %}
       <form method="post">{% csrf_token %}<button type="submit" name="action" value="git" class="btn btn-secondary">{% icon "git" %}{% translate "Connect GitHub or GitLab" %}</button></form>
       {% endif %}
+    </div></section>
+
+  <section class="card" id="api"><header class="card-header"><div><h2 class="card-title">{% icon "code" %}{% translate "API & command line" %}</h2>
+    <p class="card-subtitle">{% translate "Add tasks, run the timer and write to today's note from your terminal, scripts and git hooks." %}</p></div></header>
+    <div class="card-body !pt-0 form-stack">
+      {% if new_api_token %}
+      <label class="label" for="api-token">{% translate "Your token" %}</label>
+      <div class="ws-feed"><input id="api-token" class="form-input input-compact" value="{{ new_api_token }}" readonly @focus="$el.select()" x-data>
+        <button type="button" class="btn btn-secondary btn-sm" data-copy="{{ new_api_token }}">{% icon "copy" %}{% translate "Copy" %}</button></div>
+      <p class="help" data-tone="warn">{% translate "Copy it now: it's only shown this once. It can do anything you can do in Productivity, so keep it like a password." %}</p>
+      {% elif ws.api_token_hash %}
+      <p class="help">{% blocktranslate with hint=ws.api_token_hint %}A token ending in …{{ hint }} is on.{% endblocktranslate %} {% if ws.api_token_used_at %}{% blocktranslate with when=ws.api_token_used_at|date:"j M Y, H:i" %}Last used {{ when }}.{% endblocktranslate %}{% else %}{% translate "Not used yet." %}{% endif %}</p>
+      {% endif %}
+      <ol class="ws-steps">
+        <li>{% translate "Install the command:" %} <code>curl -fsSL {{ cli_url }} -o ~/.local/bin/ft &amp;&amp; chmod +x ~/.local/bin/ft</code></li>
+        <li>{% translate "Sign in with your token:" %} <code>ft login</code></li>
+        <li>{% translate "Then:" %} <code>ft add "fix(auth): login loop p1"</code> · <code>ft start T-42</code> · <code>ft stop "next: check the retry"</code> · <code>git switch -c $(ft branch T-42)</code> · <code>ft help</code></li>
+        <li>{% translate "Or call it yourself:" %} <code>curl -H "Authorization: Bearer $FT_TOKEN" {{ api_base }}/tasks/</code></li>
+      </ol>
+      <form method="post" class="flex flex-wrap gap-2">{% csrf_token %}
+        <button type="submit" name="action" value="api" class="btn {% if ws.api_token_hash %}btn-ghost btn-sm{% else %}btn-secondary{% endif %}">{% if ws.api_token_hash %}{% translate "Make a new token" %}{% else %}{% translate "Make a token" %}{% endif %}</button>
+        {% if ws.api_token_hash %}<button type="submit" name="action" value="api_off" class="btn btn-ghost btn-sm">{% translate "Turn off" %}</button>{% endif %}</form>
     </div></section>
 
   <section class="card" id="tags"><header class="card-header"><div><h2 class="card-title">{% translate "Tags" %}</h2><p class="card-subtitle">{% translate "Rename or recolour a tag everywhere at once." %}</p></div></header>

@@ -30,11 +30,13 @@
   {% if est_total %}<div class="stat"><dt class="stat-label">{% translate "Estimated work done" %}</dt><dd class="stat-value num">{{ est_done|minutes_hm }} / {{ est_total|minutes_hm }}</dd></div>{% endif %}
 </dl>
 
+{% if capacity.over and state != "done" %}<p class="callout" data-tone="warn">{% icon "alert" %}<span>{% if capacity.unit == "points" %}{% blocktranslate with planned=capacity.planned usual=capacity.usual %}This sprint holds {{ planned }} points. You usually finish about {{ usual }}.{% endblocktranslate %}{% else %}{% blocktranslate with planned=capacity.planned usual=capacity.usual %}This sprint holds {{ planned }} tasks. You usually finish about {{ usual }}.{% endblocktranslate %}{% endif %}</span></p>{% endif %}
+
 {% if chart.total and state != "planned" %}
 <section class="card wbu wsp-burn">
   <header class="card-header"><div><h2 class="card-title">{% translate "Burndown" %}{% include "partials/info.html" with text=_("Open tasks at the end of each day (solid) against a steady pace to none by the last day (dashed). Above the dashed line: behind; below it: ahead.") %}</h2>
-    <p class="card-subtitle">{% blocktranslate count counter=chart.left %}{{ counter }} task still open{% plural %}{{ counter }} tasks still open{% endblocktranslate %}</p></div>
-    <span class="wbu-key"><i data-k="added"></i>{% translate "Steady pace" %}<i data-k="done"></i>{% translate "Open tasks" %}</span></header>
+    <p class="card-subtitle">{% if chart.unit == "points" %}{% blocktranslate count counter=chart.left %}{{ counter }} point still open{% plural %}{{ counter }} points still open{% endblocktranslate %}{% else %}{% blocktranslate count counter=chart.left %}{{ counter }} task still open{% plural %}{{ counter }} tasks still open{% endblocktranslate %}{% endif %}</p></div>
+    <span class="wbu-key"><i data-k="added"></i>{% translate "Steady pace" %}<i data-k="done"></i>{% if chart.unit == "points" %}{% translate "Open points" %}{% else %}{% translate "Open tasks" %}{% endif %}</span></header>
   <div class="card-body">
     <div class="wsp-plot">
     <svg class="wbu-chart" viewBox="0 -8 {{ chart.w }} {{ chart.h|add:16 }}" preserveAspectRatio="none" role="img" aria-label="{% translate 'Open tasks, day by day' %}">

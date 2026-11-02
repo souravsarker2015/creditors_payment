@@ -49,6 +49,8 @@ PREFIX = "backup/"
 # Sign-in secrets and the app's own bookkeeping are never written out.
 SKIP_MODELS = {"accounts.twofactor", "accounts.signin", "core.offlinereceipt", "trash.deleteditem"}
 OWNER_FIELDS = ("user", "owner")
+# A person's keys to this account stay out of the file, both ways: restored into another account, one token would open two.
+SKIP_FIELDS = {"productivity.worksettings": ("api_token_hash", "api_token_hint", "api_token_used_at", "git_token", "feed_token")}
 
 
 # ── What belongs to one person ──────────────────────────────────────────────
@@ -127,6 +129,9 @@ def add_to_zip(z, user):
     with transaction.atomic():
         for model, lookup in owned_models():
             objs = bk.serialize_rows(model, _rows(model, lookup, user))
+            for obj in objs:
+                for name in SKIP_FIELDS.get(model._meta.label_lower, ()):
+                    obj["fields"].pop(name, None)
             counts[model._meta.label_lower] = len(objs)
             rows += objs
             files = bk._file_fields(model)
@@ -331,7 +336,7 @@ def restore(user, backup, keep_copy=True):
                     files = set(bk._file_fields(model))
                     batch = []                 # (old pk, fields, m2m, waiting)
                     for row in by_model.get(label, []):
-                        fields = dict(row["fields"])
+                        fields = {k: v for k, v in row["fields"].items() if k not in SKIP_FIELDS.get(label, ())}
                         m2m, waiting = {}, []
                         for f in model._meta.get_fields():
                             if not getattr(f, "concrete", False) or not f.is_relation or f.name not in fields:

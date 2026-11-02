@@ -138,6 +138,13 @@
     </section>
     {% endif %}
 
+    {% if left_off %}
+    <section class="card">
+      <header class="card-header"><div><h2 class="card-title">{% icon "flag" %}{% translate "Pick up where you left off" %}</h2></div></header>
+      <ul class="wd-notes">{% for t in left_off %}<li><a href="{% url 'work:task' t.pk %}"><strong>{{ t.title }}</strong><br><span class="help">{{ t.left_off }}</span></a></li>{% endfor %}</ul>
+    </section>
+    {% endif %}
+
     {% if stuck_reviews %}
     <section class="card wd-review">
       <header class="card-header"><div><h2 class="card-title">{% icon "git" %}{% translate "Waiting on code review" %}</h2><p class="card-subtitle">{% translate "No change for 3 days or more — a nudge to the reviewer helps." %}</p></div><a href="{% url 'work:tasks' %}?view=list&status=review" class="btn btn-ghost btn-sm">{% translate "All" %}</a></header>

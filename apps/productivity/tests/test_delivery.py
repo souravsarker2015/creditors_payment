@@ -156,7 +156,7 @@ class PullRequestTextTests(Base):
     def test_title_notes_link_and_closes(self):
         t = self.task("Fix the login loop", kind=TaskKind.BUG, notes="- [ ] keep the session\n- [ ] add a test", link="https://acme.atlassian.net/browse/PAY-8")
         text = dev.pr_description(t, self.ws)
-        self.assertEqual(text.splitlines()[0], f"fix: fix the login loop (T-{t.pk})")
+        self.assertEqual(text.splitlines()[0], f"fix: the login loop (T-{t.pk})")
         self.assertIn("- [ ] add a test", text)
         self.assertIn("Ticket: https://acme.atlassian.net/browse/PAY-8", text)
         self.assertTrue(text.endswith(f"Closes T-{t.pk}"))
