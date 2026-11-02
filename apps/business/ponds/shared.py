@@ -74,7 +74,7 @@ def _costs(business):
     if apps.is_installed("apps.business.assets"):
         from apps.business.assets.models import Service
 
-        for r in Service.objects.filter(business=business, cost__gt=0).values("date", "equipment__pond_id").annotate(t=Sum("cost")):
+        for r in Service.objects.filter(business=business, cost__gt=0, equipment__is_deleted=False).values("date", "equipment__pond_id").annotate(t=Sum("cost")):
             out.append((r["date"], _("Repairs & servicing"), r["t"], r["equipment__pond_id"]))
     return out
 

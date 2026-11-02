@@ -1,4 +1,3 @@
-import csv
 import json
 from datetime import date
 from decimal import Decimal
@@ -11,6 +10,7 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
+from apps.core.csvsafe import safe_writer
 from apps.business.core.decorators import business_access_required
 from apps.business.core.templatetags.business import bdt
 
@@ -261,7 +261,7 @@ def loan_schedule_csv_view(request, pk):
     response = HttpResponse(content_type="text/csv; charset=utf-8")
     response["Content-Disposition"] = f'attachment; filename="loan-{loan.pk}-schedule.csv"'
     response.write("﻿")  # so Excel opens Bangla text correctly
-    w = csv.writer(response)
+    w = safe_writer(response)
     w.writerow([_("No."), _("Due date"), _("Interest"), _("Towards the loan"), _("Total"), _("Paid"), _("Left to pay"), _("Balance after"), _("Status")])
     labels = {"paid": _("Paid"), "overdue": _("Overdue"), "due_soon": _("Due soon"), "upcoming": _("Upcoming")}
     for p in s.periods:

@@ -26073,3 +26073,24 @@ msgstr "যে কেউ অ্যাকাউন্ট খুলতে পা�
 
 msgid "Turn this off to add people yourself, from People & access."
 msgstr "এটি বন্ধ করলে ব্যবহারকারী ও অনুমতি থেকে আপনি নিজেই লোক যোগ করবেন।"
+
+msgid "Bank & bKash charges"
+msgstr "ব্যাংক ও বিকাশ চার্জ"
+
+msgid "Discounts you let buyers off"
+msgstr "ক্রেতাদের দেওয়া ছাড়"
+
+msgid "Discounts from suppliers"
+msgstr "সরবরাহকারীদের কাছ থেকে পাওয়া ছাড়"
+
+msgid "Transfer fees"
+msgstr "টাকা পাঠানোর ফি"
+
+msgid "Too many new accounts from here. Try again in an hour."
+msgstr "এখান থেকে অনেকগুলো নতুন অ্যাকাউন্ট খোলা হয়েছে। এক ঘণ্টা পরে আবার চেষ্টা করুন।"
+
+msgid "The loan and all its payments leave your account balances and profit until you restore it."
+msgstr "ফিরিয়ে না আনা পর্যন্ত ঋণটি ও এর সব পরিশোধ আপনার হিসাবের ব্যালান্স ও লাভ থেকে বাদ থাকবে।"
+
+msgid "Its price and servicing costs leave your account balances and profit until you restore it."
+msgstr "ফিরিয়ে না আনা পর্যন্ত এর দাম ও সার্ভিসিং খরচ আপনার হিসাবের ব্যালান্স ও লাভ থেকে বাদ থাকবে।"

@@ -84,7 +84,12 @@ def _worker(worker):
 
 def _loan(loan):
     left = loan.schedule().outstanding
-    return [_("%(amount)s of this loan is still to pay.") % {"amount": _money(left)}] if left > 0 else []
+    lines = [_("%(amount)s of this loan is still to pay.") % {"amount": _money(left)}] if left > 0 else []
+    return lines + [_("The loan and all its payments leave your account balances and profit until you restore it.")]
+
+
+def _machine(machine):
+    return [_("Its price and servicing costs leave your account balances and profit until you restore it.")]
 
 
 def _lender(lender):
@@ -99,7 +104,9 @@ def _money(value):
 
 BUSINESS = {
     "business:ponds_delete": _pond, "business:accounts_delete": _account, "business:staff_delete": _worker, "business:loan_delete": _loan, "business:lender_delete": _lender,
+    "business:equipment_delete": _machine,
 }
+TAKES_ITS_ENTRIES = {"business:loan_delete", "business:equipment_delete"}      # their money leaves the books with them (finance/services.py)
 OTHERS = {     # the ones not made by Master (apps/business/core/crud.py)
     "business:loan_delete": "apps.business.loans.models.Loan", "business:lender_delete": "apps.business.loans.models.Lender",
     "business:cycle_delete": "apps.business.ponds.models.CultureCycle",
@@ -121,7 +128,7 @@ def _business(request, name, pk):
     problem = master.delete_check(obj) if master and master.delete_check else None
     if problem:         # the server would refuse it: say why now, not after the click
         return [problem], True
-    return (BUSINESS[name](obj) if name in BUSINESS else []) + _still_used(obj), False
+    return (BUSINESS[name](obj) if name in BUSINESS else []) + ([] if name in TAKES_ITS_ENTRIES else _still_used(obj)), False
 
 
 # ── Personal and Productivity: deleting takes what belongs to it along ──────

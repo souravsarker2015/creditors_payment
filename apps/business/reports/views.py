@@ -1,5 +1,4 @@
 """The business dashboard and the reports, each with a CSV you can open in Excel."""
-import csv
 from dataclasses import dataclass
 from datetime import date, timedelta
 from decimal import Decimal
@@ -10,6 +9,7 @@ from django.urls import reverse
 from django.utils.formats import date_format
 from django.utils.translation import gettext as _, gettext_lazy as _lazy
 
+from apps.core.csvsafe import safe_writer
 from apps.business.core.periods import fy_start, last_fy
 from apps.business.core.decorators import business_access_required
 
@@ -149,7 +149,7 @@ def _csv(filename, report, business, period):
     response = HttpResponse(content_type="text/csv")
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
     response.write("﻿")  # so Excel shows Bangla properly
-    writer = csv.writer(response)
+    writer = safe_writer(response)
     writer.writerow([business.name])
     writer.writerow([report["title"], period.label])
     writer.writerow([])

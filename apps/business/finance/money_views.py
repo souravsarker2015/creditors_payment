@@ -378,7 +378,7 @@ def budget_copy_view(request):
 
 def _advance(recurring, after):
     """Move a recurring bill on to its next date once one is confirmed."""
-    nxt = services.next_date(recurring.next_due or after, recurring.repeat)
+    nxt = services.next_date(recurring.next_due or after, recurring.repeat, recurring.start_date)
     recurring.next_due = None if (recurring.end_date and nxt > recurring.end_date) else nxt
     recurring.save(update_fields=["next_due", "updated_at", "updated_by"])
 

@@ -2,7 +2,6 @@
 per kind, zipped — their own copy, readable in Excel — plus the same records
 in a form that can be restored (backup/, see personal_backup.py). Farm records
 have their own download (the farm owner's, under Farm setup)."""
-import csv
 import io
 import os
 import shutil
@@ -18,6 +17,7 @@ from django.utils import timezone
 from django.utils.text import capfirst
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
+from apps.core.csvsafe import safe_writer
 
 SKIP_FIELDS = {"user", "owner", "feed_token", "git_token", "api_token_hash", "api_token_hint", "api_token_used_at"}   # whose it is, and private keys
 
@@ -70,7 +70,7 @@ def build_zip(user):
                 continue
             buf = io.StringIO()
             buf.write("﻿")
-            w = csv.writer(buf)
+            w = safe_writer(buf)
             w.writerow([capfirst(str(f.verbose_name)) if f.name != "id" else "ID" for f in cols])
             readers = [_reader(f) for f in cols]
             w.writerows([read(obj) for read in readers] for obj in rows)

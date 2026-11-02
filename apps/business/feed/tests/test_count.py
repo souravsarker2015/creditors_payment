@@ -123,3 +123,14 @@ class StoreCountTests(TestCase):
         r = self.client.post(reverse("business:feed_count"), {"date": TODAY.isoformat(), f"n{self.grower.pk}": "1"})
         self.assertContains(r, "No feed products yet")   # not one of their feeds
         self.assertEqual(FeedCount.objects.count(), 1)
+
+    def test_a_deleted_cycle_leaves_the_feeding_pages(self):
+        self.client.force_login(self.owner)
+        FeedUsage.objects.create(business=self.b, cycle=self.cycle, date=TODAY, product=self.grower, quantity=D("1"), unit=self.kg)
+        self.assertTrue(self.client.get(reverse("business:feed_usage")).context["today_done"])
+        self.cycle.soft_delete()
+        page = self.client.get(reverse("business:feed_usage")).context
+        self.assertFalse(page["today_done"])
+        self.assertEqual(page["week_kg"], 0)
+        self.assertEqual(page["days"], [])
+        self.assertEqual(self.client.get(reverse("business:feed_stock")).context["used_month"], 0)

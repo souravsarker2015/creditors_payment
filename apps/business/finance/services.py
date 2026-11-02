@@ -10,11 +10,16 @@ with the documents they come from — even after one is edited or deleted.
 
     balance  = opening + money in − money out
     profit   = income (fish sales + other) − costs (feed, fingerlings,
-               farm expenses, loan interest and charges)
+               farm expenses, loan interest and charges, transfer charges)
+               ± discounts on baki (let off a buyer, or given by a supplier)
 
 Money moved between your own accounts, loan principal, and baki payments are
 NOT income or spending: they only move money about, or settle what a sale or
 purchase already counted.
+
+A loan or a machine taken out of the books takes its own payments with it, or
+its account would show money leaving for something that was never there. A
+person's money stays: what was really paid to a worker or a shop was paid.
 """
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -91,7 +96,7 @@ def movements(business, account=None):
         for loan in Loan.objects.filter(business=business, account__isnull=False).select_related("lender"):
             add(loan.taken_on, loan.account_id, loan.principal, _("Loan received"), str(loan.lender),
                 reverse("business:loan_detail", args=[loan.pk]), "loan")
-        for t in LoanTransaction.objects.filter(business=business).select_related("loan__lender"):
+        for t in LoanTransaction.objects.filter(business=business, loan__is_deleted=False).select_related("loan__lender"):
             taken = t.kind == LoanTxnKind.TOP_UP
             amount = t.principal if taken else -t.total
             add(t.date, t.account_id, amount, _("Loan money taken") if taken else _("Loan instalment"),
@@ -101,7 +106,7 @@ def movements(business, account=None):
 
         for e in Equipment.objects.filter(business=business, cost__gt=0, account__isnull=False, bought_on__isnull=False):
             add(e.bought_on, e.account_id, -e.cost, _("Equipment bought"), str(e), reverse("business:equipment_detail", args=[e.pk]), "expense")
-        for sv in Service.objects.filter(business=business, cost__gt=0, account__isnull=False).select_related("equipment"):
+        for sv in Service.objects.filter(business=business, cost__gt=0, account__isnull=False, equipment__is_deleted=False).select_related("equipment"):
             add(sv.date, sv.account_id, -sv.cost, sv.get_kind_display(), str(sv.equipment), reverse("business:equipment_detail", args=[sv.equipment_id]), "expense")
     if _installed("ponds"):
         from apps.business.ponds.models import LeasePayment
@@ -312,10 +317,24 @@ def statement(business, start, end, scope=Scope.BUSINESS, cycle=None, cache=None
         if _installed("loans") and cycle is None:
             from apps.business.loans.models import LoanTransaction
 
-            paid = LoanTransaction.objects.filter(business=business, **in_range).aggregate(i=Sum("interest"), c=Sum("charges"))
+            paid = LoanTransaction.objects.filter(business=business, loan__is_deleted=False, **in_range).aggregate(i=Sum("interest"), c=Sum("charges"))
             total = (paid["i"] or ZERO) + (paid["c"] or ZERO)
             if total:
                 s.expense.append(Line("loan", _("Loan interest & fees"), total, reverse("business:loans")))
+        if cycle is None:
+            total = Transfer.objects.filter(business=business, **in_range).aggregate(t=Sum("charge"))["t"] or ZERO
+            if total:
+                s.expense.append(Line("charges", _("Bank & bKash charges"), total, reverse("business:accounts")))
+        if _installed("credit") and cycle is None:
+            from apps.business.credit.models import Direction, PartyPayment
+
+            let_go = PartyPayment.objects.filter(business=business, discount__gt=0, **in_range)
+            given = let_go.filter(direction=Direction.IN).aggregate(t=Sum("discount"))["t"] or ZERO
+            taken = let_go.filter(direction=Direction.OUT).aggregate(t=Sum("discount"))["t"] or ZERO
+            if given:
+                s.expense.append(Line("discount_given", _("Discounts you let buyers off"), given, reverse("business:payments")))
+            if taken:
+                s.income.append(Line("discount_taken", _("Discounts from suppliers"), taken, reverse("business:payments")))
 
     rows = Transaction.objects.filter(business=business, category__scope=scope, **in_range).select_related("category__parent")
     if cycle is not None:
@@ -413,13 +432,20 @@ def _month_end(month):
 STEP = {"weekly": ("days", 7), "monthly": ("months", 1), "quarterly": ("months", 3), "half": ("months", 6), "yearly": ("months", 12)}
 
 
-def next_date(after, repeat):
+def next_date(after, repeat, start=None):
+    """The next time after `after`. Given the bill's `start`, one on the 31st comes back to it: Jan 31 → Feb 28 → Mar 31, not Mar 28."""
+    from calendar import monthrange
     from datetime import timedelta
 
     from apps.business.loans.schedule import add_months
 
     unit, n = STEP[repeat]
-    return after + timedelta(days=n) if unit == "days" else add_months(after, n)
+    if unit == "days":
+        return after + timedelta(days=n)
+    nxt = add_months(after, n)
+    if start and start.day > after.day == monthrange(after.year, after.month)[1]:
+        nxt = nxt.replace(day=min(start.day, monthrange(nxt.year, nxt.month)[1]))
+    return nxt
 
 
 def due_recurring(business, on=None):

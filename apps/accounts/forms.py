@@ -47,11 +47,8 @@ def login_failed(request, username):
     keys = _login_keys(request, username)
     locked_now = False
     for kind, key in keys.items():
-        try:
-            n = cache.incr(key)
-        except ValueError:
-            cache.set(key, 1, LOCK_WINDOW)
-            n = 1
+        n = cache.get(key, 0) + 1
+        cache.set(key, n, LOCK_WINDOW)      # not cache.incr: on the live site's disk cache that shortens the wait to 5 minutes
         if kind == "account" and n == ACCOUNT_LIMIT:
             locked_now = True
     return locked_now
@@ -102,6 +99,19 @@ class LoginForm(AuthenticationForm):
                    _("There were %(count)s wrong passwords for your account by %(when)s, so signing in is paused for %(minutes)s minutes. "
                      "If this wasn't you, nothing is needed — but a stronger password (and two-step sign-in) keeps guessers out.")
                    % {"count": ACCOUNT_LIMIT, "when": when_text(), "minutes": LOCK_WINDOW // 60})
+
+
+SIGNUP_LIMIT = 5           # new accounts from one place…
+SIGNUP_WINDOW = 60 * 60    # …per hour
+
+
+def signup_limited(request):
+    return cache.get("signup:" + client_ip(request), 0) >= SIGNUP_LIMIT
+
+
+def signup_counted(request):
+    key = "signup:" + client_ip(request)
+    cache.set(key, cache.get(key, 0) + 1, SIGNUP_WINDOW)
 
 
 class SignupForm(UserCreationForm):

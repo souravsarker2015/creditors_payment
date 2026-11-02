@@ -154,7 +154,7 @@ class Transaction(BusinessBaseModel):
 
 class Transfer(BusinessBaseModel):
     """Money moved between your own accounts (bank → cash, cash → bKash).
-    It is not income or spending, so it has no category."""
+    It is not income or spending, so it has no category; only its charge is a cost."""
 
     date = models.DateField(_("Date"), db_index=True)
     from_account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name="transfers_out", verbose_name=_("From"))

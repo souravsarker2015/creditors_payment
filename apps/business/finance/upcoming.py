@@ -44,7 +44,7 @@ def bill_items(business, today, until):
     for r in RecurringTransaction.objects.filter(business=business, next_due__isnull=False).select_related("category"):
         sign = 1 if r.category.type == CategoryType.INCOME else -1
         detail = _("Regular income") if sign > 0 else _("Regular bill")
-        for d in repeat(r.next_due, lambda x, rep=r.repeat: services.next_date(x, rep), until, r.end_date):
+        for d in repeat(r.next_due, lambda x, r=r: services.next_date(x, r.repeat, r.start_date), until, r.end_date):
             items.append(Item(d, sign * r.amount, r.name, detail, reverse("business:recurring"), "bill"))
     return items
 

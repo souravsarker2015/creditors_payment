@@ -99,7 +99,8 @@ def networth_view(request):
     household_spent_by_you = _sum(ledger.bazar)
     shops_paid = _sum(ledger.shops)
     paid_back = _sum(ledger.paid_back)
-    total_expense = expense_spent + household_spent_by_you + shops_paid + paid_back
+    transfer_fees = ledger.fees.aggregate(total=Coalesce(Sum("fee"), Value(0, output_field=DecimalField())))["total"]
+    total_expense = expense_spent + household_spent_by_you + shops_paid + paid_back + transfer_fees
 
     net_cash_flow = total_income - total_expense
 
@@ -116,7 +117,7 @@ def networth_view(request):
 
     months = last_n_month_starts(12, today)
     in_series = [a + b for a, b in zip(monthly_series(ledger.income, months), monthly_series(ledger.contrib, months))]
-    out_series = [sum(month, ZERO) for month in zip(*(monthly_series(qs, months) for qs in ledger.outgoings))]
+    out_series = [sum(month, ZERO) for month in zip(*(monthly_series(qs, months) for qs in ledger.outgoings), monthly_series(ledger.fees, months, "fee"))]
     net_series = [a - b for a, b in zip(in_series, out_series)]
 
     from apps.wallets.services import holding
@@ -166,6 +167,7 @@ def networth_view(request):
         "household_spent_by_you": household_spent_by_you,
         "shops_paid": shops_paid,
         "paid_back": paid_back,
+        "transfer_fees": transfer_fees,
         "total_expense": total_expense,
         "net_cash_flow": net_cash_flow,
         "net_position": net_position,

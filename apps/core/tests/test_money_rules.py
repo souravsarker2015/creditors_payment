@@ -23,7 +23,7 @@ from apps.income.models import IncomeSource, IncomeTransaction, RecurringIncome
 from apps.overview.report import Ledger
 from apps.shops.forms import TransactionForm as ShopEntry
 from apps.shops.models import Shop, Transaction as ShopTx
-from apps.wallets.models import Wallet
+from apps.wallets.models import Transfer, Wallet
 from apps.wallets.services import holding
 
 User = get_user_model()
@@ -192,3 +192,30 @@ class OverpaidTests(TestCase):
         Purchase.objects.create(user=self.user, buyer=m, amount=D("1000"), date=date(2025, 3, 1))
         r = self.client.post(reverse("household_member_detail", args=[m.pk]), {"amount": "10000", "date": "2025-03-02"}, follow=True)
         self.assertContains(r, "more than the balance")
+
+
+class TransferFeeTests(TestCase):
+    """Moving money isn't spending, but the fee on the way is: it's gone."""
+
+    def setUp(self):
+        self.user = User.objects.create_user("fee", password="x")
+        self.client.force_login(self.user)
+        self.today = timezone.localdate()
+        bank = Wallet.objects.create(user=self.user, name="Bank", opening_balance=D("5000"), opening_date=self.today)
+        cash = Wallet.objects.create(user=self.user, name="Cash", opening_balance=0, opening_date=self.today)
+        Transfer.objects.create(user=self.user, from_wallet=bank, to_wallet=cash, amount=D("1000"), fee=D("18.50"), date=self.today)
+
+    def test_the_fee_counts_and_the_amount_does_not(self):
+        self.assertEqual(Ledger(self.user).money_out(self.today, self.today), D("18.50"))
+
+    def test_the_report_names_it(self):
+        response = self.client.get(reverse("money_report"))
+        self.assertEqual(response.context["out_total"], D("18.50"))
+        self.assertEqual([row[0] for row in response.context["out_rows"]], ["Transfer fees"])
+
+    def test_a_year_report_counts_it_in_its_month(self):
+        response = self.client.get(reverse("money_report"), {"year": self.today.year})
+        self.assertEqual(sum(m["out"] for m in response.context["months"]), D("18.50"))
+
+    def test_home_counts_it_too(self):
+        self.assertEqual(self.client.get(reverse("home")).context["transfer_fees"], D("18.50"))

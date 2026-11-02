@@ -1,6 +1,5 @@
 """Productivity pages. Every query is limited to the signed-in person
 (owner=request.user): nobody sees anyone else's work, admins included."""
-import csv
 from datetime import date, timedelta
 from urllib.parse import urlencode
 
@@ -12,6 +11,7 @@ from django.http import Http404, HttpResponse, HttpResponseNotModified, JsonResp
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from apps.core.csvsafe import safe_writer
 from apps.core.dates import parse_date
 from django.utils.formats import date_format
 from django.utils.http import content_disposition_header, http_date, parse_http_date_safe
@@ -1419,7 +1419,7 @@ def reports_view(request):
         response = HttpResponse(content_type="text/csv; charset=utf-8")
         response["Content-Disposition"] = f'attachment; filename="time-{start}-{end}.csv"'
         response.write("﻿")
-        w = csv.writer(response)
+        w = safe_writer(response)
         w.writerow([_("Date"), _("Start"), _("End"), _("Hours"), _("Project"), _("Task"), _("Description"), _("Tags"), _("Billable"), _("Kind")])
         for e in t.entries:
             st, en = timezone.localtime(e.started_at), timezone.localtime(e.ended_at) if e.ended_at else None
@@ -2175,7 +2175,7 @@ def invoice_view(request):
         response = HttpResponse(content_type="text/csv; charset=utf-8")
         response["Content-Disposition"] = f'attachment; filename="invoice-{start}-{end}.csv"'
         response.write("﻿")
-        w = csv.writer(response)
+        w = safe_writer(response)
         w.writerow([_("Project"), _("Work"), _("Hours"), _("Rate"), _("Amount")])
         for line in inv.lines:
             w.writerow([line.project.name if line.project else "", line.label, line.hours, line.rate or "", line.amount if line.amount is not None else ""])

@@ -268,6 +268,7 @@
             <div class="kv"><dt><a href="{% url 'household_dashboard' %}" class="kv-label">{% translate "Spent (Household, by you)" %}</a></dt><dd class="kv-value" data-tone="critical">−{{ household_spent_by_you|money }}</dd></div>
             <div class="kv"><dt><a href="{% url 'shop_dashboard' %}" class="kv-label">{% translate "Paid to shops" %}</a></dt><dd class="kv-value" data-tone="critical">−{{ shops_paid|money }}</dd></div>
             <div class="kv"><dt><a href="{% url 'household_dashboard' %}" class="kv-label">{% translate "Paid back to family" %}</a></dt><dd class="kv-value" data-tone="critical">−{{ paid_back|money }}</dd></div>
+            {% if transfer_fees %}<div class="kv"><dt><a href="{% url 'wallet_list' %}" class="kv-label">{% translate "Transfer fees" %}</a></dt><dd class="kv-value" data-tone="critical">−{{ transfer_fees|money }}</dd></div>{% endif %}
           </dl>
           <div class="mt-3 space-y-1.5" aria-hidden="true">
             <div class="meter" data-tone="good"><span style="width: {{ income_pct }}%"></span></div>

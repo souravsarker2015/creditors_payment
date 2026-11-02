@@ -5,7 +5,6 @@ elsewhere. Deleted records are left out; linked records are written by name
 (“Rui”, “East pond”) with their number beside them, so the sheets read on
 their own and can still be matched up.
 """
-import csv
 import io
 import zipfile
 from datetime import date
@@ -16,6 +15,7 @@ from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.text import capfirst, slugify
 
+from apps.core.csvsafe import safe_writer
 from .models import BusinessBaseModel
 
 SKIP_FIELDS = {"business", "is_deleted", "deleted_at", "created_by", "updated_by"}
@@ -67,7 +67,7 @@ def _sheet(model, business):
             header.append(f"{label} (ID)")
     buf = io.StringIO()
     buf.write("﻿")          # so Excel opens Bangla text correctly
-    writer = csv.writer(buf)
+    writer = safe_writer(buf)
     writer.writerow(header)
     related = [f.name for f in cols if isinstance(f, models.ForeignKey)]
     qs = model.objects.filter(business=business).select_related(*related).order_by("pk")

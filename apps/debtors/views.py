@@ -10,6 +10,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.contrib import messages
 
+from apps.core.csvsafe import safe_writer
 from apps.core.flow import record_initial, record_next, warn_if_overpaid
 from django.db.models import Sum, Q, F, DecimalField, Value
 from django.db.models.functions import Coalesce, TruncMonth
@@ -72,7 +73,7 @@ def _csv_response(filename, header, rows):
     response = HttpResponse(content_type="text/csv")
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
     response.write("\ufeff")  # UTF-8 BOM so Excel renders Bangla text correctly
-    writer = csv.writer(response)
+    writer = safe_writer(response)
     writer.writerow(header)
     writer.writerows(rows)
     return response

@@ -235,7 +235,7 @@ def due_items(business, start, end, today):
                 if d >= start:
                     items.append(Item(d, "due", _("%(name)s due") % {"name": r.name}, bdt(r.amount),
                                       reverse("business:recurring"), "critical" if d < today else "warn", "repeat"))
-                d, guard = next_date(d, r.repeat), guard + 1
+                d, guard = next_date(d, r.repeat, r.start_date), guard + 1
     if _installed("parties"):
         from apps.business.parties.models import Party
 

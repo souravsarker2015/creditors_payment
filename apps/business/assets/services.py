@@ -34,5 +34,5 @@ def needs_attention(business, today=None):
 def costs(business, start, end):
     """(bought, upkeep) between two dates."""
     bought = Equipment.all_objects.filter(business=business, is_deleted=False, bought_on__gte=start, bought_on__lte=end).aggregate(t=Sum("cost"))["t"] or ZERO
-    upkeep = Service.objects.filter(business=business, date__gte=start, date__lte=end).aggregate(t=Sum("cost"))["t"] or ZERO
+    upkeep = Service.objects.filter(business=business, equipment__is_deleted=False, date__gte=start, date__lte=end).aggregate(t=Sum("cost"))["t"] or ZERO
     return bought, upkeep

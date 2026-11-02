@@ -4,10 +4,10 @@ spends, and loans given and taken. Printable, and downloadable as CSV.
 
 The totals follow the same rules as Home: money in is income plus
 contributions; money out is what left your hands — expenses, bazar you paid
-for yourself, and what you paid shops and family back (a purchase on credit,
-or one a family member paid for, is a balance until then, not spending)."""
+for yourself, and what you paid shops and family back, and fees on moving money
+between wallets (a purchase on credit, or one a family member paid for, is a
+balance until then, not spending)."""
 import calendar
-import csv
 from datetime import date
 from decimal import Decimal
 from urllib.parse import urlencode
@@ -23,6 +23,7 @@ from django.utils.formats import date_format
 from django.utils.translation import gettext as _
 
 from apps.contributors.models import Contribution
+from apps.core.csvsafe import safe_writer
 from apps.core.stats import change, ranked
 from apps.creditors.models import Transaction as CreditorTx
 from apps.debtors.models import Transaction as DebtorTx
@@ -31,12 +32,13 @@ from apps.goals.models import GoalEntry
 from apps.household.models import Purchase, Settlement
 from apps.income.models import IncomeTransaction
 from apps.shops.models import Transaction as ShopTx
+from apps.wallets.models import Transfer
 
 ZERO = Decimal("0.00")
 
 
-def _total(qs):
-    return qs.aggregate(t=Coalesce(Sum("amount"), Value(0, output_field=DecimalField())))["t"]
+def _total(qs, field="amount"):
+    return qs.aggregate(t=Coalesce(Sum(field), Value(0, output_field=DecimalField())))["t"]
 
 
 def _period(request, today):
@@ -76,6 +78,7 @@ class Ledger:
         self.shops = ShopTx.objects.filter(shop__user=user, transaction_type=ShopTx.PAYMENT)
         self.paid_back = Settlement.objects.filter(member__user=user)
         self.outgoings = (self.expense, self.bazar, self.shops, self.paid_back)
+        self.fees = Transfer.objects.filter(user=user)     # the fee only: the amount just moves between wallets
 
     @staticmethod
     def _in(qs, start, end):
@@ -85,7 +88,7 @@ class Ledger:
         return _total(self._in(self.income, start, end)) + _total(self._in(self.contrib, start, end))
 
     def money_out(self, start, end):
-        return sum((_total(self._in(qs, start, end)) for qs in self.outgoings), ZERO)
+        return sum((_total(self._in(qs, start, end)) for qs in self.outgoings), _total(self._in(self.fees, start, end), "fee"))
 
 
 def build(user, kind, start, end, today):
@@ -122,6 +125,9 @@ def build(user, kind, start, end, today):
     paid_back = _total(span(led.paid_back))
     if paid_back:
         out_rows.append((_("Paid back to family"), paid_back, reverse("household_dashboard")))
+    fees = _total(span(led.fees), "fee")
+    if fees:
+        out_rows.append((_("Transfer fees"), fees, reverse("wallet_list")))
     in_rows = [(r["source__name"], r["t"], reverse("income_source_detail", args=[r["source_id"]]))
                for r in span(led.income).values("source_id", "source__name").annotate(t=Sum("amount"))]
     in_rows += [(r["contributor__name"], r["t"], reverse("contributor_detail", args=[r["contributor_id"]]))
@@ -149,11 +155,11 @@ def build(user, kind, start, end, today):
 
     months = []
     if kind == "year":
-        def by_month(qs):
-            rows = qs.filter(date__gte=start, date__lte=end).annotate(m=TruncMonth("date")).values("m").annotate(t=Sum("amount"))
+        def by_month(qs, field="amount"):
+            rows = qs.filter(date__gte=start, date__lte=end).annotate(m=TruncMonth("date")).values("m").annotate(t=Sum(field))
             return {r["m"]: r["t"] for r in rows}
         ins = [by_month(led.income), by_month(led.contrib)]
-        outs = [by_month(qs) for qs in led.outgoings]
+        outs = [by_month(qs) for qs in led.outgoings] + [by_month(led.fees, "fee")]
         top = Decimal(0)
         for m in range(1, 13):
             first = date(start.year, m, 1)
@@ -230,7 +236,7 @@ def _csv(kind, start, label, data):
     name = f"money-report-{start.year}" + ("" if kind == "year" else f"-{start.month:02d}")
     response["Content-Disposition"] = f'attachment; filename="{name}.csv"'
     response.write("﻿")
-    w = csv.writer(response)
+    w = safe_writer(response)
     w.writerow([_("Money report"), label])
     w.writerow([])
     w.writerow([_("Money in"), data["in_total"]])

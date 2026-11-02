@@ -1,13 +1,17 @@
 """Signing in (remember me, username or email), signing up with an email,
 the account page, and resetting a forgotten password by email."""
+import pickle
 import re
+import tempfile
+import time
 
 from django.contrib.auth.models import User
 from django.core import mail
 from django.core.cache import cache
-from django.test import TestCase, override_settings
+from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
 
+from apps.accounts.forms import LOCK_WINDOW, SIGNUP_LIMIT, login_failed
 from apps.accounts.models import SecuritySettings
 
 PW = "Str0ng-pass-123"
@@ -144,6 +148,45 @@ class PasswordResetTests(TestCase):
         self.client.cookies["django_language"] = "bn"
         self.client.post(reverse("password_reset"), {"email": "rahim@example.com"}, HTTP_ACCEPT_LANGUAGE="bn")
         self.assertIn("পাসওয়ার্ড", mail.outbox[0].subject)
+
+
+@override_settings(CACHES={"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "LOCATION": "signup-limit"}})
+class SignupLimitTests(TestCase):
+    def setUp(self):
+        cache.clear()
+
+    def sign_up(self, n):
+        return self.client.post(reverse("signup"), {"username": f"new{n}", "email": f"new{n}@example.com",
+                                                    "password1": "Tr1cky-pass-77", "password2": "Tr1cky-pass-77"})
+
+    def test_one_place_can_only_make_so_many_accounts(self):
+        for n in range(SIGNUP_LIMIT):
+            self.client.logout()
+            self.sign_up(n)
+        self.client.logout()
+        self.sign_up(99)
+        self.assertEqual(User.objects.filter(username__startswith="new").count(), SIGNUP_LIMIT)
+
+    def test_a_refused_form_does_not_count(self):
+        for _ in range(SIGNUP_LIMIT + 1):
+            self.client.post(reverse("signup"), {"username": "x", "email": "bad"})
+        self.sign_up(1)
+        self.assertTrue(User.objects.filter(username="new1").exists())
+
+
+class LockOnTheLiveCacheTests(TestCase):
+    """The live site keeps its counts on disk, where a count must keep the full wait."""
+
+    def test_the_lock_lasts_the_whole_window(self):
+        with tempfile.TemporaryDirectory() as folder, override_settings(CACHES={"default": {
+                "BACKEND": "django.core.cache.backends.filebased.FileBasedCache", "LOCATION": folder}}):
+            request = RequestFactory().post("/", REMOTE_ADDR="10.0.0.9")
+            for _ in range(2):
+                login_failed(request, "someone")
+            key = "login-fail:someone"
+            with open(cache._key_to_file(key), "rb") as f:
+                expires = pickle.load(f)
+            self.assertGreater(expires - time.time(), LOCK_WINDOW - 60)
 
 
 class SignupSwitchTests(TestCase):

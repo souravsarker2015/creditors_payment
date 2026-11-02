@@ -26,7 +26,7 @@ from apps.core.nav import back_to
 from . import signins, totp, twofactor
 from .forms import (
     CodeForm, EmailChangeForm, LoginForm, PasswordAndCodeForm, ProfileForm, SecuritySettingsForm, SignupForm,
-    ThrottledPasswordResetForm, TwoFactorVerifyForm, UserAdminForm, UserCreateForm,
+    ThrottledPasswordResetForm, TwoFactorVerifyForm, UserAdminForm, UserCreateForm, signup_counted, signup_limited,
 )
 from .models import AccentTheme, BackgroundTheme, Language, SecuritySettings, ThemeMode, TwoFactor, UserProfile, ViewMode
 
@@ -68,8 +68,11 @@ def signup_view(request):
         return redirect("login")
     if request.method == "POST":
         form = SignupForm(request.POST)
-        if form.is_valid():
+        if signup_limited(request):
+            messages.error(request, _("Too many new accounts from here. Try again in an hour."))
+        elif form.is_valid():
             user = form.save()
+            signup_counted(request)
             messages.success(request, _("Account created successfully!"))
             return twofactor.finish_login(request, user, True, lambda: redirect("home"), new_account=True)
     else:

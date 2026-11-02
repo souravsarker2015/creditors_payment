@@ -81,7 +81,7 @@ def stock_view(request):
     b = request.business
     rows = services.stock(b)
     month_start = date.today().replace(day=1)
-    used_month = FeedUsage.objects.filter(business=b, date__gte=month_start).aggregate(kg=Sum("kg"))["kg"] or 0
+    used_month = FeedUsage.objects.filter(business=b, cycle__is_deleted=False, date__gte=month_start).aggregate(kg=Sum("kg"))["kg"] or 0
     bought_month = FeedPurchase.objects.filter(business=b, date__gte=month_start).aggregate(t=Sum("total"))["t"] or 0
     recent = list(FeedPurchase.objects.filter(business=b).select_related("supplier")[:5])
     _current_dues(recent, b)
@@ -145,7 +145,8 @@ def count_delete_view(request, pk):
 @business_access_required
 def usage_list_view(request):
     b = request.business
-    qs = FeedUsage.objects.filter(business=b).select_related("cycle__pond", "product", "unit")
+    alive = FeedUsage.objects.filter(business=b, cycle__is_deleted=False)     # a deleted cycle's feeding is out of the stock too
+    qs = alive.select_related("cycle__pond", "product", "unit")
     pond = request.GET.get("pond")
     if pond and pond.isdigit():
         qs = qs.filter(cycle__pond_id=pond)
@@ -157,10 +158,10 @@ def usage_list_view(request):
             days.append(current)
         current["rows"].append(u)
         current["kg"] += u.kg
-    week = FeedUsage.objects.filter(business=b, date__gte=date.today() - timedelta(days=6))
+    week = alive.filter(date__gte=date.today() - timedelta(days=6))
     return render(request, "business/feed/usage_list.html", {
         "days": days, "page_obj": page, "week_kg": week.aggregate(kg=Sum("kg"))["kg"] or 0,
-        "today_done": FeedUsage.objects.filter(business=b, date=date.today()).exists(),
+        "today_done": alive.filter(date=date.today()).exists(),
     })
 
 

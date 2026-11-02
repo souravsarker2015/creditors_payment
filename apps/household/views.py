@@ -14,6 +14,7 @@ from django.db.models import Q, Sum, Count, DecimalField, Value
 from django.db.models.functions import Coalesce, TruncMonth
 from django.core.paginator import Paginator
 from django.utils import dateformat
+from apps.core.csvsafe import safe_writer
 from apps.core.dates import parse_date
 from django.utils.translation import gettext as _, gettext_lazy, ngettext
 
@@ -32,7 +33,7 @@ def _csv_response(filename, header, rows):
     response = HttpResponse(content_type="text/csv")
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
     response.write("\ufeff")  # UTF-8 BOM so Excel renders Bangla text correctly
-    writer = csv.writer(response)
+    writer = safe_writer(response)
     writer.writerow(header)
     writer.writerows(rows)
     return response

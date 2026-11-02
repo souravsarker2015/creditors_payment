@@ -23,6 +23,9 @@ DATABASES = {
     }
 }
 
+# On disk, so every web worker counts the same wrong passwords and they survive a reload.
+CACHES = {"default": {"BACKEND": "django.core.cache.backends.filebased.FileBasedCache", "LOCATION": BASE_DIR / ".cache"}}  # noqa: F405
+
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
