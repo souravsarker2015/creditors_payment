@@ -118,6 +118,7 @@ class Creditor(models.Model):
         help_text=_("A flat interest amount (৳) — used for a one-time Fixed Amount type, or a Fixed Amount basis charged every period."),
         verbose_name=_("Fixed interest amount"),
     )
+    interest_from = models.DateField(_("Interest counted from"), null=True, blank=True, editable=False)
     is_active = models.BooleanField(
         default=True,
         help_text=_("Inactive records are hidden from lists and pickers but still count in totals."),
@@ -190,6 +191,25 @@ class Creditor(models.Model):
         None for FIXED (period-less) or when no interest type is set."""
         return INTEREST_PERIOD_NOUN.get(self.interest_type)
 
+    def _owed_spans(self):
+        """[(what was owed, for how many days)] from when interest last started counting up to today."""
+        rows = list(self.transactions.order_by("date", "created_at").values_list("date", "transaction_type", "amount"))
+        if not rows:
+            return []
+        today = timezone.localdate()
+        at = self.interest_from or rows[0][0]
+        owed, spans = Decimal(0), []
+        for when, kind, amount in rows:
+            if when > today:
+                break
+            if when > at:
+                spans.append((owed, (when - at).days))
+                at = when
+            owed += amount if kind == Transaction.BORROW else -amount
+        if today > at:
+            spans.append((owed, (today - at).days))
+        return spans
+
     @property
     def accrued_interest(self):
         """Estimated interest owed right now, on top of the outstanding
@@ -201,10 +221,11 @@ class Creditor(models.Model):
           so the same one-off charge can't be posted twice).
         - Monthly / Every 3 Months / Every 6 Months / Yearly: a per-period
           charge — either rate% of the outstanding balance, or a flat ৳
-          amount, per `interest_basis` — prorated by actual days since the
-          last transaction ÷ the period's approximate day count, so a
-          partial period accrues a proportional amount rather than jumping
-          in whole-period steps.
+          amount, per `interest_basis` — counted day by day on what was owed
+          each day since interest was last posted, ÷ the period's approximate
+          day count, so a partial period accrues a proportional amount and a
+          repayment lowers the interest from then on without wiping what had
+          already built up.
 
         This is a live estimate for display only — it is never added to
         the ledger automatically. Use post_accrued_interest() to formalize
@@ -219,26 +240,18 @@ class Creditor(models.Model):
                 return Decimal("0.00")
             return self.interest_fixed_amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
+        period_days = INTEREST_PERIOD_DAYS[self.interest_type]
+        spans = self._owed_spans()
         if self.interest_basis == InterestBasis.FIXED:
             if not self.interest_fixed_amount:
                 return Decimal("0.00")
-            per_period_amount = self.interest_fixed_amount
+            days = sum(days for owed, days in spans if owed > 0)
+            interest = self.interest_fixed_amount * days / period_days
         else:
             if not self.interest_rate:
                 return Decimal("0.00")
-            per_period_amount = principal * (self.interest_rate / Decimal(100))
-
-        last_date = self.last_transaction_date
-        if not last_date:
-            return Decimal("0.00")
-
-        days_elapsed = (timezone.localdate() - last_date).days
-        if days_elapsed <= 0:
-            return Decimal("0.00")
-
-        period_days = INTEREST_PERIOD_DAYS[self.interest_type]
-        periods_elapsed = Decimal(days_elapsed) / period_days
-        interest = per_period_amount * periods_elapsed
+            per_period = self.interest_rate / Decimal(100)
+            interest = sum((owed * per_period * days / period_days for owed, days in spans if owed > 0), Decimal(0))
         return interest.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
     @property
@@ -265,12 +278,13 @@ class Creditor(models.Model):
             date=timezone.localdate(),
             note=str(_("Accrued interest (posted)")),
         )
+        self.interest_from = timezone.localdate()
         if self.interest_type == InterestType.FIXED:
             # A flat charge is a one-off — clear it so it isn't offered
             # again until a new fixed amount is configured. The posted
             # transaction remains as the permanent record.
             self.interest_fixed_amount = None
-            self.save(update_fields=["interest_fixed_amount"])
+        self.save(update_fields=["interest_from", "interest_fixed_amount"])
         return transaction
 
 

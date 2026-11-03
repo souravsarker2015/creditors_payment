@@ -8,6 +8,7 @@ lands straight on that form too.
 from urllib.parse import urlencode
 
 from django.contrib import messages
+from django.core.cache import cache
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.translation import gettext as _
@@ -45,3 +46,9 @@ def warn_if_overpaid(request, name, remaining):
     if remaining < 0:
         messages.warning(request, _("That's %(extra)s more than the balance with %(name)s. If it was a typing slip, edit the entry.") % {
             "extra": money(-remaining), "name": name})
+
+
+def once_an_hour(key):
+    """True the first time in an hour. A page that sends mail on the way uses it: when mail is down, every
+    visit would otherwise wait out the timeout, and two tabs opening together would send it twice."""
+    return cache.add(f"once-an-hour:{key}", 1, 60 * 60)

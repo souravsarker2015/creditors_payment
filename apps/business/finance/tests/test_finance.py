@@ -4,6 +4,7 @@ from decimal import Decimal as D
 
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import translation
 
 from apps.business.core.models import Role, Unit
 from apps.business.core.testing import make_farm
@@ -182,7 +183,7 @@ class StatementTests(MoneyBase):
         self.spend(1000, category=self.daily)
         self.spend(500, category=Category.objects.get(business=self.b, name="Salaries"))
         s = services.statement(self.b, ago(30), date.today())
-        line = next(l for l in s.expense if l.label == "Labour")
+        line = next(l for l in s.expense if l.key == f"cat{self.labour.pk}")     # by id: a label follows the language
         self.assertEqual(line.amount, D("1500"))
         self.assertEqual(len(line.children), 2)
 
@@ -190,6 +191,14 @@ class StatementTests(MoneyBase):
         self.spend(1000, days=200)
         s = services.statement(self.b, ago(30), date.today())
         self.assertEqual(s.total_expense, 0)
+
+
+class StatementInBanglaTests(MoneyBase):
+    def test_the_grouping_does_not_depend_on_the_language(self):
+        self.spend(1000, category=self.daily)
+        with translation.override("bn"):
+            s = services.statement(self.b, ago(30), date.today())
+        self.assertEqual(next(l for l in s.expense if l.key == f"cat{self.labour.pk}").amount, D("1000"))
 
 
 class CyclePLTests(MoneyBase):

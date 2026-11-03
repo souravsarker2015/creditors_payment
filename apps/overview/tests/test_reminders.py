@@ -7,6 +7,7 @@ from unittest import mock
 
 from django.contrib.auth.models import User
 from django.core import mail
+from django.core.cache import cache
 from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
@@ -27,6 +28,7 @@ def at(hour):
 
 class ReminderTests(TestCase):
     def setUp(self):
+        cache.clear()
         self.user = User.objects.create_user("rahim", "rahim@example.com", "pw-123456789", first_name="Rahim")
         self.client.force_login(self.user)
 
@@ -144,3 +146,22 @@ class ReminderTests(TestCase):
         other = User.objects.create_user("other", "other@example.com", "pw-123456789")
         self.owe("Karim bhai", "5000", -3)
         self.assertEqual(reminders.build(other, TODAY).late, [])
+
+
+class MailDownTests(TestCase):
+    """Home must not wait out the mail timeout on every visit."""
+
+    def setUp(self):
+        cache.clear()
+        self.user = User.objects.create_user("down", "down@example.com", "x")
+        UserProfile.objects.update_or_create(user=self.user, defaults={"money_reminders": True})
+        self.client.force_login(self.user)
+        creditor = Creditor.objects.create(user=self.user, name="Karim", category="FAMILY", due_date=TODAY)
+        CT.objects.create(creditor=creditor, transaction_type=CT.BORROW, amount=D("100"), date=TODAY)
+
+    def test_a_failed_send_is_tried_once_an_hour(self):
+        with mock.patch.object(reminders, "due", return_value=True), \
+                mock.patch("django.core.mail.EmailMultiAlternatives.send", side_effect=OSError) as send:
+            self.client.get(reverse("home"))
+            self.client.get(reverse("home"))
+        self.assertEqual(send.call_count, 1)

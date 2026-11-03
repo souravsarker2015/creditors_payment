@@ -5,6 +5,7 @@ from io import StringIO
 from unittest import mock
 
 from django.core import mail
+from django.core.cache import cache
 from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
@@ -111,6 +112,7 @@ class PageTests(SummaryBase):
 
 class SendingTests(SummaryBase):
     def setUp(self):
+        cache.clear()
         super().setUp()
         Membership.objects.filter(business=self.b).update(daily_summary=True)
 

@@ -196,6 +196,22 @@ class RestoreTests(MyBackupBase):
         with self.assertRaises(bk.BackupError):
             pb.read(self.write(reseal(self.my_zip(), add_user)))
 
+    def test_one_huge_file_inside_is_refused_before_it_is_read(self):
+        src = zipfile.ZipFile(io.BytesIO(self.my_zip()))
+        out = io.BytesIO()
+        with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
+            for n in src.namelist():
+                z.writestr(n, src.read(n))
+            z.writestr("backup/media/receipts/big.jpg", b"0" * (pb.MAX_MEMBER + 1))
+        with self.assertRaisesMessage(bk.BackupError, "too large"):
+            pb.read(self.write(out.getvalue()))
+
+    def test_a_contents_list_of_the_wrong_shape_is_refused(self):
+        def broken(manifest, rows):
+            manifest["version"] = "lots"
+        with self.assertRaises(bk.BackupError):
+            pb.read(self.write(reseal(self.my_zip(), broken)))
+
     def test_a_changed_file_is_refused(self):
         src = zipfile.ZipFile(io.BytesIO(self.my_zip()))
         out = io.BytesIO()

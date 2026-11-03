@@ -18,7 +18,7 @@ from apps.business.staff.models import Worker, WorkerPayment
 from apps.business.supplies.models import SupplyItem, SupplyPurchase
 
 from .. import services
-from ..models import Account, Transfer
+from ..models import Account, Category, RecurringTransaction, Transaction, Transfer
 
 TODAY = date.today()
 YEAR_AGO = TODAY - timedelta(days=365)
@@ -145,6 +145,28 @@ class RegularBillDateTests(TestCase):
 
     def test_a_week_is_seven_days(self):
         self.assertEqual(services.next_date(date(2026, 1, 31), "weekly", date(2026, 1, 31)), date(2026, 2, 7))
+
+
+class BillConfirmedTwiceTests(BooksBase):
+    def setUp(self):
+        super().setUp()
+        self.category = Category.objects.get(business=self.b, name="Daily labour")
+        self.bill = RecurringTransaction.objects.create(business=self.b, name="Rent", category=self.category, amount=D("500"), start_date=TODAY, next_due=TODAY)
+        self.url = reverse("business:transaction_add") + f"?from={self.bill.pk}&scope=business"
+
+    def confirm(self):
+        return self.client.post(self.url, {"date": TODAY, "category": self.category.pk, "amount": "500", "account": self.bank.pk,
+                                           "recurring_due": TODAY.isoformat()})
+
+    def test_the_form_carries_the_date_it_is_for(self):
+        self.assertContains(self.client.get(self.url), f'name="recurring_due" value="{TODAY.isoformat()}"')
+
+    def test_a_second_tab_does_not_post_it_again(self):
+        self.confirm()
+        self.confirm()
+        self.assertEqual(Transaction.objects.filter(recurring=self.bill).count(), 1)
+        self.bill.refresh_from_db()
+        self.assertGreater(self.bill.next_due, TODAY)
 
 
 class WhatCountsInProfitTests(BooksBase):

@@ -22,6 +22,7 @@ from django.utils.formats import date_format
 from django.utils.translation import gettext as _, ngettext
 
 from apps.accounts.models import UserProfile
+from apps.core.flow import once_an_hour
 
 log = logging.getLogger(__name__)
 
@@ -143,5 +144,7 @@ def catch_up(request):
     if profile is None or not profile.money_reminders or not user.email or not due():
         return None
     if profile.reminders_sent_on and profile.reminders_sent_on >= today:
+        return None
+    if not once_an_hour(f"reminder:{user.pk}:{today}"):
         return None
     return send(user, today, request)

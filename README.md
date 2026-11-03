@@ -149,6 +149,19 @@ anyone. Back up `db.sqlite3` first, then:
 
 Errors and pages not found now go to the site's error log (Web tab → Log files).
 
+### Each update after that
+
+Back up `db.sqlite3` first (`python manage.py backup_export --keep 14`), then in the Bash console:
+
+```bash
+git pull
+pip install -r requirements/base.txt
+python manage.py migrate --settings=config.settings.live
+python manage.py collectstatic --noinput --settings=config.settings.live
+```
+
+Then reload the web app. Skip `pip install` only when `requirements/` hasn't changed.
+
 If the browser says "too many redirects", add `DJANGO_SECURE_SSL_REDIRECT=False` to `.env`, turn on **Force HTTPS** in the
 Web tab, and reload.
 

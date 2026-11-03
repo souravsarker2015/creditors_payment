@@ -91,6 +91,11 @@ class CreditorForm(forms.ModelForm):
 
         return cleaned_data
 
+    def save(self, commit=True):
+        if self.instance.pk and "interest_type" in self.changed_data:   # new terms apply from here on, not back to the first loan
+            self.instance.interest_from = self.instance.last_transaction_date
+        return super().save(commit)
+
 class TransactionForm(WalletFieldMixin, forms.ModelForm):
     class Meta:
         model = Transaction

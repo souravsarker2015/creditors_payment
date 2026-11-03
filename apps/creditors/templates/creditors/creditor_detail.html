@@ -69,9 +69,9 @@
           {% if creditor.interest_type == 'FIXED' %}
             {% translate "A flat interest amount you've agreed on. It shows here until you post it — nothing is added automatically." %}
           {% elif creditor.interest_basis == 'FIXED' %}
-            {% blocktranslate with amount=creditor.interest_fixed_amount|floatformat:2 period=creditor.interest_period_noun %}A flat ৳{{ amount }} charged every {{ period }}, accrued proportionally since the last transaction. This is an estimate only — it doesn't affect the balance above until you post it.{% endblocktranslate %}
+            {% blocktranslate with amount=creditor.interest_fixed_amount|floatformat:2 period=creditor.interest_period_noun %}A flat ৳{{ amount }} charged every {{ period }}, counted day by day since interest was last posted. This is an estimate only — it doesn't affect the balance above until you post it.{% endblocktranslate %}
           {% else %}
-            {% blocktranslate with rate=creditor.interest_rate|floatformat:2 period=creditor.interest_period_noun %}Estimated simple interest at {{ rate }}% per {{ period }} on the outstanding balance, accrued since the last transaction. This is an estimate only — it doesn't affect the balance above until you post it.{% endblocktranslate %}
+            {% blocktranslate with rate=creditor.interest_rate|floatformat:2 period=creditor.interest_period_noun %}Estimated simple interest at {{ rate }}% per {{ period }} on what was owed each day since interest was last posted. This is an estimate only — it doesn't affect the balance above until you post it.{% endblocktranslate %}
           {% endif %}
         </p>
       </div>

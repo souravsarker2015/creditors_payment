@@ -118,6 +118,11 @@ def transaction_form_view(request, pk=None):
             initial["description"] = request.GET["description"][:200]
     form = TransactionForm(request.POST or None, request.FILES or None, instance=obj, business=b, scope=scope, initial=initial or None)
     from_recurring = RecurringTransaction.objects.filter(business=b, pk=request.GET.get("from") or 0).first()
+    if request.method == "POST" and from_recurring is not None and not obj:
+        due = request.POST.get("recurring_due")
+        if due and due != (from_recurring.next_due.isoformat() if from_recurring.next_due else ""):     # confirmed in another tab or on another phone
+            messages.info(request, _("%(name)s was already recorded for that date.") % {"name": from_recurring.name})
+            return redirect("business:recurring")
     if request.method == "POST" and form.is_valid():
         item = form.save(commit=False)
         item.business = b

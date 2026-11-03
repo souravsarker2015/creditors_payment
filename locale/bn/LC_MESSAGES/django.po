@@ -26094,3 +26094,25 @@ msgstr "ফিরিয়ে না আনা পর্যন্ত ঋণট�
 
 msgid "Its price and servicing costs leave your account balances and profit until you restore it."
 msgstr "ফিরিয়ে না আনা পর্যন্ত এর দাম ও সার্ভিসিং খরচ আপনার হিসাবের ব্যালান্স ও লাভ থেকে বাদ থাকবে।"
+
+msgid "A flat ৳%(amount)s charged every %(period)s, counted day by day since interest was last posted. This is an estimate only — it doesn't affect the balance above until you post it."
+msgstr "প্রতি %(period)s একটি নির্দিষ্ট ৳%(amount)s ধার্য হয়, সর্বশেষ সুদ যোগ করার পর থেকে দিন ধরে হিসাব করা। এটি শুধু আনুমানিক হিসাব — যোগ না করা পর্যন্ত উপরের ব্যালান্সে এর প্রভাব পড়ে না।"
+
+msgid "Estimated simple interest at %(rate)s%% per %(period)s on what was owed each day since interest was last posted. This is an estimate only — it doesn't affect the balance above until you post it."
+msgstr "সর্বশেষ সুদ যোগ করার পর থেকে প্রতিদিনের বকেয়ার উপর প্রতি %(period)s %(rate)s%% হারে আনুমানিক সরল সুদ। এটি শুধু আনুমানিক হিসাব — যোগ না করা পর্যন্ত উপরের ব্যালান্সে এর প্রভাব পড়ে না।"
+
+msgid "Interest counted from"
+msgstr "সুদ হিসাব শুরু"
+
+msgid "%(name)s was already recorded for that date."
+msgstr "%(name)s ওই তারিখের জন্য আগেই লেখা হয়েছে।"
+
+#, python-format
+msgid "This password is too short. It must contain at least %d character."
+msgid_plural "This password is too short. It must contain at least %d characters."
+msgstr[0] "পাসওয়ার্ডটি খুব ছোট। অন্তত %d অক্ষর হতে হবে।"
+msgstr[1] "পাসওয়ার্ডটি খুব ছোট। অন্তত %d অক্ষর হতে হবে।"
+
+#, python-format
+msgid "%(model)s instance with %(field)s %(value)r is not a valid choice."
+msgstr "এই মানটি এখানে বেছে নেওয়া যাবে না।"

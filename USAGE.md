@@ -32,8 +32,9 @@ Moneylender, Landlord, Supplier, etc.). Each creditor tracks Borrow/Repay
 transactions, an optional due date (with Overdue / Due Soon badges), and optional
 interest — a one-time fixed fee, or a recurring charge (Monthly / Every 3 Months /
 Every 6 Months / Yearly) quoted as either a percentage of the balance or a flat
-amount. Interest accrues as a live estimate only; you post it to the real balance
-on demand, as an ordinary transaction.
+amount. Interest accrues day by day as a live estimate only, and a repayment doesn't
+wipe what has built up; you post it to the real balance on demand, as an ordinary
+transaction.
 
 ### Debtors — money owed to you
 The mirror image of Creditors: people who owe you money (Family, Client, Employee,

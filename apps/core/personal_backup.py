@@ -46,6 +46,7 @@ from .relink import relink
 FORMAT = "fintrack-my-backup"
 VERSION = 1
 PREFIX = "backup/"
+MAX_MEMBER = 128 * 1024 ** 2        # one file inside: far above any real one, and each is read into memory on restore
 # Sign-in secrets and the app's own bookkeeping are never written out.
 SKIP_MODELS = {"accounts.twofactor", "accounts.signin", "core.offlinereceipt", "trash.deleteditem"}
 OWNER_FIELDS = ("user", "owner")
@@ -119,6 +120,15 @@ def counts_for(user):
 
 def _sha256(blob):
     return hashlib.sha256(blob).hexdigest()
+
+
+def _sha256_of(z, name):
+    """A file inside the zip, read a piece at a time."""
+    digest = hashlib.sha256()
+    with z.open(name) as fh:
+        for piece in iter(lambda: fh.read(1024 ** 2), b""):
+            digest.update(piece)
+    return digest.hexdigest()
 
 
 # ── Writing ─────────────────────────────────────────────────────────────────
@@ -218,7 +228,7 @@ def read(path):
         raise bk.BackupError(wrong)
     with zipfile.ZipFile(path) as z:
         infos = z.infolist()
-        if sum(i.file_size for i in infos) > bk.MAX_UNPACKED:
+        if sum(i.file_size for i in infos) > bk.MAX_UNPACKED or any(i.file_size > MAX_MEMBER for i in infos):
             raise bk.BackupError(_("This file is too large to restore here (over 2 GB unpacked)."))
         names = {i.filename for i in infos if not i.is_dir()}
         if "manifest.json" in names and "data.json" in names:
@@ -240,14 +250,16 @@ def read(path):
             raise bk.BackupError(_("The backup file is damaged (its contents list can't be read)."))
         if not isinstance(manifest, dict) or manifest.get("format") != FORMAT:
             raise bk.BackupError(wrong)
-        if int(manifest.get("version", 0) or 0) > VERSION:
+        if not isinstance(manifest.get("counts"), dict) or not isinstance(manifest.get("version", 0), int):
+            raise bk.BackupError(wrong)
+        if manifest.get("version", 0) > VERSION:
             raise bk.BackupError(_("This backup was made by a newer version of FinTrack. Update this server first."))
         listed = manifest.get("files") or {}
         inside = {n[len(PREFIX):] for n in names if n.startswith(PREFIX)} - {"manifest.json"}
         if not isinstance(listed, dict) or set(listed) != inside or not all(bk._safe_member(n) for n in names):
             raise bk.BackupError(_("The backup file is damaged or was changed: its files don't match its contents list."))
         for name, meta in listed.items():
-            if not isinstance(meta, dict) or _sha256(z.read(PREFIX + name)) != meta.get("sha256"):
+            if not isinstance(meta, dict) or _sha256_of(z, PREFIX + name) != meta.get("sha256"):
                 raise bk.BackupError(_("The backup file is damaged or was changed after it was made (%(name)s doesn't match). Download a fresh copy.") % {"name": name})
         try:
             rows = json.loads(z.read(PREFIX + "data.json"))

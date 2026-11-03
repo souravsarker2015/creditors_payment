@@ -22,6 +22,8 @@ from django.utils import timezone, translation
 from django.utils.formats import date_format
 from django.utils.translation import gettext as _
 
+from apps.core.flow import once_an_hour
+
 from .access import can
 from .models import AuditLog, Membership
 
@@ -254,6 +256,6 @@ def send_due(business, request=None):
     day = due_day()
     sent = 0
     for m in pending(business, day):
-        if m.user.is_active:
+        if m.user.is_active and once_an_hour(f"summary:{m.pk}:{day}"):
             sent += send(m, day, request)
     return sent

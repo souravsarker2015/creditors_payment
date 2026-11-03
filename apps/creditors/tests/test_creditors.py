@@ -6,6 +6,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from ..forms import CreditorForm
 from ..models import Creditor, CreditorCategory, Transaction, InterestType, InterestBasis
 
 
@@ -398,6 +399,56 @@ class CreditorInterestTests(TestCase):
         self._borrow(creditor, Decimal("1000.00"), 15)
         # ৳600/month prorated for 15/30 days = 300.00
         self.assertEqual(creditor.accrued_interest, Decimal("300.00"))
+
+    def percent_lender(self, rate="2.00"):
+        return Creditor.objects.create(user=self.user, name="Bank", category=CreditorCategory.BANK, interest_type=InterestType.MONTHLY,
+                                       interest_basis=InterestBasis.PERCENTAGE, interest_rate=Decimal(rate))
+
+    def test_a_repayment_does_not_wipe_the_interest_built_up(self):
+        creditor = self.percent_lender()
+        self._borrow(creditor, Decimal("100000.00"), 30)
+        Transaction.objects.create(creditor=creditor, transaction_type=Transaction.REPAY, amount=Decimal("10000.00"), date=self.today)
+        self.assertEqual(creditor.accrued_interest, Decimal("2000.00"))
+
+    def test_interest_follows_what_was_owed_each_day(self):
+        creditor = self.percent_lender()
+        self._borrow(creditor, Decimal("100000.00"), 30)
+        Transaction.objects.create(creditor=creditor, transaction_type=Transaction.REPAY, amount=Decimal("50000.00"),
+                                   date=self.today - timedelta(days=15))
+        # 15 days on ৳1,00,000 (1000) + 15 days on ৳50,000 (500)
+        self.assertEqual(creditor.accrued_interest, Decimal("1500.00"))
+
+    def test_a_flat_charge_stops_for_days_nothing_was_owed(self):
+        creditor = Creditor.objects.create(user=self.user, name="Flat", category=CreditorCategory.BANK, interest_type=InterestType.MONTHLY,
+                                           interest_basis=InterestBasis.FIXED, interest_fixed_amount=Decimal("300.00"))
+        self._borrow(creditor, Decimal("1000.00"), 30)
+        Transaction.objects.create(creditor=creditor, transaction_type=Transaction.REPAY, amount=Decimal("1000.00"), date=self.today - timedelta(days=20))
+        self._borrow(creditor, Decimal("1000.00"), 10)
+        self.assertEqual(creditor.accrued_interest, Decimal("200.00"))
+
+    def test_after_posting_it_counts_only_the_new_days(self):
+        creditor = self.percent_lender()
+        self._borrow(creditor, Decimal("100000.00"), 30)
+        creditor.post_accrued_interest()
+        creditor.refresh_from_db()
+        self.assertEqual(creditor.interest_from, self.today)
+        self.assertEqual(creditor.accrued_interest, Decimal("0.00"))
+
+    def test_turning_interest_on_later_does_not_reach_back(self):
+        creditor = Creditor.objects.create(user=self.user, name="Late", category=CreditorCategory.BANK)
+        self._borrow(creditor, Decimal("1000.00"), 300)
+        self._borrow(creditor, Decimal("1000.00"), 15)
+        form = CreditorForm({"name": "Late", "category": CreditorCategory.BANK, "interest_type": InterestType.MONTHLY,
+                             "interest_basis": InterestBasis.PERCENTAGE, "interest_rate": "10"}, instance=creditor)
+        self.assertTrue(form.is_valid(), form.errors)
+        form.save()
+        self.assertEqual(Creditor.objects.get(pk=creditor.pk).accrued_interest, Decimal("100.00"))
+
+    def test_a_future_entry_adds_nothing_yet(self):
+        creditor = self.percent_lender()
+        self._borrow(creditor, Decimal("100000.00"), 30)
+        self._borrow(creditor, Decimal("100000.00"), -10)
+        self.assertEqual(creditor.accrued_interest, Decimal("2000.00"))
 
     def test_accrued_interest_zero_when_balance_is_zero(self):
         creditor = Creditor.objects.create(

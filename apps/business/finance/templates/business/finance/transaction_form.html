@@ -15,6 +15,7 @@
   </header>
 
   <form method="post" enctype="multipart/form-data" class="stack" novalidate>
+    {% if recurring and not obj %}<input type="hidden" name="recurring_due" value="{{ recurring.next_due|date:'Y-m-d' }}">{% endif %}
     {% csrf_token %}
     {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
     {% for section in form.rows %}
