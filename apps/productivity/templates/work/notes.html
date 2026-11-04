@@ -93,21 +93,22 @@
   <div class="wc-backdrop" x-show="ed" x-cloak x-transition.opacity @click="closeNote()"></div>
   <template x-if="ed">
   <section class="wc wkc-editor wnb-editor" data-dictate-scope x-transition :data-color="ed.color || null" role="dialog" aria-modal="true" aria-label="{% translate 'Edit the note' %}"
-           @keydown.escape.stop="closeNote()" @keydown.ctrl.enter.prevent="closeNote()" @keydown.meta.enter.prevent="closeNote()">
+           @keydown.escape.stop="closeNote()" @keydown.ctrl.enter.prevent="closeNote()" @keydown.meta.enter.prevent="closeNote()"
+           @keydown.ctrl.e.prevent="edView(!edPreview)" @keydown.meta.e.prevent="edView(!edPreview)">
     <div class="wkc-editor-head">
       <input type="text" class="wkc-q-input" x-model="ed.title" maxlength="200" placeholder="{% translate 'Title' %}" aria-label="{% translate 'Title' %}"
              @change="titleChanged()" @keydown.enter.prevent="$refs.edBody && $refs.edBody.focus()">
       {# Write / Preview stay up here, in sight, however long the note is (only the text below scrolls) #}
       <div class="seg seg-sm wex-write-seg" role="radiogroup" aria-label="{% translate 'Note' %}">
-        <button type="button" class="seg-item" :class="!edPreview && 'is-active'" @click="edPreview = false">{% translate "Write" %}</button>
-        <button type="button" class="seg-item" :class="edPreview && 'is-active'" @click="edPreview = true">{% translate "Preview" %}</button>
+        <button type="button" class="seg-item" :class="!edPreview && 'is-active'" @click="edView(false)" data-tip="{% translate 'Write the Markdown (Ctrl+E switches)' %}">{% translate "Write" %}</button>
+        <button type="button" class="seg-item" :class="edPreview && 'is-active'" @click="edView(true)" data-tip="{% translate 'Read it — click any part to change it (Ctrl+E switches)' %}">{% translate "Preview" %}</button>
       </div>
       <button type="button" class="icon-btn wnc-pin" :class="ed.pinned && 'is-on'" @click="noteAct('pin')" :aria-pressed="(!!ed.pinned).toString()" aria-label="{% translate 'Pin to top' %}" data-tip="{% translate 'Pin to top' %}">{% icon "pin" %}</button>
     </div>
     <textarea class="wkc-a-input is-big" x-ref="edBody" x-model="ed.body" x-show="!edPreview" data-paste-images :data-note="ed.id" aria-label="{% translate 'Note' %}"
               placeholder="{% translate 'Write… Markdown works — type / for headings, to-dos, code, tables and more.' %}"></textarea>
     <article class="wn-md wkc-preview" x-show="edPreview" data-tick @md-tick="ed.body = Work.tickMarkdown(ed.body, $event.detail.index)"
-             x-html="Work.markdown(ed.body)" x-effect="edPreview && ed.body !== undefined && $nextTick(() => Work.enrich($el, { note: ed.id }))"></article>
+             x-effect="edPreview && ed && Work.live($el, { text: ed.body, set: (v) => { if (ed) ed.body = v }, note: ed.id, attrs: { 'data-paste-images': '', 'data-note': ed.id } })"></article>
     <div class="wkc-editor-foot">
       <div class="wkc-palette" x-data="{ open: false }" @click.outside="open = false" @keydown.escape.stop="open = false">
         <button type="button" class="icon-btn" @click="open = !open" :aria-expanded="open" aria-label="{% translate 'Colour' %}" data-tip="{% translate 'Colour' %}">{% icon "palette" %}</button>
@@ -182,7 +183,7 @@
     <div class="wn-pane" x-data="workNote(JSON.parse(document.getElementById('note-data').textContent))" x-init="$nextTick(() => { if (!id) $refs.body.focus(); })">
       <div class="wn-toolbar">
         <a href="{% url 'work:notes' %}" class="icon-btn wn-back" aria-label="{% translate 'All notes' %}">{% icon "chevron-left" %}</a>
-        <div class="seg seg-sm wn-mode"><button type="button" class="seg-item" :class="!preview && 'is-active'" @click="preview = false">{% icon "edit" %}<span>{% translate "Write" %}</span></button><button type="button" class="seg-item" :class="preview && 'is-active'" @click="preview = true">{% icon "words" %}<span>{% translate "Preview" %}</span></button></div>
+        <div class="seg seg-sm wn-mode" role="radiogroup" aria-label="{% translate 'View' %}"><button type="button" class="seg-item" :class="!preview && !split && 'is-active'" @click="view('write')" data-tip="{% translate 'Write the Markdown (Ctrl+E switches)' %}">{% icon "edit" %}<span>{% translate "Write" %}</span></button><button type="button" class="seg-item wn-split-btn" :class="split && 'is-active'" @click="view('split')" data-tip="{% translate 'Write and see it side by side' %}">{% icon "columns" %}<span>{% translate "Split" context "side by side" %}</span></button><button type="button" class="seg-item" :class="preview && 'is-active'" @click="view('preview')" data-tip="{% translate 'Read it — click any part to change it (Ctrl+E switches)' %}">{% icon "words" %}<span>{% translate "Preview" %}</span></button></div>
         <button type="button" class="icon-btn wn-zen" data-zen-toggle="write" aria-label="{% translate 'Focus writing' %}" data-tip="{% translate 'Focus writing: just this note, full screen (Ctrl+Shift+F)' %}"><span class="wt-zen-on">{% icon "maximize" %}</span><span class="wt-zen-off">{% icon "minimize" %}</span></button>
         {# the headings, to jump to one (a long design doc or study note) #}
         <div class="menu-wrap" x-data="{ open: false }" x-show="outline.length > 1" x-cloak @click.outside="open = false" @keydown.escape="open = false">
@@ -263,6 +264,7 @@
           {% for v, l in colors %}<button type="button" class="wkc-swatch" data-color="{{ v }}" :class="c === '{{ v }}' && 'is-on'" @click="c = '{{ v }}'; Work.api(Work.cfg.urls.noteBase + id + '/', { action: 'color', color: '{{ v }}' })" aria-label="{{ l }}"></button>{% endfor %}
         </div>
       </div>
+      <div class="wn-panes" :class="split && 'is-split'">
       <div class="wn-body-wrap" x-show="!preview">
         <textarea x-ref="body" x-model="body" class="wn-body" data-paste-images :data-note="id || ''" placeholder="{% translate 'Start writing… Markdown works: # heading, **bold**, `code`, - [ ] to-do, ``` code blocks, [[Another note]].' %}" aria-label="{% translate 'Note' %}"
                   @keydown="linkKey($event)" @input="linkLookup(); grow()" @click="linkLookup()" @focus="linkLookup()" @blur="setTimeout(() => { if (document.activeElement !== $refs.body) suggest = [] }, 150)"></textarea>
@@ -272,7 +274,9 @@
           </template>
         </ul>
       </div>
-      <article x-show="preview" x-cloak class="wn-md" data-tick @md-tick="body = Work.tickMarkdown(body, $event.detail.index)" x-html="html" x-effect="html; preview && $nextTick(() => Work.enrich($el, { note: id }))"></article>
+      <article x-show="preview || split" x-cloak class="wn-md" data-tick @md-tick="body = Work.tickMarkdown(body, $event.detail.index)"
+               x-effect="(preview || split) && Work.live($el, { text: body, set: (v) => { body = v }, note: id, attrs: { 'data-paste-images': '', 'data-note': id || '' } })"></article>
+      </div>
       <p class="wn-stats" x-show="words" x-cloak><span x-text="words + ' ' + (words === 1 ? '{% translate "word" %}' : '{% translate "words" %}')"></span> · <span x-text="'~' + readMins + ' {% translate "min read" %}'"></span><template x-if="todoTotal"><span> · <span x-text="todoDone + '/' + todoTotal"></span> {% translate "to-dos done" %}</span></template></p>
       {# ── the note's questions into Exam notes ── #}
       <div class="wc-backdrop" x-show="examOpen" x-cloak x-transition.opacity @click="examOpen = false"></div>

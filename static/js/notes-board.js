@@ -130,7 +130,7 @@
               if (!n || !n.ok) { location.href = (urls().notes || "/work/notes/") + id + "/"; return; }
               self.edSaved = JSON.stringify([n.title, n.body]); self.edTitle = n.title;
               self.ed = { id: n.id, title: n.title, body: n.body, color: n.color, pinned: n.pinned, url: n.url, archived: n.archived, rev: n.rev };
-              self.edState = "saved"; self.edPreview = false;
+              self.edState = "saved"; self.edPreview = Work.recall("work-board-view", false) === true;      // as notes were last read here
               var draft = Work.recall(Work.noteDraftKey(n.id), null);      // what wasn't saved last time comes back, and is saved now
               if (draft && draft.at > n.updated && (draft.title !== n.title || draft.body !== n.body)) {
                 self.ed.title = draft.title; self.ed.body = draft.body;
@@ -192,8 +192,15 @@
           var old = cardOf(id);
           if (old && html) old.replaceWith(fromHTML(html));
         },
+        edView: function (on) {
+          Work.liveDone();
+          this.edPreview = !!on; Work.store("work-board-view", this.edPreview);
+          var self = this;
+          if (!on) this.$nextTick(function () { if (self.$refs.edBody) self.$refs.edBody.focus(); });
+        },
         closeNote: function () {
           var id = this.ed && this.ed.id;
+          Work.liveDone();          // a part being changed in the preview goes in first
           this.flushNote();
           this.ed = null;
           var url = new URL(location.href); url.searchParams.delete("open");

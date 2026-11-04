@@ -86,6 +86,11 @@ def _texts():
         "viewName": _("Name this view (e.g. “Urgent at work”):"), "viewDelete": _("Remove this saved view?"), "viewSaved": _("View saved"),
         "breakOver": _("Break's over"), "backToWork": _("Ready to focus again?"), "myDay": _("My Day"), "noAccess": _("Not allowed."),
         "link": _("Link"), "copied": _("Copied"), "copyCode": _("Copy code"),
+        # editing in the preview (Work.live in static/js/work.js)
+        "liveGrip": _("Options for this part"), "liveEmpty": _("Nothing here yet. Click to write."), "liveAdd": _("Click to add more"),
+        "liveEditing": _("Editing this part — Esc when done"), "liveEdit": _("Edit"), "liveBelow": _("Add below"), "liveTurn": _("Turn into"),
+        "liveText": _("Text"), "liveDup": _("Duplicate"), "liveUp": _("Move up"), "liveDown": _("Move down"),
+        "liveCopy": _("Copy as Markdown"), "liveDelete": _("Delete"), "liveDeleted": _("Part deleted"),
         "timerStarted": _("Timer started"), "timerStopped": _("Timer stopped"), "leftOffAt": _("You left off:"),
         "slash": {      # "/" in a Markdown box (static/js/writing.js)
             "h1": _("Heading 1"), "h2": _("Heading 2"), "h3": _("Heading 3"), "todo": _("To-do"), "bullet": _("Bulleted list"),

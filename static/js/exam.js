@@ -401,6 +401,7 @@
           this.composing = !this.shows.all; this.many = false; this.writeView.add = false;
         },
         add: function (keepOpen) {
+          if (window.Work && Work.liveDone) Work.liveDone();
           var self = this, x = this.draft;
           if (!x.question.trim()) { toast(t("writeFirst"), "warn"); return; }
           api(D.api, { action: "add", question: x.question.trim(), answer: x.answer, chapter: x.chapter, categories: x.categories.join(","), color: x.color, starred: x.starred ? "1" : "0" }).then(function (r) {
@@ -473,7 +474,7 @@
         },
         openEditor: function (q) {
           this.edit = { id: q.id, question: q.question, answer: q.answer, chapter: q.chapter, categories: (q.categories || []).slice(), color: q.color || "", starred: q.starred, known: q.known, number: q.number, subject: D.subject };
-          this.editFrom = JSON.stringify(this.edit); this.editFirst = JSON.parse(this.editFrom); this.editing = q; this.writeView.edit = false; this.editState = "saved";
+          this.editFrom = JSON.stringify(this.edit); this.editFirst = JSON.parse(this.editFrom); this.editing = q; this.writeView.edit = recall("work-exam-view", false) === true; this.editState = "saved";
           var kept = recall(EDIT, null);                  // what wasn't saved last time comes back
           if (kept && kept.id === q.id) {
             this.edit.question = kept.question; this.edit.answer = kept.answer; this.edit.chapter = kept.chapter; this.edit.color = kept.color;
@@ -549,7 +550,14 @@
             if (self.editState === "dirty") self.editChanged();
           });
         },
+        /* Write ⇄ Preview for an answer ("add": the new one; "edit": the one open) — the preview can be changed too, a part at a time */
+        answerView: function (which, on) {
+          if (window.Work && Work.liveDone) Work.liveDone();
+          this.writeView[which] = !!on;
+          if (which === "edit") store("work-exam-view", !!on);
+        },
         closeEditor: function () {
+          if (window.Work && Work.liveDone) Work.liveDone();
           var self = this, q = this.editing, e = this.edit, was = this.editFirst, from = this.editFrom;
           if (!q) return;
           clearTimeout(this.editTimer);

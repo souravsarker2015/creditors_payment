@@ -1369,7 +1369,7 @@
       return {
         id: initial.id || null, title: initial.title || "", body: initial.body || "", tags: initial.tags || "", project: initial.project || "", rev: initial.rev || "",
         linkedTitle: initial.title || "", examOpen: false, examSubject: "", examName: "", same: "note:" + (initial.id || uid()),
-        state: "saved", savedAt: initial.saved || "", preview: false, timer: null, inflight: null, again: false,
+        state: "saved", savedAt: initial.saved || "", preview: false, split: false, timer: null, inflight: null, again: false,
         making: false, suggest: [], pick: 0, dgOpen: false, dgItems: [], dgQ: "", dgLoading: false,
         histOpen: false, histLoading: false, versions: [], shown: null,
         /* Earlier versions: kept before each round of writing; one can be read and brought back */
@@ -1470,6 +1470,12 @@
           ["title", "body", "tags", "project"].forEach(function (k) { self.$watch(k, function () { self.changed(); }); });
           this.$watch("preview", function (on) { if (!on) self.$nextTick(function () { self.grow(); }); });
           this.$nextTick(function () { self.grow(); });
+          if (this.id) { var seen = recall("work-note-view", "write"); this.preview = seen === "preview"; this.split = seen === "split"; }    // as it was last read
+          d.addEventListener("keydown", function (e) {          // Ctrl+E: Write ⇄ Preview (as in Obsidian)
+            if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && (e.key || "").toLowerCase() === "e" && !self.histOpen && !self.examOpen) {
+              e.preventDefault(); self.view(self.preview ? "write" : "preview");
+            }
+          });
           window.addEventListener("beforeunload", function (e) { if (self.state === "dirty" || self.state === "saving") { self.saveNow(); } });
           this.$el.addEventListener("keydown", function (e) { if ((e.ctrlKey || e.metaKey) && e.key === "s") { e.preventDefault(); self.saveNow(); } });
           var heading = new URLSearchParams(location.search).get("heading");           // from a [[Note#Heading]] link
@@ -1536,6 +1542,14 @@
           return this.inflight;
         },
         get html() { return renderMarkdown(this.body); },
+        /* Write, Split (side by side, on a wide screen) or Preview — where any part can be clicked to change it */
+        view: function (mode) {
+          var self = this;
+          Work.liveDone();
+          this.preview = mode === "preview"; this.split = mode === "split";
+          store("work-note-view", mode);
+          if (mode !== "preview") this.$nextTick(function () { self.grow(); });
+        },
         action: function (name) {
           var self = this;
           if (!this.id) return;
@@ -2093,6 +2107,332 @@
     var index = Array.prototype.indexOf.call(area.querySelectorAll("input.md-tick"), box);
     area.dispatchEvent(new CustomEvent("md-tick", { detail: { index: index }, bubbles: true }));
   });
+
+  /* ── Editing in the preview (Obsidian's live preview, Notion's blocks) ───────────────────────────
+     Work.live(el, { text, set(text), note, attrs }) draws Markdown into el one block at a time (a paragraph,
+     a list, a code block, a table, a formula…). Clicking a block turns it back into its own Markdown right
+     there, the caret where it was clicked; Esc, Ctrl+Enter or clicking elsewhere draws it again. ↑ on its
+     first line and ↓ on its last go to the block before or after; Backspace in an empty one removes it.
+     Each block has a ⋮⋮ handle: add below, turn into a heading / list / to-do / quote / code, duplicate,
+     move up or down, copy, delete (with Undo). The writing keys work in the block too (static/js/writing.js:
+     lists, Tab, Ctrl+B, the "/" menu, pasting), and every change goes to set() as it's typed, so a note
+     saves itself just as it does from the Write box. */
+  var LIVE_SKIP = "a, button, input, select, textarea, label, summary, video, audio, iframe, .md-menu, .wn-embed, .wn-tasks, [data-no-edit]";
+  var GRIP = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>';
+  var PLUS = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+  var liveActive = null, liveMenuEl = null;
+
+  function liveHalf(b) {          // a formula or a <details> broken by an empty line: it goes on in the next block
+    if (b.type === "code") return false;
+    var md = b.md;
+    return (md.match(/\$\$/g) || []).length % 2 === 1 || (md.match(/\\\[/g) || []).length > (md.match(/\\\]/g) || []).length ||
+      (md.match(/<details\b/gi) || []).length > (md.match(/<\/details>/gi) || []).length;
+  }
+  function liveSplit(text) {
+    var s = { head: "", blocks: [] }, toks = null;
+    if (!text) return s;
+    try { toks = window.marked && marked.lexer ? marked.lexer(text, { gfm: true }) : null; } catch (e) { toks = null; }
+    (toks || []).forEach(function (tk) {
+      var raw = tk.raw || "";
+      if (tk.type === "space" || !raw.trim()) {
+        if (s.blocks.length) s.blocks[s.blocks.length - 1].tail += raw; else s.head += raw;
+        return;
+      }
+      var m = /^([\s\S]*?)(\n*)$/.exec(raw);
+      s.blocks.push({ md: m[1], tail: m[2], type: tk.type });
+    });
+    if (!toks || liveJoin(s) !== text) {        // the parts must add up to the text exactly; if not, it's one block
+      var w = /^(\n*)([\s\S]*?)(\n*)$/.exec(text);
+      return { head: w[1], blocks: w[2] ? [{ md: w[2], tail: w[3], type: "all" }] : [] };
+    }
+    for (var i = 0; i < s.blocks.length - 1; i++) {
+      var b = s.blocks[i];
+      if (liveHalf(b)) { var n = s.blocks.splice(i + 1, 1)[0]; b.md += b.tail + n.md; b.tail = n.tail; i--; }
+    }
+    return s;
+  }
+  function newlines(v) { return (String(v).match(/\n/g) || []).length; }
+  function liveJoin(s) {
+    var list = s.blocks.filter(function (b) { return b.md.trim(); }), out = s.head;
+    list.forEach(function (b, i) {
+      var next = list[i + 1], tail = b.tail;
+      if (next && (b.fresh || next.fresh) && newlines(tail) < 2) tail = "\n\n";   // a block that's new stands apart from its neighbours
+      else if (!next && b.fresh) tail = "";
+      out += b.md + tail;
+    });
+    return out;
+  }
+  function liveText(el) {
+    var st = el._live; st.text = liveJoin(st.split);
+    if (st.opts && st.opts.set) st.opts.set(st.text);
+  }
+  function liveDraw(el) {
+    var st = el._live, html = "", grip = t("liveGrip", "Options for this part");
+    st.split.blocks.forEach(function (b, i) {
+      if (!b.md.trim()) return;
+      html += '<div class="md-block" data-i="' + i + '" tabindex="0"><button type="button" class="md-handle" aria-haspopup="menu" aria-expanded="false" aria-label="' +
+        escAttr(grip) + '" title="' + escAttr(grip) + '">' + GRIP + "</button>" + renderMarkdown(b.md) + "</div>";
+    });
+    if (!html) html = '<p class="md-empty">' + escAttr(st.opts.empty || t("liveEmpty", "Nothing here yet. Click to write.")) + "</p>";
+    else html += '<button type="button" class="md-add">' + PLUS + "<span>" + escAttr(t("liveAdd", "Click to add more")) + "</span></button>";
+    el.innerHTML = html;
+    st.drawn = st.text;
+    Work.enrich(el, { note: st.opts.note });
+  }
+  function fitBox(ta) { if (!GROWS) { ta.style.height = "auto"; ta.style.height = ta.scrollHeight + "px"; } }
+  function caretFromClick(e) {            // the words either side of where the block was clicked
+    var node = null, off = 0;
+    if (d.caretRangeFromPoint) { var r = d.caretRangeFromPoint(e.clientX, e.clientY); if (r) { node = r.startContainer; off = r.startOffset; } }
+    else if (d.caretPositionFromPoint) { var p = d.caretPositionFromPoint(e.clientX, e.clientY); if (p) { node = p.offsetNode; off = p.offset; } }
+    if (!node || node.nodeType !== 3) return null;
+    return { before: node.data.slice(Math.max(0, off - 20), off), after: node.data.slice(off, off + 20) };
+  }
+  function caretIn(md, hint) {
+    if (hint === "start") return 0;
+    if (!hint || hint === "end") return md.length;
+    var both = hint.before + hint.after, at;
+    if (both.trim() && (at = md.indexOf(both)) >= 0) return at + hint.before.length;
+    if (hint.before.trim() && (at = md.lastIndexOf(hint.before)) >= 0) return at + hint.before.length;
+    if (hint.after.trim() && (at = md.indexOf(hint.after)) >= 0) return at;
+    return md.length;
+  }
+  function edgeRow(ta, pos, up) {          // is the caret on the box's first (up) or last line, as it wraps?
+    var v = ta.value;
+    if (up ? v.lastIndexOf("\n", pos - 1) >= 0 : v.indexOf("\n", pos) >= 0) return false;
+    if (!window.FTWriting || !FTWriting.caretXY) return true;
+    var r = ta.getBoundingClientRect(), cs = getComputedStyle(ta), lh = parseFloat(cs.lineHeight) || 24, y = FTWriting.caretXY(ta, pos).y;
+    return up ? y - r.top <= parseFloat(cs.paddingTop) + lh * 1.5 : r.bottom - parseFloat(cs.paddingBottom) - y <= lh * 0.5;
+  }
+
+  function liveBegin(el, i, hint) {
+    var st = el._live, b = st.split.blocks[i];
+    var div = b && el.querySelector('.md-block[data-i="' + i + '"]');
+    if (!div) return;
+    liveCloseMenu();
+    var ta = d.createElement("textarea");
+    ta.className = "md-edit" + (/^\s*(```|~~~)/.test(b.md) ? " is-code" : "");
+    ta.setAttribute("data-md", "");
+    Object.keys(st.opts.attrs || {}).forEach(function (k) { if (st.opts.attrs[k] != null) ta.setAttribute(k, st.opts.attrs[k]); });
+    ta.setAttribute("aria-label", t("liveEditing", "Editing this part — Esc when done"));
+    ta.rows = 1; ta.value = b.md;
+    div.classList.add("is-editing"); div.removeAttribute("tabindex"); div.innerHTML = ""; div.appendChild(ta);
+    st.editing = { i: i, ta: ta }; liveActive = el;
+    fitBox(ta);
+    ta.focus({ preventScroll: true });
+    var at = caretIn(b.md, hint); ta.setSelectionRange(at, at);
+    var box = ta.getBoundingClientRect();
+    if (box.top < 0 || box.bottom > innerHeight) ta.scrollIntoView({ block: "nearest" });
+    ta.addEventListener("input", function () { b.md = ta.value; liveText(el); fitBox(ta); });
+    ta.addEventListener("keydown", function (e) {
+      if (e.isComposing) return;
+      if (e.key === "Escape" || (e.key === "Enter" && (e.ctrlKey || e.metaKey))) {
+        e.preventDefault(); e.stopPropagation(); liveFinish(el, true); return;
+      }
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || ta.selectionStart !== ta.selectionEnd) return;
+      var pos = ta.selectionStart;
+      if (e.key === "ArrowUp" && edgeRow(ta, pos, true)) { e.preventDefault(); liveStep(el, -1); }
+      else if (e.key === "ArrowDown" && edgeRow(ta, pos, false)) { e.preventDefault(); liveStep(el, 1); }
+      else if (e.key === "Backspace" && !ta.value) { e.preventDefault(); liveStep(el, -1); }
+    });
+    ta.addEventListener("focusout", function (e) {
+      var to = e.relatedTarget;
+      if (to && (el.contains(to) || (liveMenuEl && liveMenuEl.contains(to)))) return;     // another block, a handle: their own click takes over
+      setTimeout(function () {
+        if (st.editing && st.editing.ta === ta && d.activeElement !== ta && d.hasFocus()) liveFinish(el, false);
+      }, 0);
+    });
+  }
+  /* draws the block again (it may have become several, or none); returns how many blocks there are now more than before */
+  function liveFinish(el, focus) {
+    var st = el && el._live, e = st && st.editing;
+    if (!e) return 0;
+    st.editing = null; if (liveActive === el) liveActive = null;
+    var blocks = st.split.blocks, b = blocks[e.i];
+    b.md = e.ta.value.replace(/(\n[ \t]*)+$/, "");
+    if (!b.md.trim() && e.i > 0 && newlines(b.tail) > newlines(blocks[e.i - 1].tail)) blocks[e.i - 1].tail = b.tail;    // what came after stays apart
+    var before = blocks.length;
+    liveText(el);
+    st.split = liveSplit(st.text);
+    liveDraw(el);
+    if (focus) { var div = el.querySelector('.md-block[data-i="' + Math.min(e.i, st.split.blocks.length - 1) + '"]'); if (div) div.focus({ preventScroll: true }); }
+    return st.split.blocks.length - before;
+  }
+  function liveStep(el, dir) {
+    var i = el._live.editing.i, grew = liveFinish(el, false), n = el._live.split.blocks.length;
+    var to = dir < 0 ? i - 1 : i + 1 + grew;
+    if (to >= 0 && to < n) liveBegin(el, to, dir < 0 ? "end" : "start");
+    else if (dir > 0) liveAppend(el);
+    else if (n) liveBegin(el, 0, "start");
+  }
+  function liveAppend(el) {
+    var st = el._live;
+    if (st.editing) liveFinish(el, false);
+    st.split.blocks.push({ md: "", tail: "", type: "paragraph", fresh: true });
+    liveDraw(el);
+    var i = st.split.blocks.length - 1, div = d.createElement("div");
+    div.className = "md-block"; div.setAttribute("data-i", i);
+    var add = el.querySelector(".md-add, .md-empty");
+    if (add && add.classList.contains("md-empty")) add.remove();
+    el.insertBefore(div, el.querySelector(".md-add"));
+    liveBegin(el, i, "end");
+  }
+  /* ⋮⋮: what can be done with one block */
+  var TURN = ["p", "h1", "h2", "h3", "bullet", "numbered", "todo", "quote", "code"];
+  function turnInto(md, kind) {
+    var fence = /^\s*(```|~~~)[^\n]*\n([\s\S]*?)\n?\s*(```|~~~)\s*$/.exec(md);
+    var text = fence ? fence[2] : md;
+    var lines = text.split("\n").map(function (l) {
+      return l.replace(/^[ \t]*(#{1,6}[ \t]+|>[ \t]?|[-*+][ \t]+\[[ xX]\][ \t]+|[-*+][ \t]+|\d+[.)][ \t]+)/, "");
+    });
+    var done = text.split("\n").map(function (l) { return /^[ \t]*[-*+][ \t]+\[[xX]\]/.test(l); });
+    if (kind === "code") return "```\n" + (fence ? fence[2] : md) + "\n```";
+    if (/^h[123]$/.test(kind)) return "#".repeat(+kind.charAt(1)) + " " + lines.filter(function (l) { return l.trim(); }).join(" ");
+    var n = 0;
+    return lines.map(function (l, k) {
+      if (!l.trim()) return l;
+      if (kind === "bullet") return "- " + l;
+      if (kind === "numbered") return (++n) + ". " + l;
+      if (kind === "todo") return "- [" + (done[k] ? "x" : " ") + "] " + l;
+      if (kind === "quote") return "> " + l;
+      return l;
+    }).join("\n");
+  }
+  function liveCloseMenu(back) {
+    if (!liveMenuEl) return;
+    var m = liveMenuEl; liveMenuEl = null; m.remove();
+    if (m._handle) { m._handle.setAttribute("aria-expanded", "false"); if (back && m._handle.isConnected) m._handle.focus(); }
+  }
+  function liveMenu(el, i, handle) {
+    var st = el._live, open = liveMenuEl && liveMenuEl._handle === handle;
+    liveCloseMenu();
+    if (open) return;
+    var n = st.split.blocks.length, slash = T.slash || {};
+    var names = { p: t("liveText", "Text"), h1: slash.h1 || "Heading 1", h2: slash.h2 || "Heading 2", h3: slash.h3 || "Heading 3", bullet: slash.bullet || "Bulleted list",
+                  numbered: slash.numbered || "Numbered list", todo: slash.todo || "To-do", quote: slash.quote || "Quote", code: slash.code || "Code block" };
+    function item(act, label, extra) { return '<button type="button" role="menuitem" data-act="' + act + '"' + (extra || "") + ">" + escAttr(label) + "</button>"; }
+    var m = d.createElement("div");
+    m.className = "md-menu"; m.setAttribute("role", "menu"); m._handle = handle;
+    m.innerHTML = item("edit", t("liveEdit", "Edit")) + item("below", t("liveBelow", "Add below")) +
+      '<p class="md-menu-label">' + escAttr(t("liveTurn", "Turn into")) + '</p><div class="md-turn">' +
+      TURN.map(function (k) { return item("turn:" + k, names[k]); }).join("") + "</div>" +
+      '<div class="md-menu-sep"></div>' + item("dup", t("liveDup", "Duplicate")) +
+      item("up", t("liveUp", "Move up"), i <= 0 ? " disabled" : "") + item("down", t("liveDown", "Move down"), i >= n - 1 ? " disabled" : "") +
+      item("copy", t("liveCopy", "Copy as Markdown")) + '<div class="md-menu-sep"></div>' + item("del", t("liveDelete", "Delete"), ' class="is-danger"');
+    d.body.appendChild(m);
+    liveMenuEl = m; handle.setAttribute("aria-expanded", "true");
+    var r = handle.getBoundingClientRect(), w = m.offsetWidth, h = m.offsetHeight;
+    m.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + "px";
+    m.style.top = (r.bottom + 4 + h > innerHeight - 8 ? Math.max(8, r.top - h - 4) : r.bottom + 4) + "px";
+    var first = m.querySelector("button:not([disabled])"); if (first) first.focus({ preventScroll: true });
+    m.addEventListener("keydown", function (e) {
+      var all = Array.prototype.slice.call(m.querySelectorAll("button:not([disabled])")), at = all.indexOf(d.activeElement);
+      if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); liveCloseMenu(true); }
+      else if (e.key === "ArrowDown" || e.key === "ArrowRight") { e.preventDefault(); all[(at + 1) % all.length].focus(); }
+      else if (e.key === "ArrowUp" || e.key === "ArrowLeft") { e.preventDefault(); all[(at - 1 + all.length) % all.length].focus(); }
+      else if (e.key === "Tab") liveCloseMenu();
+    });
+    m.addEventListener("click", function (e) {
+      var b = e.target.closest("button[data-act]"); if (!b || b.disabled) return;
+      e.preventDefault(); e.stopPropagation();
+      liveCloseMenu();
+      liveDo(el, i, b.getAttribute("data-act"));
+    });
+  }
+  function liveDo(el, i, act) {
+    var st = el._live, blocks = st.split.blocks, b = blocks[i], was = st.text;
+    if (!b) return;
+    var redraw = function (focusAt) { liveText(el); st.split = liveSplit(st.text); liveDraw(el); var div = focusAt != null && el.querySelector('.md-block[data-i="' + focusAt + '"]'); if (div) div.focus({ preventScroll: true }); };
+    var apart = function (k) { if (blocks[k] && newlines(blocks[k].tail) < 2) blocks[k].tail = "\n\n"; };
+    if (act === "edit") return liveBegin(el, i, "end");
+    if (act === "below") {
+      blocks.splice(i + 1, 0, { md: "", tail: "", type: "paragraph", fresh: true });
+      liveDraw(el);
+      var div = d.createElement("div"), at = el.querySelector('.md-block[data-i="' + i + '"]');
+      div.className = "md-block"; div.setAttribute("data-i", i + 1);
+      at.parentNode.insertBefore(div, at.nextSibling);         // (the blocks after it were numbered from the list, new one included)
+      return liveBegin(el, i + 1, "end");
+    }
+    if (act.indexOf("turn:") === 0) { b.md = turnInto(b.md, act.slice(5)); apart(i); return redraw(i); }
+    if (act === "dup") { apart(i); blocks.splice(i + 1, 0, { md: b.md, tail: "\n\n", type: b.type, fresh: true }); return redraw(i + 1); }
+    if (act === "up" || act === "down") {
+      var j = act === "up" ? i - 1 : i + 1, o = blocks[j]; if (!o) return;
+      apart(Math.min(i, j)); if (Math.max(i, j) < blocks.length - 1) apart(Math.max(i, j));
+      var md = b.md, type = b.type; b.md = o.md; b.type = o.type; o.md = md; o.type = type;
+      return redraw(j);
+    }
+    if (act === "copy") {
+      var done = function () { toast(t("copied", "Copied"), "good"); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(b.md).then(done, function () { FT.showText(b.md); }); else FT.showText(b.md);
+      return;
+    }
+    if (act === "del") {
+      if (i > 0 && newlines(b.tail) > newlines(blocks[i - 1].tail)) blocks[i - 1].tail = b.tail;
+      b.md = "";
+      redraw(Math.max(0, i - 1));
+      toast(t("liveDeleted", "Part deleted"), "", { label: t("undo", "Undo"), run: function () { if (st.opts.set) st.opts.set(was); } });
+    }
+  }
+  function liveWire(el) {
+    el.addEventListener("click", function (e) {
+      var st = el._live, tg = e.target;
+      if (e.defaultPrevented || e.button || !st) return;
+      var handle = tg.closest(".md-handle");
+      if (handle && el.contains(handle)) { e.preventDefault(); liveMenu(el, +handle.closest(".md-block").getAttribute("data-i"), handle); return; }
+      if (tg.closest(".md-add, .md-empty")) { e.preventDefault(); liveAppend(el); return; }
+      var tick = tg.closest("input.md-tick");
+      if (tick) {                         // ticked here, in its own block (the blocks are drawn apart, so the page-wide count doesn't fit)
+        e.preventDefault(); e.stopPropagation();
+        var tb = tick.closest(".md-block");
+        if (!tb || tick.closest(".wn-embed")) return;
+        var i0 = +tb.getAttribute("data-i"), k = Array.prototype.indexOf.call(tb.querySelectorAll("input.md-tick"), tick);
+        var ed = st.editing, grow = ed ? liveFinish(el, false) : 0, bi = ed && i0 > ed.i ? i0 + grow : i0, blk = st.split.blocks[bi];
+        if (!blk) return;
+        blk.md = Work.tickMarkdown(blk.md, k); liveText(el); st.split = liveSplit(st.text); liveDraw(el);
+        return;
+      }
+      if (tg.closest(LIVE_SKIP) || tg.closest(".md-edit")) return;
+      var sel = window.getSelection && window.getSelection();
+      if (sel && !sel.isCollapsed && el.contains(sel.anchorNode)) return;          // choosing words to copy
+      var blockEl = tg.closest(".md-block");
+      if (!blockEl || !el.contains(blockEl)) {
+        var last = el.querySelector(".md-block:last-of-type");
+        if (!st.editing && (!last || e.clientY > last.getBoundingClientRect().bottom)) liveAppend(el);      // below the last block: write on
+        return;
+      }
+      var hint = caretFromClick(e), i = +blockEl.getAttribute("data-i");
+      if (st.editing) { if (st.editing.i === i) return; var ei = st.editing.i, g = liveFinish(el, false); if (i > ei) i += g; }
+      liveBegin(el, i, hint);
+    });
+    el.addEventListener("keydown", function (e) {
+      if (!e.target.classList || !e.target.classList.contains("md-block") || e.target.closest(".md-live") !== el) return;
+      var i = +e.target.getAttribute("data-i");
+      if (e.key === "Enter" && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); liveBegin(el, i, "end"); }
+      else if ((e.key === "ArrowDown" || e.key === "ArrowUp") && !e.altKey) {
+        var to = el.querySelector('.md-block[data-i="' + (i + (e.key === "ArrowDown" ? 1 : -1)) + '"]');
+        if (to) { e.preventDefault(); to.focus(); }
+      } else if (e.key === "ContextMenu" || (e.key === "F10" && e.shiftKey)) {
+        var h = e.target.querySelector(".md-handle"); if (h) { e.preventDefault(); liveMenu(el, i, h); }
+      }
+    });
+  }
+  d.addEventListener("mousedown", function (e) { if (liveMenuEl && !liveMenuEl.contains(e.target) && !e.target.closest(".md-handle")) liveCloseMenu(); });
+  window.addEventListener("resize", function () { liveCloseMenu(); });
+  d.addEventListener("scroll", function (e) { if (liveMenuEl && !liveMenuEl.contains(e.target)) liveCloseMenu(); }, true);
+
+  window.Work.live = function (el, opts) {
+    if (!el) return;
+    var st = el._live;
+    if (!st) { st = el._live = { split: { head: "", blocks: [] }, text: "", drawn: null, editing: null }; el.classList.add("md-live"); liveWire(el); }
+    st.opts = opts || {};
+    var text = String(st.opts.text == null ? "" : st.opts.text).replace(/\r\n?/g, "\n");
+    if (st.editing) {
+      if (text === st.text) return;           // what's being typed, coming back: the block stays open
+      st.editing = null; if (liveActive === el) liveActive = null;     // changed somewhere else (a version brought back…): drawn anew
+    } else if (text === st.drawn) return;
+    st.text = text; st.split = liveSplit(text); liveDraw(el);
+  };
+  /* Before Write / Preview is switched: the block being changed is put back first */
+  window.Work.liveDone = function () { liveCloseMenu(); if (liveActive) liveFinish(liveActive, false); };
 
   // A code block gets its language and a Copy button (outside the box that scrolls sideways); diagrams don't.
   function codeBoxes(html) {

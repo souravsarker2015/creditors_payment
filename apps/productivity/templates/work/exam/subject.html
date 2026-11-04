@@ -43,8 +43,9 @@
 <datalist id="exam-chapters"><template x-for="c in chapters" :key="c.name"><option :value="c.name"></option></template></datalist>
 
 {# ── take a note: one line, which opens into a question and its answer (like Keep) ── #}
-<section class="wkc-compose" :class="composing && 'is-open'" :data-color="draft.color || null" @click.outside="composing && !many && !catOpen && closeComposer()"
-         @keydown.ctrl.enter.prevent="!many && add(true)" @keydown.meta.enter.prevent="!many && add(true)" @keydown.escape.stop="closeComposer()">
+<section class="wkc-compose" :class="composing && 'is-open'" :data-color="draft.color || null" @click.outside="composing && !many && !catOpen && !$event.target.closest('.md-menu') && closeComposer()"
+         @keydown.ctrl.enter.prevent="!many && add(true)" @keydown.meta.enter.prevent="!many && add(true)" @keydown.escape.stop="closeComposer()"
+         @keydown.ctrl.e.prevent="composing && !many && answerView('add', !writeView.add)" @keydown.meta.e.prevent="composing && !many && answerView('add', !writeView.add)">
   <div class="wkc-compose-line" x-show="!composing" @click="openComposer(false)">
     <span class="wkc-compose-hint">{% translate "Take a note… (a question)" %}</span>
     <button type="button" class="icon-btn" @click.stop="openComposer(true)" aria-label="{% translate 'Paste a list' %}" data-tip="{% translate 'Paste a list — from ChatGPT, Claude, a file…' %}">{% icon "upload" %}</button>
@@ -56,7 +57,8 @@
                 placeholder="{% translate 'Question' %}" aria-label="{% translate 'Question' %}"></textarea>
       <textarea class="wkc-a-input" rows="3" x-model="draft.answer" x-ref="answer" data-md-paste data-paste-images x-show="!writeView.add"
                 placeholder="{% translate 'Answer — Markdown, code, formulas; paste from ChatGPT or Claude' %}" aria-label="{% translate 'Answer' %}"></textarea>
-      <div class="wex-a wn-md wex-md-preview" x-show="writeView.add" x-effect="writeView.add && paint($el, draft.answer)"></div>
+      <div class="wex-a wn-md wex-md-preview" x-show="writeView.add" data-tick
+           x-effect="writeView.add && Work.live($el, { text: draft.answer || '', set: (v) => { draft.answer = v }, attrs: { 'data-md-paste': '', 'data-paste-images': '' }, empty: '{{ _("No answer yet. Click to write it.")|escapejs }}' })"></div>
       <div class="wkc-compose-foot">
         <input type="text" class="wkc-chip-input" x-model="draft.chapter" list="exam-chapters" maxlength="120" placeholder="{% translate '+ Label' %}" aria-label="{% translate 'Chapter' %}">
         {% include "work/exam/_category_chips.html" with list="draft.categories" %}
@@ -65,7 +67,7 @@
           {% for v, l in colors %}<button type="button" class="wkc-swatch" data-color="{{ v }}" :class="draft.color === '{{ v }}' && 'is-on'" @click="draft.color = '{{ v }}'" aria-label="{{ l }}"></button>{% endfor %}
         </div>
         <button type="button" class="icon-btn wex-star" :class="draft.starred && 'is-on'" @click="draft.starred = !draft.starred" :aria-pressed="draft.starred.toString()" aria-label="{% translate 'Important' %}" data-tip="{% translate 'Important' %}">{% icon "star" %}</button>
-        <button type="button" class="icon-btn" :class="writeView.add && 'is-on'" @click="writeView.add = !writeView.add" x-show="draft.answer.trim()" aria-label="{% translate 'Preview' %}" data-tip="{% translate 'Preview' %}">{% icon "words" %}</button>
+        <button type="button" class="icon-btn" :class="writeView.add && 'is-on'" @click="answerView('add', !writeView.add)" x-show="draft.answer.trim()" aria-label="{% translate 'Preview' %}" data-tip="{% translate 'Preview — click any part to change it (Ctrl+E)' %}">{% icon "words" %}</button>
         <span class="spacer"></span>
         <button type="button" class="btn btn-ghost btn-sm" @click="closeComposer()">{% translate "Close" %}</button>
         <button type="button" class="btn btn-primary btn-sm" @click="add(true)" :disabled="!draft.question.trim()">{% icon "plus" %}{% translate "Add" %} <kbd class="wp-kbd">Ctrl+Enter</kbd></button>
@@ -221,7 +223,8 @@
 {# ── one question, opened (like a Keep note) ── #}
 <div class="wc-backdrop" x-show="editing" x-cloak x-transition.opacity @click="closeEditor()"></div>
 <section class="wc wkc-editor" x-show="editing" x-cloak x-transition :data-color="edit.color || null" role="dialog" aria-modal="true" aria-label="{% translate 'Edit the question' %}"
-         @keydown.escape.stop="histOpen ? histOpen = false : closeEditor()" @keydown.ctrl.enter.prevent="closeEditor()" @keydown.meta.enter.prevent="closeEditor()" @keydown="editorKey($event)">
+         @keydown.escape.stop="histOpen ? histOpen = false : closeEditor()" @keydown.ctrl.enter.prevent="closeEditor()" @keydown.meta.enter.prevent="closeEditor()" @keydown="editorKey($event)"
+         @keydown.ctrl.e.prevent="answerView('edit', !writeView.edit)" @keydown.meta.e.prevent="answerView('edit', !writeView.edit)">
   <div class="wkc-editor-head">
     <span class="wkc-steps">
       <button type="button" class="icon-btn" @click="stepEditor(-1)" :disabled="!canStep(-1)" aria-label="{% translate 'Previous question' %}" data-tip="{% translate 'Previous question (Alt+←)' %}">{% icon "chevron-left" %}</button>
@@ -236,11 +239,12 @@
   <textarea class="wkc-q-input" rows="2" x-model="edit.question" x-ref="editQuestion" maxlength="2000" aria-label="{% translate 'Question' %}" placeholder="{% translate 'Question' %}"></textarea>
   {% include "work/exam/_category_chips.html" with list="edit.categories" %}
   <div class="seg wex-write-seg" role="radiogroup" aria-label="{% translate 'Answer' %}">
-    <button type="button" class="seg-item" :class="!writeView.edit && 'is-active'" @click="writeView.edit = false">{% translate "Write" %}</button>
-    <button type="button" class="seg-item" :class="writeView.edit && 'is-active'" @click="writeView.edit = true">{% translate "Preview" %}</button>
+    <button type="button" class="seg-item" :class="!writeView.edit && 'is-active'" @click="answerView('edit', false)" data-tip="{% translate 'Write the Markdown (Ctrl+E switches)' %}">{% translate "Write" %}</button>
+    <button type="button" class="seg-item" :class="writeView.edit && 'is-active'" @click="answerView('edit', true)" data-tip="{% translate 'Read it — click any part to change it (Ctrl+E switches)' %}">{% translate "Preview" %}</button>
   </div>
   <textarea class="wkc-a-input is-big" x-model="edit.answer" data-md-paste data-paste-images x-show="!writeView.edit" aria-label="{% translate 'Answer' %}" placeholder="{% translate 'Answer — Markdown, code, formulas; paste from ChatGPT or Claude' %}"></textarea>
-  <div class="wex-a wn-md wex-md-preview wkc-preview" x-show="writeView.edit" x-effect="editing && writeView.edit && paint($el, edit.answer || '')"></div>
+  <div class="wex-a wn-md wex-md-preview wkc-preview" x-show="writeView.edit" data-tick
+       x-effect="editing && writeView.edit && Work.live($el, { text: edit.answer || '', set: (v) => { edit.answer = v }, attrs: { 'data-md-paste': '', 'data-paste-images': '' }, empty: '{{ _("No answer yet. Click to write it.")|escapejs }}' })"></div>
   <div class="wkc-editor-foot">
     <span class="wn-state" :data-state="editState" role="status" aria-live="polite"><i aria-hidden="true"></i><span x-text="{ saving: '{% translate "Saving…" %}', saved: '{% translate "Saved" context "state" %}', dirty: '{% translate "Editing…" %}', offline: '{% translate "Saved on this device" %}', error: '{% translate "Not saved" %}' }[editState]"></span></span>
     <div class="wkc-colors" role="radiogroup" aria-label="{% translate 'Colour' %}">

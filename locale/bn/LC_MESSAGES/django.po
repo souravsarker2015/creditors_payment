@@ -26116,3 +26116,46 @@ msgstr[1] "পাসওয়ার্ডটি খুব ছোট। অন্
 #, python-format
 msgid "%(model)s instance with %(field)s %(value)r is not a valid choice."
 msgstr "এই মানটি এখানে বেছে নেওয়া যাবে না।"
+
+msgid "Options for this part"
+msgstr "এই অংশের অপশন"
+
+msgid "Nothing here yet. Click to write."
+msgstr "এখনো কিছু লেখা নেই। লিখতে ক্লিক করুন।"
+
+msgid "Click to add more"
+msgstr "আরও লিখতে ক্লিক করুন"
+
+msgid "Editing this part — Esc when done"
+msgstr "এই অংশটি বদলাচ্ছেন — শেষ হলে Esc চাপুন"
+
+msgid "Add below"
+msgstr "নিচে যোগ করুন"
+
+msgid "Turn into"
+msgstr "রূপান্তর করুন"
+
+msgid "Copy as Markdown"
+msgstr "Markdown হিসেবে কপি করুন"
+
+msgid "Part deleted"
+msgstr "অংশটি মুছে ফেলা হয়েছে"
+
+msgid "Write the Markdown (Ctrl+E switches)"
+msgstr "Markdown লিখুন (Ctrl+E দিয়ে বদলান)"
+
+msgid "Write and see it side by side"
+msgstr "লিখুন আর পাশাপাশি দেখুন"
+
+msgid "Read it — click any part to change it (Ctrl+E switches)"
+msgstr "পড়ুন — যেকোনো অংশে ক্লিক করে সেখানেই বদলান (Ctrl+E দিয়ে বদলান)"
+
+msgid "No answer yet. Click to write it."
+msgstr "এখনো উত্তর নেই। লিখতে ক্লিক করুন।"
+
+msgid "Preview — click any part to change it (Ctrl+E)"
+msgstr "প্রিভিউ — যেকোনো অংশে ক্লিক করে সেখানেই বদলান (Ctrl+E)"
+
+msgctxt "side by side"
+msgid "Split"
+msgstr "পাশাপাশি"

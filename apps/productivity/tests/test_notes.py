@@ -56,3 +56,34 @@ class NotesBoardTests(TestCase):
         n = Note.objects.create(owner=other, title="Secret")
         self.assertEqual(self.client.post(reverse("work:api_note_action", args=[n.pk]), {"action": "color", "color": "red"}).status_code, 404)
         self.assertNotContains(self.client.get(reverse("work:notes")), "Secret")
+
+
+class EditInPreviewTests(TestCase):
+    """The preview can be changed where it's read (static/js/work.js: Work.live)."""
+
+    def setUp(self):
+        self.me = User.objects.create_superuser("me", "me@example.com", PW)
+        self.client.force_login(self.me)
+
+    def test_a_note_offers_write_split_and_an_editable_preview(self):
+        note = Note.objects.create(owner=self.me, title="Plan", body="# Plan")
+        page = self.client.get(reverse("work:note", args=[note.pk])).content.decode()
+        self.assertIn("wn-split-btn", page)
+        self.assertIn("Work.live($el, { text: body", page)
+
+    def test_the_board_editor_preview_is_editable_too(self):
+        page = self.client.get(reverse("work:notes")).content.decode()
+        self.assertIn("Work.live($el, { text: ed.body", page)
+
+    def test_an_exam_answer_can_be_changed_in_its_preview(self):
+        from ..models import ExamSubject
+
+        subject = ExamSubject.objects.create(owner=self.me, name="Physics")
+        page = self.client.get(reverse("work:exam_subject", args=[subject.pk])).content.decode()
+        self.assertIn("Work.live($el, { text: edit.answer", page)
+        self.assertIn("Work.live($el, { text: draft.answer", page)
+
+    def test_its_words_come_in_the_page_settings(self):
+        page = self.client.get(reverse("work:notes")).content.decode()
+        for key in ("liveTurn", "liveBelow", "liveDeleted"):
+            self.assertIn(f'"{key}"', page)

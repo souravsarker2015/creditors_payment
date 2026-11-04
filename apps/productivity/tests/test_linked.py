@@ -223,8 +223,9 @@ class FrontEndTests(SimpleTestCase):
         js = self.read("static/js/work.js")
         self.assertIn("window.Work.enrich", js)
         self.assertIn("language-tasks", js)
+        self.assertIn("Work.enrich(el, { note: st.opts.note })", js)      # each time Work.live draws a preview
         html = self.read("apps/productivity/templates/work/notes.html")
-        self.assertEqual(html.count("Work.enrich($el"), 2)
+        self.assertEqual(html.count("Work.live($el"), 2)               # the note's page, and a note opened on the board
         self.assertEqual(html.count("data-dictate="), 2)
 
 
