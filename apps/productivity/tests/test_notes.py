@@ -1,7 +1,7 @@
 """Notes as a board of cards (like Keep), quick notes, colours, and the list
 read a page at a time (with infinite scrolling)."""
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.test import TestCase, TransactionTestCase
 from django.urls import reverse
 
 from ..models import Note
@@ -101,11 +101,11 @@ class NoteShapeAndCategoryTests(TestCase):
             self.assertIn(line, html)
 
     def test_a_note_goes_in_categories_and_a_category_shows_what_is_inside_it(self):
-        from ..models import ExamCategory
+        from ..models import NoteCategory
 
-        backend = ExamCategory.objects.create(owner=self.me, name="Backend")
-        db = ExamCategory.objects.create(owner=self.me, name="Databases", parent=backend)
-        other = ExamCategory.objects.create(owner=User.objects.create_user("x", password=PW), name="Theirs")
+        backend = NoteCategory.objects.create(owner=self.me, name="Backend")
+        db = NoteCategory.objects.create(owner=self.me, name="Databases", parent=backend)
+        other = NoteCategory.objects.create(owner=User.objects.create_user("x", password=PW), name="Theirs")
         note = Note.objects.create(owner=self.me, title="Indexes")
         Note.objects.create(owner=self.me, title="Elsewhere")
         r = self.client.post(reverse("work:api_note_save"), {"id": note.pk, "categories": f"{db.pk},{other.pk}"})
@@ -115,13 +115,13 @@ class NoteShapeAndCategoryTests(TestCase):
         self.assertEqual([n.title for n in shown], ["Indexes"])               # the parent shows its child's notes
         none = self.client.get(reverse("work:notes"), {"category": "none"}).context["notes"]
         self.assertEqual([n.title for n in none], ["Elsewhere"])
-        counts = self.client.get(reverse("work:api_exam_categories"), {"for": "notes"}).json()["counts"]
+        counts = self.client.get(reverse("work:api_note_categories")).json()["counts"]
         self.assertEqual((counts[str(backend.pk)], counts[str(db.pk)], counts["none"]), (1, 1, 1))
 
     def test_a_note_opened_on_the_board_brings_its_categories(self):
-        from ..models import ExamCategory
+        from ..models import NoteCategory
 
-        c = ExamCategory.objects.create(owner=self.me, name="Ideas")
+        c = NoteCategory.objects.create(owner=self.me, name="Ideas")
         note = Note.objects.create(owner=self.me, title="One")
         note.categories.add(c)
         self.assertEqual(self.client.get(reverse("work:api_note_get", args=[note.pk])).json()["categories"], [c.pk])
@@ -144,11 +144,11 @@ class ManyNotesAtOnceTests(TestCase):
         return self.client.post(reverse("work:api_notes_bulk"), {"ids": ",".join(str(n.pk) for n in notes), **fields})
 
     def test_duplicate_copies_text_tags_and_categories(self):
-        from ..models import ExamCategory, Tag
+        from ..models import NoteCategory, Tag
 
         note = Note.objects.create(owner=self.me, title="Plan", body="# Plan", color="amber")
         note.tags.add(Tag.objects.create(owner=self.me, name="work"))
-        note.categories.add(ExamCategory.objects.create(owner=self.me, name="Ideas"))
+        note.categories.add(NoteCategory.objects.create(owner=self.me, name="Ideas"))
         r = self.client.post(reverse("work:api_note_action", args=[note.pk]), {"action": "duplicate"}).json()
         copy = Note.objects.get(pk=r["id"])
         self.assertEqual((copy.title, copy.body, copy.color), ("Plan (copy)", "# Plan", "amber"))
@@ -156,15 +156,15 @@ class ManyNotesAtOnceTests(TestCase):
         self.assertEqual([c.name for c in copy.categories.all()], ["Ideas"])
 
     def test_picked_notes_are_pinned_archived_and_filed_together(self):
-        from ..models import ExamCategory
+        from ..models import NoteCategory
 
         a, b = Note.objects.create(owner=self.me, title="A"), Note.objects.create(owner=self.me, title="B")
         self.assertTrue(self.bulk(a, b, action="pin", on="1").json()["ok"])
         self.assertEqual(Note.objects.filter(is_pinned=True).count(), 2)
-        c = ExamCategory.objects.create(owner=self.me, name="Ideas")
+        c = NoteCategory.objects.create(owner=self.me, name="Ideas")
         self.bulk(a, b, action="categories", categories=str(c.pk))
         self.bulk(a, action="categories", categories=str(c.pk))         # already in it: no harm
-        self.assertEqual(c.work_notes.count(), 2)
+        self.assertEqual(c.notes.count(), 2)
         self.bulk(a, b, action="archive", on="1")
         self.assertEqual(Note.objects.filter(is_archived=True).count(), 2)
 
@@ -216,3 +216,131 @@ class WritingOnAPhoneTests(TestCase):
         self.assertIn("openFind(true)", html)
         for how in ("sink", "untick", "drop"):
             self.assertIn("todoTool('%s')" % how, html)
+
+
+class NoteCategoriesApartTests(TestCase):
+    """Notes have their own tree of categories; the exam pages keep theirs. Neither shows the other's."""
+
+    def setUp(self):
+        self.me = User.objects.create_superuser("me", "me@example.com", PW)
+        self.client.force_login(self.me)
+
+    def test_each_tree_is_its_own(self):
+        from ..models import ExamCategory, NoteCategory
+
+        r = self.client.post(reverse("work:api_note_categories"), {"action": "add", "name": "Ideas > Books"}).json()
+        books = NoteCategory.objects.get(pk=r["id"])
+        self.assertEqual((books.name, books.parent.name), ("Books", "Ideas"))
+        self.assertEqual([c["path"] for c in r["categories"]], ["Ideas", "Ideas › Books"])
+        self.assertFalse(ExamCategory.objects.exists())                       # the exam tree hasn't got them
+        self.client.post(reverse("work:api_exam_categories"), {"action": "add", "name": "Physics"})
+        self.assertEqual([c["path"] for c in self.client.get(reverse("work:api_exam_categories")).json()["categories"]], ["Physics"])
+        self.assertEqual([c["path"] for c in self.client.get(reverse("work:api_note_categories")).json()["categories"]], ["Ideas", "Ideas › Books"])
+        page = self.client.get(reverse("work:notes"))
+        self.assertEqual([c["name"] for c in page.context["cat_data"]["categories"]], ["Ideas", "Books"])
+        self.assertIn(reverse("work:api_note_categories"), page.context["work_config"]["urls"]["noteCategories"])
+
+    def test_renamed_moved_and_deleted_in_the_notes_tree(self):
+        from apps.trash.models import DeletedItem
+
+        from ..models import ExamCategory, NoteCategory
+
+        a = NoteCategory.objects.create(owner=self.me, name="A")
+        b = NoteCategory.objects.create(owner=self.me, name="B", parent=a)
+        exam_c = ExamCategory.objects.create(owner=self.me, name="Exam")
+        url = reverse("work:api_note_categories")
+        bad = self.client.post(url, {"action": "change", "id": a.pk, "name": "A", "parent": b.pk})
+        self.assertEqual(bad.status_code, 400)                                # not inside itself
+        theirs = NoteCategory.objects.create(owner=User.objects.create_user("x", password=PW), name="Theirs")
+        self.assertEqual(self.client.post(url, {"action": "change", "id": b.pk, "name": "B", "parent": theirs.pk}).status_code, 400)
+        self.assertEqual(self.client.post(url, {"action": "change", "id": theirs.pk, "name": "X"}).status_code, 404)
+        self.assertEqual(self.client.post(url, {"action": "change", "id": 99999, "name": "X"}).status_code, 404)
+        note = Note.objects.create(owner=self.me, title="Kept")
+        note.categories.add(b)
+        r = self.client.post(url, {"action": "delete", "id": a.pk}).json()
+        self.assertEqual(list(NoteCategory.objects.values_list("name", flat=True)), ["Theirs"])
+        self.assertTrue(Note.objects.filter(pk=note.pk).exists() and ExamCategory.objects.filter(pk=exam_c.pk).exists())
+        item = DeletedItem.objects.get(user=self.me)
+        self.assertEqual(item.back_url, reverse("work:notes"))
+        self.client.post(r["undo"])
+        self.assertEqual([c.name for c in Note.objects.get(pk=note.pk).categories.all()], ["B"])
+
+    def test_a_backup_brings_the_notes_tree_back(self):
+        from .. import services
+        from ..models import NoteCategory
+
+        ideas = NoteCategory.objects.create(owner=self.me, name="Ideas")
+        books = NoteCategory.objects.create(owner=self.me, name="Books", parent=ideas)
+        note = Note.objects.create(owner=self.me, title="Read")
+        note.categories.add(books)
+        rows, _files = services.backup_rows(self.me)
+        other = User.objects.create_user("other", password=PW)
+        services.restore(other, rows)
+        mine = Note.objects.get(owner=other, title="Read")
+        self.assertEqual([(c.name, c.parent.name, c.owner_id) for c in mine.categories.all()], [("Books", "Ideas", other.pk)])
+        services.restore(other, rows)                                          # again: the same categories, not copies
+        self.assertEqual(NoteCategory.objects.filter(owner=other).count(), 2)
+
+    def test_a_backup_from_when_notes_used_exam_categories(self):
+        from .. import services
+        from ..models import ExamCategory, NoteCategory
+
+        rows = [
+            {"model": "productivity.examcategory", "pk": 7, "fields": {"owner": 1, "parent": None, "name": "Backend", "created_at": "2026-11-01T00:00:00Z"}},
+            {"model": "productivity.examcategory", "pk": 8, "fields": {"owner": 1, "parent": 7, "name": "Databases", "created_at": "2026-11-01T00:00:00Z"}},
+            {"model": "productivity.note", "pk": 3, "fields": {"owner": 1, "title": "Indexes", "body": "", "categories": [8], "tags": [],
+                                                                "created_at": "2026-11-01T00:00:00Z", "updated_at": "2026-11-01T00:00:00Z"}},
+        ]
+        services.restore(self.me, rows)
+        note = Note.objects.get(owner=self.me, title="Indexes")
+        self.assertEqual([(c.name, c.parent.name) for c in note.categories.all()], [("Databases", "Backend")])
+        self.assertTrue(all(isinstance(c, NoteCategory) for c in note.categories.all()))
+        self.assertEqual(ExamCategory.objects.filter(owner=self.me).count(), 2)       # (the exam ones come back as they were)
+
+
+class NoteCategoriesMigrationTests(TransactionTestCase):
+    """0038: the categories notes were in (exam ones until then) are copied into the notes' own tree."""
+
+    before, after = ("productivity", "0037_note_categories"), ("productivity", "0038_note_categories_apart")
+
+    def migrate(self, target):
+        from django.db import connection
+        from django.db.migrations.executor import MigrationExecutor
+
+        executor = MigrationExecutor(connection)
+        executor.loader.build_graph()
+        executor.migrate([target])
+        return executor.loader.project_state([target]).apps
+
+    def tearDown(self):
+        from django.core.management import call_command
+
+        call_command("migrate", verbosity=0)
+
+    def test_notes_keep_their_categories_and_the_exam_tree_keeps_its_questions(self):
+        old = self.migrate(self.before)
+        User_ = old.get_model("auth", "User")
+        me = User_.objects.create(username="me")
+        Cat, ExamNote_, Subject = old.get_model("productivity", "ExamCategory"), old.get_model("productivity", "ExamNote"), old.get_model("productivity", "ExamSubject")
+        Note_ = old.get_model("productivity", "Note")
+        backend = Cat.objects.create(owner=me, name="Backend")
+        db = Cat.objects.create(owner=me, name="Databases", parent=backend)
+        ideas = Cat.objects.create(owner=me, name="Ideas")                 # only ever held notes
+        books = Cat.objects.create(owner=me, name="Books", parent=ideas)
+        physics = Cat.objects.create(owner=me, name="Physics")             # only questions
+        subject = Subject.objects.create(owner=me, name="S")
+        q = ExamNote_.objects.create(owner=me, subject=subject, question="Q?")
+        q.categories.add(db, physics)
+        n1 = Note_.objects.create(owner=me, title="Indexes")
+        n1.categories.add(db)
+        n2 = Note_.objects.create(owner=me, title="To read")
+        n2.categories.add(books, ideas)
+
+        new = self.migrate(self.after)
+        NoteCat, Note2, Cat2 = new.get_model("productivity", "NoteCategory"), new.get_model("productivity", "Note"), new.get_model("productivity", "ExamCategory")
+        paths = sorted((c.parent.name + " › " if c.parent_id else "") + c.name for c in NoteCat.objects.filter(owner_id=me.pk))
+        self.assertEqual(paths, ["Backend", "Backend › Databases", "Ideas", "Ideas › Books"])
+        self.assertEqual(sorted(c.name for c in Note2.objects.get(pk=n1.pk).categories.all()), ["Databases"])
+        self.assertEqual(sorted(c.name for c in Note2.objects.get(pk=n2.pk).categories.all()), ["Books", "Ideas"])
+        # the exam tree: what holds questions stays; what only held notes has gone over to the notes
+        self.assertEqual(sorted(Cat2.objects.values_list("name", flat=True)), ["Backend", "Databases", "Physics"])

@@ -1193,7 +1193,7 @@ def restore(user, rows, media=None):
     from apps.core.relink import relink
 
     from .exam import category_in
-    from .models import ExamCategory
+    from .models import ExamCategory, NoteCategory
 
     order = {m._meta.model_name: i for i, (m, _lookup) in enumerate(backup_models())}
     models_by_name = {m._meta.model_name: m for m, _lookup in backup_models()}
@@ -1209,6 +1209,18 @@ def restore(user, rows, media=None):
         return len(seen)
 
     rows.sort(key=lambda r: (order[r["model"].split(".", 1)[1]], depth(r)))
+    # a backup from before notes had their own categories: a note's were exam ones, copied into the notes' tree
+    exam_cats = {r.get("pk"): r.get("fields") or {} for r in rows if r["model"] == "productivity.examcategory"}
+    old_style = not any(r["model"] == "productivity.notecategory" for r in rows)
+    copied = {}
+
+    def note_category_from_exam(old):
+        if old not in copied and old in exam_cats:
+            copied[old] = None                      # (a loop in a broken file ends here)
+            parent = note_category_from_exam(exam_cats[old].get("parent"))
+            copied[old] = category_in(user, parent, exam_cats[old].get("name") or "?", NoteCategory)
+        return copied.get(old)
+
     ids, counts = defaultdict(dict), defaultdict(int)
     later = []      # tasks blocked by other tasks: linked once every task exists
     restored = []
@@ -1226,6 +1238,8 @@ def restore(user, rows, media=None):
                 continue
             if f.many_to_many and f.related_model is model:     # task → task (blocked by): after all tasks are in
                 later.append((name, old_pk, f.name, fields.pop(f.name) or []))
+            elif f.many_to_many and name == "note" and f.name == "categories" and old_style:
+                m2m[f.name] = [getattr(note_category_from_exam(v), "pk", None) for v in fields.pop(f.name) or []]
             elif f.many_to_many:
                 m2m[f.name] = [ids[f.related_model._meta.model_name].get(v) for v in fields.pop(f.name) or []]
             elif f.is_relation and f.name != "owner" and fields[f.name] is not None:
@@ -1252,6 +1266,9 @@ def restore(user, rows, media=None):
             continue
         if name == "examcategory":
             ids["examcategory"][old_pk] = category_in(user, ExamCategory.objects.filter(pk=fields.get("parent")).first(), fields["name"]).pk
+            continue
+        if name == "notecategory":             # one with the same name in the same place is the same category
+            ids["notecategory"][old_pk] = category_in(user, NoteCategory.objects.filter(pk=fields.get("parent")).first(), fields["name"], NoteCategory).pk
             continue
         if name == "journalentry" and JournalEntry.objects.filter(owner=user, date=fields.get("date")).exists():
             continue

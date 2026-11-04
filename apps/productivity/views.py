@@ -28,7 +28,7 @@ from .access import can_use, work_required
 from .forms import DeckForm, EntryForm, GoalForm, HabitForm, LearningForm, ProjectForm, SettingsForm, SnippetForm, SprintForm, TagForm, TaskForm
 from .models import (
     ExamSubject,
-    Card, Color, Deck, Diagram, DiagramKind, DiagramVersion, Goal, GoalStatus, Habit, JournalEntry, Language, LearningItem, LearningKind, LearningStatus, LearningUnit, KIND_ICONS, Note, Priority, Project, SavedView, Snippet, Sprint, TaskKind, TaskTemplate,
+    Card, Color, Deck, Diagram, DiagramKind, DiagramVersion, Goal, GoalStatus, Habit, JournalEntry, Language, LearningItem, LearningKind, LearningStatus, LearningUnit, KIND_ICONS, Note, NoteCategory, Priority, Project, SavedView, Snippet, Sprint, TaskKind, TaskTemplate,
     Status, Tag, Task, TimeEntry, WorkSettings, DRAG_KINDS, VISUAL_KINDS,
 )
 
@@ -51,7 +51,7 @@ def _urls():
         "viewSave": r("work:api_view_save"), "viewBase": "/work/api/views/",
         "taskBulk": r("work:api_task_bulk"), "wrapup": r("work:wrapup"),
         "checklist": "/work/api/checklist/", "noteSave": r("work:api_note_save"), "noteBase": "/work/api/notes/",
-        "noteCategories": r("work:api_exam_categories") + "?for=notes", "notesBulk": r("work:api_notes_bulk"),
+        "noteCategories": r("work:api_note_categories"), "notesBulk": r("work:api_notes_bulk"),
         "journal": r("work:api_journal_save"), "focus": r("work:api_focus_log"), "search": r("work:api_search"),
         "today": r("work:today"), "tasks": r("work:tasks"), "board": r("work:tasks") + "?view=board", "projects": r("work:projects"),
         "time": r("work:time"), "focus_page": r("work:focus"), "notes": r("work:notes"), "snippets": r("work:snippets"),
@@ -788,7 +788,7 @@ def notes_view(request, pk=None):
                      "project": str(note.project_id or ""), "updated": int(note.updated_at.timestamp() * 1000),
                      "saved": timezone.localtime(note.updated_at).strftime("%H:%M"), "rev": services.note_rev(note),
                      "categories": list(note.categories.values_list("pk", flat=True))}
-    cat_tree = exam.category_tree(user)
+    cat_tree = exam.category_tree(user, NoteCategory)
     cat_counts = exam.note_category_counts(user, Note.objects.filter(owner=user, is_archived=False, is_template=False))
     note_data.update(cats=cat_tree, catN=cat_counts)
     from django.core.paginator import Paginator

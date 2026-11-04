@@ -308,7 +308,7 @@
         <label class="wn-field">{% icon "tag" %}
           <input x-model.lazy="tags" placeholder="{% translate 'tags: idea, backend…' %}" aria-label="{% translate 'Tags' %}">
         </label>
-        {# its categories: the same tree as exam notes (Backend › Databases), any number, none needed #}
+        {# its categories: the notes’ own tree, apart from the exam one (Ideas › Books), any number, none needed #}
         <span class="wcat-chips wn-cats">
           <template x-for="c in catChips(categories)" :key="c.id">
             <span class="wcat-chip" :title="c.path"><a :href="'{% url 'work:notes' %}?category=' + c.id" x-text="c.name"></a><button type="button" @click="dropNoteCat(c.id)" :aria-label="'{{ _("Take out of this category")|escapejs }}: ' + c.name">{% icon "x" %}</button></span>

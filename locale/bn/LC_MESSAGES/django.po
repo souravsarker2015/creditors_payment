@@ -26283,3 +26283,9 @@ msgstr "একই তালিকা আবার ব্যবহার কর�
 
 msgid "Delete ticked items"
 msgstr "টিক দেওয়াগুলো মুছুন"
+
+msgid "Note category"
+msgstr "নোটের ক্যাটাগরি"
+
+msgid "Note categories"
+msgstr "নোটের ক্যাটাগরি"

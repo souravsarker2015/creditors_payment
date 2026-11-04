@@ -447,16 +447,22 @@ def as_json(note, number=None, today=None):
             "due": is_due(note, today), "dueOn": note.due_on.isoformat() if note.due_on else "", "interval": note.interval}
 
 
-# ── Categories: one tree per person, any number on a question, none needed ──
+# ── Categories: one tree per person for the questions (ExamCategory) and one for the notes
+#    (NoteCategory), any number on each, none needed. Each helper takes the tree's model (the exam one
+#    unless told). ──
 MAX_CATEGORY = 80
 
 
-def category_tree(user):
-    """[{id, parent, name, depth, path, kids}]: each parent before what's inside it, each level by name."""
+def _tree_model(model):
     from .models import ExamCategory
 
+    return model or ExamCategory
+
+
+def category_tree(user, model=None):
+    """[{id, parent, name, depth, path, kids}]: each parent before what's inside it, each level by name."""
     inside = {}
-    for row in ExamCategory.objects.filter(owner=user).values("id", "parent_id", "name"):
+    for row in _tree_model(model).objects.filter(owner=user).values("id", "parent_id", "name"):
         inside.setdefault(row["parent_id"], []).append(row)
     out = []
 
@@ -470,12 +476,10 @@ def category_tree(user):
     return out
 
 
-def branch(user, pk):
+def branch(user, pk, model=None):
     """The category's id and those of everything under it."""
-    from .models import ExamCategory
-
     inside, own = {}, set()
-    for child, parent in ExamCategory.objects.filter(owner=user).values_list("pk", "parent_id"):
+    for child, parent in _tree_model(model).objects.filter(owner=user).values_list("pk", "parent_id"):
         own.add(child)
         inside.setdefault(parent, []).append(child)
     out, todo = set(), [pk] if pk in own else []
@@ -500,23 +504,23 @@ def in_category(qs, user, category):
 
 
 def notes_in_category(qs, user, category):
-    """The same for notes: an id (with what's under it), "none", or None (all)."""
-    from .models import Note
+    """The same for notes, in their own tree: an id (with what's under it), "none", or None (all)."""
+    from .models import Note, NoteCategory
 
     if category == "none":
         return qs.filter(categories__isnull=True)
     if category is None:
         return qs
-    links = Note.categories.through.objects.filter(examcategory_id__in=branch(user, category))
+    links = Note.categories.through.objects.filter(notecategory_id__in=branch(user, category, NoteCategory))
     return qs.filter(pk__in=links.values("note_id"))
 
 
 def note_category_counts(user, notes):
     """How many of these notes each category holds (with what's under it), and "none": how many are in none."""
-    from .models import Note
+    from .models import Note, NoteCategory
 
-    links = list(Note.categories.through.objects.filter(note__in=notes).values_list("note_id", "examcategory_id"))
-    return {**_rolled_up(links, user), "none": notes.count() - len({note for note, _c in links})}
+    links = list(Note.categories.through.objects.filter(note__in=notes).values_list("note_id", "notecategory_id"))
+    return {**_rolled_up(links, user, NoteCategory), "none": notes.count() - len({note for note, _c in links})}
 
 
 def asked_category(value):
@@ -524,11 +528,9 @@ def asked_category(value):
     return value if value == "none" else int(value) if (value or "").isdigit() else None
 
 
-def owned_categories(user, text):
+def owned_categories(user, text, model=None):
     """The person's own categories out of a "3,8,12" sent by a page."""
-    from .models import ExamCategory
-
-    return list(ExamCategory.objects.filter(owner=user, pk__in=[int(i) for i in (text or "").split(",") if i.strip().isdigit()]))
+    return list(_tree_model(model).objects.filter(owner=user, pk__in=[int(i) for i in (text or "").split(",") if i.strip().isdigit()]))
 
 
 def add_to_categories(notes, categories):
@@ -539,11 +541,9 @@ def add_to_categories(notes, categories):
     through.objects.bulk_create([through(examnote_id=n.pk, examcategory_id=c.pk) for n in notes for c in categories], ignore_conflicts=True, batch_size=500)
 
 
-def _rolled_up(links, user):
+def _rolled_up(links, user, model=None):
     """{category id: questions in it or under it}, each question once however many of them it's in."""
-    from .models import ExamCategory
-
-    parents, seen = dict(ExamCategory.objects.filter(owner=user).values_list("pk", "parent_id")), {}
+    parents, seen = dict(_tree_model(model).objects.filter(owner=user).values_list("pk", "parent_id")), {}
     for note, category in links:
         while category and note not in seen.setdefault(category, set()):
             seen[category].add(note)
@@ -565,20 +565,19 @@ def category_counts(subject):
     return {**_rolled_up(links, subject.owner), "none": subject.notes.count() - len({note for note, _c in links})}
 
 
-def add_category(user, parent, name):
+def add_category(user, parent, name, model=None):
     """The category `name` in `parent`, made if it isn't there. "Backend > Databases" goes through both."""
     at = parent
     for part in re.split(r"\s*[>›]\s*", (name or "").strip()):
         if part.strip():
-            at = category_in(user, at, part)
+            at = category_in(user, at, part, model)
     return None if at == parent else at
 
 
-def category_in(user, parent, name):
-    from .models import ExamCategory
-
+def category_in(user, parent, name, model=None):
+    model = _tree_model(model)
     name = name.strip()[:MAX_CATEGORY]
-    return ExamCategory.objects.filter(owner=user, parent=parent, name__iexact=name).first() or ExamCategory.objects.create(owner=user, parent=parent, name=name)
+    return model.objects.filter(owner=user, parent=parent, name__iexact=name).first() or model.objects.create(owner=user, parent=parent, name=name)
 
 
 # ── Spaced repetition: a question you knew comes back later each time (1, 3, 7, 16, 35… days, as

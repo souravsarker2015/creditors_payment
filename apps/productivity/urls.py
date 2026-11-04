@@ -131,6 +131,7 @@ urlpatterns = [
     path("api/checklist/<int:pk>/", api.checklist_item, name="api_checklist_item"),
     path("api/notes/save/", api.note_save, name="api_note_save"),
     path("api/notes/bulk/", api.notes_bulk, name="api_notes_bulk"),
+    path("api/notes/categories/", api.note_categories_api, name="api_note_categories"),
     path("api/notes/<int:pk>/", api.note_action, name="api_note_action"),
     path("api/notes/<int:pk>/get/", api.note_get, name="api_note_get"),
     path("api/notes/embed/", api.note_embed, name="api_note_embed"),

@@ -28,7 +28,7 @@ from .access import work_required
 from .models import (
     ExamSubject,
     Card, ChecklistItem, Color, Deck, Diagram, DiagramKind, DiagramVersion, EntryKind, Goal, GoalStatus, GoalStep, Habit, HabitCheck, JournalEntry, LearningItem, LearningKind, LearningStatus,
-    LearningUnit, Note, NoteVersion, Priority, Project, SavedView, Snippet, Sprint, Status, Task, TaskActivity, TimeEntry, WorkSettings, link_label,
+    LearningUnit, Note, NoteCategory, NoteVersion, Priority, Project, SavedView, Snippet, Sprint, Status, Task, TaskActivity, TimeEntry, WorkSettings, link_label,
 )
 
 
@@ -516,7 +516,7 @@ def note_save(request):
     if "tags" in request.POST:
         note.tags.set(services.tags_named(user, request.POST["tags"].replace(",", " ").split()))
     if "categories" in request.POST:
-        note.categories.set(exam.owned_categories(user, request.POST["categories"]))
+        note.categories.set(exam.owned_categories(user, request.POST["categories"], NoteCategory))
     if "body" in request.POST:          # #tags written in the note are its tags too (and go when they go from the text:
         now = services.hashtags(note.body)     # saving as you type, "#back" must not stay behind "#backend")
         note.tags.add(*services.tags_named(user, now))
@@ -665,15 +665,25 @@ def notes_bulk(request):
     elif action == "archive":
         notes.update(is_archived=request.POST.get("on") != "0", updated_at=timezone.now())
     elif action == "categories":
-        cats = exam.owned_categories(request.user, request.POST.get("categories"))
+        cats = exam.owned_categories(request.user, request.POST.get("categories"), NoteCategory)
         through = Note.categories.through
-        through.objects.bulk_create([through(note_id=n, examcategory_id=c.pk) for n in notes.values_list("pk", flat=True) for c in cats], ignore_conflicts=True)
+        through.objects.bulk_create([through(note_id=n, notecategory_id=c.pk) for n in notes.values_list("pk", flat=True) for c in cats], ignore_conflicts=True)
     elif action == "delete":           # each one to Recently deleted, where it can come back from
         for note in list(notes):
             trash(request.user, note, _("Note: %(title)s") % {"title": note.display_title}, reverse("work:notes"))
     else:
         return bad("action")
     return ok(count=count)
+
+
+@work_required
+def note_categories_api(request):
+    """The notes' own tree of categories (apart from the exam ones), with the same picker: the tree with
+    how many notes each holds, or a change to it."""
+    from .views_exam import category_tree_api
+
+    return category_tree_api(request, NoteCategory, reverse("work:notes"), counts=lambda user: exam.note_category_counts(
+        user, Note.objects.filter(owner=user, is_archived=False, is_template=False)))
 
 
 # ── Habits, journal, focus, entries, snippets ─────────────────────────────

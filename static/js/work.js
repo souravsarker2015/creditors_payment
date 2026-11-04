@@ -1568,7 +1568,7 @@
           return this.inflight;
         },
         get html() { return renderMarkdown(this.body); },
-        /* its categories (the same tree as exam notes): picked in the pop-up, saved with the note */
+        /* its categories (the notes’ own tree, apart from the exam one): picked in the pop-up, saved with the note */
         pickNoteCats: function () { var self = this; this.pickCats(this.categories, function () { self.changed(); }); },
         dropNoteCat: function (id) { this.catRemove(this.categories, id); this.changed(); },
         setCategory: function (id) { location.href = CFG.urls.notes + (id === null ? "" : "?category=" + id); },

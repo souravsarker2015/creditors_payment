@@ -21,7 +21,7 @@ from apps.trash.services import trash
 from . import exam, services
 from .access import work_required
 from .forms import ExamSubjectForm
-from .models import Color, ExamCategory, ExamNote, ExamSubject, Note
+from .models import Color, ExamCategory, ExamNote, ExamSubject
 from .views import render_work
 
 WHICH = ("today", "due", "unknown", "all", "starred", "missed")      # today: to learn, and the ones due again
@@ -406,37 +406,41 @@ def note_versions_api(request, pk):
 
 @work_required
 def categories_api(request):
-    """The person's category tree. Each change answers with the whole tree, for the picker to draw again."""
+    """The person's tree of exam categories. Each change answers with the whole tree, for the picker to draw again."""
+    return category_tree_api(request, ExamCategory, reverse("work:exam"))
+
+
+def category_tree_api(request, model, back_url, counts=None):
+    """A tree of categories (the exam one, or the notes' own: views.note_categories_api) — the tree, or
+    a change to it answered with the whole tree. counts(user): what the page counts in each one."""
     user, action = request.user, request.POST.get("action")
 
     def tree(**more):
-        return JsonResponse({"ok": True, "categories": exam.category_tree(user), **more})
+        return JsonResponse({"ok": True, "categories": exam.category_tree(user, model), **more})
 
     def refuse(text):
         return JsonResponse({"ok": False, "error": text}, status=400)
 
     if request.method != "POST":
-        if request.GET.get("for") == "notes":       # the notes pages count notes, not questions
-            return tree(counts=exam.note_category_counts(user, Note.objects.filter(owner=user, is_archived=False, is_template=False)))
-        return tree()
+        return tree(counts=counts(user)) if counts else tree()
     if action == "add":
-        parent = get_object_or_404(ExamCategory, pk=request.POST["parent"], owner=user) if (request.POST.get("parent") or "").isdigit() else None
-        made = exam.add_category(user, parent, request.POST.get("name"))
+        parent = get_object_or_404(model, pk=request.POST["parent"], owner=user) if (request.POST.get("parent") or "").isdigit() else None
+        made = exam.add_category(user, parent, request.POST.get("name"), model)
         return tree(id=made.pk) if made else refuse(_("Write a name first."))
-    category = get_object_or_404(ExamCategory, pk=request.POST["id"] if (request.POST.get("id") or "").isdigit() else 0, owner=user)
+    category = get_object_or_404(model, pk=request.POST["id"] if (request.POST.get("id") or "").isdigit() else 0, owner=user)
     if action == "change":                   # its name, and what it's inside
         name = (request.POST.get("name") or "").strip()[:exam.MAX_CATEGORY]
         parent_id = int(request.POST["parent"]) if (request.POST.get("parent") or "").isdigit() else None
         if not name:
             return refuse(_("Write a name first."))
-        if parent_id is not None and (parent_id in exam.branch(user, category.pk) or not ExamCategory.objects.filter(owner=user, pk=parent_id).exists()):
+        if parent_id is not None and (parent_id in exam.branch(user, category.pk, model) or not model.objects.filter(owner=user, pk=parent_id).exists()):
             return refuse(_("A category can't go inside itself."))
-        if ExamCategory.objects.filter(owner=user, parent_id=parent_id, name__iexact=name).exclude(pk=category.pk).exists():
+        if model.objects.filter(owner=user, parent_id=parent_id, name__iexact=name).exclude(pk=category.pk).exists():
             return refuse(_("There's already a category with this name here."))
         category.name, category.parent_id = name, parent_id
         category.save(update_fields=["name", "parent"])
         return tree()
-    if action == "delete":                   # what's under it goes too; the questions stay, and it can all come back
-        item = trash(user, category, _("Category: %(name)s") % {"name": category.name}, reverse("work:exam"))
+    if action == "delete":                   # what's under it goes too; what was in it stays, and it can all come back
+        item = trash(user, category, _("Category: %(name)s") % {"name": category.name}, back_url)
         return tree(undo=reverse("trash_restore", args=[item.pk]))
     return refuse("action")
