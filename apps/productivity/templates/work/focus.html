@@ -6,9 +6,9 @@
 {% block work %}
 <div class="wfo" x-data="workFocus({ task: '{{ task.pk|default:'' }}', taskTitle: '{{ task.title|default:''|escapejs }}' })" data-focus-page :data-mode="mode">
   <nav class="seg seg-block wfo-modes" aria-label="{% translate 'Session' %}">
-    <button type="button" class="seg-item" :class="mode === 'focus' && 'is-active'" @click="set('focus')">{% translate "Focus" %}</button>
-    <button type="button" class="seg-item" :class="mode === 'short' && 'is-active'" @click="set('short')">{% translate "Short break" %}</button>
-    <button type="button" class="seg-item" :class="mode === 'long' && 'is-active'" @click="set('long')">{% translate "Long break" %}</button>
+    <button type="button" class="seg-item" :class="mode === 'focus' && 'is-active'" @click="set('focus')">{% translate "Focus" %}<span class="wfo-kept num" x-show="kept('focus')" x-text="kept('focus')" x-cloak></span></button>
+    <button type="button" class="seg-item" :class="mode === 'short' && 'is-active'" @click="set('short')">{% translate "Short break" %}<span class="wfo-kept num" x-show="kept('short')" x-text="kept('short')" x-cloak></span></button>
+    <button type="button" class="seg-item" :class="mode === 'long' && 'is-active'" @click="set('long')">{% translate "Long break" %}<span class="wfo-kept num" x-show="kept('long')" x-text="kept('long')" x-cloak></span></button>
   </nav>
 
   <div class="wfo-ring" :style="'--p:' + pct" role="timer" :aria-label="text">

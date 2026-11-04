@@ -78,7 +78,7 @@
   document.addEventListener("alpine:init", function () {
     /* ── pages of questions from the server: shared by the board and the overview ── */
     function pager(D) {
-      return {
+      return Object.assign(Work.categoryPicker(D.categoriesUrl), {     // (the category picker: static/js/work.js)
         notes: [], next: 1, loading: false, query: "", show: "all", chapter: null, sort: "order", kept: null,
         shows: D.shows || { all: 0, unknown: 0, missed: 0, starred: 0 }, chapters: D.chapters || [],
         cats: D.categories || [], catN: D.categoryN || {}, category: null, catOpen: false, catMode: "pick", catList: [], catThen: null,
@@ -162,106 +162,6 @@
         setChapter: function (name) { this.chapter = name; this.reload(); },
         /* ── categories: the popup (pick any number for a question, or one to show), and the chips ── */
         setCategory: function (id) { this.category = id; this.reload(); },
-        catOf: function (id) { return this.cats.find(function (c) { return c.id === id; }); },
-        catChips: function (ids) { var self = this; return (ids || []).map(function (id) { return self.catOf(id); }).filter(Boolean); },
-        catLabel: function () {
-          if (this.category === null) return t("catAll");
-          if (this.category === "none") return t("catNone");
-          var c = this.catOf(this.category);
-          return c ? c.name : t("catAll");
-        },
-        catBranch: function (id) {       // {id: true} for the category and what's under it
-          var out = {}, cats = this.cats, grew = true;
-          out[id] = true;
-          while (grew) { grew = false; cats.forEach(function (c) { if (out[c.parent] && !out[c.id]) { out[c.id] = true; grew = true; } }); }
-          return out;
-        },
-        catUp: function (ids) {          // these categories and all they're inside, each once
-          var self = this, out = {};
-          ids.forEach(function (id) { for (var c = self.catOf(id); c && !out[c.id]; c = self.catOf(c.parent)) out[c.id] = true; });
-          return Object.keys(out);
-        },
-        catCount: function (c) { return this.catN[c.id] || 0; },
-        catRows: function () {
-          var q = this.catQuery.trim().toLowerCase(), shut = this.catShut, hidden = {};
-          if (q) return this.cats.filter(function (c) { return c.path.toLowerCase().indexOf(q) >= 0; });
-          return this.cats.filter(function (c) {
-            if (hidden[c.parent] || shut[c.parent]) { hidden[c.id] = true; return false; }
-            return true;
-          });
-        },
-        catCanMake: function () {
-          var q = this.catQuery.trim().toLowerCase();
-          return !!q && !this.cats.some(function (c) { return c.name.toLowerCase() === q || c.path.toLowerCase() === q; });
-        },
-        catOpenUp: function () {
-          var self = this;
-          this.catOpen = true; this.catQuery = ""; this.catManage = false; this.catUnder = null; this.catEdit = null;
-          fetch(D.categoriesUrl, { credentials: "same-origin", headers: { Accept: "application/json" } }).then(function (r) { return r.json(); })
-            .then(function (r) { if (r.ok) self.cats = r.categories; }).catch(function () { /* no signal: the ones on this page */ });
-          this.$nextTick(function () { if (self.$refs.catFind && window.matchMedia("(min-width: 640px)").matches) self.$refs.catFind.focus(); });
-        },
-        pickCats: function (list, then) { this.catMode = "pick"; this.catList = list; this.catThen = then || null; this.catOpenUp(); },
-        showCats: function () { this.catMode = "filter"; this.catThen = null; this.catOpenUp(); },
-        catDone: function () { this.catOpen = false; var then = this.catThen; this.catThen = null; if (then) then(); },
-        catRemove: function (list, id) { var i = list.indexOf(id); if (i >= 0) list.splice(i, 1); },
-        catChoose: function (c) {
-          if (this.catMode === "filter") { this.catOpen = false; this.setCategory(c.id); return; }
-          var i = this.catList.indexOf(c.id);
-          if (i >= 0) this.catList.splice(i, 1); else this.catList.push(c.id);
-        },
-        catEnter: function () {
-          if (this.catCanMake()) return this.catMake(this.catQuery, "");
-          var rows = this.catRows();
-          if (this.catQuery.trim() && rows.length) { this.catChoose(rows[0]); this.catQuery = ""; }
-        },
-        /* what changes the tree needs the server: an answer with the new tree, or a word that it didn't happen */
-        catSend: function (fields) {
-          var self = this;
-          return Work.ask(D.categoriesUrl, fields).then(function (r) {
-            if (!r) { toast(t("catOffline"), "warn"); return null; }
-            if (!r.ok) { toast(r.error || t("notSaved"), "warn"); return null; }
-            self.cats = r.categories;
-            return r;
-          });
-        },
-        catMake: function (name, parent) {
-          var self = this;
-          this.catSend({ action: "add", name: name, parent: parent }).then(function (r) {
-            if (!r) return;
-            self.catQuery = ""; self.catUnder = null; self.catNewName = "";
-            if (parent) self.catShut[parent] = false;
-            if (self.catMode === "pick" && self.catList.indexOf(r.id) < 0) self.catList.push(r.id);
-          });
-        },
-        catAddUnder: function (c) { this.catEdit = null; this.catNewName = ""; this.catUnder = c.id; },
-        catStartEdit: function (c) { this.catUnder = null; this.catEdit = { id: c.id, name: c.name, parent: c.parent === null ? "" : String(c.parent) }; },
-        catParents: function (c) {       // where it can go: anywhere but inside itself
-          var mine = this.catBranch(c.id);
-          return this.cats.filter(function (x) { return !mine[x.id]; });
-        },
-        catSaveEdit: function () {
-          var self = this, e = this.catEdit;
-          this.catSend({ action: "change", id: e.id, name: e.name, parent: e.parent }).then(function (r) { if (r) self.catEdit = null; });
-        },
-        catDelete: function (c) {
-          var self = this;
-          FT.ask({ message: t("catDeleteAsk").replace("%(name)s", c.name), danger: true, after: "back" }).then(function (sure) {
-            if (!sure) return;
-            self.catSend({ action: "delete", id: c.id }).then(function (r) {
-              if (!r) return;
-              if (self.category !== null && !self.catOf(self.category) && self.category !== "none") self.category = null;
-              self.catRemove(self.catList, c.id);
-              self.reload();
-              Work.undoable(t("catDeleted"), r.undo, function () { self.catRefresh(); });
-            });
-          });
-        },
-        catRefresh: function () {
-          var self = this;
-          fetch(D.categoriesUrl, { credentials: "same-origin", headers: { Accept: "application/json" } }).then(function (r) { return r.json(); })
-            .then(function (r) { if (r.ok) { self.cats = r.categories; self.reload(); } });
-        },
         withCategory: function (url) {   // a review of what's being shown
           return this.category === null ? url : url + (url.indexOf("?") < 0 ? "?" : "&") + "category=" + this.category;
         },
@@ -290,7 +190,7 @@
             });
           }
         },
-      };
+      });
     }
 
     /* ── a subject's board: cards like Google Keep, a page at a time ── */
@@ -298,7 +198,7 @@
       var D = data("exam-data"), DRAFT = "exam-draft-" + D.subject, EDIT = "exam-edit-" + D.subject, PREFS = "exam-board", prefs = recall(PREFS, {}) || {};
       function blank(keep) { return { question: "", answer: "", chapter: keep ? keep.chapter : "", categories: keep ? keep.categories.slice() : [], color: "", starred: false }; }      // the label and categories stay for the next one
       return Object.assign(pager(D), {
-        D: D, t: t, answers: prefs.answers !== false, composing: false, many: false, draft: blank(), writeView: { add: false, edit: false },
+        D: D, t: t, answers: prefs.answers !== false, composing: false, many: false, draft: blank(), writeView: { add: false, edit: false, read: false },
         paste: "", pasteChapter: "", pasteCats: [], preview: null, checking: false, previewTimer: null, histOpen: false, histLoading: false, versions: [], shown: null,
         selecting: false, picked: {}, moveTo: "", editing: null, edit: {}, editFrom: "", editFirst: null, editState: "saved", editTimer: null, editSending: null, labelsOpen: false,
         init: function () {
@@ -474,7 +374,9 @@
         },
         openEditor: function (q) {
           this.edit = { id: q.id, question: q.question, answer: q.answer, chapter: q.chapter, categories: (q.categories || []).slice(), color: q.color || "", starred: q.starred, known: q.known, number: q.number, subject: D.subject };
-          this.editFrom = JSON.stringify(this.edit); this.editFirst = JSON.parse(this.editFrom); this.editing = q; this.writeView.edit = recall("work-exam-view", false) === true; this.editState = "saved";
+          this.editFrom = JSON.stringify(this.edit); this.editFirst = JSON.parse(this.editFrom); this.editing = q; this.editState = "saved";
+          var seen = recall("work-exam-view", "write"); if (seen === true) seen = "preview"; else if (seen !== "preview" && seen !== "view") seen = "write";
+          this.writeView.edit = seen !== "write"; this.writeView.read = seen === "view";
           var kept = recall(EDIT, null);                  // what wasn't saved last time comes back
           if (kept && kept.id === q.id) {
             this.edit.question = kept.question; this.edit.answer = kept.answer; this.edit.chapter = kept.chapter; this.edit.color = kept.color;
@@ -551,10 +453,11 @@
           });
         },
         /* Write ⇄ Preview for an answer ("add": the new one; "edit": the one open) — the preview can be changed too, a part at a time */
-        answerView: function (which, on) {
+        answerView: function (which, mode) {        // mode: "write", "preview" (click a part to change it) or "view" (just to read); true / false too
+          if (mode === true) mode = "preview"; else if (mode === false) mode = "write";
           if (window.Work && Work.liveDone) Work.liveDone();
-          this.writeView[which] = !!on;
-          if (which === "edit") store("work-exam-view", !!on);
+          this.writeView[which] = mode !== "write";
+          if (which === "edit") { this.writeView.read = mode === "view"; store("work-exam-view", mode); }
         },
         closeEditor: function () {
           if (window.Work && Work.liveDone) Work.liveDone();

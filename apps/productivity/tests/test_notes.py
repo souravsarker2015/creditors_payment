@@ -31,8 +31,8 @@ class NotesBoardTests(TestCase):
         Note.objects.create(owner=self.me, body="Shopping\n- milk\n- **eggs**")
         html = self.client.get(reverse("work:notes")).content.decode()
         self.assertIn(">Shopping</a>", html)
-        # the first line is the title, not said twice; then a line each, ** dropped
-        self.assertIn('<span class="wnc-line">- milk</span><span class="wnc-line">- eggs</span>', html)
+        # the first line is the title, not said twice; then a line each, as a list, ** dropped
+        self.assertIn('<span class="wnc-line" data-kind="li">milk</span><span class="wnc-line" data-kind="li">eggs</span>', html)
         self.assertEqual(html.count(">Shopping<"), 1)
 
     def test_pages_of_forty_for_infinite_scrolling(self):
@@ -87,3 +87,106 @@ class EditInPreviewTests(TestCase):
         page = self.client.get(reverse("work:notes")).content.decode()
         for key in ("liveTurn", "liveBelow", "liveDeleted"):
             self.assertIn(f'"{key}"', page)
+
+
+class NoteShapeAndCategoryTests(TestCase):
+    def setUp(self):
+        self.me = User.objects.create_superuser("me", "me@example.com", PW)
+        self.client.force_login(self.me)
+
+    def test_a_card_keeps_headings_quotes_and_code_apart(self):
+        Note.objects.create(owner=self.me, title="Shape", body="## Plan\n> careful\n1. first\n```\nx = 1\n```")
+        html = self.client.get(reverse("work:notes")).content.decode()
+        for line in ('data-kind="h">Plan<', 'data-kind="q">careful<', 'data-kind="ol">1. first<', 'data-kind="code">x = 1<'):
+            self.assertIn(line, html)
+
+    def test_a_note_goes_in_categories_and_a_category_shows_what_is_inside_it(self):
+        from ..models import ExamCategory
+
+        backend = ExamCategory.objects.create(owner=self.me, name="Backend")
+        db = ExamCategory.objects.create(owner=self.me, name="Databases", parent=backend)
+        other = ExamCategory.objects.create(owner=User.objects.create_user("x", password=PW), name="Theirs")
+        note = Note.objects.create(owner=self.me, title="Indexes")
+        Note.objects.create(owner=self.me, title="Elsewhere")
+        r = self.client.post(reverse("work:api_note_save"), {"id": note.pk, "categories": f"{db.pk},{other.pk}"})
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(list(note.categories.all()), [db])                 # someone else's category is never added
+        shown = self.client.get(reverse("work:notes"), {"category": backend.pk}).context["notes"]
+        self.assertEqual([n.title for n in shown], ["Indexes"])               # the parent shows its child's notes
+        none = self.client.get(reverse("work:notes"), {"category": "none"}).context["notes"]
+        self.assertEqual([n.title for n in none], ["Elsewhere"])
+        counts = self.client.get(reverse("work:api_exam_categories"), {"for": "notes"}).json()["counts"]
+        self.assertEqual((counts[str(backend.pk)], counts[str(db.pk)], counts["none"]), (1, 1, 1))
+
+    def test_a_note_opened_on_the_board_brings_its_categories(self):
+        from ..models import ExamCategory
+
+        c = ExamCategory.objects.create(owner=self.me, name="Ideas")
+        note = Note.objects.create(owner=self.me, title="One")
+        note.categories.add(c)
+        self.assertEqual(self.client.get(reverse("work:api_note_get", args=[note.pk])).json()["categories"], [c.pk])
+
+    def test_the_list_has_an_edit_button_per_note(self):
+        note = Note.objects.create(owner=self.me, title="Listed")
+        html = self.client.get(reverse("work:notes"), {"view": "list"}).content.decode()
+        self.assertIn(reverse("work:note", args=[note.pk]) + "?mode=write", html)
+        self.assertIn(reverse("work:note", args=[note.pk]) + "?mode=view", html)
+
+
+class ManyNotesAtOnceTests(TestCase):
+    """Duplicate, sort, and several cards picked at once (as in Keep)."""
+
+    def setUp(self):
+        self.me = User.objects.create_superuser("me", "me@example.com", PW)
+        self.client.force_login(self.me)
+
+    def bulk(self, *notes, **fields):
+        return self.client.post(reverse("work:api_notes_bulk"), {"ids": ",".join(str(n.pk) for n in notes), **fields})
+
+    def test_duplicate_copies_text_tags_and_categories(self):
+        from ..models import ExamCategory, Tag
+
+        note = Note.objects.create(owner=self.me, title="Plan", body="# Plan", color="amber")
+        note.tags.add(Tag.objects.create(owner=self.me, name="work"))
+        note.categories.add(ExamCategory.objects.create(owner=self.me, name="Ideas"))
+        r = self.client.post(reverse("work:api_note_action", args=[note.pk]), {"action": "duplicate"}).json()
+        copy = Note.objects.get(pk=r["id"])
+        self.assertEqual((copy.title, copy.body, copy.color), ("Plan (copy)", "# Plan", "amber"))
+        self.assertEqual([t.name for t in copy.tags.all()], ["work"])
+        self.assertEqual([c.name for c in copy.categories.all()], ["Ideas"])
+
+    def test_picked_notes_are_pinned_archived_and_filed_together(self):
+        from ..models import ExamCategory
+
+        a, b = Note.objects.create(owner=self.me, title="A"), Note.objects.create(owner=self.me, title="B")
+        self.assertTrue(self.bulk(a, b, action="pin", on="1").json()["ok"])
+        self.assertEqual(Note.objects.filter(is_pinned=True).count(), 2)
+        c = ExamCategory.objects.create(owner=self.me, name="Ideas")
+        self.bulk(a, b, action="categories", categories=str(c.pk))
+        self.bulk(a, action="categories", categories=str(c.pk))         # already in it: no harm
+        self.assertEqual(c.work_notes.count(), 2)
+        self.bulk(a, b, action="archive", on="1")
+        self.assertEqual(Note.objects.filter(is_archived=True).count(), 2)
+
+    def test_picked_notes_go_to_recently_deleted(self):
+        from apps.trash.models import DeletedItem
+
+        a, b = Note.objects.create(owner=self.me, title="A"), Note.objects.create(owner=self.me, title="B")
+        self.bulk(a, b, action="delete")
+        self.assertFalse(Note.objects.exists())
+        self.assertEqual(DeletedItem.objects.filter(user=self.me).count(), 2)
+
+    def test_someone_elses_notes_are_never_touched(self):
+        theirs = Note.objects.create(owner=User.objects.create_user("x", password=PW), title="Theirs")
+        r = self.bulk(theirs, action="delete")
+        self.assertEqual(r.status_code, 400)
+        self.assertTrue(Note.objects.filter(pk=theirs.pk).exists())
+
+    def test_the_board_can_be_sorted(self):
+        Note.objects.create(owner=self.me, title="Banana")
+        Note.objects.create(owner=self.me, title="Apple")
+        pinned = Note.objects.create(owner=self.me, title="Zebra", is_pinned=True)
+        shown = [n.title for n in self.client.get(reverse("work:notes"), {"sort": "title"}).context["notes"]]
+        self.assertEqual(shown, [pinned.title, "Apple", "Banana"])            # pinned stay first
+        shown = [n.title for n in self.client.get(reverse("work:notes"), {"sort": "created"}).context["notes"]]
+        self.assertEqual(shown, ["Zebra", "Apple", "Banana"])

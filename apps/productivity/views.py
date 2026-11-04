@@ -51,6 +51,7 @@ def _urls():
         "viewSave": r("work:api_view_save"), "viewBase": "/work/api/views/",
         "taskBulk": r("work:api_task_bulk"), "wrapup": r("work:wrapup"),
         "checklist": "/work/api/checklist/", "noteSave": r("work:api_note_save"), "noteBase": "/work/api/notes/",
+        "noteCategories": r("work:api_exam_categories") + "?for=notes", "notesBulk": r("work:api_notes_bulk"),
         "journal": r("work:api_journal_save"), "focus": r("work:api_focus_log"), "search": r("work:api_search"),
         "today": r("work:today"), "tasks": r("work:tasks"), "board": r("work:tasks") + "?view=board", "projects": r("work:projects"),
         "time": r("work:time"), "focus_page": r("work:focus"), "notes": r("work:notes"), "snippets": r("work:snippets"),
@@ -78,7 +79,7 @@ def _texts():
         "signedOut": _("You're signed out. What you wrote is kept on this device and is sent once you sign in."), "signIn": _("Sign in"),
         "linksUpdated": ngettext("Links updated in %(n)s note", "Links updated in %(n)s notes", 2), "linksUpdatedOne": ngettext("Links updated in %(n)s note", "Links updated in %(n)s notes", 1), "examMade": ngettext("%(n)s question added.", "%(n)s questions added.", 2), "examMadeOne": ngettext("%(n)s question added.", "%(n)s questions added.", 1), "seeThem": _("See them"), "noteDraftBack": _("Your unsaved writing is back."), "noteUnarchived": _("Back from the archive"),
         "repeatMade": _("Next one added"), "taskDeleted": _("Task deleted"), "noteDeleted": _("Note deleted"),
-        "focusSession": _("Focus session"), "focusDone": _("Focus session done"), "takeBreak": _("Time for a break."),
+        "focusSession": _("Focus session"), "focusKept": _("Focus paused at %(time)s — it waits under Focus."), "backToFocus": _("Back to focus"), "focusDone": _("Focus session done"), "takeBreak": _("Time for a break."),
         "focusSavedLate": _("A focus session finished while you were away — it's in your timesheet."),
         "unblocked": _("Ready to start now:"), "deleteComment": _("Delete this comment?"),
         "removeFile": _("Remove this file? It can't be brought back."), "fileOffline": _("Files need a connection — try again when you're online."),
@@ -91,6 +92,10 @@ def _texts():
         "liveEditing": _("Editing this part — Esc when done"), "liveEdit": _("Edit"), "liveBelow": _("Add below"), "liveTurn": _("Turn into"),
         "liveText": _("Text"), "liveDup": _("Duplicate"), "liveUp": _("Move up"), "liveDown": _("Move down"),
         "liveCopy": _("Copy as Markdown"), "liveDelete": _("Delete"), "liveDeleted": _("Part deleted"),
+        "deletePicked": _("Delete the %(n)s picked notes? You can bring them back from Recently deleted."),
+        "catAll": _("All categories"), "catNone": _("No category"), "catDeleted": _("Category deleted"),
+        "catOffline": _("Adding or changing a category needs a connection."),
+        "catDeleteAsk": _("Delete “%(name)s” and everything inside it? The notes and questions stay. You can bring it back from Recently deleted."),
         "timerStarted": _("Timer started"), "timerStopped": _("Timer stopped"), "leftOffAt": _("You left off:"),
         "slash": {      # "/" in a Markdown box (static/js/writing.js)
             "h1": _("Heading 1"), "h2": _("Heading 2"), "h3": _("Heading 3"), "todo": _("To-do"), "bullet": _("Bulleted list"),
@@ -727,6 +732,9 @@ NOTE_TEMPLATES = {   # key: (title, Markdown body, tags)
 }
 
 
+NOTE_SORTS = {"created": ("-created_at",), "title": ("title", "-updated_at"), "oldest": ("updated_at",)}
+
+
 @work_required
 def notes_view(request, pk=None):
     user = request.user
@@ -742,8 +750,14 @@ def notes_view(request, pk=None):
     project = request.GET.get("project", "")
     if project.isdigit():
         notes = notes.filter(project_id=int(project))
+    category = exam.asked_category(request.GET.get("category"))          # one category, with the ones inside it
+    notes = exam.notes_in_category(notes, user, category).prefetch_related("categories")
+    sort = request.GET.get("sort", "")             # pinned first, then the latest change (or as asked)
+    if sort in NOTE_SORTS:
+        notes = notes.order_by("-is_pinned", *NOTE_SORTS[sort])
     note = get_object_or_404(Note, pk=pk, owner=user) if pk else None
-    note_data = {"id": None, "title": "", "body": "", "tags": "", "project": "", "updated": 0, "saved": ""}
+    note_data = {"id": None, "title": "", "body": "", "tags": "", "project": "", "updated": 0, "saved": "",
+                 "categories": [category] if isinstance(category, int) else []}
     template = NOTE_TEMPLATES.get(request.GET.get("template", "")) if not note else None
     own = (Note.objects.filter(owner=user, is_template=True, pk=request.GET["from"]).first()
            if not note and request.GET.get("from", "").isdigit() else None)
@@ -758,7 +772,11 @@ def notes_view(request, pk=None):
     if note:
         note_data = {"id": note.pk, "title": note.title, "body": services.one_line_end(note.body), "tags": " ".join(note.tags.values_list("name", flat=True)),
                      "project": str(note.project_id or ""), "updated": int(note.updated_at.timestamp() * 1000),
-                     "saved": timezone.localtime(note.updated_at).strftime("%H:%M"), "rev": services.note_rev(note)}
+                     "saved": timezone.localtime(note.updated_at).strftime("%H:%M"), "rev": services.note_rev(note),
+                     "categories": list(note.categories.values_list("pk", flat=True))}
+    cat_tree = exam.category_tree(user)
+    cat_counts = exam.note_category_counts(user, Note.objects.filter(owner=user, is_archived=False, is_template=False))
+    note_data.update(cats=cat_tree, catN=cat_counts)
     from django.core.paginator import Paginator
 
     # Nothing open: the notes as a board of cards (like Keep), unless the list was asked for.
@@ -768,7 +786,9 @@ def notes_view(request, pk=None):
     keep.pop("page", None)
     return render_work(request, "work/notes.html", {
         "note_data": note_data, "board": board, "page_obj": page, "base_query_string": keep.urlencode(),
-        "pagination_window": [], "colors": Color.choices,
+        "pagination_window": [], "colors": Color.choices, "category": category, "sort": sort if sort in NOTE_SORTS else "",
+        "cat_data": {"categories": cat_tree, "counts": cat_counts, "category": category,
+                     "label": next((c["path"] for c in cat_tree if c["id"] == category), "")},
         "notes": page.object_list, "total": page.paginator.count, "note": note, "q": q, "tag": tag, "archived": archived, "project": project,
         "subjects": ExamSubject.objects.filter(owner=user).only("pk", "name") if not board else [],
         "tags": Tag.objects.filter(owner=user, notes__isnull=False).distinct(),

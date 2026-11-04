@@ -163,16 +163,31 @@ def note_card_lines(note, length=420):
     skip = None
     if not (note.title or "").strip():        # the first line is the card's title
         skip = next((n for n, line in enumerate(lines) if line.strip()), None)
-    out, used = [], 0
+    out, used, code = [], 0, False
     for n, line in enumerate(lines):
-        if n == skip or FENCE.match(line):
+        if FENCE.match(line):
+            code = not code
             continue
-        if n in todos:
+        if n == skip:
+            continue
+        if code:                              # a line of a code block: as it is, in a code font
+            row = {"todo": False, "kind": "code", "text": line.rstrip()}
+        elif n in todos:
             m = CHECK_LINE.match(line)
             text = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", line[m.end():]).strip()     # a task link: just its words
             row = {"todo": True, "done": m.group(2) != " ", "i": todos[n], "text": re.sub(r"[*_`]", "", text)}
-        else:
-            row = {"todo": False, "text": re.sub(r"^\s{0,3}(#{1,6}\s+|>\s?)|[*_`]|==|!\[[^\]]*\]\([^)]*\)", "", line)}
+        else:                                 # the note's shape kept: a heading bold, a list as a list, a quote as a quote
+            kind, rest = "", line
+            if (m := re.match(r"^\s{0,3}#{1,6}\s+", line)):
+                kind, rest = "h", line[m.end():]
+            elif (m := re.match(r"^\s*[-*+]\s+", line)):
+                kind, rest = "li", line[m.end():]
+            elif (m := re.match(r"^\s*(\d+)[.)]\s+", line)):
+                kind, rest = "ol", m.group(1) + ". " + line[m.end():]
+            elif (m := re.match(r"^\s{0,3}>\s?", line)) and line.strip():
+                kind, rest = "q", line[m.end():]
+            rest = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", re.sub(r"!\[[^\]]*\]\([^)]*\)", "", rest))
+            row = {"todo": False, "kind": kind, "text": re.sub(r"[*_`]|==", "", rest)}
         if not row["todo"] and not row["text"].strip() and (not out or not out[-1]["text"].strip()):
             continue                          # no blank lines at the top, or two in a row
         if used + len(row["text"]) > length:

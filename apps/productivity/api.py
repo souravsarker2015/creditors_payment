@@ -515,6 +515,8 @@ def note_save(request):
     note.save()
     if "tags" in request.POST:
         note.tags.set(services.tags_named(user, request.POST["tags"].replace(",", " ").split()))
+    if "categories" in request.POST:
+        note.categories.set(exam.owned_categories(user, request.POST["categories"]))
     if "body" in request.POST:          # #tags written in the note are its tags too (and go when they go from the text:
         now = services.hashtags(note.body)     # saving as you type, "#back" must not stay behind "#backend")
         note.tags.add(*services.tags_named(user, now))
@@ -539,6 +541,7 @@ def note_get(request, pk):
     note = get_object_or_404(Note, pk=pk, owner=request.user)
     return ok(id=note.pk, title=note.title, body=services.one_line_end(note.body), color=note.color, pinned=note.is_pinned, archived=note.is_archived,
               tags=" ".join(note.tags.values_list("name", flat=True)), url=reverse("work:note", args=[note.pk]),
+              categories=list(note.categories.values_list("pk", flat=True)),
               updated=int(note.updated_at.timestamp() * 1000), rev=services.note_rev(note))
 
 
@@ -632,6 +635,12 @@ def note_action(request, pk):
     elif action == "forget":
         NoteVersion.objects.filter(pk=request.POST.get("version") or 0, note=note).delete()
         return ok()
+    elif action == "duplicate":        # a copy to start from: the same text, tags, categories, project and colour
+        copy = Note.objects.create(owner=request.user, title=(_("%(title)s (copy)") % {"title": note.title})[:200] if note.title else "",
+                                   body=note.body, project=note.project, color=note.color)
+        copy.tags.set(note.tags.all())
+        copy.categories.set(note.categories.all())
+        return ok(id=copy.pk, url=reverse("work:note", args=[copy.pk]))
     elif action == "to_task":
         task = Task.objects.create(owner=request.user, title=note.display_title[:300], notes=note.body, project=note.project,
                                    order=services.next_order(request.user, Status.TODO))
@@ -640,6 +649,31 @@ def note_action(request, pk):
     note.save(update_fields=["is_pinned", "is_archived", "color", "updated_at"])
     return ok(pinned=note.is_pinned, archived=note.is_archived, color=note.color,
               card=_note_card(request, note) if request.POST.get("card") == "1" else "")
+
+
+@work_required
+@require_POST
+def notes_bulk(request):
+    """Several cards picked on the notes board (as in Keep): pinned, unpinned, put in categories, archived or deleted at once."""
+    ids = [int(i) for i in request.POST.get("ids", "").split(",") if i.strip().isdigit()][:500]
+    notes = Note.objects.filter(owner=request.user, pk__in=ids)
+    action, count = request.POST.get("action"), notes.count()
+    if not count:
+        return bad(_("Pick some notes first."))
+    if action == "pin":
+        notes.update(is_pinned=request.POST.get("on") != "0", updated_at=timezone.now())
+    elif action == "archive":
+        notes.update(is_archived=request.POST.get("on") != "0", updated_at=timezone.now())
+    elif action == "categories":
+        cats = exam.owned_categories(request.user, request.POST.get("categories"))
+        through = Note.categories.through
+        through.objects.bulk_create([through(note_id=n, examcategory_id=c.pk) for n in notes.values_list("pk", flat=True) for c in cats], ignore_conflicts=True)
+    elif action == "delete":           # each one to Recently deleted, where it can come back from
+        for note in list(notes):
+            trash(request.user, note, _("Note: %(title)s") % {"title": note.display_title}, reverse("work:notes"))
+    else:
+        return bad("action")
+    return ok(count=count)
 
 
 # ── Habits, journal, focus, entries, snippets ─────────────────────────────

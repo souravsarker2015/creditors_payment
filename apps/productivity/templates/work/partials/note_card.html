@@ -1,14 +1,15 @@
-{% load i18n work %}{% comment %}One note on the notes board (like a Keep card): tick its to-dos, pin, colour, archive and delete right on it; a click opens it to edit on the board.{% endcomment %}
+{% load i18n work %}{% comment %}One note on the notes board (like a Keep card): tick its to-dos, pin, colour, archive and delete right on it; a click opens it to read on the board, the pencil to write in it.{% endcomment %}
 <article class="wkc wnc" data-note-card="{{ n.pk }}"{% if n.is_pinned %} data-pinned{% endif %} x-data="noteCard({{ n.pk }}, {{ n.is_pinned|yesno:'true,false' }}, '{{ n.color }}')" x-show="!gone" :data-color="color || null"{% if n.color %} data-color="{{ n.color }}"{% endif %}
          @click="go($event)" data-url="{% url 'work:note' n.pk %}">
   <div class="wkc-top">
+    <button type="button" class="wnc-pick" @click.stop="$dispatch('note-pick', { id: id })" aria-pressed="false" aria-label="{% translate 'Pick this note' %}" data-tip="{% translate 'Pick it — then others — to do something with them all' %}">{% icon "check" %}</button>
     {% if n.project %}<span class="wkc-label"><span class="wt-dot" data-color="{{ n.project.color }}"></span> {{ n.project.name }}</span>{% endif %}
     <span class="spacer"></span>
     <button type="button" class="wkc-btn wnc-pin" :class="pinned && 'is-on'" @click.stop="pin()" :aria-pressed="pinned.toString()" aria-label="{% translate 'Pin to top' %}" data-tip="{% translate 'Pin to top' %}">{% icon "pin" %}</button>
   </div>
   <a href="{% url 'work:note' n.pk %}" class="wnc-title">{{ n.display_title }}</a>
-  {% with lines=n|note_card_lines %}{% if lines %}<div class="wnc-body">{% for ln in lines %}{% if ln.todo %}<button type="button" class="wnc-todo{% if ln.done %} is-done{% endif %}" role="checkbox" aria-checked="{{ ln.done|yesno:'true,false' }}" @click.stop="tick({{ ln.i }}, $el)"><span class="wnc-box" aria-hidden="true">{% icon "check" %}</span><span class="wnc-todo-text">{{ ln.text }}</span></button>{% else %}<span class="wnc-line">{{ ln.text }}</span>{% endif %}{% endfor %}</div>{% endif %}{% endwith %}
-  {% if n.tags.all %}<p class="wnc-tags">{% for tg in n.tags.all %}<span>#{{ tg.name }}</span>{% endfor %}</p>{% endif %}
+  {% with lines=n|note_card_lines %}{% if lines %}<div class="wnc-body">{% for ln in lines %}{% if ln.todo %}<button type="button" class="wnc-todo{% if ln.done %} is-done{% endif %}" role="checkbox" aria-checked="{{ ln.done|yesno:'true,false' }}" @click.stop="tick({{ ln.i }}, $el)"><span class="wnc-box" aria-hidden="true">{% icon "check" %}</span><span class="wnc-todo-text">{{ ln.text }}</span></button>{% else %}<span class="wnc-line"{% if ln.kind %} data-kind="{{ ln.kind }}"{% endif %}>{{ ln.text }}</span>{% endif %}{% endfor %}</div>{% endif %}{% endwith %}
+  {% if n.tags.all or n.categories.all %}<p class="wnc-tags">{% for c in n.categories.all %}<a href="?category={{ c.pk }}" class="wnc-cat" @click.stop>{% icon "folder" %}{{ c.name }}</a>{% endfor %}{% for tg in n.tags.all %}<span>#{{ tg.name }}</span>{% endfor %}</p>{% endif %}
   <div class="wkc-foot">
     <div class="wkc-palette" x-data="{ open: false }" @click.outside="open = false">
       <button type="button" class="wkc-btn" @click.stop="open = !open" aria-label="{% translate 'Colour' %}" data-tip="{% translate 'Colour' %}">{% icon "palette" %}</button>
@@ -17,6 +18,7 @@
         {% for v, l in colors %}<button type="button" class="wkc-swatch" data-color="{{ v }}" :class="color === '{{ v }}' && 'is-on'" @click="paint('{{ v }}'); open = false" aria-label="{{ l }}"></button>{% endfor %}
       </div>
     </div>
+    <button type="button" class="wkc-btn" @click.stop="$dispatch('note-open', { id: id, mode: 'write' })" aria-label="{% translate 'Edit' %}" data-tip="{% translate 'Edit' %}">{% icon "edit" %}</button>
     <button type="button" class="wkc-btn" @click.stop="act('archive')" aria-label="{% if n.is_archived %}{% translate 'Unarchive' %}{% else %}{% translate 'Archive' %}{% endif %}" data-tip="{% if n.is_archived %}{% translate 'Unarchive' %}{% else %}{% translate 'Archive' %}{% endif %}">{% icon "archive" %}</button>
     <button type="button" class="wkc-btn is-danger" @click.stop="act('delete')" aria-label="{% translate 'Delete' %}" data-tip="{% translate 'Delete' %}">{% icon "trash" %}</button>
     <span class="spacer"></span>

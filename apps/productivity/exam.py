@@ -499,6 +499,26 @@ def in_category(qs, user, category):
     return qs.filter(pk__in=links.values("examnote_id"))
 
 
+def notes_in_category(qs, user, category):
+    """The same for notes: an id (with what's under it), "none", or None (all)."""
+    from .models import Note
+
+    if category == "none":
+        return qs.filter(categories__isnull=True)
+    if category is None:
+        return qs
+    links = Note.categories.through.objects.filter(examcategory_id__in=branch(user, category))
+    return qs.filter(pk__in=links.values("note_id"))
+
+
+def note_category_counts(user, notes):
+    """How many of these notes each category holds (with what's under it), and "none": how many are in none."""
+    from .models import Note
+
+    links = list(Note.categories.through.objects.filter(note__in=notes).values_list("note_id", "examcategory_id"))
+    return {**_rolled_up(links, user), "none": notes.count() - len({note for note, _c in links})}
+
+
 def asked_category(value):
     """The ?category= of a page: an id, "none", or None for anything else."""
     return value if value == "none" else int(value) if (value or "").isdigit() else None

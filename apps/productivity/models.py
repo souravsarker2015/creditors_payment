@@ -405,6 +405,8 @@ class Note(models.Model):
     body = models.TextField(_("Note"), blank=True)
     project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True, blank=True, related_name="notes", verbose_name=_("Project"))
     tags = models.ManyToManyField(Tag, blank=True, related_name="notes", verbose_name=_("Tags"))
+    # the same tree of categories as exam notes (ExamCategory): Backend › Databases, any number, none needed
+    categories = models.ManyToManyField("ExamCategory", blank=True, related_name="work_notes", verbose_name=_("Categories"))
     is_pinned = models.BooleanField(_("Pinned"), default=False)
     is_archived = models.BooleanField(_("Archived"), default=False)
     is_template = models.BooleanField(_("A template"), default=False, help_text="Offered under Template → Your templates; not in the notes lists.")
@@ -1254,9 +1256,10 @@ class ExamSubject(models.Model):
 
 
 class ExamCategory(models.Model):
-    """A person's own tree of categories, shared by all their subjects (Backend › Databases › Indexing).
-    Where a chapter is the one place a question has in a subject's order, a question can be in any number
-    of these, or none; a category's questions are also those of the categories under it (exam.branch)."""
+    """A person's own tree of categories, shared by all their subjects and their notes (Backend › Databases ›
+    Indexing). Where a chapter is the one place a question has in a subject's order, a question or a note can be
+    in any number of these, or none; a category's questions and notes are also those of the categories under it
+    (exam.branch)."""
     owner = models.ForeignKey(**OWNER)
     parent = models.ForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="children", verbose_name=_("Inside"))
     name = models.CharField(_("Name"), max_length=80)

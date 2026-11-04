@@ -24,9 +24,12 @@
   document.addEventListener("alpine:init", function () {
     Alpine.data("noteBoard", function () {
       var DRAFT = Work.noteDraftKey("quick");
-      return {
+      var CATS = JSON.parse((d.getElementById("note-cats") || {}).textContent || "{}");
+      return Work.withCategories({
         open: false, title: "", body: "", color: "", pinned: false, saving: false,
-        ed: null, edPreview: false, edState: "saved", edTimer: null, edSending: null, edAgain: false, edSaved: "", edTitle: "", finding: null,
+        cats: CATS.categories || [], catN: CATS.counts || {}, category: CATS.category === undefined ? null : CATS.category,
+        picked: [],
+        ed: null, edPreview: false, edRead: false, edState: "saved", edTimer: null, edSending: null, edAgain: false, edSaved: "", edTitle: "", finding: null,
         init: function () {
           var self = this, older = Work.recall("work-note-quick", null);
           if (older) { Work.store(DRAFT, older); Work.store("work-note-quick", null); }      // (kept for everyone on this browser until now)
@@ -34,7 +37,7 @@
           if (saved && (saved.title || saved.body)) { Object.assign(this, saved); this.open = true; }
           ["title", "body", "color", "pinned"].forEach(function (k) { self.$watch(k, function () { self.keep(); }); });
           this.$watch("ed", function () { self.edChanged(); }, { deep: true });
-          d.addEventListener("note-open", function (e) { self.openNote(e.detail.id); });
+          d.addEventListener("note-open", function (e) { self.openNote(e.detail.id, e.detail.mode); });
           d.addEventListener("work:synced", function (e) {            // written offline, and it's there now
             if (!self.ed || e.detail.same !== "note:" + self.ed.id) return;
             self.ed.rev = e.detail.rev || "";
@@ -60,7 +63,9 @@
           var self = this;
           if (this.saving || !(this.title.trim() || this.body.trim())) return;
           this.saving = true;
-          Work.api(urls().noteSave, { title: this.title.trim(), body: this.body, color: this.color, pinned: this.pinned ? "1" : "", card: "1" }).then(function (r) {
+          // showing one category: a quick note goes into it (as Keep does with a label)
+          Work.api(urls().noteSave, { title: this.title.trim(), body: this.body, color: this.color, pinned: this.pinned ? "1" : "", card: "1",
+                                      categories: typeof this.category === "number" ? String(this.category) : "" }).then(function (r) {
             self.saving = false;
             if (!r || !r.ok) { if (!(r && r.queued)) Work.toast(t("notSaved", "Not saved."), "warn"); return; }
             if (r.card) self.place(fromHTML(r.card), self.pinned);
@@ -121,7 +126,7 @@
         },
 
         /* ── a note opened over the board ── */
-        openNote: function (id) {
+        openNote: function (id, mode) {
           var self = this;
           this.flushNote();
           fetch(urls().noteBase + id + "/get/", { credentials: "same-origin", headers: { Accept: "application/json" } })
@@ -129,8 +134,11 @@
             .then(function (n) {
               if (!n || !n.ok) { location.href = (urls().notes || "/work/notes/") + id + "/"; return; }
               self.edSaved = JSON.stringify([n.title, n.body]); self.edTitle = n.title;
-              self.ed = { id: n.id, title: n.title, body: n.body, color: n.color, pinned: n.pinned, url: n.url, archived: n.archived, rev: n.rev };
-              self.edState = "saved"; self.edPreview = Work.recall("work-board-view", false) === true;      // as notes were last read here
+              self.ed = { id: n.id, title: n.title, body: n.body, color: n.color, pinned: n.pinned, url: n.url, archived: n.archived, rev: n.rev, categories: n.categories || [] };
+              // a card's Edit button: Write; a click on the card: View; otherwise as notes were last read here
+              var seen = mode || Work.recall("work-board-view", "write");
+              if (seen === true) seen = "preview"; else if (seen === false) seen = "write";
+              self.edState = "saved"; self.edPreview = seen === "preview" || seen === "view"; self.edRead = seen === "view";
               var draft = Work.recall(Work.noteDraftKey(n.id), null);      // what wasn't saved last time comes back, and is saved now
               if (draft && draft.at > n.updated && (draft.title !== n.title || draft.body !== n.body)) {
                 self.ed.title = draft.title; self.ed.body = draft.body;
@@ -192,11 +200,48 @@
           var old = cardOf(id);
           if (old && html) old.replaceWith(fromHTML(html));
         },
-        edView: function (on) {
+        edView: function (mode) {          // "write", "preview" (click a part to change it) or "view" (just to read)
+          if (mode === true) mode = "preview"; else if (mode === false) mode = "write";
           Work.liveDone();
-          this.edPreview = !!on; Work.store("work-board-view", this.edPreview);
+          this.edPreview = mode !== "write"; this.edRead = mode === "view"; Work.store("work-board-view", mode);
           var self = this;
-          if (!on) this.$nextTick(function () { if (self.$refs.edBody) self.$refs.edBody.focus(); });
+          if (mode === "write") this.$nextTick(function () { if (self.$refs.edBody) self.$refs.edBody.focus(); });
+        },
+        /* several cards picked (the round tick, as in Keep): pin, file, archive or delete them all at once */
+        togglePick: function (id) {
+          var i = this.picked.indexOf(id);
+          if (i >= 0) this.picked.splice(i, 1); else this.picked.push(id);
+          var card = cardOf(id), on = i < 0;
+          if (card) { card.classList.toggle("is-picked", on); var b = card.querySelector(".wnc-pick"); if (b) b.setAttribute("aria-pressed", String(on)); }
+        },
+        unmark: function () {
+          d.querySelectorAll(".wnc.is-picked").forEach(function (c) { c.classList.remove("is-picked"); var b = c.querySelector(".wnc-pick"); if (b) b.setAttribute("aria-pressed", "false"); });
+        },
+        bulk: function (action, on, extra) {
+          var self = this, ids = this.picked.slice();
+          if (!ids.length) return;
+          var go = function () {
+            Work.api(urls().notesBulk, Object.assign({ ids: ids.join(","), action: action, on: on || "" }, extra || {})).then(function (r) {
+              if (!r || !r.ok) { if (!(r && r.queued)) Work.toast((r && r.error) || t("notSaved", "Not saved."), "warn"); return; }
+              self.picked = []; location.reload();
+            });
+          };
+          if (action !== "delete") return go();
+          FT.ask({ message: t("deletePicked", "Delete the %(n)s picked notes? You can bring them back from Recently deleted.").replace("%(n)s", ids.length), danger: true, after: "back" })
+            .then(function (sure) { if (sure) go(); });
+        },
+        bulkCats: function () {
+          var self = this, list = [];
+          this.pickCats(list, function () { if (list.length) self.bulk("categories", "", { categories: list.join(",") }); });
+        },
+        /* categories: the board shows one (with what's inside it); an open note's are picked in the pop-up */
+        setCategory: function (id) { location.href = urls().notes + (id === null ? "" : "?category=" + id); },
+        reload: function () {},
+        pickEdCats: function () { var self = this; this.pickCats(this.ed.categories, function () { self.saveEdCats(); }); },
+        dropEdCat: function (id) { this.catRemove(this.ed.categories, id); this.saveEdCats(); },
+        saveEdCats: function () {
+          var self = this, n = this.ed; if (!n) return;
+          Work.api(urls().noteSave, { id: n.id, categories: n.categories.join(","), card: "1" }).then(function (r) { if (r && r.ok) self.swap(n.id, r.card); });
         },
         closeNote: function () {
           var id = this.ed && this.ed.id;
@@ -235,7 +280,7 @@
             else Work.toast(r.archived ? t("noteArchived", "Archived") : t("noteUnarchived", "Back from the archive"), "good");
           });
         },
-      };
+      }, urls().noteCategories);
     });
 
     Alpine.data("noteCard", function (id, pinned, color) {
@@ -248,7 +293,8 @@
           if (link && !link.classList.contains("wnc-title")) return;
           if (e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1) { if (!link) location.href = this.$el.getAttribute("data-url"); return; }
           e.preventDefault();
-          this.$dispatch("note-open", { id: this.id });
+          if (this.$root.closest(".wnb.is-picking")) { this.$dispatch("note-pick", { id: this.id }); return; }     // picking: a click picks
+          this.$dispatch("note-open", { id: this.id, mode: "view" });
         },
         // a to-do on the card: ticked here (and its task, if it became one)
         tick: function (index, el) {

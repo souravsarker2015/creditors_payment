@@ -26159,3 +26159,58 @@ msgstr "প্রিভিউ — যেকোনো অংশে ক্লি�
 msgctxt "side by side"
 msgid "Split"
 msgstr "পাশাপাশি"
+
+msgid "Focus paused at %(time)s — it waits under Focus."
+msgstr "ফোকাস %(time)s-এ থেমে আছে — Focus-এ ফিরে গেলে সেখান থেকেই চলবে।"
+
+msgid "Back to focus"
+msgstr "ফোকাসে ফিরুন"
+
+msgid "Delete the %(n)s picked notes? You can bring them back from Recently deleted."
+msgstr "বাছাই করা %(n)sটি নোট মুছবেন? ‘সম্প্রতি মুছে ফেলা’ থেকে ফিরিয়ে আনতে পারবেন।"
+
+msgid "Delete “%(name)s” and everything inside it? The notes and questions stay. You can bring it back from Recently deleted."
+msgstr "“%(name)s” আর এর ভেতরের সবকিছু মুছবেন? নোট ও প্রশ্নগুলো থাকবে। ‘সম্প্রতি মুছে ফেলা’ থেকে ফিরিয়ে আনতে পারবেন।"
+
+msgid "Category: %(name)s"
+msgstr "ক্যাটাগরি: %(name)s"
+
+msgid "Just read it — a stray click changes nothing (to-dos can still be ticked)"
+msgstr "শুধু পড়ুন — ভুল ক্লিকে কিছু বদলাবে না (করণীয়তে টিক দেওয়া যাবে)"
+
+msgid "Last edited"
+msgstr "সর্বশেষ বদলানো"
+
+msgid "Not touched for longest"
+msgstr "অনেক দিন ধরে হাত পড়েনি"
+
+msgid "Title A–Z"
+msgstr "শিরোনাম অনুযায়ী (A–Z)"
+
+msgid "Picked notes"
+msgstr "বাছাই করা নোট"
+
+msgid "Clear the choice"
+msgstr "বাছাই বাদ দিন"
+
+msgid "Clear the choice (Esc)"
+msgstr "বাছাই বাদ দিন (Esc)"
+
+msgid "Pin"
+msgstr "পিন করুন"
+
+msgid "Pick this note"
+msgstr "এই নোটটি বাছুন"
+
+msgid "Pick it — then others — to do something with them all"
+msgstr "এটি বাছুন — তারপর আরও — সবগুলোর সাথে একসাথে কিছু করতে"
+
+msgid "A copy to start from: the same text, tags and categories"
+msgstr "শুরু করার জন্য একটি কপি: একই লেখা, ট্যাগ ও ক্যাটাগরি"
+
+msgid "Pick some notes first."
+msgstr "আগে কয়েকটি নোট বাছুন।"
+
+msgctxt "read only"
+msgid "View"
+msgstr "পড়ুন"

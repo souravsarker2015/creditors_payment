@@ -21,7 +21,7 @@ from apps.trash.services import trash
 from . import exam, services
 from .access import work_required
 from .forms import ExamSubjectForm
-from .models import Color, ExamCategory, ExamNote, ExamSubject
+from .models import Color, ExamCategory, ExamNote, ExamSubject, Note
 from .views import render_work
 
 WHICH = ("today", "due", "unknown", "all", "starred", "missed")      # today: to learn, and the ones due again
@@ -416,6 +416,8 @@ def categories_api(request):
         return JsonResponse({"ok": False, "error": text}, status=400)
 
     if request.method != "POST":
+        if request.GET.get("for") == "notes":       # the notes pages count notes, not questions
+            return tree(counts=exam.note_category_counts(user, Note.objects.filter(owner=user, is_archived=False, is_template=False)))
         return tree()
     if action == "add":
         parent = get_object_or_404(ExamCategory, pk=request.POST["parent"], owner=user) if (request.POST.get("parent") or "").isdigit() else None
@@ -435,6 +437,6 @@ def categories_api(request):
         category.save(update_fields=["name", "parent"])
         return tree()
     if action == "delete":                   # what's under it goes too; the questions stay, and it can all come back
-        item = trash(user, category, _("Exam category: %(name)s") % {"name": category.name}, reverse("work:exam"))
+        item = trash(user, category, _("Category: %(name)s") % {"name": category.name}, reverse("work:exam"))
         return tree(undo=reverse("trash_restore", args=[item.pk]))
     return refuse("action")

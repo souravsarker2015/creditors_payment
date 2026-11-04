@@ -419,8 +419,24 @@
       save(); title();
     }
     function pause() { S = load(); if (!S.running) return; S.left = left(); S.running = false; save(); title(); }
-    function reset() { S = load(); S.running = false; S.startedAt = 0; S.left = total(); save(); title(); }
-    function setMode(mode) { S = load(); S.mode = mode; S.running = false; S.startedAt = 0; S.left = total(); save(); title(); }
+    function reset() { S = load(); S.running = false; S.startedAt = 0; S.left = total(); if (S.kept) delete S.kept[S.mode]; save(); title(); }
+    /* Focus, short break, long break: switching never throws time away. The one left keeps its time (its tab shows
+       it) and carries on from there when you come back; if it was running, the one switched to starts at once. */
+    function setMode(mode) {
+      S = load();
+      if (mode === S.mode) return;
+      var was = S.mode, wasRunning = S.running, nowLeft = left();
+      S.kept = S.kept || {};
+      if (nowLeft > 0 && nowLeft < total() - 1) S.kept[was] = { left: nowLeft, startedAt: S.startedAt }; else delete S.kept[was];
+      S.mode = mode; S.running = false; S.endsAt = 0;
+      var k = S.kept[mode]; delete S.kept[mode];
+      S.left = k ? k.left : total(); S.startedAt = k ? k.startedAt : 0;
+      save(); title();
+      if (wasRunning) start();
+      if (S.kept[was] && was === "focus") toast(t("focusKept", "Focus paused at %(time)s — it waits under Focus.").replace("%(time)s", clock(S.kept[was].left)), "",
+                                               { label: t("backToFocus", "Back to focus"), run: function () { setMode("focus"); } });
+    }
+    function kept(mode) { var x = load().kept || {}; return x[mode] ? x[mode].left : 0; }
     function setTask(id, label) { S = load(); S.task = id || ""; S.taskTitle = id ? (label || "") : ""; save(); }
     // `skipped`: the Skip button. Otherwise the time ran out — maybe while no page was open (`late`).
     function finish(skipped) {
@@ -429,8 +445,10 @@
       if (!skipped && !S.running) return;
       S.running = false;
       if (was === "focus") {
-        var started = S.startedAt || (endedAt - total() * 1000);
-        if (!skipped || endedAt - started > 60000) {
+        // the time actually spent focusing (a pause or a break in between isn't counted), ending now
+        var focused = skipped ? Math.max(0, total() - left()) : total(), started = endedAt - focused * 1000;
+        if (S.kept) delete S.kept.focus;
+        if (!skipped || focused > 60) {
           S.done += 1;
           api(CFG.urls.focus, { started_at: new Date(started).toISOString(), ended_at: new Date(endedAt).toISOString(), task: S.task || "",
                                 description: S.task ? "" : t("focusSession", "Focus session") })
@@ -440,7 +458,9 @@
       } else {
         S.mode = "focus";
       }
-      S.startedAt = 0; S.left = total(); S.endsAt = 0;
+      var back = S.kept && S.kept[S.mode];          // a focus session left for this break goes on where it was
+      if (S.kept) delete S.kept[S.mode];
+      S.startedAt = back ? back.startedAt : 0; S.left = back ? back.left : total(); S.endsAt = 0;
       save(); title();
       if (late) {   // it ended while the app was closed: say so quietly, don't start a break that's long over
         toast(was === "focus" ? t("focusSavedLate", "A focus session finished while you were away — it's in your timesheet.") : t("breakOver", "Break's over"));
@@ -466,7 +486,7 @@
     d.addEventListener("visibilitychange", function () { if (!d.hidden) { S = load(); check(); emit(); title(); } });
     setTimeout(check, 0);
     return {
-      get state() { return S; }, left: left, total: total, start: start, pause: pause, reset: reset, set: setMode, setTask: setTask,
+      get state() { return S; }, left: left, total: total, start: start, pause: pause, reset: reset, set: setMode, setTask: setTask, kept: kept,
       skip: function () { finish(true); }, toggle: function () { load().running ? pause() : start(); },
       subscribe: function (fn) { subs.push(fn); fn(S); },
     };
@@ -1366,7 +1386,8 @@
 
     /* ── Notes: autosave, a copy on this device, Markdown preview ─────── */
     Alpine.data("workNote", function (initial) {
-      return {
+      return Work.withCategories({
+        categories: (initial.categories || []).slice(), reading: false,
         id: initial.id || null, title: initial.title || "", body: initial.body || "", tags: initial.tags || "", project: initial.project || "", rev: initial.rev || "",
         linkedTitle: initial.title || "", examOpen: false, examSubject: "", examName: "", same: "note:" + (initial.id || uid()),
         state: "saved", savedAt: initial.saved || "", preview: false, split: false, timer: null, inflight: null, again: false,
@@ -1470,10 +1491,14 @@
           ["title", "body", "tags", "project"].forEach(function (k) { self.$watch(k, function () { self.changed(); }); });
           this.$watch("preview", function (on) { if (!on) self.$nextTick(function () { self.grow(); }); });
           this.$nextTick(function () { self.grow(); });
-          if (this.id) { var seen = recall("work-note-view", "write"); this.preview = seen === "preview"; this.split = seen === "split"; }    // as it was last read
+          var asked = new URLSearchParams(location.search).get("mode");      // ?mode=write (a list's Edit button), view…
+          var seen = /^(write|split|preview|view)$/.test(asked || "") ? asked : this.id ? recall("work-note-view", "write") : "write";    // as it was last read
+          this.preview = seen === "preview" || seen === "view"; this.reading = seen === "view"; this.split = seen === "split";
+          if (asked) { var u = new URL(location.href); u.searchParams.delete("mode"); history.replaceState(history.state, "", u.pathname + u.search + u.hash); }
+          this.cats = initial.cats || []; this.catN = initial.catN || {};
           d.addEventListener("keydown", function (e) {          // Ctrl+E: Write ⇄ Preview (as in Obsidian)
             if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && (e.key || "").toLowerCase() === "e" && !self.histOpen && !self.examOpen) {
-              e.preventDefault(); self.view(self.preview ? "write" : "preview");
+              e.preventDefault(); self.view(self.preview ? "write" : recall("work-note-read", "preview"));
             }
           });
           window.addEventListener("beforeunload", function (e) { if (self.state === "dirty" || self.state === "saving") { self.saveNow(); } });
@@ -1526,7 +1551,8 @@
           this.state = "saving";
           var key = this.draftKey;
           var sent = [this.title, this.body];
-          this.inflight = api(CFG.urls.noteSave, { id: this.id || "", title: this.title, body: this.body, tags: this.tags, project: this.project, rev: this.rev || "", _ft_same: this.same, _ft_draft: key }).then(function (res) {
+          this.inflight = api(CFG.urls.noteSave, { id: this.id || "", title: this.title, body: this.body, tags: this.tags, project: this.project, categories: this.categories.join(","),
+                                                   rev: this.rev || "", _ft_same: this.same, _ft_draft: key }).then(function (res) {
             self.inflight = null;
             if (res.rev) self.rev = res.rev;
             if (res.conflict) toast(t("noteConflict", "This note was changed somewhere else too. That text is kept in History."), "warn");
@@ -1542,12 +1568,17 @@
           return this.inflight;
         },
         get html() { return renderMarkdown(this.body); },
+        /* its categories (the same tree as exam notes): picked in the pop-up, saved with the note */
+        pickNoteCats: function () { var self = this; this.pickCats(this.categories, function () { self.changed(); }); },
+        dropNoteCat: function (id) { this.catRemove(this.categories, id); this.changed(); },
+        setCategory: function (id) { location.href = CFG.urls.notes + (id === null ? "" : "?category=" + id); },
         /* Write, Split (side by side, on a wide screen) or Preview — where any part can be clicked to change it */
         view: function (mode) {
           var self = this;
           Work.liveDone();
-          this.preview = mode === "preview"; this.split = mode === "split";
+          this.preview = mode === "preview" || mode === "view"; this.reading = mode === "view"; this.split = mode === "split";
           store("work-note-view", mode);
+          if (this.preview) store("work-note-read", mode);
           if (mode !== "preview") this.$nextTick(function () { self.grow(); });
         },
         action: function (name) {
@@ -1555,7 +1586,7 @@
           if (!this.id) return;
           api(CFG.urls.noteBase + this.id + "/", { action: name }).then(function (res) {
             if (name === "delete") { store(self.draftKey, null); undoable(t("noteDeleted", "Note deleted"), res.undo, function () { location.href = CFG.urls.notes + self.id + "/"; }); setTimeout(function () { location.href = CFG.urls.notes; }, 350); }
-            else if ((name === "to_task" || name === "mindmap") && res.url) location.href = res.url;
+            else if ((name === "to_task" || name === "mindmap" || name === "duplicate") && res.url) location.href = res.url;
             else if (name === "mindmap" && !res.ok) toast(res.error || "", "warn");
             else if (name === "cards") {
               if (res.ok && !res.queued) toast(t("cardsMade", "Flashcards made") + ": " + res.count, "good", { label: t("seeCards", "See them"), run: function () { location.href = res.url; } });
@@ -1614,7 +1645,7 @@
         get readMins() { return Math.max(1, Math.round(this.words / 200)); },
         get todoTotal() { return (this.body.match(/^[ \t]*[-*+][ \t]+\[[ xX]\]/gm) || []).length; },
         get todoDone() { return (this.body.match(/^[ \t]*[-*+][ \t]+\[[xX]\]/gm) || []).length; },
-      };
+      }, CFG.urls.noteCategories);
     });
 
     /* ── Journal: autosave each box ───────────────────────────────────── */
@@ -1633,14 +1664,15 @@
 
     /* ── Focus (Pomodoro): the Focus page and the top-bar pill, over the engine ── */
     Alpine.store("focus", {
-      mode: "focus", running: false, left: 0, total: 1, done: 0, startedAt: 0, task: "", taskTitle: "",
+      mode: "focus", running: false, left: 0, total: 1, done: 0, startedAt: 0, task: "", taskTitle: "", kept: {},
       get text() { return clock(this.left); },
       get active() { return this.running || (this.startedAt && this.left < this.total); },   // running, or paused part-way
       get pct() { return 100 - Math.round(100 * this.left / this.total); },
       init: function () {
         var self = this;
         function pull() { var x = Focus.state; self.mode = x.mode; self.running = x.running; self.done = x.done; self.startedAt = x.startedAt;
-                          self.task = x.task; self.taskTitle = x.taskTitle; self.total = Focus.total(); self.left = Focus.left(); }
+                          self.task = x.task; self.taskTitle = x.taskTitle; self.total = Focus.total(); self.left = Focus.left();
+                          self.kept = JSON.parse(JSON.stringify(x.kept || {})); }
         Focus.subscribe(pull);
         setInterval(function () { if (self.running) self.left = Focus.left(); }, 250);
       },
@@ -1669,6 +1701,7 @@
         toggle: function () { Focus.toggle(); },
         reset: function () { Focus.reset(); },
         set: function (mode) { Focus.set(mode); },
+        kept: function (mode) { var k = this.mode !== mode && (Alpine.store("focus").kept || {})[mode]; return k ? clock(k.left) : ""; },
         skip: function () { Focus.skip(); },
         pick: function (e) { var o = e.target.selectedOptions[0]; Focus.setTask(e.target.value, o && e.target.value ? o.textContent.trim() : ""); },
       };
@@ -2108,6 +2141,123 @@
     area.dispatchEvent(new CustomEvent("md-tick", { detail: { index: index }, bubbles: true }));
   });
 
+
+  /* ── Categories: the person's own tree, shared by notes and exam notes (Backend › Databases › Indexing).
+     Work.categoryPicker(url) is mixed into a page's Alpine data: the pop-up to pick any number for a note
+     (or one to show), chips, add / rename / move / delete. The page brings setCategory(id) and reload(). ── */
+  window.Work.withCategories = function (obj, url) {      // into an object that has getters: only what it hasn't got
+    var add = Work.categoryPicker(url);
+    Object.keys(add).forEach(function (k) { if (!(k in obj)) obj[k] = add[k]; });
+    return obj;
+  };
+  window.Work.categoryPicker = function (url) {
+    return {
+      cats: [], catN: {}, category: null, catOpen: false, catMode: "pick", catList: [], catThen: null,
+      catQuery: "", catShut: {}, catManage: false, catUnder: null, catNewName: "", catEdit: null,
+      t: function (key, fallback) { return t(key, fallback); },
+        catOf: function (id) { return this.cats.find(function (c) { return c.id === id; }); },
+        catChips: function (ids) { var self = this; return (ids || []).map(function (id) { return self.catOf(id); }).filter(Boolean); },
+        catLabel: function () {
+          if (this.category === null) return t("catAll", "All categories");
+          if (this.category === "none") return t("catNone", "No category");
+          var c = this.catOf(this.category);
+          return c ? c.name : t("catAll", "All categories");
+        },
+        catBranch: function (id) {       // {id: true} for the category and what's under it
+          var out = {}, cats = this.cats, grew = true;
+          out[id] = true;
+          while (grew) { grew = false; cats.forEach(function (c) { if (out[c.parent] && !out[c.id]) { out[c.id] = true; grew = true; } }); }
+          return out;
+        },
+        catUp: function (ids) {          // these categories and all they're inside, each once
+          var self = this, out = {};
+          ids.forEach(function (id) { for (var c = self.catOf(id); c && !out[c.id]; c = self.catOf(c.parent)) out[c.id] = true; });
+          return Object.keys(out);
+        },
+        catCount: function (c) { return this.catN[c.id] || 0; },
+        catRows: function () {
+          var q = this.catQuery.trim().toLowerCase(), shut = this.catShut, hidden = {};
+          if (q) return this.cats.filter(function (c) { return c.path.toLowerCase().indexOf(q) >= 0; });
+          return this.cats.filter(function (c) {
+            if (hidden[c.parent] || shut[c.parent]) { hidden[c.id] = true; return false; }
+            return true;
+          });
+        },
+        catCanMake: function () {
+          var q = this.catQuery.trim().toLowerCase();
+          return !!q && !this.cats.some(function (c) { return c.name.toLowerCase() === q || c.path.toLowerCase() === q; });
+        },
+        catOpenUp: function () {
+          var self = this;
+          this.catOpen = true; this.catQuery = ""; this.catManage = false; this.catUnder = null; this.catEdit = null;
+          fetch(url, { credentials: "same-origin", headers: { Accept: "application/json" } }).then(function (r) { return r.json(); })
+            .then(function (r) { if (r.ok) { self.cats = r.categories; if (r.counts) self.catN = r.counts; } }).catch(function () { /* no signal: the ones on this page */ });
+          this.$nextTick(function () { if (self.$refs.catFind && window.matchMedia("(min-width: 640px)").matches) self.$refs.catFind.focus(); });
+        },
+        pickCats: function (list, then) { this.catMode = "pick"; this.catList = list; this.catThen = then || null; this.catOpenUp(); },
+        showCats: function () { this.catMode = "filter"; this.catThen = null; this.catOpenUp(); },
+        catDone: function () { this.catOpen = false; var then = this.catThen; this.catThen = null; if (then) then(); },
+        catRemove: function (list, id) { var i = list.indexOf(id); if (i >= 0) list.splice(i, 1); },
+        catChoose: function (c) {
+          if (this.catMode === "filter") { this.catOpen = false; this.setCategory(c.id); return; }
+          var i = this.catList.indexOf(c.id);
+          if (i >= 0) this.catList.splice(i, 1); else this.catList.push(c.id);
+        },
+        catEnter: function () {
+          if (this.catCanMake()) return this.catMake(this.catQuery, "");
+          var rows = this.catRows();
+          if (this.catQuery.trim() && rows.length) { this.catChoose(rows[0]); this.catQuery = ""; }
+        },
+        /* what changes the tree needs the server: an answer with the new tree, or a word that it didn't happen */
+        catSend: function (fields) {
+          var self = this;
+          return ask(url, fields).then(function (r) {
+            if (!r) { toast(t("catOffline", "Adding or changing a category needs a connection."), "warn"); return null; }
+            if (!r.ok) { toast(r.error || t("notSaved", "Not saved."), "warn"); return null; }
+            self.cats = r.categories;
+            return r;
+          });
+        },
+        catMake: function (name, parent) {
+          var self = this;
+          this.catSend({ action: "add", name: name, parent: parent }).then(function (r) {
+            if (!r) return;
+            self.catQuery = ""; self.catUnder = null; self.catNewName = "";
+            if (parent) self.catShut[parent] = false;
+            if (self.catMode === "pick" && self.catList.indexOf(r.id) < 0) self.catList.push(r.id);
+          });
+        },
+        catAddUnder: function (c) { this.catEdit = null; this.catNewName = ""; this.catUnder = c.id; },
+        catStartEdit: function (c) { this.catUnder = null; this.catEdit = { id: c.id, name: c.name, parent: c.parent === null ? "" : String(c.parent) }; },
+        catParents: function (c) {       // where it can go: anywhere but inside itself
+          var mine = this.catBranch(c.id);
+          return this.cats.filter(function (x) { return !mine[x.id]; });
+        },
+        catSaveEdit: function () {
+          var self = this, e = this.catEdit;
+          this.catSend({ action: "change", id: e.id, name: e.name, parent: e.parent }).then(function (r) { if (r) self.catEdit = null; });
+        },
+        catDelete: function (c) {
+          var self = this;
+          FT.ask({ message: t("catDeleteAsk", "Delete “%(name)s” and everything inside it?").replace("%(name)s", c.name), danger: true, after: "back" }).then(function (sure) {
+            if (!sure) return;
+            self.catSend({ action: "delete", id: c.id }).then(function (r) {
+              if (!r) return;
+              if (self.category !== null && !self.catOf(self.category) && self.category !== "none") self.category = null;
+              self.catRemove(self.catList, c.id);
+              if (self.reload) self.reload();
+              undoable(t("catDeleted", "Category deleted"), r.undo, function () { self.catRefresh(); });
+            });
+          });
+        },
+        catRefresh: function () {
+          var self = this;
+          fetch(url, { credentials: "same-origin", headers: { Accept: "application/json" } }).then(function (r) { return r.json(); })
+            .then(function (r) { if (r.ok) { self.cats = r.categories; if (self.reload) self.reload(); } });
+        }
+    };
+  };
+
   /* ── Editing in the preview (Obsidian's live preview, Notion's blocks) ───────────────────────────
      Work.live(el, { text, set(text), note, attrs }) draws Markdown into el one block at a time (a paragraph,
      a list, a code block, a table, a formula…). Clicking a block turns it back into its own Markdown right
@@ -2167,14 +2317,17 @@
     if (st.opts && st.opts.set) st.opts.set(st.text);
   }
   function liveDraw(el) {
-    var st = el._live, html = "", grip = t("liveGrip", "Options for this part");
+    var st = el._live, html = "", grip = t("liveGrip", "Options for this part"), ro = !!st.opts.readOnly;
     st.split.blocks.forEach(function (b, i) {
       if (!b.md.trim()) return;
-      html += '<div class="md-block" data-i="' + i + '" tabindex="0"><button type="button" class="md-handle" aria-haspopup="menu" aria-expanded="false" aria-label="' +
-        escAttr(grip) + '" title="' + escAttr(grip) + '">' + GRIP + "</button>" + renderMarkdown(b.md) + "</div>";
+      html += ro ? '<div class="md-block" data-i="' + i + '">' + renderMarkdown(b.md) + "</div>"
+        : '<div class="md-block" data-i="' + i + '" tabindex="0"><button type="button" class="md-handle" aria-haspopup="menu" aria-expanded="false" aria-label="' +
+          escAttr(grip) + '" title="' + escAttr(grip) + '">' + GRIP + "</button>" + renderMarkdown(b.md) + "</div>";
     });
-    if (!html) html = '<p class="md-empty">' + escAttr(st.opts.empty || t("liveEmpty", "Nothing here yet. Click to write.")) + "</p>";
-    else html += '<button type="button" class="md-add">' + PLUS + "<span>" + escAttr(t("liveAdd", "Click to add more")) + "</span></button>";
+    if (!html) html = '<p class="md-empty">' + escAttr(ro ? t("emptyNote", "Nothing written yet.") : (st.opts.empty || t("liveEmpty", "Nothing here yet. Click to write."))) + "</p>";
+    else if (!ro) html += '<button type="button" class="md-add">' + PLUS + "<span>" + escAttr(t("liveAdd", "Click to add more")) + "</span></button>";
+    el.classList.toggle("is-read", ro);
+    st.ro = ro;
     el.innerHTML = html;
     st.drawn = st.text;
     Work.enrich(el, { note: st.opts.note });
@@ -2376,9 +2529,9 @@
     el.addEventListener("click", function (e) {
       var st = el._live, tg = e.target;
       if (e.defaultPrevented || e.button || !st) return;
-      var handle = tg.closest(".md-handle");
+      var handle = !st.ro && tg.closest(".md-handle");
       if (handle && el.contains(handle)) { e.preventDefault(); liveMenu(el, +handle.closest(".md-block").getAttribute("data-i"), handle); return; }
-      if (tg.closest(".md-add, .md-empty")) { e.preventDefault(); liveAppend(el); return; }
+      if (!st.ro && tg.closest(".md-add, .md-empty")) { e.preventDefault(); liveAppend(el); return; }
       var tick = tg.closest("input.md-tick");
       if (tick) {                         // ticked here, in its own block (the blocks are drawn apart, so the page-wide count doesn't fit)
         e.preventDefault(); e.stopPropagation();
@@ -2390,6 +2543,7 @@
         blk.md = Work.tickMarkdown(blk.md, k); liveText(el); st.split = liveSplit(st.text); liveDraw(el);
         return;
       }
+      if (st.ro) return;                  // View: to read (a to-do can still be ticked, as on a Keep card)
       if (tg.closest(LIVE_SKIP) || tg.closest(".md-edit")) return;
       var sel = window.getSelection && window.getSelection();
       if (sel && !sel.isCollapsed && el.contains(sel.anchorNode)) return;          // choosing words to copy
@@ -2404,7 +2558,7 @@
       liveBegin(el, i, hint);
     });
     el.addEventListener("keydown", function (e) {
-      if (!e.target.classList || !e.target.classList.contains("md-block") || e.target.closest(".md-live") !== el) return;
+      if (el._live.ro || !e.target.classList || !e.target.classList.contains("md-block") || e.target.closest(".md-live") !== el) return;
       var i = +e.target.getAttribute("data-i");
       if (e.key === "Enter" && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); liveBegin(el, i, "end"); }
       else if ((e.key === "ArrowDown" || e.key === "ArrowUp") && !e.altKey) {
@@ -2428,7 +2582,8 @@
     if (st.editing) {
       if (text === st.text) return;           // what's being typed, coming back: the block stays open
       st.editing = null; if (liveActive === el) liveActive = null;     // changed somewhere else (a version brought back…): drawn anew
-    } else if (text === st.drawn) return;
+    } else if (text === st.drawn && !!st.opts.readOnly === st.ro) return;
+    if (st.opts.readOnly) liveCloseMenu();
     st.text = text; st.split = liveSplit(text); liveDraw(el);
   };
   /* Before Write / Preview is switched: the block being changed is put back first */
