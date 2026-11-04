@@ -105,6 +105,20 @@ def _texts():
             "card": _("Flashcard (question :: answer)"), "mark": _("Highlight (a blank in reviews)"), "date": _("Today’s date"), "time": _("Time now"),
             "tasks": _("List of tasks (live)"), "embed": _("Show another note here"), "dictate": _("Dictate (speak to type)"),
         },
+        "kbar": {       # the row of buttons over a phone's keyboard (static/js/writing.js)
+            "bar": _("Formatting"), "undo": _("Undo"), "redo": _("Redo"), "slash": _("Insert a block"), "h": _("Heading"),
+            "b": _("Bold"), "i": _("Italic"), "s": _("Strikethrough"), "code": _("Code"), "todo": _("To-do"), "ul": _("Bulleted list"),
+            "ol": _("Numbered list"), "quote": _("Quote"), "out": _("Outdent"), "in": _("Indent"), "link": _("Link"),
+            "up": _("Move line up"), "down": _("Move line down"), "find": _("Find and replace"), "done": _("Done"),
+        },
+        "find": {       # find and replace in a Markdown box (static/js/writing.js)
+            "find": _("Find"), "replace": _("Replace with"), "one": _("Replace"), "all": _("All"), "case": _("Match case"),
+            "prev": _("Previous"), "next": _("Next"), "close": _("Close"), "none": _("No matches"), "showReplace": _("Replace…"),
+            "replaced": _("Replaced %(n)s"),
+        },
+        # to-do lists in a note (Keep's "move ticked items to the bottom" and the like)
+        "todoSunk": _("Ticked items moved to the bottom"), "todoUnticked": _("All to-dos unticked"),
+        "todoDropped": _("Ticked items deleted"), "todoNothing": _("Nothing to change — no ticked item is out of place."),
         # in a drawn note (Work.enrich): ```tasks lists and ![[embedded notes]]
         "loading": _("Loading…"), "emptyNote": _("Nothing written yet."), "openTasksAll": _("Open tasks"), "openInTasks": _("Open in Tasks"),
         "noTasksMatch": _("No tasks match — nothing to do here."), "markDone": _("Done"), "andMore": _("and %s more"),

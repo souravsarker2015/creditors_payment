@@ -26214,3 +26214,72 @@ msgstr "আগে কয়েকটি নোট বাছুন।"
 msgctxt "read only"
 msgid "View"
 msgstr "পড়ুন"
+
+msgid "Insert a block"
+msgstr "একটি ব্লক যোগ করুন"
+
+msgid "Strikethrough"
+msgstr "কেটে দেওয়া"
+
+msgid "Outdent"
+msgstr "বাইরে সরান"
+
+msgid "Indent"
+msgstr "ভেতরে সরান"
+
+msgid "Move line up"
+msgstr "লাইন ওপরে সরান"
+
+msgid "Move line down"
+msgstr "লাইন নিচে সরান"
+
+msgid "Find and replace"
+msgstr "খুঁজুন ও বদলান"
+
+msgid "Replace with"
+msgstr "যা দিয়ে বদলাবেন"
+
+msgid "Replace"
+msgstr "বদলান"
+
+msgid "Match case"
+msgstr "ছোট-বড় হাতের অক্ষর মিলিয়ে"
+
+msgid "No matches"
+msgstr "কিছু মেলেনি"
+
+msgid "Replace…"
+msgstr "বদলান…"
+
+msgid "Replaced %(n)s"
+msgstr "%(n)sটি বদলানো হয়েছে"
+
+msgid "Ticked items moved to the bottom"
+msgstr "টিক দেওয়াগুলো নিচে সরানো হয়েছে"
+
+msgid "All to-dos unticked"
+msgstr "সব করণীয় থেকে টিক তুলে নেওয়া হয়েছে"
+
+msgid "Ticked items deleted"
+msgstr "টিক দেওয়াগুলো মুছে ফেলা হয়েছে"
+
+msgid "Nothing to change — no ticked item is out of place."
+msgstr "বদলানোর কিছু নেই — টিক দেওয়া কোনোটিই ভুল জায়গায় নেই।"
+
+msgid "Ctrl+F finds, Ctrl+H replaces — while you write"
+msgstr "লেখার সময় Ctrl+F খোঁজে, Ctrl+H বদলায়"
+
+msgid "To-do list"
+msgstr "করণীয় তালিকা"
+
+msgid "What’s left to do comes first, as in Google Keep"
+msgstr "যা বাকি সেগুলো আগে আসে, Google Keep-এর মতো"
+
+msgid "Move ticked items to the bottom"
+msgstr "টিক দেওয়াগুলো নিচে সরান"
+
+msgid "Use the same list again — a shopping list, a packing list"
+msgstr "একই তালিকা আবার ব্যবহার করুন — বাজারের তালিকা, গোছানোর তালিকা"
+
+msgid "Delete ticked items"
+msgstr "টিক দেওয়াগুলো মুছুন"

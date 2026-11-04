@@ -241,6 +241,17 @@
             <div class="menu" x-show="open" x-cloak role="menu">
               <button type="button" class="menu-item" @click="action('pin')">{% icon "pin" %}{% if note.is_pinned %}{% translate "Unpin" %}{% else %}{% translate "Pin to top" %}{% endif %}</button>
               <button type="button" class="menu-item" @click="open = false; openHistory()">{% icon "history" %}{% translate "History" %}</button>
+              <button type="button" class="menu-item" @click="open = false; openFind(true)" data-tip="{% translate 'Ctrl+F finds, Ctrl+H replaces — while you write' %}">{% icon "search" %}{% translate "Find and replace" %}</button>
+              <template x-if="todoDone">
+                <div class="wn-menu-todos">
+                  <div class="menu-sep"></div>
+                  <p class="menu-help">{% translate "To-do list" %} · <span class="num" x-text="todoDone + ' / ' + todoTotal"></span></p>
+                  <button type="button" class="menu-item" @click="open = false; todoTool('sink')" data-tip="{% translate 'What’s left to do comes first, as in Google Keep' %}">{% icon "arrow-down" %}{% translate "Move ticked items to the bottom" %}</button>
+                  <button type="button" class="menu-item" @click="open = false; todoTool('untick')" data-tip="{% translate 'Use the same list again — a shopping list, a packing list' %}">{% icon "repeat" %}{% translate "Untick all" %}</button>
+                  <button type="button" class="menu-item" @click="open = false; todoTool('drop')">{% icon "trash" %}{% translate "Delete ticked items" %}</button>
+                  <div class="menu-sep"></div>
+                </div>
+              </template>
               <button type="button" class="menu-item" @click="Promise.resolve(saveNow()).then(() => action('duplicate'))" data-tip="{% translate 'A copy to start from: the same text, tags and categories' %}">{% icon "copy" %}{% translate "Duplicate" %}</button>
               <button type="button" class="menu-item" @click="action('to_task')">{% icon "check" %}{% translate "Turn into a task" %}</button>
               <button type="button" class="menu-item" @click="Promise.resolve(saveNow()).then(() => action('mindmap'))" data-tip="{% translate 'Headings and lists become the branches' %}">{% icon "mindmap" %}{% translate "Turn into a mind map" %}</button>

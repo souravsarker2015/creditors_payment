@@ -190,3 +190,29 @@ class ManyNotesAtOnceTests(TestCase):
         self.assertEqual(shown, [pinned.title, "Apple", "Banana"])            # pinned stay first
         shown = [n.title for n in self.client.get(reverse("work:notes"), {"sort": "created"}).context["notes"]]
         self.assertEqual(shown, ["Zebra", "Apple", "Banana"])
+
+
+class WritingOnAPhoneTests(TestCase):
+    """The keyboard row, find and replace and Keep's to-do tools (static/js/writing.js) get their
+    words from the page, and the page lets a phone's keyboard make room (interactive-widget)."""
+
+    def setUp(self):
+        self.me = User.objects.create_superuser("me", "me@example.com", PW)
+        self.client.force_login(self.me)
+
+    def test_the_page_gives_the_scripts_their_words_and_the_keyboard_room(self):
+        note = Note.objects.create(owner=self.me, title="Shop", body="- [x] milk\n- [ ] eggs")
+        r = self.client.get(reverse("work:note", args=[note.pk]))
+        html = r.content.decode()
+        self.assertIn("interactive-widget=resizes-content", html)
+        text = r.context["work_config"]["text"]
+        for group, keys in {"kbar": ("undo", "slash", "todo", "find", "done"), "find": ("find", "replace", "one", "all", "none", "replaced")}.items():
+            for key in keys:
+                self.assertTrue(text[group][key], (group, key))
+        self.assertIn("%(n)s", str(text["find"]["replaced"]))
+        for key in ("todoSunk", "todoUnticked", "todoDropped", "todoNothing", "undo"):
+            self.assertTrue(text[key], key)
+        # the ⋯ menu: find and replace, and the to-do tools (shown when something is ticked)
+        self.assertIn("openFind(true)", html)
+        for how in ("sink", "untick", "drop"):
+            self.assertIn("todoTool('%s')" % how, html)

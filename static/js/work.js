@@ -1645,6 +1645,22 @@
         get readMins() { return Math.max(1, Math.round(this.words / 200)); },
         get todoTotal() { return (this.body.match(/^[ \t]*[-*+][ \t]+\[[ xX]\]/gm) || []).length; },
         get todoDone() { return (this.body.match(/^[ \t]*[-*+][ \t]+\[[xX]\]/gm) || []).length; },
+        /* Keep's list tools: ticked items to the bottom, untick all, delete the ticked ones — Undo on the toast */
+        todoTool: function (how) {
+          if (!window.FTWriting || !FTWriting.todos) return;
+          var before = this.body, r = FTWriting.todos(before, how), self = this;
+          if (!r.changed) { toast(t("todoNothing", "Nothing to change"), "warn"); return; }
+          this.body = r.text;
+          this.$nextTick(function () { self.grow(); });
+          toast(t(how === "sink" ? "todoSunk" : how === "untick" ? "todoUnticked" : "todoDropped", "Done"), "good",
+                { label: t("undo", "Undo"), run: function () { self.body = before; self.$nextTick(function () { self.grow(); }); } });
+        },
+        /* Find (and replace) in the note: the Markdown is where the words are, so it opens in Write */
+        openFind: function (replacing) {
+          var self = this;
+          if (this.preview) this.view("write");
+          this.$nextTick(function () { if (window.FTWriting && FTWriting.find) FTWriting.find(self.$refs.body, replacing); });
+        },
       }, CFG.urls.noteCategories);
     });
 
@@ -1890,7 +1906,9 @@
   window.addEventListener("scroll", function (e) {   // the page scrolled away from the row (not the menu itself, nor the scroll that brought the row into view)
     if (menu && !menu.contains(e.target) && Date.now() - menuAt > 250) closeMenu();
   }, { passive: true, capture: true });
-  window.addEventListener("resize", function () { closeMenu(); });
+  // a new width (a phone turned, a window resized) — not a phone's keyboard coming up or going
+  var menuW = window.innerWidth;
+  window.addEventListener("resize", function () { if (window.innerWidth !== menuW) { menuW = window.innerWidth; closeMenu(); } });
   function later(row, day) {          // snooze: out of sight until that day (a due date that has come moves along)
     var id = row.getAttribute("data-task"), leave = !!row.closest("[data-today-list]") || row.hasAttribute("data-hide-done");
     api(CFG.urls.taskBase + id + "/update/", { my_day: day, later: "1" }).then(function (res) {
@@ -2270,7 +2288,7 @@
   var LIVE_SKIP = "a, button, input, select, textarea, label, summary, video, audio, iframe, .md-menu, .wn-embed, .wn-tasks, [data-no-edit]";
   var GRIP = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>';
   var PLUS = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
-  var liveActive = null, liveMenuEl = null;
+  var liveActive = null, liveMenuEl = null, liveMenuAt = 0;
 
   function liveHalf(b) {          // a formula or a <details> broken by an empty line: it goes on in the next block
     if (b.type === "code") return false;
@@ -2472,7 +2490,7 @@
       item("up", t("liveUp", "Move up"), i <= 0 ? " disabled" : "") + item("down", t("liveDown", "Move down"), i >= n - 1 ? " disabled" : "") +
       item("copy", t("liveCopy", "Copy as Markdown")) + '<div class="md-menu-sep"></div>' + item("del", t("liveDelete", "Delete"), ' class="is-danger"');
     d.body.appendChild(m);
-    liveMenuEl = m; handle.setAttribute("aria-expanded", "true");
+    liveMenuEl = m; liveMenuAt = Date.now(); handle.setAttribute("aria-expanded", "true");
     var r = handle.getBoundingClientRect(), w = m.offsetWidth, h = m.offsetHeight;
     m.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + "px";
     m.style.top = (r.bottom + 4 + h > innerHeight - 8 ? Math.max(8, r.top - h - 4) : r.bottom + 4) + "px";
@@ -2570,8 +2588,10 @@
     });
   }
   d.addEventListener("mousedown", function (e) { if (liveMenuEl && !liveMenuEl.contains(e.target) && !e.target.closest(".md-handle")) liveCloseMenu(); });
-  window.addEventListener("resize", function () { liveCloseMenu(); });
-  d.addEventListener("scroll", function (e) { if (liveMenuEl && !liveMenuEl.contains(e.target)) liveCloseMenu(); }, true);
+  var liveW = window.innerWidth;
+  window.addEventListener("resize", function () { if (window.innerWidth !== liveW) { liveW = window.innerWidth; liveCloseMenu(); } });
+  // (the page settling as a phone's keyboard goes away, just after the menu opened, doesn't close it)
+  d.addEventListener("scroll", function (e) { if (liveMenuEl && !liveMenuEl.contains(e.target) && Date.now() - liveMenuAt > 500) liveCloseMenu(); }, true);
 
   window.Work.live = function (el, opts) {
     if (!el) return;

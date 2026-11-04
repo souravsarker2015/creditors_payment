@@ -3526,3 +3526,80 @@ html:not(.can-dictate) [data-dictate] { display: none !important; }
 }
 .wnb-bulk .is-danger { color: var(--status-critical); }
 .wnb-sort { width: auto; max-width: 11rem; }
+
+/* ── Writing on a phone (static/js/writing.js): the row of buttons on the keyboard, find and
+   replace, and the sheets being written in kept to what's above the keyboard ── */
+.md-kbar { display: none; }
+.md-kbar.is-on {
+  position: fixed; z-index: 1001; left: 0; right: 0; top: 0; display: flex; align-items: center; gap: 0.25rem;
+  padding: 0.25rem max(0.375rem, env(safe-area-inset-right)) 0.25rem max(0.375rem, env(safe-area-inset-left));
+  background: color-mix(in srgb, var(--surface-raised) 94%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid var(--border); box-shadow: 0 -8px 18px -14px rgba(0, 0, 0, 0.4);
+}
+.md-kbar-row { flex: 1; min-width: 0; display: flex; gap: 0.125rem; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; }
+.md-kbar-row::-webkit-scrollbar { display: none; }
+.md-kbar-btn {
+  flex: none; display: grid; place-items: center; width: 2.625rem; height: 2.5rem; border: 0; border-radius: 0.625rem; background: transparent;
+  color: var(--text-primary); font: 600 1.0625rem/1 var(--font-body); touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+}
+.md-kbar-btn svg { width: 1.25rem; height: 1.25rem; }
+.md-kbar-btn i { font-family: Georgia, serif; font-weight: 600; }
+.md-kbar-btn:active, .md-kbar-btn:hover { background: var(--surface-sunken); }
+.md-kbar-done {
+  flex: none; height: 2.25rem; padding: 0 0.875rem; border: 0; border-radius: 9999px; background: var(--accent); color: var(--accent-on);
+  font: 650 0.875rem/1 var(--font-body); touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+}
+/* room below the last line, so it can always be scrolled up above the keyboard and the row on it */
+:root[data-md-typing] body { padding-bottom: calc(var(--kb, 0px) + var(--kbar-h, 0px) + 2rem); }
+:root[data-md-typing] .wn-fab, :root[data-md-typing] .zen-exit, :root[data-md-typing] .wexo-dock, :root[data-md-typing] .wt-bulkbar { display: none !important; }
+@media (pointer: coarse) {
+  /* a note or question opened in a sheet: kept above the keyboard, the text scrolling inside it */
+  :root[data-md-typing] .wc.wkc-editor {
+    top: calc(var(--vvt, 0px) + 0.5rem); bottom: auto; max-height: calc(var(--vvh, 100dvh) - var(--kbar-h, 0px) - 1rem);
+  }
+  :root[data-md-typing] .wnb-editor { height: calc(var(--vvh, 100dvh) - var(--kbar-h, 0px) - 1rem); }
+  /* a question's sheet scrolls as a whole: its parts keep their height rather than being squeezed */
+  :root[data-md-typing] .wc.wkc-editor:not(.wnb-editor) > * { flex-shrink: 0; }
+  :root[data-md-typing] .wnb-editor > .wkc-a-input { min-height: 6rem; }
+}
+/* a phone: the note's toolbar scrolls away while writing — every line of the screen is for the text */
+@media (pointer: coarse) and (max-width: 899.98px) { :root[data-md-typing] .wn-toolbar { position: relative; top: auto; } }
+@media (pointer: coarse) and (max-width: 639.98px) {
+  :root[data-md-typing] .wnb-editor .wnb-ed-cats, :root[data-md-typing] .wnb-editor .wkc-editor-foot { display: none; }
+}
+
+.md-find {
+  position: fixed; z-index: 1002; top: 4.5rem; right: max(1rem, env(safe-area-inset-right)); width: min(24rem, calc(100vw - 1rem));
+  display: flex; flex-direction: column; gap: 0.375rem; padding: 0.5rem; border-radius: 0.875rem; background: var(--surface-raised);
+  border: 1px solid var(--border); box-shadow: var(--shadow-lg); animation: wt-menu .12s ease-out;
+}
+@media (max-width: 639.98px) { .md-find { top: 0.5rem; left: 0.5rem; right: 0.5rem; width: auto; } }
+.md-find-row { display: flex; align-items: center; gap: 0.25rem; }
+.md-find-rep { display: none; }
+.md-find.is-replacing .md-find-rep { display: flex; }
+.md-find input {
+  flex: 1; min-width: 0; height: 2.25rem; padding: 0 0.625rem; border-radius: 0.5rem; border: 1px solid var(--border); background: var(--surface);
+  color: var(--text-primary); font-size: 1rem; outline: none;
+}
+.md-find input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
+.md-find.is-none .md-find-q { border-color: var(--status-danger, #dc2626); }
+.md-find-n { flex: none; min-width: 3.25rem; text-align: center; font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; }
+.md-find.is-none .md-find-n { color: var(--status-danger, #dc2626); }
+.md-find-btn {
+  flex: none; display: grid; place-items: center; width: 2.125rem; height: 2.125rem; border: 0; border-radius: 0.5rem; background: transparent;
+  color: var(--text-secondary); font: 650 0.75rem/1 var(--font-body); touch-action: manipulation;
+}
+.md-find-btn svg { width: 1.125rem; height: 1.125rem; }
+.md-find-btn:hover, .md-find-btn:active { background: var(--surface-sunken); color: var(--text-primary); }
+.md-find-btn[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
+.md-find.is-replacing [data-f="more"] { background: var(--accent-soft); color: var(--accent); }
+.md-find-act {
+  flex: none; height: 2.25rem; padding: 0 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); background: var(--surface);
+  color: var(--text-primary); font: 600 0.8125rem/1 var(--font-body); touch-action: manipulation;
+}
+.md-find-act:hover { border-color: var(--accent); color: var(--accent); }
+.md-find-hit {
+  position: absolute; z-index: 1000; pointer-events: none; border-radius: 3px;
+  background: color-mix(in srgb, #facc15 45%, transparent); box-shadow: 0 0 0 2px color-mix(in srgb, #f59e0b 75%, transparent);
+}
+.wn-menu-todos { display: contents; }

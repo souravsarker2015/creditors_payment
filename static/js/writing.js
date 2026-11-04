@@ -288,7 +288,8 @@
   }, true);
   d.addEventListener("mousedown", function (e) { if (slash && !slash.el.contains(e.target)) closeSlash(); });
   d.addEventListener("focusout", function (e) { if (slash && e.target === slash.ta) setTimeout(function () { if (slash && d.activeElement !== slash.ta) closeSlash(); }, 0); });
-  window.addEventListener("resize", closeSlash);
+  var slashW = window.innerWidth;      // a new width closes it — not a phone's keyboard coming up (the page resizes too)
+  window.addEventListener("resize", function () { if (window.innerWidth !== slashW) { slashW = window.innerWidth; closeSlash(); } });
   d.addEventListener("scroll", function (e) { if (slash && e.target !== slash.el) closeSlash(); }, true);
 
   /* ── Speaking instead of typing: a microphone button ([data-dictate="selector"] — the box it types
@@ -396,7 +397,395 @@
   function looksLikeMarkdown(text) {
     return /(^|\n)\s{0,3}(#{1,6}\s|```|[-*+]\s|\d+[.)]\s|>\s|\|.*\|)|\*\*[^*\n]+\*\*|`[^`\n]+`|\$[^$\n]+\$/.test(text || "");
   }
-  window.FTWriting = { toMarkdown: function (html) { return loadTurndown().then(function () { return toMarkdown(html); }); }, caretXY: caretXY };
+  /* ── Phones: the keyboard never hides the line being written ──
+     The keyboard covers the bottom of the screen, and the browser only makes sure the box is on
+     screen — not the line inside it (a long note is taller than what's left). So after every caret
+     move, keystroke and keyboard change, the caret's line is measured, and if it's under the
+     keyboard, under the bar on top of it or under a header stuck at the top, the pop-up it's in (or
+     the page) scrolls just enough to show it, with a line to spare. Touch screens only: a mouse and
+     a desktop browser do this well already. */
+  var TOUCH = !!(window.matchMedia && matchMedia("(pointer: coarse)").matches);
+  var VV = window.visualViewport, root = d.documentElement, kbar = null, keepQueued = false;
+  function t2(group, key, fallback) { var x = ((window.Work && Work.cfg && Work.cfg.text) || {})[group] || {}; return x[key] || fallback; }
+  function barOn() { return !!(kbar && kbar.classList.contains("is-on")); }
+  function view() {        // the part of the page that can be seen, in getBoundingClientRect's terms
+    var top = VV ? VV.offsetTop : 0, h = VV ? VV.height : window.innerHeight;
+    return { top: top, bottom: top + h - (barOn() ? kbar.offsetHeight : 0) };
+  }
+  function coverTop(ta, x, y) {     // a header stuck at the top over the box: where it ends
+    var el = d.elementFromPoint(x, y + 2);
+    for (; el && el !== d.body && el !== root; el = el.parentElement) {
+      if (el.contains(ta)) return y;                  // the pop-up the box is in, not a header over it
+      var p = getComputedStyle(el).position;
+      if (p === "fixed" || p === "sticky") {
+        var b = el.getBoundingClientRect().bottom;
+        // a header is a strip; something covering most of the screen (a pop-up's backdrop) isn't one
+        return b - y < (window.innerHeight - y) * 0.4 ? Math.max(y, b) : y;
+      }
+    }
+    return y;
+  }
+  // the boxes it's in that scroll (a pop-up) first, then the page — at once: following the caret
+  // with the page's smooth scrolling would land each step where the last one was still going
+  function scrollBy(ta, dy) {
+    for (var el = ta.parentElement; el && el !== d.body && el !== root && Math.abs(dy) > 0.5; el = el.parentElement) {
+      var oy = getComputedStyle(el).overflowY;
+      if ((oy === "auto" || oy === "scroll") && el.scrollHeight > el.clientHeight + 1) {
+        var was = el.scrollTop; el.scrollTo({ top: was + dy, behavior: "instant" }); dy -= el.scrollTop - was;
+      }
+    }
+    if (Math.abs(dy) > 0.5) window.scrollTo({ top: window.scrollY + dy, behavior: "instant" });
+  }
+  function lineHeight(ta) { var cs = getComputedStyle(ta); return parseFloat(cs.lineHeight) || (parseFloat(cs.fontSize) || 16) * 1.5; }
+  // show the text at [y - lh, y] (y: the bottom of a line, as caretXY gives it) between the header and the keyboard
+  function showY(ta, y, minTop) {
+    var lh = lineHeight(ta), v = view(), r = ta.getBoundingClientRect();
+    var top = Math.max(coverTop(ta, Math.max(r.left + 8, 1), v.top), minTop || 0) + 8, bottom = v.bottom - 8;
+    if (bottom - top < lh * 2.5) return;               // hardly any room (a phone on its side): the browser's own way
+    if (y > bottom) scrollBy(ta, y - bottom + lh);
+    else if (y - lh < top) scrollBy(ta, y - lh - top - lh);
+  }
+  function keepCaret() {
+    keepQueued = false;
+    var ta = d.activeElement;
+    if (!box({ target: ta }) || ta.selectionStart !== ta.selectionEnd) return;      // choosing words: the handles are the person's
+    showY(ta, caretXY(ta, ta.selectionEnd).y);
+  }
+  function queueKeep() { if (TOUCH && !keepQueued) { keepQueued = true; requestAnimationFrame(keepCaret); } }
+
+  /* ── A row of buttons riding on the keyboard (Bear, Apple Notes, Notion): undo, the "/" blocks,
+     heading, bold, italic, to-do, lists, indent, link, move the line, find — and Done to put the
+     keyboard away. Each press keeps the caret in the box (the keyboard stays up) and types the way
+     the keys do, so Undo takes it back. Every Markdown box on a touch screen has it. ── */
+  var HEAD = /^(#{1,6} )/, MARKS = /^(#{1,6} |[-*+] \[[ xX]\] |[-*+] |\d+[.)] |> )/;
+  function lineMark(ta, mark) {             // mark the start of each chosen line, or take it off when they all have it
+    var v = ta.value, s = ta.selectionStart, e = ta.selectionEnd, ls = lineStart(v, s), le = lineEnd(v, e > s && v.charAt(e - 1) === "\n" ? e - 1 : e);
+    var lines = v.slice(ls, le).split("\n");
+    var all = lines.every(function (l) { return !l.trim() || l.replace(/^[ \t]*/, "").indexOf(mark) === 0; });
+    var out = lines.map(function (l) {
+      if (!l.trim() && lines.length > 1) return l;
+      var ind = /^[ \t]*/.exec(l)[0], rest = l.slice(ind.length);
+      return ind + (all ? rest.slice(mark.length) : mark + rest.replace(MARKS, ""));
+    }).join("\n");
+    if (lines.length > 1) put(ta, ls, le, out, ls, ls + out.length);
+    else put(ta, ls, le, out, Math.max(ls, s + out.length - (le - ls)));
+  }
+  function heading(ta) {                     // none → # → ## → ### → none
+    var v = ta.value, s = ta.selectionStart, ls = lineStart(v, s), le = lineEnd(v, s), line = v.slice(ls, le);
+    var m = HEAD.exec(line), n = m ? m[1].length - 1 : 0, rest = line.replace(MARKS, "");
+    var next = n >= 3 ? rest : new Array(n + 2).join("#") + " " + rest;
+    put(ta, ls, le, next, Math.max(ls, s + next.length - line.length));
+  }
+  function link(ta) {
+    var v = ta.value, s = ta.selectionStart, e = ta.selectionEnd, sel = v.slice(s, e);
+    if (/^https?:\/\/\S+$/.test(sel)) put(ta, s, e, "[](" + sel + ")", s + 1);
+    else put(ta, s, e, "[" + sel + "]()", s + sel.length + 3);
+  }
+  function slashHere(ta) {
+    var v = ta.value, s = ta.selectionStart, prev = v.charAt(s - 1);
+    if (s > 0 && prev && !/\s/.test(prev)) { put(ta, s, ta.selectionEnd, " "); s += 1; }
+    put(ta, s, ta.selectionEnd, "/");
+  }
+  var KEYS = [
+    ["undo", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>', "Undo"],
+    ["redo", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg>', "Redo"],
+    ["slash", "<b>/</b>", "Insert a block"], ["h", "<b>H</b>", "Heading"], ["b", "<b>B</b>", "Bold"], ["i", "<i>I</i>", "Italic"],
+    ["todo", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="m8 12 3 3 5-6"/></svg>', "To-do"],
+    ["ul", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1" fill="currentColor"/><circle cx="4.5" cy="12" r="1" fill="currentColor"/><circle cx="4.5" cy="18" r="1" fill="currentColor"/></svg>', "Bulleted list"],
+    ["ol", "<b>1.</b>", "Numbered list"],
+    ["out", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 6H11M21 12h-8M21 18H11M7 8l-4 4 4 4"/></svg>', "Outdent"],
+    ["in", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 6H11M21 12h-8M21 18H11M3 8l4 4-4 4"/></svg>', "Indent"],
+    ["link", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>', "Link"],
+    ["quote", "<b>❝</b>", "Quote"], ["code", "<b>&lt;/&gt;</b>", "Code"], ["s", "<s>S</s>", "Strikethrough"],
+    ["up", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg>', "Move line up"],
+    ["down", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg>', "Move line down"],
+    ["find", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg>', "Find and replace"],
+  ];
+  function press(ta, k) {
+    if (k === "undo" || k === "redo") { ta.focus(); try { d.execCommand(k); } catch (err) { /* not offered here */ } }
+    else if (k === "slash") slashHere(ta);
+    else if (k === "h") heading(ta);
+    else if (k === "b") wrap(ta, "**");
+    else if (k === "i") wrap(ta, "*");
+    else if (k === "s") wrap(ta, "~~");
+    else if (k === "code") wrap(ta, "`");
+    else if (k === "todo") lineMark(ta, "- [ ] ");
+    else if (k === "ul") lineMark(ta, "- ");
+    else if (k === "ol") lineMark(ta, "1. ");
+    else if (k === "quote") lineMark(ta, "> ");
+    else if (k === "in" || k === "out") tab(ta, "md", k === "out");
+    else if (k === "up" || k === "down") moveLines(ta, k === "up");
+    else if (k === "link") link(ta);
+    else if (k === "find") openFind(ta, false);
+    else if (k === "done") { closeSlash(); ta.blur(); }
+    queueKeep();
+  }
+  function makeBar() {
+    kbar = d.createElement("div");
+    kbar.className = "md-kbar"; kbar.setAttribute("role", "toolbar"); kbar.setAttribute("aria-label", t2("kbar", "bar", "Formatting"));
+    var row = d.createElement("div"); row.className = "md-kbar-row";
+    KEYS.forEach(function (k) {
+      var b = d.createElement("button"); b.type = "button"; b.className = "md-kbar-btn"; b.setAttribute("data-k", k[0]); b.tabIndex = -1;
+      var name = t2("kbar", k[0], k[2]); b.setAttribute("aria-label", name); b.title = name; b.innerHTML = k[1];
+      row.appendChild(b);
+    });
+    var done = d.createElement("button"); done.type = "button"; done.className = "md-kbar-done"; done.setAttribute("data-k", "done"); done.tabIndex = -1;
+    done.textContent = t2("kbar", "done", "Done");
+    kbar.appendChild(row); kbar.appendChild(done);
+    // the box keeps the caret (and the keyboard stays up): no button takes the focus
+    kbar.addEventListener("mousedown", function (e) { e.preventDefault(); });
+    kbar.addEventListener("pointerdown", function (e) { if (e.pointerType === "mouse") e.preventDefault(); });
+    kbar.addEventListener("click", function (e) {
+      var b = e.target.closest("[data-k]"), ta = kbar._ta;
+      if (!b || !ta || !d.contains(ta)) return;
+      press(ta, b.getAttribute("data-k"));
+    });
+    d.body.appendChild(kbar);
+  }
+  function placeBar() {
+    if (VV) {      // what's above the keyboard, for the sheets being written in (work.css)
+      root.style.setProperty("--vvh", Math.round(VV.height) + "px");
+      root.style.setProperty("--vvt", Math.round(VV.offsetTop) + "px");
+      root.style.setProperty("--kb", Math.max(0, Math.round(window.innerHeight - VV.height - VV.offsetTop)) + "px");
+    }
+    if (!barOn()) return;
+    var bottom = VV ? VV.offsetTop + VV.height : window.innerHeight;
+    kbar.style.top = Math.round(bottom - kbar.offsetHeight) + "px";
+    root.style.setProperty("--kbar-h", kbar.offsetHeight + "px");
+  }
+  function showBar(ta) {
+    if (!kbar) makeBar();
+    kbar._ta = ta; kbar.classList.add("is-on"); root.setAttribute("data-md-typing", "");
+    placeBar();
+  }
+  function hideBar() {
+    if (!kbar) return;
+    kbar.classList.remove("is-on"); kbar._ta = null; root.removeAttribute("data-md-typing"); root.style.removeProperty("--kbar-h");
+  }
+  if (TOUCH) {
+    d.addEventListener("focusin", function (e) {
+      var mode = box(e);
+      if (mode === "md") showBar(e.target); else hideBar();
+      if (mode) { queueKeep(); setTimeout(queueKeep, 400); }      // and again once the keyboard is up
+    });
+    d.addEventListener("focusout", function (e) {
+      if (!box(e)) return;
+      setTimeout(function () { if (box({ target: d.activeElement }) !== "md") hideBar(); }, 0);
+    });
+    d.addEventListener("input", function (e) { if (box(e)) queueKeep(); });
+    d.addEventListener("selectionchange", function () { if (box({ target: d.activeElement })) queueKeep(); });
+    if (VV) {
+      // the keyboard slides up in steps: the caret is checked as it goes and once it has settled
+      var settle = null;
+      VV.addEventListener("resize", function () {
+        placeBar(); queueKeep(); if (find) drawFind();
+        clearTimeout(settle); settle = setTimeout(function () { placeBar(); queueKeep(); }, 250);
+      });
+      VV.addEventListener("scroll", function () { placeBar(); if (find) drawFind(); });
+    }
+  }
+
+  /* ── Find and replace in a Markdown box (Ctrl+F or Ctrl+H in it, the 🔍 over the keyboard, or a
+     note's ⋯ menu): the matches are counted and the one you're on is marked in the text and scrolled
+     into view; Enter goes to the next, Shift+Enter back; Replace changes that one, All every one
+     (Ctrl+Z takes either back). Esc closes it. ── */
+  var find = null;      // { ta, el, q, rep, cs, at, hits, marks }
+  function esc(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+  function hitsOf(ta, q, cs) {
+    var out = []; if (!q) return out;
+    var re = new RegExp(esc(q), cs ? "g" : "gi"), v = ta.value, m;
+    while ((m = re.exec(v)) && out.length < 5000) { out.push(m.index); if (!m[0].length) re.lastIndex++; }
+    return out;
+  }
+  function rangeRects(ta, s, e) {           // where [s, e) of the box's text is on the screen: a copy of the box, measured
+    var st = getComputedStyle(ta), m = d.createElement("div"), r = ta.getBoundingClientRect();
+    ["boxSizing", "width", "paddingTop", "paddingRight", "paddingBottom", "paddingLeft", "borderTopWidth", "borderRightWidth", "borderBottomWidth",
+     "borderLeftWidth", "borderStyle", "fontFamily", "fontSize", "fontWeight", "lineHeight", "letterSpacing", "tabSize", "wordSpacing"].forEach(function (k) { m.style[k] = st[k]; });
+    m.style.borderColor = "transparent";
+    m.style.position = "absolute"; m.style.visibility = "hidden"; m.style.whiteSpace = "pre-wrap"; m.style.overflowWrap = "break-word"; m.style.top = "0"; m.style.left = "0";
+    m.textContent = ta.value.slice(0, s);
+    var mark = d.createElement("span"); mark.textContent = ta.value.slice(s, e) || "​"; m.appendChild(mark);
+    m.appendChild(d.createTextNode(ta.value.slice(e)));
+    d.body.appendChild(m);
+    var base = m.getBoundingClientRect(), out = [].map.call(mark.getClientRects(), function (q) {
+      return { left: r.left + q.left - base.left - ta.scrollLeft, top: r.top + q.top - base.top - ta.scrollTop, width: q.width, height: q.height };
+    });
+    m.remove();
+    return out.filter(function (q) { return q.top + q.height > r.top && q.top < r.bottom; });
+  }
+  function drawFind() {
+    if (!find) return;
+    var f = find, n = f.hits.length;
+    if (TOUCH && VV) f.el.style.top = Math.round(VV.offsetTop + 8) + "px";
+    f.count.textContent = f.q ? (n ? (f.at + 1) + " / " + n : t2("find", "none", "No matches")) : "";
+    f.el.classList.toggle("is-none", !!f.q && !n);
+    f.marks.forEach(function (x) { x.remove(); }); f.marks = [];
+    if (!n || !d.contains(f.ta) || !f.ta.getClientRects().length) return;
+    var s = f.hits[f.at];
+    rangeRects(f.ta, s, s + f.q.length).forEach(function (q) {
+      var x = d.createElement("div"); x.className = "md-find-hit";
+      x.style.left = (q.left + window.scrollX) + "px"; x.style.top = (q.top + window.scrollY) + "px";
+      x.style.width = Math.max(q.width, 3) + "px"; x.style.height = q.height + "px";
+      d.body.appendChild(x); f.marks.push(x);
+    });
+  }
+  function goFind(step) {
+    if (!find) return;
+    var f = find; f.hits = hitsOf(f.ta, f.q, f.cs);
+    if (!f.hits.length) { f.at = 0; drawFind(); return; }
+    if (step == null) {                           // the first match from the caret on
+      var from = f.ta.selectionStart, i = 0;
+      while (i < f.hits.length && f.hits[i] < from) i++;
+      f.at = i % f.hits.length;
+    } else f.at = (f.at + step + f.hits.length) % f.hits.length;
+    var s = f.hits[f.at], rs = rangeRects(f.ta, s, s + f.q.length);
+    if (!rs.length) {                                 // inside a box that scrolls itself: bring it there first
+      var lh = lineHeight(f.ta); f.ta.scrollTop = Math.max(0, caretXY(f.ta, s).y - f.ta.getBoundingClientRect().top + f.ta.scrollTop - lh * 3);
+      rs = rangeRects(f.ta, s, s + f.q.length);
+    }
+    if (rs.length) showY(f.ta, rs[0].top + rs[0].height, f.el.getBoundingClientRect().bottom);
+    drawFind();
+  }
+  function replaceOne() {
+    var f = find; if (!f || !f.hits.length) return;
+    var s = f.hits[f.at], keep = d.activeElement;
+    put(f.ta, s, s + f.q.length, f.rep.value, s + f.rep.value.length);
+    if (keep && f.el.contains(keep)) keep.focus({ preventScroll: true });
+    // on to the next one after what was put in (which may match too: "note" → "Note")
+    var after = s + f.rep.value.length, i = 0;
+    f.hits = hitsOf(f.ta, f.q, f.cs);
+    while (i < f.hits.length && f.hits[i] < after) i++;
+    f.at = f.hits.length ? i % f.hits.length : 0;
+    goFind(0);
+  }
+  function replaceAll() {
+    var f = find; if (!f || !f.hits.length) return;
+    var n = f.hits.length, keep = d.activeElement;
+    var next = f.ta.value.replace(new RegExp(esc(f.q), f.cs ? "g" : "gi"), function () { return f.rep.value; });
+    put(f.ta, 0, f.ta.value.length, next, 0);
+    if (keep && f.el.contains(keep)) keep.focus({ preventScroll: true });
+    goFind(null);
+    if (window.Work && Work.toast) Work.toast(t2("find", "replaced", "Replaced %(n)s").replace("%(n)s", n));
+  }
+  function closeFind(back) {
+    if (!find) return;
+    var f = find; find = null;
+    f.marks.forEach(function (x) { x.remove(); }); f.el.remove();
+    if (back && d.contains(f.ta)) {
+      f.ta.focus({ preventScroll: true });
+      if (f.hits.length) { var s = f.hits[f.at] || 0; f.ta.setSelectionRange(s, s + f.q.length); }
+    }
+  }
+  function openFind(ta, replacing) {
+    if (find && find.ta === ta) { find.el.classList.toggle("is-replacing", !!replacing || find.el.classList.contains("is-replacing")); find.input.focus(); find.input.select(); return; }
+    closeFind(false);
+    var el = d.createElement("div");
+    el.className = "md-find" + (replacing ? " is-replacing" : ""); el.setAttribute("role", "search");
+    el.innerHTML =
+      '<div class="md-find-row"><input type="search" class="md-find-q" enterkeyhint="search" autocomplete="off" spellcheck="false">' +
+      '<span class="md-find-n num" aria-live="polite"></span>' +
+      '<button type="button" class="md-find-btn" data-f="case"><span aria-hidden="true">Aa</span></button>' +
+      '<button type="button" class="md-find-btn" data-f="prev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></svg></button>' +
+      '<button type="button" class="md-find-btn" data-f="next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>' +
+      '<button type="button" class="md-find-btn" data-f="more"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h11M4 12h7M4 17h11M17 10l3 3-3 3"/></svg></button>' +
+      '<button type="button" class="md-find-btn" data-f="close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>' +
+      '<div class="md-find-row md-find-rep"><input type="text" class="md-find-r" enterkeyhint="done" autocomplete="off" spellcheck="false">' +
+      '<button type="button" class="md-find-act" data-f="one"></button><button type="button" class="md-find-act" data-f="all"></button></div>';
+    var names = { "case": ["case", "Match case"], prev: ["prev", "Previous"], next: ["next", "Next"], more: ["showReplace", "Replace…"], close: ["close", "Close"] };
+    Object.keys(names).forEach(function (k) { var b = el.querySelector('[data-f="' + k + '"]'); b.setAttribute("aria-label", t2("find", names[k][0], names[k][1])); b.title = b.getAttribute("aria-label"); });
+    el.querySelector('[data-f="case"]').setAttribute("aria-pressed", "false");
+    el.querySelector('[data-f="one"]').textContent = t2("find", "one", "Replace");
+    el.querySelector('[data-f="all"]').textContent = t2("find", "all", "All");
+    var input = el.querySelector(".md-find-q"), rep = el.querySelector(".md-find-r");
+    input.placeholder = t2("find", "find", "Find"); input.setAttribute("aria-label", input.placeholder);
+    rep.placeholder = t2("find", "replace", "Replace with"); rep.setAttribute("aria-label", rep.placeholder);
+    d.body.appendChild(el);
+    find = { ta: ta, el: el, input: input, rep: rep, count: el.querySelector(".md-find-n"), q: "", cs: false, at: 0, hits: [], marks: [] };
+    var chosen = ta.value.slice(ta.selectionStart, ta.selectionEnd);
+    if (chosen && chosen.indexOf("\n") < 0 && chosen.length < 80) { input.value = chosen; find.q = chosen; }
+    input.addEventListener("input", function () { if (find) { find.q = input.value; goFind(null); } });
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); closeFind(true); }
+      else if (e.key === "Enter" && e.target === input) { e.preventDefault(); goFind(e.shiftKey ? -1 : 1); }
+      else if (e.key === "Enter" && e.target === rep) { e.preventDefault(); if (e.ctrlKey || e.metaKey || e.altKey) replaceAll(); else replaceOne(); }
+    });
+    el.addEventListener("mousedown", function (e) { if (e.target.closest("button")) e.preventDefault(); });     // the field keeps the keyboard
+    el.addEventListener("click", function (e) {
+      var b = e.target.closest("[data-f]"); if (!b || !find) return;
+      var k = b.getAttribute("data-f");
+      if (k === "close") closeFind(true);
+      else if (k === "prev" || k === "next") goFind(k === "prev" ? -1 : 1);
+      else if (k === "case") { find.cs = !find.cs; b.setAttribute("aria-pressed", String(find.cs)); goFind(null); }
+      else if (k === "more") { el.classList.toggle("is-replacing"); if (el.classList.contains("is-replacing")) rep.focus(); }
+      else if (k === "one") replaceOne();
+      else if (k === "all") replaceAll();
+    });
+    input.focus(); input.select();
+    goFind(null);
+  }
+  d.addEventListener("keydown", function (e) {
+    if (box(e) !== "md" || e.altKey || !(e.ctrlKey || e.metaKey) || e.shiftKey) return;
+    if (e.key === "f" || e.key === "h") { e.preventDefault(); openFind(e.target, e.key === "h"); }
+  });
+  d.addEventListener("input", function (e) { if (find && e.target === find.ta) { find.hits = hitsOf(find.ta, find.q, find.cs); if (find.at >= find.hits.length) find.at = 0; drawFind(); } });
+  window.addEventListener("resize", function () { if (find) drawFind(); });
+  d.addEventListener("scroll", function () { if (find) drawFind(); }, true);
+  d.addEventListener("mousedown", function (e) {           // a click in the text leaves the bar open, anywhere else closes it
+    if (find && !find.el.contains(e.target) && e.target !== find.ta && !(kbar && kbar.contains(e.target))) closeFind(false);
+  });
+
+  /* ── To-do lists (Google Keep): ticked items sink to the bottom of their list, all of them get
+     unticked (the same shopping list next week) or the ticked ones go. Lines inside ``` blocks are
+     left alone, and an item's own indented lines go with it. ── */
+  var TODO = /^([ \t]*)[-*+] \[([ xX])\] /;
+  function indentOf(l) { return /^[ \t]*/.exec(l)[0].length; }
+  function todos(text, how) {
+    var n = 0;
+    function run(lines) {
+      var out = [], code = false, i = 0;
+      while (i < lines.length) {
+        var line = lines[i], m = !code && TODO.exec(line);
+        if (/^[ \t]*(```|~~~)/.test(line)) code = !code;
+        if (!m) { out.push(line); i++; continue; }
+        // a list: to-dos one after another at the same indent, each with the lines indented under it
+        var open = [], done = [], j = i, ind = m[1];
+        while (j < lines.length && (m = TODO.exec(lines[j])) && m[1] === ind) {
+          var k = j + 1;
+          while (k < lines.length && lines[k].trim() && indentOf(lines[k]) > ind.length) k++;
+          var head = lines[j], kids = run(lines.slice(j + 1, k)), ticked = m[2] !== " ";
+          if (how === "untick" && ticked) { head = head.replace(/\[[xX]\]/, "[ ]"); n++; ticked = false; }
+          // a ticked item with something still to do under it stays (nothing unfinished is lost)
+          if (how === "drop" && ticked && kids.some(function (l) { var k = TODO.exec(l); return k && k[2] === " "; })) ticked = false;
+          (ticked ? done : open).push([head].concat(kids));
+          j = k;
+        }
+        if (how === "drop") { n += done.length; done = []; }
+        if (how === "sink" && done.length && open.length) {
+          // only counted when something actually moves: a ticked item above an unticked one
+          var order = []; for (var q = i; q < j; q++) { var mm = TODO.exec(lines[q]); if (mm && mm[1] === ind) order.push(mm[2] !== " "); }
+          if (order.indexOf(true) >= 0 && order.lastIndexOf(false) > order.indexOf(true)) n += done.length;
+        }
+        open.concat(done).forEach(function (c) { out.push.apply(out, c); });
+        i = j;
+      }
+      return out;
+    }
+    var text2 = run(String(text || "").split("\n")).join("\n");
+    return { text: text2, changed: n };
+  }
+
+  // where the "/" menu fits: above the keyboard (and the bar on it), not under it
+  var placeSlash = openSlash;
+  openSlash = function (ta, at) {
+    placeSlash(ta, at);
+    if (!slash || !TOUCH) return;
+    var p = caretXY(ta, at), h = slash.el.offsetHeight, v = view(), top = p.y + 4;
+    if (top + h > v.bottom - 8) top = Math.max(v.top + 8, p.y - h - 24);
+    slash.el.style.top = top + "px";
+  };
+
+  window.FTWriting = { toMarkdown: function (html) { return loadTurndown().then(function () { return toMarkdown(html); }); }, caretXY: caretXY,
+                       find: function (ta, replacing) { if (ta) openFind(ta, replacing); }, todos: todos, keep: queueKeep };
 
   d.addEventListener("paste", function (e) {
     if (box(e) !== "md" || e.defaultPrevented || !e.clipboardData) return;
