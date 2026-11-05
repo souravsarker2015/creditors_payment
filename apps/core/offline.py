@@ -17,14 +17,22 @@ on the phone and sends it later. This module makes that safe:
 * Pages that are safe to keep on the phone are marked ``X-FT-Offline`` — and
   so are the lists a search or filter brings in (htmx), so a search done
   before still works with no signal.
+* A page fetched in the background — kept for offline use (``X-FT-Warm``) or
+  fetched ahead by the browser in case it's clicked (``Sec-Purpose: prefetch``)
+  — says nothing to anyone: a message it would leave ("No pond has a running
+  cycle…") would otherwise turn up on whatever page is opened next, even in
+  another part of the app; and messages already waiting stay for the page
+  the person really opens. A page fetched ahead that would say something, or
+  redirect, isn't fetched ahead at all: the real click runs it.
 """
 import json
 import re
 from datetime import timedelta
 
 from django.contrib import messages
+from django.contrib.messages.storage.base import BaseStorage
 from django.db import IntegrityError, transaction
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from django.urls import NoReverseMatch, reverse
 from django.utils import timezone
@@ -56,6 +64,35 @@ def _rev(response):
         return None
 
 
+class _Unsaid(BaseStorage):
+    """The messages of a page fetched in the background: none shown on it, none kept for later."""
+
+    def __init__(self, request, *args, **kwargs):
+        super().__init__(request, *args, **kwargs)
+        self.said = False
+
+    def add(self, level, message, extra_tags=""):
+        self.said = self.said or bool(message)
+
+    def _get(self, *args, **kwargs):
+        return [], True
+
+    def _store(self, messages, response, *args, **kwargs):
+        return []
+
+
+def _fetched_ahead(request):
+    """The browser fetching a page in case it's clicked (speculation rules: prefetch or prerender)."""
+    return "prefetch" in (request.META.get("HTTP_SEC_PURPOSE", "") + request.META.get("HTTP_PURPOSE", "")).lower()
+
+
+def _not_ahead():
+    """Not a page to fetch ahead: the browser drops it, and the click asks again for real."""
+    response = HttpResponse(status=503)
+    response["Cache-Control"] = "no-store"
+    return response
+
+
 class OfflineMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
@@ -64,7 +101,21 @@ class OfflineMiddleware:
         user = getattr(request, "user", None)
         if request.method == "POST" and user is not None and user.is_authenticated and KEY in request.POST:
             return self.keyed_save(request)
-        response = self.get_response(request)
+        real = getattr(request, "_messages", None)
+        ahead = request.method == "GET" and _fetched_ahead(request)
+        quiet = real is not None and request.method == "GET" and (ahead or request.META.get("HTTP_X_FT_WARM") == "1")
+        if quiet:
+            if ahead and len(real):        # something is waiting to be said: the page really opened says it
+                return _not_ahead()
+            request._messages = _Unsaid(request)
+            try:
+                response = self.get_response(request)
+            finally:
+                unsaid, request._messages = request._messages, real
+            if ahead and (unsaid.said or 300 <= response.status_code < 400):
+                return _not_ahead()
+        else:
+            response = self.get_response(request)
         if request.method == "GET" and user is not None and user.is_authenticated:
             self.mark_page(request, response)
         return response

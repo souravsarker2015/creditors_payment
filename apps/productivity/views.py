@@ -91,7 +91,7 @@ def _texts():
         "liveGrip": _("Options for this part"), "liveEmpty": _("Nothing here yet. Click to write."), "liveAdd": _("Click to add more"),
         "liveEditing": _("Editing this part — Esc when done"), "liveEdit": _("Edit"), "liveBelow": _("Add below"), "liveTurn": _("Turn into"),
         "liveText": _("Text"), "liveDup": _("Duplicate"), "liveUp": _("Move up"), "liveDown": _("Move down"),
-        "liveCopy": _("Copy as Markdown"), "liveDelete": _("Delete"), "liveDeleted": _("Part deleted"), "liveMoved": _("Moved"),
+        "liveCopy": _("Copy as Markdown"), "liveDelete": _("Delete"), "liveDeleted": _("Part deleted"), "liveMoved": _("Moved"), "habitHowMuch": _("How much? The goal is %(n)s."),
         "iconPick": _("Pick an icon"), "iconType": _("Or type / paste one"), "iconRemove": _("Remove"),
         "deletePicked": _("Delete the %(n)s picked notes? You can bring them back from Recently deleted."),
         "catAll": _("All categories"), "catNone": _("No category"), "catDeleted": _("Category deleted"),
@@ -320,6 +320,9 @@ def today_view(request):
         "week_bars": [{"day": d, "secs": v, "pct": round(100 * v / peak), "today": d == today, "hrs": _hours(v)} for d, v in week.by_day.items()],
         "week_total": week.seconds,
         "streak": services.focus_streak(user, today),
+        # Todoist's Karma: tasks done today against a daily goal, and the days in a row it was reached
+        "task_goal": s.task_goal, "task_goal_pct": min(100, round(100 * len(done_today) / s.task_goal)) if s.task_goal else 0,
+        "task_streak": services.task_goal_streak(user, s.task_goal, today),
         "habits": [h for h in habits if h["due_today"]],
         "timeline": [e for e in week.entries if timezone.localtime(e.started_at).date() == today or (e.ended_at and timezone.localtime(e.ended_at).date() == today) or e.is_running],
         "notes": Note.objects.filter(owner=user, is_archived=False, is_template=False)[:5],
@@ -725,9 +728,18 @@ def focus_view(request):
     sessions = TimeEntry.objects.filter(owner=user, kind="focus", started_at__gte=lo, started_at__lt=hi)
     open_tasks, _done = services.today_tasks(user, today)
     task = Task.objects.filter(owner=user, pk=request.GET.get("task") or 0).first()
+    goal = WorkSettings.for_user(user).focus_goal
+    week = services.focus_days(user, today)
+    peak = max([r["seconds"] for r in week] + [1])
+    count = sessions.count()
     return render_work(request, "work/focus.html", {
-        "sessions": sessions.count(), "focus_seconds": sum(e.seconds for e in sessions),
+        "sessions": count, "focus_seconds": sum(e.seconds for e in sessions),
         "tasks": open_tasks[:30], "task": task,
+        # Forest / Pomofocus: a goal a day, the days in a row it was reached, the last seven days
+        "goal": goal, "goal_pct": min(100, round(100 * count / goal)) if goal else 0,
+        "goal_streak": services.focus_goal_streak(user, goal, today),
+        "week": [{**r, "pct": round(100 * r["seconds"] / peak), "today": r["day"] == today} for r in week],
+        "week_seconds": sum(r["seconds"] for r in week),
     })
 
 
@@ -1408,6 +1420,7 @@ def journal_view(request):
     lo, hi = services.day_bounds(day)
     done = Task.objects.filter(owner=user, status=Status.DONE, completed_at__gte=lo, completed_at__lt=hi).select_related("project")
     data = services.standup(user, day)
+    mood_row = services.mood_days(user, today)
     return render_work(request, "work/journal.html", {
         "day": day, "entry": entry, "today": today, "done": done,
         "tracked": services.totals(user, day, day),
@@ -1415,6 +1428,9 @@ def journal_view(request):
         "recent": JournalEntry.objects.filter(owner=user).exclude(date=day)[:10],
         "standup": data, "standup_md": services.standup_text(data, markdown=True), "standup_plain": services.standup_text(data, markdown=False),
         "moods": range(1, 6),
+        # Day One: what was written on this date before, the days in a row written, the mood of the last weeks
+        "memories": services.journal_memories(user, day), "streak": services.journal_streak(user, today),
+        "mood_days": mood_row if any(m for _d, m in mood_row) else [],
     })
 
 

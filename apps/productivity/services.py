@@ -270,6 +270,48 @@ def focus_streak(user, today=None):
     return streak
 
 
+def focus_days(user, today, days=7):
+    """[{day, sessions, seconds}] of focus sessions for the last `days` days, oldest first."""
+    lo, _hi = day_bounds(today - timedelta(days=days - 1))
+    _lo, hi = day_bounds(today)
+    out = {today - timedelta(days=i): {"sessions": 0, "seconds": 0} for i in range(days)}
+    for e in TimeEntry.objects.filter(owner=user, kind="focus", started_at__gte=lo, started_at__lt=hi):
+        d = timezone.localtime(e.started_at).date()
+        if d in out:
+            out[d]["sessions"] += 1
+            out[d]["seconds"] += e.seconds
+    return [{"day": d, **out[d]} for d in sorted(out)]
+
+
+def focus_goal_streak(user, goal, today):
+    """Days in a row (ending today, or yesterday while today is still going) with the daily focus goal reached."""
+    if not goal:
+        return 0
+    rows = {r["day"]: r["sessions"] for r in focus_days(user, today, days=120)}
+    day = today if rows.get(today, 0) >= goal else today - timedelta(days=1)
+    streak = 0
+    while rows.get(day, 0) >= goal:
+        streak += 1
+        day -= timedelta(days=1)
+    return streak
+
+
+def task_goal_streak(user, goal, today):
+    """Days in a row (ending today, or yesterday while today is still going) with `goal` tasks done."""
+    if not goal:
+        return 0
+    lo, _hi = day_bounds(today - timedelta(days=120))
+    per_day = defaultdict(int)
+    for at in Task.objects.filter(owner=user, status=Status.DONE, completed_at__gte=lo).values_list("completed_at", flat=True):
+        per_day[timezone.localtime(at).date()] += 1
+    day = today if per_day[today] >= goal else today - timedelta(days=1)
+    streak = 0
+    while per_day[day] >= goal:
+        streak += 1
+        day -= timedelta(days=1)
+    return streak
+
+
 # ── Quick add: "Fix login bug #auth @api !high tomorrow ~45m *" ───────────
 PRIORITY_WORDS = {"urgent": Priority.URGENT, "high": Priority.HIGH, "medium": Priority.MEDIUM, "med": Priority.MEDIUM, "low": Priority.LOW,
                   "4": Priority.URGENT, "3": Priority.HIGH, "2": Priority.MEDIUM, "1": Priority.LOW}
@@ -722,8 +764,30 @@ def today_tasks(user, today=None):
 
 
 # ── Habits ────────────────────────────────────────────────────────────────
+def habit_week_start(day):
+    """The Monday a habit's week starts on."""
+    return day - timedelta(days=day.weekday())
+
+
+def habit_done_days(habit, rows):
+    """The days that count as done, out of (date, amount) rows: the amount reached the habit's goal."""
+    return {d for d, amount in rows if amount >= habit.target}
+
+
 def habit_streak(habit, checked, today):
-    """Due days in a row that were checked, ending today (or yesterday, if today isn't done yet)."""
+    """Due days in a row that were done, ending today (or yesterday, if today isn't done yet). For a
+    "3 times a week" habit: whole weeks in a row with enough days done, ending this week (or last week,
+    while this one is still going) — as Loop and Streaks count them."""
+    if habit.per_week:
+        def met(start):
+            return sum(1 for i in range(7) if start + timedelta(days=i) in checked) >= habit.per_week
+        weeks, start = 0, habit_week_start(today)
+        if not met(start):
+            start -= timedelta(days=7)
+        while weeks < 60 and met(start):
+            weeks += 1
+            start -= timedelta(days=7)
+        return weeks
     streak, day = 0, today
     if day not in checked:
         day -= timedelta(days=1)
@@ -738,24 +802,86 @@ def habit_streak(habit, checked, today):
     return streak
 
 
+def habit_rate(habit, checked, days):
+    """How much of what was asked over these days got done, in %."""
+    if habit.per_week:
+        weeks = max(len(days) / 7, 1)
+        return min(100, round(100 * sum(1 for d in days if d in checked) / (habit.per_week * weeks)))
+    due = [d for d in days if habit.is_due(d)]
+    return round(100 * sum(1 for d in due if d in checked) / len(due)) if due else 0
+
+
+def habit_state(habit, checked, amounts, today):
+    """What a page shows about one habit today: done, how much, this week's count, the streak."""
+    this_week = sum(1 for i in range(7) if habit_week_start(today) + timedelta(days=i) in checked)
+    return {
+        "done_today": today in checked, "amount_today": amounts.get(today, 0), "week_done": this_week,
+        # due today: on its day — or, a times-a-week habit, while the week still needs more
+        "due_today": (this_week < habit.per_week and today not in checked) if habit.per_week else habit.is_due(today),
+        "streak": habit_streak(habit, checked, today), "streak_weeks": bool(habit.per_week),
+    }
+
+
 def habit_rows(user, today, days=14):
     habits = list(Habit.objects.filter(owner=user, is_archived=False))
     since = today - timedelta(days=max(days, 400))
-    checks = defaultdict(set)
-    for hid, d in HabitCheck.objects.filter(habit__in=habits, date__gte=since).values_list("habit_id", "date"):
-        checks[hid].add(d)
+    raw = defaultdict(list)
+    for hid, d, amount in HabitCheck.objects.filter(habit__in=habits, date__gte=since).values_list("habit_id", "date", "amount"):
+        raw[hid].append((d, amount))
     span = [today - timedelta(days=i) for i in range(days - 1, -1, -1)]
     rows = []
     for h in habits:
-        done = checks[h.pk]
-        due_days = [d for d in span if h.is_due(d)]
+        amounts = dict(raw[h.pk])
+        done = habit_done_days(h, raw[h.pk])
         rows.append({
-            "habit": h, "done_today": today in done, "due_today": h.is_due(today),
-            "streak": habit_streak(h, done, today),
-            "cells": [{"date": d, "done": d in done, "due": h.is_due(d), "today": d == today} for d in span],
-            "rate": round(100 * sum(1 for d in due_days if d in done) / len(due_days)) if due_days else 0,
+            "habit": h, **habit_state(h, done, amounts, today),
+            "cells": [{"date": d, "done": d in done, "due": h.is_due(d), "today": d == today, "amount": amounts.get(d, 0)} for d in span],
+            "rate": habit_rate(h, done, span),
         })
     return rows, span
+
+
+# ── Journal: on this day, the writing streak, the mood of the last weeks (Day One) ──
+def _written(entry):
+    return bool(entry.plan.strip() or entry.wins.strip() or entry.blockers.strip() or entry.notes.strip() or entry.mood or entry.energy)
+
+
+def journal_memories(user, day):
+    """Entries from this date a month, three and six months ago, and a year or more ago: [(how long ago, entry)]."""
+    from django.utils.translation import ngettext
+
+    asked = []
+    for months in (1, 3, 6):
+        m = day.month - months
+        y, m = day.year + (m - 1) // 12, (m - 1) % 12 + 1
+        try:
+            asked.append((day.replace(year=y, month=m), ngettext("%(n)s month ago", "%(n)s months ago", months) % {"n": months}))
+        except ValueError:                       # the 31st, 29 February: that month hasn't got it
+            pass
+    for years in range(1, 11):
+        try:
+            asked.append((day.replace(year=day.year - years), ngettext("%(n)s year ago", "%(n)s years ago", years) % {"n": years}))
+        except ValueError:
+            pass
+    found = {e.date: e for e in JournalEntry.objects.filter(owner=user, date__in=[d for d, _l in asked])}
+    return [{"ago": label, "entry": found[d]} for d, label in asked if d in found and _written(found[d])]
+
+
+def journal_streak(user, today):
+    """Days in a row with something written, ending today (or yesterday, while today is still open)."""
+    days = {e.date for e in JournalEntry.objects.filter(owner=user, date__gte=today - timedelta(days=400), date__lte=today) if _written(e)}
+    day = today if today in days else today - timedelta(days=1)
+    streak = 0
+    while day in days:
+        streak += 1
+        day -= timedelta(days=1)
+    return streak
+
+
+def mood_days(user, today, days=30):
+    """[(date, mood or None)] for the last `days` days, oldest first."""
+    moods = dict(JournalEntry.objects.filter(owner=user, date__gt=today - timedelta(days=days), date__lte=today, mood__isnull=False).values_list("date", "mood"))
+    return [(d, moods.get(d)) for d in (today - timedelta(days=i) for i in range(days - 1, -1, -1))]
 
 
 # ── Standup / daily summary ───────────────────────────────────────────────
@@ -996,11 +1122,11 @@ def review(user, start, end):
         dg.is_new = dg.created_at >= lo
     habits = []
     for h in Habit.objects.filter(owner=user, is_archived=False):
-        due = [start + timedelta(days=i) for i in range((end - start).days + 1) if h.is_due(start + timedelta(days=i))]
-        checked = set(h.checks.filter(date__gte=start, date__lte=end).values_list("date", flat=True))
-        due = [d for d in due if d >= h.created_at.date() and (d < today or d in checked)]   # today isn't missed yet
-        if due:
-            habits.append({"habit": h, "pct": round(100 * sum(1 for d in due if d in checked) / len(due))})
+        checked = habit_done_days(h, h.checks.filter(date__gte=start, date__lte=end).values_list("date", "amount"))
+        span = [start + timedelta(days=i) for i in range((end - start).days + 1)]
+        span = [d for d in span if d >= h.created_at.date() and (d < today or d in checked)]   # today isn't missed yet
+        if [d for d in span if h.is_due(d)]:
+            habits.append({"habit": h, "pct": habit_rate(h, checked, span)})
     return {
         "start": start, "end": end, "totals": t, "done": done,
         "done_by_project": sorted(by_project.items(), key=lambda kv: (kv[0] is None, kv[0].name if kv[0] else "")),

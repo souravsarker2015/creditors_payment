@@ -696,12 +696,19 @@ def habit_check(request, pk):
     day = parse_date(request.POST.get("date", "") or "") or timezone.localdate()
     if day > timezone.localdate():
         return bad(_("That day hasn't come yet."))
-    if request.POST.get("done", "1") == "1":
-        HabitCheck.objects.get_or_create(habit=habit, date=day)
+    if (request.POST.get("amount") or "").isdigit():      # how much that day (8 glasses): 0 takes the day off
+        amount = min(int(request.POST["amount"]), 100000)
+    else:                                                  # a plain tick: done is the whole goal, not done is nothing
+        amount = habit.target if request.POST.get("done", "1") == "1" else 0
+    if amount:
+        HabitCheck.objects.update_or_create(habit=habit, date=day, defaults={"amount": amount})
     else:
         HabitCheck.objects.filter(habit=habit, date=day).delete()
-    checked = set(habit.checks.filter(date__gte=day - timedelta(days=400)).values_list("date", flat=True))
-    return ok(done=day in checked, streak=services.habit_streak(habit, checked, timezone.localdate()))
+    today = timezone.localdate()
+    rows = habit.checks.filter(date__gte=min(day, today) - timedelta(days=430)).values_list("date", "amount")
+    amounts = dict(rows)
+    state = services.habit_state(habit, services.habit_done_days(habit, amounts.items()), amounts, today)
+    return ok(done=amount >= habit.target, amount=amount, target=habit.target, streak=state["streak"], week=state["week_done"])
 
 
 JOURNAL_FIELDS = ("plan", "wins", "blockers", "notes")

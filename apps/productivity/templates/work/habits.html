@@ -6,7 +6,7 @@
 {% block work %}
 <header class="wp-head">
   <div class="min-w-0"><h1 class="wp-title">{% translate "Habits" %}</h1>
-    <p class="wp-sub">{% translate "Small things, every day: read, exercise, practise, review. Tap a day to tick it." %}</p></div>
+    <p class="wp-sub">{% translate "Small things, often: read, exercise, practise, review. Tap a day to tick it — or add one more glass, page or minute. Hold (or right-click) to write how much." %}</p></div>
   <div class="wp-actions">
     <nav class="seg seg-sm"><a href="?range=14" class="seg-item{% if days == 14 %} is-active{% endif %}">{% translate "2 weeks" %}</a><a href="?range=28" class="seg-item{% if days == 28 %} is-active{% endif %}">{% translate "4 weeks" %}</a></nav>
     <a href="{% url 'work:habit_new' %}" class="btn btn-primary">{% icon "plus" %}{% translate "Habit" %}</a>
@@ -20,14 +20,18 @@
       <thead><tr><th></th>{% for d in span %}<th class="{% if d == today %}is-today{% endif %}"><span>{{ d|date:"D" }}</span><small>{{ d|date:"j" }}</small></th>{% endfor %}<th>{% translate "Streak" %}</th></tr></thead>
       <tbody>
         {% for row in rows %}
-        <tr x-data="{ streak: {{ row.streak }} }">
-          <th><a href="{% url 'work:habit' row.habit.pk %}" class="wh-habit"><span class="wh-emoji">{{ row.habit.emoji }}</span><span class="wh-name">{{ row.habit.name }}</span><span class="wh-rate">{{ row.rate }}%</span></a></th>
+        <tr x-data="{ streak: {{ row.streak }}, week: {{ row.week_done }} }">
+          <th><a href="{% url 'work:habit' row.habit.pk %}" class="wh-habit"><span class="wh-emoji">{{ row.habit.emoji }}</span>
+            <span class="wh-name">{{ row.habit.name }}
+              {% if row.habit.per_week or row.habit.counted %}<small class="wh-goal">{% if row.habit.per_week %}<span x-text="week + '/{{ row.habit.per_week }}'"></span> {% translate "this week" %}{% endif %}{% if row.habit.per_week and row.habit.counted %} · {% endif %}{% if row.habit.counted %}{{ row.habit.target }} {{ row.habit.unit }}{% endif %}</small>{% endif %}
+            </span><span class="wh-rate">{{ row.rate }}%</span></a></th>
           {% for c in row.cells %}
-          <td>{% if c.due %}<button type="button" class="wh-cell{% if c.done %} is-on{% endif %}{% if c.today %} is-today{% endif %}" data-color="{{ row.habit.color }}"
-                  @click="const on = !$el.classList.contains('is-on'); $el.classList.toggle('is-on', on); if (on) Work.play(Work.cfg.sound ? 'soft' : ''); Work.api('{% url 'work:api_habit_check' row.habit.pk %}', { date: '{{ c.date|date:"Y-m-d" }}', done: on ? '1' : '0' }).then(r => { if (r.streak != null) streak = r.streak; })"
-                  aria-pressed="{{ c.done|yesno:'true,false' }}" aria-label="{{ row.habit.name }} · {{ c.date|date:'j M' }}"></button>{% else %}<span class="wh-off" aria-hidden="true"></span>{% endif %}</td>
+          <td>{% if c.due %}<button type="button" class="wh-cell{% if c.today %} is-today{% endif %}" data-color="{{ row.habit.color }}"
+                  x-data="habitDay({ url: '{% url 'work:api_habit_check' row.habit.pk %}', date: '{{ c.date|date:"Y-m-d" }}', target: {{ row.habit.target }}, amount: {{ c.amount }}, unit: '{{ row.habit.unit|escapejs }}', name: '{{ row.habit.name|escapejs }} · {{ c.date|date:'j M' }}' })"
+                  :class="{ 'is-on': done, 'is-part': amount && !done }" @click="click()" @pointerdown="press()" @pointerup="release()" @pointerleave="release()" @contextmenu.prevent="ask()"
+                  :aria-pressed="done.toString()" aria-label="{{ row.habit.name }} · {{ c.date|date:'j M' }}"><span class="wh-amt num" x-show="target > 1 && amount" x-text="amount" x-cloak></span></button>{% else %}<span class="wh-off" aria-hidden="true"></span>{% endif %}</td>
           {% endfor %}
-          <td class="wh-streak-cell"><span class="wh-streak" :class="streak && 'is-on'">{% icon "flame" %}<span x-text="streak"></span></span></td>
+          <td class="wh-streak-cell"><span class="wh-streak" :class="streak && 'is-on'" {% if row.streak_weeks %}title="{% translate 'Weeks in a row' %}"{% endif %}>{% icon "flame" %}<span x-text="streak"></span>{% if row.streak_weeks %}<small>{% translate "wk" context "weeks, short" %}</small>{% endif %}</span></td>
         </tr>
         {% endfor %}
       </tbody>

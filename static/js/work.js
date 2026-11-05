@@ -1669,6 +1669,40 @@
       }, CFG.urls.noteCategories);
     });
 
+    /* ── A habit's day (Habits, Today) — as Loop and Streaks: a plain one is ticked on and off; one with
+       an amount (8 glasses, 20 pages) goes up one a tap, and a long press or right-click asks how much.
+       Done once the goal is reached; the streak and the week's count (the row's) follow. ── */
+    Alpine.data("habitDay", function (o) {
+      return {
+        amount: o.amount || 0, target: o.target || 1, held: false, holdTimer: null,
+        get done() { return this.amount >= this.target; },
+        send: function (amount) {
+          var self = this, was = this.amount;
+          this.amount = amount;
+          if (amount >= this.target && was < this.target) Work.play(Work.cfg.sound ? "soft" : "");
+          api(o.url, { date: o.date, amount: String(amount) }).then(function (r) {
+            if (r && r.ok) { if (r.streak != null) self.streak = r.streak; if (r.week != null) self.week = r.week; }
+            else if (r && !r.queued) self.amount = was;
+          });
+        },
+        click: function () {
+          if (this.held) { this.held = false; return; }          // the end of a long press, not a tap
+          this.send(this.target > 1 ? this.amount + 1 : (this.amount ? 0 : 1));
+        },
+        press: function () { var self = this; clearTimeout(this.holdTimer); this.holdTimer = setTimeout(function () { self.held = true; self.ask(); }, 550); },
+        release: function () { clearTimeout(this.holdTimer); },
+        ask: function () {
+          var self = this;
+          FT.ask({ message: o.name, text: t("habitHowMuch", "How much? The goal is %(n)s.").replace("%(n)s", this.target + (o.unit ? " " + o.unit : "")),
+                   input: { value: String(this.amount), placeholder: "0" } }).then(function (v) {
+            if (v == null) return;
+            var n = parseInt(String(v).replace(/[^0-9]/g, ""), 10);
+            if (!isNaN(n) && n !== self.amount) self.send(Math.min(n, 100000));
+          });
+        },
+      };
+    });
+
     /* ── Journal: autosave each box ───────────────────────────────────── */
     Alpine.data("workJournal", function (day) {
       return {

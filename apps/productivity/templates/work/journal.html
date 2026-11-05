@@ -7,7 +7,8 @@
 <header class="wp-head">
   <div class="min-w-0">
     <h1 class="wp-title">{% if day == today %}{% translate "Today's journal" %}{% else %}{{ day|date:"l, j F Y" }}{% endif %}</h1>
-    <p class="wp-sub">{% blocktranslate with t=tracked.seconds|hm n=done|length %}{{ t }} tracked · {{ n }} tasks done{% endblocktranslate %}</p>
+    <p class="wp-sub">{% blocktranslate with t=tracked.seconds|hm n=done|length %}{{ t }} tracked · {{ n }} tasks done{% endblocktranslate %}{% if streak %}
+      · <span class="wj-streak" title="{% translate 'Days in a row with something written' %}">{% icon "flame" %}{% blocktranslate count counter=streak %}{{ counter }} day in a row{% plural %}{{ counter }} days in a row{% endblocktranslate %}</span>{% endif %}</p>
   </div>
   <div class="wp-actions">
     <nav class="wpg">
@@ -62,9 +63,19 @@
     <section class="card"><header class="card-header"><h2 class="card-title">{% translate "Done this day" %}</h2></header>
       <ul class="wd-notes">{% for t in done %}<li><a href="{% url 'work:task' t.pk %}"><span class="truncate">✓ {{ t.title }}</span><time>{{ t.completed_at|local_time }}</time></a></li>{% endfor %}</ul></section>
     {% endif %}
+    {% if memories %}
+    <section class="card wj-memories"><header class="card-header"><h2 class="card-title">{% icon "history" %}{% translate "On this day" %}</h2></header>
+      <ul class="wd-notes">{% for m in memories %}<li><a href="?date={{ m.entry.date|date:'Y-m-d' }}"><span class="wj-ago">{{ m.ago }}{% with v=m.entry.mood %}{% if v %} · {% if v == 1 %}😞{% elif v == 2 %}😕{% elif v == 3 %}😐{% elif v == 4 %}🙂{% else %}😄{% endif %}{% endif %}{% endwith %}</span>
+        <span class="truncate">{{ m.entry.wins|default:m.entry.plan|default:m.entry.notes|truncatechars:90 }}</span></a></li>{% endfor %}</ul></section>
+    {% endif %}
+    {% if mood_days %}
+    <section class="card wj-moods"><header class="card-header"><h2 class="card-title">{% translate "Mood, last 30 days" %}</h2></header>
+      <div class="wj-moodstrip" role="img" aria-label="{% translate 'Mood, last 30 days' %}">{% for d, m in mood_days %}<a href="?date={{ d|date:'Y-m-d' }}" class="wj-mood"{% if m %} data-mood="{{ m }}"{% endif %} title="{{ d|date:'D j M' }}{% if m %} · {{ m }}/5{% endif %}"></a>{% endfor %}</div>
+      <p class="wj-moodkey"><span>😞</span><span class="wj-moodbar"></span><span>😄</span></p></section>
+    {% endif %}
     {% if recent %}
     <section class="card"><header class="card-header"><h2 class="card-title">{% translate "Earlier entries" %}</h2></header>
-      <ul class="wd-notes">{% for j in recent %}<li><a href="?date={{ j.date|date:'Y-m-d' }}"><span class="truncate">{{ j.date|date:"D j M" }} · {{ j.plan|default:j.wins|truncatechars:50 }}</span></a></li>{% endfor %}</ul></section>
+      <ul class="wd-notes">{% for j in recent %}<li><a href="?date={{ j.date|date:'Y-m-d' }}"><span class="truncate">{{ j.date|date:"D j M" }}{% if j.date.year != today.year %} {{ j.date.year }}{% endif %}{% with text=j.plan|default:j.wins|default:j.notes|default:j.blockers %}{% if text %} · {{ text|truncatechars:50 }}{% endif %}{% endwith %}</span></a></li>{% endfor %}</ul></section>
     {% endif %}
   </div>
 </div>

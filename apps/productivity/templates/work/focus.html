@@ -38,6 +38,23 @@
     </select>
   </section>
 
+  {% if goal %}
+  {# a goal a day, the days in a row it was reached, the last week (Forest, Pomofocus) #}
+  <section class="card wfo-goal">
+    <div class="wfo-goal-top">
+      <p><b class="num">{{ sessions }}</b> / <span class="num">{{ goal }}</span> {% translate "sessions today" %}</p>
+      {% if goal_streak %}<span class="wj-streak" title="{% translate 'Days in a row with the goal reached' %}">{% icon "flame" %}{% blocktranslate count counter=goal_streak %}{{ counter }} day{% plural %}{{ counter }} days{% endblocktranslate %}</span>{% endif %}
+    </div>
+    <div class="wfo-goal-bar" role="progressbar" aria-valuemin="0" aria-valuemax="{{ goal }}" aria-valuenow="{{ sessions }}"><span style="width: {{ goal_pct }}%"></span></div>
+    {% if goal_pct >= 100 %}<p class="wfo-goal-done">{% translate "Goal reached — well done." %}</p>{% endif %}
+    <div class="wfo-week" aria-label="{% translate 'Focus, last 7 days' %}">
+      {% for r in week %}<div class="wfo-day{% if r.today %} is-today{% endif %}" title="{{ r.day|date:'D j M' }} · {{ r.seconds|hm }} · {{ r.sessions }}">
+        <span class="wfo-bar"><span style="height: {{ r.pct }}%"{% if r.sessions >= goal %} class="is-goal"{% endif %}></span></span><small>{{ r.day|date:"D"|slice:":2" }}</small></div>{% endfor %}
+    </div>
+    <p class="wfo-week-total">{% blocktranslate with t=week_seconds|hm %}{{ t }} focused this week{% endblocktranslate %} · <a href="{% url 'work:settings' %}" class="wd-link">{% translate "Change the goal" %}</a></p>
+  </section>
+  {% endif %}
+
   <dl class="wfo-today">
     <div><dt>{% translate "Sessions today" %}</dt><dd class="num" x-text="{{ sessions }} + 0">{{ sessions }}</dd></div>
     <div><dt>{% translate "Focused today" %}</dt><dd class="num">{{ focus_seconds|hm }}</dd></div>

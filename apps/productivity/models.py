@@ -500,6 +500,12 @@ class Habit(models.Model):
     color = models.CharField(_("Colour"), max_length=10, choices=Color.choices, default=Color.GREEN)
     days = models.CharField(_("Days"), max_length=7, default="0123456",
                             help_text="Weekdays it's for: 0 = Monday … 6 = Sunday.")
+    # Loop / Streaks: "3 times a week" on any days (its streak counts weeks), and an amount a day ("8 glasses")
+    per_week = models.PositiveSmallIntegerField(_("Times a week"), default=0, validators=[MaxValueValidator(7)],
+                                                help_text=_("0: on the days chosen. 1–7: that many times a week, on any days."))
+    target = models.PositiveIntegerField(_("Goal each day"), default=1, validators=[MinValueValidator(1), MaxValueValidator(100000)],
+                                         help_text=_("How much counts as done: 8 glasses, 20 pages, 30 minutes. 1 for a plain tick."))
+    unit = models.CharField(_("Unit"), max_length=20, blank=True, help_text=_("glasses, pages, minutes…"))
     is_archived = models.BooleanField(_("Archived"), default=False)
     order = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -512,12 +518,19 @@ class Habit(models.Model):
         return self.name
 
     def is_due(self, day):
-        return str(day.weekday()) in self.days
+        """A day it can be done on: any day for a "times a week" habit."""
+        return bool(self.per_week) or str(day.weekday()) in self.days
+
+    @property
+    def counted(self):
+        """An amount to reach (8 glasses), not a plain tick."""
+        return self.target > 1 or bool(self.unit)
 
 
 class HabitCheck(models.Model):
     habit = models.ForeignKey(Habit, on_delete=models.CASCADE, related_name="checks")
     date = models.DateField()
+    amount = models.PositiveIntegerField(default=1, help_text="How much that day (a plain tick is 1); done when it reaches the habit's goal.")
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["habit", "date"], name="work_habit_once_a_day")]
@@ -569,6 +582,10 @@ class WorkSettings(models.Model):
     long_break_minutes = models.PositiveSmallIntegerField(_("Long break (minutes)"), default=15, validators=[MinValueValidator(1), MaxValueValidator(120)])
     long_break_every = models.PositiveSmallIntegerField(_("Long break after every"), default=4, validators=[MinValueValidator(2), MaxValueValidator(12)],
                                                         help_text=_("Focus sessions."))
+    task_goal = models.PositiveSmallIntegerField(_("Tasks done a day (goal)"), default=5, validators=[MaxValueValidator(100)],
+                                                 help_text=_("On Today, with the days in a row you reached it (as Todoist's Karma). 0: no goal."))
+    focus_goal = models.PositiveSmallIntegerField(_("Focus sessions a day (goal)"), default=8, validators=[MaxValueValidator(30)],
+                                                  help_text=_("Shown as a ring on the focus page, with the days in a row you reached it. 0: no goal."))
     auto_start_breaks = models.BooleanField(_("Start breaks by themselves"), default=False)
     auto_start_focus = models.BooleanField(_("Start the next focus by itself"), default=False)
     sound_enabled = models.BooleanField(_("Sounds"), default=True)

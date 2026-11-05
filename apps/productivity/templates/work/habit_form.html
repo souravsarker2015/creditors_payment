@@ -16,8 +16,24 @@
       </div>
       <fieldset><legend class="label">{{ form.color.label }}</legend>
         <div class="w-swatches">{% for radio in form.color %}<label class="w-swatch" data-color="{{ radio.data.value }}" title="{{ radio.choice_label }}">{{ radio.tag }}<span class="sr-only">{{ radio.choice_label }}</span></label>{% endfor %}</div></fieldset>
-      <fieldset><legend class="label">{{ form.day_list.label }}</legend>
-        <div class="w-days">{% for box in form.day_list %}<label class="w-day">{{ box.tag }}<span>{{ box.choice_label }}</span></label>{% endfor %}</div></fieldset>
+      {# how often (Loop, Streaks): on chosen days, or so many times a week on any days #}
+      <div x-data="{ often: '{{ form.per_week.value|default_if_none:0 }}' }" class="form-stack">
+        <div class="form-grid form-grid-2">
+          <div class="form-field"><label class="label" for="{{ form.per_week.id_for_label }}">{{ form.per_week.label }}</label>
+            <select name="{{ form.per_week.html_name }}" id="{{ form.per_week.id_for_label }}" class="form-input" x-model="often" data-native>
+              {% for v, l in form.per_week.field.choices %}<option value="{{ v }}"{% if form.per_week.value|stringformat:'s' == v|stringformat:'s' %} selected{% endif %}>{{ l }}</option>{% endfor %}
+            </select></div>
+        </div>
+        <fieldset x-show="often === '0'"><legend class="label">{{ form.day_list.label }}</legend>
+          <div class="w-days">{% for box in form.day_list %}<label class="w-day">{{ box.tag }}<span>{{ box.choice_label }}</span></label>{% endfor %}</div>
+          {% if form.day_list.errors %}<p class="form-error">{{ form.day_list.errors.0 }}</p>{% endif %}</fieldset>
+        <p class="help" x-show="often !== '0'" x-cloak>{% translate "Any days you like — the streak counts the weeks you reached it." %}</p>
+      </div>
+      {# an amount a day (8 glasses, 20 pages) — or leave it at 1 for a plain tick #}
+      <div class="form-grid form-grid-2">
+        {% with field=form.target %}{% include "partials/field.html" %}{% endwith %}
+        {% with field=form.unit %}{% include "partials/field.html" %}{% endwith %}
+      </div>
     </div>
     <div class="card-footer form-actions">
       {% if habit %}

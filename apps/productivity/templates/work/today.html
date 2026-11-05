@@ -33,6 +33,9 @@
     <div class="min-w-0">
       <p class="wd-stat-label">{% translate "Tracked today" %}</p>
       <p class="wd-stat-sub">{% if streak %}<span class="wd-streak">{% icon "flame" %}{% blocktranslate count counter=streak %}{{ counter }} day streak{% plural %}{{ counter }} day streak{% endblocktranslate %}</span>{% else %}{% translate "Hit your daily target to start a streak." %}{% endif %}</p>
+      {% if task_goal %}<div class="wd-taskgoal" title="{% translate 'Tasks done today, against your daily goal (Settings)' %}">
+        <p><b class="num">{{ done_today|length }}</b>/<span class="num">{{ task_goal }}</span> {% translate "tasks done" %}{% if task_streak %} · <span class="wd-streak">{% icon "flame" %}{% blocktranslate count counter=task_streak %}{{ counter }} day{% plural %}{{ counter }} days{% endblocktranslate %}</span>{% endif %}</p>
+        <span class="wd-taskbar"><span style="width: {{ task_goal_pct }}%"></span></span></div>{% endif %}
     </div>
   </div>
   <div class="wd-week" aria-label="{% translate 'Last 7 days' %}">
@@ -114,11 +117,14 @@
       <header class="card-header"><h2 class="card-title">{% translate "Habits today" %}</h2><a href="{% url 'work:habits' %}" class="btn btn-ghost btn-sm">{% translate "All" %}</a></header>
       <ul class="wh-today">
         {% for row in habits %}
-        <li x-data="{ on: {{ row.done_today|yesno:'true,false' }}, streak: {{ row.streak }} }">
-          <button type="button" class="wh-pill" :class="on && 'is-on'" data-color="{{ row.habit.color }}"
-                  @click="on = !on; if (on) Work.play(Work.cfg.sound ? 'soft' : ''); Work.api('{% url 'work:api_habit_check' row.habit.pk %}', { date: '{{ today|date:"Y-m-d" }}', done: on ? '1' : '0' }).then(r => { if (r.streak != null) streak = r.streak; })">
+        <li x-data="{ streak: {{ row.streak }}, week: {{ row.week_done }} }">
+          <button type="button" class="wh-pill" data-color="{{ row.habit.color }}"
+                  x-data="habitDay({ url: '{% url 'work:api_habit_check' row.habit.pk %}', date: '{{ today|date:"Y-m-d" }}', target: {{ row.habit.target }}, amount: {{ row.amount_today }}, unit: '{{ row.habit.unit|escapejs }}', name: '{{ row.habit.name|escapejs }}' })"
+                  :class="{ 'is-on': done, 'is-part': amount && !done }" @click="click()" @pointerdown="press()" @pointerup="release()" @pointerleave="release()" @contextmenu.prevent="ask()" :aria-pressed="done.toString()">
             <span class="wh-emoji">{{ row.habit.emoji }}</span><span class="wh-name">{{ row.habit.name }}</span>
-            <span class="wh-streak" x-show="streak" x-cloak>{% icon "flame" %}<span x-text="streak"></span></span>
+            {% if row.habit.counted %}<span class="wh-count num" x-text="amount + '/' + target{% if row.habit.unit %} + ' {{ row.habit.unit|escapejs }}'{% endif %}"></span>{% endif %}
+            {% if row.habit.per_week %}<span class="wh-count num" title="{% translate 'This week' %}" x-text="week + '/{{ row.habit.per_week }} {% translate "this week" %}'"></span>{% endif %}
+            <span class="wh-streak" x-show="streak" x-cloak>{% icon "flame" %}<span x-text="streak"></span>{% if row.streak_weeks %}<small>{% translate "wk" context "weeks, short" %}</small>{% endif %}</span>
           </button>
         </li>
         {% endfor %}

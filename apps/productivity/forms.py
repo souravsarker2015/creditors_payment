@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 from django import forms
 from django.utils import timezone
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_lazy as _, ngettext
 
 from . import services
 from .models import Deck, ExamSubject, Goal, GoalStatus, Habit, LearningItem, LearningStatus, PrepSection, PrepTopic, Project, Question, QuestionKind, Snippet, Sprint, Tag, Task, TaskKind, TimeEntry, WorkSettings
@@ -225,21 +225,37 @@ class SnippetForm(OwnedForm):
 
 class HabitForm(forms.ModelForm):
     day_list = forms.MultipleChoiceField(label=_("On these days"), choices=WEEKDAY_CHOICES, widget=forms.CheckboxSelectMultiple,
-                                         initial=[c for c, _l in WEEKDAY_CHOICES])
+                                         initial=[c for c, _l in WEEKDAY_CHOICES], required=False)
 
     class Meta:
         model = Habit
-        fields = ("name", "emoji", "color")
-        widgets = {"color": SWATCHES}
+        fields = ("name", "emoji", "color", "per_week", "target", "unit")
+        widgets = {"color": SWATCHES, "target": forms.NumberInput(attrs={"min": 1, "inputmode": "numeric"}),
+                   "unit": forms.TextInput(attrs={"placeholder": _("glasses, pages, minutes…")})}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance.pk:
             self.fields["day_list"].initial = list(self.instance.days)
+        self.fields["target"].required = False
+        self.fields["per_week"] = forms.TypedChoiceField(
+            label=_("How often"), coerce=int, initial=self.instance.per_week if self.instance.pk else 0, required=False, empty_value=None,
+            choices=[(0, _("On the days I choose"))] + [(n, ngettext("%(n)s time a week, any days", "%(n)s times a week, any days", n) % {"n": n}) for n in range(1, 8)])
+
+    def clean(self):
+        data = super().clean()
+        if data.get("per_week") is None:                   # left out (an older page): as it was
+            data["per_week"] = self.instance.per_week or 0
+        if not data.get("target"):
+            data["target"] = self.instance.target or 1
+        if not data.get("per_week") and not data.get("day_list"):
+            self.add_error("day_list", _("Pick at least one day — or choose “times a week”."))
+        return data
 
     def save(self, commit=True):
         habit = super().save(commit=False)
-        habit.days = "".join(sorted(self.cleaned_data["day_list"]))
+        if self.cleaned_data.get("day_list"):           # (a times-a-week habit keeps the days it had, for going back)
+            habit.days = "".join(sorted(self.cleaned_data["day_list"]))
         if commit:
             habit.save()
         return habit
@@ -252,7 +268,7 @@ class SettingsForm(forms.ModelForm):
 
     class Meta:
         model = WorkSettings
-        fields = ("week_start", "focus_minutes", "short_break_minutes", "long_break_minutes", "long_break_every",
+        fields = ("week_start", "focus_minutes", "short_break_minutes", "long_break_minutes", "long_break_every", "focus_goal", "task_goal",
                   "auto_start_breaks", "auto_start_focus", "sound_enabled", "sound", "volume", "tick_sound",
                   "notifications", "long_timer_hours", "idle_minutes", "timer_follows_status", "ask_left_off", "default_project", "day_start", "day_end", "cards_remind_at",
                   "daily_email", "reminder_emails", "wip_limit", "invoice_from", "currency", "key_prefix", "branch_format")
@@ -264,7 +280,7 @@ class SettingsForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for name in ("day_start", "day_end", "currency", "key_prefix", "branch_format"):      # left empty: keep what it was
+        for name in ("day_start", "day_end", "currency", "key_prefix", "branch_format", "focus_goal", "task_goal"):      # left empty: keep what it was
             self.fields[name].required = False
         self.fields["default_project"].queryset = Project.objects.filter(owner=self.instance.owner, is_archived=False)
         self.fields["work_day_list"].initial = list(self.instance.work_days)
@@ -276,6 +292,9 @@ class SettingsForm(forms.ModelForm):
         end = data.get("day_end") or self.instance.day_end
         data["day_start"], data["day_end"] = start, end
         data["currency"] = (data.get("currency") or "").strip() or self.instance.currency or "৳"
+        for name in ("focus_goal", "task_goal"):           # 0 is "no goal"; left out (an older page): as it was
+            if data.get(name) is None:
+                data[name] = getattr(self.instance, name)
         data["key_prefix"] = (data.get("key_prefix") or self.instance.key_prefix or "T").upper()
         data["branch_format"] = (data.get("branch_format") or "").strip() or self.instance.branch_format or "{type}/{key}-{slug}"
         if "{key}" not in data["branch_format"] and "{id}" not in data["branch_format"]:

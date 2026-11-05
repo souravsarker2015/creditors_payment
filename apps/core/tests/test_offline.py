@@ -149,3 +149,41 @@ class KeptPagesTests(TestCase):
         self.assertContains(r, "ft-offline-index")
         self.assertContains(r, "Ready to use without signal")
         json.dumps({})  # keep the import used
+
+
+class BackgroundFetchSaysNothingTests(TestCase):
+    """A page fetched in the background (kept for offline use, or fetched ahead by the browser) leaves no
+    message behind for the next page opened — "No pond has a running cycle…" turned up in Productivity —
+    and doesn't use up one that was waiting."""
+
+    def setUp(self):
+        from apps.business.core.testing import make_farm
+
+        _b, self.owner, _staff = make_farm()
+        self.client.force_login(self.owner)
+
+    def shown(self):
+        r = self.client.get(reverse("business:ponds"))
+        return [str(m) for m in get_messages(r.wsgi_request)]
+
+    def test_a_page_kept_for_offline_use_leaves_no_message(self):
+        r = self.client.get(reverse("business:water_check"), HTTP_X_FT_WARM="1")
+        self.assertEqual(r.status_code, 302)                       # no running cycle: it sends you to the ponds
+        self.client.get(reverse("business:feed_usage_bulk"), HTTP_X_FT_WARM="1")
+        self.assertEqual(self.shown(), [])
+        # opened for real, it says why
+        self.client.get(reverse("business:water_check"))
+        self.assertEqual(len(self.shown()), 1)
+
+    def test_a_message_waiting_stays_for_the_page_really_opened(self):
+        self.client.get(reverse("business:water_check"))           # the real visit: its message waits for the next page
+        self.client.get(reverse("business:ponds"), HTTP_X_FT_WARM="1")
+        self.client.get(reverse("business:ponds"), HTTP_SEC_PURPOSE="prefetch")
+        self.assertEqual(len(self.shown()), 1)
+
+    def test_a_page_fetched_ahead_that_would_say_something_is_left_to_the_click(self):
+        r = self.client.get(reverse("business:water_check"), HTTP_SEC_PURPOSE="prefetch")
+        self.assertEqual(r.status_code, 503)                       # the browser drops it; the click runs it for real
+        self.assertEqual(self.shown(), [])
+        r = self.client.get(reverse("business:ponds"), HTTP_SEC_PURPOSE="prefetch;prerender")
+        self.assertEqual(r.status_code, 200)                       # an ordinary page is still fetched ahead

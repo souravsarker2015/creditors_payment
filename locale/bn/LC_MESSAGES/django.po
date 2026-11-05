@@ -26322,3 +26322,105 @@ msgstr "এই নোটের একটি আইকন"
 
 msgid "Icon"
 msgstr "আইকন"
+
+msgid "Times a week"
+msgstr "সপ্তাহে কতবার"
+
+msgid "Goal each day"
+msgstr "প্রতিদিনের লক্ষ্য"
+
+msgid "0: on the days chosen. 1–7: that many times a week, on any days."
+msgstr "০: বেছে নেওয়া দিনগুলোতে। ১–৭: সপ্তাহে ততবার, যেকোনো দিনে।"
+
+msgid "How much counts as done: 8 glasses, 20 pages, 30 minutes. 1 for a plain tick."
+msgstr "কতটা হলে হয়েছে ধরা হবে: ৮ গ্লাস, ২০ পৃষ্ঠা, ৩০ মিনিট। সাধারণ টিকের জন্য ১।"
+
+msgid "glasses, pages, minutes…"
+msgstr "গ্লাস, পৃষ্ঠা, মিনিট…"
+
+msgid "Focus sessions a day (goal)"
+msgstr "দিনে ফোকাস সেশন (লক্ষ্য)"
+
+msgid "Shown as a ring on the focus page, with the days in a row you reached it. 0: no goal."
+msgstr "ফোকাস পেজে দেখাবে, পরপর কত দিন লক্ষ্যে পৌঁছেছেন তাসহ। ০: কোনো লক্ষ্য নেই।"
+
+msgid "Tasks done a day (goal)"
+msgstr "দিনে কাজ শেষ (লক্ষ্য)"
+
+msgid "On Today, with the days in a row you reached it (as Todoist's Karma). 0: no goal."
+msgstr "আজকের পাতায় দেখাবে, পরপর কত দিন লক্ষ্যে পৌঁছেছেন তাসহ (Todoist-এর Karma-র মতো)। ০: কোনো লক্ষ্য নেই।"
+
+msgid "On the days I choose"
+msgstr "আমার বেছে নেওয়া দিনগুলোতে"
+
+msgid "Pick at least one day — or choose “times a week”."
+msgstr "অন্তত একটি দিন বেছে নিন — অথবা “সপ্তাহে কতবার” বেছে নিন।"
+
+msgid "Any days you like — the streak counts the weeks you reached it."
+msgstr "যেকোনো দিনে — ধারাবাহিকতা গোনে কত সপ্তাহ লক্ষ্যে পৌঁছেছেন।"
+
+msgid "Weeks in a row"
+msgstr "পরপর সপ্তাহ"
+
+msgid "Small things, often: read, exercise, practise, review. Tap a day to tick it — or add one more glass, page or minute. Hold (or right-click) to write how much."
+msgstr "ছোট ছোট কাজ, নিয়মিত: পড়া, ব্যায়াম, অনুশীলন, রিভিউ। একটি দিনে ট্যাপ করে টিক দিন — অথবা আরও এক গ্লাস, পৃষ্ঠা বা মিনিট যোগ করুন। কতটা তা লিখতে চেপে ধরুন (বা রাইট-ক্লিক করুন)।"
+
+msgid "On this day"
+msgstr "এই দিনে"
+
+msgid "Mood, last 30 days"
+msgstr "মেজাজ, গত ৩০ দিন"
+
+msgid "Days in a row with something written"
+msgstr "পরপর যত দিন কিছু লেখা হয়েছে"
+
+msgid "sessions today"
+msgstr "আজকের সেশন"
+
+msgid "Days in a row with the goal reached"
+msgstr "পরপর যত দিন লক্ষ্যে পৌঁছেছেন"
+
+msgid "Goal reached — well done."
+msgstr "লক্ষ্যে পৌঁছেছেন — দারুণ!"
+
+msgid "Focus, last 7 days"
+msgstr "ফোকাস, গত ৭ দিন"
+
+msgid "%(t)s focused this week"
+msgstr "এই সপ্তাহে %(t)s ফোকাস"
+
+msgid "Change the goal"
+msgstr "লক্ষ্য বদলান"
+
+msgid "Tasks done today, against your daily goal (Settings)"
+msgstr "আজ শেষ হওয়া কাজ, আপনার দৈনিক লক্ষ্যের তুলনায় (সেটিংস)"
+
+msgid "tasks done"
+msgstr "কাজ শেষ"
+
+msgid "How much? The goal is %(n)s."
+msgstr "কতটা? লক্ষ্য %(n)s।"
+
+msgid "%(counter)s day in a row"
+msgid_plural "%(counter)s days in a row"
+msgstr[0] "পরপর %(counter)s দিন"
+msgstr[1] "পরপর %(counter)s দিন"
+
+msgid "%(n)s month ago"
+msgid_plural "%(n)s months ago"
+msgstr[0] "%(n)s মাস আগে"
+msgstr[1] "%(n)s মাস আগে"
+
+msgid "%(n)s year ago"
+msgid_plural "%(n)s years ago"
+msgstr[0] "%(n)s বছর আগে"
+msgstr[1] "%(n)s বছর আগে"
+
+msgid "%(n)s time a week, any days"
+msgid_plural "%(n)s times a week, any days"
+msgstr[0] "সপ্তাহে %(n)s বার, যেকোনো দিনে"
+msgstr[1] "সপ্তাহে %(n)s বার, যেকোনো দিনে"
+
+msgctxt "weeks, short"
+msgid "wk"
+msgstr "সপ্তাহ"
