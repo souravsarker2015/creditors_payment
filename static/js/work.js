@@ -1388,7 +1388,7 @@
     Alpine.data("workNote", function (initial) {
       return Work.withCategories({
         categories: (initial.categories || []).slice(), reading: false,
-        id: initial.id || null, title: initial.title || "", body: initial.body || "", tags: initial.tags || "", project: initial.project || "", rev: initial.rev || "",
+        id: initial.id || null, title: initial.title || "", icon: initial.icon || "", body: initial.body || "", tags: initial.tags || "", project: initial.project || "", rev: initial.rev || "",
         linkedTitle: initial.title || "", examOpen: false, examSubject: "", examName: "", same: "note:" + (initial.id || uid()),
         state: "saved", savedAt: initial.saved || "", preview: false, split: false, timer: null, inflight: null, again: false,
         making: false, suggest: [], pick: 0, dgOpen: false, dgItems: [], dgQ: "", dgLoading: false,
@@ -1551,7 +1551,7 @@
           this.state = "saving";
           var key = this.draftKey;
           var sent = [this.title, this.body];
-          this.inflight = api(CFG.urls.noteSave, { id: this.id || "", title: this.title, body: this.body, tags: this.tags, project: this.project, categories: this.categories.join(","),
+          this.inflight = api(CFG.urls.noteSave, { id: this.id || "", title: this.title, icon: this.icon, body: this.body, tags: this.tags, project: this.project, categories: this.categories.join(","),
                                                    rev: this.rev || "", _ft_same: this.same, _ft_draft: key }).then(function (res) {
             self.inflight = null;
             if (res.rev) self.rev = res.rev;
@@ -1654,6 +1654,11 @@
           this.$nextTick(function () { self.grow(); });
           toast(t(how === "sink" ? "todoSunk" : how === "untick" ? "todoUnticked" : "todoDropped", "Done"), "good",
                 { label: t("undo", "Undo"), run: function () { self.body = before; self.$nextTick(function () { self.grow(); }); } });
+        },
+        /* An emoji with the title, as a Notion page's icon: on the cards, in the list and here */
+        chooseIcon: function (el) {
+          var self = this;
+          Work.pickIcon(el, this.icon).then(function (v) { if (v == null || v === self.icon) return; self.icon = v; self.saveNow(); });
         },
         /* Find (and replace) in the note: the Markdown is where the words are, so it opens in Write */
         openFind: function (replacing) {
@@ -2160,6 +2165,43 @@
   });
 
 
+  /* ── An icon for a note (Notion's page icon): a grid of common ones, or any emoji typed or pasted;
+     Work.pickIcon(button, now) → the one chosen, "" to take it off, or null when closed without one. ── */
+  var ICONS = ("📝 📌 💡 ⭐ 🔥 ✅ 🎯 🧠 📚 📖 ✏️ 🎓 🧪 💻 🐍 ⚙️ 🐞 🚀 📊 💼 💰 🧾 🏦 🛒 🏠 🍳 💪 🏃 ✈️ 🌍 📅 ⏰ " +
+               "🗂️ 📦 🔒 🔑 🎵 🎨 📷 🌱 ❤️ 😊 🙏 🎉 ⚡ 🧩 📣 💬").split(" ");
+  window.Work.pickIcon = function (anchor, current) {
+    return new Promise(function (resolve) {
+      var pop = d.createElement("div"), done = false;
+      pop.className = "wicon-pop"; pop.setAttribute("role", "dialog"); pop.setAttribute("aria-label", t("iconPick", "Pick an icon"));
+      pop.innerHTML = '<div class="wicon-grid">' + ICONS.map(function (e) {
+        return '<button type="button" class="wicon-btn' + (e === current ? " is-on" : "") + '" data-icon="' + e + '">' + e + "</button>"; }).join("") + "</div>" +
+        '<div class="wicon-foot"><input type="text" class="form-input input-compact wicon-own" maxlength="16" autocomplete="off" placeholder="' + escAttr(t("iconType", "Or type / paste one")) + '">' +
+        (current ? '<button type="button" class="btn btn-ghost btn-sm" data-icon="">' + escAttr(t("iconRemove", "Remove")) + "</button>" : "") + "</div>";
+      d.body.appendChild(pop);
+      var r = anchor.getBoundingClientRect(), w = pop.offsetWidth, h = pop.offsetHeight;
+      pop.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + "px";
+      pop.style.top = (r.bottom + 6 + h > innerHeight - 8 ? Math.max(8, r.top - h - 6) : r.bottom + 6) + "px";
+      function close(v) {
+        if (done) return; done = true;
+        pop.remove(); d.removeEventListener("mousedown", outside, true); d.removeEventListener("keydown", esc, true);
+        if (anchor.focus) anchor.focus({ preventScroll: true });
+        resolve(v);
+      }
+      function outside(e) { if (!pop.contains(e.target)) close(null); }
+      function esc(e) { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); close(null); } }
+      pop.addEventListener("click", function (e) { var b = e.target.closest("[data-icon]"); if (b) close(b.getAttribute("data-icon")); });
+      var own = pop.querySelector(".wicon-own");
+      own.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); var v = own.value.replace(/\s+/g, ""); if (v) close(v.slice(0, 16)); } });
+      own.addEventListener("input", function () {          // one emoji pasted or picked from the keyboard: that's it
+        var v = own.value.trim();
+        if (v && window.Intl && Intl.Segmenter && /\p{Extended_Pictographic}/u.test(v) && [...new Intl.Segmenter().segment(v)].length === 1) close(v);
+      });
+      setTimeout(function () { d.addEventListener("mousedown", outside, true); }, 0);
+      d.addEventListener("keydown", esc, true);
+      var on = pop.querySelector(".wicon-btn.is-on") || pop.querySelector(".wicon-btn"); if (on) on.focus({ preventScroll: true });
+    });
+  };
+
   /* ── Categories: the person's own tree, shared by notes and exam notes (Backend › Databases › Indexing).
      Work.categoryPicker(url) is mixed into a page's Alpine data: the pop-up to pick any number for a note
      (or one to show), chips, add / rename / move / delete. The page brings setCategory(id) and reload(). ── */
@@ -2543,11 +2585,87 @@
       toast(t("liveDeleted", "Part deleted"), "", { label: t("undo", "Undo"), run: function () { if (st.opts.set) st.opts.set(was); } });
     }
   }
+  /* Dragging a part by its handle (Notion): a line shows where it will go, the page scrolls near the
+     edges, and it moves there on letting go (Undo on the toast). A click on the handle is still its menu. */
+  function liveMoveTo(el, from, to) {        // to: the gap it goes into, 0 (before the first) … n (after the last)
+    var st = el._live, blocks = st.split.blocks, was = st.text;
+    if (to === from || to === from + 1 || !blocks[from]) return false;
+    var endTail = blocks[blocks.length - 1].tail;        // how the text ends stays as it was, whichever part is last now
+    var b = blocks.splice(from, 1)[0];
+    if (to > from) to--;
+    blocks.splice(to, 0, b);
+    blocks[blocks.length - 1].tail = endTail;
+    [to - 1, to, from - 1, from].forEach(function (k) {         // where it left and where it landed stand apart
+      if (k >= 0 && k < blocks.length - 1 && newlines(blocks[k].tail) < 2) blocks[k].tail = "\n\n";
+    });
+    liveText(el); st.split = liveSplit(st.text); liveDraw(el);
+    var div = el.querySelector('.md-block[data-i="' + to + '"]');
+    if (div) { div.classList.add("is-moved"); setTimeout(function () { div.classList.remove("is-moved"); }, 900); }
+    toast(t("liveMoved", "Moved"), "", { label: t("undo", "Undo"), run: function () { if (st.opts.set) st.opts.set(was); } });
+    return true;
+  }
+  function liveDrag(el, e, handle) {
+    var st = el._live, from = +handle.closest(".md-block").getAttribute("data-i"), x0 = e.clientX, y0 = e.clientY;
+    var line = null, src = null, gap = null, timer = null, lastY = y0, id = e.pointerId;
+    function gapAt(y) {                      // the gap nearest y, between the drawn parts
+      var parts = el.querySelectorAll(".md-block[data-i]"), best = 0, top = null;
+      for (var k = 0; k < parts.length; k++) {
+        var r = parts[k].getBoundingClientRect();
+        if (top === null) top = r.top;
+        if (y > r.top + r.height / 2) best = k + 1;
+      }
+      var at = parts[Math.min(best, parts.length - 1)], ar = at.getBoundingClientRect();
+      return { i: best, y: best >= parts.length ? ar.bottom + 2 : ar.top - 2, left: el.getBoundingClientRect().left, width: el.getBoundingClientRect().width };
+    }
+    function edge() {                        // near the top or bottom of the screen: the page scrolls along
+      var v = window.visualViewport, top = v ? v.offsetTop : 0, bottom = top + (v ? v.height : innerHeight), dy = 0;
+      if (lastY < top + 70) dy = -Math.ceil((top + 70 - lastY) / 4);
+      else if (lastY > bottom - 70) dy = Math.ceil((lastY - bottom + 70) / 4);
+      if (dy) { window.scrollTo({ top: window.scrollY + dy, behavior: "instant" }); place(); }
+      timer = requestAnimationFrame(edge);
+    }
+    function place() {
+      gap = gapAt(lastY);
+      line.style.top = gap.y + "px"; line.style.left = gap.left + "px"; line.style.width = gap.width + "px";
+      line.classList.toggle("is-same", gap.i === from || gap.i === from + 1);
+    }
+    function move(ev) {
+      if (ev.pointerId !== id) return;
+      lastY = ev.clientY;
+      if (!line) {
+        if (Math.abs(ev.clientY - y0) < 6 && Math.abs(ev.clientX - x0) < 6) return;
+        liveCloseMenu();
+        line = d.createElement("div"); line.className = "md-drop-line"; d.body.appendChild(line);
+        src = handle.closest(".md-block"); src.classList.add("is-dragging");
+        el.classList.add("is-dragging"); d.documentElement.classList.add("md-is-dragging");
+        timer = requestAnimationFrame(edge);
+      }
+      ev.preventDefault();
+      place();
+    }
+    function end(ev) {
+      if (ev.pointerId !== id) return;
+      window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", end); window.removeEventListener("pointercancel", end);
+      if (!line) return;                     // no drag: the click opens the menu
+      cancelAnimationFrame(timer); line.remove();
+      if (src) src.classList.remove("is-dragging");
+      el.classList.remove("is-dragging"); d.documentElement.classList.remove("md-is-dragging");
+      st.dragged = Date.now();
+      if (ev.type === "pointerup" && gap) liveMoveTo(el, from, gap.i);
+    }
+    window.addEventListener("pointermove", move, { passive: false });
+    window.addEventListener("pointerup", end); window.addEventListener("pointercancel", end);
+  }
   function liveWire(el) {
+    el.addEventListener("pointerdown", function (e) {
+      var st = el._live, handle = st && !st.ro && !st.editing && e.button === 0 && e.target.closest(".md-handle");
+      if (handle && el.contains(handle)) liveDrag(el, e, handle);
+    });
     el.addEventListener("click", function (e) {
       var st = el._live, tg = e.target;
       if (e.defaultPrevented || e.button || !st) return;
       var handle = !st.ro && tg.closest(".md-handle");
+      if (handle && st.dragged && Date.now() - st.dragged < 400) { e.preventDefault(); return; }     // the end of a drag, not a click
       if (handle && el.contains(handle)) { e.preventDefault(); liveMenu(el, +handle.closest(".md-block").getAttribute("data-i"), handle); return; }
       if (!st.ro && tg.closest(".md-add, .md-empty")) { e.preventDefault(); liveAppend(el); return; }
       var tick = tg.closest("input.md-tick");

@@ -508,6 +508,8 @@ def note_save(request):
         note.project = Project.objects.filter(owner=user, pk=request.POST["project"] or 0).first()
     if "color" in request.POST:
         note.color = request.POST["color"] if request.POST["color"] in Color.values else ""
+    if "icon" in request.POST:             # an emoji with the title (Notion's page icon); "" takes it off
+        note.icon = "".join(request.POST["icon"].split())[:16]
     if request.POST.get("pinned") == "1" and not note.pk:
         note.is_pinned = True
     if not note.pk and not (note.title.strip() or note.body.strip()):
@@ -539,7 +541,7 @@ def _note_card(request, note):
 def note_get(request, pk):
     """One note, to edit it on the board without leaving it."""
     note = get_object_or_404(Note, pk=pk, owner=request.user)
-    return ok(id=note.pk, title=note.title, body=services.one_line_end(note.body), color=note.color, pinned=note.is_pinned, archived=note.is_archived,
+    return ok(id=note.pk, title=note.title, icon=note.icon, body=services.one_line_end(note.body), color=note.color, pinned=note.is_pinned, archived=note.is_archived,
               tags=" ".join(note.tags.values_list("name", flat=True)), url=reverse("work:note", args=[note.pk]),
               categories=list(note.categories.values_list("pk", flat=True)),
               updated=int(note.updated_at.timestamp() * 1000), rev=services.note_rev(note))
@@ -637,7 +639,7 @@ def note_action(request, pk):
         return ok()
     elif action == "duplicate":        # a copy to start from: the same text, tags, categories, project and colour
         copy = Note.objects.create(owner=request.user, title=(_("%(title)s (copy)") % {"title": note.title})[:200] if note.title else "",
-                                   body=note.body, project=note.project, color=note.color)
+                                   body=note.body, project=note.project, color=note.color, icon=note.icon)
         copy.tags.set(note.tags.all())
         copy.categories.set(note.categories.all())
         return ok(id=copy.pk, url=reverse("work:note", args=[copy.pk]))

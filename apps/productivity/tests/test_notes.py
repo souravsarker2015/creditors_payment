@@ -344,3 +344,46 @@ class NoteCategoriesMigrationTests(TransactionTestCase):
         self.assertEqual(sorted(c.name for c in Note2.objects.get(pk=n2.pk).categories.all()), ["Books", "Ideas"])
         # the exam tree: what holds questions stays; what only held notes has gone over to the notes
         self.assertEqual(sorted(Cat2.objects.values_list("name", flat=True)), ["Backend", "Databases", "Physics"])
+
+
+class NoteIconAndSideListTests(TestCase):
+    """A note's icon (Notion's page icon) and the categories beside the board (Keep's labels)."""
+
+    def setUp(self):
+        self.me = User.objects.create_superuser("me", "me@example.com", PW)
+        self.client.force_login(self.me)
+
+    def test_an_icon_is_saved_shown_and_copied(self):
+        note = Note.objects.create(owner=self.me, title="Plan")
+        r = self.client.post(reverse("work:api_note_save"), {"id": note.pk, "icon": " 🧠 ", "card": "1"}).json()
+        note.refresh_from_db()
+        self.assertEqual(note.icon, "🧠")
+        self.assertIn("🧠", r["card"])
+        self.assertEqual(self.client.get(reverse("work:api_note_get", args=[note.pk])).json()["icon"], "🧠")
+        self.assertIn("🧠", self.client.get(reverse("work:notes"), {"view": "list"}).content.decode())
+        copy = self.client.post(reverse("work:api_note_action", args=[note.pk]), {"action": "duplicate"}).json()
+        self.assertEqual(Note.objects.get(pk=copy["id"]).icon, "🧠")
+        self.client.post(reverse("work:api_note_save"), {"id": note.pk, "icon": "x" * 40})
+        note.refresh_from_db()
+        self.assertEqual(len(note.icon), 16)                                   # kept short
+        self.client.post(reverse("work:api_note_save"), {"id": note.pk, "icon": ""})
+        note.refresh_from_db()
+        self.assertEqual(note.icon, "")                                        # taken off
+        self.client.post(reverse("work:api_note_save"), {"id": note.pk, "title": "Plan again"})
+        note.refresh_from_db()
+        self.assertEqual((note.title, note.icon), ("Plan again", ""))          # a save without it leaves it be
+
+    def test_the_board_has_the_categories_beside_it(self):
+        from ..models import NoteCategory
+
+        work = NoteCategory.objects.create(owner=self.me, name="Work")
+        Note.objects.create(owner=self.me, title="A").categories.add(work)
+        Note.objects.create(owner=self.me, title="B")
+        Note.objects.create(owner=self.me, title="Old", is_archived=True)
+        r = self.client.get(reverse("work:notes"))
+        html = r.content.decode()
+        self.assertIn('class="wnb-side"', html)
+        self.assertIn('class="chip-row wnb-chips"', html)
+        self.assertEqual(r.context["cat_data"]["all"], 2)                     # archived ones aren't counted
+        self.assertEqual(r.context["cat_data"]["counts"][work.pk], 1)
+        self.assertIn(reverse("trash_list"), html)

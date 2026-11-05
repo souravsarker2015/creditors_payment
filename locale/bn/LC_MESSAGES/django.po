@@ -26289,3 +26289,36 @@ msgstr "নোটের ক্যাটাগরি"
 
 msgid "Note categories"
 msgstr "নোটের ক্যাটাগরি"
+
+msgid "Pick an icon"
+msgstr "একটি আইকন বেছে নিন"
+
+msgid "Or type / paste one"
+msgstr "অথবা লিখুন / পেস্ট করুন"
+
+msgid "Highlight"
+msgstr "হাইলাইট"
+
+msgid "Add or change categories"
+msgstr "ক্যাটাগরি যোগ করুন বা বদলান"
+
+msgid "Show or hide what’s inside"
+msgstr "ভেতরের গুলো দেখান বা লুকান"
+
+msgid "No categories yet — they keep notes apart, one inside another if you like (Work › Meetings)."
+msgstr "এখনো কোনো ক্যাটাগরি নেই — এগুলো নোট আলাদা রাখে, চাইলে একটির ভেতরে আরেকটি (কাজ › মিটিং)।"
+
+msgid "Change the icon"
+msgstr "আইকন বদলান"
+
+msgid "Add an icon"
+msgstr "একটি আইকন যোগ করুন"
+
+msgid "An icon for this note — on its card and in the list too"
+msgstr "এই নোটের একটি আইকন — এর কার্ডে আর তালিকাতেও দেখাবে"
+
+msgid "An icon for this note"
+msgstr "এই নোটের একটি আইকন"
+
+msgid "Icon"
+msgstr "আইকন"

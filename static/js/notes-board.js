@@ -28,7 +28,7 @@
       return Work.withCategories({
         open: false, title: "", body: "", color: "", pinned: false, saving: false,
         cats: CATS.categories || [], catN: CATS.counts || {}, category: CATS.category === undefined ? null : CATS.category,
-        picked: [],
+        picked: [], sideClosed: Work.recall("work-note-side", {}) || {},
         ed: null, edPreview: false, edRead: false, edState: "saved", edTimer: null, edSending: null, edAgain: false, edSaved: "", edTitle: "", finding: null,
         init: function () {
           var self = this, older = Work.recall("work-note-quick", null);
@@ -134,7 +134,7 @@
             .then(function (n) {
               if (!n || !n.ok) { location.href = (urls().notes || "/work/notes/") + id + "/"; return; }
               self.edSaved = JSON.stringify([n.title, n.body]); self.edTitle = n.title;
-              self.ed = { id: n.id, title: n.title, body: n.body, color: n.color, pinned: n.pinned, url: n.url, archived: n.archived, rev: n.rev, categories: n.categories || [] };
+              self.ed = { id: n.id, title: n.title, icon: n.icon || "", body: n.body, color: n.color, pinned: n.pinned, url: n.url, archived: n.archived, rev: n.rev, categories: n.categories || [] };
               // a card's Edit button: Write; a click on the card: View; otherwise as notes were last read here
               var seen = mode || Work.recall("work-board-view", "write");
               if (seen === true) seen = "preview"; else if (seen === false) seen = "write";
@@ -251,6 +251,40 @@
           var url = new URL(location.href); url.searchParams.delete("open");
           history.replaceState(history.state, "", url.pathname + url.search);
           var card = id && cardOf(id); if (card) card.scrollIntoView({ block: "nearest" });
+        },
+        /* the side list of categories (Keep's labels, OneNote's sections): folded or open, as left */
+        sideRows: function () {
+          var closed = this.sideClosed, byId = {};
+          this.cats.forEach(function (c) { byId[c.id] = c; });
+          return this.cats.filter(function (c) {
+            for (var p = c.parent, seen = 0; p && seen < 50; p = byId[p] && byId[p].parent, seen++) if (closed[p]) return false;
+            return true;
+          });
+        },
+        sideToggle: function (id) {
+          var o = Object.assign({}, this.sideClosed);
+          if (o[id]) delete o[id]; else o[id] = 1;
+          this.sideClosed = o; Work.store("work-note-side", o);
+        },
+        sideHref: function (id) {
+          var u = new URL(location.href), keep = u.searchParams.get("sort");
+          return (urls().notes || "/work/notes/") + "?" + (id === null ? "" : "category=" + id) + (keep ? (id === null ? "" : "&") + "sort=" + encodeURIComponent(keep) : "");
+        },
+        // on a phone: the top-level categories, and those inside the one shown (a row of chips)
+        chipCats: function () {
+          var on = this.category, byId = {};
+          this.cats.forEach(function (c) { byId[c.id] = c; });
+          var here = typeof on === "number" ? byId[on] : null;
+          return this.cats.filter(function (c) { return !c.parent || (here && (c.parent === here.id || c.id === here.id || c.id === here.parent || c.parent === here.parent)); });
+        },
+        /* its icon (Notion's page icon), chosen right here: saved at once, the card follows */
+        edIcon: function (el) {
+          var self = this, n = this.ed; if (!n) return;
+          Work.pickIcon(el, n.icon).then(function (v) {
+            if (v == null || !self.ed || v === n.icon) return;
+            n.icon = v;
+            Work.api(urls().noteSave, { id: n.id, icon: v, card: "1" }).then(function (r) { if (r && r.ok && r.card) self.swap(n.id, r.card); });
+          });
         },
         noteColor: function (c) {
           var n = this.ed; n.color = c;

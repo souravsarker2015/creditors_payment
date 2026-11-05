@@ -496,7 +496,7 @@
     ["out", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 6H11M21 12h-8M21 18H11M7 8l-4 4 4 4"/></svg>', "Outdent"],
     ["in", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 6H11M21 12h-8M21 18H11M3 8l4 4-4 4"/></svg>', "Indent"],
     ["link", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>', "Link"],
-    ["quote", "<b>❝</b>", "Quote"], ["code", "<b>&lt;/&gt;</b>", "Code"], ["s", "<s>S</s>", "Strikethrough"],
+    ["quote", "<b>❝</b>", "Quote"], ["code", "<b>&lt;/&gt;</b>", "Code"], ["mark", '<span class="md-k-mark">H</span>', "Highlight"], ["s", "<s>S</s>", "Strikethrough"],
     ["up", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg>', "Move line up"],
     ["down", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg>', "Move line down"],
     ["find", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg>', "Find and replace"],
@@ -509,6 +509,7 @@
     else if (k === "i") wrap(ta, "*");
     else if (k === "s") wrap(ta, "~~");
     else if (k === "code") wrap(ta, "`");
+    else if (k === "mark") wrap(ta, "==");
     else if (k === "todo") lineMark(ta, "- [ ] ");
     else if (k === "ul") lineMark(ta, "- ");
     else if (k === "ol") lineMark(ta, "1. ");
@@ -583,6 +584,49 @@
       });
       VV.addEventListener("scroll", function () { placeBar(); if (find) drawFind(); });
     }
+  }
+
+  /* ── Words chosen with a mouse: a small bar over them (Notion, OneNote, Medium) — bold, italic,
+     strikethrough, code, highlight, link, heading. The same buttons as the row on a phone's keyboard
+     (which has them already), so Ctrl+Z takes any of them back. ── */
+  var bub = null;
+  var BUB = ["b", "i", "s", "code", "mark", "link", "h"];
+  function bubbleHide() { if (bub) { bub.classList.remove("is-on"); bub._ta = null; } }
+  function bubbleShow(ta) {
+    if (TOUCH || d.activeElement !== ta || box({ target: ta }) !== "md") return bubbleHide();
+    var s = ta.selectionStart, e = ta.selectionEnd;
+    if (s === e || !ta.value.slice(s, e).trim() || (slash && slash.ta === ta)) return bubbleHide();
+    var rs = rangeRects(ta, s, e);
+    if (!rs.length) return bubbleHide();
+    if (!bub) {
+      bub = d.createElement("div"); bub.className = "md-bubble"; bub.setAttribute("role", "toolbar"); bub.setAttribute("aria-label", t2("kbar", "bar", "Formatting"));
+      bub.innerHTML = BUB.map(function (k) {
+        var key = KEYS.filter(function (x) { return x[0] === k; })[0], name = t2("kbar", k, key[2]);
+        return '<button type="button" class="md-bubble-btn" data-k="' + k + '" tabindex="-1" title="' + name.replace(/"/g, "&quot;") + '" aria-label="' + name.replace(/"/g, "&quot;") + '">' + key[1] + "</button>";
+      }).join("");
+      bub.addEventListener("mousedown", function (ev) { ev.preventDefault(); });           // the words stay chosen
+      bub.addEventListener("click", function (ev) {
+        var b = ev.target.closest("[data-k]"), on = bub._ta; if (!b || !on) return;
+        press(on, b.getAttribute("data-k"));
+        setTimeout(function () { bubbleShow(on); }, 0);
+      });
+      d.body.appendChild(bub);
+    }
+    bub._ta = ta; bub.classList.add("is-on");
+    var first = rs[0], last = rs[rs.length - 1], w = bub.offsetWidth, h = bub.offsetHeight;
+    var top = first.top - h - 8;
+    if (top < 8) top = last.top + last.height + 8;                // no room above: under the words
+    var left = Math.max(8, Math.min(first.left + (rs.length === 1 ? first.width / 2 : 0) - (rs.length === 1 ? w / 2 : 0), innerWidth - w - 8));
+    bub.style.top = Math.round(top) + "px"; bub.style.left = Math.round(left) + "px";
+  }
+  if (!TOUCH) {
+    d.addEventListener("mouseup", function (e) { if (box(e) === "md") { var ta = e.target; setTimeout(function () { bubbleShow(ta); }, 0); } });
+    d.addEventListener("keyup", function (e) { if (box(e) === "md" && (e.shiftKey || ((e.ctrlKey || e.metaKey) && e.key === "a"))) bubbleShow(e.target); });
+    d.addEventListener("selectionchange", function () { if (bub && bub._ta && (d.activeElement !== bub._ta || bub._ta.selectionStart === bub._ta.selectionEnd)) bubbleHide(); });
+    d.addEventListener("input", function (e) { if (bub && e.target === bub._ta) bubbleHide(); });
+    d.addEventListener("focusout", function (e) { if (bub && e.target === bub._ta) bubbleHide(); });
+    d.addEventListener("keydown", function (e) { if (bub && bub._ta && e.key === "Escape" && bub.classList.contains("is-on")) { e.preventDefault(); e.stopPropagation(); bubbleHide(); } }, true);
+    d.addEventListener("scroll", function () { if (bub && bub._ta) bubbleShow(bub._ta); }, true);
   }
 
   /* ── Find and replace in a Markdown box (Ctrl+F or Ctrl+H in it, the 🔍 over the keyboard, or a

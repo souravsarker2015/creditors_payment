@@ -91,7 +91,8 @@ def _texts():
         "liveGrip": _("Options for this part"), "liveEmpty": _("Nothing here yet. Click to write."), "liveAdd": _("Click to add more"),
         "liveEditing": _("Editing this part — Esc when done"), "liveEdit": _("Edit"), "liveBelow": _("Add below"), "liveTurn": _("Turn into"),
         "liveText": _("Text"), "liveDup": _("Duplicate"), "liveUp": _("Move up"), "liveDown": _("Move down"),
-        "liveCopy": _("Copy as Markdown"), "liveDelete": _("Delete"), "liveDeleted": _("Part deleted"),
+        "liveCopy": _("Copy as Markdown"), "liveDelete": _("Delete"), "liveDeleted": _("Part deleted"), "liveMoved": _("Moved"),
+        "iconPick": _("Pick an icon"), "iconType": _("Or type / paste one"), "iconRemove": _("Remove"),
         "deletePicked": _("Delete the %(n)s picked notes? You can bring them back from Recently deleted."),
         "catAll": _("All categories"), "catNone": _("No category"), "catDeleted": _("Category deleted"),
         "catOffline": _("Adding or changing a category needs a connection."),
@@ -109,7 +110,7 @@ def _texts():
             "bar": _("Formatting"), "undo": _("Undo"), "redo": _("Redo"), "slash": _("Insert a block"), "h": _("Heading"),
             "b": _("Bold"), "i": _("Italic"), "s": _("Strikethrough"), "code": _("Code"), "todo": _("To-do"), "ul": _("Bulleted list"),
             "ol": _("Numbered list"), "quote": _("Quote"), "out": _("Outdent"), "in": _("Indent"), "link": _("Link"),
-            "up": _("Move line up"), "down": _("Move line down"), "find": _("Find and replace"), "done": _("Done"),
+            "up": _("Move line up"), "down": _("Move line down"), "find": _("Find and replace"), "done": _("Done"), "mark": _("Highlight"),
         },
         "find": {       # find and replace in a Markdown box (static/js/writing.js)
             "find": _("Find"), "replace": _("Replace with"), "one": _("Replace"), "all": _("All"), "case": _("Match case"),
@@ -770,7 +771,7 @@ def notes_view(request, pk=None):
     if sort in NOTE_SORTS:
         notes = notes.order_by("-is_pinned", *NOTE_SORTS[sort])
     note = get_object_or_404(Note, pk=pk, owner=user) if pk else None
-    note_data = {"id": None, "title": "", "body": "", "tags": "", "project": "", "updated": 0, "saved": "",
+    note_data = {"id": None, "title": "", "icon": "", "body": "", "tags": "", "project": "", "updated": 0, "saved": "",
                  "categories": [category] if isinstance(category, int) else []}
     template = NOTE_TEMPLATES.get(request.GET.get("template", "")) if not note else None
     own = (Note.objects.filter(owner=user, is_template=True, pk=request.GET["from"]).first()
@@ -784,12 +785,13 @@ def notes_view(request, pk=None):
     elif not note and request.GET.get("title"):        # a [[link]] to a note that isn't written yet
         note_data["title"] = request.GET["title"].strip()[:200]
     if note:
-        note_data = {"id": note.pk, "title": note.title, "body": services.one_line_end(note.body), "tags": " ".join(note.tags.values_list("name", flat=True)),
+        note_data = {"id": note.pk, "title": note.title, "icon": note.icon, "body": services.one_line_end(note.body), "tags": " ".join(note.tags.values_list("name", flat=True)),
                      "project": str(note.project_id or ""), "updated": int(note.updated_at.timestamp() * 1000),
                      "saved": timezone.localtime(note.updated_at).strftime("%H:%M"), "rev": services.note_rev(note),
                      "categories": list(note.categories.values_list("pk", flat=True))}
     cat_tree = exam.category_tree(user, NoteCategory)
-    cat_counts = exam.note_category_counts(user, Note.objects.filter(owner=user, is_archived=False, is_template=False))
+    active = Note.objects.filter(owner=user, is_archived=False, is_template=False)
+    cat_counts = exam.note_category_counts(user, active)
     note_data.update(cats=cat_tree, catN=cat_counts)
     from django.core.paginator import Paginator
 
@@ -801,7 +803,7 @@ def notes_view(request, pk=None):
     return render_work(request, "work/notes.html", {
         "note_data": note_data, "board": board, "page_obj": page, "base_query_string": keep.urlencode(),
         "pagination_window": [], "colors": Color.choices, "category": category, "sort": sort if sort in NOTE_SORTS else "",
-        "cat_data": {"categories": cat_tree, "counts": cat_counts, "category": category,
+        "cat_data": {"categories": cat_tree, "counts": cat_counts, "category": category, "all": active.count() if board else 0,
                      "label": next((c["path"] for c in cat_tree if c["id"] == category), "")},
         "notes": page.object_list, "total": page.paginator.count, "note": note, "q": q, "tag": tag, "archived": archived, "project": project,
         "subjects": ExamSubject.objects.filter(owner=user).only("pk", "name") if not board else [],

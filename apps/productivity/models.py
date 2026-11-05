@@ -419,6 +419,7 @@ class NoteCategory(models.Model):
 class Note(models.Model):
     owner = models.ForeignKey(**OWNER)
     title = models.CharField(_("Title"), max_length=200, blank=True)
+    icon = models.CharField(_("Icon"), max_length=16, blank=True, default="", help_text="An emoji shown with the title, as a Notion page's icon.")
     body = models.TextField(_("Note"), blank=True)
     project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True, blank=True, related_name="notes", verbose_name=_("Project"))
     tags = models.ManyToManyField(Tag, blank=True, related_name="notes", verbose_name=_("Tags"))

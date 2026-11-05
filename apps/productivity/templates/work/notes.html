@@ -29,6 +29,9 @@
     </div>
   </header>
 
+  <div class="wnb-body">
+  {% include "work/partials/note_side.html" %}
+  <div class="wnb-main">
   <section class="wkc-compose" :class="open && 'is-open'" :data-color="color || null" @click.outside="open && close()" @keydown.escape.stop="close()"
            @keydown.ctrl.enter.prevent="save(true)" @keydown.meta.enter.prevent="save(true)">
     <div class="wkc-compose-line" x-show="!open" @click="start()">
@@ -75,7 +78,7 @@
       <option value="">{% translate "Last edited" %}</option><option value="created"{% if sort == 'created' %} selected{% endif %}>{% translate "Newest first" %}</option>
       <option value="oldest"{% if sort == 'oldest' %} selected{% endif %}>{% translate "Not touched for longest" %}</option><option value="title"{% if sort == 'title' %} selected{% endif %}>{% translate "Title A–Z" %}</option>
     </select>
-    <span class="wcat-filter">
+    <span class="wcat-filter" x-show="!cats.length">
       <button type="button" class="btn btn-secondary btn-sm{% if category is not None %} is-on{% endif %}" @click="showCats()" data-tip="{% translate 'Show one category, with what’s inside it' %}">{% icon "folder" %}<span x-text="catLabel()">{% if cat_data.label %}{{ cat_data.label }}{% else %}{% translate "All categories" %}{% endif %}</span></button>
       {% if category is not None %}<a href="{% url 'work:notes' %}" class="icon-btn" aria-label="{% translate 'Show all categories' %}">{% icon "x" %}</a>{% endif %}
     </span>
@@ -110,6 +113,8 @@
     {% endfor %}
   </div>
   <div x-ref="pager">{% include "partials/pagination.html" %}</div>
+  </div>{# .wnb-main #}
+  </div>{# .wnb-body #}
 
   {# ── a note opened on the board (like Keep): written in place, saved as you go ── #}
   <div class="wc-backdrop" x-show="ed" x-cloak x-transition.opacity @click="closeNote()"></div>
@@ -118,6 +123,8 @@
            @keydown.escape.stop="closeNote()" @keydown.ctrl.enter.prevent="closeNote()" @keydown.meta.enter.prevent="closeNote()"
            @keydown.ctrl.e.prevent="edView(edPreview ? 'write' : 'preview')" @keydown.meta.e.prevent="edView(edPreview ? 'write' : 'preview')">
     <div class="wkc-editor-head">
+      <button type="button" class="wn-icon is-sm" :class="!ed.icon && 'is-empty'" @click="edIcon($el)" :aria-label="ed.icon ? '{{ _("Change the icon")|escapejs }}' : '{{ _("Add an icon")|escapejs }}'"
+              data-tip="{% translate 'An icon for this note' %}"><span x-show="ed.icon" x-text="ed.icon"></span><span x-show="!ed.icon" class="wn-icon-add">{% icon "sparkles" %}</span></button>
       <input type="text" class="wkc-q-input" x-model="ed.title" maxlength="200" placeholder="{% translate 'Title' %}" aria-label="{% translate 'Title' %}"
              @change="titleChanged()" @keydown.enter.prevent="$refs.edBody && $refs.edBody.focus()">
       {# Write / Preview stay up here, in sight, however long the note is (only the text below scrolls) #}
@@ -198,7 +205,7 @@
     <ul class="wn-items">
       {% for n in notes %}
       <li data-note-id="{{ n.pk }}" class="wn-li"><a href="{% url 'work:note' n.pk %}?mode=view{% if q %}&q={{ q|urlencode }}{% endif %}" class="wn-item{% if note and note.pk == n.pk %} is-active{% endif %}{% if n.color %} has-color{% endif %}"{% if n.color %} data-color="{{ n.color }}"{% elif n.project %} data-color="{{ n.project.color }}"{% endif %}>
-        <span class="wn-item-top">{% if n.is_pinned %}<span class="wd-pin" aria-label="{% translate 'Pinned' %}">{% icon "pin" %}</span>{% endif %}<span class="work-note-item-title wn-item-title">{{ n.display_title }}</span><time class="wn-item-time" datetime="{{ n.updated_at|date:'c' }}">{{ n.updated_at|when_short }}</time></span>
+        <span class="wn-item-top">{% if n.is_pinned %}<span class="wd-pin" aria-label="{% translate 'Pinned' %}">{% icon "pin" %}</span>{% endif %}<span class="work-note-item-title wn-item-title">{% if n.icon %}<span class="wn-ico" aria-hidden="true">{{ n.icon }}</span>{% endif %}{{ n.display_title }}</span><time class="wn-item-time" datetime="{{ n.updated_at|date:'c' }}">{{ n.updated_at|when_short }}</time></span>
         {% with snip=n|note_snippet %}{% if snip %}<span class="wn-item-snip">{{ snip }}</span>{% endif %}{% endwith %}
         {% if n.project or n.tags.all or n.categories.all %}<span class="wn-item-foot">{% for c in n.categories.all %}<span class="wn-item-cat">{% icon "folder" %}{{ c.name }}</span>{% endfor %}{% if n.project %}<span class="wt-proj"><span class="wt-dot" data-color="{{ n.project.color }}"></span>{{ n.project.name }}</span>{% endif %}{% for tg in n.tags.all %}<span class="wn-item-tag">#{{ tg.name }}</span>{% endfor %}</span>{% endif %}
       </a><a href="{% url 'work:note' n.pk %}?mode=write{% if q %}&q={{ q|urlencode }}{% endif %}" class="icon-btn wn-item-edit" aria-label="{% translate 'Edit' %}: {{ n.display_title }}" data-tip="{% translate 'Edit' %}">{% icon "edit" %}</a></li>
@@ -297,7 +304,11 @@
           </div>
         </div>
       </div>
-      <input x-model="title" class="wn-title" maxlength="200" placeholder="{% translate 'Title' %}" aria-label="{% translate 'Title' %}" @change="titleChanged()">
+      <div class="wn-title-row">
+        <button type="button" class="wn-icon" :class="!icon && 'is-empty'" @click="chooseIcon($el)" :aria-label="icon ? '{{ _("Change the icon")|escapejs }}' : '{{ _("Add an icon")|escapejs }}'"
+                data-tip="{% translate 'An icon for this note — on its card and in the list too' %}"><span x-show="icon" x-text="icon"></span><span x-show="!icon" class="wn-icon-add">{% icon "sparkles" %}</span></button>
+        <input x-model="title" class="wn-title" maxlength="200" placeholder="{% translate 'Title' %}" aria-label="{% translate 'Title' %}" @change="titleChanged()">
+      </div>
       <div class="wn-meta">
         <label class="wn-field">{% icon "folder" %}
           <select x-model="project" data-native aria-label="{% translate 'Project' %}">

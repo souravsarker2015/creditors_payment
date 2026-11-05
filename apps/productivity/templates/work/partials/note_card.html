@@ -7,7 +7,7 @@
     <span class="spacer"></span>
     <button type="button" class="wkc-btn wnc-pin" :class="pinned && 'is-on'" @click.stop="pin()" :aria-pressed="pinned.toString()" aria-label="{% translate 'Pin to top' %}" data-tip="{% translate 'Pin to top' %}">{% icon "pin" %}</button>
   </div>
-  <a href="{% url 'work:note' n.pk %}" class="wnc-title">{{ n.display_title }}</a>
+  <a href="{% url 'work:note' n.pk %}" class="wnc-title">{% if n.icon %}<span class="wn-ico" aria-hidden="true">{{ n.icon }}</span>{% endif %}{{ n.display_title }}</a>
   {% with lines=n|note_card_lines %}{% if lines %}<div class="wnc-body">{% for ln in lines %}{% if ln.todo %}<button type="button" class="wnc-todo{% if ln.done %} is-done{% endif %}" role="checkbox" aria-checked="{{ ln.done|yesno:'true,false' }}" @click.stop="tick({{ ln.i }}, $el)"><span class="wnc-box" aria-hidden="true">{% icon "check" %}</span><span class="wnc-todo-text">{{ ln.text }}</span></button>{% else %}<span class="wnc-line"{% if ln.kind %} data-kind="{{ ln.kind }}"{% endif %}>{{ ln.text }}</span>{% endif %}{% endfor %}</div>{% endif %}{% endwith %}
   {% if n.tags.all or n.categories.all %}<p class="wnc-tags">{% for c in n.categories.all %}<a href="?category={{ c.pk }}" class="wnc-cat" @click.stop>{% icon "folder" %}{{ c.name }}</a>{% endfor %}{% for tg in n.tags.all %}<span>#{{ tg.name }}</span>{% endfor %}</p>{% endif %}
   <div class="wkc-foot">

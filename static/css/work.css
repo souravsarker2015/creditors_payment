@@ -3603,3 +3603,104 @@ html:not(.can-dictate) [data-dictate] { display: none !important; }
   background: color-mix(in srgb, #facc15 45%, transparent); box-shadow: 0 0 0 2px color-mix(in srgb, #f59e0b 75%, transparent);
 }
 .wn-menu-todos { display: contents; }
+
+/* ── The notes board: categories at the side (Keep's labels, OneNote's sections); a row of chips on a phone ── */
+.wnb-body { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem 1.5rem; align-items: start; }
+.wnb-main { display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
+.wnb-side { display: none; }
+.wnb-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -1rem; padding: 0 1rem 0.125rem; }
+.wnb-chips::-webkit-scrollbar { display: none; }
+.wnb-chips .chip { flex: none; }
+.wnb-chips .chip svg { width: 0.875rem; height: 0.875rem; }
+.wnb-chips .num { margin-left: 0.25rem; font-size: 0.6875rem; opacity: 0.7; }
+@media (min-width: 1100px) {
+  .wnb-body { grid-template-columns: 14.5rem minmax(0, 1fr); }
+  .wnb-chips { display: none !important; }
+  .wnb-main .wcat-filter { display: none; }        /* the side list does it */
+  .wnb-side {
+    position: sticky; top: calc(var(--work-sticky-top, 4.5rem) + 0.5rem); display: flex; flex-direction: column; gap: 0.0625rem;
+    max-height: calc(100dvh - 7rem); overflow-y: auto; overscroll-behavior: contain; padding: 0.25rem 0.25rem 1rem 0; scrollbar-width: thin;
+  }
+}
+.wnb-side-row {
+  display: flex; align-items: center; gap: 0.5rem; min-height: 2.125rem; padding: 0.25rem 0.625rem; border-radius: 0.625rem;
+  color: var(--text-secondary); font-size: 0.875rem; font-weight: 550; text-decoration: none; min-width: 0; flex: 1;
+}
+.wnb-side-row svg { width: 1rem; height: 1rem; flex: none; opacity: 0.8; }
+.wnb-side-row:hover { background: var(--surface-sunken); color: var(--text-primary); }
+.wnb-side-row.is-on { background: var(--accent-soft); color: var(--accent); font-weight: 650; }
+.wnb-side-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wnb-side-muted { font-style: italic; }
+.wnb-side-row .num { flex: none; font-size: 0.75rem; color: var(--text-muted); font-weight: 600; }
+.wnb-side-row.is-on .num { color: inherit; }
+.wnb-side-head {
+  display: flex; align-items: center; justify-content: space-between; margin: 0.75rem 0 0.125rem; padding-left: 0.625rem;
+  font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted);
+}
+.wnb-side-head .icon-btn { width: 1.75rem; height: 1.75rem; }
+.wnb-side-item { display: flex; align-items: center; padding-left: calc(var(--depth, 0) * 0.875rem); }
+.wnb-side-item .wnb-side-row { padding-left: 0.25rem; }
+.wnb-side-item:not(:has(.wnb-side-caret:not([style*="none"]))) .wnb-side-row { padding-left: 1.75rem; }
+.wnb-side-caret {
+  flex: none; display: grid; place-items: center; width: 1.5rem; height: 1.5rem; border: 0; border-radius: 0.375rem; background: transparent;
+  color: var(--text-muted); transition: rotate .15s;
+}
+.wnb-side-caret svg { width: 0.875rem; height: 0.875rem; }
+.wnb-side-caret:hover { background: var(--surface-sunken); color: var(--text-primary); }
+.wnb-side-caret.is-closed { rotate: -90deg; }
+.wnb-side-empty { margin: 0.25rem 0.625rem; font-size: 0.8125rem; line-height: 1.5; color: var(--text-muted); }
+.wnb-side-sep { height: 1px; margin: 0.625rem 0.5rem; background: var(--border-soft, var(--border)); }
+.link-btn { padding: 0; border: 0; background: none; color: var(--accent); font: inherit; font-weight: 650; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+
+/* ── A note's icon (Notion's page icon) ── */
+.wn-ico { margin-right: 0.375rem; font-weight: 400; font-style: normal; }
+.wn-title-row { display: flex; align-items: flex-end; gap: 0; padding-left: 1rem; }
+.wn-title-row .wn-title { padding-left: 0.375rem; }
+.wn-icon {
+  flex: none; display: grid; place-items: center; width: 2.75rem; height: 2.75rem; margin-bottom: 0.125rem; border: 0; border-radius: 0.75rem;
+  background: transparent; font-size: 1.875rem; line-height: 1; cursor: pointer; transition: background .12s, opacity .12s;
+}
+.wn-icon:hover { background: var(--surface-sunken); }
+.wn-icon.is-empty { color: var(--text-muted); opacity: 0.35; }
+.wn-icon.is-empty svg { width: 1.25rem; height: 1.25rem; }
+.wn-title-row:hover .wn-icon.is-empty, .wn-icon.is-empty:focus-visible { opacity: 0.85; }
+@media (hover: none) { .wn-icon.is-empty { opacity: 0.6; } }
+.wn-icon.is-sm { width: 2.25rem; height: 2.25rem; font-size: 1.375rem; margin: 0; }
+.wicon-pop {
+  position: fixed; z-index: 1003; width: min(19rem, calc(100vw - 1rem)); padding: 0.5rem; border-radius: 0.875rem; background: var(--surface-raised);
+  border: 1px solid var(--border); box-shadow: var(--shadow-lg); animation: wt-menu .12s ease-out;
+}
+.wicon-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 0.125rem; }
+.wicon-btn { display: grid; place-items: center; aspect-ratio: 1; border: 0; border-radius: 0.5rem; background: transparent; font-size: 1.25rem; cursor: pointer; }
+.wicon-btn:hover, .wicon-btn:focus-visible { background: var(--surface-sunken); outline: none; }
+.wicon-btn.is-on { background: var(--accent-soft); box-shadow: inset 0 0 0 1.5px var(--accent); }
+.wicon-foot { display: flex; gap: 0.375rem; align-items: center; margin-top: 0.5rem; }
+.wicon-own { flex: 1; min-width: 0; }
+
+/* ── Moving a part by dragging its handle (Notion) ── */
+.md-handle { touch-action: none; cursor: grab; }
+.md-is-dragging, .md-is-dragging * { cursor: grabbing !important; user-select: none; -webkit-user-select: none; }
+.md-block.is-dragging { opacity: 0.35; }
+.md-live.is-dragging .md-handle { opacity: 0 !important; }
+.md-drop-line { position: fixed; z-index: 1001; height: 3px; margin-top: -1.5px; border-radius: 2px; background: var(--accent); pointer-events: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent); }
+.md-drop-line.is-same { opacity: 0.25; }
+.md-block.is-moved { animation: md-moved .9s ease-out; }
+@keyframes md-moved { from { background: var(--accent-soft); } to { background: transparent; } }
+
+/* ── Words chosen with a mouse: a small bar over them (Notion, OneNote) ── */
+.md-bubble { display: none; }
+.md-bubble.is-on {
+  position: fixed; z-index: 1002; display: flex; gap: 0.0625rem; padding: 0.25rem; border-radius: 0.75rem;
+  background: var(--surface-ink, #1f2937); color: var(--text-on-ink, #fff); box-shadow: var(--shadow-lg); animation: wt-menu .1s ease-out;
+}
+.md-bubble-btn {
+  display: grid; place-items: center; min-width: 2rem; height: 2rem; padding: 0 0.375rem; border: 0; border-radius: 0.5rem;
+  background: transparent; color: inherit; font: 600 0.9375rem/1 var(--font-body); cursor: pointer;
+}
+.md-bubble-btn svg { width: 1.0625rem; height: 1.0625rem; }
+.md-bubble-btn i { font-family: Georgia, serif; }
+.md-bubble-btn:hover { background: color-mix(in srgb, currentColor 16%, transparent); }
+.md-k-mark { padding: 0 0.25rem; border-radius: 0.25rem; background: color-mix(in srgb, #facc15 70%, transparent); color: #111; font-weight: 700; }
+.wnb-chips .chip.is-active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 650; }
+.wnb-chip-add { padding-inline: 0.625rem; color: var(--text-muted); }
