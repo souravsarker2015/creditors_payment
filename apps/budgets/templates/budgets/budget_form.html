@@ -38,6 +38,7 @@
       {% endwith %}
       {% with field=form.amount %}{% include "partials/field.html" %}{% endwith %}
       {% with field=form.alert_at %}{% include "partials/field.html" %}{% endwith %}
+      {% with field=form.rollover %}{% include "partials/field.html" %}{% endwith %}
     </div>
     <div class="card-footer form-actions">
       <a href="{{ back }}" class="btn btn-ghost btn-lg">{% translate "Cancel" %}</a>

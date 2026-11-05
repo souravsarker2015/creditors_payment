@@ -147,7 +147,7 @@
       <ul class="ledger">
         {% for ex in recent_expenses|slice:":6" %}
         <li class="ledger-row">
-          <span class="ledger-icon" data-tone="critical">{% if ex.category %}{{ ex.category.name|first|upper }}{% else %}G{% endif %}</span>
+          {% include "expense/_cat_icon.html" with cat=ex.category %}
           <div class="ledger-main">
             <p class="ledger-title">{% if ex.category %}{{ ex.category.name }}{% else %}{% translate "General" %}{% endif %}</p>
             <p class="ledger-meta">{{ ex.date|date:"j M Y" }}{% if ex.note %} · {{ ex.note }}{% endif %}</p>

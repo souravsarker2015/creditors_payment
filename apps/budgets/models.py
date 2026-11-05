@@ -25,6 +25,10 @@ class Budget(models.Model):
         _("Warn me at"), default=80, validators=[MinValueValidator(10), MaxValueValidator(100)],
         help_text=_("Percent of the limit. You'll also be warned if the current pace would overshoot it."),
     )
+    rollover = models.BooleanField(
+        _("Carry over to next month"), default=False,
+        help_text=_("What's left adds to next month's limit, and overspending takes from it — like envelopes."),
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

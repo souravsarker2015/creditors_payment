@@ -6,11 +6,13 @@ import django.utils.timezone
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.contrib import messages
+from django.db import transaction
 from django.db.models import Count, F, Sum, Q, DecimalField, Value
 from django.db.models.functions import Coalesce, TruncMonth
 from django.core.paginator import Paginator
 from django.utils.translation import gettext as _, gettext_lazy, ngettext
 from datetime import date as date_cls
+from decimal import Decimal, InvalidOperation
 
 from apps.core.csvsafe import safe_writer
 from apps.core.templatetags.ui import money
@@ -22,7 +24,7 @@ from datetime import timedelta
 from apps.budgets.services import statuses as budget_statuses
 from apps.core.stats import month_compare, ranked, trend_summary
 from apps.core.status import apply_status_filter, active_or_current, toggle_active
-from .forms import ExpenseCategoryForm, ExpenseForm, RecurringExpenseForm
+from .forms import CATEGORY_ICONS, CategoryForm, ExpenseForm, RecurringExpenseForm
 
 SORT_OPTIONS = [
     ("-date", gettext_lazy("Date (Newest First)")),
@@ -113,7 +115,17 @@ def _get_expense_filters(request, user):
         else:
             categories_qs = categories_qs.filter(id__in=selected_category_ids)
 
+    # search and a wallet, as Wallet and Money Lover's transaction lists have
+    search_query = " ".join(request.GET.get("q", "").split())[:100]
+    wallets = list(user.wallets.order_by("-is_active", "name"))
+    selected_wallet = request.GET.get("wallet", "").strip()
+    if selected_wallet != "none" and not any(str(w.pk) == selected_wallet for w in wallets):
+        selected_wallet = ""
+
     return {
+        "search_query": search_query,
+        "wallets": wallets,
+        "selected_wallet": selected_wallet,
         "filter_mode": filter_mode,
         "selected_category_ids": selected_category_ids,
         "selected_year": selected_year,
@@ -131,6 +143,26 @@ def _apply_date_filters(qs, selected_year=None, date_from=None, date_to=None):
         qs = qs.filter(date__gte=date_from)
     if date_to:
         qs = qs.filter(date__lte=date_to)
+    return qs
+
+
+def _filter_context(filters):
+    return {key: filters[key] for key in ("search_query", "wallets", "selected_wallet")}
+
+
+def _apply_search_and_wallet(qs, filters):
+    text = filters["search_query"]
+    if text:
+        found = Q(note__icontains=text) | Q(category__name__icontains=text)
+        try:
+            found |= Q(amount=Decimal(text.replace(",", "").lstrip("৳")))
+        except InvalidOperation:
+            pass
+        qs = qs.filter(found)
+    if filters["selected_wallet"] == "none":
+        qs = qs.filter(wallet__isnull=True)
+    elif filters["selected_wallet"]:
+        qs = qs.filter(wallet_id=int(filters["selected_wallet"]))
     return qs
 
 
@@ -189,6 +221,7 @@ def dashboard_view(request):
         date_from=filters["date_from"],
         date_to=filters["date_to"],
     )
+    filtered_expenses = _apply_search_and_wallet(filtered_expenses, filters)
 
     total_spent = filtered_expenses.aggregate(
         total_spent=Coalesce(Sum("amount"), Value(0, output_field=DecimalField()))
@@ -262,7 +295,9 @@ def dashboard_view(request):
             is_active=True, next_run_date__lte=today + timedelta(days=30)
         ).filter(Q(end_date__isnull=True) | Q(end_date__gte=F("next_run_date"))).select_related("category").order_by("next_run_date")[:5],
         "budgets": [b for b in budget_statuses(request.user) if b["budget"].scope != "bazar"],
-        "is_filtered": bool(filters["selected_category_ids"] or filters["selected_year"] or filters["date_from"] or filters["date_to"]),
+        "is_filtered": bool(filters["selected_category_ids"] or filters["selected_year"] or filters["date_from"] or filters["date_to"]
+                            or filters["search_query"] or filters["selected_wallet"]),
+        **_filter_context(filters),
         "category_labels": category_labels,
         "category_data": category_data,
         "trend_labels": trend_labels,
@@ -296,11 +331,12 @@ def expense_list_view(request):
         date_from=filters["date_from"],
         date_to=filters["date_to"],
     )
+    filtered_expenses = _apply_search_and_wallet(filtered_expenses, filters)
 
     sort = request.GET.get("sort", "-date")
     if sort not in SORT_FIELDS:
         sort = "-date"
-    filtered_expenses = filtered_expenses.select_related("category").order_by(*SORT_FIELDS[sort])
+    filtered_expenses = filtered_expenses.select_related("category", "wallet").order_by(*SORT_FIELDS[sort])
 
     total_spent = filtered_expenses.aggregate(
         total=Coalesce(Sum("amount"), Value(0, output_field=DecimalField()))
@@ -310,12 +346,13 @@ def expense_list_view(request):
 
     if request.GET.get("export") == "csv":
         rows = [
-            (ex.date.isoformat(), ex.category.name if ex.category else _("General"), ex.amount, ex.note)
+            (ex.date.isoformat(), ex.category.name if ex.category else _("General"), ex.amount,
+             ex.wallet.name if ex.wallet else "", ex.note)
             for ex in filtered_expenses
         ]
         return _csv_response(
             "expenses.csv",
-            [_("Date"), _("Category"), _("Amount"), _("Note")],
+            [_("Date"), _("Category"), _("Amount"), _("Wallet"), _("Note")],
             rows,
         )
 
@@ -334,7 +371,22 @@ def expense_list_view(request):
         .order_by("-date__year")
     )
 
+    # by day with each day's total, as Money Lover and Wallet list them (the total is the whole
+    # day's under these filters, even when the day runs onto the next page)
+    days = []
+    if sort in ("-date", "date"):
+        rows = list(page_obj.object_list)
+        day_totals = dict(filtered_expenses.filter(date__in={r.date for r in rows}).order_by()
+                          .values_list("date").annotate(t=Sum("amount")))
+        for r in rows:
+            if not days or days[-1]["date"] != r.date:
+                days.append({"date": r.date, "total": day_totals.get(r.date, 0), "rows": []})
+            days[-1]["rows"].append(r)
+
     context = {
+        "days": days,
+        "today": timezone.localdate(),
+        **_filter_context(filters),
         "expenses": page_obj.object_list,
         "total_spent": total_spent,
         "total_entries": total_entries,
@@ -369,7 +421,8 @@ def _budget_alert(request, expense):
 
 
 @login_required
-def expense_create_view(request):
+def expense_create_view(request, copy_of=None):
+    """Add an expense; from "Copy" it starts filled in like that one, dated today (Wallet, Money Lover)."""
     if request.method == "POST":
         form = ExpenseForm(request.POST, request.FILES, user=request.user)
         if form.is_valid():
@@ -380,8 +433,67 @@ def expense_create_view(request):
             _budget_alert(request, expense)
             return redirect("expense_list")
     else:
-        form = ExpenseForm(user=request.user, initial={"date": django.utils.timezone.localdate()})
+        initial = {"date": django.utils.timezone.localdate()}
+        if copy_of:
+            src = get_object_or_404(Expense, pk=copy_of, user=request.user)
+            initial.update(category=src.category_id, amount=src.amount, wallet=src.wallet_id, note=src.note)
+        form = ExpenseForm(user=request.user, initial=initial)
     return render(request, "expense/expense_form.html", {"form": form, "title": _("Add New Expense")})
+
+
+@login_required
+def expense_import_template_view(request):
+    from .importing import template_rows
+    return _csv_response("expense_import_template.csv",
+                         [_("Date"), _("Amount"), _("Category"), _("Wallet"), _("Note")], template_rows(timezone.localdate()))
+
+
+@login_required
+@require_POST
+def expense_import_view(request):
+    """A spreadsheet or a bank / bKash statement saved as CSV (see importing.py)."""
+    from .importing import read
+
+    uploaded = request.FILES.get("csv_file")
+    if not uploaded:
+        messages.error(request, _("Please choose a CSV file to import."))
+        return redirect("expense_list")
+    r = read(request.user, uploaded)
+    if r["error"] == "encoding":
+        messages.error(request, _("Could not read that file. Please upload a UTF-8 encoded CSV."))
+        return redirect("expense_list")
+    if r["error"] == "columns":
+        messages.error(request, _("The CSV needs a Date and an Amount column (or Debit / Withdrawal). Download the template to see the columns."))
+        return redirect("expense_list")
+    if r["added"]:
+        text = ngettext("Imported %(count)s expense.", "Imported %(count)s expenses.", r["added"]) % {"count": r["added"]}
+        if r["categories"]:
+            text += " " + ngettext("%(count)s new category was added.", "%(count)s new categories were added.",
+                                   r["categories"]) % {"count": r["categories"]}
+        messages.success(request, text)
+    left = []
+    if r["duplicate"]:
+        left.append(ngettext("%(count)s already recorded", "%(count)s already recorded", r["duplicate"]) % {"count": r["duplicate"]})
+    if r["income"]:
+        left.append(ngettext("%(count)s money coming in", "%(count)s money coming in", r["income"]) % {"count": r["income"]})
+    if r["bad_date"]:
+        left.append(ngettext("%(count)s without a date I could read", "%(count)s without a date I could read", r["bad_date"]) % {"count": r["bad_date"]})
+    if r["bad_amount"]:
+        left.append(ngettext("%(count)s without an amount", "%(count)s without an amount", r["bad_amount"]) % {"count": r["bad_amount"]})
+    if left:
+        messages.warning(request, _("Left out: %(list)s.") % {"list": ", ".join(left)})
+    if r["unknown_wallet"]:
+        messages.info(request, ngettext(
+            "%(count)s row named a wallet you don't have, so it was saved without one.",
+            "%(count)s rows named a wallet you don't have, so they were saved without one.", r["unknown_wallet"]) % {"count": r["unknown_wallet"]})
+    if not r["added"] and not left:
+        messages.error(request, _("No rows found to import."))
+    return redirect("expense_list")
+
+
+@login_required
+def expense_copy_view(request, pk):
+    return expense_create_view(request, copy_of=pk)
 
 
 @login_required
@@ -431,19 +543,64 @@ def category_list_view(request):
     })
 
 
+def _category_page(request, category=None):
+    form = CategoryForm(request.POST or None, instance=category, user=request.user)
+    if request.method == "POST" and form.is_valid():
+        cat = form.save(commit=False)
+        cat.user = request.user
+        cat.save()
+        if category:
+            messages.success(request, _("Category '%(name)s' saved.") % {"name": cat.name})
+        else:
+            messages.success(request, _("Category '%(name)s' created.") % {"name": cat.name})
+        return redirect("category_list")
+    context = {"form": form, "icons": CATEGORY_ICONS, "category": category,
+               "title": _("Edit category") if category else _("Add Category")}
+    if category:
+        context["entry_count"] = category.expenses.count()
+        context["others"] = request.user.expense_categories.exclude(pk=category.pk).order_by("-is_active", "name")
+    return render(request, "expense/category_form.html", context)
+
+
 @login_required
 def category_create_view(request):
-    if request.method == "POST":
-        form = ExpenseCategoryForm(request.POST)
-        if form.is_valid():
-            cat = form.save(commit=False)
-            cat.user = request.user
-            cat.save()
-            messages.success(request, _("Category '%(name)s' created.") % {"name": cat.name})
-            return redirect("category_list")
-    else:
-        form = ExpenseCategoryForm()
-    return render(request, "expense/expense_form.html", {"form": form, "title": _("Add Category")})
+    return _category_page(request)
+
+
+@login_required
+def category_edit_view(request, pk):
+    return _category_page(request, get_object_or_404(ExpenseCategory, pk=pk, user=request.user))
+
+
+@login_required
+@require_POST
+def category_merge_view(request, pk):
+    """Money Lover's merge: everything in this category moves to another (or to General), then it goes."""
+    from apps.budgets.models import Budget
+
+    source = get_object_or_404(ExpenseCategory, pk=pk, user=request.user)
+    into = None
+    if request.POST.get("into"):
+        into = get_object_or_404(ExpenseCategory, pk=request.POST["into"], user=request.user)
+        if into.pk == source.pk:
+            return redirect("category_edit", pk)
+    with transaction.atomic():
+        moved = source.expenses.update(category=into)
+        source.recurring_expenses.update(category=into)
+        budget = Budget.objects.filter(user=request.user, category=source).first()
+        if budget:
+            if into and not Budget.objects.filter(user=request.user, category=into).exists():
+                budget.category = into
+                budget.save(update_fields=["category", "updated_at"])
+            else:
+                budget.delete()       # the other category already has its own budget, or General has none
+        name = source.name
+        source.delete()
+    messages.success(request, ngettext(
+        "“%(name)s” merged into %(into)s: %(count)s expense moved.",
+        "“%(name)s” merged into %(into)s: %(count)s expenses moved.", moved,
+    ) % {"name": name, "into": into.name if into else _("General"), "count": moved})
+    return redirect("category_list")
 
 
 @login_required

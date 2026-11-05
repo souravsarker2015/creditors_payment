@@ -9,9 +9,16 @@
     <div>
       <a href="{% url 'expense_dashboard' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Expenses" %}</a>
       <h1 class="page-title">{% translate "Expense Ledger" %}</h1>
-      <p class="page-subtitle">{% translate "Every expense you've logged, newest first. Filter, sort or export to CSV." %}</p>
+      <p class="page-subtitle">{% translate "Every expense you've logged, by day. Search, filter, sort, or bring in and export a CSV." %}</p>
     </div>
     <div class="page-actions">
+      {# a spreadsheet or a bank / bKash statement (Wallet, Monarch) #}
+      <form method="post" action="{% url 'expense_import' %}" enctype="multipart/form-data" x-data>
+        {% csrf_token %}
+        <input type="file" id="expense-import-file" name="csv_file" accept=".csv,text/csv" class="hidden" @change="$el.form.submit()">
+        <label for="expense-import-file" class="btn btn-secondary cursor-pointer" data-tip="{% translate 'Bring in expenses from a spreadsheet or a bank statement saved as CSV: a Date and an Amount (or Debit) column, and if you like Category, Wallet and Note. Rows already recorded are skipped.' %}">{% include "partials/icon.html" with name="upload" %}{% translate "Import CSV" %}</label>
+      </form>
+      <a href="{% url 'expense_import_template' %}" class="btn btn-ghost" data-tip="{% translate 'Download a sample CSV with the expected columns.' %}">{% translate "Template" %}</a>
       <a href="{% url 'expense_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Log New Expense" %}</a>
     </div>
   </header>
@@ -36,26 +43,21 @@
 
   {% if page_obj.object_list %}
   <section class="card">
+    {% if days %}
+    {% for d in days %}
+    <h2 class="ledger-day"><span><b>{% if d.date == today %}{% translate "Today" %}{% else %}{{ d.date|date:"l" }}{% endif %}</b> · {{ d.date|date:"j M Y" }}</span><span>{{ d.total|money }}</span></h2>
     <ul class="ledger">
-      {% for ex in page_obj %}
-      <li class="ledger-row">
-        <span class="ledger-icon" data-tone="critical">{% if ex.category %}{{ ex.category.name|first|upper }}{% else %}G{% endif %}</span>
-        <div class="ledger-main">
-          <p class="ledger-title">{% if ex.category %}{{ ex.category.name }}{% else %}{% translate "General" %}{% endif %}{% if ex.recurring_source_id %} <span class="badge badge-outline ml-1 !text-[0.6875rem]" data-tip="{% translate 'Created automatically by a recurring schedule.' %}">{% translate "Recurring" %}</span>{% endif %}</p>
-          <p class="ledger-meta">{{ ex.date|date:"j M Y" }}{% if ex.note %} · {{ ex.note }}{% endif %}{% if ex.receipt %} · <a href="{% url 'receipt_view' 'expense' ex.pk %}" target="_blank" rel="noopener" class="receipt-link">{% translate "receipt" %}</a>{% endif %}</p>
-        </div>
-        <div class="ledger-end">
-          <span class="ledger-amount">{{ ex.amount|money }}</span>
-          {% url 'expense_edit' ex.pk as edit_url %}{% url 'expense_delete' ex.pk as delete_url %}
-          {% translate "Delete this expense? You can bring it back from Recently deleted." as confirm_text %}
-          {% include "partials/row_menu.html" with edit_url=edit_url delete_url=delete_url confirm=confirm_text up=forloop.last %}
-        </div>
-      </li>
-      {% endfor %}
+      {% for ex in d.rows %}{% include "expense/_ledger_row.html" with last=forloop.last %}{% endfor %}
     </ul>
+    {% endfor %}
+    {% else %}
+    <ul class="ledger">
+      {% for ex in page_obj %}{% include "expense/_ledger_row.html" with last=forloop.last show_date=True %}{% endfor %}
+    </ul>
+    {% endif %}
   </section>
   {% include "partials/pagination.html" %}
-  {% elif selected_category_ids or selected_year or date_from or date_to %}
+  {% elif selected_category_ids or selected_year or date_from or date_to or search_query or selected_wallet %}
   <div class="empty">
     <div class="empty-icon">{% include "partials/icon.html" with name="search" %}</div>
     <h3 class="empty-title">{% translate "No expenses match your filters" %}</h3>

@@ -1,0 +1,13 @@
+{% load i18n %}<li class="ledger-row">
+  {% include "expense/_cat_icon.html" with cat=ex.category %}
+  <div class="ledger-main">
+    <p class="ledger-title">{% if ex.category %}{{ ex.category.name }}{% else %}{% translate "General" %}{% endif %}{% if ex.recurring_source_id %} <span class="badge badge-outline ml-1 !text-[0.6875rem]" data-tip="{% translate 'Created automatically by a recurring schedule.' %}">{% translate "Recurring" %}</span>{% endif %}</p>
+    <p class="ledger-meta">{% if show_date %}{{ ex.date|date:"j M Y" }}{% endif %}{% if ex.wallet %}{% if show_date %} · {% endif %}{{ ex.wallet.name }}{% endif %}{% if ex.note %}{% if show_date or ex.wallet %} · {% endif %}{{ ex.note }}{% endif %}{% if ex.receipt %} · <a href="{% url 'receipt_view' 'expense' ex.pk %}" target="_blank" rel="noopener" class="receipt-link">{% translate "receipt" %}</a>{% endif %}</p>
+  </div>
+  <div class="ledger-end">
+    <span class="ledger-amount">{{ ex.amount|money }}</span>
+    {% url 'expense_edit' ex.pk as edit_url %}{% url 'expense_delete' ex.pk as delete_url %}{% url 'expense_copy' ex.pk as copy_url %}
+    {% translate "Delete this expense? You can bring it back from Recently deleted." as confirm_text %}
+    {% include "partials/row_menu.html" with edit_url=edit_url delete_url=delete_url confirm=confirm_text up=last copy_url=copy_url %}
+  </div>
+</li>

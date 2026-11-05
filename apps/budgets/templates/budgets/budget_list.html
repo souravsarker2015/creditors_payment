@@ -39,10 +39,10 @@
     {% with b=r.budget %}
     <article class="card entity budget-card" data-tone="{{ r.tone }}">
       <div class="entity-head">
-        <span class="avatar" data-tone="{{ r.tone }}">{% if b.scope == "bazar" %}{% include "partials/icon.html" with name="cart" %}{% elif b.scope == "expenses" %}{% include "partials/icon.html" with name="wallet" %}{% else %}{{ b.label|first|upper }}{% endif %}</span>
+        <span class="avatar{% if b.category.icon %} is-emoji{% endif %}" data-tone="{{ r.tone }}">{% if b.scope == "bazar" %}{% include "partials/icon.html" with name="cart" %}{% elif b.scope == "expenses" %}{% include "partials/icon.html" with name="wallet" %}{% else %}{{ b.category.badge|default:"?" }}{% endif %}</span>
         <div class="min-w-0 flex-1">
           <h3 class="entity-name">{{ b.label }}</h3>
-          <p class="entity-meta">{% if b.scope == "category" %}{% translate "Expense category" %}{% else %}{{ b.get_scope_display }}{% endif %} · {% blocktranslate with pct=b.alert_at %}warn at {{ pct }}%{% endblocktranslate %}</p>
+          <p class="entity-meta">{% if b.scope == "category" %}{% translate "Expense category" %}{% else %}{{ b.get_scope_display }}{% endif %} · {% blocktranslate with pct=b.alert_at %}warn at {{ pct }}%{% endblocktranslate %}{% if b.rollover %} · {% translate "carries over" %}{% endif %}</p>
         </div>
         {% url 'budget_edit' b.pk as edit_url %}{% url 'budget_delete' b.pk as delete_url %}
         {% translate "Remove this budget? Your expenses are not affected." as confirm_text %}
@@ -59,6 +59,12 @@
           {% if r.state == "over" %}<span style="color: var(--status-critical); font-weight: 700;">{% blocktranslate with amount=r.over_by|money %}Over by {{ amount }}{% endblocktranslate %}</span>
           {% else %}<span>{% blocktranslate with amount=r.remaining|money %}{{ amount }} left{% endblocktranslate %}</span>{% endif %}
         </div>
+        {% if r.carried %}
+        <p class="budget-carry" data-tone="{% if r.carried > 0 %}good{% else %}critical{% endif %}">
+          {% if r.carried > 0 %}{% blocktranslate with amount=r.carried|money month=r.from_month|date:"F" base=b.amount|money %}+{{ amount }} carried from {{ month }} (limit {{ base }}){% endblocktranslate %}
+          {% else %}{% blocktranslate with amount=r.carried_abs|money month=r.from_month|date:"F" base=b.amount|money %}{{ amount }} overspent in {{ month }} comes off (limit {{ base }}){% endblocktranslate %}{% endif %}
+        </p>
+        {% endif %}
       </div>
 
       {% if r.is_current %}

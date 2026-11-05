@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% load i18n ui %}
+
+{% block title %}{{ title }} | FinTrack{% endblock %}
+
+{% block content %}
+<div class="page-narrow stack">
+  <header class="page-header !mb-0">
+    <div>
+      <a href="{% url 'category_list' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Categories" %}</a>
+      <h1 class="page-title">{{ title }}</h1>
+    </div>
+  </header>
+
+  {# name, icon and colour — the icon grid is one tap, as in Money Lover #}
+  <form method="post" class="card" novalidate x-data="{ icon: '{{ form.icon.value|default_if_none:''|escapejs }}', color: '{{ form.color.value|default_if_none:''|escapejs }}', name: '{{ form.name.value|default_if_none:''|escapejs }}' }">
+    {% csrf_token %}
+    <div class="card-body form-stack">
+      {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+      <div class="cat-preview" aria-hidden="true">
+        <span class="avatar avatar-lg" :class="icon && 'is-emoji'" :data-goal="color || null" x-text="icon || (name.trim()[0] || '?').toUpperCase()" data-tone="critical"></span>
+        <span class="cat-preview-name" x-text="name || '{{ _("Category")|escapejs }}'"></span>
+      </div>
+      <div class="field{% if form.name.errors %} has-error{% endif %}">
+        <label class="label" for="{{ form.name.id_for_label }}">{{ form.name.label }}<span class="req" aria-hidden="true">*</span></label>
+        <input type="text" name="{{ form.name.html_name }}" id="{{ form.name.id_for_label }}" class="form-input" maxlength="100" required x-model="name"
+               placeholder="{% translate 'e.g. Groceries, Rent, Transport' %}" value="{{ form.name.value|default_if_none:'' }}">
+        {% for error in form.name.errors %}<p class="field-error">{% include "partials/icon.html" with name="alert" %}{{ error }}</p>{% endfor %}
+      </div>
+      <div class="field{% if form.icon.errors %} has-error{% endif %}">
+        <label class="label" for="{{ form.icon.id_for_label }}">{{ form.icon.label }}<span class="opt">{% translate "(optional)" %}</span></label>
+        <div class="cat-icons" role="group" aria-label="{% translate 'Pick an icon' %}">
+          {% for e in icons %}<button type="button" class="cat-icon" :class="icon === '{{ e }}' && 'is-on'" @click="icon = icon === '{{ e }}' ? '' : '{{ e }}'" aria-label="{{ e }}">{{ e }}</button>{% endfor %}
+        </div>
+        <input type="text" name="{{ form.icon.html_name }}" id="{{ form.icon.id_for_label }}" class="form-input cat-icon-input" maxlength="8" x-model="icon" placeholder="{% translate 'or type any emoji' %}" autocomplete="off">
+        <p class="help">{{ form.icon.help_text }}</p>
+        {% for error in form.icon.errors %}<p class="field-error">{% include "partials/icon.html" with name="alert" %}{{ error }}</p>{% endfor %}
+      </div>
+      <div class="field">
+        <span class="label" id="color_label">{{ form.color.label }}<span class="opt">{% translate "(optional)" %}</span></span>
+        <div class="goal-colors" role="radiogroup" aria-labelledby="color_label">
+          {% for value, label in form.fields.color.choices %}
+          <label class="goal-color{% if not value %} is-none{% endif %}" {% if value %}data-goal="{{ value }}"{% endif %} title="{{ label }}">
+            <input type="radio" class="sr-only" name="{{ form.color.html_name }}" value="{{ value }}" x-model="color">
+            <span aria-hidden="true">{% if not value %}{% include "partials/icon.html" with name="x" %}{% endif %}</span><span class="sr-only">{{ label }}</span>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="card-footer form-actions">
+      <a href="{% url 'category_list' %}" class="btn btn-ghost btn-lg">{% translate "Cancel" %}</a>
+      <button type="submit" class="btn btn-primary btn-lg">{% include "partials/icon.html" with name="check" %}{% translate "Save" %}</button>
+    </div>
+  </form>
+
+  {% if category %}
+  {# merge (Money Lover): move every expense, schedule and budget to another category, then remove this one #}
+  <form method="post" action="{% url 'category_merge' category.pk %}" class="card" data-confirm="{% blocktranslate with name=category.name %}Move everything in “{{ name }}” to the category you picked and remove “{{ name }}”? This can't be undone.{% endblocktranslate %}">
+    {% csrf_token %}
+    <div class="card-body form-stack">
+      <div>
+        <h2 class="card-title">{% translate "Merge or remove" %}</h2>
+        <p class="card-subtitle">{% blocktranslate count counter=entry_count %}Its {{ counter }} expense moves to the category you pick, with its regular payments and budget. Then this category is removed.{% plural %}Its {{ counter }} expenses move to the category you pick, with their regular payments and budget. Then this category is removed.{% endblocktranslate %}</p>
+      </div>
+      <div class="field">
+        <label class="label" for="merge-into">{% translate "Move everything to" %}</label>
+        <select id="merge-into" name="into" class="form-input">
+          <option value="">{% translate "General (no category)" %}</option>
+          {% for c in others %}<option value="{{ c.pk }}">{{ c.label }}{% if not c.is_active %} ({% translate "inactive" %}){% endif %}</option>{% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="card-footer form-actions">
+      <span class="spacer"></span>
+      <button type="submit" class="btn btn-secondary" style="color: var(--status-critical);">{% include "partials/icon.html" with name="trash" %}{% translate "Merge and remove" %}</button>
+    </div>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}

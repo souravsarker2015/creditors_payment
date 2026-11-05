@@ -2,6 +2,7 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 
 from apps.core.status import active_or_current
+from apps.expense.forms import show_category_icons
 from apps.expense.models import ExpenseCategory
 from .models import Budget, BudgetScope
 
@@ -9,12 +10,13 @@ from .models import Budget, BudgetScope
 class BudgetForm(forms.ModelForm):
     class Meta:
         model = Budget
-        fields = ["scope", "category", "amount", "alert_at"]
+        fields = ["scope", "category", "amount", "alert_at", "rollover"]
         widgets = {
             "scope": forms.RadioSelect,
             "category": forms.Select(attrs={"class": "form-input"}),
             "amount": forms.NumberInput(attrs={"class": "form-input", "placeholder": "0", "min": "1", "step": "1"}),
             "alert_at": forms.NumberInput(attrs={"class": "form-input", "min": "10", "max": "100", "step": "5"}),
+            "rollover": forms.CheckboxInput(attrs={"class": "form-checkbox"}),
         }
 
     def __init__(self, *args, user, **kwargs):
@@ -26,6 +28,7 @@ class BudgetForm(forms.ModelForm):
         # Required only when the budget is for one category.
         scope = self.data.get(self.add_prefix("scope")) if self.is_bound else None
         self.fields["category"].required = not self.is_bound or scope == BudgetScope.CATEGORY
+        show_category_icons(self.fields["category"])
         self.fields["category"].empty_label = _("Choose a category…")
         self.fields["category"].quick_add = "expense_category"
         self.fields["scope"].help_text = _("A budget resets every month — set it once.")

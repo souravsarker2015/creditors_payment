@@ -39,7 +39,7 @@
     {% for c in categories %}
     <article class="card entity {% if not c.is_active %}is-inactive{% endif %}">
       <div class="entity-head">
-        <span class="avatar" data-tone="critical">{{ c.name|first|upper }}</span>
+        <span class="avatar{% if c.icon %} is-emoji{% endif %}" data-tone="critical"{% if c.color %} data-goal="{{ c.color }}"{% endif %}>{{ c.badge }}</span>
         <div class="min-w-0 flex-1">
           <h3 class="entity-name">{{ c.name }}</h3>
           <p class="entity-meta">{% blocktranslate count counter=c.entry_count %}{{ counter }} entry{% plural %}{{ counter }} entries{% endblocktranslate %}</p>
@@ -50,9 +50,10 @@
         <p class="entity-figure-label">{% translate "Total spent" %}</p>
         <p class="entity-figure">{{ c.total_amt|money }}</p>
       </div>
-      <div class="meter" data-tone="critical" data-tip="{% translate 'Bar length is relative to your biggest category.' %}"><span style="width: {{ c.share_percent }}%"></span></div>
+      <div class="meter" data-tone="critical"{% if c.color %} data-goal="{{ c.color }}"{% endif %} data-tip="{% translate 'Bar length is relative to your biggest category.' %}"><span style="width: {{ c.share_percent }}%"></span></div>
       <div class="entity-foot">
         <a href="{% url 'expense_list' %}?category={{ c.pk }}" class="btn btn-secondary btn-sm">{% translate "View expenses" %}</a>
+        <a href="{% url 'category_edit' c.pk %}" class="btn btn-ghost btn-sm" aria-label="{% blocktranslate with name=c.name %}Edit {{ name }}{% endblocktranslate %}">{% include "partials/icon.html" with name="edit" %}{% translate "Edit" %}</a>
         {% url 'category_toggle_active' c.pk as toggle_url %}
         {% include "partials/toggle_active_item.html" with url=toggle_url active=c.is_active as_button=True %}
       </div>

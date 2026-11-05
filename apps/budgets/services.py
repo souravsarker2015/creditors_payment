@@ -1,9 +1,11 @@
 """Budget arithmetic, kept apart from views so dashboards and the
 "you're close to your limit" messages all agree."""
 import calendar
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
+from django.db.models import Sum
+from django.db.models.functions import TruncMonth
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
@@ -23,6 +25,37 @@ def spending_qs(budget):
     return qs
 
 
+ROLLOVER_MONTHS = 12   # how far back what was left (or overspent) is carried
+
+
+def _month_before(m):
+    return (m.replace(day=1) - timedelta(days=1)).replace(day=1)
+
+
+def carried_in(budget, month):
+    """With rollover on, what earlier months leave for `month`: each month's limit plus what came
+    in, less what was spent, passed on (as YNAB and Goodbudget's envelopes do). Overspending
+    passes on as a minus. It starts from the month the budget was made, at most a year back."""
+    if not budget.rollover:
+        return ZERO
+    first = timezone.localtime(budget.created_at).date().replace(day=1) if budget.created_at else month
+    start = month
+    for _i in range(ROLLOVER_MONTHS):
+        if start <= first:
+            break
+        start = _month_before(start)
+    if start >= month:
+        return ZERO
+    spent = {row["m"]: row["total"] for row in (
+        spending_qs(budget).filter(date__gte=start, date__lt=month)
+        .annotate(m=TruncMonth("date")).values("m").annotate(total=Sum("amount")))}
+    carry, m = ZERO, start
+    while m < month:
+        carry = budget.amount + carry - (spent.get(m) or ZERO)
+        m = (m + timedelta(days=32)).replace(day=1)
+    return carry
+
+
 def status(budget, month=None, today=None):
     """Where a budget stands for `month` (first day of it; default: this month).
 
@@ -37,8 +70,9 @@ def status(budget, month=None, today=None):
     last_day = today if is_current else month_end
 
     spent = total(spending_qs(budget).filter(date__gte=month, date__lte=last_day))
-    limit = budget.amount
-    pct = int(spent / limit * 100) if limit else 0
+    carried = carried_in(budget, month)
+    limit = max(budget.amount + carried, ZERO)
+    pct = int(spent / limit * 100) if limit else (100 if spent else 0)
     remaining = limit - spent
     days_left = (month_end - today).days + 1 if is_current else 0
     projected = spent / today.day * days_in_month if is_current and today.day else spent
@@ -53,6 +87,9 @@ def status(budget, month=None, today=None):
         "budget": budget,
         "spent": spent,
         "limit": limit,
+        "carried": carried,
+        "carried_abs": abs(carried),
+        "from_month": _month_before(month),
         "pct": pct,
         "bar": min(pct, 100),
         "remaining": remaining,

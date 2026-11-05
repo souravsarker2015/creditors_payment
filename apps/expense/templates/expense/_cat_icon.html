@@ -1,0 +1,1 @@
+{% load i18n %}{# a category's round badge: its emoji (or first letter) in its colour; G for General #}<span class="ledger-icon{% if cat.icon %} is-emoji{% endif %}" data-tone="critical"{% if cat.color %} data-goal="{{ cat.color }}"{% endif %} aria-hidden="true">{% if cat %}{{ cat.badge }}{% else %}{% translate "G" context "General category initial" %}{% endif %}</span>

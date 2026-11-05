@@ -14,6 +14,43 @@ class ExpenseCategoryForm(forms.ModelForm):
         widgets = {"name": forms.TextInput(attrs={"class": "form-input", "placeholder": _("e.g. Groceries, Rent, Transport")})}
 
 
+# Emoji people reach for most, offered as one-tap choices (Money Lover's icon grid).
+CATEGORY_ICONS = ["🛒", "🍔", "🍚", "🐟", "☕", "🚌", "⛽", "🏠", "💡", "💧", "📱", "🌐", "💊", "🏥", "🎓", "📚",
+                  "👕", "💇", "🎁", "🎉", "✈️", "🚗", "🔧", "🧾", "💳", "🏦", "👶", "🐄", "🕌", "🤲", "🎮", "🐾"]
+
+
+def show_category_icons(field):
+    """A category picker whose options carry their icon."""
+    field.label_from_instance = lambda obj: obj.label
+
+
+class CategoryForm(forms.ModelForm):
+    """Adding or changing a category on its own page: name, icon and colour."""
+
+    class Meta:
+        model = ExpenseCategory
+        fields = ["name", "icon", "color"]
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "form-input", "placeholder": _("e.g. Groceries, Rent, Transport")}),
+            "icon": forms.TextInput(attrs={"class": "form-input", "placeholder": "🛒", "maxlength": "8"}),
+            "color": forms.RadioSelect,
+        }
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+        self.fields["color"].choices = [("", _("None"))] + list(self.fields["color"].choices)[1:]
+
+    def clean_name(self):
+        name = " ".join(self.cleaned_data["name"].split())
+        if self.user and ExpenseCategory.objects.filter(user=self.user, name__iexact=name).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError(_("You already have a category with this name."))
+        return name
+
+    def clean_icon(self):
+        return self.cleaned_data["icon"].strip()
+
+
 class ExpenseForm(WalletFieldMixin, forms.ModelForm):
     class Meta:
         model = Expense
@@ -33,6 +70,7 @@ class ExpenseForm(WalletFieldMixin, forms.ModelForm):
             self.fields["category"].queryset = active_or_current(
                 ExpenseCategory.objects.filter(user=user), self.instance.category_id
             )
+        show_category_icons(self.fields["category"])
         self.fields["category"].empty_label = _("General (no category)")
         self.fields["category"].quick_add = "expense_category"
         attach_viewer(self, "expense")
@@ -68,6 +106,7 @@ class RecurringExpenseForm(ScheduleDatesMixin, WalletFieldMixin, forms.ModelForm
             self.fields["category"].queryset = active_or_current(
                 ExpenseCategory.objects.filter(user=user), self.instance.category_id
             )
+        show_category_icons(self.fields["category"])
         self.fields["category"].empty_label = _("General (no category)")
         self.fields["category"].quick_add = "expense_category"
         self.fields["category"].help_text = _("Missing one? Use + to add a category without leaving this form.")

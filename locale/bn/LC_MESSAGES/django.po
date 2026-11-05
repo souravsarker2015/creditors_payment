@@ -26424,3 +26424,115 @@ msgstr[1] "সপ্তাহে %(n)s বার, যেকোনো দিন�
 msgctxt "weeks, short"
 msgid "wk"
 msgstr "সপ্তাহ"
+
+msgid "The CSV needs a Date and an Amount column (or Debit / Withdrawal). Download the template to see the columns."
+msgstr "CSV-তে একটি Date এবং একটি Amount কলাম (বা Debit / Withdrawal) লাগবে। কলামগুলো দেখতে টেমপ্লেট ডাউনলোড করুন।"
+
+msgid "Left out: %(list)s."
+msgstr "বাদ গেছে: %(list)s।"
+
+msgid "Category '%(name)s' saved."
+msgstr "'%(name)s' ক্যাটাগরি সংরক্ষণ হয়েছে।"
+
+msgid "Edit category"
+msgstr "ক্যাটাগরি বদলান"
+
+msgid "You already have a category with this name."
+msgstr "এই নামে আপনার একটি ক্যাটাগরি আগেই আছে।"
+
+msgid "An emoji, e.g. 🛒 for groceries. Leave empty to show the first letter."
+msgstr "একটি ইমোজি, যেমন বাজারের জন্য 🛒। খালি রাখলে নামের প্রথম অক্ষর দেখাবে।"
+
+msgid "Carry over to next month"
+msgstr "পরের মাসে নিয়ে যান"
+
+msgid "What's left adds to next month's limit, and overspending takes from it — like envelopes."
+msgstr "যা বাঁচে তা পরের মাসের সীমায় যোগ হয়, আর বেশি খরচ হলে তা থেকে কাটা যায় — খামের মতো।"
+
+msgid "or type any emoji"
+msgstr "অথবা যেকোনো ইমোজি লিখুন"
+
+msgid "Merge or remove"
+msgstr "একত্র করুন বা সরান"
+
+msgid "Move everything to"
+msgstr "সবকিছু সরান এখানে"
+
+msgid "Merge and remove"
+msgstr "একত্র করে সরান"
+
+msgid "Move everything in “%(name)s” to the category you picked and remove “%(name)s”? This can't be undone."
+msgstr "“%(name)s”-এর সবকিছু বেছে নেওয়া ক্যাটাগরিতে সরিয়ে “%(name)s” মুছে ফেলবেন? এটা ফেরানো যাবে না।"
+
+msgid "Every expense you've logged, by day. Search, filter, sort, or bring in and export a CSV."
+msgstr "আপনার লেখা সব খরচ, দিন ধরে। খুঁজুন, ফিল্টার ও সাজান, অথবা CSV আনুন ও নামান।"
+
+msgid "Bring in expenses from a spreadsheet or a bank statement saved as CSV: a Date and an Amount (or Debit) column, and if you like Category, Wallet and Note. Rows already recorded are skipped."
+msgstr "স্প্রেডশিট বা CSV হিসেবে রাখা ব্যাংক স্টেটমেন্ট থেকে খরচ আনুন: একটি Date ও একটি Amount (বা Debit) কলাম, চাইলে Category, Wallet ও Note। আগে লেখা সারি বাদ যায়।"
+
+msgid "Search notes, categories or an amount"
+msgstr "নোট, ক্যাটাগরি বা টাকার অঙ্ক খুঁজুন"
+
+msgid "Search notes, categories or an amount…"
+msgstr "নোট, ক্যাটাগরি বা টাকার অঙ্ক খুঁজুন…"
+
+msgid "All wallets"
+msgstr "সব ওয়ালেট"
+
+msgid "carries over"
+msgstr "পরের মাসে যায়"
+
+msgid "+%(amount)s carried from %(month)s (limit %(base)s)"
+msgstr "%(month)s থেকে +%(amount)s এসেছে (সীমা %(base)s)"
+
+msgid "%(amount)s overspent in %(month)s comes off (limit %(base)s)"
+msgstr "%(month)s-এ বেশি খরচ হওয়া %(amount)s কাটা গেছে (সীমা %(base)s)"
+
+msgid "Imported %(count)s expense."
+msgid_plural "Imported %(count)s expenses."
+msgstr[0] "%(count)sটি খরচ আনা হয়েছে।"
+msgstr[1] "%(count)sটি খরচ আনা হয়েছে।"
+
+msgid "%(count)s new category was added."
+msgid_plural "%(count)s new categories were added."
+msgstr[0] "%(count)sটি নতুন ক্যাটাগরি যোগ হয়েছে।"
+msgstr[1] "%(count)sটি নতুন ক্যাটাগরি যোগ হয়েছে।"
+
+msgid "%(count)s already recorded"
+msgid_plural "%(count)s already recorded"
+msgstr[0] "%(count)sটি আগেই লেখা"
+msgstr[1] "%(count)sটি আগেই লেখা"
+
+msgid "%(count)s money coming in"
+msgid_plural "%(count)s money coming in"
+msgstr[0] "%(count)sটি টাকা আসার সারি"
+msgstr[1] "%(count)sটি টাকা আসার সারি"
+
+msgid "%(count)s without a date I could read"
+msgid_plural "%(count)s without a date I could read"
+msgstr[0] "%(count)sটির তারিখ পড়া যায়নি"
+msgstr[1] "%(count)sটির তারিখ পড়া যায়নি"
+
+msgid "%(count)s without an amount"
+msgid_plural "%(count)s without an amount"
+msgstr[0] "%(count)sটিতে টাকার অঙ্ক নেই"
+msgstr[1] "%(count)sটিতে টাকার অঙ্ক নেই"
+
+msgid "%(count)s row named a wallet you don't have, so it was saved without one."
+msgid_plural "%(count)s rows named a wallet you don't have, so they were saved without one."
+msgstr[0] "%(count)sটি সারিতে এমন ওয়ালেটের নাম আছে যা আপনার নেই, তাই ওয়ালেট ছাড়াই রাখা হয়েছে।"
+msgstr[1] "%(count)sটি সারিতে এমন ওয়ালেটের নাম আছে যা আপনার নেই, তাই ওয়ালেট ছাড়াই রাখা হয়েছে।"
+
+msgid "“%(name)s” merged into %(into)s: %(count)s expense moved."
+msgid_plural "“%(name)s” merged into %(into)s: %(count)s expenses moved."
+msgstr[0] "“%(name)s” %(into)s-এ একত্র হয়েছে: %(count)sটি খরচ সরানো হয়েছে।"
+msgstr[1] "“%(name)s” %(into)s-এ একত্র হয়েছে: %(count)sটি খরচ সরানো হয়েছে।"
+
+msgid "Its %(counter)s expense moves to the category you pick, with its regular payments and budget. Then this category is removed."
+msgid_plural "Its %(counter)s expenses move to the category you pick, with their regular payments and budget. Then this category is removed."
+msgstr[0] "এর %(counter)sটি খরচ, নিয়মিত খরচ ও বাজেটসহ, আপনার বেছে নেওয়া ক্যাটাগরিতে যাবে। তারপর এই ক্যাটাগরি মুছে যাবে।"
+msgstr[1] "এর %(counter)sটি খরচ, নিয়মিত খরচ ও বাজেটসহ, আপনার বেছে নেওয়া ক্যাটাগরিতে যাবে। তারপর এই ক্যাটাগরি মুছে যাবে।"
+
+msgctxt "General category initial"
+msgid "G"
+msgstr "সা"

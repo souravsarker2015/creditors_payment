@@ -11,6 +11,16 @@ from django.utils.translation import gettext_lazy as _
 from apps.core.validators import above_zero
 
 
+class CategoryColor(models.TextChoices):
+    # The goals' six hues, so the palette stays one across the app.
+    BLUE = "blue", _("Blue")
+    ORANGE = "orange", _("Orange")
+    GREEN = "green", _("Green")
+    GOLD = "gold", _("Gold")
+    PINK = "pink", _("Pink")
+    TEAL = "teal", _("Teal")
+
+
 class ExpenseCategory(models.Model):
     """Grouping for different types of expenses."""
 
@@ -18,6 +28,10 @@ class ExpenseCategory(models.Model):
         User, on_delete=models.CASCADE, related_name="expense_categories"
     )
     name = models.CharField(max_length=100, verbose_name=_("Name"))
+    # An icon and a colour, as Money Lover and Wallet give each category, so a list is read at a glance.
+    icon = models.CharField(_("Icon"), max_length=8, blank=True, default="",
+                            help_text=_("An emoji, e.g. 🛒 for groceries. Leave empty to show the first letter."))
+    color = models.CharField(_("Colour"), max_length=10, blank=True, default="", choices=CategoryColor.choices)
     is_active = models.BooleanField(
         default=True,
         help_text=_("Inactive records are hidden from lists and pickers but still count in totals."),
@@ -30,6 +44,16 @@ class ExpenseCategory(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def label(self):
+        """The name with its icon, for pickers."""
+        return f"{self.icon} {self.name}" if self.icon else self.name
+
+    @property
+    def badge(self):
+        """What the round badge shows: the icon, or the first letter."""
+        return self.icon or (self.name[:1].upper() if self.name else "?")
 
     @property
     def total_expense(self):

@@ -2,11 +2,18 @@
 {% comment %}Shared by the expense dashboard and ledger. Optional: show_sort, show_export. Needs: reset_url.{% endcomment %}
 <form method="get" class="card" x-data="{ open: false, filterMode: '{{ filter_mode|default:"include" }}' }">
   <input type="hidden" name="filter_mode" x-model="filterMode">
+  <div class="filter-search input-icon">
+    {% include "partials/icon.html" with name="search" %}
+    <label for="expense-q" class="sr-only">{% translate "Search notes, categories or an amount" %}</label>
+    <input type="search" id="expense-q" name="q" value="{{ search_query }}" placeholder="{% translate 'Search notes, categories or an amount…' %}" autocomplete="off" class="form-input" enterkeyhint="search">
+    {# first in the form, so Enter searches (and doesn't press Export CSV further down) #}
+    <button type="submit" class="sr-only">{% translate "Search" %}</button>
+  </div>
   <button type="button" class="filter-head" @click="open = !open" :aria-expanded="open.toString()">
     <span class="flex items-center gap-3">
       <span class="filter-head-icon">{% include "partials/icon.html" with name="filter" %}</span>
       <span>{% translate "Filters" %}</span>
-      {% if selected_category_ids or selected_year or date_from or date_to %}<span class="btn-dot" aria-label="{% translate 'Filters applied' %}"></span>{% endif %}
+      {% if selected_category_ids or selected_year or date_from or date_to or selected_wallet %}<span class="btn-dot" aria-label="{% translate 'Filters applied' %}"></span>{% endif %}
     </span>
     {% include "partials/icon.html" with name="chevron-down" %}
   </button>
@@ -43,6 +50,16 @@
           <input id="date-from-hidden" type="hidden" name="date_from" value="{{ date_from }}">
           <input id="date-to-hidden" type="hidden" name="date_to" value="{{ date_to }}">
         </div>
+        {% if wallets %}
+        <div class="field">
+          <div class="field-head"><label for="wallet-filter" class="label">{% translate "Wallet" %}</label></div>
+          <select id="wallet-filter" name="wallet" class="form-input">
+            <option value="">{% translate "All wallets" %}</option>
+            {% for w in wallets %}<option value="{{ w.pk }}"{% if selected_wallet == w.pk|stringformat:"s" %} selected{% endif %}>{{ w.name }}{% if not w.is_active %} ({% translate "inactive" %}){% endif %}</option>{% endfor %}
+            <option value="none"{% if selected_wallet == "none" %} selected{% endif %}>{% translate "Not from a wallet" %}</option>
+          </select>
+        </div>
+        {% endif %}
         {% if show_sort %}
         <div class="field">
           <div class="field-head"><label for="sort" class="label">{% translate "Sort by" %}</label></div>
@@ -62,7 +79,7 @@
   </div>
 </form>
 
-{% if selected_category_ids or selected_year or date_from or date_to %}
+{% if selected_category_ids or selected_year or date_from or date_to or search_query or selected_wallet %}
 <div class="chip-row" aria-label="{% translate 'Active filters' %}">
   {% if selected_category_ids %}
   <a href="{% query_with category='' filter_mode='' %}" class="chip" title="{% translate 'Remove filter' %}">
@@ -75,6 +92,12 @@
   {% endif %}
   {% if date_from or date_to %}
   <a href="{% query_with date_from='' date_to='' %}" class="chip" title="{% translate 'Remove filter' %}"><span><b>{% translate "Dates" %}:</b> {{ date_from|default:"…" }} → {{ date_to|default:"…" }}</span><span class="chip-x">{% include "partials/icon.html" with name="x" %}</span></a>
+  {% endif %}
+  {% if search_query %}
+  <a href="{% query_with q='' %}" class="chip" title="{% translate 'Remove filter' %}"><span><b>{% translate "Search" %}:</b> {{ search_query }}</span><span class="chip-x">{% include "partials/icon.html" with name="x" %}</span></a>
+  {% endif %}
+  {% if selected_wallet %}
+  <a href="{% query_with wallet='' %}" class="chip" title="{% translate 'Remove filter' %}"><span><b>{% translate "Wallet" %}:</b> {% if selected_wallet == "none" %}{% translate "Not from a wallet" %}{% else %}{% for w in wallets %}{% if selected_wallet == w.pk|stringformat:"s" %}{{ w.name }}{% endif %}{% endfor %}{% endif %}</span><span class="chip-x">{% include "partials/icon.html" with name="x" %}</span></a>
   {% endif %}
   <a href="{{ reset_url }}" class="chip-clear">{% translate "Clear all" %}</a>
 </div>
