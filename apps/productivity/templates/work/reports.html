@@ -4,83 +4,25 @@
 {% block title %}{% translate "Reports" %} | {% translate "Productivity" %}{% endblock %}
 
 {% block work %}
-<header class="wp-head">
-  <div class="min-w-0"><h1 class="wp-title">{% translate "Reports" %}</h1><p class="wp-sub">{{ start|date:"j M Y" }} – {{ end|date:"j M Y" }}</p></div>
-  <div class="wp-actions"><a href="{% query_with export='csv' %}" class="btn btn-secondary">{% icon "download" %}{% translate "Export CSV" %}</a></div>
-</header>
-
-<form method="get" class="wf-bar" x-data="{ custom: '{{ preset }}' === 'custom' }">
-  <nav class="chip-row">{% for v, l in presets %}<a href="?range={{ v }}" class="chip{% if preset == v %} is-active{% endif %}">{{ l }}</a>{% endfor %}
-    <button type="button" class="chip{% if preset == 'custom' %} is-active{% endif %}" @click="custom = !custom">{% translate "Custom…" %}</button></nav>
-  <div class="wr-custom" x-show="custom" x-cloak>
-    <input type="hidden" name="range" value="custom">
-    <input type="date" name="from" value="{{ start|date:'Y-m-d' }}" class="form-input input-compact" aria-label="{% translate 'From' %}">
-    <input type="date" name="to" value="{{ end|date:'Y-m-d' }}" class="form-input input-compact" aria-label="{% translate 'To' %}">
-    <button type="submit" class="btn btn-primary btn-sm">{% translate "Show" %}</button>
-  </div>
-</form>
+{% blocktranslate asvar period_label with a=start|date:"j M Y" b=end|date:"j M Y" %}{{ a }} – {{ b }}{% endblocktranslate %}
+{% include "work/partials/report_head.html" with export=True %}
 
 <dl class="stat-grid">
-  <div class="stat" data-tone="accent"><dt class="stat-label">{% translate "Tracked" %}</dt><dd class="stat-value num">{{ t.seconds|hm }}</dd></div>
+  <div class="stat" data-tone="accent"><dt class="stat-label">{% translate "Tracked" %}</dt><dd class="stat-value num">{{ t.seconds|hm }}</dd>{% include "work/partials/report_change.html" with c=cmp.tracked as_time=True %}</div>
   <div class="stat"{% if target_pct is not None and target_pct >= 100 %} data-tone="good"{% endif %}><dt class="stat-label">{% translate "Of target" %}</dt><dd class="stat-value num">{% if target_pct is not None %}{{ target_pct }}%{% else %}—{% endif %}</dd></div>
-  <div class="stat"><dt class="stat-label">{% translate "Average work day" %}</dt><dd class="stat-value num">{{ t.daily_average|hm }}</dd></div>
-  <div class="stat" data-tone="good"><dt class="stat-label">{% translate "Tasks done" %}</dt><dd class="stat-value num">{{ completed }}<small class="wr-of"> / {{ created }} {% translate "added" %}</small></dd></div>
-  <div class="stat"><dt class="stat-label">{% translate "Focus sessions" %}</dt><dd class="stat-value num">{{ t.focus_sessions }}</dd></div>
+  <div class="stat"><dt class="stat-label">{% translate "Average work day" %}</dt><dd class="stat-value num">{{ t.daily_average|hm }}</dd>{% include "work/partials/report_change.html" with c=cmp.average as_time=True %}</div>
+  <div class="stat" data-tone="good"><dt class="stat-label">{% translate "Tasks done" %}</dt><dd class="stat-value num">{{ completed }}<small class="wr-of"> / {{ created }} {% translate "added" %}</small></dd>{% include "work/partials/report_change.html" with c=cmp.done %}</div>
+  <div class="stat"><dt class="stat-label">{% translate "Focus sessions" %}</dt><dd class="stat-value num">{{ t.focus_sessions }}</dd>{% include "work/partials/report_change.html" with c=cmp.focus %}</div>
   <div class="stat"><dt class="stat-label">{% translate "Billable" %}</dt><dd class="stat-value num">{{ t.billable_seconds|hm }}</dd></div>
   {% if earned is not None %}<div class="stat" data-tone="good"><dt class="stat-label">{% translate "Worth at your rates" %}</dt><dd class="stat-value num">{{ earned|money }}</dd></div>{% endif %}
 </dl>
+<p class="wr-vs">{% blocktranslate with a=cmp.start|date:"j M" b=cmp.end|date:"j M Y" %}Arrows compare with {{ a }} – {{ b }}, the same length of time just before.{% endblocktranslate %}</p>
 
-{# ── shipping: how much gets done, and how long it takes from start to done ── #}
-{% with d=delivery %}{% if d.done or d.doing or d.review %}
-<section class="card">
-  <header class="card-header"><div><h2 class="card-title">{% translate "Delivery" %}</h2>
-    <p class="card-subtitle">{% translate "How much you ship, and how long work takes from starting it to done." %}</p></div></header>
-  <div class="card-body !pt-0 wr-dlv">
-    <dl class="wr-dlv-stats">
-      <div><dt>{% translate "Finished" %}</dt><dd class="num">{{ d.done }}{% if d.points %} <small>· {% blocktranslate count counter=d.points %}{{ counter }} point{% plural %}{{ counter }} points{% endblocktranslate %}</small>{% endif %}</dd></div>
-      <div data-tip="{% translate 'Median time from first moving it to In progress (or tracking time on it) to done' %}"><dt>{% translate "Cycle time" %}</dt><dd class="num">{{ d.cycle|span }}</dd></div>
-      <div data-tip="{% translate 'Median time from adding the task to done' %}"><dt>{% translate "Lead time" %}</dt><dd class="num">{{ d.lead|span }}</dd></div>
-      <div><dt>{% translate "In progress now" %}</dt><dd class="num">{{ d.doing }}</dd></div>
-      <div{% if d.review_days and d.review_days >= 3 %} data-tone="warn"{% endif %}><dt>{% translate "In review now" %}</dt><dd class="num">{{ d.review }}{% if d.review_days %} <small>· {% blocktranslate count counter=d.review_days %}oldest {{ counter }} day{% plural %}oldest {{ counter }} days{% endblocktranslate %}</small>{% endif %}</dd></div>
-    </dl>
-    {% if d.kinds %}<p class="wr-dlv-kinds">{% for k, icon, n in d.kinds %}<span class="wt-kind" data-kind="{{ k.value }}">{% icon icon %}{{ k.label }} <b class="num">{{ n }}</b></span>{% endfor %}</p>{% endif %}
-    <p class="wr-dlv-label">{% translate "Finished each week" %}</p>
-    <div class="wr-dlv-weeks">{% for w in d.weeks %}<div class="wr-dlv-week" data-tip="{{ w.start|date:'j M' }} · {{ w.n }}"><em class="num">{{ w.n }}</em><span style="--h: {{ w.pct }}"></span><small>{{ w.start|date:"j M" }}</small></div>{% endfor %}</div>
-  </div>
-</section>
-{% endif %}{% endwith %}
-
-{% if focus %}
-<section class="card">
-  <header class="card-header"><div><h2 class="card-title">{% translate "How you focus" %}</h2>
-    <p class="card-subtitle">{% blocktranslate with n=focus.deep_minutes %}A deep block is {{ n }} minutes or more on one thing, unbroken.{% endblocktranslate %}</p></div></header>
-  <div class="card-body !pt-0 wr-dlv">
-    <dl class="wr-dlv-stats">
-      <div><dt>{% translate "Deep blocks" %}</dt><dd class="num">{{ focus.deep }} <small>· {{ focus.deep_seconds|hm }}</small></dd></div>
-      <div><dt>{% translate "Longest block" %}</dt><dd class="num">{{ focus.longest|hm }}</dd></div>
-      <div><dt>{% translate "Average block" %}</dt><dd class="num">{{ focus.average|hm }}</dd></div>
-      <div{% if focus.switches >= 6 %} data-tone="warn"{% endif %} data-tip="{% translate 'How many times a day you moved to something else' %}"><dt>{% translate "Switches a day" %}</dt><dd class="num">{{ focus.switches }}</dd></div>
-    </dl>
-    {% if focus.best_from %}
-    <p class="wr-dlv-label">{% blocktranslate with a=focus.best_from|time:"H:i" b=focus.best_to|time:"H:i" %}Your deep work happens most around {{ a }}–{{ b }}. Keep that time clear of meetings.{% endblocktranslate %}</p>
-    <div class="wr-hours" role="img" aria-label="{% translate 'Deep work by hour of the day' %}">{% for h in focus.hours %}<span data-tip="{{ h.hour }}:00" style="--h: {{ h.pct }}%"><i></i></span>{% endfor %}</div>
-    <div class="wr-hours-axis"><span>6:00</span><span>14:00</span><span>22:00</span></div>
-    {% endif %}
-  </div>
-</section>
-{% endif %}
-
-{% if heat.weeks %}
-<section class="card">
-  <header class="card-header"><div><h2 class="card-title">{% translate "Last 12 months" %}</h2>
-    <p class="card-subtitle">{% blocktranslate with t=year_total|hm count counter=year_days %}{{ t }} on {{ counter }} day{% plural %}{{ t }} on {{ counter }} days{% endblocktranslate %}</p></div></header>
-  <div class="wy-scroll" data-scroll-end>
-    <div class="wy" style="--weeks: {{ heat.weeks|length }}">
-      <div class="wy-months">{% for m in heat.months %}<span style="grid-column: {{ m.col|add:1 }}">{{ m.date|date:"M" }}</span>{% endfor %}</div>
-      <div class="wy-grid">{% for week in heat.weeks %}{% for c in week %}<a{% if not c.out %} href="{% url 'work:time' %}?week={{ c.date|date:'Y-m-d' }}"{% endif %} class="wy-cell{% if c.out %} is-out{% endif %}" data-level="{{ c.level }}" title="{{ c.date|date:'D j M Y' }} · {{ c.secs|hm }}"></a>{% endfor %}{% endfor %}</div>
-    </div>
-  </div>
-  <p class="wy-legend">{% translate "Less" %} {% for l in "01234" %}<i class="wy-cell" data-level="{{ l }}"></i>{% endfor %} {% translate "More" %}</p>
+{% if highlights %}
+{# what stands out, in words (RescueTime's highlights) #}
+<section class="card wr-highlights">
+  <header class="card-header"><h2 class="card-title">{% icon "sparkles" %}{% translate "Highlights" %}</h2></header>
+  <ul>{% for ic, text in highlights %}<li>{% icon ic %}<span>{{ text }}</span></li>{% endfor %}</ul>
 </section>
 {% endif %}
 
@@ -97,8 +39,18 @@
 
 <div class="wr-grid">
   <section class="card">
-    <header class="card-header"><h2 class="card-title">{% translate "By project" %}</h2></header>
-    <ul class="wr-rank">{% for r in projects %}<li><span class="wr-rank-name">{% if r.p %}<span class="wt-dot" data-color="{{ r.p.color }}"></span>{{ r.p.name }}{% else %}<span class="ws-none">{% translate "No project" %}</span>{% endif %}</span><span class="wr-rank-val num">{{ r.secs|hm }} · {{ r.pct }}%{% if r.earned is not None %} · {{ r.earned|money }}{% endif %}</span><span class="wr-rank-bar" data-color="{{ r.p.color|default:'slate' }}"><i style="width: {{ r.pct }}%"></i></span></li>{% endfor %}</ul>
+    <header class="card-header"><div><h2 class="card-title">{% translate "By project" %}</h2><p class="card-subtitle">{% translate "Open a project to see its tasks." %}</p></div></header>
+    <div class="wr-donut-row">
+      <div class="wr-donut" role="img" aria-label="{% translate 'Share of time by project' %}" style="background: {{ donut }}"><span class="num">{{ t.seconds|hm }}</span></div>
+    </div>
+    <ul class="wr-proj">{% for r in projects %}
+      <li><details{% if forloop.first and projects|length <= 3 %} open{% endif %}>
+        <summary><span class="wr-rank-name">{% if r.p %}<span class="wt-dot" data-color="{{ r.p.color }}"></span>{{ r.p.name }}{% else %}<span class="wt-dot"></span><span class="ws-none">{% translate "No project" %}</span>{% endif %}</span>
+          <span class="wr-rank-val num">{{ r.secs|hm }} · {{ r.pct }}%{% if r.earned is not None %} · {{ r.earned|money }}{% endif %}</span>
+          <span class="wr-rank-bar" data-color="{{ r.p.color|default:'slate' }}"><i style="width: {{ r.pct }}%"></i></span></summary>
+        <ul class="wr-subtasks">{% for x in r.tasks %}<li>{% if x.task %}<a href="{% url 'work:task' x.task.pk %}" class="truncate">{{ x.task.title }}</a>{% else %}<span class="ws-none truncate">{% translate "Not on a task" %}</span>{% endif %}<span class="num">{{ x.secs|hm }} · {{ x.pct }}%</span></li>{% endfor %}</ul>
+      </details></li>{% endfor %}
+    </ul>
   </section>
   {% if kinds %}
   <section class="card">
@@ -138,5 +90,59 @@
 </div>
 {% else %}
 <div class="empty"><div class="empty-icon">{% icon "chart" %}</div><h3 class="empty-title">{% translate "No time in this period" %}</h3><p class="empty-text">{% translate "Track some time and come back — the charts fill in as you work." %}</p></div>
+{% endif %}
+
+{# ── shipping: how much gets done, and how long it takes from start to done ── #}
+{% with d=delivery %}{% if d.done or d.doing or d.review %}
+<section class="card">
+  <header class="card-header"><div><h2 class="card-title">{% translate "Delivery" %}</h2>
+    <p class="card-subtitle">{% translate "How much you ship, and how long work takes from starting it to done." %}</p></div></header>
+  <div class="card-body !pt-0 wr-dlv">
+    <dl class="wr-dlv-stats">
+      <div><dt>{% translate "Finished" %}</dt><dd class="num">{{ d.done }}{% if d.points %} <small>· {% blocktranslate count counter=d.points %}{{ counter }} point{% plural %}{{ counter }} points{% endblocktranslate %}</small>{% endif %}</dd></div>
+      <div data-tip="{% translate 'Median time from first moving it to In progress (or tracking time on it) to done' %}"><dt>{% translate "Cycle time" %}</dt><dd class="num">{{ d.cycle|span }}</dd></div>
+      <div data-tip="{% translate 'Median time from adding the task to done' %}"><dt>{% translate "Lead time" %}</dt><dd class="num">{{ d.lead|span }}</dd></div>
+      <div><dt>{% translate "In progress now" %}</dt><dd class="num">{{ d.doing }}</dd></div>
+      <div{% if d.review_days and d.review_days >= 3 %} data-tone="warn"{% endif %}><dt>{% translate "In review now" %}</dt><dd class="num">{{ d.review }}{% if d.review_days %} <small>· {% blocktranslate count counter=d.review_days %}oldest {{ counter }} day{% plural %}oldest {{ counter }} days{% endblocktranslate %}</small>{% endif %}</dd></div>
+    </dl>
+    {% if d.kinds %}<p class="wr-dlv-kinds">{% for k, icon, n in d.kinds %}<span class="wt-kind" data-kind="{{ k.value }}">{% icon icon %}{{ k.label }} <b class="num">{{ n }}</b></span>{% endfor %}</p>{% endif %}
+    <p class="wr-dlv-label">{% translate "Finished each week" %}</p>
+    <div class="wr-dlv-weeks">{% for w in d.weeks %}<div class="wr-dlv-week" data-tip="{{ w.start|date:'j M' }} · {{ w.n }}"><em class="num">{{ w.n }}</em><span style="--h: {{ w.pct }}"></span><small>{{ w.start|date:"j M" }}</small></div>{% endfor %}</div>
+  </div>
+</section>
+{% endif %}{% endwith %}
+
+{% if focus %}
+<section class="card">
+  <header class="card-header"><div><h2 class="card-title">{% translate "How you focus" %}</h2>
+    <p class="card-subtitle">{% blocktranslate with n=focus.deep_minutes %}A deep block is {{ n }} minutes or more on one thing, unbroken.{% endblocktranslate %}</p></div></header>
+  <div class="card-body !pt-0 wr-dlv">
+    <dl class="wr-dlv-stats">
+      <div><dt>{% translate "Deep blocks" %}</dt><dd class="num">{{ focus.deep }} <small>· {{ focus.deep_seconds|hm }}</small></dd></div>
+      <div><dt>{% translate "Longest block" %}</dt><dd class="num">{{ focus.longest|hm }}</dd></div>
+      <div><dt>{% translate "Average block" %}</dt><dd class="num">{{ focus.average|hm }}</dd></div>
+      <div{% if focus.switches >= 6 %} data-tone="warn"{% endif %} data-tip="{% translate 'How many times a day you moved to something else' %}"><dt>{% translate "Switches a day" %}</dt><dd class="num">{{ focus.switches }}</dd></div>
+    </dl>
+    {% if focus.best_from %}
+    <p class="wr-dlv-label">{% blocktranslate with a=focus.best_from|time:"H:i" b=focus.best_to|time:"H:i" %}Your deep work happens most around {{ a }}–{{ b }}. Keep that time clear of meetings.{% endblocktranslate %}</p>
+    <div class="wr-deep-hours" role="img" aria-label="{% translate 'Deep work by hour of the day' %}">{% for h in focus.hours %}<span data-tip="{{ h.hour }}:00" style="--h: {{ h.pct }}%"><i></i></span>{% endfor %}</div>
+    <div class="wr-hours-axis"><span>6:00</span><span>14:00</span><span>22:00</span></div>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
+{% if heat.weeks %}
+<section class="card">
+  <header class="card-header"><div><h2 class="card-title">{% translate "Last 12 months" %}</h2>
+    <p class="card-subtitle">{% blocktranslate with t=year_total|hm count counter=year_days %}{{ t }} on {{ counter }} day{% plural %}{{ t }} on {{ counter }} days{% endblocktranslate %}</p></div></header>
+  <div class="wy-scroll" data-scroll-end>
+    <div class="wy" style="--weeks: {{ heat.weeks|length }}">
+      <div class="wy-months">{% for m in heat.months %}<span style="grid-column: {{ m.col|add:1 }}">{{ m.date|date:"M" }}</span>{% endfor %}</div>
+      <div class="wy-grid">{% for week in heat.weeks %}{% for c in week %}<a{% if not c.out %} href="{% url 'work:time' %}?week={{ c.date|date:'Y-m-d' }}"{% endif %} class="wy-cell{% if c.out %} is-out{% endif %}" data-level="{{ c.level }}" title="{{ c.date|date:'D j M Y' }} · {{ c.secs|hm }}"></a>{% endfor %}{% endfor %}</div>
+    </div>
+  </div>
+  <p class="wy-legend">{% translate "Less" %} {% for l in "01234" %}<i class="wy-cell" data-level="{{ l }}"></i>{% endfor %} {% translate "More" %}</p>
+</section>
 {% endif %}
 {% endblock %}

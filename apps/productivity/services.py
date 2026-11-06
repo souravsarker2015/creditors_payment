@@ -106,9 +106,12 @@ def entry_seconds_between(entry, start, end, now=None):
     return max(int((b - a).total_seconds()), 0)
 
 
-def entries_between(user, start, end):
-    """Entries that overlap [start, end) — including one still running."""
-    return (TimeEntry.objects.filter(owner=user, started_at__lt=end)
+def entries_between(user, start, end, flt=None):
+    """Entries that overlap [start, end) — including one still running. `flt`: a report's filter (reports.Filter)."""
+    qs = TimeEntry.objects.filter(owner=user)
+    if flt is not None:
+        qs = flt.apply(qs)
+    return (qs.filter(started_at__lt=end)
             .filter(Q(ended_at__gt=start) | Q(ended_at__isnull=True))
             .select_related("task", "project").prefetch_related("tags").order_by("started_at"))
 
@@ -119,8 +122,9 @@ class Totals:
     objects), so a year of entries is still quick; `entries` (the full
     objects, for lists and CSV) is only loaded when a page asks for it."""
 
-    def __init__(self, user, start, end):
-        self.user, self.start, self.end = user, start, end
+    def __init__(self, user, start, end, flt=None):
+        self.user, self.start, self.end, self.flt = user, start, end, flt
+        self.project_tasks = {}           # project id → {task id (None: not on a task) → seconds}
         self.seconds = self.billable_seconds = self.focus_sessions = 0
         self.by_day = {start + timedelta(days=i): 0 for i in range((end - start).days + 1)}
         self.by_project, self.by_tag, self.by_task, self.by_kind = [], [], [], []
@@ -143,22 +147,26 @@ class Totals:
     @cached_property
     def entries(self):
         now = timezone.now()
-        return [e for e in entries_between(self.user, self._lo, self._hi) if entry_seconds_between(e, self._lo, self._hi, now)]
+        return [e for e in entries_between(self.user, self._lo, self._hi, self.flt) if entry_seconds_between(e, self._lo, self._hi, now)]
 
 
 def _overlapping(qs, lo, hi, prefix=""):
     return qs.filter(**{f"{prefix}started_at__lt": hi}).filter(Q(**{f"{prefix}ended_at__gt": lo}) | Q(**{f"{prefix}ended_at__isnull": True}))
 
 
-def totals(user, start, end):
-    """Tracked time from `start` to `end` (dates, inclusive), split every way."""
-    out = Totals(user, start, end)
+def totals(user, start, end, flt=None):
+    """Tracked time from `start` to `end` (dates, inclusive), split every way. `flt`: only what a report's
+    filter keeps (a project, a tag, billable)."""
+    out = Totals(user, start, end, flt)
     lo, hi, now = out._lo, out._hi, timezone.now()
     tz = timezone.get_current_timezone()
-    rows = _overlapping(TimeEntry.objects.filter(owner=user), lo, hi).values_list(
+    base = TimeEntry.objects.filter(owner=user)
+    through = TimeEntry.tags.through.objects.filter(timeentry__owner=user)
+    if flt is not None:
+        base, through = flt.apply(base), flt.apply(through, "timeentry__")
+    rows = _overlapping(base, lo, hi).values_list(
         "pk", "started_at", "ended_at", "project_id", "task_id", "billable", "kind")
     tags_of = defaultdict(list)
-    through = TimeEntry.tags.through.objects.filter(timeentry__owner=user)
     for entry_id, tag_id in _overlapping(through, lo, hi, "timeentry__").values_list("timeentry_id", "tag_id"):
         tags_of[entry_id].append(tag_id)
     projects, tags, tasks = defaultdict(int), defaultdict(int), defaultdict(int)
@@ -184,6 +192,8 @@ def totals(user, start, end):
             left -= part
             cursor = next_day
         projects[project_id] += secs
+        in_project = out.project_tasks.setdefault(project_id, defaultdict(int))
+        in_project[task_id] += secs
         for tag_id in tags_of.get(pk, ()):
             tags[tag_id] += secs
         if task_id:

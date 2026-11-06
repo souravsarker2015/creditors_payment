@@ -1,0 +1,100 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% translate "Day report" %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+{% blocktranslate asvar period_label with d=day|date:"l, j F Y" %}{{ d }}{% endblocktranslate %}
+{% include "work/partials/report_head.html" %}
+
+{# move between days; the week above shows which days had time (RescueTime) #}
+<section class="card wrd-nav">
+  <div class="wrd-pick">
+    <a href="?date={{ prev|date:'Y-m-d' }}" class="icon-btn" aria-label="{% translate 'Day before' %}" data-key="ArrowLeft">{% icon "chevron-left" %}</a>
+    <form method="get" class="wrd-date" x-data>
+      <strong>{% if day_name %}{{ day_name }} · {% endif %}{{ day|date:"D j M" }}</strong>
+      <label class="sr-only" for="wrd-date">{% translate "Pick a day" %}</label>
+      <input type="date" id="wrd-date" name="date" value="{{ day|date:'Y-m-d' }}" max="{{ today|date:'Y-m-d' }}" class="form-input input-compact" @change="$el.form.submit()">
+    </form>
+    {% if next %}<a href="?date={{ next|date:'Y-m-d' }}" class="icon-btn" aria-label="{% translate 'Day after' %}">{% icon "chevron-right" %}</a>{% else %}<span class="icon-btn is-disabled" aria-hidden="true">{% icon "chevron-right" %}</span>{% endif %}
+    {% if day != today %}<a href="?" class="btn btn-ghost btn-sm">{% translate "Today" %}</a>{% endif %}
+  </div>
+  <div class="wrd-week" role="list" aria-label="{% translate 'This week' %}">
+    {% for w in d.week %}{% if w.future %}<span class="wrd-wday is-future" role="listitem"><i style="--h: 0"></i><small>{{ w.day|date:"D" }}</small><b>{{ w.day|date:"j" }}</b></span>
+    {% else %}<a href="?date={{ w.day|date:'Y-m-d' }}" class="wrd-wday{% if w.is %} is-on{% endif %}" role="listitem" data-tip="{{ w.day|date:'D j M' }} · {{ w.secs|hm }}"{% if w.is %} aria-current="date"{% endif %}><i style="--h: {{ w.pct }}"></i><small>{{ w.day|date:"D" }}</small><b>{{ w.day|date:"j" }}</b></a>{% endif %}{% endfor %}
+  </div>
+</section>
+
+{# the day in words first: what most people want to know #}
+<section class="card wrd-story">
+  <div class="card-body">
+    <h2 class="sr-only">{% translate "Your day in short" %}</h2>
+    {% for line in d.story %}<p>{{ line }}</p>{% endfor %}
+    {% if not d.tracked %}<div class="wrd-empty-actions"><a href="{% url 'work:time' %}" class="btn btn-primary btn-sm">{% icon "timer" %}{% translate "Track time" %}</a>
+      <a href="{% url 'work:entry_new' %}" class="btn btn-ghost btn-sm">{% icon "plus" %}{% translate "Add time by hand" %}</a></div>{% endif %}
+  </div>
+</section>
+
+{% if d.tracked %}
+<dl class="stat-grid">
+  <div class="stat" data-tone="accent"><dt class="stat-label">{% translate "Tracked" %}</dt><dd class="stat-value num">{{ d.tracked|hm }}</dd>
+    {% if d.target %}<dd class="wrd-meter" data-tip="{% blocktranslate with t=d.target|hm %}Daily target: {{ t }}{% endblocktranslate %}"><span class="meter{% if d.target_pct >= 100 %} is-met{% endif %}"><span style="width: {{ d.target_bar }}%"></span></span><small>{% blocktranslate with p=d.target_pct t=d.target|hm %}{{ p }}% of {{ t }}{% endblocktranslate %}</small></dd>{% endif %}
+    {% if d.vs_usual %}{% include "work/partials/report_change.html" with c=d.vs_usual as_time=True %}{% endif %}</div>
+  <div class="stat"><dt class="stat-label">{% translate "Started – stopped" %}</dt><dd class="stat-value num">{{ d.first|time:"H:i" }}–{{ d.last|time:"H:i" }}</dd><dd class="stat-hint">{% blocktranslate with t=d.span_secs|hm %}over {{ t }}{% endblocktranslate %}</dd></div>
+  <div class="stat"><dt class="stat-label">{% translate "Breaks" %}</dt><dd class="stat-value num">{{ d.break_secs|hm }}</dd><dd class="stat-hint">{% blocktranslate count counter=d.breaks|length %}{{ counter }} break of 5 min or more{% plural %}{{ counter }} breaks of 5 min or more{% endblocktranslate %}</dd></div>
+  <div class="stat"><dt class="stat-label">{% translate "Longest stretch" %}</dt><dd class="stat-value num">{{ d.longest|hm }}</dd><dd class="stat-hint">{% translate "without a break" %}</dd></div>
+  <div class="stat" data-tone="good"><dt class="stat-label">{% translate "Tasks done" %}</dt><dd class="stat-value num">{{ d.done|length }}</dd></div>
+  <div class="stat"><dt class="stat-label">{% translate "Focus sessions" %}</dt><dd class="stat-value num">{{ d.focus_count }}</dd>{% if d.focus_secs %}<dd class="stat-hint">{{ d.focus_secs|hm }}</dd>{% endif %}</div>
+</dl>
+
+{# the day on a line: each entry where it happened, the gaps between them are the breaks (Timing, Rize) #}
+<section class="card">
+  <header class="card-header"><div><h2 class="card-title">{% translate "Timeline" %}</h2><p class="card-subtitle">{% translate "Each block is a stretch of tracked time, coloured by project. The gaps are breaks." %}</p></div></header>
+  <div class="card-body !pt-0">
+    <div class="wrd-line">
+      <div class="wrd-ticks" aria-hidden="true">{% for k in d.ticks %}<span style="left: {{ k.left }}%">{{ k.h }}</span>{% endfor %}</div>
+      <div class="wrd-track">
+        {% for k in d.ticks %}<i class="wrd-grid" style="left: {{ k.left }}%" aria-hidden="true"></i>{% endfor %}
+        {% for i in d.items %}<a href="{% url 'work:entry' i.e.pk %}" class="wrd-block{% if i.running %} is-running{% endif %}" data-color="{{ i.color|default:'slate' }}" style="left: {{ i.left }}%; width: {{ i.width }}%" data-tip="{{ i.a|time:'H:i' }}–{% if i.running %}{% translate 'now' %}{% else %}{{ i.b|time:'H:i' }}{% endif %} · {{ i.secs|hm }} · {{ i.label }}"><span>{{ i.label }}</span></a>{% endfor %}
+        {% if d.now_left is not None %}<i class="wrd-now" style="left: {{ d.now_left }}%" aria-hidden="true"></i>{% endif %}
+      </div>
+    </div>
+    {# the same, read in order (and on a phone) #}
+    <ol class="wrd-sessions">
+      {% for i in d.items %}
+      {% for b in d.breaks %}{% if b.b == i.a %}<li class="wrd-break">{% icon "pause" %}<span>{% blocktranslate with t=b.secs|hm a=b.a|time:"H:i" %}Break, {{ t }} (from {{ a }}){% endblocktranslate %}</span></li>{% endif %}{% endfor %}
+      <li><time class="num">{{ i.a|time:"H:i" }}–{% if i.running %}{% translate "now" %}{% else %}{{ i.b|time:"H:i" }}{% endif %}</time>
+        <a href="{% url 'work:entry' i.e.pk %}" class="wrd-sess-name"><span class="wt-dot" data-color="{{ i.color|default:'slate' }}"></span><span class="truncate">{{ i.label }}</span>{% if i.e.kind == "focus" %}<span class="badge" data-tone="accent">{% translate "Focus" %}</span>{% endif %}</a>
+        <span class="num wrd-sess-dur">{{ i.secs|hm }}</span></li>
+      {% endfor %}
+    </ol>
+  </div>
+</section>
+
+<div class="wr-grid">
+  <section class="card">
+    <header class="card-header"><div><h2 class="card-title">{% translate "Where the time went" %}</h2><p class="card-subtitle">{% translate "By task, or by what you wrote when there was no task." %}</p></div></header>
+    <ul class="wr-rank">{% for g in d.by_task %}<li>
+      <span class="wr-rank-name">{% if g.project %}<span class="wt-dot" data-color="{{ g.project.color }}"></span>{% endif %}{% if g.task %}<a href="{% url 'work:task' g.task.pk %}" class="truncate">{{ g.label }}</a>{% else %}<span class="truncate">{{ g.label }}</span>{% endif %}<small>{% if g.project %}{{ g.project.name }}{% else %}{% translate "No project" %}{% endif %}</small></span>
+      <span class="wr-rank-val num">{{ g.secs|hm }} · {{ g.pct }}%{% if g.sessions > 1 %} · {% blocktranslate count counter=g.sessions %}{{ counter }} time{% plural %}{{ counter }} times{% endblocktranslate %}{% endif %}</span>
+      <span class="wr-rank-bar" data-color="{{ g.project.color|default:'slate' }}"><i style="width: {{ g.pct }}%"></i></span></li>{% endfor %}</ul>
+  </section>
+  <section class="card">
+    <header class="card-header"><h2 class="card-title">{% translate "By project" %}</h2></header>
+    <ul class="wr-rank">{% for p in d.by_project %}<li>
+      <span class="wr-rank-name">{% if p.p %}<span class="wt-dot" data-color="{{ p.p.color }}"></span>{{ p.p.name }}{% else %}<span class="ws-none">{% translate "No project" %}</span>{% endif %}</span>
+      <span class="wr-rank-val num">{{ p.secs|hm }} · {{ p.pct }}%</span>
+      <span class="wr-rank-bar" data-color="{{ p.p.color|default:'slate' }}"><i style="width: {{ p.pct }}%"></i></span></li>{% endfor %}</ul>
+  </section>
+  <section class="card">
+    <header class="card-header"><h2 class="card-title">{% translate "Hour by hour" %}</h2></header>
+    <div class="card-body !pt-0"><div class="wrd-hours">{% for h in d.hours %}<div class="wrd-hour" data-tip="{{ h.h }}:00 · {{ h.secs|hm }}"><span style="--h: {% widthratio h.secs d.hour_peak 100 %}"></span><small>{{ h.h }}</small></div>{% endfor %}</div></div>
+  </section>
+  <section class="card">
+    <header class="card-header"><h2 class="card-title">{% translate "Finished" %}</h2></header>
+    {% if d.done %}<ul class="wrd-done">{% for task in d.done %}<li>{% icon "check" %}<a href="{% url 'work:task' task.pk %}" class="truncate">{{ task.title }}</a><time class="num">{{ task.completed_at|time:"H:i" }}</time></li>{% endfor %}</ul>
+    {% else %}<p class="card-body help">{% translate "No tasks were finished on this day." %}</p>{% endif %}
+  </section>
+</div>
+{% endif %}
+{% endblock %}

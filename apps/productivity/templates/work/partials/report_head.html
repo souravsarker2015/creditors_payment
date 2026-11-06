@@ -1,0 +1,62 @@
+{% load i18n work %}
+{% comment %}
+The top of every report: the title, the four kinds of report (Toggl and Clockify's Summary · Detailed · Weekly,
+with RescueTime's Day), and, where it applies, the period and the filter. Needs: tab, flt.
+Optional: presets/preset/start/end (a period), period_label, nav_prev/nav_next (a day or a week), export (true).
+{% endcomment %}
+{% with fq=flt.query %}
+<header class="wp-head">
+  <div class="min-w-0"><h1 class="wp-title">{% translate "Reports" %}</h1>{% if period_label %}<p class="wp-sub">{{ period_label }}</p>{% endif %}</div>
+  <div class="wp-actions wr-noprint" x-data>
+    <button type="button" class="btn btn-ghost" @click="window.print()" data-tip="{% translate 'Print it, or save it as a PDF from the print window.' %}">{% icon "printer" %}<span class="max-sm:sr-only">{% translate "Print / PDF" %}</span></button>
+    {% if export %}<a href="{% query_with export='csv' %}" class="btn btn-secondary">{% icon "download" %}<span class="max-sm:sr-only">{% translate "Export CSV" %}</span></a>{% endif %}
+  </div>
+</header>
+
+<p class="wr-print-title">{% translate "Reports" %} · {% if tab == "day" %}{% translate "Day" %}{% elif tab == "week" %}{% translate "Week" %}{% elif tab == "detailed" %}{% translate "Detailed" %}{% else %}{% translate "Summary" %}{% endif %}{% if period_label %} · {{ period_label }}{% endif %}{% if flt.active %} · {% if flt.project_obj %}{{ flt.project_obj.name }} {% endif %}{% if flt.tag_obj %}#{{ flt.tag_obj.name }} {% endif %}{% if flt.billable %}{% translate "billable time" %}{% endif %}{% endif %}</p>
+<nav class="wr-tabs wr-noprint" aria-label="{% translate 'Kind of report' %}">
+  <a href="{% url 'work:reports' %}{% if fq %}?{{ fq }}{% endif %}" class="wr-tab{% if tab == 'summary' %} is-active{% endif %}"{% if tab == 'summary' %} aria-current="page"{% endif %}>{% icon "chart" %}<span>{% translate "Summary" %}</span></a>
+  <a href="{% url 'work:report_day' %}" class="wr-tab{% if tab == 'day' %} is-active{% endif %}"{% if tab == 'day' %} aria-current="page"{% endif %}>{% icon "sun" %}<span>{% translate "Day" %}</span></a>
+  <a href="{% url 'work:report_week' %}{% if fq %}?{{ fq }}{% endif %}" class="wr-tab{% if tab == 'week' %} is-active{% endif %}"{% if tab == 'week' %} aria-current="page"{% endif %}>{% icon "columns" %}<span>{% translate "Week" %}</span></a>
+  <a href="{% url 'work:report_detailed' %}{% if fq %}?{{ fq }}{% endif %}" class="wr-tab{% if tab == 'detailed' %} is-active{% endif %}"{% if tab == 'detailed' %} aria-current="page"{% endif %}>{% icon "list" %}<span>{% translate "Detailed" %}</span></a>
+</nav>
+
+{% if tab != "day" %}
+<form method="get" class="wr-filter wr-noprint" x-data="{ custom: '{{ preset }}' === 'custom' }">
+  {% if presets %}
+  <div class="chip-row">{% for v, l in presets %}<a href="?range={{ v }}{% if fq %}&{{ fq }}{% endif %}{% if q %}&q={{ q|urlencode }}{% endif %}" class="chip{% if preset == v %} is-active{% endif %}">{{ l }}</a>{% endfor %}
+    <button type="button" class="chip{% if preset == 'custom' %} is-active{% endif %}" @click="custom = !custom" :aria-expanded="custom.toString()">{% translate "Custom…" %}</button></div>
+  <div class="wr-custom" x-show="custom" x-cloak>
+    <input type="date" name="from" value="{{ start|date:'Y-m-d' }}" class="form-input input-compact" aria-label="{% translate 'From' %}">
+    <input type="date" name="to" value="{{ end|date:'Y-m-d' }}" class="form-input input-compact" aria-label="{% translate 'To' %}">
+    <button type="submit" class="btn btn-primary btn-sm">{% translate "Show" %}</button>
+  </div>
+  <input type="hidden" name="range" :value="custom ? 'custom' : '{{ preset }}'" value="{{ preset }}">
+  {% endif %}
+  {% if nav_week %}<input type="hidden" name="week" value="{{ nav_week|date:'Y-m-d' }}">{% endif %}
+  {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+  {# narrow it down (Toggl's filters): a project, a tag, billable only — each change shows at once #}
+  <div class="wr-narrow">
+    <label class="sr-only" for="wr-project">{% translate "Project" %}</label>
+    <select id="wr-project" name="project" class="form-input input-compact" data-native @change="$el.form.requestSubmit()">
+      <option value="">{% translate "All projects" %}</option>
+      {% for p in projects_all %}<option value="{{ p.pk }}"{% if flt.project == p.pk|stringformat:'s' %} selected{% endif %}>{{ p.name }}{% if p.is_archived %} ({% translate "archived" %}){% endif %}</option>{% endfor %}
+      <option value="none"{% if flt.project == "none" %} selected{% endif %}>{% translate "No project" %}</option>
+    </select>
+    {% if tags_all %}
+    <label class="sr-only" for="wr-tag">{% translate "Tag" %}</label>
+    <select id="wr-tag" name="tag" class="form-input input-compact" data-native @change="$el.form.requestSubmit()">
+      <option value="">{% translate "All tags" %}</option>
+      {% for tg in tags_all %}<option value="{{ tg.pk }}"{% if flt.tag == tg.pk|stringformat:'s' %} selected{% endif %}>#{{ tg.name }}</option>{% endfor %}
+    </select>
+    {% endif %}
+    <label class="wr-check"><input type="checkbox" name="billable" value="1"{% if flt.billable %} checked{% endif %} @change="$el.form.requestSubmit()">{% translate "Billable only" %}</label>
+    <noscript><button type="submit" class="btn btn-secondary btn-sm">{% translate "Show" %}</button></noscript>
+    {% if flt.active %}<a href="?{% if preset %}range={{ preset }}{% if preset == 'custom' %}&from={{ start|date:'Y-m-d' }}&to={{ end|date:'Y-m-d' }}{% endif %}{% endif %}{% if nav_week %}&week={{ nav_week|date:'Y-m-d' }}{% endif %}" class="chip-clear">{% translate "Clear filter" %}</a>{% endif %}
+  </div>
+</form>
+{% if flt.active %}<p class="wr-filtered">{% icon "filter" %}{% translate "Showing only" %}
+  {% if flt.project_obj %}<b>{{ flt.project_obj.name }}</b>{% elif flt.project == "none" %}<b>{% translate "time with no project" %}</b>{% endif %}
+  {% if flt.tag_obj %}<b>#{{ flt.tag_obj.name }}</b>{% endif %}{% if flt.billable %}<b>{% translate "billable time" %}</b>{% endif %}</p>{% endif %}
+{% endif %}
+{% endwith %}

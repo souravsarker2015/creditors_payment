@@ -1,0 +1,48 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% translate "Detailed report" %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+{% blocktranslate asvar period_label with a=start|date:"j M Y" b=end|date:"j M Y" %}{{ a }} – {{ b }}{% endblocktranslate %}
+{% include "work/partials/report_head.html" with export=True %}
+
+{# find an entry by what it says, its task, project or tag #}
+<form method="get" class="wrx-search wr-noprint">
+  <input type="hidden" name="range" value="{{ preset }}">{% if preset == "custom" %}<input type="hidden" name="from" value="{{ start|date:'Y-m-d' }}"><input type="hidden" name="to" value="{{ end|date:'Y-m-d' }}">{% endif %}
+  {% if flt.project %}<input type="hidden" name="project" value="{{ flt.project }}">{% endif %}{% if flt.tag %}<input type="hidden" name="tag" value="{{ flt.tag }}">{% endif %}{% if flt.billable %}<input type="hidden" name="billable" value="1">{% endif %}
+  <div class="input-icon">{% icon "search" %}<label class="sr-only" for="wrx-q">{% translate "Search entries" %}</label>
+    <input type="search" id="wrx-q" name="q" value="{{ q }}" class="form-input" placeholder="{% translate 'Search what you wrote, a task, project or tag…' %}" enterkeyhint="search"></div>
+</form>
+
+<p class="wrx-sum">{% blocktranslate count counter=d.count with t=d.total|hm %}{{ counter }} entry · {{ t }}{% plural %}{{ counter }} entries · {{ t }}{% endblocktranslate %}{% if d.billable %} · {% blocktranslate with t=d.billable|hm %}{{ t }} billable{% endblocktranslate %}{% endif %}
+  {% if d.more %}<span class="help">{% translate "Showing the newest 1,000. Pick a shorter period or narrow it down to see the rest, or export the CSV." %}</span>{% endif %}</p>
+
+{% if d.days %}
+<section class="card wrx-list">
+  {% for day in d.days %}
+  <h2 class="wrx-day"><a href="{% url 'work:report_day' %}?date={{ day.day|date:'Y-m-d' }}">{% if day.day == today %}{% translate "Today" %}{% else %}{{ day.day|date:"l" }}{% endif %} · {{ day.day|date:"j M Y" }}</a><span class="num">{{ day.secs|hm }}</span></h2>
+  <ul>
+    {% for r in day.rows %}
+    <li class="wrx-row">
+      <time class="num">{{ r.e.started_at|time:"H:i" }}–{% if r.end %}{{ r.end|time:"H:i" }}{% else %}{% translate "now" %}{% endif %}</time>
+      <div class="wrx-main">
+        <p class="wrx-title">{% if r.e.task_id %}<a href="{% url 'work:task' r.e.task_id %}">{{ r.label }}</a>{% else %}{{ r.label }}{% endif %}</p>
+        <p class="wrx-meta">{% if r.e.project_id %}<span><span class="wt-dot" data-color="{{ r.e.project.color }}"></span>{{ r.e.project.name }}</span>{% endif %}
+          {% if r.e.task_id and r.e.description %}<span>{{ r.e.description }}</span>{% endif %}
+          {% for tg in r.e.tags.all %}<span class="wrx-tag">#{{ tg.name }}</span>{% endfor %}
+          {% if r.e.kind == "focus" %}<span class="badge" data-tone="accent">{% translate "Focus" %}</span>{% elif r.e.kind == "manual" %}<span class="wrx-kind">{% translate "added by hand" %}</span>{% endif %}
+          {% if r.e.billable %}<span class="badge" data-tone="good" title="{% translate 'Billable' %}">{% translate "Billable" %}</span>{% endif %}</p>
+      </div>
+      <span class="num wrx-dur">{{ r.secs|hm }}</span>
+      <a href="{% url 'work:entry' r.e.pk %}" class="icon-btn wr-noprint" aria-label="{% translate 'Edit entry' %}">{% icon "edit" %}</a>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endfor %}
+</section>
+{% else %}
+<div class="empty"><div class="empty-icon">{% icon "list" %}</div><h3 class="empty-title">{% translate "No entries" %}</h3>
+  <p class="empty-text">{% if q or flt.active %}{% translate "Nothing matches. Try other words, or clear the filter." %}{% else %}{% translate "No time was tracked in this period." %}{% endif %}</p></div>
+{% endif %}
+{% endblock %}

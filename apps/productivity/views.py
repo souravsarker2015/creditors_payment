@@ -22,7 +22,7 @@ from django.views.decorators.http import require_POST
 
 from apps.trash.undo import delete_with_undo
 
-from . import cards, dev, diagrams, exam, jobs, linked, services
+from . import cards, dev, diagrams, exam, jobs, linked, reports, services
 from .api import card_json, entry_json
 from .access import can_use, work_required
 from .forms import DeckForm, EntryForm, GoalForm, HabitForm, LearningForm, ProjectForm, SettingsForm, SnippetForm, SprintForm, TagForm, TaskForm
@@ -1464,55 +1464,123 @@ def _earned(by_project):
     return sum(float(p.hourly_rate) * secs / 3600 for p, secs in rated) if rated else None
 
 
-@work_required
-def reports_view(request):
-    user, today = request.user, _today()
-    s = WorkSettings.for_user(user)
+def _time_csv(entries, start, end, name="time"):
+    response = HttpResponse(content_type="text/csv; charset=utf-8")
+    response["Content-Disposition"] = f'attachment; filename="{name}-{start}-{end}.csv"'
+    response.write("\ufeff")
+    w = safe_writer(response)
+    w.writerow([_("Date"), _("Start"), _("End"), _("Hours"), _("Project"), _("Task"), _("Description"), _("Tags"), _("Billable"), _("Kind")])
+    for e in entries:
+        st, en = timezone.localtime(e.started_at), timezone.localtime(e.ended_at) if e.ended_at else None
+        w.writerow([st.date().isoformat(), st.strftime("%H:%M"), en.strftime("%H:%M") if en else "", f"{e.seconds / 3600:.2f}",
+                    e.project.name if e.project_id else "", e.task.title if e.task_id else "", e.description,
+                    " ".join(tg.name for tg in e.tags.all()), "yes" if e.billable else "", e.kind])
+    return response
+
+
+def _report_common(request, user, flt, **extra):
+    """What every report tab shows above itself: the tabs and the filter."""
+    return {"flt": flt, "projects_all": Project.objects.filter(owner=user).order_by("is_archived", "name"),
+            "tags_all": Tag.objects.filter(owner=user).order_by("name"), "presets": reports.presets(), **extra}
+
+
+def _report_range(request, s, today):
     (start, end), preset = _range(request, s, today)
     if (end - start).days > 400:
         start = end - timedelta(days=400)
-    t = services.totals(user, start, end)
+    return start, end, preset
+
+
+@work_required
+def reports_view(request):
+    """Summary (Toggl, Clockify): totals split every way, beside the period before, with what stands out."""
+    user, today = request.user, _today()
+    s = WorkSettings.for_user(user)
+    start, end, preset = _report_range(request, s, today)
+    flt = reports.Filter.from_request(request)
+    t = services.totals(user, start, end, flt)
     if request.GET.get("export") == "csv":
-        response = HttpResponse(content_type="text/csv; charset=utf-8")
-        response["Content-Disposition"] = f'attachment; filename="time-{start}-{end}.csv"'
-        response.write("﻿")
-        w = safe_writer(response)
-        w.writerow([_("Date"), _("Start"), _("End"), _("Hours"), _("Project"), _("Task"), _("Description"), _("Tags"), _("Billable"), _("Kind")])
-        for e in t.entries:
-            st, en = timezone.localtime(e.started_at), timezone.localtime(e.ended_at) if e.ended_at else None
-            w.writerow([st.date().isoformat(), st.strftime("%H:%M"), en.strftime("%H:%M") if en else "", f"{e.seconds / 3600:.2f}",
-                        e.project.name if e.project_id else "", e.task.title if e.task_id else "", e.description,
-                        " ".join(tg.name for tg in e.tags.all()), "yes" if e.billable else "", e.kind])
-        return response
+        return _time_csv(t.entries, start, end)
     peak = max(t.by_day.values(), default=0) or 1
     work_days = sum(1 for i in range(t.days) if s.is_work_day(start + timedelta(days=i)))
     lo, hi = services.day_bounds(start)[0], services.day_bounds(end)[1]
-    completed = Task.objects.filter(owner=user, status=Status.DONE, completed_at__gte=lo, completed_at__lt=hi)
+    completed = reports.done_between(user, start, end).count()
+    cmp = reports.compare(user, t, start, end, completed, flt)
     est = services.estimate_accuracy(user, start, end)
     hours = t.by_hour
     hpeak = max(hours) or 1
     year = services.daily_seconds(user, today - timedelta(days=364), today)
-    return render_work(request, "work/reports.html", {
-        "t": t, "start": start, "end": end, "preset": preset, "today": today,
-        "bars": [{"day": d, "secs": v, "pct": round(100 * v / peak), "work": s.is_work_day(d), "weekend": not s.is_work_day(d), "hrs": _hours(v)}
-                 for d, v in t.by_day.items()],
-        "avg_pct": round(100 * t.daily_average / peak, 1) if t.daily_average else None,
-        "target_total": s.daily_target_minutes * 60 * work_days,
-        "target_pct": round(100 * t.seconds / (s.daily_target_minutes * 60 * work_days)) if work_days else None,
-        "projects": [{"p": p, "secs": secs, "pct": round(100 * secs / t.seconds) if t.seconds else 0,
-                      "earned": float(p.hourly_rate) * secs / 3600 if p and p.hourly_rate else None} for p, secs in t.by_project],
-        "earned": _earned(t.by_project),
-        "kinds": [{"k": k, "icon": KIND_ICONS.get(k, "check"), "secs": secs, "pct": round(100 * secs / t.seconds) if t.seconds else 0} for k, secs in t.by_kind]
+    return render_work(request, "work/reports.html", _report_common(request, user, flt,
+        tab="summary", t=t, start=start, end=end, preset=preset, today=today, cmp=cmp,
+        highlights=reports.highlights(t, cmp, s),
+        bars=[{"day": d, "secs": v, "pct": round(100 * v / peak), "work": s.is_work_day(d), "weekend": not s.is_work_day(d), "hrs": _hours(v)}
+              for d, v in t.by_day.items()],
+        avg_pct=round(100 * t.daily_average / peak, 1) if t.daily_average else None,
+        target_total=s.daily_target_minutes * 60 * work_days,
+        target_pct=round(100 * t.seconds / (s.daily_target_minutes * 60 * work_days)) if work_days else None,
+        projects=(projects := reports.project_breakdown(t)), donut=reports.donut(projects, t.seconds),
+        earned=_earned(t.by_project),
+        kinds=[{"k": k, "icon": KIND_ICONS.get(k, "check"), "secs": secs, "pct": round(100 * secs / t.seconds) if t.seconds else 0} for k, secs in t.by_kind]
         if any(k != TaskKind.TASK for k, _secs in t.by_kind) else [],
-        "tags": [{"tag": tg, "secs": secs, "pct": round(100 * secs / t.seconds) if t.seconds else 0} for tg, secs in t.by_tag[:12]],
-        "tasks": t.by_task, "completed": completed.count(), "created": Task.objects.filter(owner=user, created_at__gte=lo, created_at__lt=hi).count(),
-        "est": est, "delivery": services.delivery(user, start, end), "focus": services.focus_pattern(user, start, end),
-        "hours": [{"h": h, "secs": v, "pct": round(100 * v / hpeak), "level": 0 if not v else min(4, 1 + int(3.999 * v / hpeak))} for h, v in enumerate(hours)],
-        "heat": services.heatmap(year, today, s.week_start), "year_total": sum(year.values()),
-        "year_days": sum(1 for v in year.values() if v),
-        "presets": [("week", _("This week")), ("lastweek", _("Last week")), ("month", _("This month")), ("lastmonth", _("Last month")),
-                    ("30", _("Last 30 days")), ("year", _("This year"))],
-    })
+        tags=[{"tag": tg, "secs": secs, "pct": round(100 * secs / t.seconds) if t.seconds else 0} for tg, secs in t.by_tag[:12]],
+        tasks=t.by_task, completed=completed, created=Task.objects.filter(owner=user, created_at__gte=lo, created_at__lt=hi).count(),
+        est=est, delivery=services.delivery(user, start, end), focus=services.focus_pattern(user, start, end),
+        hours=[{"h": h, "secs": v, "pct": round(100 * v / hpeak), "level": 0 if not v else min(4, 1 + int(3.999 * v / hpeak))} for h, v in enumerate(hours)],
+        heat=services.heatmap(year, today, s.week_start), year_total=sum(year.values()),
+        year_days=sum(1 for v in year.values() if v),
+    ))
+
+
+@work_required
+def report_day_view(request):
+    """One day (RescueTime, Rize, Timing): a timeline, the breaks, where each minute went, said in words."""
+    user, today = request.user, _today()
+    s = WorkSettings.for_user(user)
+    day = min(_day(request, default=today), today)
+    d = reports.day_report(user, day, s, today)
+    return render_work(request, "work/report_day.html", _report_common(request, user, reports.Filter(),
+        tab="day", d=d, day=day, today=today,
+        day_name=_("Today") if day == today else _("Yesterday") if day == today - timedelta(days=1) else "", prev=day - timedelta(days=1), next=day + timedelta(days=1) if day < today else None))
+
+
+@work_required
+def report_week_view(request):
+    """A week's timesheet: each project and its tasks by day (Toggl and Clockify's Weekly)."""
+    user, today = request.user, _today()
+    s = WorkSettings.for_user(user)
+    first, _last = s.week_of(_day(request, "week", today))
+    flt = reports.Filter.from_request(request)
+    w = reports.week_report(user, first, s, today, flt)
+    if request.GET.get("export") == "csv":
+        response = HttpResponse(content_type="text/csv; charset=utf-8")
+        response["Content-Disposition"] = f'attachment; filename="timesheet-{first}.csv"'
+        response.write("\ufeff")
+        out = safe_writer(response)
+        out.writerow([_("Project"), _("Task")] + [d["day"].isoformat() for d in w["days"]] + [_("Total")])
+        for g in w["groups"]:
+            for r in g["rows"]:
+                out.writerow([g["project"].name if g["project"] else _("No project"), r["label"]]
+                             + [f"{v / 3600:.2f}" for v in r["days"]] + [f"{r['total'] / 3600:.2f}"])
+        out.writerow([_("Total"), ""] + [f"{d['secs'] / 3600:.2f}" for d in w["days"]] + [f"{w['total'] / 3600:.2f}"])
+        return response
+    return render_work(request, "work/report_week.html", _report_common(request, user, flt,
+        tab="week", w=w, today=today, work_days=sum(1 for x in w["days"] if x["target"] and not x["future"]),
+        met_days=sum(1 for x in w["days"] if x["met"]), prev=first - timedelta(days=7), next=first + timedelta(days=7) if first + timedelta(days=6) < today else None))
+
+
+@work_required
+def report_detailed_view(request):
+    """Every entry, by day, to check and correct (Toggl's Detailed)."""
+    user, today = request.user, _today()
+    s = WorkSettings.for_user(user)
+    start, end, preset = _report_range(request, s, today)
+    flt = reports.Filter.from_request(request)
+    q = " ".join((request.GET.get("q") or "").split())[:100]
+    if request.GET.get("export") == "csv":
+        d = reports.detailed(user, start, end, flt, q)
+        return _time_csv([r["e"] for day in reversed(d["days"]) for r in reversed(day["rows"])], start, end)
+    return render_work(request, "work/report_detailed.html", _report_common(request, user, flt,
+        tab="detailed", d=reports.detailed(user, start, end, flt, q), q=q, start=start, end=end, preset=preset, today=today))
 
 
 # ── Settings ──────────────────────────────────────────────────────────────

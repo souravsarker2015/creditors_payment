@@ -1,0 +1,61 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% translate "Week report" %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+{% blocktranslate asvar period_label with a=w.first|date:"j M" b=w.last|date:"j M Y" %}Week of {{ a }} – {{ b }}{% endblocktranslate %}
+{% include "work/partials/report_head.html" with export=True nav_week=w.first %}
+
+<div class="wrd-pick wrw-pick">
+  <a href="?week={{ prev|date:'Y-m-d' }}{% if flt.query %}&{{ flt.query }}{% endif %}" class="icon-btn" aria-label="{% translate 'Week before' %}">{% icon "chevron-left" %}</a>
+  <strong>{{ w.first|date:"j M" }} – {{ w.last|date:"j M Y" }}</strong>
+  {% if next %}<a href="?week={{ next|date:'Y-m-d' }}{% if flt.query %}&{{ flt.query }}{% endif %}" class="icon-btn" aria-label="{% translate 'Week after' %}">{% icon "chevron-right" %}</a>{% else %}<span class="icon-btn is-disabled" aria-hidden="true">{% icon "chevron-right" %}</span>{% endif %}
+  {% if next %}<a href="?{% if flt.query %}{{ flt.query }}{% endif %}" class="btn btn-ghost btn-sm">{% translate "This week" %}</a>{% endif %}
+</div>
+
+<dl class="stat-grid">
+  <div class="stat" data-tone="accent"><dt class="stat-label">{% translate "Tracked" %}</dt><dd class="stat-value num">{{ w.total|hm }}</dd>
+    {% if w.vs_last %}{% include "work/partials/report_change.html" with c=w.vs_last as_time=True %}{% endif %}</div>
+  <div class="stat"{% if w.target_pct >= 100 %} data-tone="good"{% endif %}><dt class="stat-label">{% translate "Of target" %}</dt><dd class="stat-value num">{% if w.target_pct is not None %}{{ w.target_pct }}%{% else %}—{% endif %}</dd>{% if w.target %}<dd class="stat-hint">{{ w.target|hm }}</dd>{% endif %}</div>
+  <div class="stat"><dt class="stat-label">{% translate "Days on target" %}</dt><dd class="stat-value num">{{ met_days }}<small class="wr-of"> / {{ work_days }}</small></dd></div>
+  <div class="stat" data-tone="good"><dt class="stat-label">{% translate "Tasks done" %}</dt><dd class="stat-value num">{{ w.done }}</dd></div>
+</dl>
+
+{% if w.total %}
+{# the timesheet: projects, and their tasks, by day (Toggl, Clockify) #}
+<section class="card">
+  <header class="card-header"><div><h2 class="card-title">{% translate "Timesheet" %}</h2><p class="card-subtitle">{% translate "Open or close a project to see its tasks. Tap a day to see it hour by hour." %}</p></div></header>
+  <div class="wrw-scroll">
+    <table class="wrw-table">
+      <thead><tr><th scope="col" class="wrw-name">{% translate "Project / task" %}</th>
+        {% for x in w.days %}<th scope="col" class="{% if x.today %}is-today{% endif %}{% if x.off %} is-off{% endif %}">{% if x.future %}<span>{{ x.day|date:"D" }}<small>{{ x.day|date:"j" }}</small></span>{% else %}<a href="{% url 'work:report_day' %}?date={{ x.day|date:'Y-m-d' }}">{{ x.day|date:"D" }}<small>{{ x.day|date:"j" }}</small></a>{% endif %}</th>{% endfor %}
+        <th scope="col">{% translate "Total" %}</th></tr></thead>
+      {% for g in w.groups %}
+      <tbody x-data="{ open: true }">
+        <tr class="wrw-group" @click="open = !open">
+          <th scope="row" class="wrw-name"><button type="button" class="wrw-toggle" :aria-expanded="open.toString()"><span class="wrw-chev" :class="open && 'is-open'">{% icon "chevron-right" %}</span>{% if g.project %}<span class="wt-dot" data-color="{{ g.project.color }}"></span><span class="truncate">{{ g.project.name }}</span>{% else %}<span class="wt-dot"></span><span class="truncate ws-none">{% translate "No project" %}</span>{% endif %}</button></th>
+          {% for v in g.days %}<td class="num">{% if v %}{{ v|hm }}{% else %}<span class="wrw-zero">–</span>{% endif %}</td>{% endfor %}
+          <td class="num wrw-total">{{ g.total|hm }}</td>
+        </tr>
+        {% for r in g.rows %}
+        <tr class="wrw-task" x-show="open">
+          <th scope="row" class="wrw-name">{% if r.task %}<a href="{% url 'work:task' r.task.pk %}" class="truncate">{{ r.label }}</a>{% else %}<span class="truncate">{{ r.label }}</span>{% endif %}</th>
+          {% for v in r.days %}<td class="num">{% if v %}{{ v|hm }}{% else %}<span class="wrw-zero">–</span>{% endif %}</td>{% endfor %}
+          <td class="num wrw-total">{{ r.total|hm }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      {% endfor %}
+      <tfoot>
+        <tr><th scope="row" class="wrw-name">{% translate "Day total" %}</th>{% for x in w.days %}<td class="num{% if x.met %} is-met{% endif %}">{% if x.secs %}{{ x.secs|hm }}{% else %}–{% endif %}</td>{% endfor %}<td class="num wrw-total">{{ w.total|hm }}</td></tr>
+        {% if w.target %}<tr class="wrw-target"><th scope="row" class="wrw-name">{% translate "Target" %}</th>{% for x in w.days %}<td class="num">{% if x.target %}{% if x.met %}<span class="wrw-met" title="{% translate 'Reached' %}">✓</span> {% endif %}{{ x.target|hm }}{% else %}<span class="wrw-zero">{% translate "off" %}</span>{% endif %}</td>{% endfor %}<td class="num">{{ w.target|hm }}</td></tr>{% endif %}
+      </tfoot>
+    </table>
+  </div>
+</section>
+{% else %}
+<div class="empty"><div class="empty-icon">{% icon "columns" %}</div><h3 class="empty-title">{% translate "No time this week" %}</h3>
+  <p class="empty-text">{% if flt.active %}{% translate "Nothing matches the filter. Clear it to see all your time." %}{% else %}{% translate "Track some time and the timesheet fills in by project, task and day." %}{% endif %}</p></div>
+{% endif %}
+{% endblock %}

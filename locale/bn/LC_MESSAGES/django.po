@@ -26536,3 +26536,226 @@ msgstr[1] "এর %(counter)sটি খরচ, নিয়মিত খরচ �
 msgctxt "General category initial"
 msgid "G"
 msgstr "সা"
+
+msgid "Most of your time went to %(name)s: %(time)s (%(pct)s%%)."
+msgstr "আপনার বেশির ভাগ সময় গেছে %(name)s-এ: %(time)s (%(pct)s%%)।"
+
+msgid "Your longest day was %(day)s, with %(time)s."
+msgstr "সবচেয়ে লম্বা দিন ছিল %(day)s, %(time)s।"
+
+msgid "You do most of your work between %(a)s:00 and %(b)s:00 (%(pct)s%% of it)."
+msgstr "আপনার বেশির ভাগ কাজ হয় %(a)s:00 থেকে %(b)s:00-এর মধ্যে (%(pct)s%%)।"
+
+msgid "%(time)s more than the period before (+%(pct)s%%)."
+msgstr "আগের সময়ের চেয়ে %(time)s বেশি (+%(pct)s%%)।"
+
+msgid "%(time)s less than the period before (−%(pct)s%%)."
+msgstr "আগের সময়ের চেয়ে %(time)s কম (−%(pct)s%%)।"
+
+msgid "%(pct)s%% of the time isn't on a task. Start the timer from a task and these reports say more."
+msgstr "%(pct)s%% সময় কোনো কাজের সাথে যুক্ত নয়। কাজ থেকে টাইমার চালু করলে রিপোর্ট আরও স্পষ্ট হবে।"
+
+msgid "Nothing tracked today yet. Start the timer when you begin and this page fills in as you work."
+msgstr "আজ এখনও কিছু ট্র্যাক হয়নি। কাজ শুরু করলে টাইমার চালু করুন, কাজের সাথে সাথে এই পাতা ভরে উঠবে।"
+
+msgid "Nothing was tracked on this day."
+msgstr "এই দিনে কিছু ট্র্যাক হয়নি।"
+
+msgid "You tracked %(time)s between %(a)s and %(b)s."
+msgstr "%(a)s থেকে %(b)s-এর মধ্যে আপনি %(time)s ট্র্যাক করেছেন।"
+
+msgid "Most of it went to “%(name)s” (%(time)s, %(pct)s%%)."
+msgstr "এর বেশির ভাগ গেছে “%(name)s”-এ (%(time)s, %(pct)s%%)।"
+
+msgid "That's %(time)s more than your usual day."
+msgstr "আপনার সাধারণ দিনের চেয়ে %(time)s বেশি।"
+
+msgid "That's %(time)s less than your usual day."
+msgstr "আপনার সাধারণ দিনের চেয়ে %(time)s কম।"
+
+msgid "Not on a task"
+msgstr "কোনো কাজে নয়"
+
+msgid "Open a project to see its tasks."
+msgstr "প্রজেক্ট খুলে তার কাজগুলো দেখুন।"
+
+msgid "Share of time by project"
+msgstr "প্রজেক্ট অনুযায়ী সময়ের ভাগ"
+
+msgid "%(a)s – %(b)s"
+msgstr "%(a)s – %(b)s"
+
+msgid "Arrows compare with %(a)s – %(b)s, the same length of time just before."
+msgstr "তীরচিহ্ন তুলনা করে %(a)s – %(b)s-এর সাথে, ঠিক আগের সমান সময়।"
+
+msgid "Day report"
+msgstr "দিনের রিপোর্ট"
+
+msgid "Pick a day"
+msgstr "একটি দিন বাছুন"
+
+msgid "Your day in short"
+msgstr "সংক্ষেপে আপনার দিন"
+
+msgid "Track time"
+msgstr "সময় ট্র্যাক করুন"
+
+msgid "Started – stopped"
+msgstr "শুরু – শেষ"
+
+msgid "Breaks"
+msgstr "বিরতি"
+
+msgid "Longest stretch"
+msgstr "সবচেয়ে লম্বা টানা কাজ"
+
+msgid "without a break"
+msgstr "বিরতি ছাড়া"
+
+msgid "Each block is a stretch of tracked time, coloured by project. The gaps are breaks."
+msgstr "প্রতিটি ব্লক একটানা ট্র্যাক করা সময়, প্রজেক্টের রঙে। ফাঁকগুলো বিরতি।"
+
+msgid "By task, or by what you wrote when there was no task."
+msgstr "কাজ অনুযায়ী, অথবা কাজ না থাকলে যা লিখেছিলেন সে অনুযায়ী।"
+
+msgid "Hour by hour"
+msgstr "ঘণ্টা ধরে"
+
+msgid "No tasks were finished on this day."
+msgstr "এই দিনে কোনো কাজ শেষ হয়নি।"
+
+msgid "%(d)s"
+msgstr "%(d)s"
+
+msgid "Daily target: %(t)s"
+msgstr "দৈনিক লক্ষ্য: %(t)s"
+
+msgid "%(p)s%% of %(t)s"
+msgstr "%(t)s-এর %(p)s%%"
+
+msgid "over %(t)s"
+msgstr "%(t)s জুড়ে"
+
+msgid "Break, %(t)s (from %(a)s)"
+msgstr "বিরতি, %(t)s (%(a)s থেকে)"
+
+msgid "Detailed report"
+msgstr "বিস্তারিত রিপোর্ট"
+
+msgid "Search entries"
+msgstr "এন্ট্রি খুঁজুন"
+
+msgid "Search what you wrote, a task, project or tag…"
+msgstr "যা লিখেছেন, কাজ, প্রজেক্ট বা ট্যাগ খুঁজুন…"
+
+msgid "Showing the newest 1,000. Pick a shorter period or narrow it down to see the rest, or export the CSV."
+msgstr "সবচেয়ে নতুন ১,০০০টি দেখানো হচ্ছে। বাকিগুলো দেখতে ছোট সময় বা ফিল্টার বাছুন, অথবা CSV নামান।"
+
+msgid "added by hand"
+msgstr "হাতে যোগ করা"
+
+msgid "No entries"
+msgstr "কোনো এন্ট্রি নেই"
+
+msgid "Nothing matches. Try other words, or clear the filter."
+msgstr "কিছু মেলেনি। অন্য শব্দ দিন, অথবা ফিল্টার সরান।"
+
+msgid "No time was tracked in this period."
+msgstr "এই সময়ে কিছু ট্র্যাক হয়নি।"
+
+msgid "%(t)s billable"
+msgstr "%(t)s বিলযোগ্য"
+
+msgid "Week report"
+msgstr "সপ্তাহের রিপোর্ট"
+
+msgid "Week before"
+msgstr "আগের সপ্তাহ"
+
+msgid "Week after"
+msgstr "পরের সপ্তাহ"
+
+msgid "Days on target"
+msgstr "লক্ষ্য পূরণের দিন"
+
+msgid "Open or close a project to see its tasks. Tap a day to see it hour by hour."
+msgstr "প্রজেক্ট খুলে বা বন্ধ করে তার কাজ দেখুন। কোনো দিনে চাপলে ঘণ্টা ধরে দেখাবে।"
+
+msgid "Project / task"
+msgstr "প্রজেক্ট / কাজ"
+
+msgid "Day total"
+msgstr "দিনের মোট"
+
+msgid "off"
+msgstr "ছুটি"
+
+msgid "Nothing matches the filter. Clear it to see all your time."
+msgstr "ফিল্টারের সাথে কিছু মেলেনি। সব সময় দেখতে ফিল্টার সরান।"
+
+msgid "Track some time and the timesheet fills in by project, task and day."
+msgstr "কিছু সময় ট্র্যাক করুন, টাইমশিট প্রজেক্ট, কাজ ও দিন ধরে ভরে উঠবে।"
+
+msgid "Week of %(a)s – %(b)s"
+msgstr "%(a)s – %(b)s সপ্তাহ"
+
+msgid "same as before"
+msgstr "আগের মতোই"
+
+msgid "Print it, or save it as a PDF from the print window."
+msgstr "প্রিন্ট করুন, অথবা প্রিন্ট উইন্ডো থেকে PDF হিসেবে রাখুন।"
+
+msgid "Detailed"
+msgstr "বিস্তারিত"
+
+msgid "Summary"
+msgstr "সারসংক্ষেপ"
+
+msgid "billable time"
+msgstr "বিলযোগ্য সময়"
+
+msgid "Kind of report"
+msgstr "রিপোর্টের ধরন"
+
+msgid "archived"
+msgstr "আর্কাইভ করা"
+
+msgid "All tags"
+msgstr "সব ট্যাগ"
+
+msgid "Billable only"
+msgstr "শুধু বিলযোগ্য"
+
+msgid "Clear filter"
+msgstr "ফিল্টার সরান"
+
+msgid "Showing only"
+msgstr "শুধু দেখানো হচ্ছে"
+
+msgid "time with no project"
+msgstr "প্রজেক্ট ছাড়া সময়"
+
+msgid "%(count)s work day with nothing tracked."
+msgid_plural "%(count)s work days with nothing tracked."
+msgstr[0] "%(count)sটি কাজের দিনে কিছু ট্র্যাক হয়নি।"
+msgstr[1] "%(count)sটি কাজের দিনে কিছু ট্র্যাক হয়নি।"
+
+msgid "You finished %(count)s task."
+msgid_plural "You finished %(count)s tasks."
+msgstr[0] "আপনি %(count)sটি কাজ শেষ করেছেন।"
+msgstr[1] "আপনি %(count)sটি কাজ শেষ করেছেন।"
+
+msgid "You took %(count)s break, %(time)s in all."
+msgid_plural "You took %(count)s breaks, %(time)s in all."
+msgstr[0] "আপনি %(count)sটি বিরতি নিয়েছেন, মোট %(time)s।"
+msgstr[1] "আপনি %(count)sটি বিরতি নিয়েছেন, মোট %(time)s।"
+
+msgid "%(counter)s break of 5 min or more"
+msgid_plural "%(counter)s breaks of 5 min or more"
+msgstr[0] "৫ মিনিট বা বেশি %(counter)sটি বিরতি"
+msgstr[1] "৫ মিনিট বা বেশি %(counter)sটি বিরতি"
+
+msgid "%(counter)s entry · %(t)s"
+msgid_plural "%(counter)s entries · %(t)s"
+msgstr[0] "%(counter)sটি এন্ট্রি · %(t)s"
+msgstr[1] "%(counter)sটি এন্ট্রি · %(t)s"
