@@ -30,7 +30,9 @@
     ["link", "solid", "", ""], ["dashedLink", "dashed", "", ""],
   ];
   var MAIN = { flowchart: "rect", state: "rounded", "class": "class", er: "entity", drawing: "rect" };
-  var NO_CLONE = { start: 1, end: 1, fork: 1, text: 1, note: 1, container: 1 };
+  var NO_CLONE = { start: 1, end: 1, fork: 1, text: 1, note: 1, container: 1, ink: 1, icon: 1 };
+  // what "Copy style" takes from a shape
+  var STYLE_KEYS = ["fill", "stroke", "color", "opacity", "sw", "dash", "shadow", "size", "bold", "italic", "underline", "align", "valign", "font"];
 
   /* Changes the format panel shows go through Alpine, so the panel keeps up. */
   function rx(o) { return window.Alpine && Alpine.reactive ? Alpine.reactive(o) : o; }
@@ -46,7 +48,7 @@
   // ── Drawing one shape (SVG, in its own box from 0,0 to w,h) ──────────────
   /* `p`: the paint — fill, stroke, width — as CSS values. */
   function shapeSVG(n, p) {
-    var w = n.w, h = n.h, f = 'fill="' + p.fill + '" stroke="' + p.stroke + '" stroke-width="' + p.sw + '"', o = 0.75, s, ry;
+    var w = n.w, h = n.h, f = 'fill="' + p.fill + '" stroke="' + p.stroke + '" stroke-width="' + p.sw + '"' + (p.dash ? ' stroke-dasharray="' + p.dash + '"' : ""), o = 0.75, s, ry;
     function poly(pts) { return '<polygon points="' + pts.map(function (q) { return q[0].toFixed(1) + "," + q[1].toFixed(1); }).join(" ") + '" ' + f + ' stroke-linejoin="round"/>'; }
     switch (n.shape) {
       case "rounded": return '<rect x="' + o + '" y="' + o + '" width="' + (w - 2 * o) + '" height="' + (h - 2 * o) + '" rx="' + Math.min(12, h / 4) + '" ' + f + "/>";
@@ -81,7 +83,51 @@
         s = Math.min(14, w / 5, h / 4);
         return '<path d="M' + o + "," + o + " H" + (w - s) + " L" + (w - o) + "," + s + " V" + (h - o) + " H" + o + ' Z" ' + f + ' stroke-linejoin="round"/><path d="M' + (w - s) + "," + o + " V" + s + " H" + (w - o) + '" fill="none" stroke="' + p.stroke + '" stroke-width="' + p.sw + '"/>';
       case "text": return '<rect width="' + w + '" height="' + h + '" fill="' + (p.fill === "none" ? "transparent" : p.fill) + '" stroke="none"/>';
-      case "container": return '<rect x="' + o + '" y="' + o + '" width="' + (w - 2 * o) + '" height="' + (h - 2 * o) + '" rx="10" fill="' + p.fill + '" stroke="' + p.stroke + '" stroke-width="' + p.sw + '" stroke-dasharray="7 5"/>';
+      case "container":
+        if (n.lane) {                 // a swimlane: a solid frame with a title bar across the top
+          var hb = Math.min(30, h / 3);
+          return '<rect x="' + o + '" y="' + o + '" width="' + (w - 2 * o) + '" height="' + (h - 2 * o) + '" rx="4" ' + f + '/>' +
+            '<path d="M' + o + "," + hb + " V4 Q" + o + "," + o + " 4," + o + " H" + (w - 4) + " Q" + (w - o) + "," + o + " " + (w - o) + ",4 V" + hb + " Z" + '" fill="' + (p.stroke === "none" ? "#868e96" : p.stroke) + '" fill-opacity="0.13" stroke="none"/>' +
+            '<line x1="' + o + '" y1="' + hb + '" x2="' + (w - o) + '" y2="' + hb + '" stroke="' + p.stroke + '" stroke-width="' + p.sw + '"/>';
+        }
+        return '<rect x="' + o + '" y="' + o + '" width="' + (w - 2 * o) + '" height="' + (h - 2 * o) + '" rx="10" fill="' + p.fill + '" stroke="' + p.stroke + '" stroke-width="' + p.sw + '" stroke-dasharray="' + (p.dash || "7 5") + '"/>';
+      case "star":
+        var pts = [], minY = Infinity, maxY = -Infinity;
+        for (var i = 0; i < 10; i++) { var ang = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? 0.45 : 1; pts.push([Math.cos(ang) * rr, Math.sin(ang) * rr]); }
+        pts.forEach(function (q) { minY = Math.min(minY, q[1]); maxY = Math.max(maxY, q[1]); });
+        return poly(pts.map(function (q) { return [w / 2 + q[0] * (w / 2 - o) / 0.951, o + (q[1] - minY) / (maxY - minY) * (h - 2 * o)]; }));
+      case "callout":
+        var tl = Math.min(h * 0.25, 18), bh = h - tl, r2 = Math.min(10, bh / 4), tx = Math.min(w * 0.2, 40);
+        return '<path d="M' + (o + r2) + "," + o + " H" + (w - o - r2) + " Q" + (w - o) + "," + o + " " + (w - o) + "," + (o + r2) + " V" + (bh - r2) + " Q" + (w - o) + "," + bh + " " + (w - o - r2) + "," + bh +
+          " H" + (tx + 26) + " L" + (tx + 4) + "," + (h - o) + " L" + (tx + 8) + "," + bh + " H" + (o + r2) + " Q" + o + "," + bh + " " + o + "," + (bh - r2) + " V" + (o + r2) + " Q" + o + "," + o + " " + (o + r2) + "," + o + ' Z" ' + f + ' stroke-linejoin="round"/>';
+      case "arrow":
+        var hl = Math.min(w * 0.38, h * 0.9);
+        return poly([[o, h * 0.25], [w - hl, h * 0.25], [w - hl, o], [w - o, h / 2], [w - hl, h - o], [w - hl, h * 0.75], [o, h * 0.75]]);
+      case "plus":
+        var ax = w / 3, ay = h / 3;
+        return poly([[ax, o], [w - ax, o], [w - ax, ay], [w - o, ay], [w - o, h - ay], [w - ax, h - ay], [w - ax, h - o], [ax, h - o], [ax, h - ay], [o, h - ay], [o, ay], [ax, ay]]);
+      case "chevron": s = Math.min(w / 5, 24); return poly([[o, o], [w - s, o], [w - o, h / 2], [w - s, h - o], [o, h - o], [s, h / 2]]);
+      case "cube":
+        var dp = Math.min(w, h) * 0.2;
+        return poly([[o, dp], [w - dp, dp], [w - dp, h - o], [o, h - o]]) +
+          '<polygon points="' + o + "," + dp + " " + dp + "," + o + " " + (w - o) + "," + o + " " + (w - dp) + "," + dp + '" fill="' + p.fill + '" fill-opacity="0.75" stroke="' + p.stroke + '" stroke-width="' + p.sw + '" stroke-linejoin="round"/>' +
+          '<polygon points="' + (w - dp) + "," + dp + " " + (w - o) + "," + o + " " + (w - o) + "," + (h - dp) + " " + (w - dp) + "," + (h - o) + '" fill="' + p.fill + '" fill-opacity="0.55" stroke="' + p.stroke + '" stroke-width="' + p.sw + '" stroke-linejoin="round"/>' +
+          (p.fill !== "none" ? '<polygon points="' + (w - dp) + "," + dp + " " + (w - o) + "," + o + " " + (w - o) + "," + (h - dp) + " " + (w - dp) + "," + (h - o) + '" fill="#000" fill-opacity="0.08" stroke="none"/>' : "");
+      case "sticky":
+        return '<rect x="' + o + '" y="' + o + '" width="' + (w - 2 * o) + '" height="' + (h - 2 * o) + '" rx="3" ' + f + '/>' +
+          '<path d="M' + (w - 26) + "," + (h - o) + " L" + (w - o) + "," + (h - 26) + " V" + (h - o) + ' Z" fill="#000" fill-opacity="0.07"/>';
+      case "icon":
+        var inner = (DM.ICONS || {})[n.icon] || "", pad = n.fill && n.fill !== "none" ? Math.min(w, h) * 0.18 : 0;
+        return (pad ? '<rect x="' + o + '" y="' + o + '" width="' + (w - 2 * o) + '" height="' + (h - 2 * o) + '" rx="' + Math.min(14, w / 4) + '" fill="' + p.fill + '" stroke="none"/>' : '<rect width="' + w + '" height="' + h + '" fill="transparent"/>') +
+          '<svg x="' + pad + '" y="' + pad + '" width="' + (w - 2 * pad) + '" height="' + (h - 2 * pad) + '" viewBox="0 0 24 24" fill="none" color="' + p.iconColor + '" stroke="' + p.iconColor + '" stroke-width="' + (n.sw || 1.6) + '" stroke-linecap="round" stroke-linejoin="round">' + inner + "</svg>";
+      case "ink":
+        var q = n.pts || [];
+        if (q.length < 2) return "";
+        var dd = "M" + q[0][0] + "," + q[0][1];
+        for (var k = 1; k < q.length - 1; k++) dd += " Q" + q[k][0] + "," + q[k][1] + " " + ((q[k][0] + q[k + 1][0]) / 2).toFixed(1) + "," + ((q[k][1] + q[k + 1][1]) / 2).toFixed(1);
+        dd += " L" + q[q.length - 1][0] + "," + q[q.length - 1][1];
+        return '<rect width="' + w + '" height="' + h + '" fill="transparent"/><path transform="scale(' + (w / (n.pw || w)).toFixed(4) + "," + (h / (n.ph || h)).toFixed(4) + ')" vector-effect="non-scaling-stroke" d="' + dd +
+          '" fill="none" stroke="' + p.stroke + '" stroke-width="' + (n.sw || 3) + '" stroke-linecap="round" stroke-linejoin="round"' + (n.hl ? ' stroke-opacity="0.4"' : "") + "/>";
       case "start": return '<circle cx="' + w / 2 + '" cy="' + h / 2 + '" r="' + (Math.min(w, h) / 2 - 1) + '" fill="' + p.stroke + '"/>';
       case "end": return '<circle cx="' + w / 2 + '" cy="' + h / 2 + '" r="' + (Math.min(w, h) / 2 - 1) + '" fill="' + p.fill + '" stroke="' + p.stroke + '" stroke-width="2"/><circle cx="' + w / 2 + '" cy="' + h / 2 + '" r="' + Math.max(2, Math.min(w, h) / 2 - 6) + '" fill="' + p.stroke + '"/>';
       case "fork": return '<rect width="' + w + '" height="' + h + '" rx="' + Math.min(3, h / 2) + '" fill="' + p.stroke + '"/>';
@@ -97,14 +143,23 @@
   }
   /* The paint for a shape: its own colours, or the page's (`screen`) or plain ones for a picture. */
   function paint(n, screen) {
-    var sw = n.shape === "container" ? 1.5 : 1.6;
-    var autoFill = n.shape === "note" ? (screen ? "var(--wdr-note)" : "#fff4bf") : n.shape === "container" ? (screen ? "var(--wdr-group)" : "#f8faf9") : n.shape === "text" ? "none" : (screen ? "var(--wdr-fill)" : "#ffffff");
-    var autoStroke = n.shape === "note" ? (screen ? "var(--wdr-note-line)" : "#e0b84c") : (screen ? "var(--wdr-line)" : "#33413b");
-    return { fill: n.fill || autoFill, stroke: n.stroke || autoStroke, sw: sw };
+    var sw = n.sw != null && n.shape !== "ink" && n.shape !== "icon" ? +n.sw : n.shape === "container" ? 1.5 : 1.6;
+    var noted = n.shape === "note" || n.shape === "sticky";
+    var autoFill = noted ? (screen ? "var(--wdr-note)" : "#fff4bf") : n.shape === "container" ? (screen ? "var(--wdr-group)" : "#f8faf9") : n.shape === "text" || n.shape === "icon" ? "none" : (screen ? "var(--wdr-fill)" : "#ffffff");
+    var autoStroke = noted ? (screen ? "var(--wdr-note-line)" : "#e0b84c") : (screen ? "var(--wdr-line)" : "#33413b");
+    var stroke = n.stroke || autoStroke;
+    return { fill: n.fill || autoFill, stroke: sw === 0 ? "none" : stroke, sw: sw || 0, dash: DASHES[n.dash] || "",
+             iconColor: n.stroke || (screen ? "var(--text-primary)" : "#1f2a24") };
   }
+  var DASHES = { dashed: "7 5", dotted: "1.5 4" };
+  /* a link a shape may carry: the web, an email, or a page of this app */
+  function safeLink(u) { return /^(https?:\/\/|mailto:|\/(?!\/))/i.test(String(u || "").trim()); }
+  // the fonts a shape's words can be in (the hand-drawn one is loaded with the page)
+  var FONTS = { serif: "'Source Serif 4', Georgia, serif", mono: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace", hand: "Caveat, 'Segoe Print', 'Comic Sans MS', cursive" };
   function textColor(n, screen) {
-    if (n.fill && n.fill !== "none") return lightText(n.fill) ? "#1f2a24" : "#ffffff";
-    if (n.shape === "note") return screen ? "var(--wdr-note-text)" : "#5c4a00";
+    if (n.color) return n.color;
+    if (n.fill && n.fill !== "none" && n.shape !== "icon") return lightText(n.fill) ? "#1f2a24" : "#ffffff";
+    if (n.shape === "note" || n.shape === "sticky") return screen ? "var(--wdr-note-text)" : "#5c4a00";
     return screen ? "var(--text-primary)" : "#1f2a24";
   }
 
@@ -245,7 +300,12 @@
         else if (sh === "note") shape = "note";
         else if (sh === "text" || st._ === "text") shape = "text";
         else if (sh === "image" || st.image) shape = "image";
-        else if (sh === "step") shape = "flag";
+        else if (sh === "step") shape = st.flipH === "1" ? "flag" : "chevron";
+        else if (/star$/.test(sh)) shape = "star";
+        else if (sh === "callout") shape = "callout";
+        else if (sh === "singleArrow") shape = "arrow";
+        else if (sh === "cross") shape = "plus";
+        else if (sh === "cube") shape = "cube";
         else if (sh === "swimlane" || st.container === "1") shape = "container";
         else if (st.rounded === "1") shape = (st.arcSize | 0) >= 40 ? "stadium" : "rounded";
         var n = { id: uid(), shape: shape, x: Math.round(num(c.geo, "x") + o.x), y: Math.round(num(c.geo, "y") + o.y), w: Math.round(w), h: Math.round(h), label: plain(c.value).slice(0, 2000) };
@@ -254,6 +314,16 @@
         if (st.fillColor === "none" && shape !== "text" && shape !== "container") n.fill = "none";
         if (/^#[0-9a-f]{6}$/i.test(st.strokeColor || "")) n.stroke = st.strokeColor.toLowerCase();
         if (+st.fontSize && +st.fontSize !== 14) n.size = Math.max(8, Math.min(48, +st.fontSize));
+        if (sh === "swimlane") n.lane = true;
+        if (/^#[0-9a-f]{6}$/i.test(st.fontColor || "")) n.color = st.fontColor.toLowerCase();
+        var fst = +st.fontStyle || 0; if (fst & 1) n.bold = true; if (fst & 2) n.italic = true; if (fst & 4) n.underline = true;
+        if (st.dashed === "1" && shape !== "container") n.dash = st.dashPattern ? "dotted" : "dashed";
+        if (+st.opacity && +st.opacity < 100) n.opacity = Math.max(0.1, +st.opacity / 100);
+        if (+st.strokeWidth && +st.strokeWidth !== 1) n.sw = Math.min(8, +st.strokeWidth);
+        if (st.shadow === "1") n.shadow = true;
+        if (st.align === "left" || st.align === "right") n.align = st.align;
+        if (st.verticalAlign === "top" || st.verticalAlign === "bottom") n.valign = st.verticalAlign;
+        if (st.link && safeLink(decodeURIComponent(st.link))) n.link = decodeURIComponent(st.link).slice(0, 500);
         made[c.id] = n; nodes.push(n);
       });
       order.forEach(function (c) {           // containers own what's inside them
@@ -271,6 +341,7 @@
         if (sm === "diamond" && !startFill) sm = "odiamond";
         e.end = em; e.start = sm;
         if (st.edgeStyle) e.route = "elbow"; else if (st.curved === "1") e.route = "curve";
+        if (/^#[0-9a-f]{6}$/i.test(st.strokeColor || "")) e.color = st.strokeColor.toLowerCase();
         var label = plain(c.value);
         order.forEach(function (l) { if (l.parent === c.id && l.vertex && !label) label = plain(l.value); });     // a label stuck on the link
         if (label) e.label = label.slice(0, 200);
@@ -304,6 +375,8 @@
         kind: "drawing", mermaid: false, sel: [], esel: null, node: null, edge: null, zoom: 100, view: null, grid: true, snap: true, empty: true,
         canUndo: false, canRedo: false, palette: [], groups: [], fills: FILLS, strokes: STROKES, sizes: SIZES, area: false, texts: TEXT,
         marks: [], classLinks: CLASS_LINKS, menu: false, ctx: null, findOpen: false, findText: "", hits: [], hitAt: 0,
+        // the pen (Excalidraw, Miro), the shape search, the shortcuts sheet, a copied style
+        side: true, pen: false, penColor: "#1f2a24", penSize: 3, penHl: false, query: "", keysOpen: false, hasStyle: false, fonts: FONTS,
         get one() { return this.sel.length === 1; },
         get rowsNode() { return !!(this.node && DM.ROWS[this.node.shape]); },
         init: function () {
@@ -311,6 +384,8 @@
           this.kind = this.$el.getAttribute("data-kind") || "drawing";
           this.mermaid = this.kind !== "drawing";
           this.marks = MARKS[this.kind] || MARKS.drawing;
+          if (!Object.keys(DM.ICONS).length) { try { DM.ICONS = JSON.parse(d.getElementById("diagram-icons").textContent); } catch (e) { /* no icons on this page */ } }
+          try { this.hasStyle = !!localStorage.getItem("wdr-style"); this.side = localStorage.getItem("wdr-side") !== "0"; } catch (e) { /* private window */ }
           try { this.grid = localStorage.getItem("wdr-grid") !== "0"; this.snap = localStorage.getItem("wdr-snap") !== "0"; } catch (e) { /* private window */ }
           if (this.mermaid) {
             var draw = live.data.draw;
@@ -335,14 +410,23 @@
         buildPalette: function () {
           var lib = DM.LIBRARY[this.kind] || DM.LIBRARY.drawing, names = TEXT.shapes || {}, uml = { "class": 1, entity: 1, start: 1, end: 1, fork: 1 }, self = this;
           var items = lib.map(function (it) {
-            var probe = { shape: it[1], w: 30, h: it[1] === "fork" ? 6 : it[1] === "actor" ? 30 : it[1] === "start" || it[1] === "end" || it[1] === "circle" || it[1] === "dcircle" ? 22 : 20, label: "" };
+            var probe = { shape: it[1], w: 30, h: it[1] === "fork" ? 6 : it[1] === "actor" ? 30 : it[1] === "start" || it[1] === "end" || it[1] === "circle" || it[1] === "dcircle" || it[1] === "icon" || it[1] === "star" || it[1] === "plus" ? 24 : 20, label: "" };
+            if (it[4]) Object.keys(it[4]).forEach(function (k) { probe[k] = it[4][k]; });
+            if (it[1] === "icon") probe.w = 24;
             if (probe.shape === "actor") probe.w = 18;
             var p = paint(probe, true);
-            return { key: it[0], shape: it[1], name: names[it[0]] || it[0], svg: '<svg viewBox="-2 -2 ' + (probe.w + 4) + " " + (probe.h + 4) + '" width="' + (probe.w + 4) + '" height="' + (probe.h + 4) + '" aria-hidden="true">' + shapeSVG(probe, p) + "</svg>",
-                     group: self.kind === "drawing" && uml[it[0]] ? "uml" : "basic" };
+            var name = it[1] === "icon" ? ((TEXT.icons || {})[it[4].icon] || it[4].icon.replace(/-/g, " ")) : names[it[0]] || it[0];
+            return { key: it[0], shape: it[1], name: name, svg: '<svg viewBox="-2 -2 ' + (probe.w + 4) + " " + (probe.h + 4) + '" width="' + (probe.w + 4) + '" height="' + (probe.h + 4) + '" aria-hidden="true">' + shapeSVG(probe, p) + "</svg>",
+                     group: it[0] === "pen" ? "" : it[1] === "icon" ? "icons" : self.kind === "drawing" && uml[it[0]] ? "uml" : "basic" };
           });
-          this.palette = items;
-          this.groups = this.kind === "drawing" ? [["basic", TEXT.shapeGroups && TEXT.shapeGroups.basic], ["uml", TEXT.shapeGroups && TEXT.shapeGroups.uml]] : [["basic", ""]];
+          this.palette = items.filter(function (it) { return it.group; });
+          var gn = TEXT.shapeGroups || {};
+          this.groups = this.kind === "drawing" ? [["basic", gn.basic], ["icons", gn.icons], ["uml", gn.uml]] : [["basic", ""]];
+        },
+        /* the tiles of a group that match what's typed in the search */
+        shown: function (group) {
+          var q = this.query.trim().toLowerCase();
+          return this.palette.filter(function (p) { return p.group === group && (!q || p.name.toLowerCase().indexOf(q) >= 0 || p.key.toLowerCase().indexOf(q) >= 0); });
         },
         shapeName: function (n) {
           if (!n) return "";
@@ -399,7 +483,8 @@
             if (!el) { el = d.createElement("div"); el.setAttribute("data-id", n.id); els[n.id] = el; }
             var slot = layer === back ? "back" : "front", here = layer.children[at[slot]++];
             if (here !== el) layer.insertBefore(el, here || null);                            // z-order follows the list
-            var sig = [n.shape, n.w, n.h, n.label, n.fill, n.stroke, n.size, n.attrs, n.methods, n.stereo, n.bold, isDark()].join("\u0001");
+            var sig = [n.shape, n.w, n.h, n.label, n.fill, n.stroke, n.size, n.attrs, n.methods, n.stereo, n.bold, isDark(),
+                       n.sw, n.dash, n.icon, n.lane, n.link, n.locked, n.pw, n.ph, n.hl, n.pts && n.pts.length].join("\u0001");
             if (el._sig !== sig) {
               el._sig = sig;
               var p = paint(n, true), inner = '<svg class="wdr-shape" width="' + n.w + '" height="' + n.h + '" overflow="visible" aria-hidden="true">' + shapeSVG(n, p) + "</svg>";
@@ -408,10 +493,16 @@
                 var b = DM.textBox(n);
                 inner += '<div class="wdr-text" style="left:' + b.x + "px;top:" + b.y + "px;width:" + b.w + "px;height:" + b.h + 'px"><div class="wdr-label">' + esc(n.label) + "</div></div>";
               }
+              // a link on the shape (draw.io's "Edit link"): the badge opens it; a lock shows it can't be moved
+              if (n.link && safeLink(n.link)) inner += '<a class="wdr-badge wdr-linkbadge" href="' + esc(n.link) + '" target="_blank" rel="noopener noreferrer" title="' + esc(n.link) + '" draggable="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.2 10.8a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1-1m-1.4-4.6a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1 1"/></svg></a>';
+              if (n.locked) inner += '<span class="wdr-badge wdr-lockbadge" title="' + esc(TEXT.lockedTip || "") + '"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>';
               el.innerHTML = inner;
             }
-            el.className = "wdr-node is-" + n.shape + (self.sel.indexOf(n.id) >= 0 ? " is-selected" : "") + (n.bold ? " is-bold" : "");
-            el.style.cssText = "transform:translate(" + n.x + "px," + n.y + "px);width:" + n.w + "px;height:" + n.h + "px;--ink:" + textColor(n, true) + ";--fs:" + (n.size || 14) + "px";
+            el.className = "wdr-node is-" + n.shape + (self.sel.indexOf(n.id) >= 0 ? " is-selected" : "") + (n.bold ? " is-bold" : "") +
+              (n.italic ? " is-italic" : "") + (n.underline ? " is-underline" : "") + (n.shadow ? " has-shadow" : "") + (n.locked ? " is-locked" : "") +
+              (n.align ? " ta-" + n.align : "") + (n.valign ? " va-" + n.valign : "") + (n.lane ? " is-lane" : "");
+            el.style.cssText = "transform:translate(" + n.x + "px," + n.y + "px);width:" + n.w + "px;height:" + n.h + "px;--ink:" + textColor(n, true) + ";--fs:" + (n.size || 14) + "px" +
+              (n.font && FONTS[n.font] ? ";--ff:" + FONTS[n.font] : "") + (n.opacity != null && n.opacity < 1 ? ";opacity:" + n.opacity : "");
           });
           Object.keys(els).forEach(function (id) { if (!seen[id]) { els[id].remove(); delete els[id]; } });
           this.links();
@@ -462,7 +553,7 @@
             var n = self.byId(id); if (!n) return;
             out.push('<div class="wdr-frame" style="transform:translate(' + n.x + "px," + n.y + "px);width:" + n.w + "px;height:" + n.h + 'px"></div>');
           });
-          if (one && !this._editing) {
+          if (one && !this._editing && !one.locked) {
             var dirs = DM.ROWS[one.shape] ? ["e", "w"] : ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
             dirs.forEach(function (dir) {
               var x = one.x + (dir.indexOf("w") >= 0 ? 0 : dir.indexOf("e") >= 0 ? one.w : one.w / 2), y = one.y + (dir.indexOf("n") >= 0 ? 0 : dir.indexOf("s") >= 0 ? one.h : one.h / 2);
@@ -471,7 +562,7 @@
           }
           var h = hover && this.byId(hover);
           if (!h && one) h = one;
-          if (h && !this._editing && !this._dragging && h.shape !== "container") {
+          if (h && !this._editing && !this._dragging && h.shape !== "container" && h.shape !== "ink" && !this.pen) {
             [["n", h.x + h.w / 2, h.y], ["e", h.x + h.w, h.y + h.h / 2], ["s", h.x + h.w / 2, h.y + h.h], ["w", h.x, h.y + h.h / 2]].forEach(function (a) {
               out.push('<button type="button" class="wdr-arrow" data-arrow="' + a[0] + '" data-for="' + esc(h.id) + '" style="left:' + a[1] + "px;top:" + a[2] + 'px" tabindex="-1" aria-label="' + esc(TEXT.addLinked || "Add") + '"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2 L14 9 H10 V14 H6 V9 H2 Z"/></svg></button>');
             });
@@ -498,6 +589,11 @@
         fit: function () {
           if (M.nodes.length) this.view.fit(this.bounds(), 40, 1.2, this.$refs.canvas.clientWidth < 600 ? 0.4 : 0);
           else { var r = this.$refs.canvas.getBoundingClientRect(); this.view.k = 1; this.view.x = r.width / 2 - 75; this.view.y = r.height / 2 - 32; this.view.apply(); }
+        },
+        toggleSide: function () {
+          var self = this; this.side = !this.side;
+          try { localStorage.setItem("wdr-side", this.side ? "1" : "0"); } catch (e) { /* private window */ }
+          this.$nextTick(function () { self.view.apply && self.view.apply(); });
         },
         setGrid: function () { this.grid = !this.grid; try { localStorage.setItem("wdr-grid", this.grid ? "1" : "0"); } catch (e) { /* private window */ } },
         setSnap: function () { this.snap = !this.snap; try { localStorage.setItem("wdr-snap", this.snap ? "1" : "0"); } catch (e) { /* private window */ } },
@@ -623,8 +719,9 @@
         /* ── changing ── */
         removeSelected: function () {
           if (!this.sel.length && !this.esel) return;
+          var self = this, gone = this.sel.filter(function (id) { var n = self.byId(id); return !(n && n.locked); });
+          if (this.sel.length && !gone.length) { toast(TEXT.lockedTip, "warn"); return; }
           this.snapshot();
-          var gone = this.sel, self = this;
           if (gone.length) {
             // a group goes; what was in it stays (in the group around it)
             gone.forEach(function (id) { var g = self.byId(id); if (g && g.shape === "container") M.nodes.forEach(function (n) { if (n.parent === id) { if (g.parent) n.parent = g.parent; else delete n.parent; } }); });
@@ -702,6 +799,59 @@
           this.snapshot();
           ns.forEach(function (n) { n = rx(n); if (value === "" || value == null) delete n[key]; else n[key] = value; });
           this.render(); this.save();
+        },
+        /* copy one shape's look and give it to others (draw.io's Copy / Paste style, Ctrl+Alt+C / V) */
+        copyStyle: function () {
+          var n = this.node || this.picked()[0]; if (!n) return;
+          var st = {}; STYLE_KEYS.forEach(function (k) { if (n[k] != null && n[k] !== "") st[k] = n[k]; });
+          this._style = st; this.hasStyle = true;
+          try { localStorage.setItem("wdr-style", JSON.stringify(st)); } catch (e) { /* private window */ }
+          toast(TEXT.styleCopied);
+        },
+        pasteStyle: function () {
+          var st = this._style;
+          try { st = JSON.parse(localStorage.getItem("wdr-style") || "null") || st; } catch (e) { /* the one in memory */ }
+          var ns = this.picked(); if (!st || !ns.length) return;
+          this.snapshot();
+          ns.forEach(function (n) { n = rx(n); STYLE_KEYS.forEach(function (k) { if (k in st) n[k] = st[k]; else delete n[k]; }); });
+          this.render(); this.save(); toast(TEXT.stylePasted);
+        },
+        /* a locked shape stays put: it can't be moved, resized, rewritten or deleted until it's unlocked (Ctrl+L) */
+        get allLocked() { var ns = this.picked(); return !!ns.length && ns.every(function (n) { return n.locked; }); },
+        toggleLock: function () {
+          var ns = this.picked(); if (!ns.length) return;
+          var lock = !ns.every(function (n) { return n.locked; });
+          this.snapshot();
+          ns.forEach(function (n) { n = rx(n); if (lock) n.locked = true; else delete n.locked; });
+          this.render(); this.pick(this.sel.slice()); this.save();
+          toast(lock ? TEXT.locked : TEXT.unlocked);
+        },
+        setLink: function (value) {
+          if (!this.node) return;
+          var v = String(value || "").trim();
+          if (v && !/^[a-z]+:|^\//i.test(v)) v = "https://" + v;           // "example.com" means the web page
+          if (v && !safeLink(v)) { toast(TEXT.badLink, "warn"); return; }
+          this.style("link", v.slice(0, 500));
+        },
+        /* the pen: draw freehand on the page; each stroke is a shape you can move, resize or recolour */
+        togglePen: function (on) {
+          this.pen = on == null ? !this.pen : !!on;
+          if (this.pen) { this.pick([]); this.area = false; }
+          this.$refs.canvas.classList.toggle("is-pen", this.pen);
+          this.$refs.canvas.focus({ preventScroll: true });
+        },
+        addInk: function (pts) {
+          if (pts.length < 2) return;
+          var pad = Math.ceil(this.penSize / 2) + 2, x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
+          pts.forEach(function (q) { x1 = Math.min(x1, q[0]); y1 = Math.min(y1, q[1]); x2 = Math.max(x2, q[0]); y2 = Math.max(y2, q[1]); });
+          x1 = Math.floor(x1 - pad); y1 = Math.floor(y1 - pad);
+          var step = Math.max(1, Math.ceil(pts.length / 1500));          // a very long stroke keeps every few points
+          var n = { id: uid(), shape: "ink", x: x1, y: y1, w: Math.max(8, Math.ceil(x2 + pad - x1)), h: Math.max(8, Math.ceil(y2 + pad - y1)), label: "",
+                    stroke: this.penColor, sw: this.penSize,
+                    pts: pts.filter(function (q, i) { return i % step === 0 || i === pts.length - 1; }).map(function (q) { return [+(q[0] - x1).toFixed(1), +(q[1] - y1).toFixed(1)]; }) };
+          n.pw = n.w; n.ph = n.h;
+          if (this.penHl) n.hl = true;
+          this.snapshot(); M.nodes.push(n); this.render(); this.save();
         },
         reshape: function (shape) {
           var ns = this.picked(); if (!ns.length) return;
@@ -793,6 +943,7 @@
         /* ── words on shapes and links ── */
         editText: function (id, first) {
           var el = els[id], n = this.byId(id); if (!el || !n || DM.TIGHT[n.shape]) return;
+          if (n.locked) { toast(TEXT.lockedTip, "warn"); return; }
           var t = el.querySelector(".wdr-label"); if (!t) return;
           var self = this, before = n.label || "";
           this._editing = id; this.ui();
@@ -873,7 +1024,11 @@
         /* ── draw.io files: opened into this drawing, saved from it ── */
         drawio: function () {
           var self = this;
-          return DM.toDrawio(M, function (e) { return { start: self.endMark(e, "start"), end: self.endMark(e, "end") }; }, location.origin);
+          return DM.toDrawio(M, function (e) { return { start: self.endMark(e, "start"), end: self.endMark(e, "end") }; }, location.origin, function (n) {
+            // an icon or a pen stroke: a small SVG picture of it, as draw.io takes pictures (base64, no ";" in it)
+            var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + n.w + " " + n.h + '" width="' + n.w + '" height="' + n.h + '">' + shapeSVG(n, paint(n, false)) + "</svg>";
+            return btoa(unescape(encodeURIComponent(svg)));
+          });
         },
         openDrawio: function (e) {
           var file = e.target.files && e.target.files[0], self = this;
@@ -915,6 +1070,7 @@
             add: function (s) { var lib = DM.LIBRARY[s.kind] || DM.LIBRARY.drawing, key = lib[0][0]; for (var i = 0; i < lib.length; i++) if (lib[i][1] === MAIN[s.kind]) { key = lib[i][0]; break; } var n = s.add(key, at.x, at.y); if (!DM.TIGHT[n.shape]) s.editText(n.id); },
             picture: function (s) { s._dropAt = at; s.$refs.file.click(); }, all: function (s) { s.pick(M.nodes.map(function (n) { return n.id; })); },
             fit: function (s) { s.fit(); }, find: function (s) { s.openFind(); },
+            copyStyle: function (s) { s.copyStyle(); }, pasteStyle: function (s) { s.pasteStyle(); }, lock: function (s) { s.toggleLock(); },
           }[what];
           if (run) run(this);
         },
@@ -938,7 +1094,9 @@
           if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable) return;
           var k = e.key, mod = e.ctrlKey || e.metaKey, done = true, self = this;
           if (k === " ") { spaceDown = true; this.$refs.canvas.classList.add("is-space"); e.preventDefault(); return; }
-          if (mod && (k === "z" || k === "Z")) { if (e.shiftKey) this.redo(); else this.undo(); }
+          if (mod && e.altKey && (e.code === "KeyC" || e.code === "KeyV")) { if (e.code === "KeyC") this.copyStyle(); else this.pasteStyle(); }
+          else if (mod && !e.shiftKey && (k === "l" || k === "L")) this.toggleLock();
+          else if (mod && (k === "z" || k === "Z")) { if (e.shiftKey) this.redo(); else this.undo(); }
           else if (mod && k === "y") this.redo();
           else if (mod && k === "d") this.duplicate();
           else if (mod && (k === "c" || k === "x") && this.sel.length && !String(window.getSelection())) this.copy(k === "x");
@@ -950,7 +1108,9 @@
           else if (mod && e.shiftKey && (k === "b" || k === "B")) this.front(true);
           else if (mod) done = false;
           else if (k === "Delete" || k === "Backspace") this.removeSelected();
-          else if (k === "Escape") { if (this.ctx) this.ctx = null; else { this.pick([]); this.area = false; } }
+          else if (k === "Escape") { if (this.ctx) this.ctx = null; else if (this.keysOpen) this.keysOpen = false; else if (this.pen) this.togglePen(false); else { this.pick([]); this.area = false; } }
+          else if (!this.node && !e.altKey && (k === "p" || k === "P") && this.kind === "drawing") this.togglePen();
+          else if (!this.node && k === "?") this.keysOpen = !this.keysOpen;
           else if (k === "ContextMenu" || (e.shiftKey && k === "F10")) { var rr = this.$refs.canvas.getBoundingClientRect(); this.openMenu(rr.left + rr.width / 2, rr.top + rr.height / 3, this.node ? els[this.node.id] : null); }
           else if ((k === "Enter" || k === "F2") && this.node) this.editText(this.node.id);
           else if ((k === "Enter" || k === "F2") && this.edge) this.editEdge(this.edge.id);
@@ -959,7 +1119,7 @@
             var step = e.shiftKey ? 1 : GRID, dx = k === "ArrowLeft" ? -step : k === "ArrowRight" ? step : 0, dy = k === "ArrowUp" ? -step : k === "ArrowDown" ? step : 0;
             if (!this._nudging) { this.snapshot(); this._nudging = true; }
             clearTimeout(this._nudgeT); this._nudgeT = setTimeout(function () { self._nudging = false; }, 600);
-            var moving = this.picked(); moving = moving.concat(this.allInside(moving));
+            var moving = this.picked(); moving = moving.concat(this.allInside(moving)).filter(function (n) { return !n.locked; });
             this.unpin(moving);
             moving.forEach(function (n) { n.x += dx; n.y += dy; });
             this.render(); this.save();
@@ -997,6 +1157,12 @@
             c.focus({ preventScroll: true });
             if (e.button === 2) return;                    // the right button opens the menu (contextmenu below)
             if (e.button === 1 || (e.button === 0 && spaceDown)) { act = { kind: "pan" }; self.view.down(e); e.preventDefault(); return; }
+            if (e.target.closest(".wdr-linkbadge")) return;                 // the link opens (its own click)
+            if (self.pen && e.button === 0 && e.isPrimary) {
+              var p0 = self.view.toWorld(e.clientX, e.clientY);
+              act = { kind: "ink", pts: [[p0.x, p0.y]] };
+              c.setPointerCapture(e.pointerId); e.preventDefault(); return;
+            }
             if (handle && self.node) {
               var n0 = self.node; self.snapshot(); self._dragging = true; self.unpin([n0]);
               act = { kind: "resize", dir: handle.getAttribute("data-handle"), n: n0, x: e.clientX, y: e.clientY, box: { x: n0.x, y: n0.y, w: n0.w, h: n0.h } };
@@ -1022,7 +1188,8 @@
               if ((e.shiftKey || e.ctrlKey || e.metaKey) && self.sel.indexOf(id) >= 0) picked = self.sel.filter(function (x) { return x !== id; });
               if (picked.join() !== self.sel.join() || self.esel) self.pick(picked);
               var moving = self.picked(); moving = moving.concat(self.allInside(moving));
-              act = { kind: "move", id: id, x: e.clientX, y: e.clientY, moved: false, start: moving.map(function (n) { return { n: n, x: n.x, y: n.y }; }), list: moving };
+              act = { kind: "move", id: id, x: e.clientX, y: e.clientY, moved: false, start: moving.map(function (n) { return { n: n, x: n.x, y: n.y }; }), list: moving,
+                      locked: moving.some(function (n) { return n.locked; }) };
               c.setPointerCapture(e.pointerId); e.preventDefault();
               return;
             }
@@ -1088,7 +1255,17 @@
               act.to = { x: e.clientX, y: e.clientY }; return;
             }
             var p = self.view.toWorld(e.clientX, e.clientY), k = self.view.k;
+            if (act.kind === "ink") {
+              (e.getCoalescedEvents ? e.getCoalescedEvents() : [e]).forEach(function (ev) {
+                var q = self.view.toWorld(ev.clientX, ev.clientY), last = act.pts[act.pts.length - 1];
+                if (Math.hypot(q.x - last[0], q.y - last[1]) >= 1.5 / k) act.pts.push([q.x, q.y]);
+              });
+              self.$refs.guides.innerHTML = '<path class="wdr-ink-temp" d="M' + act.pts.map(function (q) { return q[0].toFixed(1) + "," + q[1].toFixed(1); }).join(" L") +
+                '" stroke="' + esc(self.penColor) + '" stroke-width="' + self.penSize + '"' + (self.penHl ? ' stroke-opacity="0.4"' : "") + "/>";
+              return;
+            }
             if (act.kind === "move") {
+              if (act.locked) return;
               var dx = (e.clientX - act.x) / k, dy = (e.clientY - act.y) / k;
               if (!act.moved && Math.abs(dx) + Math.abs(dy) < 4 / k) return;
               if (!act.moved) {
@@ -1149,6 +1326,7 @@
             var a = act; act = null; self._dragging = false;
             self.$refs.guides.innerHTML = "";
             Object.keys(els).forEach(function (kk) { els[kk].classList.remove("is-drop", "is-target"); });
+            if (a.kind === "ink") { self.addInk(a.pts); return; }
             if (a.kind === "pan") { if (!self.view.up(e)) { if (self.sel.length || self.esel) self.pick([]); } return; }
             if (a.kind === "box") {
               self.$refs.box.hidden = true;
@@ -1224,7 +1402,7 @@
         toSVG: function (inline) {
           if (!M.nodes.length) return null;
           var self = this, b = this.bounds(), pad = 30, out = [];
-          M.nodes.forEach(function (n) { if (n.shape === "actor" && n.label) { b.y2 = Math.max(b.y2, n.y + n.h + 24); b.x1 = Math.min(b.x1, n.x - 30); b.x2 = Math.max(b.x2, n.x + n.w + 30); } });
+          M.nodes.forEach(function (n) { if ((n.shape === "actor" || n.shape === "icon") && n.label) { b.y2 = Math.max(b.y2, n.y + n.h + 24); b.x1 = Math.min(b.x1, n.x - 30); b.x2 = Math.max(b.x2, n.x + n.w + 30); } });
           M.edges.forEach(function (e) {
             if (!e.label && !e.fromLabel && !e.toLabel) return;
             var a = self.byId(e.from), bb = self.byId(e.to); if (!a || !bb) return;
@@ -1259,11 +1437,18 @@
             }
             var bx = DM.textBox(n), rows = DM.wrap(n.label, bx.w, fs, 500), lh2 = fs * 1.3;
             if (n.shape === "container") return '<text x="' + (n.x + 12) + '" y="' + (n.y + 20) + '" font-size="13" font-weight="700" fill="' + col + '">' + esc(n.label) + "</text>";
-            if (n.shape === "actor") return '<text x="' + (n.x + n.w / 2) + '" y="' + (n.y + n.h + 16) + '" font-size="' + fs + '" text-anchor="middle" fill="' + col + '">' + esc(n.label) + "</text>";
-            var top = n.shape === "note" ? n.y + bx.y + fs : n.y + bx.y + (bx.h - rows.length * lh2) / 2 + fs * 0.95, anchor = n.shape === "note" ? "start" : "middle", tx = n.shape === "note" ? n.x + bx.x + 2 : n.x + bx.x + bx.w / 2;
-            return rows.map(function (l, i) { return '<text x="' + tx + '" y="' + (top + i * lh2) + '" font-size="' + fs + '" font-weight="' + (n.bold ? 700 : 500) + '" text-anchor="' + anchor + '" fill="' + col + '">' + esc(l) + "</text>"; }).join("");
+            var look = (n.italic ? ' font-style="italic"' : "") + (n.underline ? ' text-decoration="underline"' : "") + (n.font && FONTS[n.font] ? ' font-family="' + esc(FONTS[n.font]) + '"' : "");
+            if (n.shape === "actor" || n.shape === "icon") return '<text x="' + (n.x + n.w / 2) + '" y="' + (n.y + n.h + 16) + '" font-size="' + fs + '" text-anchor="middle" fill="' + col + '"' + look + ">" + esc(n.label) + "</text>";
+            var left = n.align === "left" || (n.shape === "note" && n.align !== "right" && n.align !== "center"), right = n.align === "right";
+            var top = n.valign === "top" || (n.shape === "note" && !n.valign) ? n.y + bx.y + fs : n.valign === "bottom" ? n.y + bx.y + bx.h - rows.length * lh2 + fs * 0.95 : n.y + bx.y + (bx.h - rows.length * lh2) / 2 + fs * 0.95;
+            var anchor = left ? "start" : right ? "end" : "middle", tx = left ? n.x + bx.x + 2 : right ? n.x + bx.x + bx.w - 2 : n.x + bx.x + bx.w / 2;
+            return rows.map(function (l, i) { return '<text x="' + tx + '" y="' + (top + i * lh2) + '" font-size="' + fs + '" font-weight="' + (n.bold ? 700 : 500) + '" text-anchor="' + anchor + '" fill="' + col + '"' + look + ">" + esc(l) + "</text>"; }).join("");
           }
-          M.nodes.filter(function (n) { return n.shape === "container"; }).forEach(function (n) { out.push('<g transform="translate(' + n.x + "," + n.y + ')">' + shapeSVG(n, paint(n, false)) + "</g>" + words(n)); });
+          function wrapLook(n, inner) {       // see-through and shadow, as on the page
+            var a = (n.opacity != null && n.opacity < 1 ? ' opacity="' + n.opacity + '"' : "") + (n.shadow ? ' filter="url(#wdr-shadow)"' : "");
+            return a ? "<g" + a + ">" + inner + "</g>" : inner;
+          }
+          M.nodes.filter(function (n) { return n.shape === "container"; }).forEach(function (n) { out.push(wrapLook(n, '<g transform="translate(' + n.x + "," + n.y + ')">' + shapeSVG(n, paint(n, false)) + "</g>" + words(n))); });
           var pairs = {};
           M.edges.forEach(function (e) { var key = [e.from, e.to].sort().join(">"); pairs[key] = (pairs[key] || 0) + 1; e._k = pairs[key]; });
           M.edges.forEach(function (e) {
@@ -1280,9 +1465,10 @@
           M.nodes.filter(function (n) { return n.shape !== "container"; }).forEach(function (n) {
             var m = n;
             if (n.shape === "image") m = Object.assign({}, n, { src: inline && inline[n.src] ? inline[n.src] : "" });      // the list's picture can't load pictures: a box
-            out.push('<g transform="translate(' + n.x + "," + n.y + ')">' + shapeSVG(m, paint(n, false)) + "</g>" + words(n));
+            out.push(wrapLook(n, '<g transform="translate(' + n.x + "," + n.y + ')">' + shapeSVG(m, paint(n, false)) + "</g>" + words(n)));
           });
           var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + w + " " + h + '" width="' + w + '" height="' + h + '" font-family="' + esc(FONT) + '">' +
+            '<defs><filter id="wdr-shadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000" flood-opacity="0.22"/></filter></defs>' +
             '<rect width="100%" height="100%" fill="#ffffff"/><g transform="translate(' + ox + "," + oy + ')">' + out.join("") + "</g></svg>";
           return { svg: svg, w: w, h: h };
         },

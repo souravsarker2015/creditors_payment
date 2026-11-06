@@ -1033,8 +1033,39 @@ def _diagram_texts(kind=""):
         "versionSaved": _("Version saved"), "restored": _("Earlier version brought back"), "restoreConfirm": _("Bring back this version? What's there now is kept as a version too."),
         "noMatch": _("Nothing matches"), "copiedParts": _("Copied"), "pasted": _("Pasted"),
         "auto": _("Kept by itself"), "now": _("Now"),
+        "imageCopied": _("Picture copied — paste it anywhere"), "noClipboard": _("This browser can't copy pictures. Download the PNG instead."),
         **(_drawing_texts() if kind == DiagramKind.DRAWING or kind in DRAG_KINDS else {}),
     }
+
+
+# the icons a drawing can use (from the app's own set), with their names
+DRAW_ICON_NAMES = {
+    "users": gettext_lazy("People"), "chat": gettext_lazy("Chat"), "mail": gettext_lazy("Email"), "phone": gettext_lazy("Phone call"),
+    "device-phone": gettext_lazy("Mobile"), "device-desktop": gettext_lazy("Computer"), "server": gettext_lazy("Server"), "database": gettext_lazy("Database"),
+    "cloud": gettext_lazy("Cloud"), "code": gettext_lazy("Code"), "git": gettext_lazy("Git"), "branch": gettext_lazy("Branch"), "bug": gettext_lazy("Bug"),
+    "lock": gettext_lazy("Lock"), "key": gettext_lazy("Key"), "shield": gettext_lazy("Security"), "bolt": gettext_lazy("Fast / event"),
+    "bell": gettext_lazy("Alert"), "calendar": gettext_lazy("Calendar"), "clock": gettext_lazy("Clock"), "timer": gettext_lazy("Timer"),
+    "chart": gettext_lazy("Chart"), "pie": gettext_lazy("Pie chart"), "folder": gettext_lazy("Folder"), "note": gettext_lazy("Page"), "book": gettext_lazy("Book"),
+    "image": gettext_lazy("Image"), "cart": gettext_lazy("Shopping cart"), "wallet": gettext_lazy("Wallet"), "bank": gettext_lazy("Bank"),
+    "banknotes": gettext_lazy("Money"), "target": gettext_lazy("Goal"), "flag": gettext_lazy("Flag"), "star": gettext_lazy("Favourite"), "heart": gettext_lazy("Heart"),
+    "trophy": gettext_lazy("Trophy"), "check": gettext_lazy("Done"), "alert": gettext_lazy("Warning"), "info": gettext_lazy("Info"),
+    "wrench": gettext_lazy("Settings / tools"), "map": gettext_lazy("Map"), "pin": gettext_lazy("Location"), "search": gettext_lazy("Search"),
+    "link": gettext_lazy("Link"), "mic": gettext_lazy("Microphone"), "sun": gettext_lazy("Sun"), "keyboard": gettext_lazy("Keyboard"), "trend": gettext_lazy("Growth"),
+}
+
+
+def _draw_icons():
+    """{name: the inside of its SVG} for the icon shapes, from the app's icon set (templates/partials/icon.html)."""
+    import re as _re
+
+    from .templatetags.work import _icon_table
+
+    table, out = _icon_table(), {}
+    for name in DRAW_ICON_NAMES:
+        m = _re.match(r"\s*<svg[^>]*>(.*)</svg>\s*$", table.get(name, ""), _re.S)
+        if m:
+            out[name] = m.group(1).strip()
+    return out
 
 
 def _drawing_texts():
@@ -1047,12 +1078,17 @@ def _drawing_texts():
             "start": _("Start"), "state": _("State"), "choice": _("Choice"), "fork": _("Fork / join"), "end": _("End"),
             "class": _("Class"), "interface": _("Interface"), "abstract": _("Abstract class"), "enum": _("Enumeration"), "entity": _("Table"),
             "rect": _("Box"), "ellipse": _("Ellipse"), "triangle": _("Triangle"), "trapezoid": _("Trapezoid"), "cloud": _("Cloud"), "actor": _("Person"),
-            "picture": _("Picture"),
+            "picture": _("Picture"), "star": _("Star"), "callout": _("Speech bubble"), "arrow": _("Block arrow"), "plus": _("Plus"),
+            "chevron": _("Step"), "cube": _("Cube"), "sticky": _("Sticky note"), "lane": _("Swimlane"), "ink": _("Pen stroke"), "icon": _("Icon"),
         },
+        "icons": {name: str(label) for name, label in DRAW_ICON_NAMES.items()},
         "uploading": _("Uploading…"), "imageFailed": _("The picture couldn't be uploaded."), "drawioEmpty": _("No shapes found in that file."),
         "drawioOpened": _("Shapes brought in"), "drawioBad": _("That file couldn't be read as a draw.io drawing."),
         "starts": {"terminal": _("Start"), "io": _("Input"), "subroutine": _("Sub-process"), "manual": _("Manual step")},
-        "shapeGroups": {"basic": _("Shapes"), "uml": _("UML and data")},
+        "shapeGroups": {"basic": _("Shapes"), "icons": _("Icons"), "uml": _("UML and data")},
+        "styleCopied": _("Style copied — pick shapes and paste it (Ctrl+Alt+V)"), "stylePasted": _("Style pasted"),
+        "locked": _("Locked: it stays where it is"), "unlocked": _("Unlocked"), "lockedTip": _("Locked. Unlock it first (Ctrl+L)."),
+        "badLink": _("A link starts with https://, mailto: or / (a page of this app)."),
         "marks": {
             "none": _("None"), "arrow": _("Arrow"), "open": _("Open arrow"), "triangle": _("Triangle (inherits)"), "diamond": _("Filled diamond (owns)"),
             "odiamond": _("Hollow diamond (has)"), "circle": _("Circle"), "cross": _("Cross"),
@@ -1075,6 +1111,7 @@ def diagram_view(request, pk):
                "hasPreview": bool(d.preview), "look": (d.data or {}).get("look", "") if not d.is_visual else "",
                "mode": ((d.data or {}).get("mode") or "draw") if d.kind in DRAG_KINDS else ""}
     return render_work(request, "work/diagram.html", {
+        "draw_icons": _draw_icons() if d.kind == DiagramKind.DRAWING else None,
         "diagram": d, "payload": payload, "sketchable": d.kind in diagrams.SKETCH_KINDS, "draggable": d.kind in DRAG_KINDS, "icon": DIAGRAM_ICON.get(d.kind, "diagram"), "texts": _diagram_texts(d.kind), "parts": BOARD_PARTS,
         "projects": Project.objects.filter(owner=request.user, is_archived=False),
         "kinds": [(k, k.label) for k in DiagramKind if k not in VISUAL_KINDS],

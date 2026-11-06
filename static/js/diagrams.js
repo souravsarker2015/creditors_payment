@@ -222,6 +222,16 @@
             return svgToPng(o.svg, o.w, o.h).then(function (b) { download(slug(self.title) + ".png", b); toast(TEXT.exported); });
           }).catch(function () { toast(TEXT.error, "warn"); });
         },
+        /* the picture straight onto the clipboard, to paste into a chat, a document or a slide (Excalidraw, Miro) */
+        copyImage: function () {
+          if (!navigator.clipboard || !window.ClipboardItem) { toast(TEXT.noClipboard, "warn"); return; }
+          var self = this;
+          // the clipboard is handed the promise at once: Safari only lets a click write to it then
+          var png = Promise.resolve(this.drawing()).then(function (o) { if (!o) throw new Error("empty"); return svgToPng(o.svg, o.w, o.h); });
+          navigator.clipboard.write([new ClipboardItem({ "image/png": png })])
+            .then(function () { toast(TEXT.imageCopied, "good"); })
+            .catch(function () { toast(self.editor ? TEXT.noClipboard : TEXT.nothing, "warn"); });
+        },
         exportDrawio: function () {
           var xml = this.editor && this.editor.drawio ? this.editor.drawio() : "";
           if (!xml) { toast(TEXT.nothing, "warn"); return; }

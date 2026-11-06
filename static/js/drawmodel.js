@@ -39,11 +39,21 @@
     ["text", "text", 140, 40], ["container", "container", 320, 220],
     ["class", "class", 190, 110], ["entity", "entity", 220, 120], ["start", "start", 32, 32], ["end", "end", 34, 34], ["fork", "fork", 140, 10],
     ["picture", "image", 200, 140],
+    // more shapes (draw.io's basic set): a star, a speech bubble, a block arrow, a plus, a step, a cube, a sticky note, a swimlane
+    ["star", "star", 110, 104], ["callout", "callout", 170, 96], ["arrow", "arrow", 160, 72], ["plus", "plus", 90, 90],
+    ["chevron", "chevron", 150, 64], ["cube", "cube", 130, 100], ["sticky", "sticky", 160, 150], ["lane", "container", 560, 200, { lane: true }],
+    ["pen", "ink", 10, 10],                                  // freehand: drawn with the pen, not from the palette
   ];
+  // pictures to drop in, from the app's own icon set (the page gives their drawing: WorkDrawModel.ICONS)
+  var ICON_NAMES = ["users", "chat", "mail", "phone", "device-phone", "device-desktop", "server", "database", "cloud", "code", "git", "branch",
+                    "bug", "lock", "key", "shield", "bolt", "bell", "calendar", "clock", "timer", "chart", "pie", "folder", "note", "book",
+                    "image", "cart", "wallet", "bank", "banknotes", "target", "flag", "star", "heart", "trophy", "check", "alert", "info",
+                    "wrench", "map", "pin", "search", "link", "mic", "sun", "keyboard", "trend"];
+  ICON_NAMES.forEach(function (name) { LIBRARY.drawing.push(["i:" + name, "icon", 56, 56, { icon: name }]); });
   // the shapes that hold their words in rows (and grow to fit them)
   var ROWS = { "class": true, entity: true };
   var ROUND = { ellipse: true, circle: true, dcircle: true, start: true, end: true };
-  var TIGHT = { start: true, end: true, fork: true, image: true };      // no words inside
+  var TIGHT = { start: true, end: true, fork: true, image: true, ink: true };      // no words inside
 
   function libraryItem(kind, key) {
     var lib = LIBRARY[kind] || LIBRARY.drawing;
@@ -112,6 +122,14 @@
       case "actor": return { x: -50, y: h + 2, w: w + 100, h: 22 };                 // the name goes under the figure
       case "container": return { x: 12, y: 6, w: w - 24, h: 22 };                   // a group's name, top left
       case "note": return { x: 10, y: 8, w: w - 26, h: h - 14 };
+      case "icon": return { x: -50, y: h + 2, w: w + 100, h: 22 };                  // the name goes under the picture
+      case "star": return { x: w * 0.3, y: h * 0.38, w: w * 0.4, h: h * 0.34 };
+      case "callout": var tail = Math.min(h * 0.25, 18); return { x: 8, y: 4, w: w - 16, h: h - tail - 8 };
+      case "arrow": return { x: w * 0.06, y: h * 0.27, w: w * 0.64, h: h * 0.46 };
+      case "plus": return { x: w / 3 + 2, y: h / 3 + 2, w: w / 3 - 4, h: h / 3 - 4 };
+      case "chevron": var cs = Math.min(w / 5, 24); return { x: cs + 4, y: 4, w: w - 2 * cs - 8, h: h - 8 };
+      case "cube": var dp = Math.min(w, h) * 0.2; return { x: 6, y: dp + 4, w: w - dp - 12, h: h - dp - 8 };
+      case "sticky": return { x: 12, y: 12, w: w - 24, h: h - 24 };
       default: return { x: 8, y: 4, w: w - 16, h: h - 8 };
     }
   }
@@ -903,22 +921,37 @@
     subroutine: "shape=process;", flag: "shape=step;perimeter=stepPerimeter;fixedSize=1;flipH=1;", start: "ellipse;fillColor=#000000;", end: "ellipse;shape=endState;fillColor=#000000;",
     fork: "rounded=0;fillColor=#000000;strokeColor=none;", "class": "verticalAlign=top;align=left;overflow=fill;html=1;", entity: "verticalAlign=top;align=left;overflow=fill;html=1;rounded=1;arcSize=4;",
     image: "shape=image;imageAspect=1;aspect=fixed;",
+    star: "shape=mxgraph.basic.star;", callout: "shape=callout;perimeter=calloutPerimeter;size=18;position=0.15;position2=0.1;base=16;",
+    arrow: "shape=singleArrow;arrowWidth=0.5;arrowSize=0.3;", plus: "shape=cross;size=0.33;", chevron: "shape=step;perimeter=stepPerimeter;fixedSize=1;",
+    cube: "shape=cube;size=20;flipH=1;", sticky: "shape=note;size=0;fillColor=#fff4bf;strokeColor=#e0b84c;", lane: "swimlane;startSize=30;",
+    icon: "shape=image;verticalLabelPosition=bottom;verticalAlign=top;imageAspect=1;aspect=fixed;", ink: "shape=image;imageAspect=0;",
   };
   var DRAWIO_MARK = { arrow: "classic", open: "open", triangle: "block;FILL=0", diamond: "diamond;FILL=1", odiamond: "diamond;FILL=0", circle: "oval;FILL=1",
                       cross: "cross", one: "ERmandOne", zone: "ERzeroToOne", many: "ERoneToMany", zmany: "ERzeroToMany", none: "none" };
   function xmlAttr(v) { return String(v == null ? "" : v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/\n/g, "&#10;"); }
   function html(v) { return String(v == null ? "" : v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
   /* A drawing as a draw.io file (opens in draw.io / diagrams.net). `marks(e, end)` gives a link's end marks; `origin` makes picture links whole. */
-  function toDrawio(g, marks, origin) {
+  function toDrawio(g, marks, origin, picture) {
     var cells = ['<mxCell id="0"/>', '<mxCell id="1" parent="0"/>'], ids = {}, k = 0;
     g.nodes.forEach(function (n) { ids[n.id] = "v" + (++k); });
     function style(n) {
-      var st = (DRAWIO_SHAPE[n.shape] || DRAWIO_SHAPE.rect) + "whiteSpace=wrap;";
+      var st = (DRAWIO_SHAPE[n.shape === "container" && n.lane ? "lane" : n.shape] || DRAWIO_SHAPE.rect) + "whiteSpace=wrap;";
       if (n.shape === "image" && n.src) st += "image=" + (/^\//.test(n.src) ? (origin || "") + n.src : n.src) + ";";
+      // an icon or a pen stroke goes as a picture of itself
+      if ((n.shape === "icon" || n.shape === "ink") && picture) st += "image=data:image/svg+xml," + picture(n) + ";";
+      if (n.color) st += "fontColor=" + n.color + ";";
+      if (n.opacity != null && n.opacity < 1) st += "opacity=" + Math.round(n.opacity * 100) + ";";
+      if (n.sw != null) st += n.sw ? "strokeWidth=" + n.sw + ";" : "strokeColor=none;";
+      if (n.dash) st += "dashed=1;" + (n.dash === "dotted" ? "dashPattern=1 4;" : "");
+      if (n.shadow) st += "shadow=1;";
+      if (n.align) st += "align=" + n.align + ";";
+      if (n.valign) st += "verticalAlign=" + n.valign + ";";
+      if (n.link) st += "link=" + n.link + ";";
       if (n.fill) st += "fillColor=" + (n.fill === "none" ? "none" : n.fill) + ";";
       if (n.stroke) st += "strokeColor=" + n.stroke + ";";
       if (n.size) st += "fontSize=" + n.size + ";";
-      if (n.bold) st += "fontStyle=1;";
+      var fs = (n.bold ? 1 : 0) + (n.italic ? 2 : 0) + (n.underline ? 4 : 0);
+      if (fs) st += "fontStyle=" + fs + ";";
       return st;
     }
     function value(n) {
@@ -945,6 +978,7 @@
       if (e.line === "thick") st += "strokeWidth=3;";
       if (e.route === "elbow" && !e.pts) st += "edgeStyle=orthogonalEdgeStyle;";
       if (e.route === "curve") st += "curved=1;";
+      if (e.color) st += "strokeColor=" + e.color + ";";
       var pts = (e.pts || []).map(function (q) { return '<mxPoint x="' + Math.round(q[0]) + '" y="' + Math.round(q[1]) + '"/>'; }).join("");
       cells.push('<mxCell id="e' + (i + 1) + '" value="' + xmlAttr(e.label || "") + '" style="' + xmlAttr(st) + '" edge="1" parent="1" source="' + ids[e.from] + '" target="' + ids[e.to] + '">' +
                  '<mxGeometry relative="1" as="geometry">' + (pts ? '<Array as="points">' + pts + "</Array>" : "") + "</mxGeometry></mxCell>");
@@ -954,7 +988,7 @@
   }
 
   root.WorkDrawModel = {
-    LIBRARY: LIBRARY, ROWS: ROWS, ROUND: ROUND, TIGHT: TIGHT, FONT: FONT, ROW_H: ROW_H, HEAD_H: HEAD_H,
+    LIBRARY: LIBRARY, ICON_NAMES: ICON_NAMES, ICONS: {}, ROWS: ROWS, ROUND: ROUND, TIGHT: TIGHT, FONT: FONT, ROW_H: ROW_H, HEAD_H: HEAD_H,
     libraryItem: libraryItem, shapesOf: shapesOf, textWidth: textWidth, wrap: wrap, lines: lines, textBox: textBox, columns: columns,
     rowsHeight: rowsHeight, fitSize: fitSize, fromMermaid: fromMermaid, toMermaid: toMermaid, layout: layout, importText: importText, toDrawio: toDrawio,
     KINDS: Object.keys(PARSERS),

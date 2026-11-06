@@ -90,6 +90,7 @@ def _clean_shapes(data, texts):
         for key in texts:
             if isinstance(n.get(key), str):
                 n[key] = n[key][:MAX_TEXT * (8 if key in ("note", "attrs", "methods") else 4 if key == "label" else 1)]
+        _clean_look(n)
         if "src" in n:                      # a picture: one of ours (/media/…) or on the web — nothing else
             src = n["src"] if isinstance(n["src"], str) else ""
             if not (src.startswith("/") and not src.startswith("//") or src.startswith("https://")) or len(src) > 2000:
@@ -100,7 +101,59 @@ def _clean_shapes(data, texts):
         for key in ("label", "fromLabel", "toLabel"):
             if isinstance(e.get(key), str):
                 e[key] = e[key][:MAX_TEXT]
+        if "color" in e and not _is_colour(e["color"]):
+            e.pop("color")
     return data
+
+
+COLOUR = re.compile(r"^#[0-9a-fA-F]{3,8}$")
+LINK = re.compile(r"^(https?://|mailto:|/(?!/))", re.I)
+CHOICES = {"dash": ("dashed", "dotted"), "align": ("left", "right"), "valign": ("top", "bottom"), "font": ("hand", "serif", "mono")}
+FLAGS = ("bold", "italic", "underline", "shadow", "locked", "lane", "hl")
+MAX_INK = 3000          # points in one pen stroke
+
+
+def _is_colour(v, none_ok=False):
+    return isinstance(v, str) and (bool(COLOUR.match(v)) or (none_ok and v == "none"))
+
+
+def _in_range(v, lo, hi):
+    return isinstance(v, (int, float)) and not isinstance(v, bool) and lo <= v <= hi
+
+
+def _clean_look(n):
+    """A shape's look as the editor sets it — colours, border, words, a link, a pen stroke — kept only when it's
+    what the editor makes: these go into the page's drawing as they are, so nothing else gets through."""
+    for key in ("fill", "stroke", "color"):
+        if key in n and not _is_colour(n[key], none_ok=key == "fill"):
+            n.pop(key)
+    for key, allowed in CHOICES.items():
+        if key in n and n[key] not in allowed:
+            n.pop(key)
+    for key in FLAGS:
+        if key in n:
+            if n[key]:
+                n[key] = True
+            else:
+                n.pop(key)
+    for key, lo, hi in (("opacity", 0.05, 1), ("sw", 0, 20), ("size", 6, 96), ("pw", 1, 100_000), ("ph", 1, 100_000)):
+        if key in n and not _in_range(n[key], lo, hi):
+            n.pop(key)
+    if "link" in n:
+        link = n["link"].strip() if isinstance(n["link"], str) else ""
+        if link and LINK.match(link) and len(link) <= 500 and not re.search(r"[\s<>\"']", link):
+            n["link"] = link
+        else:
+            n.pop("link")
+    if "icon" in n and not (isinstance(n["icon"], str) and re.fullmatch(r"[a-z][a-z-]{0,29}", n["icon"])):
+        n.pop("icon")
+    if "pts" in n:
+        pts = n["pts"]
+        if (isinstance(pts, list) and len(pts) <= MAX_INK
+                and all(isinstance(q, list) and len(q) == 2 and all(_in_range(v, -1e6, 1e6) for v in q) for q in pts)):
+            n["pts"] = [[round(q[0], 1), round(q[1], 1)] for q in pts]
+        else:
+            n.pop("pts")
 
 
 def _clip_texts(node, depth=0):

@@ -26759,3 +26759,312 @@ msgid "%(counter)s entry · %(t)s"
 msgid_plural "%(counter)s entries · %(t)s"
 msgstr[0] "%(counter)sটি এন্ট্রি · %(t)s"
 msgstr[1] "%(counter)sটি এন্ট্রি · %(t)s"
+
+msgid "Picture copied — paste it anywhere"
+msgstr "ছবি কপি হয়েছে — যেকোনো জায়গায় পেস্ট করুন"
+
+msgid "This browser can't copy pictures. Download the PNG instead."
+msgstr "এই ব্রাউজার ছবি কপি করতে পারে না। বরং PNG নামিয়ে নিন।"
+
+msgid "Chat"
+msgstr "চ্যাট"
+
+msgid "Phone call"
+msgstr "ফোন কল"
+
+msgid "Mobile"
+msgstr "মোবাইল"
+
+msgid "Computer"
+msgstr "কম্পিউটার"
+
+msgid "Git"
+msgstr "গিট"
+
+msgid "Lock"
+msgstr "লক"
+
+msgid "Key"
+msgstr "চাবি"
+
+msgid "Security"
+msgstr "নিরাপত্তা"
+
+msgid "Fast / event"
+msgstr "দ্রুত / ঘটনা"
+
+msgid "Alert"
+msgstr "সতর্কতা"
+
+msgid "Clock"
+msgstr "ঘড়ি"
+
+msgid "Chart"
+msgstr "চার্ট"
+
+msgid "Folder"
+msgstr "ফোল্ডার"
+
+msgid "Page"
+msgstr "পাতা"
+
+msgid "Image"
+msgstr "ছবি"
+
+msgid "Shopping cart"
+msgstr "শপিং কার্ট"
+
+msgid "Heart"
+msgstr "হার্ট"
+
+msgid "Trophy"
+msgstr "ট্রফি"
+
+msgid "Warning"
+msgstr "সাবধান"
+
+msgid "Info"
+msgstr "তথ্য"
+
+msgid "Settings / tools"
+msgstr "সেটিংস / যন্ত্র"
+
+msgid "Map"
+msgstr "ম্যাপ"
+
+msgid "Microphone"
+msgstr "মাইক্রোফোন"
+
+msgid "Keyboard"
+msgstr "কীবোর্ড"
+
+msgid "Speech bubble"
+msgstr "কথার বাবল"
+
+msgid "Block arrow"
+msgstr "মোটা তীর"
+
+msgid "Plus"
+msgstr "যোগ চিহ্ন"
+
+msgid "Cube"
+msgstr "কিউব"
+
+msgid "Swimlane"
+msgstr "সুইমলেন"
+
+msgid "Pen stroke"
+msgstr "কলমের দাগ"
+
+msgid "Icons"
+msgstr "আইকন"
+
+msgid "Style copied — pick shapes and paste it (Ctrl+Alt+V)"
+msgstr "স্টাইল কপি হয়েছে — আকার বেছে পেস্ট করুন (Ctrl+Alt+V)"
+
+msgid "Style pasted"
+msgstr "স্টাইল বসানো হয়েছে"
+
+msgid "Locked: it stays where it is"
+msgstr "লক করা: যেখানে আছে সেখানেই থাকবে"
+
+msgid "Unlocked"
+msgstr "লক খোলা হয়েছে"
+
+msgid "Locked. Unlock it first (Ctrl+L)."
+msgstr "লক করা। আগে লক খুলুন (Ctrl+L)।"
+
+msgid "A link starts with https://, mailto: or / (a page of this app)."
+msgstr "লিংক শুরু হয় https://, mailto: অথবা / (এই অ্যাপের পাতা) দিয়ে।"
+
+msgid "Copy as a picture"
+msgstr "ছবি হিসেবে কপি করুন"
+
+msgid "Unlock"
+msgstr "লক খুলুন"
+
+msgid "Icon colour"
+msgstr "আইকনের রঙ"
+
+msgid "Thickness"
+msgstr "পুরুত্ব"
+
+msgid "Border"
+msgstr "সীমানা"
+
+msgid "Find a shape or icon"
+msgstr "আকার বা আইকন খুঁজুন"
+
+msgid "Find a shape or icon…"
+msgstr "আকার বা আইকন খুঁজুন…"
+
+msgid "No shape or icon by that name."
+msgstr "এই নামে কোনো আকার বা আইকন নেই।"
+
+msgid "Pen"
+msgstr "কলম"
+
+msgid "Pen: draw freehand (P). Esc to stop."
+msgstr "কলম: হাতে আঁকুন (P)। থামাতে Esc।"
+
+msgid "Format panel"
+msgstr "ফরম্যাট প্যানেল"
+
+msgid "Show or hide the format panel, for more room to draw"
+msgstr "আঁকার জায়গা বাড়াতে ফরম্যাট প্যানেল দেখান বা লুকান"
+
+msgid "Keyboard shortcuts (?)"
+msgstr "কীবোর্ড শর্টকাট (?)"
+
+msgid "Any colour"
+msgstr "যেকোনো রঙ"
+
+msgid "Fine"
+msgstr "সরু"
+
+msgid "Marker"
+msgstr "মার্কার"
+
+msgid "Highlighter"
+msgstr "হাইলাইটার"
+
+msgid "Copy style"
+msgstr "স্টাইল কপি"
+
+msgid "Paste style"
+msgstr "স্টাইল পেস্ট"
+
+msgid "Write in a shape"
+msgstr "আকারে লিখুন"
+
+msgid "type"
+msgstr "টাইপ করুন"
+
+msgid "Copy · Cut · Paste"
+msgstr "কপি · কাট · পেস্ট"
+
+msgid "Copy style · Paste style"
+msgstr "স্টাইল কপি · স্টাইল পেস্ট"
+
+msgid "Group · Ungroup"
+msgstr "গ্রুপ · গ্রুপ ভাঙুন"
+
+msgid "Lock · Unlock"
+msgstr "লক · লক খুলুন"
+
+msgid "Bring to front · Send to back"
+msgstr "সামনে আনুন · পেছনে পাঠান"
+
+msgid "Moving around"
+msgstr "ঘোরাফেরা"
+
+msgid "Nudge (fine with Shift)"
+msgstr "সামান্য সরান (Shift দিয়ে আরও সূক্ষ্ম)"
+
+msgid "Zoom in · out · fit"
+msgstr "বড় · ছোট · মাপমতো"
+
+msgid "Move the page"
+msgstr "পাতা সরান"
+
+msgid "wheel"
+msgstr "চাকা"
+
+msgid "Place freely (no snapping)"
+msgstr "মুক্তভাবে বসান (গ্রিডে না আটকে)"
+
+msgid "Keep the proportions"
+msgstr "অনুপাত ঠিক রাখুন"
+
+msgid "resize"
+msgstr "মাপ বদল"
+
+msgid "Undo · Redo"
+msgstr "আগের অবস্থা · আবার করুন"
+
+msgid "Pen on · off"
+msgstr "কলম চালু · বন্ধ"
+
+msgid "This sheet"
+msgstr "এই তালিকা"
+
+msgid "Any fill colour"
+msgstr "যেকোনো ভরাট রঙ"
+
+msgid "Any line colour"
+msgstr "যেকোনো রেখার রঙ"
+
+msgid "No border"
+msgstr "সীমানা নেই"
+
+msgid "Line style"
+msgstr "রেখার ধরন"
+
+msgid "Dotted"
+msgstr "ডট দেওয়া"
+
+msgid "Underline"
+msgstr "নিচে দাগ"
+
+msgid "Line up the words"
+msgstr "লেখা সাজান"
+
+msgid "Centre"
+msgstr "মাঝে"
+
+msgid "Up or down"
+msgstr "উপরে বা নিচে"
+
+msgid "Top"
+msgstr "উপরে"
+
+msgid "Middle"
+msgstr "মাঝখানে"
+
+msgid "Bottom"
+msgstr "নিচে"
+
+msgid "Font"
+msgstr "ফন্ট"
+
+msgid "Clean (sans)"
+msgstr "পরিষ্কার (স্যান্স)"
+
+msgid "Serif"
+msgstr "সেরিফ"
+
+msgid "Code (mono)"
+msgstr "কোড (মনো)"
+
+msgid "Text colour"
+msgstr "লেখার রঙ"
+
+msgid "Any text colour"
+msgstr "লেখার যেকোনো রঙ"
+
+msgid "See-through"
+msgstr "স্বচ্ছতা"
+
+msgid "Opacity"
+msgstr "অস্বচ্ছতা"
+
+msgid "Shadow"
+msgstr "ছায়া"
+
+msgid "a web page, email or page of this app"
+msgstr "একটি ওয়েব পেজ, ইমেইল বা এই অ্যাপের পাতা"
+
+msgid "Copy this look (Ctrl+Alt+C)"
+msgstr "এই চেহারা কপি করুন (Ctrl+Alt+C)"
+
+msgid "Give the picked shapes the copied look (Ctrl+Alt+V)"
+msgstr "বাছাই করা আকারে কপি করা চেহারা দিন (Ctrl+Alt+V)"
+
+msgid "A locked shape stays put (Ctrl+L)"
+msgstr "লক করা আকার নড়ে না (Ctrl+L)"
+
+msgid "Draw freehand with the pen (P). Find any shape or icon with the search on the left."
+msgstr "কলম দিয়ে হাতে আঁকুন (P)। বাঁ দিকের খোঁজ দিয়ে যেকোনো আকার বা আইকন খুঁজুন।"
+
+msgid "Copy a shape's look and paste it onto others with Ctrl+Alt+C and Ctrl+Alt+V. Press ? for every shortcut."
+msgstr "Ctrl+Alt+C আর Ctrl+Alt+V দিয়ে একটি আকারের চেহারা কপি করে অন্যগুলোতে বসান। সব শর্টকাট দেখতে ? চাপুন।"

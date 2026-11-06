@@ -1,12 +1,14 @@
 {% load i18n work %}{% comment %}Drag-and-drop drawing, like draw.io. Drawn and driven by `drawBoard` in static/js/drawing.js.{% endcomment %}
-<div class="wdr" x-data="drawBoard" data-kind="{{ diagram.kind }}" data-own-keys>
+<div class="wdr" x-data="drawBoard" data-kind="{{ diagram.kind }}" data-own-keys :class="!side && 'no-side'">
   <aside class="wdr-palette" aria-label="{% translate 'Shapes' %}">
     <p class="wsb-palette-label">{% translate "Drag or tap to add" %}</p>
+    {% if diagram.kind == "drawing" %}<label class="wdr-search input-icon">{% icon "search" %}<span class="sr-only">{% translate "Find a shape or icon" %}</span>
+      <input type="search" class="form-input input-compact" x-model="query" placeholder="{% translate 'Find a shape or icon…' %}" @keydown.escape.stop="query = ''" autocomplete="off"></label>{% endif %}
     <template x-for="g in groups" :key="g[0]">
-      <div class="wdr-group">
+      <div class="wdr-group" x-show="shown(g[0]).length">
         <p class="wdr-group-label" x-show="g[1]" x-text="g[1]"></p>
-        <div class="wdr-shapes">
-          <template x-for="it in palette.filter(p => p.group === g[0])" :key="it.key">
+        <div class="wdr-shapes" :class="g[0] === 'icons' && 'is-icons'">
+          <template x-for="it in shown(g[0])" :key="it.key">
             <button type="button" class="wdr-tile" @pointerdown="paletteDown($event, it.key)" @click="paletteClick(it.key)" :title="it.name" :aria-label="it.name">
               <span class="wdr-tile-ico" x-html="it.svg"></span><span class="wdr-tile-name" x-text="it.name"></span>
             </button>
@@ -14,6 +16,7 @@
         </div>
       </div>
     </template>
+    <p class="wdr-none help" x-show="query && !groups.some(g => shown(g[0]).length)" x-cloak>{% translate "No shape or icon by that name." %}</p>
   </aside>
 
   <section class="wdx-stage wdr-stage">
@@ -44,12 +47,15 @@
         <button type="button" class="icon-btn" @click="distribute('y')" :disabled="sel.length < 3" aria-label="{% translate 'Space evenly down' %}" data-tip="{% translate 'Space evenly down' %}">{% icon "dist-v" %}</button>
       </div>
       <div class="wdx-group">
+        {% if diagram.kind == "drawing" %}<button type="button" class="icon-btn" :class="pen && 'is-on'" @click="togglePen()" :aria-pressed="pen.toString()" aria-label="{% translate 'Pen' %}" data-tip="{% translate 'Pen: draw freehand (P). Esc to stop.' %}">{% icon "sketch" %}</button>{% endif %}
         <button type="button" class="icon-btn" :class="area && 'is-on'" @click="area = !area" :aria-pressed="area.toString()" aria-label="{% translate 'Pick an area' %}" data-tip="{% translate 'Drag a box to pick several shapes (with a mouse, just drag on the page)' %}">{% icon "select" %}</button>
         <button type="button" class="icon-btn" :class="grid && 'is-on'" @click="setGrid()" :aria-pressed="grid.toString()" aria-label="{% translate 'Grid' %}" data-tip="{% translate 'Show the grid' %}">{% icon "grid" %}</button>
         <button type="button" class="icon-btn" :class="snap && 'is-on'" @click="setSnap()" :aria-pressed="snap.toString()" aria-label="{% translate 'Snap to grid' %}" data-tip="{% translate 'Snap to the grid (hold Alt to place freely)' %}">{% icon "magnet" %}</button>
       </div>
       <div class="wdx-group">
         <button type="button" class="icon-btn" :class="findOpen && 'is-on'" @click="openFind()" aria-label="{% translate 'Find' %}" data-tip="{% translate 'Find a shape (Ctrl+F)' %}">{% icon "search" %}</button>
+        <button type="button" class="icon-btn wdr-sidebtn" :class="side && 'is-on'" @click="toggleSide()" :aria-pressed="side.toString()" aria-label="{% translate 'Format panel' %}" data-tip="{% translate 'Show or hide the format panel, for more room to draw' %}">{% icon "columns" %}</button>
+        <button type="button" class="icon-btn" @click="keysOpen = true" aria-label="{% translate 'Keyboard shortcuts' %}" data-tip="{% translate 'Keyboard shortcuts (?)' %}">{% icon "keyboard" %}</button>
         {% if diagram.kind == "drawing" %}<button type="button" class="icon-btn" @click="$refs.drawioFile.click()" aria-label="{% translate 'Open a draw.io file' %}" data-tip="{% translate 'Open a draw.io file (.drawio) — its shapes are added here' %}">{% icon "upload" %}</button>{% endif %}
       </div>
       <div class="wdx-group wdx-group-end menu-wrap" @click.outside="menu = false" @keydown.escape="menu = false">
@@ -62,6 +68,20 @@
       </div>
     </div>
     <div class="wdx-canvas wdr-canvas" x-ref="canvas" tabindex="0" :class="{ 'no-grid': !grid, 'is-area': area }" aria-label="{% translate 'Drawing' %}" @keydown="key($event)">
+      {% if diagram.kind == "drawing" %}
+      <div class="wdr-penbar" x-show="pen" x-cloak x-transition.opacity.duration.120ms @pointerdown.stop role="toolbar" aria-label="{% translate 'Pen' %}">
+        <template x-for="c in ['#1f2a24', '#1c7ed6', '#2f9e44', '#e8590c', '#e03131', '#ae3ec9', '#f08c00']" :key="c">
+          <button type="button" class="wdx-swatch" :class="penColor === c && 'is-on'" :style="'background:' + c" @click="penColor = c" :aria-label="c"></button></template>
+        <label class="wdx-swatch is-custom" data-tip="{% translate 'Any colour' %}"><input type="color" :value="penColor" @input="penColor = $event.target.value" aria-label="{% translate 'Any colour' %}"></label>
+        <span class="wdr-penbar-sep"></span>
+        <div class="seg seg-sm">
+          <button type="button" class="seg-item" :class="penSize === 2 && !penHl && 'is-active'" @click="penSize = 2; penHl = false">{% translate "Fine" %}</button>
+          <button type="button" class="seg-item" :class="penSize === 4 && !penHl && 'is-active'" @click="penSize = 4; penHl = false">{% translate "Marker" %}</button>
+          <button type="button" class="seg-item" :class="penHl && 'is-active'" @click="penSize = 14; penHl = true; if (penColor === '#1f2a24') penColor = '#f08c00'">{% translate "Highlighter" %}</button>
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm" @click="togglePen(false)">{% translate "Done" %}</button>
+      </div>
+      {% endif %}
       <div class="wdx-world" x-ref="world">
         <div class="wdr-back" x-ref="back"></div>
         <svg class="wdr-links" x-ref="links" aria-hidden="true"></svg>
@@ -89,6 +109,9 @@
           <button type="button" class="menu-item" role="menuitem" @click="menuDo('duplicate')">{% icon "copy" %}{% translate "Duplicate" %}<kbd>Ctrl+D</kbd></button>
           <button type="button" class="menu-item" role="menuitem" @click="menuDo('copy')">{% translate "Copy" %}<kbd>Ctrl+C</kbd></button>
           <button type="button" class="menu-item" role="menuitem" @click="menuDo('cut')">{% translate "Cut" %}<kbd>Ctrl+X</kbd></button>
+          <button type="button" class="menu-item" role="menuitem" @click="menuDo('copyStyle')">{% icon "palette" %}{% translate "Copy style" %}<kbd>Ctrl+Alt+C</kbd></button>
+          <button type="button" class="menu-item" role="menuitem" x-show="hasStyle" @click="menuDo('pasteStyle')">{% translate "Paste style" %}<kbd>Ctrl+Alt+V</kbd></button>
+          <button type="button" class="menu-item" role="menuitem" @click="menuDo('lock')">{% icon "lock" %}<span x-text="allLocked ? '{{ _("Unlock")|escapejs }}' : '{{ _("Lock")|escapejs }}'"></span><kbd>Ctrl+L</kbd></button>
           <div class="menu-sep"></div>
           <button type="button" class="menu-item" role="menuitem" @click="menuDo('front')">{% icon "to-front" %}{% translate "Bring to front" %}</button>
           <button type="button" class="menu-item" role="menuitem" @click="menuDo('back')">{% icon "to-back" %}{% translate "Send to back" %}</button>
@@ -115,6 +138,37 @@
           <button type="button" class="menu-item" role="menuitem" @click="menuDo('find')">{% icon "search" %}{% translate "Find a shape" %}<kbd>Ctrl+F</kbd></button>
           <button type="button" class="menu-item" role="menuitem" @click="menuDo('fit')">{% icon "fit" %}{% translate "Fit to screen" %}<kbd>0</kbd></button>
         </div></template>
+      </div>
+      {# every shortcut on one sheet (draw.io's and Excalidraw's "?") #}
+      <div class="wdr-keys" x-show="keysOpen" x-cloak x-transition.opacity.duration.120ms @pointerdown.stop @click.self="keysOpen = false" role="dialog" aria-modal="true" aria-labelledby="wdr-keys-title">
+        <div class="wdr-keys-card card">
+          <header class="card-header"><h2 class="card-title" id="wdr-keys-title">{% icon "keyboard" %}{% translate "Keyboard shortcuts" %}</h2>
+            <button type="button" class="icon-btn" @click="keysOpen = false" aria-label="{% translate 'Close' %}">{% icon "x" %}</button></header>
+          <div class="wdr-keys-grid">
+            <section><h3>{% translate "Shapes" %}</h3><dl>
+              <div><dt>{% translate "Write in a shape" %}</dt><dd><kbd>F2</kbd> / <kbd>Enter</kbd> / {% translate "type" %}</dd></div>
+              <div><dt>{% translate "Duplicate" %}</dt><dd><kbd>Ctrl</kbd>+<kbd>D</kbd></dd></div>
+              <div><dt>{% translate "Copy · Cut · Paste" %}</dt><dd><kbd>Ctrl</kbd>+<kbd>C</kbd> · <kbd>X</kbd> · <kbd>V</kbd></dd></div>
+              <div><dt>{% translate "Copy style · Paste style" %}</dt><dd><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>C</kbd> · <kbd>V</kbd></dd></div>
+              <div><dt>{% translate "Group · Ungroup" %}</dt><dd><kbd>Ctrl</kbd>+<kbd>G</kbd> · <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd></dd></div>
+              <div><dt>{% translate "Lock · Unlock" %}</dt><dd><kbd>Ctrl</kbd>+<kbd>L</kbd></dd></div>
+              <div><dt>{% translate "Bring to front · Send to back" %}</dt><dd><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> · <kbd>B</kbd></dd></div>
+              <div><dt>{% translate "Delete" %}</dt><dd><kbd>Del</kbd></dd></div>
+            </dl></section>
+            <section><h3>{% translate "Moving around" %}</h3><dl>
+              <div><dt>{% translate "Nudge (fine with Shift)" %}</dt><dd><kbd>←↑→↓</kbd></dd></div>
+              <div><dt>{% translate "Pick everything" %}</dt><dd><kbd>Ctrl</kbd>+<kbd>A</kbd></dd></div>
+              <div><dt>{% translate "Find a shape" %}</dt><dd><kbd>Ctrl</kbd>+<kbd>F</kbd></dd></div>
+              <div><dt>{% translate "Zoom in · out · fit" %}</dt><dd><kbd>+</kbd> · <kbd>−</kbd> · <kbd>0</kbd></dd></div>
+              <div><dt>{% translate "Move the page" %}</dt><dd><kbd>Space</kbd>+{% translate "drag" %} / {% translate "wheel" %}</dd></div>
+              <div><dt>{% translate "Place freely (no snapping)" %}</dt><dd><kbd>Alt</kbd>+{% translate "drag" %}</dd></div>
+              <div><dt>{% translate "Keep the proportions" %}</dt><dd><kbd>Shift</kbd>+{% translate "resize" %}</dd></div>
+              <div><dt>{% translate "Undo · Redo" %}</dt><dd><kbd>Ctrl</kbd>+<kbd>Z</kbd> · <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd></dd></div>
+              {% if diagram.kind == "drawing" %}<div><dt>{% translate "Pen on · off" %}</dt><dd><kbd>P</kbd> · <kbd>Esc</kbd></dd></div>{% endif %}
+              <div><dt>{% translate "This sheet" %}</dt><dd><kbd>?</kbd></dd></div>
+            </dl></section>
+          </div>
+        </div>
       </div>
       <input type="file" x-ref="file" accept="image/png,image/jpeg,image/gif,image/webp" multiple hidden @change="filePicked($event)">
       <input type="file" x-ref="drawioFile" accept=".drawio,.xml,application/xml" hidden @change="openDrawio($event)">
@@ -154,33 +208,95 @@
           </div>
         </template>
 
-        <template x-if="!rowsNode">
+        <template x-if="!rowsNode && !(node && ['ink', 'icon', 'image', 'container'].includes(node.shape))">
           <div><p class="label">{% translate "Shape" %}</p>
             <div class="wdr-shape-pick">
-              <template x-for="it in palette.filter(p => !['class', 'interface', 'abstract', 'enum', 'entity', 'container'].includes(p.key))" :key="it.key">
+              <template x-for="it in palette.filter(p => p.group !== 'icons' && !['class', 'interface', 'abstract', 'enum', 'entity', 'container', 'lane', 'picture'].includes(p.key))" :key="it.key">
                 <button type="button" class="wdr-tile is-mini" :class="node && node.shape === it.shape && 'is-on'" @click="reshape(it.shape)" :title="it.name" :aria-label="it.name"><span class="wdr-tile-ico" x-html="it.svg"></span></button>
               </template>
             </div></div>
         </template>
 
-        <p class="label">{% translate "Fill" %}</p>
-        <div class="wsb-colors">
-          <button type="button" class="wdx-swatch is-auto" :class="node && !node.fill && 'is-on'" @click="style('fill', '')" aria-label="{% translate 'Automatic' %}">A</button>
-          <button type="button" class="wdx-swatch is-none" :class="node && node.fill === 'none' && 'is-on'" @click="style('fill', 'none')" aria-label="{% translate 'No fill' %}"></button>
-          <template x-for="c in fills" :key="c"><button type="button" class="wdx-swatch" :class="node && node.fill === c && 'is-on'" :style="'background:' + c" @click="style('fill', c)" :aria-label="c"></button></template>
-        </div>
-        <p class="label">{% translate "Line" %}</p>
+        <template x-if="!(node && node.shape === 'ink')"><div>
+          <p class="label" x-text="node && node.shape === 'icon' ? '{{ _("Background")|escapejs }}' : '{{ _("Fill")|escapejs }}'"></p>
+          <div class="wsb-colors">
+            <button type="button" class="wdx-swatch is-auto" :class="node && !node.fill && 'is-on'" @click="style('fill', '')" aria-label="{% translate 'Automatic' %}">A</button>
+            <button type="button" class="wdx-swatch is-none" :class="node && node.fill === 'none' && 'is-on'" @click="style('fill', 'none')" aria-label="{% translate 'No fill' %}"></button>
+            <template x-for="c in fills" :key="c"><button type="button" class="wdx-swatch" :class="node && node.fill === c && 'is-on'" :style="'background:' + c" @click="style('fill', c)" :aria-label="c"></button></template>
+            <label class="wdx-swatch is-custom" data-tip="{% translate 'Any colour' %}"><input type="color" :value="node && /^#[0-9a-f]{6}$/i.test(node.fill || '') ? node.fill : '#ffffff'" @change="style('fill', $event.target.value)" aria-label="{% translate 'Any fill colour' %}"></label>
+          </div></div>
+        </template>
+        <p class="label" x-text="node && node.shape === 'ink' ? '{{ _("Colour")|escapejs }}' : node && node.shape === 'icon' ? '{{ _("Icon colour")|escapejs }}' : '{{ _("Line")|escapejs }}'"></p>
         <div class="wsb-colors">
           <button type="button" class="wdx-swatch is-auto" :class="node && !node.stroke && 'is-on'" @click="style('stroke', '')" aria-label="{% translate 'Automatic' %}">A</button>
           <template x-for="c in strokes" :key="c"><button type="button" class="wdx-swatch" :class="node && node.stroke === c && 'is-on'" :style="'background:' + c" @click="style('stroke', c)" :aria-label="c"></button></template>
+          <label class="wdx-swatch is-custom" data-tip="{% translate 'Any colour' %}"><input type="color" :value="node && /^#[0-9a-f]{6}$/i.test(node.stroke || '') ? node.stroke : '#1f2a24'" @change="style('stroke', $event.target.value)" aria-label="{% translate 'Any line colour' %}"></label>
         </div>
-        <template x-if="!rowsNode"><div>
-          <p class="label">{% translate "Text size" %}</p>
+        <div class="wdr-two">
+          <div><p class="label" x-text="node && node.shape === 'ink' ? '{{ _("Thickness")|escapejs }}' : '{{ _("Border")|escapejs }}'"></p>
+            <div class="seg seg-sm">
+              <button type="button" class="seg-item" x-show="!(node && ['ink', 'icon'].includes(node.shape))" :class="node && node.sw === 0 && 'is-active'" @click="style('sw', 0)" title="{% translate 'No border' %}">{% translate "None" %}</button>
+              <template x-for="w in (node && node.shape === 'ink' ? [2, 4, 8] : [1, 2, 4])" :key="w">
+                <button type="button" class="seg-item wdr-wbtn" :class="node && node.sw === w && 'is-active'" @click="style('sw', w)" :aria-label="w + 'px'"><i :style="'height:' + Math.max(1, w) + 'px'"></i></button>
+              </template>
+            </div></div>
+          <div x-show="!(node && ['ink', 'icon'].includes(node.shape))"><p class="label">{% translate "Line style" %}</p>
+            <div class="seg seg-sm">
+              <button type="button" class="seg-item" :class="node && !node.dash && 'is-active'" @click="style('dash', '')" aria-label="{% translate 'Solid' %}"><i class="wdr-dash"></i></button>
+              <button type="button" class="seg-item" :class="node && node.dash === 'dashed' && 'is-active'" @click="style('dash', 'dashed')" aria-label="{% translate 'Dashed' %}"><i class="wdr-dash is-dashed"></i></button>
+              <button type="button" class="seg-item" :class="node && node.dash === 'dotted' && 'is-active'" @click="style('dash', 'dotted')" aria-label="{% translate 'Dotted' %}"><i class="wdr-dash is-dotted"></i></button>
+            </div></div>
+        </div>
+        <template x-if="!rowsNode && !(node && ['ink', 'image', 'start', 'end', 'fork'].includes(node.shape))"><div class="wdr-textlook">
+          <p class="label">{% translate "Text" %}</p>
           <div class="seg seg-sm">
             <template x-for="(z, i) in sizes" :key="z"><button type="button" class="seg-item" :class="((node && node.size) || 14) === z && 'is-active'" @click="style('size', z === 14 ? '' : z)" x-text="['S', 'M', 'L', 'XL'][i]"></button></template>
-            <button type="button" class="seg-item" :class="node && node.bold && 'is-active'" @click="style('bold', node && node.bold ? '' : true)"><b>B</b></button>
+            <button type="button" class="seg-item" :class="node && node.bold && 'is-active'" @click="style('bold', node && node.bold ? '' : true)" aria-label="{% translate 'Bold' %}"><b>B</b></button>
+            <button type="button" class="seg-item" :class="node && node.italic && 'is-active'" @click="style('italic', node && node.italic ? '' : true)" aria-label="{% translate 'Italic' %}"><i>I</i></button>
+            <button type="button" class="seg-item" :class="node && node.underline && 'is-active'" @click="style('underline', node && node.underline ? '' : true)" aria-label="{% translate 'Underline' %}"><u>U</u></button>
+          </div>
+          <div class="wdr-two">
+            <div class="seg seg-sm" role="group" aria-label="{% translate 'Line up the words' %}">
+              <button type="button" class="seg-item" :class="node && node.align === 'left' && 'is-active'" @click="style('align', 'left')" aria-label="{% translate 'Left' %}">{% icon "align-left" %}</button>
+              <button type="button" class="seg-item" :class="node && !node.align && 'is-active'" @click="style('align', '')" aria-label="{% translate 'Centre' %}">{% icon "align-hcenter" %}</button>
+              <button type="button" class="seg-item" :class="node && node.align === 'right' && 'is-active'" @click="style('align', 'right')" aria-label="{% translate 'Right' %}">{% icon "align-right" %}</button>
+            </div>
+            <div class="seg seg-sm" role="group" aria-label="{% translate 'Up or down' %}">
+              <button type="button" class="seg-item" :class="node && node.valign === 'top' && 'is-active'" @click="style('valign', 'top')" aria-label="{% translate 'Top' %}">{% icon "align-top" %}</button>
+              <button type="button" class="seg-item" :class="node && !node.valign && 'is-active'" @click="style('valign', '')" aria-label="{% translate 'Middle' %}">{% icon "align-vmiddle" %}</button>
+              <button type="button" class="seg-item" :class="node && node.valign === 'bottom' && 'is-active'" @click="style('valign', 'bottom')" aria-label="{% translate 'Bottom' %}">{% icon "align-bottom" %}</button>
+            </div>
+          </div>
+          <div class="wdr-two">
+            <label class="sr-only" for="dr-font">{% translate "Font" %}</label>
+            <select id="dr-font" class="form-input input-compact" :value="(node && node.font) || ''" @change="style('font', $event.target.value)" data-native>
+              <option value="">{% translate "Clean (sans)" %}</option><option value="hand">{% translate "Hand-drawn" %}</option>
+              <option value="serif">{% translate "Serif" %}</option><option value="mono">{% translate "Code (mono)" %}</option>
+            </select>
+            <div class="wsb-colors wdr-textcolors" aria-label="{% translate 'Text colour' %}">
+              <button type="button" class="wdx-swatch is-auto" :class="node && !node.color && 'is-on'" @click="style('color', '')" aria-label="{% translate 'Automatic' %}">A</button>
+              <template x-for="c in ['#1f2a24', '#ffffff', '#1c7ed6', '#e03131']" :key="c"><button type="button" class="wdx-swatch" :class="node && node.color === c && 'is-on'" :style="'background:' + c" @click="style('color', c)" :aria-label="c"></button></template>
+              <label class="wdx-swatch is-custom" data-tip="{% translate 'Any text colour' %}"><input type="color" :value="node && /^#[0-9a-f]{6}$/i.test(node.color || '') ? node.color : '#1f2a24'" @change="style('color', $event.target.value)" aria-label="{% translate 'Any text colour' %}"></label>
+            </div>
+          </div>
+        </div></template>
+        <div class="wdr-two">
+          <label class="wdr-range"><span class="label">{% translate "See-through" %} <span class="help" x-text="Math.round(100 - ((node && node.opacity) || 1) * 100) + '%'"></span></span>
+            <input type="range" min="10" max="100" step="5" :value="Math.round(((node && node.opacity) || 1) * 100)" @change="style('opacity', +$event.target.value >= 100 ? '' : +$event.target.value / 100)" aria-label="{% translate 'Opacity' %}"></label>
+          <label class="check wdr-shadow"><input type="checkbox" class="form-checkbox" :checked="node && node.shadow" @change="style('shadow', $event.target.checked ? true : '')"><span class="check-label">{% translate "Shadow" %}</span></label>
+        </div>
+        <template x-if="node"><div>
+          <label class="label" for="dr-link">{% translate "Link" %} <span class="help">{% translate "a web page, email or page of this app" %}</span></label>
+          <div class="wdr-linkrow">
+            <input id="dr-link" class="form-input input-compact" :value="node.link || ''" @change="setLink($event.target.value)" placeholder="https://…" inputmode="url" maxlength="500">
+            <a class="icon-btn" x-show="node.link" :href="node.link" target="_blank" rel="noopener noreferrer" aria-label="{% translate 'Open the link' %}">{% icon "external" %}</a>
           </div></div>
         </template>
+        <div class="wsb-row">
+          <button type="button" class="btn btn-ghost btn-sm" @click="copyStyle()" data-tip="{% translate 'Copy this look (Ctrl+Alt+C)' %}">{% icon "palette" %}{% translate "Copy style" %}</button>
+          <button type="button" class="btn btn-ghost btn-sm" x-show="hasStyle" @click="pasteStyle()" data-tip="{% translate 'Give the picked shapes the copied look (Ctrl+Alt+V)' %}">{% translate "Paste style" %}</button>
+          <button type="button" class="btn btn-ghost btn-sm" :class="allLocked && 'is-on'" @click="toggleLock()" data-tip="{% translate 'A locked shape stays put (Ctrl+L)' %}">{% icon "lock" %}<span x-text="allLocked ? '{{ _("Unlock")|escapejs }}' : '{{ _("Lock")|escapejs }}'"></span></button>
+        </div>
         <div class="wsb-row">
           <button type="button" class="btn btn-secondary btn-sm" @click="duplicate()">{% icon "copy" %}{% translate "Duplicate" %}</button>
           <button type="button" class="btn btn-ghost btn-sm" x-show="sel.length > 1 && kind !== 'class' && kind !== 'er'" @click="group()">{% icon "group" %}{% translate "Group" %}</button>
@@ -226,6 +342,12 @@
             <button type="button" class="seg-item" x-show="kind !== 'er'" :class="edge.line === 'thick' && 'is-active'" @click="setEdge('line', 'thick')">{% translate "Thick" %}</button>
           </div></div>
         </template>
+        <p class="label">{% translate "Colour" %}</p>
+        <div class="wsb-colors">
+          <button type="button" class="wdx-swatch is-auto" :class="!edge.color && 'is-on'" @click="setEdge('color', '')" aria-label="{% translate 'Automatic' %}">A</button>
+          <template x-for="c in strokes" :key="c"><button type="button" class="wdx-swatch" :class="edge.color === c && 'is-on'" :style="'background:' + c" @click="setEdge('color', c)" :aria-label="c"></button></template>
+          <label class="wdx-swatch is-custom" data-tip="{% translate 'Any colour' %}"><input type="color" :value="/^#[0-9a-f]{6}$/i.test(edge.color || '') ? edge.color : '#1f2a24'" @change="setEdge('color', $event.target.value)" aria-label="{% translate 'Any line colour' %}"></label>
+        </div>
         <p class="label">{% translate "Path" %}</p>
         <div class="seg seg-sm">
           <button type="button" class="seg-item" :class="!edge.route && 'is-active'" @click="setEdge('route', '')">{% translate "Straight" %}</button>
@@ -248,6 +370,8 @@
           <li>{% translate "Drag a shape into a group to put it inside; moving the group moves what's in it." %}</li>
           <li>{% translate "Drag on the empty page to pick several shapes; guides show when they line up." %}</li>
           <li>{% translate "Right-click (or press and hold) for more: copy, paste, order, group, bends…" %}</li>
+          {% if diagram.kind == "drawing" %}<li>{% translate "Draw freehand with the pen (P). Find any shape or icon with the search on the left." %}</li>{% endif %}
+          <li>{% translate "Copy a shape's look and paste it onto others with Ctrl+Alt+C and Ctrl+Alt+V. Press ? for every shortcut." %}</li>
           {% if diagram.kind == "drawing" %}<li>{% translate "Paste or drop a picture onto the page to add it; drop a .drawio file to bring in a draw.io drawing." %}</li>{% endif %}
           {% if draggable %}<li>{% translate "The text version is written for you as you draw — switch to Text to see or change it." %}</li>{% endif %}
         </ul>
