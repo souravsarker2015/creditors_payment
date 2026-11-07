@@ -32,6 +32,9 @@
           <a class="menu-item" role="menuitem" href="{% url 'work:roadmap_export' rm.pk %}">{% icon "download" %}{% translate "Download as a spreadsheet (CSV)" %}</a>
           <button type="button" class="menu-item" role="menuitem" @click="window.print()">{% icon "printer" %}{% translate "Print or save as PDF" %}</button>
           <button type="button" class="menu-item" role="menuitem" @click="roadmapAction('duplicate')">{% icon "copy" %}{% translate "Make a copy" %}</button>
+          <div class="menu-sep"></div>
+          <button type="button" class="menu-item" role="menuitem" @click="planAction('plan_save')">{% icon "history" %}<span x-text="rm.baseline ? '{% translate "Save the plan again, as it is now" %}' : '{% translate "Save the plan, to compare against later" %}'"></span></button>
+          <button type="button" class="menu-item" role="menuitem" x-show="rm.baseline" @click="planAction('plan_forget')">{% icon "x" %}{% translate "Forget the saved plan" %}</button>
           <button type="button" class="menu-item" role="menuitem" @click="roadmapAction('archive')">{% icon "archive" %}<span x-text="rm.archived ? '{% translate "Unarchive" %}' : '{% translate "Archive" %}'"></span></button>
           {% for o in others %}{% if forloop.first %}<div class="menu-sep"></div><p class="menu-label">{% translate "Other roadmaps" %}</p>{% endif %}
           <a class="menu-item" role="menuitem" href="{% url 'work:roadmap' o.pk %}">{% icon "timeline" %}{{ o.title }}</a>{% endfor %}
@@ -49,9 +52,16 @@
       <div><b class="num" x-text="summary.progress + '%'"></b><small>{% translate "done overall" %} · <span x-text="summary.done + ' / ' + summary.count"></span></small></div>
     </div>
     <button type="button" class="rmp-stat" @click="fStatus = fStatus === 'active' ? '' : 'active'" :class="fStatus === 'active' && 'is-on'"><b class="num" x-text="summary.active"></b><small>{% translate "in progress" %}</small></button>
-    <button type="button" class="rmp-stat" data-health="on_track" @click="fHealth = fHealth === 'on_track' ? '' : 'on_track'" :class="fHealth === 'on_track' && 'is-on'"><b class="num" x-text="summary.on_track"></b><small>{% translate "on track" %}</small></button>
-    <button type="button" class="rmp-stat" data-health="at_risk" @click="fHealth = fHealth === 'at_risk' ? '' : 'at_risk'" :class="fHealth === 'at_risk' && 'is-on'"><b class="num" x-text="summary.at_risk"></b><small>{% translate "at risk" %}</small></button>
-    <button type="button" class="rmp-stat" data-health="off_track" @click="fHealth = fHealth === 'off_track' ? '' : 'off_track'" :class="fHealth === 'off_track' && 'is-on'"><b class="num" x-text="summary.off_track"></b><small>{% translate "off track" %}</small></button>
+    <div class="rmp-stat rmp-stat-health" role="group" aria-label="{% translate 'Health' %}">
+      <span class="rmp-hbar" aria-hidden="true"><i data-health="on_track" :style="'flex-grow:' + summary.on_track"></i><i data-health="at_risk" :style="'flex-grow:' + summary.at_risk"></i><i data-health="off_track" :style="'flex-grow:' + summary.off_track"></i></span>
+      <span class="rmp-hbtns">
+        <button type="button" class="rmp-hbtn" data-health="on_track" @click="fHealth = fHealth === 'on_track' ? '' : 'on_track'" :class="fHealth === 'on_track' && 'is-on'" :aria-pressed="(fHealth === 'on_track').toString()"><b class="num" x-text="summary.on_track"></b><small>{% translate "on track" %}</small></button>
+        <button type="button" class="rmp-hbtn" data-health="at_risk" @click="fHealth = fHealth === 'at_risk' ? '' : 'at_risk'" :class="fHealth === 'at_risk' && 'is-on'" :aria-pressed="(fHealth === 'at_risk').toString()"><b class="num" x-text="summary.at_risk"></b><small>{% translate "at risk" %}</small></button>
+        <button type="button" class="rmp-hbtn" data-health="off_track" @click="fHealth = fHealth === 'off_track' ? '' : 'off_track'" :class="fHealth === 'off_track' && 'is-on'" :aria-pressed="(fHealth === 'off_track').toString()"><b class="num" x-text="summary.off_track"></b><small>{% translate "off track" %}</small></button>
+      </span>
+    </div>
+    <button type="button" class="rmp-stat" data-health="slip" x-show="rm.baseline" x-cloak @click="fSlip = !fSlip; if (fSlip) compare = true" :class="fSlip && 'is-on'"
+            :data-tip="'{% translate "Against the plan saved on" %} ' + (rm.baseline ? show(rm.baseline.slice(0, 10), true) : '')"><b class="num" x-text="summary.slipped"></b><small>{% translate "later than planned" %}</small></button>
     <button type="button" class="rmp-stat rmp-stat-next" x-show="summary.next" x-cloak @click="summary.next && open(summary.next.id)">
       <span class="rmp-diamond" aria-hidden="true"></span>
       <span><small>{% translate "Next milestone" %}</small><b x-text="summary.next ? summary.next.title : ''"></b>
@@ -59,9 +69,9 @@
     </button>
     <div class="rmp-stat rmp-stat-pace" data-tip="{% translate 'Tasks finished on this roadmap each week, for the last 8 weeks' %}">
       <span class="rmp-spark" aria-hidden="true"><template x-for="w in pace" :key="w.week"><i :style="'height:' + Math.max(w.h, 6) + '%'" :class="w.done && 'has'" :title="weekTip(w)"></i></template></span>
-      <span><small>{% translate "Pace" %}</small><b x-text="pace.length ? pace[pace.length - 1].done : 0"></b><small>{% translate "tasks this week" %}</small></span>
+      <span><small>{% translate "Pace" %}</small><b x-text="pace.length ? pace[pace.length - 1].done : 0"></b><small>{% translate "tasks this week" %}</small>
+        <small x-show="summary.minutes" x-cloak x-text="hm(summary.minutes) + ' {% translate "tracked" %}'"></small></span>
     </div>
-    <div class="rmp-stat" x-show="summary.minutes" x-cloak><b class="num" x-text="hm(summary.minutes)"></b><small>{% translate "tracked" %}</small></div>
   </section>
 
   {# ── views and filters ── #}
@@ -87,6 +97,7 @@
     <span class="rmp-grow"></span>
     <template x-if="view === 'timeline'">
       <div class="rmp-zoom">
+        <label class="rmp-check" x-show="rm.baseline" x-cloak data-tip="{% translate 'Shows each piece where the saved plan had it, as a dashed outline' %}"><input type="checkbox" x-model="compare">{% translate "Saved plan" %}</label>
         <button type="button" class="btn btn-ghost btn-sm" @click="goToday()" data-tip="T">{% translate "Today" %}</button>
         <nav class="seg seg-sm" aria-label="{% translate 'Zoom' %}">
           <button type="button" class="seg-item" :class="zoom === 'week' && 'is-active'" @click="zoom = 'week'">{% translate "Weeks" %}</button>
@@ -139,7 +150,7 @@
             <g x-html="arrowsSvg"></g>
           </svg>
           <template x-for="r in rows" :key="r.key">
-            <div :class="r.type === 'lane' ? 'rmp-lane' : 'rmp-row'" :style="'top:' + r.y + 'px'" :data-color="r.type === 'lane' ? (r.lane ? r.lane.color : 'slate') : colorOf(r.it)">
+            <div :class="[r.type === 'lane' ? 'rmp-lane' : 'rmp-row', dragLane && r.laneKey === dragLane ? 'is-target' : '']" :style="'top:' + r.y + 'px'" :data-color="r.type === 'lane' ? (r.lane ? r.lane.color : 'slate') : colorOf(r.it)">
               <template x-if="r.type === 'lane'">
                 <div class="rmp-lane-in">
                   <button type="button" class="rmp-lane-label" @click="toggleLane(r.laneKey)" :aria-expanded="(!collapsed[r.laneKey]).toString()">
@@ -160,10 +171,11 @@
                     <small class="num" x-text="r.it.kind === 'milestone' ? '' : r.it.progress + '%'"></small>
                   </button>
                   <div class="rmp-track" @dblclick="trackDblClick($event, r.laneKey)">
+                    <template x-if="ghost(r.it)"><i class="rmp-ghost" :class="{ 'is-ms': r.it.kind === 'milestone' }" :style="ghost(r.it)" :title="planText(r.it) + ' · ' + slipText(r.it)"></i></template>
                     <template x-if="r.it.end && r.it.kind !== 'milestone'">
                       <div class="rmp-bar" :style="bar(r.it)" :data-item="r.it.id" :data-status="r.it.status" :data-health="health(r.it)" :class="{ 'is-late': lateBy(r.it), 'is-narrow': narrow(r.it) }"
                            tabindex="0" role="button" :aria-label="r.it.title + ', ' + when(r.it)" @pointerdown="grab($event, r.it, 'move')"
-                           @keydown.enter="open(r.it.id)" @keydown="barKey($event, r.it)" :title="r.it.title + ' · ' + when(r.it) + (left(r.it) ? ' · ' + left(r.it) : '')">
+                           @keydown.enter="open(r.it.id)" @keydown="barKey($event, r.it)" :title="r.it.title + ' · ' + when(r.it) + (left(r.it) ? ' · ' + left(r.it) : '') + (rm.baseline && r.it.planEnd ? ' · ' + slipText(r.it) : '')">
                         <i class="rmp-fill" :style="'width:' + r.it.progress + '%'"></i>
                         <i class="rmp-h rmp-h-a" @pointerdown="grab($event, r.it, 'start')"></i>
                         <span class="rmp-bar-text"><span x-text="r.it.title"></span><small x-show="r.it.tasks.total" x-text="r.it.tasks.done + '/' + r.it.tasks.total"></small></span>
@@ -186,7 +198,7 @@
         </div>
       </div>
     </div>
-    <p class="rmp-hint">{% icon "info" %}<span x-text="texts.dragHint"></span> · <kbd>+</kbd> <kbd>−</kbd> {% translate "zoom" %} · <kbd>T</kbd> {% translate "today" %}</p>
+    <p class="rmp-hint">{% icon "info" %}<span x-text="texts.dragHint"></span> · <kbd>+</kbd> <kbd>−</kbd> {% translate "zoom" %} · <kbd>T</kbd> {% translate "today" %} · <kbd>Ctrl</kbd> <kbd>Z</kbd> {% translate "undo" %}</p>
   </section>
 
   {# ── Board ── #}
@@ -223,9 +235,24 @@
 
   {# ── List ── #}
   <section class="card rmp-list" x-show="view === 'list' && items.length" x-cloak>
+    <div class="rmp-bulk" x-show="pickedIds.length" x-cloak role="toolbar" aria-label="{% translate 'Change the chosen ones' %}">
+      <b x-text="texts.picked.replace('%(n)s', pickedIds.length)"></b>
+      <select class="form-input input-compact" data-native aria-label="{% translate 'Status' %}" @change="$event.target.value && bulk({ status: $event.target.value }); $event.target.value = ''">
+        <option value="">{% translate "Status…" %}</option>{% for v, l in statuses %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select>
+      <select class="form-input input-compact" data-native aria-label="{% translate 'When' %}" @change="$event.target.value && bulk({ horizon: $event.target.value }); $event.target.value = ''">
+        <option value="">{% translate "When…" %}</option>{% for v, l in horizons %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select>
+      <select class="form-input input-compact" data-native aria-label="{% translate 'Lane' %}" @change="$event.target.value && bulk({ lane: $event.target.value === 'none' ? null : +$event.target.value }); $event.target.value = ''">
+        <option value="">{% translate "Lane…" %}</option><template x-for="l in lanes" :key="l.id"><option :value="String(l.id)" x-text="l.name"></option></template><option value="none">{% translate "No lane" %}</option></select>
+      <select class="form-input input-compact" data-native aria-label="{% translate 'Health' %}" @change="$event.target.value && bulk({ health: $event.target.value === 'auto' ? '' : $event.target.value }); $event.target.value = ''">
+        <option value="">{% translate "Health…" %}</option><option value="auto">{% translate "Automatic" %}</option>{% for v, l in healths %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select>
+      <button type="button" class="btn btn-ghost btn-sm is-danger" @click="bulkDelete()">{% icon "trash" %}{% translate "Delete" %}</button>
+      <span class="rmp-grow"></span>
+      <button type="button" class="icon-btn" @click="picked = {}" aria-label="{% translate 'Clear the choice' %}" data-tip="Esc">{% icon "x" %}</button>
+    </div>
     <div class="rmp-list-scroll">
       <table class="rmp-table">
         <thead><tr>
+          <th class="rmp-pick"><input type="checkbox" :checked="allPicked" @change="pickAll()" aria-label="{% translate 'Choose all' %}"></th>
           <th><button type="button" @click="sortBy('title')" :data-sort="sortKey === 'title' ? sortDir : 0">{% translate "Title" %}</button></th>
           <th><button type="button" @click="sortBy('lane')" :data-sort="sortKey === 'lane' ? sortDir : 0">{% translate "Lane" %}</button></th>
           <th><button type="button" @click="sortBy('status')" :data-sort="sortKey === 'status' ? sortDir : 0">{% translate "Status" %}</button></th>
@@ -238,7 +265,8 @@
         </tr></thead>
         <tbody>
           <template x-for="it in sorted" :key="it.id">
-            <tr @click="if (!$event.target.closest('select')) open(it.id)" :class="sel === it.id && 'is-sel'" :data-color="colorOf(it)">
+            <tr @click="if (!$event.target.closest('select, .rmp-pick')) open(it.id)" :class="{ 'is-sel': sel === it.id, 'is-picked': picked[it.id] }" :data-color="colorOf(it)">
+              <td class="rmp-pick"><input type="checkbox" :checked="!!picked[it.id]" @click="pick(it, $event)" :aria-label="'{% translate "Choose" %} ' + it.title"></td>
               <td class="rmp-td-title"><span class="rmp-diamond sm" x-show="it.kind === 'milestone'"></span><i class="rmp-dot" x-show="it.kind !== 'milestone'"></i><a href="#" @click.prevent="open(it.id)" x-text="it.title"></a></td>
               <td x-text="lane(it.lane) ? lane(it.lane).name : '—'"></td>
               <td><select class="rmp-inline-select" :value="it.status" @change="save(it, { status: $event.target.value })" aria-label="{% translate 'Status' %}" data-native>
@@ -389,7 +417,8 @@
           <p class="rmp-going-line" x-show="likelyText(current)" :class="current.likely && current.end && current.likely > current.end && 'is-warn'">{% icon "trend" %}<span x-text="likelyText(current)"></span></p>
           <p class="rmp-going-line" x-show="left(current)" :class="lateBy(current) && 'is-warn'">{% icon "calendar" %}<span x-text="left(current)"></span></p>
           <p class="rmp-going-line" x-show="current.minutes">{% icon "timer" %}<span x-text="hm(current.minutes) + ' {% translate "tracked on its tasks" %}'"></span></p>
-          <template x-for="dep in conflicts(current)" :key="dep.id"><p class="rmp-going-line is-warn">{% icon "alert" %}<span x-text="conflictText(dep)"></span></p></template>
+          <template x-for="dep in conflicts(current)" :key="dep.id"><p class="rmp-going-line is-warn">{% icon "alert" %}<span x-text="conflictText(dep)"></span>
+            <button type="button" class="rmp-link" @click="pushWaiting(dep)">{% translate "Move it after" %}</button></p></template>
         </section>
 
         <dl class="rmp-fields">
@@ -404,6 +433,7 @@
             <span x-show="current.kind !== 'milestone'">→</span>
             <input type="date" class="form-input input-compact" :value="current.end" @change="save(current, current.kind === 'milestone' ? { end: $event.target.value } : { end: $event.target.value, start: current.start && $event.target.value < current.start ? $event.target.value : current.start })" aria-label="{% translate 'Ends' %}">
             <button type="button" class="chip-clear" x-show="current.end" @click="save(current, { start: '', end: '' })">{% translate "No dates" %}</button>
+            <small class="rmp-plan" x-show="rm.baseline && slipText(current)" :class="slip(current) > 0 && 'is-warn'">{% icon "history" %}<span x-text="(planText(current) ? planText(current) + ' · ' : '') + slipText(current)"></span></small>
           </dd>
           <dt>{% translate "When" %}</dt>
           <dd><nav class="seg seg-sm">{% for v, l in horizons %}<button type="button" class="seg-item" :class="current.horizon === '{{ v }}' && 'is-active'" @click="save(current, { horizon: '{{ v }}' })">{{ l }}</button>{% endfor %}</nav></dd>
@@ -434,6 +464,8 @@
             <select class="form-input input-compact" @change="addDep(current, $event.target.value); $event.target.value = ''" aria-label="{% translate 'Add something it waits on' %}" data-native x-show="depOptions(current).length">
               <option value="">{% translate "+ Waits on…" %}</option><template x-for="o in depOptions(current)" :key="o.id"><option :value="o.id" x-text="o.title"></option></template></select>
             <p class="rmp-blocks" x-show="waitingOnThis(current).length"><small>{% translate "Holding up:" %}</small> <template x-for="o in waitingOnThis(current)" :key="o.id"><button type="button" class="rmp-link" @click="open(o.id)" x-text="o.title"></button></template></p>
+            <p class="rmp-blocks is-warn" x-show="waitingLate(current).length">{% icon "alert" %}<small>{% translate "Some of these start before this ends." %}</small>
+              <button type="button" class="btn btn-secondary btn-sm" @click="pushWaiting(current)">{% translate "Push them later" %}</button></p>
           </dd>
         </dl>
 

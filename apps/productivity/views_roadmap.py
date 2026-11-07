@@ -89,10 +89,21 @@ def _texts():
         "updatePosted": _("Update posted"), "taskAdded": _("Task added"), "linked": _("Linked"), "unlinked": _("Unlinked"), "noMatch": _("No matching open tasks."),
         "copied": _("Copied"), "noDates": _("No dates"), "quickWins": _("Quick wins"), "bigBets": _("Big bets"), "fillIns": _("Fill-ins"), "timeSinks": _("Time sinks"),
         "hours": _("%(h)s h"), "minutes": _("%(m)s min"), "week": _("Week of %(date)s"), "doneTasks": _("%(n)s tasks done"), "scheduled": _("Put on the timeline"),
-        "dupDone": _("Copy made"), "dragHint": _("Drag to move · drag the ends to change the dates · double-click empty space to add"),
+        "dupDone": _("Copy made"), "dragHint": _("Drag to move, also up or down to another lane · drag the ends to change the dates · double-click empty space to add"),
         "moved": _("Moved to %(where)s"), "items": _("%(n)s items"), "item1": _("1 item"),
         "quickHint": _("Worth a lot, little work: do these first."), "bigHint": _("Worth a lot, a lot of work: plan them well."),
         "fillHint": _("Little work, little value: when there's time."), "sinkHint": _("A lot of work for little: question them."), "removeDep": _("Stop waiting on it"), "filtersOn": _("Filters on"),
+        "undo": _("Undo"), "undone": _("Undone"), "nothingToUndo": _("Nothing to undo."), "nowWhen": _("“%(title)s”: %(when)s"),
+        "waiterLate1": _("“%(title)s” waits on this and now starts before it ends."), "waitersLate": _("%(n)s pieces wait on this and now start before it ends."),
+        "pushThem": _("Push them later"), "pushed1": _("1 piece moved to start after what it waits on."), "pushed": _("%(n)s pieces moved to start after what they wait on."),
+        "openLeft1": _("1 of its tasks is still open."), "openLeft": _("%(n)s of its tasks are still open."), "finishThem": _("Mark them done"),
+        "tasksClosed": _("%(n)s tasks marked done"),
+        "planSaved": _("Plan saved. From now on you'll see how far each piece moves from it."), "planForgot": _("The saved plan is forgotten."),
+        "forgetPlan": _("Forget the saved plan? The dates stay as they are."), "planWhen": _("Planned: %(when)s"),
+        "slipLater1": _("1 day later than planned"), "slipLater": _("%(n)s days later than planned"),
+        "slipEarlier1": _("1 day earlier than planned"), "slipEarlier": _("%(n)s days earlier than planned"),
+        "asPlanned": _("As planned"), "notPlanned": _("Added after the plan was saved"),
+        "picked": _("%(n)s chosen"), "bulkDone": _("%(n)s changed"), "bulkDeleted": _("%(n)s deleted."), "bulkDelete": _("Delete these %(n)s pieces of work? Their tasks stay."),
     }
 
 
@@ -151,6 +162,24 @@ def roadmap_api(request, pk):
         return ok(undo=reverse("trash_restore", args=[item.pk]), url=reverse("work:roadmaps"))
     if action == "duplicate":
         return ok(url=reverse("work:roadmap", args=[rmp.duplicate(rm).pk]))
+    if action in ("plan_save", "plan_forget"):
+        (rmp.save_plan if action == "plan_save" else rmp.forget_plan)(rm)
+        return ok(baseline=rm.baseline_at.isoformat() if rm.baseline_at else "", items=rmp.items_json(rm.items.prefetch_related("depends_on"), _today()))
+    if action in ("bulk", "bulk_delete"):             # several pieces of work at once (the list's check boxes)
+        ids = {int(x) for x in p.get("ids", "").split(",") if x.strip().isdigit()}
+        chosen = list(rm.items.filter(pk__in=ids))
+        if not chosen:
+            return bad(_("Choose something first."))
+        if action == "bulk_delete":
+            undo = [reverse("trash_restore", args=[trash(request.user, it, _("Roadmap item: %(title)s") % {"title": it.title},
+                                                         reverse("work:roadmap", args=[rm.pk])).pk]) for it in chosen]
+            rm.save(update_fields=["updated_at"])
+            return ok(count=len(chosen), undo=undo)
+        fields = {k: p[k] for k in ("status", "horizon", "lane", "health") if k in p}
+        for it in chosen:
+            rmp.apply(it, fields, request.user)
+        rm.save(update_fields=["updated_at"])
+        return ok(items=rmp.items_json(rm.items.filter(pk__in=ids).prefetch_related("depends_on"), _today()))
     if action == "lane_add":
         name = p.get("name", "").strip()[:80] or _("New lane")
         lane = RoadmapLane.objects.create(roadmap=rm, name=name, color=p.get("color") if p.get("color") in Color.values else Color.SLATE,
@@ -219,6 +248,17 @@ def item_api(request, pk):
         item.save()
         item.depends_on.set(deps)
         return done()
+    if action == "push":                              # what waits on it starts after it ends
+        moved, before = rmp.push_waiting(item)
+        Roadmap.objects.filter(pk=item.roadmap_id).update(updated_at=timezone.now())
+        return ok(items=rmp.items_json(RoadmapItem.objects.filter(pk__in=moved).prefetch_related("depends_on"), today),
+                  before={pk: [rmp._iso(a), rmp._iso(b)] for pk, (a, b) in before.items()})
+    if action == "tasks_close":                       # finished: its open tasks are finished with it
+        n = 0
+        for t in item.tasks.exclude(status=Status.DONE):
+            services.set_done(t, True)
+            n += 1
+        return done(count=n)
     if action == "update":
         try:
             up = rmp.add_update(item, p.get("health", ""), p.get("text", ""))

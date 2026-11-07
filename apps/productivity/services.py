@@ -1130,6 +1130,10 @@ def review(user, start, end):
                  .only("pk", "title", "kind", "created_at", "updated_at").order_by("-updated_at")[:20])
     for dg in drawn:
         dg.is_new = dg.created_at >= lo
+    from .models import RoadmapItem, RoadmapStatus, RoadmapUpdate
+
+    shipped = list(RoadmapItem.objects.filter(roadmap__owner=user, status=RoadmapStatus.DONE, completed_at__gte=lo, completed_at__lt=hi)
+                   .select_related("roadmap").order_by("completed_at"))
     habits = []
     for h in Habit.objects.filter(owner=user, is_archived=False):
         checked = habit_done_days(h, h.checks.filter(date__gte=start, date__lte=end).values_list("date", "amount"))
@@ -1142,7 +1146,8 @@ def review(user, start, end):
         "done_by_project": sorted(by_project.items(), key=lambda kv: (kv[0] is None, kv[0].name if kv[0] else "")),
         "wins": wins, "blockers": blockers, "mood": feel["mood"], "energy": feel["energy"],
         "goals_done": goals_done, "goals_active": goals_active, "learnt": learnt, "habits": habits,
-        "practice": practice, "diagrams": drawn,
+        "practice": practice, "diagrams": drawn, "roadmap_done": shipped,
+        "roadmap_updates": RoadmapUpdate.objects.filter(item__roadmap__owner=user, created_at__gte=lo, created_at__lt=hi).count(),
         "created": Task.objects.filter(owner=user, created_at__gte=lo, created_at__lt=hi).count(),
     }
 
@@ -1158,6 +1163,9 @@ def review_markdown(data):
         lines += ["", f"## {_('Goals reached')}"] + [f"- {g.title}" for g in data["goals_done"]]
     if data["wins"]:
         lines += ["", f"## {_('Highlights')}"] + [f"- {text} ({day:%d %b})" for day, text in data["wins"]]
+    if data.get("roadmap_done"):
+        lines += ["", f"## {_('Roadmap pieces finished')}"]
+        lines += [f"- {it.title} ({it.roadmap.title})" for it in data["roadmap_done"]]
     if data["done_by_project"]:
         lines += ["", f"## {_('What I shipped')}"]
         for project, tasks in data["done_by_project"]:
@@ -1456,8 +1464,8 @@ def _fold(line):
 
 def calendar_feed(user, base_url=""):
     """Open tasks with a due date (all-day), reminders and day-planner blocks
-    (timed, with an alarm), goal deadlines, exams (an alarm the morning before), and the job search's
-    interviews (an alarm an hour before) and next steps, for Google / Apple / Outlook calendars."""
+    (timed, with an alarm), goal deadlines, exams and roadmap milestones (an alarm the morning before),
+    and the job search's interviews (an alarm an hour before) and next steps, for Google / Apple / Outlook calendars."""
     from django.urls import reverse
 
     now = timezone.now()
@@ -1513,6 +1521,14 @@ def calendar_feed(user, base_url=""):
     for a in JobApplication.objects.filter(owner=user, stage=JobStage.OFFER, offer_deadline__gte=timezone.localdate()):
         event(f"offer-{a.pk}", "💼 " + _("Answer %(company)s's offer") % {"company": a.company}, reverse("work:offers"),
               [f"DTSTART;VALUE=DATE:{a.offer_deadline:%Y%m%d}", f"DTEND;VALUE=DATE:{a.offer_deadline + timedelta(days=1):%Y%m%d}"])
+    from .models import RoadmapItem, RoadmapItemKind, RoadmapStatus
+
+    for m in (RoadmapItem.objects.filter(roadmap__owner=user, roadmap__is_archived=False, kind=RoadmapItemKind.MILESTONE,
+                                         end_date__gte=timezone.localdate() - timedelta(days=7))
+              .exclude(status__in=(RoadmapStatus.DONE, RoadmapStatus.DROPPED)).select_related("roadmap")):
+        event(f"milestone-{m.pk}", "🏁 " + m.title, reverse("work:roadmap", args=[m.roadmap_id]) + f"?item={m.pk}",
+              [f"DTSTART;VALUE=DATE:{m.end_date:%Y%m%d}", f"DTEND;VALUE=DATE:{m.end_date + timedelta(days=1):%Y%m%d}"],
+              alarm="-PT15H", description=m.roadmap.title)
     lines.append("END:VCALENDAR")
     return "\r\n".join(lines) + "\r\n"
 

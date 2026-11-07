@@ -3991,7 +3991,7 @@ a.wrd-wday:hover { background: var(--surface-hover); }
    ========================================================================== */
 .rmp-kbd { margin-left: 0.25rem; padding: 0 0.3rem; border-radius: 0.25rem; background: rgba(255,255,255,.18); font-size: 0.6875rem; font-family: inherit; }
 [data-health=""] { --h: var(--text-muted); } [data-health="on_track"] { --h: var(--status-good); }
-[data-health="at_risk"] { --h: var(--status-warn); } [data-health="off_track"] { --h: var(--status-critical); }
+[data-health="at_risk"] { --h: var(--status-warn); } [data-health="off_track"] { --h: var(--status-critical); } [data-health="slip"] { --h: #8b5cf6; }
 
 /* the list of roadmaps */
 .rmp-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr)); gap: 1rem; margin-top: 1.25rem; }
@@ -4081,6 +4081,16 @@ button.rmp-stat:hover { border-color: color-mix(in srgb, var(--h, var(--accent))
 .rmp-ring svg { width: 100%; height: 100%; rotate: -90deg; }
 .rmp-ring circle { fill: none; stroke-width: 5; stroke: var(--chart-track, var(--surface-sunken)); }
 .rmp-ring circle + circle { stroke: var(--c); stroke-linecap: round; stroke-dasharray: var(--p) 100; transition: stroke-dasharray .4s; }
+/* health: one card, a bar of how the pieces are going and a button for each (as Linear sums up projects) */
+.rmp-stat-health { gap: 0.375rem; min-width: 15rem; padding: 0.5rem 0.5rem 0.375rem; }
+.rmp-hbar { display: flex; gap: 2px; height: 6px; margin: 0 0.375rem; border-radius: 9999px; overflow: hidden; background: var(--border-soft); }
+.rmp-hbar i { flex: 0 1 0; min-width: 0; background: var(--h); }
+.rmp-hbtns { display: flex; gap: 0.125rem; }
+.rmp-hbtn { flex: 1; display: flex; flex-direction: column; align-items: flex-start; padding: 0.125rem 0.375rem; border-radius: 0.375rem; text-align: left; }
+.rmp-hbtn b { font-size: 1.125rem; font-weight: 700; line-height: 1.2; color: var(--h); }
+.rmp-hbtn small { font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; }
+.rmp-hbtn:hover { background: var(--surface-sunken); }
+.rmp-hbtn.is-on { background: color-mix(in srgb, var(--h) 13%, transparent); box-shadow: inset 0 0 0 1px var(--h); }
 .rmp-stat-next, .rmp-stat-pace { flex-direction: row; align-items: center; gap: 0.625rem; max-width: 18rem; }
 .rmp-stat-next > span:last-child, .rmp-stat-pace > span:last-child { display: flex; flex-direction: column; min-width: 0; }
 .rmp-stat-next b { font-size: 0.875rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -4369,6 +4379,33 @@ button.rmp-stat:hover { border-color: color-mix(in srgb, var(--h, var(--accent))
   .rmp-quads { grid-template-columns: minmax(0, 1fr); }
   .rmp-axes { grid-template-columns: minmax(0, 1fr); } .rmp-axis-y, .rmp-axis-x { display: none; }
   .rmp-fields { grid-template-columns: minmax(0, 1fr); gap: 0.25rem; } .rmp-fields dt { padding-top: 0.5rem; }
+}
+/* the saved plan: where each piece was meant to be, as a dashed outline under it */
+.rmp-ghost { position: absolute; top: 4px; height: 32px; border-radius: 0.5rem; border: 1.5px dashed color-mix(in srgb, #8b5cf6 70%, transparent);
+  background: color-mix(in srgb, #8b5cf6 6%, transparent); pointer-events: auto; z-index: 0; }
+.rmp-ghost.is-ms { top: 10px; width: 20px; height: 20px; margin-left: -10px; rotate: 45deg; border-radius: 3px; }
+.rmp-plan { display: flex; align-items: center; gap: 0.3125rem; flex-basis: 100%; font-size: 0.75rem; color: var(--text-muted); }
+.rmp-plan svg { width: 0.875rem; height: 0.875rem; flex: none; }
+.rmp-plan.is-warn { color: #7c3aed; }
+/* dragging a bar to another lane: the lane it would land in */
+.rmp-lane.is-target .rmp-lane-in { background: color-mix(in srgb, var(--accent) 16%, var(--surface-raised)); box-shadow: inset 3px 0 0 var(--accent); }
+.rmp-row.is-target .rmp-track { background: color-mix(in srgb, var(--accent) 7%, transparent); }
+.rmp-bar.is-dragging, .rmp-ms.is-dragging { transition: none; }
+.rmp-blocks.is-warn { display: flex; flex-wrap: wrap; align-items: center; gap: 0.375rem; margin-top: 0.25rem; color: var(--status-critical); }
+.rmp-blocks.is-warn svg { width: 0.875rem; height: 0.875rem; }
+.rmp-going-line .rmp-link { margin-left: 0.25rem; white-space: nowrap; }
+/* the list: several chosen at once */
+.rmp-pick { width: 2.25rem; padding-left: 0.875rem !important; padding-right: 0 !important; }
+.rmp-table th.rmp-pick { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+.rmp-pick input { width: 1rem; height: 1rem; accent-color: var(--accent); cursor: pointer; vertical-align: middle; }
+.rmp-table tr.is-picked { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.rmp-bulk { position: sticky; top: 0; z-index: 3; display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem;
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface-raised)); border-bottom: 1px solid var(--border); }
+.rmp-bulk > b { font-size: 0.8125rem; margin-right: 0.25rem; }
+.rmp-bulk .form-input { width: auto; flex: 0 1 auto; }
+.rmp-bulk .is-danger { color: var(--status-critical); }
+@media print {
+  .rmp-bulk, .rmp-pick, .rmp-ghost { display: none !important; }
 }
 @media print {
   .rmp-head-actions, .rmp-bar-row, .rmp-hint, .rmp-side, .rmp-side-back, .rmp-lane-add, .rmp-nodate, .rmp-glance button.rmp-stat:not(.rmp-stat-next) { display: none !important; }

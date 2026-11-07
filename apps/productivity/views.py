@@ -22,14 +22,14 @@ from django.views.decorators.http import require_POST
 
 from apps.trash.undo import delete_with_undo
 
-from . import cards, dev, diagrams, exam, jobs, linked, reports, services
+from . import cards, dev, diagrams, exam, jobs, linked, reports, roadmap, services
 from .api import card_json, entry_json
 from .access import can_use, work_required
 from .forms import DeckForm, EntryForm, GoalForm, HabitForm, LearningForm, ProjectForm, SettingsForm, SnippetForm, SprintForm, TagForm, TaskForm
 from .models import (
     ExamSubject,
     Card, Color, Deck, Diagram, DiagramKind, DiagramVersion, Goal, GoalStatus, Habit, JournalEntry, Language, LearningItem, LearningKind, LearningStatus, LearningUnit, KIND_ICONS, Note, NoteCategory, Priority, Project, SavedView, Snippet, Sprint, TaskKind, TaskTemplate,
-    Status, Tag, Task, TimeEntry, WorkSettings, DRAG_KINDS, VISUAL_KINDS,
+    RoadmapItem, RoadmapItemKind, RoadmapStatus, Status, Tag, Task, TimeEntry, WorkSettings, DRAG_KINDS, VISUAL_KINDS,
 )
 
 ROW_RELATED = ("tags", "checklist", "blocked_by", "subtasks")   # what a task row shows; fetched only for the rows on screen
@@ -331,6 +331,7 @@ def today_view(request):
         "suggest": Task.objects.filter(owner=user, status__in=[Status.TODO, Status.BACKLOG], my_day__isnull=True, due_date__isnull=True).order_by("-priority", "order")[:5],
         "cards_due": cards.due_count(user, today) if Deck.objects.filter(owner=user, is_archived=False).exists() else 0,
         "job_coming": jobs.coming_up(user, today),           # interviews this week, job follow-ups due (the job search)
+        "roadmap": roadmap.attention(user, today),            # milestones in the next two weeks, pieces of work late or at risk
         # pull requests waiting on code review for days: a nudge to chase the reviewer
         "left_off": Task.objects.filter(owner=user, status__in=[Status.DOING, Status.TODO]).exclude(left_off="").order_by("-updated_at")[:3],
         "stuck_reviews": list(Task.objects.filter(owner=user, status=Status.REVIEW, updated_at__lt=timezone.now() - timedelta(days=REVIEW_NUDGE_DAYS))
@@ -636,6 +637,7 @@ def project_view(request, pk):
         "goals": services.with_progress(project.goals.filter(status=GoalStatus.ACTIVE)),
         "notes": Note.objects.filter(owner=user, project=project, is_archived=False, is_template=False)[:10],
         "diagrams": Diagram.objects.filter(owner=user, project=project, is_archived=False).only("pk", "title", "kind", "updated_at")[:8],
+        "roadmap_items": roadmap.linked(project.roadmap_items.all(), today),
         "today": today, "burnup": _burnup(project, today),
         "unbilled": TimeEntry.objects.filter(owner=user, project=project, billable=True, invoiced_at__isnull=True, ended_at__isnull=False).exists(),
     })
@@ -1803,7 +1805,7 @@ def goal_view(request, pk):
     return render_work(request, "work/goal.html", {
         "goal": goal, "steps": goal.steps.all(), "open_tasks": open_tasks, "done_tasks": done_tasks, "today": today,
         "spent": spent, "days_left": goal.days_left(today),
-        "learning": goal.learning.all()[:10],
+        "learning": goal.learning.all()[:10], "roadmap_items": roadmap.linked(goal.roadmap_items.all(), today),
     })
 
 
@@ -1916,6 +1918,11 @@ def calendar_view(request):
     exams = {}                           # exam days (Exam notes)
     for x in ExamSubject.objects.filter(owner=user, exam_date__gte=first_cell, exam_date__lte=last_cell):
         exams.setdefault(x.exam_date, []).append(x)
+    milestones = {}                      # roadmap milestones, on their day
+    for m in (RoadmapItem.objects.filter(roadmap__owner=user, roadmap__is_archived=False, kind=RoadmapItemKind.MILESTONE,
+                                         end_date__gte=first_cell, end_date__lte=last_cell).exclude(status=RoadmapStatus.DROPPED).select_related("roadmap")):
+        m.url = roadmap.item_url(m)
+        milestones.setdefault(m.end_date, []).append(m)
     interviews = {}                      # the job search's interview rounds, on their day
     for r in JobRound.objects.filter(application__owner=user, at__gte=lo, at__lt=hi).select_related("application").order_by("at"):
         interviews.setdefault(timezone.localtime(r.at).date(), []).append(r)
@@ -1925,6 +1932,7 @@ def calendar_view(request):
         v = secs.get(day, 0)
         days.append({"date": day, "secs": v, "level": 0 if not v else min(4, 1 + int(4 * v / (peak + 1))),
                      "tasks": due.get(day, []), "done": done.get(day, 0), "mood": moods.get(day), "interviews": interviews.get(day, []), "exams": exams.get(day, []),
+                     "milestones": milestones.get(day, []),
                      "in_month": day.month == month.month, "today": day == today, "work": s.is_work_day(day)})
         day += timedelta(days=1)
     prev = (month - timedelta(days=1)).replace(day=1)

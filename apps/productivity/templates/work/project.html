@@ -62,6 +62,7 @@
       <ul class="wg-mini">{% for g in goals %}<li><a href="{% url 'work:goal' g.pk %}" data-color="{{ g.color }}"><span class="wg-mini-top"><span class="truncate">{{ g.title }}</span><b class="num">{{ g.pct }}%</b></span><span class="wg-bar"><i style="width: {{ g.pct }}%"></i></span></a></li>{% endfor %}</ul>
     </section>
     {% endif %}
+    {% include "work/partials/roadmap_linked.html" %}
     <section class="card">
       <header class="card-header"><h2 class="card-title">{% translate "Recent time" %}</h2><a href="{% url 'work:reports' %}" class="btn btn-ghost btn-sm">{% translate "Reports" %}</a></header>
       {% if entries %}<ul class="we-list">{% for e in entries %}{% include "work/partials/entry_row.html" %}{% endfor %}</ul>{% else %}<p class="wd-muted">{% translate "No time tracked on this project yet." %}</p>{% endif %}

@@ -5,6 +5,9 @@
    - List: every piece of work, sorted by any column;
    - Priorities: value against effort — quick wins, big bets, fill-ins, time sinks.
    The side panel edits one piece of work: its tasks, its updates and how it's going.
+   Forgiving, as Linear and Asana are: a move can be undone (the toast's button, or
+   Ctrl+Z), what waits on a piece of work can be pushed along when it slips, and a
+   saved plan (a baseline) shows how far each piece has moved since.
    Every change is saved at once (Work.api); the server answers with the item as it
    now is (its progress, health and finish date worked out again), which replaces ours. */
 (function () {
@@ -46,19 +49,20 @@
         adding: false, draft: { title: "", lane: "", kind: "item", start: "", end: "" },
         lanesOpen: false, newLane: "", taskText: "", search: "", found: [], searching: false, linkOpen: false,
         upHealth: "", upText: "", descPreview: true, dragId: null, dragOver: "", texts: TEXT,
+        undos: [], picked: {}, lastPick: null, dragLane: "", compare: saved.compare !== false, fSlip: false,
 
         init: function () {
           var self = this;
-          ["view", "zoom", "boardBy", "hideDone", "collapsed"].forEach(function (k) { self.$watch(k, function () { self.remember(); }); });
+          ["view", "zoom", "boardBy", "hideDone", "collapsed", "compare"].forEach(function (k) { self.$watch(k, function () { self.remember(); }); });
           var asked = new URLSearchParams(location.search).get("item");
           if (asked) this.open(+asked);
           this.$nextTick(function () { self.goToday(true); });
           this.$watch("zoom", function () { self.$nextTick(function () { self.goToday(true); }); });
-          this.$watch("view", function (v) { if (v === "timeline") self.$nextTick(function () { self.goToday(true); }); });
+          this.$watch("view", function (v) { self.picked = {}; if (v === "timeline") self.$nextTick(function () { self.goToday(true); }); });
           window.addEventListener("keydown", function (e) { self.key(e); });
           window.addEventListener("popstate", function () { var id = +new URLSearchParams(location.search).get("item"); if (id) self.open(id, true); else self.sel = null; });
         },
-        remember: function () { keep(KEY + "ui", { view: this.view, zoom: this.zoom, boardBy: this.boardBy, hideDone: this.hideDone, collapsed: this.collapsed }); },
+        remember: function () { keep(KEY + "ui", { view: this.view, zoom: this.zoom, boardBy: this.boardBy, hideDone: this.hideDone, collapsed: this.collapsed, compare: this.compare }); },
 
         /* ── Saving ─────────────────────────────────────────────── */
         post: function (url, data) {
@@ -76,16 +80,73 @@
           var i = this.items.findIndex(function (x) { return x.id === item.id; });
           if (i >= 0) this.items.splice(i, 1, item); else this.items.push(item);
         },
-        save: function (it, fields) {
-          var self = this, before = JSON.parse(JSON.stringify(it));
-          Object.keys(fields).forEach(function (k) { if (k !== "deps") it[k] = fields[k]; });   // shown at once
+        /* opts.undo: a message for a toast with an Undo button (drags and drops: easy to do by mistake) */
+        save: function (it, fields, opts) {
+          var self = this, before = JSON.parse(JSON.stringify(it)), was = {};
+          Object.keys(fields).forEach(function (k) { was[k] = before[k]; if (k !== "deps") it[k] = fields[k]; });   // shown at once
           var data = Object.assign({ action: "save" }, fields);
           if (Array.isArray(data.deps)) data.deps = data.deps.join(",");
           ["lane", "goal", "project", "progress", "impact", "effort"].forEach(function (k) { if (k in data && data[k] == null) data[k] = ""; });
           return this.post(this.itemUrl(it.id), data).then(function (res) {
             if (res.ok && res.item) self.put(res.item);
             else if (!res.queued) self.put(before);
+            if (res.ok && !(opts && opts.quiet)) {
+              var entry = self.remember_undo([[it.id, was]]);
+              if (opts && opts.undo) self.undoToast(opts.undo, entry);
+              var now = self.item(it.id);
+              if (now && ("end" in fields || "start" in fields)) self.checkWaiting(now);
+              if (now && fields.status === "done" && now.tasks.open) {
+                toast(now.tasks.open === 1 ? t("openLeft1") : t("openLeft", { n: now.tasks.open }), "warn", { label: t("finishThem"), run: function () { self.closeTasks(now); } });
+              }
+            }
             return res;
+          });
+        },
+        /* ── Undo ───────────────────────────────────────────────── */
+        remember_undo: function (steps) {
+          var entry = { steps: steps };
+          this.undos.push(entry); if (this.undos.length > 30) this.undos.shift();
+          return entry;
+        },
+        undoToast: function (message, entry) {
+          var self = this;
+          toast(message, "good", { label: t("undo"), run: function () { self.undo(entry); } });
+        },
+        undo: function (entry) {
+          var self = this, i = entry ? this.undos.indexOf(entry) : this.undos.length - 1;
+          if (i < 0) { if (!entry) toast(t("nothingToUndo"), "warn"); return; }
+          entry = this.undos.splice(i, 1)[0];
+          entry.steps.forEach(function (st) { var it = self.item(st[0]); if (it) self.save(it, st[1], { quiet: true }); });
+          toast(t("undone"));
+        },
+        /* What waits on it now starts before it ends: offer to push it (and what waits on that) later. */
+        waitingLate: function (it) {
+          if (!it.end || it.status === "dropped") return [];
+          return this.items.filter(function (x) { return x.deps.indexOf(it.id) >= 0 && x.end && x.status !== "done" && x.status !== "dropped" && (x.start || x.end) <= it.end; });
+        },
+        checkWaiting: function (it) {
+          var self = this, late = this.waitingLate(it);
+          if (!late.length) return;
+          toast(late.length === 1 ? t("waiterLate1", { title: late[0].title }) : t("waitersLate", { n: late.length }), "warn",
+                { label: t("pushThem"), run: function () { self.pushWaiting(it); } });
+        },
+        pushWaiting: function (it) {
+          var self = this;
+          this.post(this.itemUrl(it.id), { action: "push" }).then(function (res) {
+            if (!res.ok || !res.items) return;
+            res.items.forEach(function (x) { self.put(x); });
+            var steps = Object.keys(res.before).map(function (id) { return [+id, { start: res.before[id][0], end: res.before[id][1] }]; });
+            if (!steps.length) return;
+            self.undoToast(steps.length === 1 ? t("pushed1") : t("pushed", { n: steps.length }), self.remember_undo(steps));
+          });
+        },
+        closeTasks: function (it) {
+          var self = this;
+          this.post(this.itemUrl(it.id), { action: "tasks_close" }).then(function (res) {
+            if (!res.ok) return;
+            self.put(res.item);
+            if (self.sel === it.id) self.detail.tasks.forEach(function (tk) { tk.done = true; });
+            toast(t("tasksClosed", { n: res.count }));
           });
         },
         stateText: function () { return this.state === "saving" ? t("saving") : this.state === "error" ? t("notSaved") : t("saved"); },
@@ -113,8 +174,8 @@
         colorOf: function (it) { var l = this.lane(it.lane); return it.color || (l ? l.color : "slate"); },
         item: function (id) { return this.items.find(function (x) { return x.id === id; }) || null; },
         get current() { return this.sel ? this.item(this.sel) : null; },
-        get filtering() { return !!(this.q || this.fLane || this.fStatus || this.fHealth); },
-        clearFilters: function () { this.q = ""; this.fLane = ""; this.fStatus = ""; this.fHealth = ""; },
+        get filtering() { return !!(this.q || this.fLane || this.fStatus || this.fHealth || this.fSlip); },
+        clearFilters: function () { this.q = ""; this.fLane = ""; this.fStatus = ""; this.fHealth = ""; this.fSlip = false; },
         get shown() {
           var q = this.q.trim().toLowerCase(), self = this;
           return this.items.filter(function (it) {
@@ -123,6 +184,7 @@
             if (self.fLane && String(it.lane || "none") !== self.fLane) return false;
             if (self.fStatus && it.status !== self.fStatus) return false;
             if (self.fHealth && self.health(it) !== self.fHealth) return false;
+            if (self.fSlip && !(self.slip(it) > 0)) return false;
             return true;
           });
         },
@@ -136,6 +198,7 @@
             count: live.length, done: live.filter(function (i) { return i.status === "done"; }).length,
             active: live.filter(function (i) { return i.status === "active"; }).length,
             minutes: this.items.reduce(function (a, i) { return a + (i.minutes || 0); }, 0), next: next,
+            slipped: live.filter(function (i) { return i.status !== "done" && self.slip(i) > 0; }).length,
             nextIn: next ? dayOf(next.end) - this.today : null,
           });
         },
@@ -172,6 +235,37 @@
           return it.deps.map(function (id) { return self.item(id); }).filter(function (dep) { return dep && dep.end && dep.end >= it.start && dep.status !== "done"; });
         },
         conflictText: function (dep) { return t("conflict", { title: dep.title }); },
+        /* the saved plan */
+        slip: function (it) { return it.planEnd && it.end ? dayOf(it.end) - dayOf(it.planEnd) : null; },
+        slipText: function (it) {
+          var n = this.slip(it);
+          if (n === null) return it.end && this.rm.baseline ? t("notPlanned") : "";
+          if (!n) return t("asPlanned");
+          if (n > 0) return n === 1 ? t("slipLater1") : t("slipLater", { n: n });
+          return n === -1 ? t("slipEarlier1") : t("slipEarlier", { n: -n });
+        },
+        planText: function (it) {
+          if (!it.planEnd) return "";
+          return t("planWhen", { when: it.kind === "milestone" || it.planStart === it.planEnd ? show(it.planEnd, true) : show(it.planStart) + " – " + show(it.planEnd, true) });
+        },
+        ghost: function (it) {
+          if (!this.compare || !this.rm.baseline || !it.planEnd || (it.planStart === it.start && it.planEnd === it.end)) return null;
+          var a = this.x(it.planStart || it.planEnd), b = this.x(it.planEnd) + this.ppd;
+          if (it.kind === "milestone") return "left:" + (b - this.ppd / 2) + "px";
+          return "left:" + a + "px;width:" + Math.max(b - a, 8) + "px";
+        },
+        planAction: function (action) {
+          var self = this;
+          if (action === "plan_forget" && !this.sure) {
+            FT.ask({ message: t("forgetPlan"), after: "gone" }).then(function (yes) { if (yes) { self.sure = true; self.planAction(action); self.sure = false; } });
+            return;
+          }
+          this.post(this.rmUrl(), { action: action }).then(function (res) {
+            if (!res.ok) return;
+            self.rm.baseline = res.baseline; self.items = res.items;
+            if (action === "plan_save") { self.compare = true; toast(t("planSaved")); } else { self.fSlip = false; toast(t("planForgot")); }
+          });
+        },
 
         /* ── Timeline ───────────────────────────────────────────── */
         get ppd() { return ZOOMS[this.zoom] || ZOOMS.month; },
@@ -269,7 +363,8 @@
           if (e.button > 0 || !it.end) return;
           if (e.pointerType === "touch" && edge === "move") return;     // a finger scrolls; its ends still resize
           e.preventDefault(); e.stopPropagation();
-          var self = this, el = e.target.closest(".rmp-bar, .rmp-ms"), x0 = e.clientX, n = 0, moved = false, ppd = this.ppd;
+          var self = this, el = e.target.closest(".rmp-bar, .rmp-ms"), x0 = e.clientX, y0 = e.clientY, n = 0, moved = false, ppd = this.ppd;
+          var laneNow = String(it.lane || "none"), laneTo = laneNow, body = el.closest(".rmp-tl-body");
           var span = dayOf(it.end) - dayOf(it.start || it.end), left0 = el.offsetLeft, w0 = el.offsetWidth;
           el.setPointerCapture(e.pointerId);
           var tip = d.createElement("span"); tip.className = "rmp-dragtip";
@@ -278,24 +373,41 @@
             if (edge === "move") { a += n; b += n; } else if (edge === "start") a += n; else b += n;
             return { a: a, b: b };
           }
+          function laneAt(y) {         // the lane under the pointer, from the rows' places
+            var top = body.getBoundingClientRect().top, yy = y - top, rows = self.rows, key = laneNow;
+            for (var i = 0; i < rows.length && rows[i].y <= yy; i++) key = rows[i].laneKey;
+            return key;
+          }
           function move(ev) {
-            var k = Math.round((ev.clientX - x0) / ppd);
+            var k = Math.round((ev.clientX - x0) / ppd), dy = ev.clientY - y0;
             if (edge === "start") k = Math.min(k, span); if (edge === "end") k = Math.max(k, -span);
-            if (Math.abs(ev.clientX - x0) > 3 && !moved) { moved = true; el.classList.add("is-dragging"); el.appendChild(tip); }
+            if ((Math.abs(ev.clientX - x0) > 3 || Math.abs(dy) > 3) && !moved) { moved = true; el.classList.add("is-dragging"); el.appendChild(tip); }
+            if (edge === "move" && moved) {
+              var to = Math.abs(dy) > ROW / 2 ? laneAt(ev.clientY) : laneNow;
+              el.style.transform = to !== laneNow ? "translateY(" + dy + "px)" : "";
+              if (to !== laneTo) { laneTo = to; self.dragLane = to !== laneNow ? to : ""; label(); }
+            }
             if (k === n) return; n = k;
             if (edge === "move" || edge === "start") el.style.left = (left0 + n * ppd) + "px";
             if (edge === "start") el.style.width = (w0 - n * ppd) + "px";
             if (edge === "end") el.style.width = (w0 + n * ppd) + "px";
-            var w = where(); tip.textContent = it.kind === "milestone" ? show(isoOf(w.b)) : show(isoOf(w.a)) + " – " + show(isoOf(w.b));
+            label();
+          }
+          function label() {
+            var w = where(), l = laneTo !== laneNow ? (laneTo === "none" ? t("noLane") : (self.lane(+laneTo) || {}).name) : "";
+            tip.textContent = (it.kind === "milestone" ? show(isoOf(w.b)) : show(isoOf(w.a)) + " – " + show(isoOf(w.b))) + (l ? " → " + l : "");
           }
           function up() {
             el.removeEventListener("pointermove", move); el.removeEventListener("pointerup", up); el.removeEventListener("pointercancel", up);
-            el.classList.remove("is-dragging"); tip.remove(); el.style.left = ""; el.style.width = "";
+            el.classList.remove("is-dragging"); tip.remove(); el.style.left = ""; el.style.width = ""; el.style.transform = ""; self.dragLane = "";
             if (!moved) { self.open(it.id); return; }
             self.swallow = true; setTimeout(function () { self.swallow = false; }, 0);
-            if (!n) return;
-            var w = where();
-            self.save(it, it.kind === "milestone" ? { end: isoOf(w.b) } : { start: isoOf(w.a), end: isoOf(w.b) });
+            var fields = {}, w = where();
+            if (n) fields = it.kind === "milestone" ? { end: isoOf(w.b) } : { start: isoOf(w.a), end: isoOf(w.b) };
+            if (laneTo !== laneNow) fields.lane = laneTo === "none" ? null : +laneTo;
+            if (!Object.keys(fields).length) return;
+            var l = laneTo !== laneNow ? (laneTo === "none" ? t("noLane") : (self.lane(+laneTo) || {}).name) : "";
+            self.save(it, fields, { undo: t("nowWhen", { title: it.title, when: (n ? self.when(Object.assign({}, it, fields)) : "") + (n && l ? " · " : "") + l }) });
           }
           el.addEventListener("pointermove", move); el.addEventListener("pointerup", up); el.addEventListener("pointercancel", up);
         },
@@ -345,9 +457,8 @@
             if (!it.impact || (it.impact >= 3) !== (col.v >= 3)) fields.impact = col.v;
             if (!it.effort || (it.effort >= 3) !== (col.e >= 3)) fields.effort = col.e;
           } else fields[this.boardBy === "horizon" ? "horizon" : "status"] = col.key;
-          var where = col.label;
-          this.save(it, fields);
-          if (col.key !== (this.boardBy === "horizon" ? it.horizon : it.status)) toast(t("moved", { where: where }));
+          var moved = col.v ? (fields.impact || fields.effort) : col.key !== (this.boardBy === "horizon" ? it.horizon : it.status);
+          this.save(it, fields, moved ? { undo: t("moved", { where: col.label }) } : null);
         },
 
         /* ── List ───────────────────────────────────────────────── */
@@ -364,6 +475,53 @@
             return i[k] == null ? -1 : i[k];
           };
           return this.shown.slice().sort(function (a, b) { var x = val(a), y = val(b); return (x < y ? -1 : x > y ? 1 : a.order - b.order) * dir; });
+        },
+
+        /* ── Several at once (the list's check boxes, as in Linear) ─ */
+        get pickedIds() { var p = this.picked; return this.items.filter(function (i) { return p[i.id]; }).map(function (i) { return i.id; }); },
+        get allPicked() { var p = this.picked, s = this.sorted; return s.length > 0 && s.every(function (i) { return p[i.id]; }); },
+        pick: function (it, e) {
+          var on = !this.picked[it.id], next = Object.assign({}, this.picked), list = this.sorted;
+          if (e && e.shiftKey && this.lastPick != null) {        // Shift: everything between
+            var a = list.findIndex(function (x) { return x.id === this.lastPick; }, this), b = list.indexOf(it);
+            if (a >= 0) { for (var i = Math.min(a, b); i <= Math.max(a, b); i++) next[list[i].id] = on; }
+          }
+          next[it.id] = on; this.picked = next; this.lastPick = it.id;
+        },
+        pickAll: function () {
+          var on = !this.allPicked, next = {};
+          if (on) this.sorted.forEach(function (i) { next[i.id] = true; });
+          this.picked = next;
+        },
+        bulk: function (fields) {
+          var self = this, ids = this.pickedIds;
+          if (!ids.length) return;
+          var steps = ids.map(function (id) { var it = self.item(id), was = {}; Object.keys(fields).forEach(function (k) { was[k] = it[k]; }); return [id, was]; });
+          var data = Object.assign({ action: "bulk", ids: ids.join(",") }, fields);
+          if ("lane" in data && data.lane == null) data.lane = "";
+          this.post(this.rmUrl(), data).then(function (res) {
+            if (!res.ok) return;
+            res.items.forEach(function (x) { self.put(x); });
+            self.undoToast(t("bulkDone", { n: res.items.length }), self.remember_undo(steps));
+          });
+        },
+        bulkDelete: function () {
+          var self = this, ids = this.pickedIds;
+          if (!ids.length) return;
+          FT.ask({ message: ids.length === 1 ? t("deleteItem", { title: this.item(ids[0]).title }) : t("bulkDelete", { n: ids.length }), danger: true, after: "gone" }).then(function (yes) {
+            if (!yes) return;
+            self.post(self.rmUrl(), { action: "bulk_delete", ids: ids.join(",") }).then(function (res) {
+              if (!res.ok) return;
+              self.items = self.items.filter(function (x) { return ids.indexOf(x.id) < 0; });
+              self.items.forEach(function (x) { x.deps = x.deps.filter(function (dd) { return ids.indexOf(dd) < 0; }); });
+              self.picked = {};
+              if (ids.indexOf(self.sel) >= 0) self.close();
+              toast(t("bulkDeleted", { n: res.count }), "good", { label: t("undo"), run: function () {
+                res.undo.reduce(function (p, u) { return p.then(function () { return Work.api(u, {}); }); }, Promise.resolve())   // one by one: links between them come back too
+                  .then(function () { location.reload(); });
+              } });
+            });
+          });
         },
 
         /* ── New pieces of work ────────────────────────────────── */
@@ -521,10 +679,14 @@
 
         /* ── Keys ───────────────────────────────────────────────── */
         key: function (e) {
+          if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && (e.key === "z" || e.key === "Z") && !typing(e) && !this.adding && !this.lanesOpen) {
+            e.preventDefault(); this.undo(); return;
+          }
           if (e.ctrlKey || e.metaKey || e.defaultPrevented) return;
           if (e.key === "Escape") {
             if (this.adding) { this.adding = false; e.preventDefault(); return; }
             if (this.lanesOpen) { this.lanesOpen = false; e.preventDefault(); return; }
+            if (!this.sel && this.pickedIds.length) { this.picked = {}; e.preventDefault(); return; }
             if (this.sel && !typing(e)) { this.close(); e.preventDefault(); }
             return;
           }

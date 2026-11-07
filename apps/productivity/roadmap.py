@@ -29,6 +29,7 @@ PACE_DAYS = 28          # the pace a piece of work's tasks are finished at is me
 BEHIND = 25             # this many points of progress behind the time gone by: at risk
 FINISHED = (RoadmapStatus.DONE, RoadmapStatus.DROPPED)
 MOMENTUM_WEEKS = 8
+SOON_DAYS = 14          # milestones this close show on Today
 
 
 # ── Starting points ──────────────────────────────────────────────────────────
@@ -84,7 +85,8 @@ def create(user, title, template="blank", color="", today=None):
 
 @transaction.atomic
 def duplicate(rm):
-    copy = Roadmap.objects.create(owner=rm.owner, title=(_("%(title)s (copy)") % {"title": rm.title})[:120], description=rm.description, color=rm.color)
+    copy = Roadmap.objects.create(owner=rm.owner, title=(_("%(title)s (copy)") % {"title": rm.title})[:120], description=rm.description, color=rm.color,
+                                  baseline_at=rm.baseline_at)
     lanes = {}
     for lane in rm.lanes.all():
         lanes[lane.pk] = RoadmapLane.objects.create(roadmap=copy, name=lane.name, color=lane.color, order=lane.order)
@@ -148,9 +150,10 @@ def forecast(s, today):
     return today + timedelta(days=math.ceil(s["open"] / (s["recent"] / PACE_DAYS)))
 
 
-def auto_health(item, progress, likely, today):
+def auto_health(item, progress, likely, today, known=True):
     """How it's going when nobody has said: off track once it's late, at risk when it won't make it at this pace
-    or it's well behind the time gone by, else on track once it has started."""
+    or it's well behind the time gone by (only when there's progress to go by: tasks, a goal, or a figure set
+    by hand — a piece nobody has measured yet isn't called behind), else on track once it has started."""
     if item.status in FINISHED or item.status == RoadmapStatus.IDEA or not item.end_date:
         return ""
     if item.end_date < today:
@@ -158,7 +161,7 @@ def auto_health(item, progress, likely, today):
     if likely and likely > item.end_date:
         return Health.AT_RISK
     start = item.start_date or item.end_date
-    if item.kind == RoadmapItemKind.ITEM and start < today:
+    if known and item.kind == RoadmapItemKind.ITEM and start < today:
         expected = 100 * (today - start).days / max((item.end_date - start).days, 1)
         if progress + BEHIND < expected:
             return Health.AT_RISK
@@ -174,12 +177,13 @@ def item_json(item, s, goals, today):
     likely = forecast(s, today) if item.status not in FINISHED else None
     return {
         "id": item.pk, "title": item.title, "description": item.description, "kind": item.kind, "status": item.status,
-        "horizon": item.horizon, "health": item.health, "auto": auto_health(item, pct, likely, today),
+        "horizon": item.horizon, "health": item.health, "auto": auto_health(item, pct, likely, today, known=source != "manual" or item.progress is not None),
         "lane": item.lane_id, "start": _iso(item.start_date), "end": _iso(item.end_date), "color": item.color,
         "progress": pct, "from": source, "manual": item.progress, "impact": item.impact, "effort": item.effort,
         "goal": item.goal_id, "project": item.project_id, "deps": sorted(d.pk for d in item.depends_on.all()),
         "tasks": {"done": s["done"], "total": s["total"], "open": s["open"]}, "minutes": s["minutes"],
         "likely": _iso(likely), "order": item.order, "done_at": item.completed_at.isoformat() if item.completed_at else "",
+        "planStart": _iso(item.plan_start), "planEnd": _iso(item.plan_end),
     }
 
 
@@ -240,13 +244,99 @@ def payload(rm, today):
     items = rm.items.select_related("lane").prefetch_related("depends_on")
     user = rm.owner
     return {
-        "roadmap": {"id": rm.pk, "title": rm.title, "description": rm.description, "color": rm.color, "archived": rm.is_archived},
+        "roadmap": {"id": rm.pk, "title": rm.title, "description": rm.description, "color": rm.color, "archived": rm.is_archived,
+                    "baseline": rm.baseline_at.isoformat() if rm.baseline_at else ""},
         "lanes": [lane_json(lane) for lane in rm.lanes.all()],
         "items": items_json(items, today),
         "goals": [{"id": g.pk, "title": g.title} for g in Goal.objects.filter(owner=user).exclude(status="dropped").order_by("title")],
         "projects": [{"id": p.pk, "name": p.name, "color": p.color} for p in Project.objects.filter(owner=user, is_archived=False)],
         "momentum": momentum(rm, today), "today": _iso(today),
     }
+
+
+# ── The saved plan (a baseline, as Jira Plans and MS Project keep one) ──────
+@transaction.atomic
+def save_plan(rm):
+    """Keep every piece of work's dates as they are now, to see later how far each one moved."""
+    for it in rm.items.all():
+        it.plan_start, it.plan_end = it.start_date, it.end_date
+        it.save(update_fields=["plan_start", "plan_end"])
+    rm.baseline_at = timezone.now()
+    rm.save(update_fields=["baseline_at", "updated_at"])
+
+
+@transaction.atomic
+def forget_plan(rm):
+    rm.items.update(plan_start=None, plan_end=None)
+    rm.baseline_at = None
+    rm.save(update_fields=["baseline_at", "updated_at"])
+
+
+# ── What waits on a piece of work moves with it (as Asana and Jira Plans do) ─
+def push_waiting(item):
+    """Push what waits on `item` (and what waits on those) later, just enough that each one starts
+    the day after everything it waits on ends; nothing finished or undated moves.
+    Returns {id: (old start, old end)} for each one moved; they're saved."""
+    by_id = {i.pk: i for i in item.roadmap.items.prefetch_related("depends_on")}
+    waits = defaultdict(list)                     # id → the ids waiting on it
+    for i in by_id.values():
+        for dep in i.depends_on.all():
+            waits[dep.pk].append(i.pk)
+    moved, todo, steps = {}, list(waits[item.pk]), 0
+    while todo and steps < 5000:                  # (no circles can be saved; the cap is only a guard)
+        steps += 1
+        it = by_id[todo.pop(0)]
+        if it.status in FINISHED or not it.end_date:
+            continue
+        ends = [by_id[d.pk].end_date for d in it.depends_on.all()
+                if d.pk in by_id and by_id[d.pk].end_date and by_id[d.pk].status not in FINISHED]
+        start = it.start_date or it.end_date
+        if not ends or start > max(ends):
+            continue
+        gap = max(ends) + timedelta(days=1) - start
+        moved.setdefault(it.pk, (it.start_date, it.end_date))
+        it.start_date = it.start_date + gap if it.start_date else None
+        it.end_date += gap
+        todo += waits[it.pk]
+    for pk in moved:
+        by_id[pk].save(update_fields=["start_date", "end_date", "updated_at"])
+    return {pk: by_id[pk] for pk in moved}, moved
+
+
+# ── Elsewhere in the app: Today, a goal's page, a project's page ─────────────
+def item_url(item):
+    return reverse("work:roadmap", args=[item.roadmap_id]) + f"?item={item.pk}"
+
+
+def attention(user, today):
+    """For Today: milestones in the next two weeks, and pieces of work that are late or at risk,
+    from the roadmaps in use."""
+    items = list(RoadmapItem.objects.filter(roadmap__owner=user, roadmap__is_archived=False).exclude(status__in=FINISHED)
+                 .select_related("roadmap").prefetch_related("depends_on"))
+    soon, trouble = [], []
+    if not items:
+        return {"soon": soon, "trouble": trouble, "count": 0}
+    rows = {r["id"]: r for r in items_json(items, today)}
+    for it in items:
+        r = rows[it.pk]
+        health = r["health"] or r["auto"]
+        if it.kind == RoadmapItemKind.MILESTONE and it.end_date and today <= it.end_date <= today + timedelta(days=SOON_DAYS):
+            soon.append({"item": it, "url": item_url(it), "days": (it.end_date - today).days})
+        elif health in (Health.AT_RISK, Health.OFF_TRACK) and it.status != RoadmapStatus.IDEA:
+            trouble.append({"item": it, "url": item_url(it), "health": health, "label": Health(health).label, "progress": r["progress"],
+                            "late": (today - it.end_date).days if it.end_date and it.end_date < today else 0})
+    soon.sort(key=lambda x: x["days"])
+    trouble.sort(key=lambda x: (x["health"] != Health.OFF_TRACK, x["item"].end_date or today))
+    return {"soon": soon[:4], "trouble": trouble[:4], "count": len(soon) + len(trouble)}
+
+
+def linked(qs, today):
+    """Pieces of work (from roadmaps in use) as rows for a goal's or a project's page."""
+    items = list(qs.filter(roadmap__is_archived=False).exclude(status=RoadmapStatus.DROPPED)
+                 .select_related("roadmap").prefetch_related("depends_on").order_by("status", "end_date"))
+    rows = {r["id"]: r for r in items_json(items, today)}
+    return [{"item": it, "url": item_url(it), "progress": rows[it.pk]["progress"], "health": rows[it.pk]["health"] or rows[it.pk]["auto"]}
+            for it in items]
 
 
 # ── Changes, checked ─────────────────────────────────────────────────────────
@@ -368,7 +458,7 @@ def detail(item):
 
 
 CSV_HEAD = ("Title", "Type", "Lane", "Status", "When", "Health", "Starts", "Ends", "Progress %", "Tasks done", "Tasks", "Hours tracked",
-            "Likely done", "Value", "Effort", "Goal", "Project", "Waits on", "Description")
+            "Likely done", "Value", "Effort", "Goal", "Project", "Waits on", "Planned start", "Planned end", "Description")
 
 
 def csv_rows(rm, today):
@@ -379,4 +469,5 @@ def csv_rows(rm, today):
         yield (it.title, it.get_kind_display(), it.lane.name if it.lane else "", it.get_status_display(), it.get_horizon_display(),
                Health(r["health"] or r["auto"]).label if (r["health"] or r["auto"]) else "", r["start"], r["end"], r["progress"],
                r["tasks"]["done"], r["tasks"]["total"], round(r["minutes"] / 60, 1), r["likely"], it.impact or "", it.effort or "",
-               it.goal.title if it.goal else "", it.project.name if it.project else "", ", ".join(d.title for d in it.depends_on.all()), it.description)
+               it.goal.title if it.goal else "", it.project.name if it.project else "", ", ".join(d.title for d in it.depends_on.all()),
+               _iso(it.plan_start), _iso(it.plan_end), it.description)

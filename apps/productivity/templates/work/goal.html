@@ -90,6 +90,7 @@
       <div class="wn-md wg-why" data-render-markdown="{{ goal.why }}"></div>
     </section>
     {% endif %}
+    {% include "work/partials/roadmap_linked.html" %}
     <section class="card">
       <header class="card-header"><h2 class="card-title">{% translate "Learning for this goal" %}</h2><a href="{% url 'work:learning_new' %}?goal={{ goal.pk }}" class="btn btn-ghost btn-sm">{% icon "plus" %}{% translate "Add" %}</a></header>
       {% if learning %}<ul class="wg-mini">{% for item in learning %}<li><a href="{% url 'work:learning_edit' item.pk %}"><span class="wg-mini-top"><span class="truncate">{{ item.title }}</span><b class="num">{{ item.percent }}%</b></span><span class="wg-bar is-learn"><i style="width: {{ item.percent }}%"></i></span></a></li>{% endfor %}</ul>

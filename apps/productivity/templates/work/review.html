@@ -66,6 +66,15 @@
     {% else %}<p class="wd-muted">{% translate "No goals yet." %} <a href="{% url 'work:goal_new' %}" class="wd-link">{% translate "Set one" %}</a></p>{% endif %}
   </section>
 
+  {% if d.roadmap_done %}
+  <section class="card">
+    <header class="card-header"><div><h2 class="card-title">{% icon "timeline" %}{% translate "Roadmap pieces finished" %}</h2>
+      {% if d.roadmap_updates %}<p class="card-subtitle">{% blocktranslate count counter=d.roadmap_updates %}{{ counter }} update written on how things went{% plural %}{{ counter }} updates written on how things went{% endblocktranslate %}</p>{% endif %}</div>
+      <a href="{% url 'work:roadmaps' %}" class="btn btn-ghost btn-sm">{% translate "All" %}</a></header>
+    <ul class="wv-list">{% for it in d.roadmap_done %}<li><a href="{% url 'work:roadmap' it.roadmap_id %}?item={{ it.pk }}">{% if it.kind == "milestone" %}🏁{% else %}✅{% endif %} {{ it.title }}</a><time>{{ it.roadmap.title }}</time></li>{% endfor %}</ul>
+  </section>
+  {% endif %}
+
   {% if d.practice.answers or d.diagrams %}
   <section class="card">
     <header class="card-header"><h2 class="card-title">{% translate "Practice & diagrams" %}</h2></header>

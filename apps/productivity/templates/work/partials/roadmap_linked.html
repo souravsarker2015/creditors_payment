@@ -1,0 +1,7 @@
+{% load i18n work %}{% if roadmap_items %}
+<section class="card">
+  <header class="card-header"><div><h2 class="card-title">{% icon "timeline" %}{% translate "On roadmaps" %}</h2><p class="card-subtitle">{% translate "The bigger pieces of work this is part of." %}</p></div></header>
+  <ul class="wg-mini">{% for r in roadmap_items %}<li><a href="{{ r.url }}"><span class="wg-mini-top"><span class="truncate">{% if r.health %}<i class="rmp-health" data-health="{{ r.health }}" aria-hidden="true"></i> {% endif %}{{ r.item.title }} <small class="wd-muted">· {{ r.item.roadmap.title }}</small></span>
+    <b class="num">{% if r.item.status == "done" %}✓{% else %}{{ r.progress }}%{% endif %}</b></span><span class="wg-bar"><i style="width: {{ r.progress }}%"></i></span></a></li>{% endfor %}</ul>
+</section>
+{% endif %}

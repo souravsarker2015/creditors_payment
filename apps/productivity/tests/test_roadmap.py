@@ -78,6 +78,9 @@ class HealthTests(Base):
         it.progress = 70
         it.save()
         self.assertEqual(self.row(it)["auto"], Health.ON_TRACK)
+        it.progress = None          # nothing measured yet (no tasks, no goal, nothing set): not called behind
+        it.save()
+        self.assertEqual(self.row(it)["auto"], Health.ON_TRACK)
 
     def test_the_pace_says_when_it_will_be_done(self):
         it = self.piece(status=RoadmapStatus.ACTIVE, start_date=self.today, end_date=self.today + timedelta(days=5))
@@ -247,3 +250,115 @@ class OnlyMineTests(Base):
         self.rm.title = "Zebra plan"
         self.rm.save()
         self.assertNotContains(self.client.get(reverse("work:roadmaps")), "Zebra plan")
+
+
+class PlanAndSlipTests(Base):
+    """The saved plan (a baseline), what waits on a piece being pushed along, and several changed at once."""
+
+    def test_saving_the_plan_shows_how_far_each_piece_moved(self):
+        it = self.piece(start_date=self.today, end_date=self.today + timedelta(days=9))
+        r = self.rm_api(action="plan_save").json()
+        self.assertTrue(r["baseline"])
+        self.assertEqual(r["items"][0]["planEnd"], (self.today + timedelta(days=9)).isoformat())
+        self.api(it, action="save", end=(self.today + timedelta(days=14)).isoformat())
+        row = self.row(it)
+        self.assertEqual((row["planEnd"], row["end"]), ((self.today + timedelta(days=9)).isoformat(), (self.today + timedelta(days=14)).isoformat()))
+        csv = self.client.get(reverse("work:roadmap_export", args=[self.rm.pk])).content.decode("utf-8-sig")
+        self.assertIn("Planned end", csv)
+        self.assertIn((self.today + timedelta(days=9)).isoformat(), csv)
+        self.rm.refresh_from_db()
+        copy = rmp.duplicate(self.rm)
+        self.assertIsNotNone(copy.baseline_at)
+        self.assertEqual(copy.items.get().plan_end, self.today + timedelta(days=9))
+        self.rm_api(action="plan_forget")
+        self.rm.refresh_from_db()
+        it.refresh_from_db()
+        self.assertEqual((self.rm.baseline_at, it.plan_end), (None, None))
+
+    def test_what_waits_on_it_is_pushed_after_it_in_a_chain(self):
+        d = lambda n: self.today + timedelta(days=n)       # noqa: E731
+        a = self.piece(title="A", start_date=d(0), end_date=d(10))
+        b = self.piece(title="B", start_date=d(5), end_date=d(8))        # starts before A ends
+        c = self.piece(title="C", start_date=d(9), end_date=d(12))       # starts before B will end
+        done = self.piece(title="Done", start_date=d(2), end_date=d(3), status=RoadmapStatus.DONE)
+        far = self.piece(title="Far", start_date=d(40), end_date=d(45))  # already well after
+        b.depends_on.add(a)
+        c.depends_on.add(b)
+        done.depends_on.add(a)
+        far.depends_on.add(a)
+        r = self.api(a, action="push").json()
+        self.assertEqual(sorted(i["title"] for i in r["items"]), ["B", "C"])
+        self.assertEqual(r["before"][str(b.pk)], [d(5).isoformat(), d(8).isoformat()])
+        for x in (b, c, done, far):
+            x.refresh_from_db()
+        self.assertEqual((b.start_date, b.end_date), (d(11), d(14)))
+        self.assertEqual((c.start_date, c.end_date), (d(15), d(18)))
+        self.assertEqual((done.start_date, far.start_date), (d(2), d(40)))
+
+    def test_several_at_once_and_only_on_this_roadmap(self):
+        a, b = self.piece(title="A"), self.piece(title="B")
+        other = Roadmap.objects.create(owner=self.me, title="Other")
+        elsewhere = RoadmapItem.objects.create(roadmap=other, title="Elsewhere")
+        r = self.rm_api(action="bulk", ids=f"{a.pk},{b.pk},{elsewhere.pk}", status="active", lane="").json()
+        self.assertEqual(sorted(i["title"] for i in r["items"]), ["A", "B"])
+        for x in (a, b, elsewhere):
+            x.refresh_from_db()
+        self.assertEqual((a.status, a.horizon, a.lane, b.status), ("active", "now", None, "active"))
+        self.assertEqual(elsewhere.status, "planned")
+        r = self.rm_api(action="bulk_delete", ids=f"{a.pk},{b.pk}").json()
+        self.assertEqual((r["count"], len(r["undo"])), (2, 2))
+        self.assertFalse(RoadmapItem.objects.filter(pk__in=[a.pk, b.pk]).exists())
+        for u in r["undo"]:
+            self.client.post(u)
+        self.assertEqual(RoadmapItem.objects.filter(pk__in=[a.pk, b.pk]).count(), 2)
+        self.assertEqual(self.rm_api(action="bulk", ids="", status="done").status_code, 400)
+
+    def test_finishing_it_can_finish_its_open_tasks(self):
+        it = self.piece()
+        for title in ("a", "b"):
+            Task.objects.create(owner=self.me, title=title, roadmap_item=it)
+        r = self.api(it, action="tasks_close").json()
+        self.assertEqual((r["count"], r["item"]["tasks"]["open"], r["item"]["progress"]), (2, 0, 100))
+
+
+class ElsewhereTests(Base):
+    """Roadmaps show up where the rest of the day's work is: Today, goals, projects, the review and the calendar."""
+
+    def test_today_shows_milestones_coming_and_work_in_trouble(self):
+        self.piece(title="Launch day", kind="milestone", start_date=self.today + timedelta(days=3), end_date=self.today + timedelta(days=3))
+        self.piece(title="Late one", status=RoadmapStatus.ACTIVE, start_date=self.today - timedelta(days=20), end_date=self.today - timedelta(days=2))
+        self.piece(title="Fine one", status=RoadmapStatus.ACTIVE, start_date=self.today, end_date=self.today + timedelta(days=30))
+        self.piece(title="Far milestone", kind="milestone", start_date=self.today + timedelta(days=60), end_date=self.today + timedelta(days=60))
+        html = self.client.get(reverse("work:today")).content.decode()
+        self.assertIn("Launch day", html)
+        self.assertIn("in 3 days", html)
+        self.assertIn("Late one", html)
+        self.assertIn("2 days late", html)
+        self.assertNotIn("Fine one", html)
+        self.assertNotIn("Far milestone", html)
+        self.rm.is_archived = True
+        self.rm.save()
+        self.assertNotIn("Launch day", self.client.get(reverse("work:today")).content.decode())
+
+    def test_goal_and_project_pages_list_their_pieces(self):
+        from ..models import Project
+
+        g = Goal.objects.create(owner=self.me, title="Ship v2")
+        p = Project.objects.create(owner=self.me, name="App")
+        self.piece(title="Payments", goal=g, project=p)
+        self.assertContains(self.client.get(reverse("work:goal", args=[g.pk])), "Payments")
+        self.assertContains(self.client.get(reverse("work:project", args=[p.pk])), "On roadmaps")
+
+    def test_review_calendar_and_feed(self):
+        from ..models import WorkSettings
+
+        it = self.piece(title="Payments", start_date=self.today, end_date=self.today + timedelta(days=4))
+        self.api(it, action="save", status="done")
+        html = self.client.get(reverse("work:review") + "?preset=week").content.decode()
+        self.assertIn("Roadmap pieces finished", html)
+        self.assertIn("Payments", html)
+        self.assertIn("Payments (Product)", self.client.get(reverse("work:review") + "?preset=week&export=md").content.decode())
+        self.piece(title="Beta out", kind="milestone", start_date=self.today, end_date=self.today)
+        self.assertContains(self.client.get(reverse("work:calendar")), "Beta out")
+        token = WorkSettings.for_user(self.me).new_feed_token()
+        self.assertIn("Beta out", self.client.get(reverse("work:feed", args=[token])).content.decode())

@@ -31954,3 +31954,185 @@ msgstr "%(n)sটি কাজ"
 
 msgid "1 item"
 msgstr "১টি কাজ"
+
+msgid ""
+"Drag to move, also up or down to another lane · drag the ends to change the "
+"dates · double-click empty space to add"
+msgstr ""
+"টেনে সরান, উপরে-নিচে টেনে অন্য লেনে নিন · তারিখ বদলাতে দুই প্রান্ত টানুন · "
+"নতুন যোগ করতে ফাঁকা জায়গায় ডাবল-ক্লিক করুন"
+
+msgid "Undone"
+msgstr "আগের মতো করা হলো"
+
+msgid "Nothing to undo."
+msgstr "ফেরানোর মতো কিছু নেই।"
+
+msgid "“%(title)s”: %(when)s"
+msgstr "“%(title)s”: %(when)s"
+
+msgid "“%(title)s” waits on this and now starts before it ends."
+msgstr ""
+"“%(title)s” এটির অপেক্ষায় আছে, কিন্তু এখন এটি শেষ হওয়ার আগেই শুরু হচ্ছে।"
+
+msgid "%(n)s pieces wait on this and now start before it ends."
+msgstr ""
+"%(n)sটি কাজ এটির অপেক্ষায় আছে, কিন্তু এখন এটি শেষ হওয়ার আগেই শুরু হচ্ছে।"
+
+msgid "Push them later"
+msgstr "সেগুলো পিছিয়ে দিন"
+
+msgid "1 piece moved to start after what it waits on."
+msgstr "১টি কাজ সরানো হলো, যাতে যার অপেক্ষায় আছে তার পরে শুরু হয়।"
+
+msgid "%(n)s pieces moved to start after what they wait on."
+msgstr ""
+"%(n)sটি কাজ সরানো হলো, যাতে যেগুলোর অপেক্ষায় আছে সেগুলোর পরে শুরু হয়।"
+
+msgid "1 of its tasks is still open."
+msgstr "এর ১টি টাস্ক এখনও বাকি।"
+
+msgid "%(n)s of its tasks are still open."
+msgstr "এর %(n)sটি টাস্ক এখনও বাকি।"
+
+msgid "Mark them done"
+msgstr "সেগুলোও সম্পন্ন করুন"
+
+msgid "%(n)s tasks marked done"
+msgstr "%(n)sটি টাস্ক সম্পন্ন হলো"
+
+msgid "Plan saved. From now on you'll see how far each piece moves from it."
+msgstr ""
+"পরিকল্পনা সংরক্ষিত হলো। এখন থেকে দেখবেন প্রতিটি কাজ এর থেকে কতটা সরে গেল।"
+
+msgid "The saved plan is forgotten."
+msgstr "সংরক্ষিত পরিকল্পনা মুছে ফেলা হলো।"
+
+msgid "Forget the saved plan? The dates stay as they are."
+msgstr "সংরক্ষিত পরিকল্পনা মুছে ফেলবেন? তারিখগুলো যেমন আছে তেমনই থাকবে।"
+
+msgid "Planned: %(when)s"
+msgstr "পরিকল্পনা: %(when)s"
+
+msgid "1 day later than planned"
+msgstr "পরিকল্পনার চেয়ে ১ দিন দেরিতে"
+
+msgid "%(n)s days later than planned"
+msgstr "পরিকল্পনার চেয়ে %(n)s দিন দেরিতে"
+
+msgid "1 day earlier than planned"
+msgstr "পরিকল্পনার চেয়ে ১ দিন আগে"
+
+msgid "%(n)s days earlier than planned"
+msgstr "পরিকল্পনার চেয়ে %(n)s দিন আগে"
+
+msgid "As planned"
+msgstr "পরিকল্পনা মতো"
+
+msgid "Added after the plan was saved"
+msgstr "পরিকল্পনা সংরক্ষণের পরে যোগ করা"
+
+msgid "%(n)s chosen"
+msgstr "%(n)sটি বাছাই করা"
+
+msgid "%(n)s changed"
+msgstr "%(n)sটি বদলানো হলো"
+
+msgid "%(n)s deleted."
+msgstr "%(n)sটি মুছে ফেলা হলো।"
+
+msgid "Delete these %(n)s pieces of work? Their tasks stay."
+msgstr "এই %(n)sটি কাজ মুছে ফেলবেন? এদের টাস্কগুলো থেকে যাবে।"
+
+msgid "Choose something first."
+msgstr "আগে কিছু বাছাই করুন।"
+
+msgid "Roadmap pieces finished"
+msgstr "রোডম্যাপের যে কাজগুলো শেষ হলো"
+
+msgid "Save the plan again, as it is now"
+msgstr "পরিকল্পনাটি আবার সংরক্ষণ করুন, এখন যেমন আছে"
+
+msgid "Save the plan, to compare against later"
+msgstr "পরিকল্পনাটি সংরক্ষণ করুন, পরে মিলিয়ে দেখার জন্য"
+
+msgid "Forget the saved plan"
+msgstr "সংরক্ষিত পরিকল্পনা মুছে ফেলুন"
+
+msgid "Against the plan saved on"
+msgstr "সংরক্ষিত পরিকল্পনার সাথে তুলনা, তারিখ:"
+
+msgid "later than planned"
+msgstr "পরিকল্পনার চেয়ে দেরিতে"
+
+msgid "Shows each piece where the saved plan had it, as a dashed outline"
+msgstr ""
+"সংরক্ষিত পরিকল্পনায় প্রতিটি কাজ কোথায় ছিল, তা ড্যাশ দেওয়া রেখায় দেখায়"
+
+msgid "Saved plan"
+msgstr "সংরক্ষিত পরিকল্পনা"
+
+msgid "undo"
+msgstr "ফেরান"
+
+msgid "Change the chosen ones"
+msgstr "বাছাই করাগুলো বদলান"
+
+msgid "Status…"
+msgstr "অবস্থা…"
+
+msgid "When…"
+msgstr "কখন…"
+
+msgid "Lane…"
+msgstr "লেন…"
+
+msgid "Health…"
+msgstr "অবস্থা কেমন…"
+
+msgid "Choose all"
+msgstr "সব বাছাই করুন"
+
+msgid "Choose"
+msgstr "বাছাই করুন"
+
+msgid "Move it after"
+msgstr "এটিকে পরে সরান"
+
+msgid "Some of these start before this ends."
+msgstr "এর কয়েকটি এটি শেষ হওয়ার আগেই শুরু হচ্ছে।"
+
+msgid "Milestones coming up, and work that needs a look."
+msgstr "সামনের মাইলফলক, আর যে কাজগুলো একবার দেখা দরকার।"
+
+msgid "On roadmaps"
+msgstr "রোডম্যাপে"
+
+msgid "The bigger pieces of work this is part of."
+msgstr "যে বড় কাজগুলোর অংশ এটি।"
+
+msgid "Timeline · board · list · priorities"
+msgstr "টাইমলাইন · বোর্ড · তালিকা · অগ্রাধিকার"
+
+msgid "New piece of work · new milestone"
+msgstr "নতুন কাজ · নতুন মাইলফলক"
+
+msgid "Go to today · zoom in or out"
+msgstr "আজকে যান · বড় বা ছোট করে দেখুন"
+
+msgid "Move the chosen bar a day (Shift: a week, Alt: only its end)"
+msgstr "বাছাই করা বার এক দিন সরান (Shift: এক সপ্তাহ, Alt: শুধু শেষ তারিখ)"
+
+msgid "Next · previous piece of work"
+msgstr "পরের · আগের কাজ"
+
+msgid "Undo the last change"
+msgstr "শেষ পরিবর্তনটি ফেরান"
+
+msgid "In the list: choose everything in between"
+msgstr "তালিকায়: মাঝের সবগুলো বাছাই করুন"
+
+msgid "%(counter)s update written on how things went"
+msgid_plural "%(counter)s updates written on how things went"
+msgstr[0] "কাজ কেমন চলল তা নিয়ে %(counter)sটি আপডেট লেখা হয়েছে"
+msgstr[1] "কাজ কেমন চলল তা নিয়ে %(counter)sটি আপডেট লেখা হয়েছে"

@@ -132,6 +132,18 @@
     </section>
     {% endif %}
 
+    {% if roadmap.count %}
+    <section class="card wd-roadmap">
+      <header class="card-header"><div><h2 class="card-title">{% icon "timeline" %}{% translate "Roadmaps" %}</h2><p class="card-subtitle">{% translate "Milestones coming up, and work that needs a look." %}</p></div><a href="{% url 'work:roadmaps' %}" class="btn btn-ghost btn-sm">{% translate "All" %}</a></header>
+      <ul class="wd-notes">
+        {% for m in roadmap.soon %}<li><a href="{{ m.url }}"><span class="truncate"><span class="rmp-diamond sm" aria-hidden="true"></span> {{ m.item.title }} <small class="wd-muted">· {{ m.item.roadmap.title }}</small></span>
+          <time class="wt-wait">{% if m.days == 0 %}{% translate "today" %}{% else %}{% blocktranslate count counter=m.days %}in {{ counter }} day{% plural %}in {{ counter }} days{% endblocktranslate %}{% endif %}</time></a></li>{% endfor %}
+        {% for x in roadmap.trouble %}<li><a href="{{ x.url }}"><span class="truncate"><i class="rmp-health" data-health="{{ x.health }}" aria-hidden="true"></i> {{ x.item.title }} <small class="wd-muted">· {{ x.item.roadmap.title }}</small></span>
+          <time class="wt-wait" data-health="{{ x.health }}">{% if x.late %}{% blocktranslate count counter=x.late %}{{ counter }} day late{% plural %}{{ counter }} days late{% endblocktranslate %}{% else %}{{ x.label }} · {{ x.progress }}%{% endif %}</time></a></li>{% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+
     {% if job_coming.count %}
     <section class="card wd-jobs">
       <header class="card-header"><div><h2 class="card-title">{% icon "map" %}{% translate "Job search" %}</h2><p class="card-subtitle">{% translate "Interviews this week and follow-ups due." %}</p></div><a href="{% url 'work:jobs' %}" class="btn btn-ghost btn-sm">{% translate "All" %}</a></header>

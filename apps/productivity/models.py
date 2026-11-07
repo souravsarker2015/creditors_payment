@@ -802,6 +802,7 @@ class Roadmap(models.Model):
     color = models.CharField(_("Colour"), max_length=10, choices=Color.choices, default=Color.BLUE)
     is_archived = models.BooleanField(_("Archived"), default=False)
     order = models.PositiveIntegerField(default=0)
+    baseline_at = models.DateTimeField(null=True, blank=True, help_text="When the plan was last saved to compare against (each item's plan_start / plan_end).")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -844,6 +845,8 @@ class RoadmapItem(models.Model):
                               help_text="Set by hand or by the last update; empty = worked out from the dates and the progress.")
     start_date = models.DateField(_("Starts"), null=True, blank=True)
     end_date = models.DateField(_("Ends"), null=True, blank=True)
+    plan_start = models.DateField(null=True, blank=True, help_text="Its start in the saved plan (the baseline), to see how far it moved.")
+    plan_end = models.DateField(null=True, blank=True, help_text="Its end in the saved plan.")
     color = models.CharField(_("Colour"), max_length=10, choices=Color.choices, blank=True, help_text="Empty = the lane's colour.")
     progress = models.PositiveSmallIntegerField(_("Progress"), null=True, blank=True, validators=[MaxValueValidator(100)],
                                                 help_text="Set by hand (0–100), for when no tasks or goal are linked.")
