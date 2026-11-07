@@ -175,6 +175,8 @@ class Task(models.Model):
     link = models.URLField(_("Link"), max_length=500, blank=True,
                            help_text=_("The pull request, issue, ticket or doc this is about."))
     goal = models.ForeignKey("Goal", on_delete=models.SET_NULL, null=True, blank=True, related_name="tasks", verbose_name=_("Goal"))
+    roadmap_item = models.ForeignKey("RoadmapItem", on_delete=models.SET_NULL, null=True, blank=True, related_name="tasks", verbose_name=_("Roadmap item"),
+                                     help_text=_("The bigger piece of work on a roadmap this task is part of — its progress counts there."))
     from_note = models.ForeignKey("Note", on_delete=models.SET_NULL, null=True, blank=True, related_name="action_tasks",
                                   verbose_name=_("From note"), help_text="Made from a to-do line in this note (ticked there too).")
     left_off = models.CharField(_("Where I left off"), max_length=300, blank=True, help_text="The next thing to do, written on stopping work on it.")
@@ -761,6 +763,123 @@ class GoalStep(models.Model):
 
     def __str__(self):
         return self.text
+
+
+# ── Roadmaps: the plan for the months ahead (Linear, Jira Plans, ProductPlan, Aha!) ──
+class RoadmapStatus(models.TextChoices):
+    IDEA = "idea", _("Idea")
+    PLANNED = "planned", _("Planned")
+    ACTIVE = "active", _("In progress")
+    DONE = "done", _("Done")
+    DROPPED = "dropped", _("Dropped")
+
+
+class Horizon(models.TextChoices):
+    """When, roughly — the Now / Next / Later board, for when dates would be a guess."""
+    NOW = "now", _("Now")
+    NEXT = "next", _("Next")
+    LATER = "later", _("Later")
+
+
+class Health(models.TextChoices):
+    NONE = "", _("Not set")
+    ON_TRACK = "on_track", _("On track")
+    AT_RISK = "at_risk", _("At risk")
+    OFF_TRACK = "off_track", _("Off track")
+
+
+class RoadmapItemKind(models.TextChoices):
+    ITEM = "item", _("Piece of work")       # a bar, from its start to its end
+    MILESTONE = "milestone", _("Milestone")  # one day: a release, a deadline, a launch
+
+
+class Roadmap(models.Model):
+    """A plan made of bigger pieces of work laid out in time, in lanes:
+    "Product 2027", "My path to senior", "Learn machine learning"."""
+    owner = models.ForeignKey(**OWNER)
+    title = models.CharField(_("Name"), max_length=120)
+    description = models.TextField(_("What it's for"), blank=True)
+    color = models.CharField(_("Colour"), max_length=10, choices=Color.choices, default=Color.BLUE)
+    is_archived = models.BooleanField(_("Archived"), default=False)
+    order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name, verbose_name_plural = _("Roadmap"), _("Roadmaps")
+        ordering = ["is_archived", "order", "-updated_at"]
+        indexes = [models.Index(fields=["owner", "is_archived"])]
+
+    def __str__(self):
+        return self.title
+
+
+class RoadmapLane(models.Model):
+    """A row of the roadmap: a theme, a team, a part of the product."""
+    roadmap = models.ForeignKey(Roadmap, on_delete=models.CASCADE, related_name="lanes")
+    name = models.CharField(_("Name"), max_length=80)
+    color = models.CharField(_("Colour"), max_length=10, choices=Color.choices, default=Color.BLUE)
+    order = models.FloatField(default=0)
+
+    class Meta:
+        verbose_name, verbose_name_plural = _("Roadmap lane"), _("Roadmap lanes")
+        ordering = ["order", "pk"]
+
+    def __str__(self):
+        return self.name
+
+
+class RoadmapItem(models.Model):
+    """A piece of work bigger than a task (an epic, a feature, a course) or a
+    milestone. Its progress comes from the tasks linked to it, else its goal,
+    else what was set by hand."""
+    roadmap = models.ForeignKey(Roadmap, on_delete=models.CASCADE, related_name="items")
+    lane = models.ForeignKey(RoadmapLane, on_delete=models.SET_NULL, null=True, blank=True, related_name="items", verbose_name=_("Lane"))
+    title = models.CharField(_("Title"), max_length=200)
+    description = models.TextField(_("Description"), blank=True)
+    kind = models.CharField(_("Type"), max_length=10, choices=RoadmapItemKind.choices, default=RoadmapItemKind.ITEM)
+    status = models.CharField(_("Status"), max_length=10, choices=RoadmapStatus.choices, default=RoadmapStatus.PLANNED)
+    horizon = models.CharField(_("When"), max_length=5, choices=Horizon.choices, default=Horizon.NEXT)
+    health = models.CharField(_("Health"), max_length=10, choices=Health.choices, default=Health.NONE, blank=True,
+                              help_text="Set by hand or by the last update; empty = worked out from the dates and the progress.")
+    start_date = models.DateField(_("Starts"), null=True, blank=True)
+    end_date = models.DateField(_("Ends"), null=True, blank=True)
+    color = models.CharField(_("Colour"), max_length=10, choices=Color.choices, blank=True, help_text="Empty = the lane's colour.")
+    progress = models.PositiveSmallIntegerField(_("Progress"), null=True, blank=True, validators=[MaxValueValidator(100)],
+                                                help_text="Set by hand (0–100), for when no tasks or goal are linked.")
+    impact = models.PositiveSmallIntegerField(_("Value"), null=True, blank=True, validators=[MinValueValidator(1), MaxValueValidator(5)])
+    effort = models.PositiveSmallIntegerField(_("Effort"), null=True, blank=True, validators=[MinValueValidator(1), MaxValueValidator(5)])
+    goal = models.ForeignKey(Goal, on_delete=models.SET_NULL, null=True, blank=True, related_name="roadmap_items", verbose_name=_("Goal"))
+    project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True, blank=True, related_name="roadmap_items", verbose_name=_("Project"))
+    depends_on = models.ManyToManyField("self", symmetrical=False, blank=True, related_name="unblocks", verbose_name=_("Waits on"))
+    order = models.FloatField(default=0)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name, verbose_name_plural = _("Roadmap item"), _("Roadmap items")
+        ordering = ["order", "start_date", "pk"]
+        indexes = [models.Index(fields=["roadmap", "status"])]
+
+    def __str__(self):
+        return self.title
+
+
+class RoadmapUpdate(models.Model):
+    """A short note on how a piece of work is going, with its health (as Linear's project updates)."""
+    item = models.ForeignKey(RoadmapItem, on_delete=models.CASCADE, related_name="updates")
+    health = models.CharField(max_length=10, choices=Health.choices, blank=True)
+    text = models.TextField(blank=True)
+    progress = models.PositiveSmallIntegerField(default=0, help_text="The progress when it was written.")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name, verbose_name_plural = _("Roadmap update"), _("Roadmap updates")
+        ordering = ["-created_at", "-pk"]
+
+    def __str__(self):
+        return self.text[:60] or self.health
 
 
 # ── Learning: books, courses, talks and docs ──────────────────────────────

@@ -15,7 +15,7 @@ from django.utils.translation import gettext as _
 from . import services
 from .models import Project, Status, Task, TaskTemplate
 
-COPIED = ("notes", "priority", "estimate_minutes", "link", "goal_id", "repeat", "repeat_every", "repeat_days", "repeat_from_done", "waiting_for")
+COPIED = ("notes", "priority", "estimate_minutes", "link", "goal_id", "roadmap_item_id", "repeat", "repeat_every", "repeat_days", "repeat_from_done", "waiting_for")
 
 
 def _clone(task, **changes):

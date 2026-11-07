@@ -67,13 +67,20 @@ class TaskForm(OwnedForm):
             parents = parents.exclude(pk=self.instance.pk)
         self.fields["parent"].queryset = parents.order_by("-updated_at") | Task.objects.filter(pk=getattr(self.instance, "parent_id", None) or 0)
         self.fields["parent"].empty_label = _("— Not a subtask —")
+        from .models import RoadmapItem, RoadmapStatus
+
+        pieces = RoadmapItem.objects.filter(roadmap__owner=self.owner).select_related("roadmap")
+        self.fields["roadmap_item"].queryset = (pieces.filter(roadmap__is_archived=False).exclude(status__in=(RoadmapStatus.DONE, RoadmapStatus.DROPPED))
+                                                | pieces.filter(pk=getattr(self.instance, "roadmap_item_id", None) or 0)).order_by("roadmap__title", "order")
+        self.fields["roadmap_item"].label_from_instance = lambda it: f"{it.roadmap.title} › {it.title}"
+        self.fields["roadmap_item"].empty_label = _("— Not on a roadmap —")
         if self.instance.pk and self.instance.repeat_days:
             self.fields["repeat_on"].initial = [x for x in self.instance.repeat_days.split(",") if x]
 
     class Meta:
         model = Task
         fields = ("title", "parent", "project", "sprint", "status", "kind", "points", "priority", "start_date", "due_date", "estimate_minutes", "repeat", "repeat_every", "repeat_from_done",
-                  "remind_at", "scheduled_at", "link", "goal", "waiting_for", "left_off", "notes")
+                  "remind_at", "scheduled_at", "link", "goal", "roadmap_item", "waiting_for", "left_off", "notes")
         widgets = {
             "link": forms.URLInput(attrs={"placeholder": "https://github.com/…/pull/482", "inputmode": "url"}),
             "start_date": DATE,

@@ -1,0 +1,84 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% translate "Roadmaps" %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+<div data-page-keys="n" x-data="{ open: false, pick: 'product', title: '' }" @keydown.n.window="if (!open && !$event.target.closest('input,textarea,select,[contenteditable]') && !$event.ctrlKey && !$event.metaKey && !$event.altKey) { $event.preventDefault(); open = true; $nextTick(() => $refs.title.focus()) }">
+<header class="wp-head">
+  <div class="min-w-0"><h1 class="wp-title">{% translate "Roadmaps" %}</h1>
+    <p class="wp-sub">{% translate "The plan for the months ahead: bigger pieces of work and milestones on a timeline. Link tasks to them and the progress, the hours and the finish date follow by themselves." %}</p></div>
+  <div class="wp-actions">
+    <nav class="seg seg-sm" aria-label="{% translate 'Show' %}">
+      <a href="?show=active" class="seg-item{% if show == 'active' %} is-active{% endif %}">{% translate "Active" %}</a>
+      <a href="?show=archived" class="seg-item{% if show == 'archived' %} is-active{% endif %}">{% translate "Archived" %}{% if archived %} <span class="wg-count">{{ archived }}</span>{% endif %}</a>
+    </nav>
+    <button type="button" class="btn btn-primary" @click="open = true; $nextTick(() => $refs.title.focus())">{% icon "plus" %}{% translate "Roadmap" %}<kbd class="rmp-kbd">N</kbd></button>
+  </div>
+</header>
+
+{% if cards %}
+<div class="rmp-cards">
+  {% for c in cards %}
+  <a href="{% url 'work:roadmap' c.r.pk %}" class="rmp-card" data-color="{{ c.r.color }}">
+    <div class="rmp-card-top">
+      <h2 class="rmp-card-title">{{ c.r.title }}</h2>
+      <span class="rmp-pct num">{{ c.s.progress }}%</span>
+    </div>
+    {% if c.r.description %}<p class="rmp-card-about">{{ c.r.description|truncatechars:140 }}</p>{% endif %}
+    <div class="rmp-meter" role="progressbar" aria-valuenow="{{ c.s.progress }}" aria-valuemin="0" aria-valuemax="100" aria-label="{% translate 'Progress' %}"><i style="width: {{ c.s.progress }}%"></i></div>
+    <div class="rmp-mini" aria-hidden="true">
+      {% for b in c.bars.bars %}<i class="{% if b.ms %}is-ms{% endif %}{% if b.done %} is-done{% endif %}" data-health="{{ b.health }}" style="left: {{ b.left }}%;{% if not b.ms %} width: {{ b.width }}%;{% endif %} --r: {{ b.row }}"></i>{% endfor %}
+      <b style="left: {{ c.bars.today }}%"></b>
+    </div>
+    <p class="rmp-card-meta">
+      <span>{% blocktranslate count counter=c.s.count %}{{ counter }} item{% plural %}{{ counter }} items{% endblocktranslate %}</span>
+      {% if c.s.active %}<span class="rmp-tag" data-tone="active">{% blocktranslate with n=c.s.active %}{{ n }} in progress{% endblocktranslate %}</span>{% endif %}
+      {% if c.s.at_risk %}<span class="rmp-tag" data-tone="at_risk">{% blocktranslate with n=c.s.at_risk %}{{ n }} at risk{% endblocktranslate %}</span>{% endif %}
+      {% if c.s.off_track %}<span class="rmp-tag" data-tone="off_track">{% blocktranslate with n=c.s.off_track %}{{ n }} off track{% endblocktranslate %}</span>{% endif %}
+      {% if c.s.minutes %}<span>{% icon "timer" %}{% widthratio c.s.minutes 60 1 %} h</span>{% endif %}
+    </p>
+    {% if c.s.next %}<p class="rmp-card-next">{% icon "flag" %}<span>{% translate "Next milestone" %}: <b>{{ c.s.next.title }}</b> · {{ c.s.next.end }}</span></p>{% endif %}
+  </a>
+  {% endfor %}
+  {% if show == "active" %}
+  <button type="button" class="rmp-card rmp-card-new" @click="open = true; $nextTick(() => $refs.title.focus())">{% icon "plus" %}<span>{% translate "New roadmap" %}</span></button>
+  {% endif %}
+</div>
+{% else %}
+<div class="empty">
+  <div class="empty-icon">{% icon "timeline" %}</div>
+  <h3 class="empty-title">{% if show == "active" %}{% translate "Plan the months ahead" %}{% else %}{% translate "Nothing archived" %}{% endif %}</h3>
+  <p class="empty-text">{% translate "A product's next releases, your path to a senior role, a subject from the basics to a real project. Start from a ready-made roadmap and change it to fit." %}</p>
+  {% if show == "active" %}<button type="button" class="btn btn-primary" @click="open = true; $nextTick(() => $refs.title.focus())">{% icon "plus" %}{% translate "New roadmap" %}</button>{% endif %}
+</div>
+{% endif %}
+
+<div class="wc-backdrop" x-show="open" x-cloak x-transition.opacity @click="open = false"></div>
+<div class="rmp-new" x-show="open" x-cloak x-trap.noscroll="open" x-transition role="dialog" aria-modal="true" aria-labelledby="rmp-new-title" @keydown.escape.stop="open = false">
+  <form method="post" class="rmp-new-form">
+    {% csrf_token %}
+    <header class="rmp-new-head"><h2 id="rmp-new-title" class="card-title">{% icon "timeline" %}{% translate "New roadmap" %}</h2>
+      <button type="button" class="icon-btn" @click="open = false" aria-label="{% translate 'Close' %}">{% icon "x" %}</button></header>
+    <label class="label" for="rmp-title">{% translate "Name" %}</label>
+    <input id="rmp-title" x-ref="title" name="title" x-model="title" class="form-input" maxlength="120" placeholder="{% translate 'e.g. Product 2027, My path to senior' %}" autocomplete="off">
+    <p class="label rmp-new-label">{% translate "Start from" %}</p>
+    <div class="rmp-tpls" role="radiogroup" aria-label="{% translate 'Start from' %}">
+      {% for t in templates %}
+      <label class="rmp-tpl" :class="pick === '{{ t.key }}' && 'is-picked'" data-color="{{ t.color }}">
+        <input type="radio" name="template" value="{{ t.key }}" x-model="pick" class="sr-only">
+        <span class="rmp-tpl-pic" aria-hidden="true">{% for l in t.lanes %}<i style="--w: {% cycle '62' '44' '30' %}%; --x: {% cycle '4' '30' '52' %}%"></i>{% endfor %}</span>
+        <b>{{ t.name }}</b><small>{{ t.about }}</small>
+        {% if t.lanes|length > 1 %}<small class="rmp-tpl-lanes">{{ t.lanes|join:" · " }}</small>{% endif %}
+      </label>
+      {% endfor %}
+    </div>
+    <p class="help">{% translate "Ready-made roadmaps come with a few example items, dated from today. Rename, move or delete them." %}</p>
+    <footer class="rmp-new-foot">
+      <button type="button" class="btn btn-ghost" @click="open = false">{% translate "Cancel" %}</button>
+      <button type="submit" class="btn btn-primary">{% icon "plus" %}{% translate "Create" %}</button>
+    </footer>
+  </form>
+</div>
+</div>
+{% endblock %}

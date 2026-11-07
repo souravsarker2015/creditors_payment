@@ -8,7 +8,7 @@
   <div class="min-w-0">
     <a href="{% url 'work:tasks' %}" class="back-link">{% icon "chevron-left" %}{% translate "Tasks" %}</a>
     <h1 class="wp-title">{% if task %}{{ task.title }}{% else %}{% translate "New task" %}{% endif %}</h1>
-    {% if task %}<p class="wp-sub"><button type="button" class="wtd-key" data-copy="{{ dev.key }}" data-tip="{% translate 'Copy the task key' %}">{% icon task.kind_icon %}{{ dev.key }}</button> · {{ task.get_status_display }}{% if task.project %} · <a href="{% url 'work:project' task.project_id %}" class="wt-proj"><span class="wt-dot" data-color="{{ task.project.color }}"></span>{{ task.project.name }}</a>{% endif %}{% if task.completed_at %} · {% blocktranslate with when=task.completed_at|date:"j M, H:i" %}done {{ when }}{% endblocktranslate %}{% endif %}{% if task.goal %} · <a href="{% url 'work:goal' task.goal_id %}" class="wt-proj">{% icon "flag" %}{{ task.goal.title }}</a>{% endif %}</p>
+    {% if task %}<p class="wp-sub"><button type="button" class="wtd-key" data-copy="{{ dev.key }}" data-tip="{% translate 'Copy the task key' %}">{% icon task.kind_icon %}{{ dev.key }}</button> · {{ task.get_status_display }}{% if task.project %} · <a href="{% url 'work:project' task.project_id %}" class="wt-proj"><span class="wt-dot" data-color="{{ task.project.color }}"></span>{{ task.project.name }}</a>{% endif %}{% if task.completed_at %} · {% blocktranslate with when=task.completed_at|date:"j M, H:i" %}done {{ when }}{% endblocktranslate %}{% endif %}{% if task.goal %} · <a href="{% url 'work:goal' task.goal_id %}" class="wt-proj">{% icon "flag" %}{{ task.goal.title }}</a>{% endif %}{% if task.roadmap_item %} · <a href="{% url 'work:roadmap' task.roadmap_item.roadmap_id %}?item={{ task.roadmap_item_id }}" class="wt-proj">{% icon "timeline" %}{{ task.roadmap_item.title }}</a>{% endif %}</p>
     {% if task.parent %}<p class="wtd-parent">{% icon "arrow-up" %}{% translate "Subtask of" %} <a href="{% url 'work:task' task.parent_id %}">{{ task.parent.title }}</a></p>{% endif %}{% endif %}
   </div>
   {% if task %}
@@ -85,6 +85,7 @@
         {% with field=form.tags_text %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.link %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.goal %}{% include "partials/field.html" %}{% endwith %}
+        {% if form.roadmap_item.field.queryset.exists %}{% with field=form.roadmap_item %}{% include "partials/field.html" %}{% endwith %}{% endif %}
         {% with field=form.waiting_for %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.left_off %}{% include "partials/field.html" %}{% endwith %}
       </div>

@@ -65,7 +65,7 @@ def _urls():
         "diagrams": r("work:diagrams"), "diagramBase": "/work/api/diagrams/", "diagramList": r("work:api_diagram_list"),
         "cardsDue": r("work:api_cards_due"), "cardReview": r("work:card_review"), "imageUpload": r("work:api_image_upload"),
         "cards": r("work:cards"), "cardBase": "/work/api/cards/", "cardAdd": r("work:api_card_add"),
-        "prep": r("work:prep"), "prepBase": "/work/api/prep/questions/", "exam": r("work:exam"),
+        "prep": r("work:prep"), "prepBase": "/work/api/prep/questions/", "exam": r("work:exam"), "roadmaps": r("work:roadmaps"),
     }
 
 
@@ -161,6 +161,7 @@ def _commands():
         ("calendar", _("Calendar"), "calendar", "work:calendar", "g c", "month due"),
         ("projects", _("Projects"), "folder", "work:projects", "g p", "clients"),
         ("goals", _("Goals"), "flag", "work:goals", "g o", "okr career future"),
+        ("roadmaps", _("Roadmaps"), "timeline", "work:roadmaps", "g u", "roadmap plan timeline gantt now next later milestones release epics initiatives quarters productplan linear aha"),
         ("learning", _("Learning"), "book", "work:learning", "g l", "books courses reading list"),
         ("focus", _("Focus timer"), "bolt", "work:focus", "g f", "pomodoro"),
         ("time", _("Time"), "timer", "work:time", "g i", "timesheet hours"),

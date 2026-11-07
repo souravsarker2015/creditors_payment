@@ -689,7 +689,7 @@ def set_done(task, done=True):
             due = next_due(base, task.repeat, WorkSettings.for_user(task.owner).work_days, task.repeat_every, task.repeat_days)
             start = due - (task.due_date - task.start_date) if (task.start_date and task.due_date and due) else None
             nxt = Task.objects.create(owner=task.owner, project=task.project, title=task.title, notes=task.notes,
-                                      priority=task.priority, due_date=due, start_date=start, goal=task.goal, link=task.link,
+                                      priority=task.priority, due_date=due, start_date=start, goal=task.goal, link=task.link, roadmap_item=task.roadmap_item,
                                       repeat=task.repeat, repeat_every=task.repeat_every, repeat_days=task.repeat_days,
                                       repeat_from_done=task.repeat_from_done,
                                       estimate_minutes=task.estimate_minutes, remind_at=_next_reminder(task, due),

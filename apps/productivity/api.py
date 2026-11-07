@@ -336,7 +336,7 @@ def task_move(request, pk):
     return ok(status=task.status, order=task.order, timer=services.timer_follows(request.user, task, old_status))
 
 
-TASK_FIELDS = {"title", "priority", "due_date", "start_date", "sprint", "my_day", "project", "status", "notes", "estimate_minutes", "link", "goal", "waiting_for", "left_off",
+TASK_FIELDS = {"title", "priority", "due_date", "start_date", "sprint", "my_day", "project", "status", "notes", "estimate_minutes", "link", "goal", "roadmap_item", "waiting_for", "left_off",
                "scheduled_at"}
 
 
@@ -385,6 +385,10 @@ def task_update(request, pk):
             task.link = value[:500] if value.startswith(("http://", "https://")) or not value else task.link
         elif name == "goal":
             task.goal = Goal.objects.filter(owner=request.user, pk=value or 0).first()
+        elif name == "roadmap_item":
+            from .models import RoadmapItem
+
+            task.roadmap_item = RoadmapItem.objects.filter(roadmap__owner=request.user, pk=value or 0).first()
         elif name == "waiting_for":
             task.waiting_for = value[:120]
         elif name == "left_off":

@@ -11,6 +11,7 @@ most come first in each group.{% endcomment %}
   <a href="{% url 'work:calendar' %}" class="nav-link {% if '/work/calendar/' in p %}is-active{% endif %}">{% icon "calendar" %}{% translate "Calendar" %}</a>
   <a href="{% url 'work:projects' %}" class="nav-link {% if '/work/projects/' in p %}is-active{% endif %}">{% icon "folder" %}{% translate "Projects" %}</a>
   <a href="{% url 'work:sprints' %}" class="nav-link {% if '/work/sprints/' in p %}is-active{% endif %}">{% icon "repeat" %}{% translate "Sprints" %}</a>
+  <a href="{% url 'work:roadmaps' %}" class="nav-link {% if '/work/roadmaps/' in p %}is-active{% endif %}">{% icon "timeline" %}{% translate "Roadmaps" %}</a>
 </div>
 <div class="space-y-0.5">
   <p class="nav-section-label">{% translate "Focus & time" %}</p>
