@@ -1,0 +1,53 @@
+title: Data structures and algorithms
+category: skill
+color: lime
+about: From Big-O to interview-ready problem solving, pattern by pattern.
+
+# Complexity :: How to say how fast or slow code is.
+@ Big-O cheat sheet | https://www.bigocheatsheet.com/
+- Big-O notation :: Time and space, best and worst cases.
+- Common complexities :: O(1), O(log n), O(n), O(n log n), O(n²).
+- Amortised analysis :: Why appending to a dynamic array is O(1).
+# Core data structures :: The building blocks.
+- Arrays and strings :: Indexing, slicing, in-place tricks.
+- Hash maps and sets :: Constant-time lookup and its limits.
+- Linked lists :: Pointers, dummy heads, reversal.
+- Stacks and queues :: LIFO, FIFO, deques.
+# Problem-solving patterns :: Most problems are one of these.
+@ NeetCode roadmap | https://neetcode.io/roadmap
+- Two pointers :: Sorted arrays, palindromes, pairs.
+- Sliding window :: Subarrays and substrings.
+- Prefix sums :: Range sums in O(1).
+- Binary search :: Also on the answer, not just on arrays.
+- Fast and slow pointers :: Cycles and middles.
+! Checkpoint: 30 easy problems :: Solve thirty easy problems across the patterns above.
+# Recursion and backtracking :: Exploring every option, smartly.
+- Recursion :: Base cases, the call stack.
+- Backtracking :: Subsets, permutations, combinations, N-queens.
+# Trees :: Hierarchies.
+- Binary trees and traversals :: Pre, in, post order, level order.
+- Binary search trees :: Insert, search, validate.
+- Heaps and priority queues :: Top-k, merging sorted lists.
+- Tries :: Prefix search.
+# Graphs :: Networks of things.
+- Representation :: Adjacency lists and matrices.
+- BFS and DFS :: Islands, connected parts, shortest steps.
+- Topological sort :: Order with dependencies.
+- Shortest paths :: Dijkstra, Bellman-Ford.
+- Union-find :: Connected components fast.
+- ?Minimum spanning trees :: Kruskal, Prim.
+# Dynamic programming :: Remember answers to sub-problems.
+- 1-D DP :: Climbing stairs, house robber.
+- 2-D DP :: Grids, longest common subsequence, edit distance.
+- Knapsack :: Choose items under a limit.
+- ?Interval and bitmask DP :: Harder families.
+# Other techniques :: Useful extras.
+- Greedy :: When the local best is the global best.
+- Intervals :: Merging, scheduling, meeting rooms.
+- Sorting algorithms :: Merge sort, quick sort, counting sort.
+- ?Bit manipulation :: XOR tricks, masks.
+# Interview practice :: Turn knowledge into performance.
+- Timed practice :: Medium problems in 30 minutes.
+- Thinking out loud :: Clarify, plan, code, test.
+- Mock interviews :: With a friend or a service.
+! Checkpoint: interview ready :: 150 problems across all patterns, three mock interviews passed.

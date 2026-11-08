@@ -1,0 +1,49 @@
+title: Machine learning engineer
+category: role
+color: purple
+about: Maths, classic ML, deep learning, and shipping models that keep working.
+
+# Maths for ML :: Enough to understand what the models do.
+- Linear algebra :: Vectors, matrices, dot products, eigenvectors.
+- Calculus :: Derivatives, the chain rule, gradients.
+- Probability and statistics :: Distributions, Bayes, hypothesis tests.
+# Python for data :: The working tools.
+- NumPy :: Arrays and vectorised maths.
+- pandas :: Loading, cleaning and reshaping tables.
+- Plotting :: Matplotlib, seaborn: look at the data.
+- Notebooks :: Jupyter for exploring, scripts for production.
+# Classic machine learning :: Most real problems start here.
+@ scikit-learn: getting started | https://scikit-learn.org/stable/getting_started.html
+- Supervised learning :: Regression, classification, decision trees, gradient boosting.
+- Unsupervised learning :: Clustering, dimensionality reduction.
+- Feature engineering :: Encoding, scaling, leakage to avoid.
+- Evaluation :: Train/test splits, cross-validation, precision, recall, ROC.
+- Overfitting and regularisation :: Bias, variance, L1/L2.
+! Checkpoint: a model end to end :: Clean a real dataset, train, evaluate and explain a model.
+# Deep learning :: Neural networks.
+@ Google ML crash course | https://developers.google.com/machine-learning/crash-course
+- Neural network basics :: Layers, activations, backpropagation.
+- PyTorch :: Tensors, autograd, training loops.
+@ PyTorch tutorials | https://pytorch.org/tutorials/
+- Convolutional networks :: Images.
+- Sequence models and transformers :: Text and time series, attention.
+- Training well :: Optimisers, learning rates, batch size, GPUs.
+# Modern AI :: Large models and how to use them.
+- Large language models :: Tokens, embeddings, fine-tuning vs. prompting.
+- Retrieval-augmented generation :: Vector search plus an LLM.
+- Evaluation of LLM systems :: Test sets, graders, regressions.
+- ?Computer vision models :: Detection, segmentation.
+# Data for ML :: Models are only as good as their data.
+- Data pipelines :: Collecting, labelling, versioning data.
+- Feature stores :: The same features in training and serving.
+- Bias and fairness :: Checking who the model fails.
+# MLOps :: Getting models to production and keeping them right.
+- Experiment tracking :: MLflow, Weights & Biases.
+- Model serving :: REST/gRPC endpoints, batching, latency.
+- Docker and CI for models :: Reproducible training and deploys.
+- Monitoring and drift :: When the world changes under the model.
+! Checkpoint: a model in production :: Serve a model behind an API with monitoring and retraining.
+# Going further :: Depth that sets you apart.
+- ?Distributed training :: Data and model parallelism.
+- ?Model optimisation :: Quantisation, distillation, ONNX.
+- Reading papers :: Keep up and reproduce results.

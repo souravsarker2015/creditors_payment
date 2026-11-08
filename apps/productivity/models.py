@@ -177,6 +177,8 @@ class Task(models.Model):
     goal = models.ForeignKey("Goal", on_delete=models.SET_NULL, null=True, blank=True, related_name="tasks", verbose_name=_("Goal"))
     roadmap_item = models.ForeignKey("RoadmapItem", on_delete=models.SET_NULL, null=True, blank=True, related_name="tasks", verbose_name=_("Roadmap item"),
                                      help_text=_("The bigger piece of work on a roadmap this task is part of — its progress counts there."))
+    path_node = models.ForeignKey("PathNode", on_delete=models.SET_NULL, null=True, blank=True, related_name="tasks", verbose_name=_("Learning roadmap topic"),
+                                  help_text="The topic on a learning roadmap this task is for.")
     from_note = models.ForeignKey("Note", on_delete=models.SET_NULL, null=True, blank=True, related_name="action_tasks",
                                   verbose_name=_("From note"), help_text="Made from a to-do line in this note (ticked there too).")
     left_off = models.CharField(_("Where I left off"), max_length=300, blank=True, help_text="The next thing to do, written on stopping work on it.")
@@ -883,6 +885,73 @@ class RoadmapUpdate(models.Model):
 
     def __str__(self):
         return self.text[:60] or self.health
+
+
+# ── Learning roadmaps: step-by-step skill maps (as roadmap.sh has them) ──────
+class PathStatus(models.TextChoices):
+    TODO = "todo", _("To learn")
+    LEARNING = "learning", _("Learning")
+    DONE = "done", _("Done")
+    SKIPPED = "skipped", _("Skipped")
+
+
+class PathNodeKind(models.TextChoices):
+    STEP = "step", _("Step")
+    TOPIC = "topic", _("Topic")
+    CHECKPOINT = "checkpoint", _("Checkpoint")
+    NOTE = "note", _("Note")
+
+
+class LearningPath(models.Model):
+    """A map of what to learn, step by step: "Backend developer", "Rust: beginner to senior".
+    Its boxes (PathNode) sit anywhere on a canvas; `edges` joins them by their keys."""
+    owner = models.ForeignKey(**OWNER)
+    title = models.CharField(_("Name"), max_length=150)
+    description = models.TextField(_("What it's for"), blank=True)
+    color = models.CharField(_("Colour"), max_length=10, choices=Color.choices, default=Color.BLUE)
+    template = models.CharField(max_length=40, blank=True, help_text="The ready-made roadmap it started from, if any.")
+    edges = models.JSONField(default=list, blank=True, help_text='Lines between boxes: [{"from": key, "to": key, "style": "solid"|"dashed"}].')
+    is_archived = models.BooleanField(_("Archived"), default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name, verbose_name_plural = _("Learning roadmap"), _("Learning roadmaps")
+        ordering = ["is_archived", "-updated_at"]
+        indexes = [models.Index(fields=["owner", "is_archived"])]
+
+    def __str__(self):
+        return self.title
+
+
+class PathNode(models.Model):
+    """One box on a learning roadmap: a step on the main path, a topic under it, a checkpoint
+    (something to build) or a note. `key` names it within its roadmap (lines and imports use it)."""
+    path = models.ForeignKey(LearningPath, on_delete=models.CASCADE, related_name="nodes")
+    key = models.CharField(max_length=64)
+    kind = models.CharField(_("Kind"), max_length=12, choices=PathNodeKind.choices, default=PathNodeKind.TOPIC)
+    title = models.CharField(_("Title"), max_length=200)
+    description = models.TextField(_("Description"), blank=True)
+    x = models.FloatField(default=0)
+    y = models.FloatField(default=0)
+    w = models.PositiveSmallIntegerField(null=True, blank=True, help_text="Width; empty = the kind's own.")
+    status = models.CharField(_("Status"), max_length=10, choices=PathStatus.choices, default=PathStatus.TODO)
+    optional = models.BooleanField(_("Optional"), default=False)
+    color = models.CharField(_("Colour"), max_length=10, choices=Color.choices, blank=True)
+    resources = models.JSONField(default=list, blank=True, help_text='[{"title", "url", "type"}]')
+    parent = models.CharField(max_length=64, blank=True, help_text="The key of the box it hangs under.")
+    order = models.PositiveIntegerField(default=0)
+    done_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name, verbose_name_plural = _("Learning roadmap topic"), _("Learning roadmap topics")
+        ordering = ["order", "pk"]
+        constraints = [models.UniqueConstraint(fields=["path", "key"], name="pathnode_key_once")]
+
+    def __str__(self):
+        return self.title
 
 
 # ── Learning: books, courses, talks and docs ──────────────────────────────

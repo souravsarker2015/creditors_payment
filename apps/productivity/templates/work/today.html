@@ -10,6 +10,8 @@
     <h1 class="wp-title">{{ greeting }}{% if user.first_name %}, {{ user.first_name }}{% endif %}</h1>
     {% if sprint %}<a href="{% url 'work:sprint' sprint.pk %}" class="wd-sprint">{% icon "repeat" %}<strong>{{ sprint.name }}</strong>
       <span>{% blocktranslate with done=sprint.counts.done total=sprint.counts.total %}{{ done }} of {{ total }} done{% endblocktranslate %} · {% if sprint.days_left > 0 %}{% blocktranslate count counter=sprint.days_left %}{{ counter }} day left{% plural %}{{ counter }} days left{% endblocktranslate %}{% elif sprint.days_left == 0 %}{% translate "last day" %}{% else %}{% translate "time's up — close it" %}{% endif %}</span></a>{% endif %}
+    {% if keep_learning %}<a href="{% url 'work:path' keep_learning.path.pk %}?continue=1" class="wd-sprint" data-tip="{% translate 'Continue learning' %}">{% icon "journey" %}<strong>{{ keep_learning.path.title }}</strong>
+      <span>{{ keep_learning.pct }}% · {% blocktranslate with topic=keep_learning.next.title %}next: {{ topic }}{% endblocktranslate %}</span></a>{% endif %}
     {% if prep_due %}<a href="{% url 'work:prep_practice' %}?set=today" class="wd-sprint">{% icon "target" %}<strong>{% translate "Interview prep" %}</strong>
       <span>{% blocktranslate count counter=prep_due %}{{ counter }} question to practise today{% plural %}{{ counter }} questions to practise today{% endblocktranslate %}</span></a>{% endif %}
     {% for x in exam_due|slice:":3" %}<a href="{% url 'work:exam_review' x.pk %}?which=due" class="wd-sprint">{% icon "repeat" %}<strong>{{ x.name }}</strong>

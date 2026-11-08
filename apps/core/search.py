@@ -254,7 +254,7 @@ def _business(request, text):
 
 def _work(user, text):
     """Productivity: the person's own tasks, notes, diagrams, flashcards, exam notes, goals and learning."""
-    from apps.productivity.models import Card, Diagram, ExamNote, Goal, LearningItem, Note, Roadmap, RoadmapItem, Task
+    from apps.productivity.models import Card, Diagram, ExamNote, Goal, LearningItem, LearningPath, Note, PathNode, Roadmap, RoadmapItem, Task
 
     group = Group(_("Productivity"))
     for t in Task.objects.filter(_q(text, "title", "link"), owner=user).order_by("status", "-updated_at")[:PER_GROUP]:
@@ -273,6 +273,10 @@ def _work(user, text):
         group.hits.append(Hit(rm.title, _("Roadmap"), _url("work:roadmap", rm.pk), "timeline"))
     for it in RoadmapItem.objects.filter(_q(text, "title", "description"), roadmap__owner=user, roadmap__is_archived=False).select_related("roadmap")[:3]:
         group.hits.append(Hit(it.title, " · ".join((_("Roadmap"), it.roadmap.title)), _url("work:roadmap", it.roadmap_id, query=f"?item={it.pk}"), "gantt"))
+    for lp in LearningPath.objects.filter(_q(text, "title", "description"), owner=user, is_archived=False).only("pk", "title")[:3]:
+        group.hits.append(Hit(lp.title, _("Learning roadmap"), _url("work:path", lp.pk), "journey"))
+    for n in PathNode.objects.filter(_q(text, "title", "description"), path__owner=user, path__is_archived=False).select_related("path")[:3]:
+        group.hits.append(Hit(n.title, " · ".join((_("Learning roadmap"), n.path.title)), _url("work:path", n.path_id, query=f"?node={n.key}"), "journey"))
     for item in LearningItem.objects.filter(_q(text, "title", "author"), owner=user)[:3]:
         group.hits.append(Hit(item.title, " · ".join(x for x in (_("Learning"), item.author) if x), _url("work:learning_edit", item.pk), "book"))
     return [group]

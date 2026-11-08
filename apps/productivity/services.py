@@ -689,7 +689,7 @@ def set_done(task, done=True):
             due = next_due(base, task.repeat, WorkSettings.for_user(task.owner).work_days, task.repeat_every, task.repeat_days)
             start = due - (task.due_date - task.start_date) if (task.start_date and task.due_date and due) else None
             nxt = Task.objects.create(owner=task.owner, project=task.project, title=task.title, notes=task.notes,
-                                      priority=task.priority, due_date=due, start_date=start, goal=task.goal, link=task.link, roadmap_item=task.roadmap_item,
+                                      priority=task.priority, due_date=due, start_date=start, goal=task.goal, link=task.link, roadmap_item=task.roadmap_item, path_node=task.path_node,
                                       repeat=task.repeat, repeat_every=task.repeat_every, repeat_days=task.repeat_days,
                                       repeat_from_done=task.repeat_from_done,
                                       estimate_minutes=task.estimate_minutes, remind_at=_next_reminder(task, due),
@@ -1134,6 +1134,10 @@ def review(user, start, end):
 
     shipped = list(RoadmapItem.objects.filter(roadmap__owner=user, status=RoadmapStatus.DONE, completed_at__gte=lo, completed_at__lt=hi)
                    .select_related("roadmap").order_by("completed_at"))
+    from .models import PathNode, PathNodeKind, PathStatus
+
+    learnt_topics = list(PathNode.objects.filter(path__owner=user, status=PathStatus.DONE, done_at__gte=lo, done_at__lt=hi)
+                         .exclude(kind=PathNodeKind.NOTE).select_related("path").order_by("path__title", "done_at"))
     habits = []
     for h in Habit.objects.filter(owner=user, is_archived=False):
         checked = habit_done_days(h, h.checks.filter(date__gte=start, date__lte=end).values_list("date", "amount"))
@@ -1146,7 +1150,7 @@ def review(user, start, end):
         "done_by_project": sorted(by_project.items(), key=lambda kv: (kv[0] is None, kv[0].name if kv[0] else "")),
         "wins": wins, "blockers": blockers, "mood": feel["mood"], "energy": feel["energy"],
         "goals_done": goals_done, "goals_active": goals_active, "learnt": learnt, "habits": habits,
-        "practice": practice, "diagrams": drawn, "roadmap_done": shipped,
+        "practice": practice, "diagrams": drawn, "roadmap_done": shipped, "topics_learnt": learnt_topics,
         "roadmap_updates": RoadmapUpdate.objects.filter(item__roadmap__owner=user, created_at__gte=lo, created_at__lt=hi).count(),
         "created": Task.objects.filter(owner=user, created_at__gte=lo, created_at__lt=hi).count(),
     }
@@ -1163,6 +1167,9 @@ def review_markdown(data):
         lines += ["", f"## {_('Goals reached')}"] + [f"- {g.title}" for g in data["goals_done"]]
     if data["wins"]:
         lines += ["", f"## {_('Highlights')}"] + [f"- {text} ({day:%d %b})" for day, text in data["wins"]]
+    if data.get("topics_learnt"):
+        lines += ["", f"## {_('Topics learnt')}"]
+        lines += [f"- {n.title} ({n.path.title})" for n in data["topics_learnt"]]
     if data.get("roadmap_done"):
         lines += ["", f"## {_('Roadmap pieces finished')}"]
         lines += [f"- {it.title} ({it.roadmap.title})" for it in data["roadmap_done"]]

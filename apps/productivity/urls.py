@@ -1,7 +1,7 @@
 """Productivity lives under /work/ in the "work" namespace."""
 from django.urls import path
 
-from . import api, rest, views, views_exam, views_jobs, views_prep, views_roadmap
+from . import api, rest, views, views_exam, views_jobs, views_paths, views_prep, views_roadmap
 
 app_name = "work"
 
@@ -51,6 +51,13 @@ urlpatterns = [
     path("roadmaps/<int:pk>/download/", views_roadmap.roadmap_export_view, name="roadmap_export"),
     path("api/roadmaps/<int:pk>/", views_roadmap.roadmap_api, name="api_roadmap"),
     path("api/roadmap-items/<int:pk>/", views_roadmap.item_api, name="api_roadmap_item"),
+    path("learning-roadmaps/", views_paths.paths_view, name="paths"),
+    path("learning-roadmaps/example.json", views_paths.path_example_view, name="path_example"),
+    path("learning-roadmaps/ready-made/<slug:key>.json", views_paths.path_template_view, name="path_template"),
+    path("learning-roadmaps/<int:pk>/", views_paths.path_view, name="path"),
+    path("learning-roadmaps/<int:pk>/download/", views_paths.path_export_view, name="path_export"),
+    path("api/learning-roadmaps/import/", views_paths.path_import, name="api_path_import"),
+    path("api/learning-roadmaps/<int:pk>/", views_paths.path_api, name="api_path"),
     path("sprints/", views.sprints_view, name="sprints"),
     path("sprints/<int:pk>/", views.sprint_view, name="sprint"),
     path("import/", views.import_view, name="import"),

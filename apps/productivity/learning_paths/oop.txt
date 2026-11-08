@@ -1,0 +1,40 @@
+title: Object-oriented programming
+category: skill
+color: green
+about: Classes and objects done well, from the four pillars to clean design.
+
+# Basics :: Objects that hold data and behaviour.
+- Classes and objects :: Blueprints and instances.
+- Attributes and methods :: State and behaviour together.
+- Constructors :: Setting up a valid object.
+- Static vs. instance members :: Belonging to the class or to one object.
+# The four pillars :: The ideas OOP is built on.
+- Encapsulation :: Hide the details, expose a small interface.
+- Abstraction :: Model only what matters.
+- Inheritance :: Reuse and specialise — with care.
+- Polymorphism :: One interface, many forms.
+! Checkpoint: model a small domain :: A library, a shop or a bank, with classes and tests.
+# Relationships :: How objects work together.
+- Association, aggregation, composition :: Has-a, and who owns whom.
+- Composition over inheritance :: Build behaviour from parts.
+- Interfaces and abstract classes :: Contracts without implementations.
+- UML class diagrams :: Sketching designs to discuss them.
+# SOLID :: Five principles for code that can change.
+@ SOLID (Wikipedia) | https://en.wikipedia.org/wiki/SOLID
+- Single responsibility :: One reason to change.
+- Open/closed :: Extend without editing.
+- Liskov substitution :: Subtypes must keep promises.
+- Interface segregation :: Small, focused interfaces.
+- Dependency inversion :: Depend on abstractions.
+# More design principles :: Rules of thumb.
+- DRY, KISS, YAGNI :: Don't repeat, keep it simple, don't build it yet.
+- Law of Demeter :: Talk only to your neighbours.
+- Tell, don't ask :: Put behaviour where the data is.
+- Cohesion and coupling :: High inside, low between.
+# Objects in practice :: Patterns of everyday code.
+- Immutability and value objects :: Equal by value, safe to share.
+- Error handling :: Exceptions, invariants, failing early.
+- Dependency injection :: Pass collaborators in.
+- Testing objects :: Mocks at the boundaries.
+- ?Domain-driven design basics :: Entities, value objects, aggregates.
+! Checkpoint: refactor to SOLID :: Take messy procedural code and redesign it step by step.

@@ -1,0 +1,46 @@
+title: Senior software engineer
+category: role
+color: slate
+about: Beyond writing code: design, quality, ownership, and making the team better.
+
+# Master the craft :: Code others are glad to work with.
+- Clean, readable code :: Naming, small functions, clear intent.
+- Refactoring :: Improving design in small, safe steps.
+@ Refactoring catalog (Martin Fowler) | https://refactoring.com/catalog/
+- Testing strategy :: The test pyramid, what to test and what not to.
+- Debugging :: A method, not luck: reproduce, isolate, prove.
+- Know one language deeply :: Its runtime, memory model, idioms and tooling.
+# Software design :: Shape code so it can change.
+- SOLID principles :: Responsibilities, abstractions, dependencies.
+- Design patterns :: Know them, use them sparingly.
+- Domain-driven design :: Bounded contexts, a shared language with the business.
+- API design :: Contracts that are hard to misuse and easy to evolve.
+# System design :: Shape systems so they can grow.
+@ The System Design Primer | https://github.com/donnemartin/system-design-primer
+- Scalability basics :: Caching, replication, partitioning, queues.
+- Consistency and trade-offs :: CAP, latency vs. correctness.
+- Reliability :: Timeouts, retries, idempotency, graceful degradation.
+- Writing design docs :: Problem, options, decision, risks.
+@ Designing Data-Intensive Applications | https://dataintensive.net/
+! Checkpoint: lead a design :: Write a design doc for a real feature and get it reviewed.
+# Production ownership :: You build it, you run it.
+- Observability :: Logs, metrics, traces, SLOs.
+- Incidents :: Leading the response, blameless post-mortems.
+- Performance :: Profiling, load tests, capacity planning.
+- Security mindset :: Threat modelling, least privilege, secure defaults.
+# Working with people :: Multiply your impact.
+- Code review :: Kind, specific, focused on what matters.
+- Mentoring :: Pairing, explaining, growing others.
+- Communication :: Clear writing, status updates, saying no well.
+- Estimation and planning :: Breaking work down, surfacing risk early.
+# Product and business sense :: Build the right thing.
+- Understanding users :: Talk to them, read the data.
+- Prioritising :: Impact vs. effort, technical debt as a business choice.
+- Working with product and design :: Shared goals, early involvement.
+# Leading technically :: Influence without authority.
+- Driving decisions :: Gather input, decide, write it down (ADRs).
+- Technical strategy :: Where the codebase should be in a year.
+- Cross-team work :: Aligning teams, owning outcomes.
+- ?Staff engineer paths :: Tech lead, architect, solver, right hand.
+@ StaffEng | https://staffeng.com/
+! Checkpoint: own an outcome :: Lead a project from problem to launch and measure its impact.

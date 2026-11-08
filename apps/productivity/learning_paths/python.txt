@@ -1,0 +1,57 @@
+title: Python: beginner to senior
+category: language
+color: blue
+about: The language, its standard library, its internals and the tools seniors rely on.
+
+# Basics :: Writing your first programs.
+@ The Python tutorial | https://docs.python.org/3/tutorial/
+- Syntax, variables and types :: Numbers, strings, booleans, None.
+- Control flow :: if, for, while, break, continue.
+- Functions :: Arguments, defaults, *args, **kwargs, return values.
+- Collections :: Lists, tuples, dicts, sets and comprehensions.
+- Errors and exceptions :: try, except, else, finally, raising.
+# Writing Pythonic code :: Code that reads like Python.
+- PEP 8 and idioms :: Style, naming, the Zen of Python.
+- Modules and packages :: Imports, __init__, project layout.
+- Files and context managers :: with, pathlib, reading and writing.
+- Standard library tour :: collections, itertools, functools, datetime, json.
+# Object-oriented Python :: Classes the Python way.
+- Classes and dataclasses :: Attributes, methods, @dataclass.
+- Dunder methods :: __repr__, __eq__, __len__, __iter__ and friends.
+- Inheritance and protocols :: Duck typing, ABCs, typing.Protocol.
+- Properties and descriptors :: Computed attributes.
+! Checkpoint: a CLI tool :: A packaged command-line tool with argparse or Typer and tests.
+# Tooling :: The professional setup.
+- Virtual environments and packaging :: venv, pip, pyproject.toml, uv or Poetry.
+- Testing with pytest :: Fixtures, parametrisation, coverage.
+- Linting and formatting :: Ruff, Black.
+- Type hints and mypy :: Gradual typing that catches bugs.
+@ typing — support for type hints | https://docs.python.org/3/library/typing.html
+# Intermediate features :: The parts that make Python powerful.
+- Iterators and generators :: yield, lazy pipelines.
+- Decorators :: Functions that wrap functions.
+- Closures and functional tools :: lambda, map, partial.
+- Context managers in depth :: contextlib, writing your own.
+# Concurrency :: Doing several things at once.
+- Threads and the GIL :: When threads help (I/O) and when they don't.
+- Multiprocessing :: Real parallelism for CPU-bound work.
+- asyncio :: async/await, event loops, tasks, aiohttp/httpx.
+- ?Free-threaded Python :: The no-GIL builds and what they change.
+# Web and data :: Where Python earns its keep.
+- Django :: Batteries included: ORM, admin, auth.
+@ Django tutorial | https://docs.djangoproject.com/en/stable/intro/tutorial01/
+- FastAPI :: Typed, async APIs.
+- ?pandas and NumPy :: Data work.
+- Databases :: SQLAlchemy, migrations, connection pools.
+# Internals and performance :: How CPython really works.
+- The data model :: Everything is an object; references and mutability.
+- Memory management :: Reference counting, garbage collection.
+- Bytecode and the interpreter :: dis, how code runs.
+- Profiling and speed-ups :: cProfile, line_profiler, caching, vectorising.
+- ?C extensions and Cython :: When pure Python is too slow.
+# Senior Python :: Judgement and leadership.
+- Large codebase design :: Packages, boundaries, dependency direction.
+- Metaprogramming :: Metaclasses, __init_subclass__, and when not to.
+- Reviewing Python code :: Readability, typing, testability.
+- Security :: Dependency audits, safe deserialisation, secrets.
+! Checkpoint: a production service :: A typed, tested, async Python service with CI, packaging and monitoring.

@@ -30,6 +30,7 @@ most come first in each group.{% endcomment %}
   <p class="nav-section-label">{% translate "Study" %}</p>
   <a href="{% url 'work:exam' %}" class="nav-link {% if '/work/exam/' in p %}is-active{% endif %}">{% icon "exam" %}{% translate "Exam notes" %}</a>
   <a href="{% url 'work:cards' %}" class="nav-link {% if '/work/cards/' in p %}is-active{% endif %}">{% icon "cards" %}{% translate "Flashcards" %}</a>
+  <a href="{% url 'work:paths' %}" class="nav-link {% if '/work/learning-roadmaps/' in p %}is-active{% endif %}">{% icon "journey" %}{% translate "Learning roadmaps" %}</a>
   <a href="{% url 'work:learning' %}" class="nav-link {% if '/work/learning/' in p %}is-active{% endif %}">{% icon "book" %}{% translate "Learning" %}</a>
 </div>
 <div class="space-y-0.5">

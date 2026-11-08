@@ -1,0 +1,141 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{% translate "Learning roadmaps" %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+{{ prompt_tpl|json_script:"path-prompt" }}
+<div class="lpl" data-page-keys="n i" x-data="pathsList(JSON.parse(document.getElementById('path-prompt').textContent), '{% url 'work:api_path_import' %}')"
+     @keydown.window="if ($event.target.closest('input,textarea,select,[contenteditable]') || $event.ctrlKey || $event.metaKey || $event.altKey || importOpen || newOpen) return;
+                      if ($event.key === 'i') { $event.preventDefault(); openImport() } else if ($event.key === 'n') { $event.preventDefault(); newOpen = true; $nextTick(() => $refs.newTitle.focus()) }">
+{% csrf_token %}
+<header class="wp-head">
+  <div class="min-w-0"><h1 class="wp-title">{% translate "Learning roadmaps" %}</h1>
+    <p class="wp-sub">{% translate "Step-by-step maps of what to learn — for a role, a skill or a language. Tick topics off as you learn them, arrange the map your way, and turn the next topics into tasks." %}</p></div>
+  <div class="wp-actions">
+    <nav class="seg seg-sm" aria-label="{% translate 'Show' %}">
+      <a href="?show=active" class="seg-item{% if show == 'active' %} is-active{% endif %}">{% translate "Active" %}</a>
+      <a href="?show=archived" class="seg-item{% if show == 'archived' %} is-active{% endif %}">{% translate "Archived" %}{% if archived %} <span class="wg-count">{{ archived }}</span>{% endif %}</a>
+    </nav>
+    <button type="button" class="btn btn-secondary" @click="openImport()">{% icon "upload" %}{% translate "Import" %}<kbd class="rmp-kbd">I</kbd></button>
+    <button type="button" class="btn btn-primary" @click="newOpen = true; $nextTick(() => $refs.newTitle.focus())">{% icon "plus" %}{% translate "Blank roadmap" %}<kbd class="rmp-kbd">N</kbd></button>
+  </div>
+</header>
+
+{% if cards %}
+<h2 class="lpl-h">{% translate "Yours" %}</h2>
+<div class="rmp-cards lpl-mine">
+  {% for c in cards %}
+  <a href="{% url 'work:path' c.p.pk %}" class="rmp-card" data-color="{{ c.p.color }}">
+    <div class="rmp-card-top"><h3 class="rmp-card-title">{{ c.p.title }}</h3><span class="rmp-pct num">{{ c.s.pct }}%</span></div>
+    {% if c.p.description %}<p class="rmp-card-about">{{ c.p.description|truncatechars:140 }}</p>{% endif %}
+    <div class="lpl-bar" role="progressbar" aria-valuenow="{{ c.s.pct }}" aria-valuemin="0" aria-valuemax="100" aria-label="{% translate 'Progress' %}">
+      <i class="is-done" style="flex-grow: {{ c.s.done }}"></i><i class="is-learning" style="flex-grow: {{ c.s.learning }}"></i><i class="is-rest" style="flex-grow: {{ c.s.rest }}"></i></div>
+    <p class="rmp-card-meta">
+      <span>{% blocktranslate with done=c.s.done total=c.s.total %}{{ done }} of {{ total }} done{% endblocktranslate %}</span>
+      {% if c.s.learning %}<span class="rmp-tag" data-tone="active">{% blocktranslate with n=c.s.learning %}{{ n }} learning{% endblocktranslate %}</span>{% endif %}
+    </p>
+    {% if c.s.next %}<p class="rmp-card-next">{% icon "arrow-right" %}<span>{% translate "Next" %}: <b>{{ c.s.next }}</b></span></p>{% endif %}
+  </a>
+  {% endfor %}
+</div>
+{% elif show == "archived" %}
+<div class="empty"><div class="empty-icon">{% icon "archive" %}</div><h3 class="empty-title">{% translate "Nothing archived" %}</h3></div>
+{% endif %}
+
+{% if show == "active" %}
+<section class="lpl-gallery" aria-labelledby="lpl-start">
+  <header class="lpl-gallery-head">
+    <div><h2 id="lpl-start" class="lpl-h">{% translate "Start from a ready-made roadmap" %}</h2>
+      <p class="wp-sub">{% translate "Each one becomes yours: rename, move, add or delete anything." %}</p></div>
+    <button type="button" class="btn btn-ghost btn-sm" @click="openImport(); $nextTick(() => aiOpen = true)">{% icon "sparkles" %}{% translate "Make one with ChatGPT or Claude" %}</button>
+  </header>
+  {% for name, items in gallery %}
+  <h3 class="lpl-cat">{{ name }}</h3>
+  <div class="lpl-tpls">
+    {% for t in items %}
+    <form method="post" class="lpl-tpl" data-color="{{ t.color }}">
+      {% csrf_token %}<input type="hidden" name="action" value="template"><input type="hidden" name="template" value="{{ t.key }}">
+      <span class="lpl-tpl-pic" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <div class="lpl-tpl-body">
+        <b>{{ t.title }}</b>
+        <small>{{ t.about }}</small>
+        <small class="lpl-tpl-n">{% blocktranslate with n=t.steps m=t.count %}{{ n }} steps · {{ m }} topics{% endblocktranslate %}{% if t.started %} · <span class="lpl-started">{% icon "check" %}{% translate "started" %}</span>{% endif %}</small>
+      </div>
+      <div class="lpl-tpl-acts">
+        <button type="submit" class="btn btn-secondary btn-sm">{% if t.started %}{% translate "Start again" %}{% else %}{% translate "Start" %}{% endif %}</button>
+        <a href="{% url 'work:path_template' t.key %}" class="icon-btn" aria-label="{% translate 'Download as JSON' %}" data-tip="{% translate 'Download as JSON' %}">{% icon "download" %}</a>
+      </div>
+    </form>
+    {% endfor %}
+  </div>
+  {% endfor %}
+</section>
+{% endif %}
+
+{# ── blank ── #}
+<div class="wc-backdrop" x-show="newOpen" x-cloak x-transition.opacity @click="newOpen = false"></div>
+<div class="rmp-new" x-show="newOpen" x-cloak x-trap.noscroll="newOpen" x-transition role="dialog" aria-modal="true" aria-labelledby="lpl-new-title" @keydown.escape.stop="newOpen = false">
+  <form method="post" class="rmp-new-form">
+    {% csrf_token %}<input type="hidden" name="action" value="blank">
+    <header class="rmp-new-head"><h2 id="lpl-new-title" class="card-title">{% icon "map" %}{% translate "Blank roadmap" %}</h2>
+      <button type="button" class="icon-btn" @click="newOpen = false" aria-label="{% translate 'Close' %}">{% icon "x" %}</button></header>
+    <label class="label" for="lpl-title">{% translate "Name" %}</label>
+    <input id="lpl-title" x-ref="newTitle" name="title" class="form-input" maxlength="150" placeholder="{% translate 'e.g. Kubernetes, Become a tech lead' %}" autocomplete="off">
+    <p class="help">{% translate "It starts with one step. Press Tab on a box to add a topic under it, double-click anywhere to add a box." %}</p>
+    <footer class="rmp-new-foot">
+      <button type="button" class="btn btn-ghost" @click="newOpen = false">{% translate "Cancel" %}</button>
+      <button type="submit" class="btn btn-primary">{% icon "plus" %}{% translate "Create" %}</button>
+    </footer>
+  </form>
+</div>
+
+{# ── import ── #}
+<div class="wc-backdrop" x-show="importOpen" x-cloak x-transition.opacity @click="importOpen = false"></div>
+<div class="rmp-new lpl-import" x-show="importOpen" x-cloak x-trap.noscroll="importOpen" x-transition role="dialog" aria-modal="true" aria-labelledby="lpl-imp-title" @keydown.escape.stop="importOpen = false">
+  <div class="rmp-new-form">
+    <header class="rmp-new-head"><h2 id="lpl-imp-title" class="card-title">{% icon "upload" %}{% translate "Import a learning roadmap" %}</h2>
+      <button type="button" class="icon-btn" @click="importOpen = false" aria-label="{% translate 'Close' %}">{% icon "x" %}</button></header>
+    <nav class="seg seg-sm" aria-label="{% translate 'From' %}">
+      <button type="button" class="seg-item" :class="tab === 'paste' && 'is-active'" @click="tab = 'paste'; check()">{% translate "Paste" %}</button>
+      <button type="button" class="seg-item" :class="tab === 'file' && 'is-active'" @click="tab = 'file'; check()">{% translate "Choose a file" %}</button>
+    </nav>
+    <textarea x-show="tab === 'paste'" x-ref="paste" x-model="text" class="form-input lpl-paste" rows="9" spellcheck="false"
+              placeholder="{% translate 'Paste the JSON here — straight from ChatGPT or Claude is fine, even with ``` around it.' %}" aria-label="{% translate 'Roadmap JSON' %}"></textarea>
+    <label x-show="tab === 'file'" class="lpl-drop" @dragover.prevent @drop.prevent="drop($event)">
+      {% icon "upload" %}<span x-text="fileName || '{% translate "Choose a .json file, or drop it here" %}'"></span>
+      <input type="file" accept=".json,application/json,.txt,.md" class="sr-only" @change="pick($event)">
+    </label>
+    <p class="lpl-check is-ok" x-show="info" x-cloak>{% icon "check" %}<span x-text="info ? '“' + info.title + '” · ' + info.steps + ' {% translate "steps" %} · ' + info.boxes + ' {% translate "topics in all" %}' + (info.resources ? ' · ' + info.resources + ' {% translate "links" %}' : '') + (info.done ? ' · ' + info.done + ' {% translate "done" %}' : '') : ''"></span></p>
+    <p class="lpl-check is-bad" x-show="error" x-cloak role="alert">{% icon "alert" %}<span x-text="error"></span></p>
+
+    <details class="lpl-ai" :open="aiOpen" @toggle="aiOpen = $el.open">
+      <summary>{% icon "sparkles" %}{% translate "Make one with ChatGPT or Claude" %}</summary>
+      <ol class="lpl-steps">
+        <li>{% translate "Fill these in — the prompt below changes with them." %}</li>
+        <li>{% translate "Copy the prompt and paste it into ChatGPT, Claude or Gemini." %}</li>
+        <li>{% translate "Paste its answer above, check it, and press Create." %}</li>
+      </ol>
+      <div class="lpl-ai-grid">
+        <label><span class="label">{% translate "What to learn" %}</span><input x-model="topic" class="form-input input-compact" placeholder="{% translate 'e.g. Backend with Go, AWS, Kubernetes' %}"></label>
+        <label><span class="label">{% translate "Where you are now" %}</span><input x-model="level" class="form-input input-compact" placeholder="{% translate 'e.g. I know Python basics' %}"></label>
+        <label><span class="label">{% translate "Time you have" %}</span><input x-model="time" class="form-input input-compact" placeholder="{% translate 'e.g. 3 months, 1 hour a day' %}"></label>
+      </div>
+      <div class="lpl-prompt"><pre x-text="aiPrompt"></pre>
+        <button type="button" class="btn btn-secondary btn-sm" @click="copy(aiPrompt)">{% icon "copy" %}{% translate "Copy the prompt" %}</button></div>
+      <p class="help">{% translate "The format, in short:" %} <code>title</code>, <code>steps</code> ({% translate "each with a" %} <code>title</code>; {% translate "topics under it go in" %} <code>children</code>). {% translate "Everything else is optional." %}
+        <a href="{% url 'work:path_example' %}" class="wd-link">{% translate "Download an example" %}</a></p>
+    </details>
+
+    <footer class="rmp-new-foot">
+      <button type="button" class="btn btn-ghost" @click="importOpen = false">{% translate "Cancel" %}</button>
+      <button type="button" class="btn btn-primary" :disabled="!info || busy" @click="create()">{% icon "plus" %}{% translate "Create" %}</button>
+    </footer>
+  </div>
+</div>
+</div>
+{% endblock %}
+
+{% block work_js %}
+<script src="{% asset 'js/paths.js' %}"></script>
+{% endblock %}

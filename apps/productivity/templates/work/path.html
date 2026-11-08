@@ -1,0 +1,232 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{{ path.title }} | {% translate "Learning roadmaps" %}{% endblock %}
+
+{% block work %}
+{{ payload|json_script:"path-data" }}
+{{ texts|json_script:"path-text" }}
+<div class="lp" data-page-keys="c n s" data-color="{{ path.color }}" x-data="pathPage(JSON.parse(document.getElementById('path-data').textContent))">
+
+  {# ── name, how far along, what's next, find, more ── #}
+  <header class="lp-head">
+    <a href="{% url 'work:paths' %}" class="icon-btn" aria-label="{% translate 'All learning roadmaps' %}" data-tip="{% translate 'All learning roadmaps' %}">{% icon "chevron-left" %}</a>
+    <input class="rmp-title lp-name" :value="path.title" maxlength="150" aria-label="{% translate 'Roadmap name' %}"
+           @change="$event.target.value.trim() ? rename({ title: $event.target.value.trim() }) : ($event.target.value = path.title)" @keydown.enter="$event.target.blur()">
+    <span class="wn-state" :data-state="state" role="status" aria-live="polite"><i aria-hidden="true"></i><span x-text="stateText()"></span></span>
+    <span class="rmp-archived" x-show="path.archived" x-cloak>{% icon "archive" %}{% translate "Archived" %}</span>
+    <div class="lp-progress" :title="progress.done + ' {% translate "done" %} · ' + progress.learning + ' {% translate "learning" %} · ' + progress.skipped + ' {% translate "skipped" %}'">
+      <span class="lpl-bar" aria-hidden="true"><i class="is-done" :style="'flex-grow:' + progress.done"></i><i class="is-learning" :style="'flex-grow:' + progress.learning"></i><i class="is-rest" :style="'flex-grow:' + (progress.left - progress.learning)"></i></span>
+      <b class="num" x-text="progress.pct + '%'"></b><small class="num" x-text="progress.done + ' / ' + (progress.total - progress.skipped)"></small>
+    </div>
+    <button type="button" class="btn btn-primary btn-sm lp-next" @click="next()" :disabled="!upNext" data-tip="C">
+      {% icon "play" %}<span class="lp-next-text"><small>{% translate "Continue" %}</small><span x-text="upNext ? upNext.title : '{% translate "All done" %}'"></span></span></button>
+    <label class="rmp-search lp-find">{% icon "search" %}<input x-ref="find" x-model="q" @input="hitAt = -1" type="search" data-work-search placeholder="{% translate 'Find a topic…' %}" aria-label="{% translate 'Find a topic' %}"
+           @keydown.enter.prevent="nextHit($event.shiftKey)" @keydown.escape="q = ''; $event.target.blur()"><small class="lp-hits" x-show="q.trim()" x-text="hitText()"></small></label>
+    <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
+      <button type="button" class="icon-btn" @click="open = !open" :aria-expanded="open" aria-label="{% translate 'More actions' %}">{% icon "dots" %}</button>
+      <div class="menu menu-right" x-show="open" x-cloak role="menu" @click="open = false">
+        <p class="menu-label">{% translate "Tasks" %}</p>
+        <button type="button" class="menu-item" role="menuitem" @click="plan(5)">{% icon "check" %}{% translate "Make tasks for the next 5 topics" %}</button>
+        <button type="button" class="menu-item" role="menuitem" @click="plan(2, true)">{% icon "sun" %}{% translate "Put the next 2 topics on Today" %}</button>
+        <div class="menu-sep"></div>
+        <p class="menu-label">{% translate "Map" %}</p>
+        <button type="button" class="menu-item" role="menuitem" @click="tidy()">{% icon "align-vmiddle" %}{% translate "Tidy up the layout" %}</button>
+        <button type="button" class="menu-item" role="menuitem" @click="toggleLock()">{% icon "lock" %}<span x-text="locked ? '{% translate "Unlock the layout" %}' : '{% translate "Lock the layout" %}'"></span></button>
+        <button type="button" class="menu-item" role="menuitem" @click="fit()">{% icon "fit" %}{% translate "Show it all" %}<kbd>1</kbd></button>
+        <div class="menu-sep"></div>
+        <a class="menu-item" role="menuitem" href="{% url 'work:path_export' path.pk %}">{% icon "download" %}{% translate "Download (JSON, with my progress)" %}</a>
+        <a class="menu-item" role="menuitem" href="{% url 'work:path_export' path.pk %}?progress=0">{% icon "download" %}{% translate "Download (JSON, the map only — to share)" %}</a>
+        <button type="button" class="menu-item" role="menuitem" @click="roadmap('duplicate')">{% icon "copy" %}{% translate "Make a copy" %}</button>
+        <button type="button" class="menu-item" role="menuitem" @click="roadmap('reset')">{% icon "undo" %}{% translate "Clear my progress" %}</button>
+        <button type="button" class="menu-item" role="menuitem" @click="roadmap('archive')">{% icon "archive" %}<span x-text="path.archived ? '{% translate "Unarchive" %}' : '{% translate "Archive" %}'"></span></button>
+        <div class="menu-sep"></div>
+        <button type="button" class="menu-item is-danger" role="menuitem" @click="roadmap('delete')">{% icon "trash" %}{% translate "Delete" %}</button>
+      </div>
+    </div>
+  </header>
+
+  <p class="lp-tip" x-show="tip" x-cloak>{% icon "info" %}
+    <span>{% blocktranslate trimmed %}Click a box to open it · tick its circle when learnt · drag boxes anywhere · drag from a dot to join two boxes (or into empty space for a new one) · double-click to add or rename · <kbd>Tab</kbd> adds a topic under the chosen box · right-click for more{% endblocktranslate %}</span>
+    <button type="button" class="icon-btn" @click="dismissTip()" aria-label="{% translate 'Got it' %}">{% icon "x" %}</button></p>
+
+  <div class="lp-body">
+    {# ── the canvas ── #}
+    <div class="lp-canvas" x-ref="canvas" :class="{ 'is-pan': space, 'is-locked': locked, 'is-linking': !!link }" :style="gridStyle" tabindex="-1"
+         @pointerdown="down($event)" @pointermove="trackPointer($event)" @pointerup="lift($event)" @pointercancel="lift($event)"
+         @wheel.prevent="wheel($event)" @dblclick="dbl($event)" @contextmenu.prevent="context($event)" aria-label="{% translate 'The roadmap' %}">
+      <div class="lp-world" :style="worldStyle">
+        <svg class="lp-edges" aria-hidden="true"><g x-html="edgesSvg"></g></svg>
+        <template x-for="n in nodes" :key="n.key">
+          <div class="lp-node" :data-key="n.key" :data-kind="n.kind" :data-status="n.status" :data-color="n.color || null" :class="boxClass(n)" :style="boxStyle(n)">
+            <button type="button" class="lp-check" x-show="n.kind !== 'note'" @click.stop="check(n)" :aria-pressed="(n.status === 'done').toString()"
+                    :aria-label="n.title + ': ' + texts.statuses[n.status]" :title="texts.statuses[n.status]"></button>
+            <span class="lp-title" x-show="editing !== n.key" x-text="n.title"></span>
+            <template x-if="editing === n.key"><input class="lp-edit" x-model="editText" maxlength="200" @keydown="editKey($event)" @blur="commitEdit()" aria-label="{% translate 'Title' %}"></template>
+            <span class="lp-marks" x-show="n.tasks.open || n.resources.length">
+              <i class="lp-mark" x-show="n.resources.length" title="{% translate 'Has links to learn from' %}">{% icon "link" %}</i>
+              <i class="lp-mark is-tasks" x-show="n.tasks.open" :title="n.tasks.open + ' {% translate "open tasks" %}'">{% icon "check" %}<b x-text="n.tasks.open"></b></i>
+            </span>
+            <i class="lp-port" data-side="t"></i><i class="lp-port" data-side="r"></i><i class="lp-port" data-side="b"></i><i class="lp-port" data-side="l"></i>
+            <i class="lp-resize" x-show="!locked"></i>
+          </div>
+        </template>
+        <div class="lp-frame" x-show="box" :style="box ? 'left:' + box.x + 'px;top:' + box.y + 'px;width:' + box.w + 'px;height:' + box.h + 'px' : ''"></div>
+      </div>
+
+      {# tools #}
+      <div class="lp-float lp-tools" role="toolbar" aria-label="{% translate 'Add' %}">
+        <button type="button" class="lp-tool" @click="addNode('step')" data-tip="{% translate 'A step on the main path (with a step chosen: right below it)' %}">{% icon "plus" %}<span>{% translate "Step" %}</span></button>
+        <button type="button" class="lp-tool" @click="addNode('topic')" data-tip="{% translate 'A topic (with a box chosen: under it) — Tab' %}">{% icon "plus" %}<span>{% translate "Topic" %}</span></button>
+        <button type="button" class="lp-tool" @click="addNode('checkpoint')" data-tip="{% translate 'A checkpoint: something to build' %}">{% icon "flag" %}<span>{% translate "Checkpoint" %}</span></button>
+        <button type="button" class="lp-tool" @click="addNode('note')" data-tip="{% translate 'A note: free text anywhere' %}">{% icon "note" %}<span>{% translate "Note" %}</span></button>
+        <i class="lp-tools-sep"></i>
+        <button type="button" class="lp-tool" @click="undo()" :disabled="!hist.length" aria-label="{% translate 'Undo' %}" data-tip="Ctrl Z">{% icon "undo" %}</button>
+        <button type="button" class="lp-tool" @click="redo()" :disabled="!fut.length" aria-label="{% translate 'Redo' %}" data-tip="Ctrl Shift Z">{% icon "redo" %}</button>
+        <button type="button" class="lp-tool" @click="tidy()" aria-label="{% translate 'Tidy up the layout' %}" data-tip="{% translate 'Tidy up the layout' %}">{% icon "align-vmiddle" %}</button>
+        <button type="button" class="lp-tool" :class="locked && 'is-on'" @click="toggleLock()" :aria-pressed="locked.toString()" aria-label="{% translate 'Lock the layout' %}" data-tip="{% translate 'Lock the layout' %}">{% icon "lock" %}</button>
+      </div>
+      <div class="lp-float lp-zoom">
+        <button type="button" class="lp-tool" @click="zoomBy(1 / 1.2)" aria-label="{% translate 'Zoom out' %}" data-tip="−">{% icon "zoom-out" %}</button>
+        <button type="button" class="lp-tool lp-pct" @click="setView({ x: view.x, y: view.y, k: 1 })" x-text="zoomPct" data-tip="100%"></button>
+        <button type="button" class="lp-tool" @click="zoomBy(1.2)" aria-label="{% translate 'Zoom in' %}" data-tip="+">{% icon "zoom-in" %}</button>
+        <button type="button" class="lp-tool" @click="fit()" aria-label="{% translate 'Show it all' %}" data-tip="1">{% icon "fit" %}</button>
+      </div>
+      <div class="lp-float lp-legend" aria-hidden="true">
+        <span data-status="done"><i></i>{% translate "Done" %}</span><span data-status="learning"><i></i>{% translate "Learning" %}</span>
+        <span data-status="skipped"><i></i>{% translate "Skipped" %}</span><span class="is-optional"><i></i>{% translate "Optional" %}</span>
+      </div>
+
+      {# right-click #}
+      <div class="lp-menu menu" x-show="menu" x-cloak :style="menu ? 'left:' + menu.x + 'px;top:' + menu.y + 'px' : ''" role="menu" @click="menu = null" @pointerdown.stop>
+        <template x-if="menu && menu.key">
+          <div>
+            <template x-if="node(menu.key) && node(menu.key).kind !== 'note'">
+              <div>{% for v, l in statuses %}<button type="button" class="menu-item" role="menuitem" data-status="{{ v }}" @click="setStatus(selKeys, '{{ v }}')"><i class="lp-dot" data-status="{{ v }}"></i>{{ l }}<kbd>{% if v == "done" %}D{% elif v == "learning" %}L{% elif v == "skipped" %}S{% else %}U{% endif %}</kbd></button>{% endfor %}
+                <div class="menu-sep"></div></div>
+            </template>
+            <button type="button" class="menu-item" role="menuitem" @click="open(menu.key)">{% icon "note" %}{% translate "Open" %}<kbd>Enter</kbd></button>
+            <button type="button" class="menu-item" role="menuitem" @click="addChild(menu.key)">{% icon "plus" %}{% translate "Add a topic under it" %}<kbd>Tab</kbd></button>
+            <button type="button" class="menu-item" role="menuitem" @click="startEdit(menu.key)">{% icon "edit" %}{% translate "Rename" %}<kbd>F2</kbd></button>
+            <button type="button" class="menu-item" role="menuitem" @click="duplicateSel()">{% icon "copy" %}{% translate "Duplicate" %}<kbd>Ctrl D</kbd></button>
+            <div class="menu-sep"></div>
+            <button type="button" class="menu-item is-danger" role="menuitem" @click="deleteSel()">{% icon "trash" %}{% translate "Delete" %}<kbd>Del</kbd></button>
+          </div>
+        </template>
+        <template x-if="menu && !menu.key && menu.edge !== null">
+          <div>
+            <button type="button" class="menu-item" role="menuitem" @click="edgeStyle(menu.edge, 'solid')">{% icon "arrow-right" %}<span x-text="texts.lineSolid"></span></button>
+            <button type="button" class="menu-item" role="menuitem" @click="edgeStyle(menu.edge, 'dashed')">{% icon "arrow-right" %}<span x-text="texts.lineDashed"></span></button>
+            <div class="menu-sep"></div>
+            <button type="button" class="menu-item is-danger" role="menuitem" @click="dropEdge(menu.edge)">{% icon "trash" %}{% translate "Delete the line" %}</button>
+          </div>
+        </template>
+        <template x-if="menu && !menu.key && menu.edge === null">
+          <div>
+            <button type="button" class="menu-item" role="menuitem" @click="addNode('step', { x: menu.wx - 130, y: menu.wy - 24 })">{% icon "plus" %}{% translate "Add a step here" %}</button>
+            <button type="button" class="menu-item" role="menuitem" @click="addNode('topic', { x: menu.wx - 105, y: menu.wy - 20 })">{% icon "plus" %}{% translate "Add a topic here" %}</button>
+            <button type="button" class="menu-item" role="menuitem" @click="addNode('checkpoint', { x: menu.wx - 130, y: menu.wy - 24 })">{% icon "flag" %}{% translate "Add a checkpoint here" %}</button>
+            <button type="button" class="menu-item" role="menuitem" @click="addNode('note', { x: menu.wx - 110, y: menu.wy - 20 })">{% icon "note" %}{% translate "Add a note here" %}</button>
+            <div class="menu-sep"></div>
+            <button type="button" class="menu-item" role="menuitem" @click="fit()">{% icon "fit" %}{% translate "Show it all" %}<kbd>1</kbd></button>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    {# ── one box ── #}
+    <aside class="rmp-side lp-side" x-show="current" x-cloak x-transition:enter="rmp-slide-in" x-transition:leave="rmp-slide-out" role="dialog" aria-labelledby="lp-side-title" :data-color="current && current.color ? current.color : path.color">
+      <template x-if="current">
+        <div class="rmp-side-in">
+          <header class="rmp-side-head">
+            <select class="form-input input-compact lp-kind" :value="current.kind" @change="setField(current, 'kind', $event.target.value)" aria-label="{% translate 'Kind' %}" data-native>
+              {% for v, l in kinds %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select>
+            <span class="rmp-grow"></span>
+            <button type="button" class="icon-btn" @click="centerOn(current.key)" aria-label="{% translate 'Show it on the map' %}" data-tip="{% translate 'Show it on the map' %}">{% icon "target" %}</button>
+            <button type="button" class="icon-btn" @click="addChild(current.key)" aria-label="{% translate 'Add a topic under it' %}" data-tip="{% translate 'Add a topic under it' %} (Tab)">{% icon "plus" %}</button>
+            <button type="button" class="icon-btn" @click="select(current.key); deleteSel()" aria-label="{% translate 'Delete' %}" data-tip="{% translate 'Delete' %}">{% icon "trash" %}</button>
+            <button type="button" class="icon-btn" @click="close()" aria-label="{% translate 'Close' %}" data-tip="Esc">{% icon "x" %}</button>
+          </header>
+          <textarea id="lp-side-title" class="rmp-side-title" rows="1" :value="current.title" maxlength="200" aria-label="{% translate 'Title' %}"
+                    @change="$event.target.value.trim() ? setField(current, 'title', $event.target.value.replace(/\s+/g, ' ').trim()) : ($event.target.value = current.title)" @keydown.enter.prevent="$event.target.blur()"></textarea>
+
+          <div class="lp-statuses" role="radiogroup" aria-label="{% translate 'Status' %}" x-show="current.kind !== 'note'">
+            {% for v, l in statuses %}<button type="button" role="radio" class="lp-status" data-status="{{ v }}" :aria-checked="(current.status === '{{ v }}').toString()" @click="current.status !== '{{ v }}' && setStatus([current.key], '{{ v }}')"><i class="lp-dot" data-status="{{ v }}"></i>{{ l }}</button>{% endfor %}
+          </div>
+          <div class="lp-opts" x-show="current.kind !== 'note'">
+            <label class="rmp-check"><input type="checkbox" :checked="current.optional" @change="setField(current, 'optional', $event.target.checked)">{% translate "Optional — nice to know, not a must" %}</label>
+            <span class="rmp-colors lp-colors">
+              <button type="button" class="rmp-color is-lane" :class="!current.color && 'is-on'" @click="setField(current, 'color', '')" data-color="{{ path.color }}" aria-label="{% translate 'The roadmap’s colour' %}" data-tip="{% translate 'The roadmap’s colour' %}"></button>
+              {% for v, l in colors %}<button type="button" class="rmp-color" data-color="{{ v }}" :class="current.color === '{{ v }}' && 'is-on'" @click="setField(current, 'color', '{{ v }}')" aria-label="{{ l }}" data-tip="{{ l }}"></button>{% endfor %}
+            </span>
+          </div>
+
+          {# what it is #}
+          <section class="rmp-sec">
+            <header class="rmp-sec-head"><h3>{% icon "note" %}{% translate "What it is" %}</h3><span class="rmp-grow"></span>
+              <button type="button" class="btn btn-ghost btn-sm" x-show="!descEdit && current.description" @click="descEdit = true">{% icon "edit" %}{% translate "Edit" %}</button></header>
+            <div class="wn-md rmp-desc" x-show="!descEdit && current.description" x-html="md(current.description)" @dblclick="descEdit = true"></div>
+            <textarea x-show="descEdit || !current.description" class="form-input" rows="4" :value="current.description"
+                      placeholder="{% translate 'What to learn here, why it matters, what “knowing it” looks like. Markdown works.' %}" aria-label="{% translate 'Description' %}"
+                      @change="setField(current, 'description', $event.target.value); descEdit = false"></textarea>
+          </section>
+
+          {# where to learn it #}
+          <section class="rmp-sec" x-show="current.kind !== 'note'">
+            <header class="rmp-sec-head"><h3>{% icon "book" %}{% translate "Learn it from" %}</h3><small x-show="current.resources.length" x-text="current.resources.length"></small></header>
+            <ul class="lp-res">
+              <template x-for="(r, i) in current.resources" :key="r.url + i">
+                <li><span class="lp-rtype" x-text="r.type"></span>
+                  <a :href="r.url" target="_blank" rel="noopener noreferrer"><span x-text="r.title"></span><small x-text="host(r.url)"></small></a>
+                  <button type="button" class="icon-btn rmp-untask" @click="dropResource(current, i)" aria-label="{% translate 'Remove' %}">{% icon "x" %}</button></li>
+              </template>
+            </ul>
+            <form class="lp-res-add" @submit.prevent="addResource(current)">
+              <input x-model="resUrl" type="url" class="form-input input-compact" placeholder="https://…" aria-label="{% translate 'Link' %}">
+              <input x-model="resTitle" class="form-input input-compact" placeholder="{% translate 'Name (optional)' %}" aria-label="{% translate 'Name' %}">
+              <select x-model="resType" class="form-input input-compact" aria-label="{% translate 'Type' %}" data-native>{% for r in resource_types %}<option value="{{ r }}">{{ r }}</option>{% endfor %}</select>
+              <button type="submit" class="btn btn-secondary btn-sm" :disabled="!resUrl.trim()">{% icon "plus" %}{% translate "Add" %}</button>
+            </form>
+          </section>
+
+          {# its tasks #}
+          <section class="rmp-sec" x-show="current.kind !== 'note'">
+            <header class="rmp-sec-head"><h3>{% icon "check" %}{% translate "Tasks" %}</h3><small x-show="current.tasks.open + current.tasks.done" x-text="current.tasks.done + ' / ' + (current.tasks.open + current.tasks.done)"></small>
+              <span class="rmp-grow"></span><button type="button" class="btn btn-ghost btn-sm" @click="findOpen = !findOpen; if (findOpen) { search = ''; findTasks(); $nextTick(() => $refs.findTask && $refs.findTask.focus()) }">{% icon "link" %}{% translate "Link tasks" %}</button></header>
+            <form class="lp-task-add" @submit.prevent="addTask(false)">
+              <input x-model="taskText" class="form-input input-compact" maxlength="300" :placeholder="texts.learn.replace('%(topic)s', current.title)" aria-label="{% translate 'New task' %}">
+              <button type="submit" class="btn btn-secondary btn-sm">{% icon "plus" %}{% translate "Task" %}</button>
+              <button type="button" class="btn btn-primary btn-sm" @click="addTask(true)">{% icon "sun" %}{% translate "Do it today" %}</button>
+            </form>
+            <div class="rmp-find" x-show="findOpen" x-cloak>
+              <input x-ref="findTask" x-model="search" @input.debounce.250ms="findTasks()" type="search" class="form-input input-compact" placeholder="{% translate 'Find an open task…' %}" aria-label="{% translate 'Find a task' %}">
+              <ul><template x-for="tk in found" :key="tk.id"><li><button type="button" @click="linkTask(tk)">{% icon "plus" %}<span x-text="tk.title"></span></button></li></template>
+                <li class="rmp-muted" x-show="!found.length" x-text="texts.noMatch"></li></ul>
+            </div>
+            <ul class="rmp-tasks" :aria-busy="loading.toString()">
+              <template x-for="tk in detail.tasks" :key="tk.id">
+                <li :class="tk.done && 'is-done'">
+                  <button type="button" class="rmp-tick" :aria-pressed="tk.done.toString()" @click="tickTask(tk)" :aria-label="tk.title">{% icon "check" %}</button>
+                  <a :href="tk.url" x-text="tk.title"></a>
+                  <small class="lp-today" x-show="tk.today && !tk.done">{% translate "Today" %}</small>
+                  <button type="button" class="icon-btn rmp-untask" @click="unlinkTask(tk)" aria-label="{% translate 'Unlink' %}" data-tip="{% translate 'Unlink (the task stays)' %}">{% icon "x" %}</button>
+                </li>
+              </template>
+              <li class="rmp-muted" x-show="!loading && !detail.tasks.length">{% translate "No tasks yet. “Do it today” puts one on your Today list and marks this as Learning." %}</li>
+            </ul>
+          </section>
+        </div>
+      </template>
+    </aside>
+  </div>
+</div>
+{% endblock %}
+
+{% block work_libs %}
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+{% endblock %}
+
+{% block work_js %}
+<script src="{% asset 'js/paths.js' %}"></script>
+{% endblock %}

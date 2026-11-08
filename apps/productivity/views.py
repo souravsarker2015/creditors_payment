@@ -22,7 +22,7 @@ from django.views.decorators.http import require_POST
 
 from apps.trash.undo import delete_with_undo
 
-from . import cards, dev, diagrams, exam, jobs, linked, reports, roadmap, services
+from . import cards, dev, diagrams, exam, jobs, linked, paths, reports, roadmap, services
 from .api import card_json, entry_json
 from .access import can_use, work_required
 from .forms import DeckForm, EntryForm, GoalForm, HabitForm, LearningForm, ProjectForm, SettingsForm, SnippetForm, SprintForm, TagForm, TaskForm
@@ -65,7 +65,7 @@ def _urls():
         "diagrams": r("work:diagrams"), "diagramBase": "/work/api/diagrams/", "diagramList": r("work:api_diagram_list"),
         "cardsDue": r("work:api_cards_due"), "cardReview": r("work:card_review"), "imageUpload": r("work:api_image_upload"),
         "cards": r("work:cards"), "cardBase": "/work/api/cards/", "cardAdd": r("work:api_card_add"),
-        "prep": r("work:prep"), "prepBase": "/work/api/prep/questions/", "exam": r("work:exam"), "roadmaps": r("work:roadmaps"),
+        "prep": r("work:prep"), "prepBase": "/work/api/prep/questions/", "exam": r("work:exam"), "roadmaps": r("work:roadmaps"), "paths": r("work:paths"),
     }
 
 
@@ -162,6 +162,7 @@ def _commands():
         ("projects", _("Projects"), "folder", "work:projects", "g p", "clients"),
         ("goals", _("Goals"), "flag", "work:goals", "g o", "okr career future"),
         ("roadmaps", _("Roadmaps"), "timeline", "work:roadmaps", "g u", "roadmap plan timeline gantt now next later milestones release epics initiatives quarters productplan linear aha"),
+        ("paths", _("Learning roadmaps"), "journey", "work:paths", "g y", "roadmap.sh learning path skill tree career backend frontend devops data ml system design oop design patterns python java go rust dsa"),
         ("learning", _("Learning"), "book", "work:learning", "g l", "books courses reading list"),
         ("focus", _("Focus timer"), "bolt", "work:focus", "g f", "pomodoro"),
         ("time", _("Time"), "timer", "work:time", "g i", "timesheet hours"),
@@ -332,6 +333,7 @@ def today_view(request):
         "cards_due": cards.due_count(user, today) if Deck.objects.filter(owner=user, is_archived=False).exists() else 0,
         "job_coming": jobs.coming_up(user, today),           # interviews this week, job follow-ups due (the job search)
         "roadmap": roadmap.attention(user, today),            # milestones in the next two weeks, pieces of work late or at risk
+        "keep_learning": paths.keep_going(user),             # the learning roadmap in use and its next topic
         # pull requests waiting on code review for days: a nudge to chase the reviewer
         "left_off": Task.objects.filter(owner=user, status__in=[Status.DOING, Status.TODO]).exclude(left_off="").order_by("-updated_at")[:3],
         "stuck_reviews": list(Task.objects.filter(owner=user, status=Status.REVIEW, updated_at__lt=timezone.now() - timedelta(days=REVIEW_NUDGE_DAYS))

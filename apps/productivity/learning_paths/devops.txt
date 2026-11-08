@@ -1,0 +1,57 @@
+title: DevOps engineer
+category: role
+color: teal
+about: Linux, networks, containers, infrastructure as code and keeping systems healthy.
+
+# Linux :: Nearly every server runs it.
+- Shell and scripting :: Bash, pipes, cron, writing small scripts.
+- Processes and services :: systemd, signals, resource limits.
+- Files, users and permissions :: Ownership, sudo, SSH keys.
+- Package managers :: apt, dnf and keeping things updated.
+# Networking :: How machines find and talk to each other.
+- TCP/IP and ports :: The layers, sockets, common ports.
+- DNS :: Records, resolution, TTLs.
+- HTTP, TLS and certificates :: Let's Encrypt, renewals, HTTPS everywhere.
+- Load balancers and proxies :: Nginx, HAProxy, reverse proxies.
+- Firewalls and VPNs :: Who may reach what.
+# A scripting language :: Automate the boring parts.
+- Python :: Glue code, APIs, tooling.
+- ?Go :: Fast CLIs and cloud-native tools.
+# Version control and CI/CD :: Every change tested and shipped the same way.
+- Git :: Branching strategies, tags, releases.
+- CI pipelines :: GitHub Actions, GitLab CI, Jenkins.
+- Deployment strategies :: Rolling, blue-green, canary, feature flags.
+# Containers :: Package once, run anywhere.
+@ Docker: get started | https://docs.docker.com/get-started/
+- Docker images :: Dockerfiles, layers, small and safe images.
+- Docker Compose :: Multi-container stacks for development.
+- Registries :: Storing and scanning images.
+! Checkpoint: containerised app with CI :: Build, test and push an image on every commit.
+# Kubernetes :: Run containers at scale.
+@ Kubernetes basics | https://kubernetes.io/docs/tutorials/kubernetes-basics/
+- Pods, deployments and services :: The core objects.
+- Config and secrets :: ConfigMaps, Secrets, environment.
+- Ingress :: Getting traffic in.
+- Helm :: Packaging and templating releases.
+- ?Operators and GitOps :: Argo CD, Flux, reconciling desired state.
+# Cloud :: Learn one provider well.
+- Compute, storage and networking :: VMs, buckets, VPCs, subnets.
+- Identity and access :: IAM roles, least privilege.
+- Managed databases and queues :: Let the provider run them.
+- ?Serverless :: Functions and event-driven work.
+- Cost control :: Budgets, rightsizing, tagging.
+# Infrastructure as code :: Servers you can rebuild from a file.
+- Terraform :: Plans, state, modules.
+- Ansible :: Configuring machines repeatably.
+- ?Pulumi :: Infrastructure in a programming language.
+# Observability :: See problems before users do.
+- Metrics :: Prometheus and Grafana.
+- Logs :: Loki, the ELK stack, structured logging.
+- Tracing :: OpenTelemetry, Jaeger.
+- Alerting and on-call :: SLOs, error budgets, runbooks.
+# Reliability and security :: Stay up, stay safe.
+- Backups and disaster recovery :: Test restores, not just backups.
+- Incident response :: Calm handling and blameless post-mortems.
+- Secrets management :: Vault, cloud secret stores.
+- Supply chain security :: Scanning images and dependencies, signing.
+! Checkpoint: a full platform :: Terraform a cluster, deploy with GitOps, add dashboards and alerts.

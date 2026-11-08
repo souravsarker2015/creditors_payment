@@ -122,7 +122,9 @@ class ReportTabsTests(TestCase):
         s = WorkSettings.for_user(self.me)
         first, _last = s.week_of(self.today)
         self.a_day(first)
-        self.entry(first - timedelta(days=3), (9, 0), (10, 0), project=self.site)        # the week before: 1h
+        r = self.client.get(reverse("work:reports"), {"range": "week"})
+        before = reports.previous_period(r.context["start"], r.context["end"])[0]          # (on the week's first day that's only the day before)
+        self.entry(before, (9, 0), (10, 0), project=self.site)                             # the same length of time just before: 1h
         r = self.client.get(reverse("work:reports"), {"range": "week"})
         cmp = r.context["cmp"]
         self.assertEqual((cmp["tracked"]["dir"], cmp["tracked"]["before"]), ("up", 3600))

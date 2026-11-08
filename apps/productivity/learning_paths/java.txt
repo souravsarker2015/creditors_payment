@@ -1,0 +1,59 @@
+title: Java: beginner to senior
+category: language
+color: orange
+about: The language, the JVM, Spring, and the depth expected of senior Java engineers.
+
+# Basics :: Your first Java programs.
+@ dev.java: learn | https://dev.java/learn/
+- Syntax and types :: Primitives, strings, operators.
+- Control flow :: if, switch expressions, loops.
+- Methods :: Parameters, overloading, return values.
+- Arrays and strings :: StringBuilder, immutability.
+# Object-oriented Java :: Classes, interfaces and records.
+- Classes and objects :: Constructors, access modifiers.
+- Inheritance and interfaces :: Abstract classes, default methods.
+- Records and enums :: Data carriers and fixed sets.
+- Sealed classes and pattern matching :: Modelling closed hierarchies.
+- equals, hashCode and toString :: Getting identity right.
+# Core libraries :: The standard tools.
+- Collections :: List, Set, Map, and choosing between them.
+- Generics :: Type parameters, wildcards, erasure.
+- Exceptions :: Checked vs. unchecked, try-with-resources.
+- Streams and lambdas :: map, filter, collect, Optional.
+- Dates and I/O :: java.time, NIO files.
+! Checkpoint: a console app with tests :: Build it with Maven or Gradle and JUnit.
+# Build tools and testing :: The professional setup.
+- Maven or Gradle :: Dependencies, builds, plugins.
+- JUnit 5 :: Tests, assertions, parameterised tests.
+- Mockito :: Mocking collaborators.
+- Static analysis :: Checkstyle, SpotBugs, Sonar.
+# Concurrency :: Doing work in parallel safely.
+- Threads and executors :: ExecutorService, futures.
+- Synchronisation :: Locks, volatile, atomic types.
+- Concurrent collections :: ConcurrentHashMap, queues.
+- CompletableFuture :: Composing async work.
+- Virtual threads :: Project Loom: millions of cheap threads.
+# Spring :: The framework most Java backends use.
+@ Spring guides | https://spring.io/guides
+- Spring Boot :: Auto-configuration, starters, properties.
+- Dependency injection :: Beans, scopes, configuration.
+- Spring Web :: REST controllers, validation, error handling.
+- Spring Data JPA :: Repositories, entities, transactions.
+- Spring Security :: Authentication, authorisation, JWT.
+- ?Reactive Spring :: WebFlux and when it's worth it.
+# Data :: Persistence done well.
+- JDBC and SQL :: The layer under JPA.
+- Hibernate in depth :: Lazy loading, N+1, caching.
+- Migrations :: Flyway or Liquibase.
+# The JVM :: What runs your code.
+- Memory model :: Heap, stack, metaspace.
+- Garbage collectors :: G1, ZGC, tuning basics.
+- JIT compilation :: How hot code gets fast.
+- Profiling :: JFR, VisualVM, async-profiler.
+# Senior Java :: Depth and judgement.
+- Modular design :: Packages, modules, boundaries.
+- Performance and scalability :: Pools, caching, back-pressure.
+- Microservices with Java :: Spring Cloud, resilience, observability.
+- ?GraalVM native images :: Fast start-up, small footprint.
+- Mentoring and reviews :: Raising the team's Java.
+! Checkpoint: a production Spring service :: Secure, tested, observable, running in containers.

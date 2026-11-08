@@ -1,0 +1,56 @@
+title: Frontend developer
+category: role
+color: pink
+about: HTML, CSS and JavaScript to modern frameworks, accessibility and performance.
+
+# How the web works :: Browsers, HTTP and what a page is made of.
+@ MDN: Learn web development | https://developer.mozilla.org/en-US/docs/Learn_web_development
+- HTTP basics :: Requests, responses, status codes and caching.
+- How browsers render :: Parsing, layout, paint and the critical path.
+- DNS and hosting :: How a domain reaches your files.
+# HTML :: The structure and meaning of a page.
+- Semantic HTML :: header, nav, main, article, button — the right tag for the job.
+- Forms :: Inputs, labels, validation, autocomplete.
+- Accessibility basics :: Alt text, headings, focus order, ARIA only when needed.
+- SEO basics :: Titles, meta descriptions, structured content.
+# CSS :: Making it look right on every screen.
+- Box model and selectors :: Margins, padding, specificity, the cascade.
+- Flexbox :: One-dimensional layouts.
+- Grid :: Two-dimensional layouts.
+- Responsive design :: Media queries, container queries, fluid type.
+- ?Animations :: Transitions and keyframes, respecting reduced motion.
+- ?Tailwind or Sass :: Utility classes or a preprocessor.
+# JavaScript :: The language of the browser.
+@ javascript.info | https://javascript.info/
+- Syntax and types :: Variables, functions, objects, arrays.
+- The DOM and events :: Finding elements, changing them, reacting to clicks.
+- Async JavaScript :: Promises, async/await, fetch.
+- Modules :: import, export and how code is split.
+- ?The event loop :: Why setTimeout(0) runs later.
+! Checkpoint: a small app in plain JavaScript :: A to-do list or weather app with no framework.
+# Tooling :: The everyday tools around the code.
+- Git and GitHub :: Branches, pull requests, reviews.
+- npm and packages :: Installing, scripts, lock files.
+- Build tools :: Vite, bundling, dev servers.
+- Linting and formatting :: ESLint and Prettier.
+# TypeScript :: Types that catch mistakes before users do.
+@ TypeScript handbook | https://www.typescriptlang.org/docs/handbook/intro.html
+- Basic types and interfaces :: Describing the shape of data.
+- Generics :: Reusable typed functions and components.
+- Strict mode :: Turning the safety up.
+# A framework :: Components, state and routing.
+- React :: Components, hooks, the most jobs.
+  - State management :: Context, Redux Toolkit, Zustand, server state with TanStack Query.
+  - Next.js :: Server rendering, routing and data loading.
+- ?Vue :: Approachable and well documented.
+- ?Svelte :: Compiles away the framework.
+- ?Angular :: Batteries included, common in enterprises.
+# Testing :: Confidence that it still works.
+- Unit and component tests :: Vitest or Jest with Testing Library.
+- End-to-end tests :: Playwright or Cypress drive a real browser.
+# Performance and quality :: Fast, accessible, reliable.
+- Core Web Vitals :: LCP, INP, CLS and how to improve them.
+- Images and fonts :: Modern formats, sizes, lazy loading.
+- Accessibility in depth :: Keyboard use, screen readers, colour contrast.
+- Security :: XSS, CSP, CORS, safe handling of tokens.
+! Checkpoint: a production app :: A typed, tested app with a framework, deployed, scoring well on Lighthouse.

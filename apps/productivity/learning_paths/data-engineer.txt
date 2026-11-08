@@ -1,0 +1,50 @@
+title: Data engineer
+category: role
+color: amber
+about: Move, clean and model data reliably, from SQL to streaming pipelines.
+
+# Programming foundations :: The tools you will write pipelines with.
+- Python :: Functions, packaging, virtual environments, testing.
+- SQL :: Joins, aggregations, window functions, CTEs.
+- Command line and Git :: Scripts, cron, version control.
+- Data structures :: Lists, dicts, sets, and their costs.
+# Databases :: Where data is kept and how it's read.
+@ PostgreSQL tutorial | https://www.postgresql.org/docs/current/tutorial.html
+- Relational databases :: PostgreSQL, MySQL, transactions, indexes.
+- Data modelling :: Normalised schemas vs. analytics schemas.
+- ?NoSQL :: Document, key-value and wide-column stores.
+- Row vs. column storage :: Why warehouses store columns.
+# Data warehousing :: One trusted place for analytics.
+- Warehouses :: BigQuery, Snowflake, Redshift.
+- Dimensional modelling :: Facts, dimensions, star schemas, slowly changing dimensions.
+- Lakes and lakehouses :: Parquet, Delta Lake, Apache Iceberg.
+# Pipelines: ETL and ELT :: Getting data from A to B, correctly.
+- Batch ingestion :: APIs, files, database replication, change data capture.
+- Transformations with dbt :: SQL models, tests and documentation.
+@ dbt docs | https://docs.getdbt.com/
+- Data quality :: Tests, contracts, freshness checks.
+- Idempotency and backfills :: Re-running safely.
+! Checkpoint: a batch pipeline :: Pull from an API, land in a warehouse, model it with dbt.
+# Orchestration :: Running pipelines on schedule, in order.
+- Apache Airflow :: DAGs, operators, retries, scheduling.
+@ Airflow docs | https://airflow.apache.org/docs/
+- ?Dagster or Prefect :: Newer, asset-oriented orchestrators.
+- Monitoring and alerting :: Know when a job fails or is late.
+# Big data processing :: When data no longer fits on one machine.
+@ Apache Spark docs | https://spark.apache.org/docs/latest/
+- Apache Spark :: DataFrames, partitions, shuffles.
+- Distributed file formats :: Parquet, ORC, partitioning schemes.
+- Performance tuning :: Skew, caching, broadcast joins.
+# Streaming :: Data as it happens.
+@ Kafka documentation | https://kafka.apache.org/documentation/
+- Apache Kafka :: Topics, partitions, consumer groups.
+- Stream processing :: Flink, Spark Structured Streaming, windows.
+- Exactly-once and ordering :: What guarantees really mean.
+# Cloud and infrastructure :: Where it all runs.
+- Cloud storage and compute :: S3/GCS, managed Spark, serverless.
+- Docker and infrastructure as code :: Reproducible environments.
+- Cost awareness :: Partition pruning, storage tiers, query costs.
+# Governance :: Data people can trust and are allowed to use.
+- Catalogues and lineage :: Where data came from and who uses it.
+- Privacy and security :: PII, masking, access control, GDPR.
+! Checkpoint: streaming + batch platform :: Kafka into a lakehouse, orchestrated, tested and documented.

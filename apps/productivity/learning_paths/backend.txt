@@ -1,0 +1,79 @@
+title: Backend developer
+category: role
+color: blue
+about: From how the web works to running reliable services in production.
+
+# How the web works :: What happens between typing an address and getting a page back.
+@ MDN: An overview of HTTP | https://developer.mozilla.org/en-US/docs/Web/HTTP/Overview
+- How the internet works :: Packets, IP addresses, routers and the path a request takes.
+- HTTP and HTTPS :: Methods, status codes, headers, cookies and how TLS keeps it private.
+  - HTTP/2 and HTTP/3 :: Multiplexing, header compression and QUIC.
+- DNS :: How a name becomes an address, record types and caching.
+- ?Hosting and domains :: Buying a domain, pointing it at a server.
+# Learn a language well :: Pick one and go deep before going wide.
+- Python :: Readable and everywhere: Django, FastAPI, data work.
+- Go :: Small, fast, great at concurrency and network services.
+- Java or Kotlin :: The JVM, Spring, big companies and big systems.
+- ?Node.js (TypeScript) :: One language for front and back end.
+- ?Rust :: Speed and safety, for when performance really matters.
+# The command line and Git :: The everyday tools of every developer.
+@ Pro Git (free book) | https://git-scm.com/book/en/v2
+- Terminal basics :: Moving around, files, pipes, grep, permissions.
+- Processes and SSH :: What runs on a server and how to reach it.
+- Git :: Commits, branches, merging, rebasing, resolving conflicts.
+- GitHub or GitLab :: Pull requests, code review, issues.
+# Relational databases :: Where most of your data will live.
+@ PostgreSQL tutorial | https://www.postgresql.org/docs/current/tutorial.html
+- SQL :: SELECT, JOINs, GROUP BY, subqueries, window functions.
+- Modelling data :: Tables, keys, normalisation, when to break the rules.
+- Indexes :: B-trees, composite indexes, reading a query plan.
+- Transactions :: ACID, isolation levels, locks and deadlocks.
+- ORMs :: What they save you and where they hurt (N+1 queries).
+- Migrations :: Changing a schema safely while the app is running.
+# Building APIs :: How other programs talk to yours.
+- REST :: Resources, verbs, status codes, pagination, versioning.
+- JSON and validation :: Checking what comes in, shaping what goes out.
+- ?GraphQL :: One endpoint, the client asks for exactly what it needs.
+- ?gRPC :: Fast typed calls between services with Protocol Buffers.
+- API docs (OpenAPI) :: Describe the API so others can use it.
+! Checkpoint: a CRUD API with a database :: Build and deploy a small API with users, login and tests.
+# Authentication and security :: Who is calling and what they are allowed to do.
+@ OWASP Top 10 | https://owasp.org/www-project-top-ten/
+- Sessions and cookies :: The classic way to keep someone signed in.
+- Tokens and JWT :: Stateless auth, expiry and refresh.
+- OAuth 2 and OpenID Connect :: "Sign in with Google" and delegated access.
+- Password storage :: Hashing with bcrypt or Argon2, never plain text.
+- OWASP Top 10 :: Injection, broken access control, XSS, CSRF and friends.
+# Testing :: Change code without fear.
+- Unit tests :: Small, fast checks of one piece.
+- Integration tests :: The pieces together, with a real database.
+- Test doubles :: Mocks, stubs and fakes — and when not to use them.
+- ?Load testing :: How it behaves under many users (k6, Locust).
+# Caching and performance :: Make it fast and keep it fast.
+- Redis :: An in-memory store for caches, counters and queues.
+- Caching strategies :: Cache-aside, write-through, expiry, invalidation.
+- HTTP caching and CDNs :: Cache-Control, ETags, edge caching.
+- Profiling :: Find the slow part before you fix it.
+# Background work and messaging :: Work that shouldn't make the user wait.
+- Job queues :: Celery, Sidekiq, RQ: emails, reports, retries.
+- Message brokers :: RabbitMQ and Kafka: decoupling services.
+- ?WebSockets :: Live updates pushed to the browser.
+# Deploying and running it :: Getting code into production and keeping it there.
+@ Docker: get started | https://docs.docker.com/get-started/
+- Linux servers :: systemd, logs, disk, memory, networking basics.
+- Docker :: Images, containers, Compose for local stacks.
+- CI/CD :: Tests and deploys on every push.
+- Cloud basics :: One provider's compute, storage, databases and networking.
+- ?Kubernetes :: Running many containers across many machines.
+- The twelve-factor app :: Config in the environment, stateless processes.
+# Observability :: Know what your system is doing.
+- Logging :: Structured logs you can search.
+- Metrics and dashboards :: Prometheus, Grafana, the four golden signals.
+- Tracing :: Follow one request through many services.
+- Alerts and on-call :: Page people for what matters, not for noise.
+# Scaling up :: When one server is no longer enough.
+- Horizontal scaling and load balancers :: Many copies behind one address.
+- Database replication and sharding :: Read replicas, splitting data.
+- Rate limiting :: Protect the service from too many calls.
+- Microservices — and when not to :: The costs as well as the gains.
+! Checkpoint: production-ready service :: Add auth, caching, a queue, CI/CD, logs and metrics to your API.

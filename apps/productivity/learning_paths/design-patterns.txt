@@ -1,0 +1,48 @@
+title: Design patterns
+category: skill
+color: orange
+about: The classic patterns, when they help, and the modern ones around them.
+
+# Before the patterns :: The ideas they all rest on.
+@ Refactoring.Guru: design patterns | https://refactoring.guru/design-patterns
+- Object-oriented basics :: Encapsulation, polymorphism, interfaces.
+- SOLID :: The principles patterns put into practice.
+- Composition over inheritance :: Most patterns are about this.
+- UML basics :: Reading pattern diagrams.
+# Creational patterns :: Ways to make objects.
+- Factory method :: Let subclasses choose what to create.
+- Abstract factory :: Families of related objects.
+- Builder :: Step-by-step construction of complex objects.
+- Prototype :: Copy an existing object.
+- Singleton :: One instance — and why it's often a smell.
+# Structural patterns :: Ways to put objects together.
+- Adapter :: Make an interface fit another.
+- Decorator :: Add behaviour by wrapping.
+- Facade :: A simple front for a complex system.
+- Composite :: Treat a tree and a leaf the same way.
+- Proxy :: A stand-in that controls access.
+- ?Bridge and flyweight :: Split abstraction from implementation; share small objects.
+! Checkpoint: spot them in real code :: Find five patterns in a framework you use.
+# Behavioural patterns :: Ways objects share work.
+- Strategy :: Swap an algorithm at runtime.
+- Observer :: Tell subscribers when something changes.
+- Command :: A request as an object: undo, queues.
+- State :: Behaviour that changes with internal state.
+- Template method :: A fixed outline with steps to fill in.
+- Iterator :: Walk a collection without knowing its insides.
+- ?Chain of responsibility, mediator, visitor, memento :: Less common, worth knowing.
+# Architecture patterns :: Patterns at the scale of an application.
+- MVC and its cousins :: MVC, MVP, MVVM.
+- Repository and unit of work :: Keep data access in one place.
+- Dependency injection :: Wire objects from outside.
+- Layered, hexagonal, clean architecture :: Keep the domain at the centre.
+# Patterns for distributed systems :: When services talk over a network.
+- Retry, timeout, circuit breaker :: Resilience.
+- Saga and outbox :: Consistency without distributed transactions.
+- CQRS and event sourcing :: Separate reads from writes; events as the source of truth.
+- API gateway and backends-for-frontends :: One door, tailored per client.
+# Using them well :: Judgement matters more than the catalogue.
+- Anti-patterns :: God objects, spaghetti, golden hammers.
+- Refactoring to patterns :: Arrive at a pattern when the code asks for it.
+- Patterns in your language :: Some are built in (iterators, decorators, first-class functions).
+! Checkpoint: a design kata :: Build a small app (a text editor with undo, a payment flow) using four patterns on purpose.

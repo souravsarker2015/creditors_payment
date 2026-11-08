@@ -32,6 +32,7 @@ LINKS = (
     ("work:deck", "productivity.deck"),
     ("work:sprint", "productivity.sprint"),
     ("work:roadmap", "productivity.roadmap"),
+    ("work:path", "productivity.learningpath"),
     ("work:question", "productivity.question"),
     ("work:prep_topic", "productivity.preptopic"),
     ("work:exam_subject", "productivity.examsubject"),

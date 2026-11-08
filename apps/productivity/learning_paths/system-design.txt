@@ -1,0 +1,56 @@
+title: System design and architecture
+category: skill
+color: purple
+about: Designing systems that scale, stay up and can be explained in an interview.
+
+# Fundamentals :: The vocabulary of every design.
+@ The System Design Primer | https://github.com/donnemartin/system-design-primer
+- Latency and throughput :: Numbers every engineer should know.
+- Availability and reliability :: Nines, SLAs, SLOs.
+- Scalability :: Vertical vs. horizontal.
+- Back-of-the-envelope estimates :: Traffic, storage, bandwidth.
+# Networking pieces :: How requests reach your system.
+- DNS and CDNs :: Getting close to users.
+- Load balancers :: Layer 4 vs. layer 7, algorithms, health checks.
+- API gateways and reverse proxies :: Routing, auth, rate limits at the edge.
+- Communication styles :: REST, gRPC, WebSockets, long polling.
+# Storage :: Choosing where data lives.
+- SQL databases :: Transactions, indexes, when relational wins.
+- NoSQL databases :: Key-value, document, wide-column, graph.
+- Replication :: Leader-follower, multi-leader, leaderless.
+- Partitioning and sharding :: Splitting data, hot spots, rebalancing.
+- Object storage :: Blobs, files, media.
+- ?Search indexes :: Elasticsearch, inverted indexes.
+# Caching :: The cheapest way to go faster.
+- Cache placement :: Client, CDN, application, database.
+- Strategies :: Cache-aside, read-through, write-through, write-back.
+- Eviction and invalidation :: LRU, TTLs, stampedes.
+# Asynchronous systems :: Decoupling work.
+- Message queues :: RabbitMQ, SQS, at-least-once delivery.
+- Event streaming :: Kafka, logs, consumer groups.
+- Idempotency and retries :: Handling duplicates safely.
+- Sagas and outbox pattern :: Consistency across services.
+# Distributed systems :: When many machines must agree.
+- CAP and PACELC :: The trade-offs you can't avoid.
+- Consistency models :: Strong, eventual, read-your-writes.
+- Consensus :: Raft, leader election.
+- Clocks and ordering :: Why time is hard, logical clocks.
+@ Designing Data-Intensive Applications | https://dataintensive.net/
+# Architecture styles :: How to shape the whole.
+- Monolith and modular monolith :: Often the right start.
+- Microservices :: Boundaries, data ownership, the costs.
+- Event-driven architecture :: Events, CQRS, event sourcing.
+- Serverless :: Functions, managed services, cold starts.
+- ?Hexagonal / clean architecture :: Keep the core independent of frameworks.
+# Reliability and operations :: Keep it running.
+- Rate limiting and backpressure :: Token bucket, leaky bucket.
+- Circuit breakers and timeouts :: Fail fast, recover.
+- Observability :: Metrics, logs, traces.
+- Security :: Auth, encryption in transit and at rest.
+# Practice designs :: Put it together.
+- URL shortener :: IDs, redirects, analytics.
+- Chat system :: Presence, delivery, fan-out.
+- News feed :: Fan-out on write vs. read.
+- Rate limiter :: Distributed counters.
+- Video streaming :: Upload, transcode, CDN.
+! Checkpoint: mock interviews :: Design three systems out loud in 45 minutes each.

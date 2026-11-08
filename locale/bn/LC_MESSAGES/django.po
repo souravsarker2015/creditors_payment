@@ -32136,3 +32136,466 @@ msgid "%(counter)s update written on how things went"
 msgid_plural "%(counter)s updates written on how things went"
 msgstr[0] "কাজ কেমন চলল তা নিয়ে %(counter)sটি আপডেট লেখা হয়েছে"
 msgstr[1] "কাজ কেমন চলল তা নিয়ে %(counter)sটি আপডেট লেখা হয়েছে"
+
+msgid "My learning roadmap"
+msgstr "আমার শেখার রোডম্যাপ"
+
+msgid "First step"
+msgstr "প্রথম ধাপ"
+
+msgid "That file is too big (2 MB at most)."
+msgstr "ফাইলটি অনেক বড় (সর্বোচ্চ ২ MB)।"
+
+msgid "That file isn't text. Choose the .json file."
+msgstr "ফাইলটি লেখা নয়। .json ফাইলটি বেছে নিন।"
+
+msgid "New step"
+msgstr "নতুন ধাপ"
+
+msgid "Checkpoint: build something"
+msgstr "চেকপয়েন্ট: কিছু বানান"
+
+msgid "A note"
+msgstr "একটি নোট"
+
+msgid "%(n)s deleted"
+msgstr "%(n)sটি মুছে ফেলা হলো"
+
+msgid "Redone"
+msgstr "আবার করা হলো"
+
+msgid "Tidied up. Undo puts everything back."
+msgstr "গুছিয়ে দেওয়া হলো। ফেরান চাপলে সব আগের জায়গায় ফিরবে।"
+
+msgid "Added to Today"
+msgstr "আজকের তালিকায় যোগ হলো"
+
+msgid "All its tasks are done. Mark it as done?"
+msgstr "এর সব টাস্ক শেষ। এটিকে সম্পন্ন করবেন?"
+
+msgid "Mark done"
+msgstr "সম্পন্ন করুন"
+
+msgid "%(n)s tasks made for the next topics. They're in Tasks."
+msgstr "পরের বিষয়গুলোর জন্য %(n)sটি টাস্ক বানানো হলো। টাস্ক পাতায় দেখুন।"
+
+msgid "Every next topic already has a task."
+msgstr "পরের প্রতিটি বিষয়ের ইতিমধ্যে টাস্ক আছে।"
+
+msgid "Everything is done. Well done!"
+msgstr "সব শেষ। দারুণ!"
+
+msgid "Delete this learning roadmap? Its tasks stay."
+msgstr "এই শেখার রোডম্যাপটি মুছে ফেলবেন? এর টাস্কগুলো থেকে যাবে।"
+
+msgid "Set every topic back to “To learn”? The map stays as it is."
+msgstr "সব বিষয় আবার “শিখতে হবে”-তে ফেরাবেন? ম্যাপ যেমন আছে তেমনই থাকবে।"
+
+msgid "Progress cleared."
+msgstr "অগ্রগতি মুছে ফেলা হলো।"
+
+msgid "Learn: %(topic)s"
+msgstr "শিখুন: %(topic)s"
+
+msgid "Delete %(n)s boxes?"
+msgstr "%(n)sটি বক্স মুছে ফেলবেন?"
+
+msgid "%(n)s found"
+msgstr "%(n)sটি পাওয়া গেছে"
+
+msgid "Nothing found"
+msgstr "কিছু পাওয়া যায়নি"
+
+msgid "Solid line"
+msgstr "টানা রেখা"
+
+msgid "Give a link that starts with http:// or https://"
+msgstr "http:// বা https:// দিয়ে শুরু হওয়া লিংক দিন"
+
+msgid "done"
+msgstr "সম্পন্ন"
+
+msgid "learning"
+msgstr "শিখছি"
+
+msgid "Layout locked: boxes can't be moved."
+msgstr "লেআউট লক করা: বক্স সরানো যাবে না।"
+
+msgid "Layout unlocked."
+msgstr "লেআউট খোলা হলো।"
+
+msgid "Nothing to save."
+msgstr "সংরক্ষণের কিছু নেই।"
+
+msgid "Learning roadmap: %(title)s"
+msgstr "শেখার রোডম্যাপ: %(title)s"
+
+msgid "That topic isn't saved yet — try again in a moment."
+msgstr "বিষয়টি এখনও সংরক্ষিত হয়নি — একটু পরে আবার চেষ্টা করুন।"
+
+msgid "That task isn't on this topic."
+msgstr "টাস্কটি এই বিষয়ের নয়।"
+
+msgid "Roles"
+msgstr "পেশা"
+
+msgid "Languages"
+msgstr "ভাষা"
+
+msgid "It's empty. Paste the roadmap, or choose a .json file."
+msgstr "খালি। রোডম্যাপটি পেস্ট করুন, বা একটি .json ফাইল বেছে নিন।"
+
+msgid "That looks like JSON but has no { … } in it."
+msgstr "এটি JSON-এর মতো দেখাচ্ছে, কিন্তু এতে { … } নেই।"
+
+msgid "That isn't valid JSON — line %(line)s, column %(col)s: %(msg)s."
+msgstr "এটি সঠিক JSON নয় — লাইন %(line)s, কলাম %(col)s: %(msg)s।"
+
+msgid "The JSON should be one object: { \"title\": …, \"steps\": [ … ] }."
+msgstr "JSON-টি একটি অবজেক্ট হওয়া উচিত: { \"title\": …, \"steps\": [ … ] }।"
+
+msgid ""
+"No steps found. Start step lines with “# ” (or give JSON with a \"steps\" "
+"list)."
+msgstr ""
+"কোনো ধাপ পাওয়া যায়নি। ধাপের লাইন “# ” দিয়ে শুরু করুন (অথবা \"steps\" "
+"তালিকাসহ JSON দিন)।"
+
+msgid "%(where)s: this should be text."
+msgstr "%(where)s: এখানে লেখা হওয়া উচিত।"
+
+msgid "The roadmap should be one object with a title and steps."
+msgstr "রোডম্যাপটি title ও steps-সহ একটি অবজেক্ট হওয়া উচিত।"
+
+msgid "Give the roadmap a \"title\"."
+msgstr "রোডম্যাপের একটি \"title\" দিন।"
+
+msgid "It needs a \"steps\" list with at least one step in it."
+msgstr "অন্তত একটি ধাপসহ একটি \"steps\" তালিকা লাগবে।"
+
+msgid "%(where)s should be an object with a \"title\"."
+msgstr "%(where)s একটি \"title\"-সহ অবজেক্ট হওয়া উচিত।"
+
+msgid "%(where)s has no \"title\"."
+msgstr "%(where)s-এর কোনো \"title\" নেই।"
+
+msgid "That's more than %(n)s boxes — split it into smaller roadmaps."
+msgstr "এটি %(n)sটির বেশি বক্স — ছোট ছোট রোডম্যাপে ভাগ করুন।"
+
+msgid "%(where)s: \"children\" should be a list."
+msgstr "%(where)s: \"children\" একটি তালিকা হওয়া উচিত।"
+
+msgid "Step %(n)s"
+msgstr "ধাপ %(n)s"
+
+msgid "Note %(n)s"
+msgstr "নোট %(n)s"
+
+msgid "There's no ready-made roadmap called that."
+msgstr "এই নামে কোনো তৈরি রোডম্যাপ নেই।"
+
+msgid "item"
+msgstr "আইটেম"
+
+msgid "Learning roadmap topic"
+msgstr "শেখার রোডম্যাপের বিষয়"
+
+msgid "Skipped"
+msgstr "বাদ দেওয়া"
+
+msgid "Checkpoint"
+msgstr "চেকপয়েন্ট"
+
+msgid "Learning roadmap"
+msgstr "শেখার রোডম্যাপ"
+
+msgid "Learning roadmaps"
+msgstr "শেখার রোডম্যাপ"
+
+msgid "Optional"
+msgstr "ঐচ্ছিক"
+
+msgid "Learning roadmap topics"
+msgstr "শেখার রোডম্যাপের বিষয়গুলো"
+
+msgid "Topics learnt"
+msgstr "শেখা বিষয়"
+
+msgid ""
+"Step-by-step maps of what to learn — for a role, a skill or a language. Tick"
+" topics off as you learn them, arrange the map your way, and turn the next "
+"topics into tasks."
+msgstr ""
+"কী শিখবেন তার ধাপে ধাপে ম্যাপ — একটি পেশা, দক্ষতা বা ভাষার জন্য। শেখা হলে "
+"বিষয়ে টিক দিন, ম্যাপ নিজের মতো সাজান, আর পরের বিষয়গুলোকে টাস্ক বানান।"
+
+msgid "Blank roadmap"
+msgstr "ফাঁকা রোডম্যাপ"
+
+msgid "Yours"
+msgstr "আপনার"
+
+msgid "Start from a ready-made roadmap"
+msgstr "তৈরি রোডম্যাপ থেকে শুরু করুন"
+
+msgid "Each one becomes yours: rename, move, add or delete anything."
+msgstr ""
+"প্রতিটি আপনার হয়ে যায়: যেকোনো কিছু নাম বদলান, সরান, যোগ করুন বা মুছুন।"
+
+msgid "Make one with ChatGPT or Claude"
+msgstr "ChatGPT বা Claude দিয়ে বানান"
+
+msgid "started"
+msgstr "শুরু করা"
+
+msgid "Download as JSON"
+msgstr "JSON হিসেবে ডাউনলোড করুন"
+
+msgid "e.g. Kubernetes, Become a tech lead"
+msgstr "যেমন Kubernetes, টেক লিড হওয়া"
+
+msgid ""
+"It starts with one step. Press Tab on a box to add a topic under it, double-"
+"click anywhere to add a box."
+msgstr ""
+"এটি একটি ধাপ দিয়ে শুরু হয়। বক্সে Tab চাপলে তার নিচে বিষয় যোগ হয়, যেকোনো "
+"জায়গায় ডাবল-ক্লিক করলে বক্স যোগ হয়।"
+
+msgid "Import a learning roadmap"
+msgstr "শেখার রোডম্যাপ ইমপোর্ট করুন"
+
+msgid "Paste"
+msgstr "পেস্ট"
+
+msgid "Choose a file"
+msgstr "ফাইল বেছে নিন"
+
+msgid ""
+"Paste the JSON here — straight from ChatGPT or Claude is fine, even with ```"
+" around it."
+msgstr ""
+"JSON এখানে পেস্ট করুন — ChatGPT বা Claude থেকে সরাসরি দিলেও চলবে, চারপাশে "
+"``` থাকলেও।"
+
+msgid "Roadmap JSON"
+msgstr "রোডম্যাপের JSON"
+
+msgid "Choose a .json file, or drop it here"
+msgstr "একটি .json ফাইল বেছে নিন, বা এখানে ছেড়ে দিন"
+
+msgid "steps"
+msgstr "ধাপ"
+
+msgid "topics in all"
+msgstr "মোট বিষয়"
+
+msgid "links"
+msgstr "লিংক"
+
+msgid "Fill these in — the prompt below changes with them."
+msgstr "এগুলো পূরণ করুন — নিচের প্রম্পট সাথে সাথে বদলাবে।"
+
+msgid "Copy the prompt and paste it into ChatGPT, Claude or Gemini."
+msgstr "প্রম্পটটি কপি করে ChatGPT, Claude বা Gemini-তে পেস্ট করুন।"
+
+msgid "Paste its answer above, check it, and press Create."
+msgstr "এর উত্তর উপরে পেস্ট করুন, যাচাই দেখুন, তারপর তৈরি করুন চাপুন।"
+
+msgid "What to learn"
+msgstr "কী শিখবেন"
+
+msgid "e.g. Backend with Go, AWS, Kubernetes"
+msgstr "যেমন Go দিয়ে ব্যাকএন্ড, AWS, Kubernetes"
+
+msgid "Where you are now"
+msgstr "এখন কোথায় আছেন"
+
+msgid "e.g. I know Python basics"
+msgstr "যেমন Python-এর বেসিক জানি"
+
+msgid "Time you have"
+msgstr "কতটা সময় আছে"
+
+msgid "e.g. 3 months, 1 hour a day"
+msgstr "যেমন ৩ মাস, দিনে ১ ঘণ্টা"
+
+msgid "The format, in short:"
+msgstr "সংক্ষেপে ফরম্যাট:"
+
+msgid "each with a"
+msgstr "প্রতিটিতে একটি"
+
+msgid "topics under it go in"
+msgstr "এর নিচের বিষয়গুলো যায়"
+
+msgid "Everything else is optional."
+msgstr "বাকি সব ঐচ্ছিক।"
+
+msgid "Download an example"
+msgstr "একটি উদাহরণ ডাউনলোড করুন"
+
+msgid "%(n)s learning"
+msgstr "%(n)sটি শিখছি"
+
+msgid "%(n)s steps · %(m)s topics"
+msgstr "%(n)sটি ধাপ · %(m)sটি বিষয়"
+
+msgid "All learning roadmaps"
+msgstr "সব শেখার রোডম্যাপ"
+
+msgid "skipped"
+msgstr "বাদ"
+
+msgid "Find a topic…"
+msgstr "বিষয় খুঁজুন…"
+
+msgid "Find a topic"
+msgstr "বিষয় খুঁজুন"
+
+msgid "Make tasks for the next 5 topics"
+msgstr "পরের ৫টি বিষয়ের টাস্ক বানান"
+
+msgid "Put the next 2 topics on Today"
+msgstr "পরের ২টি বিষয় আজকের তালিকায় দিন"
+
+msgid "Tidy up the layout"
+msgstr "লেআউট গুছিয়ে দিন"
+
+msgid "Unlock the layout"
+msgstr "লেআউট খুলুন"
+
+msgid "Lock the layout"
+msgstr "লেআউট লক করুন"
+
+msgid "Show it all"
+msgstr "পুরোটা দেখান"
+
+msgid "Download (JSON, with my progress)"
+msgstr "ডাউনলোড (JSON, আমার অগ্রগতিসহ)"
+
+msgid "Download (JSON, the map only — to share)"
+msgstr "ডাউনলোড (JSON, শুধু ম্যাপ — শেয়ার করার জন্য)"
+
+msgid "Clear my progress"
+msgstr "আমার অগ্রগতি মুছুন"
+
+msgid "Got it"
+msgstr "বুঝেছি"
+
+msgid "The roadmap"
+msgstr "রোডম্যাপ"
+
+msgid "Has links to learn from"
+msgstr "শেখার লিংক আছে"
+
+msgid "open tasks"
+msgstr "বাকি টাস্ক"
+
+msgid "A step on the main path (with a step chosen: right below it)"
+msgstr "মূল পথের একটি ধাপ (কোনো ধাপ বাছাই থাকলে: ঠিক তার নিচে)"
+
+msgid "A topic (with a box chosen: under it) — Tab"
+msgstr "একটি বিষয় (কোনো বক্স বাছাই থাকলে: তার নিচে) — Tab"
+
+msgid "A checkpoint: something to build"
+msgstr "একটি চেকপয়েন্ট: কিছু বানানোর"
+
+msgid "A note: free text anywhere"
+msgstr "একটি নোট: যেকোনো জায়গায় লেখা"
+
+msgid "Add a topic under it"
+msgstr "এর নিচে বিষয় যোগ করুন"
+
+msgid "Delete the line"
+msgstr "রেখাটি মুছুন"
+
+msgid "Add a step here"
+msgstr "এখানে ধাপ যোগ করুন"
+
+msgid "Add a topic here"
+msgstr "এখানে বিষয় যোগ করুন"
+
+msgid "Add a checkpoint here"
+msgstr "এখানে চেকপয়েন্ট যোগ করুন"
+
+msgid "Add a note here"
+msgstr "এখানে নোট যোগ করুন"
+
+msgid "Show it on the map"
+msgstr "ম্যাপে দেখান"
+
+msgid "Optional — nice to know, not a must"
+msgstr "ঐচ্ছিক — জানা ভালো, জরুরি নয়"
+
+msgid "The roadmap’s colour"
+msgstr "রোডম্যাপের রং"
+
+msgid ""
+"What to learn here, why it matters, what “knowing it” looks like. Markdown "
+"works."
+msgstr "এখানে কী শিখবেন, কেন দরকার, “জানা” মানে কী। Markdown চলে।"
+
+msgid "Learn it from"
+msgstr "কোথা থেকে শিখবেন"
+
+msgid "Name (optional)"
+msgstr "নাম (ঐচ্ছিক)"
+
+msgid "Do it today"
+msgstr "আজই করুন"
+
+msgid ""
+"No tasks yet. “Do it today” puts one on your Today list and marks this as "
+"Learning."
+msgstr ""
+"এখনও কোনো টাস্ক নেই। “আজই করুন” আজকের তালিকায় একটি টাস্ক দেয় আর এটিকে "
+"“শিখছি” করে।"
+
+msgid ""
+"Click a box to open it · tick its circle when learnt · drag boxes anywhere ·"
+" drag from a dot to join two boxes (or into empty space for a new one) · "
+"double-click to add or rename · <kbd>Tab</kbd> adds a topic under the chosen"
+" box · right-click for more"
+msgstr ""
+"বক্সে ক্লিক করে খুলুন · শেখা হলে বৃত্তে টিক দিন · বক্স যেকোনো জায়গায় টেনে "
+"নিন · বিন্দু থেকে টেনে দুটি বক্স জুড়ুন (বা ফাঁকা জায়গায় টেনে নতুন বক্স) ·"
+" ডাবল-ক্লিক করে যোগ বা নাম বদল · <kbd>Tab</kbd> বাছাই করা বক্সের নিচে বিষয় "
+"যোগ করে · আরও কিছুর জন্য রাইট-ক্লিক"
+
+msgid "Continue learning"
+msgstr "শেখা চালিয়ে যান"
+
+msgid "next: %(topic)s"
+msgstr "পরের: %(topic)s"
+
+msgid "Click"
+msgstr "ক্লিক"
+
+msgid "double-click"
+msgstr "ডাবল-ক্লিক"
+
+msgid "Open a box · rename it (on empty space: a new box)"
+msgstr "বক্স খুলুন · নাম বদলান (ফাঁকা জায়গায়: নতুন বক্স)"
+
+msgid "A topic under the chosen box · next to it"
+msgstr "বাছাই করা বক্সের নিচে বিষয় · তার পাশে"
+
+msgid "Done · learning · skipped · to learn"
+msgstr "সম্পন্ন · শিখছি · বাদ · শিখতে হবে"
+
+msgid "Continue: the next topic to learn"
+msgstr "চালিয়ে যান: শেখার পরের বিষয়"
+
+msgid "Choose several boxes in a frame"
+msgstr "ফ্রেম টেনে কয়েকটি বক্স বাছাই করুন"
+
+msgid "Show it all · zoom (also Ctrl + wheel)"
+msgstr "পুরোটা দেখান · জুম (Ctrl + হুইলেও)"
+
+msgid "Undo · duplicate"
+msgstr "ফেরান · কপি"
+
+msgid "%(counter)s topic ticked off on your learning roadmaps"
+msgid_plural "%(counter)s topics ticked off on your learning roadmaps"
+msgstr[0] "শেখার রোডম্যাপে %(counter)sটি বিষয়ে টিক দেওয়া হয়েছে"
+msgstr[1] "শেখার রোডম্যাপে %(counter)sটি বিষয়ে টিক দেওয়া হয়েছে"

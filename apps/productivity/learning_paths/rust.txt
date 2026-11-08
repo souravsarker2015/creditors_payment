@@ -1,0 +1,53 @@
+title: Rust: beginner to senior
+category: language
+color: red
+about: Ownership, traits, async and unsafe — fast, safe systems code.
+
+# Basics :: Getting started.
+@ The Rust Programming Language (the book) | https://doc.rust-lang.org/book/
+- Cargo and rustup :: Creating, building and running projects.
+- Variables and types :: Mutability, scalars, tuples, arrays.
+- Functions and control flow :: Expressions, loops, match.
+- Structs and enums :: Modelling data, Option and Result.
+# Ownership :: Rust's central idea.
+- Ownership and moves :: One owner at a time.
+- Borrowing and references :: Shared vs. mutable borrows.
+- Lifetimes :: How the compiler knows references are valid.
+- Slices and strings :: &str vs. String.
+! Checkpoint: a small CLI :: A text tool (grep-like) with error handling and tests.
+# Traits and generics :: Abstraction without runtime cost.
+- Traits :: Shared behaviour, default methods.
+- Generics and trait bounds :: Zero-cost abstractions.
+- Trait objects :: dyn Trait and dynamic dispatch.
+- Common traits :: Clone, Copy, Debug, Display, From, Iterator.
+# Error handling :: Explicit and composable.
+- Result and the ? operator :: Propagating errors.
+- Custom error types :: thiserror and anyhow.
+- Panics :: When it's right to crash.
+# Collections and iterators :: Idiomatic data handling.
+- Vec, HashMap, HashSet :: The everyday collections.
+- Iterators and closures :: map, filter, fold, chaining.
+- Smart pointers :: Box, Rc, Arc, RefCell.
+@ Rust by Example | https://doc.rust-lang.org/rust-by-example/
+# Concurrency :: Fearless, checked by the compiler.
+- Threads :: spawn, join, move closures.
+- Send and Sync :: What may cross threads.
+- Channels and mutexes :: Message passing and shared state.
+- ?Rayon :: Easy data parallelism.
+# Async Rust :: Many tasks, few threads.
+- Futures and async/await :: How async works in Rust.
+- Tokio :: The common runtime: tasks, timers, I/O.
+- Web services :: Axum or Actix Web.
+- ?Pinning :: Why some futures can't move.
+# Tooling and quality :: The ecosystem.
+- Testing :: Unit, integration and doc tests.
+- Clippy and rustfmt :: Lints and formatting.
+- Crates and workspaces :: Organising bigger projects.
+- Benchmarking :: criterion, profiling.
+# Advanced Rust :: Senior territory.
+- Unsafe Rust :: Raw pointers, invariants, soundness.
+- Macros :: Declarative and procedural.
+- FFI :: Calling C and being called from it.
+- Performance :: Allocation, layout, zero-copy.
+- ?Embedded and WebAssembly :: no_std and the browser.
+! Checkpoint: a production service :: An async Rust API with tests, metrics and a safe deploy.

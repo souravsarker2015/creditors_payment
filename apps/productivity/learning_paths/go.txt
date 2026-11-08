@@ -1,0 +1,49 @@
+title: Go: beginner to senior
+category: language
+color: teal
+about: Simple, fast and concurrent — from the tour to production services.
+
+# Basics :: Learning the language.
+@ A Tour of Go | https://go.dev/tour/
+- Syntax and types :: Variables, constants, basic types.
+- Control flow :: if, for, switch, defer.
+- Functions :: Multiple returns, closures, variadic arguments.
+- Slices, maps and arrays :: How slices really work.
+- Structs and methods :: Value vs. pointer receivers.
+# Idiomatic Go :: Writing Go the Go way.
+@ Effective Go | https://go.dev/doc/effective_go
+- Interfaces :: Small, implicit, defined by the user.
+- Error handling :: Errors as values, wrapping, errors.Is/As.
+- Packages and modules :: go.mod, layout, visibility.
+- Generics :: Type parameters and constraints.
+- Formatting and vetting :: gofmt, go vet, staticcheck.
+! Checkpoint: a CLI tool :: A useful command-line tool with flags, tests and a release.
+# Concurrency :: Go's superpower.
+@ Go by Example | https://gobyexample.com/
+- Goroutines :: Cheap concurrent functions.
+- Channels :: Sending, receiving, buffering, closing.
+- select :: Waiting on many channels.
+- sync package :: Mutex, WaitGroup, Once.
+- context :: Cancellation and deadlines.
+- Concurrency patterns :: Worker pools, pipelines, fan-in/fan-out.
+# Testing :: Built into the toolchain.
+- go test :: Table-driven tests, subtests.
+- Benchmarks and fuzzing :: Measure and attack your code.
+- Mocks and fakes :: Interfaces make it easy.
+# Building services :: Go's home ground.
+- net/http :: Handlers, middleware, the new routing patterns.
+- JSON :: Encoding, decoding, struct tags.
+- Databases :: database/sql, pgx, sqlc.
+- ?gRPC :: Protocol Buffers and streaming.
+- Configuration and logging :: Env vars, log/slog.
+# Internals and performance :: What the runtime does.
+- Memory and escape analysis :: Stack vs. heap.
+- Garbage collector :: How it works, GOGC, GOMEMLIMIT.
+- Scheduler :: Goroutines, threads, processors.
+- Profiling :: pprof, tracing, finding hot spots.
+# Senior Go :: Judgement and leadership.
+- Project structure :: Simple layouts, internal packages.
+- API and library design :: Stable, small, documented.
+- Observability :: Metrics, traces, OpenTelemetry.
+- Reviewing Go code :: Simplicity first.
+! Checkpoint: a production microservice :: Concurrent, tested, observable, containerised.
