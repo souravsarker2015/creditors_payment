@@ -10,6 +10,7 @@ urlpatterns = ponds.urls() + [
     path("cycles/<int:pk>/edit/", views.cycle_edit_view, name="cycle_edit"),
     path("cycles/<int:pk>/targets/", views.cycle_targets_view, name="cycle_targets"),
     path("cycles/<int:pk>/finish/", views.cycle_finish_view, name="cycle_finish"),
+    path("cycles/<int:pk>/take-out-sold/", views.cycle_take_out_sold_view, name="cycle_take_out_sold"),
     path("cycles/<int:pk>/delete/", views.cycle_delete_view, name="cycle_delete"),
     path("cycles/<int:pk>/restore/", views.cycle_restore_view, name="cycle_restore"),
     path("cycles/<int:pk>/add/<slug:kind>/", views.entry_add_view, name="entry_add"),

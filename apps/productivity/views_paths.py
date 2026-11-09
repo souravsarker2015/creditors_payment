@@ -9,11 +9,13 @@ from django.utils import timezone
 from django.utils.http import content_disposition_header
 from django.utils.text import slugify
 from django.utils.translation import gettext as _
+from django.utils.translation import ngettext
 from django.views.decorators.http import require_POST
 
 from apps.trash.services import trash
 
 from . import paths as lp
+from . import roadmap as rmp
 from . import services
 from .access import work_required
 from .models import Color, LearningPath, PathNode, PathNodeKind, PathStatus, Status, Task
@@ -63,14 +65,21 @@ def paths_view(request):
     return render_work(request, "work/paths.html", {
         "cards": cards, "show": show, "archived": LearningPath.objects.filter(owner=user, is_archived=True).count(),
         "gallery": [(str(lp.CATEGORIES.get(k, k)), v) for k, v in gallery.items()],
-        "prompt_tpl": lp.PROMPT,
+        "prompts": prompts(),
     })
+
+
+def prompts():
+    """The AI prompts for both kinds, for the import box on either list page."""
+    return {"learning": lp.PROMPT, "timeline": rmp.PROMPT}
 
 
 @work_required
 @require_POST
 def path_import(request):
-    """A roadmap from a pasted text or a chosen file (JSON or outline). check=1: only say what's in it."""
+    """A roadmap from a pasted text or a chosen file — either kind: a learning roadmap (JSON with "steps", or the
+    outline) or a timeline roadmap (JSON with "lanes"). The right one is made, whichever page it came from.
+    check=1: only say what's in it."""
     text = request.POST.get("text", "")
     f = request.FILES.get("file")
     if f:
@@ -80,16 +89,30 @@ def path_import(request):
             text = f.read().decode("utf-8-sig")
         except UnicodeDecodeError:
             return bad(_("That file isn't text. Choose the .json file."))
+    checking = request.POST.get("check") == "1"
     try:
         spec = lp.read(text)
-        fields, nodes, edges = lp.build(spec)
-    except lp.Invalid as e:
-        return bad(str(e), status=200 if request.POST.get("check") == "1" else 400)     # while checking, "not yet" is an answer
-    steps = sum(1 for n in nodes if not n["parent"] and n["kind"] in (PathNodeKind.STEP, PathNodeKind.CHECKPOINT))
-    info = {"title": fields["title"], "steps": steps, "boxes": sum(1 for n in nodes if n["kind"] != PathNodeKind.NOTE),
-            "done": sum(1 for n in nodes if n["status"] == PathStatus.DONE), "resources": sum(len(n["resources"]) for n in nodes)}
-    if request.POST.get("check") == "1":
+        if rmp.is_timeline(spec):
+            info = rmp.info(*rmp.build(spec))
+        else:
+            fields, nodes, edges = lp.build(spec)
+            steps = sum(1 for n in nodes if not n["parent"] and n["kind"] in (PathNodeKind.STEP, PathNodeKind.CHECKPOINT))
+            info = {"kind": "learning", "title": fields["title"], "steps": steps, "boxes": sum(1 for n in nodes if n["kind"] != PathNodeKind.NOTE),
+                    "done": sum(1 for n in nodes if n["status"] == PathStatus.DONE), "resources": sum(len(n["resources"]) for n in nodes)}
+            parts = [_("Learning roadmap"), ngettext("%(n)s step", "%(n)s steps", info["steps"]) % {"n": info["steps"]},
+                     ngettext("%(n)s topic in all", "%(n)s topics in all", info["boxes"]) % {"n": info["boxes"]}]
+            if info["resources"]:
+                parts.append(ngettext("%(n)s link", "%(n)s links", info["resources"]) % {"n": info["resources"]})
+            if info["done"]:
+                parts.append(_("%(n)s done") % {"n": info["done"]})
+            info["summary"] = " · ".join(parts)
+    except (lp.Invalid, rmp.Invalid) as e:
+        return bad(str(e), status=200 if checking else 400)     # while checking, "not yet" is an answer
+    if checking:
         return ok(info=info)
+    if info["kind"] == "timeline":
+        rm = rmp.import_json(request.user, spec)
+        return ok(url=reverse("work:roadmap", args=[rm.pk]), info=info)
     path = lp.create(request.user, spec)
     return ok(url=reverse("work:path", args=[path.pk]), info=info)
 

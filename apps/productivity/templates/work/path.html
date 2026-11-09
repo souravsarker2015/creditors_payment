@@ -23,6 +23,16 @@
       {% icon "play" %}<span class="lp-next-text"><small>{% translate "Continue" %}</small><span x-text="upNext ? upNext.title : '{% translate "All done" %}'"></span></span></button>
     <label class="rmp-search lp-find">{% icon "search" %}<input x-ref="find" x-model="q" @input="hitAt = -1" type="search" data-work-search placeholder="{% translate 'Find a topic…' %}" aria-label="{% translate 'Find a topic' %}"
            @keydown.enter.prevent="nextHit($event.shiftKey)" @keydown.escape="q = ''; $event.target.blur()"><small class="lp-hits" x-show="q.trim()" x-text="hitText()"></small></label>
+    <div class="lp-head-acts">
+    <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
+      <button type="button" class="btn btn-secondary btn-sm" @click="open = !open" :aria-expanded="open" aria-haspopup="true">{% icon "download" %}<span class="wn-hide-xs">{% translate "Export" %}</span>{% icon "chevron-down" %}</button>
+      <div class="menu menu-right" x-show="open" x-cloak role="menu" @click="open = false">
+        <a class="menu-item" role="menuitem" href="{% url 'work:path_export' path.pk %}">{% icon "download" %}<span>{% translate "JSON, with my progress" %}<small class="menu-sub">{% translate "A backup, or to move it to another account" %}</small></span></a>
+        <a class="menu-item" role="menuitem" href="{% url 'work:path_export' path.pk %}?progress=0">{% icon "download" %}<span>{% translate "JSON, the map only" %}<small class="menu-sub">{% translate "To share, or to give an AI assistant to change" %}</small></span></a>
+        <div class="menu-sep"></div>
+        <a class="menu-item" role="menuitem" href="{% url 'work:paths' %}#import">{% icon "upload" %}{% translate "Import another roadmap…" %}</a>
+      </div>
+    </div>
     <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
       <button type="button" class="icon-btn" @click="open = !open" :aria-expanded="open" aria-label="{% translate 'More actions' %}">{% icon "dots" %}</button>
       <div class="menu menu-right" x-show="open" x-cloak role="menu" @click="open = false">
@@ -35,14 +45,13 @@
         <button type="button" class="menu-item" role="menuitem" @click="toggleLock()">{% icon "lock" %}<span x-text="locked ? '{% translate "Unlock the layout" %}' : '{% translate "Lock the layout" %}'"></span></button>
         <button type="button" class="menu-item" role="menuitem" @click="fit()">{% icon "fit" %}{% translate "Show it all" %}<kbd>1</kbd></button>
         <div class="menu-sep"></div>
-        <a class="menu-item" role="menuitem" href="{% url 'work:path_export' path.pk %}">{% icon "download" %}{% translate "Download (JSON, with my progress)" %}</a>
-        <a class="menu-item" role="menuitem" href="{% url 'work:path_export' path.pk %}?progress=0">{% icon "download" %}{% translate "Download (JSON, the map only — to share)" %}</a>
         <button type="button" class="menu-item" role="menuitem" @click="roadmap('duplicate')">{% icon "copy" %}{% translate "Make a copy" %}</button>
         <button type="button" class="menu-item" role="menuitem" @click="roadmap('reset')">{% icon "undo" %}{% translate "Clear my progress" %}</button>
         <button type="button" class="menu-item" role="menuitem" @click="roadmap('archive')">{% icon "archive" %}<span x-text="path.archived ? '{% translate "Unarchive" %}' : '{% translate "Archive" %}'"></span></button>
         <div class="menu-sep"></div>
         <button type="button" class="menu-item is-danger" role="menuitem" @click="roadmap('delete')">{% icon "trash" %}{% translate "Delete" %}</button>
       </div>
+    </div>
     </div>
   </header>
 

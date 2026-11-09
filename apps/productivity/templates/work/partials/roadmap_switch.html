@@ -1,0 +1,7 @@
+{% load i18n work %}{% comment %}The two kinds of roadmap, one click apart: a timeline (work over months) and a learning map (what to learn, step by step).{% endcomment %}
+<nav class="rmk" aria-label="{% translate 'Kind of roadmap' %}">
+  <a href="{% url 'work:roadmaps' %}" class="rmk-item{% if here == 'timeline' %} is-active{% endif %}"{% if here == 'timeline' %} aria-current="page"{% endif %}>
+    {% icon "timeline" %}<span><b>{% translate "Timeline roadmaps" %}</b><small>{% translate "Plan work over the months: lanes, dates, milestones" %}</small></span></a>
+  <a href="{% url 'work:paths' %}" class="rmk-item{% if here == 'learning' %} is-active{% endif %}"{% if here == 'learning' %} aria-current="page"{% endif %}>
+    {% icon "journey" %}<span><b>{% translate "Learning roadmaps" %}</b><small>{% translate "What to learn, step by step — 14 ready-made: Backend, System design, Python…" %}</small></span></a>
+</nav>

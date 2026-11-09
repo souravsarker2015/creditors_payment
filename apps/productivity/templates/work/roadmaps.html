@@ -4,7 +4,13 @@
 {% block title %}{% translate "Roadmaps" %} | {% translate "Productivity" %}{% endblock %}
 
 {% block work %}
-<div data-page-keys="n" x-data="{ open: false, pick: 'product', title: '' }" @keydown.n.window="if (!open && !$event.target.closest('input,textarea,select,[contenteditable]') && !$event.ctrlKey && !$event.metaKey && !$event.altKey) { $event.preventDefault(); open = true; $nextTick(() => $refs.title.focus()) }">
+{{ prompts|json_script:"path-prompt" }}
+{% include "work/partials/roadmap_switch.html" with here="timeline" %}
+<div data-page-keys="n i" x-data="pathsList(JSON.parse(document.getElementById('path-prompt').textContent), '{% url 'work:api_roadmap_import' %}', 'timeline', '{% translate "Copied" %}')">
+{% csrf_token %}
+<div x-data="{ open: false, pick: 'product', title: '' }"
+     @keydown.window="if (open || importOpen || $event.target.closest('input,textarea,select,[contenteditable]') || $event.ctrlKey || $event.metaKey || $event.altKey) return;
+                      if ($event.key === 'n') { $event.preventDefault(); open = true; $nextTick(() => $refs.title.focus()) } else if ($event.key === 'i') { $event.preventDefault(); openImport() }">
 <header class="wp-head">
   <div class="min-w-0"><h1 class="wp-title">{% translate "Roadmaps" %}</h1>
     <p class="wp-sub">{% translate "The plan for the months ahead: bigger pieces of work and milestones on a timeline. Link tasks to them and the progress, the hours and the finish date follow by themselves." %}</p></div>
@@ -13,6 +19,7 @@
       <a href="?show=active" class="seg-item{% if show == 'active' %} is-active{% endif %}">{% translate "Active" %}</a>
       <a href="?show=archived" class="seg-item{% if show == 'archived' %} is-active{% endif %}">{% translate "Archived" %}{% if archived %} <span class="wg-count">{{ archived }}</span>{% endif %}</a>
     </nav>
+    <button type="button" class="btn btn-secondary" @click="openImport()">{% icon "upload" %}{% translate "Import JSON" %}<kbd class="rmp-kbd">I</kbd></button>
     <button type="button" class="btn btn-primary" @click="open = true; $nextTick(() => $refs.title.focus())">{% icon "plus" %}{% translate "Roadmap" %}<kbd class="rmp-kbd">N</kbd></button>
   </div>
 </header>
@@ -50,7 +57,10 @@
   <div class="empty-icon">{% icon "timeline" %}</div>
   <h3 class="empty-title">{% if show == "active" %}{% translate "Plan the months ahead" %}{% else %}{% translate "Nothing archived" %}{% endif %}</h3>
   <p class="empty-text">{% translate "A product's next releases, your path to a senior role, a subject from the basics to a real project. Start from a ready-made roadmap and change it to fit." %}</p>
-  {% if show == "active" %}<button type="button" class="btn btn-primary" @click="open = true; $nextTick(() => $refs.title.focus())">{% icon "plus" %}{% translate "New roadmap" %}</button>{% endif %}
+  {% if show == "active" %}<div class="rmp-empty-acts">
+    <button type="button" class="btn btn-primary" @click="open = true; $nextTick(() => $refs.title.focus())">{% icon "plus" %}{% translate "New roadmap" %}</button>
+    <button type="button" class="btn btn-secondary" @click="openImport()">{% icon "upload" %}{% translate "Import JSON" %}</button>
+    <button type="button" class="btn btn-ghost" @click="aiKind = 'timeline'; openImport(); $nextTick(() => aiOpen = true)">{% icon "sparkles" %}{% translate "Make one with ChatGPT or Claude" %}</button></div>{% endif %}
 </div>
 {% endif %}
 
@@ -81,4 +91,27 @@
   </form>
 </div>
 </div>
+
+{% if show == "active" %}
+<section class="rmk-learn" aria-labelledby="rmk-learn-h">
+  <header class="lpl-gallery-head">
+    <div><h2 id="rmk-learn-h" class="lpl-h">{% icon "journey" %}{% translate "Learning something? Start from a ready-made learning roadmap" %}</h2>
+      <p class="wp-sub">{% translate "A step-by-step map you tick off as you learn, with tasks for each topic. One click makes it yours." %}</p></div>
+    <a href="{% url 'work:paths' %}" class="btn btn-ghost btn-sm">{% translate "All learning roadmaps" %}{% icon "arrow-right" %}</a>
+  </header>
+  <div class="rmk-chips">
+    {% for t in learning %}
+    <form method="post" action="{% url 'work:paths' %}">{% csrf_token %}<input type="hidden" name="action" value="template"><input type="hidden" name="template" value="{{ t.key }}">
+      <button type="submit" class="rmk-chip" data-color="{{ t.color }}" title="{{ t.about }}"><i aria-hidden="true"></i>{{ t.title }}<small>{{ t.count }}</small></button></form>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% include "work/partials/roadmap_import.html" %}
+</div>
+{% endblock %}
+
+{% block work_js %}
+<script src="{% asset 'js/paths.js' %}"></script>
 {% endblock %}

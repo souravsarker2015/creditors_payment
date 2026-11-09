@@ -1,11 +1,14 @@
 """Roadmaps (Productivity): the list of them, one roadmap's page, its download,
 and the background saves the page makes (static/js/roadmap.js)."""
+import json
+
 from django.db.models import Max
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.http import content_disposition_header
+from django.utils.text import slugify
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
@@ -47,9 +50,13 @@ def roadmaps_view(request):
     for rm in roadmaps:
         rows = rmp.items_json(items.get(rm.pk, []), today)
         cards.append({"r": rm, "s": rmp.summary(rows), "bars": _mini(rows, today)})
+    from . import paths as lp
+    from .views_paths import prompts
+
     return render_work(request, "work/roadmaps.html", {
         "cards": cards, "show": show, "templates": rmp.templates(), "colors": Color.choices,
         "archived": Roadmap.objects.filter(owner=user, is_archived=True).count(),
+        "learning": lp.templates(), "prompts": prompts(),
     })
 
 
@@ -127,6 +134,22 @@ def roadmap_export_view(request, pk):
     w.writerow(rmp.CSV_HEAD)
     for row in rmp.csv_rows(rm, _today()):
         w.writerow(row)
+    return resp
+
+
+@work_required
+def roadmap_json_view(request, pk):
+    """The roadmap as JSON: to import again, to share, or to hand to an AI assistant to change."""
+    rm = get_object_or_404(Roadmap, pk=pk, owner=request.user)
+    resp = HttpResponse(json.dumps(rmp.export_json(rm), indent=2, ensure_ascii=False), content_type="application/json; charset=utf-8")
+    resp["Content-Disposition"] = content_disposition_header(True, f"{slugify(rm.title) or 'roadmap'}.timeline-roadmap.json")
+    return resp
+
+
+@work_required
+def roadmap_example_view(request):
+    resp = HttpResponse(json.dumps(rmp.EXAMPLE, indent=2, ensure_ascii=False), content_type="application/json; charset=utf-8")
+    resp["Content-Disposition"] = content_disposition_header(True, "example.timeline-roadmap.json")
     return resp
 
 

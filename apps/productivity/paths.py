@@ -60,7 +60,8 @@ def read(text):
     if not text:
         raise Invalid(_("It's empty. Paste the roadmap, or choose a .json file."))
     first = text.lstrip("`").lstrip()
-    if text.startswith("{") or "```" in text or (first.lower().startswith("json") and "{" in text) or ('"steps"' in text and "{" in text):
+    looks = "{" in text and any(k in text for k in ('"steps"', '"lanes"', '"items"', '"format"'))
+    if text.startswith("{") or "```" in text or (first.lower().startswith("json") and "{" in text) or looks:
         start, end = text.find("{"), text.rfind("}")
         if start < 0 or end < start:
             raise Invalid(_("That looks like JSON but has no { … } in it."))
@@ -348,12 +349,19 @@ def _template(key):
     return spec, len([n for n in nodes if n["kind"] != PathNodeKind.NOTE]), len(spec["steps"])
 
 
+def _titles(items):
+    for it in items or []:
+        yield it.get("title", "")
+        yield from _titles(it.get("children"))
+
+
 def templates():
     out = []
     for key in TEMPLATES:
         spec, count, steps = _template(key)
         out.append({"key": key, "title": spec["title"], "about": spec["description"], "color": spec["color"] or Color.BLUE,
-                    "category": spec.get("category") or "skill", "count": count, "steps": steps})
+                    "category": spec.get("category") or "skill", "count": count, "steps": steps,
+                    "find": " ".join(_titles(spec["steps"]))})          # so "Kafka" finds the data engineer's
     return out
 
 

@@ -166,7 +166,7 @@ def cycle_rows(business, start=None, end=None, pond=None, running_only=False):
     # One query per kind of record for the whole page, not per season.
     qs = (CultureCycle.objects.filter(business=business).select_related("pond")
           .prefetch_related("stockings__species", "treatments", "moves_in__species", "moves_in__cycle", "moves_out__species", "moves_out__to_cycle", "staff_earnings", "mortalities__species", "weighings__species", "weighings__unit",
-                            "harvests__species", "harvests__unit", "feedings", "sales"))
+                            "harvests__species", "harvests__unit", "feedings", "sales__lines__species", "sales__lines__unit"))
     if pond is not None:
         qs = qs.filter(pond=pond)
     if running_only:

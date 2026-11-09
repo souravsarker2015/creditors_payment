@@ -182,7 +182,9 @@ def cycle_detail_view(request, pk):
         "mortalities": cycle.mortalities.select_related("species"),
         "weighings": cycle.weighings.select_related("species", "unit"),
         "harvests": harvests, "sales": sales, "sold_kg": sold_kg,
-        "unsold_kg": (summary.harvest_kg - sold_kg) if harvests and summary.harvest_kg - sold_kg >= 1 else None, "harvest_sale_count": len(harvests) + len(sales),
+        "unsold_kg": (summary.harvest_kg - sold_kg) if harvests and summary.harvest_kg - sold_kg >= 1 else None,
+        # Sold from this pond but never taken out of its count: fish, weight and FCR are too high.
+        "untaken_kg": (sold_kg - summary.harvest_kg) if cycle.is_running and sold_kg - summary.harvest_kg >= 1 else None, "harvest_sale_count": len(harvests) + len(sales),
         "water": water, "water_now": water[0] if water else None,
         "treatments": treatments, "water_care_count": len(water) + len(treatments),
         "withdrawal": services.withdrawal(cycle),
@@ -263,6 +265,23 @@ def cycle_finish_view(request, pk):
         else:
             services.reopen_cycle(cycle)
             messages.success(request, _g("Cycle reopened."))
+    return redirect("business:cycle_detail", cycle.pk)
+
+
+@business_access_required(capability="enter_data")
+@require_POST
+def cycle_take_out_sold_view(request, pk):
+    """Count every sale from a pond with no harvests recorded as fish taken out
+    of it. Only offered when there are no harvests, so nothing is counted twice."""
+    cycle = _cycle(request, pk)
+    if cycle.harvests.exists():
+        messages.error(request, _g("This pond has harvests recorded. Open each sale that wasn't a harvest and tick “Take these fish out of the pond”."))
+    else:
+        sales = list(cycle.sales.filter(takes_fish=False, harvest__isnull=True))
+        for sale in sales:
+            sale.takes_fish = True
+            sale.save(update_fields=["takes_fish", "updated_at", "updated_by"])
+        messages.success(request, _g("Fish sold from %(pond)s are now taken out of its count.") % {"pond": cycle.pond.name})
     return redirect("business:cycle_detail", cycle.pk)
 
 

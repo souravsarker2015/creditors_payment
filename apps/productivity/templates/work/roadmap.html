@@ -27,10 +27,18 @@
         </div>
       </div>
       <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
+        <button type="button" class="btn btn-secondary btn-sm" @click="open = !open" :aria-expanded="open" aria-haspopup="true">{% icon "download" %}<span class="wn-hide-xs">{% translate "Export" %}</span>{% icon "chevron-down" %}</button>
+        <div class="menu menu-right" x-show="open" x-cloak role="menu" @click="open = false">
+          <a class="menu-item" role="menuitem" href="{% url 'work:roadmap_json' rm.pk %}">{% icon "download" %}<span>{% translate "JSON" %}<small class="menu-sub">{% translate "To import again, share, or give an AI assistant to change" %}</small></span></a>
+          <a class="menu-item" role="menuitem" href="{% url 'work:roadmap_export' rm.pk %}">{% icon "download" %}<span>{% translate "Spreadsheet (CSV)" %}<small class="menu-sub">{% translate "With progress, hours and dates" %}</small></span></a>
+          <button type="button" class="menu-item" role="menuitem" @click="window.print()">{% icon "printer" %}{% translate "Print or save as PDF" %}</button>
+          <div class="menu-sep"></div>
+          <a class="menu-item" role="menuitem" href="{% url 'work:roadmaps' %}#import">{% icon "upload" %}{% translate "Import another roadmap…" %}</a>
+        </div>
+      </div>
+      <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
         <button type="button" class="icon-btn" @click="open = !open" :aria-expanded="open" aria-label="{% translate 'More actions' %}">{% icon "dots" %}</button>
         <div class="menu" x-show="open" x-cloak role="menu" @click="open = false">
-          <a class="menu-item" role="menuitem" href="{% url 'work:roadmap_export' rm.pk %}">{% icon "download" %}{% translate "Download as a spreadsheet (CSV)" %}</a>
-          <button type="button" class="menu-item" role="menuitem" @click="window.print()">{% icon "printer" %}{% translate "Print or save as PDF" %}</button>
           <button type="button" class="menu-item" role="menuitem" @click="roadmapAction('duplicate')">{% icon "copy" %}{% translate "Make a copy" %}</button>
           <div class="menu-sep"></div>
           <button type="button" class="menu-item" role="menuitem" @click="planAction('plan_save')">{% icon "history" %}<span x-text="rm.baseline ? '{% translate "Save the plan again, as it is now" %}' : '{% translate "Save the plan, to compare against later" %}'"></span></button>

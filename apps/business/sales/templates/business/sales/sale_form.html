@@ -29,9 +29,19 @@
                @change="if ($event.target.name === 'buyer') { b = $event.target.value; applyBuyer(b) }">{% with field=form.buyer %}{% include "business/partials/field.html" %}{% endwith %}
             <p class="help adv-hint" x-show="adv[b]" x-cloak x-text="adv[b]" data-adv-hint></p></div>
         </div>
-        {{ waits|json_script:"medicine-waits" }}
-        <div x-data="{ c: '{{ form.cycle.value|default_if_none:''|stringformat:'s'|escapejs }}', waits: JSON.parse(document.getElementById('medicine-waits').textContent) }" @change="if ($event.target.name === 'cycle') c = $event.target.value">
+        {{ waits|json_script:"medicine-waits" }}{{ unsold_harvests|json_script:"unsold-harvests" }}
+        <div x-data="{ c: '{{ form.cycle.value|default_if_none:''|stringformat:'s'|escapejs }}', waits: JSON.parse(document.getElementById('medicine-waits').textContent), unsold: JSON.parse(document.getElementById('unsold-harvests').textContent) }"
+             @change="if ($event.target.name === 'cycle') { c = $event.target.value; if ($refs.take) $refs.take.checked = !!c && !unsold[c] }">
           {% with field=form.cycle %}{% include "business/partials/field.html" %}{% endwith %}
+          {% if not harvest %}
+          <div class="mt-3" x-show="c" x-cloak>
+            {% with field=form.takes_fish %}{% include "business/partials/field.html" %}{% endwith %}
+            <div class="callout mt-2" data-tone="info" x-show="unsold[c]" x-cloak>
+              {% include "business/partials/icon.html" with name="fish" %}
+              <p><span x-text="unsold[c] && unsold[c].text"></span> <a :href="unsold[c] && unsold[c].url" class="font-semibold underline">{% translate "Sell that harvest" %}</a></p>
+            </div>
+          </div>
+          {% endif %}
           <div class="callout mt-3" data-tone="warn" role="alert" x-show="waits[c]" x-cloak>
             {% include "business/partials/icon.html" with name="dropper" %}
             <p><strong>{% translate "Medicine waiting period" %}</strong> · <span x-text="waits[c]"></span></p>

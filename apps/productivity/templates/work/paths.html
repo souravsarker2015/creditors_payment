@@ -4,8 +4,9 @@
 {% block title %}{% translate "Learning roadmaps" %} | {% translate "Productivity" %}{% endblock %}
 
 {% block work %}
-{{ prompt_tpl|json_script:"path-prompt" }}
-<div class="lpl" data-page-keys="n i" x-data="pathsList(JSON.parse(document.getElementById('path-prompt').textContent), '{% url 'work:api_path_import' %}')"
+{{ prompts|json_script:"path-prompt" }}
+{% include "work/partials/roadmap_switch.html" with here="learning" %}
+<div class="lpl" data-page-keys="n i" x-data="pathsList(JSON.parse(document.getElementById('path-prompt').textContent), '{% url 'work:api_path_import' %}', 'learning', '{% translate "Copied" %}')"
      @keydown.window="if ($event.target.closest('input,textarea,select,[contenteditable]') || $event.ctrlKey || $event.metaKey || $event.altKey || importOpen || newOpen) return;
                       if ($event.key === 'i') { $event.preventDefault(); openImport() } else if ($event.key === 'n') { $event.preventDefault(); newOpen = true; $nextTick(() => $refs.newTitle.focus()) }">
 {% csrf_token %}
@@ -17,10 +18,18 @@
       <a href="?show=active" class="seg-item{% if show == 'active' %} is-active{% endif %}">{% translate "Active" %}</a>
       <a href="?show=archived" class="seg-item{% if show == 'archived' %} is-active{% endif %}">{% translate "Archived" %}{% if archived %} <span class="wg-count">{{ archived }}</span>{% endif %}</a>
     </nav>
-    <button type="button" class="btn btn-secondary" @click="openImport()">{% icon "upload" %}{% translate "Import" %}<kbd class="rmp-kbd">I</kbd></button>
+    <button type="button" class="btn btn-secondary" @click="openImport()">{% icon "upload" %}{% translate "Import JSON" %}<kbd class="rmp-kbd">I</kbd></button>
     <button type="button" class="btn btn-primary" @click="newOpen = true; $nextTick(() => $refs.newTitle.focus())">{% icon "plus" %}{% translate "Blank roadmap" %}<kbd class="rmp-kbd">N</kbd></button>
   </div>
 </header>
+
+{% if not cards and show == "active" %}
+<div class="lpl-start">
+  <a href="#lpl-start" class="lpl-start-item">{% icon "journey" %}<span><b>{% translate "Pick a ready-made one" %}</b><small>{% translate "14 roadmaps below — roles, skills and languages. Start one in a click." %}</small></span></a>
+  <button type="button" class="lpl-start-item" @click="openImport()">{% icon "upload" %}<span><b>{% translate "Import a JSON file" %}</b><small>{% translate "One you downloaded here or got from someone." %}</small></span></button>
+  <button type="button" class="lpl-start-item" @click="openImport(); $nextTick(() => aiOpen = true)">{% icon "sparkles" %}<span><b>{% translate "Make one with ChatGPT or Claude" %}</b><small>{% translate "Copy our prompt, paste the answer back." %}</small></span></button>
+</div>
+{% endif %}
 
 {% if cards %}
 <h2 class="lpl-h">{% translate "Yours" %}</h2>
@@ -48,13 +57,17 @@
   <header class="lpl-gallery-head">
     <div><h2 id="lpl-start" class="lpl-h">{% translate "Start from a ready-made roadmap" %}</h2>
       <p class="wp-sub">{% translate "Each one becomes yours: rename, move, add or delete anything." %}</p></div>
-    <button type="button" class="btn btn-ghost btn-sm" @click="openImport(); $nextTick(() => aiOpen = true)">{% icon "sparkles" %}{% translate "Make one with ChatGPT or Claude" %}</button>
+    <div class="lpl-gallery-acts">
+      <label class="rmp-search">{% icon "search" %}<input x-model="q" type="search" placeholder="{% translate 'Find: Go, Kafka, Docker…' %}" aria-label="{% translate 'Find a ready-made roadmap' %}" @keydown.escape="q = ''"></label>
+      <button type="button" class="btn btn-ghost btn-sm" @click="openImport(); $nextTick(() => aiOpen = true)">{% icon "sparkles" %}{% translate "Make one with ChatGPT or Claude" %}</button>
+    </div>
   </header>
   {% for name, items in gallery %}
+  <div class="lpl-group" data-find="{% for t in items %}{{ t.title }} {{ t.about }} {{ t.find }} {% endfor %}" x-show="match($el.dataset.find)">
   <h3 class="lpl-cat">{{ name }}</h3>
   <div class="lpl-tpls">
     {% for t in items %}
-    <form method="post" class="lpl-tpl" data-color="{{ t.color }}">
+    <form method="post" class="lpl-tpl" data-color="{{ t.color }}" data-find="{{ t.title }} {{ t.about }} {{ t.find }}" x-show="match($el.dataset.find)">
       {% csrf_token %}<input type="hidden" name="action" value="template"><input type="hidden" name="template" value="{{ t.key }}">
       <span class="lpl-tpl-pic" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
       <div class="lpl-tpl-body">
@@ -69,7 +82,10 @@
     </form>
     {% endfor %}
   </div>
+  </div>
   {% endfor %}
+  <p class="lpl-none" x-show="q.trim() && !anyMatch()" x-cloak>{% translate "No ready-made roadmap has that. Make your own with ChatGPT or Claude — it takes a minute." %}
+    <button type="button" class="btn btn-secondary btn-sm" @click="topic = q; openImport(); $nextTick(() => aiOpen = true)">{% icon "sparkles" %}{% translate "Make it with AI" %}</button></p>
 </section>
 {% endif %}
 
@@ -90,49 +106,7 @@
   </form>
 </div>
 
-{# ── import ── #}
-<div class="wc-backdrop" x-show="importOpen" x-cloak x-transition.opacity @click="importOpen = false"></div>
-<div class="rmp-new lpl-import" x-show="importOpen" x-cloak x-trap.noscroll="importOpen" x-transition role="dialog" aria-modal="true" aria-labelledby="lpl-imp-title" @keydown.escape.stop="importOpen = false">
-  <div class="rmp-new-form">
-    <header class="rmp-new-head"><h2 id="lpl-imp-title" class="card-title">{% icon "upload" %}{% translate "Import a learning roadmap" %}</h2>
-      <button type="button" class="icon-btn" @click="importOpen = false" aria-label="{% translate 'Close' %}">{% icon "x" %}</button></header>
-    <nav class="seg seg-sm" aria-label="{% translate 'From' %}">
-      <button type="button" class="seg-item" :class="tab === 'paste' && 'is-active'" @click="tab = 'paste'; check()">{% translate "Paste" %}</button>
-      <button type="button" class="seg-item" :class="tab === 'file' && 'is-active'" @click="tab = 'file'; check()">{% translate "Choose a file" %}</button>
-    </nav>
-    <textarea x-show="tab === 'paste'" x-ref="paste" x-model="text" class="form-input lpl-paste" rows="9" spellcheck="false"
-              placeholder="{% translate 'Paste the JSON here — straight from ChatGPT or Claude is fine, even with ``` around it.' %}" aria-label="{% translate 'Roadmap JSON' %}"></textarea>
-    <label x-show="tab === 'file'" class="lpl-drop" @dragover.prevent @drop.prevent="drop($event)">
-      {% icon "upload" %}<span x-text="fileName || '{% translate "Choose a .json file, or drop it here" %}'"></span>
-      <input type="file" accept=".json,application/json,.txt,.md" class="sr-only" @change="pick($event)">
-    </label>
-    <p class="lpl-check is-ok" x-show="info" x-cloak>{% icon "check" %}<span x-text="info ? '“' + info.title + '” · ' + info.steps + ' {% translate "steps" %} · ' + info.boxes + ' {% translate "topics in all" %}' + (info.resources ? ' · ' + info.resources + ' {% translate "links" %}' : '') + (info.done ? ' · ' + info.done + ' {% translate "done" %}' : '') : ''"></span></p>
-    <p class="lpl-check is-bad" x-show="error" x-cloak role="alert">{% icon "alert" %}<span x-text="error"></span></p>
-
-    <details class="lpl-ai" :open="aiOpen" @toggle="aiOpen = $el.open">
-      <summary>{% icon "sparkles" %}{% translate "Make one with ChatGPT or Claude" %}</summary>
-      <ol class="lpl-steps">
-        <li>{% translate "Fill these in — the prompt below changes with them." %}</li>
-        <li>{% translate "Copy the prompt and paste it into ChatGPT, Claude or Gemini." %}</li>
-        <li>{% translate "Paste its answer above, check it, and press Create." %}</li>
-      </ol>
-      <div class="lpl-ai-grid">
-        <label><span class="label">{% translate "What to learn" %}</span><input x-model="topic" class="form-input input-compact" placeholder="{% translate 'e.g. Backend with Go, AWS, Kubernetes' %}"></label>
-        <label><span class="label">{% translate "Where you are now" %}</span><input x-model="level" class="form-input input-compact" placeholder="{% translate 'e.g. I know Python basics' %}"></label>
-        <label><span class="label">{% translate "Time you have" %}</span><input x-model="time" class="form-input input-compact" placeholder="{% translate 'e.g. 3 months, 1 hour a day' %}"></label>
-      </div>
-      <div class="lpl-prompt"><pre x-text="aiPrompt"></pre>
-        <button type="button" class="btn btn-secondary btn-sm" @click="copy(aiPrompt)">{% icon "copy" %}{% translate "Copy the prompt" %}</button></div>
-      <p class="help">{% translate "The format, in short:" %} <code>title</code>, <code>steps</code> ({% translate "each with a" %} <code>title</code>; {% translate "topics under it go in" %} <code>children</code>). {% translate "Everything else is optional." %}
-        <a href="{% url 'work:path_example' %}" class="wd-link">{% translate "Download an example" %}</a></p>
-    </details>
-
-    <footer class="rmp-new-foot">
-      <button type="button" class="btn btn-ghost" @click="importOpen = false">{% translate "Cancel" %}</button>
-      <button type="button" class="btn btn-primary" :disabled="!info || busy" @click="create()">{% icon "plus" %}{% translate "Create" %}</button>
-    </footer>
-  </div>
-</div>
+{% include "work/partials/roadmap_import.html" %}
 </div>
 {% endblock %}
 

@@ -39,14 +39,23 @@
   document.addEventListener("alpine:init", function () {
 
     /* ── The list page: import (paste or a file, checked as you type) and the prompt for an AI ── */
-    Alpine.data("pathsList", function (prompt, importUrl) {
+    /* Both roadmap list pages (Roadmaps and Learning roadmaps): the import box takes either kind and the
+       AI prompt can be for either; `kind` is the one this page starts with. */
+    Alpine.data("pathsList", function (prompts, importUrl, kind, copiedText) {
+      if (typeof prompts === "string") prompts = { learning: prompts };
       return {
         importOpen: false, tab: "paste", text: "", fileName: "", file: null, info: null, error: "", checking: false, busy: false,
-        topic: "", level: "", time: "", aiOpen: false, newOpen: false,
+        topic: "", level: "", time: "", aiOpen: false, newOpen: false, aiKind: kind || "learning", q: "",
         init: function () {
           var self = this;
           if (location.hash === "#import") this.openImport();
+          if (location.hash === "#ai") { this.openImport(); this.aiOpen = true; }
           this.$watch("text", function () { self.later(); });
+        },
+        match: function (text) { var q = this.q.trim().toLowerCase(); return !q || text.toLowerCase().indexOf(q) >= 0; },
+        anyMatch: function () {
+          var self = this;
+          return Array.prototype.some.call(this.$root.querySelectorAll(".lpl-tpl[data-find]"), function (el) { return self.match(el.dataset.find); });
         },
         openImport: function () { this.importOpen = true; var self = this; this.$nextTick(function () { self.$refs.paste && self.$refs.paste.focus(); }); },
         form: function (check) {
@@ -80,11 +89,12 @@
             .catch(function () { self.busy = false; });
         },
         get aiPrompt() {
+          var prompt = prompts[this.aiKind] || prompts.learning;
           return prompt.split("{topic}").join(this.topic.trim() || "…").split("{level}").join(this.level.trim() || "…")
             .split("{time}").join(this.time.trim() || "…").split("{{").join("{").split("}}").join("}");
         },
         copy: function (text) {
-          var done = function () { toast(t("copied")); };
+          var done = function () { toast(copiedText || t("copied")); };
           if (navigator.clipboard) navigator.clipboard.writeText(text).then(done); else { var a = d.createElement("textarea"); a.value = text; d.body.appendChild(a); a.select(); d.execCommand("copy"); a.remove(); done(); }
         },
       };

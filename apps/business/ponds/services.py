@@ -87,6 +87,35 @@ def _sizes(stockings, moves_in, weighings):
     return sizes
 
 
+@dataclass
+class _SoldOut:
+    """A sale line that took fish out of the pond, shaped like a Harvest."""
+    species: object
+    unit: object
+    base_quantity: Decimal
+    date: date
+    fish_count: int | None = None
+
+    @property
+    def species_id(self):
+        return self.species.pk
+
+
+def _sold_out(cycle):
+    """Fish netted and sold straight from the pond (a sale marked "take these
+    fish out", not tied to a recorded harvest) — they leave the count like a harvest."""
+    if not apps.is_installed("apps.business.sales"):
+        return []
+    if "sales" in getattr(cycle, "_prefetched_objects_cache", {}):
+        lines = [(s, ln) for s in cycle.sales.all() if s.takes_fish and not s.harvest_id for ln in s.lines.all()]
+    else:
+        from apps.business.sales.models import FishSaleLine
+
+        lines = [(ln.sale, ln) for ln in FishSaleLine.objects.filter(sale__cycle=cycle, sale__takes_fish=True, sale__harvest__isnull=True,
+                                                                     sale__is_deleted=False).select_related("sale", "species", "unit")]
+    return [_SoldOut(ln.species, ln.unit, ln.base_quantity, s.date) for s, ln in lines]
+
+
 def count_fish(cycle):
     """{species id: SpeciesRow} — the fish put into a cycle, lost, taken out,
     and still in it (stockings, moves, deaths, harvests, weighings)."""
@@ -121,7 +150,7 @@ def count_fish(cycle):
         r = row(w.species)
         r.avg_g, r.weighed_on = w.avg_g, w.date
     sizes = _sizes(stockings, moves_in, weighings)
-    for h in _rows(cycle, "harvests", "species", "unit"):
+    for h in list(_rows(cycle, "harvests", "species", "unit")) + _sold_out(cycle):
         r = row(h.species)
         n, guessed = harvest_count(h, sizes)
         r.harvested_count += n
@@ -658,7 +687,7 @@ def glance(business, today=None):
     running = list(CultureCycle.objects.filter(business=business, status=CycleStatus.RUNNING).select_related("pond")
                    .prefetch_related("stockings__species", "moves_in__species", "moves_in__cycle__pond", "moves_out__species",
                                      "moves_out__to_cycle__pond", "weighings__species", "weighings__unit", "mortalities__species",
-                                     "harvests__species", "harvests__unit")
+                                     "harvests__species", "harvests__unit", "sales__lines__species", "sales__lines__unit")
                    .order_by("pond__order", "pond__name"))
     if not running:
         return []

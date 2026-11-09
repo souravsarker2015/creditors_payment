@@ -362,3 +362,84 @@ class ElsewhereTests(Base):
         self.assertContains(self.client.get(reverse("work:calendar")), "Beta out")
         token = WorkSettings.for_user(self.me).new_feed_token()
         self.assertIn("Beta out", self.client.get(reverse("work:feed", args=[token])).content.decode())
+
+
+class JsonTests(Base):
+    """A timeline roadmap as JSON: downloaded, imported again, or written by an AI assistant."""
+
+    def test_download_then_import_gives_the_same_roadmap(self):
+        a = self.piece(start_date=self.today, end_date=self.today + timedelta(days=13), status=RoadmapStatus.ACTIVE, impact=4, effort=2,
+                       description="Cards and wallets")
+        b = self.piece(title="Launch", kind="milestone", start_date=self.today + timedelta(days=20), end_date=self.today + timedelta(days=20))
+        b.depends_on.add(a)
+        RoadmapItem.objects.create(roadmap=self.rm, title="Someday")
+        r = self.client.get(reverse("work:roadmap_json", args=[self.rm.pk]))
+        self.assertIn("product.timeline-roadmap.json", r["Content-Disposition"])
+        data = json.loads(r.content)
+        self.assertEqual((data["format"], data["lanes"][0]["name"]), ("timeline-roadmap", "Features"))
+        self.assertEqual(data["lanes"][0]["items"][1]["waitsOn"], ["payments"])
+        self.assertEqual(data["items"][0]["title"], "Someday")
+        r = self.client.post(reverse("work:api_roadmap_import"), {"text": json.dumps(data)}).json()
+        copy = Roadmap.objects.exclude(pk=self.rm.pk).get()
+        self.assertEqual(r["url"], reverse("work:roadmap", args=[copy.pk]))
+        pay = copy.items.get(title="Payments")
+        self.assertEqual((pay.start_date, pay.end_date, pay.status, pay.impact, pay.effort, pay.lane.name, pay.description),
+                         (a.start_date, a.end_date, "active", 4, 2, "Features", "Cards and wallets"))
+        self.assertEqual(list(copy.items.get(title="Launch").depends_on.all()), [pay])
+        self.assertIsNone(copy.items.get(title="Someday").lane)
+
+    def test_what_an_ai_assistant_writes_weeks_from_now_and_loose_words(self):
+        fields, lanes, items = rmp.build(rmp.EXAMPLE, self.today)
+        monday = self.today - timedelta(days=self.today.weekday())
+        mvp = items[0]
+        self.assertEqual((mvp["start"], mvp["end"]), (monday, monday + timedelta(days=34)))
+        launch = [i for i in items if i["key"] == "launch"][0]
+        self.assertEqual((launch["kind"], launch["start"], launch["end"]), ("milestone", monday + timedelta(weeks=10), monday + timedelta(weeks=10)))
+        _f, _l, items = rmp.build({"title": "x", "items": [{"title": "A", "status": "In progress", "type": "Release", "color": "neon"}]})
+        self.assertEqual((items[0]["status"], items[0]["kind"], items[0]["horizon"], items[0]["color"]), ("active", "milestone", "now", ""))
+
+    def test_mistakes_say_where(self):
+        cases = [({"lanes": []}, "title"), ({"title": "x"}, "lanes"), ({"title": "x", "lanes": [{"items": []}]}, "Lane 1"),
+                 ({"title": "x", "lanes": [{"name": "A", "items": [{"title": "a"}, {}]}]}, "Lane 1 › item 2"),
+                 ({"title": "x", "items": [{"title": "a", "start": "soon"}]}, "2027-01-31"),
+                 ({"title": "x", "items": [{"title": "a", "waitsOn": ["b"]}]}, "“b”"),
+                 ({"title": "x", "items": [{"id": "a", "title": "a", "waitsOn": ["b"]}, {"id": "b", "title": "b", "waitsOn": ["a"]}]}, "circle"),
+                 ({"title": "x", "items": [{"id": "a", "title": "a"}, {"id": "a", "title": "b"}]}, "twice")]
+        for spec, said in cases:
+            with self.subTest(said=said), self.assertRaises(rmp.Invalid) as e:
+                rmp.build(spec)
+            self.assertIn(said, str(e.exception))
+
+    def test_one_import_box_takes_either_kind(self):
+        from .. import paths as lp
+        from ..models import LearningPath
+
+        url = reverse("work:api_roadmap_import")
+        chat = "Sure! Here it is:\n```json\n" + json.dumps(rmp.EXAMPLE) + "\n```\nGood luck!"
+        r = self.client.post(url, {"text": chat, "check": "1"}).json()
+        self.assertEqual((r["info"]["kind"], r["info"]["lanes"], r["info"]["items"], r["info"]["milestones"]), ("timeline", 2, 4, 1))
+        self.assertIn("2 lanes", r["info"]["summary"])
+        r = self.client.post(reverse("work:api_path_import"), {"text": json.dumps(lp.EXAMPLE), "check": "1"}).json()
+        self.assertEqual(r["info"]["kind"], "learning")
+        r = self.client.post(url, {"text": json.dumps(lp.EXAMPLE)}).json()     # a learning roadmap given on the Roadmaps page
+        self.assertEqual(r["url"], reverse("work:path", args=[LearningPath.objects.get().pk]))
+        r = self.client.post(reverse("work:api_path_import"), {"text": chat}).json()
+        self.assertEqual(r["url"], reverse("work:roadmap", args=[Roadmap.objects.get(title=rmp.EXAMPLE["title"]).pk]))
+        r = self.client.post(url, {"text": '{"title": "x", "lanes": [{"name": ""}]}', "check": "1"})
+        self.assertEqual((r.status_code, r.json()["ok"]), (200, False))
+        self.assertEqual(json.loads(self.client.get(reverse("work:roadmap_example")).content)["format"], "timeline-roadmap")
+
+    def test_the_list_pages_lead_to_each_other_and_to_import(self):
+        html = self.client.get(reverse("work:roadmaps")).content.decode()
+        for text in ("Learning roadmaps", "Import JSON", "Backend developer", "Rust: beginner to senior", reverse("work:api_roadmap_import"), "timeline-roadmap"):
+            self.assertIn(text, html)
+        html = self.client.get(reverse("work:paths")).content.decode()
+        for text in ("Timeline roadmaps", "Import JSON", "Make one with ChatGPT or Claude", "timeline-roadmap", "learning-roadmap"):
+            self.assertIn(text, html)
+        html = self.client.get(reverse("work:roadmap", args=[self.rm.pk])).content.decode()
+        self.assertIn(reverse("work:roadmap_json", args=[self.rm.pk]), html)
+
+    def test_someone_elses_cant_be_downloaded(self):
+        other = User.objects.create_superuser("other", "o@example.com", PW)
+        self.client.force_login(other)
+        self.assertEqual(self.client.get(reverse("work:roadmap_json", args=[self.rm.pk])).status_code, 404)

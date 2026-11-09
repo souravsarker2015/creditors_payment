@@ -38,7 +38,7 @@
     <dl class="memo-parties">
       {% if sale.buyer %}<div><dt>{% translate "Buyer" %}</dt><dd>{{ sale.buyer }}{% if sale.buyer.phone %} · {{ sale.buyer.phone }}{% endif %}</dd></div>{% endif %}
       {% if sale.market %}<div><dt>{% translate "Market" %}</dt><dd>{{ sale.market }}</dd></div>{% endif %}
-      {% if sale.cycle %}<div><dt>{% translate "From pond" %}</dt><dd><a href="{% url 'business:cycle_detail' sale.cycle_id %}?tab=harvest" class="hover:underline">{{ sale.cycle }}</a></dd></div>{% endif %}
+      {% if sale.cycle %}<div><dt>{% translate "From pond" %}</dt><dd><a href="{% url 'business:cycle_detail' sale.cycle_id %}?tab=harvest" class="hover:underline">{{ sale.cycle }}</a>{% if sale.takes_fish and not sale.harvest_id %} <span class="help print:hidden">· {% translate "taken out of the pond's count" %}</span>{% endif %}</dd></div>{% endif %}
     </dl>
     <table class="memo-table">
       <thead><tr><th>{% translate "Fish" %}</th><th class="num">{% translate "Quantity" %}</th><th class="num">{% translate "Rate" %}</th><th class="num">{% translate "Amount" %}</th></tr></thead>

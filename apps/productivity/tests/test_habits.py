@@ -1,6 +1,7 @@
 """Habits as Loop and Streaks have them: an amount a day ("8 glasses", done when it's reached) and
 "3 times a week" on any days (its streak counts weeks)."""
 from datetime import timedelta
+from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.test import TestCase
@@ -50,6 +51,12 @@ class HabitAmountAndWeekTests(TestCase):
         self.assertFalse(HabitCheck.objects.exists())
 
     def test_times_a_week_counts_weeks_in_a_row(self):
+        # on a Wednesday: two days of this week have come (on a Monday only one has, and a day to come can't be ticked)
+        self.today = services.habit_week_start(self.today) + timedelta(days=2)
+        with patch("django.utils.timezone.localdate", return_value=self.today):
+            self._times_a_week()
+
+    def _times_a_week(self):
         h = self.habit(name="Gym", per_week=2)
         monday = services.habit_week_start(self.today)
         for weeks_ago in (1, 2):                                                     # the last two weeks: twice each
@@ -64,8 +71,7 @@ class HabitAmountAndWeekTests(TestCase):
         self.assertTrue(all(c["due"] for c in row["cells"]))                         # any day will do
         r = self.check(h, self.today, done="1")
         self.assertEqual(r["week"], 1)
-        other = monday + timedelta(days=1) if self.today == monday else monday
-        r = self.check(h, other, done="1")
+        r = self.check(h, monday, done="1")
         self.assertEqual((r["week"], r["streak"]), (2, 3))                           # this week reached too: 3 weeks
 
     def test_the_form_offers_days_or_times_a_week(self):

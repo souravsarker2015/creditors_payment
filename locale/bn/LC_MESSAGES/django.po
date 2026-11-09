@@ -32599,3 +32599,328 @@ msgid "%(counter)s topic ticked off on your learning roadmaps"
 msgid_plural "%(counter)s topics ticked off on your learning roadmaps"
 msgstr[0] "শেখার রোডম্যাপে %(counter)sটি বিষয়ে টিক দেওয়া হয়েছে"
 msgstr[1] "শেখার রোডম্যাপে %(counter)sটি বিষয়ে টিক দেওয়া হয়েছে"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "%(n)s done"
+msgstr "%(n)sটি শেষ"
+
+#: apps/productivity/roadmap.py
+msgid "%(where)s has no title."
+msgstr "%(where)s-এর কোনো শিরোনাম নেই।"
+
+#: apps/productivity/roadmap.py
+msgid "%(where)s should be an object: { \"title\": … }."
+msgstr "%(where)s একটি অবজেক্ট হওয়া উচিত: { \"title\": … }।"
+
+#: apps/productivity/roadmap.py
+msgid "%(where)s starts after it ends."
+msgstr "%(where)s শেষ হওয়ার পরে শুরু হচ্ছে।"
+
+#: apps/productivity/roadmap.py
+msgid "%(where)s waits on “%(id)s”, which isn't in it."
+msgstr "%(where)s “%(id)s”-এর অপেক্ষায় আছে, কিন্তু সেটি এতে নেই।"
+
+#: apps/productivity/roadmap.py
+msgid "%(where)s: the id “%(id)s” is used twice."
+msgstr "%(where)s: “%(id)s” আইডিটি দুবার ব্যবহার হয়েছে।"
+
+#: apps/productivity/roadmap.py
+msgid "%(where)s: what waits on what goes round in a circle."
+msgstr "%(where)s: কোনটা কোনটার অপেক্ষায়, তা ঘুরে ঘুরে একটা বৃত্ত তৈরি করছে।"
+
+#: apps/productivity/roadmap.py
+msgid "%(where)s: “%(name)s” should be a date like 2027-01-31."
+msgstr "%(where)s: “%(name)s” একটি তারিখ হওয়া উচিত, যেমন 2027-01-31।"
+
+#: apps/productivity/roadmap.py
+msgid "%(where)s: “%(name)s” should be a number."
+msgstr "%(where)s: “%(name)s” একটি সংখ্যা হওয়া উচিত।"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "14 roadmaps below — roles, skills and languages. Start one in a click."
+msgstr "নিচে ১৪টি রোডম্যাপ — পেশা, দক্ষতা ও ভাষা। এক ক্লিকে একটি শুরু করুন।"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "A backup, or to move it to another account"
+msgstr "ব্যাকআপ, বা অন্য অ্যাকাউন্টে নিতে"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid ""
+"A step-by-step map you tick off as you learn, with tasks for each topic. One"
+" click makes it yours."
+msgstr ""
+"ধাপে ধাপে একটি ম্যাপ — শিখতে শিখতে টিক দিন, প্রতিটি বিষয়ের জন্য টাস্ক। এক "
+"ক্লিকেই এটি আপনার।"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "At most %(n)s lanes."
+msgstr "সর্বোচ্চ %(n)sটি লেন।"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "Context"
+msgstr "প্রেক্ষাপট"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "Copy our prompt, paste the answer back."
+msgstr "আমাদের প্রম্পট কপি করুন, উত্তরটি এখানে পেস্ট করুন।"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "Dates are"
+msgstr "তারিখ হয়"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid ""
+"Either kind works: a learning roadmap (steps and topics) or a timeline "
+"roadmap (lanes of work with dates). A file you downloaded here, or JSON from"
+" ChatGPT or Claude."
+msgstr ""
+"দুই ধরনই চলবে: লার্নিং রোডম্যাপ (ধাপ ও বিষয়) বা টাইমলাইন রোডম্যাপ (তারিখসহ "
+"কাজের লেন)। এখান থেকে ডাউনলোড করা ফাইল, বা ChatGPT বা Claude-এর দেওয়া JSON।"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "Find a ready-made roadmap"
+msgstr "তৈরি রোডম্যাপ খুঁজুন"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "Find: Go, Kafka, Docker…"
+msgstr "খুঁজুন: Go, Kafka, Docker…"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "Import JSON"
+msgstr "JSON ইমপোর্ট"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "Import a JSON file"
+msgstr "একটি JSON ফাইল ইমপোর্ট করুন"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "Import a roadmap (JSON)"
+msgstr "রোডম্যাপ ইমপোর্ট (JSON)"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "Import another roadmap…"
+msgstr "আরেকটি রোডম্যাপ ইমপোর্ট…"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "It has no “lanes” (or “items”) — nothing to put on the timeline."
+msgstr "এতে কোনো “lanes” (বা “items”) নেই — টাইমলাইনে রাখার মতো কিছু নেই।"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "It has no “title”."
+msgstr "এতে কোনো “title” নেই।"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "Item %(m)s (no lane)"
+msgstr "আইটেম %(m)s (লেন ছাড়া)"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "JSON, the map only"
+msgstr "JSON, শুধু ম্যাপ"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "JSON, with my progress"
+msgstr "JSON, আমার অগ্রগতিসহ"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "Kind of roadmap"
+msgstr "রোডম্যাপের ধরন"
+
+#: apps/productivity/roadmap.py
+msgid "Lane %(n)s has no “name”."
+msgstr "লেন %(n)s-এর কোনো “name” নেই।"
+
+#: apps/productivity/roadmap.py
+msgid "Lane %(n)s should be an object: { \"name\": …, \"items\": [ … ] }."
+msgstr "লেন %(n)s একটি অবজেক্ট হওয়া উচিত: { \"name\": …, \"items\": [ … ] }।"
+
+#: apps/productivity/roadmap.py
+msgid "Lane %(n)s › item %(m)s"
+msgstr "লেন %(n)s › আইটেম %(m)s"
+
+#: apps/productivity/roadmap.py
+msgid "Lane %(n)s: “items” should be a list."
+msgstr "লেন %(n)s: “items” একটি তালিকা হওয়া উচিত।"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "Learning something? Start from a ready-made learning roadmap"
+msgstr "কিছু শিখছেন? তৈরি একটি লার্নিং রোডম্যাপ দিয়ে শুরু করুন"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "Make it with AI"
+msgstr "AI দিয়ে বানান"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid ""
+"No ready-made roadmap has that. Make your own with ChatGPT or Claude — it "
+"takes a minute."
+msgstr ""
+"তৈরি কোনো রোডম্যাপে এটি নেই। ChatGPT বা Claude দিয়ে নিজেরটা বানান — এক "
+"মিনিট লাগে।"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "One you downloaded here or got from someone."
+msgstr "এখান থেকে ডাউনলোড করা, বা কারো কাছ থেকে পাওয়া।"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "Pick a ready-made one"
+msgstr "তৈরি একটি বেছে নিন"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "Plan work over the months: lanes, dates, milestones"
+msgstr "মাসের পর মাস কাজের পরিকল্পনা: লেন, তারিখ, মাইলফলক"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "Spreadsheet (CSV)"
+msgstr "স্প্রেডশিট (CSV)"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "That's %(n)s pieces of work — at most %(max)s."
+msgstr "এখানে %(n)sটি কাজ — সর্বোচ্চ %(max)sটি।"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "The JSON should be one object: { \"title\": …, \"lanes\": [ … ] }."
+msgstr "JSON একটি অবজেক্ট হওয়া উচিত: { \"title\": …, \"lanes\": [ … ] }।"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "Time span"
+msgstr "সময়সীমা"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "Timeline roadmap"
+msgstr "টাইমলাইন রোডম্যাপ"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "Timeline roadmaps"
+msgstr "টাইমলাইন রোডম্যাপ"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "To import again, share, or give an AI assistant to change"
+msgstr "আবার ইমপোর্ট, শেয়ার, বা AI সহকারীকে দিয়ে বদলাতে"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "To share, or to give an AI assistant to change"
+msgstr "শেয়ার করতে, বা AI সহকারীকে দিয়ে বদলাতে"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid ""
+"What to learn, step by step — 14 ready-made: Backend, System design, Python…"
+msgstr "ধাপে ধাপে কী শিখবেন — ১৪টি তৈরি: Backend, System design, Python…"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "With progress, hours and dates"
+msgstr "অগ্রগতি, ঘণ্টা ও তারিখসহ"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "and"
+msgstr "এবং"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "e.g. 2 developers, Django + React"
+msgstr "যেমন ২ জন ডেভেলপার, Django + React"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "e.g. Launch my SaaS MVP, Move to microservices"
+msgstr "যেমন আমার SaaS MVP লঞ্চ, মাইক্রোসার্ভিসে যাওয়া"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "e.g. the next 6 months"
+msgstr "যেমন আগামী ৬ মাস"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "or"
+msgstr "বা"
+
+#: apps/productivity/templates/work/partials/roadmap_import.html
+msgid "“lanes” and “items” should be lists: [ … ]."
+msgstr "“lanes” ও “items” তালিকা হওয়া উচিত: [ … ]।"
+
+#: apps/productivity/roadmap.py
+msgid "%(n)s lane"
+msgid_plural "%(n)s lanes"
+msgstr[0] "%(n)sটি লেন"
+msgstr[1] "%(n)sটি লেন"
+
+#: apps/productivity/roadmap.py
+msgid "%(n)s link"
+msgid_plural "%(n)s links"
+msgstr[0] "%(n)sটি লিংক"
+msgstr[1] "%(n)sটি লিংক"
+
+#: apps/productivity/roadmap.py
+msgid "%(n)s milestone"
+msgid_plural "%(n)s milestones"
+msgstr[0] "%(n)sটি মাইলফলক"
+msgstr[1] "%(n)sটি মাইলফলক"
+
+#: apps/productivity/roadmap.py
+msgid "%(n)s piece of work"
+msgid_plural "%(n)s pieces of work"
+msgstr[0] "%(n)sটি কাজ"
+msgstr[1] "%(n)sটি কাজ"
+
+#: apps/productivity/roadmap.py
+msgid "%(n)s step"
+msgid_plural "%(n)s steps"
+msgstr[0] "%(n)sটি ধাপ"
+msgstr[1] "%(n)sটি ধাপ"
+
+#: apps/productivity/roadmap.py
+msgid "%(n)s topic in all"
+msgid_plural "%(n)s topics in all"
+msgstr[0] "মোট %(n)sটি বিষয়"
+msgstr[1] "মোট %(n)sটি বিষয়"
+
+#: apps/business/sales/models.py
+msgid "Take these fish out of the pond"
+msgstr "এই মাছ পুকুরের হিসাব থেকে বাদ দিন"
+
+#: apps/business/sales/models.py
+msgid "Tick when these fish were netted for this sale. Leave it off if you already recorded them as a harvest."
+msgstr "এই বিক্রির জন্য মাছ জাল টেনে ধরা হলে টিক দিন। আগেই মাছ ধরা হিসেবে লিখে থাকলে টিক দেবেন না।"
+
+#: apps/business/sales/forms.py
+msgid "The pond's fish count, weight and FCR only go down when fish leave it. If you netted these fish for this sale, tick this and you don't need to record a harvest too."
+msgstr "মাছ পুকুর থেকে বের হলে তবেই পুকুরের মাছের সংখ্যা, ওজন ও এফসিআর কমে। এই বিক্রির জন্য জাল টেনে থাকলে টিক দিন — তাহলে আলাদা করে মাছ ধরা লিখতে হবে না।"
+
+#: apps/business/sales/views.py
+#, python-format
+msgid "You harvested %(qty)s %(unit)s of %(fish)s here on %(date)s and haven't sold it yet. If this sale is that harvest, sell it from there so the fish aren't taken out twice."
+msgstr "%(date)s তারিখে এখান থেকে %(qty)s %(unit)s %(fish)s ধরেছেন, যা এখনো বিক্রি হয়নি। এই বিক্রি যদি সেই মাছ হয়, তবে সেখান থেকেই বিক্রি করুন, যাতে মাছ দুবার বাদ না যায়।"
+
+#: apps/business/sales/templates/business/sales/sale_form.html
+msgid "Sell that harvest"
+msgstr "সেই মাছ বিক্রি করুন"
+
+#: apps/business/sales/templates/business/sales/sale_detail.html
+msgid "taken out of the pond's count"
+msgstr "পুকুরের হিসাব থেকে বাদ দেওয়া হয়েছে"
+
+#: apps/business/ponds/views.py
+msgid "This pond has harvests recorded. Open each sale that wasn't a harvest and tick “Take these fish out of the pond”."
+msgstr "এই পুকুরে মাছ ধরা লেখা আছে। যে বিক্রিগুলো মাছ ধরা থেকে নয়, সেগুলো খুলে “এই মাছ পুকুরের হিসাব থেকে বাদ দিন” টিক দিন।"
+
+#: apps/business/ponds/views.py
+#, python-format
+msgid "Fish sold from %(pond)s are now taken out of its count."
+msgstr "%(pond)s থেকে বিক্রি করা মাছ এখন এর হিসাব থেকে বাদ দেওয়া হয়েছে।"
+
+#: apps/business/ponds/templates/business/ponds/cycle_detail.html
+#, python-format
+msgid "%(kg)s kg sold from this pond is still counted as in it"
+msgstr "এই পুকুর থেকে বিক্রি করা %(kg)s কেজি এখনো পুকুরে আছে বলে গোনা হচ্ছে"
+
+#: apps/business/ponds/templates/business/ponds/cycle_detail.html
+msgid "The fish count, weight and FCR below are too high. Record the harvest, or open each sale that wasn't a harvest and tick “Take these fish out of the pond”."
+msgstr "নিচের মাছের সংখ্যা, ওজন ও এফসিআর বেশি দেখাচ্ছে। মাছ ধরা লিখুন, অথবা যে বিক্রিগুলো মাছ ধরা থেকে নয় সেগুলো খুলে “এই মাছ পুকুরের হিসাব থেকে বাদ দিন” টিক দিন।"
+
+#: apps/business/ponds/templates/business/ponds/cycle_detail.html
+msgid "No harvest was recorded, so the fish count, weight and FCR below are too high. If these fish were netted for the sales, take them out in one tap."
+msgstr "কোনো মাছ ধরা লেখা হয়নি, তাই নিচের মাছের সংখ্যা, ওজন ও এফসিআর বেশি দেখাচ্ছে। বিক্রির জন্য জাল টেনে থাকলে এক চাপে বাদ দিন।"
+
+#: apps/business/ponds/templates/business/ponds/cycle_detail.html
+msgid "See sales"
+msgstr "বিক্রি দেখুন"
+
+#: apps/business/ponds/templates/business/ponds/cycle_detail.html
+msgid "Take them out"
+msgstr "বাদ দিন"

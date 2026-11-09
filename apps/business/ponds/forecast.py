@@ -23,7 +23,7 @@ FAR_DAYS = 365
 
 
 def _prefetch():
-    return ("stockings__species", "mortalities__species", "harvests__species", "harvests__unit",
+    return ("stockings__species", "mortalities__species", "harvests__species", "harvests__unit", "sales__lines__species", "sales__lines__unit",
             "moves_in__species", "moves_in__cycle", "moves_out__species", "moves_out__to_cycle",
             Prefetch("weighings", queryset=SampleWeighing.objects.select_related("species", "unit")))
 

@@ -1,0 +1,55 @@
+{% load i18n work %}{% comment %}The import box of both roadmap list pages (inside x-data="pathsList(…)"). It takes either kind —
+a learning roadmap (steps of topics) or a timeline roadmap (lanes of dated work) — and makes the right one.{% endcomment %}
+<div class="wc-backdrop" x-show="importOpen" x-cloak x-transition.opacity @click="importOpen = false"></div>
+<div class="rmp-new lpl-import" x-show="importOpen" x-cloak x-trap.noscroll="importOpen" x-transition role="dialog" aria-modal="true" aria-labelledby="lpl-imp-title" @keydown.escape.stop="importOpen = false">
+  <div class="rmp-new-form">
+    <header class="rmp-new-head"><h2 id="lpl-imp-title" class="card-title">{% icon "upload" %}{% translate "Import a roadmap (JSON)" %}</h2>
+      <button type="button" class="icon-btn" @click="importOpen = false" aria-label="{% translate 'Close' %}">{% icon "x" %}</button></header>
+    <p class="help lpl-imp-about">{% translate "Either kind works: a learning roadmap (steps and topics) or a timeline roadmap (lanes of work with dates). A file you downloaded here, or JSON from ChatGPT or Claude." %}</p>
+    <nav class="seg seg-sm" aria-label="{% translate 'From' %}">
+      <button type="button" class="seg-item" :class="tab === 'paste' && 'is-active'" @click="tab = 'paste'; check()">{% icon "copy" %}{% translate "Paste" %}</button>
+      <button type="button" class="seg-item" :class="tab === 'file' && 'is-active'" @click="tab = 'file'; check()">{% icon "paperclip" %}{% translate "Choose a file" %}</button>
+    </nav>
+    <textarea x-show="tab === 'paste'" x-ref="paste" x-model="text" class="form-input lpl-paste" rows="8" spellcheck="false"
+              placeholder="{% translate 'Paste the JSON here — straight from ChatGPT or Claude is fine, even with ``` around it.' %}" aria-label="{% translate 'Roadmap JSON' %}"></textarea>
+    <label x-show="tab === 'file'" class="lpl-drop" @dragover.prevent @drop.prevent="drop($event)">
+      {% icon "upload" %}<span x-text="fileName || '{% filter escapejs %}{% translate "Choose a .json file, or drop it here" %}{% endfilter %}'"></span>
+      <input type="file" accept=".json,application/json,.txt,.md" class="sr-only" @change="pick($event)">
+    </label>
+    <p class="lpl-check" x-show="checking && !info && !error" x-cloak>{% translate "Checking…" %}</p>
+    <p class="lpl-check is-ok" x-show="info" x-cloak>{% icon "check" %}<span><b x-text="info && ('“' + info.title + '”')"></b> · <span x-text="info && info.summary"></span></span></p>
+    <p class="lpl-check is-bad" x-show="error" x-cloak role="alert">{% icon "alert" %}<span x-text="error"></span></p>
+
+    <details class="lpl-ai" :open="aiOpen" @toggle="aiOpen = $el.open">
+      <summary>{% icon "sparkles" %}{% translate "Make one with ChatGPT or Claude" %}</summary>
+      <nav class="seg seg-sm lpl-ai-kind" aria-label="{% translate 'Kind of roadmap' %}">
+        <button type="button" class="seg-item" :class="aiKind === 'learning' && 'is-active'" @click="aiKind = 'learning'">{% icon "journey" %}{% translate "Learning roadmap" %}</button>
+        <button type="button" class="seg-item" :class="aiKind === 'timeline' && 'is-active'" @click="aiKind = 'timeline'">{% icon "timeline" %}{% translate "Timeline roadmap" %}</button>
+      </nav>
+      <ol class="lpl-steps">
+        <li>{% translate "Fill these in — the prompt below changes with them." %}</li>
+        <li>{% translate "Copy the prompt and paste it into ChatGPT, Claude or Gemini." %}</li>
+        <li>{% translate "Paste its answer above, check it, and press Create." %}</li>
+      </ol>
+      <div class="lpl-ai-grid">
+        <label><span class="label" x-text="aiKind === 'learning' ? '{% filter escapejs %}{% translate "What to learn" %}{% endfilter %}' : '{% filter escapejs %}{% translate "What it's for" %}{% endfilter %}'"></span>
+          <input x-model="topic" class="form-input input-compact" :placeholder="aiKind === 'learning' ? '{% filter escapejs %}{% translate "e.g. Backend with Go, AWS, Kubernetes" %}{% endfilter %}' : '{% filter escapejs %}{% translate "e.g. Launch my SaaS MVP, Move to microservices" %}{% endfilter %}'"></label>
+        <label><span class="label" x-text="aiKind === 'learning' ? '{% filter escapejs %}{% translate "Where you are now" %}{% endfilter %}' : '{% filter escapejs %}{% translate "Context" %}{% endfilter %}'"></span>
+          <input x-model="level" class="form-input input-compact" :placeholder="aiKind === 'learning' ? '{% filter escapejs %}{% translate "e.g. I know Python basics" %}{% endfilter %}' : '{% filter escapejs %}{% translate "e.g. 2 developers, Django + React" %}{% endfilter %}'"></label>
+        <label><span class="label" x-text="aiKind === 'learning' ? '{% filter escapejs %}{% translate "Time you have" %}{% endfilter %}' : '{% filter escapejs %}{% translate "Time span" %}{% endfilter %}'"></span>
+          <input x-model="time" class="form-input input-compact" :placeholder="aiKind === 'learning' ? '{% filter escapejs %}{% translate "e.g. 3 months, 1 hour a day" %}{% endfilter %}' : '{% filter escapejs %}{% translate "e.g. the next 6 months" %}{% endfilter %}'"></label>
+      </div>
+      <div class="lpl-prompt"><pre x-text="aiPrompt"></pre>
+        <button type="button" class="btn btn-secondary btn-sm" @click="copy(aiPrompt)">{% icon "copy" %}{% translate "Copy the prompt" %}</button></div>
+      <p class="help" x-show="aiKind === 'learning'">{% translate "The format, in short:" %} <code>title</code>, <code>steps</code> ({% translate "each with a" %} <code>title</code>; {% translate "topics under it go in" %} <code>children</code>). {% translate "Everything else is optional." %}
+        <a href="{% url 'work:path_example' %}" class="wd-link">{% translate "Download an example" %}</a></p>
+      <p class="help" x-show="aiKind === 'timeline'" x-cloak>{% translate "The format, in short:" %} <code>title</code>, <code>lanes</code> ({% translate "each with a" %} <code>name</code> {% translate "and" %} <code>items</code>). {% translate "Dates are" %} <code>start</code>/<code>end</code> {% translate "or" %} <code>startWeek</code>/<code>weeks</code>. {% translate "Everything else is optional." %}
+        <a href="{% url 'work:roadmap_example' %}" class="wd-link">{% translate "Download an example" %}</a></p>
+    </details>
+
+    <footer class="rmp-new-foot">
+      <button type="button" class="btn btn-ghost" @click="importOpen = false">{% translate "Cancel" %}</button>
+      <button type="button" class="btn btn-primary" :disabled="!info || busy" @click="create()">{% icon "plus" %}{% translate "Create" %}</button>
+    </footer>
+  </div>
+</div>

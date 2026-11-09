@@ -15,6 +15,7 @@ from django.db import transaction
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext as _
+from django.utils.translation import ngettext
 from django.utils.translation import gettext_lazy
 
 from apps.core.dates import parse_date
@@ -471,3 +472,278 @@ def csv_rows(rm, today):
                r["tasks"]["done"], r["tasks"]["total"], round(r["minutes"] / 60, 1), r["likely"], it.impact or "", it.effort or "",
                it.goal.title if it.goal else "", it.project.name if it.project else "", ", ".join(d.title for d in it.depends_on.all()),
                _iso(it.plan_start), _iso(it.plan_end), it.description)
+
+
+# ── As JSON: to download, to import again, or to have an AI assistant write one ──────
+FORMAT = "timeline-roadmap"
+VERSION = 1
+MAX_ITEMS, MAX_LANES = 400, 30
+_STATUS_WORDS = {"in progress": "active", "in_progress": "active", "doing": "active", "started": "active", "todo": "planned",
+                 "to do": "planned", "planned": "planned", "idea": "idea", "done": "done", "finished": "done", "complete": "done",
+                 "completed": "done", "dropped": "dropped", "cancelled": "dropped", "canceled": "dropped", "active": "active"}
+_KIND_WORDS = {"item": "item", "work": "item", "piece": "item", "task": "item", "epic": "item", "feature": "item",
+               "milestone": "milestone", "release": "milestone", "deadline": "milestone"}
+
+
+class Invalid(ValueError):
+    """What's wrong with a roadmap someone gave, said so they can fix it."""
+
+
+def is_timeline(data):
+    """True for this format (lanes of dated work), False for a learning roadmap (steps of topics)."""
+    if not isinstance(data, dict):
+        return False
+    if data.get("format") in (FORMAT, "learning-roadmap"):
+        return data["format"] == FORMAT
+    return ("lanes" in data or "items" in data) and "steps" not in data
+
+
+def _slug(text, taken):
+    import re
+
+    base = re.sub(r"[^a-z0-9]+", "-", str(text).lower()).strip("-")[:40] or "item"
+    key, n = base, 2
+    while key in taken:
+        key, n = f"{base}-{n}", n + 1
+    taken.add(key)
+    return key
+
+
+def export_json(rm):
+    """The roadmap as the import reads it: lanes with their pieces of work, real dates, what waits on what."""
+    items = list(rm.items.select_related("lane").prefetch_related("depends_on").order_by("order", "pk"))
+    taken, keys = set(), {}
+    for it in items:
+        keys[it.pk] = _slug(it.title, taken)
+
+    def one_(it):
+        out = {"id": keys[it.pk], "title": it.title, "type": it.kind, "status": it.status, "when": it.horizon}
+        if it.kind == RoadmapItemKind.MILESTONE:
+            out["date"] = _iso(it.end_date)
+        else:
+            out["start"], out["end"] = _iso(it.start_date), _iso(it.end_date)
+        for name, value in (("description", it.description), ("health", it.health), ("color", it.color), ("progress", it.progress),
+                            ("value", it.impact), ("effort", it.effort)):
+            if value not in ("", None):
+                out[name] = value
+        deps = [keys[d.pk] for d in it.depends_on.all() if d.pk in keys]
+        if deps:
+            out["waitsOn"] = deps
+        return {k: v for k, v in out.items() if v != ""}
+
+    lanes = [{"name": lane.name, "color": lane.color, "items": [one_(it) for it in items if it.lane_id == lane.pk]} for lane in rm.lanes.all()]
+    data = {"format": FORMAT, "version": VERSION, "title": rm.title, "description": rm.description, "color": rm.color, "lanes": lanes}
+    loose = [one_(it) for it in items if not it.lane_id]
+    if loose:
+        data["items"] = loose
+    return data
+
+
+def _when(raw, today, where, name):
+    """A date: 2027-01-31, or a number of weeks from now (as startWeek / weeks give it)."""
+    if raw in (None, ""):
+        return None
+    day = parse_date(str(raw).strip())
+    if day is None:
+        raise Invalid(_("%(where)s: “%(name)s” should be a date like 2027-01-31.") % {"where": where, "name": name})
+    return day
+
+
+def _int(raw, lo, hi, where, name):
+    if raw in (None, ""):
+        return None
+    try:
+        n = int(float(raw))
+    except (TypeError, ValueError):
+        raise Invalid(_("%(where)s: “%(name)s” should be a number.") % {"where": where, "name": name})
+    return max(lo, min(hi, n))
+
+
+def build(spec, today=None):
+    """A timeline roadmap someone gave (dict), checked and cleaned: (fields, lanes, items). Raises Invalid with where it's wrong.
+    Dates are either real ("start"/"end", or "date" for a milestone) or counted from this week ("startWeek" and "weeks")."""
+    today = today or timezone.localdate()
+    monday = today - timedelta(days=today.weekday())
+    if not isinstance(spec, dict):
+        raise Invalid(_("The JSON should be one object: { \"title\": …, \"lanes\": [ … ] }."))
+    title = str(spec.get("title") or "").strip()[:120]
+    if not title:
+        raise Invalid(_("It has no “title”."))
+    raw_lanes = spec.get("lanes") or []
+    loose = spec.get("items") or []
+    if not isinstance(raw_lanes, list) or not isinstance(loose, list):
+        raise Invalid(_("“lanes” and “items” should be lists: [ … ]."))
+    if not raw_lanes and not loose:
+        raise Invalid(_("It has no “lanes” (or “items”) — nothing to put on the timeline."))
+    if len(raw_lanes) > MAX_LANES:
+        raise Invalid(_("At most %(n)s lanes.") % {"n": MAX_LANES})
+    color = spec.get("color") if spec.get("color") in Color.values else Color.BLUE
+    lanes, items, ids = [], [], set()
+
+    def item(raw, lane, where):
+        if not isinstance(raw, dict):
+            raise Invalid(_("%(where)s should be an object: { \"title\": … }.") % {"where": where})
+        t = str(raw.get("title") or raw.get("name") or "").strip()[:200]
+        if not t:
+            raise Invalid(_("%(where)s has no title.") % {"where": where})
+        kind = _KIND_WORDS.get(str(raw.get("type") or raw.get("kind") or "item").lower().strip(), "item")
+        status = _STATUS_WORDS.get(str(raw.get("status") or "planned").lower().strip(), "planned")
+        horizon = str(raw.get("when") or raw.get("horizon") or "").lower().strip()
+        horizon = horizon if horizon in Horizon.values else (Horizon.NOW if status == "active" else Horizon.NEXT)
+        start, end = _when(raw.get("start"), today, where, "start"), _when(raw.get("end") or raw.get("date"), today, where, "end")
+        week = _int(raw.get("startWeek"), -260, 520, where, "startWeek")
+        if start is None and week is not None:
+            start = monday + timedelta(weeks=week)
+        weeks, days = _int(raw.get("weeks"), 0, 520, where, "weeks"), _int(raw.get("days"), 0, 3650, where, "days")
+        if end is None and start is not None and (weeks or days):
+            end = start + timedelta(days=(days if days else weeks * 7) - 1)
+        if kind == RoadmapItemKind.MILESTONE:
+            start = end = end or start
+        else:
+            start, end = start or end, end or start
+        if start and end and start > end:
+            raise Invalid(_("%(where)s starts after it ends.") % {"where": where})
+        key = str(raw.get("id") or "").strip()[:64] or _slug(t, set(ids))
+        if key in ids:
+            raise Invalid(_("%(where)s: the id “%(id)s” is used twice.") % {"where": where, "id": key})
+        ids.add(key)
+        waits = raw.get("waitsOn") or raw.get("dependsOn") or []
+        if isinstance(waits, str):
+            waits = [waits]
+        items.append({
+            "key": key, "lane": lane, "title": t, "kind": kind, "status": status, "horizon": horizon, "start": start, "end": end,
+            "description": str(raw.get("description") or "").replace("\r\n", "\n")[:20000],
+            "health": raw.get("health") if raw.get("health") in Health.values else "",
+            "color": raw.get("color") if raw.get("color") in Color.values else "",
+            "progress": _int(raw.get("progress"), 0, 100, where, "progress"),
+            "impact": _int(raw.get("value") if raw.get("value") is not None else raw.get("impact"), 1, 5, where, "value"),
+            "effort": _int(raw.get("effort"), 1, 5, where, "effort"),
+            "waits": [str(w) for w in waits if isinstance(w, (str, int))], "where": where,
+        })
+
+    for i, lane in enumerate(raw_lanes, 1):
+        if not isinstance(lane, dict):
+            raise Invalid(_("Lane %(n)s should be an object: { \"name\": …, \"items\": [ … ] }.") % {"n": i})
+        name = str(lane.get("name") or lane.get("title") or "").strip()[:80]
+        if not name:
+            raise Invalid(_("Lane %(n)s has no “name”.") % {"n": i})
+        lanes.append({"name": name, "color": lane.get("color") if lane.get("color") in Color.values else Color.BLUE})
+        rows = lane.get("items") or []
+        if not isinstance(rows, list):
+            raise Invalid(_("Lane %(n)s: “items” should be a list.") % {"n": i})
+        for j, raw in enumerate(rows, 1):
+            item(raw, len(lanes) - 1, _("Lane %(n)s › item %(m)s") % {"n": i, "m": j})
+    for j, raw in enumerate(loose, 1):
+        item(raw, None, _("Item %(m)s (no lane)") % {"m": j})
+    if len(items) > MAX_ITEMS:
+        raise Invalid(_("That's %(n)s pieces of work — at most %(max)s.") % {"n": len(items), "max": MAX_ITEMS})
+    for it in items:
+        missing = [w for w in it["waits"] if w not in ids]
+        if missing:
+            raise Invalid(_("%(where)s waits on “%(id)s”, which isn't in it.") % {"where": it["where"], "id": missing[0]})
+    graph = {it["key"]: it["waits"] for it in items}
+    seen, stack = set(), set()
+
+    def circle(k):
+        if k in stack:
+            return True
+        if k in seen:
+            return False
+        seen.add(k)
+        stack.add(k)
+        found = any(circle(w) for w in graph[k])
+        stack.discard(k)
+        return found
+
+    for it in items:
+        if circle(it["key"]):
+            raise Invalid(_("%(where)s: what waits on what goes round in a circle.") % {"where": it["where"]})
+    fields = {"title": title, "description": str(spec.get("description") or "").replace("\r\n", "\n")[:5000], "color": color}
+    return fields, lanes, items
+
+
+def info(fields, lanes, items):
+    """What the import box says it found."""
+    ms = sum(1 for i in items if i["kind"] == RoadmapItemKind.MILESTONE)
+    return {"kind": "timeline", "title": fields["title"], "lanes": len(lanes), "items": len(items) - ms, "milestones": ms,
+            "undated": sum(1 for i in items if not i["end"]),
+            "summary": " · ".join([_("Timeline roadmap"),
+                                   ngettext("%(n)s lane", "%(n)s lanes", len(lanes)) % {"n": len(lanes)},
+                                   ngettext("%(n)s piece of work", "%(n)s pieces of work", len(items) - ms) % {"n": len(items) - ms},
+                                   ngettext("%(n)s milestone", "%(n)s milestones", ms) % {"n": ms}])}
+
+
+@transaction.atomic
+def import_json(user, spec, today=None):
+    fields, lanes, items = build(spec, today)
+    rm = Roadmap.objects.create(owner=user, **fields)
+    made = [RoadmapLane.objects.create(roadmap=rm, name=lane["name"], color=lane["color"], order=i) for i, lane in enumerate(lanes)]
+    by_key = {}
+    for i, it in enumerate(items):
+        by_key[it["key"]] = RoadmapItem.objects.create(
+            roadmap=rm, lane=made[it["lane"]] if it["lane"] is not None else None, title=it["title"], description=it["description"],
+            kind=it["kind"], status=it["status"], horizon=it["horizon"], health=it["health"], color=it["color"], start_date=it["start"],
+            end_date=it["end"], progress=it["progress"], impact=it["impact"], effort=it["effort"], order=i,
+            completed_at=timezone.now() if it["status"] == RoadmapStatus.DONE else None)
+    for it in items:
+        if it["waits"]:
+            by_key[it["key"]].depends_on.set([by_key[w] for w in it["waits"]])
+    return rm
+
+
+EXAMPLE = {
+    "format": FORMAT, "version": VERSION,
+    "title": "Side project: launch in 3 months",
+    "description": "A small SaaS from the first version to the first paying users.",
+    "color": "orange",
+    "lanes": [
+        {"name": "Build", "color": "blue", "items": [
+            {"id": "mvp", "title": "First working version", "status": "active", "when": "now", "startWeek": 0, "weeks": 5,
+             "description": "Sign-up, the one main feature, deploy.", "value": 5, "effort": 4},
+            {"id": "payments", "title": "Payments", "when": "next", "startWeek": 5, "weeks": 2, "waitsOn": ["mvp"], "value": 4, "effort": 2},
+        ]},
+        {"name": "Marketing", "color": "pink", "items": [
+            {"id": "landing", "title": "Landing page", "startWeek": 2, "weeks": 2, "value": 3, "effort": 1},
+            {"id": "first-50", "title": "Tell the first 50 people", "startWeek": 6, "weeks": 4, "waitsOn": ["landing"]},
+        ]},
+    ],
+    "items": [
+        {"id": "launch", "title": "Launch day", "type": "milestone", "startWeek": 10, "waitsOn": ["payments", "first-50"]},
+    ],
+}
+
+PROMPT = """Make a timeline roadmap (a plan of work over time) for: {topic}
+Context: {level}. Time span: {time}.
+
+Answer with JSON only (no explanation), in exactly this format:
+{{
+  "format": "timeline-roadmap",
+  "version": 1,
+  "title": "short name",
+  "description": "one sentence",
+  "color": "blue",
+  "lanes": [
+    {{
+      "name": "Area of work, e.g. Backend",
+      "color": "blue",
+      "items": [
+        {{"id": "short-unique-id", "title": "Piece of work", "type": "item", "status": "planned", "when": "now",
+          "startWeek": 0, "weeks": 3, "description": "1–2 sentences: what done looks like",
+          "value": 4, "effort": 2, "waitsOn": []}}
+      ]
+    }}
+  ],
+  "items": [
+    {{"id": "release-1", "title": "Release 1.0", "type": "milestone", "startWeek": 8, "waitsOn": ["short-unique-id"]}}
+  ]
+}}
+
+Rules:
+- 2 to 5 lanes, each with 3 to 8 pieces of work, in the order they happen.
+- "startWeek" counts weeks from now (0 = this week); "weeks" is how long it takes. Keep everything inside the time span.
+- Milestones ("type": "milestone") are one day: releases, deadlines, exams, launches. Put them in "items" or in a lane.
+- "status" is one of: idea, planned, active, done, dropped. "when" is one of: now, next, later.
+- "value" and "effort" are 1 (low) to 5 (high).
+- "waitsOn" lists the ids of what must be finished first. No circles.
+- "color" is one of: slate, blue, teal, green, lime, amber, orange, red, pink, purple.
+- Every "id" is unique, lowercase, with dashes."""

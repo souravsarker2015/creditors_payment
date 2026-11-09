@@ -18,6 +18,11 @@ class FishSale(BusinessBaseModel):
     buyer = models.ForeignKey("business_parties.Party", on_delete=models.PROTECT, null=True, blank=True, related_name="fish_purchases", verbose_name=_("Buyer"))
     cycle = models.ForeignKey("business_ponds.CultureCycle", on_delete=models.SET_NULL, null=True, blank=True, related_name="sales", verbose_name=_("From pond"))
     harvest = models.ForeignKey("business_ponds.Harvest", on_delete=models.SET_NULL, null=True, blank=True, related_name="sales", verbose_name=_("Harvest"))
+    # Netted and sold the same day, with no harvest written down: the sale itself
+    # takes the fish out of the pond's count (and into its FCR). Off for a sale
+    # of a harvest already recorded, so nothing is counted twice.
+    takes_fish = models.BooleanField(_("Take these fish out of the pond"), default=False,
+                                     help_text=_("Tick when these fish were netted for this sale. Leave it off if you already recorded them as a harvest."))
     memo_no = models.CharField(_("Memo no."), max_length=40, blank=True)
     receipt = models.FileField(_("Memo photo"), upload_to=memo_path, blank=True, validators=[FileExtensionValidator(MEMO_EXTENSIONS)])
     received_now = models.DecimalField(_("Received now"), default=0, validators=[MinValueValidator(0)], **MONEY)

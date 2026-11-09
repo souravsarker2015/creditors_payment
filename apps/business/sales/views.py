@@ -144,8 +144,12 @@ def sale_form_view(request, pk=None):
     sale = get_object_or_404(FishSale, pk=pk, business=b) if pk else None
     form = FishSaleForm(request.POST or None, request.FILES or None, instance=sale, business=b)
     harvest, line_initial, ded_initial = (None, [], [])
+    unsold = _unsold_harvests(b)
     if not sale and request.method != "POST":
         harvest, line_initial, ded_initial = _initial(request, form)
+        c = form.initial.get("cycle")
+        # Netted for this sale unless the pond has a harvest waiting to be sold.
+        form.initial["takes_fish"] = bool(c) and not harvest and str(c) not in unsold
     LineSet = inlineformset_factory(FishSale, FishSaleLine, form=SaleLineForm, formset=_SaleLines, extra=len(line_initial), can_delete=True) if line_initial else SaleLineFormSet
     DedSet = inlineformset_factory(FishSale, SaleDeduction, form=SaleDeductionForm, extra=len(ded_initial), can_delete=True) if ded_initial else SaleDeductionFormSet
     instance = sale or FishSale(business=b)
@@ -158,6 +162,8 @@ def sale_form_view(request, pk=None):
                 obj.business = b
                 if request.POST.get("harvest", "").isdigit():
                     obj.harvest = Harvest.objects.filter(business=b, pk=request.POST["harvest"]).first()
+                if obj.harvest_id or not obj.cycle_id:
+                    obj.takes_fish = False   # a recorded harvest already took them out
                 obj.save()
                 for fs in (lines, deds):
                     fs.instance = obj
@@ -178,7 +184,7 @@ def sale_form_view(request, pk=None):
             return _saved(request, obj)
     return render(request, "business/sales/sale_form.html", {
         "form": form, "lines": lines, "deds": deds, "obj": sale, "harvest": harvest or (sale.harvest if sale else None),
-        "sale_json": _form_json(b, sale), "waits": _medicine_waits(b), "break_evens": _break_evens(request), "buyer_advances": _buyer_advances(b),
+        "sale_json": _form_json(b, sale), "waits": _medicine_waits(b), "unsold_harvests": unsold, "break_evens": _break_evens(request), "buyer_advances": _buyer_advances(b),
     })
 
 
@@ -212,6 +218,24 @@ def _break_evens(request):
         if need and need > 0:
             out[str(c.pk)] = str(need)
     return out
+
+
+def _unsold_harvests(business):
+    """{cycle id: {text, url}} for ponds whose latest harvest has no sale yet —
+    a sale from such a pond is most likely that harvest, already out of the pond."""
+    out = {}
+    harvests = (Harvest.objects.filter(business=business, cycle__status="running", cycle__is_deleted=False)
+                .select_related("species", "unit").prefetch_related("sales").order_by("cycle_id", "-date", "-id"))
+    for h in harvests:
+        key = str(h.cycle_id)
+        if key in out or h.sales.all():
+            out.setdefault(key, None)   # only the latest harvest of each pond counts
+            continue
+        out[key] = {"url": reverse("business:sale_add") + f"?harvest={h.pk}",
+                    "text": _("You harvested %(qty)s %(unit)s of %(fish)s here on %(date)s and haven't sold it yet. "
+                              "If this sale is that harvest, sell it from there so the fish aren't taken out twice.") % {
+                        "qty": num(h.quantity), "unit": h.unit.symbol, "fish": h.species, "date": date_format(h.date, "j M")}}
+    return {k: v for k, v in out.items() if v}
 
 
 def _medicine_waits(business):
