@@ -41,7 +41,9 @@ def _texts():
         "important": _("Important"), "others": _("Others"),
         "bulkDeleteAsk": _("Delete the picked questions? You can bring them back from Recently deleted."),
         "notHere": _("This subject isn't on this device yet. Open it once with a connection."),
-        "deletedMany": _("%(n)s questions deleted"), "undo": _("Undo"), "chapterAsk": _("Chapter for the picked questions (empty: no chapter):"),
+        "deletedMany": _("%(n)s questions deleted"),
+        "subjectsAsk": _("Delete the %(n)s picked subjects with all their questions? You can bring them back from Recently deleted."),
+        "subjectsDeleted": _("%(n)s subjects deleted"), "undo": _("Undo"), "chapterAsk": _("Chapter for the picked questions (empty: no chapter):"),
         "leave": _("You have changes that aren't saved yet. Leave anyway?"), "draftBack": _("Your unsaved question is back."),
         "conflict": _("This question was changed somewhere else too. That text is kept in History."),
         "catDeleteAsk": _("Delete “%(name)s” and everything inside it? The questions stay. You can bring it back from Recently deleted."),
@@ -79,6 +81,14 @@ def _chapters(notes):
 @work_required
 def exam_home_view(request):
     """Every subject, soonest exam first, and a search through all the questions."""
+    if request.method == "POST" and request.POST.get("action") == "delete_many":      # subjects picked on this page, with their questions
+        ids = [int(i) for i in (request.POST.get("ids") or "").split(",") if i.strip().isdigit()]
+        undo = []
+        for subject in ExamSubject.objects.filter(owner=request.user, pk__in=ids):
+            n = subject.notes.count()
+            item = trash(request.user, subject, _("Subject: %(name)s (%(n)s questions)") % {"name": subject.name, "n": n}, reverse("work:exam"))
+            undo.append(reverse("trash_restore", args=[item.pk]))
+        return JsonResponse({"ok": True, "count": len(undo), "undo": undo})
     form = ExamSubjectForm(request.POST or None, owner=request.user)
     if request.method == "POST" and form.is_valid():
         s = form.save(commit=False)
@@ -98,7 +108,7 @@ def exam_home_view(request):
         for n in found:
             n.snippet = exam.plain(n.answer)
     return render_work(request, "work/exam/home.html", {
-        "subjects": subjects, "form": form, "q": q, "found": found, "total": sum(s.n for s in subjects), "current": current,
+        "exam_text": _texts(), "subjects": subjects, "form": form, "q": q, "found": found, "total": sum(s.n for s in subjects), "current": current,
         "branches": [dict(c, n=totals[c["id"]]) for c in tree if c["id"] in totals and c["parent"] == (current["id"] if current else None)],
     })
 

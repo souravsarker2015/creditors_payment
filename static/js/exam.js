@@ -216,7 +216,7 @@
       return Object.assign(pager(D), {
         D: D, t: t, answers: prefs.answers !== false, composing: false, many: false, draft: blank(), writeView: { add: false, edit: false, read: false },
         paste: "", pasteChapter: "", pasteCats: [], preview: null, checking: false, previewTimer: null, histOpen: false, histLoading: false, versions: [], shown: null,
-        selecting: false, picked: {}, moveTo: "", editing: null, edit: {}, editFrom: "", editFirst: null, editState: "saved", editTimer: null, editSending: null, labelsOpen: false,
+        selecting: false, picked: {}, lastPick: null, moveTo: "", editing: null, edit: {}, editFrom: "", editFirst: null, editState: "saved", editTimer: null, editSending: null, labelsOpen: false,
         init: function () {
           var self = this;
           if (prefs.sort === "new") this.sort = "new";
@@ -380,7 +380,7 @@
         copyPrompt: function () { copy(this.$refs.prompt.value).then(function () { toast(t("copied"), "good"); }); },
         /* one card */
         cardClick: function (e, q) {
-          if (this.selecting) { this.picked[q.id] = !this.picked[q.id]; return; }
+          if (this.selecting || e.ctrlKey || e.metaKey) { if (!e.target.closest("a, button, input, select, textarea")) this.tick(q, e); return; }
           var sel = window.getSelection && window.getSelection();
           if (sel && !sel.isCollapsed && e.currentTarget.contains(sel.anchorNode)) return;     // choosing words (to highlight or copy)
           if (e.target.closest("a, button, input, select, textarea, .wkc-colors")) return;
@@ -543,9 +543,25 @@
             Work.undoable(t("deleted", "Question deleted"), r.undo, function () { self.reload(); });
           });
         },
-        /* picking several */
-        startSelect: function () { this.selecting = true; this.picked = {}; },
-        endSelect: function () { this.selecting = false; this.picked = {}; },
+        /* picking several (as in Gmail and Keep): the round tick on a card — or Ctrl+click a card — starts it;
+           Shift picks everything between that card and the last one picked; Ctrl+A all shown; Delete deletes them */
+        startSelect: function () { this.selecting = true; this.picked = {}; this.lastPick = null; },
+        endSelect: function () { this.selecting = false; this.picked = {}; this.lastPick = null; },
+        tick: function (q, e) {
+          if (!this.selecting) { this.selecting = true; this.picked = {}; }
+          var self = this, on = !this.picked[q.id];
+          if (e && e.shiftKey && this.lastPick != null) {
+            var a = this.notes.findIndex(function (n) { return n.id === self.lastPick; }), b = this.notes.indexOf(q);
+            if (a >= 0 && b >= 0) {
+              on = !!this.picked[this.lastPick] || on;
+              this.notes.slice(Math.min(a, b), Math.max(a, b) + 1).forEach(function (n) { self.picked[n.id] = on; });
+              this.lastPick = q.id;
+              return;
+            }
+          }
+          this.picked[q.id] = on;
+          this.lastPick = q.id;
+        },
         pickedIds: function () { var self = this; return this.notes.filter(function (q) { return self.picked[q.id]; }).map(function (q) { return q.id; }); },
         pickedText: function () { return t("picked").replace("%(n)s", this.pickedIds().length); },
         pickAll: function () {
@@ -584,7 +600,8 @@
             if (op === "move") toast(r.message, "good");
             if (op === "delete") {
               Work.toast(t("deletedMany").replace("%(n)s", ids.length), "good", { label: t("undo", "Undo"), run: function () {
-                Promise.all((r.undo || []).map(function (u) { return Work.api(u, {}); })).then(function () { self.reload(); });
+                (r.undo || []).reduce(function (p, u) { return p.then(function () { return Work.api(u, {}); }); }, Promise.resolve())    // one by one (SQLite: one write at a time)
+                  .then(function () { self.reload(); });
               } });
             }
             self.reload();
@@ -613,6 +630,10 @@
           });
         },
         key: function (e) {
+          if (this.selecting && !e.defaultPrevented && !typing(e) && !this.editing && !this.catOpen) {
+            if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key === "a" || e.key === "A")) { e.preventDefault(); this.pickAll(); return; }
+            if ((e.key === "Delete" || e.key === "Backspace") && !e.ctrlKey && !e.metaKey && !e.altKey && this.pickedIds().length) { e.preventDefault(); this.bulk("delete"); return; }
+          }
           if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || typing(e) || this.editing || this.catOpen) return;
           var cards = Array.prototype.slice.call(this.$refs.grid.querySelectorAll(".wkc"));
           var card = d.activeElement && d.activeElement.closest && d.activeElement.closest(".wkc");
@@ -636,6 +657,53 @@
           else if (e.key === "Escape" && this.selecting) this.endSelect();
         },
       });
+    });
+
+    /* ── the subjects (Exam notes' first page): several picked with their round tick — or Ctrl+click — and deleted
+       together (they and their questions go to Recently deleted, with Undo). Shift picks all in between. ── */
+    Alpine.data("examSubjects", function (url) {
+      return {
+        t: t, picked: [], last: null,
+        get picking() { return this.picked.length > 0; },
+        ids: function () { return Array.prototype.map.call(this.$root.querySelectorAll(".wex-subject[data-id]"), function (el) { return +el.getAttribute("data-id"); }); },
+        isPicked: function (id) { return this.picked.indexOf(id) >= 0; },
+        tick: function (id, e) {
+          var all = this.ids(), on = !this.isPicked(id), self = this;
+          if (e && e.shiftKey && this.last != null && all.indexOf(this.last) >= 0) {
+            var a = all.indexOf(this.last), b = all.indexOf(id);
+            all.slice(Math.min(a, b), Math.max(a, b) + 1).forEach(function (x) { if (!self.isPicked(x)) self.picked.push(x); });
+          } else if (on) this.picked.push(id);
+          else this.picked.splice(this.picked.indexOf(id), 1);
+          this.last = id;
+        },
+        open: function (e, id) {                 // a click on a subject while picking (or with Ctrl) picks it instead of opening it
+          if (this.picking || e.ctrlKey || e.metaKey || e.shiftKey) { e.preventDefault(); this.tick(id, e); }
+        },
+        all: function () { var ids = this.ids(); this.picked = this.picked.length === ids.length ? [] : ids; },
+        clear: function () { this.picked = []; this.last = null; },
+        remove: function () {
+          var self = this, ids = this.picked.slice();
+          if (!ids.length) return;
+          FT.ask({ message: t("subjectsAsk").replace("%(n)s", ids.length), danger: true }).then(function (sure) {
+            if (!sure) return;
+            Work.api(url, { action: "delete_many", ids: ids.join(",") }).then(function (r) {
+              if (!r || !r.ok) { toast(t("notSaved"), "warn"); return; }
+              ids.forEach(function (id) { var el = self.$root.querySelector('.wex-subject[data-id="' + id + '"]'); if (el) el.remove(); });
+              self.clear();
+              Work.toast(t("subjectsDeleted").replace("%(n)s", r.count), "good", { label: t("undo", "Undo"), run: function () {
+                (r.undo || []).reduce(function (p, u) { return p.then(function () { return Work.api(u, {}); }); }, Promise.resolve())    // one by one (SQLite: one write at a time)
+                  .then(function () { location.reload(); });
+              } });
+            });
+          });
+        },
+        key: function (e) {
+          if (!this.picking || typing(e)) return;
+          if (e.key === "Escape") { e.preventDefault(); this.clear(); }
+          else if ((e.key === "Delete" || e.key === "Backspace") && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); this.remove(); }
+          else if ((e.ctrlKey || e.metaKey) && (e.key === "a" || e.key === "A")) { e.preventDefault(); this.all(); }
+        },
+      };
     });
 
     /* ── one page to read everything through before the exam (a page at a time) ── */

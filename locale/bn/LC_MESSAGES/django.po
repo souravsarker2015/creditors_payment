@@ -33274,3 +33274,62 @@ msgstr "হাইলাইটের রং"
 #: apps/productivity/views.py
 msgid "Or choose words while reading (Preview or View) and pick a colour."
 msgstr "বা পড়ার সময় (Preview বা View) শব্দ বেছে নিয়ে একটি রং বাছুন।"
+
+#: apps/productivity/templates/work/exam/home.html
+msgid ""
+"Delete the %(n)s picked subjects with all their questions? You can bring "
+"them back from Recently deleted."
+msgstr ""
+"বেছে নেওয়া %(n)sটি বিষয় সব প্রশ্নসহ মুছবেন? Recently deleted থেকে আবার "
+"ফিরিয়ে আনতে পারবেন।"
+
+#: apps/productivity/templates/work/exam/home.html
+msgid "%(n)s subjects deleted"
+msgstr "%(n)sটি বিষয় মোছা হয়েছে"
+
+#: apps/productivity/templates/work/exam/home.html
+msgid "Pick — Shift+click picks all in between"
+msgstr "বাছুন — Shift+ক্লিক করলে মাঝের সবগুলো বাছাই হবে"
+
+#: apps/productivity/templates/work/exam/home.html
+msgid "Pick questions to delete, move or change together"
+msgstr "একসাথে মুছতে, সরাতে বা বদলাতে প্রশ্ন বাছুন"
+
+#: apps/productivity/templates/work/exam/home.html
+msgid "Picked questions"
+msgstr "বাছাই করা প্রশ্ন"
+
+#: apps/productivity/templates/work/exam/home.html
+msgid "Stop picking"
+msgstr "বাছাই বন্ধ করুন"
+
+#: apps/productivity/templates/work/exam/home.html
+msgid "Stop picking (Esc)"
+msgstr "বাছাই বন্ধ করুন (Esc)"
+
+#: apps/productivity/templates/work/exam/home.html
+msgid "Pick none"
+msgstr "কোনোটিই নয়"
+
+#: apps/productivity/templates/work/exam/home.html
+msgid "Delete them (Delete key) — they can come back from Recently deleted"
+msgstr "এগুলো মুছুন (Delete কী) — Recently deleted থেকে ফিরিয়ে আনা যাবে"
+
+#: apps/productivity/templates/work/exam/home.html
+msgid "Picked subjects"
+msgstr "বাছাই করা বিষয়"
+
+#: apps/productivity/templates/work/exam/home.html
+msgid ""
+"Delete them with their questions (Delete key) — they can come back from "
+"Recently deleted"
+msgstr ""
+"প্রশ্নসহ এগুলো মুছুন (Delete কী) — Recently deleted থেকে ফিরিয়ে আনা যাবে"
+
+#: apps/productivity/templates/work/exam/home.html
+msgid "Pick %(name)s"
+msgstr "%(name)s বাছুন"
+
+#: apps/productivity/templates/work/exam/home.html
+msgid "Pick — to delete several at once"
+msgstr "বাছুন — একসাথে কয়েকটি মুছতে"

@@ -2716,6 +2716,8 @@ button.wpq-option:not(:disabled):active { translate: 0 1px; }
 .wex-search { display: flex; }
 .wex-search .wf-search { flex: 1; }
 .wex-subjects { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr)); gap: 0.75rem; margin: 0; padding: 0; list-style: none; }
+.wex-subject-pick { position: absolute; top: 0.625rem; right: 0.625rem; z-index: 2; }
+.wex-subjects-bulk { margin-bottom: 0.75rem; }
 .wex-subject { position: relative; display: flex; flex-direction: column; gap: 0.625rem; padding: 1rem 1rem 0.875rem; border-top: 3px solid var(--c); }
 .wex-subject-main { display: flex; flex-direction: column; gap: 0.25rem; color: inherit; }
 .wex-subject-main::after { content: ""; position: absolute; inset: 0; }        /* the whole card opens it */
@@ -3030,9 +3032,18 @@ button.wpq-option:not(:disabled):active { translate: 0 1px; }
 .wkc-btn.is-danger:hover { color: var(--status-critical); }
 .wkc-btn.wex-star { opacity: 0.45; } .wkc:hover .wkc-btn.wex-star, .wkc-btn.wex-star.is-on { opacity: 1; }
 .wkc-palette { position: relative; }
-.wkc-pick { display: grid; place-items: center; width: 1.375rem; height: 1.375rem; border-radius: 9999px; border: 2px solid var(--border); color: transparent; }
-.wkc-pick svg { width: 0.75rem; height: 0.75rem; }
-.wkc.is-picked .wkc-pick { background: var(--accent); border-color: var(--accent); color: #fff; }
+/* the round tick that picks a card (several cards: delete, move, mark them together) — on hover, always while picking or on a phone */
+.wkc-pick, .wex-subject-pick { display: grid; place-items: center; flex: none; width: 1.375rem; height: 1.375rem; padding: 0; border-radius: 9999px; border: 2px solid var(--text-muted);
+  background: var(--surface-raised); color: transparent; cursor: pointer; opacity: 0; transition: opacity .12s, background .12s; }
+.wkc-pick svg, .wex-subject-pick svg { width: 0.75rem; height: 0.75rem; }
+.wkc:hover .wkc-pick, .wkc-pick:focus-visible, .is-selecting .wkc-pick, .wkc.is-picked .wkc-pick,
+.wex-subject:hover .wex-subject-pick, .wex-subject-pick:focus-visible, .is-picking .wex-subject-pick { opacity: 1; }
+.wkc-pick:hover, .wex-subject-pick:hover { border-color: var(--accent); color: color-mix(in srgb, var(--accent) 60%, transparent); }
+.wkc.is-picked .wkc-pick, .wex-subject.is-picked .wex-subject-pick { background: var(--accent); border-color: var(--accent); color: #fff; }
+.wkc.is-picked, .wex-subject.is-picked { outline: 2px solid var(--accent); outline-offset: 1px; }
+.is-selecting .wkc, .is-picking .wex-subject-main { cursor: pointer; }
+@media (hover: none) { .wkc-pick, .wex-subject-pick { opacity: 0.7; } }
+.wex-bulk-del { margin-left: auto; }
 .wkb-grid.no-answers .wkc { padding-bottom: 0.5rem; }
 .wkc-editor { width: min(100% - 1.5rem, 44rem); max-height: calc(100dvh - 3rem); overflow-y: auto; background: var(--card, var(--surface-raised)); display: flex; flex-direction: column; gap: 0.5rem; }
 .wkc-editor-head { display: flex; align-items: center; gap: 0.5rem; }

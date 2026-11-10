@@ -148,7 +148,7 @@
       <option value="new">{% translate "Newest first" %}</option>
     </select>
     {% include "work/exam/_category_filter.html" %}
-    <button type="button" class="wexo-tool" :class="selecting && 'is-on'" @click="selecting ? endSelect() : startSelect()" aria-label="{% translate 'Pick questions to change together' %}" data-tip="{% translate 'Pick questions to change together' %}">{% icon "check" %}</button>
+    <button type="button" class="wexo-tool" :class="selecting && 'is-on'" @click="selecting ? endSelect() : startSelect()" :aria-pressed="selecting.toString()" data-tip="{% translate 'Pick questions to delete, move or change together' %}">{% icon "check" %}<span>{% translate "Select" %}</span></button>
   </div>
   <nav class="wexo-chapters" x-show="chapters.length > 1 || (chapters.length === 1 && chapters[0].name)" aria-label="{% translate 'Labels' %}">
     <button type="button" class="wexo-chap" :class="chapter === null && 'is-on'" @click="setChapter(null)">{% icon "tag" %}{% translate "All labels" %}</button>
@@ -159,9 +159,10 @@
 </div>
 
 {# picked questions: change them together #}
-<div class="wex-bulk" x-show="selecting" x-cloak>
-  <button type="button" class="btn btn-ghost btn-sm" @click="pickAll()">{% translate "Pick all shown" %}</button>
+<div class="wex-bulk" x-show="selecting" x-cloak x-transition role="toolbar" aria-label="{% translate 'Picked questions' %}">
+  <button type="button" class="icon-btn" @click="endSelect()" aria-label="{% translate 'Stop picking' %}" data-tip="{% translate 'Stop picking (Esc)' %}">{% icon "x" %}</button>
   <b class="wex-bulk-n" x-text="pickedText()"></b>
+  <button type="button" class="btn btn-ghost btn-sm" @click="pickAll()" data-tip="Ctrl+A" x-text="notes.length && notes.every(q => picked[q.id]) ? '{{ _("Pick none")|escapejs }}' : '{{ _("Pick all shown")|escapejs }}'"></button>
   <span class="wex-bulk-acts" :class="!pickedIds().length && 'is-off'">
     <button type="button" class="btn btn-secondary btn-sm" @click="bulk('known')">{% icon "check" %}{% translate "Known" %}</button>
     <button type="button" class="btn btn-secondary btn-sm" @click="bulk('unknown')">{% translate "Not known" %}</button>
@@ -171,9 +172,8 @@
       <option value="">{% translate "Move to…" %}</option>
       <template x-for="o in D.subjects.filter(x => x.id !== D.subject)" :key="o.id"><option :value="o.id" x-text="o.name"></option></template>
     </select>
-    <button type="button" class="btn btn-ghost btn-sm is-danger" @click="bulk('delete')">{% icon "trash" %}{% translate "Delete" %}</button>
+    <button type="button" class="btn btn-danger btn-sm wex-bulk-del" @click="bulk('delete')" data-tip="{% translate 'Delete them (Delete key) — they can come back from Recently deleted' %}">{% icon "trash" %}{% translate "Delete" %}</button>
   </span>
-  <button type="button" class="btn btn-ghost btn-sm" @click="endSelect()">{% translate "Done" %}</button>
 </div>
 
 {# ── the cards ── #}
@@ -183,13 +183,14 @@
              :data-section="firstPinned(i) ? '★ ' + t('important') : (firstOther(i) ? t('others') : null)"
              @click="cardClick($event, q)" tabindex="0" @keydown.enter.self.prevent="openEditor(q)" :aria-label="q.question">
       <div class="wkc-top">
+        <button type="button" class="wkc-pick" @click.stop="tick(q, $event)" :aria-pressed="(!!picked[q.id]).toString()" aria-label="{% translate 'Pick' %}"
+                data-tip="{% translate 'Pick — Shift+click picks all in between' %}">{% icon "check" %}</button>
         <span class="wkc-grip" x-show="canDrag()" aria-hidden="true" title="{% translate 'Drag to change the order' %}">{% icon "grip" %}</span>
         <span class="wkc-num num" x-text="q.number ? '#' + q.number : ''"></span>
         <span class="wkc-label" x-show="q.chapter" x-text="q.chapter"></span>
         <span class="wex-missed" x-show="q.misses" x-text="'✗ ' + q.misses" title="{% translate 'Times you didn’t know it in a review' %}"></span>
         <span class="wex-due" x-show="q.due" title="{% translate 'Due again today' %}">{% icon "repeat" %}{% translate "Revise" %}</span>
         <span class="spacer"></span>
-        <span class="wkc-pick" x-show="selecting" aria-hidden="true">{% icon "check" %}</span>
         <button type="button" class="wkc-btn wex-star" x-show="!selecting" :class="q.starred && 'is-on'" @click.stop="flag(q, 'star')" :aria-pressed="q.starred.toString()" aria-label="{% translate 'Important' %}" data-tip="{% translate 'Important' %}">{% icon "star" %}</button>
       </div>
       <div class="wkc-q wn-md" x-effect="paint($el, q.question)"></div>

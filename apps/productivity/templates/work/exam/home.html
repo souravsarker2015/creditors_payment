@@ -4,6 +4,7 @@
 {% block title %}{% translate "Exam notes" %} | {% translate "Productivity" %}{% endblock %}
 
 {% block work %}
+{{ exam_text|json_script:"exam-text" }}
 <header class="wp-head">
   <div class="min-w-0">
     <h1 class="wp-title">{% translate "Exam notes" %}</h1>
@@ -53,10 +54,21 @@
 {% endif %}
 
 {% if subjects %}
+<div x-data="examSubjects('{% url 'work:exam' %}')" :class="picking && 'is-picking'" @keydown.document="key($event)">
+{% csrf_token %}
+{# several subjects picked (the round tick on a card): delete them together #}
+<div class="wex-bulk wex-subjects-bulk" x-show="picking" x-cloak x-transition role="toolbar" aria-label="{% translate 'Picked subjects' %}">
+  <button type="button" class="icon-btn" @click="clear()" aria-label="{% translate 'Stop picking' %}" data-tip="{% translate 'Stop picking (Esc)' %}">{% icon "x" %}</button>
+  <b class="wex-bulk-n" x-text="t('picked').replace('%(n)s', picked.length)"></b>
+  <button type="button" class="btn btn-ghost btn-sm" @click="all()" data-tip="Ctrl+A" x-text="picked.length === ids().length ? '{{ _("Pick none")|escapejs }}' : '{{ _("Pick all")|escapejs }}'"></button>
+  <button type="button" class="btn btn-danger btn-sm wex-bulk-del" @click="remove()" data-tip="{% translate 'Delete them with their questions (Delete key) — they can come back from Recently deleted' %}">{% icon "trash" %}{% translate "Delete" %}</button>
+</div>
 <ul class="wex-subjects">
   {% for s in subjects %}
-  <li class="card wex-subject" data-color="{{ s.color }}">
-    <a href="{% url 'work:exam_subject' s.pk %}" class="wex-subject-main">
+  <li class="card wex-subject" data-color="{{ s.color }}" data-id="{{ s.pk }}" :class="isPicked({{ s.pk }}) && 'is-picked'">
+    <button type="button" class="wex-subject-pick" @click.stop="tick({{ s.pk }}, $event)" :aria-pressed="isPicked({{ s.pk }}).toString()"
+            aria-label="{% blocktranslate with name=s.name %}Pick {{ name }}{% endblocktranslate %}" data-tip="{% translate 'Pick — to delete several at once' %}">{% icon "check" %}</button>
+    <a href="{% url 'work:exam_subject' s.pk %}" class="wex-subject-main" @click="open($event, {{ s.pk }})">
       <span class="wex-subject-name">{{ s.name }}</span>
       <span class="wex-subject-meta">{% blocktranslate count counter=s.n %}{{ counter }} question{% plural %}{{ counter }} questions{% endblocktranslate %}{% if s.n %} · {% blocktranslate with k=s.known %}{{ k }} known{% endblocktranslate %}{% endif %}{% if s.missed %} · <span class="wex-missed-text">{% blocktranslate count counter=s.missed %}{{ counter }} missed in reviews{% plural %}{{ counter }} missed in reviews{% endblocktranslate %}</span>{% endif %}</span>
       <span class="wex-subject-meta">{% if s.revised %}{% blocktranslate with t=s.revised|timesince %}Revised {{ t }} ago{% endblocktranslate %}{% elif s.n %}{% translate "Not revised yet" %}{% endif %}</span>
@@ -70,6 +82,7 @@
   </li>
   {% endfor %}
 </ul>
+</div>
 {% else %}
 <ol class="wex-how">
   <li><b>1</b><div><h3>{% translate "Add a subject" %}</h3><p>{% translate "Type its name above — and the exam date, if you know it, for a countdown." %}</p></div></li>
@@ -78,3 +91,5 @@
 </ol>
 {% endif %}
 {% endblock %}
+
+{% block work_js %}<script src="{% asset 'js/exam.js' %}"></script>{% endblock %}

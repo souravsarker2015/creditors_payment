@@ -92,6 +92,8 @@ def restore(item):
     db = router.db_for_write(DeletedItem)
     try:
         with transaction.atomic(using=db):
+            # a write first: SQLite then waits its turn behind another restore instead of failing with "database is locked"
+            DeletedItem.objects.using(db).filter(pk=item.pk).update(count=item.count)
             tables, restored = set(), []
             rows = list(serializers.deserialize("json", item.data))
             coming = {(type(d.object), d.object.pk) for d in rows}

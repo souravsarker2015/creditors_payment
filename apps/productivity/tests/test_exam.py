@@ -112,6 +112,30 @@ class PageTests(Base):
         self.assertEqual(s.days_left, 3)
         self.assertContains(self.client.get(reverse("work:exam")), "Exam in 3 days")
 
+    def test_several_subjects_deleted_at_once_and_brought_back(self):
+        self.note()
+        maths = ExamSubject.objects.create(owner=self.me, name="Maths")
+        other = User.objects.create_user("other", "o@example.com", PW)
+        theirs = ExamSubject.objects.create(owner=other, name="Theirs")
+        html = self.client.get(reverse("work:exam")).content.decode()
+        self.assertIn('class="wex-subject-pick"', html)
+        r = self.client.post(reverse("work:exam"), {"action": "delete_many", "ids": f"{self.s.pk},{maths.pk},{theirs.pk},x"}).json()
+        self.assertEqual(r["count"], 2)                                           # not someone else's
+        self.assertEqual(list(ExamSubject.objects.values_list("name", flat=True)), ["Theirs"])
+        self.assertFalse(ExamNote.objects.exists())                               # their questions went with them
+        for url in r["undo"]:                                                     # one by one, as the page does
+            self.client.post(url)
+        self.assertEqual(sorted(ExamSubject.objects.values_list("name", flat=True)), ["Maths", "Physics", "Theirs"])
+        self.assertEqual(ExamNote.objects.get().subject.name, "Physics")
+
+    def test_picked_questions_deleted_and_brought_back(self):
+        a, b, c = self.note("A"), self.note("B"), self.note("C")
+        r = self.client.post(reverse("work:api_exam_subject", args=[self.s.pk]), {"action": "bulk", "op": "delete", "ids": f"{a.pk},{c.pk}"}).json()
+        self.assertEqual(list(ExamNote.objects.values_list("question", flat=True)), ["B"])
+        for url in r["undo"]:
+            self.client.post(url)
+        self.assertEqual(sorted(ExamNote.objects.values_list("question", flat=True)), ["A", "B", "C"])
+
     def test_first_visit_explains_how_it_works(self):
         self.s.delete()
         r = self.client.get(reverse("work:exam"))
