@@ -392,6 +392,23 @@
         });
     })();
 
+    /* One-tap amounts (partials/pay_shortcuts.html): fill the amount, pick the
+       paying-back kind, and leave the cursor in the amount to change it. */
+    document.addEventListener("click", function (e) {
+        var chip = e.target.closest && e.target.closest("[data-pay-amount]");
+        if (!chip) return;
+        var form = chip.closest("form");
+        if (!form) return;
+        var amount = form.querySelector('[name="amount"]');
+        var kind = form.querySelector('[name="transaction_type"][value="' + chip.dataset.payType + '"]');
+        if (kind) { kind.checked = true; kind.dispatchEvent(new Event("change", { bubbles: true })); }
+        if (amount) {
+            amount.value = chip.dataset.payAmount;
+            amount.dispatchEvent(new Event("input", { bubbles: true }));
+            amount.focus();
+        }
+    });
+
     /* One submit per form: a second click, tap or Enter while the first is on
        its way does nothing (no duplicate records). This runs after every other
        submit handler, so a cancelled confirm or an in-page (fetch) form, which

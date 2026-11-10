@@ -60,6 +60,8 @@
 
   {% include "plans/_card.html" with party=creditor kind="creditor" remaining=remaining %}
 
+  {% for pair in both_ways %}{% include "overview/_set_off.html" with pair=pair compact=True next=request.get_full_path %}{% endfor %}
+
   {% if creditor.interest_type %}
   <section class="card">
     <div class="card-header">
@@ -93,8 +95,9 @@
           </dd>
         </div>
         <div class="kv sm:block sm:!border-0 sm:py-0">
-          <dt class="kv-label sm:text-xs inline-flex items-center">{% translate "Accrued Interest (est.)" %}{% translate "Interest built up since the last transaction, prorated by days. It resets each time you post it." as info_text %}{% include "partials/info.html" with text=info_text %}</dt>
+          <dt class="kv-label sm:text-xs inline-flex items-center">{% translate "Accrued Interest (est.)" %}{% translate "Interest built up day by day since it started counting (or was last posted). It resets each time you post it." as info_text %}{% include "partials/info.html" with text=info_text %}</dt>
           <dd class="kv-value sm:mt-1 sm:text-left sm:text-lg" {% if accrued_interest > 0 %}data-tone="warn"{% endif %}>{{ accrued_interest|money }}</dd>
+          {% if creditor.interest_type != 'FIXED' %}<dd class="text-xs" style="color: var(--text-muted);">{% if creditor.interest_from %}{% blocktranslate with date=creditor.interest_from|date:"j M Y" %}counted from {{ date }}{% endblocktranslate %}{% else %}{% translate "counted from the first amount borrowed" %}{% endif %}</dd>{% endif %}
         </div>
         <div class="kv sm:block sm:!border-0 sm:py-0">
           <dt class="kv-label sm:text-xs">{% translate "Balance Incl. Interest" %}</dt>
@@ -128,7 +131,8 @@
           {% endif %}
           <div class="ledger-main">
             <p class="ledger-title">{{ tx.get_transaction_type_display }}</p>
-            <p class="ledger-meta">{{ tx.date|date:"j M Y" }}{% if tx.note %} · {{ tx.note }}{% endif %}</p>
+            <p class="ledger-meta">{{ tx.date|date:"j M Y" }}{% if tx.wallet %} · {{ tx.wallet.name }}{% endif %}{% if tx.note %} · {{ tx.note }}{% endif %}{% if tx.receipt %} · <a href="{% url 'receipt_view' 'loan' tx.pk %}" target="_blank" rel="noopener" class="receipt-link">{% translate "receipt" %}</a>{% endif %}</p>
+            {% if tx.balance_after is not None %}<p class="ledger-meta">{% if tx.balance_after > 0 %}{% blocktranslate with amount=tx.balance_after|money %}You owed {{ amount }} after this{% endblocktranslate %}{% elif tx.balance_after < 0 %}{% blocktranslate with amount=tx.balance_size|money %}Paid {{ amount }} too much after this{% endblocktranslate %}{% else %}{% translate "All paid off after this" %}{% endif %}</p>{% endif %}
           </div>
           <div class="ledger-end">
             <span class="ledger-amount" data-tone="{% if tx.transaction_type == 'BORROW' %}critical{% else %}good{% endif %}">{{ tx.amount|money }}</span>
@@ -155,8 +159,9 @@
         </button>
         <div class="collapse-body" :class="open && 'is-open'">
           <div class="card-header hidden lg:flex"><h2 class="card-title">{% translate "Borrowed more, or paid back?" %}</h2></div>
-          <form method="post" class="card-body form-stack">
+          <form method="post" class="card-body form-stack" enctype="multipart/form-data">
             {% csrf_token %}
+            {% include "partials/pay_shortcuts.html" with party=creditor pay_type="REPAY" %}
             {% for field in form %}{% include "partials/field.html" %}{% endfor %}
             <button type="submit" class="btn btn-primary btn-lg btn-block">{% translate "Save" %}</button>
           </form>

@@ -1,4 +1,6 @@
 from django import forms
+
+from apps.core.ledger_views import UniqueNameMixin
 from django.utils.translation import gettext_lazy as _
 from apps.core.status import active_or_current
 from .models import HouseholdCategory, HouseholdMember, Purchase, Settlement
@@ -18,7 +20,9 @@ class HouseholdCategoryForm(forms.ModelForm):
         }
 
 
-class HouseholdMemberForm(forms.ModelForm):
+class HouseholdMemberForm(UniqueNameMixin, forms.ModelForm):
+    owner_related_name = "household_members"
+
     class Meta:
         model = HouseholdMember
         fields = ["name", "phone", "note"]

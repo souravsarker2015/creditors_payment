@@ -13,6 +13,7 @@ from apps.core.pwa import manifest_view, offline_view, service_worker_view
 from apps.core.receipts import receipt_view
 from apps.core.search import search_view
 from apps.accounts import views as account_views
+from apps.overview import people as overview_people
 from apps.overview import report as overview_report
 from apps.overview import views as overview_views
 
@@ -29,6 +30,8 @@ urlpatterns = [
     path("upcoming/", overview_views.upcoming_view, name="upcoming"),
     path("upcoming/reminders/", overview_views.reminders_view, name="money_reminders"),
     path("report/", overview_report.report_view, name="money_report"),
+    path("people/", overview_people.people_view, name="people"),
+    path("people/set-off/", overview_people.set_off_view, name="people_set_off"),
     path("", include("apps.creditors.urls")),
     path("networth/", include("apps.overview.urls")),
     path("debtors/", include("apps.debtors.urls")),

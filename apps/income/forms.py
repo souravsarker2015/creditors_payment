@@ -1,4 +1,6 @@
 from django import forms
+
+from apps.core.ledger_views import UniqueNameMixin
 from django.utils.translation import gettext_lazy as _
 from apps.core.status import active_or_current
 from .models import RecurringFrequency, IncomeSource, IncomeTransaction, RecurringIncome
@@ -6,7 +8,9 @@ from apps.core.schedule_forms import ScheduleDatesMixin
 from apps.wallets.forms import WalletFieldMixin
 
 
-class IncomeSourceForm(forms.ModelForm):
+class IncomeSourceForm(UniqueNameMixin, forms.ModelForm):
+    owner_related_name = "income_sources"
+
     class Meta:
         model = IncomeSource
         fields = ["name", "description"]

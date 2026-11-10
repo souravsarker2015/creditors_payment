@@ -26,14 +26,8 @@ from datetime import timedelta
 from apps.core.stats import month_compare, ranked, trend_summary
 from apps.core.status import apply_status_filter, delete_record, toggle_active
 from .forms import IncomeSourceForm, IncomeTransactionForm, RecurringIncomeForm
+from apps.core.ledger_views import _build_pagination_window, _csv_response, _last_12_month_starts, _parse_iso_date, _period_label, _render_statement, _row_value  # shared by every ledger app
 
-
-def _row_value(row, fieldnames, key):
-    """Reads a value from a csv.DictReader row by lowercased column name."""
-    col = fieldnames.get(key)
-    if col is None:
-        return ""
-    return (row.get(col) or "").strip()
 
 SORT_OPTIONS = [
     ("-amount", gettext_lazy("Total Earned (High to Low)")),
@@ -47,83 +41,6 @@ SORT_FIELDS = {
     "name": ["name"],
     "-name": ["-name"],
 }
-
-
-def _build_pagination_window(page_obj, window=2):
-    """Compact list of page numbers around the current page, with None as a '…' gap."""
-    total_pages = page_obj.paginator.num_pages
-    current = page_obj.number
-    pages = {1, total_pages}
-
-    for page_number in range(current - window, current + window + 1):
-        if 1 <= page_number <= total_pages:
-            pages.add(page_number)
-
-    ordered_pages = sorted(pages)
-    compact_pages = []
-    previous = None
-
-    for page_number in ordered_pages:
-        if previous is not None and page_number - previous > 1:
-            compact_pages.append(None)
-        compact_pages.append(page_number)
-        previous = page_number
-
-    return compact_pages
-
-
-def _last_12_month_starts():
-    today = django.utils.timezone.localdate()
-    starts = []
-    for i in range(11, -1, -1):
-        month_index = today.month - i
-        year = today.year
-        while month_index <= 0:
-            month_index += 12
-            year -= 1
-        starts.append(date_cls(year, month_index, 1))
-    return starts
-
-
-def _period_label(selected_year, selected_month):
-    if selected_month:
-        return dateformat.format(date_cls(2000, selected_month, 1), "F") + f" {selected_year}"
-    if selected_year:
-        return str(selected_year)
-    return _("All Time")
-
-
-def _render_statement(request, *, entity_label, entity_name, entity_meta, period_label, summary_rows, columns, rows, back_url):
-    return render(request, "statement.html", {
-        "entity_label": entity_label,
-        "entity_name": entity_name,
-        "entity_meta": entity_meta,
-        "period_label": period_label,
-        "summary_rows": summary_rows,
-        "columns": columns,
-        "rows": rows,
-        "back_url": back_url,
-        "generated_at": django.utils.timezone.now(),
-    })
-
-
-def _csv_response(filename, header, rows):
-    response = HttpResponse(content_type="text/csv")
-    response["Content-Disposition"] = f'attachment; filename="{filename}"'
-    response.write("\ufeff")  # UTF-8 BOM so Excel renders Bangla text correctly
-    writer = safe_writer(response)
-    writer.writerow(header)
-    writer.writerows(rows)
-    return response
-
-
-def _parse_iso_date(value):
-    if not value:
-        return None
-    try:
-        return date_cls.fromisoformat(value)
-    except ValueError:
-        return None
 
 
 def _get_income_filters(request, user):
@@ -163,7 +80,7 @@ def _get_income_filters(request, user):
         else:
             sources_qs = sources_qs.filter(id__in=selected_source_ids)
     if search_query:
-        sources_qs = sources_qs.filter(name__icontains=search_query)
+        sources_qs = sources_qs.filter(Q(name__icontains=search_query) | Q(description__icontains=search_query))
 
     return {
         "filter_mode": filter_mode,
@@ -484,10 +401,11 @@ def income_source_edit_view(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, _("Source '%(name)s' updated.") % {"name": source.name})
-            return redirect("income_source_list")
+            return redirect("income_source_detail", pk=source.pk)
     else:
         form = IncomeSourceForm(instance=source)
-    return render(request, "income/source_form.html", {"form": form, "title": _("Edit %(name)s") % {"name": source.name}})
+    return render(request, "income/source_form.html", {
+        "form": form, "title": _("Edit %(name)s") % {"name": source.name}, "back_url": reverse("income_source_detail", args=[source.pk])})
 
 
 @login_required

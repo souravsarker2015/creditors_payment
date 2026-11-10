@@ -19,10 +19,14 @@ from django.utils import dateformat
 from django.utils.translation import gettext as _, gettext_lazy
 
 from apps.core.templatetags.ui import bd_number, money
+from apps.core.ledger_views import ImportRows, attach_running_balance, party_search
+from apps.overview.people import pairs
+from apps.wallets.services import warn_if_short
 from apps.trash.undo import delete_with_undo
 from .models import Creditor, CreditorCategory, Transaction, DUE_SOON_DAYS
 from apps.core.stats import ledger_extras
 from apps.core.status import apply_status_filter, delete_record, toggle_active
+from apps.core.ledger_views import _build_pagination_window, _csv_response, _last_12_month_starts, _parse_year_month, _period_label, _render_statement, _row_value  # shared by every ledger app
 
 MONTH_CHOICES = [(i, date_cls(2000, i, 1)) for i in range(1, 13)]
 
@@ -38,92 +42,6 @@ SORT_FIELDS = {
     "remaining": ["remaining_amt", "name"],
     "-remaining": ["-remaining_amt", "name"],
 }
-
-
-def _build_pagination_window(page_obj, window=2):
-    """Compact list of page numbers around the current page, with None as a '…' gap."""
-    total_pages = page_obj.paginator.num_pages
-    current = page_obj.number
-    pages = {1, total_pages}
-
-    for page_number in range(current - window, current + window + 1):
-        if 1 <= page_number <= total_pages:
-            pages.add(page_number)
-
-    ordered_pages = sorted(pages)
-    compact_pages = []
-    previous = None
-
-    for page_number in ordered_pages:
-        if previous is not None and page_number - previous > 1:
-            compact_pages.append(None)
-        compact_pages.append(page_number)
-        previous = page_number
-
-    return compact_pages
-
-
-def _csv_response(filename, header, rows):
-    response = HttpResponse(content_type="text/csv")
-    response["Content-Disposition"] = f'attachment; filename="{filename}"'
-    response.write("\ufeff")  # UTF-8 BOM so Excel renders Bangla text correctly
-    writer = safe_writer(response)
-    writer.writerow(header)
-    writer.writerows(rows)
-    return response
-
-
-def _row_value(row, fieldnames, key):
-    """Reads a value from a csv.DictReader row by lowercased column name."""
-    col = fieldnames.get(key)
-    if col is None:
-        return ""
-    return (row.get(col) or "").strip()
-
-
-def _last_12_month_starts():
-    """List of 12 date(y, m, 1), oldest first, ending at the first of this month."""
-    today = django.utils.timezone.localdate()
-    starts = []
-    for i in range(11, -1, -1):
-        month_index = today.month - i
-        year = today.year
-        while month_index <= 0:
-            month_index += 12
-            year -= 1
-        starts.append(date_cls(year, month_index, 1))
-    return starts
-
-
-def _period_label(selected_year, selected_month):
-    if selected_month:
-        return dateformat.format(date_cls(2000, selected_month, 1), "F") + f" {selected_year}"
-    if selected_year:
-        return str(selected_year)
-    return _("All Time")
-
-
-def _render_statement(request, *, entity_label, entity_name, entity_meta, period_label, summary_rows, columns, rows, back_url):
-    return render(request, "statement.html", {
-        "entity_label": entity_label,
-        "entity_name": entity_name,
-        "entity_meta": entity_meta,
-        "period_label": period_label,
-        "summary_rows": summary_rows,
-        "columns": columns,
-        "rows": rows,
-        "back_url": back_url,
-        "generated_at": django.utils.timezone.now(),
-    })
-
-
-def _parse_year_month(request):
-    """Reads `year`/`month` GET params. Returns (year_or_None, month_or_None)."""
-    raw_year = request.GET.get("year", "").strip()
-    year = int(raw_year) if raw_year.isdigit() else None
-    raw_month = request.GET.get("month", "").strip()
-    month = int(raw_month) if raw_month.isdigit() and 1 <= int(raw_month) <= 12 else None
-    return year, month
 
 
 @login_required
@@ -284,10 +202,14 @@ def creditor_edit_view(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, _("Creditor '%(name)s' updated successfully.") % {"name": creditor.name})
-            return redirect("creditor_list")
+            if form.posted_old_interest:
+                messages.info(request, _("Posted %(amount)s of interest that had built up under the old terms.") % {
+                    "amount": money(form.posted_old_interest.amount)})
+            return redirect("creditor_detail", pk=creditor.pk)
     else:
         form = CreditorForm(instance=creditor)
-    return render(request, "creditors/creditor_form.html", {"form": form, "title": _("Edit %(name)s") % {"name": creditor.name}})
+    return render(request, "creditors/creditor_form.html", {
+        "form": form, "title": _("Edit %(name)s") % {"name": creditor.name}, "back_url": reverse("creditor_detail", args=[creditor.pk])})
 
 
 @login_required
@@ -296,13 +218,13 @@ def creditor_detail_view(request, pk):
     all_transactions = creditor.transactions.all()
 
     if request.method == "POST":
-        form = TransactionForm(request.POST)
+        form = TransactionForm(request.POST, request.FILES, instance=Transaction(creditor=creditor))
         if form.is_valid():
-            transaction = form.save(commit=False)
-            transaction.creditor = creditor
-            transaction.save()
+            transaction = form.save()
             messages.success(request, _("Transaction of ৳%(amount)s added.") % {"amount": transaction.amount})
             warn_if_overpaid(request, creditor.name, creditor.remaining)
+            if transaction.transaction_type == Transaction.REPAY:
+                warn_if_short(request, transaction.wallet_id)
             return redirect("creditor_detail", pk=pk)
     else:
         form = TransactionForm(initial=record_initial(request, Transaction.TYPE_CHOICES, {"date": django.utils.timezone.localdate()}))
@@ -331,14 +253,16 @@ def creditor_detail_view(request, pk):
 
     year_options = list(all_transactions.values_list("date__year", flat=True).distinct().order_by("-date__year"))
 
+    transactions = attach_running_balance(transactions.select_related("wallet"), all_transactions, Transaction.BORROW)
+
     if request.GET.get("export") == "csv":
         rows = [
-            (tx.date.isoformat(), tx.get_transaction_type_display(), tx.amount, tx.note)
+            (tx.date.isoformat(), tx.get_transaction_type_display(), tx.amount, tx.note, tx.wallet.name if tx.wallet else "", tx.balance_after)
             for tx in transactions
         ]
         return _csv_response(
             f"{creditor.name}_transactions.csv",
-            [_("Date"), _("Type"), _("Amount"), _("Note")],
+            [_("Date"), _("Type"), _("Amount"), _("Note"), _("Wallet"), _("Balance after")],
             rows,
         )
 
@@ -374,6 +298,7 @@ def creditor_detail_view(request, pk):
         "chart_remaining": float(remaining) if remaining > 0 else 0,
         "due_status": due_status,
         "accrued_interest": accrued_interest,
+        "both_ways": pairs(request.user, creditor=creditor),
     }
     return render(request, "creditors/creditor_detail.html", context)
 
@@ -472,8 +397,7 @@ def creditor_list_view(request):
         else:
             creditors_base_qs = creditors_base_qs.filter(category__in=selected_categories)
 
-    if search_query:
-        creditors_base_qs = creditors_base_qs.filter(name__icontains=search_query)
+    creditors_base_qs = party_search(creditors_base_qs, search_query)
 
     status, creditors_base_qs, status_counts = apply_status_filter(request, creditors_base_qs)
 
@@ -511,6 +435,8 @@ def creditor_list_view(request):
             (
                 cr.name,
                 cr.get_category_display(),
+                cr.phone,
+                cr.due_date.isoformat() if cr.due_date else "",
                 cr.total_borrowed_amt,
                 cr.total_paid_amt,
                 cr.total_borrowed_amt - cr.total_paid_amt,
@@ -520,7 +446,7 @@ def creditor_list_view(request):
         ]
         return _csv_response(
             "creditors.csv",
-            [_("Creditor"), _("Category"), _("Total Borrowed"), _("Total Paid"), _("Remaining Debt"), _("Status")],
+            [_("Creditor"), _("Category"), _("Phone"), _("Due date"), _("Total Borrowed"), _("Total Paid"), _("Remaining Debt"), _("Status")],
             rows,
         )
 
@@ -570,10 +496,10 @@ def creditor_list_view(request):
 
 @login_required
 def creditor_import_template_view(request):
-    rows = [(_("Karim Uddin"), "01711000000", _("Friend"), _("Borrowed for shop setup"), "5000")]
+    rows = [(_("Karim Uddin"), "01711000000", _("Friend"), _("Borrowed for shop setup"), "5000", "2025-01-15", "")]
     return _csv_response(
         "creditor_import_template.csv",
-        [_("Name"), _("Phone"), _("Category"), _("Note"), _("Opening Balance")],
+        [_("Name"), _("Phone"), _("Category"), _("Note"), _("Opening Balance"), _("Date"), _("Due date")],
         rows,
     )
 
@@ -582,26 +508,8 @@ def creditor_import_template_view(request):
 def creditor_import_view(request):
     if request.method != "POST":
         return redirect("creditor_list")
-
-    csv_file = request.FILES.get("csv_file")
-    if not csv_file:
-        messages.error(request, _("Please choose a CSV file to import."))
-        return redirect("creditor_list")
-
-    try:
-        decoded = csv_file.read().decode("utf-8-sig")
-    except UnicodeDecodeError:
-        messages.error(request, _("Could not read that file. Please upload a UTF-8 encoded CSV."))
-        return redirect("creditor_list")
-
-    reader = csv.DictReader(io.StringIO(decoded))
-    if not reader.fieldnames:
-        messages.error(request, _("The CSV file appears to be empty."))
-        return redirect("creditor_list")
-
-    fieldnames = {(f or "").strip().lower(): f for f in reader.fieldnames}
-    if "name" not in fieldnames:
-        messages.error(request, _("The CSV must have a 'Name' column."))
+    rows = ImportRows.open(request)
+    if rows is None:
         return redirect("creditor_list")
 
     category_lookup = {}
@@ -609,59 +517,39 @@ def creditor_import_view(request):
         category_lookup[value.lower()] = value
         category_lookup[str(label).lower()] = value
 
-    existing_names = {n.lower() for n in request.user.creditors.values_list("name", flat=True)}
+    existing_names = {" ".join(n.split()).lower() for n in request.user.creditors.values_list("name", flat=True)}
     today = django.utils.timezone.localdate()
-
     created = 0
-    skipped_duplicate = 0
-    skipped_blank = 0
 
-    for row in reader:
-        name = _row_value(row, fieldnames, "name")
+    for line, row in rows:
+        name = " ".join(rows.value(row, "name").split())
         if not name:
-            skipped_blank += 1
+            rows.blanks += 1
             continue
         if name.lower() in existing_names:
-            skipped_duplicate += 1
+            rows.duplicates += 1
             continue
 
-        phone = _row_value(row, fieldnames, "phone")
-        note = _row_value(row, fieldnames, "note")
-        category = category_lookup.get(_row_value(row, fieldnames, "category").lower(), CreditorCategory.OTHER)
-
-        raw_balance = _row_value(row, fieldnames, "opening balance") or _row_value(row, fieldnames, "opening_balance")
-        try:
-            opening_balance = Decimal(raw_balance) if raw_balance else Decimal("0")
-        except InvalidOperation:
-            opening_balance = Decimal("0")
-
+        category = category_lookup.get(rows.value(row, "category").lower(), CreditorCategory.OTHER)
+        opening_balance = rows.amount(row, line, "opening balance", "opening_balance")
+        since = rows.date(row, line, "date", "opening date")
         creditor = Creditor.objects.create(
-            user=request.user, name=name, phone=phone, note=note, category=category
+            user=request.user, name=name, phone=rows.value(row, "phone"), note=rows.value(row, "note"), category=category,
+            due_date=rows.date(row, line, "due date", "due_date"),
         )
-        if opening_balance > 0:
+        if opening_balance:
             Transaction.objects.create(
                 creditor=creditor,
                 transaction_type=Transaction.BORROW,
                 amount=opening_balance,
-                date=today,
+                date=min(since or today, today),
                 note=_("Opening balance (imported)"),
             )
 
         existing_names.add(name.lower())
         created += 1
 
-    if created:
-        messages.success(request, _("Imported %(count)s creditor(s).") % {"count": created})
-    skipped_total = skipped_duplicate + skipped_blank
-    if skipped_total:
-        messages.warning(
-            request,
-            _("Skipped %(count)s row(s): %(dup)s duplicate name(s), %(blank)s blank name(s).")
-            % {"count": skipped_total, "dup": skipped_duplicate, "blank": skipped_blank},
-        )
-    if not created and not skipped_total:
-        messages.error(request, _("No rows found to import."))
-
+    rows.report(request, created, _("Imported %(count)s creditor(s)."))
     return redirect("creditor_list")
 
 
@@ -670,14 +558,17 @@ def transaction_edit_view(request, pk):
     transaction = get_object_or_404(Transaction, pk=pk, creditor__user=request.user)
     creditor = transaction.creditor
     if request.method == "POST":
-        form = TransactionForm(request.POST, instance=transaction)
+        form = TransactionForm(request.POST, request.FILES, instance=transaction)
         if form.is_valid():
             form.save()
             messages.success(request, _("Transaction updated."))
+            warn_if_overpaid(request, creditor.name, creditor.remaining)
+            if transaction.transaction_type == Transaction.REPAY:
+                warn_if_short(request, transaction.wallet_id)
             return redirect("creditor_detail", pk=creditor.pk)
     else:
         form = TransactionForm(instance=transaction)
-    return render(request, "creditors/creditor_form.html", {"form": form, "title": _("Edit Transaction"), "back_url": f"/creditors/{creditor.pk}/"})
+    return render(request, "creditors/creditor_form.html", {"form": form, "title": _("Edit Transaction"), "back_url": reverse("creditor_detail", args=[creditor.pk])})
 
 
 @login_required

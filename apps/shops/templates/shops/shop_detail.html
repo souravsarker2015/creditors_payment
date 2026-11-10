@@ -139,7 +139,8 @@
           {% endif %}
           <div class="ledger-main">
             <p class="ledger-title">{{ tx.get_transaction_type_display }}</p>
-            <p class="ledger-meta">{{ tx.date|date:"j M Y" }}{% if tx.note %} · {{ tx.note }}{% endif %}</p>
+            <p class="ledger-meta">{{ tx.date|date:"j M Y" }}{% if tx.wallet %} · {{ tx.wallet.name }}{% endif %}{% if tx.note %} · {{ tx.note }}{% endif %}{% if tx.receipt %} · <a href="{% url 'receipt_view' 'shop' tx.pk %}" target="_blank" rel="noopener" class="receipt-link">{% translate "memo" %}</a>{% endif %}</p>
+            {% if tx.balance_after is not None %}<p class="ledger-meta">{% if tx.balance_after > 0 %}{% blocktranslate with amount=tx.balance_after|money %}Due {{ amount }} after this{% endblocktranslate %}{% elif tx.balance_after < 0 %}{% blocktranslate with amount=tx.balance_size|money %}Paid {{ amount }} too much after this{% endblocktranslate %}{% else %}{% translate "All paid off after this" %}{% endif %}</p>{% endif %}
           </div>
           <div class="ledger-end">
             <span class="ledger-amount" data-tone="{% if tx.transaction_type == 'PURCHASE' %}critical{% else %}good{% endif %}">{{ tx.amount|money }}</span>
@@ -166,8 +167,9 @@
         </button>
         <div class="collapse-body" :class="open && 'is-open'">
           <div class="card-header hidden lg:flex"><h2 class="card-title">{% translate "Bought on baki, or paid the shop?" %}</h2></div>
-          <form method="post" class="card-body form-stack">
+          <form method="post" class="card-body form-stack" enctype="multipart/form-data">
             {% csrf_token %}
+            {% include "partials/pay_shortcuts.html" with party=shop pay_type="PAYMENT" %}
             {% for field in form %}{% include "partials/field.html" %}{% endfor %}
             <button type="submit" class="btn btn-primary btn-lg btn-block">{% translate "Save" %}</button>
           </form>

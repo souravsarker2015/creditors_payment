@@ -6,6 +6,7 @@ from django.db.models import Sum, Q
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from apps.core.receipts import RECEIPT_VALIDATORS, personal_receipt_path
 from apps.core.validators import above_zero
 
 DUE_SOON_DAYS = 7
@@ -118,6 +119,8 @@ class Creditor(models.Model):
         help_text=_("A flat interest amount (৳) — used for a one-time Fixed Amount type, or a Fixed Amount basis charged every period."),
         verbose_name=_("Fixed interest amount"),
     )
+    # Set through CreditorForm's "Count interest from" field (and reset to the
+    # posting day by post_accrued_interest); empty means "from the first entry".
     interest_from = models.DateField(_("Interest counted from"), null=True, blank=True, editable=False)
     is_active = models.BooleanField(
         default=True,
@@ -280,11 +283,13 @@ class Creditor(models.Model):
         )
         self.interest_from = timezone.localdate()
         if self.interest_type == InterestType.FIXED:
-            # A flat charge is a one-off — clear it so it isn't offered
-            # again until a new fixed amount is configured. The posted
-            # transaction remains as the permanent record.
+            # A flat charge is a one-off — once posted, the creditor has no
+            # interest terms left, so the type goes too. (Leaving the type set
+            # with no amount made the Edit form refuse every later save.) The
+            # posted transaction remains as the permanent record.
+            self.interest_type = None
             self.interest_fixed_amount = None
-        self.save(update_fields=["interest_from", "interest_fixed_amount"])
+        self.save(update_fields=["interest_from", "interest_type", "interest_fixed_amount"])
         return transaction
 
 
@@ -313,6 +318,8 @@ class Transaction(models.Model):
     amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name=_("Amount"), validators=[above_zero])
     wallet = models.ForeignKey("wallets.Wallet", on_delete=models.SET_NULL, null=True, blank=True, related_name="+",
                                verbose_name=_("Wallet"))
+    receipt = models.FileField(_("Receipt photo"), upload_to=personal_receipt_path, blank=True, validators=RECEIPT_VALIDATORS,
+                               help_text=_("Optional: a photo of the memo, slip or signed paper."))
     date = models.DateField(verbose_name=_("Date"))
     note = models.TextField(blank=True, default="", verbose_name=_("Note"))
     created_at = models.DateTimeField(auto_now_add=True)

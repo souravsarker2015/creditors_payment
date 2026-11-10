@@ -23,7 +23,7 @@
   </header>
 
   {% url 'debtor_list' as reset_url %}
-  {% translate "e.g. Karim" as search_placeholder %}
+  {% translate "Name, phone or note" as search_placeholder %}
   {% include "partials/entity_filters.html" with reset_url=reset_url search_placeholder=search_placeholder show_payment=True %}
 
   <div id="results" class="stack">
@@ -86,6 +86,7 @@
       </dl>
 
       <div class="entity-foot">
+        {% if cr.remaining_amt > 0 and cr.is_active %}<a href="{{ detail_url }}?record=RECEIVE#record" class="btn btn-soft btn-sm" data-no-prefetch>{% include "partials/icon.html" with name="check" %}{% translate "Got money back" %}</a>{% endif %}
         <a href="{{ detail_url }}" class="btn btn-secondary btn-sm">{% translate "Details" %}{% include "partials/icon.html" with name="arrow-right" %}</a>
       </div>
     </article>

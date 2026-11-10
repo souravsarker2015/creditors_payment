@@ -189,6 +189,26 @@ and shops (বাকি tracking) — household and shops didn't exist at the ti
   Net Worth shows a goals card, and a "Put it toward a goal" nudge when the month is in surplus.
   Moving money into a goal is not counted as spending, so Net Worth is unchanged by it.
 
+- **Search, receipt photos and backup** — the global search, receipt photos (now also on loan,
+  lending and shop-due entries, with a private viewer) and full backup & restore have all shipped.
+- **Borrowing & lending review (Nov 2026)** —
+  - Posting a one-time interest fee no longer blocks later edits of the creditor.
+  - Interest terms now carry a visible "Count interest from" day. New or changed terms count from
+    today unless an earlier day is picked, and what built up under the old terms can be posted first.
+  - Edit returns to the person's page, not the list (creditors, debtors, shops, sources, members,
+    contributors). Expense Edit/Delete return to the filtered list.
+  - The same name can't be added twice by mistake (the quick-add popup still picks the existing one).
+  - Every loan/shop entry shows the wallet used and the balance after it.
+  - One-tap "All of it" / "Installment" amounts, and a "Record ৳X paid" button on installment plans.
+  - Lists search phone numbers and notes too, and cards have a quick "Paid back" button.
+  - Paying more than a wallet holds is pointed out, and the wallet picker shows each balance.
+  - Wallet balances are added up by the database, so Home stays quick as the history grows.
+  - Home's recent entries include bazar, shop dues and contributions.
+  - The CSV import reports unreadable amounts/dates and takes Date and Due date columns.
+  - A new "Both ways" page shows people who are both creditor and debtor, with a "Set off" that cancels the
+    smaller balance on both sides.
+  - The helpers the seven ledger apps each copied now live once in `apps/core/ledger_views.py`.
+
 ## Suggested / not yet implemented
 
 - **No self-service password recovery, and signup is open to anyone** (Low–Medium — reviewed and
@@ -204,12 +224,6 @@ and shops (বাকি tracking) — household and shops didn't exist at the ti
   if public self-registration was never actually intended. Worth revisiting once there's an actual
   email-sending setup decided on.
 
-- **Global search / command palette** (Medium) — one search box (Ctrl+K) across creditors, debtors,
-  shops, sources, categories, members and notes.
-- **Receipt photos** (Medium) — attach a picture to an expense or purchase; needs a media storage
-  decision for production.
-- **Full backup & restore** (Medium) — one download of everything (JSON/ZIP) and a matching import,
-  beyond today's per-list CSV export.
 - **Login protection** (Low) — lock out or slow down repeated failed logins (e.g. django-axes).
 
 ## Platform

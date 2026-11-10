@@ -1,0 +1,15 @@
+{% load i18n l10n plans %}{% comment %}
+One-tap amounts above a creditor / debtor / shop entry form: the next
+installment (when there's a plan) and everything still owed. Tapping one fills
+the amount and picks the paying-back kind; nothing is saved until Save.
+Needs: party, remaining, pay_type ("REPAY" | "RECEIVE" | "PAYMENT").
+The click handling lives in base.html ([data-pay-amount]).
+{% endcomment %}{% if remaining > 0 %}{% plan_status party as st %}
+<div class="chip-row" role="group" aria-label="{% translate 'Fill in an amount' %}">
+  <span class="chip-row-label">{% translate "Fill in:" %}</span>
+  {% if st and not st.done and st.next_amount > 0 and st.next_amount != remaining %}
+  <button type="button" class="chip" data-pay-amount="{{ st.next_amount|floatformat:"2u" }}" data-pay-type="{{ pay_type }}">{% blocktranslate with amount=st.next_amount|money %}Installment {{ amount }}{% endblocktranslate %}</button>
+  {% endif %}
+  <button type="button" class="chip" data-pay-amount="{{ remaining|floatformat:"2u" }}" data-pay-type="{{ pay_type }}">{% blocktranslate with amount=remaining|money %}All of it · {{ amount }}{% endblocktranslate %}</button>
+</div>
+{% endif %}

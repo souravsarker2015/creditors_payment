@@ -1,10 +1,14 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 from .models import Debtor, Transaction
+from apps.core.ledger_views import UniqueNameMixin
+from apps.core.receipts import ReceiptInput, attach_viewer
 from apps.wallets.forms import WalletFieldMixin
 
 
-class DebtorForm(forms.ModelForm):
+class DebtorForm(UniqueNameMixin, forms.ModelForm):
+    owner_related_name = "debtors"
+
     class Meta:
         model = Debtor
         fields = ["name", "category", "phone", "due_date", "note"]
@@ -20,10 +24,15 @@ class DebtorForm(forms.ModelForm):
 class TransactionForm(WalletFieldMixin, forms.ModelForm):
     class Meta:
         model = Transaction
-        fields = ["transaction_type", "amount", "wallet", "date", "note"]
+        fields = ["transaction_type", "amount", "wallet", "date", "note", "receipt"]
         widgets = {
+            "receipt": ReceiptInput(),
             "transaction_type": forms.Select(attrs={"class": "form-control"}),
             "amount": forms.NumberInput(attrs={"class": "form-control", "placeholder": _("Amount (৳)")}),
             "date": forms.DateInput(attrs={"class": "form-control datepicker", "placeholder": _("Select Date")}),
             "note": forms.Textarea(attrs={"class": "form-control", "rows": 2, "placeholder": _("Transaction details...")}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        attach_viewer(self, "lent")

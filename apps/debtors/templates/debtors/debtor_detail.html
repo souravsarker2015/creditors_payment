@@ -61,6 +61,8 @@
 
   {% include "plans/_card.html" with party=debtor kind="debtor" remaining=remaining %}
 
+  {% for pair in both_ways %}{% include "overview/_set_off.html" with pair=pair compact=True next=request.get_full_path %}{% endfor %}
+
   <div class="detail-grid">
     <section class="card">
       <div class="card-header">
@@ -84,7 +86,8 @@
           {% endif %}
           <div class="ledger-main">
             <p class="ledger-title">{{ tx.get_transaction_type_display }}</p>
-            <p class="ledger-meta">{{ tx.date|date:"j M Y" }}{% if tx.note %} · {{ tx.note }}{% endif %}</p>
+            <p class="ledger-meta">{{ tx.date|date:"j M Y" }}{% if tx.wallet %} · {{ tx.wallet.name }}{% endif %}{% if tx.note %} · {{ tx.note }}{% endif %}{% if tx.receipt %} · <a href="{% url 'receipt_view' 'lent' tx.pk %}" target="_blank" rel="noopener" class="receipt-link">{% translate "receipt" %}</a>{% endif %}</p>
+            {% if tx.balance_after is not None %}<p class="ledger-meta">{% if tx.balance_after > 0 %}{% blocktranslate with amount=tx.balance_after|money %}They owed you {{ amount }} after this{% endblocktranslate %}{% elif tx.balance_after < 0 %}{% blocktranslate with amount=tx.balance_size|money %}Got {{ amount }} too much after this{% endblocktranslate %}{% else %}{% translate "All collected after this" %}{% endif %}</p>{% endif %}
           </div>
           <div class="ledger-end">
             <span class="ledger-amount" data-tone="{% if tx.transaction_type == 'LEND' %}info{% else %}good{% endif %}">{{ tx.amount|money }}</span>
@@ -111,8 +114,9 @@
         </button>
         <div class="collapse-body" :class="open && 'is-open'">
           <div class="card-header hidden lg:flex"><h2 class="card-title">{% translate "Lent more, or got money back?" %}</h2></div>
-          <form method="post" class="card-body form-stack">
+          <form method="post" class="card-body form-stack" enctype="multipart/form-data">
             {% csrf_token %}
+            {% include "partials/pay_shortcuts.html" with party=debtor pay_type="RECEIVE" %}
             {% for field in form %}{% include "partials/field.html" %}{% endfor %}
             <button type="submit" class="btn btn-primary btn-lg btn-block">{% translate "Save" %}</button>
           </form>

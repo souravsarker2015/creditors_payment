@@ -40,6 +40,13 @@ class WalletFieldMixin:
             del self.fields["wallet"]
             return
         field.queryset = wallets
+        # "bKash · ৳2,000" — so the right wallet is picked, and an empty one is noticed before paying from it.
+        from apps.core.templatetags.ui import money
+
+        from .services import balances
+
+        held = balances(user)
+        field.label_from_instance = lambda w: f"{w.name} · {money(held.get(w.pk, w.opening_balance))}"
         field.empty_label = _("Not from a wallet")
         field.help_text = self.wallet_help
         field.widget.attrs.setdefault("class", "form-input")

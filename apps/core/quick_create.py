@@ -99,6 +99,7 @@ def quick_create_view(request, kind):
         return _ok(obj, _("'%(name)s' is active again and selected.") % {"name": obj})
 
     form = spec.form_class(request.POST, prefix=form_prefix(kind))
+    form.allow_same_name = True        # an existing one is picked below instead of refused
     if not form.is_valid():
         errors = {field: [str(e) for e in errs] for field, errs in form.errors.items()}
         return JsonResponse({"ok": False, "errors": errors}, status=400)

@@ -1,4 +1,4 @@
-{% load i18n plans %}{% comment %}
+{% load i18n l10n plans %}{% comment %}
 Installment plan card on a creditor / debtor / shop page.
 Needs: party, kind ("creditor" | "debtor" | "shop"), remaining.
 {% endcomment %}{% plan_status party as st %}
@@ -35,6 +35,11 @@ Needs: party, kind ("creditor" | "debtor" | "shop"), remaining.
       <li class="is-{{ state }}"><span>{{ d|date:"j M" }}</span><span>{% if state == "late" %}{% translate "late" %}{% elif state == "today" %}{% translate "today" %}{% elif state == "next" %}{% translate "next" %}{% else %}{{ st.plan.amount|money }}{% endif %}</span></li>
       {% endfor %}
     </ol>
+    {% if st.next_amount > 0 %}
+    <a href="?record={% if kind == 'debtor' %}RECEIVE{% elif kind == 'shop' %}PAYMENT{% else %}REPAY{% endif %}&amp;amount={{ st.next_amount|floatformat:"2u" }}#record" class="btn btn-primary btn-block" data-no-prefetch>
+      {% include "partials/icon.html" with name="check" %}{% if kind == "debtor" %}{% blocktranslate with amount=st.next_amount|money %}Record {{ amount }} received{% endblocktranslate %}{% else %}{% blocktranslate with amount=st.next_amount|money %}Record {{ amount }} paid{% endblocktranslate %}{% endif %}
+    </a>
+    {% endif %}
     <p class="help">{% translate "Payments you record here count toward the plan. The due date and reminders follow the next installment." %}</p>
     {% endif %}
   </div>

@@ -1,10 +1,14 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 from .models import Shop, Transaction
+from apps.core.ledger_views import UniqueNameMixin
+from apps.core.receipts import ReceiptInput, attach_viewer
 from apps.wallets.forms import WalletFieldMixin
 
 
-class ShopForm(forms.ModelForm):
+class ShopForm(UniqueNameMixin, forms.ModelForm):
+    owner_related_name = "shops"
+
     class Meta:
         model = Shop
         fields = ["name", "category", "phone", "due_date", "note"]
@@ -34,13 +38,20 @@ class TransactionForm(WalletFieldMixin, forms.ModelForm):
 
     class Meta:
         model = Transaction
-        fields = ["transaction_type", "amount", "wallet", "date", "note"]
+        fields = ["transaction_type", "amount", "wallet", "date", "note", "receipt"]
         widgets = {
+            "receipt": ReceiptInput(),
             "transaction_type": forms.Select(attrs={"class": "form-input"}),
             "amount": forms.NumberInput(attrs={"class": "form-input", "placeholder": "0.00"}),
             "date": forms.DateInput(attrs={"class": "form-input datepicker", "placeholder": _("Select Date")}),
             "note": forms.TextInput(attrs={"class": "form-input", "placeholder": _("What did you buy? (optional)")}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        attach_viewer(self, "shop", _("See the memo"))
+        if "receipt" in self.fields:
+            self.fields["receipt"].help_text = _("Optional: a photo of the shop's memo (খাতা) for this entry.")
 
     def clean(self):
         data = super().clean()

@@ -27,69 +27,11 @@ from apps.core.flow import warn_if_overpaid
 from apps.core.stats import month_compare, month_start, ranked, total, trend_summary
 from apps.core.status import apply_status_filter, delete_record, toggle_active
 from .forms import HouseholdCategoryForm, HouseholdMemberForm, PurchaseForm, SettlementForm
+from apps.core.ledger_views import party_search, _build_pagination_window, _csv_response, _last_12_month_starts, _parse_year_month, _period_label, _render_statement, _row_value  # shared by every ledger app
+from apps.wallets.services import warn_if_short
 
-
-def _csv_response(filename, header, rows):
-    response = HttpResponse(content_type="text/csv")
-    response["Content-Disposition"] = f'attachment; filename="{filename}"'
-    response.write("\ufeff")  # UTF-8 BOM so Excel renders Bangla text correctly
-    writer = safe_writer(response)
-    writer.writerow(header)
-    writer.writerows(rows)
-    return response
-
-
-def _row_value(row, fieldnames, key):
-    """Reads a value from a csv.DictReader row by lowercased column name."""
-    col = fieldnames.get(key)
-    if col is None:
-        return ""
-    return (row.get(col) or "").strip()
-
-
-def _last_12_month_starts():
-    today = timezone.localdate()
-    starts = []
-    for i in range(11, -1, -1):
-        month_index = today.month - i
-        year = today.year
-        while month_index <= 0:
-            month_index += 12
-            year -= 1
-        starts.append(date(year, month_index, 1))
-    return starts
-
-
-def _period_label(selected_year, selected_month):
-    if selected_month:
-        return dateformat.format(date(2000, selected_month, 1), "F") + f" {selected_year}"
-    if selected_year:
-        return str(selected_year)
-    return _("All Time")
-
-
-def _render_statement(request, *, entity_label, entity_name, entity_meta, period_label, summary_rows, columns, rows, back_url):
-    return render(request, "statement.html", {
-        "entity_label": entity_label,
-        "entity_name": entity_name,
-        "entity_meta": entity_meta,
-        "period_label": period_label,
-        "summary_rows": summary_rows,
-        "columns": columns,
-        "rows": rows,
-        "back_url": back_url,
-        "generated_at": timezone.now(),
-    })
 
 MONTH_CHOICES = [(i, date(2000, i, 1)) for i in range(1, 13)]
-
-
-def _parse_year_month(request):
-    raw_year = request.GET.get("year", "").strip()
-    year = int(raw_year) if raw_year.isdigit() else None
-    raw_month = request.GET.get("month", "").strip()
-    month = int(raw_month) if raw_month.isdigit() and 1 <= int(raw_month) <= 12 else None
-    return year, month
 
 
 PURCHASE_LIST_SORT_OPTIONS = [
@@ -124,29 +66,6 @@ CATEGORY_SORT_FIELDS = {
     "name": ["category__name"],
     "-name": ["-category__name"],
 }
-
-
-def _build_pagination_window(page_obj, window=2):
-    """Compact list of page numbers around the current page, with None as a '…' gap."""
-    total_pages = page_obj.paginator.num_pages
-    current = page_obj.number
-    pages = {1, total_pages}
-
-    for page_number in range(current - window, current + window + 1):
-        if 1 <= page_number <= total_pages:
-            pages.add(page_number)
-
-    ordered_pages = sorted(pages)
-    compact_pages = []
-    previous = None
-
-    for page_number in ordered_pages:
-        if previous is not None and page_number - previous > 1:
-            compact_pages.append(None)
-        compact_pages.append(page_number)
-        previous = page_number
-
-    return compact_pages
 
 
 def _budget_alert(request, purchase):
@@ -416,6 +335,8 @@ def month_detail_view(request, year, month):
             purchase.save()
             messages.success(request, _("Purchase of ৳%(amount)s recorded.") % {"amount": purchase.amount})
             _budget_alert(request, purchase)
+            if not purchase.buyer_id:
+                warn_if_short(request, purchase.wallet_id)
             return redirect("household_month_detail", year=purchase.date.year, month=purchase.date.month)
     else:
         if year == today.year and month == today.month:
@@ -462,6 +383,8 @@ def purchase_edit_view(request, pk):
             form.save()
             messages.success(request, _("Purchase updated."))
             _budget_alert(request, form.instance)
+            if not form.instance.buyer_id:
+                warn_if_short(request, form.instance.wallet_id)
             return redirect(_back_to(request) or reverse("household_month_detail", kwargs={"year": purchase.date.year, "month": purchase.date.month}))
     else:
         form = PurchaseForm(instance=purchase, user=request.user)
@@ -492,7 +415,7 @@ def member_list_view(request):
     search_query = request.GET.get("q", "").strip()
     members_qs = request.user.household_members.with_balances()
     if search_query:
-        members_qs = members_qs.filter(name__icontains=search_query)
+        members_qs = party_search(members_qs, search_query)
     status, members_qs, status_counts = apply_status_filter(request, members_qs)
     members = list(members_qs)
     for m in members:
@@ -655,13 +578,13 @@ def member_edit_view(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, _("'%(name)s' updated.") % {"name": member.name})
-            return redirect("household_member_list")
+            return redirect("household_member_detail", pk=member.pk)
     else:
         form = HouseholdMemberForm(instance=member)
     return render(
         request,
         "household/household_form.html",
-        {"form": form, "title": _("Edit %(name)s") % {"name": member.name}, "back_url": f"/household/members/{member.pk}/"},
+        {"form": form, "title": _("Edit %(name)s") % {"name": member.name}, "back_url": reverse("household_member_detail", args=[member.pk])},
     )
 
 
@@ -677,6 +600,7 @@ def member_detail_view(request, pk):
             settlement.save()
             messages.success(request, _("Gave back ৳%(amount)s to %(name)s.") % {"amount": settlement.amount, "name": member.name})
             warn_if_overpaid(request, member.name, HouseholdMember.objects.get(pk=pk).balance_due)
+            warn_if_short(request, settlement.wallet_id)
             return redirect("household_member_detail", pk=pk)
     else:
         form = SettlementForm(initial={"date": timezone.localdate()})
@@ -817,6 +741,7 @@ def settlement_edit_view(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, _("Settlement updated."))
+            warn_if_short(request, form.instance.wallet_id)
             return redirect("household_member_detail", pk=member.pk)
     else:
         form = SettlementForm(instance=settlement)

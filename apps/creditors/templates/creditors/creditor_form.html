@@ -14,7 +14,7 @@
     </div>
   </header>
 
-  <form method="post" class="card" novalidate
+  <form method="post" class="card" novalidate{% if form.is_multipart %} enctype="multipart/form-data"{% endif %}
         x-data="{ interestType: '{{ form.interest_type.value|default_if_none:"" }}', interestBasis: '{{ form.interest_basis.value|default_if_none:"" }}' }">
     {% csrf_token %}
     <div class="card-body form-stack">
@@ -32,6 +32,10 @@
           <div x-show="interestType && interestType !== 'FIXED' && interestBasis === 'PERCENTAGE'" x-cloak>{% include "partials/field.html" %}</div>
         {% elif field.name == "interest_fixed_amount" %}
           <div x-show="interestType === 'FIXED' || (interestType && interestBasis === 'FIXED')" x-cloak>{% include "partials/field.html" %}</div>
+        {% elif field.name == "interest_from" %}
+          <div x-show="interestType && interestType !== 'FIXED'" x-cloak>{% include "partials/field.html" %}</div>
+        {% elif field.name == "post_old_interest" %}
+          <div class="callout" data-tone="warn">{% include "partials/field.html" %}</div>
         {% else %}
           {% include "partials/field.html" %}
         {% endif %}

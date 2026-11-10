@@ -22,7 +22,7 @@ class NetWorthTests(TestCase):
     def test_zero_data_does_not_crash(self):
         response = self.client.get(reverse("networth"))
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context["net_position"], 0)
+        self.assertEqual(response.context["settled"], 0)
         self.assertEqual(response.context["receivables"], 0)
         self.assertEqual(response.context["payables"], 0)
 
@@ -123,7 +123,9 @@ class NetWorthTests(TestCase):
         # Only the real, posted principal counts — the live interest estimate does not.
         self.assertEqual(response.context["creditors_payable"], Decimal("1000.00"))
 
-    def test_net_position_is_sum_of_balance_and_cash_flow(self):
+    def test_balance_and_cash_flow_are_kept_apart(self):
+        """They answer different questions, so no blended "net position" is shown:
+        lending 1000 isn't 1000 more money, it only moves it to someone else."""
         debtor = Debtor.objects.create(user=self.user, name="Owes Me")
         DebtorTransaction.objects.create(debtor=debtor, transaction_type=DebtorTransaction.LEND, amount=Decimal("1000.00"), date=date(2026, 1, 1))
 
@@ -131,9 +133,9 @@ class NetWorthTests(TestCase):
         IncomeTransaction.objects.create(source=source, amount=Decimal("500.00"), date=date(2026, 1, 1))
 
         response = self.client.get(reverse("networth"))
-        expected = response.context["net_balance"] + response.context["net_cash_flow"]
-        self.assertEqual(response.context["net_position"], expected)
-        self.assertEqual(response.context["net_position"], Decimal("1500.00"))
+        self.assertEqual(response.context["net_balance"], Decimal("1000.00"))
+        self.assertEqual(response.context["net_cash_flow"], Decimal("500.00"))
+        self.assertNotIn("net_position", response.context)
 
     def test_figures_never_leak_between_users(self):
         other_user = User.objects.create_user(username="networth_other", password="secret123")

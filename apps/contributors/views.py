@@ -21,14 +21,8 @@ from django.urls import reverse
 from apps.core.stats import month_compare, ranked, trend_summary
 from apps.core.status import apply_status_filter, toggle_active
 from .forms import ContributorForm, ContributionForm
+from apps.core.ledger_views import party_search, _build_pagination_window, _csv_response, _last_12_month_starts, _parse_year_month, _period_label, _render_statement, _row_value  # shared by every ledger app
 
-
-def _row_value(row, fieldnames, key):
-    """Reads a value from a csv.DictReader row by lowercased column name."""
-    col = fieldnames.get(key)
-    if col is None:
-        return ""
-    return (row.get(col) or "").strip()
 
 MONTH_CHOICES = [(i, date_cls(2000, i, 1)) for i in range(1, 13)]
 
@@ -45,81 +39,6 @@ SORT_FIELDS = {
     "-amount": ["-total_amount", "name"],
 }
 
-
-def _build_pagination_window(page_obj, window=2):
-    """Compact list of page numbers around the current page, with None as a '…' gap."""
-    total_pages = page_obj.paginator.num_pages
-    current = page_obj.number
-    pages = {1, total_pages}
-
-    for page_number in range(current - window, current + window + 1):
-        if 1 <= page_number <= total_pages:
-            pages.add(page_number)
-
-    ordered_pages = sorted(pages)
-    compact_pages = []
-    previous = None
-
-    for page_number in ordered_pages:
-        if previous is not None and page_number - previous > 1:
-            compact_pages.append(None)
-        compact_pages.append(page_number)
-        previous = page_number
-
-    return compact_pages
-
-
-def _csv_response(filename, header, rows):
-    response = HttpResponse(content_type="text/csv")
-    response["Content-Disposition"] = f'attachment; filename="{filename}"'
-    response.write("\ufeff")  # UTF-8 BOM so Excel renders Bangla text correctly
-    writer = safe_writer(response)
-    writer.writerow(header)
-    writer.writerows(rows)
-    return response
-
-
-def _parse_year_month(request):
-    raw_year = request.GET.get("year", "").strip()
-    year = int(raw_year) if raw_year.isdigit() else None
-    raw_month = request.GET.get("month", "").strip()
-    month = int(raw_month) if raw_month.isdigit() and 1 <= int(raw_month) <= 12 else None
-    return year, month
-
-
-def _last_12_month_starts():
-    today = django.utils.timezone.localdate()
-    starts = []
-    for i in range(11, -1, -1):
-        month_index = today.month - i
-        year = today.year
-        while month_index <= 0:
-            month_index += 12
-            year -= 1
-        starts.append(date_cls(year, month_index, 1))
-    return starts
-
-
-def _period_label(selected_year, selected_month):
-    if selected_month:
-        return dateformat.format(date_cls(2000, selected_month, 1), "F") + f" {selected_year}"
-    if selected_year:
-        return str(selected_year)
-    return _("All Time")
-
-
-def _render_statement(request, *, entity_label, entity_name, entity_meta, period_label, summary_rows, columns, rows, back_url):
-    return render(request, "statement.html", {
-        "entity_label": entity_label,
-        "entity_name": entity_name,
-        "entity_meta": entity_meta,
-        "period_label": period_label,
-        "summary_rows": summary_rows,
-        "columns": columns,
-        "rows": rows,
-        "back_url": back_url,
-        "generated_at": django.utils.timezone.now(),
-    })
 
 @login_required
 def contributor_dashboard(request):
@@ -231,8 +150,7 @@ def contributor_list(request):
         else:
             contributors_base_qs = contributors_base_qs.filter(category__in=selected_categories)
 
-    if search_query:
-        contributors_base_qs = contributors_base_qs.filter(name__icontains=search_query)
+    contributors_base_qs = party_search(contributors_base_qs, search_query)
 
     status, contributors_base_qs, status_counts = apply_status_filter(request, contributors_base_qs)
 
@@ -393,6 +311,7 @@ def contributor_create(request):
             contributor = form.save(commit=False)
             contributor.user = request.user
             contributor.save()
+            messages.success(request, _("Contributor '%(name)s' added.") % {"name": contributor.name})
             return redirect('contributor_list')
     else:
         form = ContributorForm()
@@ -405,10 +324,12 @@ def contributor_update(request, pk):
         form = ContributorForm(request.POST, instance=contributor)
         if form.is_valid():
             form.save()
-            return redirect('contributor_list')
+            messages.success(request, _("Contributor '%(name)s' updated.") % {"name": contributor.name})
+            return redirect('contributor_detail', pk=contributor.pk)
     else:
         form = ContributorForm(instance=contributor)
-    return render(request, 'contributors/contributor_form.html', {'form': form, 'title': _('Edit Contributor')})
+    return render(request, 'contributors/contributor_form.html', {
+        'form': form, 'title': _('Edit Contributor'), 'back_url': reverse('contributor_detail', args=[contributor.pk])})
 
 @login_required
 def contributor_delete(request, pk):

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% translate "Both ways" %} | FinTrack{% endblock %}
+{% block content %}
+<div class="page-narrow stack">
+  <header class="page-header !mb-0">
+    <div>
+      <a href="{% url 'home' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Home" %}</a>
+      <h1 class="page-title">{% translate "Both ways" %}</h1>
+      <p class="page-subtitle">{% translate "People you have borrowed from and also lent to. See what you owe each other overall, and set one against the other." %}</p>
+    </div>
+  </header>
+
+  {% if pairs %}
+    {% if can_set_off_total > 0 %}
+    <div class="callout" data-tone="info">
+      {% include "partials/icon.html" with name="check" %}
+      <p>{% blocktranslate with amount=can_set_off_total|money %}{{ amount }} of what you owe and what you're owed cancels out between the same people.{% endblocktranslate %}</p>
+    </div>
+    {% endif %}
+    {% for pair in pairs %}{% include "overview/_set_off.html" with pair=pair %}{% endfor %}
+  {% else %}
+  <div class="empty">
+    <p class="empty-title">{% translate "Nobody is in both lists" %}</p>
+    <p class="empty-text">{% translate "When someone is both in Creditors and in Debtors — same phone number, or the same name when a number is missing — they show here." %}</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

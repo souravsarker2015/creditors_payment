@@ -61,6 +61,8 @@ PAGES = [
     (gettext_noop("Creditors"), "dashboard", "personal", ""),
     (gettext_noop("Debtors"), "debtor_dashboard", "personal", ""),
     (gettext_noop("Shop Dues"), "shop_dashboard", "personal", ""),
+    (gettext_noop("Both ways"), "people", "personal", ""),
+    (gettext_noop("Set off what you owe each other"), "people", "personal", ""),
     (gettext_noop("Income"), "income_dashboard", "personal", ""),
     (gettext_noop("Expense"), "expense_dashboard", "personal", ""),
     (gettext_noop("Budgets"), "budget_list", "personal", ""),

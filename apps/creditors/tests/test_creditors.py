@@ -434,15 +434,113 @@ class CreditorInterestTests(TestCase):
         self.assertEqual(creditor.interest_from, self.today)
         self.assertEqual(creditor.accrued_interest, Decimal("0.00"))
 
-    def test_turning_interest_on_later_does_not_reach_back(self):
+    def _terms(self, **extra):
+        data = {"name": "Late", "category": CreditorCategory.BANK, "interest_type": InterestType.MONTHLY,
+                "interest_basis": InterestBasis.PERCENTAGE, "interest_rate": "10"}
+        data.update(extra)
+        return data
+
+    def test_turning_interest_on_later_starts_today(self):
         creditor = Creditor.objects.create(user=self.user, name="Late", category=CreditorCategory.BANK)
         self._borrow(creditor, Decimal("1000.00"), 300)
         self._borrow(creditor, Decimal("1000.00"), 15)
-        form = CreditorForm({"name": "Late", "category": CreditorCategory.BANK, "interest_type": InterestType.MONTHLY,
-                             "interest_basis": InterestBasis.PERCENTAGE, "interest_rate": "10"}, instance=creditor)
+        form = CreditorForm(self._terms(), instance=creditor)
         self.assertTrue(form.is_valid(), form.errors)
         form.save()
+        creditor = Creditor.objects.get(pk=creditor.pk)
+        self.assertEqual(creditor.interest_from, self.today)
+        self.assertEqual(creditor.accrued_interest, Decimal("0.00"))
+
+    def test_turning_interest_on_can_reach_back_to_a_picked_day(self):
+        creditor = Creditor.objects.create(user=self.user, name="Late", category=CreditorCategory.BANK)
+        self._borrow(creditor, Decimal("1000.00"), 300)
+        self._borrow(creditor, Decimal("1000.00"), 15)
+        form = CreditorForm(self._terms(interest_from=(self.today - timedelta(days=15)).isoformat()), instance=creditor)
+        self.assertTrue(form.is_valid(), form.errors)
+        form.save()
+        # 10% of 2000 a month, for 15 of 30 days
         self.assertEqual(Creditor.objects.get(pk=creditor.pk).accrued_interest, Decimal("100.00"))
+
+    def test_a_new_creditor_counts_from_the_first_loan_unless_a_day_is_picked(self):
+        form = CreditorForm(self._terms(name="New"))
+        self.assertTrue(form.is_valid(), form.errors)
+        creditor = form.save(commit=False)
+        creditor.user = self.user
+        creditor.save()
+        self.assertIsNone(creditor.interest_from)
+        self._borrow(creditor, Decimal("1000.00"), 30)
+        self.assertEqual(creditor.accrued_interest, Decimal("100.00"))
+
+    def test_changing_only_the_rate_does_not_reprice_the_past(self):
+        creditor = self.percent_lender("2.00")
+        creditor.name = "Late"
+        creditor.save()
+        self._borrow(creditor, Decimal("100000.00"), 30)
+        self.assertEqual(creditor.accrued_interest, Decimal("2000.00"))
+        form = CreditorForm(self._terms(interest_rate="3", post_old_interest="on"), instance=creditor)
+        self.assertTrue(form.is_valid(), form.errors)
+        form.save()
+        # What built up at 2% was posted as a Borrowed entry, and 3% counts from today.
+        self.assertEqual(form.posted_old_interest.amount, Decimal("2000.00"))
+        creditor = Creditor.objects.get(pk=creditor.pk)
+        self.assertEqual((creditor.interest_rate, creditor.interest_from), (Decimal("3.00"), self.today))
+        self.assertEqual(creditor.remaining, Decimal("102000.00"))
+        self.assertEqual(creditor.accrued_interest, Decimal("0.00"))
+
+    def test_changing_the_rate_without_posting_leaves_the_balance_alone(self):
+        creditor = self.percent_lender("2.00")
+        creditor.name = "Late"
+        creditor.save()
+        self._borrow(creditor, Decimal("100000.00"), 30)
+        form = CreditorForm(self._terms(interest_rate="3"), instance=creditor)
+        self.assertTrue(form.is_valid(), form.errors)
+        form.save()
+        self.assertIsNone(form.posted_old_interest)
+        creditor = Creditor.objects.get(pk=creditor.pk)
+        self.assertEqual((creditor.remaining, creditor.interest_from), (Decimal("100000.00"), self.today))
+
+    def test_editing_the_phone_keeps_interest_counting(self):
+        creditor = self.percent_lender("2.00")
+        creditor.name = "Late"
+        creditor.save()
+        self._borrow(creditor, Decimal("100000.00"), 30)
+        form = CreditorForm(self._terms(interest_rate="2.00", phone="01711000000"), instance=creditor)
+        self.assertTrue(form.is_valid(), form.errors)
+        form.save()
+        self.assertEqual(Creditor.objects.get(pk=creditor.pk).accrued_interest, Decimal("2000.00"))
+
+    def test_posting_and_reaching_back_together_is_refused(self):
+        creditor = self.percent_lender("2.00")
+        creditor.name = "Late"
+        creditor.save()
+        self._borrow(creditor, Decimal("100000.00"), 30)
+        form = CreditorForm(self._terms(interest_rate="3", post_old_interest="on",
+                                        interest_from=(self.today - timedelta(days=10)).isoformat()), instance=creditor)
+        self.assertFalse(form.is_valid())
+        self.assertIn("interest_from", form.errors)
+
+    def test_a_future_start_day_is_refused(self):
+        form = CreditorForm(self._terms(name="New", interest_from=(self.today + timedelta(days=3)).isoformat()))
+        self.assertFalse(form.is_valid())
+        self.assertIn("interest_from", form.errors)
+
+    def test_the_post_first_box_only_shows_when_something_built_up(self):
+        creditor = self.percent_lender("2.00")
+        self.assertNotIn("post_old_interest", CreditorForm(instance=creditor).fields)
+        self._borrow(creditor, Decimal("100000.00"), 30)
+        self.assertIn("post_old_interest", CreditorForm(instance=creditor).fields)
+
+    def test_after_posting_a_one_time_fee_the_creditor_can_still_be_edited(self):
+        creditor = Creditor.objects.create(user=self.user, name="Fee", category=CreditorCategory.MONEYLENDER,
+                                           interest_type=InterestType.FIXED, interest_fixed_amount=Decimal("250.00"))
+        self._borrow(creditor, Decimal("1000.00"), 1)
+        creditor.post_accrued_interest()
+        creditor.refresh_from_db()
+        self.assertIsNone(creditor.interest_type)
+        form = CreditorForm({"name": "Fee", "category": CreditorCategory.MONEYLENDER, "phone": "01711000000"}, instance=creditor)
+        self.assertTrue(form.is_valid(), form.errors)
+        form.save()
+        self.assertEqual(Creditor.objects.get(pk=creditor.pk).phone, "01711000000")
 
     def test_a_future_entry_adds_nothing_yet(self):
         creditor = self.percent_lender()

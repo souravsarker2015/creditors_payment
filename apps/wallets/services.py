@@ -89,13 +89,73 @@ def movements(user, wallet=None):
     return rows
 
 
-def balances(user):
-    """{wallet id: balance now}, opening balance included."""
-    totals = {w.pk: w.opening_balance for w in Wallet.objects.filter(user=user)}
-    for m in movements(user):
-        if m.wallet_id in totals:
-            totals[m.wallet_id] += m.amount
+def _signed_totals(user):
+    """(queryset, sign) for every kind of entry that can name a wallet — the same
+    entries as _sources(), split so each one is a plain sum the database can add up."""
+    from apps.contributors.models import Contribution
+    from apps.creditors.models import Transaction as CreditorTx
+    from apps.debtors.models import Transaction as DebtorTx
+    from apps.expense.models import Expense
+    from apps.household.models import Purchase, Settlement
+    from apps.income.models import IncomeTransaction
+    from apps.shops.models import Transaction as ShopTx
+
+    return [
+        (Expense.objects.filter(user=user), -1),
+        (IncomeTransaction.objects.filter(source__user=user), 1),
+        (CreditorTx.objects.filter(creditor__user=user, transaction_type=CreditorTx.BORROW), 1),
+        (CreditorTx.objects.filter(creditor__user=user).exclude(transaction_type=CreditorTx.BORROW), -1),
+        (DebtorTx.objects.filter(debtor__user=user, transaction_type=DebtorTx.LEND), -1),
+        (DebtorTx.objects.filter(debtor__user=user).exclude(transaction_type=DebtorTx.LEND), 1),
+        (ShopTx.objects.filter(shop__user=user, transaction_type=ShopTx.PAYMENT), -1),
+        (Purchase.objects.filter(user=user, buyer__isnull=True), -1),
+        (Settlement.objects.filter(member__user=user), -1),
+        (Contribution.objects.filter(contributor__user=user), 1),
+        (Adjustment.objects.filter(wallet__user=user), 1),
+    ]
+
+
+def balances(user, only=None):
+    """{wallet id: balance now}, opening balance included — added up by the
+    database, so Home and every entry form stay quick however long the history
+    gets. Same rule as movements(): only entries on or after a wallet's
+    opening date move it. `only` limits it to one wallet id."""
+    from django.db.models import F, Sum
+
+    wallets = Wallet.objects.filter(user=user)
+    if only is not None:
+        wallets = wallets.filter(pk=only)
+    totals = {w.pk: w.opening_balance for w in wallets}
+    if not totals:
+        return totals
+
+    def add(qs, wallet_field, amount, sign):
+        rows = (qs.filter(**{f"{wallet_field}__in": list(totals), "date__gte": F(f"{wallet_field}__opening_date")})
+                .order_by().values(wallet_field).annotate(total=Sum(amount)).values_list(wallet_field, "total"))
+        for wallet_id, total in rows:
+            totals[wallet_id] += sign * (total or ZERO)
+
+    for qs, sign in _signed_totals(user):
+        add(qs, "wallet", "amount", sign)
+    transfers = Transfer.objects.filter(user=user)
+    add(transfers, "from_wallet", F("amount") + F("fee"), -1)
+    add(transfers, "to_wallet", "amount", 1)
     return totals
+
+
+def warn_if_short(request, wallet_id):
+    """After money leaves a wallet: if the app now shows it holding less than
+    nothing, say so — usually the wrong wallet was picked, or an earlier entry
+    is missing. The entry is saved either way."""
+    if not wallet_id:
+        return
+    from django.contrib import messages
+
+    balance = balances(request.user, only=wallet_id).get(wallet_id)
+    if balance is not None and balance < 0:
+        name = Wallet.objects.filter(pk=wallet_id).values_list("name", flat=True).first()
+        messages.warning(request, _("%(wallet)s now shows %(balance)s — less than nothing. Check the wallet picked, or add the money that came into it.") % {
+            "wallet": name, "balance": money(balance)})
 
 
 def holding(user):

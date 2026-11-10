@@ -34,6 +34,7 @@ SHORTCUTS = {
     "creditors": (gettext_lazy("Creditors"), "dashboard", "", "users", "money", "personal"),
     "debtors": (gettext_lazy("Debtors"), "debtor_dashboard", "", "bank", "money", "personal"),
     "shops": (gettext_lazy("Shop Dues"), "shop_dashboard", "", "cart", "money", "personal"),
+    "people": (gettext_lazy("Both ways"), "people", "", "users", "money", "personal"),
     "expenses": (gettext_lazy("Expense"), "expense_dashboard", "", "banknotes", "money", "personal"),
     "income": (gettext_lazy("Income"), "income_dashboard", "", "trend", "money", "personal"),
     "wallets": (gettext_lazy("Wallets"), "wallet_list", "", "wallet", "money", "personal"),

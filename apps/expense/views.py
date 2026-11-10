@@ -25,6 +25,9 @@ from apps.budgets.services import statuses as budget_statuses
 from apps.core.stats import month_compare, ranked, trend_summary
 from apps.core.status import apply_status_filter, active_or_current, toggle_active
 from .forms import CATEGORY_ICONS, CategoryForm, ExpenseForm, RecurringExpenseForm
+from apps.core.ledger_views import _build_pagination_window, _csv_response, _last_12_month_starts, _parse_iso_date, _row_value  # shared by every ledger app
+from apps.core.ledger_views import safe_next
+from apps.wallets.services import warn_if_short
 
 SORT_OPTIONS = [
     ("-date", gettext_lazy("Date (Newest First)")),
@@ -38,46 +41,6 @@ SORT_FIELDS = {
     "-amount": ["-amount"],
     "amount": ["amount"],
 }
-
-
-def _csv_response(filename, header, rows):
-    response = HttpResponse(content_type="text/csv")
-    response["Content-Disposition"] = f'attachment; filename="{filename}"'
-    response.write("\ufeff")  # UTF-8 BOM so Excel renders Bangla text correctly
-    writer = safe_writer(response)
-    writer.writerow(header)
-    writer.writerows(rows)
-    return response
-
-
-def _row_value(row, fieldnames, key):
-    """Reads a value from a csv.DictReader row by lowercased column name."""
-    col = fieldnames.get(key)
-    if col is None:
-        return ""
-    return (row.get(col) or "").strip()
-
-
-def _last_12_month_starts():
-    today = django.utils.timezone.localdate()
-    starts = []
-    for i in range(11, -1, -1):
-        month_index = today.month - i
-        year = today.year
-        while month_index <= 0:
-            month_index += 12
-            year -= 1
-        starts.append(date_cls(year, month_index, 1))
-    return starts
-
-
-def _parse_iso_date(value):
-    if not value:
-        return None
-    try:
-        return date_cls.fromisoformat(value)
-    except ValueError:
-        return None
 
 
 def _get_expense_filters(request, user):
@@ -173,28 +136,6 @@ def _apply_category_filters(qs, selected_category_ids=None, filter_mode="include
     if filter_mode == "exclude":
         return qs.exclude(category_id__in=selected_category_ids)
     return qs.filter(category_id__in=selected_category_ids)
-
-
-def _build_pagination_window(page_obj, window=2):
-    total_pages = page_obj.paginator.num_pages
-    current = page_obj.number
-    pages = {1, total_pages}
-
-    for page_number in range(current - window, current + window + 1):
-        if 1 <= page_number <= total_pages:
-            pages.add(page_number)
-
-    ordered_pages = sorted(pages)
-    compact_pages = []
-    previous = None
-
-    for page_number in ordered_pages:
-        if previous is not None and page_number - previous > 1:
-            compact_pages.append(None)
-        compact_pages.append(page_number)
-        previous = page_number
-
-    return compact_pages
 
 
 @login_required
@@ -431,6 +372,7 @@ def expense_create_view(request, copy_of=None):
             expense.save()
             messages.success(request, _("Expense of ৳%(amount)s recorded.") % {"amount": expense.amount})
             _budget_alert(request, expense)
+            warn_if_short(request, expense.wallet_id)
             return redirect("expense_list")
     else:
         initial = {"date": django.utils.timezone.localdate()}
@@ -505,10 +447,12 @@ def expense_edit_view(request, pk):
             expense = form.save()
             messages.success(request, _("Expense updated."))
             _budget_alert(request, expense)
-            return redirect("expense_list")
+            warn_if_short(request, expense.wallet_id)
+            return redirect(safe_next(request, reverse("expense_list")))
     else:
         form = ExpenseForm(instance=expense, user=request.user)
-    return render(request, "expense/expense_form.html", {"form": form, "title": _("Edit Expense")})
+    return render(request, "expense/expense_form.html", {
+        "form": form, "title": _("Edit Expense"), "back_url": safe_next(request, reverse("expense_list"))})
 
 
 @login_required
@@ -518,7 +462,7 @@ def expense_delete_view(request, pk):
     amt = expense.amount
     delete_with_undo(request, expense, _("Expense of ৳%(amount)s deleted.") % {"amount": amt},
                      label=f"{expense.category or _('No category')} · {money(amt)} · {expense.date:%d %b %Y}", back_url=reverse("expense_list"))
-    return redirect("expense_list")
+    return redirect(safe_next(request, reverse("expense_list")))
 
 
 @login_required

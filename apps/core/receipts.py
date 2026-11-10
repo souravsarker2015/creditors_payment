@@ -19,9 +19,21 @@ MAX_MB = 8
 EXTENSIONS = ["jpg", "jpeg", "png", "webp", "heic", "pdf"]
 
 
+def _owner_id(instance):
+    """The person a record belongs to: its own `user`, or — for a loan or shop
+    entry, which hangs off a creditor/debtor/shop — that one's user."""
+    owner = getattr(instance, "user_id", None)
+    if owner:
+        return owner
+    for parent in ("creditor", "debtor", "shop"):
+        if getattr(instance, f"{parent}_id", None):
+            return getattr(instance, parent).user_id
+    return None
+
+
 def personal_receipt_path(instance, filename):
     ext = os.path.splitext(filename)[1].lower()[:6] or ".jpg"
-    return f"receipts/{instance.user_id}/{uuid.uuid4().hex}{ext}"
+    return f"receipts/{_owner_id(instance)}/{uuid.uuid4().hex}{ext}"
 
 
 def max_size(f):
@@ -80,6 +92,18 @@ def _record(request, kind, pk):
         from apps.household.models import Purchase
 
         return get_object_or_404(Purchase, pk=pk, user=request.user)
+    if kind == "loan":
+        from apps.creditors.models import Transaction
+
+        return get_object_or_404(Transaction, pk=pk, creditor__user=request.user)
+    if kind == "lent":
+        from apps.debtors.models import Transaction
+
+        return get_object_or_404(Transaction, pk=pk, debtor__user=request.user)
+    if kind == "shop":
+        from apps.shops.models import Transaction
+
+        return get_object_or_404(Transaction, pk=pk, shop__user=request.user)
     if kind == "farm":
         from apps.business.core.access import active_membership, can
         from apps.business.finance.models import Transaction

@@ -1,9 +1,13 @@
 from django import forms
+
+from apps.core.ledger_views import UniqueNameMixin
 from django.utils.translation import gettext_lazy as _
 from .models import Contributor, Contribution
 from apps.wallets.forms import WalletFieldMixin
 
-class ContributorForm(forms.ModelForm):
+class ContributorForm(UniqueNameMixin, forms.ModelForm):
+    owner_related_name = "contributors"
+
     class Meta:
         model = Contributor
         fields = ["name", "category", "phone", "note"]

@@ -104,8 +104,6 @@ def networth_view(request):
 
     net_cash_flow = total_income - total_expense
 
-    net_position = net_balance + net_cash_flow
-
     # ── This month: money in vs money out, and the savings rate ──
     today = timezone.localdate()
     this_start, last_start = month_start(today), month_start(today, -1)
@@ -170,7 +168,6 @@ def networth_view(request):
         "transfer_fees": transfer_fees,
         "total_expense": total_expense,
         "net_cash_flow": net_cash_flow,
-        "net_position": net_position,
         # Pre-clamped 0-100 bar widths, computed here (not via {% widthratio %}
         # in the template) so a negative balance — e.g. someone repaid more
         # than they borrowed — can never produce an invalid negative width.
@@ -221,23 +218,54 @@ def _starter_steps(user):
 
 def _recent_entries(user, limit=6):
     """The last few things recorded anywhere, newest first, so Home answers
-    "did I already write that down?"."""
+    "did I already write that down?" — whichever page it was written on."""
     from django.utils.translation import gettext as _
 
+    from apps.household.models import Settlement
+
     rows = []
-    for e in Expense.objects.filter(user=user).select_related("category").order_by("-date", "-pk")[:limit]:
-        rows.append((e.date, e.pk, e.category.name if e.category_id else _("General"), _("Spent"), -e.amount, "critical", reverse("expense_list")))
-    for t in IncomeTransaction.objects.filter(source__user=user).select_related("source").order_by("-date", "-pk")[:limit]:
-        rows.append((t.date, t.pk, t.source.name, _("Money in"), t.amount, "good", reverse("income_source_detail", args=[t.source_id])))
-    for t in CreditorTransaction.objects.filter(creditor__user=user).select_related("creditor").order_by("-date", "-pk")[:limit]:
+
+    def add(qs, make):
+        for o in qs.order_by("-date", "-created_at")[:limit]:
+            rows.append((o.date, o.created_at, *make(o)))
+
+    add(Expense.objects.filter(user=user).select_related("category"),
+        lambda e: (e.category.name if e.category_id else _("General"), _("Spent"), -e.amount, "critical", reverse("expense_list")))
+    add(IncomeTransaction.objects.filter(source__user=user).select_related("source"),
+        lambda t: (t.source.name, _("Money in"), t.amount, "good", reverse("income_source_detail", args=[t.source_id])))
+
+    def creditor_row(t):
         borrowed = t.transaction_type == CreditorTransaction.BORROW
-        rows.append((t.date, t.pk, t.creditor.name, _("Borrowed") if borrowed else _("Paid back"), t.amount if borrowed else -t.amount, "good" if borrowed else "critical", reverse("creditor_detail", args=[t.creditor_id])))
-    for t in DebtorTransaction.objects.filter(debtor__user=user).select_related("debtor").order_by("-date", "-pk")[:limit]:
+        return (t.creditor.name, _("Borrowed") if borrowed else _("Paid back"), t.amount if borrowed else -t.amount,
+                "good" if borrowed else "critical", reverse("creditor_detail", args=[t.creditor_id]))
+    add(CreditorTransaction.objects.filter(creditor__user=user).select_related("creditor"), creditor_row)
+
+    def debtor_row(t):
         lent = t.transaction_type == DebtorTransaction.LEND
-        rows.append((t.date, t.pk, t.debtor.name, _("Lent") if lent else _("Got back"), -t.amount if lent else t.amount, "critical" if lent else "good", reverse("debtor_detail", args=[t.debtor_id])))
+        return (t.debtor.name, _("Lent") if lent else _("Got back"), -t.amount if lent else t.amount,
+                "critical" if lent else "good", reverse("debtor_detail", args=[t.debtor_id]))
+    add(DebtorTransaction.objects.filter(debtor__user=user).select_related("debtor"), debtor_row)
+
+    def shop_row(t):
+        # Bought on credit moves no money yet: still a minus (it's owed), in the warning colour, not as spent.
+        bought = t.transaction_type == ShopTransaction.PURCHASE
+        return (t.shop.name, _("Bought on baki") if bought else _("Paid the shop"), -t.amount,
+                "warn" if bought else "critical", reverse("shop_detail", args=[t.shop_id]))
+    add(ShopTransaction.objects.filter(shop__user=user).select_related("shop"), shop_row)
+
+    def bazar_row(p):
+        kind = _("Bazar, paid by %(name)s") % {"name": p.buyer.name} if p.buyer_id else _("Bazar")
+        return (p.category.name if p.category_id else _("Bazar"), kind, -p.amount, "warn" if p.buyer_id else "critical",
+                reverse("household_month_detail", kwargs={"year": p.date.year, "month": p.date.month}))
+    add(Purchase.objects.filter(user=user).select_related("category", "buyer"), bazar_row)
+    add(Settlement.objects.filter(member__user=user).select_related("member"),
+        lambda s: (s.member.name, _("Paid back"), -s.amount, "critical", reverse("household_member_detail", args=[s.member_id])))
+    add(Contribution.objects.filter(contributor__user=user).select_related("contributor"),
+        lambda c: (c.contributor.name, _("Received"), c.amount, "good", reverse("contributor_detail", args=[c.contributor_id])))
+
     rows.sort(key=lambda r: (r[0], r[1]), reverse=True)
     return [{"date": d, "title": title, "kind": kind, "amount": amount, "tone": tone, "url": url}
-            for d, _pk, title, kind, amount, tone, url in rows[:limit]]
+            for d, _created, title, kind, amount, tone, url in rows[:limit]]
 
 
 def _bar_percent(value, *comparison_values):
@@ -375,7 +403,9 @@ def _help_content():
         (_("I moved money from bKash to cash. What do I write?"), _("Tap “Move money” on Home. It is not spending, so it won't show as an expense — it only changes the two wallet balances.")),
         (_("Someone paid back only part of a loan."), _("Open that person and add a payment for the amount they gave. The app shows what is still left.")),
         (_("Can I get a reminder before something is due?"), _("Yes. Give a loan or a shop due a “due date”. It shows on Home in “Needs attention” a week before, and in red once it is late. To get it by email each morning, turn on the reminder email on the Upcoming money page.")),
-        (_("How do I find an old entry?"), _("Use the search button at the top (the magnifying glass). Type a name, an amount or a note.")),
+        (_("I owe a friend money, and they owe me too."), _("Keep them in both lists — Creditors and Debtors — with the same phone number or name. “Both ways” in the menu shows what you owe each other overall, and “Set off” cancels the smaller amount on both sides so only the difference is left.")),
+        (_("Can I keep a photo of the paper or the shop's memo?"), _("Yes. When you add an expense, a bazar, a loan entry or a shop due, tap “Take or choose a photo”. Only you can open it later, from the “receipt” or “memo” link on that entry.")),
+        (_("How do I find an old entry?"),_("Use the search button at the top (the magnifying glass). Type a name, an amount or a note.")),
         (_("Is my data safe? Can I keep a copy?"), _("Only you can see your personal records. Use “Download my data” in the menu any time to save everything as Excel-ready files.")),
         (_("Can I use the app in Bangla?"), _("Yes. Open the menu and pick বাংলা under Language. You can switch back any time.")),
         (_("Can I put it on my phone like an app?"), _("Yes. In Chrome, open the menu and tap “Add to Home screen” (or “Install app”). It then opens full-screen like any other app.")),

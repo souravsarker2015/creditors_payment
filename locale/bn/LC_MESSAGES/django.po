@@ -32924,3 +32924,217 @@ msgstr "বিক্রি দেখুন"
 #: apps/business/ponds/templates/business/ponds/cycle_detail.html
 msgid "Take them out"
 msgstr "বাদ দিন"
+
+msgid "Name, phone or note"
+msgstr "নাম, ফোন বা নোট"
+
+#, python-format
+msgid "Contributor '%(name)s' added."
+msgstr "অবদানকারী '%(name)s' যোগ করা হয়েছে।"
+
+#, python-format
+msgid "Contributor '%(name)s' updated."
+msgstr "অবদানকারী '%(name)s' আপডেট করা হয়েছে।"
+
+msgid "Both ways"
+msgstr "দুই দিকেই লেনদেন"
+
+#, python-format
+msgid "You already have “%(name)s”. Open that one to add to it, or make the name different (for example add the area or surname)."
+msgstr "“%(name)s” নামে আগে থেকেই একজন আছেন। তাঁর পাতায় গিয়ে যোগ করুন, অথবা নামটি আলাদা করুন (যেমন এলাকা বা পদবি যোগ করে)।"
+
+#, python-format
+msgid "Row %(line)s: “%(value)s” isn't an amount, so no opening balance was added."
+msgstr "সারি %(line)s: “%(value)s” কোনো টাকার অঙ্ক নয়, তাই প্রারম্ভিক ব্যালেন্স যোগ করা হয়নি।"
+
+#, python-format
+msgid "Row %(line)s: “%(value)s” isn't a date (use 2025-01-31 or 31/01/2025), so it was left empty."
+msgstr "সারি %(line)s: “%(value)s” কোনো তারিখ নয় (2025-01-31 বা 31/01/2025 লিখুন), তাই খালি রাখা হয়েছে।"
+
+#, python-format
+msgid "…and %(count)s more row like this."
+msgid_plural "…and %(count)s more rows like this."
+msgstr[0] "…এবং এমন আরও %(count)sটি সারি।"
+msgstr[1] "…এবং এমন আরও %(count)sটি সারি।"
+
+msgid "Set off what you owe each other"
+msgstr "পরস্পরের পাওনা কাটাকাটি করুন"
+
+msgid "Count interest from"
+msgstr "সুদ গোনা শুরু"
+
+msgid "From the first amount borrowed"
+msgstr "প্রথম ধার নেওয়ার দিন থেকে"
+
+msgid "Interest builds up from this day. When you change the terms it starts from today — pick an earlier day if the agreement started earlier. Leave empty to count from the first amount borrowed."
+msgstr "এই দিন থেকে সুদ জমতে থাকে। শর্ত বদলালে আজ থেকে শুরু হয় — চুক্তি আগে শুরু হয়ে থাকলে আগের একটি দিন বেছে নিন। প্রথম ধার নেওয়ার দিন থেকে গুনতে চাইলে খালি রাখুন।"
+
+#, python-format
+msgid "Post the %(amount)s built up under the current terms first"
+msgstr "আগে বর্তমান শর্তে জমা %(amount)s ব্যালেন্সে যোগ করুন"
+
+msgid "Only used if you change the terms above, so the interest that has already built up isn't lost."
+msgstr "শুধু ওপরের শর্ত বদলালে কাজে লাগে, যাতে এ পর্যন্ত জমা সুদ হারিয়ে না যায়।"
+
+msgid "Pick today or an earlier day."
+msgstr "আজ বা আগের কোনো দিন বেছে নিন।"
+
+msgid "The interest built up so far is being posted, so the new terms can only start today. Untick that box to count the new terms from an earlier day."
+msgstr "এ পর্যন্ত জমা সুদ ব্যালেন্সে যোগ হচ্ছে, তাই নতুন শর্ত শুধু আজ থেকেই শুরু হতে পারে। আগের দিন থেকে নতুন শর্ত গুনতে চাইলে ওই বক্সের টিক তুলে দিন।"
+
+msgid "Optional: a photo of the memo, slip or signed paper."
+msgstr "ঐচ্ছিক: মেমো, স্লিপ বা সই করা কাগজের ছবি।"
+
+msgid "Interest built up day by day since it started counting (or was last posted). It resets each time you post it."
+msgstr "গোনা শুরুর দিন (বা শেষবার ব্যালেন্সে যোগ করার পর) থেকে দিনে দিনে জমা সুদ। প্রতিবার যোগ করলে আবার শূন্য থেকে শুরু হয়।"
+
+#, python-format
+msgid "counted from %(date)s"
+msgstr "%(date)s থেকে গোনা"
+
+msgid "counted from the first amount borrowed"
+msgstr "প্রথম ধার নেওয়ার দিন থেকে গোনা"
+
+#, python-format
+msgid "You owed %(amount)s after this"
+msgstr "এরপর আপনার দেনা ছিল %(amount)s"
+
+#, python-format
+msgid "Paid %(amount)s too much after this"
+msgstr "এরপর %(amount)s বেশি দেওয়া হয়েছে"
+
+msgid "All paid off after this"
+msgstr "এরপর সব শোধ"
+
+#, python-format
+msgid "Posted %(amount)s of interest that had built up under the old terms."
+msgstr "পুরোনো শর্তে জমা %(amount)s সুদ ব্যালেন্সে যোগ করা হয়েছে।"
+
+#, python-format
+msgid "They owed you %(amount)s after this"
+msgstr "এরপর আপনার পাওনা ছিল %(amount)s"
+
+#, python-format
+msgid "Got %(amount)s too much after this"
+msgstr "এরপর %(amount)s বেশি পাওয়া গেছে"
+
+msgid "All collected after this"
+msgstr "এরপর সব আদায়"
+
+msgid "Got money back"
+msgstr "টাকা ফেরত পেয়েছি"
+
+msgid "These two aren't the same person (their names or phone numbers differ), so nothing was changed."
+msgstr "এই দুজন একই ব্যক্তি নন (নাম বা ফোন নম্বর আলাদা), তাই কিছুই বদলানো হয়নি।"
+
+msgid "There's nothing to set off: one side owes nothing."
+msgstr "কাটাকাটি করার কিছু নেই: এক পক্ষের কোনো পাওনা নেই।"
+
+#, python-format
+msgid "Set off against what %(name)s owes you"
+msgstr "%(name)s-এর কাছে আপনার পাওনার সাথে কাটাকাটি"
+
+#, python-format
+msgid "Set off against what you owe %(name)s"
+msgstr "%(name)s-এর কাছে আপনার দেনার সাথে কাটাকাটি"
+
+#, python-format
+msgid "Set off %(amount)s with %(name)s: you owe them that much less, and they owe you that much less. No wallet changed."
+msgstr "%(name)s-এর সাথে %(amount)s কাটাকাটি হয়েছে: আপনার দেনা ও তাঁর দেনা দুটোই ততটা কমেছে। কোনো ওয়ালেট বদলায়নি।"
+
+msgid "People you have borrowed from and also lent to. See what you owe each other overall, and set one against the other."
+msgstr "যাঁদের কাছ থেকে ধার নিয়েছেন এবং যাঁদের ধারও দিয়েছেন। মোট কে কার কাছে কত পায় দেখুন, আর একটির সাথে অন্যটি কাটাকাটি করুন।"
+
+#, python-format
+msgid "%(amount)s of what you owe and what you're owed cancels out between the same people."
+msgstr "একই মানুষদের সাথে আপনার দেনা ও পাওনার %(amount)s একে অপরকে কাটাকাটি করে।"
+
+msgid "Nobody is in both lists"
+msgstr "কেউ দুই তালিকাতেই নেই"
+
+msgid "When someone is both in Creditors and in Debtors — same phone number, or the same name when a number is missing — they show here."
+msgstr "কেউ পাওনাদার ও দেনাদার দুই তালিকাতেই থাকলে — একই ফোন নম্বর, বা নম্বর না থাকলে একই নাম — এখানে দেখা যাবে।"
+
+msgid "Paid the shop"
+msgstr "দোকানে শোধ করেছেন"
+
+#, python-format
+msgid "Bazar, paid by %(name)s"
+msgstr "বাজার, টাকা দিয়েছেন %(name)s"
+
+#, python-format
+msgid "Record %(amount)s received"
+msgstr "%(amount)s পাওয়া লিখুন"
+
+#, python-format
+msgid "Record %(amount)s paid"
+msgstr "%(amount)s দেওয়া লিখুন"
+
+msgid "Optional: a photo of the shop's memo (খাতা) for this entry."
+msgstr "ঐচ্ছিক: এই এন্ট্রির জন্য দোকানের মেমোর (খাতা) ছবি।"
+
+#, python-format
+msgid "Due %(amount)s after this"
+msgstr "এরপর বাকি %(amount)s"
+
+#, python-format
+msgid "%(wallet)s now shows %(balance)s — less than nothing. Check the wallet picked, or add the money that came into it."
+msgstr "%(wallet)s-এ এখন দেখাচ্ছে %(balance)s — শূন্যের চেয়েও কম। ঠিক ওয়ালেট বেছেছেন কিনা দেখুন, অথবা এতে যে টাকা এসেছিল তা লিখুন।"
+
+msgid "Fill in an amount"
+msgstr "একটি অঙ্ক বসান"
+
+msgid "Fill in:"
+msgstr "বসান:"
+
+#, python-format
+msgid "Installment %(amount)s"
+msgstr "কিস্তি %(amount)s"
+
+#, python-format
+msgid "All of it · %(amount)s"
+msgstr "পুরোটা · %(amount)s"
+
+#, python-format
+msgid "%(name)s is in both lists"
+msgstr "%(name)s দুই তালিকাতেই আছেন"
+
+#, python-format
+msgid "Overall, they owe you %(amount)s."
+msgstr "সব মিলিয়ে তিনি আপনাকে %(amount)s দেবেন।"
+
+#, python-format
+msgid "Overall, you owe them %(amount)s."
+msgstr "সব মিলিয়ে আপনি তাঁকে %(amount)s দেবেন।"
+
+msgid "Overall, you're even."
+msgstr "সব মিলিয়ে কারও কাছে কারও পাওনা নেই।"
+
+msgid "You owe them (Creditors)"
+msgstr "আপনি তাঁকে দেবেন (পাওনাদার)"
+
+msgid "They owe you (Debtors)"
+msgstr "তিনি আপনাকে দেবেন (দেনাদার)"
+
+#, python-format
+msgid "Set off %(amount)s with %(name)s? It's taken off what you owe them and off what they owe you — one entry on each side, dated today. No wallet changes. You can delete those two entries later if needed."
+msgstr "%(name)s-এর সাথে %(amount)s কাটাকাটি করবেন? আপনার দেনা ও তাঁর দেনা দুটো থেকেই এটা বাদ যাবে — দুই দিকে একটি করে এন্ট্রি, আজকের তারিখে। কোনো ওয়ালেট বদলাবে না। দরকার হলে পরে ওই দুটি এন্ট্রি মুছে দিতে পারবেন।"
+
+#, python-format
+msgid "Set off %(amount)s against each other"
+msgstr "পরস্পরের %(amount)s কাটাকাটি করুন"
+
+msgid "Clears the smaller balance on both sides, so only the difference is left to pay."
+msgstr "দুই দিক থেকেই ছোট অঙ্কটি মিটিয়ে দেয়, তাই শুধু পার্থক্যটুকু দিতে বাকি থাকে।"
+
+msgid "I owe a friend money, and they owe me too."
+msgstr "আমি এক বন্ধুর কাছে টাকা ধারি, আবার সেও আমার কাছে ধারে।"
+
+msgid "Keep them in both lists — Creditors and Debtors — with the same phone number or name. “Both ways” in the menu shows what you owe each other overall, and “Set off” cancels the smaller amount on both sides so only the difference is left."
+msgstr "তাঁকে দুই তালিকাতেই রাখুন — পাওনাদার ও দেনাদার — একই ফোন নম্বর বা নাম দিয়ে। মেনুর “দুই দিকেই লেনদেন” দেখায় সব মিলিয়ে কে কার কাছে কত পায়, আর “কাটাকাটি” দুই দিক থেকে ছোট অঙ্কটি বাদ দেয়, যাতে শুধু পার্থক্যটুকু বাকি থাকে।"
+
+msgid "Can I keep a photo of the paper or the shop's memo?"
+msgstr "কাগজ বা দোকানের মেমোর ছবি রাখা যায়?"
+
+msgid "Yes. When you add an expense, a bazar, a loan entry or a shop due, tap “Take or choose a photo”. Only you can open it later, from the “receipt” or “memo” link on that entry."
+msgstr "হ্যাঁ। খরচ, বাজার, ধারের এন্ট্রি বা দোকানের বাকি লেখার সময় “ছবি তুলুন বা বাছুন” চাপুন। পরে শুধু আপনিই সেই এন্ট্রির “রসিদ” বা “মেমো” লিঙ্ক থেকে খুলতে পারবেন।"

@@ -25,7 +25,23 @@ def record_initial(request, choices, initial=None):
     kind = request.GET.get(PARAM)
     if kind and kind in {value for value, _label in choices}:
         initial["transaction_type"] = kind
+    amount = _amount(request.GET.get("amount"))
+    if amount is not None:
+        initial["amount"] = amount
     return initial
+
+
+def _amount(raw):
+    """A positive amount from a link (?amount=1500.50), else None."""
+    from decimal import Decimal, InvalidOperation
+
+    try:
+        value = Decimal((raw or "").strip())
+    except InvalidOperation:
+        return None
+    if not value.is_finite() or value <= 0 or value >= Decimal("1e10"):
+        return None
+    return value.quantize(Decimal("0.01"))
 
 
 def record_next(request, url_name, pk):

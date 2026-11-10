@@ -23,7 +23,7 @@
   </header>
 
   {% url 'contributor_list' as reset_url %}
-  {% translate "e.g. Sajal Saha" as search_placeholder %}
+  {% translate "Name, phone or note" as search_placeholder %}
   {% include "partials/entity_filters.html" with reset_url=reset_url search_placeholder=search_placeholder %}
 
   <div id="results" class="stack">

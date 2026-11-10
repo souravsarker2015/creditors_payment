@@ -1,9 +1,29 @@
 from django import forms
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from .models import Creditor, InterestBasis, InterestType, Transaction
+from apps.core.ledger_views import UniqueNameMixin
+from apps.core.receipts import ReceiptInput, attach_viewer
+from apps.core.templatetags.ui import money
 from apps.wallets.forms import WalletFieldMixin
 
-class CreditorForm(forms.ModelForm):
+# The fields that make up a creditor's interest terms.
+INTEREST_TERMS = ("interest_type", "interest_basis", "interest_rate", "interest_fixed_amount")
+
+
+class CreditorForm(UniqueNameMixin, forms.ModelForm):
+    owner_related_name = "creditors"
+
+    interest_from = forms.DateField(
+        required=False,
+        label=_("Count interest from"),
+        widget=forms.DateInput(attrs={"class": "form-input datepicker", "placeholder": _("From the first amount borrowed")}),
+        help_text=_("Interest builds up from this day. When you change the terms it starts from today — pick an earlier day if the agreement started earlier. Leave empty to count from the first amount borrowed."),
+    )
+    post_old_interest = forms.BooleanField(required=False, initial=True)
+
+    field_order = ["name", "category", "phone", "due_date", *INTEREST_TERMS, "interest_from", "post_old_interest", "note"]
+
     class Meta:
         model = Creditor
         fields = ["name", "category", "phone", "due_date", "interest_type", "interest_basis", "interest_rate", "interest_fixed_amount", "note"]
@@ -50,6 +70,24 @@ class CreditorForm(forms.ModelForm):
             }),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.posted_old_interest = None
+        self.old_accrued = 0
+        if self.instance.pk:
+            self.fields["interest_from"].initial = self.instance.interest_from
+            if self.instance.interest_type:
+                self.old_accrued = self.instance.accrued_interest
+        if self.old_accrued > 0:
+            field = self.fields["post_old_interest"]
+            field.label = _("Post the %(amount)s built up under the current terms first") % {"amount": money(self.old_accrued)}
+            field.help_text = _("Only used if you change the terms above, so the interest that has already built up isn't lost.")
+        else:
+            del self.fields["post_old_interest"]
+
+    def terms_changed(self):
+        return bool(self.instance.pk) and any(name in self.changed_data for name in INTEREST_TERMS)
+
     def clean(self):
         cleaned_data = super().clean()
         interest_type = cleaned_data.get("interest_type")
@@ -89,20 +127,42 @@ class CreditorForm(forms.ModelForm):
             cleaned_data["interest_rate"] = None
             cleaned_data["interest_fixed_amount"] = None
 
+        start = cleaned_data.get("interest_from")
+        if start and start > timezone.localdate():
+            self.add_error("interest_from", _("Pick today or an earlier day."))
+        elif (start and "interest_from" in self.changed_data and start < timezone.localdate()
+                and cleaned_data.get("post_old_interest") and self.terms_changed()):
+            # Posting counts every day up to today under the old terms; starting the
+            # new ones earlier would charge those days twice.
+            self.add_error("interest_from", _("The interest built up so far is being posted, so the new terms can only start today. Untick that box to count the new terms from an earlier day."))
         return cleaned_data
 
     def save(self, commit=True):
-        if self.instance.pk and "interest_type" in self.changed_data:   # new terms apply from here on, not back to the first loan
-            self.instance.interest_from = self.instance.last_transaction_date
+        """New interest terms count from today unless a day is picked; what
+        built up under the old terms can be posted first, so it isn't lost."""
+        start_picked = "interest_from" in self.changed_data
+        if self.terms_changed():
+            if self.cleaned_data.get("post_old_interest") and self.old_accrued > 0:
+                # Post on a fresh copy: this form has already put the new terms on self.instance.
+                self.posted_old_interest = Creditor.objects.get(pk=self.instance.pk).post_accrued_interest()
+            if not start_picked:
+                self.instance.interest_from = timezone.localdate()
+        if start_picked or not self.instance.pk:
+            self.instance.interest_from = self.cleaned_data.get("interest_from")
         return super().save(commit)
 
 class TransactionForm(WalletFieldMixin, forms.ModelForm):
     class Meta:
         model = Transaction
-        fields = ["transaction_type", "amount", "wallet", "date", "note"]
+        fields = ["transaction_type", "amount", "wallet", "date", "note", "receipt"]
         widgets = {
+            "receipt": ReceiptInput(),
             "transaction_type": forms.Select(attrs={"class": "form-input"}),
             "amount": forms.NumberInput(attrs={"class": "form-input", "placeholder": "0.00"}),
             "date": forms.DateInput(attrs={"class": "form-input datepicker", "placeholder": _("Select Date")}),
             "note": forms.TextInput(attrs={"class": "form-input", "placeholder": _("Quick note...")}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        attach_viewer(self, "loan")

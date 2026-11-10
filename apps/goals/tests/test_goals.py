@@ -142,10 +142,12 @@ class GoalViewTests(TestCase):
         self.assertEqual(r.context["goal_totals"]["saved"], 2500)
 
     def test_goal_money_is_not_counted_as_spending(self):
-        before = self.client.get(reverse("networth")).context["net_position"]
+        before = self.client.get(reverse("networth")).context
+        before = (before["net_cash_flow"], before["settled"])
         g = SavingsGoal.objects.create(user=self.user, name="X", target_amount=10)
         GoalEntry.objects.create(goal=g, amount=5000, date=self.today)
-        self.assertEqual(self.client.get(reverse("networth")).context["net_position"], before)
+        after = self.client.get(reverse("networth")).context
+        self.assertEqual((after["net_cash_flow"], after["settled"]), before)
 
 
 class NewGoalPlanTests(TestCase):

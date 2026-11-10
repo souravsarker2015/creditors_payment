@@ -131,6 +131,7 @@ def transfer_form_view(request, pk=None):
         t.user = request.user
         t.save()
         messages.success(request, _("Moved %(amount)s from %(a)s to %(b)s.") % {"amount": money(t.amount), "a": t.from_wallet, "b": t.to_wallet})
+        services.warn_if_short(request, t.from_wallet_id)
         return redirect("wallet_list")
     return render(request, "wallets/form.html", {
         "form": form, "title": _("Edit transfer") if obj else _("Move money between wallets"),

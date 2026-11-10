@@ -8,6 +8,6 @@
     <span class="ledger-amount">{{ ex.amount|money }}</span>
     {% url 'expense_edit' ex.pk as edit_url %}{% url 'expense_delete' ex.pk as delete_url %}{% url 'expense_copy' ex.pk as copy_url %}
     {% translate "Delete this expense? You can bring it back from Recently deleted." as confirm_text %}
-    {% include "partials/row_menu.html" with edit_url=edit_url delete_url=delete_url confirm=confirm_text up=last copy_url=copy_url %}
+    {% include "partials/row_menu.html" with edit_url=edit_url delete_url=delete_url confirm=confirm_text up=last copy_url=copy_url next=request.get_full_path %}
   </div>
 </li>
