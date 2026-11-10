@@ -96,6 +96,7 @@ def plain(text):
     text = re.sub(r"```.*?(```|$)", " ", text or "", flags=re.S)
     text = re.sub(r"^\s{0,3}(#{1,6}\s+|[-*+]\s+(\[[ xX]\]\s+)?|\d+\.\s+|>\s?)", "", text, flags=re.M)
     text = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", text)            # [link](url) → link
+    text = re.sub(r"==(?:\{(?:yellow|green|blue|pink|purple)\})?", "", text)    # ==highlight== / =={green}highlight==
     text = re.sub(r"`+|~~|\*+|(?<!\w)_+|_+(?!\w)", "", text)        # marks, but not the _ in work_mem
     return " ".join(text.split())
 
@@ -175,7 +176,7 @@ def note_card_lines(note, length=420):
         elif n in todos:
             m = CHECK_LINE.match(line)
             text = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", line[m.end():]).strip()     # a task link: just its words
-            row = {"todo": True, "done": m.group(2) != " ", "i": todos[n], "text": re.sub(r"[*_`]", "", text)}
+            row = {"todo": True, "done": m.group(2) != " ", "i": todos[n], "text": re.sub(r"[*_`]|==(?:\{(?:yellow|green|blue|pink|purple)\})?", "", text)}
         else:                                 # the note's shape kept: a heading bold, a list as a list, a quote as a quote
             kind, rest = "", line
             if (m := re.match(r"^\s{0,3}#{1,6}\s+", line)):
@@ -187,7 +188,7 @@ def note_card_lines(note, length=420):
             elif (m := re.match(r"^\s{0,3}>\s?", line)) and line.strip():
                 kind, rest = "q", line[m.end():]
             rest = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", re.sub(r"!\[[^\]]*\]\([^)]*\)", "", rest))
-            row = {"todo": False, "kind": kind, "text": re.sub(r"[*_`]|==", "", rest)}
+            row = {"todo": False, "kind": kind, "text": re.sub(r"[*_`]|==(?:\{(?:yellow|green|blue|pink|purple)\})?", "", rest)}       # (highlights: any colour)
         if not row["todo"] and not row["text"].strip() and (not out or not out[-1]["text"].strip()):
             continue                          # no blank lines at the top, or two in a row
         if used + len(row["text"]) > length:

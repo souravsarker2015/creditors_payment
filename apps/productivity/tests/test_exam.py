@@ -94,6 +94,7 @@ class ParseTests(TestCase):
 
     def test_plain_snippet(self):
         self.assertEqual(exam.plain("## Hi\n- **bold** and `code` $x$ [link](http://x)"), "Hi bold and code x link")
+        self.assertEqual(exam.plain("A ==key== and =={pink}also key== words"), "A key and also key words")     # highlights, any colour
 
     def test_empty(self):
         self.assertEqual(exam.parse("  \n\n"), [])

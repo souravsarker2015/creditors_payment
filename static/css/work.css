@@ -3125,7 +3125,14 @@ button.wpq-option:not(:disabled):active { translate: 0 1px; }
 .wn-outline .menu-item { white-space: normal; text-align: left; line-height: 1.35; }
 .wn-outline .menu-item[data-level="1"] { font-weight: 700; } .wn-outline .menu-item[data-level="2"] { font-weight: 600; }
 /* ==highlight== in Markdown; on a review card's front it's a blank to fill in your head (cloze), shown when the card turns */
-.wn-md mark { padding: 0 0.1875rem; border-radius: 0.25rem; background: color-mix(in srgb, #facc15 38%, transparent); color: inherit; }
+/* highlights: ==words== (yellow) or =={green}words== — the colour set by --hl, softer in dark mode */
+mark, .hl-dot { --hl: #facc15; }
+[data-hl="green"], [data-hl-c="green"] { --hl: #4ade80; } [data-hl="blue"], [data-hl-c="blue"] { --hl: #60a5fa; }
+[data-hl="pink"], [data-hl-c="pink"] { --hl: #f472b6; } [data-hl="purple"], [data-hl-c="purple"] { --hl: #a78bfa; }
+.wn-md mark { padding: 0 0.1875rem; border-radius: 0.25rem; background: color-mix(in srgb, var(--hl) 40%, transparent); color: inherit;
+  -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .wn-md mark { background: color-mix(in srgb, var(--hl) 30%, transparent); } }
+:root[data-theme="dark"] .wn-md mark { background: color-mix(in srgb, var(--hl) 30%, transparent); }
 .wn-md.is-cloze mark { color: transparent; background: var(--surface-sunken); border-bottom: 2px dashed color-mix(in srgb, var(--accent) 60%, transparent);
   user-select: none; -webkit-user-select: none; }
 .wn-md.is-cloze mark * { visibility: hidden; }
@@ -3701,6 +3708,30 @@ html:not(.can-dictate) [data-dictate] { display: none !important; }
 .md-bubble-btn svg { width: 1.0625rem; height: 1.0625rem; }
 .md-bubble-btn i { font-family: Georgia, serif; }
 .md-bubble-btn:hover { background: color-mix(in srgb, currentColor 16%, transparent); }
+/* the colour dots (the bubble over words in a Markdown box, the bar over words chosen while reading, the notes toolbar) */
+.hl-dot { display: grid; place-items: center; width: 1.375rem; height: 1.375rem; margin: 0.3125rem 0.1875rem; padding: 0; border-radius: 50%; cursor: pointer;
+  border: 2px solid var(--hl); background: color-mix(in srgb, var(--hl) 85%, transparent); transition: transform .1s; flex: none; }
+.hl-dot:hover { transform: scale(1.15); }
+.hl-dot.is-last { box-shadow: 0 0 0 2px var(--surface-ink, #1f2937), 0 0 0 4px var(--hl); }
+.hl-dot.hl-off { display: none; background: transparent; border-color: color-mix(in srgb, currentColor 45%, transparent); color: inherit; }
+.has-marks > .hl-dot.hl-off { display: grid; }
+.hl-dot.is-swatch { width: 0.875rem; height: 0.875rem; margin: 0; cursor: inherit; }
+.hl-dot.is-swatch:hover { transform: none; }
+.md-bubble-sep { width: 1px; margin: 0.375rem 0.25rem; background: color-mix(in srgb, currentColor 25%, transparent); }
+.hl-bar { display: none; }
+.hl-bar.is-on { position: fixed; z-index: 1002; display: flex; align-items: center; padding: 0.125rem 0.375rem; border-radius: 9999px;
+  background: var(--surface-ink, #1f2937); color: var(--text-on-ink, #fff); box-shadow: var(--shadow-lg); animation: wt-menu .1s ease-out; }
+.hl-bar-label { display: grid; place-items: center; padding: 0 0.25rem 0 0.125rem; opacity: .75; }
+@media (pointer: coarse) { .hl-dot { width: 1.75rem; height: 1.75rem; margin: 0.375rem 0.3125rem; } }
+.wn-hl { display: flex; align-items: center; }
+.wn-hl .wn-hl-main { border-top-right-radius: 0.25rem; border-bottom-right-radius: 0.25rem; }
+.wn-hl .wn-hl-main svg { border-bottom: 3px solid var(--hl, #facc15); }
+.wn-hl .wn-hl-main[data-hl="green"] { --hl: #4ade80; } .wn-hl .wn-hl-main[data-hl="blue"] { --hl: #60a5fa; }
+.wn-hl .wn-hl-main[data-hl="pink"] { --hl: #f472b6; } .wn-hl .wn-hl-main[data-hl="purple"] { --hl: #a78bfa; }
+.wn-fmt .wn-hl .wn-hl-more { width: 1.125rem; border-top-left-radius: 0.25rem; border-bottom-left-radius: 0.25rem; }
+.wn-hl .wn-hl-more svg { width: 0.75rem; height: 0.75rem; }
+.wn-hl-menu { min-width: 13rem; }
+.wn-hl-menu .menu-help { max-width: 13rem; white-space: normal; }
 .md-k-mark { padding: 0 0.25rem; border-radius: 0.25rem; background: color-mix(in srgb, #facc15 70%, transparent); color: #111; font-weight: 700; }
 .wnb-chips .chip.is-active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 650; }
 .wnb-chip-add { padding-inline: 0.625rem; color: var(--text-muted); }

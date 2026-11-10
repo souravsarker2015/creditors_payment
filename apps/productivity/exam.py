@@ -705,5 +705,6 @@ def plain(text):
     text = re.sub(r"```\w*|~~~\w*|!\[[^\]]*\]\([^)]*\)", " ", text or "")
     text = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", text)
     text = re.sub(r"(?m)^\s{0,3}(?:#{1,6}\s+|>\s?|[-*+]\s+|\d+[.)]\s+)", "", text)
+    text = re.sub(r"==(?:\{(?:yellow|green|blue|pink|purple)\})?", "", text)      # highlights, any colour
     text = re.sub(r"[*_`|]|==|\\[()[\]]|\$\$?", "", text)
     return " ".join(text.split())

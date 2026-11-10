@@ -113,6 +113,33 @@
     put(ta, s, e, mark + v.slice(s, e) + mark, s + n, e + n);
   }
 
+  /* Highlighting the chosen words (Work.hl in work.js does the Markdown): color "yellow", "green"…, null takes it
+     off, "toggle" uses the colour used last — or takes it off when the words are highlighted already (Ctrl+Shift+H).
+     Only the part that changes is typed over, so Ctrl+Z takes it back. */
+  function highlight(ta, color) {
+    var H = window.Work && Work.hl;
+    if (!H) return;
+    var v = ta.value, s = ta.selectionStart, e = ta.selectionEnd;
+    if (s === e) {                                          // nothing chosen: the word the caret is in
+      var a = s, z = s;
+      while (a > 0 && /[^\s=]/.test(v.charAt(a - 1))) a--;
+      while (z < v.length && /[^\s=]/.test(v.charAt(z))) z++;
+      if (a === z) return;
+      s = a; e = z;
+    }
+    if (color === "toggle") color = inHighlight(v, s, e) ? null : H.last();
+    if (color) H.remember(color);
+    var r = H.apply(v, s, e, color), next = r.text;
+    if (next === v) { ta.setSelectionRange(r.s, r.e); return; }
+    var p = 0, q = 0;
+    while (p < v.length && p < next.length && v.charAt(p) === next.charAt(p)) p++;
+    while (q < v.length - p && q < next.length - p && v.charAt(v.length - 1 - q) === next.charAt(next.length - 1 - q)) q++;
+    put(ta, p, v.length - q, next.slice(p, next.length - q), r.s, r.e);
+  }
+  function inHighlight(v, s, e) {
+    return Work.hl.spans(v).some(function (h) { return s >= h.s && e <= h.e && e > h.inS && s < h.inE; });
+  }
+
   // Alt+↑ / Alt+↓: the line (or the chosen lines) changes places with the one above or below
   function moveLines(ta, up) {
     var v = ta.value, s = ta.selectionStart, e = ta.selectionEnd;
@@ -143,6 +170,8 @@
       e.preventDefault(); moveLines(ta, key === "ArrowUp");
     } else if (mode === "md" && mod && !e.altKey && !e.shiftKey && (key === "b" || key === "i")) {
       e.preventDefault(); wrap(ta, key === "b" ? "**" : "*");
+    } else if (mode === "md" && mod && e.shiftKey && !e.altKey && (key === "h" || key === "H")) {
+      e.preventDefault(); highlight(ta, "toggle");
     }
   });
 
@@ -509,7 +538,7 @@
     else if (k === "i") wrap(ta, "*");
     else if (k === "s") wrap(ta, "~~");
     else if (k === "code") wrap(ta, "`");
-    else if (k === "mark") wrap(ta, "==");
+    else if (k === "mark") highlight(ta, "toggle");
     else if (k === "todo") lineMark(ta, "- [ ] ");
     else if (k === "ul") lineMark(ta, "- ");
     else if (k === "ol") lineMark(ta, "1. ");
@@ -601,11 +630,14 @@
     if (!bub) {
       bub = d.createElement("div"); bub.className = "md-bubble"; bub.setAttribute("role", "toolbar"); bub.setAttribute("aria-label", t2("kbar", "bar", "Formatting"));
       bub.innerHTML = BUB.map(function (k) {
+        if (k === "mark") return hlDots();
         var key = KEYS.filter(function (x) { return x[0] === k; })[0], name = t2("kbar", k, key[2]);
         return '<button type="button" class="md-bubble-btn" data-k="' + k + '" tabindex="-1" title="' + name.replace(/"/g, "&quot;") + '" aria-label="' + name.replace(/"/g, "&quot;") + '">' + key[1] + "</button>";
       }).join("");
       bub.addEventListener("mousedown", function (ev) { ev.preventDefault(); });           // the words stay chosen
       bub.addEventListener("click", function (ev) {
+        var dot = ev.target.closest("[data-hl-c]"), on0 = bub._ta;
+        if (dot && on0) { highlight(on0, dot.getAttribute("data-hl-c") || null); setTimeout(function () { bubbleShow(on0); }, 0); return; }
         var b = ev.target.closest("[data-k]"), on = bub._ta; if (!b || !on) return;
         press(on, b.getAttribute("data-k"));
         setTimeout(function () { bubbleShow(on); }, 0);
@@ -613,11 +645,25 @@
       d.body.appendChild(bub);
     }
     bub._ta = ta; bub.classList.add("is-on");
+    var H = window.Work && Work.hl, last = H ? H.last() : "yellow";
+    bub.classList.toggle("has-marks", !!(H && H.spans(ta.value).some(function (h) { return h.s < e && h.e > s; })));
+    bub.querySelectorAll("[data-hl-c]").forEach(function (b) { b.classList.toggle("is-last", b.getAttribute("data-hl-c") === last); });
     var first = rs[0], last = rs[rs.length - 1], w = bub.offsetWidth, h = bub.offsetHeight;
     var top = first.top - h - 8;
     if (top < 8) top = last.top + last.height + 8;                // no room above: under the words
     var left = Math.max(8, Math.min(first.left + (rs.length === 1 ? first.width / 2 : 0) - (rs.length === 1 ? w / 2 : 0), innerWidth - w - 8));
     bub.style.top = Math.round(top) + "px"; bub.style.left = Math.round(left) + "px";
+  }
+  // the highlight colours in the bubble (and "take it off", shown when the words touch a highlight)
+  function hlDots() {
+    var cols = (window.Work && Work.hl && Work.hl.colors) || ["yellow"], T = (window.Work && Work.cfg && Work.cfg.text) || {};
+    var names = { yellow: T.hlYellow || "Yellow", green: T.hlGreen || "Green", blue: T.hlBlue || "Blue", pink: T.hlPink || "Pink", purple: T.hlPurple || "Purple" };
+    var q = function (v) { return String(v).replace(/"/g, "&quot;"); };
+    return '<span class="md-bubble-sep" aria-hidden="true"></span>' + cols.map(function (c) {
+      var name = (T.hlIn || "Highlight: %(colour)s").replace("%(colour)s", names[c]);
+      return '<button type="button" class="hl-dot" data-hl-c="' + c + '" tabindex="-1" title="' + q(name) + '" aria-label="' + q(name) + '"></button>';
+    }).join("") + '<button type="button" class="hl-dot hl-off" data-hl-c="" tabindex="-1" title="' + q(T.hlRemove || "Take the highlight off") + '" aria-label="' + q(T.hlRemove || "Take the highlight off") +
+      '"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button><span class="md-bubble-sep" aria-hidden="true"></span>';
   }
   if (!TOUCH) {
     d.addEventListener("mouseup", function (e) { if (box(e) === "md") { var ta = e.target; setTimeout(function () { bubbleShow(ta); }, 0); } });
@@ -829,7 +875,8 @@
   };
 
   window.FTWriting = { toMarkdown: function (html) { return loadTurndown().then(function () { return toMarkdown(html); }); }, caretXY: caretXY,
-                       find: function (ta, replacing) { if (ta) openFind(ta, replacing); }, todos: todos, keep: queueKeep };
+                       find: function (ta, replacing) { if (ta) openFind(ta, replacing); }, todos: todos, keep: queueKeep,
+                       highlight: function (ta, color) { if (ta) { ta.focus(); highlight(ta, color === undefined ? "toggle" : color); } } };
 
   d.addEventListener("paste", function (e) {
     if (box(e) !== "md" || e.defaultPrevented || !e.clipboardData) return;

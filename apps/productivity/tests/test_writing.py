@@ -334,7 +334,7 @@ class NoteTemplateTests(TestCase):
         self.assertEqual(data["title"], "")              # not marked as a template
 
     def test_highlights_are_plain_words_on_cards(self):
-        n = Note.objects.create(owner=self.me, title="TCP", body="A ==three-way== handshake")
-        self.assertContains(self.client.get(reverse("work:notes")), ">A three-way handshake<")
+        n = Note.objects.create(owner=self.me, title="TCP", body="A ==three-way== handshake, =={green}SYN== first")
+        self.assertContains(self.client.get(reverse("work:notes")), ">A three-way handshake, SYN first<")      # any colour
         self.assertEqual(services.fill_template("{{ date }}", today=timezone.localdate()), timezone.localdate().isoformat())
         n.delete()

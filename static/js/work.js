@@ -2120,10 +2120,16 @@
       return "[" + shown.replace(/([\\*_`\[\]])/g, "\\$1") + "](" + CFG.urls.noteGo + "?title=" + encodeURIComponent(title.trim()).replace(/\(/g, "%28").replace(/\)/g, "%29") + ")";
     });
   }
-  // ==highlighted== words (as Obsidian writes them) — outside code; on a review card's front they're the blanks (cloze)
+  /* ==highlighted== words (as Obsidian writes them), or in a colour: =={green}words== — outside code; on a review
+     card's front they're the blanks (cloze). HL_RE finds them in Markdown; the n-th match is the n-th <mark> drawn. */
+  var HL_COLORS = ["yellow", "green", "blue", "pink", "purple"];
+  var HL_RE = /==(?:\{(yellow|green|blue|pink|purple)\})?(?=[^\s=])((?:[^=\n]|=(?!=))+?)(?<=\S)==/g;     // (one = inside is fine: a = b)
+  var CODE_SPLIT = /(```[\s\S]*?(?:```|$)|~~~[\s\S]*?(?:~~~|$)|`[^`\n]+`)/;
   function highlights(text) {
-    return String(text || "").split(/(```[\s\S]*?(?:```|$)|~~~[\s\S]*?(?:~~~|$)|`[^`\n]+`)/).map(function (part, i) {
-      return i % 2 ? part : part.replace(/==(?=\S)([^=\n]+?)(?<=\S)==/g, "<mark>$1</mark>");
+    return String(text || "").split(CODE_SPLIT).map(function (part, i) {
+      return i % 2 ? part : part.replace(HL_RE, function (all, color, words) {
+        return "<mark" + (color && color !== "yellow" ? ' data-hl="' + color + '"' : "") + ">" + words + "</mark>";
+      });
     }).join("");
   }
   /* ![[Another note]] (or ![[Note#Heading]]) on a line of its own: a box that Work.enrich fills with that
@@ -2760,6 +2766,224 @@
   };
   /* Before Write / Preview is switched: the block being changed is put back first */
   window.Work.liveDone = function () { liveCloseMenu(); if (liveActive) liveFinish(liveActive, false); };
+
+  /* ── Highlighting, as Kindle, Medium and Notion have it ───────────────────────────────────────────
+     Choose words — in a Markdown box, or while reading a note, an answer, a card — and pick a colour from the
+     small bar over them (Ctrl+Shift+H: the colour used last). Chosen words already highlighted get another
+     colour, or the highlight taken off. In the Markdown it's ==words== (yellow) or =={green}words==.
+     Reading: the words chosen are found in the Markdown of the part they're in (a block of Work.live, or a box
+     drawn with Work.highlightable), so what's saved is the note itself — the same as writing the marks by hand. */
+  var HL_KEY = "ft:hl";
+  function hlLast() { try { var c = localStorage.getItem(HL_KEY); return HL_COLORS.indexOf(c) >= 0 ? c : "yellow"; } catch (e) { return "yellow"; } }
+  function hlRemember(c) { try { localStorage.setItem(HL_KEY, c); } catch (e) { /* private window */ } }
+  function hlOpen(c) { return "==" + (c && c !== "yellow" ? "{" + c + "}" : ""); }
+  // the highlights in the Markdown (outside code), in order: [{s, e, inS, inE, color}] — s…e with the marks, inS…inE the words
+  function hlSpans(src) {
+    var out = [], pos = 0;
+    String(src || "").split(CODE_SPLIT).forEach(function (part, i) {
+      if (!(i % 2)) {
+        var re = new RegExp(HL_RE.source, "g"), m;
+        while ((m = re.exec(part))) {
+          var s = pos + m.index, open = 2 + (m[1] ? m[1].length + 2 : 0);
+          out.push({ s: s, e: s + m[0].length, inS: s + open, inE: s + m[0].length - 2, color: m[1] || "yellow" });
+        }
+      }
+      pos += part.length;
+    });
+    return out;
+  }
+  var LINE_MARKS = /^[ \t]*(?:(?:>[ \t]?)+|#{1,6}[ \t]+|(?:[-*+]|\d+[.)])[ \t]+(?:\[[ xX]\][ \t]+)?)*/;
+  /* src with s…e highlighted in `color` — or, with color null, its highlights taken off. A highlight can't cross
+     a line, so each line chosen gets its own (without its "- " or "## "). Returns { text, s, e } (the words, chosen). */
+  function hlApply(src, s, e, color) {
+    src = String(src || "");
+    var spans = hlSpans(src).filter(function (h) { return h.s < e && h.e > s; });
+    var inside = spans.length === 1 && s >= spans[0].inS && e <= spans[0].inE;
+    if (color && inside) {                                  // within one highlight: another colour
+      var h = spans[0], open = hlOpen(color);
+      return { text: src.slice(0, h.s) + open + src.slice(h.inS, h.inE) + "==" + src.slice(h.e), s: h.s + open.length, e: h.s + open.length + (h.inE - h.inS) };
+    }
+    // take off the highlights it touches (the words chosen grow to cover them all)
+    spans.forEach(function (x) { s = Math.min(s, x.s); e = Math.max(e, x.e); });
+    for (var k = spans.length - 1; k >= 0; k--) {
+      var x = spans[k], cut = x.inS - x.s;
+      var map = function (p) { return p <= x.s ? p : p < x.inS ? x.s : p <= x.inE ? p - cut : p < x.e ? x.inE - cut : p - cut - 2; };
+      src = src.slice(0, x.s) + src.slice(x.inS, x.inE) + src.slice(x.e);
+      s = map(s); e = map(e);
+    }
+    if (!color) return { text: src, s: s, e: Math.max(s, e) };
+    var out = src.slice(0, s), first = -1, last = s, open2 = hlOpen(color);
+    src.slice(s, e).split("\n").forEach(function (line, n, all) {
+      var lead = n === 0 && s > 0 && src.charAt(s - 1) !== "\n" ? 0 : (LINE_MARKS.exec(line) || [""])[0].length;
+      var body = line.slice(lead), l = body.length - body.trimStart().length, r = body.trimEnd().length;
+      if (r > l && body.slice(l, r).indexOf("==") < 0) {     // (words with == in them can't be marked: it would end early)
+        var words = body.slice(l, r);
+        var piece = line.slice(0, lead + l) + open2 + words + "==" + body.slice(r);
+        if (first < 0) first = out.length + lead + l + open2.length;
+        out += piece; last = out.length - body.slice(r).length - 2;
+      } else out += line;
+      if (n < all.length - 1) out += "\n";
+    });
+    out += src.slice(e);
+    return { text: out, s: first < 0 ? s : first, e: first < 0 ? s : last };
+  }
+
+  // Where words chosen while reading are in the Markdown: the same letters, with any marks (** _ ` == [ ]( ) between them
+  var HL_GAP = "(?:[*_~`\\[]|\\]\\([^)\\s]*\\)|\\]|==(?:\\{[a-z]+\\})?)*";
+  var HL_WS = HL_GAP + "\\s+(?:(?:>|[-*+]|\\d+[.)]|#{1,6}|\\[[ xX]\\])[ \\t]+)*" + HL_GAP;
+  function hlFind(src, words, nth) {
+    words = words.replace(/ /g, " ").trim();
+    if (!words || words.length > 3000) return null;
+    var pat = "";
+    for (var i = 0; i < words.length; i++) {
+      var c = words.charAt(i);
+      if (/\s/.test(c)) { while (i + 1 < words.length && /\s/.test(words.charAt(i + 1))) i++; pat += HL_WS; continue; }
+      pat += c.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + (i < words.length - 1 && !/\s/.test(words.charAt(i + 1)) ? HL_GAP : "");
+    }
+    var re, m, found = [];
+    try { re = new RegExp(pat, "g"); } catch (e) { return null; }
+    // only outside code, as highlights() draws them
+    var pos = 0;
+    src.split(CODE_SPLIT).forEach(function (part, k) {
+      if (!(k % 2)) { re.lastIndex = 0; while ((m = re.exec(part))) { found.push([pos + m.index, pos + m.index + m[0].length]); if (!m[0].length) re.lastIndex++; } }
+      pos += part.length;
+    });
+    if (!found.length) return null;
+    var at = found[Math.min(nth, found.length - 1)], a = at[0], b = at[1];
+    // the marks right around them come too: **bold** stays bold, inside the highlight
+    function mark(ch, nb) { return ch === "*" || ch === "~" || ch === "`" || (ch === "_" && !/\w/.test(nb || "")); }
+    while (a > 0 && mark(src.charAt(a - 1), src.charAt(a - 2))) a--;
+    while (b < src.length && mark(src.charAt(b), src.charAt(b + 1))) b++;
+    return [a, b];
+  }
+  function hlCount(hay, needle) {
+    if (!needle) return 0;
+    var n = 0, i = hay.indexOf(needle);
+    while (i >= 0) { n++; i = hay.indexOf(needle, i + needle.length); }
+    return n;
+  }
+  // the part being read that holds these words: { el (drawn from one piece of Markdown), get(), set(md) }
+  function hlTarget(node) {
+    var el = node && (node.nodeType === 1 ? node : node.parentElement);
+    if (!el || !el.closest || el.closest(".md-edit, textarea, input, .wn-embed, .md-menu")) return null;
+    var block = el.closest(".md-block"), live = block && block.closest(".md-live");
+    if (block && live && live._live) {
+      var st = live._live, i = +block.getAttribute("data-i"), b = st.split.blocks[i];
+      if (!b || (st.editing && st.editing.i === i)) return null;
+      return { el: block, get: function () { return b.md; }, set: function (md) {
+        if (st.editing) liveFinish(live, false);
+        b.md = md; liveText(live); st.split = liveSplit(st.text); liveDraw(live);
+      } };
+    }
+    var own = el.closest("[data-hl-box]");
+    if (own && own._hl) return { el: own, get: function () { return own._hl.text; }, set: function (md) { own._hl.text = md; own._hl.set(md); } };
+    return null;
+  }
+  /* What the chosen words would change: { target, range, marks (indexes of the highlights it's in), within (all of it is
+     highlighted already) } — or null when they aren't all in one part that can be highlighted */
+  function hlChoice() {
+    var sel = window.getSelection && window.getSelection();
+    if (!sel || sel.isCollapsed || !sel.rangeCount) return null;
+    var range = sel.getRangeAt(0), a = hlTarget(range.startContainer), z = hlTarget(range.endContainer);
+    if (!a || !z || a.el !== z.el || !range.toString().trim()) return null;
+    var all = a.el.querySelectorAll("mark"), marks = [], within = true, walker = d.createTreeWalker(a.el, NodeFilter.SHOW_TEXT), tn;
+    Array.prototype.forEach.call(all, function (m, n) { if (range.intersectsNode(m)) marks.push(n); });
+    while ((tn = walker.nextNode())) {
+      if (!range.intersectsNode(tn) || !tn.data.trim()) continue;
+      var from = tn === range.startContainer ? range.startOffset : 0, to = tn === range.endContainer ? range.endOffset : tn.data.length;
+      if (tn.data.slice(from, to).trim() && !(tn.parentElement && tn.parentElement.closest("mark"))) { within = false; break; }
+    }
+    return { target: a, range: range, marks: marks, within: within && marks.length > 0 };
+  }
+  // color: one of HL_COLORS, or null to take it off. Returns false (and says so) when the words can't be found.
+  function hlRead(color) {
+    var ch = hlChoice();
+    if (!ch) return false;
+    var tg = ch.target, src = tg.get(), next = null, spans = hlSpans(src);
+    if (ch.within && ch.marks.every(function (n) { return spans[n]; })) {
+      next = src;
+      ch.marks.slice().reverse().forEach(function (n) { var h = spans[n]; next = hlApply(next, h.inS, h.inE, color).text; });
+    } else if (color) {
+      var pre = d.createRange(); pre.selectNodeContents(tg.el); pre.setEnd(ch.range.startContainer, ch.range.startOffset);
+      var words = ch.range.toString(), firstLine = words.trim().split(/\s+/).slice(0, 3).join(" ");
+      var at = hlFind(src, words, hlCount(pre.toString().replace(/\s+/g, " "), firstLine));
+      if (!at) { toast(t("hlNotFound", "Couldn't highlight that here — switch to Write and choose it there."), "warn"); return false; }
+      next = hlApply(src, at[0], at[1], color).text;
+    } else return false;
+    if (next === src) return true;
+    if (color) hlRemember(color);
+    window.getSelection().removeAllRanges();
+    tg.set(next);
+    // (a highlight shows itself; taking one off is said, with Undo)
+    if (!color) toast(t("hlOff", "Highlight taken off"), "", { label: t("undo", "Undo"), run: function () { tg.set(src); } });
+    return true;
+  }
+
+  // the small bar over words chosen while reading
+  var hlBar = null, hlTimer = 0;
+  function hlBarHide() { if (hlBar) hlBar.classList.remove("is-on"); }
+  function hlBarMake() {
+    hlBar = d.createElement("div"); hlBar.className = "hl-bar"; hlBar.setAttribute("role", "toolbar"); hlBar.setAttribute("aria-label", t("hlBar", "Highlight"));
+    var names = { yellow: t("hlYellow", "Yellow"), green: t("hlGreen", "Green"), blue: t("hlBlue", "Blue"), pink: t("hlPink", "Pink"), purple: t("hlPurple", "Purple") };
+    hlBar.innerHTML = '<span class="hl-bar-label" aria-hidden="true">' + HL_PEN + "</span>" + HL_COLORS.map(function (c) {
+      var name = escAttr(t("hlIn", "Highlight: %(colour)s").replace("%(colour)s", names[c]));
+      return '<button type="button" class="hl-dot" data-hl-c="' + c + '" title="' + name + '" aria-label="' + name + '"></button>';
+    }).join("") + '<button type="button" class="hl-dot hl-off" data-hl-c="" title="' + escAttr(t("hlRemove", "Take the highlight off")) + '" aria-label="' +
+      escAttr(t("hlRemove", "Take the highlight off")) + '">' + HL_ERASE + "</button>";
+    hlBar.addEventListener("mousedown", function (e) { e.preventDefault(); });          // the words stay chosen
+    hlBar.addEventListener("click", function (e) {
+      var b = e.target.closest("[data-hl-c]"); if (!b) return;
+      e.preventDefault(); hlRead(b.getAttribute("data-hl-c") || null); hlBarHide();
+    });
+    d.body.appendChild(hlBar);
+  }
+  function hlBarShow() {
+    var ch = hlChoice();
+    if (!ch) return hlBarHide();
+    if (!hlBar) hlBarMake();
+    hlBar.classList.toggle("has-marks", ch.marks.length > 0);
+    var last = hlLast();
+    hlBar.querySelectorAll(".hl-dot[data-hl-c]").forEach(function (b) { b.classList.toggle("is-last", b.getAttribute("data-hl-c") === last); });
+    hlBar.classList.add("is-on");
+    var rs = ch.range.getClientRects(), first = rs[0] || ch.range.getBoundingClientRect(), end = rs[rs.length - 1] || first;
+    var w = hlBar.offsetWidth, h = hlBar.offsetHeight, touch = window.matchMedia && matchMedia("(pointer: coarse)").matches;
+    // on a phone the system's own menu (Copy…) is over the words: this one goes under them
+    var top = touch ? end.bottom + 10 : first.top - h - 8;
+    if (!touch && top < 8) top = end.bottom + 8;
+    if (touch && top + h > innerHeight - 8) top = first.top - h - 10;
+    var left = Math.max(8, Math.min((touch ? end.left + end.width / 2 : first.left + (rs.length === 1 ? first.width / 2 : 0)) - w / 2, innerWidth - w - 8));
+    hlBar.style.top = Math.round(top) + "px"; hlBar.style.left = Math.round(left) + "px";
+  }
+  var HL_PEN = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11-6 6v3h9l3-3"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/></svg>';
+  var HL_ERASE = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+  d.addEventListener("selectionchange", function () {
+    clearTimeout(hlTimer);
+    hlTimer = setTimeout(function () {
+      var sel = window.getSelection();
+      if (!sel || sel.isCollapsed) return hlBarHide();
+      if (!d.querySelector(":active") || (window.matchMedia && matchMedia("(pointer: coarse)").matches)) hlBarShow();
+    }, 180);
+  });
+  d.addEventListener("mouseup", function (e) { if (hlBar && hlBar.contains(e.target)) return; setTimeout(function () { var s = window.getSelection(); if (s && !s.isCollapsed) hlBarShow(); else hlBarHide(); }, 0); });
+  d.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && hlBar && hlBar.classList.contains("is-on")) { hlBarHide(); return; }
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && !e.altKey && (e.key === "h" || e.key === "H")) {
+      var ch = hlChoice();
+      if (!ch) return;
+      e.preventDefault();
+      hlRead(ch.within ? null : hlLast());           // pressed again on a highlight: it comes off
+      hlBarHide();
+    }
+  });
+  d.addEventListener("scroll", function () { if (hlBar && hlBar.classList.contains("is-on")) hlBarShow(); }, true);
+
+  window.Work.hl = { colors: HL_COLORS, last: hlLast, remember: hlRemember, spans: hlSpans, apply: hlApply, find: hlFind };
+  /* A box drawn from Markdown (Work.markdown) where words chosen while reading can be highlighted: set(md) saves it. */
+  window.Work.highlightable = function (el, text, set) {
+    if (!el) return;
+    if (!set) { delete el._hl; el.removeAttribute("data-hl-box"); return; }
+    el._hl = { text: String(text || ""), set: set }; el.setAttribute("data-hl-box", "");
+  };
 
   // A code block gets its language and a Copy button (outside the box that scrolls sideways); diagrams don't.
   function codeBoxes(html) {

@@ -92,6 +92,10 @@ def _texts():
         "liveEditing": _("Editing this part — Esc when done"), "liveEdit": _("Edit"), "liveBelow": _("Add below"), "liveTurn": _("Turn into"),
         "liveText": _("Text"), "liveDup": _("Duplicate"), "liveUp": _("Move up"), "liveDown": _("Move down"),
         "liveCopy": _("Copy as Markdown"), "liveDelete": _("Delete"), "liveDeleted": _("Part deleted"), "liveMoved": _("Moved"), "habitHowMuch": _("How much? The goal is %(n)s."),
+        # highlighting (work.js: Work.hl, the bar over words chosen while reading)
+        "hlBar": _("Highlight"), "hlIn": _("Highlight: %(colour)s"), "hlRemove": _("Take the highlight off"),
+        "hlOff": _("Highlight taken off"), "hlYellow": _("Yellow"), "hlGreen": _("Green"), "hlBlue": _("Blue"), "hlPink": _("Pink"), "hlPurple": _("Purple"),
+        "hlNotFound": _("Couldn't highlight that here — switch to Write and choose it there."),
         "iconPick": _("Pick an icon"), "iconType": _("Or type / paste one"), "iconRemove": _("Remove"),
         "deletePicked": _("Delete the %(n)s picked notes? You can bring them back from Recently deleted."),
         "catAll": _("All categories"), "catNone": _("No category"), "catDeleted": _("Category deleted"),

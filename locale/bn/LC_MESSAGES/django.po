@@ -32875,17 +32875,32 @@ msgid "Take these fish out of the pond"
 msgstr "এই মাছ পুকুরের হিসাব থেকে বাদ দিন"
 
 #: apps/business/sales/models.py
-msgid "Tick when these fish were netted for this sale. Leave it off if you already recorded them as a harvest."
-msgstr "এই বিক্রির জন্য মাছ জাল টেনে ধরা হলে টিক দিন। আগেই মাছ ধরা হিসেবে লিখে থাকলে টিক দেবেন না।"
+msgid ""
+"Tick when these fish were netted for this sale. Leave it off if you already "
+"recorded them as a harvest."
+msgstr ""
+"এই বিক্রির জন্য মাছ জাল টেনে ধরা হলে টিক দিন। আগেই মাছ ধরা হিসেবে লিখে থাকলে"
+" টিক দেবেন না।"
 
 #: apps/business/sales/forms.py
-msgid "The pond's fish count, weight and FCR only go down when fish leave it. If you netted these fish for this sale, tick this and you don't need to record a harvest too."
-msgstr "মাছ পুকুর থেকে বের হলে তবেই পুকুরের মাছের সংখ্যা, ওজন ও এফসিআর কমে। এই বিক্রির জন্য জাল টেনে থাকলে টিক দিন — তাহলে আলাদা করে মাছ ধরা লিখতে হবে না।"
+msgid ""
+"The pond's fish count, weight and FCR only go down when fish leave it. If "
+"you netted these fish for this sale, tick this and you don't need to record "
+"a harvest too."
+msgstr ""
+"মাছ পুকুর থেকে বের হলে তবেই পুকুরের মাছের সংখ্যা, ওজন ও এফসিআর কমে। এই "
+"বিক্রির জন্য জাল টেনে থাকলে টিক দিন — তাহলে আলাদা করে মাছ ধরা লিখতে হবে না।"
 
 #: apps/business/sales/views.py
 #, python-format
-msgid "You harvested %(qty)s %(unit)s of %(fish)s here on %(date)s and haven't sold it yet. If this sale is that harvest, sell it from there so the fish aren't taken out twice."
-msgstr "%(date)s তারিখে এখান থেকে %(qty)s %(unit)s %(fish)s ধরেছেন, যা এখনো বিক্রি হয়নি। এই বিক্রি যদি সেই মাছ হয়, তবে সেখান থেকেই বিক্রি করুন, যাতে মাছ দুবার বাদ না যায়।"
+msgid ""
+"You harvested %(qty)s %(unit)s of %(fish)s here on %(date)s and haven't sold"
+" it yet. If this sale is that harvest, sell it from there so the fish aren't"
+" taken out twice."
+msgstr ""
+"%(date)s তারিখে এখান থেকে %(qty)s %(unit)s %(fish)s ধরেছেন, যা এখনো বিক্রি "
+"হয়নি। এই বিক্রি যদি সেই মাছ হয়, তবে সেখান থেকেই বিক্রি করুন, যাতে মাছ "
+"দুবার বাদ না যায়।"
 
 #: apps/business/sales/templates/business/sales/sale_form.html
 msgid "Sell that harvest"
@@ -32896,8 +32911,12 @@ msgid "taken out of the pond's count"
 msgstr "পুকুরের হিসাব থেকে বাদ দেওয়া হয়েছে"
 
 #: apps/business/ponds/views.py
-msgid "This pond has harvests recorded. Open each sale that wasn't a harvest and tick “Take these fish out of the pond”."
-msgstr "এই পুকুরে মাছ ধরা লেখা আছে। যে বিক্রিগুলো মাছ ধরা থেকে নয়, সেগুলো খুলে “এই মাছ পুকুরের হিসাব থেকে বাদ দিন” টিক দিন।"
+msgid ""
+"This pond has harvests recorded. Open each sale that wasn't a harvest and "
+"tick “Take these fish out of the pond”."
+msgstr ""
+"এই পুকুরে মাছ ধরা লেখা আছে। যে বিক্রিগুলো মাছ ধরা থেকে নয়, সেগুলো খুলে “এই "
+"মাছ পুকুরের হিসাব থেকে বাদ দিন” টিক দিন।"
 
 #: apps/business/ponds/views.py
 #, python-format
@@ -32910,12 +32929,22 @@ msgid "%(kg)s kg sold from this pond is still counted as in it"
 msgstr "এই পুকুর থেকে বিক্রি করা %(kg)s কেজি এখনো পুকুরে আছে বলে গোনা হচ্ছে"
 
 #: apps/business/ponds/templates/business/ponds/cycle_detail.html
-msgid "The fish count, weight and FCR below are too high. Record the harvest, or open each sale that wasn't a harvest and tick “Take these fish out of the pond”."
-msgstr "নিচের মাছের সংখ্যা, ওজন ও এফসিআর বেশি দেখাচ্ছে। মাছ ধরা লিখুন, অথবা যে বিক্রিগুলো মাছ ধরা থেকে নয় সেগুলো খুলে “এই মাছ পুকুরের হিসাব থেকে বাদ দিন” টিক দিন।"
+msgid ""
+"The fish count, weight and FCR below are too high. Record the harvest, or "
+"open each sale that wasn't a harvest and tick “Take these fish out of the "
+"pond”."
+msgstr ""
+"নিচের মাছের সংখ্যা, ওজন ও এফসিআর বেশি দেখাচ্ছে। মাছ ধরা লিখুন, অথবা যে "
+"বিক্রিগুলো মাছ ধরা থেকে নয় সেগুলো খুলে “এই মাছ পুকুরের হিসাব থেকে বাদ দিন” "
+"টিক দিন।"
 
 #: apps/business/ponds/templates/business/ponds/cycle_detail.html
-msgid "No harvest was recorded, so the fish count, weight and FCR below are too high. If these fish were netted for the sales, take them out in one tap."
-msgstr "কোনো মাছ ধরা লেখা হয়নি, তাই নিচের মাছের সংখ্যা, ওজন ও এফসিআর বেশি দেখাচ্ছে। বিক্রির জন্য জাল টেনে থাকলে এক চাপে বাদ দিন।"
+msgid ""
+"No harvest was recorded, so the fish count, weight and FCR below are too "
+"high. If these fish were netted for the sales, take them out in one tap."
+msgstr ""
+"কোনো মাছ ধরা লেখা হয়নি, তাই নিচের মাছের সংখ্যা, ওজন ও এফসিআর বেশি দেখাচ্ছে।"
+" বিক্রির জন্য জাল টেনে থাকলে এক চাপে বাদ দিন।"
 
 #: apps/business/ponds/templates/business/ponds/cycle_detail.html
 msgid "See sales"
@@ -32940,16 +32969,27 @@ msgid "Both ways"
 msgstr "দুই দিকেই লেনদেন"
 
 #, python-format
-msgid "You already have “%(name)s”. Open that one to add to it, or make the name different (for example add the area or surname)."
-msgstr "“%(name)s” নামে আগে থেকেই একজন আছেন। তাঁর পাতায় গিয়ে যোগ করুন, অথবা নামটি আলাদা করুন (যেমন এলাকা বা পদবি যোগ করে)।"
+msgid ""
+"You already have “%(name)s”. Open that one to add to it, or make the name "
+"different (for example add the area or surname)."
+msgstr ""
+"“%(name)s” নামে আগে থেকেই একজন আছেন। তাঁর পাতায় গিয়ে যোগ করুন, অথবা নামটি "
+"আলাদা করুন (যেমন এলাকা বা পদবি যোগ করে)।"
 
 #, python-format
-msgid "Row %(line)s: “%(value)s” isn't an amount, so no opening balance was added."
-msgstr "সারি %(line)s: “%(value)s” কোনো টাকার অঙ্ক নয়, তাই প্রারম্ভিক ব্যালেন্স যোগ করা হয়নি।"
+msgid ""
+"Row %(line)s: “%(value)s” isn't an amount, so no opening balance was added."
+msgstr ""
+"সারি %(line)s: “%(value)s” কোনো টাকার অঙ্ক নয়, তাই প্রারম্ভিক ব্যালেন্স যোগ"
+" করা হয়নি।"
 
 #, python-format
-msgid "Row %(line)s: “%(value)s” isn't a date (use 2025-01-31 or 31/01/2025), so it was left empty."
-msgstr "সারি %(line)s: “%(value)s” কোনো তারিখ নয় (2025-01-31 বা 31/01/2025 লিখুন), তাই খালি রাখা হয়েছে।"
+msgid ""
+"Row %(line)s: “%(value)s” isn't a date (use 2025-01-31 or 31/01/2025), so it"
+" was left empty."
+msgstr ""
+"সারি %(line)s: “%(value)s” কোনো তারিখ নয় (2025-01-31 বা 31/01/2025 লিখুন), "
+"তাই খালি রাখা হয়েছে।"
 
 #, python-format
 msgid "…and %(count)s more row like this."
@@ -32966,27 +33006,44 @@ msgstr "সুদ গোনা শুরু"
 msgid "From the first amount borrowed"
 msgstr "প্রথম ধার নেওয়ার দিন থেকে"
 
-msgid "Interest builds up from this day. When you change the terms it starts from today — pick an earlier day if the agreement started earlier. Leave empty to count from the first amount borrowed."
-msgstr "এই দিন থেকে সুদ জমতে থাকে। শর্ত বদলালে আজ থেকে শুরু হয় — চুক্তি আগে শুরু হয়ে থাকলে আগের একটি দিন বেছে নিন। প্রথম ধার নেওয়ার দিন থেকে গুনতে চাইলে খালি রাখুন।"
+msgid ""
+"Interest builds up from this day. When you change the terms it starts from "
+"today — pick an earlier day if the agreement started earlier. Leave empty to"
+" count from the first amount borrowed."
+msgstr ""
+"এই দিন থেকে সুদ জমতে থাকে। শর্ত বদলালে আজ থেকে শুরু হয় — চুক্তি আগে শুরু "
+"হয়ে থাকলে আগের একটি দিন বেছে নিন। প্রথম ধার নেওয়ার দিন থেকে গুনতে চাইলে "
+"খালি রাখুন।"
 
 #, python-format
 msgid "Post the %(amount)s built up under the current terms first"
 msgstr "আগে বর্তমান শর্তে জমা %(amount)s ব্যালেন্সে যোগ করুন"
 
-msgid "Only used if you change the terms above, so the interest that has already built up isn't lost."
-msgstr "শুধু ওপরের শর্ত বদলালে কাজে লাগে, যাতে এ পর্যন্ত জমা সুদ হারিয়ে না যায়।"
+msgid ""
+"Only used if you change the terms above, so the interest that has already "
+"built up isn't lost."
+msgstr ""
+"শুধু ওপরের শর্ত বদলালে কাজে লাগে, যাতে এ পর্যন্ত জমা সুদ হারিয়ে না যায়।"
 
 msgid "Pick today or an earlier day."
 msgstr "আজ বা আগের কোনো দিন বেছে নিন।"
 
-msgid "The interest built up so far is being posted, so the new terms can only start today. Untick that box to count the new terms from an earlier day."
-msgstr "এ পর্যন্ত জমা সুদ ব্যালেন্সে যোগ হচ্ছে, তাই নতুন শর্ত শুধু আজ থেকেই শুরু হতে পারে। আগের দিন থেকে নতুন শর্ত গুনতে চাইলে ওই বক্সের টিক তুলে দিন।"
+msgid ""
+"The interest built up so far is being posted, so the new terms can only "
+"start today. Untick that box to count the new terms from an earlier day."
+msgstr ""
+"এ পর্যন্ত জমা সুদ ব্যালেন্সে যোগ হচ্ছে, তাই নতুন শর্ত শুধু আজ থেকেই শুরু হতে"
+" পারে। আগের দিন থেকে নতুন শর্ত গুনতে চাইলে ওই বক্সের টিক তুলে দিন।"
 
 msgid "Optional: a photo of the memo, slip or signed paper."
 msgstr "ঐচ্ছিক: মেমো, স্লিপ বা সই করা কাগজের ছবি।"
 
-msgid "Interest built up day by day since it started counting (or was last posted). It resets each time you post it."
-msgstr "গোনা শুরুর দিন (বা শেষবার ব্যালেন্সে যোগ করার পর) থেকে দিনে দিনে জমা সুদ। প্রতিবার যোগ করলে আবার শূন্য থেকে শুরু হয়।"
+msgid ""
+"Interest built up day by day since it started counting (or was last posted)."
+" It resets each time you post it."
+msgstr ""
+"গোনা শুরুর দিন (বা শেষবার ব্যালেন্সে যোগ করার পর) থেকে দিনে দিনে জমা সুদ। "
+"প্রতিবার যোগ করলে আবার শূন্য থেকে শুরু হয়।"
 
 #, python-format
 msgid "counted from %(date)s"
@@ -33024,8 +33081,11 @@ msgstr "এরপর সব আদায়"
 msgid "Got money back"
 msgstr "টাকা ফেরত পেয়েছি"
 
-msgid "These two aren't the same person (their names or phone numbers differ), so nothing was changed."
-msgstr "এই দুজন একই ব্যক্তি নন (নাম বা ফোন নম্বর আলাদা), তাই কিছুই বদলানো হয়নি।"
+msgid ""
+"These two aren't the same person (their names or phone numbers differ), so "
+"nothing was changed."
+msgstr ""
+"এই দুজন একই ব্যক্তি নন (নাম বা ফোন নম্বর আলাদা), তাই কিছুই বদলানো হয়নি।"
 
 msgid "There's nothing to set off: one side owes nothing."
 msgstr "কাটাকাটি করার কিছু নেই: এক পক্ষের কোনো পাওনা নেই।"
@@ -33039,21 +33099,36 @@ msgid "Set off against what you owe %(name)s"
 msgstr "%(name)s-এর কাছে আপনার দেনার সাথে কাটাকাটি"
 
 #, python-format
-msgid "Set off %(amount)s with %(name)s: you owe them that much less, and they owe you that much less. No wallet changed."
-msgstr "%(name)s-এর সাথে %(amount)s কাটাকাটি হয়েছে: আপনার দেনা ও তাঁর দেনা দুটোই ততটা কমেছে। কোনো ওয়ালেট বদলায়নি।"
+msgid ""
+"Set off %(amount)s with %(name)s: you owe them that much less, and they owe "
+"you that much less. No wallet changed."
+msgstr ""
+"%(name)s-এর সাথে %(amount)s কাটাকাটি হয়েছে: আপনার দেনা ও তাঁর দেনা দুটোই "
+"ততটা কমেছে। কোনো ওয়ালেট বদলায়নি।"
 
-msgid "People you have borrowed from and also lent to. See what you owe each other overall, and set one against the other."
-msgstr "যাঁদের কাছ থেকে ধার নিয়েছেন এবং যাঁদের ধারও দিয়েছেন। মোট কে কার কাছে কত পায় দেখুন, আর একটির সাথে অন্যটি কাটাকাটি করুন।"
+msgid ""
+"People you have borrowed from and also lent to. See what you owe each other "
+"overall, and set one against the other."
+msgstr ""
+"যাঁদের কাছ থেকে ধার নিয়েছেন এবং যাঁদের ধারও দিয়েছেন। মোট কে কার কাছে কত "
+"পায় দেখুন, আর একটির সাথে অন্যটি কাটাকাটি করুন।"
 
 #, python-format
-msgid "%(amount)s of what you owe and what you're owed cancels out between the same people."
-msgstr "একই মানুষদের সাথে আপনার দেনা ও পাওনার %(amount)s একে অপরকে কাটাকাটি করে।"
+msgid ""
+"%(amount)s of what you owe and what you're owed cancels out between the same"
+" people."
+msgstr ""
+"একই মানুষদের সাথে আপনার দেনা ও পাওনার %(amount)s একে অপরকে কাটাকাটি করে।"
 
 msgid "Nobody is in both lists"
 msgstr "কেউ দুই তালিকাতেই নেই"
 
-msgid "When someone is both in Creditors and in Debtors — same phone number, or the same name when a number is missing — they show here."
-msgstr "কেউ পাওনাদার ও দেনাদার দুই তালিকাতেই থাকলে — একই ফোন নম্বর, বা নম্বর না থাকলে একই নাম — এখানে দেখা যাবে।"
+msgid ""
+"When someone is both in Creditors and in Debtors — same phone number, or the"
+" same name when a number is missing — they show here."
+msgstr ""
+"কেউ পাওনাদার ও দেনাদার দুই তালিকাতেই থাকলে — একই ফোন নম্বর, বা নম্বর না "
+"থাকলে একই নাম — এখানে দেখা যাবে।"
 
 msgid "Paid the shop"
 msgstr "দোকানে শোধ করেছেন"
@@ -33078,8 +33153,12 @@ msgid "Due %(amount)s after this"
 msgstr "এরপর বাকি %(amount)s"
 
 #, python-format
-msgid "%(wallet)s now shows %(balance)s — less than nothing. Check the wallet picked, or add the money that came into it."
-msgstr "%(wallet)s-এ এখন দেখাচ্ছে %(balance)s — শূন্যের চেয়েও কম। ঠিক ওয়ালেট বেছেছেন কিনা দেখুন, অথবা এতে যে টাকা এসেছিল তা লিখুন।"
+msgid ""
+"%(wallet)s now shows %(balance)s — less than nothing. Check the wallet "
+"picked, or add the money that came into it."
+msgstr ""
+"%(wallet)s-এ এখন দেখাচ্ছে %(balance)s — শূন্যের চেয়েও কম। ঠিক ওয়ালেট "
+"বেছেছেন কিনা দেখুন, অথবা এতে যে টাকা এসেছিল তা লিখুন।"
 
 msgid "Fill in an amount"
 msgstr "একটি অঙ্ক বসান"
@@ -33117,24 +33196,81 @@ msgid "They owe you (Debtors)"
 msgstr "তিনি আপনাকে দেবেন (দেনাদার)"
 
 #, python-format
-msgid "Set off %(amount)s with %(name)s? It's taken off what you owe them and off what they owe you — one entry on each side, dated today. No wallet changes. You can delete those two entries later if needed."
-msgstr "%(name)s-এর সাথে %(amount)s কাটাকাটি করবেন? আপনার দেনা ও তাঁর দেনা দুটো থেকেই এটা বাদ যাবে — দুই দিকে একটি করে এন্ট্রি, আজকের তারিখে। কোনো ওয়ালেট বদলাবে না। দরকার হলে পরে ওই দুটি এন্ট্রি মুছে দিতে পারবেন।"
+msgid ""
+"Set off %(amount)s with %(name)s? It's taken off what you owe them and off "
+"what they owe you — one entry on each side, dated today. No wallet changes. "
+"You can delete those two entries later if needed."
+msgstr ""
+"%(name)s-এর সাথে %(amount)s কাটাকাটি করবেন? আপনার দেনা ও তাঁর দেনা দুটো "
+"থেকেই এটা বাদ যাবে — দুই দিকে একটি করে এন্ট্রি, আজকের তারিখে। কোনো ওয়ালেট "
+"বদলাবে না। দরকার হলে পরে ওই দুটি এন্ট্রি মুছে দিতে পারবেন।"
 
 #, python-format
 msgid "Set off %(amount)s against each other"
 msgstr "পরস্পরের %(amount)s কাটাকাটি করুন"
 
-msgid "Clears the smaller balance on both sides, so only the difference is left to pay."
-msgstr "দুই দিক থেকেই ছোট অঙ্কটি মিটিয়ে দেয়, তাই শুধু পার্থক্যটুকু দিতে বাকি থাকে।"
+msgid ""
+"Clears the smaller balance on both sides, so only the difference is left to "
+"pay."
+msgstr ""
+"দুই দিক থেকেই ছোট অঙ্কটি মিটিয়ে দেয়, তাই শুধু পার্থক্যটুকু দিতে বাকি থাকে।"
 
 msgid "I owe a friend money, and they owe me too."
 msgstr "আমি এক বন্ধুর কাছে টাকা ধারি, আবার সেও আমার কাছে ধারে।"
 
-msgid "Keep them in both lists — Creditors and Debtors — with the same phone number or name. “Both ways” in the menu shows what you owe each other overall, and “Set off” cancels the smaller amount on both sides so only the difference is left."
-msgstr "তাঁকে দুই তালিকাতেই রাখুন — পাওনাদার ও দেনাদার — একই ফোন নম্বর বা নাম দিয়ে। মেনুর “দুই দিকেই লেনদেন” দেখায় সব মিলিয়ে কে কার কাছে কত পায়, আর “কাটাকাটি” দুই দিক থেকে ছোট অঙ্কটি বাদ দেয়, যাতে শুধু পার্থক্যটুকু বাকি থাকে।"
+msgid ""
+"Keep them in both lists — Creditors and Debtors — with the same phone number"
+" or name. “Both ways” in the menu shows what you owe each other overall, and"
+" “Set off” cancels the smaller amount on both sides so only the difference "
+"is left."
+msgstr ""
+"তাঁকে দুই তালিকাতেই রাখুন — পাওনাদার ও দেনাদার — একই ফোন নম্বর বা নাম দিয়ে।"
+" মেনুর “দুই দিকেই লেনদেন” দেখায় সব মিলিয়ে কে কার কাছে কত পায়, আর "
+"“কাটাকাটি” দুই দিক থেকে ছোট অঙ্কটি বাদ দেয়, যাতে শুধু পার্থক্যটুকু বাকি "
+"থাকে।"
 
 msgid "Can I keep a photo of the paper or the shop's memo?"
 msgstr "কাগজ বা দোকানের মেমোর ছবি রাখা যায়?"
 
-msgid "Yes. When you add an expense, a bazar, a loan entry or a shop due, tap “Take or choose a photo”. Only you can open it later, from the “receipt” or “memo” link on that entry."
-msgstr "হ্যাঁ। খরচ, বাজার, ধারের এন্ট্রি বা দোকানের বাকি লেখার সময় “ছবি তুলুন বা বাছুন” চাপুন। পরে শুধু আপনিই সেই এন্ট্রির “রসিদ” বা “মেমো” লিঙ্ক থেকে খুলতে পারবেন।"
+msgid ""
+"Yes. When you add an expense, a bazar, a loan entry or a shop due, tap “Take"
+" or choose a photo”. Only you can open it later, from the “receipt” or "
+"“memo” link on that entry."
+msgstr ""
+"হ্যাঁ। খরচ, বাজার, ধারের এন্ট্রি বা দোকানের বাকি লেখার সময় “ছবি তুলুন বা "
+"বাছুন” চাপুন। পরে শুধু আপনিই সেই এন্ট্রির “রসিদ” বা “মেমো” লিঙ্ক থেকে খুলতে "
+"পারবেন।"
+
+#: apps/productivity/views.py
+msgid "Highlight: %(colour)s"
+msgstr "হাইলাইট: %(colour)s"
+
+#: apps/productivity/views.py
+msgid "Take the highlight off"
+msgstr "হাইলাইট সরান"
+
+#: apps/productivity/views.py
+msgid "Highlight taken off"
+msgstr "হাইলাইট সরানো হয়েছে"
+
+#: apps/productivity/views.py
+msgid "Yellow"
+msgstr "হলুদ"
+
+#: apps/productivity/views.py
+msgid "Couldn't highlight that here — switch to Write and choose it there."
+msgstr "এখানে এটি হাইলাইট করা গেল না — Write-এ গিয়ে সেখানে বেছে নিন।"
+
+#: apps/productivity/views.py
+msgid ""
+"Highlight the chosen words (Ctrl+Shift+H) — or choose words while reading"
+msgstr ""
+"বেছে নেওয়া শব্দ হাইলাইট করুন (Ctrl+Shift+H) — বা পড়ার সময় শব্দ বেছে নিন"
+
+#: apps/productivity/views.py
+msgid "Highlight colours"
+msgstr "হাইলাইটের রং"
+
+#: apps/productivity/views.py
+msgid "Or choose words while reading (Preview or View) and pick a colour."
+msgstr "বা পড়ার সময় (Preview বা View) শব্দ বেছে নিয়ে একটি রং বাছুন।"

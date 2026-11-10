@@ -33,7 +33,7 @@
 
   <section class="wfr-stage" x-show="stage === 'card'">
     <div class="wfr-card-wrap" :style="swipeStyle()" @pointerdown="down($event)" @pointermove="move($event)" @pointerup="up()" @pointercancel="swipe = null">
-      <div class="wfr-card" :class="flipped && 'is-flipped'" @click="if (Date.now() - swiped > 400 && (!writeFirst || flipped)) flip()" role="button" tabindex="0"
+      <div class="wfr-card" :class="flipped && 'is-flipped'" @click="if (Date.now() - swiped > 400 && (!writeFirst || flipped) && !choosing($event)) flip()" role="button" tabindex="0"
            :aria-label="flipped ? '{% translate "Answer" %}' : '{% translate "Question — tap to see the answer" %}'">
         <div class="wfr-face wfr-front">
           <span class="wfr-tag"><span x-text="card && ('{% translate "Question" %} ' + card.number + (card.chapter ? ' · ' + card.chapter : ''))"></span><span class="wex-tag-star" x-show="card && card.starred">★</span><span class="wex-tag-missed" x-show="card && card.misses" x-text="card && '✗ ' + card.misses"></span></span>

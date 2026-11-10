@@ -193,7 +193,7 @@
         <button type="button" class="wkc-btn wex-star" x-show="!selecting" :class="q.starred && 'is-on'" @click.stop="flag(q, 'star')" :aria-pressed="q.starred.toString()" aria-label="{% translate 'Important' %}" data-tip="{% translate 'Important' %}">{% icon "star" %}</button>
       </div>
       <div class="wkc-q wn-md" x-effect="paint($el, q.question)"></div>
-      <div class="wkc-a wn-md" x-show="answers && q.answer" x-effect="answers && paint($el, q.answer)"></div>
+      <div class="wkc-a wn-md" x-show="answers && q.answer" x-effect="answers && paint($el, q.answer, q)"></div>
       {% include "work/exam/_category_card.html" %}
       <div class="wkc-foot" x-show="!selecting">
         <button type="button" class="wkc-btn wex-known" :class="q.known && 'is-on'" @click.stop="flag(q, 'known')" :aria-pressed="q.known.toString()" aria-label="{% translate 'I know it' %}" data-tip="{% translate 'I know it' %}">{% icon "check" %}</button>

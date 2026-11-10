@@ -34,6 +34,22 @@
     });
   }
 
+  /* A highlight made while reading an answer (Work.highlightable, work.js): the answer saved with it, at once. */
+  function saveAnswer(q, value, done) {
+    var was = q.answer;
+    q.answer = value;
+    if (done) done();
+    api(D_NOTE_BASE() + q.id + "/", { action: "update", question: q.question, answer: value, rev: q.rev || "", _ft_same: "exam:" + q.id }).then(function (r) {
+      if (!r.ok && !r.queued) { q.answer = was; if (done) done(); return; }
+      if (r.rev) q.rev = r.rev;
+      if (r.conflict) toast(t("conflict"), "warn");
+    });
+  }
+  function D_NOTE_BASE() { return (data("exam-data").noteBase) || ""; }
+  function markable(el, q, text) {
+    if (window.Work && Work.highlightable) Work.highlightable(el, q && q.answer ? text : "", q && q.answer ? function (md) { saveAnswer(q, md); } : null);
+  }
+
   function paint(el, text) {
     if (!el) return;
     el.innerHTML = Work.markdown(text || "");     // (with formulas: work.js)
@@ -251,7 +267,7 @@
           var x = this.draft, has = x.question.trim() || x.answer.trim() || this.paste.trim();
           store(DRAFT, has ? Object.assign({}, x, { paste: this.paste }) : null);
         },
-        paint: function (el, text) { if (el._md !== text) { el._md = text; paint(el, text); } },
+        paint: function (el, text, q) { if (el._md !== text) { el._md = text; paint(el, text); } if (q) markable(el, q, text); },
         countText: function () { var n = this.shows.all; return t(n === 1 ? "countOne" : "count").replace("%(counter)s", n); },
         pace: function () {
           var left = this.shows.unknown;
@@ -365,6 +381,8 @@
         /* one card */
         cardClick: function (e, q) {
           if (this.selecting) { this.picked[q.id] = !this.picked[q.id]; return; }
+          var sel = window.getSelection && window.getSelection();
+          if (sel && !sel.isCollapsed && e.currentTarget.contains(sel.anchorNode)) return;     // choosing words (to highlight or copy)
           if (e.target.closest("a, button, input, select, textarea, .wkc-colors")) return;
           this.openEditor(q);
         },
@@ -637,6 +655,7 @@
         keep: function () { store(KEEP, { show: this.show, answers: this.answers, size: this.size }); },
         paint: function (el, text, q) {
           if (el._md !== text) { el._md = text; paint(el, text); }
+          if (q) markable(el, q, text);
           if (q && !this.full[q.id]) {
             var self = this;
             requestAnimationFrame(function () { if (el.clientHeight) self.long[q.id] = el.scrollHeight > el.clientHeight + 4; });      // trimmed: offer "Show all"
@@ -740,15 +759,22 @@
           var self = this;
           this.card = this.queue[this.pos]; this.flipped = false; this.mine = "";
           this.$nextTick(function () {
-            paint(self.$refs.front, self.card.question); paint(self.$refs.q, self.card.question); paint(self.$refs.back, self.card.answer || t("noAnswer"));
+            paint(self.$refs.front, self.card.question); paint(self.$refs.q, self.card.question); self.paintBack();
             if (self.writeFirst && self.$refs.mine) self.$refs.mine.focus();
           });
+        },
+        paintBack: function () {
+          var self = this, q = this.card, el = this.$refs.back;
+          paint(el, q.answer || t("noAnswer"));
+          if (window.Work && Work.highlightable) Work.highlightable(el, q.answer || "", q.answer ? function (md) { saveAnswer(q, md, function () { if (self.card === q) paint(el, q.answer || t("noAnswer")); }); } : null);
         },
         leftText: function () {
           var n = this.queue.length - this.pos;
           return n === 1 ? t("leftOne", "1 question left") : t("left", "%(n)s questions left").replace("%(n)s", n);
         },
         flip: function () { if (this.stage === "card") this.flipped = !this.flipped; },
+        // words being chosen on the card (to highlight or copy): that click doesn't turn it over
+        choosing: function (e) { var sel = window.getSelection && window.getSelection(); return !!(sel && !sel.isCollapsed && e.currentTarget.contains(sel.anchorNode)); },
         mark: function (knew) {
           var q = this.card;
           if (!q || !this.flipped) return;
@@ -802,7 +828,7 @@
             if (!r.ok && !r.queued) return;
             q.question = e.question.trim(); q.answer = e.answer; self.editing = false; q.rev = r.rev || "";
             if (r.conflict) toast(t("conflict"), "warn");
-            paint(self.$refs.front, q.question); paint(self.$refs.q, q.question); paint(self.$refs.back, q.answer || t("noAnswer"));
+            paint(self.$refs.front, q.question); paint(self.$refs.q, q.question); self.paintBack();
             toast(t("saved", "Saved"), "good");
           });
         },

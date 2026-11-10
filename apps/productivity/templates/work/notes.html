@@ -277,6 +277,22 @@
           <button type="button" class="icon-btn" @click="line('## ')" aria-label="{% translate 'Heading' %}" data-tip="{% translate 'Heading' %}"><span class="wn-cb">H</span></button>
           <button type="button" class="icon-btn" @click="insert('**', '**')" aria-label="{% translate 'Bold' %}" data-tip="{% translate 'Bold' %}"><b>B</b></button>
           <button type="button" class="icon-btn" @click="insert('_', '_')" aria-label="{% translate 'Italic' %}" data-tip="{% translate 'Italic' %}"><i class="wn-it">I</i></button>
+          {# highlight: the colour used last in one click (Ctrl+Shift+H), or pick one — or choose words while reading #}
+          <div class="menu-wrap wn-hl" x-data="{ open: false, last: Work.hl ? Work.hl.last() : 'yellow' }" @click.outside="open = false" @keydown.escape.stop="open = false">
+            <button type="button" class="icon-btn wn-hl-main" @mousedown.prevent @click="FTWriting.highlight($refs.body); last = Work.hl.last()" :data-hl="last"
+                    aria-label="{% translate 'Highlight' %}" data-tip="{% translate 'Highlight the chosen words (Ctrl+Shift+H) — or choose words while reading' %}">{% icon "highlighter" %}</button>
+            <button type="button" class="icon-btn wn-hl-more" @mousedown.prevent @click="open = !open" :aria-expanded="open" aria-label="{% translate 'Highlight colours' %}" data-tip="{% translate 'Highlight colours' %}">{% icon "chevron-down" %}</button>
+            <div class="menu wn-hl-menu" x-show="open" x-cloak role="menu" @mousedown.prevent>
+              <button type="button" class="menu-item" role="menuitem" @click="FTWriting.highlight($refs.body, 'yellow'); last = 'yellow'; open = false"><i class="hl-dot is-swatch" data-hl-c="yellow" aria-hidden="true"></i>{% translate "Yellow" %}</button>
+              <button type="button" class="menu-item" role="menuitem" @click="FTWriting.highlight($refs.body, 'green'); last = 'green'; open = false"><i class="hl-dot is-swatch" data-hl-c="green" aria-hidden="true"></i>{% translate "Green" %}</button>
+              <button type="button" class="menu-item" role="menuitem" @click="FTWriting.highlight($refs.body, 'blue'); last = 'blue'; open = false"><i class="hl-dot is-swatch" data-hl-c="blue" aria-hidden="true"></i>{% translate "Blue" %}</button>
+              <button type="button" class="menu-item" role="menuitem" @click="FTWriting.highlight($refs.body, 'pink'); last = 'pink'; open = false"><i class="hl-dot is-swatch" data-hl-c="pink" aria-hidden="true"></i>{% translate "Pink" %}</button>
+              <button type="button" class="menu-item" role="menuitem" @click="FTWriting.highlight($refs.body, 'purple'); last = 'purple'; open = false"><i class="hl-dot is-swatch" data-hl-c="purple" aria-hidden="true"></i>{% translate "Purple" %}</button>
+              <div class="menu-sep"></div>
+              <button type="button" class="menu-item" role="menuitem" @click="FTWriting.highlight($refs.body, null); open = false">{% icon "x" %}{% translate "Take the highlight off" %}</button>
+              <p class="menu-help">{% translate "Or choose words while reading (Preview or View) and pick a colour." %}</p>
+            </div>
+          </div>
           <span class="wn-fmt-sep" aria-hidden="true"></span>
           <button type="button" class="icon-btn" @click="line('- [ ] ')" aria-label="{% translate 'To-do item' %}" data-tip="{% translate 'To-do item' %}">{% icon "check" %}</button>
           <button type="button" class="icon-btn" @click="line('- ')" aria-label="{% translate 'List' %}" data-tip="{% translate 'List' %}">{% icon "list" %}</button>
