@@ -766,8 +766,12 @@
       if (f.hits.length) { var s = f.hits[f.at] || 0; f.ta.setSelectionRange(s, s + f.q.length); }
     }
   }
-  function openFind(ta, replacing) {
-    if (find && find.ta === ta) { find.el.classList.toggle("is-replacing", !!replacing || find.el.classList.contains("is-replacing")); find.input.focus(); find.input.select(); return; }
+  function openFind(ta, replacing, q) {
+    if (find && find.ta === ta) {
+      find.el.classList.toggle("is-replacing", !!replacing || find.el.classList.contains("is-replacing"));
+      if (q) { find.input.value = find.q = q; goFind(null); }
+      (replacing && q ? find.rep : find.input).focus(); if (!(replacing && q)) find.input.select(); return;
+    }
     closeFind(false);
     var el = d.createElement("div");
     el.className = "md-find" + (replacing ? " is-replacing" : ""); el.setAttribute("role", "search");
@@ -793,6 +797,7 @@
     find = { ta: ta, el: el, input: input, rep: rep, count: el.querySelector(".md-find-n"), q: "", cs: false, at: 0, hits: [], marks: [] };
     var chosen = ta.value.slice(ta.selectionStart, ta.selectionEnd);
     if (chosen && chosen.indexOf("\n") < 0 && chosen.length < 80) { input.value = chosen; find.q = chosen; }
+    if (q) { input.value = q; find.q = q; }                 // (what was being looked for while reading)
     input.addEventListener("input", function () { if (find) { find.q = input.value; goFind(null); } });
     el.addEventListener("keydown", function (e) {
       if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); closeFind(true); }
@@ -810,8 +815,7 @@
       else if (k === "one") replaceOne();
       else if (k === "all") replaceAll();
     });
-    input.focus(); input.select();
-    goFind(null);
+    if (replacing && q) { goFind(null); rep.focus(); } else { input.focus(); input.select(); goFind(null); }
   }
   d.addEventListener("keydown", function (e) {
     if (box(e) !== "md" || e.altKey || !(e.ctrlKey || e.metaKey) || e.shiftKey) return;
@@ -875,7 +879,7 @@
   };
 
   window.FTWriting = { toMarkdown: function (html) { return loadTurndown().then(function () { return toMarkdown(html); }); }, caretXY: caretXY,
-                       find: function (ta, replacing) { if (ta) openFind(ta, replacing); }, todos: todos, keep: queueKeep,
+                       find: function (ta, replacing, q) { if (ta) openFind(ta, replacing, q); }, todos: todos, keep: queueKeep,
                        highlight: function (ta, color) { if (ta) { ta.focus(); highlight(ta, color === undefined ? "toggle" : color); } } };
 
   d.addEventListener("paste", function (e) {

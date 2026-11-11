@@ -35,6 +35,26 @@ class HouseholdCategory(models.Model):
         return self.purchases.aggregate(total=Sum("amount"))["total"] or 0
 
 
+class MemberColor(models.TextChoices):
+    # The app's six goal and category hues, and two more: a family is often bigger than six.
+    BLUE = "blue", _("Blue")
+    ORANGE = "orange", _("Orange")
+    GREEN = "green", _("Green")
+    PINK = "pink", _("Pink")
+    PURPLE = "purple", _("Purple")
+    GOLD = "gold", _("Gold")
+    TEAL = "teal", _("Teal")
+    RED = "red", _("Red")
+
+
+def next_member_color(user, exclude_pk=None):
+    """A colour for a new member, as Splitwise and Tricount give one: the first nobody has yet, else the least used."""
+    used = {}
+    for c in HouseholdMember.objects.filter(user=user).exclude(pk=exclude_pk).values_list("color", flat=True):
+        used[c] = used.get(c, 0) + 1
+    return min(MemberColor.values, key=lambda c: (used.get(c, 0), MemberColor.values.index(c)))
+
+
 class HouseholdMemberQuerySet(models.QuerySet):
     def with_balances(self):
         """Load each member's fronted and paid-back totals in the same query,
@@ -58,6 +78,8 @@ class HouseholdMember(models.Model):
     name = models.CharField(max_length=200, verbose_name=_("Name"))
     phone = models.CharField(max_length=20, blank=True, default="", verbose_name=_("Phone"))
     note = models.TextField(blank=True, default="", verbose_name=_("Note"))
+    color = models.CharField(_("Colour"), max_length=10, blank=True, default="", choices=MemberColor.choices,
+                             help_text=_("Shown with their name in the bazar list, so you see at a glance who paid."))
     is_active = models.BooleanField(
         default=True,
         help_text=_("Inactive records are hidden from lists and pickers but still count in totals."),
@@ -67,6 +89,11 @@ class HouseholdMember(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     objects = HouseholdMemberQuerySet.as_manager()
+
+    def save(self, *args, **kwargs):
+        if not self.color and self.user_id:          # none picked: one of their own, chosen for them
+            self.color = next_member_color(self.user, exclude_pk=self.pk)
+        super().save(*args, **kwargs)
 
     class Meta:
         ordering = ["name"]

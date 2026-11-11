@@ -1,6 +1,6 @@
 {% load i18n %}
 <div class="wk-grid">
-  <div><h3>{% translate "Anywhere" %}</h3><dl>
+  <div data-keys="any"><h3>{% translate "Anywhere" %}</h3><dl>
     <div><dt><kbd>c</kbd></dt><dd>{% translate "Quick add a task" %}</dd></div>
     <div><dt><kbd>n</kbd></dt><dd>{% translate "Quick note" %}</dd></div>
     <div><dt><kbd>s</kbd></dt><dd>{% translate "Start / stop the timer" %}</dd></div>
@@ -41,17 +41,75 @@
     <div><dt><kbd>g</kbd> <kbd>l</kbd></dt><dd>{% translate "Learning" %}</dd></div>
     <div><dt><kbd>g</kbd> <kbd>v</kbd></dt><dd>{% translate "Review & brag doc" %}</dd></div>
   </dl></div>
-  <div><h3>{% translate "Writing (notes, answers, cards)" %}</h3><dl>
+  <div data-keys="writing"><h3>{% translate "Writing (notes, answers, cards)" %}</h3><dl>
+    <div><dt><kbd>Ctrl</kbd> <kbd>Z</kbd> · <kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>Z</kbd></dt><dd>{% translate "Undo · redo (Ctrl+Y redoes too)" %}</dd></div>
+    <div><dt><kbd>Ctrl</kbd> <kbd>B</kbd> · <kbd>I</kbd></dt><dd>{% translate "Bold · italic" %}</dd></div>
+    <div><dt><kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>H</kbd></dt><dd>{% translate "Highlight the chosen words (again: take it off)" %}</dd></div>
+    <div><dt>{% translate "Choose words" %}</dt><dd>{% translate "A bar: bold, italic, code, link, colours to highlight" %}</dd></div>
+    <div><dt><kbd>/</kbd></dt><dd>{% translate "At the start of a line: headings, to-dos, code, a table…" %}</dd></div>
     <div><dt><kbd>Enter</kbd></dt><dd>{% translate "Next list item or to-do (on an empty one: the list ends)" %}</dd></div>
     <div><dt><kbd>Tab</kbd> · <kbd>Shift</kbd> <kbd>Tab</kbd></dt><dd>{% translate "Indent · outdent the line or the chosen lines" %}</dd></div>
-    <div><dt><kbd>Esc</kbd> <kbd>Tab</kbd></dt><dd>{% translate "Leave the box with the keyboard" %}</dd></div>
-    <div><dt><kbd>Ctrl</kbd> <kbd>B</kbd> · <kbd>I</kbd></dt><dd>{% translate "Bold · italic" %}</dd></div>
     <div><dt><kbd>Alt</kbd> <kbd>↑</kbd> <kbd>↓</kbd></dt><dd>{% translate "Move the line up or down" %}</dd></div>
+    <div><dt><kbd>Esc</kbd> <kbd>Tab</kbd></dt><dd>{% translate "Leave the box with the keyboard" %}</dd></div>
     <div><dt><code>```py</code> <kbd>Enter</kbd></dt><dd>{% translate "A code block, closed for you" %}</dd></div>
     <div><dt>{% translate "Paste a link on words" %}</dt><dd>{% translate "Makes them a link" %}</dd></div>
-    <div><dt><code>#tag</code></dt><dd>{% translate "In a note: tags it" %}</dd></div>
   </dl></div>
-  <div><h3>{% translate "Roadmaps" %}</h3><dl>
+  <div data-keys="find"><h3>{% translate "Find & replace" %}</h3><dl>
+    <div><dt><kbd>Ctrl</kbd> <kbd>F</kbd></dt><dd>{% translate "Find in the note or answer — while writing or reading" %}</dd></div>
+    <div><dt><kbd>Ctrl</kbd> <kbd>H</kbd></dt><dd>{% translate "Replace (while reading: it opens Write)" %}</dd></div>
+    <div><dt><kbd>Enter</kbd> · <kbd>Shift</kbd> <kbd>Enter</kbd></dt><dd>{% translate "Next · previous match" %}</dd></div>
+    <div><dt><kbd>Ctrl</kbd> <kbd>Enter</kbd></dt><dd>{% translate "In “Replace with”: replace all" %}</dd></div>
+    <div><dt><kbd>Aa</kbd></dt><dd>{% translate "Match case" %}</dd></div>
+    <div><dt><kbd>Esc</kbd></dt><dd>{% translate "Close the bar" %}</dd></div>
+  </dl></div>
+  <div data-keys="reading"><h3>{% translate "Reading & highlighting" %}</h3><dl>
+    <div><dt>{% translate "Choose words" %}</dt><dd>{% translate "Colours to highlight them (✕ takes it off)" %}</dd></div>
+    <div><dt><kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>H</kbd></dt><dd>{% translate "Highlight in the last colour (again: take it off)" %}</dd></div>
+    <div><dt><kbd>Ctrl</kbd> <kbd>Z</kbd></dt><dd>{% translate "Undo a highlight or a change made here" %}</dd></div>
+    <div><dt><kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>Z</kbd> · <kbd>Ctrl</kbd> <kbd>Y</kbd></dt><dd>{% translate "Redo" %}</dd></div>
+    <div><dt>{% translate "Click a part" %}</dt><dd>{% translate "Change it right there (in Preview)" %}</dd></div>
+    <div><dt><kbd>Esc</kbd> · <kbd>Ctrl</kbd> <kbd>Enter</kbd></dt><dd>{% translate "Done with the part" %}</dd></div>
+    <div><dt><kbd>↑</kbd> <kbd>↓</kbd></dt><dd>{% translate "From the first or last line: the part before or after" %}</dd></div>
+  </dl></div>
+  <div data-keys="notes"><h3>{% translate "A note" %}</h3><dl>
+    <div><dt><kbd>Ctrl</kbd> <kbd>E</kbd></dt><dd>{% translate "Write ⇄ Preview" %}</dd></div>
+    <div><dt><kbd>Ctrl</kbd> <kbd>S</kbd></dt><dd>{% translate "Save now (it saves by itself too)" %}</dd></div>
+    <div><dt><kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>F</kbd></dt><dd>{% translate "Focus writing: just this note, full screen" %}</dd></div>
+    <div><dt><code>[[</code></dt><dd>{% translate "Link another note (↑ ↓ Enter to pick)" %}</dd></div>
+    <div><dt><code>#tag</code></dt><dd>{% translate "Tags the note" %}</dd></div>
+    <div><dt><kbd>Ctrl</kbd> <kbd>Enter</kbd> · <kbd>Esc</kbd></dt><dd>{% translate "On the board: close the note" %}</dd></div>
+  </dl></div>
+  <div data-keys="exam"><h3>{% translate "Exam notes: a subject" %}</h3><dl>
+    <div><dt><kbd>C</kbd></dt><dd>{% translate "New question" %}</dd></div>
+    <div><dt><kbd>/</kbd></dt><dd>{% translate "Search questions and answers" %}</dd></div>
+    <div><dt><kbd>J</kbd> · <kbd>K</kbd></dt><dd>{% translate "Next · previous card" %}</dd></div>
+    <div><dt><kbd>E</kbd> · <kbd>X</kbd> · <kbd>S</kbd></dt><dd>{% translate "Open it · known · important" %}</dd></div>
+    <div><dt><kbd>R</kbd> · <kbd>O</kbd></dt><dd>{% translate "Review · overview" %}</dd></div>
+    <div><dt><kbd>Ctrl</kbd> + {% translate "click" %}</dt><dd>{% translate "Pick a card (to delete or change several)" %}</dd></div>
+    <div><dt><kbd>Shift</kbd> + {% translate "click" %}</dt><dd>{% translate "Pick all cards in between" %}</dd></div>
+    <div><dt><kbd>Ctrl</kbd> <kbd>A</kbd> · <kbd>Delete</kbd></dt><dd>{% translate "Picking: all shown · delete the picked" %}</dd></div>
+    <div><dt><kbd>Esc</kbd></dt><dd>{% translate "Stop picking" %}</dd></div>
+  </dl></div>
+  <div data-keys="exam"><h3>{% translate "Exam notes: a question open" %}</h3><dl>
+    <div><dt><kbd>Ctrl</kbd> <kbd>E</kbd></dt><dd>{% translate "The answer: Write ⇄ Preview" %}</dd></div>
+    <div><dt><kbd>Alt</kbd> <kbd>←</kbd> <kbd>→</kbd></dt><dd>{% translate "Previous · next question" %}</dd></div>
+    <div><dt><kbd>Ctrl</kbd> <kbd>Enter</kbd> · <kbd>Esc</kbd></dt><dd>{% translate "Close it (it's saved)" %}</dd></div>
+  </dl></div>
+  <div data-keys="exam-review"><h3>{% translate "Exam review" %}</h3><dl>
+    <div><dt><kbd>Space</kbd> · <kbd>Enter</kbd></dt><dd>{% translate "Turn the card over" %}</dd></div>
+    <div><dt><kbd>1</kbd> · <kbd>2</kbd></dt><dd>{% translate "Not yet · I knew it (also ← →)" %}</dd></div>
+    <div><dt><kbd>Z</kbd></dt><dd>{% translate "Undo the last answer" %}</dd></div>
+    <div><dt><kbd>E</kbd></dt><dd>{% translate "Fix a typo in this question" %}</dd></div>
+    <div><dt><kbd>Shift</kbd> <kbd>Enter</kbd></dt><dd>{% translate "After writing your answer: compare" %}</dd></div>
+    <div><dt><kbd>Esc</kbd></dt><dd>{% translate "Stop the review" %}</dd></div>
+    <div><dt>{% translate "Swipe" %} → · ←</dt><dd>{% translate "Knew it · not yet (on a phone)" %}</dd></div>
+  </dl></div>
+  <div data-keys="exam-overview"><h3>{% translate "Exam overview" %}</h3><dl>
+    <div><dt><kbd>A</kbd></dt><dd>{% translate "Show or hide every answer" %}</dd></div>
+    <div><dt><kbd>/</kbd></dt><dd>{% translate "Search" %}</dd></div>
+    <div><dt><kbd>Ctrl</kbd> <kbd>F</kbd></dt><dd>{% translate "Find in what's shown" %}</dd></div>
+  </dl></div>
+  <div data-keys="roadmap"><h3>{% translate "Roadmaps" %}</h3><dl>
     <div><dt><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd></dt><dd>{% translate "Timeline · board · list · priorities" %}</dd></div>
     <div><dt><kbd>N</kbd> · <kbd>M</kbd></dt><dd>{% translate "New piece of work · new milestone" %}</dd></div>
     <div><dt><kbd>T</kbd> · <kbd>+</kbd> <kbd>−</kbd></dt><dd>{% translate "Go to today · zoom in or out" %}</dd></div>
@@ -60,7 +118,7 @@
     <div><dt><kbd>Ctrl</kbd> <kbd>Z</kbd></dt><dd>{% translate "Undo the last change" %}</dd></div>
     <div><dt><kbd>Shift</kbd> + {% translate "click" %}</dt><dd>{% translate "In the list: choose everything in between" %}</dd></div>
   </dl></div>
-  <div><h3>{% translate "Learning roadmaps" %}</h3><dl>
+  <div data-keys="paths"><h3>{% translate "Learning roadmaps" %}</h3><dl>
     <div><dt>{% translate "Click" %} · {% translate "double-click" %}</dt><dd>{% translate "Open a box · rename it (on empty space: a new box)" %}</dd></div>
     <div><dt><kbd>Tab</kbd> · <kbd>Shift</kbd> <kbd>Tab</kbd></dt><dd>{% translate "A topic under the chosen box · next to it" %}</dd></div>
     <div><dt><kbd>D</kbd> <kbd>L</kbd> <kbd>S</kbd> <kbd>U</kbd></dt><dd>{% translate "Done · learning · skipped · to learn" %}</dd></div>
@@ -84,7 +142,7 @@
     <div><dt><kbd>←</kbd> <kbd>↑</kbd> <kbd>→</kbd> <kbd>↓</kbd></dt><dd>{% translate "Nudge (Shift for one step)" %}</dd></div>
     <div><dt><kbd>Ctrl</kbd> <kbd>Z</kbd></dt><dd>{% translate "Undo (Ctrl+Shift+Z to redo)" %}</dd></div>
   </dl></div>
-  <div><h3>{% translate "Flashcard review" %}</h3><dl>
+  <div data-keys="cards"><h3>{% translate "Flashcard review" %}</h3><dl>
     <div><dt><kbd>Space</kbd></dt><dd>{% translate "Turn the card over" %}</dd></div>
     <div><dt><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd></dt><dd>{% translate "Again · Hard · Good · Easy" %}</dd></div>
     <div><dt><kbd>Z</kbd></dt><dd>{% translate "Undo the last answer" %}</dd></div>

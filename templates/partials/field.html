@@ -14,6 +14,18 @@ selects with only a couple of choices render as a segmented toggle.
         {% if field.help_text %}<span class="help mt-0.5 block">{{ field.help_text|safe }}</span>{% endif %}
       </span>
     </label>
+  {% elif field.field.swatches %}
+    {# colour dots (a household member's colour) — the same look as a goal's or a category's #}
+    <span class="label" id="{{ field.auto_id }}_label">{{ field.label }}</span>
+    <div class="goal-colors" role="radiogroup" aria-labelledby="{{ field.auto_id }}_label">
+      {% for value, label in field.field.choices %}
+      <label class="goal-color" data-goal="{{ value }}" title="{{ label }}">
+        <input type="radio" class="sr-only" name="{{ field.html_name }}" value="{{ value }}" aria-label="{{ label }}" {% if field.value|stringformat:"s" == value|stringformat:"s" %}checked{% endif %}>
+        <span aria-hidden="true"></span>
+      </label>
+      {% endfor %}
+    </div>
+    {% if field.help_text %}<p class="help">{{ field.help_text }}</p>{% endif %}
   {% elif field.name == "transaction_type" %}
     <span class="label" id="{{ field.auto_id }}_label">{{ field.label }}</span>
     <div class="seg seg-block" role="radiogroup" aria-labelledby="{{ field.auto_id }}_label">

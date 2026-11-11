@@ -96,6 +96,10 @@ def _texts():
         "hlBar": _("Highlight"), "hlIn": _("Highlight: %(colour)s"), "hlRemove": _("Take the highlight off"),
         "hlOff": _("Highlight taken off"), "hlYellow": _("Yellow"), "hlGreen": _("Green"), "hlBlue": _("Blue"), "hlPink": _("Pink"), "hlPurple": _("Purple"),
         "hlNotFound": _("Couldn't highlight that here — switch to Write and choose it there."),
+        # undo and redo while reading (work.js), and find in what's being read
+        "undone": _("Undone"), "redone": _("Redone"), "redoHow": _("Ctrl+Shift+Z redoes"), "nothingToUndo": _("Nothing to undo."),
+        "nothingToRedo": _("Nothing to redo."), "findHere": _("Find in this text"), "findNone": _("No matches"), "findOf": _("%(at)s of %(n)s"),
+        "findReplace": _("Replace… (opens Write)"), "findClose": _("Close (Esc)"), "findPrev": _("Previous (Shift+Enter)"), "findNext": _("Next (Enter)"),
         "iconPick": _("Pick an icon"), "iconType": _("Or type / paste one"), "iconRemove": _("Remove"),
         "deletePicked": _("Delete the %(n)s picked notes? You can bring them back from Recently deleted."),
         "catAll": _("All categories"), "catNone": _("No category"), "catDeleted": _("Category deleted"),

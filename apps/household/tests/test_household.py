@@ -216,3 +216,48 @@ class AllPurchasesTests(TestCase):
     def test_both_views_link_to_each_other(self):
         self.assertContains(self.client.get(reverse("household_list")), self.url)
         self.assertContains(self.client.get(self.url), reverse("household_list"))
+
+
+class MemberColorTests(TestCase):
+    """A member's colour: chosen for them (one nobody has yet), changeable, and shown wherever they paid."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(username="colours", password="secret123")
+        self.client.force_login(self.user)
+
+    def test_each_new_member_gets_a_colour_nobody_has_yet(self):
+        from ..models import MemberColor
+
+        made = [HouseholdMember.objects.create(user=self.user, name=f"M{i}") for i in range(len(MemberColor.values) + 1)]
+        self.assertEqual([m.color for m in made[:-1]], MemberColor.values)          # all different, in order
+        self.assertEqual(made[-1].color, MemberColor.values[0])                    # then the least used again
+        other = User.objects.create_user(username="other", password="secret123")
+        self.assertEqual(HouseholdMember.objects.create(user=other, name="X").color, MemberColor.values[0])     # per person
+
+    def test_the_form_offers_colours_and_keeps_the_one_picked(self):
+        html = self.client.get(reverse("household_member_create")).content.decode()
+        self.assertIn('class="goal-colors"', html)
+        self.assertIn('value="blue" aria-label="Blue" checked', html)             # the one they'd get, shown
+        self.client.post(reverse("household_member_create"), {"name": "Rahim", "color": "purple"})
+        rahim = HouseholdMember.objects.get(name="Rahim")
+        self.assertEqual(rahim.color, "purple")
+        self.client.post(reverse("household_member_edit", args=[rahim.pk]), {"name": "Rahim", "color": "teal"})
+        rahim.refresh_from_db()
+        self.assertEqual(rahim.color, "teal")
+        self.client.post(reverse("household_member_create"), {"name": "Karim"})     # none sent (the quick-add popup)
+        self.assertEqual(HouseholdMember.objects.get(name="Karim").color, "blue")
+
+    def test_the_bazar_log_shows_who_paid_in_their_colour_and_filters_by_them(self):
+        rahim = HouseholdMember.objects.create(user=self.user, name="Rahim", color="pink")
+        Purchase.objects.create(user=self.user, buyer=rahim, amount=Decimal("100"), date=date(2026, 11, 1))
+        Purchase.objects.create(user=self.user, amount=Decimal("50"), date=date(2026, 11, 2))
+        html = self.client.get(reverse("household_purchase_all")).content.decode()
+        self.assertIn('class="ledger-row has-member" data-goal="pink"', html)
+        self.assertIn('class="member-chip" data-goal="pink"', html)
+        self.assertIn(f'?paid={rahim.pk}', html)                                   # its chip above the list filters by them
+        r = self.client.get(reverse("household_purchase_all"), {"paid": rahim.pk})
+        self.assertEqual(r.context["count"], 1)
+        self.assertIn("member-chip is-on", r.content.decode())
+        for name in ("household_dashboard", "household_member_list"):
+            self.assertIn('data-goal="pink"', self.client.get(reverse(name)).content.decode())
+        self.assertIn('data-goal="pink"', self.client.get(reverse("household_month_detail", args=[2026, 11])).content.decode())

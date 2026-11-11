@@ -33,11 +33,11 @@
       {% if purchases %}
       <ul class="ledger">
         {% for p in purchases %}
-        <li class="ledger-row">
+        <li class="ledger-row{% if p.buyer %} has-member{% endif %}"{% if p.buyer %} data-goal="{{ p.buyer.color }}"{% endif %}>
           <span class="ledger-icon" data-tone="gold">{{ p.date|date:"j" }}</span>
           <div class="ledger-main">
-            <p class="ledger-title">{% if p.category %}{{ p.category.name }}{% else %}{% translate "Uncategorized" %}{% endif %}</p>
-            <p class="ledger-meta">{{ p.date|date:"j M" }}{% if p.buyer %} · {% blocktranslate with name=p.buyer.name %}by {{ name }}{% endblocktranslate %}{% endif %}{% if p.description %} · {{ p.description }}{% endif %}{% if p.receipt %} · <a href="{% url 'receipt_view' 'bazar' p.pk %}" target="_blank" rel="noopener" class="receipt-link">{% translate "receipt" %}</a>{% endif %}</p>
+            <p class="ledger-title">{% if p.category %}{{ p.category.name }}{% else %}{% translate "Uncategorized" %}{% endif %}{% if p.buyer %} {% include "household/_member_chip.html" with m=p.buyer %}{% endif %}</p>
+            <p class="ledger-meta">{{ p.date|date:"j M" }}{% if p.description %} · {{ p.description }}{% endif %}{% if p.receipt %} · <a href="{% url 'receipt_view' 'bazar' p.pk %}" target="_blank" rel="noopener" class="receipt-link">{% translate "receipt" %}</a>{% endif %}</p>
           </div>
           <div class="ledger-end">
             <span class="ledger-amount">{{ p.amount|money }}</span>

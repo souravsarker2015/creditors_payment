@@ -6,7 +6,7 @@
 {% block work %}
 {{ data|json_script:"exam-data" }}
 {{ exam_text|json_script:"exam-text" }}
-<div class="wexo" x-data="examOverview" @keydown.document="key($event)" :style="'--wexo-size:' + size">
+<div class="wexo" data-keys-page="exam-overview reading find" x-data="examOverview" @keydown.document="key($event)" :style="'--wexo-size:' + size">
   <header class="wp-head">
     <div class="min-w-0">
       <a href="{% url 'work:exam_subject' s.pk %}" class="back-link">{% icon "chevron-left" %}{{ s.name }}</a>
@@ -28,6 +28,7 @@
       <button type="button" class="wexo-chip" :class="show === 'starred' && 'is-on'" @click="setShow('starred')" x-show="count('starred')">★ <b x-text="count('starred')"></b></button>
     </div>
     <div class="wexo-tools">
+      <button type="button" class="wexo-tool" data-keys-open aria-label="{% translate 'Keyboard shortcuts' %}" data-tip="{% translate 'Keyboard shortcuts (?)' %}">{% icon "keyboard" %}</button>
       <button type="button" class="wexo-tool" :class="answers && 'is-on'" @click="answers = !answers" :aria-pressed="answers.toString()"
               :data-tip="answers ? '{{ _("Hide the answers — test yourself")|escapejs }}' : '{{ _("Show every answer")|escapejs }}'">
         {% icon "book" %}<span x-text="answers ? '{{ _("Hide answers")|escapejs }}' : '{{ _("Show answers")|escapejs }}'"></span></button>
@@ -55,7 +56,7 @@
   </div>
 
   {# ── the questions, chapter by chapter, a page at a time ── #}
-  <ol class="wexo-list">
+  <ol class="wexo-list" data-find-read>
     <template x-for="(q, i) in notes" :key="q.id">
       <li class="wexo-item">
         <h2 class="wexo-group-name" x-show="heading(i) && (chapters.length > 1 || q.chapter)" x-text="q.chapter || t('noChapter')"></h2>

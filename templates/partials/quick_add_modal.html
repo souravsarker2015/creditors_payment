@@ -29,13 +29,13 @@ page's form. Lives inside an element using x-data="quickAdd(...)". Needs: qa (fr
           </div>
         </template>
         <p class="form-errors" x-show="errors.__all__" x-text="(errors.__all__ || []).join(' ')"></p>
-        {% for f in qa.form %}
+        {% for f in qa.form %}{% if not f.field.swatches %}{# (a colour is chosen for them; it can be changed later) #}
         <div class="field" :class="errors['{{ f.name }}'] && !reactivate && 'has-error'">
           <label class="label" for="{{ f.id_for_label }}">{{ f.label }}{% if f.field.required %}<span class="req" aria-hidden="true">*</span>{% else %}<span class="opt">{% translate "(optional)" %}</span>{% endif %}</label>
           {{ f }}
           <p class="field-error" x-show="errors['{{ f.name }}'] && !reactivate" x-text="(errors['{{ f.name }}'] || []).join(' ')"></p>
         </div>
-        {% endfor %}
+        {% endif %}{% endfor %}
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-ghost" @click="close()">{% translate "Cancel" %}</button>

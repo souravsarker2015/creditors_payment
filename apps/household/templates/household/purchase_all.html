@@ -83,6 +83,17 @@
   </div>
   {% endif %}
 
+  {% if member_chips %}
+  {# who paid: each member in their colour — a tap shows only theirs, a second tap all again #}
+  <nav class="member-filter" aria-label="{% translate 'Paid by' %}">
+    <span class="member-filter-label">{% translate "Paid by" %}</span>
+    {% for m in member_chips %}{% with pk=m.pk|stringformat:"s" %}
+    <a href="{% if paid == pk %}{% query_with paid='' page='' %}{% else %}{% query_with paid=m.pk page='' %}{% endif %}" class="member-chip{% if paid == pk %} is-on{% endif %}" data-goal="{{ m.color }}"{% if paid == pk %} aria-current="true"{% endif %}><span>{{ m.name }}</span> <small class="num">{{ m.n }}</small></a>
+    {% endwith %}{% endfor %}
+    <a href="{% if paid == 'me' %}{% query_with paid='' page='' %}{% else %}{% query_with paid='me' page='' %}{% endif %}" class="member-chip{% if paid == 'me' %} is-on{% endif %}"{% if paid == 'me' %} aria-current="true"{% endif %}><span>{% translate "Me" %}</span></a>
+  </nav>
+  {% endif %}
+
   <dl class="stat-grid">
     <div class="stat" data-tone="accent">
       <dt class="stat-label">{% if filtered %}{% translate "Total (filtered)" %}{% else %}{% translate "Total Spent" %}{% endif %}</dt>
@@ -103,11 +114,11 @@
     {% if page_obj.paginator.num_pages > 1 %}<p class="list-range">{% blocktranslate with start=page_obj.start_index end=page_obj.end_index total=page_obj.paginator.count %}Showing {{ start }}–{{ end }} of {{ total }}{% endblocktranslate %}</p>{% endif %}
     <ul class="ledger">
       {% for p in page_obj %}
-      <li class="ledger-row">
+      <li class="ledger-row{% if p.buyer %} has-member{% endif %}"{% if p.buyer %} data-goal="{{ p.buyer.color }}"{% endif %}>
         <span class="ledger-icon" data-tone="gold">{{ p.date|date:"j" }}</span>
         <div class="ledger-main">
-          <p class="ledger-title">{% if p.category %}{{ p.category.name }}{% else %}{% translate "Uncategorized" %}{% endif %}</p>
-          <p class="ledger-meta">{{ p.date|date:"j M Y" }}{% if p.buyer %} · {% blocktranslate with name=p.buyer.name %}by {{ name }}{% endblocktranslate %}{% elif p.wallet %} · {{ p.wallet.name }}{% endif %}{% if p.description %} · {{ p.description }}{% endif %}{% if p.receipt %} · <a href="{% url 'receipt_view' 'bazar' p.pk %}" target="_blank" rel="noopener" class="receipt-link">{% translate "receipt" %}</a>{% endif %}</p>
+          <p class="ledger-title">{% if p.category %}{{ p.category.name }}{% else %}{% translate "Uncategorized" %}{% endif %}{% if p.buyer %} {% include "household/_member_chip.html" with m=p.buyer %}{% endif %}</p>
+          <p class="ledger-meta">{{ p.date|date:"j M Y" }}{% if p.wallet and not p.buyer %} · {{ p.wallet.name }}{% endif %}{% if p.description %} · {{ p.description }}{% endif %}{% if p.receipt %} · <a href="{% url 'receipt_view' 'bazar' p.pk %}" target="_blank" rel="noopener" class="receipt-link">{% translate "receipt" %}</a>{% endif %}</p>
         </div>
         <div class="ledger-end">
           <span class="ledger-amount">{{ p.amount|money }}</span>

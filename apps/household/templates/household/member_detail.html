@@ -9,7 +9,7 @@
     <div>
       <a href="{% url 'household_member_list' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Members" %}</a>
       <div class="flex items-start gap-3">
-        <span class="avatar avatar-lg">{{ member.name|first }}</span>
+        <span class="avatar avatar-lg" data-goal="{{ member.color }}">{{ member.name|first }}</span>
         <div class="min-w-0">
           <h1 class="page-title">{{ member.name }}</h1>
           <div class="mt-1 flex flex-wrap gap-1.5">

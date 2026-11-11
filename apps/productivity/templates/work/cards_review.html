@@ -6,7 +6,7 @@
 {% block work %}
 {{ review|json_script:"review-data" }}
 {{ texts|json_script:"card-text" }}
-<div class="wfr" x-data="cardReview" data-own-keys @keydown.window="key($event)" :data-stage="stage">
+<div class="wfr" data-keys-page="cards" x-data="cardReview" data-own-keys @keydown.window="key($event)" :data-stage="stage">
   <header class="wfr-head">
     <a :href="back" class="icon-btn" aria-label="{% translate 'Stop' %}" data-tip="{% translate 'Stop (Esc)' %}">{% icon "x" %}</a>
     <div class="wfr-title">

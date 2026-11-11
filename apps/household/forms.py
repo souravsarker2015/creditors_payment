@@ -25,8 +25,9 @@ class HouseholdMemberForm(UniqueNameMixin, forms.ModelForm):
 
     class Meta:
         model = HouseholdMember
-        fields = ["name", "phone", "note"]
+        fields = ["name", "color", "phone", "note"]
         widgets = {
+            "color": forms.RadioSelect,          # drawn as colour dots (partials/field.html: `swatches`)
             "name": forms.TextInput(attrs={
                 "class": "form-input",
                 "placeholder": _("Full Name"),
@@ -41,6 +42,12 @@ class HouseholdMemberForm(UniqueNameMixin, forms.ModelForm):
                 "rows": 3,
             }),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["color"].swatches = True
+        self.fields["color"].choices = [c for c in self.fields["color"].choices if c[0]]      # always one: none picked → chosen for them
+        self.fields["color"].help_text = _("Shown with their name in the bazar list. One is picked for you; change it if you like.")
 
 
 class PurchaseForm(WalletFieldMixin, forms.ModelForm):

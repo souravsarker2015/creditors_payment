@@ -81,7 +81,7 @@
         {% for m in members_owed %}
         <li>
           <a href="{% url 'household_member_detail' m.pk %}" class="ledger-row">
-            <span class="ledger-icon" data-tone="warn">{{ m.name|first|upper }}</span>
+            <span class="ledger-icon" data-goal="{{ m.color }}">{{ m.name|first|upper }}</span>
             <div class="ledger-main"><p class="ledger-title">{{ m.name }}</p><p class="ledger-meta">{% translate "Tap to record a payback" %}</p></div>
             <span class="ledger-amount" data-tone="warn">{{ m.balance_due|money }}</span>
           </a>
@@ -115,11 +115,11 @@
       <ul class="ledger">
         {% for p in recent_purchases|slice:":6" %}
         <li>
-          <a href="{% url 'household_month_detail' p.date.year p.date.month %}" class="ledger-row">
+          <a href="{% url 'household_month_detail' p.date.year p.date.month %}" class="ledger-row{% if p.buyer %} has-member{% endif %}"{% if p.buyer %} data-goal="{{ p.buyer.color }}"{% endif %}>
             <span class="ledger-icon" data-tone="gold">{% include "partials/icon.html" with name="cart" %}</span>
             <div class="ledger-main">
-              <p class="ledger-title">{% if p.category %}{{ p.category.name }}{% else %}{% translate "Uncategorized" %}{% endif %}</p>
-              <p class="ledger-meta">{{ p.date|date:"j M Y" }}{% if p.buyer %} · {% blocktranslate with name=p.buyer.name %}by {{ name }}{% endblocktranslate %}{% endif %}</p>
+              <p class="ledger-title">{% if p.category %}{{ p.category.name }}{% else %}{% translate "Uncategorized" %}{% endif %}{% if p.buyer %} {% include "household/_member_chip.html" with m=p.buyer plain=True %}{% endif %}</p>
+              <p class="ledger-meta">{{ p.date|date:"j M Y" }}</p>
             </div>
             <span class="ledger-amount">{{ p.amount|money }}</span>
           </a>

@@ -902,6 +902,9 @@
         },
         key: function (e) {
           if (this.editing || e.ctrlKey || e.metaKey || e.altKey) return;
+          // (the app's own ? handler skips this page's card, so it's opened here then)
+          if (e.key === "?" && !typing(e) && e.target.closest && e.target.closest("[data-own-keys]")) { e.preventDefault(); d.dispatchEvent(new CustomEvent("work:help")); return; }
+          if (e.key === "Escape" && e.ftOverlay) return;      // something open over the card (shortcuts, a bar): Esc closes that, not the review
           if (typing(e)) {                // writing your own answer first: Shift+Enter turns the card over
             if (e.key === "Enter" && e.shiftKey && e.target === this.$refs.mine) { e.preventDefault(); this.flipped = true; }
             return;

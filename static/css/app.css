@@ -1562,6 +1562,22 @@ a.hero-progress:hover .hero-progress-row span { color: var(--text-on-ink); }
    ========================================================================== */
 [data-goal="blue"] { --g: #2a78d6; } [data-goal="orange"] { --g: #eb6834; } [data-goal="green"] { --g: #1baf7a; }
 [data-goal="gold"] { --g: #d99400; } [data-goal="pink"] { --g: #e0679a; } [data-goal="teal"] { --g: #0f8a7a; }
+[data-goal="purple"] { --g: #8b5cf6; } [data-goal="red"] { --g: #dc4646; }
+
+/* A household member's colour (Splitwise, Tricount): their name as a coloured chip, and a stripe down the
+   edge of a bazar row they paid for — who paid is seen at a glance, down a long list. */
+.member-chip { display: inline-flex; align-items: center; gap: 0.3125rem; max-width: 100%; padding: 0.0625rem 0.5rem 0.0625rem 0.375rem; border-radius: 9999px;
+  background: color-mix(in srgb, var(--g, var(--text-muted)) 14%, transparent); color: color-mix(in srgb, var(--g, var(--text-muted)) 78%, var(--text-primary));
+  font-size: 0.75rem; font-weight: 600; line-height: 1.5; white-space: nowrap; vertical-align: 0.0625rem; }
+.member-chip::before { content: ""; flex: none; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--g, var(--text-muted)); }
+.member-chip > span { overflow: hidden; text-overflow: ellipsis; }
+a.member-chip:hover { background: color-mix(in srgb, var(--g, var(--text-muted)) 24%, transparent); }
+.ledger-row.has-member { box-shadow: inset 3px 0 0 var(--g); }
+.member-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 0.375rem; margin-bottom: 0.75rem; }
+.member-filter-label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); margin-right: 0.125rem; }
+.member-filter .member-chip { padding: 0.25rem 0.75rem 0.25rem 0.5rem; font-size: 0.8125rem; border: 1px solid transparent; }
+.member-filter .member-chip.is-on { border-color: var(--g, var(--text-muted)); background: color-mix(in srgb, var(--g, var(--text-muted)) 24%, transparent); }
+.member-filter .member-chip small { font-weight: 500; opacity: .75; }
 
 .goal-card { box-shadow: inset 0 3px 0 var(--g), var(--shadow-sm); }
 .goal-meter > span { background: var(--g); }

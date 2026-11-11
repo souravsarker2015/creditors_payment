@@ -6,7 +6,7 @@
 {% block work %}
 {{ payload|json_script:"roadmap-data" }}
 {{ texts|json_script:"roadmap-text" }}
-<div class="rmp" data-page-keys="n t" x-data="roadmapPage(JSON.parse(document.getElementById('roadmap-data').textContent))" data-color="{{ rm.color }}">
+<div class="rmp" data-keys-page="roadmap" data-page-keys="n t" x-data="roadmapPage(JSON.parse(document.getElementById('roadmap-data').textContent))" data-color="{{ rm.color }}">
 
   {# ── header: name, saving state, views, actions ── #}
   <header class="rmp-head">

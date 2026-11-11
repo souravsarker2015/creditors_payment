@@ -6,12 +6,13 @@
 {% block work %}
 {{ data|json_script:"exam-data" }}
 {{ exam_text|json_script:"exam-text" }}
-<div class="wfr wex-review" x-data="examReview" data-own-keys @keydown.window="key($event)">
+<div class="wfr wex-review" data-keys-page="exam-review reading find" x-data="examReview" data-own-keys @keydown.window="key($event)">
   <header class="wfr-head">
     <a :href="back" class="icon-btn" aria-label="{% translate 'Stop' %}" data-tip="{% translate 'Stop (Esc)' %}">{% icon "x" %}</a>
     <div class="wfr-title"><b>{{ s.name }}</b><small class="wex-left" x-show="stage === 'card'" x-text="leftText()"></small></div>
     <b class="wex-clock num" x-show="test && stage === 'card'" x-cloak role="timer" :class="left < 60 && 'is-low'" x-text="leftClock()"></b>
     <button type="button" class="icon-btn" @click="undo()" :disabled="!history.length" aria-label="{% translate 'Undo the last answer' %}" data-tip="{% translate 'Undo the last answer (Z)' %}">{% icon "undo" %}</button>
+    <button type="button" class="icon-btn" data-keys-open aria-label="{% translate 'Keyboard shortcuts' %}" data-tip="{% translate 'Keyboard shortcuts (?)' %}">{% icon "keyboard" %}</button>
     <button type="button" class="icon-btn" @click="startEdit()" x-show="stage === 'card'" aria-label="{% translate 'Edit this question' %}" data-tip="{% translate 'Edit this question (E)' %}">{% icon "edit" %}</button>
   </header>
   <div class="wex-review-bar" x-show="!test && stage !== 'setup'">
@@ -46,7 +47,7 @@
           <div class="wfr-q wn-md" x-ref="q"></div>
           <div class="wex-mine-shown" x-show="writeFirst && mine.trim()"><small>{% translate "Your answer" %}</small><p x-text="mine"></p></div>
           <hr>
-          <div class="wfr-text wex-answer wn-md" x-ref="back"></div>
+          <div class="wfr-text wex-answer wn-md" x-ref="back" data-find-read></div>
         </div>
       </div>
       <span class="wfr-swipe is-left" aria-hidden="true">{% translate "Not yet" %}</span>

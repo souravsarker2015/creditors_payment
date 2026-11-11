@@ -20,7 +20,7 @@ from django.utils.translation import gettext as _, gettext_lazy, ngettext
 
 from apps.core.templatetags.ui import bd_number, money
 from apps.trash.undo import delete_with_undo
-from .models import HouseholdCategory, HouseholdMember, Purchase, Settlement
+from .models import HouseholdCategory, HouseholdMember, Purchase, Settlement, next_member_color
 from apps.budgets.models import Budget, BudgetScope
 from apps.budgets.services import status as budget_status
 from apps.core.flow import warn_if_overpaid
@@ -300,7 +300,10 @@ def purchase_all_view(request):
     base_query.pop("page", None)
     today = timezone.localdate()
     filtered = bool(q or category or paid or date_from or date_to)
+    # who paid, as coloured chips above the list (one tap filters): the members who paid for anything, most first
+    member_chips = list(members.annotate(n=Count("purchases")).filter(n__gt=0).order_by("-n", "name"))
     return render(request, "household/purchase_all.html", {
+        "member_chips": member_chips,
         "page_obj": page_obj,
         "pagination_window": _build_pagination_window(page_obj),
         "base_query_string": base_query.urlencode(),
@@ -562,7 +565,7 @@ def member_create_view(request):
             messages.success(request, _("'%(name)s' added.") % {"name": member.name})
             return redirect("household_member_list")
     else:
-        form = HouseholdMemberForm()
+        form = HouseholdMemberForm(initial={"color": next_member_color(request.user)})      # the one they'd get anyway, shown
     return render(
         request,
         "household/household_form.html",

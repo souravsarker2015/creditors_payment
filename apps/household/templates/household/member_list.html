@@ -53,7 +53,7 @@
     {% url 'household_member_detail' m.pk as detail_url %}
     <article class="card entity {% if not m.is_active %}is-inactive{% endif %}">
       <div class="entity-head">
-        <a href="{{ detail_url }}" class="avatar">{{ m.name|first }}</a>
+        <a href="{{ detail_url }}" class="avatar" data-goal="{{ m.color }}">{{ m.name|first }}</a>
         <div class="min-w-0 flex-1">
           <h3 class="entity-name"><a href="{{ detail_url }}">{{ m.name }}</a></h3>
           <p class="entity-meta">{% if m.phone %}{{ m.phone }}{% else %}{% translate "No contact info" %}{% endif %}</p>

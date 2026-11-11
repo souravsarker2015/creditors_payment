@@ -1661,10 +1661,10 @@
           Work.pickIcon(el, this.icon).then(function (v) { if (v == null || v === self.icon) return; self.icon = v; self.saveNow(); });
         },
         /* Find (and replace) in the note: the Markdown is where the words are, so it opens in Write */
-        openFind: function (replacing) {
+        openFind: function (replacing, q) {
           var self = this;
           if (this.preview) this.view("write");
-          this.$nextTick(function () { if (window.FTWriting && FTWriting.find) FTWriting.find(self.$refs.body, replacing); });
+          this.$nextTick(function () { if (window.FTWriting && FTWriting.find) FTWriting.find(self.$refs.body, replacing, q); });
         },
       }, CFG.urls.noteCategories);
     });
@@ -2458,6 +2458,7 @@
   }
 
   function liveBegin(el, i, hint) {
+    liveCommit(el);
     var st = el._live, b = st.split.blocks[i];
     var div = b && el.querySelector('.md-block[data-i="' + i + '"]');
     if (!div) return;
@@ -2507,6 +2508,7 @@
     liveText(el);
     st.split = liveSplit(st.text);
     liveDraw(el);
+    liveCommit(el);
     if (focus) { var div = el.querySelector('.md-block[data-i="' + Math.min(e.i, st.split.blocks.length - 1) + '"]'); if (div) div.focus({ preventScroll: true }); }
     return st.split.blocks.length - before;
   }
@@ -2594,7 +2596,7 @@
   function liveDo(el, i, act) {
     var st = el._live, blocks = st.split.blocks, b = blocks[i], was = st.text;
     if (!b) return;
-    var redraw = function (focusAt) { liveText(el); st.split = liveSplit(st.text); liveDraw(el); var div = focusAt != null && el.querySelector('.md-block[data-i="' + focusAt + '"]'); if (div) div.focus({ preventScroll: true }); };
+    var redraw = function (focusAt) { liveText(el); st.split = liveSplit(st.text); liveDraw(el); liveCommit(el); var div = focusAt != null && el.querySelector('.md-block[data-i="' + focusAt + '"]'); if (div) div.focus({ preventScroll: true }); };
     var apart = function (k) { if (blocks[k] && newlines(blocks[k].tail) < 2) blocks[k].tail = "\n\n"; };
     if (act === "edit") return liveBegin(el, i, "end");
     if (act === "below") {
@@ -2622,7 +2624,7 @@
       if (i > 0 && newlines(b.tail) > newlines(blocks[i - 1].tail)) blocks[i - 1].tail = b.tail;
       b.md = "";
       redraw(Math.max(0, i - 1));
-      toast(t("liveDeleted", "Part deleted"), "", { label: t("undo", "Undo"), run: function () { if (st.opts.set) st.opts.set(was); } });
+      toast(t("liveDeleted", "Part deleted"), "", { label: t("undo", "Undo"), run: function () { undoStep(true); } });
     }
   }
   /* Dragging a part by its handle (Notion): a line shows where it will go, the page scrolls near the
@@ -2638,10 +2640,10 @@
     [to - 1, to, from - 1, from].forEach(function (k) {         // where it left and where it landed stand apart
       if (k >= 0 && k < blocks.length - 1 && newlines(blocks[k].tail) < 2) blocks[k].tail = "\n\n";
     });
-    liveText(el); st.split = liveSplit(st.text); liveDraw(el);
+    liveText(el); st.split = liveSplit(st.text); liveDraw(el); liveCommit(el);
     var div = el.querySelector('.md-block[data-i="' + to + '"]');
     if (div) { div.classList.add("is-moved"); setTimeout(function () { div.classList.remove("is-moved"); }, 900); }
-    toast(t("liveMoved", "Moved"), "", { label: t("undo", "Undo"), run: function () { if (st.opts.set) st.opts.set(was); } });
+    toast(t("liveMoved", "Moved"), "", { label: t("undo", "Undo"), run: function () { undoStep(true); } });
     return true;
   }
   function liveDrag(el, e, handle) {
@@ -2716,7 +2718,7 @@
         var i0 = +tb.getAttribute("data-i"), k = Array.prototype.indexOf.call(tb.querySelectorAll("input.md-tick"), tick);
         var ed = st.editing, grow = ed ? liveFinish(el, false) : 0, bi = ed && i0 > ed.i ? i0 + grow : i0, blk = st.split.blocks[bi];
         if (!blk) return;
-        blk.md = Work.tickMarkdown(blk.md, k); liveText(el); st.split = liveSplit(st.text); liveDraw(el);
+        blk.md = Work.tickMarkdown(blk.md, k); liveText(el); st.split = liveSplit(st.text); liveDraw(el); liveCommit(el);
         return;
       }
       if (st.ro) return;                  // View: to read (a to-do can still be ticked, as on a Keep card)
@@ -2754,7 +2756,7 @@
   window.Work.live = function (el, opts) {
     if (!el) return;
     var st = el._live;
-    if (!st) { st = el._live = { split: { head: "", blocks: [] }, text: "", drawn: null, editing: null }; el.classList.add("md-live"); liveWire(el); }
+    if (!st) { st = el._live = { split: { head: "", blocks: [] }, text: "", drawn: null, editing: null, committed: null }; el.classList.add("md-live"); liveWire(el); }
     st.opts = opts || {};
     var text = String(st.opts.text == null ? "" : st.opts.text).replace(/\r\n?/g, "\n");
     if (st.editing) {
@@ -2762,10 +2764,50 @@
       st.editing = null; if (liveActive === el) liveActive = null;     // changed somewhere else (a version brought back…): drawn anew
     } else if (text === st.drawn && !!st.opts.readOnly === st.ro) return;
     if (st.opts.readOnly) liveCloseMenu();
-    st.text = text; st.split = liveSplit(text); liveDraw(el);
+    st.text = st.committed = text; st.split = liveSplit(text); liveDraw(el);      // (changed from outside — Write, a version: its own undo)
   };
   /* Before Write / Preview is switched: the block being changed is put back first */
   window.Work.liveDone = function () { liveCloseMenu(); if (liveActive) liveFinish(liveActive, false); };
+
+  /* ── Undo and redo while reading (Notion, Obsidian): Ctrl+Z, Ctrl+Shift+Z or Ctrl+Y outside a text box take back a
+     change made in the preview — a part edited and closed, ticked, moved, turned into something else, deleted — or a
+     highlight, on a note or an answer. (In a text box the browser's own undo does it, as it always has.) ── */
+  var undoDone = [], undoAhead = [];
+  function undoPush(entry) {           // { undo(), redo(), alive() }
+    undoDone.push(entry); if (undoDone.length > 100) undoDone.shift();
+    undoAhead = [];
+  }
+  function undoStep(back) {
+    var from = back ? undoDone : undoAhead, to = back ? undoAhead : undoDone, e;
+    while ((e = from.pop()) && e.alive && !e.alive()) { /* (a box no longer on the page: skipped) */ }
+    if (!e) { toast(back ? t("nothingToUndo", "Nothing to undo.") : t("nothingToRedo", "Nothing to redo.")); return; }
+    (back ? e.undo : e.redo)();
+    to.push(e);
+    toast(back ? t("undone", "Undone") + " · " + t("redoHow", "Ctrl+Shift+Z redoes") : t("redone", "Redone"));
+  }
+  // a change made in the preview is kept once it's done: what the text was before it, and is now
+  function liveCommit(el) {
+    var st = el && el._live;
+    if (!st || st.committed == null || st.text === st.committed) { if (st) st.committed = st.text; return; }
+    var before = st.committed, after = st.text;
+    st.committed = after;
+    undoPush({ alive: function () { return d.contains(el); }, undo: function () { liveSetAll(el, before); }, redo: function () { liveSetAll(el, after); } });
+  }
+  function liveSetAll(el, text) {
+    var st = el._live;
+    if (st.editing) { st.editing = null; if (liveActive === el) liveActive = null; }
+    st.text = st.committed = text; st.split = liveSplit(text); liveDraw(el);
+    if (st.opts.set) st.opts.set(text);
+  }
+  d.addEventListener("keydown", function (e) {
+    if (e.defaultPrevented || e.altKey || !(e.ctrlKey || e.metaKey) || (!undoDone.length && !undoAhead.length)) return;
+    var k = (e.key || "").toLowerCase(), tg = e.target;
+    if (k !== "z" && k !== "y") return;
+    if (tg && tg.closest && tg.closest("input, textarea, select, [contenteditable=''], [contenteditable='true']")) return;
+    if (d.querySelector("dialog[open]")) return;
+    e.preventDefault();
+    undoStep(k === "z" && !e.shiftKey);
+  });
 
   /* ── Highlighting, as Kindle, Medium and Notion have it ───────────────────────────────────────────
      Choose words — in a Markdown box, or while reading a note, an answer, a card — and pick a colour from the
@@ -2872,11 +2914,18 @@
       if (!b || (st.editing && st.editing.i === i)) return null;
       return { el: block, get: function () { return b.md; }, set: function (md) {
         if (st.editing) liveFinish(live, false);
-        b.md = md; liveText(live); st.split = liveSplit(st.text); liveDraw(live);
+        b.md = md; liveText(live); st.split = liveSplit(st.text); liveDraw(live); liveCommit(live);
       } };
     }
     var own = el.closest("[data-hl-box]");
-    if (own && own._hl) return { el: own, get: function () { return own._hl.text; }, set: function (md) { own._hl.text = md; own._hl.set(md); } };
+    if (own && own._hl) {
+      var hl = own._hl;            // (kept: the box may be drawn anew, with a fresh one, before an undo)
+      return { el: own, get: function () { return hl.text; }, set: function (md, again) {
+        var was = hl.text;
+        hl.text = md; hl.set(md);
+        if (!again) undoPush({ undo: function () { hl.text = was; hl.set(was); }, redo: function () { hl.text = md; hl.set(md); } });
+      } };
+    }
     return null;
   }
   /* What the chosen words would change: { target, range, marks (indexes of the highlights it's in), within (all of it is
@@ -2915,7 +2964,7 @@
     window.getSelection().removeAllRanges();
     tg.set(next);
     // (a highlight shows itself; taking one off is said, with Undo)
-    if (!color) toast(t("hlOff", "Highlight taken off"), "", { label: t("undo", "Undo"), run: function () { tg.set(src); } });
+    if (!color) toast(t("hlOff", "Highlight taken off") + " · Ctrl+Z", "", { label: t("undo", "Undo"), run: function () { undoStep(true); } });
     return true;
   }
 
@@ -2925,7 +2974,7 @@
   function hlBarMake() {
     hlBar = d.createElement("div"); hlBar.className = "hl-bar"; hlBar.setAttribute("role", "toolbar"); hlBar.setAttribute("aria-label", t("hlBar", "Highlight"));
     var names = { yellow: t("hlYellow", "Yellow"), green: t("hlGreen", "Green"), blue: t("hlBlue", "Blue"), pink: t("hlPink", "Pink"), purple: t("hlPurple", "Purple") };
-    hlBar.innerHTML = '<span class="hl-bar-label" aria-hidden="true">' + HL_PEN + "</span>" + HL_COLORS.map(function (c) {
+    hlBar.innerHTML = '<span class="hl-bar-label" aria-hidden="true" title="Ctrl+Shift+H · Ctrl+Z">' + HL_PEN + "<kbd>Ctrl Shift H</kbd></span>" + HL_COLORS.map(function (c) {
       var name = escAttr(t("hlIn", "Highlight: %(colour)s").replace("%(colour)s", names[c]));
       return '<button type="button" class="hl-dot" data-hl-c="' + c + '" title="' + name + '" aria-label="' + name + '"></button>';
     }).join("") + '<button type="button" class="hl-dot hl-off" data-hl-c="" title="' + escAttr(t("hlRemove", "Take the highlight off")) + '" aria-label="' +
@@ -2976,6 +3025,153 @@
     }
   });
   d.addEventListener("scroll", function () { if (hlBar && hlBar.classList.contains("is-on")) hlBarShow(); }, true);
+
+  /* ── Find while reading (Obsidian's reading view; Chrome's Ctrl+F, but only in the text being read) ─────────
+     Ctrl+F over a note or an answer being read ([data-find-read]) opens a small bar: every match is marked, the one
+     you're on more strongly; Enter / Shift+Enter go to the next / previous; Aa matches case. Replacing changes the
+     Markdown, so Ctrl+H (or "Replace…") hands the words to the box that writes it ([data-find-read] gets "ft:replace").
+     Over a Markdown box that's showing ([data-find-write]) Ctrl+F and Ctrl+H open its own find and replace. ── */
+  var rf = null;
+  var RF_SKIP = ".md-handle, .md-add, .md-menu, .wn-code-bar, button, script, style, .katex-mathml";
+  var HAS_HL = !!(window.CSS && CSS.highlights && window.Highlight);
+  function rfNodes(el) {
+    var out = [], w = d.createTreeWalker(el, NodeFilter.SHOW_TEXT, { acceptNode: function (n) {
+      return n.parentElement && n.parentElement.closest(RF_SKIP) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT; } }), n;
+    while ((n = w.nextNode())) out.push(n);
+    return out;
+  }
+  function rfSearch() {
+    if (!rf) return;
+    var q = rf.input.value, nodes = rfNodes(rf.el), flat = "", map = [];
+    rf.hits = [];
+    nodes.forEach(function (n) { map.push([n, flat.length]); flat += n.data; });
+    if (q) {
+      var hay = rf.cs ? flat : flat.toLowerCase(), needle = rf.cs ? q : q.toLowerCase(), i = hay.indexOf(needle);
+      var spot = function (p, end) {
+        for (var k = map.length - 1; k >= 0; k--) if (end ? map[k][1] < p : map[k][1] <= p) return [map[k][0], p - map[k][1]];
+        return [map[0][0], 0];
+      };
+      while (i >= 0 && rf.hits.length < 2000) {
+        var a = spot(i, false), b = spot(i + needle.length, true), r = d.createRange();
+        r.setStart(a[0], a[1]); r.setEnd(b[0], b[1]); rf.hits.push(r);
+        i = hay.indexOf(needle, i + needle.length);
+      }
+    }
+    if (rf.at >= rf.hits.length) rf.at = 0;
+    rfDraw(false);
+  }
+  function rfDraw(go) {
+    var n = rf.hits.length, q = rf.input.value;
+    rf.bar.classList.toggle("is-none", !!q && !n);
+    rf.count.textContent = !q ? "" : n ? t("findOf", "%(at)s of %(n)s").replace("%(at)s", rf.at + 1).replace("%(n)s", n) : t("findNone", "No matches");
+    if (HAS_HL) {
+      CSS.highlights.set("ft-find", new Highlight(...rf.hits));
+      if (n) CSS.highlights.set("ft-find-now", new Highlight(rf.hits[rf.at])); else CSS.highlights.delete("ft-find-now");
+    }
+    if (go && n) {
+      var r = rf.hits[rf.at], box = r.getBoundingClientRect(), top = rf.bar.getBoundingClientRect().bottom + 16;
+      if (box.top < top || box.bottom > innerHeight - 24) window.scrollBy({ top: box.top - innerHeight / 2, behavior: "instant" });
+      if (!HAS_HL) { var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r); }
+    }
+  }
+  function rfStep(dir) { if (!rf || !rf.hits.length) return; rf.at = (rf.at + dir + rf.hits.length) % rf.hits.length; rfDraw(true); }
+  function rfClose() {
+    if (!rf) return;
+    rf.bar.remove(); rf.watch.disconnect();
+    if (HAS_HL) { CSS.highlights.delete("ft-find"); CSS.highlights.delete("ft-find-now"); }
+    rf = null;
+  }
+  function rfReplace(el, q) {
+    var host = el;
+    rfClose();
+    host.dispatchEvent(new CustomEvent("ft:replace", { bubbles: true, detail: { q: q || "" } }));
+  }
+  function rfOpen(el, q) {
+    if (rf && rf.el === el) { if (q) rf.input.value = q; rf.input.focus(); rf.input.select(); rfSearch(); rfDraw(true); return; }
+    rfClose();
+    var bar = d.createElement("div"), x = function (v) { return escAttr(v); };
+    bar.className = "md-find rf-find"; bar.setAttribute("role", "search");
+    bar.innerHTML = '<div class="md-find-row"><input type="search" class="md-find-q" enterkeyhint="search" autocomplete="off" spellcheck="false" placeholder="' +
+      x(t("findHere", "Find in this text")) + '" aria-label="' + x(t("findHere", "Find in this text")) + '"><span class="md-find-n num" aria-live="polite"></span>' +
+      '<button type="button" class="md-find-btn" data-f="case" aria-pressed="false" title="Aa" aria-label="Aa"><span aria-hidden="true">Aa</span></button>' +
+      '<button type="button" class="md-find-btn" data-f="prev" title="' + x(t("findPrev", "Previous (Shift+Enter)")) + '" aria-label="' + x(t("findPrev", "Previous (Shift+Enter)")) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></svg></button>' +
+      '<button type="button" class="md-find-btn" data-f="next" title="' + x(t("findNext", "Next (Enter)")) + '" aria-label="' + x(t("findNext", "Next (Enter)")) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>' +
+      (el.hasAttribute("data-find-replace") ? '<button type="button" class="md-find-btn" data-f="rep" title="' + x(t("findReplace", "Replace… (opens Write)")) + ' — Ctrl+H" aria-label="' + x(t("findReplace", "Replace… (opens Write)")) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h11M4 12h7M4 17h11M17 10l3 3-3 3"/></svg></button>' : "") +
+      '<button type="button" class="md-find-btn" data-f="close" title="' + x(t("findClose", "Close (Esc)")) + '" aria-label="' + x(t("findClose", "Close (Esc)")) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>';
+    d.body.appendChild(bar);
+    rf = { el: el, bar: bar, input: bar.querySelector("input"), count: bar.querySelector(".md-find-n"), hits: [], at: 0, cs: false,
+           watch: new MutationObserver(function () { clearTimeout(rf && rf.redo); if (rf) rf.redo = setTimeout(rfSearch, 60); }) };
+    rf.watch.observe(el, { childList: true, subtree: true, characterData: true });
+    if (q) rf.input.value = q;
+    rf.input.addEventListener("input", function () { rf.at = 0; rfSearch(); rfDraw(true); });
+    bar.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); rfClose(); }
+      else if (e.key === "Enter") { e.preventDefault(); rfStep(e.shiftKey ? -1 : 1); }
+      else if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key === "h" || e.key === "H") && el.hasAttribute("data-find-replace")) { e.preventDefault(); rfReplace(el, rf.input.value); }
+      else if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key === "f" || e.key === "F")) { e.preventDefault(); rf.input.select(); }
+    });
+    bar.addEventListener("mousedown", function (e) { if (e.target.closest("button")) e.preventDefault(); });
+    bar.addEventListener("click", function (e) {
+      var b = e.target.closest("[data-f]"); if (!b || !rf) return;
+      var k = b.getAttribute("data-f");
+      if (k === "close") rfClose();
+      else if (k === "prev" || k === "next") rfStep(k === "prev" ? -1 : 1);
+      else if (k === "case") { rf.cs = !rf.cs; b.setAttribute("aria-pressed", String(rf.cs)); rfSearch(); rfDraw(true); }
+      else if (k === "rep") rfReplace(el, rf.input.value);
+    });
+    rf.input.focus(); rf.input.select();
+    rfSearch(); rfDraw(true);
+  }
+  function shown(el) { return !!(el && el.offsetParent !== null && el.getClientRects().length); }
+  d.addEventListener("keydown", function (e) {
+    if (e.defaultPrevented || e.altKey || e.shiftKey || !(e.ctrlKey || e.metaKey)) return;
+    var k = (e.key || "").toLowerCase();
+    if (k !== "f" && k !== "h") return;
+    var tg = e.target;
+    // (a Markdown box finds in itself: writing.js; another box to type in, or a list: the browser's own find)
+    if (tg && tg.closest && (tg.closest("textarea, select, [contenteditable=''], [contenteditable='true'], .md-find") || (tg.closest("input") && !tg.closest("[data-keys-page]")))) return;
+    // the part of the page being read or written: the one holding what's chosen, else the first showing
+    var sel = window.getSelection(), at = sel && sel.anchorNode && (sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement);
+    var all = Array.prototype.filter.call(d.querySelectorAll("[data-find-read], [data-find-write]"), shown);
+    // an open question or pop-up before the page behind it; then what's being read before an empty box to write in
+    var up = function (x) { return (x.closest("[role=dialog]") ? 2 : 0) + (x.matches("[data-find-read]") ? 1 : 0); };
+    all.sort(function (a, b) { return up(b) - up(a); });
+    var focused = d.activeElement && d.activeElement !== d.body ? d.activeElement : null;
+    if (!at && focused) at = focused;
+    var el = (at && all.filter(function (x) { return x.contains(at); })[0]) || all[0];
+    if (!el) return;                                    // nothing of ours here: the browser's own find
+    var words = sel && !sel.isCollapsed ? sel.toString().trim() : "";
+    if (words.length > 80 || words.indexOf("\n") >= 0) words = "";
+    e.preventDefault();
+    if (el.matches("[data-find-write]")) { if (window.FTWriting && FTWriting.find) FTWriting.find(el, k === "h", words); return; }
+    if (k === "h") { if (el.hasAttribute("data-find-replace")) rfReplace(el, words || (rf && rf.input.value) || ""); else rfOpen(el, words); }
+    else rfOpen(el, words);
+  });
+  window.Work.findIn = rfOpen;
+  /* The shortcuts sheet (?): the keys of the page you're on first, marked "On this page" — as Notion and Gmail
+     show the keys of where you are. A page names its sections: data-keys-page="notes writing reading find". */
+  window.Work.keysHere = function (list) {
+    var grid = list && list.querySelector(".wk-grid"), page = d.querySelector("[data-keys-page]");
+    if (!grid) return;
+    grid.querySelectorAll(".wk-here").forEach(function (x) { x.remove(); });
+    grid.querySelectorAll(".is-here").forEach(function (x) { x.classList.remove("is-here"); });
+    var names = page ? page.getAttribute("data-keys-page").split(/\s+/) : [];
+    names.slice().reverse().forEach(function (name) {
+      Array.prototype.slice.call(grid.querySelectorAll('[data-keys="' + name + '"]')).reverse().forEach(function (sec) {
+        sec.classList.add("is-here"); grid.insertBefore(sec, grid.firstChild);
+        var tag = d.createElement("small"); tag.className = "wk-here"; tag.textContent = list.getAttribute("data-here") || "On this page";
+        var h = sec.querySelector("h3"); if (h) h.appendChild(tag);
+      });
+    });
+    var box = list.closest(".wk-keys"); if (box) box.scrollTop = 0;
+  };
+  // something small open over the page (the shortcuts, a find or highlight bar, a question): Esc is for it, not the page
+  window.Work.overlayOpen = function () {
+    return !!(d.querySelector("dialog[open]") || Array.prototype.some.call(d.querySelectorAll(".wk-keys, .hl-bar.is-on, .md-find, .md-bubble.is-on"), function (x) { return x.offsetParent !== null || getComputedStyle(x).position === "fixed" && getComputedStyle(x).display !== "none"; }));
+  };
+  d.addEventListener("keydown", function (e) { if (e.key === "Escape" && Work.overlayOpen()) e.ftOverlay = true; }, true);    // (seen before anything closes)
+  // a ⌨ button anywhere ([data-keys-open]) opens the sheet
+  d.addEventListener("click", function (e) { if (e.target.closest && e.target.closest("[data-keys-open]")) d.dispatchEvent(new CustomEvent("work:help")); });
 
   window.Work.hl = { colors: HL_COLORS, last: hlLast, remember: hlRemember, spans: hlSpans, apply: hlApply, find: hlFind };
   /* A box drawn from Markdown (Work.markdown) where words chosen while reading can be highlighted: set(md) saves it. */

@@ -1,9 +1,10 @@
 {% load i18n work %}{% comment %}Keyboard shortcuts sheet (press ?).{% endcomment %}
-<div x-data="{ open: false }" @work:help.document="open = !open" x-cloak>
+<div x-data="{ open: false }" @work:help.document="open = !open; open && $nextTick(() => Work.keysHere($refs.list))" x-cloak>
   <div class="wc-backdrop" x-show="open" x-transition.opacity @click="open = false"></div>
   <section class="wc wk-keys" x-show="open" x-transition.scale.98 @keydown.escape.window="open = false" role="dialog" aria-modal="true" aria-labelledby="wk-title">
     <header class="flex items-center justify-between"><h2 id="wk-title" class="card-title">{% translate "Keyboard shortcuts" %}</h2>
       <button type="button" class="icon-btn" @click="open = false" aria-label="{% translate 'Close' %}">{% icon "x" %}</button></header>
-    {% include "work/partials/shortcut_list.html" %}
+    {# this page's keys come first ("On this page"): the page names them in data-keys-page #}
+    <div x-ref="list" data-here="{% translate 'On this page' %}">{% include "work/partials/shortcut_list.html" %}</div>
   </section>
 </div>

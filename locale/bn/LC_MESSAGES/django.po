@@ -33333,3 +33333,245 @@ msgstr "%(name)s বাছুন"
 #: apps/productivity/templates/work/exam/home.html
 msgid "Pick — to delete several at once"
 msgstr "বাছুন — একসাথে কয়েকটি মুছতে"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "%(at)s of %(n)s"
+msgstr "%(n)sটির মধ্যে %(at)s"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "A bar: bold, italic, code, link, colours to highlight"
+msgstr "একটি বার: বোল্ড, ইটালিক, কোড, লিংক, হাইলাইটের রং"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "After writing your answer: compare"
+msgstr "নিজের উত্তর লেখার পর: মিলিয়ে দেখুন"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "At the start of a line: headings, to-dos, code, a table…"
+msgstr "লাইনের শুরুতে: শিরোনাম, টু-ডু, কোড, টেবিল…"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Bold (Ctrl+B)"
+msgstr "বোল্ড (Ctrl+B)"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Change it right there (in Preview)"
+msgstr "সেখানেই বদলান (Preview-তে)"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Choose words"
+msgstr "শব্দ বাছুন"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Click a part"
+msgstr "একটি অংশে ক্লিক"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Close it (it's saved)"
+msgstr "বন্ধ করুন (সেভ হয়ে আছে)"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Close the bar"
+msgstr "বারটি বন্ধ করুন"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Colours to highlight them (✕ takes it off)"
+msgstr "হাইলাইটের রং (✕ দিলে সরে যায়)"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Ctrl+F finds, Ctrl+H replaces — while writing or reading"
+msgstr "Ctrl+F খোঁজে, Ctrl+H বদলায় — লেখার বা পড়ার সময়"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Ctrl+Shift+Z redoes"
+msgstr "Ctrl+Shift+Z আবার করে"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Done with the part"
+msgstr "অংশটির কাজ শেষ"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Exam notes: a question open"
+msgstr "পরীক্ষার নোট: একটি প্রশ্ন খোলা"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Exam notes: a subject"
+msgstr "পরীক্ষার নোট: একটি বিষয়"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Exam overview"
+msgstr "পরীক্ষার সারসংক্ষেপ"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Exam review"
+msgstr "পরীক্ষার রিভিউ"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Find & replace"
+msgstr "খুঁজুন ও বদলান"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Find in the note or answer — while writing or reading"
+msgstr "নোট বা উত্তরে খুঁজুন — লেখার বা পড়ার সময়"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Find in this text"
+msgstr "এই লেখায় খুঁজুন"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Find in what's shown"
+msgstr "যা দেখাচ্ছে তাতে খুঁজুন"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Fix a typo in this question"
+msgstr "এই প্রশ্নের ভুল ঠিক করুন"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Focus writing: just this note, full screen"
+msgstr "মনোযোগে লেখা: শুধু এই নোট, পুরো স্ক্রিনে"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "From the first or last line: the part before or after"
+msgstr "প্রথম বা শেষ লাইন থেকে: আগের বা পরের অংশ"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Highlight in the last colour (again: take it off)"
+msgstr "শেষ ব্যবহৃত রঙে হাইলাইট (আবার চাপলে সরে যায়)"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Highlight the chosen words (again: take it off)"
+msgstr "বাছাই করা শব্দ হাইলাইট (আবার চাপলে সরে যায়)"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "In “Replace with”: replace all"
+msgstr "“যা দিয়ে বদলাবেন”-এ: সব বদলান"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Italic (Ctrl+I)"
+msgstr "ইটালিক (Ctrl+I)"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Knew it · not yet (on a phone)"
+msgstr "জানতাম · এখনো না (ফোনে)"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Link another note (↑ ↓ Enter to pick)"
+msgstr "অন্য নোটের লিংক (↑ ↓ Enter দিয়ে বাছুন)"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Next (Enter)"
+msgstr "পরেরটি (Enter)"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Next · previous card"
+msgstr "পরের · আগের কার্ড"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Next · previous match"
+msgstr "পরের · আগের মিল"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Not yet · I knew it (also ← →)"
+msgstr "এখনো না · আমি জানতাম (← → দিয়েও)"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Nothing to redo."
+msgstr "আবার করার কিছু নেই।"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "On the board: close the note"
+msgstr "বোর্ডে: নোটটি বন্ধ করুন"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Open it · known · important"
+msgstr "খুলুন · জানা · গুরুত্বপূর্ণ"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Paid by %(name)s"
+msgstr "%(name)s দিয়েছেন"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Pick a card (to delete or change several)"
+msgstr "কার্ড বাছুন (কয়েকটি মুছতে বা বদলাতে)"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Pick all cards in between"
+msgstr "মাঝের সব কার্ড বাছুন"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Picking: all shown · delete the picked"
+msgstr "বাছাই চলাকালে: দেখানো সব · বাছাইগুলো মুছুন"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Previous (Shift+Enter)"
+msgstr "আগেরটি (Shift+Enter)"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Previous · next question"
+msgstr "আগের · পরের প্রশ্ন"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Reading & highlighting"
+msgstr "পড়া ও হাইলাইট"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Replace (while reading: it opens Write)"
+msgstr "বদলান (পড়ার সময়: Write খুলে যায়)"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Replace… (opens Write)"
+msgstr "বদলান… (Write খোলে)"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Review · overview"
+msgstr "রিভিউ · সারসংক্ষেপ"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Save now (it saves by itself too)"
+msgstr "এখনই সেভ করুন (নিজে থেকেও সেভ হয়)"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Search questions and answers"
+msgstr "প্রশ্ন ও উত্তরে খুঁজুন"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Show or hide every answer"
+msgstr "সব উত্তর দেখান বা লুকান"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid ""
+"Shown with their name in the bazar list, so you see at a glance who paid."
+msgstr ""
+"বাজারের তালিকায় নামের সাথে দেখায়, যাতে এক নজরে বোঝা যায় কে টাকা দিয়েছেন।"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid ""
+"Shown with their name in the bazar list. One is picked for you; change it if"
+" you like."
+msgstr ""
+"বাজারের তালিকায় নামের সাথে দেখায়। একটি আপনার জন্য বেছে দেওয়া হয়েছে; "
+"চাইলে বদলান।"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Stop the review"
+msgstr "রিভিউ বন্ধ করুন"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Tags the note"
+msgstr "নোটে ট্যাগ দেয়"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "The answer: Write ⇄ Preview"
+msgstr "উত্তর: Write ⇄ Preview"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Undo a highlight or a change made here"
+msgstr "এখানে করা হাইলাইট বা পরিবর্তন ফিরিয়ে নিন"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Undo · redo (Ctrl+Y redoes too)"
+msgstr "আগের অবস্থায় · আবার করুন (Ctrl+Y দিয়েও)"
+
+#: apps/productivity/templates/work/partials/shortcut_list.html
+msgid "Write ⇄ Preview"
+msgstr "Write ⇄ Preview"

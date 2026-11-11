@@ -72,6 +72,27 @@ class EditorTests(TestCase):
     def test_the_shortcut_sheet_lists_the_writing_keys(self):
         self.assertContains(self.client.get(reverse("work:help")), "Writing (notes, answers, cards)")
 
+    def test_the_sheet_has_every_section_and_pages_say_which_are_theirs(self):
+        from ..models import ExamNote, ExamSubject, Note
+
+        html = self.client.get(reverse("work:help")).content.decode()
+        for section in ("Find & replace", "Reading & highlighting", "A note", "Exam notes: a subject", "Exam notes: a question open",
+                        "Exam review", "Exam overview", "Ctrl</kbd> <kbd>Shift</kbd> <kbd>H"):
+            self.assertIn(section, html)
+        note = Note.objects.create(owner=self.me, title="N", body="x")
+        s = ExamSubject.objects.create(owner=self.me, name="S")
+        ExamNote.objects.create(owner=self.me, subject=s, question="Q", answer="A")
+        pages = {reverse("work:note", args=[note.pk]): "notes writing reading find", reverse("work:exam_subject", args=[s.pk]): "exam writing reading find",
+                 reverse("work:exam_review", args=[s.pk]): "exam-review reading find", reverse("work:exam_overview", args=[s.pk]): "exam-overview reading find"}
+        for url, keys in pages.items():
+            html = self.client.get(url).content.decode()
+            self.assertIn(f'data-keys-page="{keys}"', html, url)
+            self.assertIn("data-keys-open", html, url)                 # the ⌨ button
+            self.assertIn("data-find-read", html, url)                 # Ctrl+F while reading
+        html = self.client.get(reverse("work:note", args=[note.pk])).content.decode()
+        self.assertIn('data-find-write', html)
+        self.assertIn('@ft:replace="openFind(true, $event.detail.q)"', html)
+
 
 class SnippetTests(TestCase):
     def setUp(self):

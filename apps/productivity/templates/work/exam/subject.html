@@ -6,7 +6,7 @@
 {% block work %}
 {{ data|json_script:"exam-data" }}
 {{ exam_text|json_script:"exam-text" }}
-<div class="wex wkb" x-data="examBoard" @keydown.document="key($event)" data-page-keys="c a r o j k x s e">
+<div class="wex wkb" data-keys-page="exam writing reading find" x-data="examBoard" @keydown.document="key($event)" data-page-keys="c a r o j k x s e">
 <header class="wp-head">
   <div class="min-w-0">
     <a href="{% url 'work:exam' %}" class="back-link">{% icon "chevron-left" %}{% translate "Exam notes" %}</a>
@@ -55,9 +55,10 @@
       <textarea class="wkc-q-input" rows="1" x-model="draft.question" x-ref="question" maxlength="2000"
                 @keydown.enter="if (!$event.shiftKey && !$event.ctrlKey && !$event.metaKey && !$event.altKey && !$event.isComposing) { $event.preventDefault(); $refs.answer.focus() }"
                 placeholder="{% translate 'Question' %}" aria-label="{% translate 'Question' %}"></textarea>
-      <textarea class="wkc-a-input" rows="3" x-model="draft.answer" x-ref="answer" data-md-paste data-paste-images x-show="!writeView.add"
+      <textarea class="wkc-a-input" rows="3" x-model="draft.answer" x-ref="answer" data-find-write data-md-paste data-paste-images x-show="!writeView.add"
                 placeholder="{% translate 'Answer — Markdown, code, formulas; paste from ChatGPT or Claude' %}" aria-label="{% translate 'Answer' %}"></textarea>
       <div class="wex-a wn-md wex-md-preview" x-show="writeView.add" data-tick
+           data-find-read data-find-replace @ft:replace="answerView('add', 'write'); $nextTick(() => FTWriting.find($refs.answer, true, $event.detail.q))"
            x-effect="writeView.add && Work.live($el, { text: draft.answer || '', set: (v) => { draft.answer = v }, attrs: { 'data-md-paste': '', 'data-paste-images': '' }, empty: '{{ _("No answer yet. Click to write it.")|escapejs }}' })"></div>
       <div class="wkc-compose-foot">
         <input type="text" class="wkc-chip-input" x-model="draft.chapter" list="exam-chapters" maxlength="120" placeholder="{% translate '+ Label' %}" aria-label="{% translate 'Chapter' %}">
@@ -148,6 +149,7 @@
       <option value="new">{% translate "Newest first" %}</option>
     </select>
     {% include "work/exam/_category_filter.html" %}
+    <button type="button" class="wexo-tool" data-keys-open aria-label="{% translate 'Keyboard shortcuts' %}" data-tip="{% translate 'Keyboard shortcuts (?)' %}">{% icon "keyboard" %}</button>
     <button type="button" class="wexo-tool" :class="selecting && 'is-on'" @click="selecting ? endSelect() : startSelect()" :aria-pressed="selecting.toString()" data-tip="{% translate 'Pick questions to delete, move or change together' %}">{% icon "check" %}<span>{% translate "Select" %}</span></button>
   </div>
   <nav class="wexo-chapters" x-show="chapters.length > 1 || (chapters.length === 1 && chapters[0].name)" aria-label="{% translate 'Labels' %}">
@@ -177,7 +179,7 @@
 </div>
 
 {# ── the cards ── #}
-<div class="wkb-grid" x-ref="grid" :class="{ 'no-answers': !answers, 'is-selecting': selecting }">
+<div class="wkb-grid" x-ref="grid" data-find-read :class="{ 'no-answers': !answers, 'is-selecting': selecting }">
   <template x-for="(q, i) in notes" :key="q.id">
     <article class="wkc" :data-id="q.id" :data-color="q.color || null" :class="{ 'is-known': q.known, 'is-picked': picked[q.id], 'is-new': q._new, 'is-first-other': firstOther(i), 'is-first-pinned': firstPinned(i) }"
              :data-section="firstPinned(i) ? '★ ' + t('important') : (firstOther(i) ? t('others') : null)"
@@ -234,6 +236,7 @@
     <span class="wkc-num num" x-text="edit.number ? '#' + edit.number : ''"></span>
     <input type="text" class="wkc-chip-input" x-model="edit.chapter" list="exam-chapters" maxlength="120" placeholder="{% translate '+ Label' %}" aria-label="{% translate 'Chapter' %}">
     <span class="spacer"></span>
+    <button type="button" class="icon-btn" data-keys-open aria-label="{% translate 'Keyboard shortcuts' %}" data-tip="{% translate 'Keyboard shortcuts (?)' %}">{% icon "keyboard" %}</button>
     <button type="button" class="icon-btn wex-star" :class="edit.starred && 'is-on'" @click="edit.starred = !edit.starred" :aria-pressed="(!!edit.starred).toString()" aria-label="{% translate 'Important' %}">{% icon "star" %}</button>
     <button type="button" class="icon-btn wex-known" :class="edit.known && 'is-on'" @click="edit.known = !edit.known" :aria-pressed="(!!edit.known).toString()" aria-label="{% translate 'I know it' %}">{% icon "check" %}</button>
   </div>
@@ -244,8 +247,9 @@
     <button type="button" class="seg-item" :class="writeView.edit && !writeView.read && 'is-active'" @click="answerView('edit', 'preview')" data-tip="{% translate 'Read it — click any part to change it (Ctrl+E switches)' %}">{% translate "Preview" %}</button>
     <button type="button" class="seg-item" :class="writeView.read && 'is-active'" @click="answerView('edit', 'view')" data-tip="{% translate 'Just read it — a stray click changes nothing (to-dos can still be ticked)' %}">{% translate "View" context "read only" %}</button>
   </div>
-  <textarea class="wkc-a-input is-big" x-model="edit.answer" data-md-paste data-paste-images x-show="!writeView.edit" aria-label="{% translate 'Answer' %}" placeholder="{% translate 'Answer — Markdown, code, formulas; paste from ChatGPT or Claude' %}"></textarea>
+  <textarea class="wkc-a-input is-big" x-model="edit.answer" x-ref="editAnswer" data-find-write data-md-paste data-paste-images x-show="!writeView.edit" aria-label="{% translate 'Answer' %}" placeholder="{% translate 'Answer — Markdown, code, formulas; paste from ChatGPT or Claude' %}"></textarea>
   <div class="wex-a wn-md wex-md-preview wkc-preview" x-show="writeView.edit" data-tick
+       data-find-read data-find-replace @ft:replace="answerView('edit', 'write'); $nextTick(() => FTWriting.find($refs.editAnswer, true, $event.detail.q))"
        x-effect="editing && writeView.edit && Work.live($el, { text: edit.answer || '', set: (v) => { edit.answer = v }, readOnly: writeView.read, attrs: { 'data-md-paste': '', 'data-paste-images': '' }, empty: '{{ _("No answer yet. Click to write it.")|escapejs }}' })"></div>
   <div class="wkc-editor-foot">
     <span class="wn-state" :data-state="editState" role="status" aria-live="polite"><i aria-hidden="true"></i><span x-text="{ saving: '{% translate "Saving…" %}', saved: '{% translate "Saved" context "state" %}', dirty: '{% translate "Editing…" %}', offline: '{% translate "Saved on this device" %}', error: '{% translate "Not saved" %}' }[editState]"></span></span>

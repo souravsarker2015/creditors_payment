@@ -6,7 +6,7 @@
 {% block work %}
 {{ payload|json_script:"path-data" }}
 {{ texts|json_script:"path-text" }}
-<div class="lp" data-page-keys="c n s" data-color="{{ path.color }}" x-data="pathPage(JSON.parse(document.getElementById('path-data').textContent))">
+<div class="lp" data-keys-page="paths" data-page-keys="c n s" data-color="{{ path.color }}" x-data="pathPage(JSON.parse(document.getElementById('path-data').textContent))">
 
   {# ── name, how far along, what's next, find, more ── #}
   <header class="lp-head">
