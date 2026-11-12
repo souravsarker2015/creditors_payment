@@ -1,65 +1,234 @@
 {% extends "work/base.html" %}
 {% load i18n work %}
 
-{% block title %}{% translate "Focus" %} | {% translate "Productivity" %}{% endblock %}
+{% block title %}{% translate "Focus & timers" %} | {% translate "Productivity" %}{% endblock %}
 
 {% block work %}
-<div class="wfo" x-data="workFocus({ task: '{{ task.pk|default:'' }}', taskTitle: '{{ task.title|default:''|escapejs }}' })" data-focus-page :data-mode="mode">
-  <nav class="seg seg-block wfo-modes" aria-label="{% translate 'Session' %}">
-    <button type="button" class="seg-item" :class="mode === 'focus' && 'is-active'" @click="set('focus')">{% translate "Focus" %}<span class="wfo-kept num" x-show="kept('focus')" x-text="kept('focus')" x-cloak></span></button>
-    <button type="button" class="seg-item" :class="mode === 'short' && 'is-active'" @click="set('short')">{% translate "Short break" %}<span class="wfo-kept num" x-show="kept('short')" x-text="kept('short')" x-cloak></span></button>
-    <button type="button" class="seg-item" :class="mode === 'long' && 'is-active'" @click="set('long')">{% translate "Long break" %}<span class="wfo-kept num" x-show="kept('long')" x-text="kept('long')" x-cloak></span></button>
-  </nav>
+{# Focus | Timers | Stopwatch — as a phone's Clock app has them (static/js/clock.js); 1 2 3 switch #}
+<div class="wck" x-data="clockPage" :data-clock-tab="tab" data-focus-page data-keys-page="clock" data-page-keys="1 2 3 l r">
+  <header class="wck-head">
+    <nav class="seg seg-block wck-tabs" role="tablist" aria-label="{% translate 'Clock' %}">
+      <button type="button" class="seg-item" role="tab" :aria-selected="(tab === 'focus').toString()" :class="tab === 'focus' && 'is-active'" @click="tab = 'focus'" data-tip="1">
+        <span aria-hidden="true">🍅</span>{% translate "Focus" %}<span class="wck-live" x-show="$store.focus.running" x-cloak></span></button>
+      <button type="button" class="seg-item" role="tab" :aria-selected="(tab === 'timers').toString()" :class="tab === 'timers' && 'is-active'" @click="tab = 'timers'" data-tip="2">
+        <span aria-hidden="true">⏲</span>{% translate "Timers" %}<span class="wck-count num" x-show="$store.clock.running.length" x-text="$store.clock.running.length" x-cloak></span></button>
+      <button type="button" class="seg-item" role="tab" :aria-selected="(tab === 'stopwatch').toString()" :class="tab === 'stopwatch' && 'is-active'" @click="tab = 'stopwatch'" data-tip="3">
+        <span aria-hidden="true">⏱</span>{% translate "Stopwatch" %}<span class="wck-live" x-show="$store.clock.sw.running" x-cloak></span></button>
+    </nav>
+    <button type="button" class="icon-btn" data-keys-open aria-label="{% translate 'Keyboard shortcuts' %}" data-tip="{% translate 'Keyboard shortcuts (?)' %}">{% icon "keyboard" %}</button>
+  </header>
 
-  <div class="wfo-ring" :style="'--p:' + pct" role="timer" :aria-label="text">
-    <svg viewBox="0 0 220 220" aria-hidden="true"><circle cx="110" cy="110" r="100" class="wfo-ring-bg"/><circle cx="110" cy="110" r="100" class="wfo-ring-fg" pathLength="100"/></svg>
-    <div class="wfo-center">
-      <p class="wfo-time num" x-text="text">{{ ws.focus_minutes }}:00</p>
-      <p class="wfo-mode" x-text="{ focus: '{% translate "Focus" %}', short: '{% translate "Short break" %}', long: '{% translate "Long break" %}' }[mode]"></p>
-      <p class="wfo-dots" aria-label="{% translate 'Sessions done' %}"><template x-for="i in {{ ws.long_break_every }}" :key="i"><span :class="(done % {{ ws.long_break_every }}) >= i || (done && done % {{ ws.long_break_every }} === 0 && mode === 'long') ? 'is-on' : ''"></span></template></p>
+  {# ── Focus (Pomodoro) ── #}
+  {{ focus_values|json_script:"focus-values" }}
+  <section x-show="tab === 'focus'" x-data="focusSettings(JSON.parse(document.getElementById('focus-values').textContent), '{% url 'work:api_focus_settings' %}')">
+  <div class="wfo" x-data="workFocus({ task: '{{ task.pk|default:'' }}', taskTitle: '{{ task.title|default:''|escapejs }}' })" :data-mode="mode">
+    <div class="wfo-top">
+      <nav class="seg seg-block wfo-modes" aria-label="{% translate 'Session' %}">
+        <button type="button" class="seg-item" :class="mode === 'focus' && 'is-active'" @click="set('focus')">{% translate "Focus" %}<span class="wfo-kept num" x-show="kept('focus')" x-text="kept('focus')" x-cloak></span></button>
+        <button type="button" class="seg-item" :class="mode === 'short' && 'is-active'" @click="set('short')">{% translate "Short break" %}<span class="wfo-kept num" x-show="kept('short')" x-text="kept('short')" x-cloak></span></button>
+        <button type="button" class="seg-item" :class="mode === 'long' && 'is-active'" @click="set('long')">{% translate "Long break" %}<span class="wfo-kept num" x-show="kept('long')" x-text="kept('long')" x-cloak></span></button>
+      </nav>
+      <button type="button" class="wfo-gear" @click="open = true" aria-label="{% translate 'Focus settings' %}" data-tip="{% translate 'Lengths, sounds, ticking' %}">{% icon "wrench" %}</button>
     </div>
+
+    <div class="wfo-ring" :style="'--p:' + pct" role="timer" :aria-label="text">
+      <svg viewBox="0 0 220 220" aria-hidden="true"><circle cx="110" cy="110" r="100" class="wfo-ring-bg"/><circle cx="110" cy="110" r="100" class="wfo-ring-fg" pathLength="100"/></svg>
+      <div class="wfo-center">
+        <p class="wfo-time num" x-text="text">{{ ws.focus_minutes }}:00</p>
+        <p class="wfo-mode" x-text="{ focus: '{% translate "Focus" %}', short: '{% translate "Short break" %}', long: '{% translate "Long break" %}' }[mode]"></p>
+        <p class="wfo-dots" aria-label="{% translate 'Sessions done' %}"><template x-for="i in len.every" :key="i"><span :class="dotOn(i) && 'is-on'"></span></template></p>
+      </div>
+    </div>
+
+    <div class="wfo-controls">
+      <button type="button" class="wfo-small" @click="reset()" aria-label="{% translate 'Reset' %}" data-tip="{% translate 'Reset' %}">{% icon "restore" %}</button>
+      <button type="button" class="wfo-main" @click="toggle()" :aria-label="running ? '{% translate "Pause" %}' : '{% translate "Start" %}'" data-tip="Space">
+        <span x-show="!running">{% icon "play" %}</span><span x-show="running" x-cloak>{% icon "pause" %}</span>
+      </button>
+      <button type="button" class="wfo-small" @click="skip()" aria-label="{% translate 'Skip to next' %}" data-tip="{% translate 'Skip' %}">{% icon "chevron-right" %}</button>
+    </div>
+    <p class="wfo-hint">{% translate "Space to start or pause. Focus time is added to your timesheet." %}</p>
+
+    <section class="card wfo-task">
+      <label class="label" for="focus-task">{% translate "Focusing on" %}</label>
+      <select id="focus-task" data-native class="form-input" @change="pick($event)" x-init="$el.value = task">
+        <option value="">{% translate "— Nothing in particular —" %}</option>
+        {% for t in tasks %}<option value="{{ t.pk }}">{{ t.title }}</option>{% endfor %}
+        {% if task and task not in tasks %}<option value="{{ task.pk }}">{{ task.title }}</option>{% endif %}
+      </select>
+    </section>
+
+    {% if goal %}
+    {# a goal a day, the days in a row it was reached, the last week (Forest, Pomofocus) #}
+    <section class="card wfo-goal">
+      <div class="wfo-goal-top">
+        <p><b class="num">{{ sessions }}</b> / <span class="num">{{ goal }}</span> {% translate "sessions today" %}</p>
+        {% if goal_streak %}<span class="wj-streak" title="{% translate 'Days in a row with the goal reached' %}">{% icon "flame" %}{% blocktranslate count counter=goal_streak %}{{ counter }} day{% plural %}{{ counter }} days{% endblocktranslate %}</span>{% endif %}
+      </div>
+      <div class="wfo-goal-bar" role="progressbar" aria-valuemin="0" aria-valuemax="{{ goal }}" aria-valuenow="{{ sessions }}"><span style="width: {{ goal_pct }}%"></span></div>
+      {% if goal_pct >= 100 %}<p class="wfo-goal-done">{% translate "Goal reached — well done." %}</p>{% endif %}
+      <div class="wfo-week" aria-label="{% translate 'Focus, last 7 days' %}">
+        {% for r in week %}<div class="wfo-day{% if r.today %} is-today{% endif %}" title="{{ r.day|date:'D j M' }} · {{ r.seconds|hm }} · {{ r.sessions }}">
+          <span class="wfo-bar"><span style="height: {{ r.pct }}%"{% if r.sessions >= goal %} class="is-goal"{% endif %}></span></span><small>{{ r.day|date:"D"|slice:":2" }}</small></div>{% endfor %}
+      </div>
+      <p class="wfo-week-total">{% blocktranslate with t=week_seconds|hm %}{{ t }} focused this week{% endblocktranslate %}</p>
+    </section>
+    {% endif %}
+
+    <dl class="wfo-today">
+      <div><dt>{% translate "Sessions today" %}</dt><dd class="num">{{ sessions }}</dd></div>
+      <div><dt>{% translate "Focused today" %}</dt><dd class="num">{{ focus_seconds|hm }}</dd></div>
+      <div><dt>{% translate "Lengths" %}</dt><dd><span class="num" x-text="len.focus + ' / ' + len.short + ' / ' + len.long">{{ ws.focus_minutes }} / {{ ws.short_break_minutes }} / {{ ws.long_break_minutes }}</span>
+        <button type="button" class="wd-link" @click="open = true">{% translate "Change" %}</button></dd></div>
+    </dl>
   </div>
 
-  <div class="wfo-controls">
-    <button type="button" class="wfo-small" @click="reset()" aria-label="{% translate 'Reset' %}" data-tip="{% translate 'Reset' %}">{% icon "restore" %}</button>
-    <button type="button" class="wfo-main" @click="toggle()" :aria-label="running ? '{% translate "Pause" %}' : '{% translate "Start" %}'">
-      <span x-show="!running">{% icon "play" %}</span><span x-show="running" x-cloak>{% icon "pause" %}</span>
-    </button>
-    <button type="button" class="wfo-small" @click="skip()" aria-label="{% translate 'Skip to next' %}" data-tip="{% translate 'Skip' %}">{% icon "chevron-right" %}</button>
-  </div>
-  <p class="wfo-hint">{% translate "Space to start or pause. Focus time is added to your timesheet." %}</p>
+  {# the settings panel: every change saved at once, the timer follows #}
+  <div class="wc-backdrop" x-show="open" x-cloak x-transition.opacity @click="open = false"></div>
+  <section class="wc wfs" x-show="open" x-cloak x-transition role="dialog" aria-modal="true" aria-labelledby="wfs-title" @keydown.escape.stop="open = false" x-trap.noscroll="open">
+    <header class="wfs-head">
+      <h2 id="wfs-title" class="card-title">{% icon "wrench" %}{% translate "Focus settings" %}</h2>
+      <span class="wfs-state" x-show="state" x-cloak x-text="{ saving: '{% translate "Saving…" %}', saved: '{% translate "Saved" context "state" %}', error: '{% translate "Not saved" %}' }[state]" :data-state="state"></span>
+      <button type="button" class="icon-btn" @click="open = false" aria-label="{% translate 'Close' %}">{% icon "x" %}</button>
+    </header>
 
-  <section class="card wfo-task">
-    <label class="label" for="focus-task">{% translate "Focusing on" %}</label>
-    <select id="focus-task" data-native class="form-input" @change="pick($event)" x-init="$el.value = task">
-      <option value="">{% translate "— Nothing in particular —" %}</option>
-      {% for t in tasks %}<option value="{{ t.pk }}">{{ t.title }}</option>{% endfor %}
-      {% if task and task not in tasks %}<option value="{{ task.pk }}">{{ task.title }}</option>{% endif %}
-    </select>
+    <div class="wfs-body">
+      <h3 class="wfs-h">{% translate "Lengths (minutes)" %}</h3>
+      <div class="wfs-presets" role="group" aria-label="{% translate 'Ready-made lengths' %}">
+        <button type="button" class="chip" :class="isPreset(25, 5, 15) && 'is-active'" @click="preset(25, 5, 15)">{% translate "Classic" %} <small>25 · 5 · 15</small></button>
+        <button type="button" class="chip" :class="isPreset(50, 10, 20) && 'is-active'" @click="preset(50, 10, 20)">{% translate "Deep work" %} <small>50 · 10 · 20</small></button>
+        <button type="button" class="chip" :class="isPreset(90, 20, 30) && 'is-active'" @click="preset(90, 20, 30)">{% translate "Long haul" %} <small>90 · 20 · 30</small></button>
+        <button type="button" class="chip" :class="isPreset(15, 3, 10) && 'is-active'" @click="preset(15, 3, 10)">{% translate "Quick" %} <small>15 · 3 · 10</small></button>
+      </div>
+      <div class="wfs-steps">
+        <div class="wfs-step"><span>{% translate "Focus" %}</span>
+          <button type="button" @click="step('focus_minutes', -5, 1, 180)" aria-label="{% translate 'Less' %}">−</button>
+          <input type="number" inputmode="numeric" min="1" max="180" x-model.number="v.focus_minutes" @change="save()" aria-label="{% translate 'Focus (minutes)' %}">
+          <button type="button" @click="step('focus_minutes', 5, 1, 180)" aria-label="{% translate 'More' %}">+</button></div>
+        <div class="wfs-step"><span>{% translate "Short break" %}</span>
+          <button type="button" @click="step('short_break_minutes', -1, 1, 60)" aria-label="{% translate 'Less' %}">−</button>
+          <input type="number" inputmode="numeric" min="1" max="60" x-model.number="v.short_break_minutes" @change="save()" aria-label="{% translate 'Short break (minutes)' %}">
+          <button type="button" @click="step('short_break_minutes', 1, 1, 60)" aria-label="{% translate 'More' %}">+</button></div>
+        <div class="wfs-step"><span>{% translate "Long break" %}</span>
+          <button type="button" @click="step('long_break_minutes', -5, 1, 120)" aria-label="{% translate 'Less' %}">−</button>
+          <input type="number" inputmode="numeric" min="1" max="120" x-model.number="v.long_break_minutes" @change="save()" aria-label="{% translate 'Long break (minutes)' %}">
+          <button type="button" @click="step('long_break_minutes', 5, 1, 120)" aria-label="{% translate 'More' %}">+</button></div>
+        <div class="wfs-step"><span>{% translate "Long break after" %} <small>{% translate "sessions" %}</small></span>
+          <button type="button" @click="step('long_break_every', -1, 2, 12)" aria-label="{% translate 'Less' %}">−</button>
+          <input type="number" inputmode="numeric" min="2" max="12" x-model.number="v.long_break_every" @change="save()" aria-label="{% translate 'Long break after every (sessions)' %}">
+          <button type="button" @click="step('long_break_every', 1, 2, 12)" aria-label="{% translate 'More' %}">+</button></div>
+        <div class="wfs-step"><span>{% translate "Daily goal" %} <small>{% translate "sessions · 0: none" %}</small></span>
+          <button type="button" @click="step('focus_goal', -1, 0, 30)" aria-label="{% translate 'Less' %}">−</button>
+          <input type="number" inputmode="numeric" min="0" max="30" x-model.number="v.focus_goal" @change="save()" aria-label="{% translate 'Focus sessions a day (goal)' %}">
+          <button type="button" @click="step('focus_goal', 1, 0, 30)" aria-label="{% translate 'More' %}">+</button></div>
+      </div>
+      <label class="wfs-switch"><span>{% translate "Start breaks by themselves" %}</span><input type="checkbox" class="switch" x-model="v.auto_start_breaks" @change="save()"></label>
+      <label class="wfs-switch"><span>{% translate "Start the next focus by itself" %}</span><input type="checkbox" class="switch" x-model="v.auto_start_focus" @change="save()"></label>
+
+      <h3 class="wfs-h">{% translate "Sounds" %}</h3>
+      <label class="wfs-switch"><span>{% translate "Play a sound when time is up" %}</span><input type="checkbox" class="switch" x-model="v.sound_enabled" @change="save()"></label>
+      <div class="wfs-sounds" :class="!v.sound_enabled && 'is-off'">
+        <label class="wfs-sound"><span>{% translate "Focus ends" %}</span>
+          <select class="form-input input-compact" data-native x-model="v.sound" @change="save(); hear(v.sound)">{% for value, label in sounds %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select>
+          <button type="button" class="icon-btn" @click="hear(v.sound)" aria-label="{% translate 'Listen' %}" data-tip="{% translate 'Listen' %}">{% icon "play" %}</button></label>
+        <label class="wfs-sound"><span>{% translate "Break ends" %}</span>
+          <select class="form-input input-compact" data-native x-model="v.break_sound" @change="save(); hear(v.break_sound)"><option value="">{% translate "Same as focus" %}</option>{% for value, label in sounds %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select>
+          <button type="button" class="icon-btn" @click="hear(v.break_sound)" aria-label="{% translate 'Listen' %}" data-tip="{% translate 'Listen' %}">{% icon "play" %}</button></label>
+        <label class="wfs-sound"><span>{% translate "A timer ends" %}</span>
+          <select class="form-input input-compact" data-native x-model="v.timer_sound" @change="save(); hear(v.timer_sound)"><option value="">{% translate "Same as focus" %}</option>{% for value, label in sounds %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select>
+          <button type="button" class="icon-btn" @click="hear(v.timer_sound)" aria-label="{% translate 'Listen' %}" data-tip="{% translate 'Listen' %}">{% icon "play" %}</button></label>
+        <div class="wfs-row"><span>{% translate "Ring" %}</span>
+          <div class="seg seg-sm" role="radiogroup" aria-label="{% translate 'Ring' %}">{% for value, label in rings %}
+            <button type="button" class="seg-item" :class="+v.ring === {{ value }} && 'is-active'" @click="v.ring = {{ value }}; save()">{{ label }}</button>{% endfor %}</div></div>
+        <label class="wfs-row"><span>{% translate "Volume" %} <small class="num" x-text="v.volume + '%'"></small></span>
+          <input type="range" min="0" max="100" step="5" x-model.number="v.volume" @change="save(); hear()"></label>
+      </div>
+
+      <h3 class="wfs-h">{% translate "Ticking while you focus" %}</h3>
+      <label class="wfs-switch"><span>{% translate "Tick like a clock" %}</span><input type="checkbox" class="switch" x-model="v.tick_sound" @change="save(); v.tick_sound && hearTick(v.tick_style)"></label>
+      <div class="wfs-sounds" :class="!v.tick_sound && 'is-off'">
+        <div class="wfs-row"><span>{% translate "Sound" %}</span>
+          <div class="seg seg-sm" role="radiogroup" aria-label="{% translate 'Ticking sound' %}">{% for value, label in tick_styles %}
+            <button type="button" class="seg-item" :class="v.tick_style === '{{ value }}' && 'is-active'" @click="v.tick_style = '{{ value }}'; save(); hearTick('{{ value }}')">{{ label }}</button>{% endfor %}</div></div>
+        <label class="wfs-switch"><span>{% translate "Tick on every page" %} <small>{% translate "Off: only here" %}</small></span><input type="checkbox" class="switch" x-model="v.tick_everywhere" @change="save()"></label>
+      </div>
+
+      <h3 class="wfs-h">{% translate "Notifications" %}</h3>
+      <label class="wfs-switch"><span>{% translate "Notify me when time is up" %} <small>{% translate "Also when this tab is in the background" %}</small></span><input type="checkbox" class="switch" x-model="v.notifications" @change="save(); v.notifications && Work.askNotify()"></label>
+      <button type="button" class="btn btn-ghost btn-sm" @click="Work.askNotify().then(p => { hear(); Work.notify('{% translate "Sound and notifications are on" %}', '{% translate "This is how a finished session will sound." %}'); })">{% icon "bell" %}{% translate "Test sound & notifications" %}</button>
+    </div>
+    <footer class="wfs-foot">
+      <button type="button" class="btn btn-ghost btn-sm" @click="FT.ask({ message: '{% translate "Put the lengths, sounds and ticking back to the usual (25 / 5 / 15)?" %}' }).then(ok => ok && defaults())">{% icon "restore" %}{% translate "Back to defaults" %}</button>
+      <button type="button" class="btn btn-primary btn-sm" @click="open = false">{% translate "Done" %}</button>
+    </footer>
+  </section>
   </section>
 
-  {% if goal %}
-  {# a goal a day, the days in a row it was reached, the last week (Forest, Pomofocus) #}
-  <section class="card wfo-goal">
-    <div class="wfo-goal-top">
-      <p><b class="num">{{ sessions }}</b> / <span class="num">{{ goal }}</span> {% translate "sessions today" %}</p>
-      {% if goal_streak %}<span class="wj-streak" title="{% translate 'Days in a row with the goal reached' %}">{% icon "flame" %}{% blocktranslate count counter=goal_streak %}{{ counter }} day{% plural %}{{ counter }} days{% endblocktranslate %}</span>{% endif %}
-    </div>
-    <div class="wfo-goal-bar" role="progressbar" aria-valuemin="0" aria-valuemax="{{ goal }}" aria-valuenow="{{ sessions }}"><span style="width: {{ goal_pct }}%"></span></div>
-    {% if goal_pct >= 100 %}<p class="wfo-goal-done">{% translate "Goal reached — well done." %}</p>{% endif %}
-    <div class="wfo-week" aria-label="{% translate 'Focus, last 7 days' %}">
-      {% for r in week %}<div class="wfo-day{% if r.today %} is-today{% endif %}" title="{{ r.day|date:'D j M' }} · {{ r.seconds|hm }} · {{ r.sessions }}">
-        <span class="wfo-bar"><span style="height: {{ r.pct }}%"{% if r.sessions >= goal %} class="is-goal"{% endif %}></span></span><small>{{ r.day|date:"D"|slice:":2" }}</small></div>{% endfor %}
-    </div>
-    <p class="wfo-week-total">{% blocktranslate with t=week_seconds|hm %}{{ t }} focused this week{% endblocktranslate %} · <a href="{% url 'work:settings' %}" class="wd-link">{% translate "Change the goal" %}</a></p>
-  </section>
-  {% endif %}
+  {# ── Timers: as many as you like ── #}
+  <section x-show="tab === 'timers'" x-cloak x-data="timersPanel" class="wtm">
+    <form class="card wtm-new" @submit.prevent="start()">
+      <p class="wtm-h">{% translate "New timer" %}</p>
+      <div class="wtm-presets" role="group" aria-label="{% translate 'Start one now' %}">
+        {% for m in timer_presets %}<button type="button" class="wtm-preset" @click="start({{ m }} * 60)">{% if m >= 60 %}{% widthratio m 60 1 %} h{% else %}{{ m }} {% translate "min" %}{% endif %}</button>{% endfor %}
+      </div>
+      <div class="wtm-recent" x-show="recent.length" x-cloak><span>{% translate "Recent" %}</span>
+        <template x-for="sec in recent" :key="sec"><button type="button" class="chip" @click="start(sec)" x-text="length(sec)"></button></template></div>
+      <div class="wtm-custom">
+        <div class="wtm-hms" role="group" aria-label="{% translate 'Hours, minutes, seconds' %}">
+          <label><input type="number" inputmode="numeric" min="0" max="23" x-model="h" placeholder="0" aria-label="{% translate 'Hours' %}"><small>{% translate "h" %}</small></label>
+          <label><input type="number" inputmode="numeric" min="0" max="59" x-model="m" x-ref="m" placeholder="00" aria-label="{% translate 'Minutes' %}"><small>{% translate "min" %}</small></label>
+          <label><input type="number" inputmode="numeric" min="0" max="59" x-model="s" placeholder="00" aria-label="{% translate 'Seconds' %}"><small>{% translate "sec" %}</small></label>
+        </div>
+        <input type="text" class="form-input wtm-label" x-model="label" maxlength="60" placeholder="{% translate 'Label (optional): Tea, Rice, Call…' %}" aria-label="{% translate 'Label' %}">
+        <button type="submit" class="btn btn-primary" :disabled="!seconds()">{% icon "play" %}{% translate "Start" %}</button>
+      </div>
+    </form>
 
-  <dl class="wfo-today">
-    <div><dt>{% translate "Sessions today" %}</dt><dd class="num" x-text="{{ sessions }} + 0">{{ sessions }}</dd></div>
-    <div><dt>{% translate "Focused today" %}</dt><dd class="num">{{ focus_seconds|hm }}</dd></div>
-    <div><dt>{% translate "Lengths" %}</dt><dd>{{ ws.focus_minutes }} / {{ ws.short_break_minutes }} / {{ ws.long_break_minutes }} <a href="{% url 'work:settings' %}" class="wd-link">{% translate "Change" %}</a></dd></div>
-  </dl>
-  <button type="button" class="btn btn-ghost btn-sm wfo-test" @click="Work.askNotify().then(p => { Work.play(Work.cfg.sound || 'chime', true); Work.notify('{% translate "Sound and notifications are on" %}', '{% translate "This is how a finished session will sound." %}'); })">{% icon "bell" %}{% translate "Test sound & notifications" %}</button>
+    <div class="wtm-list" x-show="list.length" x-cloak>
+      <template x-for="t in list" :key="t.id">
+        <article class="card wtm-card" :class="{ 'is-done': t.done, 'is-paused': !t.running && !t.done }">
+          <div class="wtm-ring" :style="'--p:' + pct(t)" aria-hidden="true"><svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="19" class="wtm-ring-bg"/><circle cx="22" cy="22" r="19" class="wtm-ring-fg" pathLength="100"/></svg></div>
+          <div class="wtm-main">
+            <input class="wtm-name" :value="t.label" @change="rename(t, $event.target.value)" @keydown.enter="$event.target.blur()" placeholder="{% translate 'Timer' %}" aria-label="{% translate 'Label' %}" maxlength="60">
+            <p class="wtm-left num" x-text="text(t)" role="timer"></p>
+            <small class="wtm-of" x-text="'{% translate "of" %} ' + length(t.total)"></small>
+          </div>
+          <div class="wtm-acts">
+            <button type="button" class="wtm-btn" @click="plus(t)" data-tip="{% translate '+1 minute' %}" aria-label="{% translate '+1 minute' %}">+1:00</button>
+            <button type="button" class="wtm-btn" @click="restart(t)" data-tip="{% translate 'Start again' %}" aria-label="{% translate 'Start again' %}">{% icon "restore" %}</button>
+            <button type="button" class="wtm-play" @click="toggle(t)" :aria-label="t.running ? '{% translate "Pause" %}' : '{% translate "Start" %}'">
+              <span x-show="!t.running">{% icon "play" %}</span><span x-show="t.running">{% icon "pause" %}</span></button>
+            <button type="button" class="wtm-btn is-danger" @click="remove(t)" data-tip="{% translate 'Delete' %}" aria-label="{% translate 'Delete' %}">{% icon "x" %}</button>
+          </div>
+        </article>
+      </template>
+      <button type="button" class="btn btn-ghost btn-sm wtm-clear" x-show="anyDone" @click="clearDone()">{% translate "Clear finished timers" %}</button>
+    </div>
+    <div class="empty is-plain" x-show="!list.length">
+      <div class="empty-icon">⏲</div>
+      <h3 class="empty-title">{% translate "No timers running" %}</h3>
+      <p class="empty-text">{% translate "Tap a length above, or type one. Run as many as you like — tea, rice, a call — each rings when it's done, even on another page." %}</p>
+    </div>
+  </section>
+
+  {# ── Stopwatch ── #}
+  <section x-show="tab === 'stopwatch'" x-cloak x-data="stopwatchPanel" class="wsw">
+    <p class="wsw-time num" x-text="shown" role="timer">0:00.00</p>
+    <div class="wfo-controls">
+      <button type="button" class="wfo-small wsw-side" @click="running ? lap() : reset()" :disabled="!running && !rows.length && shown === '0:00.00'"
+              :aria-label="running ? '{% translate "Lap" %}' : '{% translate "Reset" %}'" :data-tip="running ? 'L' : 'R'">
+        <span x-text="running ? '{% translate "Lap" %}' : '{% translate "Reset" %}'"></span></button>
+      <button type="button" class="wfo-main wsw-main" :class="running && 'is-running'" @click="toggle()" :aria-label="running ? '{% translate "Stop" %}' : '{% translate "Start" %}'" data-tip="Space">
+        <span x-show="!running">{% icon "play" %}</span><span x-show="running" x-cloak>{% icon "pause" %}</span></button>
+      <button type="button" class="wfo-small wsw-side" @click="copy()" :disabled="!rows.length" aria-label="{% translate 'Copy the laps' %}" data-tip="{% translate 'Copy the laps' %}">{% icon "copy" %}</button>
+    </div>
+    <p class="wfo-hint">{% translate "Space starts and stops · L lap · R reset. It keeps running on other pages." %}</p>
+    <ol class="wsw-laps" x-show="rows.length" x-cloak>
+      <li class="wsw-lap-head"><span>{% translate "Lap" %}</span><span>{% translate "Lap time" %}</span><span>{% translate "Total" %}</span></li>
+      <template x-for="r in rows" :key="r.n">
+        <li :class="{ 'is-best': r.best, 'is-worst': r.worst }"><span x-text="'#' + r.n"></span><span class="num" x-text="fmt(r.lap)"></span><span class="num" x-text="fmt(r.total)"></span></li>
+      </template>
+    </ol>
+  </section>
 </div>
 {% endblock %}

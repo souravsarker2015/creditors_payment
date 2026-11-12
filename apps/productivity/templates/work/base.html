@@ -17,6 +17,7 @@ menu and the settings the page script needs.
   {% include "work/partials/task_menu.html" %}
   {% include "work/partials/idle.html" %}
   {% include "work/partials/left_off.html" %}
+  {% include "work/partials/ring.html" %}
   <button type="button" class="zen-exit" data-zen-off aria-label="{% translate 'Leave full screen' %}">{% icon "minimize" %}<span>{% translate "Exit full screen" %}</span><kbd>Esc</kbd></button>
 </div>
 {{ work_config|json_script:"work-config" }}
@@ -26,5 +27,6 @@ menu and the settings the page script needs.
 {% block work_libs %}{% endblock %}
 <script src="{% asset 'js/work.js' %}"></script>
 <script src="{% asset 'js/writing.js' %}"></script>
+<script src="{% asset 'js/clock.js' %}"></script>
 {% block work_js %}{% endblock %}
 {% endblock %}

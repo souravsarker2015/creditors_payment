@@ -568,10 +568,31 @@ class WeekStart(models.IntegerChoices):
 
 
 class Sound(models.TextChoices):
+    # all made in the browser (static/js/work.js: SOUNDS), nothing to download
     CHIME = "chime", _("Chime")
     BELL = "bell", _("Bell")
     DIGITAL = "digital", _("Digital")
     SOFT = "soft", _("Soft")
+    MARIMBA = "marimba", _("Marimba")
+    DING = "ding", _("Ding")
+    HARP = "harp", _("Harp")
+    GONG = "gong", _("Gong")
+    KITCHEN = "kitchen", _("Kitchen timer")
+    BIRDS = "birds", _("Birds")
+    ALARM = "alarm", _("Alarm clock")
+
+
+class Ring(models.IntegerChoices):
+    """How long a finished focus, break or timer rings."""
+    ONCE = 1, _("Once")
+    THREE = 3, _("3 times")
+    UNTIL_STOPPED = 0, _("Until I stop it")
+
+
+class TickStyle(models.TextChoices):
+    CLOCK = "clock", _("Clock (tick-tock)")
+    SOFT = "soft", _("Soft tick")
+    WOOD = "wood", _("Wood block")
 
 
 class WorkSettings(models.Model):
@@ -593,9 +614,19 @@ class WorkSettings(models.Model):
     auto_start_breaks = models.BooleanField(_("Start breaks by themselves"), default=False)
     auto_start_focus = models.BooleanField(_("Start the next focus by itself"), default=False)
     sound_enabled = models.BooleanField(_("Sounds"), default=True)
-    sound = models.CharField(_("Sound"), max_length=10, choices=Sound.choices, default=Sound.CHIME)
+    sound = models.CharField(_("Sound"), max_length=10, choices=Sound.choices, default=Sound.CHIME,
+                             help_text=_("When a focus session ends."))
+    break_sound = models.CharField(_("When a break ends"), max_length=10, choices=Sound.choices, blank=True, default="",
+                                   help_text=_("Empty: the same as a focus session's."))
+    timer_sound = models.CharField(_("When a timer ends"), max_length=10, choices=Sound.choices, blank=True, default="",
+                                   help_text=_("Empty: the same as a focus session's."))
+    ring = models.PositiveSmallIntegerField(_("Ring"), choices=Ring.choices, default=Ring.ONCE,
+                                            help_text=_("How long the sound plays when time is up."))
     volume = models.PositiveSmallIntegerField(_("Volume"), default=70, validators=[MaxValueValidator(100)])
     tick_sound = models.BooleanField(_("Ticking during focus"), default=False)
+    tick_style = models.CharField(_("Ticking sound"), max_length=8, choices=TickStyle.choices, default=TickStyle.CLOCK)
+    tick_everywhere = models.BooleanField(_("Tick on every page"), default=False,
+                                          help_text=_("Off: only on the focus page."))
     notifications = models.BooleanField(_("Notifications"), default=True,
                                         help_text=_("When a focus session or break ends, a reminder is due, or a timer runs very long."))
     long_timer_hours = models.PositiveSmallIntegerField(_("Remind me when a timer runs over (hours)"), default=3,

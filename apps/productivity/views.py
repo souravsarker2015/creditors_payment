@@ -25,11 +25,11 @@ from apps.trash.undo import delete_with_undo
 from . import cards, dev, diagrams, exam, jobs, linked, paths, reports, roadmap, services
 from .api import card_json, entry_json
 from .access import can_use, work_required
-from .forms import DeckForm, EntryForm, GoalForm, HabitForm, LearningForm, ProjectForm, SettingsForm, SnippetForm, SprintForm, TagForm, TaskForm
+from .forms import FOCUS_FIELDS, DeckForm, EntryForm, GoalForm, HabitForm, LearningForm, ProjectForm, SettingsForm, SnippetForm, SprintForm, TagForm, TaskForm
 from .models import (
     ExamSubject,
     Card, Color, Deck, Diagram, DiagramKind, DiagramVersion, Goal, GoalStatus, Habit, JournalEntry, Language, LearningItem, LearningKind, LearningStatus, LearningUnit, KIND_ICONS, Note, NoteCategory, Priority, Project, SavedView, Snippet, Sprint, TaskKind, TaskTemplate,
-    RoadmapItem, RoadmapItemKind, RoadmapStatus, Status, Tag, Task, TimeEntry, WorkSettings, DRAG_KINDS, VISUAL_KINDS,
+    RoadmapItem, RoadmapItemKind, RoadmapStatus, Ring, Sound, Status, Tag, Task, TickStyle, TimeEntry, WorkSettings, DRAG_KINDS, VISUAL_KINDS,
 )
 
 ROW_RELATED = ("tags", "checklist", "blocked_by", "subtasks")   # what a task row shows; fetched only for the rows on screen
@@ -96,6 +96,9 @@ def _texts():
         "hlBar": _("Highlight"), "hlIn": _("Highlight: %(colour)s"), "hlRemove": _("Take the highlight off"),
         "hlOff": _("Highlight taken off"), "hlYellow": _("Yellow"), "hlGreen": _("Green"), "hlBlue": _("Blue"), "hlPink": _("Pink"), "hlPurple": _("Purple"),
         "hlNotFound": _("Couldn't highlight that here — switch to Write and choose it there."),
+        # timers, the stopwatch and ringing (static/js/clock.js)
+        "timer": _("Timer"), "timesUp": _("Time's up"), "plusMinute": _("+1 min"), "timerDeleted": _("Timer deleted"), "min": _("min"),
+        "timerEndedAway": _("it ended while the app was closed."), "defaultsBack": _("Back to the usual settings."),
         # undo and redo while reading (work.js), and find in what's being read
         "undone": _("Undone"), "redone": _("Redone"), "redoHow": _("Ctrl+Shift+Z redoes"), "nothingToUndo": _("Nothing to undo."),
         "nothingToRedo": _("Nothing to redo."), "findHere": _("Find in this text"), "findNone": _("No matches"), "findOf": _("%(at)s of %(n)s"),
@@ -172,7 +175,7 @@ def _commands():
         ("roadmaps", _("Roadmaps"), "timeline", "work:roadmaps", "g u", "roadmap plan timeline gantt now next later milestones release epics initiatives quarters productplan linear aha"),
         ("paths", _("Learning roadmaps"), "journey", "work:paths", "g y", "roadmap.sh learning path skill tree career backend frontend devops data ml system design oop design patterns python java go rust dsa"),
         ("learning", _("Learning"), "book", "work:learning", "g l", "books courses reading list"),
-        ("focus", _("Focus timer"), "bolt", "work:focus", "g f", "pomodoro"),
+        ("focus", _("Focus & timers"), "bolt", "work:focus", "g f", "pomodoro timer countdown stopwatch alarm"),
         ("time", _("Time"), "timer", "work:time", "g i", "timesheet hours"),
         ("habits", _("Habits"), "flame", "work:habits", "g a", "streak"),
         ("journal", _("Journal & standup"), "journal", "work:journal", "g j", "daily log standup"),
@@ -265,10 +268,8 @@ def render_work(request, template, ctx=None):
             "commands": _commands() + [{"id": f"view-{v.pk}", "title": _("View: %(name)s") % {"name": v.name}, "icon": "filter", "kind": "page",
                                         "url": reverse("work:tasks") + "?" + v.query + ("&" if v.query else "") + f"sv={v.pk}", "words": "saved view filter"}
                                        for v in SavedView.objects.filter(owner=user)],
-            "wip": s.wip_limit, "focus": s.focus_minutes, "short": s.short_break_minutes, "long": s.long_break_minutes, "every": s.long_break_every,
-            "autoBreaks": s.auto_start_breaks, "autoFocus": s.auto_start_focus,
-            "sound": s.sound if s.sound_enabled else "", "volume": s.volume, "tick": s.tick_sound,
-            "leftOff": s.ask_left_off, "notify": s.notifications, "longTimer": s.long_timer_hours, "target": s.daily_target_minutes, "idle": s.idle_minutes,
+            "wip": s.wip_limit, **focus_config(s),
+            "leftOff": s.ask_left_off, "longTimer": s.long_timer_hours, "target": s.daily_target_minutes, "idle": s.idle_minutes,
             "cardsRemind": s.cards_remind_at.strftime("%H:%M") if s.cards_remind_at else "",
             "reminders": [{"id": r["pk"], "title": r["title"], "at": r["remind_at"].isoformat(),
                            "url": reverse("work:task", args=[r["pk"]])} for r in reminders] + _interview_reminders(user, now),
@@ -277,6 +278,16 @@ def render_work(request, template, ctx=None):
     }
     base.update(ctx or {})
     return render(request, template, base)
+
+
+def focus_config(s):
+    """What the focus timer, the timers and the stopwatch go by (Work.cfg in static/js/work.js). No sound: ""."""
+    on = s.sound_enabled
+    return {"focus": s.focus_minutes, "short": s.short_break_minutes, "long": s.long_break_minutes, "every": s.long_break_every,
+            "goal": s.focus_goal, "autoBreaks": s.auto_start_breaks, "autoFocus": s.auto_start_focus,
+            "sound": s.sound if on else "", "breakSound": (s.break_sound or s.sound) if on else "", "timerSound": (s.timer_sound or s.sound) if on else "",
+            "ring": s.ring, "volume": s.volume, "tick": s.tick_sound, "tickStyle": s.tick_style, "tickEverywhere": s.tick_everywhere,
+            "notify": s.notifications}
 
 
 # ── Today ─────────────────────────────────────────────────────────────────
@@ -741,7 +752,8 @@ def focus_view(request):
     sessions = TimeEntry.objects.filter(owner=user, kind="focus", started_at__gte=lo, started_at__lt=hi)
     open_tasks, _done = services.today_tasks(user, today)
     task = Task.objects.filter(owner=user, pk=request.GET.get("task") or 0).first()
-    goal = WorkSettings.for_user(user).focus_goal
+    ws = WorkSettings.for_user(user)
+    goal = ws.focus_goal
     week = services.focus_days(user, today)
     peak = max([r["seconds"] for r in week] + [1])
     count = sessions.count()
@@ -753,6 +765,10 @@ def focus_view(request):
         "goal_streak": services.focus_goal_streak(user, goal, today),
         "week": [{**r, "pct": round(100 * r["seconds"] / peak), "today": r["day"] == today} for r in week],
         "week_seconds": sum(r["seconds"] for r in week),
+        # the settings panel (⚙): what's set now, and the choices
+        "focus_values": {name: getattr(ws, name) for name in FOCUS_FIELDS},
+        "sounds": Sound.choices, "rings": Ring.choices, "tick_styles": TickStyle.choices,
+        "timer_presets": [1, 3, 5, 10, 15, 20, 30, 45, 60],
     })
 
 

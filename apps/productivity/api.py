@@ -756,6 +756,39 @@ def focus_log(request):
 
 @work_required
 @require_POST
+def focus_settings(request):
+    """The focus page's settings panel: saved as each one changes (all of them sent each time); action=defaults puts back the
+    lengths, sounds and ticking a new account starts with. Answers with what the page goes by now."""
+    from .forms import FOCUS_FIELDS, FocusSettingsForm
+    from .views import focus_config
+
+    s = WorkSettings.for_user(request.user)
+    if request.POST.get("action") == "defaults":
+        for name in FOCUS_FIELDS:
+            if name != "notifications":                  # (whether this device may notify is the person's own choice)
+                setattr(s, name, WorkSettings._meta.get_field(name).get_default())
+        s.save(update_fields=[n for n in FOCUS_FIELDS if n != "notifications"])
+        return ok(cfg=focus_config(s), values=_focus_values(s))
+    data = request.POST.copy()
+    for name in FOCUS_FIELDS:                          # anything not sent stays as it was
+        if name not in data:
+            value = getattr(s, name)
+            data[name] = ("true" if value else "false") if isinstance(value, bool) else value
+    form = FocusSettingsForm(data, instance=s)
+    if not form.is_valid():
+        return JsonResponse({"ok": False, "errors": {k: [str(e) for e in v] for k, v in form.errors.items()}}, status=400)
+    form.save()
+    return ok(cfg=focus_config(s), values=_focus_values(s))
+
+
+def _focus_values(s):
+    from .forms import FOCUS_FIELDS
+
+    return {name: getattr(s, name) for name in FOCUS_FIELDS}
+
+
+@work_required
+@require_POST
 def entry_delete(request, pk):
     entry = get_object_or_404(TimeEntry, pk=pk, owner=request.user)
     return _trash(request, entry, _("Time: %(what)s · %(time)s") % {"what": entry.label, "time": services.hm(entry.seconds)}, reverse("work:time"))

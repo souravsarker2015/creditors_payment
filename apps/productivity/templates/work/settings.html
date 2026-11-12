@@ -46,10 +46,17 @@
         {% with field=form.sound_enabled %}{% include "partials/field.html" %}{% endwith %}
         <div class="form-grid form-grid-2">
           {% with field=form.sound %}{% include "partials/field.html" %}{% endwith %}
+          {% with field=form.break_sound %}{% include "partials/field.html" %}{% endwith %}
+          {% with field=form.timer_sound %}{% include "partials/field.html" %}{% endwith %}
+          {% with field=form.ring %}{% include "partials/field.html" %}{% endwith %}
           {% with field=form.volume %}{% include "partials/field.html" %}{% endwith %}
         </div>
         <div class="flex flex-wrap gap-2">{% for v, l in form.sound.field.choices %}<button type="button" class="btn btn-ghost btn-sm" @click="Work.cfg.volume = document.querySelector('[name=s-volume]').value; Work.play('{{ v }}', true)">{% icon "play" %}{{ l }}</button>{% endfor %}</div>
-        {% with field=form.tick_sound %}{% include "partials/field.html" %}{% endwith %}
+        <div class="form-grid form-grid-2">
+          {% with field=form.tick_sound %}{% include "partials/field.html" %}{% endwith %}
+          {% with field=form.tick_style %}{% include "partials/field.html" %}{% endwith %}
+        </div>
+        {% with field=form.tick_everywhere %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.notifications %}{% include "partials/field.html" %}{% endwith %}
         {% with field=form.cards_remind_at %}{% include "partials/field.html" %}{% endwith %}
         <div class="callout" :data-tone="perm === 'granted' ? 'good' : 'info'">

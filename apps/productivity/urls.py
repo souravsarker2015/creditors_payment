@@ -156,6 +156,7 @@ urlpatterns = [
     path("api/habits/<int:pk>/check/", api.habit_check, name="api_habit_check"),
     path("api/journal/", api.journal_save, name="api_journal_save"),
     path("api/focus/", api.focus_log, name="api_focus_log"),
+    path("api/focus/settings/", api.focus_settings, name="api_focus_settings"),
     path("api/entries/<int:pk>/delete/", api.entry_delete, name="api_entry_delete"),
     path("api/entries/<int:pk>/continue/", api.entry_continue, name="api_entry_continue"),
     path("api/snippets/<int:pk>/", api.snippet_action, name="api_snippet_action"),

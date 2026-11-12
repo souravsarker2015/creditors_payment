@@ -180,19 +180,53 @@
     g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + start + length);
     o.connect(g); g.connect(c.destination); o.start(c.currentTime + start); o.stop(c.currentTime + start + length + 0.05);
   }
+  // a short burst of filtered noise: the knock of a clock's tick, a wood block
+  function knock(c, freq, start, length, gain, q) {
+    var n = Math.floor(c.sampleRate * length), buf = c.createBuffer(1, n, c.sampleRate), data = buf.getChannelData(0);
+    for (var i = 0; i < n; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 6);
+    var src = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+    src.buffer = buf; f.type = "bandpass"; f.frequency.value = freq; f.Q.value = q || 8; g.gain.value = gain;
+    src.connect(f); f.connect(g); g.connect(c.destination); src.start(c.currentTime + start);
+  }
+  /* Every sound is made here, in the browser — nothing to download, and it works offline. Each one lasts about two
+     seconds (RING_GAP), so ringing again and again (Work.ring, static/js/clock.js) doesn't overlap. */
   var SOUNDS = {
     chime: function (c, v) { [523.25, 659.25, 783.99, 1046.5].forEach(function (f, i) { tone(c, f, i * 0.16, 1.1, "sine", v * 0.5); }); },
     bell: function (c, v) { [880, 1760, 2640].forEach(function (f, i) { tone(c, f, 0, 2.2 - i * 0.5, "triangle", v * (0.45 - i * 0.12)); }); tone(c, 880, 0.9, 1.6, "triangle", v * 0.3); },
     digital: function (c, v) { for (var i = 0; i < 3; i++) { tone(c, 1046.5, i * 0.22, 0.12, "square", v * 0.18); } },
     soft: function (c, v) { tone(c, 392, 0, 1.4, "sine", v * 0.4); tone(c, 523.25, 0.35, 1.6, "sine", v * 0.35); },
+    marimba: function (c, v) { [523.25, 659.25, 783.99, 659.25, 1046.5].forEach(function (f, i) { tone(c, f, i * 0.13, 0.45, "sine", v * 0.45); tone(c, f * 4, i * 0.13, 0.12, "sine", v * 0.08); }); },
+    ding: function (c, v) { tone(c, 1318.5, 0, 1.8, "sine", v * 0.45); tone(c, 2637, 0, 0.9, "sine", v * 0.1); },
+    harp: function (c, v) { [392, 493.88, 587.33, 783.99, 987.77, 1174.66].forEach(function (f, i) { tone(c, f, i * 0.09, 1.3, "triangle", v * 0.28); }); },
+    gong: function (c, v) { [110, 164.8, 220, 277, 330].forEach(function (f, i) { tone(c, f, 0.02 * i, 2.4, i ? "sine" : "triangle", v * (0.5 - i * 0.08)); }); },
+    kitchen: function (c, v) { for (var i = 0; i < 14; i++) { tone(c, 2200, i * 0.07, 0.05, "square", v * 0.12); tone(c, 2900, i * 0.07 + 0.035, 0.03, "square", v * 0.08); } },
+    birds: function (c, v) {
+      [0, 0.32, 0.9, 1.2].forEach(function (at) {
+        var o = c.createOscillator(), g = c.createGain(), s0 = c.currentTime + at;
+        o.type = "sine"; o.frequency.setValueAtTime(2600, s0); o.frequency.exponentialRampToValueAtTime(4200, s0 + 0.08); o.frequency.exponentialRampToValueAtTime(3000, s0 + 0.16);
+        g.gain.setValueAtTime(0.0001, s0); g.gain.exponentialRampToValueAtTime(v * 0.2, s0 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, s0 + 0.18);
+        o.connect(g); g.connect(c.destination); o.start(s0); o.stop(s0 + 0.2);
+      });
+    },
+    alarm: function (c, v) { for (var i = 0; i < 4; i++) { tone(c, 988, i * 0.26, 0.1, "square", v * 0.16); tone(c, 988, i * 0.26 + 0.12, 0.1, "square", v * 0.16); } },
   };
+  var RING_GAP = 2400;
+  function vol() { return Math.max(0.05, (CFG.volume == null ? 70 : CFG.volume) / 100); }
   function play(kind, force) {
     var name = kind || CFG.sound;
     if (!name && !force) return;
     var c = ctx(); if (!c) return;
-    (SOUNDS[name] || SOUNDS.chime)(c, Math.max(0.05, (CFG.volume == null ? 70 : CFG.volume) / 100));
+    (SOUNDS[name] || SOUNDS.chime)(c, vol());
   }
-  function tick() { var c = ctx(); if (c && CFG.sound) tone(c, 1800, 0, 0.03, "square", 0.02 * (CFG.volume || 70) / 100); }
+  /* The ticking of a running focus session: a clock's tick-tock (a lower "tock" every other second), a soft tick or
+     a wood block — quiet, under whatever else is playing. `n`: which second it is. */
+  function tick(n, style) {
+    var c = ctx(); if (!c) return;
+    var v = vol(), st = style || CFG.tickStyle || "clock";
+    if (st === "soft") tone(c, 1800, 0, 0.03, "square", 0.02 * v);
+    else if (st === "wood") knock(c, n % 2 ? 900 : 1100, 0, 0.06, 0.9 * v, 6);
+    else knock(c, n % 2 ? 2600 : 3400, 0, 0.035, 0.7 * v, 12);
+  }
 
   /* ── Notifications (also when this tab is in the background) ──────────── */
   function canNotify() { return "Notification" in window && CFG.notify; }
@@ -382,7 +416,7 @@
   })();
 
   /* ── Expose for the page components ──────────────────────────────────── */
-  window.Work = { api: api, ask: ask, toast: toast, undoable: undoable, play: play, notify: notify, askNotify: askNotify, clock: clock, hm: hm, cfg: CFG, flush: flush, recall: recall, store: store, putImages: putImages, shrinkImage: shrinkImage, zen: { on: zenOn, off: zenOff, toggle: zenToggle } };
+  window.Work = { api: api, ask: ask, toast: toast, undoable: undoable, play: play, tick: tick, ringGap: RING_GAP, sounds: Object.keys(SOUNDS), notify: notify, askNotify: askNotify, clock: clock, hm: hm, cfg: CFG, flush: flush, recall: recall, store: store, putImages: putImages, shrinkImage: shrinkImage, zen: { on: zenOn, off: zenOff, toggle: zenToggle } };
 
   /* ── Focus (Pomodoro): one engine for every page ──────────────────────
    * The session lives in localStorage (by its end time), so it keeps going
@@ -393,7 +427,7 @@
    * through "storage" events; a Web Lock (and the server, by start time)
    * makes sure a session is saved once. */
   var Focus = (function () {
-    var KEY = "work-focus:" + ME, subs = [], TITLE = /^(?:🍅|☕) [^·]+ · /u;
+    var KEY = "work-focus:" + ME, subs = [], TITLE = /^(?:🍅|☕|⏲️?|⏱️?) [^·]+ · /u;     // (⏲ ⏱: a timer, the stopwatch — clock.js)
     function lengths() { return { focus: CFG.focus || 25, short: CFG.short || 5, long: CFG.long || 15 }; }
     function blank() { return { mode: "focus", running: false, endsAt: 0, startedAt: 0, left: lengths().focus * 60, done: 0, day: isoDay(0), task: "", taskTitle: "" }; }
     function load() {
@@ -467,9 +501,12 @@
         return;
       }
       if (!skipped) {
-        play();
-        if (was === "focus") notify(t("focusDone", "Focus session done"), t("takeBreak", "Time for a break."), CFG.urls.focus_page, "focus");
-        else notify(t("breakOver", "Break's over"), t("backToWork", "Ready to focus again?"), CFG.urls.focus_page, "focus");
+        var head = was === "focus" ? t("focusDone", "Focus session done") : t("breakOver", "Break's over");
+        var body = was === "focus" ? t("takeBreak", "Time for a break.") : t("backToWork", "Ready to focus again?");
+        // rings once, three times or until stopped (Work.ring: static/js/clock.js), with the sound for what just ended
+        if (window.Work.ring) Work.ring("focus", { title: head, text: body, sound: was === "focus" ? CFG.sound : CFG.breakSound, icon: was === "focus" ? "🍅" : "☕" });
+        else play(was === "focus" ? CFG.sound : CFG.breakSound);
+        if (d.hidden || !window.Work.ring) notify(head, body, CFG.urls.focus_page, "focus");      // (in sight: the ring's card or toast says it)
       }
       var auto = S.mode === "focus" ? CFG.autoFocus : CFG.autoBreaks;
       if (auto && !skipped) setTimeout(start, 1200);
@@ -485,8 +522,14 @@
     window.addEventListener("storage", function (e) { if (e.key === KEY) { S = load(); emit(); title(); } });
     d.addEventListener("visibilitychange", function () { if (!d.hidden) { S = load(); check(); emit(); title(); } });
     setTimeout(check, 0);
+    // the lengths were changed (the focus page's settings): one not started yet takes its new length at once
+    function lengthsChanged(was) {
+      S = load();
+      if (!S.running && (!S.startedAt || Math.round(S.left) === (was[S.mode] || 0) * 60)) { S.left = total(); S.startedAt = 0; }
+      save(); title();
+    }
     return {
-      get state() { return S; }, left: left, total: total, start: start, pause: pause, reset: reset, set: setMode, setTask: setTask, kept: kept,
+      get state() { return S; }, left: left, total: total, start: start, pause: pause, reset: reset, set: setMode, setTask: setTask, kept: kept, lengthsChanged: lengthsChanged,
       skip: function () { finish(true); }, toggle: function () { load().running ? pause() : start(); },
       subscribe: function (fn) { subs.push(fn); fn(S); },
     };
@@ -1741,15 +1784,16 @@
         get task() { return Alpine.store("focus").task; },
         get text() { return Alpine.store("focus").text; },
         get pct() { return Alpine.store("focus").pct; },
+        len: { focus: CFG.focus, short: CFG.short, long: CFG.long, every: CFG.every || 4 },      // (the settings panel changes them: work:focus-settings)
+        dotOn: function (i) { var n = this.len.every, k = this.done % n; return k >= i || (this.done && k === 0 && this.mode === "long"); },
         init: function () {
-          var self = this, last = -1;
+          var self = this;
+          window.addEventListener("work:focus-settings", function (e) { var c = e.detail; self.len = { focus: c.focus, short: c.short, long: c.long, every: c.every || 4 }; });
           if (opts.task && !Focus.state.running) Focus.setTask(opts.task, opts.taskTitle);   // opened from a task's "Focus"
-          setInterval(function () {      // the soft tick, on this page only
-            var sec = Math.ceil(Focus.left());
-            if (CFG.tick && Focus.state.running && Focus.state.mode === "focus" && sec !== last) { if (last >= 0) tick(); }
-            last = sec;
-          }, 250);
-          d.addEventListener("keydown", function (e) { if (!typing(e) && e.code === "Space" && !e.ctrlKey) { e.preventDefault(); self.toggle(); } });
+          // (the ticking: static/js/clock.js, here or on every page)
+          d.addEventListener("keydown", function (e) {
+            if (!typing(e) && e.code === "Space" && !e.ctrlKey && (!window.Clock || Clock.tab() === "focus")) { e.preventDefault(); self.toggle(); }
+          });
         },
         start: function () { Focus.start(); },
         pause: function () { Focus.pause(); },

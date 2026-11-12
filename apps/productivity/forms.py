@@ -268,6 +268,19 @@ class HabitForm(forms.ModelForm):
         return habit
 
 
+FOCUS_FIELDS = ("focus_minutes", "short_break_minutes", "long_break_minutes", "long_break_every", "focus_goal", "auto_start_breaks",
+                "auto_start_focus", "sound_enabled", "sound", "break_sound", "timer_sound", "ring", "volume", "tick_sound", "tick_style",
+                "tick_everywhere", "notifications")
+
+
+class FocusSettingsForm(forms.ModelForm):
+    """The focus page's own settings panel (⚙): lengths, sounds, ringing and ticking — saved as they're changed."""
+
+    class Meta:
+        model = WorkSettings
+        fields = FOCUS_FIELDS
+
+
 class SettingsForm(forms.ModelForm):
     work_day_list = forms.MultipleChoiceField(label=_("Work days"), choices=WEEKDAY_CHOICES, widget=forms.CheckboxSelectMultiple)
     daily_target_hours = forms.DecimalField(label=_("Daily target (hours)"), min_value=0.25, max_value=24, decimal_places=2,
@@ -276,7 +289,8 @@ class SettingsForm(forms.ModelForm):
     class Meta:
         model = WorkSettings
         fields = ("week_start", "focus_minutes", "short_break_minutes", "long_break_minutes", "long_break_every", "focus_goal", "task_goal",
-                  "auto_start_breaks", "auto_start_focus", "sound_enabled", "sound", "volume", "tick_sound",
+                  "auto_start_breaks", "auto_start_focus", "sound_enabled", "sound", "break_sound", "timer_sound", "ring", "volume", "tick_sound",
+                  "tick_style", "tick_everywhere",
                   "notifications", "long_timer_hours", "idle_minutes", "timer_follows_status", "ask_left_off", "default_project", "day_start", "day_end", "cards_remind_at",
                   "daily_email", "reminder_emails", "wip_limit", "invoice_from", "currency", "key_prefix", "branch_format")
         widgets = {"invoice_from": forms.Textarea(attrs={"rows": 4, "placeholder": _("Your name\nAddress\nPhone\nPay to: bank account or bKash number")}),
@@ -287,7 +301,7 @@ class SettingsForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for name in ("day_start", "day_end", "currency", "key_prefix", "branch_format", "focus_goal", "task_goal"):      # left empty: keep what it was
+        for name in ("day_start", "day_end", "currency", "key_prefix", "branch_format", "focus_goal", "task_goal", "ring", "tick_style"):      # left empty: keep what it was
             self.fields[name].required = False
         self.fields["default_project"].queryset = Project.objects.filter(owner=self.instance.owner, is_archived=False)
         self.fields["work_day_list"].initial = list(self.instance.work_days)
@@ -299,8 +313,8 @@ class SettingsForm(forms.ModelForm):
         end = data.get("day_end") or self.instance.day_end
         data["day_start"], data["day_end"] = start, end
         data["currency"] = (data.get("currency") or "").strip() or self.instance.currency or "৳"
-        for name in ("focus_goal", "task_goal"):           # 0 is "no goal"; left out (an older page): as it was
-            if data.get(name) is None:
+        for name in ("focus_goal", "task_goal", "ring", "tick_style"):      # 0 is "no goal" / "until stopped"; left out (an older page): as it was
+            if data.get(name) in (None, ""):
                 data[name] = getattr(self.instance, name)
         data["key_prefix"] = (data.get("key_prefix") or self.instance.key_prefix or "T").upper()
         data["branch_format"] = (data.get("branch_format") or "").strip() or self.instance.branch_format or "{type}/{key}-{slug}"

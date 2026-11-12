@@ -33575,3 +33575,332 @@ msgstr "আগের অবস্থায় · আবার করুন (Ctrl
 #: apps/productivity/templates/work/partials/shortcut_list.html
 msgid "Write ⇄ Preview"
 msgstr "Write ⇄ Preview"
+
+#: apps/productivity/templates/work/focus.html
+msgid "+1 min"
+msgstr "+১ মিনিট"
+
+#: apps/productivity/templates/work/focus.html
+msgid "+1 minute"
+msgstr "+১ মিনিট"
+
+#: apps/productivity/templates/work/focus.html
+msgid "3 times"
+msgstr "৩ বার"
+
+#: apps/productivity/templates/work/focus.html
+msgid "A timer ends"
+msgstr "টাইমার শেষ হলে"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Alarm clock"
+msgstr "অ্যালার্ম ঘড়ি"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Also when this tab is in the background"
+msgstr "এই ট্যাব পেছনে থাকলেও"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Back to defaults"
+msgstr "আগের মতো করুন"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Back to the usual settings."
+msgstr "সাধারণ সেটিংসে ফেরানো হয়েছে।"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Break ends"
+msgstr "বিরতি শেষ হলে"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Classic"
+msgstr "ক্লাসিক"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Clear finished timers"
+msgstr "শেষ হওয়া টাইমার সরান"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Clock (tick-tock)"
+msgstr "ঘড়ি (টিক-টক)"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Copy the laps"
+msgstr "ল্যাপগুলো কপি করুন"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Daily goal"
+msgstr "দৈনিক লক্ষ্য"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Deep work"
+msgstr "গভীর কাজ"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Ding"
+msgstr "ডিং"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Empty: the same as a focus session's."
+msgstr "খালি: ফোকাস সেশনের মতোই।"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Focus & timers"
+msgstr "ফোকাস ও টাইমার"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Focus (minutes)"
+msgstr "ফোকাস (মিনিট)"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Focus ends"
+msgstr "ফোকাস শেষ হলে"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Focus settings"
+msgstr "ফোকাস সেটিংস"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Focus · timers · stopwatch"
+msgstr "ফোকাস · টাইমার · স্টপওয়াচ"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Focus, timers & stopwatch"
+msgstr "ফোকাস, টাইমার ও স্টপওয়াচ"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Gong"
+msgstr "গং"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Harp"
+msgstr "হার্প"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Hours, minutes, seconds"
+msgstr "ঘণ্টা, মিনিট, সেকেন্ড"
+
+#: apps/productivity/templates/work/focus.html
+msgid "How long the sound plays when time is up."
+msgstr "সময় শেষ হলে শব্দ কতক্ষণ বাজবে।"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Kitchen timer"
+msgstr "রান্নাঘরের টাইমার"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Label (optional): Tea, Rice, Call…"
+msgstr "নাম (ঐচ্ছিক): চা, ভাত, কল…"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Lap"
+msgstr "ল্যাপ"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Lap time"
+msgstr "ল্যাপের সময়"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Lengths (minutes)"
+msgstr "দৈর্ঘ্য (মিনিট)"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Lengths, sounds, ticking"
+msgstr "দৈর্ঘ্য, শব্দ, টিকটিক"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Listen"
+msgstr "শুনুন"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Long break after"
+msgstr "লম্বা বিরতি"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Long break after every (sessions)"
+msgstr "প্রতি কত সেশন পর লম্বা বিরতি"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Long haul"
+msgstr "দীর্ঘ সময়"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Marimba"
+msgstr "মারিম্বা"
+
+#: apps/productivity/templates/work/focus.html
+msgid "New timer"
+msgstr "নতুন টাইমার"
+
+#: apps/productivity/templates/work/focus.html
+msgid "No timers running"
+msgstr "কোনো টাইমার চলছে না"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Notify me when time is up"
+msgstr "সময় শেষ হলে জানান"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Off: only here"
+msgstr "বন্ধ: শুধু এখানে"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Off: only on the focus page."
+msgstr "বন্ধ: শুধু ফোকাস পাতায়।"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Once"
+msgstr "একবার"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Play a sound when time is up"
+msgstr "সময় শেষ হলে শব্দ বাজান"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Put the lengths, sounds and ticking back to the usual (25 / 5 / 15)?"
+msgstr "দৈর্ঘ্য, শব্দ ও টিকটিক সাধারণ অবস্থায় (২৫ / ৫ / ১৫) ফেরাবেন?"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Quick"
+msgstr "দ্রুত"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Ready-made lengths"
+msgstr "তৈরি দৈর্ঘ্য"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Ring"
+msgstr "বাজবে"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Same as focus"
+msgstr "ফোকাসের মতো"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Seconds"
+msgstr "সেকেন্ড"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Soft tick"
+msgstr "নরম টিক"
+
+#: apps/productivity/templates/work/focus.html
+msgid ""
+"Space starts and stops · L lap · R reset. It keeps running on other pages."
+msgstr "Space চালু ও বন্ধ · L ল্যাপ · R রিসেট। অন্য পাতায় গেলেও চলতে থাকে।"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Start one now"
+msgstr "এখনই একটি চালু করুন"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Start or pause the focus session · the stopwatch"
+msgstr "ফোকাস সেশন · স্টপওয়াচ চালু বা থামান"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Stop all"
+msgstr "সব থামান"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Stop the ringing"
+msgstr "বাজনা থামান"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Stopwatch"
+msgstr "স্টপওয়াচ"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Stopwatch — open it"
+msgstr "স্টপওয়াচ — খুলুন"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Stopwatch: lap · reset"
+msgstr "স্টপওয়াচ: ল্যাপ · রিসেট"
+
+#: apps/productivity/templates/work/focus.html
+msgid ""
+"Tap a length above, or type one. Run as many as you like — tea, rice, a call"
+" — each rings when it's done, even on another page."
+msgstr ""
+"ওপরে একটি সময় বাছুন, বা লিখুন। যত খুশি চালান — চা, ভাত, কল — প্রতিটি শেষ "
+"হলে বাজবে, অন্য পাতায় থাকলেও।"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Tick like a clock"
+msgstr "ঘড়ির মতো টিকটিক"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Tick on every page"
+msgstr "সব পাতায় টিকটিক"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Ticking sound"
+msgstr "টিকটিকের শব্দ"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Ticking while you focus"
+msgstr "ফোকাসের সময় টিকটিক"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Time's up"
+msgstr "সময় শেষ"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Timer deleted"
+msgstr "টাইমার মোছা হয়েছে"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Timers"
+msgstr "টাইমার"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Timers — open them"
+msgstr "টাইমার — খুলুন"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Timers: start the time typed in"
+msgstr "টাইমার: লেখা সময়টি চালু করুন"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Until I stop it"
+msgstr "আমি না থামানো পর্যন্ত"
+
+#: apps/productivity/templates/work/focus.html
+msgid "When a break ends"
+msgstr "বিরতি শেষ হলে"
+
+#: apps/productivity/templates/work/focus.html
+msgid "When a focus session ends."
+msgstr "ফোকাস সেশন শেষ হলে।"
+
+#: apps/productivity/templates/work/focus.html
+msgid "When a timer ends"
+msgstr "টাইমার শেষ হলে"
+
+#: apps/productivity/templates/work/focus.html
+msgid "Wood block"
+msgstr "কাঠের শব্দ"
+
+#: apps/productivity/templates/work/focus.html
+msgid "h"
+msgstr "ঘ"
+
+#: apps/productivity/templates/work/focus.html
+msgid "it ended while the app was closed."
+msgstr "অ্যাপ বন্ধ থাকার সময় শেষ হয়েছে।"
+
+#: apps/productivity/templates/work/focus.html
+msgid "of"
+msgstr "মোট"
+
+#: apps/productivity/templates/work/focus.html
+msgid "sec"
+msgstr "সে"
+
+#: apps/productivity/templates/work/focus.html
+msgid "sessions"
+msgstr "সেশন"
+
+#: apps/productivity/templates/work/focus.html
+msgid "sessions · 0: none"
+msgstr "সেশন · ০: নেই"

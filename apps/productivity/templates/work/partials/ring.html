@@ -1,0 +1,13 @@
+{% load i18n work %}{% comment %}"Time's up" — a finished timer, focus session or break that rings until it's stopped (static/js/clock.js: Work.ring), over any page.{% endcomment %}
+<div class="wrg" x-data x-show="$store.ring.items.length" x-cloak x-transition role="alertdialog" aria-live="assertive" aria-label="{% translate "Time's up" %}"
+     @keydown.escape.window="$store.ring.items.length && $store.ring.stopAll()">
+  <template x-for="x in $store.ring.items" :key="x.id">
+    <div class="wrg-card">
+      <span class="wrg-icon" aria-hidden="true" x-text="x.icon"></span>
+      <div class="wrg-text"><b x-text="x.title"></b><small x-text="x.text"></small></div>
+      <button type="button" class="btn btn-secondary btn-sm" x-show="x.canSnooze" @click="$store.ring.snooze(x)">{% translate "+1 min" %}</button>
+      <button type="button" class="btn btn-primary btn-sm wrg-stop" @click="$store.ring.stop(x.id)">{% icon "stop" %}{% translate "Stop" %}</button>
+    </div>
+  </template>
+  <button type="button" class="wrg-all" x-show="$store.ring.items.length > 1" @click="$store.ring.stopAll()">{% translate "Stop all" %} <kbd>Esc</kbd></button>
+</div>
