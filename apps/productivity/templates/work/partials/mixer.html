@@ -1,0 +1,46 @@
+{% load i18n work %}{% comment %}
+The background-sound mixer (static/js/ambient.js): ready-made mixes, every sound with its own slider, one volume — saved
+as it's changed, and heard while it's open. which: focus | break | reading. fixed: only that one (the Reader), no tabs.
+{% endcomment %}
+<div class="mx" x-data="mixer('{{ which|default:"focus" }}', {{ fixed|yesno:"true,false" }})">
+  {% if not fixed %}
+  <div class="seg seg-sm mx-tabs" role="tablist" aria-label="{% translate 'When it plays' %}">
+    <button type="button" role="tab" class="seg-item" :class="which === 'focus' && 'is-active'" :aria-selected="which === 'focus'" @click="which = 'focus'; mix && listen()">{% translate "While you focus" %}</button>
+    <button type="button" role="tab" class="seg-item" :class="which === 'break' && 'is-active'" :aria-selected="which === 'break'" @click="which = 'break'; mix && listen()">{% translate "On breaks" %}</button>
+    <button type="button" role="tab" class="seg-item" :class="which === 'reading' && 'is-active'" :aria-selected="which === 'reading'" @click="which = 'reading'; mix && listen()">{% translate "While you read" %}</button>
+  </div>
+  {% endif %}
+  <div class="mx-presets" role="group" aria-label="{% translate 'Ready-made mixes' %}">
+    <button type="button" class="mx-chip" :class="!mix && 'is-active'" @click="off()" :aria-pressed="!mix">🔇 {% translate "Quiet" %}</button>
+    <template x-for="p in presets" :key="p.id">
+      <button type="button" class="mx-chip" :class="isPreset(p) && 'is-active'" :aria-pressed="isPreset(p)" @click="pick(p)" :title="p.why"><span aria-hidden="true" x-text="Ambient.label(p.mix).icons"></span><span x-text="p.name"></span></button>
+    </template>
+  </div>
+  <p class="mx-why" x-show="mix" x-cloak x-text="(presets.find(p => isPreset(p)) || {}).why || '{{ _("Your own mix")|escapejs }}'"></p>
+  <p class="mx-why" x-show="!mix" x-text="which === 'break' ? '{{ _("Quiet is the best rest — or nature: a stream, birds, the sea.")|escapejs }}' : '{{ _("Pick a mix, or tap the sounds below to make your own.")|escapejs }}'"></p>
+  <div class="mx-grid" role="group" aria-label="{% translate 'Sounds' %}">
+    <template x-for="l in layers" :key="l.id">
+      <div class="mx-tile" :class="level(l.id) && 'is-on'">
+        <button type="button" class="mx-tile-btn" @click="toggle(l.id)" :aria-pressed="level(l.id) > 0"><span class="mx-ic" aria-hidden="true" x-text="l.icon"></span><span class="mx-name" x-text="l.name"></span></button>
+        <input type="range" class="mx-range" min="1" max="100" step="1" :value="level(l.id)" x-show="level(l.id)" @input="slide(l.id, $event.target.value)" :aria-label="l.name">
+      </div>
+    </template>
+  </div>
+  <div class="mx-foot">
+    <label class="mx-vol"><span>{% translate "Volume" context "sound" %}</span>
+      <input type="range" min="5" max="100" step="5" :value="box.volume" @input="setVolume($event.target.value)"><small class="num" x-text="box.volume + '%'"></small></label>
+    <button type="button" class="btn btn-ghost btn-sm" x-show="mix" x-cloak @click="hear()">{% icon "music" %}<span x-text="hearing ? '{{ _("Stop listening")|escapejs }}' : '{{ _("Listen")|escapejs }}'"></span></button>
+    <span class="mx-state" x-show="state === 'saved'" x-cloak>{% translate "Saved" context "state" %}</span>
+  </div>
+  <details class="mx-tips">
+    <summary>{% translate "Which sound helps?" %}</summary>
+    <ul>
+      <li><b>{% translate "Sound without words helps most." %}</b> {% translate "It covers the noises that pull you away — a voice, a door, traffic. Songs with words compete with what you read." %}</li>
+      <li><b>{% translate "To focus:" %}</b> {% translate "brown noise or rain. Deep and steady; brown noise is a favourite of people who find it hard to concentrate." %}</li>
+      <li><b>{% translate "On breaks:" %}</b> {% translate "quiet, or nature — a stream, birds, the sea. Nature rests tired attention." %}</li>
+      <li><b>{% translate "To read:" %}</b> {% translate "a fire or rain, kept low. Slow, cosy sounds help you settle in and read for longer." %}</li>
+      <li><b>{% translate "Ticking" %}</b> {% translate "keeps you moving on short tasks, but can feel rushed — so it stays out of the Reader. A heartbeat at 60 a minute calms instead." %}</li>
+      <li><b>{% translate "Keep it soft:" %}</b> {% translate "just loud enough to cover other noise. Binaural beats need headphones, and help some people more than others." %}</li>
+    </ul>
+  </details>
+</div>

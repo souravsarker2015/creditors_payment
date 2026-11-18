@@ -1,0 +1,167 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+
+{% block title %}{{ title }} | {% translate "Reader" %}{% endblock %}
+
+{% block work %}
+{# straight away, before anything is drawn: the Reader's layout and its colours (no flash of the app's menus or a white page) #}
+<script>(function () { var h = document.documentElement, t = "paper"; h.setAttribute("data-reader", "");
+  try { t = (JSON.parse(localStorage.getItem("ft-reader") || "{}") || {}).theme || "paper"; } catch (e) {} h.setAttribute("data-rtheme", t); }());</script>
+{{ data|json_script:"read-data" }}
+{{ texts|json_script:"read-text" }}
+{# The Reader (static/js/reader.js): a chapter at a time, as Kindle and Apple Books — keys: ← → chapters, T contents, A text, L listen, F focus line #}
+<div class="rd" x-data="reader(JSON.parse(document.getElementById('read-data').textContent))" data-keys-page="reader find"
+     data-page-keys="t a l s m f n p" :class="{ 'is-focus': prefs.focus, 'is-bionic': prefs.bionic, 'bar-hidden': barHidden, 'toc-open': toc }"
+     :style="vars()" :data-rtheme="prefs.theme" :data-rfont="prefs.font">
+
+  {# ── the bar: back, contents, where you are, today's reading, listen, text ── #}
+  <header class="rd-bar">
+    <a href="{{ back }}" class="rd-btn" aria-label="{% translate 'Back' %}" data-tip="{% translate 'Back' %} ({{ back_label }})">{% icon "chevron-left" %}</a>
+    <button type="button" class="rd-btn" @click="toc = !toc" :aria-expanded="toc.toString()" aria-label="{% translate 'Contents' %}" data-tip="{% translate 'Contents (T)' %}">{% icon "list" %}</button>
+    <div class="rd-where">
+      <b x-text="data.title"></b>
+      <small x-text="chapterOf() + ' · ' + minLeftText()"></small>
+    </div>
+    <button type="button" class="rd-goal" @click="goalOpen = !goalOpen" :class="stats.reached && 'is-met'" :data-tip="'{% translate "Read today — your daily goal" %}'"
+            :aria-label="todayText()">
+      <svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="15" class="rd-goal-bg"/><circle cx="18" cy="18" r="15" class="rd-goal-fg" pathLength="100" :style="'stroke-dasharray:' + goalPct() + ' 100'"/></svg>
+      <span class="rd-goal-n num" x-text="Math.floor(todayMin())"></span>
+      <span class="rd-streak" x-show="stats.streak" x-cloak>🔥<span class="num" x-text="stats.streak"></span></span>
+    </button>
+    <button type="button" class="rd-btn" @click="listen()" :class="speaking && 'is-on'" :aria-label="speaking ? T('pause') : T('listen')" data-tip="{% translate 'Listen — read it aloud (L)' %}">
+      <span x-show="!speaking">{% icon "mic" %}</span><span x-show="speaking" x-cloak>{% icon "pause" %}</span></button>
+    <button type="button" class="rd-btn rd-snd" @click="snd = !snd" :class="$store.ambient.mixes.reading && !hushed && 'is-on'" :aria-expanded="snd.toString()" aria-label="{% translate 'Background sound' %}" data-tip="{% translate 'Background sound: rain, fire, sea… (S) · pause (M)' %}">{% icon "music" %}</button>
+    <button type="button" class="rd-btn rd-aa" @click="aa = !aa" :aria-expanded="aa.toString()" aria-label="{% translate 'Text and colours' %}" data-tip="{% translate 'Text size, font, colours (A)' %}">Aa</button>
+    <button type="button" class="rd-btn rd-hide-xs" data-keys-open aria-label="{% translate 'Keyboard shortcuts' %}" data-tip="{% translate 'Keyboard shortcuts (?)' %}">{% icon "keyboard" %}</button>
+  </header>
+  <div class="rd-progress" aria-hidden="true"><i :style="'width:' + (pos * 100) + '%'"></i></div>
+
+  {# today's reading: the goal and the streak #}
+  <div class="rd-pop rd-goalpop" x-show="goalOpen" x-cloak x-transition @click.outside="goalOpen = false">
+    <p class="rd-pop-big"><b class="num" x-text="Math.floor(todayMin())"></b> <span x-text="stats.goal ? '/ ' + stats.goal + ' {% translate "min today" %}' : '{% translate "min today" %}'"></span></p>
+    <p class="rd-pop-sub" x-show="stats.streak">🔥 <span x-text="stats.streak"></span> <span>{% translate "days in a row" %}</span></p>
+    <p class="rd-pop-sub" x-show="!stats.streak">{% translate "Reach the goal today and a streak begins." %}</p>
+    <div class="rd-step"><span>{% translate "Daily goal" %}</span>
+      <button type="button" @click="setGoal(stats.goal - 5)" aria-label="{% translate 'Less' %}">−</button><b class="num" x-text="stats.goal ? stats.goal + ' min' : '{% translate "none" %}'"></b>
+      <button type="button" @click="setGoal(stats.goal + 5)" aria-label="{% translate 'More' %}">+</button></div>
+    <p class="rd-pop-help">{% translate "Small is the secret: 10 minutes a day is a book a month." %}</p>
+  </div>
+
+  {# background sound to read with (static/js/ambient.js) — saved with your settings #}
+  <div class="rd-pop rd-sndpop" x-show="snd" x-cloak x-transition @click.outside="if (!$event.target.closest('.rd-snd')) snd = false" @keydown.escape.stop="snd = false">
+    <div class="rd-sndhead"><b>{% translate "Read with a sound" %}</b>
+      <button type="button" class="rd-btn" x-show="$store.ambient.mixes.reading" @click="mute()" :aria-label="hushed ? '{{ _("Play the sound")|escapejs }}' : '{{ _("Pause the sound")|escapejs }}'" :data-tip="'M'">
+        <span x-show="!hushed">{% icon "pause" %}</span><span x-show="hushed" x-cloak>{% icon "play" %}</span></button></div>
+    {% include "work/partials/mixer.html" with which="reading" fixed=True %}
+  </div>
+
+  {# text and colours (as Kindle's Aa) — kept on this device #}
+  <div class="rd-pop rd-aapop" x-show="aa" x-cloak x-transition @click.outside="if (!$event.target.closest('.rd-aa')) aa = false" @keydown.escape.stop="aa = false">
+    <div class="rd-row"><span>{% translate "Size" %}</span>
+      <div class="rd-seg"><button type="button" @click="size(-1)" aria-label="{% translate 'Smaller' %}"><small>A</small></button><b class="num" x-text="prefs.size"></b><button type="button" @click="size(1)" aria-label="{% translate 'Bigger' %}"><big>A</big></button></div></div>
+    <div class="rd-row"><span>{% translate "Font" %}</span>
+      <div class="rd-seg">
+        <button type="button" :class="prefs.font === 'serif' && 'is-on'" @click="set('font', 'serif')" class="rd-f-serif">{% translate "Book" %}</button>
+        <button type="button" :class="prefs.font === 'sans' && 'is-on'" @click="set('font', 'sans')" class="rd-f-sans">{% translate "Clean" %}</button>
+        <button type="button" :class="prefs.font === 'easy' && 'is-on'" @click="set('font', 'easy')" class="rd-f-easy" data-tip="{% translate 'Wider letters and spacing — easier when reading is hard' %}">{% translate "Easy" %}</button>
+      </div></div>
+    <div class="rd-row"><span>{% translate "Lines" %}</span>
+      <div class="rd-seg">
+        <button type="button" :class="prefs.lh === 1.5 && 'is-on'" @click="set('lh', 1.5)" aria-label="{% translate 'Close together' %}">≡</button>
+        <button type="button" :class="prefs.lh === 1.75 && 'is-on'" @click="set('lh', 1.75)" aria-label="{% translate 'Comfortable' %}">☰</button>
+        <button type="button" :class="prefs.lh === 2 && 'is-on'" @click="set('lh', 2)" aria-label="{% translate 'Airy' %}">⁝⁝</button>
+      </div></div>
+    <div class="rd-row"><span>{% translate "Width" %}</span>
+      <div class="rd-seg">
+        <button type="button" :class="prefs.width === 56 && 'is-on'" @click="set('width', 56)">{% translate "Narrow" %}</button>
+        <button type="button" :class="prefs.width === 68 && 'is-on'" @click="set('width', 68)">{% translate "Medium" %}</button>
+        <button type="button" :class="prefs.width === 84 && 'is-on'" @click="set('width', 84)">{% translate "Wide" %}</button>
+      </div></div>
+    <div class="rd-row"><span>{% translate "Colours" %}</span>
+      <div class="rd-themes" role="radiogroup" aria-label="{% translate 'Colours' %}">
+        <button type="button" data-t="paper" :class="prefs.theme === 'paper' && 'is-on'" @click="set('theme', 'paper')" title="{% translate 'Paper' %}">Aa</button>
+        <button type="button" data-t="sepia" :class="prefs.theme === 'sepia' && 'is-on'" @click="set('theme', 'sepia')" title="{% translate 'Sepia — warm, softer on the eyes' %}">Aa</button>
+        <button type="button" data-t="dark" :class="prefs.theme === 'dark' && 'is-on'" @click="set('theme', 'dark')" title="{% translate 'Dark' %}">Aa</button>
+        <button type="button" data-t="night" :class="prefs.theme === 'night' && 'is-on'" @click="set('theme', 'night')" title="{% translate 'Night — dim and warm, for bed' %}">Aa</button>
+      </div></div>
+    <label class="rd-row rd-switch"><span>{% translate "Focus line" %}<small>{% translate "Only the part you're on is bright (F)" %}</small></span><input type="checkbox" class="switch" :checked="prefs.focus" @change="set('focus', $event.target.checked)"></label>
+    <label class="rd-row rd-switch"><span>{% translate "Bold word starts" %}<small>{% translate "Guides the eye along each line" %}</small></span><input type="checkbox" class="switch" :checked="prefs.bionic" @change="set('bionic', $event.target.checked)"></label>
+    <div class="rd-row" x-show="voices.length" x-cloak><span>{% translate "Reading speed" %}<small>{% translate "When listening" %}</small></span>
+      <div class="rd-seg">
+        <template x-for="r in [0.8, 1, 1.25, 1.5, 2]" :key="r"><button type="button" :class="prefs.rate === r && 'is-on'" @click="set('rate', r); if (speaking) { stopSpeaking(); listen(); }" x-text="r + '×'"></button></template>
+      </div></div>
+  </div>
+
+  {# contents: every chapter, how long, ticked when read — drag to put a note book in your own order #}
+  <div class="rd-shade" x-show="toc" x-cloak x-transition.opacity @click="toc = false"></div>
+  <aside class="rd-toc" x-show="toc" x-cloak x-transition @keydown.escape.stop="toc = false" aria-label="{% translate 'Contents' %}">
+    <header class="rd-toc-head"><b x-text="data.title"></b>
+      <small x-text="doneCount() + ' / ' + chapters.length + ' {% translate "read" %} · ' + bookMinutesLeft() + ' {% translate "min to go" %}'"></small>
+      <div class="rd-bookbar" aria-hidden="true"><i :style="'width:' + (100 * doneCount() / chapters.length) + '%'"></i></div></header>
+    <ol class="rd-toc-list" x-ref="tocList">
+      <template x-for="(c, i) in chapters" :key="c.key">
+        <li :data-key="c.key" :class="{ 'is-here': i === idx, 'is-done': prog(c.key).done }">
+          <button type="button" @click="go(i); toc = false">
+            <span class="rd-toc-mark" aria-hidden="true"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" class="rd-toc-bg"/><circle cx="10" cy="10" r="8" class="rd-toc-fg" pathLength="100" :style="'stroke-dasharray:' + (prog(c.key).done ? 100 : Math.round(100 * (prog(c.key).position || 0))) + ' 100'"/></svg><i x-show="prog(c.key).done">✓</i></span>
+            <span class="rd-toc-t"><span x-text="(c.icon ? c.icon + ' ' : '') + c.title"></span><small x-text="c.minutes + ' min'"></small></span>
+          </button>
+          <span class="rd-toc-grip" x-show="data.canOrder" aria-hidden="true" title="{% translate 'Drag to change the order' %}">{% icon "grip" %}</span>
+        </li>
+      </template>
+    </ol>
+    <p class="rd-toc-help" x-show="data.canOrder">{% translate "Drag the chapters into the order you want to read them." %}</p>
+  </aside>
+
+  {# ── the chapter ── #}
+  <main class="rd-page" @click="barHidden = false">
+    <header class="rd-ch-head">
+      <p class="rd-ch-kicker" x-text="chapterOf() + ' · ' + T('minRead').replace('%(n)s', cur().minutes)"></p>
+      <h1 class="rd-ch-title" x-text="(cur().icon ? cur().icon + ' ' : '') + cur().title"></h1>
+      <p class="rd-ch-back" x-show="resumeAt > 0.03 && !prog(cur().key).done" x-cloak>
+        <button type="button" class="rd-chip" @click="jump(resumeAt)">{% icon "arrow-down" %}<span>{% translate "Go on from where you stopped" %}</span></button></p>
+      <p class="rd-ch-back" x-show="data.asBook" x-cloak><a class="rd-chip" :href="data.asBook">{% icon "book" %}<span x-text="'{% translate "Read all of" %} ' + data.asBookName"></span></a></p>
+    </header>
+    <article class="rd-text wn-md" x-ref="text" data-find-read></article>
+
+    {# the end of a chapter: well done, one line to remember, test yourself, what's next #}
+    <section class="rd-end" x-ref="end" :class="justDone && 'is-celebrating'">
+      <div class="rd-done" aria-live="polite">
+        <span class="rd-done-check" aria-hidden="true">✓</span>
+        <div><b x-text="!prog(cur().key).done ? T('endOf') : allRead() ? T('allDone') : T('done')"></b>
+          <small x-text="doneCount() + ' / ' + chapters.length + ' · ' + todayText()"></small></div>
+      </div>
+      <label class="rd-recall">
+        <span>{% translate "One line to remember" %} <small>{% translate "Recalling it is what makes it stay." %}</small></span>
+        <textarea rows="2" maxlength="300" x-model="takeaway" @blur="keepTakeaway()" @keydown.ctrl.enter.prevent="keepTakeaway(); $event.target.blur()"
+                  placeholder="{% translate 'In your own words, the main thing in this chapter…' %}"></textarea>
+        <small class="rd-kept" x-show="kept" x-cloak>✓ <span x-text="T('saved')"></span></small>
+      </label>
+      <div class="rd-end-acts">
+        <a class="btn btn-secondary" x-show="data.review" :href="data.review + '?which=all&chapter=' + encodeURIComponent(cur().key)">{% icon "target" %}{% translate "Test yourself on this chapter" %}</a>
+        <a class="btn btn-ghost" x-show="data.edit" :href="data.edit + cur().key + '/'">{% icon "edit" %}{% translate "Edit this note" %}</a>
+        <button type="button" class="btn btn-primary rd-next" x-show="idx < chapters.length - 1" @click="go(idx + 1)">
+          <span><small>{% translate "Next" %} · <span x-text="next() && next().minutes"></span> min</small><b x-text="next() && next().title"></b></span>{% icon "arrow-right" %}</button>
+      </div>
+    </section>
+  </main>
+
+  {# on a phone: the chapters one tap away #}
+  <nav class="rd-foot" aria-label="{% translate 'Chapters' %}">
+    <button type="button" class="rd-btn" @click="go(idx - 1)" :disabled="idx === 0" aria-label="{% translate 'Previous chapter' %}" data-tip="←">{% icon "chevron-left" %}</button>
+    <span class="num" x-text="(idx + 1) + ' / ' + chapters.length"></span>
+    <button type="button" class="rd-btn" @click="go(idx + 1)" :disabled="idx >= chapters.length - 1" aria-label="{% translate 'Next chapter' %}" data-tip="→">{% icon "chevron-right" %}</button>
+  </nav>
+
+  {# listening: back, play / pause, forward #}
+  <div class="rd-listen" x-show="speaking || listenPaused" x-cloak x-transition>
+    <button type="button" class="rd-btn" @click="say(at - 1)" aria-label="{% translate 'Back a part' %}">{% icon "chevron-left" %}</button>
+    <button type="button" class="rd-btn is-main" @click="listen()" :aria-label="speaking ? T('pause') : T('listen')"><span x-show="!speaking">{% icon "play" %}</span><span x-show="speaking">{% icon "pause" %}</span></button>
+    <button type="button" class="rd-btn" @click="say(at + 1)" aria-label="{% translate 'Forward a part' %}">{% icon "chevron-right" %}</button>
+    <small class="num" x-text="prefs.rate + '×'"></small>
+    <button type="button" class="rd-btn" @click="stopSpeaking(); listenPaused = false" aria-label="{% translate 'Stop listening' %}">{% icon "x" %}</button>
+  </div>
+</div>
+{% endblock %}
+
+{% block work_libs %}{% include "work/exam/_libs.html" %}<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>{% endblock %}
+{% block work_js %}<script src="{% asset 'js/reader.js' %}"></script>{% endblock %}

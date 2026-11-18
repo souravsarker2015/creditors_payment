@@ -53,6 +53,7 @@
 </section>
 {% endif %}
 
+{% include "work/partials/continue_reading.html" with cr=continue_reading %}
 {% if subjects %}
 <div x-data="examSubjects('{% url 'work:exam' %}')" :class="picking && 'is-picking'" @keydown.document="key($event)">
 {% csrf_token %}
@@ -77,6 +78,7 @@
       <span class="wex-bar" role="img" aria-label="{% blocktranslate with k=s.known n=s.n %}{{ k }} of {{ n }} known{% endblocktranslate %}"><i style="width: {% if s.n %}{% widthratio s.known s.n 100 %}{% else %}0{% endif %}%"></i></span>
     </a>
     {% if s.n %}<div class="wex-subject-go">
+      <a href="{% url 'work:read_exam' s.pk %}" class="btn btn-secondary btn-sm" data-tip="{% translate 'Read it like a book, a chapter at a time' %}">{% icon "journey" %}{% translate "Read" %}</a>
       <a href="{% url 'work:exam_overview' s.pk %}" class="btn btn-secondary btn-sm">{% icon "book" %}{% translate "Overview" %}</a>
       <a href="{% url 'work:exam_review' s.pk %}" class="btn btn-primary btn-sm"{% if s.due %} data-tip="{% blocktranslate count counter=s.due %}{{ counter }} question is due again today{% plural %}{{ counter }} questions are due again today{% endblocktranslate %}"{% endif %}>{% icon "play" %}{% translate "Review" %}{% if s.today %} <b class="wex-due-n num">{{ s.today }}</b>{% endif %}</a></div>{% endif %}
   </li>

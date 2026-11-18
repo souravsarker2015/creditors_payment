@@ -270,7 +270,7 @@ class HabitForm(forms.ModelForm):
 
 FOCUS_FIELDS = ("focus_minutes", "short_break_minutes", "long_break_minutes", "long_break_every", "focus_goal", "auto_start_breaks",
                 "auto_start_focus", "sound_enabled", "sound", "break_sound", "timer_sound", "ring", "volume", "tick_sound", "tick_style",
-                "tick_everywhere", "notifications")
+                "tick_everywhere", "sound_with_timers", "notifications")
 
 
 class FocusSettingsForm(forms.ModelForm):
@@ -279,6 +279,14 @@ class FocusSettingsForm(forms.ModelForm):
     class Meta:
         model = WorkSettings
         fields = FOCUS_FIELDS
+
+
+class BackgroundSoundForm(forms.ModelForm):
+    """The mixer (Focus page, Settings, the Reader): whichever of these is sent changes, the rest stay as they were."""
+
+    class Meta:
+        model = WorkSettings
+        fields = ("focus_mix", "break_mix", "reading_mix", "mix_volume")
 
 
 class SettingsForm(forms.ModelForm):
@@ -290,7 +298,7 @@ class SettingsForm(forms.ModelForm):
         model = WorkSettings
         fields = ("week_start", "focus_minutes", "short_break_minutes", "long_break_minutes", "long_break_every", "focus_goal", "task_goal",
                   "auto_start_breaks", "auto_start_focus", "sound_enabled", "sound", "break_sound", "timer_sound", "ring", "volume", "tick_sound",
-                  "tick_style", "tick_everywhere",
+                  "tick_style", "tick_everywhere", "sound_with_timers",
                   "notifications", "long_timer_hours", "idle_minutes", "timer_follows_status", "ask_left_off", "default_project", "day_start", "day_end", "cards_remind_at",
                   "daily_email", "reminder_emails", "wip_limit", "invoice_from", "currency", "key_prefix", "branch_format")
         widgets = {"invoice_from": forms.Textarea(attrs={"rows": 4, "placeholder": _("Your name\nAddress\nPhone\nPay to: bank account or bKash number")}),

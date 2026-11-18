@@ -18,7 +18,7 @@ from django.views.decorators.http import require_GET, require_POST
 
 from apps.trash.services import trash
 
-from . import exam, services
+from . import exam, reading, services
 from .access import work_required
 from .forms import ExamSubjectForm
 from .models import Color, ExamCategory, ExamNote, ExamSubject
@@ -108,7 +108,7 @@ def exam_home_view(request):
         for n in found:
             n.snippet = exam.plain(n.answer)
     return render_work(request, "work/exam/home.html", {
-        "exam_text": _texts(), "subjects": subjects, "form": form, "q": q, "found": found, "total": sum(s.n for s in subjects), "current": current,
+        "exam_text": _texts(), "subjects": subjects, "continue_reading": reading.keep_going(request.user, "exam"), "form": form, "q": q, "found": found, "total": sum(s.n for s in subjects), "current": current,
         "branches": [dict(c, n=totals[c["id"]]) for c in tree if c["id"] in totals and c["parent"] == (current["id"] if current else None)],
     })
 

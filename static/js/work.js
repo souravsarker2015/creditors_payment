@@ -171,7 +171,9 @@
     return audio;
   }
   // Any tap unlocks sound for later (browsers only allow it after a gesture).
-  d.addEventListener("pointerdown", function once() { ctx(); d.removeEventListener("pointerdown", once); }, { passive: true });
+  ["pointerdown", "keydown"].forEach(function (type) {
+    d.addEventListener(type, function once() { ctx(); d.removeEventListener(type, once); }, { passive: true });
+  });
   function tone(c, freq, start, length, type, gain) {
     var o = c.createOscillator(), g = c.createGain();
     o.type = type; o.frequency.value = freq;
@@ -218,13 +220,19 @@
     var c = ctx(); if (!c) return;
     (SOUNDS[name] || SOUNDS.chime)(c, vol());
   }
-  /* The ticking of a running focus session: a clock's tick-tock (a lower "tock" every other second), a soft tick or
-     a wood block — quiet, under whatever else is playing. `n`: which second it is. */
+  /* The ticking of a running focus session (or timer): a clock's tick-tock (a lower "tock" every other second), a soft
+     tick, a wood block, a grandfather clock's slow deep tock, a pocket watch's quick ticks, a metronome (a beat in four
+     a little higher), or a heartbeat at 60 a minute, which slows a racing pulse down — quiet, under whatever else is
+     playing. `n`: which second it is. */
   function tick(n, style) {
     var c = ctx(); if (!c) return;
     var v = vol(), st = style || CFG.tickStyle || "clock";
     if (st === "soft") tone(c, 1800, 0, 0.03, "square", 0.02 * v);
     else if (st === "wood") knock(c, n % 2 ? 900 : 1100, 0, 0.06, 0.9 * v, 6);
+    else if (st === "grand") { knock(c, n % 2 ? 640 : 820, 0, 0.16, 1.4 * v, 14); tone(c, n % 2 ? 320 : 410, 0.005, 0.45, "sine", 0.05 * v); }
+    else if (st === "watch") { for (var i = 0; i < 5; i++) knock(c, 4600, i * 0.2, 0.012, 0.4 * v, 16); }
+    else if (st === "metro") { var one = ((n % 4) + 4) % 4 === 0; knock(c, one ? 2400 : 1800, 0, 0.025, 1.0 * v, 5); tone(c, one ? 1760 : 1320, 0, 0.05, "sine", 0.07 * v); }
+    else if (st === "heart") { knock(c, 90, 0, 0.14, 2.6 * v, 2); tone(c, 70, 0, 0.12, "sine", 0.35 * v); knock(c, 80, 0.2, 0.16, 1.9 * v, 2); tone(c, 62, 0.2, 0.14, "sine", 0.25 * v); }
     else knock(c, n % 2 ? 2600 : 3400, 0, 0.035, 0.7 * v, 12);
   }
 
@@ -416,7 +424,7 @@
   })();
 
   /* ── Expose for the page components ──────────────────────────────────── */
-  window.Work = { api: api, ask: ask, toast: toast, undoable: undoable, play: play, tick: tick, ringGap: RING_GAP, sounds: Object.keys(SOUNDS), notify: notify, askNotify: askNotify, clock: clock, hm: hm, cfg: CFG, flush: flush, recall: recall, store: store, putImages: putImages, shrinkImage: shrinkImage, zen: { on: zenOn, off: zenOff, toggle: zenToggle } };
+  window.Work = { api: api, ask: ask, toast: toast, undoable: undoable, play: play, tick: tick, audio: ctx, ringGap: RING_GAP, sounds: Object.keys(SOUNDS), notify: notify, askNotify: askNotify, clock: clock, hm: hm, cfg: CFG, flush: flush, recall: recall, store: store, putImages: putImages, shrinkImage: shrinkImage, zen: { on: zenOn, off: zenOff, toggle: zenToggle } };
 
   /* ── Focus (Pomodoro): one engine for every page ──────────────────────
    * The session lives in localStorage (by its end time), so it keeps going

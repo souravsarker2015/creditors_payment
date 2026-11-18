@@ -1,7 +1,7 @@
 """Productivity lives under /work/ in the "work" namespace."""
 from django.urls import path
 
-from . import api, rest, views, views_exam, views_jobs, views_paths, views_prep, views_roadmap
+from . import api, rest, views, views_exam, views_jobs, views_paths, views_prep, views_reading, views_roadmap
 
 app_name = "work"
 
@@ -19,6 +19,10 @@ urlpatterns = [
     path("time/add/", views.entry_form_view, name="entry_new"),
     path("time/<int:pk>/", views.entry_form_view, name="entry"),
     path("focus/", views.focus_view, name="focus"),
+    path("read/notes/<int:pk>/", views_reading.read_book, name="read_book"),
+    path("read/note/<int:pk>/", views_reading.read_note, name="read_note"),
+    path("read/exam/<int:pk>/", views_reading.read_exam, name="read_exam"),
+    path("api/reading/", views_reading.reading_api, name="api_reading"),
     path("templates/", views.templates_view, name="templates"),
     path("jobs/", views_jobs.jobs_view, name="jobs"),
     path("jobs/offers/", views_jobs.offers_view, name="offers"),
@@ -157,6 +161,7 @@ urlpatterns = [
     path("api/journal/", api.journal_save, name="api_journal_save"),
     path("api/focus/", api.focus_log, name="api_focus_log"),
     path("api/focus/settings/", api.focus_settings, name="api_focus_settings"),
+    path("api/sound/", api.background_sound, name="api_sound"),
     path("api/entries/<int:pk>/delete/", api.entry_delete, name="api_entry_delete"),
     path("api/entries/<int:pk>/continue/", api.entry_continue, name="api_entry_continue"),
     path("api/snippets/<int:pk>/", api.snippet_action, name="api_snippet_action"),

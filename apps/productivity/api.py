@@ -781,6 +781,23 @@ def focus_settings(request):
     return ok(cfg=focus_config(s), values=_focus_values(s))
 
 
+@work_required
+@require_POST
+def background_sound(request):
+    """The mixer saves here as it's changed: a mix (focus_mix, break_mix, reading_mix: "rain:60,fire:30") or the volume."""
+    from .forms import BackgroundSoundForm
+    from .views import focus_config
+
+    s = WorkSettings.for_user(request.user)
+    fields = [n for n in BackgroundSoundForm._meta.fields if n in request.POST]
+    data = {n: request.POST[n] if n in request.POST else getattr(s, n) for n in BackgroundSoundForm._meta.fields}
+    form = BackgroundSoundForm(data, instance=s)
+    if not fields or not form.is_valid():
+        return JsonResponse({"ok": False, "errors": {k: [str(e) for e in v] for k, v in form.errors.items()}}, status=400)
+    form.save(commit=False).save(update_fields=fields)
+    return ok(cfg=focus_config(s))
+
+
 def _focus_values(s):
     from .forms import FOCUS_FIELDS
 

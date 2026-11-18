@@ -33904,3 +33904,562 @@ msgstr "সেশন"
 #: apps/productivity/templates/work/focus.html
 msgid "sessions · 0: none"
 msgstr "সেশন · ০: নেই"
+
+#: apps/productivity/templates/work/read.html
+msgid "%(d)s of %(t)s chapters read"
+msgstr "%(t)sটির মধ্যে %(d)sটি অধ্যায় পড়া হয়েছে"
+
+#: apps/productivity/templates/work/read.html
+msgid "%(n)s / %(goal)s min today"
+msgstr "আজ %(n)s / %(goal)s মিনিট"
+
+#: apps/productivity/templates/work/read.html
+msgid "%(n)s min left"
+msgstr "%(n)s মিনিট বাকি"
+
+#: apps/productivity/templates/work/read.html
+msgid "%(n)s min today"
+msgstr "আজ %(n)s মিনিট"
+
+#: apps/productivity/templates/work/read.html
+msgid ""
+"A small daily goal in the Reader, with the days in a row you reached it. 0: "
+"no goal."
+msgstr ""
+"রিডারে ছোট একটি দৈনিক লক্ষ্য, টানা কত দিন পূরণ করেছেন তা সহ। ০: লক্ষ্য নেই।"
+
+#: apps/productivity/templates/work/read.html
+msgid "Add a few questions first — then read them here like a book."
+msgstr "আগে কয়েকটি প্রশ্ন যোগ করুন — তারপর এখানে বইয়ের মতো পড়ুন।"
+
+#: apps/productivity/templates/work/read.html
+msgid "Airy"
+msgstr "খোলামেলা"
+
+#: apps/productivity/templates/work/read.html
+msgid "Back a part"
+msgstr "এক অংশ পেছনে"
+
+#: apps/productivity/templates/work/read.html
+msgid "Bigger"
+msgstr "বড়"
+
+#: apps/productivity/templates/work/read.html
+msgid "Bold word starts"
+msgstr "শব্দের শুরু মোটা"
+
+#: apps/productivity/templates/work/read.html
+msgid "Chapter %(n)s of %(total)s"
+msgstr "%(total)sটির মধ্যে অধ্যায় %(n)s"
+
+#: apps/productivity/templates/work/read.html
+msgid "Chapter done"
+msgstr "অধ্যায় শেষ"
+
+#: apps/productivity/templates/work/read.html
+msgid "Clean"
+msgstr "পরিষ্কার"
+
+#: apps/productivity/templates/work/read.html
+msgid "Close together"
+msgstr "ঘন"
+
+#: apps/productivity/templates/work/read.html
+msgid "Close · stop listening"
+msgstr "বন্ধ · শোনা থামান"
+
+#: apps/productivity/templates/work/read.html
+msgid "Colours"
+msgstr "রং"
+
+#: apps/productivity/templates/work/read.html
+msgid "Comfortable"
+msgstr "আরামদায়ক"
+
+#: apps/productivity/templates/work/read.html
+msgid "Contents (T)"
+msgstr "সূচি (T)"
+
+#: apps/productivity/templates/work/read.html
+msgid "Contents: every chapter, how far"
+msgstr "সূচি: সব অধ্যায়, কতদূর পড়া হলো"
+
+#: apps/productivity/templates/work/read.html
+msgid "Continue reading"
+msgstr "পড়া চালিয়ে যান"
+
+#: apps/productivity/templates/work/read.html
+msgid "Down a screen"
+msgstr "এক পর্দা নিচে"
+
+#: apps/productivity/templates/work/read.html
+msgid "Drag the chapters into the order you want to read them."
+msgstr "যে ক্রমে পড়তে চান, অধ্যায়গুলো টেনে সেভাবে সাজান।"
+
+#: apps/productivity/templates/work/read.html
+msgid "Edit this note"
+msgstr "এই নোট সম্পাদনা"
+
+#: apps/productivity/templates/work/read.html
+msgid "End of the chapter"
+msgstr "অধ্যায়ের শেষ"
+
+#: apps/productivity/templates/work/read.html
+msgid "Find in the chapter"
+msgstr "অধ্যায়ে খুঁজুন"
+
+#: apps/productivity/templates/work/read.html
+msgid "Focus line"
+msgstr "ফোকাস লাইন"
+
+#: apps/productivity/templates/work/read.html
+msgid "Focus line on: ↑ ↓ move it"
+msgstr "ফোকাস লাইন চালু: ↑ ↓ দিয়ে সরান"
+
+#: apps/productivity/templates/work/read.html
+msgid "Focus line · move it"
+msgstr "ফোকাস লাইন · সরান"
+
+#: apps/productivity/templates/work/read.html
+msgid "Forward a part"
+msgstr "এক অংশ সামনে"
+
+#: apps/productivity/templates/work/read.html
+msgid "Go on from where you stopped"
+msgstr "যেখানে থেমেছিলেন সেখান থেকে"
+
+#: apps/productivity/templates/work/read.html
+msgid "Guides the eye along each line"
+msgstr "প্রতিটি লাইনে চোখকে পথ দেখায়"
+
+#: apps/productivity/templates/work/read.html
+msgid "In your own words, the main thing in this chapter…"
+msgstr "নিজের ভাষায়, এই অধ্যায়ের মূল কথা…"
+
+#: apps/productivity/templates/work/read.html
+msgid "Kept"
+msgstr "রাখা হয়েছে"
+
+#: apps/productivity/templates/work/read.html
+msgid "Listen — read it aloud (L)"
+msgstr "শুনুন — জোরে পড়ে শোনাবে (L)"
+
+#: apps/productivity/templates/work/read.html
+msgid "Listen: read it aloud (again: pause)"
+msgstr "শুনুন: জোরে পড়ে শোনাবে (আবার: থামবে)"
+
+#: apps/productivity/templates/work/read.html
+msgid "Narrow"
+msgstr "সরু"
+
+#: apps/productivity/templates/work/read.html
+msgid "Next chapter"
+msgstr "পরের অধ্যায়"
+
+#: apps/productivity/templates/work/read.html
+msgid "Night — dim and warm, for bed"
+msgstr "রাত — ম্লান ও উষ্ণ, ঘুমের আগে"
+
+#: apps/productivity/templates/work/read.html
+msgid "One line to remember"
+msgstr "মনে রাখার এক লাইন"
+
+#: apps/productivity/templates/work/read.html
+msgid "Only the part you're on is bright (F)"
+msgstr "শুধু যে অংশ পড়ছেন সেটি উজ্জ্বল (F)"
+
+#: apps/productivity/templates/work/read.html
+msgid "Order saved"
+msgstr "ক্রম সেভ হয়েছে"
+
+#: apps/productivity/templates/work/read.html
+msgid "Previous chapter"
+msgstr "আগের অধ্যায়"
+
+#: apps/productivity/templates/work/read.html
+msgid "Previous · next chapter"
+msgstr "আগের · পরের অধ্যায়"
+
+#: apps/productivity/templates/work/read.html
+msgid "Reach the goal today and a streak begins."
+msgstr "আজ লক্ষ্য পূরণ করুন, ধারাবাহিকতা শুরু হবে।"
+
+#: apps/productivity/templates/work/read.html
+msgid "Read all of"
+msgstr "পুরোটা পড়ুন:"
+
+#: apps/productivity/templates/work/read.html
+msgid "Read as a book"
+msgstr "বইয়ের মতো পড়ুন"
+
+#: apps/productivity/templates/work/read.html
+msgid "Read it"
+msgstr "পড়ুন"
+
+#: apps/productivity/templates/work/read.html
+msgid "Read it like a book, a chapter at a time"
+msgstr "বইয়ের মতো পড়ুন, এক এক অধ্যায় করে"
+
+#: apps/productivity/templates/work/read.html
+msgid ""
+"Read it like a book: a chapter at a time, where you stopped kept, or listen"
+msgstr "বইয়ের মতো পড়ুন: এক এক অধ্যায়, যেখানে থেমেছিলেন মনে থাকে, বা শুনুন"
+
+#: apps/productivity/templates/work/read.html
+msgid "Read it: comfortable text, listen, where you stopped kept"
+msgstr "পড়ুন: আরামদায়ক লেখা, শোনা, যেখানে থেমেছিলেন মনে থাকে"
+
+#: apps/productivity/templates/work/read.html
+msgid "Read today — your daily goal"
+msgstr "আজ পড়া — আপনার দৈনিক লক্ষ্য"
+
+#: apps/productivity/templates/work/read.html
+msgid "Reader"
+msgstr "রিডার"
+
+#: apps/productivity/templates/work/read.html
+msgid "Reading a day (minutes)"
+msgstr "দিনে পড়া (মিনিট)"
+
+#: apps/productivity/templates/work/read.html
+msgid "Reading speed"
+msgstr "পড়ার গতি"
+
+#: apps/productivity/templates/work/read.html
+msgid "Recalling it is what makes it stay."
+msgstr "মনে করার চেষ্টাই মনে রাখায়।"
+
+#: apps/productivity/templates/work/read.html
+msgid "Sepia — warm, softer on the eyes"
+msgstr "সেপিয়া — উষ্ণ, চোখে আরাম"
+
+#: apps/productivity/templates/work/read.html
+msgid "Small is the secret: 10 minutes a day is a book a month."
+msgstr "ছোট লক্ষ্যই রহস্য: দিনে ১০ মিনিট মানে মাসে একটি বই।"
+
+#: apps/productivity/templates/work/read.html
+msgid "Smaller"
+msgstr "ছোট"
+
+#: apps/productivity/templates/work/read.html
+msgid "Stop listening"
+msgstr "শোনা থামান"
+
+#: apps/productivity/templates/work/read.html
+msgid "Test yourself on this chapter"
+msgstr "এই অধ্যায়ে নিজেকে যাচাই করুন"
+
+#: apps/productivity/templates/work/read.html
+msgid "Text and colours"
+msgstr "লেখা ও রং"
+
+#: apps/productivity/templates/work/read.html
+msgid "Text and colours · bigger, smaller"
+msgstr "লেখা ও রং · বড়, ছোট"
+
+#: apps/productivity/templates/work/read.html
+msgid "Text size, font, colours (A)"
+msgstr "লেখার আকার, ফন্ট, রং (A)"
+
+#: apps/productivity/templates/work/read.html
+msgid "These notes as a book: a chapter at a time, where you stopped kept"
+msgstr "এই নোটগুলো বইয়ের মতো: এক এক অধ্যায়, যেখানে থেমেছিলেন মনে থাকে"
+
+#: apps/productivity/templates/work/read.html
+msgid "This browser can't read aloud."
+msgstr "এই ব্রাউজার জোরে পড়তে পারে না।"
+
+#: apps/productivity/templates/work/read.html
+msgid "Today's reading goal reached!"
+msgstr "আজকের পড়ার লক্ষ্য পূরণ হয়েছে!"
+
+#: apps/productivity/templates/work/read.html
+msgid "When listening"
+msgstr "শোনার সময়"
+
+#: apps/productivity/templates/work/read.html
+msgid "Wide"
+msgstr "চওড়া"
+
+#: apps/productivity/templates/work/read.html
+msgid "Wider letters and spacing — easier when reading is hard"
+msgstr "চওড়া অক্ষর ও ফাঁক — পড়া কঠিন হলে সহজ"
+
+#: apps/productivity/templates/work/read.html
+msgid "Width"
+msgstr "প্রস্থ"
+
+#: apps/productivity/templates/work/read.html
+msgid "You've read the whole book. Well done!"
+msgstr "পুরো বই পড়া শেষ। দারুণ!"
+
+#: apps/productivity/templates/work/read.html
+msgid "days in a row"
+msgstr "দিন টানা"
+
+#: apps/productivity/templates/work/read.html
+msgid "min to go"
+msgstr "মিনিট বাকি"
+
+#: apps/productivity/templates/work/read.html
+msgid "min today"
+msgstr "মিনিট আজ"
+
+#: apps/productivity/templates/work/read.html
+msgid "none"
+msgstr "নেই"
+
+#: apps/productivity/templates/work/read.html
+msgid "“%(name)s” has no notes yet — write one, then read it here as a book."
+msgstr ""
+"“%(name)s”-এ এখনো কোনো নোট নেই — একটি লিখুন, তারপর এখানে বইয়ের মতো পড়ুন।"
+
+#: apps/productivity/templates/work/read.html
+msgid "≈ %(n)s min read"
+msgstr "≈ %(n)s মিনিটের পড়া"
+
+msgid "Grandfather clock"
+msgstr "দেয়াল ঘড়ি (গ্র্যান্ডফাদার)"
+
+msgid "Pocket watch"
+msgstr "পকেট ঘড়ি"
+
+msgid "Metronome"
+msgstr "মেট্রোনোম"
+
+msgid "Heartbeat (calming)"
+msgstr "হৃদস্পন্দন (শান্ত করে)"
+
+msgid "Not a mix of sounds."
+msgstr "এটা শব্দের মিশ্রণ নয়।"
+
+msgid "The ticking and the background sound. Off: only on the focus page."
+msgstr "টিকটিক আর পটভূমির শব্দ। বন্ধ: শুধু ফোকাস পেজে।"
+
+msgid "Also while a timer or the stopwatch runs"
+msgstr "টাইমার বা স্টপওয়াচ চলার সময়ও"
+
+msgid "The ticking and the background sound — not only during focus."
+msgstr "টিকটিক আর পটভূমির শব্দ — শুধু ফোকাসের সময় নয়।"
+
+msgid "Background sound while you focus"
+msgstr "ফোকাসের সময় পটভূমির শব্দ"
+
+msgid "Background sound on breaks"
+msgstr "বিরতিতে পটভূমির শব্দ"
+
+msgid "Background sound while you read"
+msgstr "পড়ার সময় পটভূমির শব্দ"
+
+msgid "Background volume"
+msgstr "পটভূমির শব্দের ভলিউম"
+
+msgid "Rain"
+msgstr "বৃষ্টি"
+
+msgid "Thunder"
+msgstr "বজ্রপাত"
+
+msgid "Sea waves"
+msgstr "সমুদ্রের ঢেউ"
+
+msgid "Stream"
+msgstr "ঝরনা"
+
+msgid "Wind"
+msgstr "বাতাস"
+
+msgid "Fireplace"
+msgstr "আগুনের চুলা"
+
+msgid "Night crickets"
+msgstr "রাতের ঝিঁঝিঁ"
+
+msgid "Brown noise"
+msgstr "ব্রাউন নয়েজ"
+
+msgid "Pink noise"
+msgstr "পিংক নয়েজ"
+
+msgid "White noise"
+msgstr "হোয়াইট নয়েজ"
+
+msgid "Binaural beats"
+msgstr "বাইনরাল বিট"
+
+msgid "Deep focus"
+msgstr "গভীর মনোযোগ"
+
+msgid "Rainy day"
+msgstr "বৃষ্টির দিন"
+
+msgid "Fireside"
+msgstr "আগুনের পাশে"
+
+msgid "Seaside"
+msgstr "সমুদ্রতীর"
+
+msgid "Forest stream"
+msgstr "বনের ঝরনা"
+
+msgid "Storm"
+msgstr "ঝড়"
+
+msgid "Quiet night"
+msgstr "নিস্তব্ধ রাত"
+
+msgid "Study beats"
+msgstr "পড়ার বিট"
+
+msgid "Deep, steady, covers voices and noise"
+msgstr "গভীর, একটানা — কথাবার্তা আর আওয়াজ ঢেকে দেয়"
+
+msgid "The favourite for working and studying"
+msgstr "কাজ আর পড়াশোনার জন্য সবার প্রিয়"
+
+msgid "Cosy and slow — for long reading"
+msgstr "আরামদায়ক আর ধীর — লম্বা সময় পড়ার জন্য"
+
+msgid "Slow waves calm your breathing"
+msgstr "ধীর ঢেউ শ্বাস শান্ত করে"
+
+msgid "Nature rests tired attention"
+msgstr "প্রকৃতি ক্লান্ত মনোযোগকে বিশ্রাম দেয়"
+
+msgid "Heavy rain: shuts the world out"
+msgstr "ভারী বৃষ্টি: বাইরের দুনিয়া বন্ধ"
+
+msgid "Soft and still"
+msgstr "নরম আর স্থির"
+
+msgid "Softer than white noise"
+msgstr "হোয়াইট নয়েজের চেয়ে নরম"
+
+msgid "Use headphones"
+msgstr "হেডফোন ব্যবহার করুন"
+
+msgid "Pause the sound"
+msgstr "শব্দ থামান"
+
+msgid "Play the sound"
+msgstr "শব্দ চালান"
+
+msgid "Tap to play"
+msgstr "চালাতে ট্যাপ করুন"
+
+msgid "Background sound"
+msgstr "পটভূমির শব্দ"
+
+msgid "When it plays"
+msgstr "কখন বাজবে"
+
+msgid "While you focus"
+msgstr "ফোকাসের সময়"
+
+msgid "On breaks"
+msgstr "বিরতিতে"
+
+msgid "While you read"
+msgstr "পড়ার সময়"
+
+msgid "Ready-made mixes"
+msgstr "তৈরি মিশ্রণ"
+
+msgid "Your own mix"
+msgstr "আপনার নিজের মিশ্রণ"
+
+msgid "Quiet is the best rest — or nature: a stream, birds, the sea."
+msgstr "নীরবতাই সেরা বিশ্রাম — অথবা প্রকৃতি: ঝরনা, পাখি, সমুদ্র।"
+
+msgid "Pick a mix, or tap the sounds below to make your own."
+msgstr "একটা মিশ্রণ বেছে নিন, বা নিচের শব্দগুলো ট্যাপ করে নিজেরটা বানান।"
+
+msgid "Which sound helps?"
+msgstr "কোন শব্দ কাজে দেয়?"
+
+msgid "Sound without words helps most."
+msgstr "কথাহীন শব্দ সবচেয়ে বেশি কাজে দেয়।"
+
+msgid ""
+"It covers the noises that pull you away — a voice, a door, traffic. Songs "
+"with words compete with what you read."
+msgstr ""
+"যে আওয়াজ মন সরিয়ে নেয় — কারও কথা, দরজা, রাস্তার গাড়ি — সেগুলো ঢেকে দেয়।"
+" কথাওয়ালা গান আপনার পড়ার সাথে পাল্লা দেয়।"
+
+msgid "To focus:"
+msgstr "ফোকাসের জন্য:"
+
+msgid ""
+"brown noise or rain. Deep and steady; brown noise is a favourite of people "
+"who find it hard to concentrate."
+msgstr ""
+"ব্রাউন নয়েজ বা বৃষ্টি। গভীর আর একটানা; যাঁদের মন বসাতে কষ্ট হয়, ব্রাউন "
+"নয়েজ তাঁদের প্রিয়।"
+
+msgid "On breaks:"
+msgstr "বিরতিতে:"
+
+msgid ""
+"quiet, or nature — a stream, birds, the sea. Nature rests tired attention."
+msgstr ""
+"নীরবতা, বা প্রকৃতি — ঝরনা, পাখি, সমুদ্র। প্রকৃতি ক্লান্ত মনোযোগকে বিশ্রাম "
+"দেয়।"
+
+msgid "To read:"
+msgstr "পড়ার জন্য:"
+
+msgid ""
+"a fire or rain, kept low. Slow, cosy sounds help you settle in and read for "
+"longer."
+msgstr ""
+"আগুন বা বৃষ্টি, আস্তে। ধীর, আরামদায়ক শব্দ মন বসাতে আর বেশিক্ষণ পড়তে "
+"সাহায্য করে।"
+
+msgid "Ticking"
+msgstr "টিকটিক"
+
+msgid ""
+"keeps you moving on short tasks, but can feel rushed — so it stays out of "
+"the Reader. A heartbeat at 60 a minute calms instead."
+msgstr ""
+"ছোট কাজে গতি রাখে, তবে তাড়াহুড়ো লাগতে পারে — তাই রিডারে বাজে না। মিনিটে ৬০"
+" বারের হৃদস্পন্দন বরং শান্ত করে।"
+
+msgid "Keep it soft:"
+msgstr "আস্তে রাখুন:"
+
+msgid ""
+"just loud enough to cover other noise. Binaural beats need headphones, and "
+"help some people more than others."
+msgstr ""
+"অন্য আওয়াজ ঢাকার মতো যথেষ্ট। বাইনরাল বিটের জন্য হেডফোন লাগে, আর সবার সমান "
+"কাজে দেয় না।"
+
+msgid "Where the ticking and sound play"
+msgstr "টিকটিক আর শব্দ কোথায় বাজবে"
+
+msgid "On every page"
+msgstr "সব পেজে"
+
+msgid "Off: only here. The Reader has its own."
+msgstr "বন্ধ: শুধু এখানে। রিডারের নিজেরটা আছে।"
+
+msgid ""
+"Rain, the sea, a fire, brown noise… mixed your way, saved as you change it"
+msgstr ""
+"বৃষ্টি, সমুদ্র, আগুন, ব্রাউন নয়েজ… নিজের মতো মেশান, বদলানোর সাথে সাথে সেভ "
+"হয়"
+
+msgid "Background sound: rain, fire, sea… (S) · pause (M)"
+msgstr "পটভূমির শব্দ: বৃষ্টি, আগুন, সমুদ্র… (S) · থামান (M)"
+
+msgid "Read with a sound"
+msgstr "শব্দের সাথে পড়ুন"
+
+msgid "Background sound · pause it"
+msgstr "পটভূমির শব্দ · থামান"
+
+msgctxt "sound"
+msgid "Volume"
+msgstr "ভলিউম"

@@ -6,7 +6,8 @@
    - The stopwatch: start, stop, laps (the fastest and slowest marked), reset — kept on this device too.
    - Ringing (Work.ring): a finished timer, focus session or break plays its sound once, three times or until
      stopped (settings), with a "Time's up" card over any page: Stop, +1 min. Only one tab rings; Stop stops them all.
-   - Ticking: a clock's tick-tock while a focus session runs, on the focus page or on every page (settings).
+   - Ticking: a clock's tick-tock while a focus session runs (and, if chosen, a timer or the stopwatch), on the focus
+     page or on every page (settings). The background sound (rain, waves…): static/js/ambient.js.
    - The page's title shows the time left (⏲ a timer, ⏱ the stopwatch), and the screen stays on while something
      runs on the focus page (phones).
 
@@ -177,9 +178,12 @@
   setInterval(function () {
     checkTimers();
     var F = W.focus && W.focus.state;
-    // ticking: a running focus session, here or (if chosen) on every page, in the tab you're looking at
-    if (CFG.tick && F && F.running && F.mode === "focus" && !d.hidden && (CFG.tickEverywhere || onClockPage())) {
-      var sec = Math.ceil(W.focus.left());
+    // ticking: a running focus session (and, if chosen, a timer or the stopwatch), here or (if chosen) on every page,
+    // in the tab you're looking at — never in the Reader, which has sounds of its own
+    var focusing = F && F.running && F.mode === "focus",
+        timing = CFG.withTimers && (TS.list.some(function (t) { return t.running; }) || SW.running);
+    if (CFG.tick && (focusing || timing) && !d.hidden && (CFG.tickEverywhere || onClockPage()) && !d.documentElement.hasAttribute("data-reader")) {
+      var sec = focusing ? Math.ceil(W.focus.left()) : Math.floor(Date.now() / 1000);
       if (sec !== lastTick) { if (lastTick >= 0) W.tick(sec); lastTick = sec; }
     } else lastTick = -1;
     if (!F || !F.running) {        // (a running focus session has the title: work.js)

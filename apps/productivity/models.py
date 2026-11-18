@@ -12,7 +12,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator, RegexVa
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_lazy as _, pgettext_lazy
 
 OWNER = {"to": settings.AUTH_USER_MODEL, "on_delete": models.CASCADE, "related_name": "+"}
 
@@ -433,6 +433,7 @@ class Note(models.Model):
     is_archived = models.BooleanField(_("Archived"), default=False)
     is_template = models.BooleanField(_("A template"), default=False, help_text="Offered under Template → Your templates; not in the notes lists.")
     color = models.CharField(_("Colour"), max_length=10, choices=Color.choices, blank=True, default="")
+    book_order = models.FloatField(default=0, help_text="Its place as a chapter when its category is read as a book (the Reader).")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True, db_index=True)
 
@@ -593,6 +594,14 @@ class TickStyle(models.TextChoices):
     CLOCK = "clock", _("Clock (tick-tock)")
     SOFT = "soft", _("Soft tick")
     WOOD = "wood", _("Wood block")
+    GRAND = "grand", _("Grandfather clock")
+    WATCH = "watch", _("Pocket watch")
+    METRO = "metro", _("Metronome")
+    HEART = "heart", _("Heartbeat (calming)")
+
+
+# A mix of background sounds, each at its own level (0–100): "rain:60,fire:30" (the sounds: ambient.py). Empty: quiet.
+validate_mix = RegexValidator(r"^$|^[a-z]{3,10}:\d{1,3}(,[a-z]{3,10}:\d{1,3}){0,11}$", _("Not a mix of sounds."))
 
 
 class WorkSettings(models.Model):
@@ -622,11 +631,17 @@ class WorkSettings(models.Model):
                                    help_text=_("Empty: the same as a focus session's."))
     ring = models.PositiveSmallIntegerField(_("Ring"), choices=Ring.choices, default=Ring.ONCE,
                                             help_text=_("How long the sound plays when time is up."))
-    volume = models.PositiveSmallIntegerField(_("Volume"), default=70, validators=[MaxValueValidator(100)])
+    volume = models.PositiveSmallIntegerField(pgettext_lazy("sound", "Volume"), default=70, validators=[MaxValueValidator(100)])
     tick_sound = models.BooleanField(_("Ticking during focus"), default=False)
     tick_style = models.CharField(_("Ticking sound"), max_length=8, choices=TickStyle.choices, default=TickStyle.CLOCK)
     tick_everywhere = models.BooleanField(_("Tick on every page"), default=False,
-                                          help_text=_("Off: only on the focus page."))
+                                          help_text=_("The ticking and the background sound. Off: only on the focus page."))
+    sound_with_timers = models.BooleanField(_("Also while a timer or the stopwatch runs"), default=False,
+                                            help_text=_("The ticking and the background sound — not only during focus."))
+    focus_mix = models.CharField(_("Background sound while you focus"), max_length=160, blank=True, default="", validators=[validate_mix])
+    break_mix = models.CharField(_("Background sound on breaks"), max_length=160, blank=True, default="", validators=[validate_mix])
+    reading_mix = models.CharField(_("Background sound while you read"), max_length=160, blank=True, default="", validators=[validate_mix])
+    mix_volume = models.PositiveSmallIntegerField(_("Background volume"), default=40, validators=[MaxValueValidator(100)])
     notifications = models.BooleanField(_("Notifications"), default=True,
                                         help_text=_("When a focus session or break ends, a reminder is due, or a timer runs very long."))
     long_timer_hours = models.PositiveSmallIntegerField(_("Remind me when a timer runs over (hours)"), default=3,
@@ -652,6 +667,8 @@ class WorkSettings(models.Model):
     day_end = models.TimeField(_("Work day ends"), default=time(18, 0))
     wip_limit = models.PositiveSmallIntegerField(_("Most tasks in progress at once"), null=True, blank=True, validators=[MinValueValidator(1), MaxValueValidator(50)],
                                                  help_text=_("Optional. The board warns when “In progress” holds more — finishing beats starting."))
+    reading_goal = models.PositiveSmallIntegerField(_("Reading a day (minutes)"), default=10, validators=[MaxValueValidator(240)],
+                                                    help_text=_("A small daily goal in the Reader, with the days in a row you reached it. 0: no goal."))
     invoice_from = models.TextField(_("Your details on invoices"), blank=True,
                                     help_text=_("Your name, address, phone and how to pay you (bank, bKash…). Printed at the top of an invoice."))
     currency = models.CharField(_("Currency"), max_length=8, default="৳", help_text=_("Shown on invoices and earnings: ৳, $, €…"))
@@ -1558,6 +1575,41 @@ class ExamNote(models.Model):
 
     def __str__(self):
         return self.question[:60]
+
+
+class ReadingProgress(models.Model):
+    """How far a chapter has been read in the Reader: a note (read on its own or as a chapter of its category), or
+    one chapter of an exam subject. Where you stopped, whether it's done, the time spent, and one line to remember."""
+    owner = models.ForeignKey(**OWNER)
+    note = models.ForeignKey(Note, on_delete=models.CASCADE, null=True, blank=True, related_name="readings")
+    subject = models.ForeignKey(ExamSubject, on_delete=models.CASCADE, null=True, blank=True, related_name="readings")
+    chapter = models.CharField(max_length=120, blank=True, help_text="An exam subject's chapter (its name; empty: no chapter).")
+    book = models.ForeignKey(NoteCategory, on_delete=models.SET_NULL, null=True, blank=True, related_name="+",
+                             help_text="The category it was last read in as a book (to go back to it).")
+    position = models.FloatField(default=0, help_text="How far down it was read: 0 to 1.")
+    done = models.BooleanField(default=False)
+    done_at = models.DateTimeField(null=True, blank=True)
+    seconds = models.PositiveIntegerField(default=0)
+    takeaway = models.CharField(_("One line to remember"), max_length=300, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, db_index=True)
+
+    class Meta:
+        ordering = ["-updated_at"]
+        constraints = [
+            models.UniqueConstraint(fields=["owner", "note"], condition=models.Q(note__isnull=False), name="reading_one_per_note"),
+            models.UniqueConstraint(fields=["owner", "subject", "chapter"], condition=models.Q(subject__isnull=False), name="reading_one_per_chapter"),
+        ]
+
+
+class ReadingDay(models.Model):
+    """Minutes read on a day (the Reader's daily goal and streak)."""
+    owner = models.ForeignKey(**OWNER)
+    day = models.DateField()
+    seconds = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["-day"]
+        constraints = [models.UniqueConstraint(fields=["owner", "day"], name="reading_one_row_a_day")]
 
 
 class ExamNoteVersion(models.Model):

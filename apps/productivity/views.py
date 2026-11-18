@@ -22,7 +22,7 @@ from django.views.decorators.http import require_POST
 
 from apps.trash.undo import delete_with_undo
 
-from . import cards, dev, diagrams, exam, jobs, linked, paths, reports, roadmap, services
+from . import ambient, cards, dev, diagrams, exam, jobs, linked, paths, reading, reports, roadmap, services
 from .api import card_json, entry_json
 from .access import can_use, work_required
 from .forms import FOCUS_FIELDS, DeckForm, EntryForm, GoalForm, HabitForm, LearningForm, ProjectForm, SettingsForm, SnippetForm, SprintForm, TagForm, TaskForm
@@ -54,7 +54,7 @@ def _urls():
         "noteCategories": r("work:api_note_categories"), "notesBulk": r("work:api_notes_bulk"),
         "journal": r("work:api_journal_save"), "focus": r("work:api_focus_log"), "search": r("work:api_search"),
         "today": r("work:today"), "tasks": r("work:tasks"), "board": r("work:tasks") + "?view=board", "projects": r("work:projects"),
-        "time": r("work:time"), "focus_page": r("work:focus"), "notes": r("work:notes"), "snippets": r("work:snippets"),
+        "time": r("work:time"), "focus_page": r("work:focus"), "sound": r("work:api_sound"), "notes": r("work:notes"), "snippets": r("work:snippets"),
         "habits": r("work:habits"), "journal_page": r("work:journal"), "reports": r("work:reports"), "settings": r("work:settings"),
         "goals": r("work:goals"), "learning": r("work:learning"), "review": r("work:review"), "calendar": r("work:calendar"),
         "help": r("work:help"), "entry_new": r("work:entry_new"), "task_new": r("work:task_new"), "goal_new": r("work:goal_new"),
@@ -72,6 +72,7 @@ def _urls():
 def _texts():
     return {
         "savedOffline": _("Saved on this device — it will sync when you're online."), "synced": _("Synced changes made offline."),
+        "soundPause": _("Pause the sound"), "soundPlay": _("Play the sound"), "soundTap": _("Tap to play"), "soundSettings": _("Background sound"),
         "undo": _("Undo"), "reminder": _("Reminder"), "stillWorking": _("Still working on this?"), "noDescription": _("No description"),
         "tracked": _("Tracked"), "notSaved": _("Not saved."), "taskAdded": _("Task added"), "noteSaved": _("Note saved"), "noteArchived": _("Archived"), "noteConflict": _("This note was changed somewhere else too. That text is kept in History."),
         "forgetVersion": _("Delete this version?"),
@@ -287,7 +288,7 @@ def focus_config(s):
             "goal": s.focus_goal, "autoBreaks": s.auto_start_breaks, "autoFocus": s.auto_start_focus,
             "sound": s.sound if on else "", "breakSound": (s.break_sound or s.sound) if on else "", "timerSound": (s.timer_sound or s.sound) if on else "",
             "ring": s.ring, "volume": s.volume, "tick": s.tick_sound, "tickStyle": s.tick_style, "tickEverywhere": s.tick_everywhere,
-            "notify": s.notifications}
+            "notify": s.notifications, **ambient.config(s)}
 
 
 # ── Today ─────────────────────────────────────────────────────────────────
@@ -353,6 +354,7 @@ def today_view(request):
         "job_coming": jobs.coming_up(user, today),           # interviews this week, job follow-ups due (the job search)
         "roadmap": roadmap.attention(user, today),            # milestones in the next two weeks, pieces of work late or at risk
         "keep_learning": paths.keep_going(user),             # the learning roadmap in use and its next topic
+        "keep_reading": reading.keep_going(user),            # the book being read (notes or exam notes), to the line
         # pull requests waiting on code review for days: a nudge to chase the reviewer
         "left_off": Task.objects.filter(owner=user, status__in=[Status.DOING, Status.TODO]).exclude(left_off="").order_by("-updated_at")[:3],
         "stuck_reviews": list(Task.objects.filter(owner=user, status=Status.REVIEW, updated_at__lt=timezone.now() - timedelta(days=REVIEW_NUDGE_DAYS))
@@ -842,6 +844,7 @@ def notes_view(request, pk=None):
     keep = request.GET.copy()
     keep.pop("page", None)
     return render_work(request, "work/notes.html", {
+        "continue_reading": reading.keep_going(user, "notes"),
         "note_data": note_data, "board": board, "page_obj": page, "base_query_string": keep.urlencode(),
         "pagination_window": [], "colors": Color.choices, "category": category, "sort": sort if sort in NOTE_SORTS else "",
         "cat_data": {"categories": cat_tree, "counts": cat_counts, "category": category, "all": active.count() if board else 0,

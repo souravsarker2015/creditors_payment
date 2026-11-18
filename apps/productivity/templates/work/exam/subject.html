@@ -20,6 +20,7 @@
     </div>
   </div>
   <div class="wp-actions">
+    <a href="{% url 'work:read_exam' s.pk %}" class="btn btn-secondary" x-show="shows.all" {% if not n %}x-cloak{% endif %} data-tip="{% translate 'Read it like a book: a chapter at a time, where you stopped kept, or listen' %}">{% icon "journey" %}{% translate "Read" %}</a>
     <a :href="D.overview" class="btn btn-secondary" x-show="shows.all" {% if not n %}x-cloak{% endif %} data-tip="{% translate 'Every question and answer on one page, to read through before the exam' %}">{% icon "book" %}{% translate "Overview" %}</a>
     <a :href="withCategory(D.review)" class="btn btn-primary" x-show="shows.all" {% if not n %}x-cloak{% endif %}>{% icon "play" %}{% translate "Review" %}</a>
     <div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">

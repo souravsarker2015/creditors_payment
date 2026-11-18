@@ -140,18 +140,23 @@
         <div class="wfs-row"><span>{% translate "Ring" %}</span>
           <div class="seg seg-sm" role="radiogroup" aria-label="{% translate 'Ring' %}">{% for value, label in rings %}
             <button type="button" class="seg-item" :class="+v.ring === {{ value }} && 'is-active'" @click="v.ring = {{ value }}; save()">{{ label }}</button>{% endfor %}</div></div>
-        <label class="wfs-row"><span>{% translate "Volume" %} <small class="num" x-text="v.volume + '%'"></small></span>
+        <label class="wfs-row"><span>{% translate "Volume" context "sound" %} <small class="num" x-text="v.volume + '%'"></small></span>
           <input type="range" min="0" max="100" step="5" x-model.number="v.volume" @change="save(); hear()"></label>
       </div>
 
       <h3 class="wfs-h">{% translate "Ticking while you focus" %}</h3>
       <label class="wfs-switch"><span>{% translate "Tick like a clock" %}</span><input type="checkbox" class="switch" x-model="v.tick_sound" @change="save(); v.tick_sound && hearTick(v.tick_style)"></label>
       <div class="wfs-sounds" :class="!v.tick_sound && 'is-off'">
-        <div class="wfs-row"><span>{% translate "Sound" %}</span>
-          <div class="seg seg-sm" role="radiogroup" aria-label="{% translate 'Ticking sound' %}">{% for value, label in tick_styles %}
-            <button type="button" class="seg-item" :class="v.tick_style === '{{ value }}' && 'is-active'" @click="v.tick_style = '{{ value }}'; save(); hearTick('{{ value }}')">{{ label }}</button>{% endfor %}</div></div>
-        <label class="wfs-switch"><span>{% translate "Tick on every page" %} <small>{% translate "Off: only here" %}</small></span><input type="checkbox" class="switch" x-model="v.tick_everywhere" @change="save()"></label>
+        <div class="mx-presets" role="radiogroup" aria-label="{% translate 'Ticking sound' %}">{% for value, label in tick_styles %}
+          <button type="button" class="mx-chip" role="radio" :aria-checked="v.tick_style === '{{ value }}'" :class="v.tick_style === '{{ value }}' && 'is-active'" @click="v.tick_style = '{{ value }}'; save(); hearTick('{{ value }}')">{{ label }}</button>{% endfor %}</div>
       </div>
+
+      <h3 class="wfs-h">{% icon "music" %}{% translate "Background sound" %}</h3>
+      {% include "work/partials/mixer.html" with which="focus" %}
+
+      <h3 class="wfs-h">{% translate "Where the ticking and sound play" %}</h3>
+      <label class="wfs-switch"><span>{% translate "On every page" %} <small>{% translate "Off: only here. The Reader has its own." %}</small></span><input type="checkbox" class="switch" x-model="v.tick_everywhere" @change="save()"></label>
+      <label class="wfs-switch"><span>{% translate "Also while a timer or the stopwatch runs" %}</span><input type="checkbox" class="switch" x-model="v.sound_with_timers" @change="save()"></label>
 
       <h3 class="wfs-h">{% translate "Notifications" %}</h3>
       <label class="wfs-switch"><span>{% translate "Notify me when time is up" %} <small>{% translate "Also when this tab is in the background" %}</small></span><input type="checkbox" class="switch" x-model="v.notifications" @change="save(); v.notifications && Work.askNotify()"></label>

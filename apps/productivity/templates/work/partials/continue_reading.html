@@ -1,0 +1,11 @@
+{% load i18n work %}{# "Continue reading" (cr: reading.keep_going): back to the very line, with how far the book is #}
+{% if cr %}<a href="{{ cr.url }}" class="card rd-continue">
+  <span class="rd-continue-icon" aria-hidden="true">{% if cr.subject %}🎓{% else %}📖{% endif %}</span>
+  <span class="rd-continue-main">
+    <small>{% translate "Continue reading" %}</small>
+    <b>{{ cr.title }}</b>
+    <span>{{ cr.chapter }} · {% blocktranslate with n=cr.left %}{{ n }} min left{% endblocktranslate %} · {% blocktranslate with d=cr.done t=cr.total %}{{ d }} of {{ t }} chapters read{% endblocktranslate %}</span>
+    <span class="rd-continue-bar" aria-hidden="true"><i style="width: {{ cr.pct }}%"></i></span>
+  </span>
+  <span class="rd-continue-go">{% translate "Read" %}{% icon "arrow-right" %}</span>
+</a>{% endif %}
