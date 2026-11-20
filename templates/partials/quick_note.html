@@ -1,0 +1,39 @@
+{% load i18n %}{% comment %}
+Quick note (static/js/quicknote.js), on every page for whoever can use Productivity: ✎ in the top bar or Alt+N.
+Kept on this device as it's written, until it's saved to Notes.
+{% endcomment %}
+<div id="quick-note" x-data="quickNote" data-save="{% url 'work:api_note_save' %}" data-cats="{% url 'work:api_note_categories' %}"
+     data-t-saved="{% translate 'Note saved' %}" data-t-kept="{% translate 'Your note is kept on this device — Alt+N opens it again.' %}"
+     data-t-notsaved="{% translate 'Not saved.' %}" data-t-offline="{% translate 'No connection — your note is kept here. Try again in a moment.' %}">
+  <div class="qn-shade" x-show="open" x-cloak x-transition.opacity @click="hide()"></div>
+  <section class="qn" x-show="open" x-cloak x-transition role="dialog" aria-modal="true" aria-labelledby="qn-title"
+           @keydown.escape.stop.prevent="picking ? picking = false : hide()" @keydown.ctrl.enter.prevent="save(false)" @keydown.meta.enter.prevent="save(false)" x-trap.noscroll="open">
+    <header class="qn-head">
+      <h2 id="qn-title">✎ {% translate "Quick note" %}</h2>
+      <span class="qn-kept" x-show="kept" x-cloak>{% translate "Kept on this device" %}</span>
+      <button type="button" class="qn-x" @click="hide()" aria-label="{% translate 'Close (Esc) — the note is kept' %}">✕</button>
+    </header>
+    <input type="text" class="qn-titlebox" x-model="title" maxlength="200" placeholder="{% translate 'Title (optional)' %}" aria-label="{% translate 'Title' %}"
+           @keydown.enter.prevent="$refs.body.focus()">
+    <textarea class="qn-body" x-ref="body" x-model="body" @input="grow()" rows="5" maxlength="100000"
+              placeholder="{% translate 'Write it down — a thought, a link, a to-do, a question. Markdown works.' %}" aria-label="{% translate 'Note' %}"></textarea>
+    <div class="qn-cats">
+      <template x-for="id in cats" :key="id"><button type="button" class="qn-cat is-on" @click="toggleCat(id)" :aria-label="'{{ _('Remove')|escapejs }} ' + catName(id)"><span x-text="catName(id)"></span> ✕</button></template>
+      <button type="button" class="qn-cat" @click="picking = !picking; if (!all) loadCats()" :aria-expanded="picking.toString()">＋ {% translate "Category" %}</button>
+    </div>
+    <div class="qn-pick" x-show="picking" x-cloak>
+      <p class="qn-none" x-show="all && !all.length">{% translate "No categories yet — make them on the Notes page." %}</p>
+      <template x-for="c in all || []" :key="c.id">
+        <button type="button" class="qn-pick-row" :class="cats.includes(c.id) && 'is-on'" :style="'padding-left:' + (0.625 + c.depth * 0.875) + 'rem'" @click="toggleCat(c.id)">
+          <span x-text="(cats.includes(c.id) ? '☑ ' : '☐ ') + c.name"></span></button>
+      </template>
+    </div>
+    <p class="qn-error" x-show="error" x-cloak x-text="error" role="alert"></p>
+    <footer class="qn-foot">
+      <small class="qn-hint"><span x-text="words"></span> {% translate "words" %} · <kbd>Ctrl</kbd>+<kbd>Enter</kbd> {% translate "saves" %}</small>
+      <button type="button" class="btn btn-ghost btn-sm" x-show="has" x-cloak @click="clear(); $refs.body.focus()">{% translate "Clear" %}</button>
+      <button type="button" class="btn btn-secondary btn-sm" @click="save(true)" :disabled="busy || !has">{% translate "Save & open" %}</button>
+      <button type="button" class="btn btn-primary btn-sm" @click="save(false)" :disabled="busy || !has"><span x-show="!busy">{% translate "Save" %}</span><span x-show="busy" x-cloak>{% translate "Saving…" %}</span></button>
+    </footer>
+  </section>
+</div>

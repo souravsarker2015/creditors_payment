@@ -1,0 +1,121 @@
+{% extends "work/base.html" %}
+{% load i18n work %}
+{% comment %}The Dashboard (dashboard.py): the last 7 / 30 / 90 days at a glance — what stands out, a number per part of
+the app (each beside the days before, with its trend), day by day, streaks, the last 12 weeks, where the time went,
+and at most three next steps. Opened 3 days or more after the last report, it has the report emailed (views_dashboard).{% endcomment %}
+
+{% block title %}{% translate "Dashboard" %} | {% translate "Productivity" %}{% endblock %}
+
+{% block work %}
+<div class="wdb" x-data="workDashboard({{ email_due|yesno:'true,false' }}, '{% url 'work:api_dashboard_email' %}', {{ days }})">
+<header class="wp-head">
+  <div class="min-w-0"><h1 class="wp-title">{% translate "Dashboard" %}</h1>
+    <p class="wp-sub">{{ r.start|date:"j M" }} – {{ r.end|date:"j M Y" }} · {% translate "How these days went, everything in one place." %}</p></div>
+  <div class="wp-actions">
+    <nav class="seg" aria-label="{% translate 'Period' %}">{% for n in periods %}<a href="?days={{ n }}" class="seg-item{% if n == days %} is-active{% endif %}"{% if n == days %} aria-current="page"{% endif %}>{% blocktranslate %}{{ n }} days{% endblocktranslate %}</a>{% endfor %}</nav>
+    {% if email_to %}<button type="button" class="btn btn-secondary" @click="emailNow()" :disabled="sending" data-tip="{% translate 'Email this report to me now' %}">{% icon "mail" %}<span>{% translate "Email me this" %}</span></button>{% endif %}
+  </div>
+</header>
+
+{# ── the headline, and the days you were at it ── #}
+<section class="card wdb-hero">
+  <div class="wdb-ring" style="--p: {{ r.consistency }}" role="img" aria-label="{% blocktranslate with a=r.now.active n=r.now.n_days %}Active on {{ a }} of {{ n }} days{% endblocktranslate %}">
+    <svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="15.5" class="wdb-ring-bg"/><circle cx="18" cy="18" r="15.5" class="wdb-ring-fg" pathLength="100" stroke-dasharray="{{ r.consistency }} 100"/></svg>
+    <b class="num">{{ r.now.active }}<small>/{{ r.now.n_days }}</small></b><span>{% translate "active days" %}</span>
+  </div>
+  <div class="min-w-0">
+    <p class="wdb-headline">{{ r.highlights.0.0 }} {{ r.highlights.0.1 }}</p>
+    {% if r.highlights|length > 1 %}<ul class="wdb-highlights">{% for icon, text in r.highlights|slice:"1:" %}<li><span aria-hidden="true">{{ icon }}</span>{{ text }}</li>{% endfor %}</ul>{% endif %}
+  </div>
+</section>
+
+{# ── a number per part of the app ── #}
+<div class="wdb-kpis">
+  {% for k in r.kpis %}
+  <a href="{{ k.url }}" class="wdb-kpi" data-key="{{ k.key }}">
+    <span class="wdb-kpi-label"><span aria-hidden="true">{{ k.icon }}</span>{{ k.label }}</span>
+    <span class="wdb-kpi-value num">{{ k.value }}</span>
+    <span class="wdb-kpi-foot">
+      {% if k.delta and k.delta.text %}<span class="wdb-delta {% if k.delta.up %}is-up{% else %}is-down{% endif %}" title="{% blocktranslate with n=days %}Compared with the {{ n }} days before{% endblocktranslate %}">{% if k.delta.up %}▲{% else %}▼{% endif %} {{ k.delta.text }}</span>{% endif %}
+      {% if k.sub %}<small>{{ k.sub }}</small>{% endif %}
+    </span>
+    {% if k.spark %}<svg class="wdb-spark" viewBox="0 0 96 28" preserveAspectRatio="none" aria-hidden="true"><polyline points="{{ k.spark }}"/></svg>{% endif %}
+  </a>
+  {% endfor %}
+</div>
+
+<div class="wdb-grid">
+  {# ── day by day ── #}
+  <section class="card wdb-days">
+    <header class="card-header"><div><h2 class="card-title">{% translate "Day by day" %}</h2>
+      <p class="card-subtitle"><span class="wdb-key" data-k="focus"></span>{% translate "Focus" %} <span class="wdb-key" data-k="other"></span>{% translate "Other time tracked" %} <span class="wdb-key" data-k="read"></span>{% translate "Reading" %}</p></div></header>
+    <div class="wdb-bars{% if days > 31 %} is-dense{% endif %}" role="img" aria-label="{% translate 'Time each day' %}">
+      {% for b in r.bars %}
+      <div class="wdb-bar{% if b.today %} is-today{% endif %}" title="{{ b.title }}{% if b.done %} · ✅ {{ b.done }}{% endif %}">
+        <div class="wdb-stack"><i data-k="read" style="height: {{ b.read }}%"></i><i data-k="other" style="height: {{ b.other }}%"></i><i data-k="focus" style="height: {{ b.focus }}%"></i></div>
+        <small>{% if days <= 31 or forloop.counter0|divisibleby:7 %}{{ b.short }}{% endif %}</small>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  {# ── streaks ── #}
+  <section class="card wdb-streaks">
+    <header class="card-header"><h2 class="card-title">{% translate "Streaks" %}</h2></header>
+    <div class="wdb-streak-row">
+      {% for s in r.streaks %}<div class="wdb-streak{% if s.n %} is-on{% endif %}"><b class="num">🔥 {{ s.n }}</b><small>{{ s.icon }} {{ s.label }}</small></div>{% endfor %}
+    </div>
+    <p class="wdb-muted">{% translate "Days in a row — today counts once it's reached." %}</p>
+  </section>
+
+  {# ── the last 12 weeks ── #}
+  <section class="card wdb-heat-card">
+    <header class="card-header"><div><h2 class="card-title">{% translate "The last 12 weeks" %}</h2><p class="card-subtitle">{% translate "Darker: more done that day." %}</p></div></header>
+    <div class="wdb-heat" role="img" aria-label="{% translate 'Activity in the last 12 weeks' %}">
+      {% for week in r.heat %}<div class="wdb-heat-col">{% for c in week %}<i data-l="{{ c.level }}" title="{{ c.title }}"></i>{% endfor %}</div>{% endfor %}
+    </div>
+  </section>
+
+  {# ── where the time went ── #}
+  <section class="card">
+    <header class="card-header"><h2 class="card-title">{% translate "Where the time went" %}</h2><a href="{% url 'work:reports' %}" class="wd-link">{% translate "Reports" %}</a></header>
+    {% if r.projects %}<ul class="wdb-projects">{% for p in r.projects %}<li><span class="wdb-p-name">{{ p.name }}</span><span class="wdb-p-bar"><i style="width: {{ p.pct }}%"></i></span><span class="num">{{ p.time }}</span></li>{% endfor %}</ul>
+    {% else %}<p class="wdb-muted">{% translate "Start the timer while you work — the projects show up here." %}</p>{% endif %}
+  </section>
+
+  {# ── next steps ── #}
+  <section class="card wdb-tips">
+    <header class="card-header"><h2 class="card-title">{% translate "Next steps" %}</h2></header>
+    <ol>{% for t in r.tips %}<li>{{ t }}</li>{% endfor %}</ol>
+  </section>
+</div>
+
+<p class="wdb-email-note">{% icon "mail" %}
+  {% if not email_to %}{% translate "Add an email address to your account to get a progress report every 3 days." %}
+  {% elif email_on %}{% blocktranslate %}Every 3 days, when you open this page, a report like this is emailed to {{ email_to }}.{% endblocktranslate %}{% if email_last %} {% blocktranslate with when=email_last|timesince %}The last one: {{ when }} ago.{% endblocktranslate %}{% endif %} <a href="{% url 'work:settings' %}" class="wd-link">{% translate "Change" %}</a>
+  {% else %}{% translate "Progress emails are off." %} <a href="{% url 'work:settings' %}" class="wd-link">{% translate "Turn them on" %}</a>{% endif %}</p>
+</div>
+{% endblock %}
+
+{% block work_js %}
+<script>
+document.addEventListener("alpine:init", function () {
+  /* the 3-day email: asked for once the page is shown (when it's due), or now with the button */
+  Alpine.data("workDashboard", function (due, url, days) {
+    return {
+      sending: false,
+      init: function () { if (due) setTimeout(this.send.bind(this, "auto"), 1200); },
+      send: function (action) {
+        var self = this; this.sending = true;
+        return Work.ask(url, { action: action, days: days }).then(function (r) {
+          self.sending = false;
+          if (r && r.ok && r.sent) Work.toast("📊 " + "{{ _('Your progress report is on its way to')|escapejs }} " + r.to, "good");
+          else if (r && !r.ok) Work.toast(r.error || "{{ _('Not sent.')|escapejs }}", "warn");
+        });
+      },
+      emailNow: function () { this.send("now"); },
+    };
+  });
+});
+</script>
+{% endblock %}

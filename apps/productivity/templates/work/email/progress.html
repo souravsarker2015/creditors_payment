@@ -1,0 +1,78 @@
+{% load i18n %}<!doctype html>
+<html><body style="margin:0;padding:24px 12px;background:#f5f3ee;font-family:Arial,Helvetica,sans-serif;color:#1f2a24;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:14px;">
+{# ── the headline ── #}
+<tr><td style="padding:26px 26px 6px;">
+  <p style="margin:0;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#0f5c4d;font-weight:bold;">{% translate "Your progress" %} · {{ r.start|date:"j M" }} – {{ r.end|date:"j M" }}</p>
+  <h1 style="margin:6px 0 0;font-size:22px;line-height:1.3;">{% blocktranslate with name=user.get_short_name|default:user.get_username n=r.days %}{{ name }}, here are your last {{ n }} days{% endblocktranslate %}</h1>
+  <p style="margin:8px 0 0;font-size:15px;line-height:1.5;color:#374151;">{{ r.highlights.0.0 }} {{ r.highlights.0.1 }}</p>
+</td></tr>
+
+{# ── the numbers, two a row, each with the change from the days before ── #}
+<tr><td style="padding:14px 20px 0;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+{% for k in r.kpis %}{% if forloop.counter0|divisibleby:2 %}<tr>{% endif %}
+<td width="50%" valign="top" style="padding:6px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f7f6f2;border-radius:10px;">
+  <tr><td style="padding:12px 14px;">
+    <p style="margin:0;font-size:12px;color:#6b7280;">{{ k.icon }} {{ k.label }}</p>
+    <p style="margin:4px 0 0;font-size:22px;font-weight:bold;color:#1f2a24;">{{ k.value }}
+      {% if k.delta and k.delta.text %}<span style="font-size:12px;font-weight:bold;color:{% if k.delta.up %}#0f7a4d{% else %}#b45309{% endif %};">{% if k.delta.up %}▲{% else %}▼{% endif %} {{ k.delta.text }}</span>{% endif %}</p>
+    {% if k.sub %}<p style="margin:2px 0 0;font-size:12px;color:#6b7280;">{{ k.sub }}</p>{% endif %}
+  </td></tr></table>
+</td>
+{% if forloop.counter|divisibleby:2 or forloop.last %}</tr>{% endif %}{% endfor %}
+</table>
+<p style="margin:4px 6px 0;font-size:11px;color:#9ca3af;">{% blocktranslate with n=r.days %}▲ ▼ compared with the {{ n }} days before.{% endblocktranslate %}</p>
+</td></tr>
+
+{# ── day by day: a bar each (focus, other time, reading) ── #}
+<tr><td style="padding:18px 26px 0;">
+  <h2 style="margin:0 0 8px;font-size:16px;">{% translate "Day by day" %}</h2>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:13px;">
+  {% for b in r.bars %}<tr>
+    <td width="64" style="padding:4px 8px 4px 0;color:#374151;white-space:nowrap;">{{ b.label }}</td>
+    <td style="padding:4px 0;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f1efe9;border-radius:4px;"><tr>
+        {% if b.focus %}<td width="{{ b.focus|floatformat:0 }}%" style="height:14px;background:#0f5c4d;font-size:0;line-height:0;">&nbsp;</td>{% endif %}
+        {% if b.other %}<td width="{{ b.other|floatformat:0 }}%" style="height:14px;background:#7fb5a8;font-size:0;line-height:0;">&nbsp;</td>{% endif %}
+        {% if b.read %}<td width="{{ b.read|floatformat:0 }}%" style="height:14px;background:#d4943a;font-size:0;line-height:0;">&nbsp;</td>{% endif %}
+        <td style="height:14px;font-size:0;line-height:0;">&nbsp;</td>
+      </tr></table>
+    </td>
+    <td width="56" align="right" style="padding:4px 0 4px 8px;color:#6b7280;white-space:nowrap;">{% if b.done %}✅ {{ b.done }}{% endif %}</td>
+  </tr>{% endfor %}
+  </table>
+  <p style="margin:6px 0 0;font-size:11px;color:#6b7280;">
+    <span style="display:inline-block;width:9px;height:9px;background:#0f5c4d;border-radius:2px;"></span> {% translate "Focus" %} &nbsp;
+    <span style="display:inline-block;width:9px;height:9px;background:#7fb5a8;border-radius:2px;"></span> {% translate "Other time tracked" %} &nbsp;
+    <span style="display:inline-block;width:9px;height:9px;background:#d4943a;border-radius:2px;"></span> {% translate "Reading" %} &nbsp; ✅ {% translate "tasks done" %}</p>
+</td></tr>
+
+{# ── what stands out ── #}
+{% if r.highlights|length > 1 %}<tr><td style="padding:18px 26px 0;">
+  <h2 style="margin:0 0 6px;font-size:16px;">{% translate "What stands out" %}</h2>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;line-height:1.5;">
+  {% for icon, text in r.highlights|slice:"1:" %}<tr><td width="26" valign="top" style="padding:3px 0;">{{ icon }}</td><td style="padding:3px 0;">{{ text }}</td></tr>{% endfor %}
+  </table></td></tr>{% endif %}
+
+{# ── streaks ── #}
+<tr><td style="padding:16px 20px 0;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+{% for s in r.streaks %}<td width="33%" align="center" style="padding:6px;">
+  <div style="padding:10px 6px;border-radius:10px;background:{% if s.n %}#fff4e5{% else %}#f7f6f2{% endif %};">
+  <p style="margin:0;font-size:20px;font-weight:bold;color:{% if s.n %}#b45309{% else %}#9ca3af{% endif %};">🔥 {{ s.n }}</p>
+  <p style="margin:2px 0 0;font-size:11px;color:#6b7280;">{{ s.icon }} {{ s.label }} · {% translate "days in a row" %}</p></div>
+</td>{% endfor %}
+</tr></table></td></tr>
+
+{# ── next steps ── #}
+<tr><td style="padding:16px 26px 0;">
+  <div style="padding:14px 16px;border-radius:10px;background:#e2efe9;">
+  <h2 style="margin:0 0 6px;font-size:15px;color:#0f5c4d;">{% blocktranslate with n=r.days %}For the next {{ n }} days{% endblocktranslate %}</h2>
+  <ol style="margin:0;padding-left:18px;font-size:14px;line-height:1.6;color:#1f2a24;">{% for t in r.tips %}<li>{{ t }}</li>{% endfor %}</ol>
+  </div></td></tr>
+
+<tr><td style="padding:20px 26px 26px;">{% if base %}<a href="{{ base }}{{ dashboard_url }}" style="display:inline-block;padding:11px 18px;border-radius:8px;background:#0f5c4d;color:#ffffff;text-decoration:none;font-weight:bold;">{% translate "Open your dashboard" %}</a>{% endif %}
+<p style="margin:16px 0 0;font-size:12px;line-height:1.5;color:#9ca3af;">{% translate "You get this at most every 3 days, when you open the Dashboard." %} {% if base %}<a href="{{ base }}{{ settings_url }}" style="color:#9ca3af;">{% translate "Turn it off in Settings" %}</a>{% else %}{% translate "Turn it off in Productivity → Settings." %}{% endif %}</p></td></tr>
+</table></body></html>

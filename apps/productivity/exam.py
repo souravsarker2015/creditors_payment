@@ -12,7 +12,8 @@ Claude usually write when asked for questions and answers:
 
     ## What is osmosis?                  Markdown headings: each heading is a
     Water moving through a membrane…     question, everything under it the answer
-                                         (# headings above them become chapters)
+                                         (# headings above them become chapters,
+                                         and a level between: the chapter's sections)
 
     **1. What is diffusion?**            whole bold lines are the questions
     Particles spreading out…
@@ -27,7 +28,7 @@ Claude usually write when asked for questions and answers:
     a) 4   b) 7   (one a line)           with the question, the answer is what's
     Answer: b                            under them
 
-A .csv file works too (two columns, or Question / Answer / Chapter headers), and
+A .csv file works too (two columns, or Question / Answer / Chapter / Section headers), and
 what Anki and Quizlet export. Code blocks (```) are kept whole: an empty line or
 a "#" inside one never splits a question.
 """
@@ -151,11 +152,19 @@ class _Notes(list):
     """Collects the questions as they're read: start one, add answer lines, finish it."""
     def __init__(self):
         super().__init__()
-        self.cur, self.chapter = None, ""
+        self.cur, self.chapter, self.section, self.level = None, "", "", 0
 
     def start(self, question):
         self.finish()
-        self.cur = (question, [], self.chapter)
+        self.cur = (question, [], self.chapter, self.section)
+
+    def heading(self, level, text):
+        """A heading above the questions: the chapter — or, one level under the chapter's, a section of it."""
+        self.finish()
+        if self.level and level > self.level:
+            self.section = _chapter(text)
+        else:
+            self.chapter, self.section, self.level = _chapter(text), "", level
 
     def add(self, row):
         if self.cur:
@@ -163,11 +172,11 @@ class _Notes(list):
 
     def finish(self):
         if self.cur:
-            q, rows, chapter = self.cur
+            q, rows, chapter, section = self.cur
             more, rows = _lift(rows)
             q = _question(q)
             if q:
-                self.append({"question": "\n".join([q, *more])[:MAX_QUESTION], "answer": _answer(rows), "chapter": chapter})
+                self.append({"question": "\n".join([q, *more])[:MAX_QUESTION], "answer": _answer(rows), "chapter": chapter, "section": section})
         self.cur = None
 
 
@@ -179,19 +188,29 @@ def _next_filled(rows, i):
 
 
 def _marked(rows):
-    """Q:/A: lists. A heading right before a Q: line names the chapter."""
+    """Q:/A: lists. A heading right before a Q: line names the chapter — or two in a row (## Chapter, ### Section)."""
     out = _Notes()
+
+    def leads_to_q(i):            # a Q: comes next — or a heading, then a Q:
+        nxt, nxt_code = _next_filled(rows, i)
+        if nxt_code:
+            return False
+        if Q_LINE.match(nxt):
+            return True
+        if not HEADING.match(nxt):
+            return False
+        j = next(k for k in range(i + 1, len(rows)) if rows[k][0].strip())
+        after, after_code = _next_filled(rows, j)
+        return not after_code and bool(Q_LINE.match(after))
+
     for i, (line, code) in enumerate(rows):
         if not code and Q_LINE.match(line):
             out.start(line)
             continue
         h = None if code else HEADING.match(line)
-        if h:
-            nxt, nxt_code = _next_filled(rows, i)
-            if not nxt_code and Q_LINE.match(nxt):
-                out.finish()
-                out.chapter = _chapter(h.group(2))
-                continue
+        if h and leads_to_q(i):
+            out.heading(len(h.group(1)), h.group(2))
+            continue
         out.add((line, code))
     out.finish()
     return out
@@ -199,8 +218,8 @@ def _marked(rows):
 
 def _headed(rows):
     """Markdown headings. The level that repeats (## mostly) holds the questions —
-    unless its headings only hold other headings: then those are the questions.
-    A heading above the questions' level names the chapter of the ones under it;
+    unless its headings only hold other headings: then those are the questions (twice: # chapter, ## section, ### question).
+    A heading above the questions' level names the chapter of the ones under it (one level under that: its section);
     deeper headings stay inside the answers."""
     heads = {i: (len(m.group(1)), m.group(2)) for i, (line, code) in enumerate(rows) if not code and (m := HEADING.match(line))}
     if not heads:
@@ -220,8 +239,10 @@ def _headed(rows):
         first = next((j for j in body(i) if rows[j][0].strip()), None)
         return first in heads and heads[first][0] > heads[i][0]
 
-    tops = [i for i, (lv, _t) in heads.items() if lv == level]
-    if all(holds_headings(i) for i in tops):
+    for _step in range(2):        # chapters that only hold sections, sections that only hold questions: a level down each
+        tops = [i for i, (lv, _t) in heads.items() if lv == level]
+        if not (tops and all(holds_headings(i) for i in tops)):
+            break
         level = min(heads[j][0] for i in tops for j in body(i) if j in heads)
     out = _Notes()
     for i, row in enumerate(rows):
@@ -230,8 +251,7 @@ def _headed(rows):
             if lv == level:
                 out.start(text)
             else:
-                out.finish()
-                out.chapter = _chapter(text)
+                out.heading(lv, text)
             continue
         out.add(row)
     out.finish()
@@ -291,6 +311,7 @@ def _blocks(rows):
 
 
 QUESTION_HEADS, ANSWER_HEADS, CHAPTER_HEADS = ("question", "q", "front", "term", "প্রশ্ন"), ("answer", "a", "back", "definition", "উত্তর"), ("chapter", "topic", "label", "deck", "অধ্যায়")
+SECTION_HEADS = ("section", "subtopic", "part", "অংশ", "পরিচ্ছেদ")
 ANKI_HEADER = re.compile(r"^#(?:separator|html|tags|columns|deck|notetype)\b.*:", re.I)     # the lines Anki puts at the top of its export
 
 
@@ -308,11 +329,12 @@ def _table(cells):
         return None
     q, a = (q, a) if named else (0, 1)
     ch = next((head.index(h) for h in CHAPTER_HEADS if h in head), None) if named else None
+    sec = next((head.index(h) for h in SECTION_HEADS if h in head), None) if named else None
     notes = []
     for row in cells:
         cell = lambda i: row[i].strip() if i is not None and i < len(row) else ""     # noqa: E731
         if _question(cell(q)):
-            notes.append({"question": _question(cell(q)), "answer": cell(a)[:MAX_ANSWER], "chapter": cell(ch)[:MAX_CHAPTER]})
+            notes.append({"question": _question(cell(q)), "answer": cell(a)[:MAX_ANSWER], "chapter": cell(ch)[:MAX_CHAPTER], "section": cell(sec)[:MAX_CHAPTER]})
     return notes
 
 
@@ -350,6 +372,7 @@ def parse(text, chapter=""):
     chapter = (chapter or "").strip()[:MAX_CHAPTER]
     for n in notes:
         n["chapter"] = n["chapter"] or chapter
+        n.setdefault("section", "")
     return list(notes)[:MAX_PASTE]
 
 
@@ -363,7 +386,7 @@ def parse_note(text):
     if any(not code and Q_LINE.match(line) for line, code in rows):
         return list(_marked(rows))[:MAX_PASTE]
     found = list(_headed(rows) or _numbered(rows) or _bolded(rows))
-    return found[:MAX_PASTE] or [{"question": q[:MAX_QUESTION], "answer": a[:MAX_ANSWER], "chapter": ""} for q, a in parse_pairs(text)][:MAX_PASTE]
+    return found[:MAX_PASTE] or [{"question": q[:MAX_QUESTION], "answer": a[:MAX_ANSWER], "chapter": "", "section": ""} for q, a in parse_pairs(text)][:MAX_PASTE]
 
 
 def add_found(user, subject, found):
@@ -372,7 +395,7 @@ def add_found(user, subject, found):
 
     start = next_order(subject)
     made = ExamNote.objects.bulk_create([ExamNote(owner=user, subject=subject, question=n["question"], answer=n["answer"], chapter=n["chapter"],
-                                                  order=start + i) for i, n in enumerate(found)])
+                                                  section=n.get("section", ""), order=start + i) for i, n in enumerate(found)])
     return list(subject.notes.order_by("-pk")[:len(made)])[::-1] if made else []     # bulk_create gives no ids on every database
 
 
@@ -392,11 +415,12 @@ def same(text):
 
 
 def ordered(notes):
-    """Each chapter's questions together, the chapters in the order their first question comes."""
+    """Each chapter's questions together, the chapters in the order their first question comes — and in a chapter,
+    each section's together the same way (the ones with no section where they are)."""
     groups = {}
     for n in sorted(notes, key=lambda n: (n.order, n.pk or 0)):
-        groups.setdefault(n.chapter, []).append(n)
-    return [n for group in groups.values() for n in group]
+        groups.setdefault(n.chapter, {}).setdefault(getattr(n, "section", ""), []).append(n)
+    return [n for sections in groups.values() for group in sections.values() for n in group]
 
 
 def next_order(subject):
@@ -406,13 +430,18 @@ def next_order(subject):
 
 
 def as_text(subject, notes):
-    """The subject as a Q:/A: list, chapters as ## headings — reads back in with parse()."""
-    out, chapter = [subject.name, ""], ""      # a plain line: a heading right before a Q: would read back as a chapter
+    """The subject as a Q:/A: list, chapters as ## headings, their sections ### — reads back in with parse()."""
+    out, chapter, section = [subject.name, ""], "", ""      # a plain line: a heading right before a Q: would read back as a chapter
     # (the ones with no chapter come first: an empty heading can't say "no chapter" for those after a chapter)
     for n in sorted(ordered(notes), key=lambda n: bool(n.chapter)):
-        if n.chapter != chapter:
-            chapter = n.chapter
-            out += [f"## {chapter}", ""]
+        sec = getattr(n, "section", "")
+        if n.chapter != chapter or (n.chapter and sec != section):
+            if n.chapter != chapter:
+                chapter, section = n.chapter, ""
+                out += [f"## {chapter}", ""]
+            if sec != section:
+                section = sec
+                out += [f"### {section}" if section else f"## {chapter}", ""]      # (back to no section: the chapter again)
         out.append(f"Q: {n.question.strip()}")
         out.append(f"A: {n.answer.strip()}" if n.answer.strip() else "A:")
         out.append("")
@@ -441,7 +470,7 @@ def remember(note, force=False):
 
 
 def as_json(note, number=None, today=None):
-    return {"id": note.pk, "question": note.question, "answer": note.answer, "rev": rev(note), "chapter": note.chapter,
+    return {"id": note.pk, "question": note.question, "answer": note.answer, "rev": rev(note), "chapter": note.chapter, "section": note.section,
             "categories": [c.pk for c in note.categories.all()], "starred": note.is_starred,
             "known": note.is_known, "misses": note.misses, "color": note.color, "number": number,
             "due": is_due(note, today), "dueOn": note.due_on.isoformat() if note.due_on else "", "interval": note.interval}
@@ -616,7 +645,14 @@ def in_order(qs, subject):
     # (questions with no place yet, 0: the chapter's oldest decides)
     ranks = subject.notes.order_by().values("chapter").annotate(first=Min("order"), first_pk=Min("pk")).order_by("first", "first_pk")
     rank = Case(*[When(chapter=r["chapter"], then=Value(i)) for i, r in enumerate(ranks)], default=Value(0), output_field=IntegerField())
-    return qs.annotate(chapter_rank=rank).order_by("chapter_rank", "order", "pk")
+    # and in a chapter, its sections the same way (only when there are any: most subjects have none)
+    parts = list(subject.notes.exclude(section="").order_by().values("chapter", "section").annotate(first=Min("order"), first_pk=Min("pk")))
+    if not parts:
+        return qs.annotate(chapter_rank=rank).order_by("chapter_rank", "order", "pk")
+    loose = {r["chapter"]: (r["first"], r["first_pk"]) for r in subject.notes.filter(section="").order_by().values("chapter").annotate(first=Min("order"), first_pk=Min("pk"))}
+    firsts = sorted([(p["first"], p["first_pk"], p["chapter"], p["section"]) for p in parts] + [(f, fp, c, "") for c, (f, fp) in loose.items()])
+    section_rank = Case(*[When(chapter=c, section=sec, then=Value(i)) for i, (_f, _fp, c, sec) in enumerate(firsts)], default=Value(0), output_field=IntegerField())
+    return qs.annotate(chapter_rank=rank, section_rank=section_rank).order_by("chapter_rank", "section_rank", "order", "pk")
 
 
 def numbers(subject):
@@ -629,7 +665,7 @@ def matching(qs, text):
     from django.db.models import Q
 
     for word in (text or "").split()[:6]:
-        qs = qs.filter(Q(question__icontains=word) | Q(answer__icontains=word) | Q(chapter__icontains=word))
+        qs = qs.filter(Q(question__icontains=word) | Q(answer__icontains=word) | Q(chapter__icontains=word) | Q(section__icontains=word))
     return qs
 
 
@@ -670,19 +706,21 @@ def counts(subject):
 
 
 def chapter_list(subject):
-    """[{name, n, known}] in the subject's order."""
+    """[{name, n, known, sections}] in the subject's order (sections: the names used in that chapter)."""
     from collections import OrderedDict
 
     out = OrderedDict()
-    for chapter, known in in_order(subject.notes.all(), subject).values_list("chapter", "is_known"):
-        row = out.setdefault(chapter, {"name": chapter, "n": 0, "known": 0})
+    for chapter, section, known in in_order(subject.notes.all(), subject).values_list("chapter", "section", "is_known"):
+        row = out.setdefault(chapter, {"name": chapter, "n": 0, "known": 0, "sections": []})
         row["n"] += 1
         row["known"] += 1 if known else 0
+        if section and section not in row["sections"]:
+            row["sections"].append(section)
     return list(out.values())
 
 
 def move(note, before_id=None):
-    """Put a question just before another (or last) and into that one's chapter, renumbering the subject."""
+    """Put a question just before another (or last) and into that one's chapter and section, renumbering the subject."""
     ids = list(in_order(note.subject.notes.all(), note.subject).values_list("pk", flat=True))
     ids.remove(note.pk)
     if before_id and before_id in ids:
@@ -692,12 +730,12 @@ def move(note, before_id=None):
         ids.append(note.pk)
         neighbour = ids[-2] if len(ids) > 1 else None
     if neighbour:
-        note.chapter = type(note).objects.filter(pk=neighbour).values_list("chapter", flat=True).first() or ""
+        note.chapter, note.section = type(note).objects.filter(pk=neighbour).values_list("chapter", "section").first() or ("", "")
     rows = {n.pk: n for n in note.subject.notes.all()}
-    rows[note.pk].chapter = note.chapter
+    rows[note.pk].chapter, rows[note.pk].section = note.chapter, note.section
     for place, pk in enumerate(ids, 1):
         rows[pk].order = place
-    type(note).objects.bulk_update(rows.values(), ["order", "chapter"])
+    type(note).objects.bulk_update(rows.values(), ["order", "chapter", "section"])
 
 
 def plain(text):

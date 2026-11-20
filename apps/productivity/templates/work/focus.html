@@ -158,6 +158,16 @@
       <label class="wfs-switch"><span>{% translate "On every page" %} <small>{% translate "Off: only here. The Reader has its own." %}</small></span><input type="checkbox" class="switch" x-model="v.tick_everywhere" @change="save()"></label>
       <label class="wfs-switch"><span>{% translate "Also while a timer or the stopwatch runs" %}</span><input type="checkbox" class="switch" x-model="v.sound_with_timers" @change="save()"></label>
 
+      <h3 class="wfs-h">{% translate "Floating clock" %}</h3>
+      <label class="wfs-row" x-data="{ show: window.FloatClock ? FloatClock.prefs().show : 'fsweb', hidden: window.FloatClock ? FloatClock.prefs().hidden : false }">
+        <span>{% translate "Show a small clock" %} <small>{% translate "On this device · Alt+T shows or hides it · drag it anywhere" %}</small></span>
+        <select class="form-input input-compact" data-native x-model="show" @change="FloatClock.set('show', show); FloatClock.set('hidden', false)">
+          <option value="fs">{% translate "In full screen" %}</option>
+          <option value="fsweb">{% translate "Full screen and web view" %}</option>
+          <option value="always">{% translate "Always" %}</option>
+          <option value="off">{% translate "Never" %}</option>
+        </select></label>
+
       <h3 class="wfs-h">{% translate "Notifications" %}</h3>
       <label class="wfs-switch"><span>{% translate "Notify me when time is up" %} <small>{% translate "Also when this tab is in the background" %}</small></span><input type="checkbox" class="switch" x-model="v.notifications" @change="save(); v.notifications && Work.askNotify()"></label>
       <button type="button" class="btn btn-ghost btn-sm" @click="Work.askNotify().then(p => { hear(); Work.notify('{% translate "Sound and notifications are on" %}', '{% translate "This is how a finished session will sound." %}'); })">{% icon "bell" %}{% translate "Test sound & notifications" %}</button>

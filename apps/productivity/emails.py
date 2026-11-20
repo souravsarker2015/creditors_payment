@@ -4,6 +4,9 @@
   the day's plan, today's reminders, habits and flashcards waiting.
 - Task reminders: a task whose "Remind me" time has come is emailed once — the
   browser only shows a reminder while the app is open.
+- Your progress: every 3 days, when the Dashboard is opened (dashboard.py) —
+  how the last days went, with charts made of tables (mail apps show no scripts
+  or pictures drawn by the page).
 
 Both are opt-in (Timer, focus & sounds → Emails). PythonAnywhere has no
 always-on worker, so `manage.py send_work_emails` runs them from a scheduled
@@ -196,3 +199,49 @@ def run(now=None):
         else:
             counts["failed"] += 1
     return counts
+
+
+# ── Your progress (every 3 days, from the Dashboard) ────────────────────────
+def progress_due(s, now=None):
+    now = now or timezone.now()
+    return s.progress_email and (s.progress_email_sent_at is None or now - s.progress_email_sent_at >= dashboard_every())
+
+
+def dashboard_every():
+    from .dashboard import EMAIL_EVERY
+
+    return EMAIL_EVERY
+
+
+def send_progress(user, days=3, request=None, force=False, now=None):
+    """Email one person how the last `days` days went (to yesterday: a whole day each). Returns "sent", "not due",
+    "off" or "failed". Claimed first (one statement), so two tabs opening the Dashboard at once send it once."""
+    from . import dashboard
+
+    now = now or timezone.now()
+    s = WorkSettings.for_user(user)
+    if not user.email:
+        return "failed"
+    if not force:
+        if not s.progress_email:
+            return "off"
+        due = Q(progress_email_sent_at__isnull=True) | Q(progress_email_sent_at__lte=now - dashboard.EMAIL_EVERY)
+        if not WorkSettings.objects.filter(pk=s.pk, progress_email=True).filter(due).update(progress_email_sent_at=now):
+            return "not due"
+    before = s.progress_email_sent_at
+    with translation.override(_language(user)):
+        end = timezone.localdate(now) - timedelta(days=1) if days <= 7 else timezone.localdate(now)
+        r = dashboard.report(user, days=days, end=end)
+        peak = max([b["focus"] + b["other"] + b["read"] for b in r["bars"]] + [1])
+        ctx = {"r": r, "user": user, "base": _base(request), "dashboard_url": reverse("work:dashboard"), "settings_url": reverse("work:settings"),
+               "scale": 100 / peak if peak > 100 else 1}
+        subject = _("Your last %(n)s days: %(headline)s") % {"n": days, "headline": r["highlights"][0][1]}
+        sent = _send(user, subject, "work/email/progress.txt", "work/email/progress.html", ctx)
+    if not sent:
+        if not force:                 # it can go next time
+            WorkSettings.objects.filter(pk=s.pk).update(progress_email_sent_at=before)
+        return "failed"
+    if force:
+        WorkSettings.objects.filter(pk=s.pk).update(progress_email_sent_at=now)
+    s.progress_email_sent_at = now
+    return "sent"

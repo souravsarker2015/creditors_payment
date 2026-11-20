@@ -54,7 +54,7 @@ def _urls():
         "noteCategories": r("work:api_note_categories"), "notesBulk": r("work:api_notes_bulk"),
         "journal": r("work:api_journal_save"), "focus": r("work:api_focus_log"), "search": r("work:api_search"),
         "today": r("work:today"), "tasks": r("work:tasks"), "board": r("work:tasks") + "?view=board", "projects": r("work:projects"),
-        "time": r("work:time"), "focus_page": r("work:focus"), "sound": r("work:api_sound"), "notes": r("work:notes"), "snippets": r("work:snippets"),
+        "time": r("work:time"), "dashboard": r("work:dashboard"), "focus_page": r("work:focus"), "sound": r("work:api_sound"), "notes": r("work:notes"), "snippets": r("work:snippets"),
         "habits": r("work:habits"), "journal_page": r("work:journal"), "reports": r("work:reports"), "settings": r("work:settings"),
         "goals": r("work:goals"), "learning": r("work:learning"), "review": r("work:review"), "calendar": r("work:calendar"),
         "help": r("work:help"), "entry_new": r("work:entry_new"), "task_new": r("work:task_new"), "goal_new": r("work:goal_new"),
@@ -63,7 +63,7 @@ def _urls():
         "plan": r("work:plan"), "planAction": r("work:api_plan"), "week": r("work:week"), "noteGo": r("work:note_go"),
         "noteEmbed": r("work:api_note_embed"), "taskQuery": r("work:api_task_query"),
         "diagrams": r("work:diagrams"), "diagramBase": "/work/api/diagrams/", "diagramList": r("work:api_diagram_list"),
-        "cardsDue": r("work:api_cards_due"), "cardReview": r("work:card_review"), "imageUpload": r("work:api_image_upload"),
+        "cardsDue": r("work:api_cards_due"), "readNudge": r("work:api_read_nudge"), "cardReview": r("work:card_review"), "imageUpload": r("work:api_image_upload"),
         "cards": r("work:cards"), "cardBase": "/work/api/cards/", "cardAdd": r("work:api_card_add"),
         "prep": r("work:prep"), "prepBase": "/work/api/prep/questions/", "exam": r("work:exam"), "roadmaps": r("work:roadmaps"), "paths": r("work:paths"),
     }
@@ -73,6 +73,11 @@ def _texts():
     return {
         "savedOffline": _("Saved on this device — it will sync when you're online."), "synced": _("Synced changes made offline."),
         "soundPause": _("Pause the sound"), "soundPlay": _("Play the sound"), "soundTap": _("Tap to play"), "soundSettings": _("Background sound"),
+        "readGoOn": _("A few minutes of reading? Go on with %(book)s"), "readStart": _("A few minutes of reading? Pick a note to read like a book."),
+        "readTime": _("Time to read"), "readNow": _("Read"),
+        "clockSettings": _("Clock settings"), "clockHide": _("Hide the clock (Alt+T)"), "clockFs": _("In full screen"), "clockFsWeb": _("Full screen and web view"),
+        "clockAlways": _("Always"), "clockOff": _("Never"), "clockShow": _("Show the clock"), "clockSeconds": _("Seconds"), "clock12": _("12-hour (AM/PM)"),
+        "clockDate": _("Date"), "clockDrag": _("drag to move"), "clockHidden": _("Clock hidden — Alt+T brings it back"), "clockShown": _("Clock on — Alt+T hides it"),
         "undo": _("Undo"), "reminder": _("Reminder"), "stillWorking": _("Still working on this?"), "noDescription": _("No description"),
         "tracked": _("Tracked"), "notSaved": _("Not saved."), "taskAdded": _("Task added"), "noteSaved": _("Note saved"), "noteArchived": _("Archived"), "noteConflict": _("This note was changed somewhere else too. That text is kept in History."),
         "forgetVersion": _("Delete this version?"),
@@ -166,6 +171,7 @@ def _commands():
     r = reverse
     go = [
         ("today", _("Today"), "sun", "work:today", "g h", "home my day"),
+        ("dashboard", _("Dashboard"), "chart", "work:dashboard", "g g", "overview progress stats insights analytics week month how am i doing report email"),
         ("plan", _("Plan my day"), "clock", "work:plan", "g d", "time blocking schedule timeline day planner calendar hours"),
         ("week", _("Plan the week"), "calendar", "work:week", "g w", "weekly planning schedule days"),
         ("tasks", _("Tasks"), "check", "work:tasks", "g t", "todo list"),
@@ -272,6 +278,7 @@ def render_work(request, template, ctx=None):
             "wip": s.wip_limit, **focus_config(s),
             "leftOff": s.ask_left_off, "longTimer": s.long_timer_hours, "target": s.daily_target_minutes, "idle": s.idle_minutes,
             "cardsRemind": s.cards_remind_at.strftime("%H:%M") if s.cards_remind_at else "",
+            "readRemind": s.reading_remind_at.strftime("%H:%M") if s.reading_remind_at else "",
             "reminders": [{"id": r["pk"], "title": r["title"], "at": r["remind_at"].isoformat(),
                            "url": reverse("work:task", args=[r["pk"]])} for r in reminders] + _interview_reminders(user, now),
         },

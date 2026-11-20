@@ -22,6 +22,7 @@
       <span>{% if d == 0 %}{% translate "Exam today — good luck!" %}{% else %}{% blocktranslate count counter=d %}Exam in {{ counter }} day{% plural %}Exam in {{ counter }} days{% endblocktranslate %}{% endif %} · {% if exam_soon.left %}{% blocktranslate count counter=exam_soon.left %}{{ counter }} question to learn{% plural %}{{ counter }} questions to learn{% endblocktranslate %}{% else %}{% translate "all known" %}{% endif %}</span></a>{% endwith %}{% endif %}
   </div>
   <div class="wp-actions">
+    <a href="{% url 'work:dashboard' %}" class="btn btn-ghost" data-tip="{% translate 'How your days went: time, focus, tasks, reading, practice (g g)' %}">{% icon "chart" %}{% translate "Dashboard" %}</a>
     <a href="{% url 'work:wrapup' %}" class="btn {% if hour_late %}btn-primary{% else %}btn-ghost{% endif %}">{% icon "sun" %}{% translate "Wrap up the day" %}</a>
     <a href="{% url 'work:focus' %}" class="btn btn-secondary">{% icon "bolt" %}{% translate "Focus" %}</a>
     <button type="button" class="btn btn-primary" @click="$dispatch('work:capture', 'task')">{% icon "plus" %}{% translate "Task" %}<kbd class="wp-kbd">c</kbd></button>

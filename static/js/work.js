@@ -287,6 +287,31 @@
     setTimeout(check, 3000); setInterval(check, 60000);
   })();
 
+  /* ── Reading: a nudge once a day at the time chosen in the Reader (a fixed time and place is how a habit starts),
+        unless today's reading goal is reached already — and with the book to go on with ── */
+  (function readNudge() {
+    var at = CFG.readRemind, key = "work-read-nudge:" + ME;
+    if (!at || !CFG.urls.readNudge) return;
+    function check() {
+      var now = new Date(), day = now.getFullYear() + "-" + pad(now.getMonth() + 1) + "-" + pad(now.getDate());
+      if (pad(now.getHours()) + ":" + pad(now.getMinutes()) < at || recall(key, "") === day) return;
+      store(key, day);
+      if (d.documentElement.hasAttribute("data-reader")) return;                 // reading already
+      fetch(CFG.urls.readNudge, { credentials: "same-origin", headers: { Accept: "application/json" } })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+          if (!res || !res.due) return;
+          var msg = "📖 " + (res.title ? t("readGoOn", "A few minutes of reading? Go on with %(book)s").replace("%(book)s", res.title + (res.chapter && res.chapter !== res.title ? " — " + res.chapter : ""))
+                                       : t("readStart", "A few minutes of reading? Pick a note to read like a book."));
+          play();
+          if (d.hidden) notify(t("readTime", "Time to read"), msg, res.url, "reading");
+          else toast(msg, "good", { label: t("readNow", "Read"), run: function () { location.href = res.url; } });
+        })
+        .catch(function () { store(key, null); });
+    }
+    setTimeout(check, 3500); setInterval(check, 60000);
+  })();
+
   /* ── Pictures in Markdown boxes (textarea[data-paste-images]): paste, drop
         or pick one → it's uploaded and ![…](its address) goes in at the cursor ── */
   function shrinkImage(file) {      // big photos get smaller first; screenshots and small pictures go up as they are
@@ -643,7 +668,11 @@
           var asked = new URLSearchParams(location.search).get("capture");
           if (asked && /^(task|note|time)$/.test(asked)) setTimeout(function () { self.show(asked); }, 60);
         },
-        show: function (mode) { this.mode = mode || "task"; this.open = true; var self = this; setTimeout(function () { var el = self.$refs[self.mode]; if (el) el.focus(); }, 40); },
+        show: function (mode) {
+          if (mode === "note" && d.getElementById("quick-note")) {           // a note: the quick note (on every page, kept as it's written)
+            window.dispatchEvent(new CustomEvent("quick-note", { detail: { text: this.text } })); this.text = ""; return;
+          }
+          this.mode = mode || "task"; this.open = true; var self = this; setTimeout(function () { var el = self.$refs[self.mode]; if (el) el.focus(); }, 40); },
         hide: function () { this.open = false; },
         get chips() { return this.mode === "task" ? parseChips(this.text) : []; },
         save: function (startTimer) {
@@ -3463,7 +3492,7 @@
   /* ── Keyboard: the whole module without a mouse ─────────────────────── */
   var pending = null;
   var GO = { h: "today", t: "tasks", b: "board", p: "projects", i: "time", f: "focus_page", n: "notes", s: "snippets", a: "habits", j: "journal", r: "reports", ",": "settings",
-             c: "calendar", o: "goals", l: "learning", v: "review", d: "plan", w: "week", m: "diagrams", k: "cards", q: "prep", e: "exam", u: "roadmaps", y: "paths" };
+             c: "calendar", o: "goals", l: "learning", v: "review", d: "plan", w: "week", m: "diagrams", k: "cards", q: "prep", e: "exam", u: "roadmaps", y: "paths", g: "dashboard" };
   d.addEventListener("keydown", function (e) {
     if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || typing(e)) return;
     var k = e.key;

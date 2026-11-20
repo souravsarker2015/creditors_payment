@@ -44,6 +44,7 @@ def _texts():
         "deletedMany": _("%(n)s questions deleted"),
         "subjectsAsk": _("Delete the %(n)s picked subjects with all their questions? You can bring them back from Recently deleted."),
         "subjectsDeleted": _("%(n)s subjects deleted"), "undo": _("Undo"), "chapterAsk": _("Chapter for the picked questions (empty: no chapter):"),
+        "sectionAsk": _("Section for the picked questions — a part of their chapter (empty: no section):"),
         "leave": _("You have changes that aren't saved yet. Leave anyway?"), "draftBack": _("Your unsaved question is back."),
         "conflict": _("This question was changed somewhere else too. That text is kept in History."),
         "catDeleteAsk": _("Delete “%(name)s” and everything inside it? The questions stay. You can bring it back from Recently deleted."),
@@ -223,6 +224,10 @@ def _chapter_of(request):
     return (request.POST.get("chapter") or "").strip()[:exam.MAX_CHAPTER]
 
 
+def _section_of(request):
+    return (request.POST.get("section") or "").strip()[:exam.MAX_CHAPTER]
+
+
 def _answer_of(request, default=""):
     return services.one_line_end(request.POST.get("answer", default)).rstrip()
 
@@ -244,7 +249,7 @@ def subject_api(request, pk):
         answer = _answer_of(request)
         if len(answer) > exam.MAX_ANSWER:
             return _too_long()
-        n = ExamNote.objects.create(owner=request.user, subject=s, question=question, chapter=_chapter_of(request), order=exam.next_order(s),
+        n = ExamNote.objects.create(owner=request.user, subject=s, question=question, chapter=_chapter_of(request), section=_section_of(request), order=exam.next_order(s),
                                     color=request.POST.get("color") if request.POST.get("color") in Color.values else "",
                                     is_starred=request.POST.get("starred") == "1", answer=answer)
         n.categories.set(exam.owned_categories(request.user, request.POST.get("categories")))
@@ -274,7 +279,8 @@ def subject_api(request, pk):
         exam.move(note, int(before) if (before or "").isdigit() else None)
         number = exam.numbers(s)              # the numbers change: the cards on screen get theirs
         shown = [int(i) for i in (request.POST.get("ids") or "").split(",") if i.isdigit()]
-        return JsonResponse({"ok": True, "chapter": ExamNote.objects.get(pk=note.pk).chapter, "numbers": {i: number.get(i) for i in shown}, **exam.counts(s)})
+        moved = ExamNote.objects.get(pk=note.pk)
+        return JsonResponse({"ok": True, "chapter": moved.chapter, "section": moved.section, "numbers": {i: number.get(i) for i in shown}, **exam.counts(s)})
     if action == "chapter_move":             # a whole chapter one place up or down
         names = [c["name"] for c in exam.chapter_list(s)]
         name, step = request.POST.get("chapter", ""), 1 if request.POST.get("step") == "1" else -1
@@ -313,6 +319,8 @@ def subject_api(request, pk):
                 s.notes.filter(pk__in=[n.pk for n in picked], due_on__isnull=True).update(interval=exam.STEPS[1], due_on=timezone.localdate() + timedelta(days=exam.STEPS[1]))
         elif op == "chapter":
             s.notes.filter(pk__in=[n.pk for n in picked]).update(chapter=_chapter_of(request), updated_at=timezone.now())
+        elif op == "section":
+            s.notes.filter(pk__in=[n.pk for n in picked]).update(section=_section_of(request), updated_at=timezone.now())
         elif op == "categories":             # added to what each one has already
             exam.add_to_categories(picked, exam.owned_categories(request.user, request.POST.get("categories")))
         elif op == "move":
@@ -356,6 +364,8 @@ def note_api(request, pk):
         n.question, n.answer = question, answer
         if "chapter" in request.POST:
             n.chapter = _chapter_of(request)
+        if "section" in request.POST:
+            n.section = _section_of(request)
         if request.POST.get("color", None) is not None and request.POST["color"] in ("", *Color.values):
             n.color = request.POST["color"]
         if request.POST.get("subject") and str(request.POST["subject"]) != str(n.subject_id):

@@ -14,6 +14,7 @@ from datetime import timedelta
 from django.db.models import F, Sum
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.formats import date_format
 from django.utils.translation import gettext as _
 
 from . import exam
@@ -34,32 +35,103 @@ def minutes(n_words):
     return max(1, round(n_words / WPM))
 
 
+HEAD = re.compile(r"^\s{0,3}(#{1,6})\s+(.+?)\s*#*\s*$")
+FENCE = re.compile(r"^\s{0,3}(```|~~~)")
+
+
+def plain_heading(text):
+    """A heading's words, without its marks: **bold**, `code`, [links](…), ==highlights==."""
+    text = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", text)
+    return re.sub(r"[*_`=~]+|\{[a-z]+\}", "", text).strip()
+
+
+def sections(md):
+    """A chapter's sections: its headings of the top level used (a lone title heading on the first line aside),
+    each with how long it takes. [{title, level, n (which heading of that level it is), words, minutes}]."""
+    heads, fenced, lines = [], False, (md or "").split("\n")
+    for i, line in enumerate(lines):
+        if FENCE.match(line):
+            fenced = not fenced
+            continue
+        m = None if fenced else HEAD.match(line)
+        if m:
+            heads.append((i, len(m.group(1)), plain_heading(m.group(2))))
+    if not heads:
+        return []
+    levels = sorted({lv for _i, lv, _t in heads})
+    top = levels[0]
+    tops = [h for h in heads if h[1] == top]
+    first_text = next((i for i, line in enumerate(lines) if line.strip()), 0)
+    if len(tops) == 1 and tops[0][0] == first_text and len(levels) > 1:       # "# Title" and then its parts
+        top = levels[1]
+    out, seen = [], {}
+    marks = [h for h in heads if h[1] == top]
+    for k, (i, lv, title) in enumerate(heads):
+        seen[lv] = seen.get(lv, -1) + 1
+        if lv != top:
+            continue
+        nxt = next((h[0] for h in marks if h[0] > i), len(lines))
+        n = words("\n".join(lines[i:nxt]))
+        out.append({"title": title or "…", "level": lv, "n": seen[lv], "words": n, "minutes": minutes(n)})
+    return out
+
+
 def _chapter(key, title, md, icon=""):
     n = words(md)
-    return {"key": str(key), "title": title, "icon": icon, "md": md, "words": n, "minutes": minutes(n)}
+    return {"key": str(key), "title": title, "icon": icon, "md": md, "words": n, "minutes": minutes(n), "sections": sections(md)}
 
 
 # ── The books ────────────────────────────────────────────────────────────────
+def parts(user, category):
+    """The categories inside a book, in the order of its tree (each under the one it's in): {id: "SQL › Joins"}."""
+    kids = {}
+    for c in NoteCategory.objects.filter(owner=user).order_by("name", "pk"):
+        kids.setdefault(c.parent_id, []).append(c)
+    out, rank = {}, {}
+
+    def walk(parent, path):
+        for c in kids.get(parent, []):
+            name = (path + " › " if path else "") + c.name
+            out[c.pk], rank[c.pk] = name, len(rank)
+            walk(c.pk, name)
+    walk(category.pk, "")
+    return out, rank
+
+
 def notebook_notes(user, category):
-    """A note category's notes (with what's inside it), as its chapters: in the order set in the Reader, then as written."""
+    """A note category's notes (with what's inside it), as its chapters: in the order set in the Reader — and until
+    then, the ones right in it first, then those of each category inside it, together (the part each is in: .part)."""
     qs = Note.objects.filter(owner=user, is_archived=False, is_template=False)
-    return list(exam.notes_in_category(qs, user, category.pk).order_by("book_order", "created_at", "pk"))
+    notes = list(exam.notes_in_category(qs, user, category.pk).prefetch_related("categories"))
+    names, rank = parts(user, category)
+    for n in notes:
+        mine = [c.pk for c in n.categories.all()]
+        inside = sorted((c for c in mine if c in names), key=rank.get)
+        n.part = "" if category.pk in mine or not inside else names[inside[-1]]       # (in the book itself: no part)
+        n.part_rank = -1 if not n.part else rank[inside[-1]]
+    return sorted(notes, key=lambda n: (n.book_order, n.part_rank, n.created_at, n.pk))
 
 
 def note_chapters(notes):
-    return [_chapter(n.pk, n.display_title, n.body, n.icon) for n in notes]
+    return [dict(_chapter(n.pk, n.display_title, n.body, n.icon), part=getattr(n, "part", "")) for n in notes]
 
 
 def exam_chapters(subject):
-    """An exam subject's chapters, in the order the questions are in: each question a heading, its answer below."""
+    """An exam subject's chapters, in the order the questions are in: each section a ## heading, each question a ###
+    heading with its answer below."""
     out, by = [], {}
-    for q in subject.notes.order_by("order", "pk"):
+    for q in exam.ordered(list(subject.notes.all())):
         if q.chapter not in by:
             by[q.chapter] = []
             out.append(q.chapter)
+        part = by[q.chapter]
+        if q.section and (not part or part[-1][0] != q.section):
+            part.append((q.section, "## " + q.section))
+        elif not q.section and part and part[-1][0]:                    # (after a section, the ones with none: under the chapter again)
+            part.append(("", "## " + (q.chapter or _("No chapter"))))
         first, _sep, rest = q.question.strip().partition("\n")
-        by[q.chapter].append("### " + first.strip() + ("\n\n" + rest.strip() if rest.strip() else "") + "\n\n" + (q.answer.strip() or "*" + _("No answer written yet.") + "*"))
-    return [_chapter(name, name or _("No chapter"), "\n\n".join(by[name])) for name in out]
+        part.append((q.section, "### " + first.strip() + ("\n\n" + rest.strip() if rest.strip() else "") + "\n\n" + (q.answer.strip() or "*" + _("No answer written yet.") + "*")))
+    return [_chapter(name, name or _("No chapter"), "\n\n".join(md for _s, md in by[name])) for name in out]
 
 
 def progress(user, kind, chapters, subject=None):
@@ -83,7 +155,21 @@ def day_stats(user, today=None):
     while reached(seconds.get(day, 0)):
         streak += 1
         day -= timedelta(days=1)
-    return {"today": round(seconds.get(today, 0) / 60, 1), "goal": goal, "streak": streak, "reached": reached(seconds.get(today, 0))}
+    ws = WorkSettings.for_user(user)
+    week = [{"day": date_format(today - timedelta(days=back), "D"), "min": round(seconds.get(today - timedelta(days=back), 0) / 60),
+             "met": reached(seconds.get(today - timedelta(days=back), 0)), "today": back == 0} for back in range(6, -1, -1)]
+    return {"today": round(seconds.get(today, 0) / 60, 1), "goal": goal, "streak": streak, "reached": reached(seconds.get(today, 0)),
+            "week": week, "weekMin": sum(x["min"] for x in week), "remind": ws.reading_remind_at.strftime("%H:%M") if ws.reading_remind_at else ""}
+
+
+def parse_time(text):
+    """"07:30" → a time; anything else (or nothing) → None."""
+    from datetime import time
+
+    m = re.match(r"^\s*(\d{1,2}):(\d{2})\s*$", text or "")
+    if not m or int(m.group(1)) > 23 or int(m.group(2)) > 59:
+        return None
+    return time(int(m.group(1)), int(m.group(2)))
 
 
 def log(user, *, note=None, subject=None, chapter="", book=None, position=None, add_seconds=0, done=None, takeaway=None):

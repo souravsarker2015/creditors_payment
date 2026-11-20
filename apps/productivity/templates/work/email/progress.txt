@@ -1,0 +1,22 @@
+{% load i18n %}{% autoescape off %}{% blocktranslate with name=user.get_short_name|default:user.get_username n=r.days %}{{ name }}, here are your last {{ n }} days{% endblocktranslate %} — {{ r.start|date:"j M" }} – {{ r.end|date:"j M" }}
+
+{{ r.highlights.0.1 }}
+
+{% for k in r.kpis %}{{ k.label }}: {{ k.value }}{% if k.delta and k.delta.text %} ({{ k.delta.text }}){% endif %}{% if k.sub %} — {{ k.sub }}{% endif %}
+{% endfor %}
+{% translate "DAY BY DAY" %}
+{% for b in r.bars %}{{ b.title }}{% if b.done %} · ✅ {{ b.done }}{% endif %}
+{% endfor %}{% if r.highlights|length > 1 %}
+{% translate "WHAT STANDS OUT" %}
+{% for icon, text in r.highlights|slice:"1:" %}- {{ text }}
+{% endfor %}{% endif %}
+{% translate "STREAKS (days in a row)" %}
+{% for s in r.streaks %}- {{ s.label }}: {{ s.n }}
+{% endfor %}
+{% blocktranslate with n=r.days %}FOR THE NEXT {{ n }} DAYS{% endblocktranslate %}
+{% for t in r.tips %}{{ forloop.counter }}. {{ t }}
+{% endfor %}{% if base %}
+{% translate "Open your dashboard" %}: {{ base }}{{ dashboard_url }}{% endif %}
+
+{% translate "You get this at most every 3 days, when you open the Dashboard." %} {% translate "Turn it off in Productivity → Settings." %}
+{% endautoescape %}

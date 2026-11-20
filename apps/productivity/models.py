@@ -669,6 +669,8 @@ class WorkSettings(models.Model):
                                                  help_text=_("Optional. The board warns when “In progress” holds more — finishing beats starting."))
     reading_goal = models.PositiveSmallIntegerField(_("Reading a day (minutes)"), default=10, validators=[MaxValueValidator(240)],
                                                     help_text=_("A small daily goal in the Reader, with the days in a row you reached it. 0: no goal."))
+    reading_remind_at = models.TimeField(_("Remind me to read at"), null=True, blank=True,
+                                         help_text=_("Once a day, while the app is open — unless you've read enough already. Empty: no reminder."))
     invoice_from = models.TextField(_("Your details on invoices"), blank=True,
                                     help_text=_("Your name, address, phone and how to pay you (bank, bKash…). Printed at the top of an invoice."))
     currency = models.CharField(_("Currency"), max_length=8, default="৳", help_text=_("Shown on invoices and earnings: ৳, $, €…"))
@@ -677,6 +679,10 @@ class WorkSettings(models.Model):
     reminder_emails = models.BooleanField(_("Email my task reminders too"), default=False,
                                           help_text=_("So a reminder reaches you even when the app is closed."))
     daily_email_sent_on = models.DateField(null=True, blank=True)
+    progress_email = models.BooleanField(_("Email me a progress report every 3 days"), default=True,
+                                         help_text=_("When you open the Dashboard and the last report is 3 days old or more: your time, focus, tasks, "
+                                                     "reading and practice, with charts."))
+    progress_email_sent_at = models.DateTimeField(null=True, blank=True)
     prep_exam = models.CharField(_("Preparing for"), max_length=120, blank=True, help_text=_("The exam or interview: “Google onsite”, “AWS SAA”…"))
     prep_exam_date = models.DateField(_("Its date"), null=True, blank=True)
     prep_new_per_day = models.PositiveSmallIntegerField(_("New questions a day"), default=10, validators=[MaxValueValidator(200)],
@@ -1554,6 +1560,8 @@ class ExamNote(models.Model):
     owner = models.ForeignKey(**OWNER)
     subject = models.ForeignKey(ExamSubject, on_delete=models.CASCADE, related_name="notes", verbose_name=_("Subject"))
     chapter = models.CharField(_("Chapter"), max_length=120, blank=True, help_text=_("Optional: questions with the same chapter are shown together."))
+    section = models.CharField(_("Section"), max_length=120, blank=True, default="",
+                               help_text=_("Optional: a part of the chapter — questions with the same section are shown together in it."))
     categories = models.ManyToManyField(ExamCategory, blank=True, related_name="notes", verbose_name=_("Categories"))
     question = models.TextField(_("Question"))
     answer = models.TextField(_("Answer"), blank=True)

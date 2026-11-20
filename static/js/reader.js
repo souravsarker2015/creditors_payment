@@ -7,7 +7,11 @@
    - help to stay on the line: Focus line (only the part you're on is bright), Bold word starts;
    - listening instead: the chapter read aloud part by part, the part marked, on into the next chapter;
    - a reward: a chapter's end is a small celebration, a daily goal (10 min) and its streak;
-   - remembering: one line of your own at the end of each chapter, and (exam notes) a test of just that chapter.
+   - remembering: one line of your own at the end of each chapter, and (exam notes) a test of just that chapter —
+     or "Quiz me as I read": each answer hidden until you've thought of it (recalling beats rereading);
+   - a chapter's sections (its headings; an exam chapter's sections or questions): listed at its start ("In this
+     chapter", what's coming and how long), in the contents, ticked on the bar as you pass them, [ ] to step;
+   - a book's parts: the categories inside a note category, each a group of chapters.
 
    Time read is counted only while the page is in sight and you're reading (scrolling, keys, a tap in the last
    minute — or listening), and sent every 30 s (and on leaving). Keys: ← → chapters, T contents, A text, L listen,
@@ -18,7 +22,7 @@
   function json(id) { try { return JSON.parse(d.getElementById(id).textContent); } catch (e) { return {}; } }
   var TX = json("read-text");
   function T(k) { return TX[k] || k; }
-  var PREFS = "ft-reader", DEFAULT = { size: 19, font: "serif", lh: 1.75, width: 68, theme: "paper", focus: false, bionic: false, rate: 1 };
+  var PREFS = "ft-reader", DEFAULT = { size: 19, font: "serif", lh: 1.75, width: 68, theme: "paper", focus: false, bionic: false, rate: 1, quiz: false };
   function loadPrefs() { var p = W.recall(PREFS, {}) || {}; return Object.assign({}, DEFAULT, p); }
   function typing(e) { var el = e.target; return !!(el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))); }
   function csrf() { var m = d.cookie.match(/csrftoken=([^;]+)/); return m ? decodeURIComponent(m[1]) : ((d.querySelector("[name=csrfmiddlewaretoken]") || {}).value || ""); }
@@ -31,7 +35,7 @@
         data: data, chapters: data.chapters, progress: data.progress || {}, stats: data.stats || {}, prefs: loadPrefs(),
         idx: start, pos: 0, resumeAt: 0, toc: false, aa: false, snd: false, goalOpen: false, barHidden: false, justDone: false,
         takeaway: "", kept: false, speaking: false, listenPaused: false, at: -1, voices: [],
-        pending: 0, lastActive: Date.now(), T: T,
+        pending: 0, lastActive: Date.now(), T: T, sec: -1, secMarks: [], secEls: [], tocOpen: {}, allSecs: false,
 
         init: function () {
           var self = this;
@@ -41,6 +45,13 @@
           this.countTime();
           this.keys();
           this.sortable();
+          var self2 = this, sized = 0;
+          window.addEventListener("resize", function () { clearTimeout(sized); sized = setTimeout(function () { self2.layout(); self2.measure(); }, 200); });
+          this.$refs.text.addEventListener("click", function (e) {         // Quiz me: a tap shows the answer
+            var a = e.target.closest(".rd-ans");
+            if (!a || a.classList.contains("is-shown") || !self2.prefs.quiz) return;
+            e.preventDefault(); e.stopPropagation(); a.classList.add("is-shown"); self2.active();
+          }, true);
           this.$watch("speaking", function (on) { if (window.Ambient) Ambient.duck(on); });     // the background sound steps back while it's read aloud
           if ("speechSynthesis" in window) {
             var load = function () { self.voices = speechSynthesis.getVoices(); };
@@ -69,18 +80,22 @@
         open: function (i, first) {
           var self = this, c = this.chapters[i], el = this.$refs.text;
           this.idx = i; this.justDone = false; this.kept = false; this.openedAt = Date.now(); clearTimeout(this.doneTimer);
+          this.sec = -1; this.allSecs = false; this.secMarks = []; this.secEls = [];
           this.takeaway = this.prog(c.key).takeaway || "";
           el.innerHTML = W.markdown(c.md || "");
           if (W.enrich) try { W.enrich(el, {}); } catch (e) { /* diagrams etc. */ }
           if (window.hljs) el.querySelectorAll("pre code:not(.language-mermaid):not([data-highlighted])").forEach(function (x) { try { hljs.highlightElement(x); } catch (e) { /* ok */ } });
           if (this.prefs.bionic) this.bionic(true);
+          this.wrapAnswers();
           var u = new URL(location.href); u.searchParams.set("ch", c.key); history.replaceState(null, "", u);
           var p = this.prog(c.key);
           this.resumeAt = p.done ? 0 : (p.position || 0);
           window.scrollTo({ top: 0, behavior: "instant" });
           this.$nextTick(function () {
+            self.layout();
             if (first && self.resumeAt > 0.03) self.jump(self.resumeAt);      // opened again: straight back to the line
             self.measure(); self.markFocus();
+            setTimeout(function () { self.layout(); self.measure(); }, 600);     // (pictures and diagrams take a moment)
           });
         },
         jump: function (frac) {
@@ -94,6 +109,51 @@
           var r = this.$refs.text.getBoundingClientRect(), h = Math.max(1, r.height);
           var seen = innerHeight * 0.6 - r.top;
           this.pos = Math.max(0, Math.min(1, seen / h));
+          var line = innerHeight * 0.4, at = -1;                     // the section you're in: the last one begun above the reading line
+          this.secEls.forEach(function (el, j) { if (el && el.getBoundingClientRect().top <= line) at = j; });
+          this.sec = at;
+        },
+
+        /* ── sections: a chapter's headings (server: reading.sections) found on the page, and where each starts ── */
+        layout: function () {
+          var el = this.$refs.text, c = this.cur();
+          this.secEls = (c.sections || []).map(function (s) { return el.querySelectorAll("h" + s.level)[s.n] || null; });
+          var r = el.getBoundingClientRect(), h = Math.max(1, r.height);
+          this.secMarks = this.secEls.length > 1 ? this.secEls.map(function (x) { return x ? Math.max(0, Math.min(1, (x.getBoundingClientRect().top - r.top) / h)) : 0; }) : [];
+        },
+        toSection: function (ci, j) {
+          var self = this;
+          if (ci !== this.idx) { this.go(ci); setTimeout(function () { self.toSection(ci, j); }, 80); return; }
+          var el = this.secEls[j]; if (!el) return;
+          window.scrollTo({ top: Math.max(0, window.scrollY + el.getBoundingClientRect().top - 76), behavior: "smooth" });
+          this.resumeAt = 0; this.heading = { j: j, at: Date.now() };
+        },
+        stepSection: function (dir) {           // ] the next section (after the last: the next chapter), [ back
+          var n = this.secEls.length, h = this.heading, at = h && Date.now() - h.at < 1000 ? h.j : this.sec;      // (pressed again while still scrolling: on from there)
+          if (dir > 0) { if (at + 1 < n) this.toSection(this.idx, at + 1); else this.go(this.idx + 1); return; }
+          var el = this.secEls[at];
+          if (at === this.sec && el && el.getBoundingClientRect().top < -40) this.toSection(this.idx, at);          // back to this one's start first
+          else if (at > 0) this.toSection(this.idx, at - 1);
+          else window.scrollTo({ top: 0, behavior: "smooth" });
+        },
+        secText: function () {
+          var s = (this.cur().sections || [])[this.sec];
+          return s && this.secEls.length > 1 ? "§ " + (this.sec + 1) + "/" + this.secEls.length + " " + s.title : "";
+        },
+        whereText: function () { var s = this.secText(); return this.chapterOf() + (s ? " · " + s : "") + " · " + this.minLeftText(); },
+        partStart: function (i) { var c = this.chapters[i]; return !!(c && c.part) && (i === 0 || this.chapters[i - 1].part !== c.part); },
+
+        /* Quiz me as I read (exam notes): what's under each question is hidden until tapped */
+        wrapAnswers: function () {
+          var el = this.$refs.text;
+          el.querySelectorAll(".rd-ans").forEach(function (a) { while (a.firstChild) a.parentNode.insertBefore(a.firstChild, a); a.remove(); });
+          if (this.data.kind !== "exam" || !this.prefs.quiz) return;
+          el.querySelectorAll(":scope > h3").forEach(function (q) {
+            var box = d.createElement("div"), n = q.nextElementSibling;
+            box.className = "rd-ans"; box.setAttribute("data-hint", T("tapAnswer"));
+            while (n && !/^H[1-3]$/.test(n.tagName)) { var next = n.nextElementSibling; box.appendChild(n); n = next; }
+            q.after(box);
+          });
         },
         watchScroll: function () {
           var self = this, lastY = window.scrollY, timer = 0;
@@ -151,6 +211,22 @@
           var n = Math.floor(this.todayMin());
           return this.stats.goal ? T("today").replace("%(n)s", n).replace("%(goal)s", this.stats.goal) : T("todayNoGoal").replace("%(n)s", n);
         },
+        weekPct: function (w) {
+          var top = Math.max(this.stats.goal || 0, Math.max.apply(null, (this.stats.week || []).map(function (x) { return x.min; }).concat([1])));
+          return w.min ? Math.max(6, Math.round(100 * w.min / top)) : 0;
+        },
+        setRemind: function (v) {           // (a time box sends a change for the hour, then the minutes: the last one counts)
+          var self = this;
+          clearTimeout(this.remindTimer);
+          this.remindTimer = setTimeout(function () { self.sendRemind(v); }, 900);
+        },
+        sendRemind: function (v) {
+          var self = this;
+          this.post({ action: "goal", remind: v || "" }).then(function (r) {
+            if (r && r.stats) { self.stats = Object.assign(r.stats, { today: self.stats.today }); W.cfg.readRemind = v; W.toast(v ? T("remindSet").replace("%(time)s", v) : T("remindOff")); }
+            else W.toast(T("notSaved"), "warn");
+          });
+        },
         setGoal: function (n) {
           var self = this, goal = Math.max(0, Math.min(240, n));
           this.stats.goal = goal;
@@ -197,7 +273,8 @@
           if (k === "theme") d.documentElement.setAttribute("data-rtheme", v);          // (the page around it too)
           if (k === "bionic") this.bionic(v);
           if (k === "focus") { this.markFocus(); if (v) W.toast(T("focusOn")); }
-          var self = this; this.$nextTick(function () { self.measure(); });
+          if (k === "quiz") this.wrapAnswers();
+          var self = this; this.$nextTick(function () { self.layout(); self.measure(); });
         },
         size: function (by) { this.set("size", Math.max(14, Math.min(32, this.prefs.size + by))); },
 
@@ -230,8 +307,8 @@
           if (best) {
             best.classList.add("rd-here");
             // a heading (an exam question): what's under it, up to the next heading, stays bright with it
-            var hd = /^H[1-6]$/.test(best.tagName) ? best : null;
-            if (!hd) for (var p = best.previousElementSibling; p; p = p.previousElementSibling) { if (/^H[1-6]$/.test(p.tagName)) { if (+p.tagName[1] >= 3) hd = p; break; } }
+            var hd = /^H[1-6]$/.test(best.tagName) ? best : null, base = best.parentElement.classList.contains("rd-ans") ? best.parentElement : best;
+            if (!hd) for (var p = base.previousElementSibling; p; p = p.previousElementSibling) { if (/^H[1-6]$/.test(p.tagName)) { if (+p.tagName[1] >= 3) hd = p; break; } }
             if (hd) for (var n = hd; n; n = n.nextElementSibling) { if (n !== hd && /^H[1-6]$/.test(n.tagName)) break; n.classList.add("rd-near"); }
           }
         },
@@ -318,6 +395,9 @@
             else if (k === "a" || k === "A") { e.preventDefault(); self.aa = !self.aa; }
             else if (k === "l" || k === "L") { e.preventDefault(); self.listen(); }
             else if (k === "s" || k === "S") { e.preventDefault(); self.snd = !self.snd; }
+            else if (k === "]") { e.preventDefault(); self.stepSection(1); }
+            else if (k === "[") { e.preventDefault(); self.stepSection(-1); }
+            else if ((k === "q" || k === "Q") && self.data.kind === "exam") { e.preventDefault(); self.set("quiz", !self.prefs.quiz); }
             else if ((k === "m" || k === "M") && window.Ambient) { e.preventDefault(); self.mute(); }
             else if (k === "f" || k === "F") { e.preventDefault(); self.set("focus", !self.prefs.focus); }
             else if (k === "+" || k === "=") { e.preventDefault(); self.size(1); }

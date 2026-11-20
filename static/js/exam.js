@@ -146,8 +146,9 @@
               if (!(n.categories || []).length) catN.none++;
               self.catUp(n.categories || []).forEach(function (id) { catN[id] = (catN[id] || 0) + 1; });
               shows.unknown += n.known ? 0 : 1; shows.due += n.due ? 1 : 0; shows.missed += n.misses ? 1 : 0; shows.starred += n.starred ? 1 : 0;
-              if (!by[n.chapter]) { by[n.chapter] = { name: n.chapter, n: 0, known: 0 }; chapters.push(by[n.chapter]); }
+              if (!by[n.chapter]) { by[n.chapter] = { name: n.chapter, n: 0, known: 0, sections: [] }; chapters.push(by[n.chapter]); }
               by[n.chapter].n++; by[n.chapter].known += n.known ? 1 : 0;
+              if (n.section && by[n.chapter].sections.indexOf(n.section) < 0) by[n.chapter].sections.push(n.section);
             });
             self.shows = shows; self.chapters = chapters; self.catN = catN; self.next = null;
             self.notes = all.filter(function (n) {
@@ -176,6 +177,8 @@
         updateCounts: function (r) { if (r && r.shows) { this.shows = r.shows; this.chapters = r.chapters; this.catN = r.categoryN || this.catN; } },
         setShow: function (show) { this.show = show; this.reload(); },
         setChapter: function (name) { this.chapter = name; this.reload(); },
+        // the sections already used in a chapter (to pick from as one is typed)
+        sectionsOf: function (name) { var c = (this.chapters || []).filter(function (x) { return x.name === (name || "").trim(); })[0]; return c && c.sections ? c.sections : []; },
         /* ── categories: the popup (pick any number for a question, or one to show), and the chips ── */
         setCategory: function (id) { this.category = id; this.reload(); },
         withCategory: function (url) {   // a review of what's being shown
@@ -212,7 +215,7 @@
     /* ── a subject's board: cards like Google Keep, a page at a time ── */
     Alpine.data("examBoard", function () {
       var D = data("exam-data"), DRAFT = "exam-draft-" + D.subject, EDIT = "exam-edit-" + D.subject, PREFS = "exam-board", prefs = recall(PREFS, {}) || {};
-      function blank(keep) { return { question: "", answer: "", chapter: keep ? keep.chapter : "", categories: keep ? keep.categories.slice() : [], color: "", starred: false }; }      // the label and categories stay for the next one
+      function blank(keep) { return { question: "", answer: "", chapter: keep ? keep.chapter : "", section: keep ? keep.section || "" : "", categories: keep ? keep.categories.slice() : [], color: "", starred: false }; }      // the label and categories stay for the next one
       return Object.assign(pager(D), {
         D: D, t: t, answers: prefs.answers !== false, composing: false, many: false, draft: blank(), writeView: { add: false, edit: false, read: false },
         paste: "", pasteChapter: "", pasteCats: [], preview: null, checking: false, previewTimer: null, histOpen: false, histLoading: false, versions: [], shown: null,
@@ -300,7 +303,7 @@
               var before = self.notes[evt.newDraggableIndex + 1];
               api(D.api, { action: "move", id: moved.id, before: before ? before.id : "", ids: self.notes.map(function (n) { return n.id; }).join(",") }).then(function (r) {
                 if (!r.ok) return;
-                moved.chapter = r.chapter; self.updateCounts(r);
+                moved.chapter = r.chapter; moved.section = r.section || ""; self.updateCounts(r);
                 self.notes.forEach(function (n) { if (r.numbers && r.numbers[n.id]) n.number = r.numbers[n.id]; });
               });
             },
@@ -320,7 +323,7 @@
           if (window.Work && Work.liveDone) Work.liveDone();
           var self = this, x = this.draft;
           if (!x.question.trim()) { toast(t("writeFirst"), "warn"); return; }
-          api(D.api, { action: "add", question: x.question.trim(), answer: x.answer, chapter: x.chapter, categories: x.categories.join(","), color: x.color, starred: x.starred ? "1" : "0" }).then(function (r) {
+          api(D.api, { action: "add", question: x.question.trim(), answer: x.answer, chapter: x.chapter, section: (x.chapter || "").trim() ? x.section || "" : "", categories: x.categories.join(","), color: x.color, starred: x.starred ? "1" : "0" }).then(function (r) {
             if (r.queued) { self.draft = blank(x); self.writeView.add = false; return; }        // sent when there's signal (or after signing in)
             if (!r.ok || !r.note) return;
             r.note._new = true;
@@ -391,13 +394,13 @@
           api(D.noteBase + q.id + "/", { action: "color", color: color }).then(function (r) { if (!r.ok && !r.queued) q.color = was; });
         },
         openEditor: function (q) {
-          this.edit = { id: q.id, question: q.question, answer: q.answer, chapter: q.chapter, categories: (q.categories || []).slice(), color: q.color || "", starred: q.starred, known: q.known, number: q.number, subject: D.subject };
+          this.edit = { id: q.id, question: q.question, answer: q.answer, chapter: q.chapter, section: q.section || "", categories: (q.categories || []).slice(), color: q.color || "", starred: q.starred, known: q.known, number: q.number, subject: D.subject };
           this.editFrom = JSON.stringify(this.edit); this.editFirst = JSON.parse(this.editFrom); this.editing = q; this.editState = "saved";
           var seen = recall("work-exam-view", "write"); if (seen === true) seen = "preview"; else if (seen !== "preview" && seen !== "view") seen = "write";
           this.writeView.edit = seen !== "write"; this.writeView.read = seen === "view";
           var kept = recall(EDIT, null);                  // what wasn't saved last time comes back
           if (kept && kept.id === q.id) {
-            this.edit.question = kept.question; this.edit.answer = kept.answer; this.edit.chapter = kept.chapter; this.edit.color = kept.color;
+            this.edit.question = kept.question; this.edit.answer = kept.answer; this.edit.chapter = kept.chapter; this.edit.section = kept.section || ""; this.edit.color = kept.color;
             this.edit.categories = kept.categories || this.edit.categories;
             toast(t("draftBack"), "good");
           }
@@ -409,13 +412,13 @@
           var self = this, e = this.edit;
           if (JSON.stringify(e) === this.editFrom) return;
           this.editState = "dirty";
-          store(EDIT, { id: e.id, question: e.question, answer: e.answer, chapter: e.chapter, categories: e.categories, color: e.color });
+          store(EDIT, { id: e.id, question: e.question, answer: e.answer, chapter: e.chapter, section: e.section, categories: e.categories, color: e.color });
           clearTimeout(this.editTimer);
           if (e.question.trim()) this.editTimer = setTimeout(function () { self.saveEditing(); }, 900);
         },
         /* What's in the editor, to the server (`to`: a subject to move it to). One save at a time, in order. */
         sendEdit: function (q, e, to) {
-          var self = this, fields = { action: "update", question: e.question, answer: e.answer, chapter: e.chapter, categories: (e.categories || []).join(","), color: e.color };
+          var self = this, fields = { action: "update", question: e.question, answer: e.answer, chapter: e.chapter, section: (e.chapter || "").trim() ? e.section || "" : "", categories: (e.categories || []).join(","), color: e.color };
           if (to) fields.subject = to; else fields._ft_same = "exam:" + q.id;
           var sent = JSON.stringify(e);
           this.editSending = Promise.resolve(this.editSending).then(function () {
@@ -424,7 +427,7 @@
           }).then(function (r) {
             self.editSending = null;
             if (!r.ok && !r.queued) return r;
-            if (r.ok) { q.question = e.question.trim(); q.answer = e.answer; q.chapter = (e.chapter || "").trim(); q.categories = (e.categories || []).slice(); q.color = e.color; }
+            if (r.ok) { q.question = e.question.trim(); q.answer = e.answer; q.chapter = (e.chapter || "").trim(); q.section = (e.chapter || "").trim() ? (e.section || "").trim() : ""; q.categories = (e.categories || []).slice(); q.color = e.color; }
             if (r.rev) q.rev = r.rev;
             if (r.conflict) toast(t("conflict"), "warn");
             if (JSON.stringify(self.edit) === sent || self.editing !== q) store(EDIT, null);
@@ -486,7 +489,7 @@
           if (unsent && !e.question.trim()) { toast(t("writeFirst"), "warn"); return; }
           this.editing = null;
           function done() {
-            if ((e.chapter || "").trim() !== was.chapter || JSON.stringify(e.categories) !== JSON.stringify(was.categories)) self.reload();
+            if ((e.chapter || "").trim() !== was.chapter || (e.section || "").trim() !== (was.section || "") || JSON.stringify(e.categories) !== JSON.stringify(was.categories)) self.reload();
           }
           if (!unsent) { this.flags(q, e, was); done(); return; }
           this.sendEdit(q, e, to).then(function (r) {
@@ -576,6 +579,12 @@
             return FT.ask({ title: t("chapterAsk"), input: {} }).then(function (name) {
               if (name === null) return;
               fields.chapter = name.trim(); self.bulkSend(op, ids, fields);
+            });
+          }
+          if (op === "section") {
+            return FT.ask({ title: t("sectionAsk"), input: {} }).then(function (name) {
+              if (name === null) return;
+              fields.section = name.trim(); self.bulkSend(op, ids, fields);
             });
           }
           if (op === "move") { if (!this.moveTo) return; fields.subject = this.moveTo; }
@@ -731,6 +740,7 @@
         },
         known: function () { return this.shows.all - this.shows.unknown; },
         heading: function (i) { return i === 0 || this.notes[i - 1].chapter !== this.notes[i].chapter; },     // a chapter starts here
+        sectionStart: function (i) { var q = this.notes[i]; return !!q.section && (this.heading(i) || this.notes[i - 1].section !== q.section); },     // …or a section of it
         count: function (show) { return this.shows[show] || 0; },
         reveal: function (q) { if (!this.answers) this.open[q.id] = !this.open[q.id]; },
         zoom: function (step) { this.size = Math.round(Math.min(1.4, Math.max(0.85, this.size + step * 0.1)) * 100) / 100; },

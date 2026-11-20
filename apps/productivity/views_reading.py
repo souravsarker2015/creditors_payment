@@ -5,7 +5,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils.translation import gettext as _
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_GET, require_POST
 
 from . import reading
 from .access import work_required
@@ -19,7 +19,8 @@ def _texts():
         "done": _("Chapter done"), "endOf": _("End of the chapter"), "allDone": _("You've read the whole book. Well done!"), "goalMet": _("Today's reading goal reached!"),
         "saved": _("Kept"), "listen": _("Listen"), "pause": _("Pause"), "noVoice": _("This browser can't read aloud."),
         "today": _("%(n)s / %(goal)s min today"), "todayNoGoal": _("%(n)s min today"), "copied": _("Copied"),
-        "focusOn": _("Focus line on: ↑ ↓ move it"), "orderSaved": _("Order saved"), "undo": _("Undo"), "notSaved": _("Not saved."),
+        "focusOn": _("Focus line on: ↑ ↓ move it"), "tapAnswer": _("Think of the answer, then tap to see it"),
+        "remindSet": _("Reminder set for %(time)s each day"), "remindOff": _("No reminder"), "orderSaved": _("Order saved"), "undo": _("Undo"), "notSaved": _("Not saved."),
     }
 
 
@@ -86,14 +87,21 @@ def reading_api(request):
     """What the Reader saves as you read: where you are in a chapter, the time read since the last report, a chapter
     finished or a line kept — or (action=order) the chapters of a note book put in a new order."""
     user, p = request.user, request.POST
-    if p.get("action") == "goal":
-        try:
-            goal = max(0, min(240, int(p.get("goal", ""))))
-        except ValueError:
-            return JsonResponse({"ok": False}, status=400)
-        ws = WorkSettings.for_user(user)
-        ws.reading_goal = goal
-        ws.save(update_fields=["reading_goal"])
+    if p.get("action") == "goal":            # the daily goal (minutes) and/or the time of the reminder ("" : none)
+        ws, fields = WorkSettings.for_user(user), []
+        if "goal" in p:
+            try:
+                ws.reading_goal = max(0, min(240, int(p.get("goal", ""))))
+            except ValueError:
+                return JsonResponse({"ok": False}, status=400)
+            fields.append("reading_goal")
+        if "remind" in p:
+            ws.reading_remind_at = reading.parse_time(p["remind"])
+            if p["remind"].strip() and ws.reading_remind_at is None:
+                return JsonResponse({"ok": False}, status=400)
+            fields.append("reading_remind_at")
+        if fields:
+            ws.save(update_fields=fields)
         return JsonResponse({"ok": True, "stats": reading.day_stats(user)})
     if p.get("action") == "order":
         ids = [int(i) for i in p.get("ids", "").split(",") if i.strip().isdigit()]
@@ -119,3 +127,17 @@ def reading_api(request):
         book = NoteCategory.objects.filter(owner=user, pk=p.get("book") or 0).first() if kind == "book" else None
         reading.log(user, note=note, book=book, position=position, add_seconds=add, done=done, takeaway=takeaway)
     return JsonResponse({"ok": True, "stats": reading.day_stats(user)})
+
+
+@work_required
+@require_GET
+def reading_nudge(request):
+    """For the reminder (static/js/work.js, at the time set): nothing when today's goal is reached already, else
+    how far today is and the book to go on with."""
+    stats = reading.day_stats(request.user)
+    if stats["reached"] and stats["goal"]:
+        return JsonResponse({"ok": True, "due": False})
+    book = reading.keep_going(request.user)
+    return JsonResponse({"ok": True, "due": True, "today": stats["today"], "goal": stats["goal"], "streak": stats["streak"],
+                         "title": book["title"] if book else "", "chapter": book["chapter"] if book else "",
+                         "url": book["url"] if book else reverse("work:notes")})

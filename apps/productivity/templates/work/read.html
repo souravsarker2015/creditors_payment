@@ -11,7 +11,7 @@
 {{ texts|json_script:"read-text" }}
 {# The Reader (static/js/reader.js): a chapter at a time, as Kindle and Apple Books — keys: ← → chapters, T contents, A text, L listen, F focus line #}
 <div class="rd" x-data="reader(JSON.parse(document.getElementById('read-data').textContent))" data-keys-page="reader find"
-     data-page-keys="t a l s m f n p" :class="{ 'is-focus': prefs.focus, 'is-bionic': prefs.bionic, 'bar-hidden': barHidden, 'toc-open': toc }"
+     data-page-keys="t a l s m f n p q [ ]" :class="{ 'is-quiz': prefs.quiz && data.kind === 'exam', 'is-focus': prefs.focus, 'is-bionic': prefs.bionic, 'bar-hidden': barHidden, 'toc-open': toc }"
      :style="vars()" :data-rtheme="prefs.theme" :data-rfont="prefs.font">
 
   {# ── the bar: back, contents, where you are, today's reading, listen, text ── #}
@@ -20,7 +20,7 @@
     <button type="button" class="rd-btn" @click="toc = !toc" :aria-expanded="toc.toString()" aria-label="{% translate 'Contents' %}" data-tip="{% translate 'Contents (T)' %}">{% icon "list" %}</button>
     <div class="rd-where">
       <b x-text="data.title"></b>
-      <small x-text="chapterOf() + ' · ' + minLeftText()"></small>
+      <small x-text="whereText()"></small>
     </div>
     <button type="button" class="rd-goal" @click="goalOpen = !goalOpen" :class="stats.reached && 'is-met'" :data-tip="'{% translate "Read today — your daily goal" %}'"
             :aria-label="todayText()">
@@ -34,7 +34,8 @@
     <button type="button" class="rd-btn rd-aa" @click="aa = !aa" :aria-expanded="aa.toString()" aria-label="{% translate 'Text and colours' %}" data-tip="{% translate 'Text size, font, colours (A)' %}">Aa</button>
     <button type="button" class="rd-btn rd-hide-xs" data-keys-open aria-label="{% translate 'Keyboard shortcuts' %}" data-tip="{% translate 'Keyboard shortcuts (?)' %}">{% icon "keyboard" %}</button>
   </header>
-  <div class="rd-progress" aria-hidden="true"><i :style="'width:' + (pos * 100) + '%'"></i></div>
+  <div class="rd-progress" aria-hidden="true"><i :style="'width:' + (pos * 100) + '%'"></i>
+    <template x-for="(m, j) in secMarks" :key="j"><b :style="'left:' + (m * 100) + '%'" :class="j <= sec && 'is-past'"></b></template></div>
 
   {# today's reading: the goal and the streak #}
   <div class="rd-pop rd-goalpop" x-show="goalOpen" x-cloak x-transition @click.outside="goalOpen = false">
@@ -44,6 +45,15 @@
     <div class="rd-step"><span>{% translate "Daily goal" %}</span>
       <button type="button" @click="setGoal(stats.goal - 5)" aria-label="{% translate 'Less' %}">−</button><b class="num" x-text="stats.goal ? stats.goal + ' min' : '{% translate "none" %}'"></b>
       <button type="button" @click="setGoal(stats.goal + 5)" aria-label="{% translate 'More' %}">+</button></div>
+    <div class="rd-week" x-show="stats.week" aria-label="{% translate 'The last seven days' %}">
+      <template x-for="(w, j) in stats.week || []" :key="j">
+        <div class="rd-week-day" :class="{ 'is-met': w.met, 'is-today': w.today }" :title="w.min + ' min'">
+          <span class="rd-week-bar"><i :style="'height:' + weekPct(w) + '%'"></i></span><small x-text="w.day"></small></div>
+      </template>
+    </div>
+    <p class="rd-pop-sub" x-show="stats.week" x-text="(stats.weekMin || 0) + ' {{ _("min this week")|escapejs }}'"></p>
+    <label class="rd-step rd-remind"><span>{% translate "Remind me at" %}<small>{% translate "A fixed time each day turns reading into a habit" %}</small></span>
+      <input type="time" :value="stats.remind || ''" @change="setRemind($event.target.value)" aria-label="{% translate 'Remind me to read at' %}"></label>
     <p class="rd-pop-help">{% translate "Small is the secret: 10 minutes a day is a book a month." %}</p>
   </div>
 
@@ -85,6 +95,7 @@
         <button type="button" data-t="night" :class="prefs.theme === 'night' && 'is-on'" @click="set('theme', 'night')" title="{% translate 'Night — dim and warm, for bed' %}">Aa</button>
       </div></div>
     <label class="rd-row rd-switch"><span>{% translate "Focus line" %}<small>{% translate "Only the part you're on is bright (F)" %}</small></span><input type="checkbox" class="switch" :checked="prefs.focus" @change="set('focus', $event.target.checked)"></label>
+    <label class="rd-row rd-switch" x-show="data.kind === 'exam'"><span>{% translate "Quiz me as I read" %}<small>{% translate "Answers hidden: think first, then tap to see (Q)" %}</small></span><input type="checkbox" class="switch" :checked="prefs.quiz" @change="set('quiz', $event.target.checked)"></label>
     <label class="rd-row rd-switch"><span>{% translate "Bold word starts" %}<small>{% translate "Guides the eye along each line" %}</small></span><input type="checkbox" class="switch" :checked="prefs.bionic" @change="set('bionic', $event.target.checked)"></label>
     <div class="rd-row" x-show="voices.length" x-cloak><span>{% translate "Reading speed" %}<small>{% translate "When listening" %}</small></span>
       <div class="rd-seg">
@@ -100,12 +111,21 @@
       <div class="rd-bookbar" aria-hidden="true"><i :style="'width:' + (100 * doneCount() / chapters.length) + '%'"></i></div></header>
     <ol class="rd-toc-list" x-ref="tocList">
       <template x-for="(c, i) in chapters" :key="c.key">
-        <li :data-key="c.key" :class="{ 'is-here': i === idx, 'is-done': prog(c.key).done }">
+        <li :data-key="c.key" :class="{ 'is-here': i === idx, 'is-done': prog(c.key).done, 'has-part': partStart(i) }">
+          <p class="rd-toc-part" x-show="partStart(i)" x-text="c.part"></p>
           <button type="button" @click="go(i); toc = false">
             <span class="rd-toc-mark" aria-hidden="true"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" class="rd-toc-bg"/><circle cx="10" cy="10" r="8" class="rd-toc-fg" pathLength="100" :style="'stroke-dasharray:' + (prog(c.key).done ? 100 : Math.round(100 * (prog(c.key).position || 0))) + ' 100'"/></svg><i x-show="prog(c.key).done">✓</i></span>
             <span class="rd-toc-t"><span x-text="(c.icon ? c.icon + ' ' : '') + c.title"></span><small x-text="c.minutes + ' min'"></small></span>
           </button>
+          <button type="button" class="rd-toc-more" x-show="(c.sections || []).length > 1 && i !== idx" @click="tocOpen[c.key] = !tocOpen[c.key]"
+                  :aria-expanded="(!!tocOpen[c.key]).toString()" :aria-label="'{{ _("Sections")|escapejs }}: ' + c.sections.length"><small class="num" x-text="c.sections.length"></small>{% icon "chevron-down" %}</button>
           <span class="rd-toc-grip" x-show="data.canOrder" aria-hidden="true" title="{% translate 'Drag to change the order' %}">{% icon "grip" %}</span>
+          <ol class="rd-toc-secs" x-show="(c.sections || []).length > 1 && (i === idx || tocOpen[c.key])">
+            <template x-for="(s, j) in c.sections" :key="j">
+              <li :class="{ 'is-past': prog(c.key).done || (i === idx && j < sec), 'is-at': i === idx && j === sec }">
+                <button type="button" @click="toSection(i, j); toc = false"><span x-text="s.title"></span><small class="num" x-text="s.minutes + ' min'"></small></button></li>
+            </template>
+          </ol>
         </li>
       </template>
     </ol>
@@ -115,10 +135,22 @@
   {# ── the chapter ── #}
   <main class="rd-page" @click="barHidden = false">
     <header class="rd-ch-head">
-      <p class="rd-ch-kicker" x-text="chapterOf() + ' · ' + T('minRead').replace('%(n)s', cur().minutes)"></p>
+      <p class="rd-ch-kicker" x-text="(cur().part ? cur().part + ' · ' : '') + chapterOf() + ' · ' + T('minRead').replace('%(n)s', cur().minutes)"></p>
       <h1 class="rd-ch-title" x-text="(cur().icon ? cur().icon + ' ' : '') + cur().title"></h1>
       <p class="rd-ch-back" x-show="resumeAt > 0.03 && !prog(cur().key).done" x-cloak>
         <button type="button" class="rd-chip" @click="jump(resumeAt)">{% icon "arrow-down" %}<span>{% translate "Go on from where you stopped" %}</span></button></p>
+      <nav class="rd-insec" x-show="(cur().sections || []).length > 1" x-cloak aria-label="{% translate 'In this chapter' %}">
+        <p class="rd-insec-h">{% translate "In this chapter" %} <small class="num" x-text="'· ' + cur().sections.length"></small></p>
+        <ol>
+          <template x-for="(s, j) in cur().sections.slice(0, allSecs ? 999 : 6)" :key="j">
+            <li :class="{ 'is-past': prog(cur().key).done || j < sec, 'is-at': j === sec }"><button type="button" @click="toSection(idx, j)">
+              <span class="rd-insec-n num" x-text="j + 1"></span><span class="rd-insec-t" x-text="s.title"></span><small class="num" x-text="s.minutes + ' min'"></small></button></li>
+          </template>
+        </ol>
+        <button type="button" class="rd-insec-more" x-show="cur().sections.length > 6 && !allSecs" @click="allSecs = true" x-text="'+ ' + (cur().sections.length - 6) + ' {{ _("more")|escapejs }}'"></button>
+      </nav>
+      <p class="rd-ch-back" x-show="data.kind === 'exam' && !prefs.quiz" x-cloak><button type="button" class="rd-chip" @click="set('quiz', true)">🙈 <span>{% translate "Quiz me: hide the answers" %}</span></button></p>
+      <p class="rd-ch-back" x-show="data.kind === 'exam' && prefs.quiz" x-cloak><button type="button" class="rd-chip" @click="set('quiz', false)">👀 <span>{% translate "Show all the answers" %}</span></button></p>
       <p class="rd-ch-back" x-show="data.asBook" x-cloak><a class="rd-chip" :href="data.asBook">{% icon "book" %}<span x-text="'{% translate "Read all of" %} ' + data.asBookName"></span></a></p>
     </header>
     <article class="rd-text wn-md" x-ref="text" data-find-read></article>

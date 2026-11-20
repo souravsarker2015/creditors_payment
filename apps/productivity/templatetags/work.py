@@ -270,3 +270,11 @@ def cash(value, currency="৳"):
     except InvalidOperation:
         return value
     return f"{'−' if amount < 0 else ''}{currency}{abs(amount):,.2f}"
+
+
+@register.filter
+def can_work(user):
+    """Whether this person can use Productivity (for what the whole site shows of it: the quick note)."""
+    from ..access import can_use
+
+    return can_use(user)

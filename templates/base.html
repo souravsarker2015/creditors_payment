@@ -1,4 +1,4 @@
-{% load static i18n %}
+{% load static i18n work %}
 <!DOCTYPE html>
 <html lang="{{ LANGUAGE_CODE }}" class="h-full"{% if user.is_authenticated %} data-user="{{ user.pk }}" data-today="{% now 'Y-m-d' %}"{% endif %} data-theme="{{ user_theme_mode }}" data-accent="{{ user_accent }}" data-bg="{{ user_background }}" data-view-pref="{{ user_view_mode }}" data-view="web"{% if LANGUAGE_CODE == "bn" %} data-lang="bn"{% endif %}>
 <head>
@@ -45,6 +45,7 @@
     <title>{% block title %}{% translate "Tracker" %}{% endblock %}</title>
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3.17.5/dist/cdn.min.js"></script>
     <script defer src="{% asset 'js/calculator.js' %}"></script>
+    <script defer src="{% asset 'js/quicknote.js' %}"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.17.5/dist/cdn.min.js"></script>
     {# HTMX: search boxes and filters update just the results, without reloading the page. #}
     <script defer src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.11/dist/htmx.min.js" integrity="sha384-2OatzQy1H+Zd/IIrjr1TcuDGqLXeHhbooAyJY1KdQMKnr4LZ22k31GBLdYKHmVjg" crossorigin="anonymous"></script>
@@ -106,6 +107,10 @@
                         data-tip="{% translate 'Search everything (Ctrl+K)' %}" aria-label="{% translate 'Search everything' %}">
                     {% include "partials/icon.html" with name="search" %}<span class="hidden xl:inline">{% translate "Search" %}</span>
                 </button>
+                {% if user|can_work %}<button type="button" class="calc-trigger qn-trigger" @click="$dispatch('quick-note')" aria-keyshortcuts="Alt+N"
+                        data-tip="{% translate 'Quick note — write it down from any page (Alt+N)' %}" aria-label="{% translate 'Quick note' %}">
+                    {% include "partials/icon.html" with name="edit" %}<span class="hidden xl:inline">{% translate "Note" %}</span>
+                </button>{% endif %}
                 <button type="button" class="calc-trigger" @click="$dispatch('toggle-calculator')" aria-keyshortcuts="Alt+C"
                         data-tip="{% translate 'Calculator — discounts, VAT, profit, splits (Alt+C)' %}" aria-label="{% translate 'Calculator' %}">
                     {% include "partials/icon.html" with name="calculator" %}<span class="hidden xl:inline">{% translate "Calculator" %}</span>
@@ -218,7 +223,7 @@
     <script src="{% asset 'js/pickers.js' %}"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tippy.js@6.3.7/dist/tippy-bundle.umd.min.js"></script>
-    {% if user.is_authenticated %}{% include "partials/calculator.html" %}{% include "partials/search_modal.html" %}{% include "partials/photo_shrink.html" %}{% include "partials/form_guard.html" %}{% endif %}
+    {% if user.is_authenticated %}{% include "partials/calculator.html" %}{% if user|can_work %}{% include "partials/quick_note.html" %}{% endif %}{% include "partials/search_modal.html" %}{% include "partials/photo_shrink.html" %}{% include "partials/form_guard.html" %}{% endif %}
     {% include "partials/clamp.html" %}
     <div id="toast-root" class="toast-root" aria-live="polite" aria-atomic="true"></div>
     {% include "partials/ask.html" %}

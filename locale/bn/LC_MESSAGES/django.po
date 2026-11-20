@@ -34463,3 +34463,418 @@ msgstr "পটভূমির শব্দ · থামান"
 msgctxt "sound"
 msgid "Volume"
 msgstr "ভলিউম"
+
+msgid ""
+"Optional: a part of the chapter — questions with the same section are shown "
+"together in it."
+msgstr ""
+"ঐচ্ছিক: অধ্যায়ের একটা অংশ — একই অংশের প্রশ্নগুলো অধ্যায়ের ভেতরে একসাথে "
+"দেখায়।"
+
+msgid "Remind me to read at"
+msgstr "পড়ার কথা মনে করিয়ে দিন"
+
+msgid ""
+"Once a day, while the app is open — unless you've read enough already. "
+"Empty: no reminder."
+msgstr ""
+"দিনে একবার, অ্যাপ খোলা থাকলে — যদি না আজ যথেষ্ট পড়া হয়ে গিয়ে থাকে। খালি: "
+"কোনো রিমাইন্ডার নয়।"
+
+msgid ""
+"Section for the picked questions — a part of their chapter (empty: no "
+"section):"
+msgstr ""
+"বাছাই করা প্রশ্নগুলোর অংশ — তাদের অধ্যায়ের একটা ভাগ (খালি: কোনো অংশ নয়):"
+
+msgid "+ Section"
+msgstr "+ অংশ"
+
+msgid "A part of the chapter: questions in the same section are read together"
+msgstr "অধ্যায়ের একটা অংশ: একই অংশের প্রশ্নগুলো একসাথে পড়া হয়"
+
+msgid "Section…"
+msgstr "অংশ…"
+
+msgid "A few minutes of reading? Go on with %(book)s"
+msgstr "কয়েক মিনিট পড়বেন? %(book)s থেকে শুরু করুন"
+
+msgid "A few minutes of reading? Pick a note to read like a book."
+msgstr "কয়েক মিনিট পড়বেন? একটা নোট বেছে নিয়ে বইয়ের মতো পড়ুন।"
+
+msgid "Time to read"
+msgstr "পড়ার সময়"
+
+msgid "Think of the answer, then tap to see it"
+msgstr "আগে উত্তরটা ভাবুন, তারপর ট্যাপ করে দেখুন"
+
+msgid "Reminder set for %(time)s each day"
+msgstr "প্রতিদিন %(time)s-এ মনে করিয়ে দেওয়া হবে"
+
+msgid "The last seven days"
+msgstr "গত সাত দিন"
+
+msgid "min this week"
+msgstr "মিনিট এই সপ্তাহে"
+
+msgid "Remind me at"
+msgstr "মনে করিয়ে দিন"
+
+msgid "A fixed time each day turns reading into a habit"
+msgstr "প্রতিদিন একটা নির্দিষ্ট সময় পড়াকে অভ্যাসে পরিণত করে"
+
+msgid "Quiz me as I read"
+msgstr "পড়ার সময় আমাকে প্রশ্ন করুন"
+
+msgid "Answers hidden: think first, then tap to see (Q)"
+msgstr "উত্তর লুকানো: আগে ভাবুন, তারপর ট্যাপ করে দেখুন (Q)"
+
+msgid "In this chapter"
+msgstr "এই অধ্যায়ে"
+
+msgid "more"
+msgstr "আরও"
+
+msgid "Quiz me: hide the answers"
+msgstr "প্রশ্ন করুন: উত্তর লুকান"
+
+msgid "Show all the answers"
+msgstr "সব উত্তর দেখান"
+
+msgid "Previous · next section"
+msgstr "আগের · পরের অংশ"
+
+msgid "Exam notes: quiz me — hide the answers"
+msgstr "পরীক্ষার নোট: প্রশ্ন করুন — উত্তর লুকান"
+
+msgid "Reading"
+msgstr "পড়া"
+
+msgid "flashcards and exam questions"
+msgstr "ফ্ল্যাশকার্ড আর পরীক্ষার প্রশ্ন"
+
+msgid "%(n)s%% remembered"
+msgstr "%(n)s%% মনে ছিল"
+
+msgid "Habits kept"
+msgstr "অভ্যাস রাখা হয়েছে"
+
+msgid "no habits due"
+msgstr "কোনো অভ্যাস বাকি নেই"
+
+msgid "Notes written"
+msgstr "লেখা নোট"
+
+msgid "energy %(n)s / 5"
+msgstr "শক্তি %(n)s / 5"
+
+msgid "from your journal"
+msgstr "আপনার জার্নাল থেকে"
+
+msgid "focus"
+msgstr "ফোকাস"
+
+msgid "reading"
+msgstr "পড়া"
+
+msgid "Focus goal"
+msgstr "ফোকাসের লক্ষ্য"
+
+msgid "Task goal"
+msgstr "কাজের লক্ষ্য"
+
+msgid "You tracked %(time)s — %(diff)s more than the %(n)s days before."
+msgstr "আপনি %(time)s ট্র্যাক করেছেন — আগের %(n)s দিনের চেয়ে %(diff)s বেশি।"
+
+msgid "You tracked %(time)s — %(diff)s less than the %(n)s days before."
+msgstr "আপনি %(time)s ট্র্যাক করেছেন — আগের %(n)s দিনের চেয়ে %(diff)s কম।"
+
+msgid "Best day: %(day)s."
+msgstr "সেরা দিন: %(day)s।"
+
+msgid "Active on %(a)s of %(n)s days."
+msgstr "%(n)s দিনের মধ্যে %(a)s দিন সক্রিয়।"
+
+msgid ""
+"Read for %(n)s minutes today — open Continue reading on Notes. Small and "
+"daily beats long and rare."
+msgstr ""
+"আজ %(n)s মিনিট পড়ুন — নোট পেজে \"পড়া চালিয়ে যান\" খুলুন। অল্প করে রোজ, "
+"মাঝে মাঝে অনেকটার চেয়ে ভালো।"
+
+msgid ""
+"Try two focus sessions before noon: the morning is when attention is "
+"freshest."
+msgstr ""
+"দুপুরের আগে দুটো ফোকাস সেশন করে দেখুন: সকালেই মনোযোগ সবচেয়ে তাজা থাকে।"
+
+msgid "Aim for a little every day — consistency matters more than long days."
+msgstr ""
+"রোজ একটু করে করার চেষ্টা করুন — লম্বা দিনের চেয়ে নিয়মিত থাকা বেশি জরুরি।"
+
+msgid ""
+"A habit that keeps slipping is too big: make it smaller (2 minutes) until it"
+" sticks."
+msgstr ""
+"যে অভ্যাস বারবার বাদ পড়ে সেটা খুব বড়: অভ্যাস না হওয়া পর্যন্ত ছোট করুন (২ "
+"মিনিট)।"
+
+msgid ""
+"Revise a few flashcards or exam questions — recalling is what makes things "
+"stay."
+msgstr ""
+"কয়েকটা ফ্ল্যাশকার্ড বা পরীক্ষার প্রশ্ন ঝালিয়ে নিন — মনে করাতেই জিনিস মনে "
+"থাকে।"
+
+msgid ""
+"A good stretch. Keep the same rhythm, and plan tomorrow before you stop "
+"today."
+msgstr ""
+"ভালো সময় গেছে। একই ছন্দ ধরে রাখুন, আর আজ থামার আগে কালকের পরিকল্পনা করে "
+"রাখুন।"
+
+msgid "Add an email address to your account first."
+msgstr "আগে আপনার অ্যাকাউন্টে একটা ইমেইল ঠিকানা যোগ করুন।"
+
+msgid "The email couldn't be sent just now. It will try again next time."
+msgstr "ইমেইলটা এখন পাঠানো গেল না। পরের বার আবার চেষ্টা করবে।"
+
+msgid "How these days went, everything in one place."
+msgstr "এই দিনগুলো কেমন গেল, সব এক জায়গায়।"
+
+msgid "Email this report to me now"
+msgstr "এই রিপোর্টটা এখনই আমাকে ইমেইল করুন"
+
+msgid "Email me this"
+msgstr "আমাকে ইমেইল করুন"
+
+msgid "Active on %(a)s of %(n)s days"
+msgstr "%(n)s দিনের মধ্যে %(a)s দিন সক্রিয়"
+
+msgid "active days"
+msgstr "সক্রিয় দিন"
+
+msgid "Compared with the %(n)s days before"
+msgstr "আগের %(n)s দিনের সাথে তুলনা"
+
+msgid "Day by day"
+msgstr "দিন অনুযায়ী"
+
+msgid "Other time tracked"
+msgstr "অন্যান্য ট্র্যাক করা সময়"
+
+msgid "Time each day"
+msgstr "প্রতিদিনের সময়"
+
+msgid "Streaks"
+msgstr "টানা দিন"
+
+msgid "Days in a row — today counts once it's reached."
+msgstr "টানা দিন — আজকের দিন লক্ষ্য পূরণ হলে গোনা হয়।"
+
+msgid "The last 12 weeks"
+msgstr "গত ১২ সপ্তাহ"
+
+msgid "Darker: more done that day."
+msgstr "যত গাঢ়, সেদিন তত বেশি কাজ।"
+
+msgid "Activity in the last 12 weeks"
+msgstr "গত ১২ সপ্তাহের কাজ"
+
+msgid "Start the timer while you work — the projects show up here."
+msgstr "কাজের সময় টাইমার চালু করুন — প্রজেক্টগুলো এখানে দেখাবে।"
+
+msgid "Next steps"
+msgstr "পরের পদক্ষেপ"
+
+msgid ""
+"Add an email address to your account to get a progress report every 3 days."
+msgstr ""
+"প্রতি ৩ দিনে অগ্রগতির রিপোর্ট পেতে আপনার অ্যাকাউন্টে একটা ইমেইল ঠিকানা যোগ "
+"করুন।"
+
+msgid ""
+"Every 3 days, when you open this page, a report like this is emailed to "
+"%(email_to)s."
+msgstr ""
+"প্রতি ৩ দিনে, আপনি এই পেজ খুললে, এমন একটা রিপোর্ট %(email_to)s-এ ইমেইল করা "
+"হয়।"
+
+msgid "The last one: %(when)s ago."
+msgstr "শেষটা: %(when)s আগে।"
+
+msgid "Progress emails are off."
+msgstr "অগ্রগতির ইমেইল বন্ধ আছে।"
+
+msgid "Turn them on"
+msgstr "চালু করুন"
+
+msgid "Your progress report is on its way to"
+msgstr "আপনার অগ্রগতির রিপোর্ট যাচ্ছে"
+
+msgid "Not sent."
+msgstr "পাঠানো হয়নি।"
+
+msgid "How your days went: time, focus, tasks, reading, practice (g g)"
+msgstr "আপনার দিনগুলো কেমন গেল: সময়, ফোকাস, কাজ, পড়া, অনুশীলন (g g)"
+
+msgid "Email me a progress report every 3 days"
+msgstr "প্রতি ৩ দিনে আমাকে অগ্রগতির রিপোর্ট ইমেইল করুন"
+
+msgid ""
+"When you open the Dashboard and the last report is 3 days old or more: your "
+"time, focus, tasks, reading and practice, with charts."
+msgstr ""
+"যখন আপনি ড্যাশবোর্ড খোলেন আর শেষ রিপোর্টের পর ৩ দিন বা বেশি হয়ে গেছে: আপনার"
+" সময়, ফোকাস, কাজ, পড়া আর অনুশীলন, চার্টসহ।"
+
+msgid "Your last %(n)s days: %(headline)s"
+msgstr "আপনার গত %(n)s দিন: %(headline)s"
+
+msgid "Your progress"
+msgstr "আপনার অগ্রগতি"
+
+msgid "%(name)s, here are your last %(n)s days"
+msgstr "%(name)s, এই হলো আপনার গত %(n)s দিন"
+
+msgid "▲ ▼ compared with the %(n)s days before."
+msgstr "▲ ▼ আগের %(n)s দিনের সাথে তুলনা।"
+
+msgid "What stands out"
+msgstr "যা চোখে পড়ে"
+
+msgid "For the next %(n)s days"
+msgstr "পরের %(n)s দিনের জন্য"
+
+msgid "Open your dashboard"
+msgstr "আপনার ড্যাশবোর্ড খুলুন"
+
+msgid "You get this at most every 3 days, when you open the Dashboard."
+msgstr "এটা আপনি সর্বোচ্চ প্রতি ৩ দিনে একবার পান, যখন ড্যাশবোর্ড খোলেন।"
+
+msgid "Turn it off in Settings"
+msgstr "সেটিংসে বন্ধ করুন"
+
+msgid "Turn it off in Productivity → Settings."
+msgstr "প্রোডাক্টিভিটি → সেটিংসে বন্ধ করুন।"
+
+msgid "DAY BY DAY"
+msgstr "দিন অনুযায়ী"
+
+msgid "WHAT STANDS OUT"
+msgstr "যা চোখে পড়ে"
+
+msgid "STREAKS (days in a row)"
+msgstr "টানা দিন"
+
+msgid "FOR THE NEXT %(n)s DAYS"
+msgstr "পরের %(n)s দিনের জন্য"
+
+msgid "Clock settings"
+msgstr "ঘড়ির সেটিংস"
+
+msgid "Hide the clock (Alt+T)"
+msgstr "ঘড়ি লুকান (Alt+T)"
+
+msgid "In full screen"
+msgstr "পূর্ণ স্ক্রিনে"
+
+msgid "Full screen and web view"
+msgstr "পূর্ণ স্ক্রিন আর ওয়েব ভিউতে"
+
+msgid "Always"
+msgstr "সবসময়"
+
+msgid "Never"
+msgstr "কখনো না"
+
+msgid "Show the clock"
+msgstr "ঘড়ি দেখান"
+
+msgid "12-hour (AM/PM)"
+msgstr "১২ ঘণ্টা (AM/PM)"
+
+msgid "drag to move"
+msgstr "সরাতে টেনে নিন"
+
+msgid "Clock hidden — Alt+T brings it back"
+msgstr "ঘড়ি লুকানো হয়েছে — Alt+T চাপলে ফিরে আসবে"
+
+msgid "Clock on — Alt+T hides it"
+msgstr "ঘড়ি চালু — Alt+T চাপলে লুকাবে"
+
+msgid "Floating clock"
+msgstr "ভাসমান ঘড়ি"
+
+msgid "Show a small clock"
+msgstr "একটা ছোট ঘড়ি দেখান"
+
+msgid "On this device · Alt+T shows or hides it · drag it anywhere"
+msgstr "এই ডিভাইসে · Alt+T দেখায় বা লুকায় · যেকোনো জায়গায় টেনে রাখুন"
+
+msgid "Floating clock: show or hide"
+msgstr "ভাসমান ঘড়ি: দেখান বা লুকান"
+
+msgid "Quick note — write it down from any page (Alt+N)"
+msgstr "দ্রুত নোট — যেকোনো পেজ থেকে লিখে রাখুন (Alt+N)"
+
+msgid "Your note is kept on this device — Alt+N opens it again."
+msgstr "আপনার নোট এই ডিভাইসে রাখা আছে — Alt+N চাপলে আবার খুলবে।"
+
+msgid "No connection — your note is kept here. Try again in a moment."
+msgstr "সংযোগ নেই — আপনার নোট এখানে রাখা আছে। একটু পরে আবার চেষ্টা করুন।"
+
+msgid "Kept on this device"
+msgstr "এই ডিভাইসে রাখা আছে"
+
+msgid "Close (Esc) — the note is kept"
+msgstr "বন্ধ করুন (Esc) — নোট রাখা থাকবে"
+
+msgid "Title (optional)"
+msgstr "শিরোনাম (ঐচ্ছিক)"
+
+msgid ""
+"Write it down — a thought, a link, a to-do, a question. Markdown works."
+msgstr "লিখে রাখুন — একটা ভাবনা, লিংক, কাজ, প্রশ্ন। মার্কডাউন চলে।"
+
+msgid "No categories yet — make them on the Notes page."
+msgstr "এখনো কোনো ক্যাটাগরি নেই — নোট পেজে বানান।"
+
+msgid "saves"
+msgstr "সেভ করে"
+
+msgid "Save & open"
+msgstr "সেভ করে খুলুন"
+
+msgid "Quick note (Alt+N also while typing, on any page)"
+msgstr "দ্রুত নোট (যেকোনো পেজে, লেখার সময়ও Alt+N)"
+
+msgid "%(n)s session"
+msgid_plural "%(n)s sessions"
+msgstr[0] "%(n)s সেশন"
+msgstr[1] "%(n)s সেশন"
+
+msgid "%(n)s added"
+msgid_plural "%(n)s added"
+msgstr[0] "%(n)s যোগ হয়েছে"
+msgstr[1] "%(n)s যোগ হয়েছে"
+
+msgid "%(n)s chapter finished"
+msgid_plural "%(n)s chapters finished"
+msgstr[0] "%(n)s অধ্যায় শেষ"
+msgstr[1] "%(n)s অধ্যায় শেষ"
+
+msgid "%(n)s task done."
+msgid_plural "%(n)s tasks done."
+msgstr[0] "%(n)s কাজ শেষ।"
+msgstr[1] "%(n)s কাজ শেষ।"
+
+msgid "%(time)s of reading, %(n)s chapter finished."
+msgid_plural "%(time)s of reading, %(n)s chapters finished."
+msgstr[0] "%(time)s পড়া, %(n)s অধ্যায় শেষ।"
+msgstr[1] "%(time)s পড়া, %(n)s অধ্যায় শেষ।"
+
+msgid "%(n)s task is late: do it first, or give it a new date."
+msgid_plural "%(n)s tasks are late: do one first, or give them new dates."
+msgstr[0] "%(n)s কাজ দেরি হয়ে গেছে: আগে এটা করুন, বা নতুন তারিখ দিন।"
+msgstr[1] "%(n)sটা কাজ দেরি হয়ে গেছে: আগে একটা করুন, বা নতুন তারিখ দিন।"

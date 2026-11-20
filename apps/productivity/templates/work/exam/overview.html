@@ -60,6 +60,7 @@
     <template x-for="(q, i) in notes" :key="q.id">
       <li class="wexo-item">
         <h2 class="wexo-group-name" x-show="heading(i) && (chapters.length > 1 || q.chapter)" x-text="q.chapter || t('noChapter')"></h2>
+        <h3 class="wexo-section-name" x-show="sectionStart(i)" x-text="q.section"></h3>
         <div class="wexo-q" :class="{ 'is-known': q.known, 'is-open': answers || open[q.id] }">
           <div class="wexo-q-head">
             <span class="wexo-no num" x-text="q.number"></span>
