@@ -1,0 +1,8 @@
+{% comment %}The icon for one thing on a card. Needs: kind.{% endcomment %}
+{% if kind == "cash" %}<span class="ledger-icon" data-tone="accent">{% include "partials/icon.html" with name="phone" %}</span>
+{% elif kind == "spend" %}<span class="ledger-icon" data-tone="warn">{% include "partials/icon.html" with name="cart" %}</span>
+{% elif kind == "charge" or kind == "emi_fee" %}<span class="ledger-icon" data-tone="critical">{% include "partials/icon.html" with name="percent" %}</span>
+{% elif kind == "pay" %}<span class="ledger-icon" data-tone="good">{% include "partials/icon.html" with name="check" %}</span>
+{% elif kind == "refund" %}<span class="ledger-icon" data-tone="good">{% include "partials/icon.html" with name="undo" %}</span>
+{% elif kind == "emi_move" or kind == "emi_inst" or kind == "emi_close" %}<span class="ledger-icon" data-tone="info">{% include "partials/icon.html" with name="repeat" %}</span>
+{% else %}<span class="ledger-icon" data-tone="muted">{% include "partials/icon.html" with name="scale" %}</span>{% endif %}

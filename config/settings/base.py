@@ -74,6 +74,7 @@ LOCAL_APPS = [
     "apps.wallets",
     "apps.plans",
     "apps.zakat",
+    "apps.cards",
     # ── Productivity (time tracker, tasks, notes…; admins and people they allow) ──
     "apps.productivity",
     # ── Business module (fully separate; see apps/business/) ──

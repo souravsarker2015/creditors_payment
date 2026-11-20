@@ -77,7 +77,12 @@ class Ledger:
         self.bazar = Purchase.objects.filter(user=user, buyer__isnull=True)
         self.shops = ShopTx.objects.filter(shop__user=user, transaction_type=ShopTx.PAYMENT)
         self.paid_back = Settlement.objects.filter(member__user=user)
-        self.outgoings = (self.expense, self.bazar, self.shops, self.paid_back)
+        from apps.cards.services import money_out_querysets
+
+        # Credit cards: what was bought with one, and bank charges, are spent when they happen; money taken
+        # out to bKash is borrowed (spent later, from the wallet), and paying the bill is paying that back.
+        self.cards, self.card_fees = money_out_querysets(user)
+        self.outgoings = (self.expense, self.bazar, self.shops, self.paid_back, self.cards)
         self.fees = Transfer.objects.filter(user=user)     # the fee only: the amount just moves between wallets
 
     @staticmethod
@@ -88,7 +93,8 @@ class Ledger:
         return _total(self._in(self.income, start, end)) + _total(self._in(self.contrib, start, end))
 
     def money_out(self, start, end):
-        return sum((_total(self._in(qs, start, end)) for qs in self.outgoings), _total(self._in(self.fees, start, end), "fee"))
+        return sum((_total(self._in(qs, start, end)) for qs in self.outgoings),
+                   _total(self._in(self.fees, start, end), "fee") + _total(self._in(self.card_fees, start, end), "fee"))
 
 
 def build(user, kind, start, end, today):
@@ -128,6 +134,12 @@ def build(user, kind, start, end, today):
     fees = _total(span(led.fees), "fee")
     if fees:
         out_rows.append((_("Transfer fees"), fees, reverse("wallet_list")))
+    card_spent = _total(span(led.cards.filter(kind="spend")))
+    if card_spent:
+        out_rows.append((_("Credit card spending"), card_spent, reverse("card_dashboard")))
+    card_costs = _total(span(led.cards.exclude(kind="spend"))) + _total(span(led.card_fees), "fee")
+    if card_costs:
+        out_rows.append((_("Credit card fees & charges"), card_costs, reverse("card_dashboard")))
     in_rows = [(r["source__name"], r["t"], reverse("income_source_detail", args=[r["source_id"]]))
                for r in span(led.income).values("source_id", "source__name").annotate(t=Sum("amount"))]
     in_rows += [(r["contributor__name"], r["t"], reverse("contributor_detail", args=[r["contributor_id"]]))
@@ -159,7 +171,7 @@ def build(user, kind, start, end, today):
             rows = qs.filter(date__gte=start, date__lte=end).annotate(m=TruncMonth("date")).values("m").annotate(t=Sum(field))
             return {r["m"]: r["t"] for r in rows}
         ins = [by_month(led.income), by_month(led.contrib)]
-        outs = [by_month(qs) for qs in led.outgoings] + [by_month(led.fees, "fee")]
+        outs = [by_month(qs) for qs in led.outgoings] + [by_month(led.fees, "fee"), by_month(led.card_fees, "fee")]
         top = Decimal(0)
         for m in range(1, 13):
             first = date(start.year, m, 1)

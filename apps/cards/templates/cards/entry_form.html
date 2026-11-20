@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{{ title }} | FinTrack{% endblock %}
+{% block content %}
+{{ guide|json_script:"cc-guide" }}
+<div class="page-narrow" x-data="cardEntry('{{ kind }}')">
+  <header class="page-header">
+    <div>
+      <a href="{{ back }}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Back" %}</a>
+      <h1 class="page-title">{{ title }}</h1>
+      <p class="page-subtitle">{{ subtitle }}</p>
+    </div>
+  </header>
+
+  {% if kind == "cash" and not has_mobile %}
+  <div class="callout mb-4" data-tone="info">{% include "partials/icon.html" with name="info" %}
+    <p class="callout-text !mt-0">{% translate "Add bKash, Nagad or Rocket as a wallet so its balance goes up when you send money to it." %} <a href="{% url 'card_mfs_add' %}" class="link">{% translate "Add mobile banking" %}</a></p>
+  </div>
+  {% endif %}
+
+  <form method="post" class="card" novalidate>
+    {% csrf_token %}
+    <div class="card-body form-stack">
+      {% if form.non_field_errors %}<div class="form-errors">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+      {% for field in form %}
+        {% if field.name == "route" %}
+          <div x-show="isMobile()" x-cloak>{% include "partials/field.html" %}</div>
+        {% elif field.name == "amount" and kind == "pay" %}
+          {% include "partials/field.html" %}
+          <div class="chip-row cc-quick" x-show="owe().bill || owe().all" x-cloak>
+            <button type="button" class="chip" x-show="owe().bill" @click="setAmount(owe().bill)"><span>{% translate "The bill" %} <b x-text="taka(owe().bill)"></b></span></button>
+            <button type="button" class="chip" x-show="owe().min && owe().min < owe().bill" @click="setAmount(owe().min)"><span>{% translate "Minimum" %} <b x-text="taka(owe().min)"></b></span></button>
+            <button type="button" class="chip" x-show="owe().all && owe().all != owe().bill" @click="setAmount(owe().all)"><span>{% translate "Everything owed" %} <b x-text="taka(owe().all)"></b></span></button>
+          </div>
+        {% elif field.name == "fee_rate" %}
+          <div class="cc-fee-pair">{% include "partials/field.html" %}
+        {% elif field.name == "fee" %}
+          {% include "partials/field.html" %}</div>
+        {% else %}
+          {% include "partials/field.html" %}
+        {% endif %}
+      {% endfor %}
+
+      {% if kind == "cash" or kind == "pay" %}
+      <div class="cc-sum" x-show="num(amount) > 0" x-cloak aria-live="polite">
+        {% if kind == "cash" %}
+        <p><span x-text="walletName() || '{% translate "The wallet"|escapejs %}'"></span>: <b x-text="'+' + taka(num(amount))"></b></p>
+        <p>{% translate "The card owes" %} <b x-text="taka(num(amount) + num(fee))"></b> <small x-show="num(fee) > 0">{% translate "with the fee" %}</small></p>
+        {% else %}
+        <p>{% translate "The card gets" %} <b x-text="taka(num(amount))"></b></p>
+        <p x-show="wallet"><span x-text="walletName()"></span>: <b x-text="'−' + taka(num(amount) + num(fee))"></b> <small x-show="num(fee) > 0">{% translate "with the fee" %}</small></p>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+    <div class="card-footer form-actions">
+      <a href="{{ back }}" class="btn btn-ghost btn-lg">{% translate "Cancel" %}</a>
+      <button type="submit" class="btn btn-primary btn-lg">{% include "partials/icon.html" with name="check" %}{{ submit_label }}</button>
+    </div>
+  </form>
+
+  {% if obj %}
+  <div class="mt-4">
+    <form method="post" action="{% url 'card_entry_delete' obj.pk %}" data-confirm="{% translate 'Delete this entry?' %}" data-confirm-after="back">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-ghost is-danger">{% include "partials/icon.html" with name="trash" %}{% translate "Delete this entry" %}</button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+<script>
+document.addEventListener("alpine:init", function () {
+  Alpine.data("cardEntry", function (kind) {
+    var g = JSON.parse(document.getElementById("cc-guide").textContent);
+    return {
+      kind: kind, card: g.card, wallet: g.wallet, route: g.route, amount: g.amount, rate: g.rate, fee: g.fee, typed: g.typed,
+      init: function () {
+        var self = this;
+        if (this.kind === "pay" && this.wallet && !this.route) this.route = this.defaultRoute();
+        if (this.rate === "" || this.rate === null) this.pickRate();
+        this.$watch("card", function () { self.pickRate(); });
+        this.$watch("wallet", function () { if (self.kind === "pay") self.route = self.defaultRoute(); self.pickRate(); });
+        this.$watch("route", function () { self.pickRate(); });
+        this.$watch("amount", function () { self.calc(); });
+        this.$watch("rate", function () { self.calc(); });
+      },
+      num: function (v) { v = parseFloat(v); return isNaN(v) ? 0 : v; },
+      taka: function (v) { return "৳" + (Math.round(v * 100) / 100).toLocaleString("en-IN", { maximumFractionDigits: 2 }); },
+      info: function () { return ((g.rates[this.card] || {})[this.wallet]) || null; },
+      isMobile: function () { var i = this.info(); return !!(i && i.mobile); },
+      defaultRoute: function () { var i = this.info(); return !i || !i.mobile ? "direct" : (i.pays ? "mfs_bill" : "mfs_bank"); },
+      pickRate: function () {
+        var i = this.info();
+        if (!i) { if (this.kind === "pay" && !this.wallet) this.rate = 0; return; }
+        var r = this.kind === "cash" ? i.cash : i[this.route || this.defaultRoute()];
+        this.rate = r === undefined ? 0 : r;
+        this.typed = false;
+        this.calc();
+      },
+      calc: function () { if (!this.typed) { var f = this.num(this.amount) * this.num(this.rate) / 100; this.fee = f ? (Math.round(f * 100) / 100).toFixed(2) : ""; } },
+      owe: function () { return g.owed[this.card] || {}; },
+      setAmount: function (v) { this.amount = String(Math.round(v * 100) / 100); },
+      walletName: function () { if (!this.wallet) return ""; var el = this.$root.querySelector("select[name=wallet]"); var o = el && el.selectedOptions[0]; return o && o.value ? o.text.split(" · ")[0] : ""; },
+    };
+  });
+});
+</script>
+{% endblock %}

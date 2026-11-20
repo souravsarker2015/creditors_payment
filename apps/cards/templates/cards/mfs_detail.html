@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{{ w.name }} | FinTrack{% endblock %}
+{% block content %}
+<div class="page-medium stack">
+  <header class="page-header !mb-0">
+    <div class="min-w-0">
+      <a href="{% url 'card_mfs' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Mobile banking" %}</a>
+      <h1 class="page-title">{{ w.name }}</h1>
+      <p class="page-subtitle">{{ w.get_kind_display }}{% if w.number %} · {{ w.number }}{% endif %}</p>
+    </div>
+    <div class="page-actions"><a href="{% url 'wallet_detail' w.pk %}" class="btn btn-ghost">{% include "partials/icon.html" with name="wallet" %}{% translate "All its money" %}</a></div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="min-w-0">
+        <p class="hero-label">{% translate "Holds now" %}</p>
+        <p class="hero-value">{{ row.balance|money }}</p>
+        <p class="hero-sub">{% blocktranslate with a=month_in|money b=month_out|money c=month_fees|money %}This month: {{ a }} in from cards · {{ b }} card bills paid · {{ c }} fees{% endblocktranslate %}</p>
+      </div>
+    </div>
+  </section>
+
+  <dl class="stat-grid">
+    <div class="stat" data-tone="accent"><dt class="stat-label">{% translate "In from cards" %}</dt><dd class="stat-value">{{ row.received|money }}</dd><dd class="stat-hint">{% blocktranslate count n=row.times_in %}{{ n }} time{% plural %}{{ n }} times{% endblocktranslate %}</dd></div>
+    <div class="stat" data-tone="good"><dt class="stat-label">{% translate "Card bills paid" %}</dt><dd class="stat-value">{{ row.paid|money }}</dd><dd class="stat-hint">{% blocktranslate count n=row.times_out %}{{ n }} time{% plural %}{{ n }} times{% endblocktranslate %}</dd></div>
+    <div class="stat" data-tone="warn"><dt class="stat-label">{% translate "Cards' fees to send here" %}</dt><dd class="stat-value">{{ row.card_fee|money }}</dd></div>
+    <div class="stat" data-tone="critical"><dt class="stat-label">{% translate "Its fees for paying bills" %}</dt><dd class="stat-value">{{ row.pay_fee|money }}</dd></div>
+  </dl>
+
+  <section class="card">
+    <div class="card-header"><div><h2 class="card-title">{% translate "Its charges" %}</h2><p class="card-subtitle">{% translate "Suggested on each payment; you can still change the fee there." %}</p></div></div>
+    <form method="post" class="card-body form-stack" novalidate>
+      {% csrf_token %}
+      {% for field in form %}{% include "partials/field.html" %}{% endfor %}
+      <div><button type="submit" class="btn btn-primary">{% include "partials/icon.html" with name="check" %}{% translate "Save charges" %}</button></div>
+    </form>
+  </section>
+
+  {% if cards %}
+  <section class="card">
+    <div class="card-header"><h2 class="card-title">{% translate "By card" %}</h2></div>
+    <ul class="ledger">
+      {% for c in cards %}
+      <li><a href="{% url 'card_detail' c.card.pk %}" class="ledger-row">
+        <span class="ledger-icon" data-tone="info">{% include "partials/icon.html" with name="cards" %}</span>
+        <div class="ledger-main"><p class="ledger-title">{{ c.card.name }}</p><p class="ledger-meta">{% blocktranslate with a=c.received|money b=c.paid|money %}{{ a }} in · {{ b }} paid back{% endblocktranslate %}</p></div>
+        <div class="ledger-end"><span class="party-bal"><strong>{{ c.fees|money }}</strong><span>{% translate "fees" %}</span></span></div>
+      </a></li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  <section class="card">
+    <div class="card-header"><h2 class="card-title">{% translate "Card money through it" %}</h2></div>
+    {% if entries %}
+    <ul class="ledger">
+      {% for x in entries %}
+      <li><a href="{% url 'card_entry_edit' x.pk %}" class="ledger-row">
+        {% include "cards/_entry_icon.html" with kind=x.kind %}
+        <div class="ledger-main"><p class="ledger-title">{% if x.kind == "cash" %}{% blocktranslate with c=x.card.name %}From {{ c }}{% endblocktranslate %}{% else %}{% blocktranslate with c=x.card.name %}Paid {{ c }}{% endblocktranslate %}{% endif %}</p>
+          <p class="ledger-meta">{{ x.date|date:"j M Y" }}{% if x.fee %} · {% blocktranslate with f=x.fee|money %}{{ f }} fee{% endblocktranslate %}{% if x.fee_rate %} ({{ x.fee_rate|floatformat:"-2" }}%){% endif %}{% endif %}{% if x.kind == "pay" and x.route %} · {{ x.get_route_display }}{% endif %}{% if x.note %} · {{ x.note }}{% endif %}</p></div>
+        <div class="ledger-end"><span class="ledger-amount" data-tone="{% if x.kind == 'cash' %}good{% else %}critical{% endif %}">{% if x.kind == "cash" %}+{{ x.amount|money }}{% else %}−{{ x.total|money }}{% endif %}</span></div>
+      </a></li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty is-plain"><p class="empty-text">{% translate "Nothing yet. Pick this wallet when you take money from a card or pay a card bill." %}</p></div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

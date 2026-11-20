@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% translate "Banks & card types" %} | FinTrack{% endblock %}
+{% block content %}
+<div class="page-medium stack">
+  <header class="page-header !mb-0">
+    <div>
+      <a href="{% url 'card_dashboard' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Credit cards" %}</a>
+      <h1 class="page-title">{% translate "Banks & card types" %}</h1>
+      <p class="page-subtitle">{% translate "The lists you pick from when adding a card. You can also add to them with the + beside each dropdown." %}</p>
+    </div>
+  </header>
+
+  <div class="card-grid card-grid-2">
+    {% for key, title, placeholder, rows in lists %}
+    <section class="card">
+      <div class="card-header"><h2 class="card-title">{{ title }}</h2></div>
+      <form method="post" class="card-body !pb-2 flex gap-2">
+        {% csrf_token %}<input type="hidden" name="list" value="{{ key }}"><input type="hidden" name="action" value="add">
+        <input type="text" name="name" class="form-input" placeholder="{{ placeholder }}" maxlength="80" required aria-label="{{ title }}">
+        <button type="submit" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add" %}</button>
+      </form>
+      {% if rows %}
+      <ul class="ledger">
+        {% for r in rows %}
+        <li class="ledger-row cc-list-row{% if not r.is_active %} is-off{% endif %}" x-data="{ edit: false }">
+          <div class="ledger-main" x-show="!edit">
+            <p class="ledger-title">{{ r.name }}{% if not r.is_active %} <span class="badge" data-tone="muted">{% translate "Hidden" %}</span>{% endif %}</p>
+            <p class="ledger-meta">{% blocktranslate count n=r.n %}{{ n }} card{% plural %}{{ n }} cards{% endblocktranslate %}</p>
+          </div>
+          <form method="post" class="ledger-main flex gap-2" x-show="edit" x-cloak>
+            {% csrf_token %}<input type="hidden" name="list" value="{{ key }}"><input type="hidden" name="action" value="rename"><input type="hidden" name="pk" value="{{ r.pk }}">
+            <input type="text" name="name" value="{{ r.name }}" class="form-input" maxlength="80" required aria-label="{% translate 'New name' %}">
+            <button type="submit" class="btn btn-primary btn-sm">{% translate "Save" %}</button>
+          </form>
+          <div class="ledger-end gap-1">
+            <button type="button" class="btn btn-ghost btn-sm" @click="edit = !edit" :aria-pressed="edit.toString()" aria-label="{% translate 'Rename' %}" data-tip="{% translate 'Rename' %}">{% include "partials/icon.html" with name="edit" %}</button>
+            <form method="post">{% csrf_token %}<input type="hidden" name="list" value="{{ key }}"><input type="hidden" name="action" value="toggle"><input type="hidden" name="pk" value="{{ r.pk }}">
+              <button type="submit" class="btn btn-ghost btn-sm" aria-label="{% if r.is_active %}{% translate 'Hide' %}{% else %}{% translate 'Show' %}{% endif %}" data-tip="{% if r.is_active %}{% translate 'Hide from the list' %}{% else %}{% translate 'Offer it again' %}{% endif %}">{% if r.is_active %}{% include "partials/icon.html" with name="pause" %}{% else %}{% include "partials/icon.html" with name="play" %}{% endif %}</button></form>
+            {% if not r.n %}<form method="post" data-confirm="{% blocktranslate with name=r.name %}Delete {{ name }}?{% endblocktranslate %}">{% csrf_token %}<input type="hidden" name="list" value="{{ key }}"><input type="hidden" name="action" value="delete"><input type="hidden" name="pk" value="{{ r.pk }}">
+              <button type="submit" class="btn btn-ghost btn-sm is-danger" aria-label="{% translate 'Delete' %}" data-tip="{% translate 'Delete' %}">{% include "partials/icon.html" with name="trash" %}</button></form>{% endif %}
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="empty is-plain"><p class="empty-text">{% translate "Nothing yet." %}</p></div>
+      {% endif %}
+    </section>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

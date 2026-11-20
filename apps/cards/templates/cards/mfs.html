@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% translate "Mobile banking" %} | FinTrack{% endblock %}
+{% block content %}
+<div class="page-medium stack">
+  <header class="page-header !mb-0">
+    <div>
+      <a href="{% url 'card_dashboard' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Credit cards" %}</a>
+      <h1 class="page-title">{% translate "Mobile banking" %}</h1>
+      <p class="page-subtitle">{% translate "bKash, Nagad, Rocket — or any other. Set each one's charges once; every card payment then suggests the cheapest way." %}</p>
+    </div>
+    <div class="page-actions"><a href="{% url 'card_mfs_add' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add mobile banking" %}</a></div>
+  </header>
+
+  {% if rows %}
+  <dl class="stat-grid">
+    <div class="stat" data-tone="accent"><dt class="stat-label">{% translate "In from cards" %}</dt><dd class="stat-value">{{ received|money }}</dd></div>
+    <div class="stat" data-tone="good"><dt class="stat-label">{% translate "Card bills paid" %}</dt><dd class="stat-value">{{ paid|money }}</dd></div>
+    <div class="stat" data-tone="warn"><dt class="stat-label">{% translate "Fees on the way" %}</dt><dd class="stat-value">{{ fees|money }}</dd><dd class="stat-hint">{% translate "The cards' and the wallets' fees" %}</dd></div>
+  </dl>
+
+  <div class="card-grid card-grid-2">
+    {% for r in rows %}
+    <section class="card">
+      <div class="card-header">
+        <div class="min-w-0"><h2 class="card-title"><a href="{% url 'card_mfs_detail' r.wallet.pk %}">{{ r.wallet.name }}</a>{% if not r.wallet.is_active %} <span class="badge" data-tone="muted">{% translate "Not in use" %}</span>{% endif %}</h2>
+          <p class="card-subtitle">{% blocktranslate with b=r.balance|money %}Holds {{ b }} now{% endblocktranslate %}</p></div>
+        <a href="{% url 'card_mfs_detail' r.wallet.pk %}" class="btn btn-ghost btn-sm">{% translate "Open" %}{% include "partials/icon.html" with name="arrow-right" %}</a>
+      </div>
+      <div class="card-body !pt-2">
+        <dl>
+          <div class="kv"><dt class="kv-label">{% translate "Pay a card bill from it" %}</dt><dd class="kv-value">{% if r.fees.pays_bills %}{{ r.fees.bill_rate|floatformat:"-2" }}%{% else %}{% translate "Can't" %}{% endif %}</dd></div>
+          <div class="kv"><dt class="kv-label">{% translate "Send to a bank / debit card" %}</dt><dd class="kv-value">{{ r.fees.bank_rate|floatformat:"-2" }}%</dd></div>
+          <div class="kv"><dt class="kv-label">{% translate "In from cards" %}</dt><dd class="kv-value">{{ r.received|money }}</dd></div>
+          <div class="kv"><dt class="kv-label">{% translate "Card bills paid from it" %}</dt><dd class="kv-value">{{ r.paid|money }}</dd></div>
+          <div class="kv"><dt class="kv-label">{% translate "Fees" %}</dt><dd class="kv-value" data-tone="warn">{{ r.fees_total|money }}</dd></div>
+        </dl>
+        {% if r.fees.note %}<p class="help mt-2">{{ r.fees.note }}</p>{% endif %}
+      </div>
+    </section>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty">
+    <div class="empty-icon">{% include "partials/icon.html" with name="phone" %}</div>
+    <h3 class="empty-title">{% translate "No mobile banking yet" %}</h3>
+    <p class="empty-text">{% translate "Add bKash, Nagad or Rocket with what it holds today, and its charges." %}</p>
+    <a href="{% url 'card_mfs_add' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add mobile banking" %}</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

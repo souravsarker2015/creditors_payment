@@ -94,6 +94,12 @@ def sheet(request, settings):
     s.lines.append(Line("creditors", _("What you owe creditors"), _positive_balances(Creditor.objects.filter(user=user), CT.BORROW, CT.REPAY),
                         side="owe"))
     s.lines.append(Line("shops", _("Shop dues"), _positive_balances(Shop.objects.filter(user=user), ST.PURCHASE, ST.PAYMENT), side="owe"))
+    from apps.cards.services import total_owed
+    from django.utils import timezone
+
+    cards = total_owed(user, timezone.localdate())
+    if cards:
+        s.lines.append(Line("cards", _("Credit cards"), cards, _("What's on your card bills now, and EMIs still to come."), side="owe"))
     household = sum((m.balance_due for m in user.household_members.with_balances() if m.balance_due > 0), ZERO)
     if household:
         s.lines.append(Line("household", _("Owed to family for bazar"), household, side="owe"))

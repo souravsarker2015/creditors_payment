@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+{% load static i18n %}
+{% block title %}{% translate "Credit cards" %} | FinTrack{% endblock %}
+{% block content %}
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div>
+      <h1 class="page-title">{% translate "Credit cards" %}</h1>
+      <p class="page-subtitle">{% translate "What you owe on each card, when to pay it, and what bKash, Nagad and the banks charge you on the way." %}</p>
+    </div>
+    <div class="page-actions">
+      {% if active %}
+      <a href="{% url 'card_entry_new' 'cash' %}" class="btn btn-secondary">{% include "partials/icon.html" with name="phone" %}{% translate "Take money to bKash / Nagad" %}</a>
+      <a href="{% url 'card_entry_new' 'pay' %}" class="btn btn-secondary">{% include "partials/icon.html" with name="check" %}{% translate "Pay a bill" %}</a>
+      {% endif %}
+      <a href="{% url 'card_lists' %}" class="btn btn-ghost" data-tip="{% translate 'Banks & card types' %}">{% include "partials/icon.html" with name="list" %}<span class="sr-only">{% translate "Banks & card types" %}</span></a>
+      <a href="{% url 'card_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add a card" %}</a>
+    </div>
+  </header>
+
+  {% if not states %}
+  <div class="empty">
+    <div class="empty-icon">{% include "partials/icon.html" with name="cards" %}</div>
+    <h3 class="empty-title">{% translate "Keep every card bill in view" %}</h3>
+    <p class="empty-text">{% translate "Add each credit card with its bill day and pay-by day. Then record the money you send to bKash or Nagad and the bills you pay — the app works out each bill, the due date, the minimum, every fee and the cheapest way to pay." %}</p>
+    <a href="{% url 'card_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add your first card" %}</a>
+  </div>
+  {% else %}
+
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="min-w-0">
+        <p class="hero-label inline-flex items-center">{% translate "You owe on all cards" %}{% translate "Everything on the cards now, EMIs still to come included." as info_text %}{% include "partials/info.html" with text=info_text %}</p>
+        <p class="hero-value">{{ owed|money }}</p>
+        <p class="hero-sub">{% blocktranslate with a=billed|money %}{{ a }} on bills to pay now{% endblocktranslate %}{% if emi_left %} · {% blocktranslate with b=emi_left|money %}{{ b }} in EMIs to come{% endblocktranslate %}{% endif %}</p>
+      </div>
+      {% if used_pct is not None %}
+      <div class="hero-progress">
+        <div class="hero-progress-row"><span>{% blocktranslate with limit=limit|money %}Used of {{ limit }}{% endblocktranslate %}</span><strong>{{ used_pct }}%</strong></div>
+        <div class="meter" data-tone="{% if used_pct >= 70 %}critical{% elif used_pct >= 30 %}warn{% else %}good{% endif %}" role="progressbar" aria-valuenow="{{ used_pct }}" aria-valuemin="0" aria-valuemax="100"><span style="width: {{ used_pct }}%"></span></div>
+        <p class="hero-sub">{% blocktranslate with a=available|money %}{{ a }} available{% endblocktranslate %}</p>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <dl class="stat-grid">
+    <div class="stat" data-tone="{% if next %}{% if next.to_pay.overdue %}critical{% elif next.to_pay.days <= 7 %}warn{% else %}info{% endif %}{% else %}good{% endif %}">
+      <dt class="stat-label">{% translate "Next payment" %}</dt>
+      {% if next %}
+      <dd class="stat-value{% if next.to_pay.overdue %} is-tone{% endif %}">{{ next.to_pay.left|money }}</dd>
+      <dd class="stat-hint">{{ next.card.name }} · {% if next.to_pay.overdue %}{% blocktranslate with d=next.to_pay.due|date:"j M" %}was due {{ d }}{% endblocktranslate %}{% else %}{% blocktranslate with d=next.to_pay.due|date:"j M" %}by {{ d }}{% endblocktranslate %}{% endif %}</dd>
+      {% else %}
+      <dd class="stat-value">{{ 0|money }}</dd>
+      <dd class="stat-hint">{% translate "No bill waiting. Well done!" %}</dd>
+      {% endif %}
+    </div>
+    <div class="stat" data-tone="warn">
+      <dt class="stat-label">{% translate "Fees & interest this month" %}</dt>
+      <dd class="stat-value">{{ cost_month.total|money }}</dd>
+      <dd class="stat-hint">{% blocktranslate with y=cost_year.total|money %}This year: {{ y }}{% endblocktranslate %}</dd>
+    </div>
+    <div class="stat" data-tone="accent">
+      <dt class="stat-label">{% translate "Sent to mobile banking this month" %}</dt>
+      <dd class="stat-value">{{ taken_month|money }}</dd>
+      <dd class="stat-hint">{% translate "From your cards to bKash, Nagad…" %}</dd>
+    </div>
+    <div class="stat" data-tone="info">
+      <dt class="stat-label">{% translate "EMIs running" %}</dt>
+      <dd class="stat-value">{{ emis|length }}</dd>
+      <dd class="stat-hint">{% if emi_left %}{% blocktranslate with a=emi_left|money %}{{ a }} still to come{% endblocktranslate %}{% else %}{% translate "None" %}{% endif %}</dd>
+    </div>
+  </dl>
+
+  {% for tone, text in tips %}
+  <div class="callout" data-tone="{{ tone }}" role="{% if tone == 'critical' %}alert{% else %}status{% endif %}">
+    {% include "partials/icon.html" with name="alert" %}
+    <p class="callout-text !mt-0">{{ text }}</p>
+  </div>
+  {% endfor %}
+
+  {% if to_pay %}
+  <section class="card">
+    <div class="card-header"><div><h2 class="card-title">{% translate "Bills to pay" %}</h2><p class="card-subtitle">{% translate "Pay the whole bill by its date and there's no interest." %}</p></div></div>
+    <ul class="ledger">
+      {% for s in to_pay %}{% with b=s.to_pay %}
+      <li class="ledger-row cc-bill-row">
+        <span class="ledger-icon" data-tone="{% if b.overdue %}critical{% elif b.days <= 7 %}warn{% else %}info{% endif %}">{% include "partials/icon.html" with name="calendar" %}</span>
+        <div class="ledger-main">
+          <p class="ledger-title"><a href="{% url 'card_detail' s.card.pk %}">{{ s.card.name }}</a> {% include "cards/_status.html" %}</p>
+          <p class="ledger-meta">{% blocktranslate with bill=b.date|date:"j M" due=b.due|date:"j M Y" %}Bill of {{ bill }} · pay by {{ due }}{% endblocktranslate %} · {% blocktranslate with m=b.min_due|money %}minimum {{ m }}{% endblocktranslate %}{% if b.paid %} · {% blocktranslate with p=b.paid|money %}{{ p }} paid{% endblocktranslate %}{% endif %}</p>
+        </div>
+        <div class="ledger-end gap-2">
+          <span class="ledger-amount"{% if b.overdue %} data-tone="critical"{% endif %}>{{ b.left|money }}</span>
+          <a href="{% url 'card_entry_add' s.card.pk 'pay' %}?amount={{ b.left|stringformat:'s' }}" class="btn btn-primary btn-sm">{% translate "Pay" %}</a>
+        </div>
+      </li>
+      {% endwith %}{% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  <section>
+    <div class="flex items-baseline justify-between gap-3 mb-3"><h2 class="section-title">{% translate "Your cards" %}</h2></div>
+    <div class="cc-grid">
+      {% for s in states %}
+      <div class="cc-item">
+        {% include "cards/_card.html" with st=s %}
+        <p class="cc-next">
+          {% if s.to_pay %}{% blocktranslate with a=s.to_pay.left|money d=s.to_pay.due|date:"j M" %}{{ a }} to pay by {{ d }}{% endblocktranslate %}
+          {% else %}{% blocktranslate with d=s.next_bill|date:"j M" a=s.so_far|money %}Next bill {{ d }} · {{ a }} so far{% endblocktranslate %}{% endif %}
+        </p>
+      </div>
+      {% endfor %}
+      <a href="{% url 'card_create' %}" class="cc-add">{% include "partials/icon.html" with name="plus" %}<span>{% translate "Add a card" %}</span></a>
+    </div>
+  </section>
+
+  <div class="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
+    <section class="card trend-card">
+      <div class="card-header"><div><h2 class="card-title">{% translate "Last 12 months" %}</h2><p class="card-subtitle">{% translate "Sent to mobile banking, bought, paid back, and fees — month by month." %}</p></div></div>
+      <div class="card-body">
+        {% if has_chart %}<div class="chart-box"><canvas id="cardTrend"></canvas></div>
+        {% else %}<div class="empty is-plain"><p class="empty-text">{% translate "The chart fills in as you record money on your cards." %}</p></div>{% endif %}
+      </div>
+    </section>
+
+    <section class="card" x-data="{ tab: 'month' }">
+      <div class="card-header">
+        <div><h2 class="card-title">{% translate "What the cards cost you" %}</h2><p class="card-subtitle">{% translate "Fees, interest and charges — the price of borrowing." %}</p></div>
+        <div class="seg seg-sm">
+          <button type="button" class="seg-item" :class="tab === 'month' && 'is-active'" @click="tab = 'month'">{% translate "Month" %}</button>
+          <button type="button" class="seg-item" :class="tab === 'year' && 'is-active'" @click="tab = 'year'">{% translate "Year" %}</button>
+          <button type="button" class="seg-item" :class="tab === 'all' && 'is-active'" @click="tab = 'all'">{% translate "All" %}</button>
+        </div>
+      </div>
+      <div class="card-body !pt-2">
+        <dl x-show="tab === 'month'">{% include "cards/_costs.html" with c=cost_month %}</dl>
+        <dl x-show="tab === 'year'" x-cloak>{% include "cards/_costs.html" with c=cost_year %}</dl>
+        <dl x-show="tab === 'all'" x-cloak>{% include "cards/_costs.html" with c=cost_all %}</dl>
+        {% if cost %}
+        <div class="callout mt-3" data-tone="info">
+          {% include "partials/icon.html" with name="percent" %}
+          <div><p class="callout-title">{% blocktranslate with r=cost.rate y=cost.yearly %}A {{ r }}% fee is like {{ y }}% interest a year{% endblocktranslate %}</p>
+          <p class="callout-text">{% blocktranslate with f=cost.fee|money a=cost.amount|money d=cost.days %}In the last 12 months you paid {{ f }} in fees to send {{ a }} to mobile banking, and had about {{ d }} days to pay each back. Paying in full on time, that's the whole cost.{% endblocktranslate %}</p></div>
+        </div>
+        {% endif %}
+      </div>
+    </section>
+  </div>
+
+  <section class="card">
+    <div class="card-header">
+      <div><h2 class="card-title">{% translate "Mobile banking" %}</h2><p class="card-subtitle">{% translate "Money from your cards into each wallet, card bills paid from it, and its charges." %}</p></div>
+      <a href="{% url 'card_mfs' %}" class="btn btn-ghost btn-sm">{% translate "Charges & details" %}{% include "partials/icon.html" with name="arrow-right" %}</a>
+    </div>
+    {% if mfs %}
+    <ul class="ledger">
+      {% for r in mfs %}
+      <li><a href="{% url 'card_mfs_detail' r.wallet.pk %}" class="ledger-row">
+        <span class="ledger-icon" data-tone="accent">{% if r.wallet.kind == 'bank' %}{% include "partials/icon.html" with name="bank" %}{% elif r.wallet.kind == 'mobile' %}{% include "partials/icon.html" with name="phone" %}{% else %}{% include "partials/icon.html" with name="wallet" %}{% endif %}</span>
+        <div class="ledger-main">
+          <p class="ledger-title">{{ r.wallet.name }} <span class="text-xs font-normal" style="color: var(--text-muted);">{{ r.balance|money }}</span></p>
+          <p class="ledger-meta">{% blocktranslate with a=r.received|money b=r.paid|money %}{{ a }} in from cards · {{ b }} bills paid{% endblocktranslate %} · {% if r.fees.pays_bills %}{% blocktranslate with x=r.fees.bill_rate|floatformat:"-2" %}bill pay {{ x }}%{% endblocktranslate %}{% else %}{% translate "no card bill pay" %}{% endif %} · {% blocktranslate with x=r.fees.bank_rate|floatformat:"-2" %}to bank {{ x }}%{% endblocktranslate %}</p>
+        </div>
+        <div class="ledger-end"><span class="party-bal"><strong>{{ r.fees_total|money }}</strong><span>{% translate "fees" %}</span></span></div>
+      </a></li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty is-plain">
+      <p class="empty-text">{% translate "Add bKash, Nagad or Rocket as a wallet to see what goes through each, and set its charges." %}</p>
+      <a href="{% url 'card_mfs_add' %}" class="btn btn-secondary">{% include "partials/icon.html" with name="plus" %}{% translate "Add mobile banking" %}</a>
+    </div>
+    {% endif %}
+  </section>
+
+  <div class="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
+    <section class="card">
+      <div class="card-header"><div><h2 class="card-title">{% translate "EMIs" %}</h2><p class="card-subtitle">{% translate "One installment comes on each bill." %}</p></div>
+        {% if active %}<a href="{% url 'card_emi_new' %}" class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="plus" %}{% translate "Turn into EMI" %}</a>{% endif %}</div>
+      {% if emis %}
+      <ul class="ledger">
+        {% for card, e in emis %}
+        <li><a href="{% url 'card_emi_edit' e.plan.pk %}" class="ledger-row">
+          <div class="ledger-main">
+            <p class="ledger-title">{{ e.plan.title }} <span class="text-xs font-normal" style="color: var(--text-muted);">· {{ card.name }}</span></p>
+            <p class="ledger-meta">{% blocktranslate with a=e.each|money n=e.count m=e.plan.months %}{{ a }} a month · {{ n }} of {{ m }} paid{% endblocktranslate %}{% if e.next %} · {% blocktranslate with d=e.next.date|date:"j M" %}next on the {{ d }} bill{% endblocktranslate %}{% endif %}</p>
+            <div class="meter mt-2" data-tone="good"><span style="width: {{ e.pct }}%"></span></div>
+          </div>
+          <div class="ledger-end"><span class="party-bal"><strong>{{ e.left|money }}</strong><span>{% translate "left" %}</span></span></div>
+        </a></li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="empty is-plain"><p class="empty-text">{% translate "No EMI running. A big bill you can't pay at once? Ask the bank to turn it into EMI, then add it here." %}</p></div>
+      {% endif %}
+    </section>
+
+    <section class="card">
+      <div class="card-header"><h2 class="card-title">{% translate "Recent" %}</h2></div>
+      {% if recent %}
+      <ul class="ledger">
+        {% for e in recent %}
+        <li><a href="{% url 'card_entry_edit' e.entry.pk %}" class="ledger-row">
+          {% include "cards/_entry_icon.html" with kind=e.kind %}
+          <div class="ledger-main"><p class="ledger-title">{{ e.title }} <span class="text-xs font-normal" style="color: var(--text-muted);">· {{ e.entry.card.name }}</span></p><p class="ledger-meta">{{ e.date|date:"j M Y" }}{% if e.detail %} · {{ e.detail }}{% endif %}</p></div>
+          <div class="ledger-end"><span class="ledger-amount"{% if e.owed < 0 %} data-tone="good"{% endif %}>{{ e.owed|signed_money }}</span></div>
+        </a></li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="empty is-plain"><p class="empty-text">{% translate "Nothing recorded yet." %}</p></div>
+      {% endif %}
+    </section>
+  </div>
+
+  {% include "business/partials/note.html" with key="cards" title=_("How credit cards work here") p1=_("Add each card once with its bill day and pay-by day (both are on your card bill). The card number isn't needed — at most the last 4 digits.") p2=_("“Take money to bKash / Nagad” adds the money to that wallet, and the amount plus the card's fee to the card. “Pay a bill” takes the payment and the mobile banking fee out of the wallet you pick.") p3=_("Each bill is worked out for you: what's new, what's left from before, the minimum and the due date. Pay in full by the date to pay no interest. If the bank's number differs, open the card and use “Match the bank”.") p4=_("Set each mobile banking's charges once under “Charges & details”; the app then suggests the cheapest way to pay each bill.") %}
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if has_chart %}
+{{ chart|json_script:"card-chart" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.6.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<script src="{% asset 'js/charts.js' %}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var d = JSON.parse(document.getElementById('card-chart').textContent);
+    renderTrendChart({
+      canvasId: 'cardTrend', labels: d.labels,
+      datasets: [
+        { label: '{% translate "Sent to mobile banking"|escapejs %}', data: d.taken },
+        { label: '{% translate "Bought"|escapejs %}', data: d.spent },
+        { label: '{% translate "Paid back"|escapejs %}', data: d.paid },
+        { label: '{% translate "Fees"|escapejs %}', data: d.fees },
+      ],
+    });
+  });
+</script>
+{% endif %}
+{% endblock %}

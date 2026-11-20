@@ -77,7 +77,10 @@ def networth_view(request):
         (m.balance_due for m in household_members if m.balance_due > 0), ZERO
     )
 
-    payables = creditors_payable + shops_payable + household_payable
+    from apps.cards.services import total_owed as cards_owed
+
+    cards_payable = cards_owed(user, timezone.localdate())       # credit cards: everything owed on them, EMIs included
+    payables = creditors_payable + shops_payable + household_payable + cards_payable
     net_balance = receivables - payables
 
     # ── Lifetime cash flow: everything ever earned vs ever spent ──
@@ -100,7 +103,8 @@ def networth_view(request):
     shops_paid = _sum(ledger.shops)
     paid_back = _sum(ledger.paid_back)
     transfer_fees = ledger.fees.aggregate(total=Coalesce(Sum("fee"), Value(0, output_field=DecimalField())))["total"]
-    total_expense = expense_spent + household_spent_by_you + shops_paid + paid_back + transfer_fees
+    card_costs = _sum(ledger.cards) + ledger.card_fees.aggregate(total=Coalesce(Sum("fee"), Value(0, output_field=DecimalField())))["total"]
+    total_expense = expense_spent + household_spent_by_you + shops_paid + paid_back + transfer_fees + card_costs
 
     net_cash_flow = total_income - total_expense
 
@@ -115,7 +119,7 @@ def networth_view(request):
 
     months = last_n_month_starts(12, today)
     in_series = [a + b for a, b in zip(monthly_series(ledger.income, months), monthly_series(ledger.contrib, months))]
-    out_series = [sum(month, ZERO) for month in zip(*(monthly_series(qs, months) for qs in ledger.outgoings), monthly_series(ledger.fees, months, "fee"))]
+    out_series = [sum(month, ZERO) for month in zip(*(monthly_series(qs, months) for qs in ledger.outgoings), monthly_series(ledger.fees, months, "fee"), monthly_series(ledger.card_fees, months, "fee"))]
     net_series = [a - b for a, b in zip(in_series, out_series)]
 
     from apps.wallets.services import holding
@@ -156,6 +160,7 @@ def networth_view(request):
         "creditors_payable": creditors_payable,
         "shops_payable": shops_payable,
         "household_payable": household_payable,
+        "cards_payable": cards_payable,
         "payables": payables,
         "net_balance": net_balance,
         "income_earned": income_earned,
@@ -166,6 +171,7 @@ def networth_view(request):
         "shops_paid": shops_paid,
         "paid_back": paid_back,
         "transfer_fees": transfer_fees,
+        "card_costs": card_costs,
         "total_expense": total_expense,
         "net_cash_flow": net_cash_flow,
         # Pre-clamped 0-100 bar widths, computed here (not via {% widthratio %}
@@ -314,6 +320,14 @@ def _attention(user, today):
                     "overdue": r.due_date < today, "days": (r.due_date - today).days, "late": (today - r.due_date).days,
                     "url": reverse(urlname, args=[r.pk]),
                 })
+    from apps.cards.services import due_items
+
+    for row in due_items(user, today):                 # credit card bills
+        b, card = row["bill"], row["state"].card
+        if b.due <= cutoff:
+            items.append({"name": card.name, "amount": b.left, "due_date": b.due, "kind": "pay", "installment": False,
+                          "overdue": b.due < today, "days": (b.due - today).days, "late": (today - b.due).days,
+                          "url": reverse("card_detail", args=[card.pk])})
     items.sort(key=lambda i: i["due_date"])
     return items
 

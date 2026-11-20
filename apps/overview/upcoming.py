@@ -56,7 +56,23 @@ def ledger_items(user, today, until):
             else:
                 undated["count"] += 1
                 undated["in" if sign > 0 else "out"] += remaining
+    items += card_items(user, today, until)
     return items, undated
+
+
+def card_items(user, today, until):
+    """Credit card bills: the one to pay now, and the next one as it stands (EMI installments included)."""
+    from apps.cards.services import states
+
+    items = []
+    for st in states(user, today):
+        url = reverse("card_detail", args=[st.card.pk])
+        b = st.to_pay
+        if b:
+            items.append(Item(b.due, -b.left, st.card.name, _("Card bill"), url, "bill"))
+        if st.next_new > 0 and st.next_due <= until:
+            items.append(Item(st.next_due, -st.next_new, st.card.name, _("Next card bill, so far"), url, "bill"))
+    return items
 
 
 def recurring_items(user, today, until):

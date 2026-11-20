@@ -49,6 +49,7 @@ urlpatterns = [
     path("wallets/", include("apps.wallets.urls")),
     path("plans/", include("apps.plans.urls")),
     path("zakat/", include("apps.zakat.urls")),
+    path("cards/", include("apps.cards.urls")),  # credit cards, and the bKash/Nagad/Rocket money that goes through them
     path("search/", search_view, name="search"),
     path("receipts/<slug:kind>/<int:pk>/", receipt_view, name="receipt_view"),
     path("business/", include("apps.business.urls")),  # business module

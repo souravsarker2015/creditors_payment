@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{{ c.name }} | FinTrack{% endblock %}
+{% block content %}
+<div class="page stack">
+  <header class="page-header !mb-0">
+    <div class="min-w-0">
+      <a href="{% url 'card_dashboard' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Credit cards" %}</a>
+      <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <h1 class="page-title">{{ c.name }}</h1>
+        {% if not c.is_active %}<span class="badge" data-tone="muted">{% translate "Not in use" %}</span>{% endif %}
+      </div>
+      <p class="page-subtitle">{% if c.bank %}{{ c.bank }} · {% endif %}{% blocktranslate with s=c.statement_day d=c.due_day %}bill on the {{ s }}, pay by the {{ d }}{% endblocktranslate %}{% if c.masked %} · {{ c.masked }}{% endif %}</p>
+    </div>
+    <div class="page-actions">
+      <a href="{% url 'card_edit' c.pk %}" class="btn btn-ghost">{% include "partials/icon.html" with name="edit" %}{% translate "Edit" %}</a>
+    </div>
+  </header>
+
+  {% if c.is_active %}
+  <nav class="cc-actions" aria-label="{% translate 'Record' %}">
+    <a href="{% url 'card_entry_add' c.pk 'cash' %}" class="cc-action" data-tone="accent">{% include "partials/icon.html" with name="phone" %}<span>{% translate "Take money to bKash / Nagad" %}</span></a>
+    <a href="{% url 'card_entry_add' c.pk 'pay' %}{% if pay_amount %}?amount={{ pay_amount|stringformat:'s' }}{% endif %}" class="cc-action" data-tone="good">{% include "partials/icon.html" with name="check" %}<span>{% translate "Pay the bill" %}</span></a>
+    <a href="{% url 'card_entry_add' c.pk 'spend' %}" class="cc-action" data-tone="warn">{% include "partials/icon.html" with name="cart" %}<span>{% translate "Bought with it" %}</span></a>
+    <a href="{% url 'card_entry_add' c.pk 'charge' %}" class="cc-action" data-tone="critical">{% include "partials/icon.html" with name="percent" %}<span>{% translate "Bank charge" %}</span></a>
+    <a href="{% url 'card_emi_add' c.pk %}" class="cc-action" data-tone="info">{% include "partials/icon.html" with name="repeat" %}<span>{% translate "Turn into EMI" %}</span></a>
+    <a href="{% url 'card_entry_add' c.pk 'refund' %}" class="cc-action" data-tone="muted">{% include "partials/icon.html" with name="undo" %}<span>{% translate "Refund" %}</span></a>
+  </nav>
+  {% endif %}
+
+  <div class="cc-top">
+    <div class="cc-top-card">{% include "cards/_card.html" with st=st link=False %}</div>
+    <section class="card cc-now">
+      {% with b=st.to_pay %}
+      {% if b %}
+      <div class="card-body">
+        <p class="stat-label flex flex-wrap items-center gap-2">{% blocktranslate with d=b.date|date:"j M" %}Bill of {{ d }}{% endblocktranslate %} {% include "cards/_status.html" %}</p>
+        <p class="cc-now-amount{% if b.overdue %} tone-critical{% endif %}">{{ b.left|money }}</p>
+        <p class="help">{% if b.overdue %}{% blocktranslate with d=b.due|date:"j M Y" %}Was due {{ d }}. Pay it now — interest is running.{% endblocktranslate %}{% else %}{% blocktranslate with d=b.due|date:"l, j M" %}Pay by {{ d }} to pay no interest.{% endblocktranslate %}{% endif %}</p>
+        <dl class="mt-3">
+          <div class="kv"><dt class="kv-label">{% translate "The bill" %}</dt><dd class="kv-value">{{ b.closing|money }}</dd></div>
+          {% if b.paid %}<div class="kv"><dt class="kv-label">{% translate "Paid so far" %}</dt><dd class="kv-value" data-tone="good">−{{ b.paid|money }}</dd></div>{% endif %}
+          <div class="kv"><dt class="kv-label">{% translate "Minimum to pay" %}</dt><dd class="kv-value">{{ b.min_due|money }}</dd></div>
+          {% if b.interest %}<div class="kv"><dt class="kv-label">{% translate "Interest if it stays unpaid" %}</dt><dd class="kv-value" data-tone="warn">{% blocktranslate with x=b.interest|money %}about {{ x }} a month{% endblocktranslate %}</dd></div>{% endif %}
+        </dl>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <a href="{% url 'card_entry_add' c.pk 'pay' %}?amount={{ b.left|stringformat:'s' }}" class="btn btn-primary">{% include "partials/icon.html" with name="check" %}{% blocktranslate with a=b.left|money %}Pay {{ a }}{% endblocktranslate %}</a>
+          {% if b.left > b.min_due %}{% blocktranslate with d=b.date|date:'M Y' asvar emi_title %}Bill of {{ d }}{% endblocktranslate %}<a href="{% url 'card_emi_add' c.pk %}?amount={{ b.left|stringformat:'s' }}&amp;title={{ emi_title|urlencode }}" class="btn btn-secondary">{% include "partials/icon.html" with name="repeat" %}{% translate "Can't pay it all? EMI" %}</a>{% endif %}
+        </div>
+      </div>
+      {% else %}
+      <div class="card-body">
+        <p class="stat-label">{% translate "Nothing to pay right now" %}</p>
+        <p class="cc-now-amount">{{ st.so_far|money }}</p>
+        <p class="help">{% blocktranslate with d=st.next_bill|date:"j M" due=st.next_due|date:"j M" %}New since the last bill. It goes on the bill of {{ d }}, to pay by {{ due }}.{% endblocktranslate %}</p>
+        {% if st.bill and st.bill.status == "paid" %}<p class="help mt-2" style="color: var(--status-good);">{% blocktranslate with d=st.bill.date|date:"j M" %}The bill of {{ d }} is paid in full — no interest.{% endblocktranslate %}</p>{% endif %}
+      </div>
+      {% endif %}
+      {% endwith %}
+      <div class="card-footer cc-next-bill">
+        <span>{% blocktranslate with d=st.next_bill|date:"j M" %}Next bill · {{ d }}{% endblocktranslate %}</span>
+        <strong>{% blocktranslate with a=st.next_new|money %}{{ a }} so far{% endblocktranslate %}</strong>
+      </div>
+    </section>
+  </div>
+
+  {% if routes %}
+  <section class="card">
+    <div class="card-header"><div><h2 class="card-title">{% blocktranslate with a=pay_amount|money %}Cheapest ways to pay {{ a }}{% endblocktranslate %}</h2><p class="card-subtitle">{% translate "From your wallets and each one's charges." %} <a href="{% url 'card_mfs' %}" class="link">{% translate "Set charges" %}</a></p></div></div>
+    <ul class="ledger">
+      {% for r in routes %}
+      <li><a href="{% url 'card_entry_add' c.pk 'pay' %}?amount={{ pay_amount|stringformat:'s' }}&wallet={{ r.wallet.pk }}&route={{ r.route }}" class="ledger-row">
+        <span class="ledger-icon" data-tone="{% if forloop.first and r.enough %}good{% else %}muted{% endif %}">{% if r.wallet.kind == 'mobile' %}{% include "partials/icon.html" with name="phone" %}{% elif r.wallet.kind == 'bank' %}{% include "partials/icon.html" with name="bank" %}{% else %}{% include "partials/icon.html" with name="wallet" %}{% endif %}</span>
+        <div class="ledger-main">
+          <p class="ledger-title">{{ r.wallet.name }}{% if forloop.first and r.enough %} <span class="badge" data-tone="good">{% translate "Cheapest" %}</span>{% endif %}</p>
+          <p class="ledger-meta">{{ r.label }}{% if not r.enough %} · <span style="color: var(--status-warn);">{% blocktranslate with a=r.short|money %}short by {{ a }}{% endblocktranslate %}</span>{% endif %}</p>
+        </div>
+        <div class="ledger-end"><span class="party-bal"><strong>{% if r.fee %}{{ r.fee|money }}{% else %}{% translate "Free" %}{% endif %}</strong><span>{% if r.rate %}{{ r.rate|floatformat:"-2" }}%{% else %}{% translate "no fee" %}{% endif %}</span></span></div>
+      </a></li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  <dl class="stat-grid">
+    <div class="stat" data-tone="critical"><dt class="stat-label">{% translate "You owe in all" %}</dt><dd class="stat-value">{{ st.owed|money }}</dd><dd class="stat-hint">{% if st.emi_left %}{% blocktranslate with a=st.emi_left|money %}incl. {{ a }} in EMIs to come{% endblocktranslate %}{% else %}{% translate "No EMI to come" %}{% endif %}</dd></div>
+    <div class="stat" data-tone="accent"><dt class="stat-label">{% translate "Sent to mobile banking" %}</dt><dd class="stat-value">{{ st.taken|money }}</dd><dd class="stat-hint">{% translate "All time" %}</dd></div>
+    <div class="stat" data-tone="good"><dt class="stat-label">{% translate "Paid back" %}</dt><dd class="stat-value">{{ st.paid|money }}</dd><dd class="stat-hint">{% blocktranslate with a=st.spent|money %}Bought with it: {{ a }}{% endblocktranslate %}</dd></div>
+    <div class="stat" data-tone="warn"><dt class="stat-label">{% translate "Fees & interest" %}</dt><dd class="stat-value">{{ st.costs.total|money }}</dd><dd class="stat-hint">{% translate "All time, every kind" %}</dd></div>
+  </dl>
+
+  <div class="cc-cols">
+    <div class="stack">
+      <section class="card">
+        <div class="card-header"><div><h2 class="card-title">{% translate "Bills" %}</h2><p class="card-subtitle">{% translate "Worked out from what you recorded. Tap one to see what's on it." %}</p></div></div>
+        {% if bills %}
+        <div class="cc-bills">
+          {% for b in bills %}
+          <details class="cc-bill"{% if forloop.first and b.to_pay %} open{% endif %}>
+            <summary class="ledger-row">
+              <div class="ledger-main">
+                <p class="ledger-title">{{ b.date|date:"j M Y" }} {% include "cards/_status.html" %}</p>
+                <p class="ledger-meta">{% blocktranslate with d=b.due|date:"j M" %}pay by {{ d }}{% endblocktranslate %}{% if b.paid %} · {% blocktranslate with p=b.paid|money %}{{ p }} paid{% endblocktranslate %}{% endif %}{% if b.left and b.status != "paid" %} · {% blocktranslate with l=b.left|money %}{{ l }} left{% endblocktranslate %}{% endif %}</p>
+              </div>
+              <div class="ledger-end"><span class="ledger-amount">{{ b.closing|money }}</span>{% include "partials/icon.html" with name="chevron-down" %}</div>
+            </summary>
+            <div class="cc-bill-body">
+              <dl>
+                <div class="kv"><dt class="kv-label">{% translate "Left from the bill before" %}</dt><dd class="kv-value">{{ b.opening|money }}</dd></div>
+                <div class="kv"><dt class="kv-label">{% translate "New on this bill" %}</dt><dd class="kv-value">+{{ b.charges|money }}</dd></div>
+                {% if b.payments %}<div class="kv"><dt class="kv-label">{% translate "Paid in this period" %}</dt><dd class="kv-value" data-tone="good">−{{ b.payments|money }}</dd></div>{% endif %}
+                {% if b.credits %}<div class="kv"><dt class="kv-label">{% translate "Refunds, EMI, corrections" %}</dt><dd class="kv-value" data-tone="good">−{{ b.credits|money }}</dd></div>{% endif %}
+                <div class="kv kv-total"><dt class="kv-label">{% translate "The bill" %}</dt><dd class="kv-value">{{ b.closing|money }}</dd></div>
+                {% if b.closing > 0 %}<div class="kv"><dt class="kv-label">{% translate "Minimum" %}</dt><dd class="kv-value">{{ b.min_due|money }}</dd></div>{% endif %}
+              </dl>
+              {% if b.events %}
+              <ul class="cc-bill-items">
+                {% for e in b.events %}<li><span>{{ e.date|date:"j M" }} · {{ e.title }}{% if e.detail %} <small>{{ e.detail }}</small>{% endif %}</span><b{% if e.billable < 0 %} class="tone-good"{% endif %}>{{ e.billable|signed_money }}</b></li>{% endfor %}
+              </ul>
+              {% endif %}
+            </div>
+          </details>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty is-plain"><p class="empty-text">{% blocktranslate with d=st.next_bill|date:"j M" %}The first bill is made on {{ d }}.{% endblocktranslate %}</p></div>
+        {% endif %}
+      </section>
+
+      <section class="card">
+        <div class="card-header"><h2 class="card-title">{% translate "Everything on this card" %}</h2></div>
+        {% if rows %}
+        <ul class="ledger">
+          {% for e in rows %}
+          <li>{% if e.entry %}<a href="{% url 'card_entry_edit' e.entry.pk %}" class="ledger-row">{% elif e.plan %}<a href="{% url 'card_emi_edit' e.plan.pk %}" class="ledger-row">{% else %}<a href="{% url 'card_edit' c.pk %}" class="ledger-row">{% endif %}
+            {% include "cards/_entry_icon.html" with kind=e.kind %}
+            <div class="ledger-main"><p class="ledger-title">{{ e.title }}</p><p class="ledger-meta">{{ e.date|date:"j M Y" }}{% if e.detail %} · {{ e.detail }}{% endif %}</p></div>
+            <div class="ledger-end"><span class="party-bal"><strong class="{% if e.owed < 0 %}tone-good{% endif %}">{% if e.owed %}{{ e.owed|signed_money }}{% else %}{{ e.billable|signed_money }}{% endif %}</strong><span>{{ e.balance|money }}</span></span></div>
+          </a></li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="empty is-plain"><p class="empty-text">{% translate "Nothing yet. Use the buttons above to record money taken out, things bought, or a bill paid." %}</p></div>
+        {% endif %}
+      </section>
+    </div>
+
+    <div class="stack">
+      {% if emis %}
+      <section class="card">
+        <div class="card-header"><h2 class="card-title">{% translate "EMIs" %}</h2></div>
+        <ul class="ledger">
+          {% for e in emis %}
+          <li><a href="{% url 'card_emi_edit' e.plan.pk %}" class="ledger-row">
+            <div class="ledger-main">
+              <p class="ledger-title">{{ e.plan.title }}{% if e.done %} <span class="badge" data-tone="good">{% if e.closed %}{% translate "Paid off early" %}{% else %}{% translate "Done" %}{% endif %}</span>{% endif %}</p>
+              <p class="ledger-meta">{% blocktranslate with a=e.each|money n=e.count m=e.plan.months %}{{ a }} a month · {{ n }} of {{ m }}{% endblocktranslate %}{% if e.plan.rate %} · {{ e.plan.rate|floatformat:"-2" }}%{% else %} · 0%{% endif %}</p>
+              <div class="meter mt-2" data-tone="good"><span style="width: {{ e.pct }}%"></span></div>
+            </div>
+            <div class="ledger-end"><span class="party-bal"><strong>{{ e.left|money }}</strong><span>{% translate "left" %}</span></span></div>
+          </a></li>
+          {% endfor %}
+        </ul>
+      </section>
+      {% endif %}
+
+      <section class="card">
+        <div class="card-header"><h2 class="card-title">{% translate "Fees & interest on this card" %}</h2></div>
+        <div class="card-body !pt-2"><dl>{% include "cards/_costs.html" with c=st.costs %}</dl></div>
+      </section>
+
+      <section class="card">
+        <div class="card-header"><h2 class="card-title">{% translate "Card details" %}</h2><a href="{% url 'card_edit' c.pk %}" class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="edit" %}{% translate "Edit" %}</a></div>
+        <div class="card-body !pt-2">
+          <dl>
+            {% if c.bank %}<div class="kv"><dt class="kv-label">{% translate "Bank" %}</dt><dd class="kv-value">{{ c.bank }}</dd></div>{% endif %}
+            {% if c.network %}<div class="kv"><dt class="kv-label">{% translate "Card type" %}</dt><dd class="kv-value">{{ c.network }}</dd></div>{% endif %}
+            {% if c.last4 %}<div class="kv"><dt class="kv-label">{% translate "Number" %}</dt><dd class="kv-value">{{ c.masked }}</dd></div>{% endif %}
+            {% if c.expiry %}<div class="kv"><dt class="kv-label">{% translate "Expires" %}</dt><dd class="kv-value">{{ c.expiry }}</dd></div>{% endif %}
+            <div class="kv"><dt class="kv-label">{% translate "Credit limit" %}</dt><dd class="kv-value">{% if c.limit %}{{ c.limit|money }}{% else %}—{% endif %}</dd></div>
+            {% if c.cash_limit %}<div class="kv"><dt class="kv-label">{% translate "Cash / transfer limit" %}</dt><dd class="kv-value">{{ c.cash_limit|money }}</dd></div>{% endif %}
+            <div class="kv"><dt class="kv-label">{% translate "Bill day · pay-by day" %}</dt><dd class="kv-value">{{ c.statement_day }} · {{ c.due_day }}</dd></div>
+            <div class="kv"><dt class="kv-label">{% translate "Fee to send to bKash / Nagad" %}</dt><dd class="kv-value">{{ c.transfer_fee_rate|floatformat:"-2" }}%</dd></div>
+            {% if c.interest_rate %}<div class="kv"><dt class="kv-label">{% translate "Interest a year" %}</dt><dd class="kv-value">{{ c.interest_rate|floatformat:"-2" }}%</dd></div>{% endif %}
+            <div class="kv"><dt class="kv-label">{% translate "Minimum payment" %}</dt><dd class="kv-value">{% blocktranslate with r=c.min_due_rate|floatformat:"-2" f=c.min_due_floor|money %}{{ r }}%, at least {{ f }}{% endblocktranslate %}</dd></div>
+            {% if c.late_fee %}<div class="kv"><dt class="kv-label">{% translate "Late fee" %}</dt><dd class="kv-value">{{ c.late_fee|money }}</dd></div>{% endif %}
+            {% if c.annual_fee %}<div class="kv"><dt class="kv-label">{% translate "Annual fee" %}</dt><dd class="kv-value">{{ c.annual_fee|money }}{% if c.annual_fee_month %} · {{ c.get_annual_fee_month_display }}{% endif %}</dd></div>{% endif %}
+          </dl>
+          {% if c.note %}<p class="help mt-3">{{ c.note|linebreaksbr }}</p>{% endif %}
+        </div>
+      </section>
+
+      <details class="card wallet-correct">
+        <summary class="card-header"><div><h2 class="card-title">{% translate "Match the bank" %}</h2><p class="card-subtitle">{% translate "The bank app shows a different amount owed? Type it here." %}</p></div>{% include "partials/icon.html" with name="chevron-down" %}</summary>
+        <form method="post" action="{% url 'card_correct' c.pk %}" class="card-body form-stack">
+          {% csrf_token %}
+          {% with form=correct_form %}{% for field in form %}{% include "partials/field.html" %}{% endfor %}{% endwith %}
+          <p class="help">{% translate "The difference is saved as a correction, so the bills still add up. Better still, record the missing charge or payment." %}</p>
+          <div><button type="submit" class="btn btn-primary">{% include "partials/icon.html" with name="check" %}{% translate "Save" %}</button></div>
+        </form>
+      </details>
+
+      <div class="wallet-manage">
+        <form method="post" action="{% url 'card_toggle' c.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-ghost btn-sm">{% if c.is_active %}{% include "partials/icon.html" with name="pause" %}{% translate "Stop using this card" %}{% else %}{% include "partials/icon.html" with name="play" %}{% translate "Use this card again" %}{% endif %}</button>
+        </form>
+        <form method="post" action="{% url 'card_delete' c.pk %}" data-confirm-check data-confirm="{% translate 'Delete this card with everything recorded on it? You can undo this from Recently deleted.' %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-ghost btn-sm is-danger">{% include "partials/icon.html" with name="trash" %}{% translate "Delete card" %}</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

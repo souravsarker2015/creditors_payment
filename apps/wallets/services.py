@@ -77,6 +77,10 @@ def movements(user, wallet=None):
                              _("incl. %(fee)s fee") % {"fee": money(t.fee)} if t.fee else (t.note or ""), link, "transfer"))
         if only is None or t.to_wallet_id == only:
             rows.append(Move(t.date, t.to_wallet_id, t.amount, _("From %(name)s") % {"name": t.from_wallet}, t.note or "", link, "transfer"))
+    from apps.cards.services import wallet_moves
+
+    for when, wallet_id, amount, title, detail, link in wallet_moves(user, only):      # credit cards ↔ bKash, Nagad…
+        rows.append(Move(when, wallet_id, amount, title, (detail or "")[:80], link, "card"))
     adjustments = Adjustment.objects.filter(wallet__user=user)
     if only is not None:
         adjustments = adjustments.filter(wallet_id=only)
@@ -140,6 +144,10 @@ def balances(user, only=None):
     transfers = Transfer.objects.filter(user=user)
     add(transfers, "from_wallet", F("amount") + F("fee"), -1)
     add(transfers, "to_wallet", "amount", 1)
+    from apps.cards.services import wallet_querysets
+
+    for qs, amount, sign in wallet_querysets(user):     # money taken out of a card to it, card bills paid from it (+ fee)
+        add(qs, "wallet", amount, sign)
     return totals
 
 

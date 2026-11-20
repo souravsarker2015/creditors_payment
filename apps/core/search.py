@@ -61,6 +61,8 @@ PAGES = [
     (gettext_noop("Creditors"), "dashboard", "personal", ""),
     (gettext_noop("Debtors"), "debtor_dashboard", "personal", ""),
     (gettext_noop("Shop Dues"), "shop_dashboard", "personal", ""),
+    (gettext_noop("Credit cards"), "card_dashboard", "personal", ""),
+    (gettext_noop("Mobile banking charges"), "card_mfs", "personal", ""),
     (gettext_noop("Both ways"), "people", "personal", ""),
     (gettext_noop("Set off what you owe each other"), "people", "personal", ""),
     (gettext_noop("Income"), "income_dashboard", "personal", ""),
@@ -168,6 +170,10 @@ def _personal(user, text):
     other = Group(_("Income, spending & goals"))
     for w in Wallet.objects.filter(_q(text, "name", "number"), user=user)[:PER_GROUP]:
         other.hits.append(Hit(w.name, " · ".join(x for x in (_("Wallet"), w.number) if x), _url("wallet_detail", w.pk), "wallet"))
+    from apps.cards.models import Card
+
+    for c in Card.objects.filter(_q(text, "name", "bank__name", "last4", "note"), user=user).select_related("bank")[:PER_GROUP]:
+        other.hits.append(Hit(c.name, " · ".join(x for x in (_("Credit card"), str(c.bank or ""), c.masked) if x), _url("card_detail", c.pk), "cards"))
     for s in IncomeSource.objects.filter(_q(text, "name", "description"), user=user)[:PER_GROUP]:
         other.hits.append(Hit(s.name, _("Income source"), _url("income_source_detail", s.pk), "arrow-down"))
     for g in SavingsGoal.objects.filter(_q(text, "name", "note"), user=user)[:PER_GROUP]:

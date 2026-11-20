@@ -54,6 +54,18 @@ KINDS = {
         "apps.household.forms.HouseholdMemberForm", "apps.household.models.HouseholdMember",
         gettext_lazy("New household member"), gettext_lazy("member"),
     ),
+    "card_bank": QuickCreateKind(
+        "apps.cards.forms.CardBankForm", "apps.cards.models.CardBank",
+        gettext_lazy("New bank"), gettext_lazy("bank"),
+    ),
+    "card_network": QuickCreateKind(
+        "apps.cards.forms.CardNetworkForm", "apps.cards.models.CardNetwork",
+        gettext_lazy("New card type"), gettext_lazy("card type"),
+    ),
+    "card_wallet": QuickCreateKind(
+        "apps.cards.forms.QuickWalletForm", "apps.wallets.models.Wallet",
+        gettext_lazy("New wallet"), gettext_lazy("wallet"),
+    ),
 }
 
 

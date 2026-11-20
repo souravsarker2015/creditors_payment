@@ -1,0 +1,3 @@
+{% load i18n %}{% comment %}A Costs breakdown as key/value rows. Needs: c.{% endcomment %}
+{% for label, amount in c.rows %}<div class="kv"><dt class="kv-label">{{ label }}</dt><dd class="kv-value">{{ amount|money }}</dd></div>{% empty %}<div class="kv"><dt class="kv-label">{% translate "No fees or interest" %}</dt><dd class="kv-value" data-tone="good">{{ 0|money }}</dd></div>{% endfor %}
+{% if c.rows|length > 1 %}<div class="kv kv-total"><dt class="kv-label">{% translate "Total" %}</dt><dd class="kv-value">{{ c.total|money }}</dd></div>{% endif %}

@@ -241,6 +241,7 @@
             <div class="kv"><dt><a href="{% url 'dashboard' %}" class="kv-label">{% translate "You owe (Creditors)" %}</a></dt><dd class="kv-value" data-tone="critical">−{{ creditors_payable|money }}</dd></div>
             <div class="kv"><dt><a href="{% url 'shop_dashboard' %}" class="kv-label">{% translate "You owe (Shop Dues)" %}</a></dt><dd class="kv-value" data-tone="critical">−{{ shops_payable|money }}</dd></div>
             <div class="kv"><dt><a href="{% url 'household_member_list' %}" class="kv-label">{% translate "You owe (Household Members)" %}</a></dt><dd class="kv-value" data-tone="critical">−{{ household_payable|money }}</dd></div>
+            {% if cards_payable %}<div class="kv"><dt><a href="{% url 'card_dashboard' %}" class="kv-label">{% translate "You owe (Credit cards)" %}</a></dt><dd class="kv-value" data-tone="critical">−{{ cards_payable|money }}</dd></div>{% endif %}
           </dl>
           <div class="mt-3 space-y-1.5" aria-hidden="true">
             <div class="meter" data-tone="good"><span style="width: {{ receivables_pct }}%"></span></div>
@@ -269,6 +270,7 @@
             <div class="kv"><dt><a href="{% url 'shop_dashboard' %}" class="kv-label">{% translate "Paid to shops" %}</a></dt><dd class="kv-value" data-tone="critical">−{{ shops_paid|money }}</dd></div>
             <div class="kv"><dt><a href="{% url 'household_dashboard' %}" class="kv-label">{% translate "Paid back to family" %}</a></dt><dd class="kv-value" data-tone="critical">−{{ paid_back|money }}</dd></div>
             {% if transfer_fees %}<div class="kv"><dt><a href="{% url 'wallet_list' %}" class="kv-label">{% translate "Transfer fees" %}</a></dt><dd class="kv-value" data-tone="critical">−{{ transfer_fees|money }}</dd></div>{% endif %}
+            {% if card_costs %}<div class="kv"><dt><a href="{% url 'card_dashboard' %}" class="kv-label">{% translate "Credit cards (bought, fees, interest)" %}</a></dt><dd class="kv-value" data-tone="critical">−{{ card_costs|money }}</dd></div>{% endif %}
           </dl>
           <div class="mt-3 space-y-1.5" aria-hidden="true">
             <div class="meter" data-tone="good"><span style="width: {{ income_pct }}%"></span></div>
@@ -301,6 +303,7 @@
       <a href="{% url 'household_dashboard' %}" class="guide-tile">{% include "partials/icon.html" with name="cart" %}<span><b>{% translate "Household (Bazar)" %}</b><small>{% translate "Daily shopping, and who in the family paid for it." %}</small></span><em>{{ household_payable|money }}<small>{% translate "owed to family" %}</small></em></a>
       <a href="{% url 'dashboard' %}" class="guide-tile" data-tone="critical">{% include "partials/icon.html" with name="arrow-down" %}<span><b>{% translate "Creditors" %}</b><small>{% translate "People you borrowed money from." %}</small></span><em>{{ creditors_payable|money }}<small>{% translate "you owe" %}</small></em></a>
       <a href="{% url 'debtor_dashboard' %}" class="guide-tile" data-tone="good">{% include "partials/icon.html" with name="arrow-up" %}<span><b>{% translate "Debtors" %}</b><small>{% translate "People who borrowed money from you." %}</small></span><em>{{ receivables|money }}<small>{% translate "owed to you" %}</small></em></a>
+      <a href="{% url 'card_dashboard' %}" class="guide-tile" data-tone="critical">{% include "partials/icon.html" with name="cards" %}<span><b>{% translate "Credit cards" %}</b><small>{% translate "Bills, EMIs, and money sent to bKash or Nagad." %}</small></span><em>{{ cards_payable|money }}<small>{% translate "you owe" %}</small></em></a>
       <a href="{% url 'shop_dashboard' %}" class="guide-tile" data-tone="critical">{% include "partials/icon.html" with name="tag" %}<span><b>{% translate "Shop Dues" %}</b><small>{% translate "Shops where you buy now and pay later (baki)." %}</small></span><em>{{ shops_payable|money }}<small>{% translate "you owe" %}</small></em></a>
       <a href="{% url 'budget_list' %}" class="guide-tile">{% include "partials/icon.html" with name="target" %}<span><b>{% translate "Budgets" %}</b><small>{% translate "A spending limit for each month, with a warning before you cross it." %}</small></span></a>
       <a href="{% url 'goal_list' %}" class="guide-tile">{% include "business/partials/icon.html" with name="flag" %}<span><b>{% translate "Savings Goals" %}</b><small>{% translate "Save up for something, step by step." %}</small></span><em>{{ goal_totals.saved|money }}<small>{% translate "saved" %}</small></em></a>

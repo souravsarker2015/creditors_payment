@@ -1,0 +1,7 @@
+{% load i18n %}{% comment %}A bill's state as a badge. Needs: b (services.Bill).{% endcomment %}
+{% if b.status == "paid" %}<span class="badge" data-tone="good">{% translate "Paid in full" %}</span>
+{% elif b.status == "late" %}<span class="badge" data-tone="warn">{% translate "Paid late" %}</span>
+{% elif b.status == "open" %}<span class="badge" data-tone="{% if b.days <= 7 %}warn{% else %}info{% endif %}">{% if b.days == 0 %}{% translate "Due today" %}{% else %}{% blocktranslate count n=b.days %}Due in {{ n }} day{% plural %}Due in {{ n }} days{% endblocktranslate %}{% endif %}</span>
+{% elif b.status == "partial" %}<span class="badge" data-tone="critical">{% translate "Partly paid" %}</span>
+{% elif b.status == "missed" %}<span class="badge" data-tone="critical">{% translate "Minimum not paid" %}</span>
+{% else %}<span class="badge" data-tone="muted">{% translate "Nothing to pay" %}</span>{% endif %}

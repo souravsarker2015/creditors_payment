@@ -1,0 +1,17 @@
+{% load i18n %}{% comment %}A card drawn like the real one. Needs: st (services.CardState). Optional: link (default true).{% endcomment %}
+{% with c=st.card %}
+<{% if link is False %}div{% else %}a href="{% url 'card_detail' c.pk %}"{% endif %} class="ccard{% if not c.is_active %} is-off{% endif %}" data-color="{{ c.color }}" aria-label="{{ c.name }}">
+  <div class="ccard-top">
+    <span class="ccard-bank">{{ c.bank|default:c.name }}</span>
+    <span class="ccard-net">{% if c.network %}{{ c.network }}{% endif %}</span>
+  </div>
+  <span class="ccard-chip" aria-hidden="true"></span>
+  <p class="ccard-num">{% if c.last4 %}•••• •••• •••• {{ c.last4 }}{% else %}{{ c.name }}{% endif %}</p>
+  <div class="ccard-foot">
+    <div><span>{% translate "You owe" %}</span><b>{{ st.owed|money }}</b></div>
+    {% if c.limit %}<div class="text-right"><span>{% translate "Available" %}</span><b>{{ st.available|money }}</b></div>
+    {% elif c.expiry %}<div class="text-right"><span>{% translate "Expires" %}</span><b>{{ c.expiry }}</b></div>{% endif %}
+  </div>
+  {% if st.used_pct is not None %}<div class="ccard-meter" title="{% blocktranslate with pct=st.used_pct %}{{ pct }}% of the limit used{% endblocktranslate %}"><span style="width: {{ st.used_pct }}%"></span></div>{% endif %}
+</{% if link is False %}div{% else %}a{% endif %}>
+{% endwith %}
