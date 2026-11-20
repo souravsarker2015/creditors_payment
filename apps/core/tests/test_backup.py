@@ -96,13 +96,13 @@ class RoundTripTests(BackupTestBase):
         self.assertEqual(data_of(first), data_of(self.export("second.zip")))
 
     def test_times_just_past_a_whole_second_survive_the_round_trip(self):
-        # Stored to the millisecond, 0.0004 s past a second is written ".000"; read back it's exactly on
-        # the second. Both must export the same, or a backup of restored data looks different.
+        # 0.0004 s past a second is kept exactly (backups keep times to the microsecond), and a backup of the
+        # restored data is the same file as the first.
         from datetime import datetime, timezone as tz
 
         Pond.all_objects.filter(pk=self.pond.pk).update(created_at=datetime(2026, 1, 2, 3, 4, 5, 400, tzinfo=tz.utc))
         first = self.export("first.zip")
-        self.assertIn(b'"2026-01-02T03:04:05Z"', data_of(first))
+        self.assertIn(b'"2026-01-02T03:04:05.000400Z"', data_of(first))
         bk.restore_backup(bk.read_backup(first))
         self.assertEqual(data_of(first), data_of(self.export("second.zip")))
 
