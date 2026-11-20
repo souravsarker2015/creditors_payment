@@ -36092,3 +36092,42 @@ msgstr "নতুন ওয়ালেট"
 
 msgid "wallet"
 msgstr "ওয়ালেট"
+
+msgid "Bangla voice"
+msgstr "বাংলা কণ্ঠ"
+
+msgid "Best there is"
+msgstr "সবচেয়ে ভালোটা"
+
+msgid "None on this device"
+msgstr "এই ডিভাইসে নেই"
+
+msgid "English voice"
+msgstr "ইংরেজি কণ্ঠ"
+
+msgid ""
+"This browser has no Bangla voice, so Bangla is skipped when listening. To "
+"hear Bangla: on a computer, open the app in Microsoft Edge (it has free "
+"natural Bangla voices); on Android, install Bangla in Settings → Text-to-"
+"speech → Google → Install voice data."
+msgstr ""
+"এই ব্রাউজারে কোনো বাংলা কণ্ঠ নেই, তাই শোনার সময় বাংলা অংশ বাদ যায়। বাংলা "
+"শুনতে: কম্পিউটারে অ্যাপটি Microsoft Edge-এ খুলুন (এতে ফ্রি স্বাভাবিক বাংলা "
+"কণ্ঠ আছে); অ্যান্ড্রয়েডে Settings → Text-to-speech → Google → Install voice"
+" data থেকে বাংলা ইনস্টল করুন।"
+
+msgid "Hear the voices"
+msgstr "কণ্ঠ শুনে দেখুন"
+
+msgid "A Bangla and an English line"
+msgstr "একটি বাংলা ও একটি ইংরেজি লাইন"
+
+msgid "Test"
+msgstr "শুনুন"
+
+msgid ""
+"No Bangla voice in this browser, so the Bangla parts are skipped. Open Aa to"
+" see how to get one."
+msgstr ""
+"এই ব্রাউজারে বাংলা কণ্ঠ নেই, তাই বাংলা অংশ বাদ যাচ্ছে। কীভাবে পাবেন দেখতে Aa"
+" খুলুন।"

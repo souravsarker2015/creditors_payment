@@ -5,7 +5,8 @@
    - no searching for your place: where you stopped is kept to the line (on the server, so on every device);
    - easy on the eyes: size, font (book, clean, easy), line spacing, width, Paper / Sepia / Dark / Night (this device);
    - help to stay on the line: Focus line (only the part you're on is bright), Bold word starts;
-   - listening instead: the chapter read aloud part by part, the part marked, on into the next chapter;
+   - listening instead: the chapter read aloud part by part, the part marked, on into the next chapter — Bangla
+     parts by a Bangla voice, English by an English one (speech.js), chosen in Aa;
    - a reward: a chapter's end is a small celebration, a daily goal (10 min) and its streak;
    - remembering: one line of your own at the end of each chapter, and (exam notes) a test of just that chapter —
      or "Quiz me as I read": each answer hidden until you've thought of it (recalling beats rereading);
@@ -22,7 +23,7 @@
   function json(id) { try { return JSON.parse(d.getElementById(id).textContent); } catch (e) { return {}; } }
   var TX = json("read-text");
   function T(k) { return TX[k] || k; }
-  var PREFS = "ft-reader", DEFAULT = { size: 19, font: "serif", lh: 1.75, width: 68, theme: "paper", focus: false, bionic: false, rate: 1, quiz: false };
+  var PREFS = "ft-reader", DEFAULT = { size: 19, font: "serif", lh: 1.75, width: 68, theme: "paper", focus: false, bionic: false, rate: 1, quiz: false, voiceBn: "", voiceEn: "" };
   function loadPrefs() { var p = W.recall(PREFS, {}) || {}; return Object.assign({}, DEFAULT, p); }
   function typing(e) { var el = e.target; return !!(el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))); }
   function csrf() { var m = d.cookie.match(/csrftoken=([^;]+)/); return m ? decodeURIComponent(m[1]) : ((d.querySelector("[name=csrfmiddlewaretoken]") || {}).value || ""); }
@@ -34,7 +35,7 @@
       return {
         data: data, chapters: data.chapters, progress: data.progress || {}, stats: data.stats || {}, prefs: loadPrefs(),
         idx: start, pos: 0, resumeAt: 0, toc: false, aa: false, snd: false, goalOpen: false, barHidden: false, justDone: false,
-        takeaway: "", kept: false, speaking: false, listenPaused: false, at: -1, voices: [],
+        takeaway: "", kept: false, speaking: false, listenPaused: false, at: -1, voices: [], voicesBn: [], voicesEn: [], warnedBn: false,
         pending: 0, lastActive: Date.now(), T: T, sec: -1, secMarks: [], secEls: [], tocOpen: {}, allSecs: false,
 
         init: function () {
@@ -53,9 +54,9 @@
             e.preventDefault(); e.stopPropagation(); a.classList.add("is-shown"); self2.active();
           }, true);
           this.$watch("speaking", function (on) { if (window.Ambient) Ambient.duck(on); });     // the background sound steps back while it's read aloud
-          if ("speechSynthesis" in window) {
-            var load = function () { self.voices = speechSynthesis.getVoices(); };
-            load(); speechSynthesis.onvoiceschanged = load;
+          if (window.Speak) {                                                 // the voices (speech.js): Bangla and English
+            var load = function () { self.voicesBn = Speak.choices("bn"); self.voicesEn = Speak.choices("en"); self.voices = self.voicesBn.concat(self.voicesEn); };
+            load(); Speak.onChange(load);
           }
         },
 
@@ -336,22 +337,33 @@
           }
           i = Math.max(0, i); this.at = i; this.speaking = true; this.listenPaused = false;
           var block = this.speakList[i], text = block.textContent.replace(/\s+/g, " ").trim();
-          var bn = /[ঀ-৿]/.test(text), voice = this.voices.filter(function (v) { return bn ? /^bn/i.test(v.lang) : /^en/i.test(v.lang); })[0];
-          var parts = text.match(/[^.!?।]+[.!?।]*\s*/g) || [text], k = 0;           // a sentence at a time (long ones get cut off otherwise)
+          // a sentence at a time (long ones get cut off otherwise), each split into its Bangla and English parts,
+          // every part read by a voice of its own language (speech.js)
+          var parts = [], k = 0;
+          (text.match(/[^.!?।]+[.!?।]*\s*/g) || [text]).forEach(function (s) { parts = parts.concat(Speak.plan(s, self.prefs)); });
+          if (!this.warnedBn && parts.some(function (p) { return p.skip; })) {
+            this.warnedBn = true;
+            W.toast(T("noBangla"), "warn");
+          }
+          parts = parts.filter(function (p) { return !p.skip && p.text.trim(); });
           this.markFocus();
           var r = block.getBoundingClientRect();
           if (r.top < 80 || r.bottom > innerHeight - 80) window.scrollBy({ top: r.top - innerHeight * 0.35, behavior: "smooth" });
           var speakNext = function () {
             if (!self.speaking || self.at !== i) return;
             if (k >= parts.length) { self.say(i + 1); return; }
-            var u = new SpeechSynthesisUtterance(parts[k++]);
-            u.rate = self.prefs.rate; if (voice) { u.voice = voice; u.lang = voice.lang; } else if (bn) u.lang = "bn-BD";
+            var u = Speak.utter(parts[k++], self.prefs.rate);
             u.onend = speakNext; u.onerror = function () { if (self.speaking && self.at === i) speakNext(); };
             speechSynthesis.speak(u);
           };
           speakNext();
           this.active();
         },
+        setVoice: function (lang, uri) {
+          this.set(lang === "bn" ? "voiceBn" : "voiceEn", uri);
+          if (this.speaking) { this.stopSpeaking(); this.listen(); }
+        },
+        testVoices: function () { if (this.speaking) this.stopSpeaking(); Speak.test(this.prefs, this.prefs.rate); },
         stopSpeaking: function () {
           if ("speechSynthesis" in window) speechSynthesis.cancel();
           this.speaking = false;

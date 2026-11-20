@@ -118,6 +118,16 @@ class ProgressTests(Base):
         self.assertEqual(reading.words("# Title\n\nSome **bold** words [link](http://x.y)\n\n```\ncode code code\n```"), 5)
 
 
+class ListeningTests(Base):
+    def test_bangla_and_english_voices_can_be_chosen(self):
+        r = self.client.get(reverse("work:read_note", args=[self.n1.pk]))
+        self.assertContains(r, "js/speech.js")              # each part read by a voice of its own language
+        self.assertContains(r, "Bangla voice")
+        self.assertContains(r, "English voice")
+        self.assertContains(r, "Microsoft Edge")            # what to do on a device with no Bangla voice
+        self.assertIn("noBangla", r.context["texts"])
+
+
 class OnlyMineTests(Base):
     def test_someone_else_cant_read_or_change_them(self):
         other = User.objects.create_superuser("other", "o@example.com", PW)

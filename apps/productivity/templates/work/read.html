@@ -101,6 +101,21 @@
       <div class="rd-seg">
         <template x-for="r in [0.8, 1, 1.25, 1.5, 2]" :key="r"><button type="button" :class="prefs.rate === r && 'is-on'" @click="set('rate', r); if (speaking) { stopSpeaking(); listen(); }" x-text="r + '×'"></button></template>
       </div></div>
+    {# the voices: one for Bangla, one for English — each part is read by its own language's voice (speech.js) #}
+    <div class="rd-row rd-voice" x-show="voices.length" x-cloak><span>{% translate "Bangla voice" %}</span>
+      <select class="rd-select" x-show="voicesBn.length" :value="prefs.voiceBn" @change="setVoice('bn', $event.target.value)" aria-label="{% translate 'Bangla voice' %}">
+        <option value="">{% translate "Best there is" %}</option>
+        <template x-for="v in voicesBn" :key="v.uri"><option :value="v.uri" :selected="prefs.voiceBn === v.uri" x-text="v.name + ' · ' + v.lang"></option></template>
+      </select>
+      <em class="rd-none" x-show="!voicesBn.length">{% translate "None on this device" %}</em></div>
+    <div class="rd-row rd-voice" x-show="voicesEn.length" x-cloak><span>{% translate "English voice" %}</span>
+      <select class="rd-select" :value="prefs.voiceEn" @change="setVoice('en', $event.target.value)" aria-label="{% translate 'English voice' %}">
+        <option value="">{% translate "Best there is" %}</option>
+        <template x-for="v in voicesEn" :key="v.uri"><option :value="v.uri" :selected="prefs.voiceEn === v.uri" x-text="v.name + ' · ' + v.lang"></option></template>
+      </select></div>
+    <p class="rd-voice-help" x-show="voices.length && !voicesBn.length" x-cloak>{% translate "This browser has no Bangla voice, so Bangla is skipped when listening. To hear Bangla: on a computer, open the app in Microsoft Edge (it has free natural Bangla voices); on Android, install Bangla in Settings → Text-to-speech → Google → Install voice data." %}</p>
+    <div class="rd-row" x-show="voices.length" x-cloak><span>{% translate "Hear the voices" %}<small>{% translate "A Bangla and an English line" %}</small></span>
+      <button type="button" class="rd-chip" @click="testVoices()">{% icon "play" %}{% translate "Test" %}</button></div>
   </div>
 
   {# contents: every chapter, how long, ticked when read — drag to put a note book in your own order #}
@@ -196,4 +211,4 @@
 {% endblock %}
 
 {% block work_libs %}{% include "work/exam/_libs.html" %}<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>{% endblock %}
-{% block work_js %}<script src="{% asset 'js/reader.js' %}"></script>{% endblock %}
+{% block work_js %}<script src="{% asset 'js/speech.js' %}"></script><script src="{% asset 'js/reader.js' %}"></script>{% endblock %}

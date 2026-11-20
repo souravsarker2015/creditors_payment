@@ -5179,3 +5179,9 @@ input.switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2
 
 /* the sound pill and the floating clock, both bottom right: the pill above the clock */
 body:has(.fclock:not([hidden])) .amb-pill { bottom: calc(5.75rem + env(safe-area-inset-bottom)); }
+/* the Reader's voices (speech.js): one for Bangla, one for English */
+.rd-voice > span { flex: none; }
+.rd-select { min-width: 0; max-width: 62%; padding: 0.375rem 1.75rem 0.375rem 0.625rem; border: 0; border-radius: 0.625rem; background: var(--rd-mark); color: var(--rd-ink); font: inherit; font-size: 0.8125rem; text-overflow: ellipsis; }
+.rd-none { font-size: 0.8125rem; font-style: normal; color: var(--rd-faint); }
+.rd-voice-help { margin: -0.25rem 0 0; padding: 0.625rem 0.75rem; border-radius: 0.625rem; background: var(--rd-mark); font-size: 0.75rem; line-height: 1.5; color: var(--rd-ink); }
+button.rd-chip { border: 0; cursor: pointer; }

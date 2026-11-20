@@ -18,6 +18,7 @@ def _texts():
         "minRead": _("≈ %(n)s min read"), "minLeft": _("%(n)s min left"), "chapterOf": _("Chapter %(n)s of %(total)s"),
         "done": _("Chapter done"), "endOf": _("End of the chapter"), "allDone": _("You've read the whole book. Well done!"), "goalMet": _("Today's reading goal reached!"),
         "saved": _("Kept"), "listen": _("Listen"), "pause": _("Pause"), "noVoice": _("This browser can't read aloud."),
+        "noBangla": _("No Bangla voice in this browser, so the Bangla parts are skipped. Open Aa to see how to get one."),
         "today": _("%(n)s / %(goal)s min today"), "todayNoGoal": _("%(n)s min today"), "copied": _("Copied"),
         "focusOn": _("Focus line on: ↑ ↓ move it"), "tapAnswer": _("Think of the answer, then tap to see it"),
         "remindSet": _("Reminder set for %(time)s each day"), "remindOff": _("No reminder"), "orderSaved": _("Order saved"), "undo": _("Undo"), "notSaved": _("Not saved."),
