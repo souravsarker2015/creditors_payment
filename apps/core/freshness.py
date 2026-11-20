@@ -11,6 +11,11 @@ stamped with the version it was built from. A page whose stamp is older than
 the cookie is a stale copy, and the browser reloads it (see
 templates/partials/freshness.html). Chrome is also told to drop its
 speculative copies right away (Clear-Site-Data, secure origins only).
+
+Some saves change nothing a page shows, and come often: the Reader's clock and
+place in a chapter, sent every 30 s and each time you switch away (by
+sendBeacon, which this page can't watch). Those call quiet(request), or the
+page would reload every time you came back to it.
 """
 import time
 
@@ -18,9 +23,14 @@ COOKIE = "ftv"
 SAFE = {"GET", "HEAD", "OPTIONS", "TRACE"}
 
 
+def quiet(request):
+    """This save doesn't make any page stale: don't bump the data version."""
+    request.data_unchanged = True
+
+
 def changed_data(request, response):
     """A successful change: a redirect after a form, or a non-page reply to a background save."""
-    if request.method in SAFE:
+    if request.method in SAFE or getattr(request, "data_unchanged", False):
         return False
     status = response.status_code
     if 300 <= status < 400:

@@ -76,12 +76,14 @@ def _relinks(collector):
 def trash(user, obj, label, back_url=""):
     """Delete `obj` (and what cascades with it), keeping a copy to restore."""
     with transaction.atomic():
+        from apps.core.backup import FullTimeEncoder        # times to the microsecond, so Undo brings back exactly what was there
+
         collector = Collector(using=router.db_for_write(type(obj), instance=obj))
         collector.collect([obj])
         rows = _instances(collector)
         item = DeletedItem.objects.create(
             user=user, label=label[:200], kind=str(type(obj)._meta.verbose_name).capitalize()[:80],
-            data=serializers.serialize("json", rows), relinks=_relinks(collector), count=len(rows), back_url=back_url[:300])
+            data=serializers.serialize("json", rows, cls=FullTimeEncoder), relinks=_relinks(collector), count=len(rows), back_url=back_url[:300])
         obj.delete()
     purge_old(user)
     return item

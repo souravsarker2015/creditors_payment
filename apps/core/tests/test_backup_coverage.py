@@ -11,6 +11,7 @@ When one of these fails after adding a feature, the new table isn't carried
 by that backup — fix the backup, don't skip the table here.
 """
 import json
+from datetime import timedelta
 import shutil
 import tempfile
 import zipfile
@@ -22,12 +23,13 @@ from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
 from apps.business.core.testing import make_farm
 
 from .. import backup as bk
 from .. import personal_backup as pb
-from ..backup_testing import fill_every_table
+from ..backup_testing import differences, fill_every_table, fingerprint
 
 # Personal-app tables that aren't one person's: one row for the whole site.
 SITE_WIDE = {"accounts.securitysettings"}
@@ -174,3 +176,73 @@ class LinksInsideRecordsTests(CoverageBase):
         self.client.force_login(other)
         self.client.post(reverse("work:settings"), {"action": "restore", "backup": SimpleUploadedFile("work.zip", blob)})
         self.check(other)
+
+
+class ExactlyTests(CoverageBase):
+    """Not just every table: every field and every link comes back exactly — times to the microsecond, an
+    entry still pointing at the right wallet, a task at the right project — through each backup and restore."""
+
+    def setUp(self):
+        super().setUp()
+        from decimal import Decimal as D
+
+        from apps.cards.models import Card, CardBank, CardEntry, EmiPlan, MfsFees
+        from apps.productivity.models import Diagram, Note, NoteCategory, Project, Task, TimeEntry
+        from apps.wallets.models import Wallet
+
+        u = self.owner
+        early = timezone.now() - timedelta(days=40, microseconds=123457)
+        bkash = Wallet.objects.create(user=u, name="bKash two", kind="mobile")
+        nagad = Wallet.objects.create(user=u, name="Nagad two", kind="mobile")
+        MfsFees.objects.create(wallet=nagad, bill_rate=D("1.25"), bank_rate=D("1.5"), pays_bills=False)
+        ebl = CardBank.objects.create(user=u, name="EBL two")
+        card = Card.objects.create(user=u, name="Second card", bank=ebl, statement_day=20, due_day=10, transfer_fee_rate=D("1.5"))
+        CardEntry.objects.create(card=card, kind="cash", amount=D("5000"), fee=D("75"), fee_rate=D("1.5"), wallet=nagad, date=timezone.localdate())
+        CardEntry.objects.create(card=card, kind="pay", amount=D("5075"), fee=D("50.75"), wallet=bkash, route="mfs_bank", date=timezone.localdate())
+        EmiPlan.objects.create(card=card, title="Phone", amount=D("30000"), months=6, rate=D("9"), start=timezone.localdate())
+        cats = [NoteCategory.objects.create(owner=u, name=f"Shelf {i}") for i in range(2)]
+        n = Note.objects.create(owner=u, title="On the second shelf", body="text")
+        n.categories.set([cats[1]])
+        projects = [Project.objects.create(owner=u, name=f"Project {i}") for i in range(2)]
+        t = Task.objects.create(owner=u, title="In the second project", project=projects[1])
+        TimeEntry.objects.create(owner=u, task=t, project=projects[1], started_at=early, ended_at=early + timedelta(minutes=25, microseconds=7))
+        Diagram.objects.create(owner=u, title="With a picture", kind="mindmap", preview="<svg xmlns='http://www.w3.org/2000/svg'/>")
+        Note.objects.filter(pk=n.pk).update(created_at=early, updated_at=early + timedelta(microseconds=1))
+
+    def check(self, before, after):
+        self.maxDiff = None
+        self.assertEqual(differences(before, after), [])
+
+    def test_the_whole_system(self):
+        scope = lambda: [(m, m._base_manager.all()) for m in bk.backup_models()]
+        before = fingerprint(scope())
+        path = self.tmp / "exact.zip"
+        bk.write_backup(path, self.owner)
+        bk.restore_backup(bk.read_backup(path))
+        self.check(before, fingerprint(scope()))
+
+    def test_my_data_into_another_account(self):
+        from ..my_data import build_zip
+
+        scope = lambda user: [(m, m._base_manager.filter(**{lookup: user})) for m, lookup in pb.owned_models()]
+        skip = dict(pb.SKIP_FIELDS)
+        before = fingerprint(scope(self.owner), skip)
+        data, _made = build_zip(self.owner)
+        path = self.tmp / "exact-mine.zip"
+        path.write_bytes(data)
+        other = get_user_model().objects.create_superuser("exact-other", password="x")
+        pb.restore(other, pb.read(path), keep_copy=False)
+        self.check(before, fingerprint(scope(other), skip))
+
+    def test_the_work_backup_into_another_account(self):
+        from apps.productivity.services import KEYS, backup_models
+
+        scope = lambda user: [(m, m._base_manager.filter(**{lookup: user})) for m, lookup in backup_models()]
+        skip = {"productivity.worksettings": KEYS}
+        before = fingerprint(scope(self.owner), skip)
+        self.client.force_login(self.owner)
+        blob = self.client.get(reverse("work:export")).content
+        other = get_user_model().objects.create_superuser("exact-work", password="x")
+        self.client.force_login(other)
+        self.client.post(reverse("work:settings"), {"action": "restore", "backup": SimpleUploadedFile("work.zip", blob)})
+        self.check(before, fingerprint(scope(other), skip))

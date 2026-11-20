@@ -11,6 +11,7 @@ from . import reading
 from .access import work_required
 from .models import ExamSubject, Note, NoteCategory, WorkSettings
 from .views import render_work
+from apps.core.freshness import quiet
 
 
 def _texts():
@@ -120,6 +121,10 @@ def reading_api(request):
         return JsonResponse({"ok": False}, status=400)
     done = {"1": True, "0": False}.get(p.get("done", ""))
     takeaway = p.get("takeaway") if "takeaway" in p else None
+    if done is None and takeaway is None:
+        # only the clock and your place: no page needs rebuilding for it — or the Reader (and every other open
+        # page) would reload each time you came back from another tab, after its save on the way out
+        quiet(request)
     if kind == "exam":
         subject = get_object_or_404(ExamSubject, pk=p.get("book") or 0, owner=user)
         reading.log(user, subject=subject, chapter=p.get("chapter", ""), position=position, add_seconds=add, done=done, takeaway=takeaway)

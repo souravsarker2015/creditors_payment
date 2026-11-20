@@ -158,3 +158,71 @@ def _mine(model, user, business):
     look = _lookup(model, user, business)
     return model._base_manager.filter(**look).exists() if look else True
 
+
+
+def fingerprint(scope, skip_fields=None):
+    """Every row of the given tables as comparable values, for "does it come back exactly?":
+    {label: Counter(row)}. A link is written as which row it points to — its place among the
+    rows of that table in `scope` — so a restore that gives records new ids still compares
+    equal, and a link that now points at the wrong record doesn't. Uploaded files compare by
+    their content. `scope`: [(model, queryset)]; `skip_fields`: {label: (field names)}."""
+    import hashlib
+    from collections import Counter
+
+    from django.core.files.storage import default_storage
+
+    skip_fields = skip_fields or {}
+    User = get_user_model()
+    place = {m: {pk: i for i, pk in enumerate(qs.order_by("pk").values_list("pk", flat=True))} for m, qs in scope}
+
+    def content(f):
+        if not f:
+            return ""
+        try:
+            with default_storage.open(f.name, "rb") as fh:
+                return hashlib.sha256(fh.read()).hexdigest()[:16]
+        except OSError:
+            return "MISSING FILE"
+
+    out = {}
+    for m, qs in scope:
+        skip = set(skip_fields.get(m._meta.label_lower, ()))
+        rows = Counter()
+        for o in qs.order_by("pk"):
+            row = []
+            for f in m._meta.concrete_fields:
+                if f.primary_key or f.name in skip:
+                    continue
+                if f.is_relation:
+                    v, target = getattr(o, f.attname), f.related_model
+                    if v is None:
+                        row.append((f.name, None))
+                    elif target is User and f.name in ("user", "owner"):
+                        row.append((f.name, "the owner"))
+                    elif target in place:
+                        row.append((f.name, target._meta.label_lower, place[target].get(v, "outside")))
+                    else:
+                        row.append((f.name, "elsewhere", str(getattr(o, f.name))))
+                elif isinstance(f, models.FileField):
+                    row.append((f.name, content(getattr(o, f.name))))
+                else:
+                    row.append((f.name, getattr(o, f.attname)))
+            for f in m._meta.many_to_many:
+                ids = getattr(o, f.name).values_list("pk", flat=True)
+                target = f.related_model
+                row.append((f.name, tuple(sorted(place[target].get(i, "outside") for i in ids)) if target in place else tuple(sorted(map(str, ids)))))
+            rows[repr(row)] += 1
+        out[m._meta.label_lower] = rows
+    return out
+
+
+def differences(before, after):
+    """What a restore changed, readably (empty: nothing)."""
+    out = []
+    for label in sorted(set(before) | set(after)):
+        a, b = before.get(label), after.get(label)
+        if a != b:
+            gone, came = (a or {}) - (b or {}), (b or {}) - (a or {})
+            out.append(f"{label}: {sum((a or {}).values())} rows before, {sum((b or {}).values())} after — "
+                       f"{next(iter(gone), '')[:300]} ⇢ {next(iter(came), '')[:300]}")
+    return out

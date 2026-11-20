@@ -1301,7 +1301,10 @@ def backup_models():
 
 
 KEYS = ("feed_token", "git_token", "api_token_hash", "api_token_hint", "api_token_used_at")     # this account's own: never in a file
-LEFT_OUT = {"diagram": ("preview",), "worksettings": KEYS}      # (a diagram's preview is drawn again from the diagram itself)
+# Left out of the file: this account's own keys. (A diagram's preview picture goes in: it's only drawn again when the
+# diagram is opened and saved, so without it the list would show no pictures after a restore; it is served as a locked
+# image — diagram_preview_view — so a file can't slip anything into the page through it.)
+LEFT_OUT = {"worksettings": KEYS}
 
 
 def backup_rows(user):
@@ -1310,14 +1313,14 @@ def backup_rows(user):
 
     from django.core import serializers
 
-    from apps.core.backup import _file_fields
+    from apps.core.backup import FullTimeEncoder, _file_fields
 
     rows, files = [], []
     for model, lookup in backup_models():
         qs = model._base_manager.filter(**{lookup: user}).order_by("pk")
         skip = LEFT_OUT.get(model._meta.model_name, ())
         fields = [f.name for f in [*model._meta.concrete_fields, *model._meta.many_to_many] if not f.primary_key and f.name not in skip] if skip else None
-        rows += json.loads(serializers.serialize("json", qs, fields=fields))
+        rows += json.loads(serializers.serialize("json", qs, fields=fields, cls=FullTimeEncoder))     # times to the microsecond
         names = _file_fields(model)
         if names:
             files += [v for values in qs.values_list(*names) for v in values if v]
@@ -1415,11 +1418,15 @@ def restore(user, rows, media=None):
             tag, _created = Tag.objects.get_or_create(owner=user, name=fields["name"], defaults={"color": fields.get("color", "slate")})
             ids["tag"][old_pk] = tag.pk
             continue
-        if name == "examcategory":
-            ids["examcategory"][old_pk] = category_in(user, ExamCategory.objects.filter(pk=fields.get("parent")).first(), fields["name"]).pk
-            continue
-        if name == "notecategory":             # one with the same name in the same place is the same category
-            ids["notecategory"][old_pk] = category_in(user, NoteCategory.objects.filter(pk=fields.get("parent")).first(), fields["name"], NoteCategory).pk
+        if name in ("examcategory", "notecategory"):      # one with the same name in the same place is the same category
+            cls = ExamCategory if name == "examcategory" else NoteCategory
+            had = set(cls.objects.filter(owner=user).values_list("pk", flat=True))
+            cat = category_in(user, cls.objects.filter(pk=fields.get("parent")).first(), fields["name"], cls)
+            if cat.pk not in had and fields.get("created_at"):          # made now: it keeps the date it was first made
+                made = next(serializers.deserialize("json", json.dumps([{"model": row["model"], "fields": {"created_at": fields["created_at"]}}]),
+                                                    ignorenonexistent=True)).object.created_at
+                cls.objects.filter(pk=cat.pk).update(created_at=made)
+            ids[name][old_pk] = cat.pk
             continue
         if name == "journalentry" and JournalEntry.objects.filter(owner=user, date=fields.get("date")).exists():
             continue
@@ -1438,7 +1445,15 @@ def restore(user, rows, media=None):
         else:
             obj.pk = None
         obj._no_activity = True     # its history comes from the backup, not from being added now
+        # "created" and "updated" are set to now by save(): put the backup's own times back, so a restored note,
+        # task or time entry keeps its real dates (and the order things were made in)
+        stamps = {f.attname: getattr(obj, f.attname) for f in model._meta.concrete_fields
+                  if (getattr(f, "auto_now", False) or getattr(f, "auto_now_add", False)) and f.name in fields and fields[f.name]}
         obj.save()
+        if stamps:
+            model._base_manager.filter(pk=obj.pk).update(**stamps)
+            for k, v in stamps.items():
+                setattr(obj, k, v)
         ids[name][old_pk] = obj.pk
         restored.append(obj)
         for fname, values in m2m.items():

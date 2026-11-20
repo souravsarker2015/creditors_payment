@@ -22,10 +22,14 @@ SKIP_FIELDS = {"business", "is_deleted", "deleted_at", "created_by", "updated_by
 
 
 def farm_models():
-    """Every kind of business record, in app order."""
+    """Every kind of business record, in app order — and the farm's own settings kept in a table of their own
+    (the pond alert levels). The farm itself, its people and the audit trail are in the whole-system backup."""
     out = []
     for model in apps.get_models():
         if issubclass(model, BusinessBaseModel) and not model._meta.abstract:
+            out.append(model)
+        elif (model.__module__.startswith("apps.business.") and model._meta.app_label != "business_core"
+              and any(f.name == "business" and f.is_relation for f in model._meta.concrete_fields)):
             out.append(model)
     return out
 

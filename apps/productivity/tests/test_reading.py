@@ -118,6 +118,31 @@ class ProgressTests(Base):
         self.assertEqual(reading.words("# Title\n\nSome **bold** words [link](http://x.y)\n\n```\ncode code code\n```"), 5)
 
 
+class NoReloadTests(Base):
+    """The Reader's clock and place are saved every 30 s and each time you switch away: that mustn't mark every
+    open page out of date (apps/core/freshness.py), or the Reader reloads each time you come back to it."""
+
+    def api(self, **fields):
+        return self.client.post(reverse("work:api_reading"), fields)
+
+    def test_the_clock_and_your_place_dont_make_pages_stale(self):
+        r = self.api(kind="book", book=self.db.pk, chapter=self.n2.pk, position="0.4", seconds="30")
+        self.assertEqual(r.status_code, 200)
+        self.assertNotIn("ftv", r.cookies)
+        self.assertEqual(ReadingProgress.objects.get(note=self.n2).position, 0.4)          # still saved
+
+    def test_the_same_for_exam_notes(self):
+        r = self.api(kind="exam", book=self.s.pk, chapter="ER", position="0.5", seconds="30")
+        self.assertEqual(r.status_code, 200)
+        self.assertNotIn("ftv", r.cookies)
+        self.assertIn("ftv", self.api(kind="exam", book=self.s.pk, chapter="ER", position="1", done="1").cookies)
+
+    def test_finishing_a_chapter_or_keeping_a_line_still_does(self):
+        self.assertIn("ftv", self.api(kind="book", book=self.db.pk, chapter=self.n2.pk, position="1", done="1").cookies)
+        self.assertIn("ftv", self.api(kind="book", book=self.db.pk, chapter=self.n2.pk, takeaway="Joins match rows").cookies)
+        self.assertIn("ftv", self.api(action="goal", goal="15").cookies)
+
+
 class ListeningTests(Base):
     def test_bangla_and_english_voices_can_be_chosen(self):
         r = self.client.get(reverse("work:read_note", args=[self.n1.pk]))
@@ -126,6 +151,9 @@ class ListeningTests(Base):
         self.assertContains(r, "English voice")
         self.assertContains(r, "Microsoft Edge")            # what to do on a device with no Bangla voice
         self.assertIn("noBangla", r.context["texts"])
+        r = self.client.get(reverse("work:read_exam", args=[self.s.pk]))            # exam notes: the same Reader, the same voices
+        self.assertContains(r, "js/speech.js")
+        self.assertContains(r, "Bangla voice")
 
 
 class OnlyMineTests(Base):

@@ -22,6 +22,7 @@ import hashlib
 import json
 import re
 from datetime import datetime
+from datetime import datetime as datetime_type, time as time_type
 import os
 import shutil
 import tempfile
@@ -117,10 +118,25 @@ def current_counts():
 
 # ── Export ──────────────────────────────────────────────────────────────────
 
-# Django's JSON keeps times to the millisecond and writes ".000" when the
-# leftover microseconds round to nothing — but the same time read back (now
-# exactly on the second) is written without it. Dropping an empty ".000"
-# makes a backup of restored data identical to the original.
+class FullTimeEncoder(DjangoJSONEncoder):
+    """Django's JSON cuts times to the millisecond (16:41:53.843251 → .843): a restore would bring back
+    slightly different times, and two things saved in the same millisecond would tie and could swap order.
+    Every backup (whole system, My data, the work tracker) keeps them to the microsecond instead."""
+
+    def default(self, o):
+        if isinstance(o, datetime_type):
+            r = o.isoformat()
+            return r[:-6] + "Z" if r.endswith("+00:00") else r
+        if isinstance(o, time_type):
+            if timezone.is_aware(o):
+                raise ValueError("JSON can't represent timezone-aware times.")
+            return o.isoformat()
+        return super().default(o)
+
+
+# Backups made before FullTimeEncoder kept milliseconds and wrote ".000" when the leftover microseconds rounded
+# to nothing — but the same time read back (now exactly on the second) is written without it. Dropping an
+# empty ".000" keeps a backup of data restored from such a file identical to the original.
 _ZERO_MS = re.compile(r"(\d{2}:\d{2}:\d{2})\.000(?=Z|[+-]\d{2}:\d{2}|$)")
 
 
@@ -129,7 +145,7 @@ def serialize_rows(model, queryset):
     with one query per link table, not one per row (Django's own way)."""
     m2m = list(model._meta.many_to_many)
     objs = serializers.serialize("python", queryset, fields=[f.name for f in model._meta.local_fields])
-    objs = json.loads(json.dumps(objs, cls=DjangoJSONEncoder))     # the same values the JSON format writes
+    objs = json.loads(json.dumps(objs, cls=FullTimeEncoder))       # the values the JSON format writes, times in full
     for f in m2m:
         src, dst = f.m2m_field_name(), f.m2m_reverse_field_name()
         links = {}
