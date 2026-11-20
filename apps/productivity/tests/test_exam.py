@@ -214,7 +214,7 @@ class BoardTests(Base):
         self.assertEqual(q(q="KAFKA"), ["Beta?"])
         self.assertEqual(q(pinned="1"), ["Beta?", "Alpha?", "Gamma?"])      # the board: important ones first
         self.assertEqual(q(sort="new"), ["Gamma?", "Beta?", "Alpha?"])
-        self.assertEqual(self.page()["chapters"], [{"name": "A", "n": 1, "known": 1}, {"name": "B", "n": 2, "known": 0}])
+        self.assertEqual(self.page()["chapters"], [{"name": "A", "n": 1, "known": 1, "sections": []}, {"name": "B", "n": 2, "known": 0, "sections": []}])
 
     def test_move_a_card_and_a_chapter(self):
         a, b, c = self.note("A?", chapter="X", order=1), self.note("B?", chapter="X", order=2), self.note("C?", chapter="Y", order=3)

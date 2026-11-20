@@ -92,7 +92,7 @@ class PastedListsTests(SimpleTestCase):
                          [("Capital of France", "Paris"), ("Japan, capital", "Tokyo, big")])
         self.assertEqual(self.one("Capital of France,Paris\nCapital of Japan,Tokyo\nCapital of Peru,Lima"),
                          [("Capital of France", "Paris"), ("Capital of Japan", "Tokyo"), ("Capital of Peru", "Lima")])
-        self.assertEqual(exam.parse("Chapter,Front,Back\nGeo,France,Paris")[0], {"question": "France", "answer": "Paris", "chapter": "Geo"})
+        self.assertEqual(exam.parse("Chapter,Front,Back\nGeo,France,Paris")[0], {"question": "France", "answer": "Paris", "chapter": "Geo", "section": ""})
         self.assertEqual(self.one("Question\tAnswer\nFrance\tParis"), [("France", "Paris")])
         self.assertEqual(self.one("#separator:tab\n#html:false\nFrance\tParis\nJapan\tTokyo"), [("France", "Paris"), ("Japan", "Tokyo")])
 
