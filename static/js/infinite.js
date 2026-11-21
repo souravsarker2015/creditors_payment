@@ -7,8 +7,9 @@
 
    The rows are found by shape: in the element just before the pager, the
    element with the most children of one kind (<li>s, <tr>s, cards…), unless a
-   template marks it with data-infinite-items. The same is looked up in the
-   next page, and its children are moved over. Alpine starts the new rows by
+   template marks it with data-infinite-items. In the next page the list in the
+   same place (same element, same classes) is found, and its children are moved
+   over — never guessed from shape again: a page of one card isn't a list. Alpine starts the new rows by
    itself; a search swapped in by htmx gets its own pager set up again. */
 (function () {
   "use strict";
@@ -43,6 +44,37 @@
     return best;
   }
 
+  // Where the list sits under the element before the pager: the child number at each step down, with each element's
+  // tag and classes. The next page's list is looked up by this — not guessed again from its shape: a last page with
+  // a single card would have its card's own parts (title, amounts, button) taken for the rows, and spread over the grid.
+  function pathTo(root, el) {
+    var steps = [];
+    for (var at = el; at && at !== root; at = at.parentElement) {
+      steps.unshift({ i: Array.prototype.indexOf.call(at.parentElement.children, at), sig: at.tagName + "." + at.className });
+    }
+    return at === root ? steps : null;
+  }
+
+  function sameList(root, list, path) {
+    if (!root) return null;
+    if (root.hasAttribute("data-infinite-items")) return root;
+    var marked = root.querySelector("[data-infinite-items]");
+    if (marked) return marked;
+    var sig = list.tagName + "." + list.className;
+    if (root.tagName + "." + root.className === sig && path && !path.length) return root;
+    if (path) {                                  // the same place, holding the same kind of element
+      var at = root;
+      for (var k = 0; at && k < path.length; k++) {
+        at = at.children[path[k].i];
+        if (!at || at.tagName + "." + at.className !== path[k].sig) { at = null; break; }
+      }
+      if (at) return at;
+    }
+    var alike = Array.prototype.filter.call(root.querySelectorAll(list.tagName), function (el) { return el.tagName + "." + el.className === sig; });
+    if (alike.length === 1) return alike[0];     // the one element like it (something above the list changed place)
+    return null;
+  }
+
   function text(nav, key, fallback) { return nav.getAttribute("data-" + key) || fallback; }
 
   // A list that scrolls inside its own box (the notes list beside the editor) is watched within that box.
@@ -56,8 +88,9 @@
 
   function setup(nav) {
     if (nav._infinite) return;
-    var next = nav.getAttribute("data-next"), list = itemsIn(before(nav));
+    var next = nav.getAttribute("data-next"), root = before(nav), list = itemsIn(root);
     if (!next || !list) return;
+    var path = pathTo(root, list);
     nav._infinite = true;
     var index = Array.prototype.indexOf.call(d.querySelectorAll("nav.pager"), nav);
     var button = d.createElement("button");
@@ -84,8 +117,8 @@
         .then(function (html) {
           var doc = new DOMParser().parseFromString(html, "text/html");
           var navs = doc.querySelectorAll("nav.pager"), there = navs[index] || navs[0];
-          var rows = itemsIn(there ? before(there) : null);
-          if (!rows) { location.href = next; return; }
+          var rows = there ? sameList(before(there), list, path) : null;
+          if (!rows) { location.href = next; return; }    // not found for sure: open the next page itself rather than guess
           var added = Array.prototype.slice.call(rows.children);
           added.forEach(function (row) { list.appendChild(d.adoptNode(row)); });
           next = there.getAttribute("data-next");
