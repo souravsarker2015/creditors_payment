@@ -312,7 +312,7 @@ def relink(note, old):
         parts[::2] = [link.sub(lambda m: m.group(1) + new + m.group(2), part) for part in parts[::2]]
         body = "".join(parts)
         if body != other.body:
-            services.remember_note(other, force=True)
+            services.remember_note(other, force=True, reason="link")
             other.body = body
             other.save(update_fields=["body", "updated_at"])
             changed += 1
@@ -330,7 +330,7 @@ def link_from(note, source=None):
         other = Note.objects.get(pk=m["note"].pk)
         body, n = link_mentions(other.body, note.title)
         if n:
-            services.remember_note(other, force=True)          # in its History, to take it back
+            services.remember_note(other, force=True, reason="link")          # in its History, to take it back
             other.body = body
             other.save(update_fields=["body", "updated_at"])
             changed += 1

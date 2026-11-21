@@ -246,6 +246,7 @@
         </div>
         <span class="spacer"></span>
         <span class="wn-state" :data-state="state" role="status" aria-live="polite"><i aria-hidden="true"></i><span x-text="{ saving: '{% translate "Saving…" %}', saved: savedAt ? '{% translate "Saved" context "state" %} ' + savedAt : '', offline: '{% translate "Saved on this device" %}', dirty: '{% translate "Editing…" %}', error: '{% translate "Not saved" %}' }[state]"></span></span>
+        <button type="button" class="icon-btn" x-show="id" x-cloak @click="openHistory()" aria-label="{% translate 'Edit history' %}" data-tip="{% translate 'Edit history — see what changed, bring back an older version' %}">{% icon "history" %}</button>
         <button type="button" class="btn btn-secondary btn-sm wn-todos" x-show="id && todoCount" x-cloak @click="todosToTasks()" :disabled="making"
                 data-tip="{% translate 'Each “- [ ] …” line becomes a task. Ticking the task ticks the line.' %}" aria-label="{% translate 'Make tasks' %}">{% icon "check" %}<span>{% translate "Make tasks" %}</span><b class="wn-todos-n" x-text="todoCount"></b></button>
         <template x-if="id">
@@ -253,7 +254,7 @@
             <button type="button" class="icon-btn" @click="open = !open" :aria-expanded="open" aria-label="{% translate 'More actions' %}">{% icon "dots" %}</button>
             <div class="menu" x-show="open" x-cloak role="menu">
               <button type="button" class="menu-item" @click="action('pin')">{% icon "pin" %}{% if note.is_pinned %}{% translate "Unpin" %}{% else %}{% translate "Pin to top" %}{% endif %}</button>
-              <button type="button" class="menu-item" @click="open = false; openHistory()">{% icon "history" %}{% translate "History" %}</button>
+              <button type="button" class="menu-item" @click="open = false; openHistory()">{% icon "history" %}{% translate "Edit history" %}</button>
               <button type="button" class="menu-item" @click="open = false; openFind(true)" data-tip="{% translate 'Ctrl+F finds, Ctrl+H replaces — while writing or reading' %}">{% icon "search" %}{% translate "Find and replace" %}</button>
               <template x-if="todoDone">
                 <div class="wn-menu-todos">
@@ -384,34 +385,165 @@
         <div class="wc-foot"><span class="spacer"></span><button type="button" class="btn btn-ghost" @click="examOpen = false">{% translate "Cancel" %}</button>
           <button type="button" class="btn btn-primary" @click="toExam()" :disabled="!examName.trim() && !examSubject">{% translate "Make them" %}</button></div>
       </section>
-      {# ── earlier versions ── #}
+      {# ── edit history: what changed and when, kept as long as set for this note (note_history.py) ── #}
       <div class="wc-backdrop" x-show="histOpen" x-cloak x-transition.opacity @click="histOpen = false"></div>
-      <aside class="wdx-hist wn-hist" x-show="histOpen" x-cloak x-trap="histOpen" x-transition:enter="wdx-hist-in" x-transition:leave="wdx-hist-out"
-             @keydown.escape.stop="histOpen = false" role="dialog" aria-modal="true" aria-labelledby="note-hist-title">
+      <aside class="wdx-hist wnh" :class="shown && 'is-reading'" x-show="histOpen" x-cloak x-trap="histOpen" x-transition:enter="wdx-hist-in" x-transition:leave="wdx-hist-out"
+             @keydown.escape.stop="histSet ? (histSet = false) : (histOpen = false)" role="dialog" aria-modal="true" aria-labelledby="note-hist-title">
         <header class="wdx-hist-head">
-          <h2 id="note-hist-title" class="card-title">{% icon "history" %}{% translate "History" %}</h2>
+          <h2 id="note-hist-title" class="card-title">{% icon "history" %}{% translate "Edit history" %}</h2>
           <button type="button" class="icon-btn" @click="histOpen = false" aria-label="{% translate 'Close' %}">{% icon "x" %}</button>
         </header>
-        <p class="wdx-hist-tip">{% translate "A copy is kept by itself before each round of writing. Pick one to read it." %}</p>
-        <ol class="wn-vers" :aria-busy="histLoading">
-          <template x-for="v in versions" :key="v.id">
-            <li><button type="button" class="wn-ver" :class="shown && shown.id === v.id && 'is-on'" @click="shown = v">
-              <b x-text="v.time"></b><small x-text="(v.title || '') + ' · ' + v.words + ' {% translate "words" %}'"></small></button></li>
-          </template>
-          <li class="wdx-hist-empty" x-show="!histLoading && !versions.length">{% translate "No earlier versions yet. They appear as you write." %}</li>
-        </ol>
-        <template x-if="shown">
-          <div class="wn-ver-read">
-            <div class="wn-ver-acts">
-              <button type="button" class="btn btn-primary btn-sm" @click="restoreVersion(shown)">{% icon "restore" %}{% translate "Bring back" %}</button>
-              <button type="button" class="btn btn-ghost btn-sm" @click="navigator.clipboard && navigator.clipboard.writeText(shown.body).then(() => Work.toast('{% translate "Copied" %}'))">{% icon "copy" %}{% translate "Copy" %}</button>
-              <span class="spacer"></span>
-              <button type="button" class="icon-btn" @click="forgetVersion(shown)" aria-label="{% translate 'Delete this version' %}">{% icon "trash" %}</button>
+        <div class="wnh-cols">
+          <section class="wnh-side" aria-label="{% translate 'Saved copies' %}">
+            {# what's kept, and the settings for this note #}
+            <button type="button" class="wnh-status" :class="hist.off && 'is-off'" @click="histSet = !histSet; resetHistorySettings()" :aria-expanded="histSet.toString()">
+              <span class="wnh-status-dot" aria-hidden="true"></span>
+              <span class="min-w-0">
+                <b x-show="!hist.off">{% blocktranslate with n="__N__" asvar keep_for %}Keeping changes for {{ n }}{% endblocktranslate %}<span x-text="'{{ keep_for|escapejs }}'.replace('__N__', hist.months === 12 ? '{% translate "1 year"|escapejs %}' : hist.months + ' {% translate "months"|escapejs %}')"></span></b>
+                <b x-show="hist.off" x-cloak>{% translate "History is off for this note" %}</b>
+                <small x-text="hist.count ? ((hist.count === 1 ? '{% translate "1 copy"|escapejs %}' : '{% translate "%(n)s copies"|escapejs %}'.replace('%(n)s', hist.count)) + ' · ' + (hist.bytes > 1048576 ? (hist.bytes / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(hist.bytes / 1024)) + ' KB') + (hist.oldest ? ' · {% translate "since"|escapejs %} ' + hist.oldest : '')) : '{% translate "No copies yet"|escapejs %}'"></small>
+              </span>
+              <span class="wnh-status-edit">{% icon "edit" %}<span>{% translate "Change" %}</span></span>
+            </button>
+
+            <div class="wnh-settings" x-show="histSet" x-cloak x-transition.opacity>
+              <label class="wnh-switch"><input type="checkbox" :checked="!setOff" @change="setOff = !$event.target.checked">
+                <span><b>{% translate "Keep edit history for this note" %}</b><small>{% translate "Off: no new copies are kept. Text changed in two places at once is still kept, so nothing is lost." %}</small></span></label>
+              <div x-show="!setOff">
+                <p class="label">{% translate "Keep changes for" %}</p>
+                <div class="seg seg-sm wnh-months" role="radiogroup" aria-label="{% translate 'Keep changes for' %}">
+                  <template x-for="m in (hist.choices || [2, 4, 6, 12])" :key="m">
+                    <button type="button" class="seg-item" role="radio" :aria-checked="(!setCustom && Number(setMonths) === m).toString()" :class="!setCustom && Number(setMonths) === m && 'is-active'" @click="pickMonths(m)"
+                            x-text="m === 12 ? '{% translate "1 year"|escapejs %}' : m + ' {% translate "months"|escapejs %}'"></button>
+                  </template>
+                  <button type="button" class="seg-item" role="radio" :aria-checked="setCustom.toString()" :class="setCustom && 'is-active'" @click="pickMonths('custom')">{% translate "Custom" %}</button>
+                </div>
+                <label class="wnh-custom" x-show="setCustom" x-cloak><input type="number" min="1" max="120" step="1" class="form-input" x-model.number="setMonths" aria-label="{% translate 'Months' %}"> <span>{% translate "months (1–120)" %}</span></label>
+                <p class="help" x-text="hist.own ? '{% translate "This note has its own setting."|escapejs %}' : '{% translate "This note follows your default."|escapejs %}'"></p>
+              </div>
+              <p class="wnh-warn" x-show="!setOff && histWillGo > 0" x-cloak>{% icon "alert" %}<span x-text="histWillGo === 1 ? '{% translate "1 older copy will be deleted."|escapejs %}' : '{% translate "%(n)s older copies will be deleted."|escapejs %}'.replace('%(n)s', histWillGo)"></span></p>
+              <label class="check" x-show="setOff && hist.count" x-cloak><input type="checkbox" x-model="forgetOld"><span class="check-label" x-text="'{% translate "Also delete the %(n)s copies kept so far"|escapejs %}'.replace('%(n)s', hist.count - (hist.pinned || 0))"></span></label>
+              <div class="wnh-settings-foot">
+                <button type="button" class="btn btn-primary btn-sm" @click="saveHistorySettings(false)" :disabled="!histDirty">{% translate "Save" %}</button>
+                <button type="button" class="btn btn-ghost btn-sm" @click="histSet = false">{% translate "Cancel" %}</button>
+                <span class="spacer"></span>
+                <button type="button" class="link text-xs" x-show="hist.own" @click="saveHistorySettings(true)" x-text="'{% translate "Use my default (%(n)s months)"|escapejs %}'.replace('%(n)s', hist.default)"></button>
+              </div>
+              <p class="wnh-fine">{% translate "Every copy of the last week is kept; older ones thin out to one a day, then one a week. Copies you keep for good never go." %} <a href="{% url 'work:settings' %}#note-history" class="link">{% translate "Defaults for all notes" %}</a></p>
             </div>
-            <h3 class="wn-ver-title" x-text="shown.title"></h3>
-            <article class="wn-md wn-ver-md" x-html="Work.markdown(shown.body)"></article>
-          </div>
-        </template>
+
+            <button type="button" class="btn btn-secondary btn-sm wnh-keep-now" @click="saveVersionNow()">{% icon "star" %}{% translate "Keep this version now" %}</button>
+
+            <ol class="wnh-list" :aria-busy="histLoading">
+              <li x-show="histNow && (histNow.added || histNow.removed || histNow.title_changed)" x-cloak>
+                <div class="wnh-item is-now">
+                  <span class="wnh-dot" aria-hidden="true"></span>
+                  <span class="wnh-item-main"><b>{% translate "Now" %}</b>
+                    <small>{% translate "Changes since the last copy — kept with the next one" %}</small>
+                    <span class="wnh-chips"><span class="wnh-plus" x-show="histNow && histNow.added" x-text="'+' + (histNow && histNow.added)"></span><span class="wnh-minus" x-show="histNow && histNow.removed" x-text="'−' + (histNow && histNow.removed)"></span></span></span>
+                </div>
+              </li>
+              <template x-for="g in histGroups" :key="g.day">
+                <li class="wnh-group">
+                  <p class="wnh-day" x-text="g.day"></p>
+                  <ol>
+                    <template x-for="v in g.items" :key="v.id">
+                      <li><button type="button" class="wnh-item" :class="[shown && shown.id === v.id ? 'is-on' : '', v.pinned ? 'is-pinned' : '']" @click="showVersion(v)" :aria-pressed="(shown && shown.id === v.id) ? 'true' : 'false'">
+                        <span class="wnh-dot" :class="v.pinned && 'is-pinned'" aria-hidden="true"></span>
+                        <span class="wnh-item-main">
+                          <b><span x-text="v.time"></span><span class="wnh-label" x-show="v.label" x-text="v.label"></span>{% icon "star" %}</b>
+                          <span class="wnh-chips">
+                            <span class="wnh-plus" x-show="v.added" x-text="'+' + v.added"></span><span class="wnh-minus" x-show="v.removed" x-text="'−' + v.removed"></span>
+                            <span class="wnh-tag" x-show="v.title_changed">{% translate "title" %}</span>
+                            <span class="wnh-tag" x-show="v.oldest">{% translate "oldest kept" %}</span>
+                            <span class="wnh-tag" x-show="!v.oldest && v.added === 0 && v.removed === 0 && !v.title_changed">{% translate "no text change" %}</span>
+                          </span>
+                          <small x-show="v.sections.length" x-text="'{% translate "Changed in: %(s)s"|escapejs %}'.replace('%(s)s', v.sections.map(function (x) { return x || '{% translate "the start"|escapejs %}'; }).join(', ') + (v.more ? ' +' + v.more : ''))"></small>
+                          <small class="wnh-why" x-show="v.reason" x-text="v.why"></small>
+                        </span>
+                      </button></li>
+                    </template>
+                  </ol>
+                </li>
+              </template>
+              <li class="wdx-hist-empty" x-show="!histLoading && !versions.length">
+                <span x-show="!hist.off">{% translate "No earlier copies yet. As you write, a copy is kept every few minutes — then you can see what changed and bring one back." %}</span>
+                <span x-show="hist.off" x-cloak>{% translate "History is off for this note. Turn it on above to keep copies as you write." %}</span>
+              </li>
+            </ol>
+            <button type="button" class="link text-xs wnh-forget-all" x-show="versions.length" x-cloak @click="forgetAllVersions()">{% icon "trash" %}{% translate "Delete all history" %}</button>
+          </section>
+
+          <section class="wnh-main" aria-live="polite">
+            <div class="wnh-pick" x-show="!shown">
+              {% icon "history" %}
+              <p><b>{% translate "Pick a time to see what changed" %}</b></p>
+              <p>{% translate "Added words are green, taken-out words are red and crossed out. You can also compare a copy with the note now, read it whole, or bring it back." %}</p>
+            </div>
+            <template x-if="shown">
+              <div class="wnh-read">
+                <div class="wnh-read-head">
+                  <button type="button" class="btn btn-ghost btn-sm wnh-back" @click="shown = null; diff = null">{% icon "chevron-left" %}{% translate "All copies" %}</button>
+                  <div class="min-w-0">
+                    <p class="wnh-read-when"><span x-text="shown.date"></span><span class="wnh-label" x-show="shown.label" x-text="shown.label"></span></p>
+                    <p class="wnh-read-sub" x-text="shown.pinned ? '{% translate "Kept for good"|escapejs %}' : (shown.expires ? '{% translate "Kept until %(d)s"|escapejs %}'.replace('%(d)s', shown.expires) : '')"></p>
+                  </div>
+                </div>
+                <div class="seg seg-sm seg-block wnh-modes" role="tablist">
+                  <button type="button" role="tab" class="seg-item" :class="histMode === 'prev' && 'is-active'" @click="showVersion(shown, 'prev')">{% translate "What changed then" %}</button>
+                  <button type="button" role="tab" class="seg-item" :class="histMode === 'now' && 'is-active'" @click="showVersion(shown, 'now')">{% translate "Compare with now" %}</button>
+                  <button type="button" role="tab" class="seg-item" :class="histMode === 'text' && 'is-active'" @click="showVersion(shown, 'text')">{% translate "Whole text" %}</button>
+                </div>
+                <p class="wnh-explain" x-show="histMode === 'prev'">{% translate "The edits made up to this time, against the copy before it." %}</p>
+                <p class="wnh-explain" x-show="histMode === 'now'" x-cloak>{% translate "Everything that is different now: green is in the note now, red was here then and is gone now." %}</p>
+                <div class="wnh-diff" :aria-busy="diffLoading">
+                  <p class="wnh-loading" x-show="diffLoading">{% translate "Working it out…" %}</p>
+                  <template x-if="diff && !diffLoading">
+                    <div>
+                      <template x-if="diff.first">
+                        <p class="wnh-note">{% translate "This is the oldest copy kept, so there's nothing before it to compare with. Here is its whole text." %}</p>
+                      </template>
+                      <template x-if="diff.rows">
+                        <div>
+                          <div class="wnh-summary">
+                            <span class="wnh-plus" x-show="diff.added" x-text="diff.added === 1 ? '{% translate "+1 word"|escapejs %}' : '{% translate "+%(n)s words"|escapejs %}'.replace('%(n)s', diff.added)"></span>
+                            <span class="wnh-minus" x-show="diff.removed" x-text="diff.removed === 1 ? '{% translate "−1 word"|escapejs %}' : '{% translate "−%(n)s words"|escapejs %}'.replace('%(n)s', diff.removed)"></span>
+                            <span class="wnh-tag" x-show="!diff.added && !diff.removed && !diff.title">{% translate "No difference" %}</span>
+                          </div>
+                          <p class="wnh-title-change" x-show="diff.title">{% translate "Title:" %} <del x-text="diff.title && diff.title[0] || '—'"></del> → <ins x-text="diff.title && diff.title[1] || '—'"></ins></p>
+                          <ol class="wnh-rows">
+                            <template x-for="(r, i) in diff.rows" :key="i">
+                              <li :class="'is-' + r.op">
+                                <template x-if="r.op === 'head'"><span class="wnh-head">{% icon "list" %}<span x-text="r.text || '{% translate "At the start"|escapejs %}'"></span></span></template>
+                                <template x-if="r.op === 'same'"><span class="wnh-line" x-text="r.text || ' '"></span></template>
+                                <template x-if="r.op === 'add'"><span class="wnh-line"><span class="wnh-sign" aria-label="{% translate 'added' %}">+</span><span x-text="r.text || ' '"></span></span></template>
+                                <template x-if="r.op === 'del'"><span class="wnh-line"><span class="wnh-sign" aria-label="{% translate 'taken out' %}">−</span><span x-text="r.text || ' '"></span>
+                                  <button type="button" class="wnh-copy" @click="copyLines(r.text)" aria-label="{% translate 'Copy this line' %}" data-tip="{% translate 'Copy' %}">{% icon "copy" %}</button></span></template>
+                                <template x-if="r.op === 'mod'"><span class="wnh-line"><span class="wnh-sign">~</span><span><template x-for="(p, k) in r.parts" :key="k"><span :class="p[0] === '+' ? 'wnh-ins' : (p[0] === '-' ? 'wnh-del' : '')" x-text="p[1]"></span></template></span></span></template>
+                                <template x-if="r.op === 'fold'"><button type="button" class="wnh-fold" @click="openFold(i)" x-text="'⋯ ' + (r.count === 1 ? '{% translate "1 unchanged line"|escapejs %}' : '{% translate "%(n)s unchanged lines"|escapejs %}'.replace('%(n)s', r.count))"></button></template>
+                              </li>
+                            </template>
+                          </ol>
+                        </div>
+                      </template>
+                      <template x-if="!diff.rows && diff.body !== undefined">
+                        <div><h3 class="wn-ver-title" x-text="diff.title"></h3><article class="wn-md wn-ver-md" x-html="Work.markdown(diff.body)"></article></div>
+                      </template>
+                      <p class="wnh-note" x-show="diff.error">{% translate "Couldn't load it — try again." %}</p>
+                    </div>
+                  </template>
+                </div>
+                <div class="wnh-acts">
+                  <button type="button" class="btn btn-primary btn-sm" @click="restoreVersion(shown)">{% icon "restore" %}{% translate "Bring back this version" %}</button>
+                  <button type="button" class="btn btn-ghost btn-sm" @click="copyVersion(shown)">{% icon "copy" %}{% translate "Copy its text" %}</button>
+                  <button type="button" class="btn btn-ghost btn-sm" @click="keepVersion(shown)" :aria-pressed="shown.pinned.toString()">{% icon "star" %}<span x-text="shown.pinned ? '{% translate "Don't keep for good"|escapejs %}' : '{% translate "Keep for good"|escapejs %}'"></span></button>
+                  <span class="spacer"></span>
+                  <button type="button" class="icon-btn" @click="forgetVersion(shown)" aria-label="{% translate 'Delete this copy' %}" data-tip="{% translate 'Delete this copy' %}">{% icon "trash" %}</button>
+                </div>
+              </div>
+            </template>
+          </section>
+        </div>
       </aside>
       {% if note %}{% include "work/partials/note_links.html" %}{% endif %}
     </div>

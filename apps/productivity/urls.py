@@ -176,6 +176,7 @@ urlpatterns = [
     path("api/cards/due/", api.cards_due, name="api_cards_due"),
     path("api/images/", api.image_upload, name="api_image_upload"),
     path("api/notes/<int:pk>/versions/", api.note_versions, name="api_note_versions"),
+    path("api/notes/<int:pk>/versions/<int:vid>/", api.note_version_diff, name="api_note_version_diff"),
     path("api/cards/<int:pk>/", api.card_action, name="api_card_action"),
     path("api/decks/<int:pk>/", api.deck_action, name="api_deck_action"),
     path("api/search/", api.search, name="api_search"),

@@ -1473,15 +1473,146 @@
         linkedTitle: initial.title || "", examOpen: false, examSubject: "", examName: "", same: "note:" + (initial.id || uid()),
         state: "saved", savedAt: initial.saved || "", preview: false, split: false, timer: null, inflight: null, again: false,
         making: false, suggest: [], pick: 0, dgOpen: false, dgItems: [], dgQ: "", dgLoading: false,
-        histOpen: false, histLoading: false, versions: [], shown: null,
-        /* Earlier versions: kept before each round of writing; one can be read and brought back */
+        histOpen: false, histLoading: false, versions: [], shown: null, histNow: null, hist: {}, histSet: false,
+        histMode: "prev", diff: null, diffLoading: false, setOff: false, setMonths: 2, setCustom: false, forgetOld: false,
+        /* Edit history (note_history.py): copies kept while writing, each with what changed in it; kept 2–12 months or any
+           number (the note's own setting, or the default in Work settings), or off for this note */
         openHistory: function () {
           var self = this; if (!this.id) return;
-          this.histOpen = true; this.histLoading = true; this.shown = null;
-          Promise.resolve(this.saveNow()).then(function () {
-            return fetch(CFG.urls.noteBase + self.id + "/versions/", { credentials: "same-origin", headers: { Accept: "application/json" } });
-          }).then(function (r) { return r.json(); }).then(function (res) { self.versions = res.versions || []; self.shown = self.versions[0] || null; })
-            .catch(function () { self.versions = []; }).then(function () { self.histLoading = false; });
+          this.histOpen = true; this.histLoading = true; this.shown = null; this.diff = null;
+          return Promise.resolve(this.saveNow()).then(function () { return self.loadHistory(); }).then(function () {
+            if (self.versions.length && window.matchMedia("(min-width: 900px)").matches) self.showVersion(self.versions[0]);
+          });
+        },
+        loadHistory: function () {
+          var self = this; this.histLoading = true;
+          return fetch(CFG.urls.noteBase + this.id + "/versions/", { credentials: "same-origin", headers: { Accept: "application/json" } })
+            .then(function (r) { return r.json(); }).then(function (res) {
+              self.versions = res.versions || []; self.histNow = res.now || null; self.hist = res.history || {};
+              self.resetHistorySettings();
+            }).catch(function () { self.versions = []; }).then(function () { self.histLoading = false; });
+        },
+        resetHistorySettings: function () {
+          var h = this.hist || {};
+          this.setOff = !!h.off; this.setMonths = h.months || 2; this.forgetOld = false;
+          this.setCustom = (h.choices || []).indexOf(this.setMonths) < 0;
+        },
+        get histGroups() {        /* the copies by day: Today, Yesterday, Monday 17 November… */
+          var out = [], last = null;
+          this.versions.forEach(function (v) { if (!last || last.day !== v.day) { last = { day: v.day, items: [] }; out.push(last); } last.items.push(v); });
+          return out;
+        },
+        get histWillGo() {        /* copies the new setting would delete: older than its months, not kept for good */
+          var m = Number(this.setMonths) || 0; if (!m) return 0;
+          var end = new Date(); end.setMonth(end.getMonth() - m);
+          return this.versions.filter(function (v) { return !v.pinned && new Date(v.when) < end; }).length;
+        },
+        get histDirty() {
+          var h = this.hist || {};
+          return this.setOff !== !!h.off || Number(this.setMonths) !== Number(h.months) || this.forgetOld;
+        },
+        pickMonths: function (m) { this.setCustom = m === "custom"; if (m !== "custom") this.setMonths = m; },
+        saveHistorySettings: function (useDefault) {
+          var self = this, m = Math.max(1, Math.min(120, parseInt(this.setMonths, 10) || 2));
+          var data = { action: "history", off: this.setOff ? "1" : "0", months: useDefault ? "default" : String(m) };
+          if (this.setOff && this.forgetOld) data.forget_all = "1";
+          return api(CFG.urls.noteBase + this.id + "/", data).then(function (res) {
+            if (!res.ok) { toast(res.error || t("notSaved", "Not saved."), "warn"); return; }
+            self.histSet = false; toast(t("historySaved", "History settings saved"));
+            return self.loadHistory().then(function () { if (self.shown && !self.versions.some(function (v) { return v.id === self.shown.id; })) { self.shown = null; self.diff = null; } });
+          });
+        },
+        changeText: function (v) {     /* "+120 words · −15" in words a person reads */
+          if (!v || v.added === null || v.added === undefined) return "";
+          var bits = [];
+          if (v.added) bits.push("+" + v.added);
+          if (v.removed) bits.push("−" + v.removed);
+          return bits.join("  ");
+        },
+        showVersion: function (v, mode) {
+          var self = this; if (!v) return;
+          this.shown = v; this.histMode = mode || "prev"; this.diffLoading = true;
+          var url = CFG.urls.noteBase + this.id + "/versions/" + v.id + "/?with=" + this.histMode;
+          return fetch(url, { credentials: "same-origin", headers: { Accept: "application/json" } }).then(function (r) { return r.json(); })
+            .then(function (res) {
+              if (self.shown !== v) return;
+              if (res.rows) {          /* a heading line above each new part of the note the changes are in */
+                var at = null, rows = [];
+                res.rows.forEach(function (r, i) {
+                  if (r.op === "fold") at = null;            /* after a gap, say again where we are */
+                  else if (at === null || (r.op !== "same" && r.at !== at)) {
+                    var lead = r;                            /* the heading of the change this stretch leads to */
+                    for (var k = i; k < res.rows.length && res.rows[k].op === "same"; k++) lead = res.rows[k + 1] || r;
+                    if (lead.op !== "fold") { rows.push({ op: "head", text: lead.at }); at = lead.at; }
+                  }
+                  rows.push(r);
+                });
+                res.rows = rows;
+              }
+              self.diff = res;
+            }).catch(function () { self.diff = { error: true }; }).then(function () { self.diffLoading = false; });
+        },
+        openFold: function (i) {       /* "⋯ 37 unchanged lines": shown in place (a long stretch: from this copy's text) */
+          var self = this, diff = this.diff, r = diff.rows[i]; if (!r || r.op !== "fold") return;
+          var put = function (lines) {
+            var at = diff.rows.indexOf(r); if (at < 0) return;
+            diff.rows.splice.apply(diff.rows, [at, 1].concat(lines.map(function (text) { return { op: "same", text: text }; })));
+          };
+          if (r.lines) return put(r.lines);
+          var shown = this.shown;
+          (diff.text ? Promise.resolve(diff.text) : fetch(CFG.urls.noteBase + this.id + "/versions/" + shown.id + "/?with=text", { credentials: "same-origin", headers: { Accept: "application/json" } })
+            .then(function (x) { return x.json(); }).then(function (res) { diff.text = (res.body || "").split(/\r?\n/); return diff.text; }))
+            .then(function (lines) { if (self.diff === diff) put(lines.slice(r.start, r.start + r.count)); });
+        },
+        copyVersion: function (v) {
+          var self = this;
+          fetch(CFG.urls.noteBase + this.id + "/versions/" + v.id + "/?with=text", { credentials: "same-origin", headers: { Accept: "application/json" } })
+            .then(function (r) { return r.json(); }).then(function (res) {
+              var text = res.body || "";
+              (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(function () { toast(t("copied", "Copied")); }, function () { FT.showText(text); });
+            });
+        },
+        copyLines: function (text) {
+          (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(function () { toast(t("copied", "Copied")); }, function () { FT.showText(text); });
+        },
+        keepVersion: function (v) {    /* keep for good (never runs out) — or not any more */
+          var self = this;
+          var go = function (label) {
+            var data = { action: "keep", version: v.id, pinned: v.pinned ? "0" : "1" };
+            if (label !== undefined) data.label = label;
+            return api(CFG.urls.noteBase + self.id + "/", data).then(function (res) {
+              if (!res.ok) return;
+              v.pinned = res.pinned; v.label = res.label;
+              if (!res.exists) { self.versions = self.versions.filter(function (x) { return x.id !== v.id; }); if (self.shown === v) { self.shown = null; self.diff = null; } }
+              else toast(res.pinned ? t("versionKept", "Kept for good") : t("historySaved", "History settings saved"));
+            });
+          };
+          if (v.pinned) return go();
+          FT.ask({ title: t("keepName", "Name this version (optional):"), input: { value: v.label || "" } }).then(function (name) {
+            if (name === null || name === false || name === undefined) return; go(String(name));
+          });
+        },
+        saveVersionNow: function () {   /* "Keep this version": the note as it is now, kept for good */
+          var self = this;
+          FT.ask({ title: t("keepName", "Name this version (optional):"), input: {} }).then(function (name) {
+            if (name === null || name === false || name === undefined) return;
+            Promise.resolve(self.saveNow()).then(function () {
+              return api(CFG.urls.noteBase + self.id + "/", { action: "save_version", label: String(name) });
+            }).then(function (res) {
+              if (!res || !res.ok) return;
+              toast(t("versionSaved", "This version is kept for good"));
+              self.loadHistory().then(function () { var v = self.versions.filter(function (x) { return x.id === res.version; })[0]; if (v) self.showVersion(v); });
+            });
+          });
+        },
+        forgetAllVersions: function () {
+          var self = this;
+          FT.ask({ message: t("forgetAll", "Delete the whole history of this note?"), danger: true, after: "gone" }).then(function (sure) {
+            if (!sure) return;
+            api(CFG.urls.noteBase + self.id + "/", { action: "forget_all" }).then(function (res) {
+              if (!res.ok) return; self.shown = null; self.diff = null; self.loadHistory();
+            });
+          });
         },
         restoreVersion: function (v) {
           if (!v) return;
@@ -1500,7 +1631,8 @@
             api(CFG.urls.noteBase + self.id + "/", { action: "forget", version: v.id }).then(function (res) {
               if (!res.ok) return;
               self.versions = self.versions.filter(function (x) { return x.id !== v.id; });
-              if (self.shown && self.shown.id === v.id) self.shown = self.versions[0] || null;
+              if (self.shown && self.shown.id === v.id) { self.shown = null; self.diff = null; }
+              self.loadHistory();
             });
           });
         },

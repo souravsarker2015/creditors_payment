@@ -434,6 +434,11 @@ class Note(models.Model):
     is_template = models.BooleanField(_("A template"), default=False, help_text="Offered under Template → Your templates; not in the notes lists.")
     color = models.CharField(_("Colour"), max_length=10, choices=Color.choices, blank=True, default="")
     book_order = models.FloatField(default=0, help_text="Its place as a chapter when its category is read as a book (the Reader).")
+    # Edit history (note_history.py): on unless turned off for this note; kept this many months, or — empty — as long as
+    # the default in Work settings (2 months unless changed there).
+    history_off = models.BooleanField(_("No edit history"), default=False)
+    history_months = models.PositiveSmallIntegerField(_("Keep edit history for (months)"), null=True, blank=True,
+                                                      validators=[MinValueValidator(1), MaxValueValidator(120)])
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True, db_index=True)
 
@@ -689,6 +694,14 @@ class WorkSettings(models.Model):
                                                         help_text=_("How many questions you haven't seen yet join each day's practice."))
     cards_remind_at = models.TimeField(_("Remind me to review flashcards at"), null=True, blank=True,
                                        help_text=_("A notification when cards are waiting. Leave empty for none."))
+    note_history_months = models.PositiveSmallIntegerField(_("Keep note edit history for (months)"), default=2,
+                                                           validators=[MinValueValidator(1), MaxValueValidator(120)],
+                                                           help_text=_("For every note that doesn't have its own setting. Each note can change it in its History."))
+    note_history_minutes = models.PositiveSmallIntegerField(_("A new copy at most every (minutes)"), default=10,
+                                                            validators=[MinValueValidator(1), MaxValueValidator(240)],
+                                                            help_text=_("While you write, a copy of the note is kept before each round of edits."))
+    note_history_new = models.BooleanField(_("Keep edit history for new notes"), default=True,
+                                           help_text=_("Off: new notes start with history off. Each note can still turn it on."))
 
     def __str__(self):
         return f"Work settings for {self.owner}"
@@ -1210,11 +1223,27 @@ class TaskFile(models.Model):
 
 
 class NoteVersion(models.Model):
-    """An earlier state of a note, kept before each new round of editing (see services.remember_note)."""
+    """An earlier state of a note, kept before each new round of editing (note_history.py).
+
+    `added`/`removed`/`sections` say what changed from the copy before it to this one (worked out once, then kept);
+    a pinned copy is kept for good — it never runs out or thins out."""
+    class Reason(models.TextChoices):
+        WRITING = "", _("While writing")
+        SAVED = "saved", _("Saved by you")
+        RESTORE = "restore", _("Before bringing back an older version")
+        CONFLICT = "conflict", _("Changed in two places at once")
+        LINK = "link", _("A linked note was renamed")
+
     note = models.ForeignKey(Note, on_delete=models.CASCADE, related_name="versions")
     title = models.CharField(max_length=200, blank=True)
     body = models.TextField(blank=True)
     created_at = models.DateTimeField(default=timezone.now, db_index=True)
+    reason = models.CharField(max_length=10, choices=Reason.choices, blank=True, default="")
+    pinned = models.BooleanField(default=False, help_text="Kept for good: never deleted when older than the note's history time.")
+    label = models.CharField(max_length=80, blank=True, default="", help_text="A name for it: “Before the rewrite”.")
+    added = models.PositiveIntegerField(null=True, blank=True, help_text="Words added since the copy before it (empty: not worked out yet).")
+    removed = models.PositiveIntegerField(null=True, blank=True)
+    sections = models.JSONField(default=dict, blank=True, help_text="What changed, in short: {\"title\": true if the title did, \"under\": [headings]}.")
 
     class Meta:
         ordering = ["-created_at", "-pk"]

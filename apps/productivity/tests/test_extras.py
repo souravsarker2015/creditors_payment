@@ -48,7 +48,7 @@ class ExtrasTests(TestCase):
         self.client.post(save, {"id": note.pk, "body": "fourth draft"})
         self.assertEqual(NoteVersion.objects.count(), 2)
         listed = self.client.get(reverse("work:api_note_versions", args=[note.pk])).json()["versions"]
-        self.assertEqual([v["body"] for v in listed], ["third draft", "first draft"])
+        self.assertEqual([NoteVersion.objects.get(pk=v["id"]).body for v in listed], ["third draft", "first draft"])
         act = reverse("work:api_note_action", args=[note.pk])
         self.client.post(act, {"action": "restore", "version": listed[1]["id"]})
         note.refresh_from_db()

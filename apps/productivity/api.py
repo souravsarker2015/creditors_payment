@@ -11,6 +11,7 @@ from datetime import timedelta
 from urllib.parse import quote
 
 from django.db.models import Q
+from django.db.models.functions import Length
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
@@ -23,7 +24,7 @@ from django.views.decorators.http import require_GET, require_POST
 
 from apps.trash.services import trash
 
-from . import cards, diagrams, exam, linked, services
+from . import cards, diagrams, exam, linked, note_history, services
 from .access import work_required
 from .models import (
     ExamSubject,
@@ -505,7 +506,7 @@ def note_save(request):
     # Written over a text the editor never saw (another device, another tab): that text stays in History.
     conflict = bool(note.pk and changed and request.POST.get("rev") and request.POST["rev"] != services.note_rev(note))
     if note.pk and changed:
-        services.remember_note(note, force=conflict)        # what it said before this sitting, at most every few minutes
+        services.remember_note(note, force=conflict, reason="conflict" if conflict else "")        # what it said before this sitting, at most every few minutes
     for name, text in posted.items():
         setattr(note, name, text)
     if "project" in request.POST:
@@ -518,6 +519,8 @@ def note_save(request):
         note.is_pinned = True
     if not note.pk and not (note.title.strip() or note.body.strip()):
         return bad(_("The note is empty."))
+    if not note.pk:                    # a new note: edit history on or off as set in Work settings
+        note.history_off = not WorkSettings.for_user(user).note_history_new
     note.save()
     if "tags" in request.POST:
         note.tags.set(services.tags_named(user, request.POST["tags"].replace(",", " ").split()))
@@ -634,16 +637,55 @@ def note_action(request, pk):
         return ok(url=reverse("work:diagram", args=[d.pk]))
     elif action == "restore":          # an earlier version comes back (what's there now is kept too)
         v = get_object_or_404(NoteVersion, pk=request.POST.get("version") or 0, note=note)
-        services.remember_note(note, force=True)
+        services.remember_note(note, force=True, reason="restore")
         note.title, note.body = v.title, v.body
         note.save()
         return ok(url=reverse("work:note", args=[note.pk]))
     elif action == "forget":
-        NoteVersion.objects.filter(pk=request.POST.get("version") or 0, note=note).delete()
+        v = NoteVersion.objects.filter(pk=request.POST.get("version") or 0, note=note).first()
+        if v:
+            after = note.versions.filter(created_at__gte=v.created_at).exclude(pk=v.pk).order_by("created_at", "pk").first()
+            v.delete()
+            if after:                      # it said what changed since the deleted one: worked out again
+                NoteVersion.objects.filter(pk=after.pk).update(added=None, removed=None, sections={})
         return ok()
+    elif action == "history":          # this note's history: on or off, and for how long (empty: the default in Work settings)
+        fields = []
+        if "off" in request.POST:
+            note.history_off = request.POST["off"] == "1"
+            fields.append("history_off")
+        if "months" in request.POST:
+            raw = request.POST["months"].strip()
+            try:
+                note.history_months = None if raw in ("", "default") else max(1, min(120, int(raw)))
+            except ValueError:
+                return bad(_("Type a number of months, 1 to 120."))
+            fields.append("history_months")
+        note.save(update_fields=fields)    # (not updated_at: the note itself didn't change)
+        gone = note_history.prune(note)
+        if request.POST.get("forget_all") == "1":
+            gone += note.versions.filter(pinned=False).delete()[0]
+        return ok(history=_history_info(note), gone=gone)
+    elif action == "keep":             # keep one copy for good (or not), with a name
+        v = get_object_or_404(NoteVersion, pk=request.POST.get("version") or 0, note=note)
+        if "pinned" in request.POST:
+            v.pinned = request.POST["pinned"] == "1"
+        if "label" in request.POST:
+            v.label = request.POST["label"].strip()[:80]
+        v.save(update_fields=["pinned", "label"])
+        if not v.pinned:
+            note_history.prune(note)
+        return ok(pinned=v.pinned, label=v.label, exists=NoteVersion.objects.filter(pk=v.pk).exists())
+    elif action == "save_version":     # "Keep this version": the note as it is now, kept for good
+        v = note_history.save_now(note, request.POST.get("label", ""))
+        return ok(version=v.pk)
+    elif action == "forget_all":       # every copy (the kept-for-good ones too, when asked)
+        qs = note.versions.all() if request.POST.get("pinned") == "1" else note.versions.filter(pinned=False)
+        return ok(gone=qs.delete()[0], history=_history_info(note))
     elif action == "duplicate":        # a copy to start from: the same text, tags, categories, project and colour
         copy = Note.objects.create(owner=request.user, title=(_("%(title)s (copy)") % {"title": note.title})[:200] if note.title else "",
-                                   body=note.body, project=note.project, color=note.color, icon=note.icon)
+                                   body=note.body, project=note.project, color=note.color, icon=note.icon,
+                                   history_off=note.history_off, history_months=note.history_months)
         copy.tags.set(note.tags.all())
         copy.categories.set(note.categories.all())
         return ok(id=copy.pk, url=reverse("work:note", args=[copy.pk]))
@@ -929,16 +971,76 @@ def diagram_versions(request, pk):
     return ok(versions=[version_json(v) for v in d.versions.defer("source", "data", "notes")[:60]])
 
 
+def _history_info(note):
+    ws = WorkSettings.for_user(note.owner)
+    count, size, oldest = note_history.size(note)
+    return {"off": note.history_off, "months": note_history.months(note, ws), "own": note.history_months is not None,
+            "default": ws.note_history_months, "every": ws.note_history_minutes, "choices": list(note_history.MONTH_CHOICES),
+            "count": count, "bytes": size, "oldest": date_format(timezone.localtime(oldest), "j M Y") if oldest else "",
+            "pinned": note.versions.filter(pinned=True).count()}
+
+
+def _day(when, today):
+    d = when.date()
+    if d == today:
+        return str(_("Today"))
+    if d == today - timedelta(days=1):
+        return str(_("Yesterday"))
+    return date_format(when, "l, j F Y" if d.year != today.year else "l, j F")
+
+
 @work_required
 @require_GET
 def note_versions(request, pk):
+    """The note's history, newest first, each copy with what changed in it — not the texts themselves (they can be
+    long): one is fetched when it's opened (note_version_diff)."""
     note = get_object_or_404(Note, pk=pk, owner=request.user)
+    note_history.sweep(request.user)
+    note_history.prune(note)
+    note_history.fill_summaries(note)
+    ws = WorkSettings.for_user(request.user)
+    end = note_history.cutoff(note, ws=ws)
+    today = timezone.localdate()
+    reasons = dict(NoteVersion.Reason.choices)
+    rows = list(note.versions.only("pk", "title", "created_at", "reason", "pinned", "label", "added", "removed", "sections")
+                .annotate(chars=Length("body")).order_by("-created_at", "-pk")[:400])
     out = []
-    for v in note.versions.all()[:60]:
+    for i, v in enumerate(rows):
         when = timezone.localtime(v.created_at)
-        out.append({"id": v.pk, "title": v.title, "body": v.body, "time": date_format(when, "j M, H:i"), "when": when.isoformat(),
-                    "words": len(v.body.split())})
-    return ok(versions=out)
+        expires = None if v.pinned else note_history.months_ago(v.created_at, -note_history.months(note, ws))
+        sections = v.sections or {}
+        out.append({"id": v.pk, "title": v.title, "time": date_format(when, "H:i"), "when": when.isoformat(), "day": _day(when, today),
+                    "date": date_format(when, "j M Y, H:i"), "reason": v.reason, "why": str(reasons.get(v.reason, "")),
+                    "pinned": v.pinned, "label": v.label, "added": v.added, "removed": v.removed, "oldest": i == len(rows) - 1,
+                    "title_changed": bool(sections.get("title")), "sections": sections.get("under", []), "more": sections.get("more", 0),
+                    "expires": date_format(timezone.localtime(expires), "j M Y") if expires else "", "chars": v.chars})
+    now = None
+    if rows:                           # what changed since the newest copy: the edits not kept in a copy yet
+        last = note.versions.only("title", "body").get(pk=rows[0].pk)
+        added, removed, sections = note_history.summary(last, note)
+        now = {"added": added, "removed": removed, "title_changed": sections["title"], "sections": sections["under"], "more": sections["more"],
+               "time": date_format(timezone.localtime(note.updated_at), "H:i"), "day": _day(timezone.localtime(note.updated_at), today)}
+    return ok(versions=out, now=now, history=_history_info(note), cutoff=end.isoformat())
+
+
+@work_required
+@require_GET
+def note_version_diff(request, pk, vid):
+    """One copy: what changed in it (from the copy before it), what changed since (to the note now), or its whole text."""
+    note = get_object_or_404(Note, pk=pk, owner=request.user)
+    v = get_object_or_404(NoteVersion, pk=vid, note=note)
+    mode = request.GET.get("with", "prev")
+    if mode == "text":
+        return ok(title=v.title, body=v.body)
+    if mode == "now":                  # (a long unchanged stretch points into this copy's text: the older side)
+        d = note_history.diff(v.title, v.body, note.title, note.body, side="i")
+    else:
+        older = note.versions.filter(created_at__lt=v.created_at).order_by("-created_at", "-pk").only("title", "body").first() \
+            or note.versions.filter(created_at=v.created_at, pk__lt=v.pk).order_by("-pk").only("title", "body").first()
+        if older is None:
+            return ok(first=True, title=v.title, body=v.body)
+        d = note_history.diff(older.title, older.body, v.title, v.body)
+    return ok(**d)
 
 
 # Pictures in notes: only these, checked by their first bytes (an SVG could carry a script, so it's not allowed).

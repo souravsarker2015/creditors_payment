@@ -1266,28 +1266,15 @@ def bulk(user, ids, action, value=""):
     return len(tasks)
 
 
-# ── Note history ──────────────────────────────────────────────────────────
-NOTE_EVERY = timedelta(minutes=10)    # a new copy at most this often while writing
-NOTE_KEEP = 40
+# ── Note history (note_history.py) ────────────────────────────────────────
+NOTE_EVERY = timedelta(minutes=10)    # the default: a new copy at most this often while writing (Work settings)
 
 
-def remember_note(note, force=False):
+def remember_note(note, force=False, reason=""):
     """Keep the note as it is now, before a new round of edits (or on purpose with `force`)."""
-    from .models import NoteVersion
+    from . import note_history
 
-    if not (note.title.strip() or note.body.strip()):
-        return None
-    last = note.versions.only("created_at", "body", "title").first()
-    now = timezone.now()
-    if last and not force and now - last.created_at < NOTE_EVERY:
-        return None
-    if last and last.body == note.body and last.title == note.title:
-        return None
-    v = NoteVersion.objects.create(note=note, title=note.title, body=note.body, created_at=now)
-    old = list(note.versions.values_list("pk", flat=True)[NOTE_KEEP:])
-    if old:
-        NoteVersion.objects.filter(pk__in=old).delete()
-    return v
+    return note_history.remember(note, force=force, reason=reason)
 
 
 # ── Restore from a backup (the export .zip / data.json) ───────────────────

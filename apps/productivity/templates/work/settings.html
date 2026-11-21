@@ -86,6 +86,16 @@
         {% with field=form.progress_email %}{% include "partials/field.html" %}{% endwith %}
         {% if request.user.email %}<div><button type="submit" form="work-test-brief" class="btn btn-secondary btn-sm">{% icon "mail" %}{% translate "Send me today's now" %}</button></div>{% endif %}
       </div></section>
+    <section class="card" id="note-history"><header class="card-header"><div><h2 class="card-title">{% icon "history" %}{% translate "Note edit history" %}</h2>
+      <p class="card-subtitle">{% translate "While you write, the app keeps earlier copies of each note, so you can see what changed and bring an older one back. These are the defaults — each note can have its own in its History." %}</p></div></header>
+      <div class="card-body form-stack">
+        {% with field=form.note_history_new %}{% include "partials/field.html" %}{% endwith %}
+        <div class="form-grid form-grid-2">
+          {% with field=form.note_history_months %}{% include "partials/field.html" %}{% endwith %}
+          {% with field=form.note_history_minutes %}{% include "partials/field.html" %}{% endwith %}
+        </div>
+        <p class="help">{% translate "Every copy of the last week is kept; older ones thin out to one a day, then one a week, so a long note doesn't fill your space. A copy you “keep for good” never goes." %}</p>
+      </div></section>
     <section class="card" id="board-invoices"><header class="card-header"><div><h2 class="card-title">{% translate "Board & invoices" %}</h2>
       <p class="card-subtitle">{% translate "A limit for work in progress, and what an invoice says about you." %}</p></div></header>
       <div class="card-body form-stack">

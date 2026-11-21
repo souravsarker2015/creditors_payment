@@ -36830,3 +36830,288 @@ msgstr "%(t)s টির %(d)s টি হয়েছে — করলেই প�
 
 msgid "Read the 3-minute guide"
 msgstr "৩ মিনিটের গাইডটি পড়ুন"
+
+msgid "Edit history"
+msgstr "সম্পাদনার ইতিহাস"
+
+msgid "Saved copies"
+msgstr "রাখা কপিগুলো"
+
+msgid "Keeping changes for %(n)s"
+msgstr "%(n)s পর্যন্ত পরিবর্তন রাখা হচ্ছে"
+
+msgid "History is off for this note"
+msgstr "এই নোটের ইতিহাস বন্ধ"
+
+msgid "1 copy"
+msgstr "১টি কপি"
+
+msgid "%%(n)s copies"
+msgstr "%%(n)s টি কপি"
+
+msgid "since"
+msgstr "থেকে"
+
+msgid "No copies yet"
+msgstr "এখনো কোনো কপি নেই"
+
+msgid "Keep edit history for this note"
+msgstr "এই নোটের সম্পাদনার ইতিহাস রাখুন"
+
+msgid ""
+"Off: no new copies are kept. Text changed in two places at once is still "
+"kept, so nothing is lost."
+msgstr ""
+"বন্ধ থাকলে নতুন কপি রাখা হয় না। একসাথে দুই জায়গায় বদলানো লেখা তবুও রাখা "
+"হয়, যাতে কিছু না হারায়।"
+
+msgid "Keep changes for"
+msgstr "পরিবর্তন রাখুন"
+
+msgid "Custom"
+msgstr "নিজের মতো"
+
+msgid "months (1–120)"
+msgstr "মাস (১–১২০)"
+
+msgid "This note has its own setting."
+msgstr "এই নোটের নিজস্ব সেটিং আছে।"
+
+msgid "This note follows your default."
+msgstr "এই নোট আপনার ডিফল্ট মেনে চলে।"
+
+msgid "1 older copy will be deleted."
+msgstr "১টি পুরোনো কপি মুছে যাবে।"
+
+msgid "%%(n)s older copies will be deleted."
+msgstr "%%(n)s টি পুরোনো কপি মুছে যাবে।"
+
+msgid "Also delete the %%(n)s copies kept so far"
+msgstr "এ পর্যন্ত রাখা %%(n)s টি কপিও মুছে ফেলুন"
+
+msgid "Use my default (%%(n)s months)"
+msgstr "আমার ডিফল্ট ব্যবহার করুন (%%(n)s মাস)"
+
+msgid ""
+"Every copy of the last week is kept; older ones thin out to one a day, then "
+"one a week. Copies you keep for good never go."
+msgstr ""
+"গত এক সপ্তাহের প্রতিটি কপি রাখা হয়; পুরোনোগুলো কমে দিনে একটি, তারপর সপ্তাহে"
+" একটি হয়। চিরদিনের জন্য রাখা কপি কখনো মুছে না।"
+
+msgid "Defaults for all notes"
+msgstr "সব নোটের ডিফল্ট"
+
+msgid "Keep this version now"
+msgstr "এই সংস্করণটি এখনই রাখুন"
+
+msgid "Changes since the last copy — kept with the next one"
+msgstr "শেষ কপির পরের পরিবর্তন — পরের কপির সাথে রাখা হবে"
+
+msgid "title"
+msgstr "শিরোনাম"
+
+msgid "oldest kept"
+msgstr "সবচেয়ে পুরোনো"
+
+msgid "no text change"
+msgstr "লেখায় কোনো বদল নেই"
+
+msgid "the start"
+msgstr "শুরুতে"
+
+msgid ""
+"No earlier copies yet. As you write, a copy is kept every few minutes — then"
+" you can see what changed and bring one back."
+msgstr ""
+"এখনো কোনো আগের কপি নেই। লেখার সময় কয়েক মিনিট পরপর একটি কপি রাখা হয় — তখন "
+"কী বদলেছে দেখতে আর আগেরটা ফিরিয়ে আনতে পারবেন।"
+
+msgid ""
+"History is off for this note. Turn it on above to keep copies as you write."
+msgstr "এই নোটের ইতিহাস বন্ধ। লেখার সময় কপি রাখতে ওপরে চালু করুন।"
+
+msgid "Delete all history"
+msgstr "সব ইতিহাস মুছুন"
+
+msgid "Pick a time to see what changed"
+msgstr "কী বদলেছে দেখতে একটি সময় বেছে নিন"
+
+msgid ""
+"Added words are green, taken-out words are red and crossed out. You can also"
+" compare a copy with the note now, read it whole, or bring it back."
+msgstr ""
+"যোগ করা শব্দ সবুজ, বাদ দেওয়া শব্দ লাল আর কাটা দাগ দেওয়া। কোনো কপিকে এখনকার"
+" নোটের সাথে মিলিয়ে দেখতে, পুরোটা পড়তে বা ফিরিয়ে আনতেও পারবেন।"
+
+msgid "All copies"
+msgstr "সব কপি"
+
+msgid "Kept for good"
+msgstr "চিরদিনের জন্য রাখা"
+
+msgid "Kept until %%(d)s"
+msgstr "%%(d)s পর্যন্ত রাখা হবে"
+
+msgid "What changed then"
+msgstr "তখন কী বদলেছিল"
+
+msgid "Compare with now"
+msgstr "এখনকার সাথে মেলান"
+
+msgid "Whole text"
+msgstr "পুরো লেখা"
+
+msgid "The edits made up to this time, against the copy before it."
+msgstr "এই সময় পর্যন্ত করা সম্পাদনা, এর আগের কপির তুলনায়।"
+
+msgid ""
+"Everything that is different now: green is in the note now, red was here "
+"then and is gone now."
+msgstr "এখন যা আলাদা সব: সবুজ এখন নোটে আছে, লাল তখন ছিল আর এখন নেই।"
+
+msgid ""
+"This is the oldest copy kept, so there's nothing before it to compare with. "
+"Here is its whole text."
+msgstr ""
+"এটি রাখা সবচেয়ে পুরোনো কপি, তাই এর আগের কিছুর সাথে তুলনা করার নেই। এই হলো "
+"এর পুরো লেখা।"
+
+msgid "+1 word"
+msgstr "+১টি শব্দ"
+
+msgid "+%%(n)s words"
+msgstr "+%%(n)s টি শব্দ"
+
+msgid "−1 word"
+msgstr "−১টি শব্দ"
+
+msgid "−%%(n)s words"
+msgstr "−%%(n)s টি শব্দ"
+
+msgid "No difference"
+msgstr "কোনো পার্থক্য নেই"
+
+msgid "Title:"
+msgstr "শিরোনাম:"
+
+msgid "taken out"
+msgstr "বাদ দেওয়া"
+
+msgid "Copy this line"
+msgstr "এই লাইনটি কপি করুন"
+
+msgid "1 unchanged line"
+msgstr "১টি অপরিবর্তিত লাইন"
+
+msgid "%%(n)s unchanged lines"
+msgstr "%%(n)s টি অপরিবর্তিত লাইন"
+
+msgid "Couldn't load it — try again."
+msgstr "লোড করা গেল না — আবার চেষ্টা করুন।"
+
+msgid "Bring back this version"
+msgstr "এই সংস্করণটি ফিরিয়ে আনুন"
+
+msgid "Copy its text"
+msgstr "এর লেখা কপি করুন"
+
+msgid "Don't keep for good"
+msgstr "চিরদিনের জন্য আর রাখবেন না"
+
+msgid "Keep for good"
+msgstr "চিরদিনের জন্য রাখুন"
+
+msgid "Delete this copy"
+msgstr "এই কপিটি মুছুন"
+
+msgid "Note edit history"
+msgstr "নোট সম্পাদনার ইতিহাস"
+
+msgid ""
+"While you write, the app keeps earlier copies of each note, so you can see "
+"what changed and bring an older one back. These are the defaults — each note"
+" can have its own in its History."
+msgstr ""
+"লেখার সময় অ্যাপ প্রতিটি নোটের আগের কপি রাখে, যাতে কী বদলেছে দেখতে আর "
+"পুরোনোটা ফিরিয়ে আনতে পারেন। এগুলো ডিফল্ট — প্রতিটি নোট তার ইতিহাসে নিজের "
+"সেটিং রাখতে পারে।"
+
+msgid ""
+"Every copy of the last week is kept; older ones thin out to one a day, then "
+"one a week, so a long note doesn't fill your space. A copy you “keep for "
+"good” never goes."
+msgstr ""
+"গত এক সপ্তাহের প্রতিটি কপি রাখা হয়; পুরোনোগুলো কমে দিনে একটি, তারপর সপ্তাহে"
+" একটি হয়, যাতে লম্বা নোট আপনার জায়গা ভরে না ফেলে। “চিরদিনের জন্য রাখা” কপি"
+" কখনো মুছে না।"
+
+msgid "Delete this copy? It can't be brought back."
+msgstr "এই কপিটি মুছবেন? এটি আর ফিরিয়ে আনা যাবে না।"
+
+msgid "Name this version (optional), e.g. “Before the rewrite”:"
+msgstr "এই সংস্করণের একটি নাম দিন (ঐচ্ছিক), যেমন “নতুন করে লেখার আগে”:"
+
+msgid "Delete the whole history of this note? Copies you keep for good stay."
+msgstr "এই নোটের পুরো ইতিহাস মুছবেন? চিরদিনের জন্য রাখা কপিগুলো থাকবে।"
+
+msgid "History settings saved"
+msgstr "ইতিহাসের সেটিং সংরক্ষিত"
+
+msgid "This version is kept for good"
+msgstr "এই সংস্করণটি চিরদিনের জন্য রাখা হলো"
+
+msgid "No edit history"
+msgstr "সম্পাদনার ইতিহাস নেই"
+
+msgid "Keep edit history for (months)"
+msgstr "সম্পাদনার ইতিহাস রাখুন (মাস)"
+
+msgid "Keep note edit history for (months)"
+msgstr "নোট সম্পাদনার ইতিহাস রাখুন (মাস)"
+
+msgid "A new copy at most every (minutes)"
+msgstr "নতুন কপি সর্বোচ্চ প্রতি (মিনিট)"
+
+msgid "Keep edit history for new notes"
+msgstr "নতুন নোটের সম্পাদনার ইতিহাস রাখুন"
+
+msgid ""
+"For every note that doesn't have its own setting. Each note can change it in"
+" its History."
+msgstr ""
+"যে নোটের নিজস্ব সেটিং নেই তার সবার জন্য। প্রতিটি নোট তার ইতিহাসে এটা বদলাতে "
+"পারে।"
+
+msgid ""
+"While you write, a copy of the note is kept before each round of edits."
+msgstr "লেখার সময় প্রতিবার সম্পাদনার আগে নোটের একটি কপি রাখা হয়।"
+
+msgid "Off: new notes start with history off. Each note can still turn it on."
+msgstr ""
+"বন্ধ থাকলে নতুন নোট ইতিহাস বন্ধ অবস্থায় শুরু হয়। প্রতিটি নোট তবুও চালু "
+"করতে পারে।"
+
+msgid "While writing"
+msgstr "লেখার সময়"
+
+msgid "Saved by you"
+msgstr "আপনি রেখেছেন"
+
+msgid "Before bringing back an older version"
+msgstr "পুরোনো সংস্করণ ফিরিয়ে আনার আগে"
+
+msgid "Changed in two places at once"
+msgstr "একসাথে দুই জায়গায় বদলানো"
+
+msgid "A linked note was renamed"
+msgstr "লিংক করা নোটের নাম বদলেছে"
+
+msgid "Type a number of months, 1 to 120."
+msgstr "মাসের সংখ্যা লিখুন, ১ থেকে ১২০।"
+
+msgid "Changed in: %%(s)s"
+msgstr "বদল: %%(s)s"
+
+msgid "Edit history — see what changed, bring back an older version"
+msgstr "সম্পাদনার ইতিহাস — কী বদলেছে দেখুন, পুরোনো সংস্করণ ফিরিয়ে আনুন"

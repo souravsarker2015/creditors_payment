@@ -300,6 +300,7 @@ class SettingsForm(forms.ModelForm):
                   "auto_start_breaks", "auto_start_focus", "sound_enabled", "sound", "break_sound", "timer_sound", "ring", "volume", "tick_sound",
                   "tick_style", "tick_everywhere", "sound_with_timers",
                   "notifications", "long_timer_hours", "idle_minutes", "timer_follows_status", "ask_left_off", "default_project", "day_start", "day_end", "cards_remind_at", "reading_goal", "reading_remind_at", "progress_email",
+                  "note_history_months", "note_history_minutes", "note_history_new",
                   "daily_email", "reminder_emails", "wip_limit", "invoice_from", "currency", "key_prefix", "branch_format")
         widgets = {"invoice_from": forms.Textarea(attrs={"rows": 4, "placeholder": _("Your name\nAddress\nPhone\nPay to: bank account or bKash number")}),
                    "volume": forms.NumberInput(attrs={"type": "range", "min": 0, "max": 100, "step": 5}),
@@ -310,7 +311,8 @@ class SettingsForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for name in ("day_start", "day_end", "currency", "key_prefix", "branch_format", "focus_goal", "task_goal", "ring", "tick_style", "reading_goal"):      # left empty: keep what it was
+        for name in ("day_start", "day_end", "currency", "key_prefix", "branch_format", "focus_goal", "task_goal", "ring", "tick_style", "reading_goal",
+                     "note_history_months", "note_history_minutes"):      # left empty: keep what it was
             self.fields[name].required = False
         self.fields["default_project"].queryset = Project.objects.filter(owner=self.instance.owner, is_archived=False)
         self.fields["work_day_list"].initial = list(self.instance.work_days)
@@ -322,7 +324,7 @@ class SettingsForm(forms.ModelForm):
         end = data.get("day_end") or self.instance.day_end
         data["day_start"], data["day_end"] = start, end
         data["currency"] = (data.get("currency") or "").strip() or self.instance.currency or "৳"
-        for name in ("focus_goal", "task_goal", "ring", "tick_style", "reading_goal"):      # 0 is "no goal" / "until stopped"; left out (an older page): as it was
+        for name in ("focus_goal", "task_goal", "ring", "tick_style", "reading_goal", "note_history_months", "note_history_minutes"):      # 0 is "no goal" / "until stopped"; left out (an older page): as it was
             if data.get(name) in (None, ""):
                 data[name] = getattr(self.instance, name)
         data["key_prefix"] = (data.get("key_prefix") or self.instance.key_prefix or "T").upper()
