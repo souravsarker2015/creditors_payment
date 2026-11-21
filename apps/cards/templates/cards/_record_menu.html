@@ -1,0 +1,15 @@
+{% load i18n %}{% comment %}The "Record" button: every kind of thing that can happen on a card, each with a line on when to use it.{% endcomment %}
+<div class="menu-wrap" x-data="{ open: false, left: false,
+     toggle() { this.open = !this.open; this.left = false;
+       if (this.open) this.$nextTick(() => { if (this.$refs.m.getBoundingClientRect().left < 8) this.left = true; }); } }"
+     @click.outside="open = false" @keydown.escape="open = false">
+  <button type="button" class="btn btn-primary" @click="toggle()" :aria-expanded="open" aria-haspopup="true">{% include "partials/icon.html" with name="plus" %}{% translate "Record" %}{% include "partials/icon.html" with name="chevron-down" %}</button>
+  <div class="menu cc-record-menu" :class="left && 'is-left'" x-ref="m" x-show="open" x-cloak x-transition.opacity.scale.95.duration.100ms role="menu">
+    <a href="{% url 'card_entry_new' 'cash' %}" class="menu-item" role="menuitem"><span class="ledger-icon" data-tone="accent">{% include "partials/icon.html" with name="phone" %}</span><span><b>{% translate "Take money to bKash / Nagad" %}</b><small>{% translate "Sent from a card to a wallet, with the card's fee" %}</small></span></a>
+    <a href="{% url 'card_entry_new' 'pay' %}" class="menu-item" role="menuitem"><span class="ledger-icon" data-tone="good">{% include "partials/icon.html" with name="check" %}</span><span><b>{% translate "Pay a bill" %}</b><small>{% translate "In full, the minimum or any part — from any wallet" %}</small></span></a>
+    <a href="{% url 'card_entry_new' 'spend' %}" class="menu-item" role="menuitem"><span class="ledger-icon" data-tone="warn">{% include "partials/icon.html" with name="cart" %}</span><span><b>{% translate "Bought with the card" %}</b><small>{% translate "Paid a shop, Daraz, a bill… with the card" %}</small></span></a>
+    <a href="{% url 'card_entry_new' 'charge' %}" class="menu-item" role="menuitem"><span class="ledger-icon" data-tone="critical">{% include "partials/icon.html" with name="percent" %}</span><span><b>{% translate "Bank charge" %}</b><small>{% translate "Interest, late fee, annual fee, VAT on the bill" %}</small></span></a>
+    <a href="{% url 'card_emi_new' %}" class="menu-item" role="menuitem"><span class="ledger-icon" data-tone="info">{% include "partials/icon.html" with name="repeat" %}</span><span><b>{% translate "Turn into EMI" %}</b><small>{% translate "The bank split a bill or a purchase into months" %}</small></span></a>
+    <a href="{% url 'card_entry_new' 'refund' %}" class="menu-item" role="menuitem"><span class="ledger-icon" data-tone="muted">{% include "partials/icon.html" with name="undo" %}</span><span><b>{% translate "Refund / cashback" %}</b><small>{% translate "Money put back on the card" %}</small></span></a>
+  </div>
+</div>

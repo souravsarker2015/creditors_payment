@@ -3,6 +3,8 @@ from decimal import Decimal
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
+from django.db.models import Q, Sum
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -10,6 +12,8 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
+from apps.core.ledger_views import _build_pagination_window
+from apps.core.nav import back_to
 from apps.core.templatetags.ui import money, signed_money
 from apps.trash.undo import delete_with_undo
 from apps.wallets.models import Wallet, WalletKind
@@ -34,6 +38,48 @@ def _texts():
 
 def _today():
     return timezone.localdate()
+
+
+def _steps(user):
+    """The first five things to do, each ticked by itself once it's done (the dashboard and the guide show them)."""
+    cards = Card.objects.filter(user=user)
+    mobile = Wallet.objects.filter(user=user, kind=WalletKind.MOBILE)
+    entries = CardEntry.objects.filter(card__user=user)
+    first_card = cards.filter(is_active=True).first()
+    first_mobile = mobile.filter(is_active=True).first()
+    steps = [
+        {"done": cards.exists(), "title": _("Add your credit card"),
+         "text": _("Its name and two dates from the card bill: the bill day and the pay-by day. Add each card you have — UCB, EBL, DBBL…"),
+         "url": reverse("card_create"), "button": _("Add a card")},
+        {"done": mobile.exists(), "title": _("Add your mobile banking"),
+         "text": _("bKash, Nagad, Rocket — whichever you use, with what each holds today."),
+         "url": reverse("card_mfs_add"), "button": _("Add mobile banking")},
+        {"done": MfsFees.objects.filter(wallet__user=user).exists(), "title": _("Set each one's charges"),
+         "text": _("What bKash, Nagad or Rocket charge to pay a card bill, or to send money to a bank. The app then picks the cheapest way to pay."),
+         "url": reverse("card_mfs_detail", args=[first_mobile.pk]) if first_mobile else reverse("card_mfs"), "button": _("Set charges")},
+        {"done": entries.filter(kind__in=[EntryKind.CASH, EntryKind.SPEND]).exists(), "title": _("Record money taken from a card"),
+         "text": _("Sent money from a card to bKash or Nagad? Record it with the card's fee (1%, 1.5%…). Bought something with the card? Record that too."),
+         "url": reverse("card_entry_new", args=["cash"]), "button": _("Take money to bKash / Nagad")},
+        {"done": entries.filter(kind=EntryKind.PAY).exists(), "title": _("Pay a bill"),
+         "text": _("When the bill comes, record what you paid and from which wallet — in full, the minimum, or any part."),
+         "url": reverse("card_entry_add", args=[first_card.pk, "pay"]) if first_card else reverse("card_entry_new", args=["pay"]), "button": _("Pay a bill")},
+    ]
+    nxt = next((s for s in steps if not s["done"]), None)
+    if nxt:
+        nxt["next"] = True
+    done = sum(1 for s in steps if s["done"])
+    return {"rows": steps, "done": done, "total": len(steps), "pct": done * 100 // len(steps), "all": done == len(steps)}
+
+
+def _next(request, fallback):
+    """Where to go after saving or deleting: the page it was opened from (?next=), else `fallback`."""
+    return back_to(request, request.POST.get("next") or request.GET.get("next"), fallback)
+
+
+@login_required
+def guide_view(request):
+    """How the credit card pages work, for someone who has never used them."""
+    return render(request, "cards/guide.html", {"steps": _steps(request.user), "has_cards": Card.objects.filter(user=request.user).exists()})
 
 
 def _card(request, pk):
@@ -78,6 +124,8 @@ def dashboard_view(request):
         "cost": sv.borrowing_cost(states, today),
         "tips": _tips(states, today),
         "recent": recent,
+        "steps": _steps(request.user),
+        "record_count": CardEntry.objects.filter(card__user=request.user).count(),
     })
 
 
@@ -141,10 +189,20 @@ def card_detail_view(request, pk):
     today = _today()
     st = sv.card_state(c, today)
     pay_amount = st.to_pay.left if st.to_pay else (st.billable if st.billable > 0 else ZERO)
+    rows = sv.ledger(st, today)[:300]
+    groups = {"cash": ("cash",), "spend": ("spend",), "pay": ("pay", "refund"), "charge": ("charge", "emi_fee", "adjust", "open"),
+              "emi": ("emi_move", "emi_inst", "emi_close")}
+    for e in rows:
+        e.group = next((g for g, kinds in groups.items() if e.kind in kinds), "charge")
+    tab = request.GET.get("tab", "")
     return render(request, "cards/detail.html", {
         "c": c, "st": st, "today": today,
+        "tab": tab if tab in ("overview", "bills", "records", "emis", "details") else "overview",
         "bills": list(reversed(st.bills))[:24],
-        "rows": sv.ledger(st, today)[:300],
+        "rows": rows,
+        "row_groups": [(g, label, sum(1 for e in rows if e.group == g)) for g, label in (
+            ("cash", _("Taken out")), ("spend", _("Bought")), ("pay", _("Paid")), ("charge", _("Charges")), ("emi", _("EMI")))],
+        "here": reverse("card_detail", args=[c.pk]) + "?tab=records",
         "routes": sv.pay_routes(request.user, pay_amount) if pay_amount > 0 else [],
         "pay_amount": pay_amount,
         "correct_form": CorrectForm(initial={"actual": format(st.owed, "f")}),
@@ -209,7 +267,8 @@ def _entry_page(request, form, kind, card, obj=None):
     return render(request, "cards/entry_form.html", {
         "form": form, "kind": kind, "obj": obj, "card": card,
         "title": _("Edit") + " · " + title if obj else title, "subtitle": subtitle, "submit_label": button,
-        "back": reverse("card_detail", args=[card.pk]) if card else reverse("card_dashboard"),
+        "back": _next(request, reverse("card_entry_detail", args=[obj.pk]) if obj else reverse("card_detail", args=[card.pk]) if card else reverse("card_dashboard")),
+        "next": back_to(request, request.POST.get("next") or request.GET.get("next"), ""),
         "guide": ({"rates": rates, "owed": owed, "card": str(form["card"].value() or ""), "wallet": str(form["wallet"].value() or "") if "wallet" in form.fields else "",
                              "route": form["route"].value() or "" if "route" in form.fields else "", "amount": str(initial_amount),
                              "rate": str(form["fee_rate"].value() or "") if "fee_rate" in form.fields else "",
@@ -268,13 +327,21 @@ def entry_add_view(request, kind, pk=None):
         initial["amount"] = request.GET["amount"]
     if request.GET.get("route"):
         initial["route"] = request.GET["route"]
+    copy = CardEntry.objects.filter(pk=request.GET.get("copy"), card__user=request.user, kind=kind).first() \
+        if request.GET.get("copy", "").isdigit() else None
+    if copy:                                     # "Record again": the same card, wallet, way and amount, dated today
+        card = copy.card if copy.card.is_active else card
+        initial.update({"card": card.pk if card else None, "wallet": copy.wallet_id, "route": copy.route, "amount": copy.amount,
+                        "fee_rate": copy.fee_rate, "charge_type": copy.charge_type, "note": copy.note})
     if kind == EntryKind.CASH and card:
         initial.setdefault("fee_rate", card.transfer_fee_rate)
     form = EntryForm(request.POST or None, user=request.user, kind=kind, initial=initial)
     if request.method == "POST" and form.is_valid():
         e = form.save()
         _after_save(request, e, True)
-        return redirect("card_detail", pk=e.card_id)
+        if "another" in request.POST:            # "Save and add another": the same form again, for the same card
+            return redirect(reverse("card_entry_add", args=[e.card_id, kind]))
+        return redirect(_next(request, reverse("card_detail", args=[e.card_id])))
     return _entry_page(request, form, kind, card)
 
 
@@ -292,7 +359,7 @@ def entry_edit_view(request, pk):
     if request.method == "POST" and form.is_valid():
         e = form.save()
         _after_save(request, e, False)
-        return redirect("card_detail", pk=e.card_id)
+        return redirect(_next(request, reverse("card_entry_detail", args=[e.pk])))
     return _entry_page(request, form, e.kind, e.card, obj=e)
 
 
@@ -303,7 +370,86 @@ def entry_delete_view(request, pk):
     card_id = e.card_id
     delete_with_undo(request, e, _("Deleted: %(what)s of %(amount)s.") % {"what": e.title, "amount": money(e.amount)},
                      label=f"{e.card} · {e.title} · {money(e.amount)}", back_url=reverse("card_detail", args=[card_id]))
-    return redirect("card_detail", pk=card_id)
+    back = _next(request, reverse("card_detail", args=[card_id]) + "?tab=records")
+    if f"/entry/{pk}/" in back:                  # not back to the page of the record that's gone
+        back = reverse("card_detail", args=[card_id]) + "?tab=records"
+    return redirect(back)
+
+
+@login_required
+def entry_detail_view(request, pk):
+    """Everything about one record: what it was, what it did to the card and the wallet, and which bill it's on."""
+    e = get_object_or_404(CardEntry.objects.select_related("card", "card__bank", "wallet"), pk=pk, card__user=request.user)
+    today = _today()
+    st = sv.card_state(e.card, today)
+    on_bill = next((b for b in st.bills if any(x.entry is not None and x.entry.pk == e.pk for x in b.events)), None)
+    paid_bill = None
+    if e.kind in (EntryKind.PAY, EntryKind.REFUND):
+        paid_bill = next((b for b in reversed(st.bills) if b.date < e.date), None)
+    after = next((x.balance for x in sv.ledger(st, today) if x.entry is not None and x.entry.pk == e.pk), None)
+    card_change = e.debt
+    wallet_change = None
+    if e.wallet_id and e.kind == EntryKind.CASH:
+        wallet_change = e.amount
+    elif e.wallet_id and e.kind == EntryKind.PAY:
+        wallet_change = -(e.amount + e.fee)
+    return render(request, "cards/entry_detail.html", {
+        "e": e, "c": e.card, "today": today, "on_bill": on_bill, "paid_bill": paid_bill,
+        "later": None if on_bill or paid_bill or e.date > today else (st.next_bill, st.next_due),
+        "future": e.date > today, "after": after,
+        "card_change": card_change, "wallet_change": wallet_change,
+        "can_edit": e.kind != EntryKind.ADJUST,
+        "copy_url": reverse("card_entry_new", args=[e.kind]) + f"?copy={e.pk}" if e.kind in sv_kinds() else "",
+        "back": _next(request, reverse("card_detail", args=[e.card_id]) + "?tab=records"),
+    })
+
+
+# ── Every record, on every card ──────────────────────────────────────────────
+
+RECORD_KINDS = (EntryKind.CASH, EntryKind.SPEND, EntryKind.PAY, EntryKind.CHARGE, EntryKind.REFUND, EntryKind.ADJUST)
+
+
+@login_required
+def records_view(request):
+    """Every record on every card, with filters: card, kind, wallet, dates and words in the note."""
+    user = request.user
+    qs = CardEntry.objects.filter(card__user=user).select_related("card", "wallet")
+    f = {k: (request.GET.get(k) or "").strip() for k in ("card", "kind", "wallet", "start", "end", "q")}
+    if f["card"].isdigit():
+        qs = qs.filter(card_id=f["card"])
+    if f["kind"] in RECORD_KINDS:
+        qs = qs.filter(kind=f["kind"])
+    if f["wallet"].isdigit():
+        qs = qs.filter(wallet_id=f["wallet"])
+    from django.utils.dateparse import parse_date
+    start, end = parse_date(f["start"]) if f["start"] else None, parse_date(f["end"]) if f["end"] else None
+    if start:
+        qs = qs.filter(date__gte=start)
+    if end:
+        qs = qs.filter(date__lte=end)
+    if f["q"]:
+        qs = qs.filter(Q(note__icontains=f["q"]) | Q(card__name__icontains=f["q"]) | Q(wallet__name__icontains=f["q"]))
+    sums = {k: v or ZERO for k, v in qs.order_by().values("kind").annotate(t=Sum("amount")).values_list("kind", "t")}
+    fees = qs.aggregate(t=Sum("fee"))["t"] or ZERO
+    charges = sums.get(EntryKind.CHARGE, ZERO)
+    page = Paginator(qs.order_by("-date", "-id"), 40).get_page(request.GET.get("page"))
+    query = request.GET.copy()
+    query.pop("page", None)
+    active = {k: v for k, v in f.items() if v}
+    wallet_ids = set(CardEntry.objects.filter(card__user=user, wallet__isnull=False).values_list("wallet_id", flat=True))
+    return render(request, "cards/records.html", {
+        "page_obj": page, "rows": page.object_list, "pagination_window": _build_pagination_window(page),
+        "base_query_string": query.urlencode(), "f": f, "filtered": bool(active),
+        "count": page.paginator.count,
+        "totals": {"taken": sums.get(EntryKind.CASH, ZERO), "spent": sums.get(EntryKind.SPEND, ZERO),
+                   "paid": sums.get(EntryKind.PAY, ZERO) + sums.get(EntryKind.REFUND, ZERO), "costs": fees + charges},
+        "cards": Card.objects.filter(user=user),
+        "wallets": Wallet.objects.filter(Q(pk__in=wallet_ids) | Q(user=user, kind=WalletKind.MOBILE), user=user).order_by("name"),
+        "kinds": [(k, EntryKind(k).label) for k in RECORD_KINDS],
+        "here": request.get_full_path(),
+        "has_any": CardEntry.objects.filter(card__user=user).exists(),
+        "active_cards": Card.objects.filter(user=user, is_active=True).exists(),
+    })
 
 
 # ── EMI ──────────────────────────────────────────────────────────────────────
@@ -329,13 +475,25 @@ def emi_form_view(request, pk=None, emi=None):
         st = sv.emi_state(p, _today())
         messages.success(request, _("EMI saved: %(each)s a month for %(n)s months, from the bill of %(first)s.") % {
             "each": money(st.each), "n": p.months, "first": st.rows[0].date.strftime("%d %b %Y")})
-        return redirect("card_detail", pk=p.card_id)
+        return redirect("card_emi_detail", emi=p.pk)
     return render(request, "cards/emi_form.html", {
         "form": form, "obj": obj, "card": card,
-        "state": sv.emi_state(obj, _today()) if obj else None,
-        "payoff": PayOffForm() if obj and not obj.closed_on else None,
         "title": _("Edit EMI") if obj else _("Turn into EMI"),
-        "back": reverse("card_detail", args=[card.pk]) if card else reverse("card_dashboard"),
+        "back": reverse("card_emi_detail", args=[obj.pk]) if obj else reverse("card_detail", args=[card.pk]) if card else reverse("card_dashboard"),
+    })
+
+
+@login_required
+def emi_detail_view(request, emi):
+    """One EMI: each month's installment, what's paid and left, and paying it off early."""
+    p = get_object_or_404(EmiPlan.objects.select_related("card"), pk=emi, card__user=request.user)
+    st = sv.emi_state(p, _today())
+    return render(request, "cards/emi_detail.html", {
+        "p": p, "c": p.card, "st": st,
+        "payoff": PayOffForm() if not p.closed_on else None,
+        "paid": sum((r.total for r in st.billed), ZERO),
+        "total": sum((r.total for r in st.rows), ZERO),
+        "back": _next(request, reverse("card_detail", args=[p.card_id]) + "?tab=emis"),
     })
 
 
@@ -347,7 +505,7 @@ def emi_payoff_view(request, emi):
         p.closed_on = None
         p.save(update_fields=["closed_on"])
         messages.success(request, _("The EMI runs again."))
-        return redirect("card_detail", pk=p.card_id)
+        return redirect("card_emi_detail", emi=p.pk)
     form = PayOffForm(request.POST)
     if form.is_valid():
         p.closed_on = form.cleaned_data["closed_on"]
@@ -355,7 +513,7 @@ def emi_payoff_view(request, emi):
         st = sv.emi_state(p, _today())
         rest = p.amount - sum((r.principal for r in st.billed), ZERO)
         messages.success(request, _("EMI paid off early. The %(rest)s left goes on the next bill — pay it with the bill.") % {"rest": money(rest)})
-    return redirect("card_detail", pk=p.card_id)
+    return redirect("card_emi_detail", emi=p.pk)
 
 
 @login_required
@@ -365,7 +523,10 @@ def emi_delete_view(request, emi):
     card_id = p.card_id
     delete_with_undo(request, p, _("EMI deleted: %(title)s.") % {"title": p.title}, label=f"{p.card} · EMI · {p.title}",
                      back_url=reverse("card_detail", args=[card_id]))
-    return redirect("card_detail", pk=card_id)
+    back = _next(request, reverse("card_detail", args=[card_id]) + "?tab=emis")
+    if f"/emi/{emi}/" in back:
+        back = reverse("card_detail", args=[card_id]) + "?tab=emis"
+    return redirect(back)
 
 
 # ── Mobile banking ───────────────────────────────────────────────────────────
@@ -393,7 +554,7 @@ def mfs_detail_view(request, wallet):
         f.wallet = w
         f.save()
         messages.success(request, _("Charges saved for %(name)s.") % {"name": w.name})
-        return redirect(request.GET.get("next") or reverse("card_mfs_detail", args=[w.pk]))
+        return redirect(_next(request, reverse("card_mfs_detail", args=[w.pk])))
     month = today.replace(day=1)
     return render(request, "cards/mfs_detail.html", {
         "w": w, "row": row, "form": form, "today": today,
@@ -422,7 +583,51 @@ def mfs_add_view(request):
             f.save()
         messages.success(request, _("Added %(name)s.") % {"name": w.name})
         return redirect("card_mfs_detail", wallet=w.pk)
-    return render(request, "cards/mfs_add.html", {"form": form, "fees": fees, "back": reverse("card_mfs")})
+    return render(request, "cards/mfs_add.html", {"form": form, "fees": fees, "back": reverse("card_mfs"),
+                                                  "title": _("Add mobile banking")})
+
+
+@login_required
+def mfs_edit_view(request, wallet):
+    """Change a mobile banking wallet — its name, number, what it held at the start — and its charges, in one form."""
+    from apps.wallets.forms import WalletForm
+
+    w = get_object_or_404(Wallet, pk=wallet, user=request.user)
+    form = WalletForm(request.POST or None, instance=w, user=request.user)
+    fees = MfsFeesForm(request.POST or None, instance=sv.fees_for(w), prefix="fees")
+    if request.method == "POST" and form.is_valid() and fees.is_valid():
+        with transaction.atomic():
+            w = form.save()
+            if w.is_default:
+                Wallet.objects.filter(user=request.user, is_default=True).exclude(pk=w.pk).update(is_default=False)
+            f = fees.save(commit=False)
+            f.wallet = w
+            f.save()
+        messages.success(request, _("Saved: %(name)s.") % {"name": w.name})
+        return redirect(_next(request, reverse("card_mfs_detail", args=[w.pk])))
+    return render(request, "cards/mfs_add.html", {"form": form, "fees": fees, "obj": w, "title": _("Edit %(name)s") % {"name": w.name},
+                                                  "back": _next(request, reverse("card_mfs_detail", args=[w.pk]))})
+
+
+@login_required
+@require_POST
+def mfs_toggle_view(request, wallet):
+    w = get_object_or_404(Wallet, pk=wallet, user=request.user)
+    w.is_active = not w.is_active
+    if not w.is_active:
+        w.is_default = False
+    w.save(update_fields=["is_active", "is_default"])
+    messages.success(request, (_("%(name)s is in use again.") if w.is_active else _("%(name)s is no longer offered for new entries.")) % {"name": w.name})
+    return redirect(_next(request, reverse("card_mfs_detail", args=[w.pk])))
+
+
+@login_required
+@require_POST
+def mfs_delete_view(request, wallet):
+    w = get_object_or_404(Wallet, pk=wallet, user=request.user)
+    delete_with_undo(request, w, _("Deleted: %(name)s. Card records that used it are kept, without a wallet.") % {"name": w.name},
+                     label=w.name, back_url=reverse("card_mfs_detail", args=[w.pk]))
+    return redirect("card_mfs")
 
 
 # ── Your lists: banks and card types ────────────────────────────────────────
@@ -466,7 +671,7 @@ def lists_view(request):
 
     return render(request, "cards/lists.html", {
         "lists": [
-            ("bank", _("Banks"), _("e.g. UCB, EBL, DBBL, City Bank"), sv.CardBank.objects.filter(user=request.user).annotate(n=Count("cards"))),
-            ("network", _("Card types"), _("e.g. Visa, Mastercard, Amex"), sv.CardNetwork.objects.filter(user=request.user).annotate(n=Count("cards"))),
+            ("bank", _("Banks"), _("e.g. UCB, EBL, DBBL, City Bank"), sv.CardBank.objects.filter(user=request.user).annotate(n=Count("cards")).prefetch_related("cards")),
+            ("network", _("Card types"), _("e.g. Visa, Mastercard, Amex"), sv.CardNetwork.objects.filter(user=request.user).annotate(n=Count("cards")).prefetch_related("cards")),
         ],
     })

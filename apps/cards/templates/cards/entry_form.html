@@ -53,20 +53,23 @@
       </div>
       {% endif %}
     </div>
+    {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
     <div class="card-footer form-actions">
       <a href="{{ back }}" class="btn btn-ghost btn-lg">{% translate "Cancel" %}</a>
+      {% if not obj %}<button type="submit" name="another" value="1" class="btn btn-secondary btn-lg">{% include "partials/icon.html" with name="plus" %}{% translate "Save and add another" %}</button>{% endif %}
       <button type="submit" class="btn btn-primary btn-lg">{% include "partials/icon.html" with name="check" %}{{ submit_label }}</button>
     </div>
   </form>
 
-  {% if obj %}
-  <div class="mt-4">
-    <form method="post" action="{% url 'card_entry_delete' obj.pk %}" data-confirm="{% translate 'Delete this entry?' %}" data-confirm-after="back">
+  <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+    <a href="{% url 'card_guide' %}#what-to-tap" class="link text-sm">{% include "partials/icon.html" with name="info" %}{% translate "Not sure this is the right one? See what to record when" %}</a>
+    {% if obj %}
+    <form method="post" action="{% url 'card_entry_delete' obj.pk %}" data-confirm="{% translate "Delete this record? What you owe and the wallet's balance change back. You can undo it from Recently deleted." %}" data-confirm-after="back">
       {% csrf_token %}
-      <button type="submit" class="btn btn-ghost is-danger">{% include "partials/icon.html" with name="trash" %}{% translate "Delete this entry" %}</button>
+      <button type="submit" class="btn btn-ghost is-danger">{% include "partials/icon.html" with name="trash" %}{% translate "Delete this record" %}</button>
     </form>
+    {% endif %}
   </div>
-  {% endif %}
 </div>
 <script>
 document.addEventListener("alpine:init", function () {

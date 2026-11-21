@@ -26,7 +26,7 @@
         <li class="ledger-row cc-list-row{% if not r.is_active %} is-off{% endif %}" x-data="{ edit: false }">
           <div class="ledger-main" x-show="!edit">
             <p class="ledger-title">{{ r.name }}{% if not r.is_active %} <span class="badge" data-tone="muted">{% translate "Hidden" %}</span>{% endif %}</p>
-            <p class="ledger-meta">{% blocktranslate count n=r.n %}{{ n }} card{% plural %}{{ n }} cards{% endblocktranslate %}</p>
+            <p class="ledger-meta">{% if r.n %}{% for c in r.cards.all %}<a href="{% url 'card_detail' c.pk %}" class="link">{{ c.name }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}{% else %}{% translate "No card uses it yet" %}{% endif %}</p>
           </div>
           <form method="post" class="ledger-main flex gap-2" x-show="edit" x-cloak>
             {% csrf_token %}<input type="hidden" name="list" value="{{ key }}"><input type="hidden" name="action" value="rename"><input type="hidden" name="pk" value="{{ r.pk }}">
@@ -37,7 +37,7 @@
             <button type="button" class="btn btn-ghost btn-sm" @click="edit = !edit" :aria-pressed="edit.toString()" aria-label="{% translate 'Rename' %}" data-tip="{% translate 'Rename' %}">{% include "partials/icon.html" with name="edit" %}</button>
             <form method="post">{% csrf_token %}<input type="hidden" name="list" value="{{ key }}"><input type="hidden" name="action" value="toggle"><input type="hidden" name="pk" value="{{ r.pk }}">
               <button type="submit" class="btn btn-ghost btn-sm" aria-label="{% if r.is_active %}{% translate 'Hide' %}{% else %}{% translate 'Show' %}{% endif %}" data-tip="{% if r.is_active %}{% translate 'Hide from the list' %}{% else %}{% translate 'Offer it again' %}{% endif %}">{% if r.is_active %}{% include "partials/icon.html" with name="pause" %}{% else %}{% include "partials/icon.html" with name="play" %}{% endif %}</button></form>
-            {% if not r.n %}<form method="post" data-confirm="{% blocktranslate with name=r.name %}Delete {{ name }}?{% endblocktranslate %}">{% csrf_token %}<input type="hidden" name="list" value="{{ key }}"><input type="hidden" name="action" value="delete"><input type="hidden" name="pk" value="{{ r.pk }}">
+            {% if not r.n %}<form method="post" data-confirm-after="gone" data-confirm="{% blocktranslate with name=r.name %}Delete {{ name }}?{% endblocktranslate %}">{% csrf_token %}<input type="hidden" name="list" value="{{ key }}"><input type="hidden" name="action" value="delete"><input type="hidden" name="pk" value="{{ r.pk }}">
               <button type="submit" class="btn btn-ghost btn-sm is-danger" aria-label="{% translate 'Delete' %}" data-tip="{% translate 'Delete' %}">{% include "partials/icon.html" with name="trash" %}</button></form>{% endif %}
           </div>
         </li>

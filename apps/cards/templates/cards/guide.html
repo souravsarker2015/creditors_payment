@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% translate "Credit card guide" %} | FinTrack{% endblock %}
+{% block content %}
+<div class="page-medium stack cc-guide">
+  <header class="page-header !mb-0">
+    <div>
+      <a href="{% url 'card_dashboard' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Credit cards" %}</a>
+      <h1 class="page-title">{% translate "How to use credit cards here" %}</h1>
+      <p class="page-subtitle">{% translate "A 3-minute read. You record what happens; the app works out every bill, due date, minimum and fee for you." %}</p>
+    </div>
+  </header>
+
+  <nav class="chip-row" aria-label="{% translate 'On this page' %}">
+    <a href="#start" class="chip"><span>{% translate "First steps" %}</span></a>
+    <a href="#flow" class="chip"><span>{% translate "How money moves" %}</span></a>
+    <a href="#what-to-tap" class="chip"><span>{% translate "What to tap" %}</span></a>
+    <a href="#example" class="chip"><span>{% translate "An example" %}</span></a>
+    <a href="#pay" class="chip"><span>{% translate "3 ways to pay" %}</span></a>
+    <a href="#words" class="chip"><span>{% translate "The words" %}</span></a>
+    <a href="#mistakes" class="chip"><span>{% translate "Fixing mistakes" %}</span></a>
+  </nav>
+
+  <div id="start">{% include "cards/_steps.html" with always=True %}</div>
+
+  <section class="card" id="flow">
+    <div class="card-header"><div><h2 class="card-title">{% translate "How money moves" %}</h2><p class="card-subtitle">{% translate "The whole idea in four steps." %}</p></div></div>
+    <ol class="cc-flow card-body">
+      <li class="cc-flow-step"><span class="ledger-icon" data-tone="info">{% include "partials/icon.html" with name="cards" %}</span>
+        <b>{% translate "1. Take money from the card" %}</b><small>{% translate "To bKash, Nagad or Rocket. The card's bank may charge 1%, 1.5%, 2%… The card now owes the money plus that fee." %}</small></li>
+      <li class="cc-flow-step"><span class="ledger-icon" data-tone="accent">{% include "partials/icon.html" with name="phone" %}</span>
+        <b>{% translate "2. Use it" %}</b><small>{% translate "The money is in your wallet; its balance goes up by itself. Spend it however you need." %}</small></li>
+      <li class="cc-flow-step"><span class="ledger-icon" data-tone="warn">{% include "partials/icon.html" with name="calendar" %}</span>
+        <b>{% translate "3. The bill comes" %}</b><small>{% translate "On the bill day everything since the last bill becomes one bill, with a pay-by day about 20 days later." %}</small></li>
+      <li class="cc-flow-step"><span class="ledger-icon" data-tone="good">{% include "partials/icon.html" with name="check" %}</span>
+        <b>{% translate "4. Pay it back" %}</b><small>{% translate "Pay the whole bill by the pay-by day and there's no interest. Can't? Pay at least the minimum, or turn it into EMI." %}</small></li>
+    </ol>
+  </section>
+
+  <section class="card" id="what-to-tap">
+    <div class="card-header"><div><h2 class="card-title">{% translate "What happened? What to tap" %}</h2><p class="card-subtitle">{% translate "Every button is under “Record” on the Credit cards page, and on each card's page." %}</p></div></div>
+    <ul class="ledger">
+      {% url 'card_entry_new' 'cash' as u_cash %}{% url 'card_entry_new' 'spend' as u_spend %}{% url 'card_entry_new' 'pay' as u_pay %}{% url 'card_emi_new' as u_emi %}{% url 'card_entry_new' 'charge' as u_charge %}{% url 'card_entry_new' 'refund' as u_refund %}
+      <li class="ledger-row"><span class="ledger-icon" data-tone="accent">{% include "partials/icon.html" with name="phone" %}</span><div class="ledger-main"><p class="ledger-title">{% translate "I sent money from my card to bKash, Nagad or Rocket" %}</p><p class="ledger-meta">{% translate "Tap" %} <a href="{{ u_cash }}" class="link">{% translate "Take money to bKash / Nagad" %}</a> — {% translate "the card's fee is filled in for you." %}</p></div></li>
+      <li class="ledger-row"><span class="ledger-icon" data-tone="warn">{% include "partials/icon.html" with name="cart" %}</span><div class="ledger-main"><p class="ledger-title">{% translate "I bought something with the card" %}</p><p class="ledger-meta">{% translate "Tap" %} <a href="{{ u_spend }}" class="link">{% translate "Bought with the card" %}</a></p></div></li>
+      <li class="ledger-row"><span class="ledger-icon" data-tone="good">{% include "partials/icon.html" with name="check" %}</span><div class="ledger-main"><p class="ledger-title">{% translate "I paid the card bill — all of it, the minimum, or a part" %}</p><p class="ledger-meta">{% translate "Tap" %} <a href="{{ u_pay }}" class="link">{% translate "Pay a bill" %}</a> — {% translate "pick the wallet it came from; its fee comes out of that wallet." %}</p></div></li>
+      <li class="ledger-row"><span class="ledger-icon" data-tone="info">{% include "partials/icon.html" with name="repeat" %}</span><div class="ledger-main"><p class="ledger-title">{% translate "The bank split a bill or a purchase into monthly payments" %}</p><p class="ledger-meta">{% translate "Tap" %} <a href="{{ u_emi }}" class="link">{% translate "Turn into EMI" %}</a> — {% translate "one installment then comes on each bill." %}</p></div></li>
+      <li class="ledger-row"><span class="ledger-icon" data-tone="critical">{% include "partials/icon.html" with name="percent" %}</span><div class="ledger-main"><p class="ledger-title">{% translate "The bill shows interest, a late fee, the annual fee or VAT" %}</p><p class="ledger-meta">{% translate "Tap" %} <a href="{{ u_charge }}" class="link">{% translate "Bank charge" %}</a></p></div></li>
+      <li class="ledger-row"><span class="ledger-icon" data-tone="muted">{% include "partials/icon.html" with name="undo" %}</span><div class="ledger-main"><p class="ledger-title">{% translate "A shop gave money back, or I got cashback" %}</p><p class="ledger-meta">{% translate "Tap" %} <a href="{{ u_refund }}" class="link">{% translate "Refund / cashback" %}</a></p></div></li>
+      <li class="ledger-row"><span class="ledger-icon" data-tone="muted">{% include "partials/icon.html" with name="scale" %}</span><div class="ledger-main"><p class="ledger-title">{% translate "The bank's app shows a different amount owed" %}</p><p class="ledger-meta">{% translate "Open the card → Details → “Match the bank”, and type what the bank says." %}</p></div></li>
+    </ul>
+  </section>
+
+  <section class="card" id="example">
+    <div class="card-header"><div><h2 class="card-title">{% translate "An example" %}</h2><p class="card-subtitle">{% translate "A UCB card: bill on the 5th, pay by the 25th, 1% fee to send money to bKash." %}</p></div></div>
+    <ol class="cc-example card-body">
+      <li><span class="cc-example-date">{% translate "10 Oct" %}</span><div><b>{% translate "You take ৳20,000 to bKash." %}</b><p>{% translate "bKash goes up by ৳20,000. The card owes ৳20,200 — the money plus the ৳200 fee." %}</p></div></li>
+      <li><span class="cc-example-date">{% translate "5 Nov" %}</span><div><b>{% translate "The bill is made: ৳20,200." %}</b><p>{% translate "Pay by 25 Nov. The minimum is ৳1,010 (5%). The app shows it under “Bills to pay”." %}</p></div></li>
+      <li><span class="cc-example-date">{% translate "20 Nov" %}</span><div><b>{% translate "You pay ৳20,200 from bKash (Pay Bill, no fee)." %}</b><p>{% translate "The bill shows “Paid in full”. No interest. The whole cost of borrowing for 41 days: ৳200." %}</p></div></li>
+    </ol>
+    <div class="card-body !pt-0">
+      <div class="callout" data-tone="warn">{% include "partials/icon.html" with name="alert" %}
+        <p class="callout-text !mt-0">{% translate "Had you paid only the minimum, the other ৳19,190 would cost about ৳400 a month in interest (at 25% a year) until it's paid. The app warns you of this on the bill." %}</p></div>
+    </div>
+  </section>
+
+  <section class="card" id="pay">
+    <div class="card-header"><div><h2 class="card-title">{% translate "3 ways to pay a bill — and their fees" %}</h2><p class="card-subtitle">{% translate "Set each mobile banking's charges once; the card's page then lists the cheapest way first." %}</p></div>
+      <a href="{% url 'card_mfs' %}" class="btn btn-ghost btn-sm">{% translate "Set charges" %}{% include "partials/icon.html" with name="arrow-right" %}</a></div>
+    <ul class="ledger">
+      <li class="ledger-row"><span class="ledger-icon" data-tone="good">{% include "partials/icon.html" with name="phone" %}</span><div class="ledger-main"><p class="ledger-title">{% translate "Bill pay in bKash / Nagad / Rocket" %}</p><p class="ledger-meta">{% translate "Pay Bill → Credit card in the wallet's app. Often free or a small %. Not every wallet can do it — say so in its charges." %}</p></div></li>
+      <li class="ledger-row"><span class="ledger-icon" data-tone="warn">{% include "partials/icon.html" with name="bank" %}</span><div class="ledger-main"><p class="ledger-title">{% translate "Mobile banking → bank or debit card → card" %}</p><p class="ledger-meta">{% translate "Send the money to your bank account or debit card first (that has a fee), then pay the card from the bank." %}</p></div></li>
+      <li class="ledger-row"><span class="ledger-icon" data-tone="info">{% include "partials/icon.html" with name="wallet" %}</span><div class="ledger-main"><p class="ledger-title">{% translate "Straight from the bank or cash" %}</p><p class="ledger-meta">{% translate "From your bank app or at the counter. Usually free." %}</p></div></li>
+    </ul>
+  </section>
+
+  <section class="card" id="words">
+    <div class="card-header"><div><h2 class="card-title">{% translate "The words, in plain language" %}</h2></div></div>
+    <dl class="cc-words card-body">
+      <div><dt>{% translate "Bill day (statement day)" %}</dt><dd>{% translate "The day each month the bank adds everything up into a bill. Printed on your card bill." %}</dd></div>
+      <div><dt>{% translate "Pay-by day (due date)" %}</dt><dd>{% translate "The last day to pay that bill. Pay all of it by then and you pay no interest." %}</dd></div>
+      <div><dt>{% translate "The bill" %}</dt><dd>{% translate "Everything new since the last bill, plus whatever was left unpaid from it." %}</dd></div>
+      <div><dt>{% translate "Minimum payment" %}</dt><dd>{% translate "The least you must pay by the pay-by day to avoid a late fee — usually 5% of the bill, at least ৳500. Interest still runs on the rest." %}</dd></div>
+      <div><dt>{% translate "Interest" %}</dt><dd>{% translate "What the bank charges, about 20–27% a year, when a bill isn't paid in full." %}</dd></div>
+      <div><dt>{% translate "Card fee (to bKash / Nagad)" %}</dt><dd>{% translate "What the card's bank takes when you send money from the card to a wallet: 0%, 1%, 1.5%, 2%… It is added to what you owe on the card." %}</dd></div>
+      <div><dt>{% translate "Mobile banking fee" %}</dt><dd>{% translate "What bKash, Nagad or Rocket take when you pay a card bill from them, or send money to a bank. It comes out of the wallet." %}</dd></div>
+      <div><dt>{% translate "EMI" %}</dt><dd>{% translate "A bill or a purchase split into equal monthly payments, one on each bill. Often 0% for a few months; sometimes with interest or a fee." %}</dd></div>
+      <div><dt>{% translate "Limit · Available" %}</dt><dd>{% translate "The most the card lets you owe, and how much of it is left. Keeping under 30% used looks better to banks." %}</dd></div>
+      <div><dt>{% translate "Match the bank" %}</dt><dd>{% translate "If the app's amount differs from the bank's, type the bank's number on the card's page. The difference is saved as a correction." %}</dd></div>
+    </dl>
+  </section>
+
+  <section class="card" id="mistakes">
+    <div class="card-header"><div><h2 class="card-title">{% translate "Fixing mistakes, and staying safe" %}</h2></div></div>
+    <ul class="cc-tips card-body">
+      <li>{% include "partials/icon.html" with name="edit" %}<span>{% translate "Tap any record to see its details. Use ⋯ (or the buttons on its page) to edit it, record it again, or delete it." %}</span></li>
+      <li>{% include "partials/icon.html" with name="undo" %}<span>{% translate "Deleted something by mistake? Tap Undo on the message, or bring it back from Recently deleted within 30 days." %}</span></li>
+      <li>{% include "partials/icon.html" with name="pause" %}<span>{% translate "Closed a card? “Stop using” it instead of deleting — its history and totals stay." %}</span></li>
+      <li>{% include "partials/icon.html" with name="list" %}<span>{% translate "Banks, card types and mobile banking are your own lists: add, rename, hide or delete them any time." %}</span></li>
+      <li>{% include "partials/icon.html" with name="lock" %}<span>{% translate "Never type the full card number, the CVV or the PIN. The app doesn't need them — at most the last 4 digits, and only if you want." %}</span></li>
+    </ul>
+  </section>
+
+  <div class="flex flex-wrap gap-2">
+    <a href="{% url 'card_dashboard' %}" class="btn btn-primary">{% include "partials/icon.html" with name="cards" %}{% translate "Go to my cards" %}</a>
+    {% if not has_cards %}<a href="{% url 'card_create' %}" class="btn btn-secondary">{% include "partials/icon.html" with name="plus" %}{% translate "Add a card" %}</a>{% endif %}
+  </div>
+</div>
+{% endblock %}

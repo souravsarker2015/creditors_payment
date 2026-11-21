@@ -36137,3 +36137,696 @@ msgstr "লম্বা লেখা: প্রায় %(n)s মিনিট"
 
 msgid "Read it in the Reader, a short part at a time — it keeps your place."
 msgstr "রিডারে পড়ুন, ছোট ছোট অংশে — কোথায় ছিলেন তা মনে রাখে।"
+
+msgid "Add your credit card"
+msgstr "আপনার ক্রেডিট কার্ড যোগ করুন"
+
+msgid ""
+"Its name and two dates from the card bill: the bill day and the pay-by day. "
+"Add each card you have — UCB, EBL, DBBL…"
+msgstr ""
+"এর নাম আর কার্ডের বিল থেকে দুটি তারিখ: বিলের দিন আর শোধের শেষ দিন। আপনার "
+"প্রতিটি কার্ড যোগ করুন — UCB, EBL, DBBL…"
+
+msgid "Add your mobile banking"
+msgstr "আপনার মোবাইল ব্যাংকিং যোগ করুন"
+
+msgid "bKash, Nagad, Rocket — whichever you use, with what each holds today."
+msgstr "বিকাশ, নগদ, রকেট — যেটা ব্যবহার করেন, আজ প্রতিটিতে কত আছে সহ।"
+
+msgid "Set each one's charges"
+msgstr "প্রতিটির চার্জ ঠিক করুন"
+
+msgid ""
+"What bKash, Nagad or Rocket charge to pay a card bill, or to send money to a"
+" bank. The app then picks the cheapest way to pay."
+msgstr ""
+"কার্ডের বিল দিতে, বা ব্যাংকে টাকা পাঠাতে বিকাশ, নগদ বা রকেট কত চার্জ নেয়। "
+"তারপর অ্যাপ সবচেয়ে কম খরচের উপায় বেছে দেয়।"
+
+msgid "Record money taken from a card"
+msgstr "কার্ড থেকে তোলা টাকা লিখুন"
+
+msgid ""
+"Sent money from a card to bKash or Nagad? Record it with the card's fee (1%,"
+" 1.5%…). Bought something with the card? Record that too."
+msgstr ""
+"কার্ড থেকে বিকাশ বা নগদে টাকা পাঠিয়েছেন? কার্ডের ফি (১%, ১.৫%…) সহ লিখুন। "
+"কার্ডে কিছু কিনেছেন? সেটাও লিখুন।"
+
+msgid ""
+"When the bill comes, record what you paid and from which wallet — in full, "
+"the minimum, or any part."
+msgstr ""
+"বিল এলে কত দিলেন আর কোন ওয়ালেট থেকে দিলেন লিখুন — পুরোটা, ন্যূনতম, বা "
+"যেকোনো অংশ।"
+
+msgid ""
+"Deleted: %(name)s. Card records that used it are kept, without a wallet."
+msgstr ""
+"মুছে ফেলা হয়েছে: %(name)s। যে কার্ড-রেকর্ডে এটি ছিল সেগুলো থাকবে, ওয়ালেট "
+"ছাড়া।"
+
+msgid "Charges"
+msgstr "চার্জ"
+
+msgid "EMI"
+msgstr "ইএমআই"
+
+msgid "Limit and fee"
+msgstr "লিমিট ও ফি"
+
+msgid "What you owe today"
+msgstr "আজ কত দেনা"
+
+msgid ""
+"What you already owe on the card today (0 for a new card). Everything you "
+"record from then on adds to it or takes it down."
+msgstr ""
+"আজ কার্ডে আগে থেকে কত দেনা আছে (নতুন কার্ড হলে ০)। এরপর যা লিখবেন তা এর সাথে"
+" যোগ হবে বা কমবে।"
+
+msgid "Look and number"
+msgstr "চেহারা ও নম্বর"
+
+msgid "For the picture of the card and a reminder before it runs out."
+msgstr "কার্ডের ছবির জন্য, আর মেয়াদ শেষ হওয়ার আগে মনে করিয়ে দিতে।"
+
+msgid "Interest and other fees"
+msgstr "সুদ ও অন্যান্য ফি"
+
+msgid ""
+"For the minimum payment, the interest warning and the annual fee reminder. "
+"Left empty, the usual values are used."
+msgstr ""
+"ন্যূনতম পেমেন্ট, সুদের সতর্কতা আর বার্ষিক ফির রিমাইন্ডারের জন্য। খালি রাখলে "
+"সাধারণ মানগুলো ধরা হবে।"
+
+msgid "You still owe %(amount)s on this card."
+msgstr "এই কার্ডে এখনো %(amount)s দেনা আছে।"
+
+msgid "Guide"
+msgstr "গাইড"
+
+msgid "No card in use"
+msgstr "কোনো কার্ড চালু নেই"
+
+msgid ""
+"Your cards are all stopped and paid off. Add a new one, or open an old one "
+"to use it again."
+msgstr ""
+"আপনার সব কার্ড বন্ধ আর শোধ হয়ে গেছে। নতুন একটি যোগ করুন, বা পুরোনো একটি "
+"খুলে আবার চালু করুন।"
+
+msgid "Tap one for its details; ⋯ to edit or delete it."
+msgstr "বিস্তারিত দেখতে একটিতে চাপুন; সম্পাদনা বা মুছতে ⋯।"
+
+msgid "All %(n)s record"
+msgid_plural "All %(n)s records"
+msgstr[0] "সব %(n)s টি রেকর্ড"
+msgstr[1] "সব %(n)s টি রেকর্ড"
+
+msgid "New here, or not sure what to tap?"
+msgstr "নতুন, বা কোনটায় চাপবেন বুঝতে পারছেন না?"
+
+msgid ""
+"The guide explains every word and shows what to record for each thing that "
+"happens — with an example."
+msgstr "গাইডে প্রতিটি শব্দের মানে, আর কী ঘটলে কী লিখবেন — উদাহরণসহ বলা আছে।"
+
+msgid "This card"
+msgstr "এই কার্ড"
+
+msgid ""
+"Tap one for its details; ⋯ to edit, record again or delete. The small number"
+" is what you owed after it."
+msgstr ""
+"বিস্তারিত দেখতে একটিতে চাপুন; সম্পাদনা, আবার লেখা বা মুছতে ⋯। ছোট সংখ্যাটি "
+"এরপর কত দেনা ছিল।"
+
+msgid ""
+"Delete this record? What you owe and the wallet's balance change back. You "
+"can undo it from Recently deleted."
+msgstr ""
+"এই রেকর্ড মুছবেন? দেনা আর ওয়ালেটের ব্যালান্স আগের মতো হয়ে যাবে। সম্প্রতি "
+"মুছে ফেলা থেকে ফিরিয়ে আনতে পারবেন।"
+
+msgid ""
+"No EMI on this card. A big bill you can't pay at once? Ask the bank to turn "
+"it into EMI, then add it here."
+msgstr ""
+"এই কার্ডে কোনো ইএমআই নেই। বড় বিল একবারে দিতে পারছেন না? ব্যাংককে ইএমআই করতে"
+" বলুন, তারপর এখানে যোগ করুন।"
+
+msgid "Stop using or delete"
+msgstr "বন্ধ করুন বা মুছুন"
+
+msgid ""
+"Closed the card? Stop using it — its history and totals stay. Delete only a "
+"card added by mistake."
+msgstr ""
+"কার্ড বন্ধ করেছেন? ব্যবহার বন্ধ করুন — এর ইতিহাস আর হিসাব থাকবে। ভুল করে যোগ"
+" করা কার্ডই শুধু মুছুন।"
+
+msgid "EMI on"
+msgstr "ইএমআই:"
+
+msgid "started %(d)s"
+msgstr "শুরু %(d)s"
+
+msgid "%(n)s of %(m)s installments on a bill so far"
+msgstr "%(m)s টি কিস্তির %(n)s টি এ পর্যন্ত বিলে এসেছে"
+
+msgid "Interest in all"
+msgstr "মোট সুদ"
+
+msgid "Still to come"
+msgstr "এখনো বাকি"
+
+msgid "One on each bill. Ticked ones are already on a bill."
+msgstr "প্রতি বিলে একটি। টিক দেওয়াগুলো ইতিমধ্যে বিলে এসেছে।"
+
+msgid "Paid to the card"
+msgstr "কার্ডে দেওয়া হয়েছে"
+
+msgid "+ %(f)s fee = %(t)s in all"
+msgstr "+ %(f)s ফি = মোট %(t)s"
+
+msgid "This is dated in the future — it counts from that day."
+msgstr "এর তারিখ ভবিষ্যতে — সেই দিন থেকে হিসাবে ধরা হবে।"
+
+msgid "No fee"
+msgstr "কোনো ফি নেই"
+
+msgid "What it did"
+msgstr "এর ফলে কী হলো"
+
+msgid "Worked out for you — change the record and these follow."
+msgstr "আপনার জন্য হিসাব করা — রেকর্ড বদলালে এগুলোও বদলাবে।"
+
+msgid "You owe less on %(c)s"
+msgstr "%(c)s-এ দেনা কমেছে"
+
+msgid "You owe more on %(c)s"
+msgstr "%(c)s-এ দেনা বেড়েছে"
+
+msgid "%(a)s owed on the card after this"
+msgstr "এরপর কার্ডে %(a)s দেনা"
+
+msgid "The card's %(f)s fee is added to what you owe."
+msgstr "কার্ডের %(f)s ফি দেনার সাথে যোগ হয়েছে।"
+
+msgid "Money into %(w)s"
+msgstr "%(w)s-এ টাকা এসেছে"
+
+msgid "Money out of %(w)s"
+msgstr "%(w)s থেকে টাকা গেছে"
+
+msgid "Includes its %(f)s fee."
+msgstr "এর %(f)s ফি সহ।"
+
+msgid "On the bill of %(d)s"
+msgstr "%(d)s-এর বিলে"
+
+msgid "That bill was %(a)s, to pay by %(d)s."
+msgstr "সেই বিল ছিল %(a)s, শোধের শেষ দিন %(d)s।"
+
+msgid "Counted towards the bill of %(d)s"
+msgstr "%(d)s-এর বিলের শোধে ধরা হয়েছে"
+
+msgid "Goes on the next bill, of %(d)s"
+msgstr "পরের বিলে যাবে, %(d)s-এর"
+
+msgid "To pay by %(d)s."
+msgstr "শোধের শেষ দিন %(d)s।"
+
+msgid "Before the first bill"
+msgstr "প্রথম বিলের আগে"
+
+msgid "Record again"
+msgstr "আবার লিখুন"
+
+msgid "Added on %(d)s."
+msgstr "যোগ করা হয়েছে %(d)s।"
+
+msgid "A correction can't be edited — delete it and match the bank again."
+msgstr "সংশোধন সম্পাদনা করা যায় না — মুছে আবার ব্যাংকের সাথে মেলান।"
+
+msgid "Not sure this is the right one? See what to record when"
+msgstr "ঠিকটা বেছেছেন কিনা নিশ্চিত নন? কখন কী লিখবেন দেখুন"
+
+msgid "Delete this record"
+msgstr "এই রেকর্ড মুছুন"
+
+msgid "to %(w)s"
+msgstr "%(w)s-এ"
+
+msgid "from %(w)s"
+msgstr "%(w)s থেকে"
+
+msgid ""
+"UCB, EBL, DBBL, City… any card. Only the name and the two dates are needed —"
+" everything else can wait."
+msgstr ""
+"UCB, EBL, DBBL, City… যেকোনো কার্ড। শুধু নাম আর দুটি তারিখ লাগবে — বাকিটা "
+"পরে দিলেও চলবে।"
+
+msgid "Your card"
+msgstr "আপনার কার্ড"
+
+msgid "Bill · pay by"
+msgstr "বিল · শোধ"
+
+msgid "optional"
+msgstr "ঐচ্ছিক"
+
+msgid "Add the card"
+msgstr "কার্ডটি যোগ করুন"
+
+msgid "What's a bill day, a pay-by day, a minimum payment? See the guide."
+msgstr "বিলের দিন, শোধের শেষ দিন, ন্যূনতম পেমেন্ট কী? গাইড দেখুন।"
+
+msgid "Credit card guide"
+msgstr "ক্রেডিট কার্ড গাইড"
+
+msgid "How to use credit cards here"
+msgstr "এখানে ক্রেডিট কার্ড যেভাবে ব্যবহার করবেন"
+
+msgid ""
+"A 3-minute read. You record what happens; the app works out every bill, due "
+"date, minimum and fee for you."
+msgstr ""
+"৩ মিনিটে পড়া যায়। যা ঘটে আপনি লিখবেন; প্রতিটি বিল, শোধের তারিখ, ন্যূনতম আর"
+" ফি অ্যাপ নিজে হিসাব করবে।"
+
+msgid "First steps"
+msgstr "প্রথম ধাপ"
+
+msgid "How money moves"
+msgstr "টাকা যেভাবে চলে"
+
+msgid "What to tap"
+msgstr "কোথায় চাপবেন"
+
+msgid "An example"
+msgstr "একটি উদাহরণ"
+
+msgid "3 ways to pay"
+msgstr "শোধের ৩টি উপায়"
+
+msgid "The words"
+msgstr "শব্দগুলো"
+
+msgid "Fixing mistakes"
+msgstr "ভুল ঠিক করা"
+
+msgid "The whole idea in four steps."
+msgstr "পুরো ব্যাপারটা চার ধাপে।"
+
+msgid "1. Take money from the card"
+msgstr "১. কার্ড থেকে টাকা নিন"
+
+msgid ""
+"To bKash, Nagad or Rocket. The card's bank may charge 1%%, 1.5%%, 2%%… The "
+"card now owes the money plus that fee."
+msgstr ""
+"বিকাশ, নগদ বা রকেটে। কার্ডের ব্যাংক ১%%, ১.৫%%, ২%%… নিতে পারে। এখন কার্ডে "
+"টাকাটা আর সেই ফি দেনা।"
+
+msgid "2. Use it"
+msgstr "২. ব্যবহার করুন"
+
+msgid ""
+"The money is in your wallet; its balance goes up by itself. Spend it however"
+" you need."
+msgstr ""
+"টাকা আপনার ওয়ালেটে; এর ব্যালান্স নিজে থেকেই বাড়ে। যেভাবে দরকার খরচ করুন।"
+
+msgid "3. The bill comes"
+msgstr "৩. বিল আসে"
+
+msgid ""
+"On the bill day everything since the last bill becomes one bill, with a pay-"
+"by day about 20 days later."
+msgstr ""
+"বিলের দিনে আগের বিলের পর থেকে সব কিছু মিলে একটি বিল হয়, প্রায় ২০ দিন পরে "
+"শোধের শেষ দিন।"
+
+msgid "4. Pay it back"
+msgstr "৪. শোধ করুন"
+
+msgid ""
+"Pay the whole bill by the pay-by day and there's no interest. Can't? Pay at "
+"least the minimum, or turn it into EMI."
+msgstr ""
+"শোধের শেষ দিনের মধ্যে পুরো বিল দিলে কোনো সুদ নেই। না পারলে? অন্তত ন্যূনতমটা "
+"দিন, বা ইএমআই করুন।"
+
+msgid "What happened? What to tap"
+msgstr "কী ঘটেছে? কোথায় চাপবেন"
+
+msgid ""
+"Every button is under “Record” on the Credit cards page, and on each card's "
+"page."
+msgstr ""
+"সব বোতাম ক্রেডিট কার্ড পাতার “লিখুন”-এর ভেতরে, আর প্রতিটি কার্ডের পাতায় "
+"আছে।"
+
+msgid "I sent money from my card to bKash, Nagad or Rocket"
+msgstr "কার্ড থেকে বিকাশ, নগদ বা রকেটে টাকা পাঠিয়েছি"
+
+msgid "Tap"
+msgstr "চাপুন"
+
+msgid "the card's fee is filled in for you."
+msgstr "কার্ডের ফি নিজে থেকে বসে যায়।"
+
+msgid "I bought something with the card"
+msgstr "কার্ডে কিছু কিনেছি"
+
+msgid "I paid the card bill — all of it, the minimum, or a part"
+msgstr "কার্ডের বিল দিয়েছি — পুরোটা, ন্যূনতম, বা একটি অংশ"
+
+msgid "pick the wallet it came from; its fee comes out of that wallet."
+msgstr "কোন ওয়ালেট থেকে দিলেন বেছে নিন; এর ফি সেই ওয়ালেট থেকে কাটবে।"
+
+msgid "The bank split a bill or a purchase into monthly payments"
+msgstr "ব্যাংক একটি বিল বা কেনাকাটা মাসিক কিস্তিতে ভাগ করেছে"
+
+msgid "one installment then comes on each bill."
+msgstr "তারপর প্রতি বিলে একটি করে কিস্তি আসবে।"
+
+msgid "The bill shows interest, a late fee, the annual fee or VAT"
+msgstr "বিলে সুদ, লেট ফি, বার্ষিক ফি বা ভ্যাট এসেছে"
+
+msgid "A shop gave money back, or I got cashback"
+msgstr "দোকান টাকা ফেরত দিয়েছে, বা ক্যাশব্যাক পেয়েছি"
+
+msgid "The bank's app shows a different amount owed"
+msgstr "ব্যাংকের অ্যাপে দেনা অন্য রকম দেখাচ্ছে"
+
+msgid ""
+"Open the card → Details → “Match the bank”, and type what the bank says."
+msgstr ""
+"কার্ডটি খুলুন → বিস্তারিত → “ব্যাংকের সাথে মেলান”, আর ব্যাংক যা বলে তা "
+"লিখুন।"
+
+msgid ""
+"A UCB card: bill on the 5th, pay by the 25th, 1%% fee to send money to "
+"bKash."
+msgstr ""
+"একটি UCB কার্ড: ৫ তারিখে বিল, ২৫ তারিখের মধ্যে শোধ, বিকাশে টাকা পাঠাতে ১%% "
+"ফি।"
+
+msgid "10 Oct"
+msgstr "১০ অক্টো"
+
+msgid "You take ৳20,000 to bKash."
+msgstr "আপনি বিকাশে ৳২০,০০০ নিলেন।"
+
+msgid ""
+"bKash goes up by ৳20,000. The card owes ৳20,200 — the money plus the ৳200 "
+"fee."
+msgstr "বিকাশে ৳২০,০০০ বাড়ে। কার্ডে দেনা ৳২০,২০০ — টাকা আর ৳২০০ ফি।"
+
+msgid "5 Nov"
+msgstr "৫ নভে"
+
+msgid "The bill is made: ৳20,200."
+msgstr "বিল হলো: ৳২০,২০০।"
+
+msgid ""
+"Pay by 25 Nov. The minimum is ৳1,010 (5%%). The app shows it under “Bills to"
+" pay”."
+msgstr ""
+"শোধের শেষ দিন ২৫ নভেম্বর। ন্যূনতম ৳১,০১০ (৫%%)। অ্যাপ এটা “যে বিলগুলো দিতে "
+"হবে”-তে দেখায়।"
+
+msgid "20 Nov"
+msgstr "২০ নভে"
+
+msgid "You pay ৳20,200 from bKash (Pay Bill, no fee)."
+msgstr "আপনি বিকাশ থেকে ৳২০,২০০ দিলেন (পে বিল, কোনো ফি নেই)।"
+
+msgid ""
+"The bill shows “Paid in full”. No interest. The whole cost of borrowing for "
+"41 days: ৳200."
+msgstr ""
+"বিলে দেখায় “পুরো টাকা দিয়েছি”। কোনো সুদ নেই। ৪১ দিনের ধারের পুরো খরচ: "
+"৳২০০।"
+
+msgid ""
+"Had you paid only the minimum, the other ৳19,190 would cost about ৳400 a "
+"month in interest (at 25%% a year) until it's paid. The app warns you of "
+"this on the bill."
+msgstr ""
+"শুধু ন্যূনতম দিলে বাকি ৳১৯,১৯০-এর জন্য শোধ না হওয়া পর্যন্ত মাসে প্রায় ৳৪০০"
+" সুদ লাগত (বছরে ২৫%% হারে)। অ্যাপ বিলেই এ বিষয়ে সতর্ক করে।"
+
+msgid "3 ways to pay a bill — and their fees"
+msgstr "বিল শোধের ৩টি উপায় — আর তাদের ফি"
+
+msgid ""
+"Set each mobile banking's charges once; the card's page then lists the "
+"cheapest way first."
+msgstr ""
+"প্রতিটি মোবাইল ব্যাংকিংয়ের চার্জ একবার ঠিক করুন; তারপর কার্ডের পাতায় "
+"সবচেয়ে কম খরচের উপায় প্রথমে দেখাবে।"
+
+msgid ""
+"Pay Bill → Credit card in the wallet's app. Often free or a small %%. Not "
+"every wallet can do it — say so in its charges."
+msgstr ""
+"ওয়ালেটের অ্যাপে পে বিল → ক্রেডিট কার্ড। প্রায়ই ফ্রি বা সামান্য %%। সব "
+"ওয়ালেট পারে না — এর চার্জে সেটা বলে দিন।"
+
+msgid "Mobile banking → bank or debit card → card"
+msgstr "মোবাইল ব্যাংকিং → ব্যাংক বা ডেবিট কার্ড → কার্ড"
+
+msgid ""
+"Send the money to your bank account or debit card first (that has a fee), "
+"then pay the card from the bank."
+msgstr ""
+"প্রথমে টাকা আপনার ব্যাংক অ্যাকাউন্ট বা ডেবিট কার্ডে পাঠান (এতে ফি আছে), "
+"তারপর ব্যাংক থেকে কার্ডের বিল দিন।"
+
+msgid "From your bank app or at the counter. Usually free."
+msgstr "আপনার ব্যাংকের অ্যাপ থেকে বা কাউন্টারে। সাধারণত ফ্রি।"
+
+msgid "The words, in plain language"
+msgstr "শব্দগুলো, সহজ ভাষায়"
+
+msgid "Bill day (statement day)"
+msgstr "বিলের দিন (স্টেটমেন্টের দিন)"
+
+msgid ""
+"The day each month the bank adds everything up into a bill. Printed on your "
+"card bill."
+msgstr ""
+"প্রতি মাসে যেদিন ব্যাংক সব কিছু যোগ করে একটি বিল বানায়। আপনার কার্ডের বিলে "
+"লেখা থাকে।"
+
+msgid "Pay-by day (due date)"
+msgstr "শোধের শেষ দিন (ডিউ ডেট)"
+
+msgid ""
+"The last day to pay that bill. Pay all of it by then and you pay no "
+"interest."
+msgstr "সেই বিল দেওয়ার শেষ দিন। এর মধ্যে পুরোটা দিলে কোনো সুদ দিতে হয় না।"
+
+msgid ""
+"Everything new since the last bill, plus whatever was left unpaid from it."
+msgstr "আগের বিলের পর থেকে নতুন সব কিছু, আর আগের বিলের যা বাকি ছিল।"
+
+msgid ""
+"The least you must pay by the pay-by day to avoid a late fee — usually 5%% "
+"of the bill, at least ৳500. Interest still runs on the rest."
+msgstr ""
+"লেট ফি এড়াতে শোধের শেষ দিনের মধ্যে অন্তত যা দিতে হয় — সাধারণত বিলের ৫%%, "
+"কমপক্ষে ৳৫০০। বাকিটার ওপর সুদ চলতে থাকে।"
+
+msgid ""
+"What the bank charges, about 20–27%% a year, when a bill isn't paid in full."
+msgstr "বিল পুরো না দিলে ব্যাংক যা নেয়, বছরে প্রায় ২০–২৭%%।"
+
+msgid "Card fee (to bKash / Nagad)"
+msgstr "কার্ডের ফি (বিকাশ / নগদে)"
+
+msgid ""
+"What the card's bank takes when you send money from the card to a wallet: "
+"0%%, 1%%, 1.5%%, 2%%… It is added to what you owe on the card."
+msgstr ""
+"কার্ড থেকে ওয়ালেটে টাকা পাঠালে কার্ডের ব্যাংক যা নেয়: ০%%, ১%%, ১.৫%%, "
+"২%%… এটা কার্ডের দেনার সাথে যোগ হয়।"
+
+msgid "Mobile banking fee"
+msgstr "মোবাইল ব্যাংকিং ফি"
+
+msgid ""
+"What bKash, Nagad or Rocket take when you pay a card bill from them, or send"
+" money to a bank. It comes out of the wallet."
+msgstr ""
+"বিকাশ, নগদ বা রকেট থেকে কার্ডের বিল দিলে, বা ব্যাংকে টাকা পাঠালে তারা যা "
+"নেয়। এটা ওয়ালেট থেকে কাটে।"
+
+msgid ""
+"A bill or a purchase split into equal monthly payments, one on each bill. "
+"Often 0%% for a few months; sometimes with interest or a fee."
+msgstr ""
+"একটি বিল বা কেনাকাটা সমান মাসিক কিস্তিতে ভাগ, প্রতি বিলে একটি। প্রায়ই কয়েক"
+" মাসের জন্য ০%%; কখনো সুদ বা ফি সহ।"
+
+msgid "Limit · Available"
+msgstr "লিমিট · বাকি লিমিট"
+
+msgid ""
+"The most the card lets you owe, and how much of it is left. Keeping under "
+"30%% used looks better to banks."
+msgstr ""
+"কার্ড সর্বোচ্চ কত দেনা হতে দেয়, আর তার কতটা বাকি। ৩০%%-এর নিচে ব্যবহার "
+"রাখলে ব্যাংকের কাছে ভালো দেখায়।"
+
+msgid ""
+"If the app's amount differs from the bank's, type the bank's number on the "
+"card's page. The difference is saved as a correction."
+msgstr ""
+"অ্যাপের হিসাব ব্যাংকের থেকে আলাদা হলে, কার্ডের পাতায় ব্যাংকের সংখ্যাটা "
+"লিখুন। পার্থক্যটা সংশোধন হিসেবে রাখা হয়।"
+
+msgid "Fixing mistakes, and staying safe"
+msgstr "ভুল ঠিক করা, আর নিরাপদ থাকা"
+
+msgid ""
+"Tap any record to see its details. Use ⋯ (or the buttons on its page) to "
+"edit it, record it again, or delete it."
+msgstr ""
+"বিস্তারিত দেখতে যেকোনো রেকর্ডে চাপুন। সম্পাদনা, আবার লেখা বা মুছতে ⋯ (বা এর "
+"পাতার বোতাম) ব্যবহার করুন।"
+
+msgid ""
+"Deleted something by mistake? Tap Undo on the message, or bring it back from"
+" Recently deleted within 30 days."
+msgstr ""
+"ভুল করে কিছু মুছে ফেলেছেন? বার্তায় “ফিরিয়ে আনুন” চাপুন, বা ৩০ দিনের মধ্যে "
+"সম্প্রতি মুছে ফেলা থেকে ফিরিয়ে আনুন।"
+
+msgid ""
+"Closed a card? “Stop using” it instead of deleting — its history and totals "
+"stay."
+msgstr ""
+"কার্ড বন্ধ করেছেন? না মুছে “ব্যবহার বন্ধ” করুন — এর ইতিহাস আর হিসাব থাকবে।"
+
+msgid ""
+"Banks, card types and mobile banking are your own lists: add, rename, hide "
+"or delete them any time."
+msgstr ""
+"ব্যাংক, কার্ডের ধরন আর মোবাইল ব্যাংকিং আপনার নিজের তালিকা: যেকোনো সময় যোগ, "
+"নাম বদল, লুকানো বা মোছা যায়।"
+
+msgid ""
+"Never type the full card number, the CVV or the PIN. The app doesn't need "
+"them — at most the last 4 digits, and only if you want."
+msgstr ""
+"কখনো পুরো কার্ড নম্বর, CVV বা PIN লিখবেন না। অ্যাপের এগুলো লাগে না — বড়জোর "
+"শেষ ৪টি সংখ্যা, তাও চাইলে।"
+
+msgid "Go to my cards"
+msgstr "আমার কার্ডে যান"
+
+msgid "No card uses it yet"
+msgstr "কোনো কার্ড এটা ব্যবহার করে না"
+
+msgid "Stop using"
+msgstr "ব্যবহার বন্ধ"
+
+msgid "Use again"
+msgstr "আবার ব্যবহার"
+
+msgid ""
+"Delete this wallet? Card records that used it keep their amounts, without a "
+"wallet. You can undo this from Recently deleted."
+msgstr ""
+"এই ওয়ালেট মুছবেন? যে কার্ড-রেকর্ডে এটি ছিল সেগুলোর টাকা থাকবে, ওয়ালেট "
+"ছাড়া। সম্প্রতি মুছে ফেলা থেকে ফিরিয়ে আনতে পারবেন।"
+
+msgid "Sent from a card to a wallet, with the card's fee"
+msgstr "কার্ড থেকে ওয়ালেটে পাঠানো, কার্ডের ফি সহ"
+
+msgid "In full, the minimum or any part — from any wallet"
+msgstr "পুরোটা, ন্যূনতম বা যেকোনো অংশ — যেকোনো ওয়ালেট থেকে"
+
+msgid "Paid a shop, Daraz, a bill… with the card"
+msgstr "দোকান, দারাজ, কোনো বিল… কার্ডে দিয়েছেন"
+
+msgid "Interest, late fee, annual fee, VAT on the bill"
+msgstr "বিলে সুদ, লেট ফি, বার্ষিক ফি, ভ্যাট"
+
+msgid "The bank split a bill or a purchase into months"
+msgstr "ব্যাংক একটি বিল বা কেনাকাটা মাসে মাসে ভাগ করেছে"
+
+msgid "Money put back on the card"
+msgstr "কার্ডে ফেরত আসা টাকা"
+
+msgid "All card records"
+msgstr "সব কার্ডের রেকর্ড"
+
+msgid ""
+"Everything you recorded on every card. Tap one for its details; ⋯ to edit, "
+"record again or delete."
+msgstr ""
+"প্রতিটি কার্ডে যা লিখেছেন সব। বিস্তারিত দেখতে একটিতে চাপুন; সম্পাদনা, আবার "
+"লেখা বা মুছতে ⋯।"
+
+msgid "Note, card or wallet"
+msgstr "নোট, কার্ড বা ওয়ালেট"
+
+msgid "All cards"
+msgstr "সব কার্ড"
+
+msgid "Any wallet"
+msgstr "যেকোনো ওয়ালেট"
+
+msgid "Any day"
+msgstr "যেকোনো দিন"
+
+msgid "Fewer filters"
+msgstr "কম ফিল্টার"
+
+msgid "More filters"
+msgstr "আরও ফিল্টার"
+
+msgid "Refunds included"
+msgstr "রিফান্ড সহ"
+
+msgid "Fees & charges"
+msgstr "ফি ও চার্জ"
+
+msgid "%(n)s record"
+msgid_plural "%(n)s records"
+msgstr[0] "%(n)s টি রেকর্ড"
+msgstr[1] "%(n)s টি রেকর্ড"
+
+msgid "Nothing matches these filters."
+msgstr "এই ফিল্টারে কিছু মেলেনি।"
+
+msgid "Nothing recorded yet"
+msgstr "এখনো কিছু লেখা হয়নি"
+
+msgid ""
+"Money taken to bKash or Nagad, things bought with a card, bills paid — they "
+"all show here, ready to search."
+msgstr ""
+"বিকাশ বা নগদে নেওয়া টাকা, কার্ডে কেনা জিনিস, দেওয়া বিল — সব এখানে দেখাবে, "
+"খোঁজার জন্য তৈরি।"
+
+msgid "Record the first one"
+msgstr "প্রথমটি লিখুন"
+
+msgid "Welcome! Start in 5 short steps"
+msgstr "স্বাগতম! ৫টি ছোট ধাপে শুরু করুন"
+
+msgid "%(d)s of %(t)s done — each one ticks itself when you do it."
+msgstr "%(t)s টির %(d)s টি হয়েছে — করলেই প্রতিটিতে নিজে থেকে টিক পড়ে।"
+
+msgid "Read the 3-minute guide"
+msgstr "৩ মিনিটের গাইডটি পড়ুন"

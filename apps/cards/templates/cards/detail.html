@@ -2,7 +2,8 @@
 {% load i18n %}
 {% block title %}{{ c.name }} | FinTrack{% endblock %}
 {% block content %}
-<div class="page stack">
+<div class="page stack" x-data="{ tab: '{{ tab }}', show: 'all',
+     go(t) { this.tab = t; try { var u = new URL(location.href); u.searchParams.set('tab', t); history.replaceState(history.state, '', u); } catch (e) {} } }">
   <header class="page-header !mb-0">
     <div class="min-w-0">
       <a href="{% url 'card_dashboard' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Credit cards" %}</a>
@@ -13,7 +14,10 @@
       <p class="page-subtitle">{% if c.bank %}{{ c.bank }} · {% endif %}{% blocktranslate with s=c.statement_day d=c.due_day %}bill on the {{ s }}, pay by the {{ d }}{% endblocktranslate %}{% if c.masked %} · {{ c.masked }}{% endif %}</p>
     </div>
     <div class="page-actions">
-      <a href="{% url 'card_edit' c.pk %}" class="btn btn-ghost">{% include "partials/icon.html" with name="edit" %}{% translate "Edit" %}</a>
+      <a href="{% url 'card_edit' c.pk %}" class="btn btn-secondary">{% include "partials/icon.html" with name="edit" %}{% translate "Edit card" %}</a>
+      {% url 'card_toggle' c.pk as toggle_url %}{% url 'card_delete' c.pk as delete_url %}
+      {% translate "Delete this card with everything recorded on it? You can undo this from Recently deleted." as confirm_text %}
+      {% include "cards/_menu.html" with toggle_url=toggle_url active=c.is_active delete_url=delete_url confirm=confirm_text check=True %}
     </div>
   </header>
 
@@ -28,6 +32,15 @@
   </nav>
   {% endif %}
 
+  <nav class="seg cc-tabs" role="tablist" aria-label="{% translate 'This card' %}">
+    <button type="button" role="tab" class="seg-item" :class="tab === 'overview' && 'is-active'" :aria-selected="tab === 'overview'" @click="go('overview')">{% translate "Overview" %}</button>
+    <button type="button" role="tab" class="seg-item" :class="tab === 'bills' && 'is-active'" :aria-selected="tab === 'bills'" @click="go('bills')">{% translate "Bills" %}{% if bills %} <span class="cc-tab-n">{{ bills|length }}</span>{% endif %}</button>
+    <button type="button" role="tab" class="seg-item" :class="tab === 'records' && 'is-active'" :aria-selected="tab === 'records'" @click="go('records')">{% translate "Records" %}{% if rows %} <span class="cc-tab-n">{{ rows|length }}</span>{% endif %}</button>
+    <button type="button" role="tab" class="seg-item" :class="tab === 'emis' && 'is-active'" :aria-selected="tab === 'emis'" @click="go('emis')">{% translate "EMIs" %}{% if emis %} <span class="cc-tab-n">{{ emis|length }}</span>{% endif %}</button>
+    <button type="button" role="tab" class="seg-item" :class="tab === 'details' && 'is-active'" :aria-selected="tab === 'details'" @click="go('details')">{% translate "Details" %}</button>
+  </nav>
+
+  <div class="stack" x-show="tab === 'overview'"{% if tab != "overview" %} x-cloak{% endif %} role="tabpanel">
   <div class="cc-top">
     <div class="cc-top-card">{% include "cards/_card.html" with st=st link=False %}</div>
     <section class="card cc-now">
@@ -89,10 +102,15 @@
     <div class="stat" data-tone="warn"><dt class="stat-label">{% translate "Fees & interest" %}</dt><dd class="stat-value">{{ st.costs.total|money }}</dd><dd class="stat-hint">{% translate "All time, every kind" %}</dd></div>
   </dl>
 
-  <div class="cc-cols">
-    <div class="stack">
-      <section class="card">
-        <div class="card-header"><div><h2 class="card-title">{% translate "Bills" %}</h2><p class="card-subtitle">{% translate "Worked out from what you recorded. Tap one to see what's on it." %}</p></div></div>
+  <section class="card">
+        <div class="card-header"><h2 class="card-title">{% translate "Fees & interest on this card" %}</h2></div>
+        <div class="card-body !pt-2"><dl>{% include "cards/_costs.html" with c=st.costs %}</dl></div>
+      </section>
+
+  </div>
+
+  <section class="card" x-show="tab === 'bills'"{% if tab != "bills" %} x-cloak{% endif %} role="tabpanel">
+    <div class="card-header"><div><h2 class="card-title">{% translate "Bills" %}</h2><p class="card-subtitle">{% translate "Worked out from what you recorded. Tap one to see what's on it." %}</p></div></div>
         {% if bills %}
         <div class="cc-bills">
           {% for b in bills %}
@@ -125,50 +143,75 @@
         {% else %}
         <div class="empty is-plain"><p class="empty-text">{% blocktranslate with d=st.next_bill|date:"j M" %}The first bill is made on {{ d }}.{% endblocktranslate %}</p></div>
         {% endif %}
-      </section>
+  </section>
 
-      <section class="card">
-        <div class="card-header"><h2 class="card-title">{% translate "Everything on this card" %}</h2></div>
-        {% if rows %}
-        <ul class="ledger">
-          {% for e in rows %}
-          <li>{% if e.entry %}<a href="{% url 'card_entry_edit' e.entry.pk %}" class="ledger-row">{% elif e.plan %}<a href="{% url 'card_emi_edit' e.plan.pk %}" class="ledger-row">{% else %}<a href="{% url 'card_edit' c.pk %}" class="ledger-row">{% endif %}
-            {% include "cards/_entry_icon.html" with kind=e.kind %}
-            <div class="ledger-main"><p class="ledger-title">{{ e.title }}</p><p class="ledger-meta">{{ e.date|date:"j M Y" }}{% if e.detail %} · {{ e.detail }}{% endif %}</p></div>
-            <div class="ledger-end"><span class="party-bal"><strong class="{% if e.owed < 0 %}tone-good{% endif %}">{% if e.owed %}{{ e.owed|signed_money }}{% else %}{{ e.billable|signed_money }}{% endif %}</strong><span>{{ e.balance|money }}</span></span></div>
-          </a></li>
-          {% endfor %}
-        </ul>
-        {% else %}
-        <div class="empty is-plain"><p class="empty-text">{% translate "Nothing yet. Use the buttons above to record money taken out, things bought, or a bill paid." %}</p></div>
-        {% endif %}
-      </section>
+  <section class="card" x-show="tab === 'records'"{% if tab != "records" %} x-cloak{% endif %} role="tabpanel">
+    <div class="card-header">
+      <div><h2 class="card-title">{% translate "Everything on this card" %}</h2><p class="card-subtitle">{% translate "Tap one for its details; ⋯ to edit, record again or delete. The small number is what you owed after it." %}</p></div>
+      <a href="{% url 'card_records' %}?card={{ c.pk }}" class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="filter" %}{% translate "Search & filter" %}</a>
     </div>
+    {% if rows %}
+    <div class="chip-row cc-filter">
+      <button type="button" class="chip" :class="show === 'all' && 'is-active'" @click="show = 'all'"><span>{% translate "All" %} <b>{{ rows|length }}</b></span></button>
+      {% for g, label, n in row_groups %}{% if n %}<button type="button" class="chip" :class="show === '{{ g }}' && 'is-active'" @click="show = '{{ g }}'"><span>{{ label }} <b>{{ n }}</b></span></button>{% endif %}{% endfor %}
+    </div>
+    <ul class="ledger">
+      {% for e in rows %}
+      <li class="ledger-row cc-row" x-show="show === 'all' || show === '{{ e.group }}'">
+        {% include "cards/_entry_icon.html" with kind=e.kind %}
+        <div class="ledger-main">
+          <p class="ledger-title">{% if e.entry %}<a href="{% url 'card_entry_detail' e.entry.pk %}?next={{ here|urlencode }}" class="cc-row-link">{% elif e.plan %}<a href="{% url 'card_emi_detail' e.plan.pk %}" class="cc-row-link">{% else %}<a href="{% url 'card_edit' c.pk %}" class="cc-row-link">{% endif %}{{ e.title }}</a></p>
+          <p class="ledger-meta">{{ e.date|date:"j M Y" }}{% if e.detail %} · {{ e.detail }}{% endif %}</p>
+        </div>
+        <div class="ledger-end">
+          <span class="party-bal"><strong class="{% if e.owed < 0 %}tone-good{% endif %}">{% if e.owed %}{{ e.owed|signed_money }}{% else %}{{ e.billable|signed_money }}{% endif %}</strong><span>{{ e.balance|money }}</span></span>
+          {% if e.entry %}
+          {% url 'card_entry_detail' e.entry.pk as detail_url %}{% url 'card_entry_delete' e.entry.pk as delete_url %}
+          {% translate "Delete this record? What you owe and the wallet's balance change back. You can undo it from Recently deleted." as confirm_text %}
+          {% if e.kind != "adjust" %}{% url 'card_entry_edit' e.entry.pk as edit_url %}{% url 'card_entry_add' c.pk e.kind as copy_url %}
+          {% include "cards/_menu.html" with detail_url=detail_url edit_url=edit_url copy_url=copy_url copy_id=e.entry.pk delete_url=delete_url confirm=confirm_text next=here up=forloop.last %}
+          {% else %}{% include "cards/_menu.html" with detail_url=detail_url edit_url="" copy_url="" delete_url=delete_url confirm=confirm_text next=here up=forloop.last %}{% endif %}
+          {% elif e.plan %}
+          {% url 'card_emi_detail' e.plan.pk as detail_url %}{% url 'card_emi_edit' e.plan.pk as edit_url %}{% url 'card_emi_delete' e.plan.pk as delete_url %}
+          {% translate "Delete this EMI? Its amount goes back on the bill." as confirm_text %}
+          {% include "cards/_menu.html" with detail_url=detail_url edit_url=edit_url copy_url="" delete_url=delete_url confirm=confirm_text next=here up=forloop.last %}
+          {% else %}<span class="cc-menu-gap" aria-hidden="true"></span>{% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty is-plain"><p class="empty-text">{% translate "Nothing yet. Use the buttons above to record money taken out, things bought, or a bill paid." %}</p></div>
+    {% endif %}
+  </section>
 
+  <section class="card" x-show="tab === 'emis'"{% if tab != "emis" %} x-cloak{% endif %} role="tabpanel">
+    <div class="card-header"><div><h2 class="card-title">{% translate "EMIs" %}</h2><p class="card-subtitle">{% translate "One installment comes on each bill." %}</p></div>
+      {% if c.is_active %}<a href="{% url 'card_emi_add' c.pk %}" class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="plus" %}{% translate "Turn into EMI" %}</a>{% endif %}</div>
+    {% if emis %}
+    <ul class="ledger">
+      {% for e in emis %}
+      <li class="ledger-row cc-row">
+        <div class="ledger-main">
+          <p class="ledger-title"><a href="{% url 'card_emi_detail' e.plan.pk %}" class="cc-row-link">{{ e.plan.title }}</a>{% if e.done %} <span class="badge" data-tone="good">{% if e.closed %}{% translate "Paid off early" %}{% else %}{% translate "Done" %}{% endif %}</span>{% endif %}</p>
+          <p class="ledger-meta">{% blocktranslate with a=e.each|money n=e.count m=e.plan.months %}{{ a }} a month · {{ n }} of {{ m }}{% endblocktranslate %}{% if e.plan.rate %} · {{ e.plan.rate|floatformat:"-2" }}%{% else %} · 0%{% endif %}</p>
+          <div class="meter mt-2" data-tone="good"><span style="width: {{ e.pct }}%"></span></div>
+        </div>
+        <div class="ledger-end"><span class="party-bal"><strong>{{ e.left|money }}</strong><span>{% translate "left" %}</span></span>
+          {% url 'card_emi_detail' e.plan.pk as detail_url %}{% url 'card_emi_edit' e.plan.pk as edit_url %}{% url 'card_emi_delete' e.plan.pk as delete_url %}
+          {% translate "Delete this EMI? Its amount goes back on the bill." as confirm_text %}
+          {% include "cards/_menu.html" with detail_url=detail_url edit_url=edit_url copy_url="" delete_url=delete_url confirm=confirm_text up=forloop.last %}
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty is-plain"><p class="empty-text">{% translate "No EMI on this card. A big bill you can't pay at once? Ask the bank to turn it into EMI, then add it here." %}</p></div>
+    {% endif %}
+  </section>
+
+  <div class="cc-cols" x-show="tab === 'details'"{% if tab != "details" %} x-cloak{% endif %} role="tabpanel">
     <div class="stack">
-      {% if emis %}
-      <section class="card">
-        <div class="card-header"><h2 class="card-title">{% translate "EMIs" %}</h2></div>
-        <ul class="ledger">
-          {% for e in emis %}
-          <li><a href="{% url 'card_emi_edit' e.plan.pk %}" class="ledger-row">
-            <div class="ledger-main">
-              <p class="ledger-title">{{ e.plan.title }}{% if e.done %} <span class="badge" data-tone="good">{% if e.closed %}{% translate "Paid off early" %}{% else %}{% translate "Done" %}{% endif %}</span>{% endif %}</p>
-              <p class="ledger-meta">{% blocktranslate with a=e.each|money n=e.count m=e.plan.months %}{{ a }} a month · {{ n }} of {{ m }}{% endblocktranslate %}{% if e.plan.rate %} · {{ e.plan.rate|floatformat:"-2" }}%{% else %} · 0%{% endif %}</p>
-              <div class="meter mt-2" data-tone="good"><span style="width: {{ e.pct }}%"></span></div>
-            </div>
-            <div class="ledger-end"><span class="party-bal"><strong>{{ e.left|money }}</strong><span>{% translate "left" %}</span></span></div>
-          </a></li>
-          {% endfor %}
-        </ul>
-      </section>
-      {% endif %}
-
-      <section class="card">
-        <div class="card-header"><h2 class="card-title">{% translate "Fees & interest on this card" %}</h2></div>
-        <div class="card-body !pt-2"><dl>{% include "cards/_costs.html" with c=st.costs %}</dl></div>
-      </section>
-
       <section class="card">
         <div class="card-header"><h2 class="card-title">{% translate "Card details" %}</h2><a href="{% url 'card_edit' c.pk %}" class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="edit" %}{% translate "Edit" %}</a></div>
         <div class="card-body !pt-2">
@@ -190,6 +233,8 @@
         </div>
       </section>
 
+    </div>
+    <div class="stack">
       <details class="card wallet-correct">
         <summary class="card-header"><div><h2 class="card-title">{% translate "Match the bank" %}</h2><p class="card-subtitle">{% translate "The bank app shows a different amount owed? Type it here." %}</p></div>{% include "partials/icon.html" with name="chevron-down" %}</summary>
         <form method="post" action="{% url 'card_correct' c.pk %}" class="card-body form-stack">
@@ -200,16 +245,19 @@
         </form>
       </details>
 
-      <div class="wallet-manage">
-        <form method="post" action="{% url 'card_toggle' c.pk %}">
-          {% csrf_token %}
-          <button type="submit" class="btn btn-ghost btn-sm">{% if c.is_active %}{% include "partials/icon.html" with name="pause" %}{% translate "Stop using this card" %}{% else %}{% include "partials/icon.html" with name="play" %}{% translate "Use this card again" %}{% endif %}</button>
-        </form>
-        <form method="post" action="{% url 'card_delete' c.pk %}" data-confirm-check data-confirm="{% translate 'Delete this card with everything recorded on it? You can undo this from Recently deleted.' %}">
-          {% csrf_token %}
-          <button type="submit" class="btn btn-ghost btn-sm is-danger">{% include "partials/icon.html" with name="trash" %}{% translate "Delete card" %}</button>
-        </form>
-      </div>
+      <section class="card">
+        <div class="card-header"><div><h2 class="card-title">{% translate "Stop using or delete" %}</h2><p class="card-subtitle">{% translate "Closed the card? Stop using it — its history and totals stay. Delete only a card added by mistake." %}</p></div></div>
+        <div class="card-body !pt-0 wallet-manage">
+          <form method="post" action="{% url 'card_toggle' c.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-secondary btn-sm">{% if c.is_active %}{% include "partials/icon.html" with name="pause" %}{% translate "Stop using this card" %}{% else %}{% include "partials/icon.html" with name="play" %}{% translate "Use this card again" %}{% endif %}</button>
+          </form>
+          <form method="post" action="{% url 'card_delete' c.pk %}" data-confirm-check data-confirm="{% translate 'Delete this card with everything recorded on it? You can undo this from Recently deleted.' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-ghost btn-sm is-danger">{% include "partials/icon.html" with name="trash" %}{% translate "Delete card" %}</button>
+          </form>
+        </div>
+      </section>
     </div>
   </div>
 </div>

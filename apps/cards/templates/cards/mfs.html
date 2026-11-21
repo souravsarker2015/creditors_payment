@@ -25,7 +25,13 @@
       <div class="card-header">
         <div class="min-w-0"><h2 class="card-title"><a href="{% url 'card_mfs_detail' r.wallet.pk %}">{{ r.wallet.name }}</a>{% if not r.wallet.is_active %} <span class="badge" data-tone="muted">{% translate "Not in use" %}</span>{% endif %}</h2>
           <p class="card-subtitle">{% blocktranslate with b=r.balance|money %}Holds {{ b }} now{% endblocktranslate %}</p></div>
-        <a href="{% url 'card_mfs_detail' r.wallet.pk %}" class="btn btn-ghost btn-sm">{% translate "Open" %}{% include "partials/icon.html" with name="arrow-right" %}</a>
+        <div class="flex items-center gap-1">
+          <a href="{% url 'card_mfs_detail' r.wallet.pk %}" class="btn btn-ghost btn-sm">{% translate "Details" %}{% include "partials/icon.html" with name="arrow-right" %}</a>
+          {% url 'card_mfs_edit' r.wallet.pk as edit_url %}{% url 'card_mfs_toggle' r.wallet.pk as toggle_url %}{% url 'card_mfs_delete' r.wallet.pk as delete_url %}
+          {% translate "Delete this wallet? Card records that used it keep their amounts, without a wallet. You can undo this from Recently deleted." as confirm_text %}
+          {% url 'card_mfs' as here %}
+          {% include "cards/_menu.html" with edit_url=edit_url toggle_url=toggle_url active=r.wallet.is_active delete_url=delete_url confirm=confirm_text next=here check=True %}
+        </div>
       </div>
       <div class="card-body !pt-2">
         <dl>

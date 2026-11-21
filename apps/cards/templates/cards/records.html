@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% translate "All card records" %} | FinTrack{% endblock %}
+{% block content %}
+<div class="page-medium stack">
+  <header class="page-header !mb-0">
+    <div>
+      <a href="{% url 'card_dashboard' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Credit cards" %}</a>
+      <h1 class="page-title">{% translate "All card records" %}</h1>
+      <p class="page-subtitle">{% translate "Everything you recorded on every card. Tap one for its details; ⋯ to edit, record again or delete." %}</p>
+    </div>
+    {% if active_cards %}<div class="page-actions">{% include "cards/_record_menu.html" %}</div>{% endif %}
+  </header>
+
+  {% if has_any %}
+  <form method="get" class="card cc-records-filter" x-data="{ more: {% if f.wallet or f.start or f.end %}true{% else %}false{% endif %} }">
+    <div class="card-body">
+      <div class="cc-filter-grid">
+        <label class="field"><span class="label">{% translate "Search" %}</span>
+          <input type="search" name="q" value="{{ f.q }}" class="form-input" placeholder="{% translate 'Note, card or wallet' %}"></label>
+        <label class="field"><span class="label">{% translate "Card" %}</span>
+          <select name="card" class="form-input" onchange="this.form.submit()"><option value="">{% translate "All cards" %}</option>
+            {% for c in cards %}<option value="{{ c.pk }}"{% if f.card == c.pk|stringformat:"s" %} selected{% endif %}>{{ c.name }}</option>{% endfor %}</select></label>
+        <label class="field"><span class="label">{% translate "What happened" %}</span>
+          <select name="kind" class="form-input" onchange="this.form.submit()"><option value="">{% translate "Everything" %}</option>
+            {% for k, label in kinds %}<option value="{{ k }}"{% if f.kind == k %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+      </div>
+      <div class="cc-filter-grid mt-3" x-show="more" x-cloak>
+        <label class="field"><span class="label">{% translate "Wallet" %}</span>
+          <select name="wallet" class="form-input"><option value="">{% translate "Any wallet" %}</option>
+            {% for w in wallets %}<option value="{{ w.pk }}"{% if f.wallet == w.pk|stringformat:"s" %} selected{% endif %}>{{ w.name }}</option>{% endfor %}</select></label>
+        <label class="field"><span class="label">{% translate "From" %}</span><input type="text" name="start" value="{{ f.start }}" class="form-input datepicker" autocomplete="off" placeholder="{% translate 'Any day' %}"></label>
+        <label class="field"><span class="label">{% translate "To" %}</span><input type="text" name="end" value="{{ f.end }}" class="form-input datepicker" autocomplete="off" placeholder="{% translate 'Any day' %}"></label>
+      </div>
+      <div class="mt-3 flex flex-wrap items-center gap-2">
+        <button type="submit" class="btn btn-primary btn-sm">{% include "partials/icon.html" with name="search" %}{% translate "Show" %}</button>
+        <button type="button" class="btn btn-ghost btn-sm" @click="more = !more" x-text="more ? '{% translate "Fewer filters"|escapejs %}' : '{% translate "More filters"|escapejs %}'">{% translate "More filters" %}</button>
+        {% if filtered %}<a href="{% url 'card_records' %}" class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="x" %}{% translate "Clear" %}</a>{% endif %}
+      </div>
+    </div>
+  </form>
+
+  <dl class="stat-grid">
+    <div class="stat" data-tone="accent"><dt class="stat-label">{% translate "Taken out" %}</dt><dd class="stat-value">{{ totals.taken|money }}</dd></div>
+    <div class="stat" data-tone="warn"><dt class="stat-label">{% translate "Bought" %}</dt><dd class="stat-value">{{ totals.spent|money }}</dd></div>
+    <div class="stat" data-tone="good"><dt class="stat-label">{% translate "Paid back" %}</dt><dd class="stat-value">{{ totals.paid|money }}</dd><dd class="stat-hint">{% translate "Refunds included" %}</dd></div>
+    <div class="stat" data-tone="critical"><dt class="stat-label">{% translate "Fees & charges" %}</dt><dd class="stat-value">{{ totals.costs|money }}</dd></div>
+  </dl>
+
+  <section class="card">
+    <div class="card-header"><h2 class="card-title">{% blocktranslate count n=count %}{{ n }} record{% plural %}{{ n }} records{% endblocktranslate %}</h2></div>
+    {% if rows %}
+    <ul class="ledger">
+      {% for x in rows %}{% include "cards/_entry_row.html" with show_card=True next=here up=forloop.last %}{% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty is-plain"><p class="empty-text">{% translate "Nothing matches these filters." %}</p><a href="{% url 'card_records' %}" class="btn btn-secondary btn-sm">{% translate "Clear filters" %}</a></div>
+    {% endif %}
+  </section>
+  {% include "partials/pagination.html" %}
+  {% else %}
+  <div class="empty">
+    <div class="empty-icon">{% include "partials/icon.html" with name="list" %}</div>
+    <h3 class="empty-title">{% translate "Nothing recorded yet" %}</h3>
+    <p class="empty-text">{% translate "Money taken to bKash or Nagad, things bought with a card, bills paid — they all show here, ready to search." %}</p>
+    {% if active_cards %}<a href="{% url 'card_entry_new' 'cash' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Record the first one" %}</a>
+    {% else %}<a href="{% url 'card_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add your first card" %}</a>{% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

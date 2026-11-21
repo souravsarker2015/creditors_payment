@@ -1,0 +1,17 @@
+{% load i18n %}{% comment %}
+One record as a row: tap it for its details, ⋯ for Edit / Record again / Delete. Needs: x (CardEntry).
+Optional: show_card (its card's name beside the title), next (the page to come back to), up (menu opens upwards).
+{% endcomment %}<li class="ledger-row cc-row">
+  {% include "cards/_entry_icon.html" with kind=x.kind %}
+  <div class="ledger-main">
+    <p class="ledger-title"><a href="{% url 'card_entry_detail' x.pk %}{% if next %}?next={{ next|urlencode }}{% endif %}" class="cc-row-link">{{ x.title }}</a>{% if show_card %} <span class="text-xs font-normal" style="color: var(--text-muted);">· {{ x.card.name }}</span>{% endif %}</p>
+    <p class="ledger-meta">{{ x.date|date:"j M Y" }}{% if x.wallet %} · {% if x.kind == "cash" %}{% blocktranslate with w=x.wallet.name %}to {{ w }}{% endblocktranslate %}{% else %}{% blocktranslate with w=x.wallet.name %}from {{ w }}{% endblocktranslate %}{% endif %}{% endif %}{% if x.fee %} · {% blocktranslate with f=x.fee|money %}{{ f }} fee{% endblocktranslate %}{% endif %}{% if x.note %} · {{ x.note }}{% endif %}</p>
+  </div>
+  <div class="ledger-end">
+    <span class="ledger-amount"{% if x.debt < 0 %} data-tone="good"{% endif %}>{{ x.debt|signed_money }}</span>
+    {% url 'card_entry_detail' x.pk as detail_url %}{% url 'card_entry_delete' x.pk as delete_url %}
+    {% if x.kind != "adjust" %}{% url 'card_entry_edit' x.pk as edit_url %}{% url 'card_entry_new' x.kind as new_url %}{% endif %}
+    {% translate "Delete this record? What you owe and the wallet's balance change back. You can undo it from Recently deleted." as confirm_text %}
+    {% include "cards/_menu.html" with detail_url=detail_url edit_url=edit_url copy_url=new_url copy_id=x.pk delete_url=delete_url confirm=confirm_text %}
+  </div>
+</li>

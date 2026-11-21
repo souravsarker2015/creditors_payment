@@ -22,16 +22,18 @@ def _num(**attrs):
 
 
 class CardForm(forms.ModelForm):
-    GROUPS = (
-        (_("The card"), ("name", "bank", "network", "color", "last4", "expiry"),
-         _("Only what helps you tell your cards apart. Never type the full card number, the CVV or the PIN — the app doesn't need them.")),
-        (_("Limit"), ("limit", "cash_limit"), ""),
+    GROUPS = (       # (title, fields, help, folded) — the folded ones are optional, under "More details"
+        (_("The card"), ("name", "bank"),
+         _("Only what helps you tell your cards apart. Never type the full card number, the CVV or the PIN — the app doesn't need them."), False),
         (_("Bill and pay-by dates"), ("statement_day", "due_day"),
-         _("Printed on your card bill (statement). Everything until the bill day lands on that bill; pay it in full by the pay-by day and there's no interest.")),
-        (_("Fees and interest"), ("transfer_fee_rate", "interest_rate", "min_due_rate", "min_due_floor", "late_fee", "annual_fee", "annual_fee_month"), ""),
-        (_("Where you start"), ("opening_balance", "opening_date"),
-         _("What you already owe on the card today. Everything you record from then on adds to it or takes it down.")),
-        ("", ("note",), ""),
+         _("Printed on your card bill (statement). Everything until the bill day lands on that bill; pay it in full by the pay-by day and there's no interest."), False),
+        (_("Limit and fee"), ("limit", "transfer_fee_rate"), "", False),
+        (_("What you owe today"), ("opening_balance", "opening_date"),
+         _("What you already owe on the card today (0 for a new card). Everything you record from then on adds to it or takes it down."), False),
+        (_("Look and number"), ("network", "color", "last4", "expiry"), _("For the picture of the card and a reminder before it runs out."), True),
+        (_("Interest and other fees"), ("interest_rate", "min_due_rate", "min_due_floor", "late_fee", "annual_fee", "annual_fee_month", "cash_limit"),
+         _("For the minimum payment, the interest warning and the annual fee reminder. Left empty, the usual values are used."), True),
+        (_("Note"), ("note",), "", True),
     )
 
     class Meta:
@@ -97,7 +99,12 @@ class CardForm(forms.ModelForm):
             self.fields[name].taka = True
 
     def groups(self):
-        return [(title, [self[f] for f in names], help) for title, names, help in self.GROUPS]
+        """(title, bound fields, help, folded, open): a folded group opens by itself when one of its fields has an error."""
+        out = []
+        for title, names, help, folded in self.GROUPS:
+            fields = [self[f] for f in names]
+            out.append((title, fields, help, folded, not folded or any(f.errors for f in fields)))
+        return out
 
     def clean_last4(self):
         digits = "".join(ch for ch in self.cleaned_data.get("last4", "") if ch.isdigit())

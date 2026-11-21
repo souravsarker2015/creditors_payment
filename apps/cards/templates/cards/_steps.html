@@ -1,0 +1,28 @@
+{% load i18n %}{% comment %}
+Getting started: five steps that tick themselves as they're done. Needs: steps (views._steps). Optional: always (the
+guide page: no Hide button). Hidden for now on this browser with "Hide"; it comes back from the Guide page.
+{% endcomment %}<section class="card cc-steps" x-data="{ hidden: false, k: 'cardSteps:hidden',
+    init() { {% if not always %}try { this.hidden = localStorage.getItem(this.k) === '1'; } catch (e) {}{% else %}try { localStorage.removeItem(this.k); } catch (e) {}{% endif %} },
+    hide() { this.hidden = true; try { localStorage.setItem(this.k, '1'); } catch (e) {} } }" x-show="!hidden">
+  <div class="card-header">
+    <div class="min-w-0">
+      <h2 class="card-title">{% if steps.done == 0 %}{% translate "Welcome! Start in 5 short steps" %}{% else %}{% translate "Getting started" %}{% endif %}</h2>
+      <p class="card-subtitle">{% blocktranslate with d=steps.done t=steps.total %}{{ d }} of {{ t }} done — each one ticks itself when you do it.{% endblocktranslate %}</p>
+    </div>
+    {% if not always %}<button type="button" class="btn btn-ghost btn-sm" @click="hide()">{% translate "Hide" %}</button>{% endif %}
+  </div>
+  <div class="cc-steps-meter"><div class="meter" data-tone="good" role="progressbar" aria-valuenow="{{ steps.pct }}" aria-valuemin="0" aria-valuemax="100"><span style="width: {{ steps.pct }}%"></span></div></div>
+  <ol class="cc-step-list">
+    {% for s in steps.rows %}
+    <li class="cc-step{% if s.done %} is-done{% elif s.next %} is-next{% endif %}">
+      <span class="cc-step-mark" aria-hidden="true">{% if s.done %}{% include "partials/icon.html" with name="check" %}{% else %}{{ forloop.counter }}{% endif %}</span>
+      <div class="min-w-0">
+        <p class="cc-step-title">{{ s.title }}{% if s.done %}<span class="sr-only"> — {% translate "done" %}</span>{% endif %}</p>
+        {% if not s.done %}<p class="cc-step-text">{{ s.text }}</p>{% endif %}
+      </div>
+      {% if not s.done %}<a href="{{ s.url }}" class="btn {% if s.next %}btn-primary{% else %}btn-ghost{% endif %} btn-sm">{{ s.button }}</a>{% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+  {% if not always %}<div class="card-footer cc-steps-foot"><a href="{% url 'card_guide' %}" class="link">{% include "partials/icon.html" with name="book" %}{% translate "Read the 3-minute guide" %}</a></div>{% endif %}
+</section>

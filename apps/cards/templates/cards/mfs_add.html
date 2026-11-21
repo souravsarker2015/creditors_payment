@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 {% load i18n %}
-{% block title %}{% translate "Add mobile banking" %} | FinTrack{% endblock %}
+{% block title %}{{ title }} | FinTrack{% endblock %}
 {% block content %}
 <div class="page-narrow">
   <header class="page-header">
     <div>
       <a href="{{ back }}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Back" %}</a>
-      <h1 class="page-title">{% translate "Add mobile banking" %}</h1>
-      <p class="page-subtitle">{% translate "bKash, Nagad, Rocket, Upay… It's added to your wallets too, so its balance keeps itself." %}</p>
+      <h1 class="page-title">{{ title }}</h1>
+      {% if not obj %}<p class="page-subtitle">{% translate "bKash, Nagad, Rocket, Upay… It's added to your wallets too, so its balance keeps itself." %}</p>{% endif %}
     </div>
   </header>
   <form method="post" class="card" novalidate>

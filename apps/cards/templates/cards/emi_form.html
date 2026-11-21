@@ -29,36 +29,7 @@
     </div>
   </form>
 
-  {% if state %}
-  <section class="card">
-    <div class="card-header"><div><h2 class="card-title">{% translate "Installments" %}</h2><p class="card-subtitle">{% blocktranslate with n=state.count m=obj.months %}{{ n }} of {{ m }} on a bill so far{% endblocktranslate %}</p></div></div>
-    <ul class="ledger">
-      {% for r in state.rows %}
-      <li class="ledger-row{% if r in state.billed %} is-done{% endif %}">
-        <span class="ledger-icon" data-tone="{% if r in state.billed %}good{% else %}muted{% endif %}">{% if r in state.billed %}{% include "partials/icon.html" with name="check" %}{% else %}{{ r.n }}{% endif %}</span>
-        <div class="ledger-main"><p class="ledger-title">{% blocktranslate with d=r.date|date:"j M Y" %}Bill of {{ d }}{% endblocktranslate %}</p>{% if r.interest %}<p class="ledger-meta">{% blocktranslate with p=r.principal|money i=r.interest|money %}{{ p }} + {{ i }} interest{% endblocktranslate %}</p>{% endif %}</div>
-        <div class="ledger-end"><span class="ledger-amount">{{ r.total|money }}</span></div>
-      </li>
-      {% endfor %}
-    </ul>
-  </section>
-
-  {% if payoff %}
-  <details class="card wallet-correct">
-    <summary class="card-header"><div><h2 class="card-title">{% translate "Paid it off early?" %}</h2><p class="card-subtitle">{% blocktranslate with a=state.left|money %}The {{ a }} still to come goes on the next bill at once.{% endblocktranslate %}</p></div>{% include "partials/icon.html" with name="chevron-down" %}</summary>
-    <form method="post" action="{% url 'card_emi_payoff' obj.pk %}" class="card-body form-stack">
-      {% csrf_token %}
-      {% with form=payoff %}{% for field in form %}{% include "partials/field.html" %}{% endfor %}{% endwith %}
-      <div><button type="submit" class="btn btn-primary">{% include "partials/icon.html" with name="check" %}{% translate "Mark as paid off" %}</button></div>
-    </form>
-  </details>
-  {% elif obj.closed_on %}
-  <form method="post" action="{% url 'card_emi_payoff' obj.pk %}" class="callout" data-tone="good">
-    {% csrf_token %}{% include "partials/icon.html" with name="check" %}
-    <p class="callout-text !mt-0">{% blocktranslate with d=obj.closed_on|date:"j M Y" %}Paid off early on {{ d }}.{% endblocktranslate %} <button type="submit" name="reopen" value="1" class="link">{% translate "Undo" %}</button></p>
-  </form>
-  {% endif %}
-
+  {% if obj %}
   <form method="post" action="{% url 'card_emi_delete' obj.pk %}" data-confirm="{% translate 'Delete this EMI? Its amount goes back on the bill.' %}" data-confirm-after="back">
     {% csrf_token %}
     <button type="submit" class="btn btn-ghost is-danger">{% include "partials/icon.html" with name="trash" %}{% translate "Delete this EMI" %}</button>

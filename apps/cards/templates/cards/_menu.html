@@ -1,0 +1,26 @@
+{% load i18n %}{% comment %}
+The ⋯ menu on a row: Details, Edit, Copy, Delete — whatever is given. Needs: at least one of detail_url, edit_url,
+delete_url (then also confirm). Optional: copy_url (+ copy_id: ?copy=<id> on it), toggle_url (+ active: Stop using / Use again), next (the page to come
+back to after editing or deleting), up (open upwards, for the last rows).
+{% endcomment %}<div class="menu-wrap" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
+  <button type="button" class="icon-btn" @click.prevent.stop="open = !open" :aria-expanded="open" aria-haspopup="true" aria-label="{% translate 'More actions' %}" data-tip="{% translate 'More actions' %}">
+    <span class="h-[1.125rem] w-[1.125rem]">{% include "partials/icon.html" with name="dots" %}</span>
+  </button>
+  <div class="menu{% if up %} menu-up{% endif %}" x-show="open" x-cloak x-transition.opacity.scale.95.duration.100ms role="menu">
+    {% if detail_url %}<a href="{{ detail_url }}{% if next %}?next={{ next|urlencode }}{% endif %}" class="menu-item" role="menuitem">{% include "partials/icon.html" with name="list" %}{% translate "Details" %}</a>{% endif %}
+    {% if edit_url %}<a href="{{ edit_url }}{% if next %}?next={{ next|urlencode }}{% endif %}" class="menu-item" role="menuitem">{% include "partials/icon.html" with name="edit" %}{% translate "Edit" %}</a>{% endif %}
+    {% if copy_url %}<a href="{{ copy_url }}{% if copy_id %}?copy={{ copy_id }}{% endif %}" class="menu-item" role="menuitem">{% include "partials/icon.html" with name="copy" %}{% translate "Record again" %}</a>{% endif %}
+    {% if toggle_url %}
+    <form method="post" action="{{ toggle_url }}">{% csrf_token %}{% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+      <button type="submit" class="menu-item" role="menuitem">{% if active %}{% include "partials/icon.html" with name="pause" %}{% translate "Stop using" %}{% else %}{% include "partials/icon.html" with name="play" %}{% translate "Use again" %}{% endif %}</button>
+    </form>
+    {% endif %}
+    {% if delete_url %}
+    <div class="menu-sep"></div>
+    <form method="post" action="{{ delete_url }}" data-confirm="{{ confirm }}" data-confirm-after="back"{% if check %} data-confirm-check{% endif %}>
+      {% csrf_token %}{% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+      <button type="submit" class="menu-item is-danger" role="menuitem">{% include "partials/icon.html" with name="trash" %}{% translate "Delete" %}</button>
+    </form>
+    {% endif %}
+  </div>
+</div>

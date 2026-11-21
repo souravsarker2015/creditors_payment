@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{{ e.title }} · {{ c.name }} | FinTrack{% endblock %}
+{% block content %}
+<div class="page-narrow stack">
+  <header class="page-header !mb-0">
+    <div class="min-w-0">
+      <a href="{{ back }}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Back" %}</a>
+      <div class="flex items-center gap-3">
+        {% include "cards/_entry_icon.html" with kind=e.kind %}
+        <div class="min-w-0">
+          <h1 class="page-title">{{ e.title }}</h1>
+          <p class="page-subtitle"><a href="{% url 'card_detail' c.pk %}" class="link">{{ c.name }}</a> · {{ e.date|date:"l, j F Y" }}</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="card">
+    <div class="card-body">
+      <p class="stat-label">{% if e.kind == "cash" %}{% translate "Money received" %}{% elif e.kind == "pay" %}{% translate "Paid to the card" %}{% else %}{% translate "Amount" %}{% endif %}</p>
+      <p class="cc-now-amount">{{ e.amount|money }}</p>
+      {% if e.fee %}<p class="help">{% blocktranslate with f=e.fee|money t=e.total|money %}+ {{ f }} fee = {{ t }} in all{% endblocktranslate %}</p>{% endif %}
+      {% if future %}<p class="help mt-2" style="color: var(--status-warn);">{% translate "This is dated in the future — it counts from that day." %}</p>{% endif %}
+    </div>
+    <dl class="card-body !pt-0">
+      <div class="kv"><dt class="kv-label">{% translate "Card" %}</dt><dd class="kv-value"><a href="{% url 'card_detail' c.pk %}" class="link">{{ c.name }}</a></dd></div>
+      <div class="kv"><dt class="kv-label">{% translate "Date" %}</dt><dd class="kv-value">{{ e.date|date:"j M Y" }}</dd></div>
+      {% if e.charge_type %}<div class="kv"><dt class="kv-label">{% translate "Charge" %}</dt><dd class="kv-value">{{ e.get_charge_type_display }}</dd></div>{% endif %}
+      {% if e.wallet %}<div class="kv"><dt class="kv-label">{% if e.kind == "cash" %}{% translate "Sent to" %}{% else %}{% translate "Paid from" %}{% endif %}</dt><dd class="kv-value"><a href="{% url 'card_mfs_detail' e.wallet.pk %}" class="link">{{ e.wallet.name }}</a></dd></div>{% endif %}
+      {% if e.kind == "pay" and e.route %}<div class="kv"><dt class="kv-label">{% translate "How you paid" %}</dt><dd class="kv-value">{{ e.get_route_display }}</dd></div>{% endif %}
+      <div class="kv"><dt class="kv-label">{% translate "Amount" %}</dt><dd class="kv-value">{{ e.amount|money }}</dd></div>
+      {% if e.kind == "cash" or e.kind == "pay" %}<div class="kv"><dt class="kv-label">{% translate "Fee" %}</dt><dd class="kv-value">{% if e.fee %}{{ e.fee|money }}{% if e.fee_rate %} ({{ e.fee_rate|floatformat:"-2" }}%){% endif %}{% else %}{% translate "No fee" %}{% endif %}</dd></div>{% endif %}
+      {% if e.note %}<div class="kv"><dt class="kv-label">{% translate "Note" %}</dt><dd class="kv-value">{{ e.note }}</dd></div>{% endif %}
+    </dl>
+  </section>
+
+  <section class="card">
+    <div class="card-header"><div><h2 class="card-title">{% translate "What it did" %}</h2><p class="card-subtitle">{% translate "Worked out for you — change the record and these follow." %}</p></div></div>
+    <ul class="ledger">
+      <li class="ledger-row">
+        <span class="ledger-icon" data-tone="{% if card_change < 0 %}good{% else %}critical{% endif %}">{% include "partials/icon.html" with name="cards" %}</span>
+        <div class="ledger-main"><p class="ledger-title">{% if card_change < 0 %}{% blocktranslate with c=c.name %}You owe less on {{ c }}{% endblocktranslate %}{% else %}{% blocktranslate with c=c.name %}You owe more on {{ c }}{% endblocktranslate %}{% endif %}</p>
+          {% if after is not None %}<p class="ledger-meta">{% blocktranslate with a=after|money %}{{ a }} owed on the card after this{% endblocktranslate %}</p>{% endif %}
+          {% if e.kind == "cash" and e.fee %}<p class="ledger-meta">{% blocktranslate with f=e.fee|money %}The card's {{ f }} fee is added to what you owe.{% endblocktranslate %}</p>{% endif %}</div>
+        <div class="ledger-end"><span class="ledger-amount"{% if card_change < 0 %} data-tone="good"{% endif %}>{{ card_change|signed_money }}</span></div>
+      </li>
+      {% if wallet_change is not None %}
+      <li class="ledger-row">
+        <span class="ledger-icon" data-tone="accent">{% include "partials/icon.html" with name="phone" %}</span>
+        <div class="ledger-main"><p class="ledger-title">{% if wallet_change > 0 %}{% blocktranslate with w=e.wallet.name %}Money into {{ w }}{% endblocktranslate %}{% else %}{% blocktranslate with w=e.wallet.name %}Money out of {{ w }}{% endblocktranslate %}{% endif %}</p>
+          {% if e.kind == "pay" and e.fee %}<p class="ledger-meta">{% blocktranslate with f=e.fee|money %}Includes its {{ f }} fee.{% endblocktranslate %}</p>{% endif %}</div>
+        <div class="ledger-end"><span class="ledger-amount" data-tone="{% if wallet_change > 0 %}good{% else %}critical{% endif %}">{{ wallet_change|signed_money }}</span></div>
+      </li>
+      {% endif %}
+      <li class="ledger-row">
+        <span class="ledger-icon" data-tone="info">{% include "partials/icon.html" with name="calendar" %}</span>
+        <div class="ledger-main">
+          {% if on_bill %}
+          <p class="ledger-title">{% blocktranslate with d=on_bill.date|date:"j M Y" %}On the bill of {{ d }}{% endblocktranslate %} {% include "cards/_status.html" with b=on_bill %}</p>
+          <p class="ledger-meta">{% blocktranslate with d=on_bill.due|date:"j M Y" a=on_bill.closing|money %}That bill was {{ a }}, to pay by {{ d }}.{% endblocktranslate %}</p>
+          {% elif paid_bill %}
+          <p class="ledger-title">{% blocktranslate with d=paid_bill.date|date:"j M Y" %}Counted towards the bill of {{ d }}{% endblocktranslate %} {% include "cards/_status.html" with b=paid_bill %}</p>
+          <p class="ledger-meta">{% blocktranslate with d=paid_bill.due|date:"j M Y" a=paid_bill.closing|money %}That bill was {{ a }}, to pay by {{ d }}.{% endblocktranslate %}</p>
+          {% elif later %}
+          <p class="ledger-title">{% blocktranslate with d=later.0|date:"j M Y" %}Goes on the next bill, of {{ d }}{% endblocktranslate %}</p>
+          <p class="ledger-meta">{% blocktranslate with d=later.1|date:"j M Y" %}To pay by {{ d }}.{% endblocktranslate %}</p>
+          {% else %}
+          <p class="ledger-title">{% translate "Before the first bill" %}</p>
+          {% endif %}
+        </div>
+      </li>
+    </ul>
+  </section>
+
+  <div class="cc-detail-actions">
+    {% if can_edit %}<a href="{% url 'card_entry_edit' e.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-primary">{% include "partials/icon.html" with name="edit" %}{% translate "Edit" %}</a>{% endif %}
+    {% if copy_url and c.is_active %}<a href="{{ copy_url }}" class="btn btn-secondary">{% include "partials/icon.html" with name="copy" %}{% translate "Record again" %}</a>{% endif %}
+    <form method="post" action="{% url 'card_entry_delete' e.pk %}" data-confirm="{% translate "Delete this record? What you owe and the wallet's balance change back. You can undo it from Recently deleted." %}" data-confirm-after="back">
+      {% csrf_token %}<input type="hidden" name="next" value="{{ back }}">
+      <button type="submit" class="btn btn-ghost is-danger">{% include "partials/icon.html" with name="trash" %}{% translate "Delete" %}</button>
+    </form>
+  </div>
+  <p class="help">{% blocktranslate with d=e.created_at|date:"j M Y, H:i" %}Added on {{ d }}.{% endblocktranslate %}{% if not can_edit %} {% translate "A correction can't be edited — delete it and match the bank again." %}{% endif %}</p>
+</div>
+{% endblock %}

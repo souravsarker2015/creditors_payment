@@ -675,7 +675,7 @@ def wallet_moves(user, only=None):
     if only is not None:
         qs = qs.filter(wallet_id=only)
     for x in qs:
-        url = reverse("card_entry_edit", args=[x.pk])
+        url = reverse("card_entry_detail", args=[x.pk])
         if x.kind == EntryKind.CASH:
             yield x.date, x.wallet_id, x.amount, _("From card %(card)s") % {"card": x.card}, x.note, url
         else:

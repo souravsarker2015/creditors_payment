@@ -6,10 +6,16 @@
   <header class="page-header !mb-0">
     <div class="min-w-0">
       <a href="{% url 'card_mfs' %}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{% translate "Mobile banking" %}</a>
-      <h1 class="page-title">{{ w.name }}</h1>
+      <div class="flex flex-wrap items-center gap-x-3 gap-y-1"><h1 class="page-title">{{ w.name }}</h1>{% if not w.is_active %}<span class="badge" data-tone="muted">{% translate "Not in use" %}</span>{% endif %}</div>
       <p class="page-subtitle">{{ w.get_kind_display }}{% if w.number %} · {{ w.number }}{% endif %}</p>
     </div>
-    <div class="page-actions"><a href="{% url 'wallet_detail' w.pk %}" class="btn btn-ghost">{% include "partials/icon.html" with name="wallet" %}{% translate "All its money" %}</a></div>
+    <div class="page-actions">
+      <a href="{% url 'wallet_detail' w.pk %}" class="btn btn-ghost">{% include "partials/icon.html" with name="wallet" %}{% translate "All its money" %}</a>
+      <a href="{% url 'card_mfs_edit' w.pk %}" class="btn btn-secondary">{% include "partials/icon.html" with name="edit" %}{% translate "Edit" %}</a>
+      {% url 'card_mfs_toggle' w.pk as toggle_url %}{% url 'card_mfs_delete' w.pk as delete_url %}
+      {% translate "Delete this wallet? Card records that used it keep their amounts, without a wallet. You can undo this from Recently deleted." as confirm_text %}
+      {% include "cards/_menu.html" with toggle_url=toggle_url active=w.is_active delete_url=delete_url confirm=confirm_text check=True %}
+    </div>
   </header>
 
   <section class="hero">
@@ -54,17 +60,11 @@
   {% endif %}
 
   <section class="card">
-    <div class="card-header"><h2 class="card-title">{% translate "Card money through it" %}</h2></div>
+    <div class="card-header"><div><h2 class="card-title">{% translate "Card money through it" %}</h2><p class="card-subtitle">{% translate "Tap one for its details; ⋯ to edit or delete it." %}</p></div>
+      <a href="{% url 'card_records' %}?wallet={{ w.pk }}" class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="filter" %}{% translate "Search & filter" %}</a></div>
     {% if entries %}
     <ul class="ledger">
-      {% for x in entries %}
-      <li><a href="{% url 'card_entry_edit' x.pk %}" class="ledger-row">
-        {% include "cards/_entry_icon.html" with kind=x.kind %}
-        <div class="ledger-main"><p class="ledger-title">{% if x.kind == "cash" %}{% blocktranslate with c=x.card.name %}From {{ c }}{% endblocktranslate %}{% else %}{% blocktranslate with c=x.card.name %}Paid {{ c }}{% endblocktranslate %}{% endif %}</p>
-          <p class="ledger-meta">{{ x.date|date:"j M Y" }}{% if x.fee %} · {% blocktranslate with f=x.fee|money %}{{ f }} fee{% endblocktranslate %}{% if x.fee_rate %} ({{ x.fee_rate|floatformat:"-2" }}%){% endif %}{% endif %}{% if x.kind == "pay" and x.route %} · {{ x.get_route_display }}{% endif %}{% if x.note %} · {{ x.note }}{% endif %}</p></div>
-        <div class="ledger-end"><span class="ledger-amount" data-tone="{% if x.kind == 'cash' %}good{% else %}critical{% endif %}">{% if x.kind == "cash" %}+{{ x.amount|money }}{% else %}−{{ x.total|money }}{% endif %}</span></div>
-      </a></li>
-      {% endfor %}
+      {% for x in entries %}{% include "cards/_entry_row.html" with show_card=True next=request.get_full_path up=forloop.last %}{% endfor %}
     </ul>
     {% else %}
     <div class="empty is-plain"><p class="empty-text">{% translate "Nothing yet. Pick this wallet when you take money from a card or pay a card bill." %}</p></div>

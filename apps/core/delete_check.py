@@ -152,6 +152,15 @@ def _wallet(obj):
     return [_("%(amount)s is in this wallet.") % {"amount": _money(balance)}] if balance else []
 
 
+def _card(obj):
+    from django.utils import timezone
+
+    from apps.cards.services import card_state
+
+    owed = card_state(obj, timezone.localdate()).owed
+    return [_("You still owe %(amount)s on this card.") % {"amount": _money(owed)}] if owed > 0 else []
+
+
 MINE = {       # the delete's URL name: the record, whose it is, and what to say about its money
     "creditor_delete": ("apps.creditors.models.Creditor", "user", _i_owe),
     "debtor_delete": ("apps.debtors.models.Debtor", "user", _owed_to_me),
@@ -160,6 +169,8 @@ MINE = {       # the delete's URL name: the record, whose it is, and what to say
     "income_source_delete": ("apps.income.models.IncomeSource", "user", None),
     "contributor_delete": ("apps.contributors.models.Contributor", "user", None),
     "wallet_delete": ("apps.wallets.models.Wallet", "user", _wallet),
+    "card_delete": ("apps.cards.models.Card", "user", _card),
+    "card_mfs_delete": ("apps.wallets.models.Wallet", "user", _wallet),
     "work:project_delete": ("apps.productivity.models.Project", "owner", None),
     "work:exam_subject": ("apps.productivity.models.ExamSubject", "owner", None),
     "work:prep_topic": ("apps.productivity.models.PrepTopic", "owner", None),
@@ -180,7 +191,7 @@ def delete_check_view(request):
         match = resolve(urlsplit(request.GET.get("url", "")).path)
     except Resolver404:
         return JsonResponse({"lines": []})
-    name, pk = match.view_name, match.kwargs.get("pk")
+    name, pk = match.view_name, match.kwargs.get("pk", match.kwargs.get("wallet"))
     lines, blocked = [], False
     if name in MINE:
         lines = _mine(request, name, pk)

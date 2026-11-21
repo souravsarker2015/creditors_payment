@@ -9,22 +9,23 @@
       <p class="page-subtitle">{% translate "What you owe on each card, when to pay it, and what bKash, Nagad and the banks charge you on the way." %}</p>
     </div>
     <div class="page-actions">
-      {% if active %}
-      <a href="{% url 'card_entry_new' 'cash' %}" class="btn btn-secondary">{% include "partials/icon.html" with name="phone" %}{% translate "Take money to bKash / Nagad" %}</a>
-      <a href="{% url 'card_entry_new' 'pay' %}" class="btn btn-secondary">{% include "partials/icon.html" with name="check" %}{% translate "Pay a bill" %}</a>
-      {% endif %}
-      <a href="{% url 'card_lists' %}" class="btn btn-ghost" data-tip="{% translate 'Banks & card types' %}">{% include "partials/icon.html" with name="list" %}<span class="sr-only">{% translate "Banks & card types" %}</span></a>
-      <a href="{% url 'card_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add a card" %}</a>
+      <a href="{% url 'card_guide' %}" class="btn btn-ghost">{% include "partials/icon.html" with name="book" %}{% translate "Guide" %}</a>
+      {% if active %}{% include "cards/_record_menu.html" %}{% endif %}
+      <a href="{% url 'card_create' %}" class="btn {% if active %}btn-secondary{% else %}btn-primary{% endif %}">{% include "partials/icon.html" with name="plus" %}{% translate "Add a card" %}</a>
     </div>
   </header>
 
+  {% if not steps.all %}{% if states %}{% include "cards/_steps.html" %}{% else %}{% include "cards/_steps.html" with always=True %}{% endif %}{% endif %}
+
   {% if not states %}
+  {% if steps.all %}
   <div class="empty">
     <div class="empty-icon">{% include "partials/icon.html" with name="cards" %}</div>
-    <h3 class="empty-title">{% translate "Keep every card bill in view" %}</h3>
-    <p class="empty-text">{% translate "Add each credit card with its bill day and pay-by day. Then record the money you send to bKash or Nagad and the bills you pay — the app works out each bill, the due date, the minimum, every fee and the cheapest way to pay." %}</p>
-    <a href="{% url 'card_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add your first card" %}</a>
+    <h3 class="empty-title">{% translate "No card in use" %}</h3>
+    <p class="empty-text">{% translate "Your cards are all stopped and paid off. Add a new one, or open an old one to use it again." %}</p>
+    <a href="{% url 'card_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add a card" %}</a>
   </div>
+  {% endif %}
   {% else %}
 
   <section class="hero">
@@ -182,7 +183,7 @@
       {% if emis %}
       <ul class="ledger">
         {% for card, e in emis %}
-        <li><a href="{% url 'card_emi_edit' e.plan.pk %}" class="ledger-row">
+        <li><a href="{% url 'card_emi_detail' e.plan.pk %}" class="ledger-row">
           <div class="ledger-main">
             <p class="ledger-title">{{ e.plan.title }} <span class="text-xs font-normal" style="color: var(--text-muted);">· {{ card.name }}</span></p>
             <p class="ledger-meta">{% blocktranslate with a=e.each|money n=e.count m=e.plan.months %}{{ a }} a month · {{ n }} of {{ m }} paid{% endblocktranslate %}{% if e.next %} · {% blocktranslate with d=e.next.date|date:"j M" %}next on the {{ d }} bill{% endblocktranslate %}{% endif %}</p>
@@ -198,16 +199,11 @@
     </section>
 
     <section class="card">
-      <div class="card-header"><h2 class="card-title">{% translate "Recent" %}</h2></div>
+      <div class="card-header"><div><h2 class="card-title">{% translate "Recent" %}</h2><p class="card-subtitle">{% translate "Tap one for its details; ⋯ to edit or delete it." %}</p></div>
+        {% if record_count %}<a href="{% url 'card_records' %}" class="btn btn-ghost btn-sm">{% blocktranslate count n=record_count %}All {{ n }} record{% plural %}All {{ n }} records{% endblocktranslate %}{% include "partials/icon.html" with name="arrow-right" %}</a>{% endif %}</div>
       {% if recent %}
       <ul class="ledger">
-        {% for e in recent %}
-        <li><a href="{% url 'card_entry_edit' e.entry.pk %}" class="ledger-row">
-          {% include "cards/_entry_icon.html" with kind=e.kind %}
-          <div class="ledger-main"><p class="ledger-title">{{ e.title }} <span class="text-xs font-normal" style="color: var(--text-muted);">· {{ e.entry.card.name }}</span></p><p class="ledger-meta">{{ e.date|date:"j M Y" }}{% if e.detail %} · {{ e.detail }}{% endif %}</p></div>
-          <div class="ledger-end"><span class="ledger-amount"{% if e.owed < 0 %} data-tone="good"{% endif %}>{{ e.owed|signed_money }}</span></div>
-        </a></li>
-        {% endfor %}
+        {% for e in recent %}{% include "cards/_entry_row.html" with x=e.entry show_card=True up=forloop.last %}{% endfor %}
       </ul>
       {% else %}
       <div class="empty is-plain"><p class="empty-text">{% translate "Nothing recorded yet." %}</p></div>
@@ -215,7 +211,11 @@
     </section>
   </div>
 
-  {% include "business/partials/note.html" with key="cards" title=_("How credit cards work here") p1=_("Add each card once with its bill day and pay-by day (both are on your card bill). The card number isn't needed — at most the last 4 digits.") p2=_("“Take money to bKash / Nagad” adds the money to that wallet, and the amount plus the card's fee to the card. “Pay a bill” takes the payment and the mobile banking fee out of the wallet you pick.") p3=_("Each bill is worked out for you: what's new, what's left from before, the minimum and the due date. Pay in full by the date to pay no interest. If the bank's number differs, open the card and use “Match the bank”.") p4=_("Set each mobile banking's charges once under “Charges & details”; the app then suggests the cheapest way to pay each bill.") %}
+  <a href="{% url 'card_guide' %}" class="cc-guide-link">
+    <span class="ledger-icon" data-tone="info">{% include "partials/icon.html" with name="book" %}</span>
+    <span><b>{% translate "New here, or not sure what to tap?" %}</b><small>{% translate "The guide explains every word and shows what to record for each thing that happens — with an example." %}</small></span>
+    {% include "partials/icon.html" with name="arrow-right" %}
+  </a>
   {% endif %}
 </div>
 {% endblock %}
