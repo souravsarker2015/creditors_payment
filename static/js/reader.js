@@ -85,7 +85,7 @@
           this.takeaway = this.prog(c.key).takeaway || "";
           el.innerHTML = W.markdown(c.md || "");
           if (W.enrich) try { W.enrich(el, {}); } catch (e) { /* diagrams etc. */ }
-          if (window.hljs) el.querySelectorAll("pre code:not(.language-mermaid):not([data-highlighted])").forEach(function (x) { try { hljs.highlightElement(x); } catch (e) { /* ok */ } });
+          this.paintCode(el);
           if (this.prefs.bionic) this.bionic(true);
           this.wrapAnswers();
           var u = new URL(location.href); u.searchParams.set("ch", c.key); history.replaceState(null, "", u);
@@ -98,6 +98,18 @@
             self.measure(); self.markFocus();
             setTimeout(function () { self.layout(); self.measure(); }, 600);     // (pictures and diagrams take a moment)
           });
+        },
+        /* code blocks get their colours as they come near (a long chapter's 40 blocks all at once froze the page) */
+        paintCode: function (el) {
+          if (!window.hljs) return;
+          var list = el.querySelectorAll("pre code:not(.language-mermaid):not([data-highlighted])");
+          var go = function (x) { try { hljs.highlightElement(x); } catch (e) { /* ok */ } };
+          if (!("IntersectionObserver" in window)) { list.forEach(go); return; }
+          if (this.codeSeen) this.codeSeen.disconnect();
+          var io = this.codeSeen = new IntersectionObserver(function (es) {
+            es.forEach(function (e) { if (e.isIntersecting) { io.unobserve(e.target); go(e.target); } });
+          }, { rootMargin: "800px 0px" });
+          list.forEach(function (x) { io.observe(x); });
         },
         jump: function (frac) {
           var r = this.$refs.text.getBoundingClientRect(), top = window.scrollY + r.top;
@@ -381,8 +393,13 @@
               if (e.oldIndex === e.newIndex) return;
               var key = self.cur().key, moved = self.chapters.splice(e.oldIndex, 1)[0];
               self.chapters.splice(e.newIndex, 0, moved);
+              // a long note's parts go together: the note moves to where its part was put, its parts in their order
+              var order = [], byNote = {};
+              self.chapters.forEach(function (c) { var n = String(c.note || c.key); if (!byNote[n]) { byNote[n] = []; order.push(n); } byNote[n].push(c); });
+              if (moved.pieces) { order.splice(order.indexOf(String(moved.note)), 1); var at = self.chapters.indexOf(moved), before = self.chapters.slice(0, at).filter(function (c) { return String(c.note) !== String(moved.note); }).map(function (c) { return String(c.note || c.key); }); var after = before.length ? order.indexOf(before[before.length - 1]) + 1 : 0; order.splice(after, 0, String(moved.note)); }
+              self.chapters = [].concat.apply([], order.map(function (n) { return byNote[n].sort(function (a, b) { return (a.piece || 0) - (b.piece || 0); }); }));
               self.idx = self.chapters.findIndex(function (c) { return c.key === key; });
-              self.post({ action: "order", ids: self.chapters.map(function (c) { return c.key; }).join(",") }).then(function (r) { if (r && r.ok) W.toast(T("orderSaved")); });
+              self.post({ action: "order", ids: order.join(",") }).then(function (r) { if (r && r.ok) W.toast(T("orderSaved")); });
             },
           });
         },

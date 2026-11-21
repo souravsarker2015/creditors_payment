@@ -52,7 +52,7 @@
           <h3>{% translate "Blockers" %}</h3>
           <ul>{% for x in standup.blockers %}<li>{{ x }}</li>{% empty %}<li class="wd-muted">{% translate "None" %}</li>{% endfor %}</ul>
         </div>
-        {{ standup_md|json_script:"standup-md" }}{{ standup_plain|json_script:"standup-plain" }}
+        {{ standup_md|json_page:"standup-md" }}{{ standup_plain|json_page:"standup-plain" }}
         <div class="form-actions !justify-start mt-3">
           <button type="button" class="btn btn-primary btn-sm" @click="navigator.clipboard.writeText(JSON.parse(document.getElementById('standup-md').textContent)).then(() => Work.toast('{% translate "Copied for Slack / Teams (Markdown)" %}'))">{% icon "copy" %}{% translate "Copy Markdown" %}</button>
           <button type="button" class="btn btn-secondary btn-sm" @click="navigator.clipboard.writeText(JSON.parse(document.getElementById('standup-plain').textContent)).then(() => Work.toast('{% translate "Copied" %}'))">{% translate "Copy plain text" %}</button>

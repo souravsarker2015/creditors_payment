@@ -4,7 +4,7 @@
 {% block title %}{% translate "Learning roadmaps" %} | {% translate "Productivity" %}{% endblock %}
 
 {% block work %}
-{{ prompts|json_script:"path-prompt" }}
+{{ prompts|json_page:"path-prompt" }}
 {% include "work/partials/roadmap_switch.html" with here="learning" %}
 <div class="lpl" data-page-keys="n i" x-data="pathsList(JSON.parse(document.getElementById('path-prompt').textContent), '{% url 'work:api_path_import' %}', 'learning', '{% translate "Copied" %}')"
      @keydown.window="if ($event.target.closest('input,textarea,select,[contenteditable]') || $event.ctrlKey || $event.metaKey || $event.altKey || importOpen || newOpen) return;

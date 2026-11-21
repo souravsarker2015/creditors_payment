@@ -4,8 +4,8 @@
 {% block title %}{{ exam.title }} | {% translate "Mock exam" %}{% endblock %}
 
 {% block work %}
-{{ data|json_script:"prep-exam" }}
-{{ prep_text|json_script:"prep-text" }}
+{{ data|json_page:"prep-exam" }}
+{{ prep_text|json_page:"prep-text" }}
 <div class="wpq-exam" x-data="prepExam" @keydown.window="key($event)">
   <header class="wpq-exam-head">
     <div class="min-w-0"><p class="wfc-hero-kicker">{% translate "Mock exam" %}</p><h1 class="wpq-exam-title">{{ exam.title }}</h1></div>

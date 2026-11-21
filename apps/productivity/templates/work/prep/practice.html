@@ -4,8 +4,8 @@
 {% block title %}{{ title }} | {% translate "Interview prep" %}{% endblock %}
 
 {% block work %}
-{{ session|json_script:"prep-session" }}
-{{ prep_text|json_script:"prep-text" }}
+{{ session|json_page:"prep-session" }}
+{{ prep_text|json_page:"prep-text" }}
 <div class="wpq-session" x-data="prepSession('prep-session')" @keydown.window="key($event)">
   <header class="wfr-head">
     <a :href="back" class="icon-btn" aria-label="{% translate 'Stop' %}" data-tip="{% translate 'Stop' %}">{% icon "x" %}</a>

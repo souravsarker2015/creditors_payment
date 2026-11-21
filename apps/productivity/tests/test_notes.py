@@ -69,7 +69,7 @@ class EditInPreviewTests(TestCase):
         note = Note.objects.create(owner=self.me, title="Plan", body="# Plan")
         page = self.client.get(reverse("work:note", args=[note.pk])).content.decode()
         self.assertIn("wn-split-btn", page)
-        self.assertIn("Work.live($el, { text: body", page)
+        self.assertIn("Work.live($el, { text: split && long ? shownBody : body", page)
 
     def test_the_board_editor_preview_is_editable_too(self):
         page = self.client.get(reverse("work:notes")).content.decode()

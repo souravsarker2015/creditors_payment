@@ -4,9 +4,9 @@
 {% block title %}{{ diagram.title }} | {% translate "Diagrams" %}{% endblock %}
 
 {% block work %}
-{{ payload|json_script:"diagram-data" }}
-{{ texts|json_script:"diagram-text" }}
-{% if draw_icons %}{{ draw_icons|json_script:"diagram-icons" }}{% endif %}
+{{ payload|json_page:"diagram-data" }}
+{{ texts|json_page:"diagram-text" }}
+{% if draw_icons %}{{ draw_icons|json_page:"diagram-icons" }}{% endif %}
 <div class="wdx" x-data="diagramPage(JSON.parse(document.getElementById('diagram-data').textContent))" :class="full && 'is-full'"
      data-kind="{{ diagram.kind }}" @keydown.escape.window="if (full && !$event.defaultPrevented) full = false">
   <header class="wdx-head">

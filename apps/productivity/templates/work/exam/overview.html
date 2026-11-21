@@ -4,8 +4,8 @@
 {% block title %}{% translate "Overview" %} | {{ s.name }}{% endblock %}
 
 {% block work %}
-{{ data|json_script:"exam-data" }}
-{{ exam_text|json_script:"exam-text" }}
+{{ data|json_page:"exam-data" }}
+{{ exam_text|json_page:"exam-text" }}
 <div class="wexo" data-keys-page="exam-overview reading find" x-data="examOverview" @keydown.document="key($event)" :style="'--wexo-size:' + size">
   <header class="wp-head">
     <div class="min-w-0">

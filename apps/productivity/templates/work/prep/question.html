@@ -4,8 +4,8 @@
 {% block title %}{{ q.title|truncatechars:60 }} | {% translate "Interview prep" %}{% endblock %}
 
 {% block work %}
-{{ data|json_script:"prep-session" }}
-{{ prep_text|json_script:"prep-text" }}
+{{ data|json_page:"prep-session" }}
+{{ prep_text|json_page:"prep-text" }}
 <header class="wp-head">
   <div class="min-w-0">
     <a href="{% url 'work:prep_topic' q.topic_id %}" class="back-link">{% icon "chevron-left" %}{{ q.topic.name }}{% if q.section %} › {{ q.section.name }}{% endif %}</a>

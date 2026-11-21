@@ -124,5 +124,5 @@
     <button type="button" class="btn btn-ghost btn-sm" @click="open = !open" x-text="open ? '{% translate "Hide" %}' : '{% translate "Show" %}'">{% translate "Show" %}</button></header>
   <div class="card-body !pt-0" x-show="open" x-cloak><pre class="wv-md">{{ md }}</pre></div>
 </section>
-{{ md|json_script:"review-md" }}
+{{ md|json_page:"review-md" }}
 {% endblock %}

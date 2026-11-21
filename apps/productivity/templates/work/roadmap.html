@@ -4,8 +4,8 @@
 {% block title %}{{ rm.title }} | {% translate "Roadmaps" %}{% endblock %}
 
 {% block work %}
-{{ payload|json_script:"roadmap-data" }}
-{{ texts|json_script:"roadmap-text" }}
+{{ payload|json_page:"roadmap-data" }}
+{{ texts|json_page:"roadmap-text" }}
 <div class="rmp" data-keys-page="roadmap" data-page-keys="n t" x-data="roadmapPage(JSON.parse(document.getElementById('roadmap-data').textContent))" data-color="{{ rm.color }}">
 
   {# ── header: name, saving state, views, actions ── #}

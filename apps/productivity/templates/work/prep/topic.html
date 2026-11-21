@@ -4,8 +4,8 @@
 {% block title %}{{ t.name }} | {% translate "Interview prep" %}{% endblock %}
 
 {% block work %}
-{{ contents|json_script:"prep-contents" }}
-{{ prep_text|json_script:"prep-text" }}
+{{ contents|json_page:"prep-contents" }}
+{{ prep_text|json_page:"prep-text" }}
 <header class="wp-head">
   <div class="min-w-0">
     <a href="{% url 'work:prep_contents' %}" class="back-link">{% icon "chevron-left" %}{% translate "Contents" %}</a>

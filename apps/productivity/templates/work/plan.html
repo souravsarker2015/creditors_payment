@@ -4,7 +4,7 @@
 {% block title %}{% translate "Plan my day" %} | {% translate "Productivity" %}{% endblock %}
 
 {% block work %}
-{{ plan|json_script:"plan-data" }}
+{{ plan|json_page:"plan-data" }}
 <div class="stack" x-data="workPlan(JSON.parse(document.getElementById('plan-data').textContent), { isToday: {{ is_today|yesno:'true,false' }}, dayStart: {{ day_start }}, dayEnd: {{ day_end }} })"
      @pointermove.window="move($event)" @pointerup.window="up($event)" @pointercancel.window="drag = null; ghost = null" @keydown.escape.window="picked = null; open = null">
   <header class="wp-head">

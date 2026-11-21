@@ -50,11 +50,31 @@
     if (window.Work && Work.highlightable) Work.highlightable(el, q && q.answer ? text : "", q && q.answer ? function (md) { saveAnswer(q, md); } : null);
   }
 
-  function paint(el, text) {
-    if (!el) return;
+  /* A question or an answer drawn from its Markdown when it comes near the screen: until then its words are there as
+     plain text (so they're found, and the page is as long). 300 questions and answers drawn at once froze the page. */
+  var later = "IntersectionObserver" in window ? new IntersectionObserver(function (es) {
+    es.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      later.unobserve(e.target);
+      if (e.target._wantMd != null) { var text = e.target._wantMd; e.target._wantMd = null; draw(e.target, text); }
+    });
+  }, { rootMargin: "900px 0px" }) : null;
+  // the first few of a page are drawn at once (no flash of plain text at the top); the others when the browser says
+  // they're near — asking each one where it is would make the browser lay the page out again for every card
+  var now = 0, nowReset = 0;
+  function first() { if (!nowReset) nowReset = setTimeout(function () { now = 0; nowReset = 0; }, 0); return ++now <= 8; }
+  function draw(el, text) {
+    el.classList.remove("is-plain");
     el.innerHTML = Work.markdown(text || "");     // (with formulas: work.js)
     if (window.Work && Work.mermaidIn) Work.mermaidIn(el);
-    if (window.hljs) el.querySelectorAll("pre code:not(.language-mermaid)").forEach(function (c) { hljs.highlightElement(c); });
+    if (window.Work && Work.paintCode) Work.paintCode(el);
+    else if (window.hljs) el.querySelectorAll("pre code:not(.language-mermaid)").forEach(function (c) { hljs.highlightElement(c); });
+  }
+  function paint(el, text) {
+    if (!el) return;
+    if (!later || first()) { el._wantMd = null; draw(el, text); return; }
+    el._wantMd = text || ""; el.textContent = text || ""; el.classList.add("is-plain");
+    later.observe(el);
   }
 
   /* (A ChatGPT / Claude reply pasted as formatted text comes in as Markdown: static/js/writing.js) */

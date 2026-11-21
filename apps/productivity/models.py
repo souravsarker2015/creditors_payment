@@ -1591,7 +1591,8 @@ class ReadingProgress(models.Model):
     owner = models.ForeignKey(**OWNER)
     note = models.ForeignKey(Note, on_delete=models.CASCADE, null=True, blank=True, related_name="readings")
     subject = models.ForeignKey(ExamSubject, on_delete=models.CASCADE, null=True, blank=True, related_name="readings")
-    chapter = models.CharField(max_length=120, blank=True, help_text="An exam subject's chapter (its name; empty: no chapter).")
+    chapter = models.CharField(max_length=120, blank=True, help_text="An exam subject's chapter (its name; empty: no chapter; "
+                               "“name#2”: the second part of a long one) — or, for a note read in parts, which part (“3”; empty: the whole note).")
     book = models.ForeignKey(NoteCategory, on_delete=models.SET_NULL, null=True, blank=True, related_name="+",
                              help_text="The category it was last read in as a book (to go back to it).")
     position = models.FloatField(default=0, help_text="How far down it was read: 0 to 1.")
@@ -1604,7 +1605,7 @@ class ReadingProgress(models.Model):
     class Meta:
         ordering = ["-updated_at"]
         constraints = [
-            models.UniqueConstraint(fields=["owner", "note"], condition=models.Q(note__isnull=False), name="reading_one_per_note"),
+            models.UniqueConstraint(fields=["owner", "note", "chapter"], condition=models.Q(note__isnull=False), name="reading_one_per_note_part"),
             models.UniqueConstraint(fields=["owner", "subject", "chapter"], condition=models.Q(subject__isnull=False), name="reading_one_per_chapter"),
         ]
 

@@ -4,8 +4,8 @@
 {% block title %}{{ path.title }} | {% translate "Learning roadmaps" %}{% endblock %}
 
 {% block work %}
-{{ payload|json_script:"path-data" }}
-{{ texts|json_script:"path-text" }}
+{{ payload|json_page:"path-data" }}
+{{ texts|json_page:"path-text" }}
 <div class="lp" data-keys-page="paths" data-page-keys="c n s" data-color="{{ path.color }}" x-data="pathPage(JSON.parse(document.getElementById('path-data').textContent))">
 
   {# ── name, how far along, what's next, find, more ── #}

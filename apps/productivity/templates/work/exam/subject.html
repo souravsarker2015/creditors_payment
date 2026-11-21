@@ -4,8 +4,8 @@
 {% block title %}{{ s.name }} | {% translate "Exam notes" %}{% endblock %}
 
 {% block work %}
-{{ data|json_script:"exam-data" }}
-{{ exam_text|json_script:"exam-text" }}
+{{ data|json_page:"exam-data" }}
+{{ exam_text|json_page:"exam-text" }}
 <div class="wex wkb" data-keys-page="exam writing reading find" x-data="examBoard" @keydown.document="key($event)" data-page-keys="c a r o j k x s e">
 <header class="wp-head">
   <div class="min-w-0">

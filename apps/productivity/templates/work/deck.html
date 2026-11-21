@@ -4,8 +4,8 @@
 {% block title %}{{ deck.name }} | {% translate "Flashcards" %}{% endblock %}
 
 {% block work %}
-{{ cards|json_script:"deck-cards" }}
-{{ texts|json_script:"card-text" }}
+{{ cards|json_page:"deck-cards" }}
+{{ texts|json_page:"card-text" }}
 <div class="wfc-deckpage" x-data="deckPage({{ deck.pk }}, {{ form.errors|yesno:'true,false' }})" data-color="{{ deck.color }}">
   <header class="wp-head wfc-deck-head">
     <div class="min-w-0">

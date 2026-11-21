@@ -7,8 +7,8 @@
 {# straight away, before anything is drawn: the Reader's layout and its colours (no flash of the app's menus or a white page) #}
 <script>(function () { var h = document.documentElement, t = "paper"; h.setAttribute("data-reader", "");
   try { t = (JSON.parse(localStorage.getItem("ft-reader") || "{}") || {}).theme || "paper"; } catch (e) {} h.setAttribute("data-rtheme", t); }());</script>
-{{ data|json_script:"read-data" }}
-{{ texts|json_script:"read-text" }}
+{{ data|json_page:"read-data" }}
+{{ texts|json_page:"read-text" }}
 {# The Reader (static/js/reader.js): a chapter at a time, as Kindle and Apple Books — keys: ← → chapters, T contents, A text, L listen, F focus line #}
 <div class="rd" x-data="reader(JSON.parse(document.getElementById('read-data').textContent))" data-keys-page="reader find"
      data-page-keys="t a l s m f n p q [ ]" :class="{ 'is-quiz': prefs.quiz && data.kind === 'exam', 'is-focus': prefs.focus, 'is-bionic': prefs.bionic, 'bar-hidden': barHidden, 'toc-open': toc }"
@@ -185,7 +185,7 @@
       </label>
       <div class="rd-end-acts">
         <a class="btn btn-secondary" x-show="data.review" :href="data.review + '?which=all&chapter=' + encodeURIComponent(cur().key)">{% icon "target" %}{% translate "Test yourself on this chapter" %}</a>
-        <a class="btn btn-ghost" x-show="data.edit" :href="data.edit + cur().key + '/'">{% icon "edit" %}{% translate "Edit this note" %}</a>
+        <a class="btn btn-ghost" x-show="data.edit" :href="data.edit + (cur().note || cur().key) + '/'">{% icon "edit" %}{% translate "Edit this note" %}</a>
         <button type="button" class="btn btn-primary rd-next" x-show="idx < chapters.length - 1" @click="go(idx + 1)">
           <span><small>{% translate "Next" %} · <span x-text="next() && next().minutes"></span> min</small><b x-text="next() && next().title"></b></span>{% icon "arrow-right" %}</button>
       </div>

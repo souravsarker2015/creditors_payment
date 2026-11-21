@@ -4,7 +4,7 @@
 {% block title %}{% translate "Roadmaps" %} | {% translate "Productivity" %}{% endblock %}
 
 {% block work %}
-{{ prompts|json_script:"path-prompt" }}
+{{ prompts|json_page:"path-prompt" }}
 {% include "work/partials/roadmap_switch.html" with here="timeline" %}
 <div data-page-keys="n i" x-data="pathsList(JSON.parse(document.getElementById('path-prompt').textContent), '{% url 'work:api_roadmap_import' %}', 'timeline', '{% translate "Copied" %}')">
 {% csrf_token %}

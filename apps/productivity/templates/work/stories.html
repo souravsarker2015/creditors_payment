@@ -31,7 +31,7 @@
 </section>
 
 {# ── practice: a question, a story to answer it, two minutes ── #}
-{{ practice|json_script:"story-practice" }}
+{{ practice|json_page:"story-practice" }}
 <section class="card card-body ws-practice" id="practice" x-data="storyPractice">
   <div class="ws-practice-head">
     <h2 class="card-title">{% icon "play" %}{% translate "Practise out loud" %}</h2>

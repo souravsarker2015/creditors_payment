@@ -104,6 +104,9 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 # ──────────────────────────────────────────────
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # Pages sent compressed: a long note or a book for the Reader is a tenth of the size over a phone's signal.
+    # (Django adds random bytes to each compressed page, against the BREACH attack on HTTPS.)
+    "django.middleware.gzip.GZipMiddleware",
     "apps.core.freshness.DataVersionMiddleware",  # lists never show a copy from before your last save
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",

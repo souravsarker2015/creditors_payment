@@ -10,7 +10,7 @@
   <p class="wp-sub">{% icon "lock" %}{% translate "Everything here runs in your browser — nothing you type is sent anywhere, so a real token is safe to paste." %}</p>
 </div></header>
 
-{{ texts|json_script:"devtools-text" }}
+{{ texts|json_page:"devtools-text" }}
 <div x-data="devTools" class="wdv" data-page-keys>
   <nav class="wdv-tabs" role="tablist" aria-label="{% translate 'Dev tools' %}">
     {% for key, label in tools %}<button type="button" class="chip" role="tab" data-tool="{{ key }}" :class="tool === '{{ key }}' && 'is-active'" :aria-selected="(tool === '{{ key }}').toString()" @click="tool = '{{ key }}'">{{ label }}</button>{% endfor %}

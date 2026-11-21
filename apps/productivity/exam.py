@@ -152,10 +152,11 @@ class _Notes(list):
     """Collects the questions as they're read: start one, add answer lines, finish it."""
     def __init__(self):
         super().__init__()
-        self.cur, self.chapter, self.section, self.level = None, "", "", 0
+        self.cur, self.chapter, self.section, self.level, self.intro = None, "", "", 0, None
 
     def start(self, question):
         self.finish()
+        self.intro, self.opening = None, False
         self.cur = (question, [], self.chapter, self.section)
 
     def heading(self, level, text):
@@ -165,12 +166,25 @@ class _Notes(list):
             self.section = _chapter(text)
         else:
             self.chapter, self.section, self.level = _chapter(text), "", level
+        self.intro = text            # words written under it before its first question: kept, as a question of its own
 
     def add(self, row):
+        if not self.cur and self.intro and (row[0].strip() or row[1]):
+            # a chapter's (or section's) opening lines: its heading is the question, they're the answer — they were
+            # dropped (a long note's parts each lost their introduction). Kept when they're more than a line like
+            # "Here they are:" (finish() decides).
+            self.cur, self.intro, self.opening = (self.intro, [], self.chapter, self.section), None, True
         if self.cur:
             self.cur[1].append(row)
 
     def finish(self):
+        if self.cur and getattr(self, "opening", False):
+            self.opening = False
+            text = [line for line, code in self.cur[1] if line.strip()]
+            has_more = any(code for _line, code in self.cur[1]) or any(re.match(r"\s*([-*+]|\d+[.)]|\|)\s", line) for line in text)
+            if not has_more and len(" ".join(text).split()) < 8:
+                self.cur = None
+                return
         if self.cur:
             q, rows, chapter, section = self.cur
             more, rows = _lift(rows)
@@ -235,13 +249,13 @@ def _headed(rows):
             out.append(j)
         return out
 
-    def holds_headings(i):
-        first = next((j for j in body(i) if rows[j][0].strip()), None)
-        return first in heads and heads[first][0] > heads[i][0]
+    def holds_headings(i):            # deeper headings under it (a few lines of its own first are fine)
+        return any(j in heads and heads[j][0] > heads[i][0] for j in body(i))
 
-    for _step in range(2):        # chapters that only hold sections, sections that only hold questions: a level down each
+    for _step in range(2):        # chapters that hold sections, sections that hold questions: a level down each
         tops = [i for i, (lv, _t) in heads.items() if lv == level]
-        if not (tops and all(holds_headings(i) for i in tops)):
+        # most of them (3 in 4) are enough: a book's title heading, or a part, often starts with a few lines first
+        if not (tops and sum(1 for i in tops if holds_headings(i)) >= max(1, len(tops) * 3 / 4)):
             break
         level = min(heads[j][0] for i in tops for j in body(i) if j in heads)
     out = _Notes()
@@ -365,10 +379,14 @@ def parse(text, chapter=""):
     table = _columns("\n".join(lines), filled) if not any(code for _line, code in rows) else None
     if table:
         notes = table
-    elif any(not code and Q_LINE.match(line) for line, code in rows):
-        notes = _marked(rows)
     else:
         notes = _headed(rows) or _numbered(rows) or _bolded(rows) or _blocks(rows)
+        if any(not code and Q_LINE.match(line) for line, code in rows):
+            # Q: / A: lines — unless the text is really written in headings and one "Q:" line is just part of it
+            # (a long note with one **প্রশ্ন:** in it came in as that one question)
+            marked = _marked(rows)
+            if len(marked) >= len(notes) or not _headed(rows):
+                notes = marked
     chapter = (chapter or "").strip()[:MAX_CHAPTER]
     for n in notes:
         n["chapter"] = n["chapter"] or chapter

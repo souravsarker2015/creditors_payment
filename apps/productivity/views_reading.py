@@ -29,6 +29,15 @@ def _texts():
 def _page(request, *, title, kind, chapters, book_id, back, back_label, subject=None, start=None, extra=None):
     user = request.user
     progress = reading.progress(user, kind, chapters, subject=subject)
+    keys = {c["key"] for c in chapters}
+    if start is not None and start not in keys:
+        # a note asked for by its number (a link from Notes, a book's ?ch=12) that's read in parts: the part you were
+        # in — else the first one not read yet
+        group = [c["key"] for c in chapters if str(c.get("note", "")) == str(start)]
+        start = None
+        if group:
+            latest = max(((progress[k]["at"], k) for k in group if k in progress), default=None)
+            start = latest[1] if latest and not progress[latest[1]].get("done") else next((k for k in group if not progress.get(k, {}).get("done")), group[0])
     if start is None:                 # where you were: the chapter last read, else the first not done
         latest = max(((p["at"], k) for k, p in progress.items() if k in {c["key"] for c in chapters}), default=None)
         start = latest[1] if latest else next((c["key"] for c in chapters if not progress.get(c["key"], {}).get("done")), chapters[0]["key"])
@@ -63,8 +72,11 @@ def read_note(request, pk):
     """One note, read on its own (when it's in a category, that book is a tap away)."""
     note = get_object_or_404(Note, pk=pk, owner=request.user)
     cat = note.categories.order_by("pk").first()
-    return _page(request, title=note.display_title, kind="note", chapters=reading.note_chapters([note]), book_id=None,
-                 back=reverse("work:note", args=[note.pk]), back_label=_("Note"), start=str(note.pk),
+    chapters = reading.note_chapters([note], alone=True)         # a long one: its parts are the chapters
+    asked = request.GET.get("ch", "")
+    start = asked if asked in {c["key"] for c in chapters} else (None if len(chapters) > 1 else str(note.pk))
+    return _page(request, title=note.display_title, kind="note", chapters=chapters, book_id=None,
+                 back=reverse("work:note", args=[note.pk]), back_label=_("Note"), start=start,
                  extra={"edit": reverse("work:note", args=[0])[:-2],
                         "asBook": reverse("work:read_book", args=[cat.pk]) + f"?ch={note.pk}" if cat else "", "asBookName": cat.name if cat else ""})
 
@@ -129,9 +141,10 @@ def reading_api(request):
         subject = get_object_or_404(ExamSubject, pk=p.get("book") or 0, owner=user)
         reading.log(user, subject=subject, chapter=p.get("chapter", ""), position=position, add_seconds=add, done=done, takeaway=takeaway)
     else:
-        note = get_object_or_404(Note, pk=p.get("chapter") or 0, owner=user)
+        note_id, part = reading.parse_note_key(p.get("chapter"))          # "12" a note, "12.3" the third part of a long one
+        note = get_object_or_404(Note, pk=note_id or 0, owner=user)
         book = NoteCategory.objects.filter(owner=user, pk=p.get("book") or 0).first() if kind == "book" else None
-        reading.log(user, note=note, book=book, position=position, add_seconds=add, done=done, takeaway=takeaway)
+        reading.log(user, note=note, chapter=part, book=book, position=position, add_seconds=add, done=done, takeaway=takeaway)
     return JsonResponse({"ok": True, "stats": reading.day_stats(user)})
 
 

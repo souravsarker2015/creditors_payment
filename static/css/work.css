@@ -5185,3 +5185,20 @@ body:has(.fclock:not([hidden])) .amb-pill { bottom: calc(5.75rem + env(safe-area
 .rd-none { font-size: 0.8125rem; font-style: normal; color: var(--rd-faint); }
 .rd-voice-help { margin: -0.25rem 0 0; padding: 0.625rem 0.75rem; border-radius: 0.625rem; background: var(--rd-mark); font-size: 0.75rem; line-height: 1.5; color: var(--rd-ink); }
 button.rd-chip { border: 0; cursor: pointer; }
+
+/* A long note (30,000+ characters) is written in a box of the window's height that scrolls inside, as a code
+   editor does: a box growing to thousands of lines was laid out again on every key (typing lagged). */
+.wn-body.is-long { field-sizing: fixed; height: calc(100dvh - 15rem); min-height: 22rem; overflow-y: auto; resize: vertical; overscroll-behavior: contain; }
+:root[data-zen="write"] .wn-body.is-long { height: calc(100dvh - 9rem); }
+/* a note in View: the parts off screen aren't laid out until they come near (a long one opens at once). (Not in
+   Preview: it would clip each part's ⋮⋮ handle, which sits in the margin.) */
+.md-live.is-read > .md-block { content-visibility: auto; contain-intrinsic-size: auto 4rem; }
+.wn-long { display: flex; align-items: center; gap: 0.75rem; margin: 0 1.25rem 0.5rem; padding: 0.5rem 0.875rem; border-radius: 0.75rem;
+  background: var(--accent-soft); color: var(--text-primary); text-decoration: none; font-size: 0.8125rem; line-height: 1.35; }
+.wn-long > svg { width: 1.125rem; height: 1.125rem; flex: none; color: var(--accent); }
+.wn-long > span { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.wn-long small { color: var(--text-secondary); }
+.wn-long:hover { background: color-mix(in srgb, var(--accent) 16%, transparent); }
+@media print { .wn-long { display: none !important; } }
+.wn-md.is-plain { white-space: pre-line; }
+.md-more { display: block; height: 1px; }

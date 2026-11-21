@@ -21,6 +21,7 @@
   try { CFG = JSON.parse((d.getElementById("work-config") || {}).textContent || "{}"); } catch (e) { CFG = {}; }
   var T = CFG.text || {};
   var ME = root.getAttribute("data-user") || "";
+  var LONG_NOTE = 30000;          // characters: a note this long is written in a box of its own height that scrolls (notes.html)
   var GROWS = !!(window.CSS && CSS.supports && CSS.supports("field-sizing", "content"));   // textareas that grow by themselves
   function t(key, fallback) { return T[key] || fallback; }
 
@@ -1519,8 +1520,31 @@
           this.insert("\n[![" + title + "](" + item.picture + ")](" + item.url + ")\n", "");
         },
         titles: (function () { try { return JSON.parse((d.getElementById("note-titles") || {}).textContent || "[]"); } catch (e) { return []; } })(),
-        get todoCount() {      // open "- [ ] …" lines that aren't tasks yet
-          return (this.body.match(/^[ \t]*[-*+][ \t]+\[ \][ \t]+\S.*$/gm) || []).filter(function (l) { return l.indexOf("/work/tasks/") < 0; }).length;
+        /* What's counted from the note — words, minutes, headings, to-dos — kept here and counted again a moment after
+           typing stops, not on every key: on a note of 150,000 characters each count took 10–20 ms, and the page asked
+           for some of them four times a key (the typing lagged by a tenth of a second) */
+        words: 0, readMins: 1, outline: [], todoCount: 0, todoTotal: 0, todoDone: 0, long: false, shownBody: initial.body || "",
+        recount: function () {
+          var b = this.body, out = [], code = false, m = b.match(/[^\s#>*`_\-\[\]()]+/g);
+          this.words = m ? m.length : 0;
+          this.readMins = Math.max(1, Math.round(this.words / 200));
+          b.split("\n").forEach(function (line, i) {
+            if (/^[ \t]*(```|~~~)/.test(line)) { code = !code; return; }
+            var h = !code && /^(#{1,6})[ \t]+(.+?)[ \t#]*$/.exec(line);
+            if (h) out.push({ level: h[1].length, text: h[2].replace(/[*_`]/g, ""), line: i });
+          });
+          if (JSON.stringify(out) !== JSON.stringify(this.outline)) this.outline = out;
+          this.todoCount = (b.match(/^[ \t]*[-*+][ \t]+\[ \][ \t]+\S.*$/gm) || []).filter(function (l) { return l.indexOf("/work/tasks/") < 0; }).length;   // open "- [ ] …" lines that aren't tasks yet
+          this.todoTotal = (b.match(/^[ \t]*[-*+][ \t]+\[[ xX]\]/gm) || []).length;
+          this.todoDone = (b.match(/^[ \t]*[-*+][ \t]+\[[xX]\]/gm) || []).length;
+          this.long = b.length > LONG_NOTE;
+          this.shownBody = b;
+        },
+        recountSoon: function () {
+          var self = this;
+          clearTimeout(this.countTimer);
+          if (this.body.length < 20000) { this.recount(); return; }         // a short note: at once (it costs nothing)
+          this.countTimer = setTimeout(function () { self.recount(); }, 350);
         },
         todosToTasks: function () {
           var self = this; if (!this.id || this.making) return;
@@ -1567,7 +1591,9 @@
           if (draft && draft.at > (initial.updated || 0) && (draft.body !== this.body || draft.title !== this.title)) {
             this.title = draft.title; this.body = draft.body; this.same = draft.same || this.same; this.state = "dirty"; this.queue();
           }
+          this.recount();
           d.addEventListener("work:synced", function (e) { self.synced(e.detail); });
+          d.addEventListener("visibilitychange", function () { if (d.hidden) self.keepDraft(); });
           ["title", "body", "tags", "project"].forEach(function (k) { self.$watch(k, function () { self.changed(); }); });
           this.$watch("preview", function (on) { if (!on) self.$nextTick(function () { self.grow(); }); });
           this.$nextTick(function () { self.grow(); });
@@ -1581,7 +1607,7 @@
               e.preventDefault(); self.view(self.preview ? "write" : recall("work-note-read", "preview"));
             }
           });
-          window.addEventListener("beforeunload", function (e) { if (self.state === "dirty" || self.state === "saving") { self.saveNow(); } });
+          window.addEventListener("beforeunload", function (e) { self.keepDraft(); if (self.state === "dirty" || self.state === "saving") { self.saveNow(); } });
           this.$el.addEventListener("keydown", function (e) { if ((e.ctrlKey || e.metaKey) && e.key === "s") { e.preventDefault(); self.saveNow(); } });
           var heading = new URLSearchParams(location.search).get("heading");           // from a [[Note#Heading]] link
           if (heading) this.$nextTick(function () {
@@ -1613,7 +1639,19 @@
             toast(t(res.count === 1 ? "examMadeOne" : "examMade", "Questions added: %(n)s").replace("%(n)s", res.count), "good", { label: t("seeThem", "See them"), run: function () { location.href = res.url; } });
           });
         },
-        changed: function () { this.state = "dirty"; store(this.draftKey, { title: this.title, body: this.body, at: Date.now(), same: this.same }); this.queue(); },
+        changed: function () {
+          var self = this;
+          this.state = "dirty"; this.queue(); this.recountSoon();
+          // the copy kept on this device (for a lost signal or a closed tab): a moment after typing stops — writing
+          // the whole note to storage on every key slowed a long one down — and at once when the page is left
+          clearTimeout(this.draftTimer); this.draftDue = true;
+          this.draftTimer = setTimeout(function () { self.keepDraft(); }, this.body.length < 20000 ? 0 : 400);
+        },
+        keepDraft: function () {
+          if (!this.draftDue) return;
+          this.draftDue = false; clearTimeout(this.draftTimer);
+          store(this.draftKey, { title: this.title, body: this.body, at: Date.now(), same: this.same });
+        },
         /* what was written offline has reached the server: this page goes on from there */
         synced: function (x) {
           if (x.same !== this.same) return;
@@ -1629,6 +1667,7 @@
           // One save at a time: a second one before the first answers would make a new note twice.
           if (this.inflight) { this.again = true; return this.inflight; }
           this.state = "saving";
+          this.keepDraft();
           var key = this.draftKey;
           var sent = [this.title, this.body];
           this.inflight = api(CFG.urls.noteSave, { id: this.id || "", title: this.title, icon: this.icon, body: this.body, tags: this.tags, project: this.project, categories: this.categories.join(","),
@@ -1694,22 +1733,14 @@
         },
         /* The writing box grows with the note (the page scrolls, not the box) where CSS field-sizing can't do it */
         grow: function () {
-          if (GROWS) return;
+          if (GROWS || this.long) return;                 // (a long note's box keeps its own height and scrolls)
           var ta = this.$refs.body; if (!ta) return;
           ta.style.height = "auto"; ta.style.height = ta.scrollHeight + "px";
         },
-        /* The note's headings (not those in a ``` block), to jump to one — Obsidian's outline */
-        get outline() {
-          var out = [], code = false;
-          this.body.split("\n").forEach(function (line, i) {
-            if (/^[ \t]*(```|~~~)/.test(line)) { code = !code; return; }
-            var m = !code && /^(#{1,6})[ \t]+(.+?)[ \t#]*$/.exec(line);
-            if (m) out.push({ level: m[1].length, text: m[2].replace(/[*_`]/g, ""), line: i });
-          });
-          return out;
-        },
+        /* (the note's headings, to jump to one — Obsidian's outline: this.outline, from recount()) */
         goHeading: function (h, n) {
           if (this.preview) {
+            this.$root.querySelectorAll(".wn-md.md-live").forEach(Work.liveAll);      // (a long note still being drawn: all of it first)
             var el = this.$root.querySelectorAll(".wn-md h1, .wn-md h2, .wn-md h3, .wn-md h4, .wn-md h5, .wn-md h6")[n];
             if (el) el.scrollIntoView({ block: "start", behavior: "smooth" });
             return;
@@ -1721,10 +1752,6 @@
           if (box && box.scrollHeight > box.clientHeight + 1 && getComputedStyle(box).overflowY !== "visible") box.scrollTop += y - box.getBoundingClientRect().top - 80;
           else window.scrollTo({ top: window.scrollY + y - 140, behavior: "smooth" });
         },
-        get words() { var m = this.body.match(/[^\s#>*`_\-\[\]()]+/g); return m ? m.length : 0; },
-        get readMins() { return Math.max(1, Math.round(this.words / 200)); },
-        get todoTotal() { return (this.body.match(/^[ \t]*[-*+][ \t]+\[[ xX]\]/gm) || []).length; },
-        get todoDone() { return (this.body.match(/^[ \t]*[-*+][ \t]+\[[xX]\]/gm) || []).length; },
         /* Keep's list tools: ticked items to the bottom, untick all, delete the ticked ones — Undo on the toast */
         todoTool: function (how) {
           if (!window.FTWriting || !FTWriting.todos) return;
@@ -2462,7 +2489,14 @@
   function liveSplit(text) {
     var s = { head: "", blocks: [] }, toks = null;
     if (!text) return s;
-    try { toks = window.marked && marked.lexer ? marked.lexer(text, { gfm: true }) : null; } catch (e) { toks = null; }
+    // only where each block starts and ends is needed: marked's block pass, without reading every word's marks —
+    // the same blocks, five times faster (a note of 150,000 characters: 166 ms → 28 ms)
+    try {
+      if (window.marked && marked.Lexer) {
+        var lx = new marked.Lexer(Object.assign({}, marked.getDefaults ? marked.getDefaults() : marked.defaults, { gfm: true }));
+        toks = lx.blockTokens(text, []);
+      } else toks = window.marked && marked.lexer ? marked.lexer(text, { gfm: true }) : null;
+    } catch (e) { try { toks = marked.lexer(text, { gfm: true }); } catch (e2) { toks = null; } }
     (toks || []).forEach(function (tk) {
       var raw = tk.raw || "";
       if (tk.type === "space" || !raw.trim()) {
@@ -2497,22 +2531,89 @@
     var st = el._live; st.text = liveJoin(st.split);
     if (st.opts && st.opts.set) st.opts.set(st.text);
   }
-  function liveDraw(el) {
-    var st = el._live, html = "", grip = t("liveGrip", "Options for this part"), ro = !!st.opts.readOnly;
-    st.split.blocks.forEach(function (b, i) {
-      if (!b.md.trim()) return;
-      html += ro ? '<div class="md-block" data-i="' + i + '">' + renderMarkdown(b.md) + "</div>"
-        : '<div class="md-block" data-i="' + i + '" tabindex="0"><button type="button" class="md-handle" aria-haspopup="menu" aria-expanded="false" aria-label="' +
-          escAttr(grip) + '" title="' + escAttr(grip) + '">' + GRIP + "</button>" + renderMarkdown(b.md) + "</div>";
-    });
-    if (!html) html = '<p class="md-empty">' + escAttr(ro ? t("emptyNote", "Nothing written yet.") : (st.opts.empty || t("liveEmpty", "Nothing here yet. Click to write."))) + "</p>";
-    else if (!ro) html += '<button type="button" class="md-add">' + PLUS + "<span>" + escAttr(t("liveAdd", "Click to add more")) + "</span></button>";
-    el.classList.toggle("is-read", ro);
+  /* A long note is drawn a screenful first, then the rest a slice at a time while the page is free — all of it at
+     once (30,000 elements for a long note) froze the page for seconds. What needs the whole of it (going to a
+     heading, find, print) calls Work.liveAll(el) first. */
+  var LIVE_FIRST = 12000, LIVE_SLICE = 12000;          // characters of Markdown: drawn at once, then as you scroll near the rest
+  function liveBlockHtml(st, b, i) {
+    var grip = t("liveGrip", "Options for this part");
+    return st.ro ? '<div class="md-block" data-i="' + i + '">' + renderMarkdown(b.md) + "</div>"
+      : '<div class="md-block" data-i="' + i + '" tabindex="0"><button type="button" class="md-handle" aria-haspopup="menu" aria-expanded="false" aria-label="' +
+        escAttr(grip) + '" title="' + escAttr(grip) + '">' + GRIP + "</button>" + renderMarkdown(b.md) + "</div>";
+  }
+  function liveDraw(el, bit) {          // bit: a screenful now, the rest in slices (the first drawing — not after an edit, which keeps its place)
+    var st = el._live, ro = !!st.opts.readOnly, blocks = st.split.blocks, html = "", size = 0, i = 0, first = bit ? LIVE_FIRST : Infinity;
     st.ro = ro;
+    st.pending = null;                                     // (a slice still to come from a drawing before: not any more)
+    el.classList.toggle("is-read", ro);
+    for (; i < blocks.length && size < first; i++) {
+      if (!blocks[i].md.trim()) continue;
+      html += liveBlockHtml(st, blocks[i], i); size += blocks[i].md.length;
+    }
+    var more = blocks.slice(i).some(function (b) { return b.md.trim(); });
+    if (!html && !more) html = '<p class="md-empty">' + escAttr(ro ? t("emptyNote", "Nothing written yet.") : (st.opts.empty || t("liveEmpty", "Nothing here yet. Click to write."))) + "</p>";
+    else if (!ro) html += '<button type="button" class="md-add">' + PLUS + "<span>" + escAttr(t("liveAdd", "Click to add more")) + "</span></button>";
+    el.classList.toggle("is-long", more);
     el.innerHTML = html;
     st.drawn = st.text;
     Work.enrich(el, { note: st.opts.note });
+    if (more) { st.pending = { from: i }; liveMore(el, st.pending); }
   }
+  function liveSlice(el, job, budget) {
+    var st = el._live, blocks = st.split.blocks, html = "", size = 0, i = job.from;
+    for (; i < blocks.length && size < budget; i++) {
+      if (!blocks[i].md.trim()) continue;
+      html += liveBlockHtml(st, blocks[i], i); size += blocks[i].md.length;
+    }
+    job.from = i;
+    if (!html) return;
+    var tmp = d.createElement("div"); tmp.innerHTML = html;
+    var add = el.querySelector(":scope > .md-add"), made = Array.prototype.slice.call(tmp.children);
+    made.forEach(function (b) { el.insertBefore(b, add); });
+    made.forEach(function (b) { Work.enrich(b, { note: st.opts.note }); });
+  }
+  function liveMore(el, job) {
+    var st = el._live, n = st.split.blocks.length;
+    var done = function () { return !el.isConnected || !el._live || el._live.pending !== job; };
+    var finish = function () {
+      if (job.from < n) return false;
+      st.pending = null; el.classList.remove("is-long");
+      if (job.seen) job.seen.disconnect();
+      el.dispatchEvent(new CustomEvent("md-drawn", { bubbles: true }));
+      return true;
+    };
+    // as you read down: the next pieces before you get there
+    var end = d.createElement("i"); end.className = "md-more"; end.setAttribute("aria-hidden", "true");
+    el.appendChild(end);
+    if ("IntersectionObserver" in window) {
+      job.seen = new IntersectionObserver(function (es) {
+        if (done() || !es.some(function (e) { return e.isIntersecting; })) return;
+        liveSlice(el, job, LIVE_SLICE); el.appendChild(end);
+        if (finish()) end.remove();
+      }, { rootMargin: "2500px 0px" });
+      job.seen.observe(end);
+    }
+    // and while the page is free, a small piece at a time (never long enough to be felt)
+    var idle = window.requestIdleCallback || function (f) { return setTimeout(function () { f({ timeRemaining: function () { return 6; } }); }, 50); };
+    var step = function (deadline) {
+      if (done()) { end.remove(); return; }
+      while (job.from < n && deadline.timeRemaining() > 14) liveSlice(el, job, 2500);
+      el.appendChild(end);
+      if (finish()) { end.remove(); return; }
+      idle(step, { timeout: 1500 });
+    };
+    idle(step, { timeout: 1500 });
+  }
+  /* Everything drawn now (before going to a heading, a find, a print) */
+  window.Work.liveAll = function (el) {
+    var st = el && el._live;
+    if (!st || !st.pending) return;
+    var job = st.pending; st.pending = null;
+    if (job.seen) job.seen.disconnect();
+    liveSlice(el, job, Infinity);
+    el.querySelectorAll(":scope > .md-more").forEach(function (x) { x.remove(); });
+    el.classList.remove("is-long");
+  };
   function fitBox(ta) { if (!GROWS) { ta.style.height = "auto"; ta.style.height = ta.scrollHeight + "px"; } }
   function caretFromClick(e) {            // the words either side of where the block was clicked
     var node = null, off = 0;
@@ -2845,7 +2946,7 @@
       st.editing = null; if (liveActive === el) liveActive = null;     // changed somewhere else (a version brought back…): drawn anew
     } else if (text === st.drawn && !!st.opts.readOnly === st.ro) return;
     if (st.opts.readOnly) liveCloseMenu();
-    st.text = st.committed = text; st.split = liveSplit(text); liveDraw(el);      // (changed from outside — Write, a version: its own undo)
+    st.text = st.committed = text; st.split = liveSplit(text); liveDraw(el, true);      // (changed from outside — Write, a version: its own undo)
   };
   /* Before Write / Preview is switched: the block being changed is put back first */
   window.Work.liveDone = function () { liveCloseMenu(); if (liveActive) liveFinish(liveActive, false); };
@@ -3168,6 +3269,7 @@
     host.dispatchEvent(new CustomEvent("ft:replace", { bubbles: true, detail: { q: q || "" } }));
   }
   function rfOpen(el, q) {
+    if (Work.liveAll) { Work.liveAll(el); el.querySelectorAll(".md-live").forEach(Work.liveAll); }       // a long note still being drawn: all of it, to find in
     if (rf && rf.el === el) { if (q) rf.input.value = q; rf.input.focus(); rf.input.select(); rfSearch(); rfDraw(true); return; }
     rfClose();
     var bar = d.createElement("div"), x = function (v) { return escAttr(v); };
@@ -3383,11 +3485,37 @@
     return p;
   }
   function esc(v) { return escAttr(v == null ? "" : v); }
+  /* Code blocks get their colours as they come near the screen: a long note's 40 blocks coloured at once froze the
+     page for a fifth of a second. Printing colours the rest first. */
+  var codeSeen = null, codeLeft = [];
+  function paintNow(c) { if (c.dataset.highlighted || !window.hljs) return; try { hljs.highlightElement(c); } catch (e) { /* ok */ } }
+  window.Work.paintCode = function (el) {
+    if (!el || !window.hljs) return;
+    var list = el.querySelectorAll("pre code:not(.language-mermaid):not(.language-tasks):not([data-highlighted])");
+    if (!list.length) return;
+    if (!("IntersectionObserver" in window)) { list.forEach(paintNow); return; }
+    if (!codeSeen) {
+      // the ones come into reach are coloured a few a frame (forty at once was felt)
+      var queue = [], busy = false;
+      var run = function () {
+        var until = performance.now() + 10;
+        while (queue.length && performance.now() < until) paintNow(queue.shift());
+        if (queue.length) requestAnimationFrame(run); else busy = false;
+      };
+      codeSeen = new IntersectionObserver(function (es) {
+        es.forEach(function (e) { if (e.isIntersecting) { codeSeen.unobserve(e.target); queue.push(e.target); } });
+        if (queue.length && !busy) { busy = true; requestAnimationFrame(run); }
+      }, { rootMargin: "800px 0px" });
+      window.addEventListener("beforeprint", function () { d.querySelectorAll(".md-live").forEach(Work.liveAll); codeLeft.forEach(paintNow); });
+    }
+    list.forEach(function (c) { codeSeen.observe(c); codeLeft.push(c); });
+    if (codeLeft.length > 2000) codeLeft = codeLeft.filter(function (c) { return c.isConnected && !c.dataset.highlighted; });
+  };
   window.Work.enrich = function (el, opts) {
     if (!el) return;
     opts = opts || {};
     Work.mermaidIn(el);
-    if (window.hljs) el.querySelectorAll("pre code:not(.language-mermaid):not(.language-tasks)").forEach(function (c) { if (!c.dataset.highlighted) hljs.highlightElement(c); });
+    Work.paintCode(el);
     if (!CFG.urls || !CFG.urls.taskQuery) return;
     el.querySelectorAll("pre > code.language-tasks").forEach(function (code) {
       var box = d.createElement("div");

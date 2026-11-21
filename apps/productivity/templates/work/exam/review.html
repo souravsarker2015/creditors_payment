@@ -4,8 +4,8 @@
 {% block title %}{% translate "Review" %} | {{ s.name }}{% endblock %}
 
 {% block work %}
-{{ data|json_script:"exam-data" }}
-{{ exam_text|json_script:"exam-text" }}
+{{ data|json_page:"exam-data" }}
+{{ exam_text|json_page:"exam-text" }}
 <div class="wfr wex-review" data-keys-page="exam-review reading find" x-data="examReview" data-own-keys @keydown.window="key($event)">
   <header class="wfr-head">
     <a :href="back" class="icon-btn" aria-label="{% translate 'Stop' %}" data-tip="{% translate 'Stop (Esc)' %}">{% icon "x" %}</a>

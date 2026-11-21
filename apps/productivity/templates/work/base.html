@@ -20,7 +20,7 @@ menu and the settings the page script needs.
   {% include "work/partials/ring.html" %}
   <button type="button" class="zen-exit" data-zen-off aria-label="{% translate 'Leave full screen' %}">{% icon "minimize" %}<span>{% translate "Exit full screen" %}</span><kbd>Esc</kbd></button>
 </div>
-{{ work_config|json_script:"work-config" }}
+{{ work_config|json_page:"work-config" }}
 {% endblock %}
 
 {% block extra_js %}

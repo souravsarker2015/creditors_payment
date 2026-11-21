@@ -19,7 +19,7 @@
   </header>
 
   {# ── Focus (Pomodoro) ── #}
-  {{ focus_values|json_script:"focus-values" }}
+  {{ focus_values|json_page:"focus-values" }}
   <section x-show="tab === 'focus'" x-data="focusSettings(JSON.parse(document.getElementById('focus-values').textContent), '{% url 'work:api_focus_settings' %}')">
   <div class="wfo" x-data="workFocus({ task: '{{ task.pk|default:'' }}', taskTitle: '{{ task.title|default:''|escapejs }}' })" :data-mode="mode">
     <div class="wfo-top">

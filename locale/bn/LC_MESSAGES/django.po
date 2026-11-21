@@ -36131,3 +36131,9 @@ msgid ""
 msgstr ""
 "এই ব্রাউজারে বাংলা কণ্ঠ নেই, তাই বাংলা অংশ বাদ যাচ্ছে। কীভাবে পাবেন দেখতে Aa"
 " খুলুন।"
+
+msgid "A long read: about %(n)s min"
+msgstr "লম্বা লেখা: প্রায় %(n)s মিনিট"
+
+msgid "Read it in the Reader, a short part at a time — it keeps your place."
+msgstr "রিডারে পড়ুন, ছোট ছোট অংশে — কোথায় ছিলেন তা মনে রাখে।"

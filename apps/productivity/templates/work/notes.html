@@ -168,7 +168,7 @@
   </section>
   </template>
   {% include "work/exam/_category_picker.html" %}
-  {{ cat_data|json_script:"note-cats" }}
+  {{ cat_data|json_page:"note-cats" }}
 </div>
 {% else %}
 <div class="wn{% if note or request.GET.new %} has-note{% endif %}">
@@ -226,8 +226,8 @@
 
   <section class="wn-editor">
     {% if note or request.GET.new %}
-    {{ note_data|json_script:"note-data" }}
-    {{ titles|json_script:"note-titles" }}
+    {{ note_data|json_page:"note-data" }}
+    {{ titles|json_page:"note-titles" }}
     <div class="wn-pane" data-keys-page="notes writing reading find" x-data="workNote(JSON.parse(document.getElementById('note-data').textContent))" x-init="$nextTick(() => { if (!id) $refs.body.focus(); })">
       <div class="wn-toolbar">
         <a href="{% url 'work:notes' %}" class="icon-btn wn-back" aria-label="{% translate 'All notes' %}">{% icon "chevron-left" %}</a>
@@ -353,9 +353,13 @@
           {% for v, l in colors %}<button type="button" class="wkc-swatch" data-color="{{ v }}" :class="c === '{{ v }}' && 'is-on'" @click="c = '{{ v }}'; Work.api(Work.cfg.urls.noteBase + id + '/', { action: 'color', color: '{{ v }}' })" aria-label="{{ l }}"></button>{% endfor %}
         </div>
       </div>
+      {# a long note: offered as a book of short parts — a 45-minute wall of text is where people stop reading #}
+      <a class="wn-long" x-show="id && readMins >= 15" x-cloak :href="'{% url 'work:read_note' 0 %}'.replace('/0/', '/' + id + '/')">
+        {% blocktranslate with n="__N__" asvar long_read %}A long read: about {{ n }} min{% endblocktranslate %}{% icon "book" %}<span><b x-text="'{{ long_read|escapejs }}'.replace('__N__', readMins)"></b>
+        <small>{% translate "Read it in the Reader, a short part at a time — it keeps your place." %}</small></span>{% icon "arrow-right" %}</a>
       <div class="wn-panes" :class="split && 'is-split'">
       <div class="wn-body-wrap" x-show="!preview">
-        <textarea x-ref="body" x-model="body" class="wn-body" data-find-write data-paste-images :data-note="id || ''" placeholder="{% translate 'Start writing… Markdown works: # heading, **bold**, `code`, - [ ] to-do, ``` code blocks, [[Another note]].' %}" aria-label="{% translate 'Note' %}"
+        <textarea x-ref="body" x-model="body" class="wn-body" :class="long && 'is-long'" data-find-write data-paste-images :data-note="id || ''" placeholder="{% translate 'Start writing… Markdown works: # heading, **bold**, `code`, - [ ] to-do, ``` code blocks, [[Another note]].' %}" aria-label="{% translate 'Note' %}"
                   @keydown="linkKey($event)" @input="linkLookup(); grow()" @click="linkLookup()" @focus="linkLookup()" @blur="setTimeout(() => { if (document.activeElement !== $refs.body) suggest = [] }, 150)"></textarea>
         <ul class="wn-suggest" x-show="suggest.length && !preview" x-cloak role="listbox" aria-label="{% translate 'Notes to link' %}">
           <template x-for="(s, i) in suggest" :key="s">
@@ -364,7 +368,7 @@
         </ul>
       </div>
       <article x-show="preview || split" x-cloak class="wn-md" data-find-read data-find-replace @ft:replace="openFind(true, $event.detail.q)" data-tick @md-tick="body = Work.tickMarkdown(body, $event.detail.index)"
-               x-effect="(preview || split) && Work.live($el, { text: body, set: (v) => { body = v }, note: id, readOnly: reading && !split, attrs: { 'data-paste-images': '', 'data-note': id || '' } })"></article>
+               x-effect="(preview || split) && Work.live($el, { text: split && long ? shownBody : body, set: (v) => { body = v; shownBody = v }, note: id, readOnly: reading && !split, attrs: { 'data-paste-images': '', 'data-note': id || '' } })"></article>
       </div>
       {% include "work/exam/_category_picker.html" %}
       <p class="wn-stats" x-show="words" x-cloak><span x-text="words + ' ' + (words === 1 ? '{% translate "word" %}' : '{% translate "words" %}')"></span> · <span x-text="'~' + readMins + ' {% translate "min read" %}'"></span><template x-if="todoTotal"><span> · <span x-text="todoDone + '/' + todoTotal"></span> {% translate "to-dos done" %}</span></template></p>

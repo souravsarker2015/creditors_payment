@@ -4,7 +4,7 @@
 {% block title %}{% translate "Exam notes" %} | {% translate "Productivity" %}{% endblock %}
 
 {% block work %}
-{{ exam_text|json_script:"exam-text" }}
+{{ exam_text|json_page:"exam-text" }}
 <header class="wp-head">
   <div class="min-w-0">
     <h1 class="wp-title">{% translate "Exam notes" %}</h1>

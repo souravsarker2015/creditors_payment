@@ -278,3 +278,21 @@ def can_work(user):
     from ..access import can_use
 
     return can_use(user)
+
+
+@register.filter(is_safe=True)
+def json_page(value, element_id):
+    """Like Django's json_script, for the long texts these pages carry (a note, a book for the Reader, an exam's answers):
+    Bangla stays as it is — json_script writes each letter as \\u09xx, twice the size — and only < > & are escaped (all
+    that's needed inside a <script>), with str.replace rather than translate(), which took a quarter of a second on a
+    note of 150,000 characters."""
+    import json
+
+    from django.core.serializers.json import DjangoJSONEncoder
+    from django.utils.html import format_html
+    from django.utils.safestring import mark_safe
+
+    text = (json.dumps(value, cls=DjangoJSONEncoder, ensure_ascii=False)
+            .replace("&", "\\u0026").replace("<", "\\u003c").replace(">", "\\u003e")
+            .replace("\u2028", "\\u2028").replace("\u2029", "\\u2029"))
+    return format_html('<script id="{}" type="application/json">{}</script>', element_id, mark_safe(text))
