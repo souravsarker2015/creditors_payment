@@ -176,3 +176,12 @@ class RecurringExpenseTests(TestCase):
         schedule.delete()
         self.assertEqual(Expense.objects.filter(user=self.user).count(), 1)
         self.assertIsNone(Expense.objects.get(user=self.user).recurring_source)
+
+
+class ExpenseFormOrderTests(TestCase):
+    def test_the_amount_comes_first(self):
+        """Like every other entry form: what a person has in mind ("I spent ৳200") is the first box."""
+        user = User.objects.create_user("order", password="pw")
+        self.client.force_login(user)
+        r = self.client.get(reverse("expense_create"))
+        self.assertEqual(list(r.context["form"].fields)[:2], ["amount", "category"])

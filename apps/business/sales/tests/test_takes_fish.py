@@ -91,6 +91,8 @@ class TakesFishTests(TestCase):
         r = self.client.get(reverse("business:sale_add") + f"?cycle={self.cycle.pk}")
         self.assertTrue(r.context["form"].initial["takes_fish"])
         self.assertContains(r, "Take these fish out of the pond")
+        # its ⓘ sits beside the words inside the switch, not alone on the line under it
+        self.assertRegex(r.content.decode(), r'class="check-label">Take these fish out of the pond<button type="button" class="info-tip"')
 
     def test_an_unsold_harvest_leaves_the_box_unticked_and_points_to_it(self):
         h = Harvest.objects.create(business=self.b, cycle=self.cycle, date=ago(1), species=self.rui, quantity=D("80"), unit=self.kg)

@@ -54,7 +54,7 @@ class CategoryForm(forms.ModelForm):
 class ExpenseForm(WalletFieldMixin, forms.ModelForm):
     class Meta:
         model = Expense
-        fields = ["category", "amount", "wallet", "date", "note", "receipt"]
+        fields = ["amount", "category", "wallet", "date", "note", "receipt"]  # the amount first, like every other entry form: it is what a person has in mind
         widgets = {
             "receipt": ReceiptInput(),
             "category": forms.Select(attrs={"class": "form-input"}),

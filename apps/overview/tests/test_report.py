@@ -78,3 +78,23 @@ class MoneyReportTests(TestCase):
     def test_needs_sign_in(self):
         self.client.logout()
         self.assertEqual(self.client.get(reverse("money_report")).status_code, 302)
+
+
+class BiggestSpendsIncludeCardsTests(TestCase):
+    """Something bought on a credit card is spending ("Where it went" counts it), so a big one shows in "Biggest spends"."""
+
+    def test_card_purchase_is_among_the_biggest(self):
+        from apps.cards.models import Card, CardBank, CardEntry
+
+        user = User.objects.create_user("rina", password="pw")
+        self.client.force_login(user)
+        card = Card.objects.create(user=user, name="UCB Visa", bank=CardBank.objects.create(user=user, name="UCB"),
+                                   statement_day=5, due_day=25, limit=D("100000"), opening_date=date(2026, 1, 1))
+        Expense.objects.create(user=user, amount=D("500"), date=date(2026, 3, 4))
+        tv = CardEntry.objects.create(card=card, kind="spend", amount=D("42000"), date=date(2026, 3, 9), note="TV")
+        CardEntry.objects.create(card=card, kind="pay", amount=D("90000"), date=date(2026, 3, 10))   # a bill paid isn't spending
+        r = self.client.get(reverse("money_report"), {"month": "2026-03"})
+        top = r.context["biggest"]
+        self.assertEqual([row["amount"] for row in top], [D("42000"), D("500")])
+        self.assertEqual(top[0]["url"], reverse("card_entry_detail", args=[tv.pk]))
+        self.assertContains(r, "UCB Visa")

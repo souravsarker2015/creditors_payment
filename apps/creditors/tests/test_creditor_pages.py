@@ -166,3 +166,34 @@ class CreditorPageTests(TestCase):
     def test_the_import_template_shows_the_new_columns(self):
         header = self.client.get(reverse("creditor_import_template")).content.decode("utf-8-sig").splitlines()[0]
         self.assertTrue(header.endswith("Opening Balance,Date,Due date"))
+
+
+class RecordFormStartsOpenTests(TestCase):
+    """Nothing written down for this person yet: the "Borrowed more, or paid back?" form is the next step, so it starts open."""
+
+    OPEN = "open: false || true ||"
+
+    def setUp(self):
+        self.user = User.objects.create_user("fresh", password="pw12345!")
+        self.client.force_login(self.user)
+        self.karim = Creditor.objects.create(user=self.user, name="Karim")
+
+    def test_open_while_nothing_is_recorded(self):
+        self.assertContains(self.client.get(reverse("creditor_detail", args=[self.karim.pk])), self.OPEN)
+
+    def test_folded_once_there_is_history_or_a_filter(self):
+        Transaction.objects.create(creditor=self.karim, transaction_type=Transaction.BORROW, amount=Decimal("500"),
+                                   date=timezone.localdate())
+        url = reverse("creditor_detail", args=[self.karim.pk])
+        self.assertNotContains(self.client.get(url), self.OPEN)
+        Transaction.objects.all().delete()
+        self.assertNotContains(self.client.get(url, {"year": "2001"}), self.OPEN)   # "nothing in this period" isn't "nothing yet"
+
+    def test_debtor_and_shop_pages_too(self):
+        from apps.debtors.models import Debtor
+        from apps.shops.models import Shop
+
+        debtor = Debtor.objects.create(user=self.user, name="Rafiq")
+        shop = Shop.objects.create(user=self.user, name="Corner shop")
+        self.assertContains(self.client.get(reverse("debtor_detail", args=[debtor.pk])), self.OPEN)
+        self.assertContains(self.client.get(reverse("shop_detail", args=[shop.pk])), self.OPEN)

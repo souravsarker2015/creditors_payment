@@ -17,7 +17,7 @@
         <input type="file" id="contributor-import-file" name="csv_file" accept=".csv,text/csv" class="hidden" @change="$el.form.submit()">
         <label for="contributor-import-file" class="btn btn-secondary cursor-pointer" data-tip="{% translate 'Upload a .csv file to add many at once. Download the Template to see the columns.' %}">{% include "partials/icon.html" with name="upload" %}{% translate "Import CSV" %}</label>
       </form>
-      <a href="{% url 'contributor_import_template' %}" class="btn btn-ghost" data-tip="{% translate 'Download a sample CSV with the expected columns.' %}">{% translate "Template" %}</a>
+      <a href="{% url 'contributor_import_template' %}" class="btn btn-ghost" data-tip="{% translate 'Download a sample CSV with the expected columns.' %}">{% translate "Sample CSV" %}</a>
       <a href="{% url 'contributor_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "New Contributor" %}</a>
     </div>
   </header>

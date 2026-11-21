@@ -9,10 +9,11 @@ A business form field: label with its ⓘ tip (the form's `tips` dict), the
     <label class="check" for="{{ field.id_for_label }}">
       {{ field }}
       <span>
-        <span class="check-label">{{ field.label }}</span>
+        {# the ⓘ beside the words, inside the box — outside it wrapped onto a line of its own (a tap on it opens the tip, not the switch) #}
+        <span class="check-label">{{ field.label }}{% include "business/partials/tip.html" with text=tip_text %}</span>
         {% if field.help_text %}<span class="help mt-0.5 block">{{ field.help_text|safe }}</span>{% endif %}
       </span>
-    </label>{% include "business/partials/tip.html" with text=tip_text %}
+    </label>
   </div>
   {% for error in field.errors %}<p class="field-error">{% include "partials/icon.html" with name="alert" %}{{ error }}</p>{% endfor %}
 </div>

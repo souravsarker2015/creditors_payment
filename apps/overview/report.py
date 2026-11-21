@@ -151,6 +151,10 @@ def build(user, kind, start, end, today):
     biggest += [{"date": p.date, "label": _("Bazar") + (f" · {p.category.name}" if p.category else ""), "note": getattr(p, "note", ""),
                  "amount": p.amount, "url": reverse("household_purchase_edit", args=[p.pk])}
                 for p in span(led.bazar).select_related("category").order_by("-amount", "-date")[:6]]
+    # what was bought on a credit card is spending too (it is in "Where it went"), so a big card purchase shows here as well
+    biggest += [{"date": c.date, "label": _("Credit card") + f" · {c.card.name}", "note": c.note, "amount": c.amount,
+                 "url": reverse("card_entry_detail", args=[c.pk])}
+                for c in span(led.cards.filter(kind="spend")).select_related("card").order_by("-amount", "-date")[:6]]
     biggest = sorted(biggest, key=lambda r: (-r["amount"], r["date"]))[:6]
 
     def tx(model, owner, kind_value):

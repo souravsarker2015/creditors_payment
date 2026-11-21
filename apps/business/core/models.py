@@ -10,7 +10,7 @@ from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils import timezone
-from django.utils.translation import get_language, gettext_lazy as _
+from django.utils.translation import get_language, gettext, gettext_noop, gettext_lazy as _
 
 MONEY = {"max_digits": 14, "decimal_places": 2}
 
@@ -41,6 +41,18 @@ class Dashboard(models.Model):
     @property
     def display_name(self):
         return self.name_bn if (get_language() or "").startswith("bn") and self.name_bn else self.name
+
+    # The seeded descriptions, so they are in the translation file (the rows hold the English).
+    DESCRIPTIONS = (
+        gettext_noop("Loans, dues, income, expenses, bazar, budgets and savings"),
+        gettext_noop("Ponds, feed, sales, credit (baki) and farm accounts"),
+        gettext_noop("Time tracker, tasks, focus timer, notes, snippets and habits"),
+    )
+
+    @property
+    def display_description(self):
+        """The description in the reader's language (one an admin typed in themselves stays as written)."""
+        return gettext(self.description) if self.description else ""
 
 
 class UserDashboardAccess(models.Model):

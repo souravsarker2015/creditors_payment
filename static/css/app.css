@@ -175,6 +175,17 @@ h1, h2, h3 { font-family: var(--font-heading); }
     border-bottom: 1px solid var(--border);
 }
 @media (min-width: 640px) { .topbar { padding-inline: 1.5rem; } }
+/* The right-hand buttons may squeeze, never spill: on a tablet, or a laptop with the sidebar open, a long business name gets "…" rather than pushing the account menu off the screen. */
+/* Phones where the dashboard switcher joins the bar: the ৳ mark without the word, so the account button stays on screen. */
+@media (max-width: 479.98px) { .topbar:has(.dash-switch) .topbar-logo > span:last-child { display: none; } }
+@media (min-width: 640px) {
+    .topbar > .ml-auto { min-width: 0; }
+    .topbar .menu-wrap:has(> .dash-switch) { min-width: 0; }
+    .topbar .dash-switch { max-width: 100%; }
+    .topbar .dash-switch-name { min-width: 0; }
+}
+/* Laptops (1280–1439px) with the sidebar open: Search, Note and Calculator as icons (their tips still name them), so the business name keeps its room. */
+@media (max-width: 1439.98px) { .topbar .calc-trigger > span { display: none; } }
 @media (min-width: 1024px) { .topbar { padding-inline: 2rem; } }
 /* Small phones (under 360px): the ৳ mark without the word, buttons a little closer, so nothing hangs off the edge. */
 @media (max-width: 359.98px) {
@@ -690,7 +701,9 @@ html.ft-touch select.ftp-native, select.ftp-native.is-multi { display: none !imp
 html:not(.ft-touch) .ftp-trigger:not(.ftp-multi) { display: none !important; }
 .ftp-trigger[hidden] { display: none !important; }
 .ftp-trigger { display: flex; align-items: center; gap: 0.5rem; width: 100%; text-align: left; cursor: pointer; background-image: none !important; padding-right: 0.75rem !important; }
-.ftp-trigger-text { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* A long choice ("usman feed house — দেনা ৳15,00,500") takes a second line rather than losing its amount to "…". */
+.ftp-trigger { height: auto !important; min-height: 2.75rem; }
+.ftp-trigger-text { flex: 1 1 auto; min-width: 0; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.35; }
 .ftp-trigger > svg { width: 1.125rem; height: 1.125rem; flex-shrink: 0; color: var(--text-muted); transition: transform .15s; }
 .ftp-trigger[aria-expanded="true"] > svg { transform: rotate(180deg); }
 .ftp-trigger.is-placeholder .ftp-trigger-text, .ftp-ph { color: var(--text-muted); }
@@ -1908,8 +1921,9 @@ a.member-chip:hover { background: color-mix(in srgb, var(--g, var(--text-muted))
 .glance-sub { display: block; font-size: 0.75rem; color: var(--text-muted); overflow-wrap: anywhere; }
 .glance-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.375rem; }
 .glance-facts > div { min-width: 0; padding: 0.375rem 0.5rem; border-radius: 0.5rem; background: var(--surface-sunken); }
-.glance-facts dt { font-size: 0.6875rem; font-weight: 600; color: var(--text-muted); }
-.glance-facts dd { font-size: 0.875rem; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.glance-facts dt { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); }
+/* The number is the point: never cut to "40,200…" — on a narrow phone the unit goes to the next line instead. */
+.glance-facts dd { font-size: 0.875rem; font-weight: 700; line-height: 1.3; color: var(--text-primary); font-variant-numeric: tabular-nums; }
 .glance-chips { display: flex; flex-wrap: wrap; gap: 0.375rem; }
 .glance-chip { --tone: var(--status-info); display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.1875rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; line-height: 1.4;
   color: var(--tone); background: color-mix(in srgb, var(--tone) 12%, transparent); }
@@ -2055,7 +2069,8 @@ a.member-chip:hover { background: color-mix(in srgb, var(--g, var(--text-muted))
 .baki-side:hover { border-color: color-mix(in srgb, var(--tone) 45%, var(--border)); }
 .baki-side.is-active { background: var(--tone-bg); border-color: color-mix(in srgb, var(--tone) 55%, transparent); }
 .baki-side-label { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); }
-.baki-side-value { font-size: 1.5rem; font-weight: 780; letter-spacing: -0.01em; color: var(--tone); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+/* An amount is read as one thing: it never breaks across lines ("৳15,54," / "500"); on a narrow phone it gets a little smaller instead. */
+.baki-side-value { font-size: clamp(1.125rem, 5.6vw, 1.5rem); font-weight: 780; letter-spacing: -0.01em; color: var(--tone); font-variant-numeric: tabular-nums; white-space: nowrap; }
 @media (min-width: 640px) { .baki-side-value { font-size: 1.875rem; } }
 .baki-side-sub { font-size: 0.75rem; color: var(--text-muted); }
 .baki-sides-sm .baki-side { padding: 0.75rem 0.875rem; box-shadow: inset 0 3px 0 var(--tone); }
@@ -2208,10 +2223,19 @@ a.member-chip:hover { background: color-mix(in srgb, var(--g, var(--text-muted))
 .tile .tile-body, .tile .tile-title, .tile .tile-text { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
 @media print { .memo-table th, .memo-table td { padding: 0.375rem 0.25rem; font-size: 0.75rem; } }
 
+/* "Or press S." — a keyboard shortcut means nothing on a phone. */
+@media (hover: none) and (pointer: coarse) { .keys-only { display: none; } }
+
 /* Phones: the little "i" keeps its size but gets a finger-sized tap area. */
 @media (hover: none) and (pointer: coarse) {
     .info-tip { position: relative; }
     .info-tip::after { content: ""; position: absolute; top: 50%; left: 50%; width: 44px; height: 44px; transform: translate(-50%, -50%); }
+    /* "‹ Back" / "‹ Credit cards" above a page title: small words, a thumb-sized target around them (nothing moves). */
+    .back-link { position: relative; }
+    .back-link::after { content: ""; position: absolute; inset: -0.75rem -0.75rem -0.5rem; }
+    /* "+ Write one" under a story cover */
+    .ws-cover-add { position: relative; }
+    .ws-cover-add::after { content: ""; position: absolute; inset: -0.75rem -0.5rem; }
 }
 
 /* ==========================================================================
@@ -3040,7 +3064,7 @@ ul.health-steps { list-style: disc; }
 .home-sum > div { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.25rem 0; font-size: 0.875rem; }
 .home-sum dt { display: inline-flex; align-items: center; color: var(--text-on-ink-muted); }
 .home-sum dt a:hover { color: var(--text-on-ink); text-decoration: underline; }
-.home-sum dd { margin: 0; font-weight: 650; font-variant-numeric: tabular-nums; color: var(--text-on-ink); }
+.home-sum dd { margin: 0; font-weight: 650; font-variant-numeric: tabular-nums; color: var(--text-on-ink); white-space: nowrap; }
 .home-sum .is-good { color: #8fe0b0; }
 .home-sum .is-bad { color: #f2a597; }
 .home-sum .home-sum-total { margin-top: 0.25rem; padding-top: 0.5rem; border-top: 1px dashed rgba(255, 255, 255, 0.16); font-size: 0.9375rem; }
@@ -3122,8 +3146,8 @@ html.ft-touch .ftp-trigger:focus, html.ft-touch .ftp-trigger:focus-visible { box
 .fc-hero .hero-value[data-tone="critical"] { color: #ff9b8f; }
 .fc-sum { display: grid; grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr)); gap: 0.5rem 1rem; margin-top: 1rem; padding-top: 0.875rem; border-top: 1px solid rgba(255, 255, 255, 0.12); }
 .fc-sum > div { min-width: 0; }
-.fc-sum dt { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.02em; color: var(--text-on-ink-muted); }
-.fc-sum dd { margin-top: 0.125rem; font-size: 0.9375rem; font-weight: 700; color: var(--text-on-ink); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.fc-sum dt { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.02em; color: var(--text-on-ink-muted); }
+.fc-sum dd { margin-top: 0.125rem; font-size: 0.9375rem; font-weight: 700; color: var(--text-on-ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .fc-sum dd.is-in { color: #7fd8a4; }
 .fc-sum dd.is-out { color: #ffb4a8; }
 .fc-list { overflow: hidden; }

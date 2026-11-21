@@ -403,6 +403,15 @@
 
     /* ── Dates ───────────────────────────────────────────────────────────── */
     var LOCALE = root.getAttribute("lang") === "bn" && window.flatpickr && flatpickr.l10ns && flatpickr.l10ns.bn ? "bn" : "default";
+    // the Bangla pack leaves the picker's own screen-reader words in English ("Year", "Hour"…)
+    if (LOCALE === "bn") {
+      var bn = flatpickr.l10ns.bn;
+      bn.yearAriaLabel = bn.yearAriaLabel && bn.yearAriaLabel !== "Year" ? bn.yearAriaLabel : "বছর";
+      bn.monthAriaLabel = bn.monthAriaLabel && bn.monthAriaLabel !== "Month" ? bn.monthAriaLabel : "মাস";
+      bn.hourAriaLabel = bn.hourAriaLabel && bn.hourAriaLabel !== "Hour" ? bn.hourAriaLabel : "ঘণ্টা";
+      bn.minuteAriaLabel = bn.minuteAriaLabel && bn.minuteAriaLabel !== "Minute" ? bn.minuteAriaLabel : "মিনিট";
+      bn.toggleTitle = bn.toggleTitle && bn.toggleTitle !== "Click to toggle" ? bn.toggleTitle : "বদলাতে চাপুন";
+    }
     var pickers = [];
 
     function ymd(dt) { return window.flatpickr ? flatpickr.formatDate(dt, "Y-m-d") : ""; }

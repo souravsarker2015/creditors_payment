@@ -308,6 +308,8 @@
       };
     });
 
+    var hasAny = datasets.some(function (ds) { return (ds.data || []).some(function (v) { return Number(v) !== 0; }); });
+
     var chart = new Chart(canvas.getContext('2d'), {
       type: 'bar',
       data: { labels: labels, datasets: chartDatasets },
@@ -322,10 +324,13 @@
           },
           y: {
             beginAtZero: true,
+            // nothing yet: a plain ৳0–৳1K scale, not ten steps of 0.1 that all read "৳1"
+            suggestedMax: hasAny ? undefined : 1000,
             grid: { color: gridColor },
             ticks: {
               color: textColor,
               font: { size: 10 },
+              precision: 0,   // whole taka only, so no two ticks print the same label
               callback: function (value) { return compactAmount(value, currency); },
             },
           },

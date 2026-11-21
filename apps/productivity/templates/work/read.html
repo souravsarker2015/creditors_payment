@@ -43,11 +43,11 @@
     <p class="rd-pop-sub" x-show="stats.streak">🔥 <span x-text="stats.streak"></span> <span>{% translate "days in a row" %}</span></p>
     <p class="rd-pop-sub" x-show="!stats.streak">{% translate "Reach the goal today and a streak begins." %}</p>
     <div class="rd-step"><span>{% translate "Daily goal" %}</span>
-      <button type="button" @click="setGoal(stats.goal - 5)" aria-label="{% translate 'Less' %}">−</button><b class="num" x-text="stats.goal ? stats.goal + ' min' : '{% translate "none" %}'"></b>
+      <button type="button" @click="setGoal(stats.goal - 5)" aria-label="{% translate 'Less' %}">−</button><b class="num" x-text="stats.goal ? stats.goal + ' {% translate "min" %}' : '{% translate "none" %}'"></b>
       <button type="button" @click="setGoal(stats.goal + 5)" aria-label="{% translate 'More' %}">+</button></div>
     <div class="rd-week" x-show="stats.week" aria-label="{% translate 'The last seven days' %}">
       <template x-for="(w, j) in stats.week || []" :key="j">
-        <div class="rd-week-day" :class="{ 'is-met': w.met, 'is-today': w.today }" :title="w.min + ' min'">
+        <div class="rd-week-day" :class="{ 'is-met': w.met, 'is-today': w.today }" :title="w.min + ' {% translate "min" %}'">
           <span class="rd-week-bar"><i :style="'height:' + weekPct(w) + '%'"></i></span><small x-text="w.day"></small></div>
       </template>
     </div>
@@ -130,7 +130,7 @@
           <p class="rd-toc-part" x-show="partStart(i)" x-text="c.part"></p>
           <button type="button" @click="go(i); toc = false">
             <span class="rd-toc-mark" aria-hidden="true"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" class="rd-toc-bg"/><circle cx="10" cy="10" r="8" class="rd-toc-fg" pathLength="100" :style="'stroke-dasharray:' + (prog(c.key).done ? 100 : Math.round(100 * (prog(c.key).position || 0))) + ' 100'"/></svg><i x-show="prog(c.key).done">✓</i></span>
-            <span class="rd-toc-t"><span x-text="(c.icon ? c.icon + ' ' : '') + c.title"></span><small x-text="c.minutes + ' min'"></small></span>
+            <span class="rd-toc-t"><span x-text="(c.icon ? c.icon + ' ' : '') + c.title"></span><small x-text="c.minutes + ' {% translate "min" %}'"></small></span>
           </button>
           <button type="button" class="rd-toc-more" x-show="(c.sections || []).length > 1 && i !== idx" @click="tocOpen[c.key] = !tocOpen[c.key]"
                   :aria-expanded="(!!tocOpen[c.key]).toString()" :aria-label="'{{ _("Sections")|escapejs }}: ' + c.sections.length"><small class="num" x-text="c.sections.length"></small>{% icon "chevron-down" %}</button>
@@ -138,7 +138,7 @@
           <ol class="rd-toc-secs" x-show="(c.sections || []).length > 1 && (i === idx || tocOpen[c.key])">
             <template x-for="(s, j) in c.sections" :key="j">
               <li :class="{ 'is-past': prog(c.key).done || (i === idx && j < sec), 'is-at': i === idx && j === sec }">
-                <button type="button" @click="toSection(i, j); toc = false"><span x-text="s.title"></span><small class="num" x-text="s.minutes + ' min'"></small></button></li>
+                <button type="button" @click="toSection(i, j); toc = false"><span x-text="s.title"></span><small class="num" x-text="s.minutes + ' {% translate "min" %}'"></small></button></li>
             </template>
           </ol>
         </li>
@@ -159,7 +159,7 @@
         <ol>
           <template x-for="(s, j) in cur().sections.slice(0, allSecs ? 999 : 6)" :key="j">
             <li :class="{ 'is-past': prog(cur().key).done || j < sec, 'is-at': j === sec }"><button type="button" @click="toSection(idx, j)">
-              <span class="rd-insec-n num" x-text="j + 1"></span><span class="rd-insec-t" x-text="s.title"></span><small class="num" x-text="s.minutes + ' min'"></small></button></li>
+              <span class="rd-insec-n num" x-text="j + 1"></span><span class="rd-insec-t" x-text="s.title"></span><small class="num" x-text="s.minutes + ' {% translate "min" %}'"></small></button></li>
           </template>
         </ol>
         <button type="button" class="rd-insec-more" x-show="cur().sections.length > 6 && !allSecs" @click="allSecs = true" x-text="'+ ' + (cur().sections.length - 6) + ' {{ _("more")|escapejs }}'"></button>
@@ -184,10 +184,10 @@
         <small class="rd-kept" x-show="kept" x-cloak>✓ <span x-text="T('saved')"></span></small>
       </label>
       <div class="rd-end-acts">
-        <a class="btn btn-secondary" x-show="data.review" :href="data.review + '?which=all&chapter=' + encodeURIComponent(cur().key)">{% icon "target" %}{% translate "Test yourself on this chapter" %}</a>
-        <a class="btn btn-ghost" x-show="data.edit" :href="data.edit + (cur().note || cur().key) + '/'">{% icon "edit" %}{% translate "Edit this note" %}</a>
+        <a class="btn btn-secondary" x-show="data.review" :href="data.review ? data.review + '?which=all&chapter=' + encodeURIComponent(cur().key) : null">{% icon "target" %}{% translate "Test yourself on this chapter" %}</a>
+        <a class="btn btn-ghost" x-show="data.edit" :href="data.edit ? data.edit + (cur().note || cur().key) + '/' : null">{% icon "edit" %}{% translate "Edit this note" %}</a>
         <button type="button" class="btn btn-primary rd-next" x-show="idx < chapters.length - 1" @click="go(idx + 1)">
-          <span><small>{% translate "Next" %} · <span x-text="next() && next().minutes"></span> min</small><b x-text="next() && next().title"></b></span>{% icon "arrow-right" %}</button>
+          <span><small>{% translate "Next" %} · <span x-text="next() && next().minutes"></span> {% translate "min" %}</small><b x-text="next() && next().title"></b></span>{% icon "arrow-right" %}</button>
       </div>
     </section>
   </main>

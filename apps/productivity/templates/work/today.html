@@ -187,7 +187,7 @@
       {% if timeline %}
       <ul class="we-list">{% for e in timeline reversed %}{% include "work/partials/entry_row.html" %}{% endfor %}</ul>
       {% else %}
-      <p class="wd-muted">{% translate "Nothing tracked yet. Start the timer above, or press s." %}</p>
+      <p class="wd-muted">{% translate "Nothing tracked yet. Start the timer above." %}<span class="keys-only"> {% translate "Or press S." %}</span></p>
       {% endif %}
     </section>
 
@@ -217,7 +217,7 @@
     {% if notes %}
     <section class="card">
       <header class="card-header"><h2 class="card-title">{% translate "Recent notes" %}</h2><a href="{% url 'work:notes' %}" class="btn btn-ghost btn-sm">{% translate "All" %}</a></header>
-      <ul class="wd-notes">{% for n in notes %}<li><a href="{% url 'work:note' n.pk %}">{% if n.is_pinned %}<span class="wd-pin">{% icon "pin" %}</span>{% endif %}<span class="truncate">{{ n.display_title }}</span><time>{{ n.updated_at|timesince }}</time></a></li>{% endfor %}</ul>
+      <ul class="wd-notes">{% for n in notes %}<li><a href="{% url 'work:note' n.pk %}">{% if n.is_pinned %}<span class="wd-pin">{% icon "pin" %}</span>{% endif %}<span class="truncate">{{ n.display_title }}</span><time>{{ n.updated_at|ago }}</time></a></li>{% endfor %}</ul>
     </section>
     {% endif %}
   </div>

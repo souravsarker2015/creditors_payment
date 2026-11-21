@@ -13,7 +13,7 @@
       </div>
     </div>
     <div class="page-actions">
-    <a href="{% url 'business:day_summary' %}" class="btn btn-ghost" data-tip="{% translate 'Everything recorded today, pond by pond — and an evening email if you want one.' %}">{% include "partials/icon.html" with name="mail" %}<span class="hidden sm:inline">{% translate "Evening summary" %}</span></a>
+    <a href="{% url 'business:day_summary' %}" class="btn btn-ghost" data-tip="{% translate 'Everything recorded today, pond by pond — and an evening email if you want one.' %}">{% include "partials/icon.html" with name="mail" %}{% translate "Evening summary" %}</a>
     {% if share_url %}<a href="{{ share_url }}" target="_blank" rel="noopener" class="btn btn-secondary" data-tip="{% translate 'Send today’s sales, feed, deaths and to-dos to the owner or your family group on WhatsApp.' %}">{% include "partials/icon.html" with name="chat" %}{% translate "Share today’s report" %}</a>{% endif %}
     {% if other_businesses %}
     <form method="post" action="{% url 'business:switch_business' %}">

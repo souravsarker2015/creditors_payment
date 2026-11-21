@@ -296,3 +296,13 @@ def json_page(value, element_id):
             .replace("&", "\\u0026").replace("<", "\\u003c").replace(">", "\\u003e")
             .replace("\u2028", "\\u2028").replace("\u2029", "\\u2029"))
     return format_html('<script id="{}" type="application/json">{}</script>', element_id, mark_safe(text))
+
+
+@register.filter
+def ago(value):
+    """"2 hours ago", "3 days ago": one unit, the way people say it — not "2 hours, 50 minutes"."""
+    if not value:
+        return ""
+    from django.utils.timesince import timesince
+
+    return _("%(t)s ago") % {"t": timesince(value, depth=1)}

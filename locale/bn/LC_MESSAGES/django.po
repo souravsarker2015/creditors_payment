@@ -29187,7 +29187,7 @@ msgid "The two are the same."
 msgstr "দুটি একই।"
 
 msgid "user profile picture"
-msgstr "user profile picture"
+msgstr "প্রোফাইল ছবি"
 
 #, python-format
 msgid "Exam: %(name)s"
@@ -33562,7 +33562,7 @@ msgstr "নোটে ট্যাগ দেয়"
 
 #: apps/productivity/templates/work/partials/shortcut_list.html
 msgid "The answer: Write ⇄ Preview"
-msgstr "উত্তর: Write ⇄ Preview"
+msgstr "উত্তর: লেখা ⇄ দেখা"
 
 #: apps/productivity/templates/work/partials/shortcut_list.html
 msgid "Undo a highlight or a change made here"
@@ -33574,7 +33574,7 @@ msgstr "আগের অবস্থায় · আবার করুন (Ctrl
 
 #: apps/productivity/templates/work/partials/shortcut_list.html
 msgid "Write ⇄ Preview"
-msgstr "Write ⇄ Preview"
+msgstr "লেখা ⇄ দেখা"
 
 #: apps/productivity/templates/work/focus.html
 msgid "+1 min"
@@ -37115,3 +37115,43 @@ msgstr "বদল: %%(s)s"
 
 msgid "Edit history — see what changed, bring back an older version"
 msgstr "সম্পাদনার ইতিহাস — কী বদলেছে দেখুন, পুরোনো সংস্করণ ফিরিয়ে আনুন"
+
+msgid "Nothing tracked yet. Start the timer above."
+msgstr "এখনো কিছু হিসাব হয়নি। উপরে টাইমার শুরু করুন।"
+
+msgid "Or press S."
+msgstr "বা S চাপুন।"
+
+msgid "No notes yet. Take one above."
+msgstr "এখনো কোনো নোট নেই। ওপরে একটি লিখুন।"
+
+msgid "Or press N on any Productivity page."
+msgstr "অথবা প্রোডাক্টিভিটির যেকোনো পাতায় N চাপুন।"
+
+msgid "No notes yet."
+msgstr "এখনো কোনো নোট নেই।"
+
+msgid "Press N anywhere to jot one down."
+msgstr "যেকোনো জায়গায় N চেপে লিখে ফেলুন।"
+
+msgid ""
+"Add one with the + Task button. Try typing: Fix login bug #auth @api !high "
+"tomorrow ~45m"
+msgstr ""
+"+ টাস্ক বোতাম দিয়ে যোগ করুন। লিখে দেখুন: Fix login bug #auth @api !high "
+"tomorrow ~45m"
+
+msgid "Or press C."
+msgstr "অথবা C চাপুন।"
+
+msgid "Loans, dues, income, expenses, bazar, budgets and savings"
+msgstr "ধার, বাকি, আয়, খরচ, বাজার, বাজেট আর সঞ্চয়"
+
+msgid "Ponds, feed, sales, credit (baki) and farm accounts"
+msgstr "পুকুর, খাবার, বিক্রি, বাকি আর খামারের হিসাব"
+
+msgid "Time tracker, tasks, focus timer, notes, snippets and habits"
+msgstr "সময়ের হিসাব, কাজ, ফোকাস টাইমার, নোট, স্নিপেট আর অভ্যাস"
+
+msgid "Sample CSV"
+msgstr "নমুনা CSV"

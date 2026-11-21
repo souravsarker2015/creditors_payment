@@ -338,7 +338,15 @@
        - [data-tip]: short label on icon buttons/badges — hover & keyboard focus;
          on touch, press-and-hold so a normal tap still performs the action.
        - .info-tip[data-info]: the ⓘ explainers — also open on a plain tap. */
+    // An icon-only button that only has a tip is named by it (screen readers, voice control) — also the ones Alpine draws.
+    function nameByTip() {
+        document.querySelectorAll("button[data-tip]:not([aria-label]):not([aria-labelledby]), a[data-tip]:not([aria-label]):not([aria-labelledby])").forEach(function (el) {
+            if (!(el.innerText || "").trim()) el.setAttribute("aria-label", el.getAttribute("data-tip"));   // (words hidden on a phone count as none)
+        });
+    }
+    document.addEventListener("alpine:initialized", function () { setTimeout(nameByTip, 0); });
     document.addEventListener("DOMContentLoaded", function () {
+        nameByTip();
         if (!window.tippy) return;
         // Icon-only buttons already carry a title/aria-label: reuse it as the tooltip.
         document.querySelectorAll(".icon-btn:not([data-tip]):not([data-no-tip]), .chip[title], .pager-link[aria-label], .pref-swatch[title], .bg-pick[aria-label]").forEach(function (el) {

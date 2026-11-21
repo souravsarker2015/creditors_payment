@@ -2411,12 +2411,21 @@
     if (window.marked && window.DOMPurify) {
       var html = marked.parse(text || "", { gfm: true, breaks: true });
       // to-do boxes can be ticked where the preview allows it ([data-tick]); elsewhere CSS keeps them still
-      return codeBoxes(DOMPurify.sanitize(html)).replace(/<input (?=[^>]*type="checkbox")(?=[^>]*disabled="")([^>]*)>/g, function (all, attrs) {
+      return codeBoxes(deadLinks(DOMPurify.sanitize(html))).replace(/<input (?=[^>]*type="checkbox")(?=[^>]*disabled="")([^>]*)>/g, function (all, attrs) {
         return '<input type="checkbox" class="md-tick" tabindex="-1"' + (/checked=""/.test(attrs) ? ' checked=""' : "") + ">";
       });
     }
     var esc = (text || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     return "<p>" + esc.replace(/\n\n+/g, "</p><p>").replace(/\n/g, "<br>") + "</p>";
+  }
+  /* A link written for somewhere else — "../services/loan.py" copied from a code folder, "notes/a.md" from another app —
+     has nothing to open here, and a tap would only land on a "not found" page. Those show as words (the path on hover);
+     web, mail and phone links, links into this app (/…) and jumps within the page (#…) stay links. */
+  function deadLinks(html) {
+    return html.replace(/<a ([^>]*?)href="([^"]*)"([^>]*)>([\s\S]*?)<\/a>/g, function (all, before, href, after, words) {
+      if (!href || /^(?:[a-z][a-z0-9+.-]*:|\/|#|\?)/i.test(href)) return all;
+      return '<span class="md-deadlink" title="' + href + '">' + words + "</span>";
+    });
   }
   window.Work.markdown = renderMarkdown;
   window.Work.noteDraftKey = function (id) { return "work-note-draft:" + ME + ":" + id; };

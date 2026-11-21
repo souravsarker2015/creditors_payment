@@ -19,7 +19,7 @@ more dashboards, so everyone else sees the top bar exactly as before.
       <span class="dash-option-icon">{% include "business/partials/icon.html" with name=d.icon %}</span>
       <span class="min-w-0 flex-1">
         <span class="dash-option-name">{{ d.display_name }}</span>
-        {% if d.description %}<span class="dash-option-desc">{{ d.description }}</span>{% endif %}
+        {% if d.description %}<span class="dash-option-desc">{{ d.display_description }}</span>{% endif %}
       </span>
       {% if d.code == active_dashboard %}<span class="dash-option-check">{% include "partials/icon.html" with name="check" %}</span>{% endif %}
     </a>
