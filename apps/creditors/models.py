@@ -6,6 +6,7 @@ from django.db.models import Sum, Q
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from apps.core.people_categories import PersonCategory
 from apps.core.receipts import RECEIPT_VALIDATORS, personal_receipt_path
 from apps.core.validators import above_zero
 
@@ -52,7 +53,9 @@ INTEREST_PERIOD_NOUN = {
 }
 
 
-class CreditorCategory(models.TextChoices):
+class DefaultCreditorCategory(models.TextChoices):
+    """The categories everyone starts with. Each becomes a row of CreditorCategory (with this code), which the person can rename, hide or delete."""
+
     FAMILY = "FAMILY", _("Family")
     FRIEND = "FRIEND", _("Friend")
     BUSINESS_PARTNER = "BUSINESS_PARTNER", _("Business Partner")
@@ -67,16 +70,26 @@ class CreditorCategory(models.TextChoices):
     OTHER = "OTHER", _("Other")
 
 
+
+class CreditorCategory(PersonCategory):
+    """One of a person's creditor categories: the starters, and any they add with the + beside the dropdown."""
+
+    STARTERS = DefaultCreditorCategory
+
+    class Meta(PersonCategory.Meta):
+        verbose_name = _("Creditor category")
+        verbose_name_plural = _("Creditor categories")
+        constraints = [models.UniqueConstraint(fields=["user", "name"], name="creditor_category_unique_name")]
+
+
 class Creditor(models.Model):
     """A person you have borrowed money from."""
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="creditors")
 
     name = models.CharField(max_length=200, verbose_name=_("Name"))
-    category = models.CharField(
-        max_length=32,
-        choices=CreditorCategory.choices,
-        default=CreditorCategory.OTHER,
+    category = models.ForeignKey(
+        CreditorCategory, on_delete=models.SET_NULL, null=True, blank=True, related_name="creditors",
         verbose_name=_("Category"),
     )
     phone = models.CharField(max_length=20, blank=True, default="", verbose_name=_("Phone"))
@@ -135,6 +148,18 @@ class Creditor(models.Model):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        # A new one with no category starts in "Other", as the fixed list's default did.
+        if self._state.adding and self.category_id is None and self.user_id:
+            from apps.core.people_categories import starting_category
+
+            self.category = starting_category(CreditorCategory, self.user, self.user.creditors.all())
+        super().save(*args, **kwargs)
+
+    def get_category_display(self):
+        """The category's name ("" for none) — the name the old fixed list gave this, kept for the pages and files that use it."""
+        return self.category.label if self.category_id else ""
 
     # ── Computed properties ──────────────────────────
 

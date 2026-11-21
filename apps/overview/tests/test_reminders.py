@@ -156,7 +156,7 @@ class MailDownTests(TestCase):
         self.user = User.objects.create_user("down", "down@example.com", "x")
         UserProfile.objects.update_or_create(user=self.user, defaults={"money_reminders": True})
         self.client.force_login(self.user)
-        creditor = Creditor.objects.create(user=self.user, name="Karim", category="FAMILY", due_date=TODAY)
+        creditor = Creditor.objects.create(user=self.user, name="Karim", due_date=TODAY)
         CT.objects.create(creditor=creditor, transaction_type=CT.BORROW, amount=D("100"), date=TODAY)
 
     def test_a_failed_send_is_tried_once_an_hour(self):

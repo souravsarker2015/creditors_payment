@@ -24,6 +24,7 @@ from apps.overview.people import pairs
 from apps.wallets.services import warn_if_short
 from apps.trash.undo import delete_with_undo
 from .models import Debtor, DebtorCategory, Transaction, DUE_SOON_DAYS
+from apps.core import people_categories as pc
 from apps.core.stats import ledger_extras
 from apps.core.status import apply_status_filter, delete_record, toggle_active
 
@@ -55,18 +56,15 @@ def dashboard_view(request):
     if filter_type not in valid_filter_types:
         filter_type = "include"
 
-    selected_categories = [
-        category
-        for category in request.GET.getlist("category")
-        if category in DebtorCategory.values
-    ]
+    pc.ensure_starters(DebtorCategory, request.user, request.user.debtors.all())
+    selected_categories = pc.selected(request, DebtorCategory, request.user)   # ids; an old ?category=FAMILY link still works
 
-    debtors_base_qs = request.user.debtors.all()
+    debtors_base_qs = request.user.debtors.select_related("category")
     if selected_categories:
         if filter_type == "exclude":
-            debtors_base_qs = debtors_base_qs.exclude(category__in=selected_categories)
+            debtors_base_qs = debtors_base_qs.exclude(category_id__in=selected_categories)
         else:
-            debtors_base_qs = debtors_base_qs.filter(category__in=selected_categories)
+            debtors_base_qs = debtors_base_qs.filter(category_id__in=selected_categories)
 
     # Global summary stats for the current user
     stats = debtors_base_qs.aggregate(
@@ -129,11 +127,11 @@ def dashboard_view(request):
     if selected_categories:
         if filter_type == "exclude":
             recent_transactions = recent_transactions.exclude(
-                debtor__category__in=selected_categories
+                debtor__category_id__in=selected_categories
             )
         else:
             recent_transactions = recent_transactions.filter(
-                debtor__category__in=selected_categories
+                debtor__category_id__in=selected_categories
             )
     recent_transactions = recent_transactions.select_related("debtor").order_by(
         "-date", "-created_at"
@@ -167,7 +165,7 @@ def dashboard_view(request):
         "overdue_debtors": overdue_debtors,
         "due_soon_debtors": due_soon_debtors,
         "selected_categories": selected_categories,
-        "category_choices": DebtorCategory.choices,
+        "category_choices": pc.choices(DebtorCategory, request.user),
         "filter_type": filter_type,
     }
     context.update(ledger_extras(
@@ -341,11 +339,8 @@ def debtor_list_view(request):
     if filter_type not in valid_filter_types:
         filter_type = "include"
 
-    selected_categories = [
-        category
-        for category in request.GET.getlist("category")
-        if category in DebtorCategory.values
-    ]
+    pc.ensure_starters(DebtorCategory, request.user, request.user.debtors.all())
+    selected_categories = pc.selected(request, DebtorCategory, request.user)   # ids; an old ?category=FAMILY link still works
 
     valid_payment_statuses = {"ALL", "PAID", "UNPAID"}
     payment_status = request.GET.get("payment_status", "ALL").strip().upper()
@@ -354,12 +349,12 @@ def debtor_list_view(request):
 
     search_query = request.GET.get("q", "").strip()
 
-    debtors_base_qs = request.user.debtors.all()
+    debtors_base_qs = request.user.debtors.select_related("category")
     if selected_categories:
         if filter_type == "exclude":
-            debtors_base_qs = debtors_base_qs.exclude(category__in=selected_categories)
+            debtors_base_qs = debtors_base_qs.exclude(category_id__in=selected_categories)
         else:
-            debtors_base_qs = debtors_base_qs.filter(category__in=selected_categories)
+            debtors_base_qs = debtors_base_qs.filter(category_id__in=selected_categories)
 
     debtors_base_qs = party_search(debtors_base_qs, search_query)
 
@@ -445,7 +440,7 @@ def debtor_list_view(request):
         "total_received": stats["total_received"],
         "remaining": remaining,
         "selected_categories": selected_categories,
-        "category_choices": DebtorCategory.choices,
+        "category_choices": pc.choices(DebtorCategory, request.user),
         "filter_type": filter_type,
         "payment_status": payment_status,
         "search_query": search_query,
@@ -476,10 +471,7 @@ def debtor_import_view(request):
     if rows is None:
         return redirect("debtor_list")
 
-    category_lookup = {}
-    for value, label in DebtorCategory.choices:
-        category_lookup[value.lower()] = value
-        category_lookup[str(label).lower()] = value
+    pc.ensure_starters(DebtorCategory, request.user, request.user.debtors.all())
 
     existing_names = {" ".join(n.split()).lower() for n in request.user.debtors.values_list("name", flat=True)}
     today = django.utils.timezone.localdate()
@@ -494,7 +486,7 @@ def debtor_import_view(request):
             rows.duplicates += 1
             continue
 
-        category = category_lookup.get(rows.value(row, "category").lower(), DebtorCategory.OTHER)
+        category = pc.find(DebtorCategory, request.user, rows.value(row, "category"))   # by name or old code; a new name becomes a new category
         opening_balance = rows.amount(row, line, "opening balance", "opening_balance")
         since = rows.date(row, line, "date", "opening date")
         debtor = Debtor.objects.create(
@@ -558,3 +550,12 @@ def debtor_toggle_active_view(request, pk):
 def debtor_delete_view(request, pk):
     obj = get_object_or_404(Debtor, pk=pk, user=request.user)
     return delete_record(request, obj, "debtor_list", reverse("debtor_detail", args=[pk]))
+
+
+@login_required
+def debtor_categories_view(request):
+    """Add, rename, hide or delete debtor categories."""
+    return pc.manage(
+        request, model=DebtorCategory, people_name="debtors", title=_("Debtor categories"), subtitle=_("The list you pick from when adding a debtor — Family, Client, and any of your own. You can also add one with the + beside the Category box."),
+        back_url=reverse("debtor_list"), back_label=_("Debtors"), list_url=reverse("debtor_list"), kind="debtor",
+    )

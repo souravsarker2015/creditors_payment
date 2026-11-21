@@ -9,6 +9,16 @@ from django.utils import timezone
 from ..models import Debtor, DebtorCategory, Transaction
 
 
+def cat(user, code):
+    """The user's category that began as this code (FAMILY, BANK…) — with the whole starter list, as every account has."""
+    from apps.core.people_categories import ensure_starters
+
+    from ..models import Debtor
+
+    ensure_starters(DebtorCategory, user, Debtor.objects.none())
+    return DebtorCategory.objects.get(user=user, code=code)
+
+
 class DebtorCategoryTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="debtoruser", password="secret123")
@@ -17,12 +27,12 @@ class DebtorCategoryTests(TestCase):
         self.family_debtor = Debtor.objects.create(
             user=self.user,
             name="Family Debtor",
-            category=DebtorCategory.FAMILY,
+            category=cat(self.user, "FAMILY"),
         )
         self.client_debtor = Debtor.objects.create(
             user=self.user,
             name="Client Debtor",
-            category=DebtorCategory.CLIENT,
+            category=cat(self.user, "CLIENT"),
         )
 
         Transaction.objects.create(
@@ -52,16 +62,16 @@ class DebtorCategoryTests(TestCase):
 
     def test_debtor_default_category_is_other(self):
         debtor = Debtor.objects.create(user=self.user, name="Default Debtor")
-        self.assertEqual(debtor.category, DebtorCategory.OTHER)
+        self.assertEqual(debtor.category.code, "OTHER")
 
     def test_dashboard_with_include_category_filter(self):
         response = self.client.get(
             reverse("debtor_dashboard"),
-            {"category": DebtorCategory.FAMILY, "filter_type": "include"},
+            {"category": "FAMILY", "filter_type": "include"},
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context["filter_type"], "include")
-        self.assertEqual(response.context["selected_categories"], [DebtorCategory.FAMILY])
+        self.assertEqual(response.context["selected_categories"], [str(cat(self.user, "FAMILY").pk)])
         self.assertEqual(response.context["total_lent"], Decimal("1000.00"))
         self.assertEqual(response.context["total_received"], Decimal("300.00"))
         self.assertEqual(response.context["remaining"], Decimal("700.00"))
@@ -70,11 +80,11 @@ class DebtorCategoryTests(TestCase):
     def test_dashboard_with_exclude_category_filter(self):
         response = self.client.get(
             reverse("debtor_dashboard"),
-            {"category": DebtorCategory.FAMILY, "filter_type": "exclude"},
+            {"category": "FAMILY", "filter_type": "exclude"},
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context["filter_type"], "exclude")
-        self.assertEqual(response.context["selected_categories"], [DebtorCategory.FAMILY])
+        self.assertEqual(response.context["selected_categories"], [str(cat(self.user, "FAMILY").pk)])
         self.assertEqual(response.context["total_lent"], Decimal("800.00"))
         self.assertEqual(response.context["total_received"], Decimal("100.00"))
         self.assertEqual(response.context["remaining"], Decimal("700.00"))
@@ -84,15 +94,15 @@ class DebtorCategoryTests(TestCase):
         response = self.client.get(
             reverse("debtor_dashboard"),
             [
-                ("category", DebtorCategory.FAMILY),
-                ("category", DebtorCategory.CLIENT),
+                ("category", "FAMILY"),
+                ("category", "CLIENT"),
                 ("filter_type", "exclude"),
             ],
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.context["selected_categories"],
-            [DebtorCategory.FAMILY, DebtorCategory.CLIENT],
+            [str(cat(self.user, "FAMILY").pk), str(cat(self.user, "CLIENT").pk)],
         )
         self.assertEqual(response.context["total_lent"], Decimal("0"))
         self.assertEqual(response.context["total_received"], Decimal("0"))
@@ -103,7 +113,7 @@ class DebtorCategoryTests(TestCase):
     def test_list_with_include_category_filter(self):
         response = self.client.get(
             reverse("debtor_list"),
-            {"category": DebtorCategory.CLIENT, "filter_type": "include"},
+            {"category": "CLIENT", "filter_type": "include"},
         )
         self.assertEqual(response.status_code, 200)
 
@@ -117,7 +127,7 @@ class DebtorCategoryTests(TestCase):
     def test_list_with_exclude_category_filter(self):
         response = self.client.get(
             reverse("debtor_list"),
-            {"category": DebtorCategory.CLIENT, "filter_type": "exclude"},
+            {"category": "CLIENT", "filter_type": "exclude"},
         )
         self.assertEqual(response.status_code, 200)
 
@@ -139,7 +149,7 @@ class DebtorCategoryTests(TestCase):
 
     def test_list_payment_status_paid_filter(self):
         paid_debtor = Debtor.objects.create(
-            user=self.user, name="Fully Repaid Friend", category=DebtorCategory.FRIEND
+            user=self.user, name="Fully Repaid Friend", category=cat(self.user, "FRIEND")
         )
         Transaction.objects.create(
             debtor=paid_debtor,
@@ -161,7 +171,7 @@ class DebtorCategoryTests(TestCase):
 
     def test_list_payment_status_unpaid_filter(self):
         paid_debtor = Debtor.objects.create(
-            user=self.user, name="Fully Repaid Friend", category=DebtorCategory.FRIEND
+            user=self.user, name="Fully Repaid Friend", category=cat(self.user, "FRIEND")
         )
         Transaction.objects.create(
             debtor=paid_debtor,
@@ -185,7 +195,7 @@ class DebtorCategoryTests(TestCase):
         """Regression test: payment_status must not be silently flipped by the
         category include/exclude toggle (`filter_type`)."""
         paid_debtor = Debtor.objects.create(
-            user=self.user, name="Fully Repaid Friend", category=DebtorCategory.FRIEND
+            user=self.user, name="Fully Repaid Friend", category=cat(self.user, "FRIEND")
         )
         Transaction.objects.create(
             debtor=paid_debtor,
@@ -204,7 +214,7 @@ class DebtorCategoryTests(TestCase):
             reverse("debtor_list"),
             {
                 "payment_status": "PAID",
-                "category": DebtorCategory.CLIENT,
+                "category": "CLIENT",
                 "filter_type": "exclude",
             },
         )
@@ -220,7 +230,7 @@ class DebtorDueDateTests(TestCase):
 
     def _debtor_with_balance(self, due_date=None, lent=Decimal("1000.00"), received=Decimal("0.00")):
         debtor = Debtor.objects.create(
-            user=self.user, name="Test Debtor", category=DebtorCategory.FAMILY, due_date=due_date
+            user=self.user, name="Test Debtor", category=cat(self.user, "FAMILY"), due_date=due_date
         )
         Transaction.objects.create(
             debtor=debtor, transaction_type=Transaction.LEND, amount=lent, date=self.today - timedelta(days=30)

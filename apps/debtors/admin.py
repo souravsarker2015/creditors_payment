@@ -4,7 +4,7 @@ from django.db.models.functions import Coalesce
 
 from apps.core.templatetags.ui import bd_number
 
-from .models import Debtor, Transaction
+from .models import Debtor, DebtorCategory, Transaction
 
 
 class TransactionInline(admin.TabularInline):
@@ -83,3 +83,10 @@ class TransactionAdmin(admin.ModelAdmin):
     @admin.display(description="User")
     def get_user(self, obj):
         return obj.debtor.user.username
+
+
+@admin.register(DebtorCategory)
+class DebtorCategoryAdmin(admin.ModelAdmin):
+    list_display = ("name", "user", "code", "is_active")
+    list_filter = ("is_active",)
+    search_fields = ("name", "user__username")

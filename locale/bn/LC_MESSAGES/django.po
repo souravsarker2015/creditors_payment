@@ -37155,3 +37155,90 @@ msgstr "সময়ের হিসাব, কাজ, ফোকাস টাই
 
 msgid "Sample CSV"
 msgstr "নমুনা CSV"
+
+msgid ""
+"Upload a .csv file to add many at once. Download the Sample CSV to see the "
+"columns."
+msgstr ""
+"একসাথে অনেকগুলো যোগ করতে একটি .csv ফাইল আপলোড করুন। কলামগুলো দেখতে নমুনা CSV"
+" ডাউনলোড করুন।"
+
+msgid ""
+"This backup was made with an older version of FinTrack. Its records are "
+"brought up to date as they are restored (for example, creditor and debtor "
+"categories become lists you can edit)."
+msgstr ""
+"এই ব্যাকআপটি FinTrack-এর পুরোনো সংস্করণে বানানো। ফেরত আনার সময় এর "
+"রেকর্ডগুলো হালনাগাদ করা হয় (যেমন পাওনাদার ও দেনাদারের ক্যাটাগরি এখন আপনার "
+"নিজের বদলানো যায় এমন তালিকা হয়)।"
+
+msgid "New creditor category"
+msgstr "নতুন পাওনাদার ক্যাটাগরি"
+
+msgid "New debtor category"
+msgstr "নতুন দেনাদার ক্যাটাগরি"
+
+msgid "e.g. Neighbour, Office colleague"
+msgstr "যেমন প্রতিবেশী, অফিসের সহকর্মী"
+
+msgid "Creditor category"
+msgstr "পাওনাদার ক্যাটাগরি"
+
+msgid "Creditor categories"
+msgstr "পাওনাদারের ক্যাটাগরি"
+
+msgid "Add, rename or hide the categories you pick from"
+msgstr "যে ক্যাটাগরিগুলো থেকে বাছেন, সেগুলো যোগ করুন, নাম বদলান বা লুকান"
+
+msgid ""
+"The list you pick from when adding a creditor — Family, Bank, and any of "
+"your own. You can also add one with the + beside the Category box."
+msgstr ""
+"পাওনাদার যোগ করার সময় যে তালিকা থেকে বাছেন — পরিবার, ব্যাংক, আর আপনার নিজের"
+" যেকোনোটি। ক্যাটাগরি ঘরের পাশের + দিয়েও নতুন যোগ করা যায়।"
+
+msgid "Debtor category"
+msgstr "দেনাদার ক্যাটাগরি"
+
+msgid "Debtor categories"
+msgstr "দেনাদারের ক্যাটাগরি"
+
+msgid ""
+"The list you pick from when adding a debtor — Family, Client, and any of "
+"your own. You can also add one with the + beside the Category box."
+msgstr ""
+"দেনাদার যোগ করার সময় যে তালিকা থেকে বাছেন — পরিবার, ক্লায়েন্ট, আর আপনার "
+"নিজের যেকোনোটি। ক্যাটাগরি ঘরের পাশের + দিয়েও নতুন যোগ করা যায়।"
+
+msgid "Missing one? Use + to add it."
+msgstr "যেটা চান নেই? + দিয়ে যোগ করুন।"
+
+msgid "Change the list"
+msgstr "তালিকা বদলান"
+
+msgid "Renamed to %(name)s. Everyone in it shows the new name."
+msgstr "নাম বদলে %(name)s করা হলো। এতে থাকা সবার পাশে নতুন নামটি দেখাবে।"
+
+msgid "%(name)s is hidden from the list. People already in it keep it."
+msgstr ""
+"%(name)s তালিকা থেকে লুকানো হলো। যারা আগে থেকে এতে আছেন, তাদের এটাই থাকবে।"
+
+msgid ""
+"%(name)s is still used — hide it instead, or move those people to another "
+"category first."
+msgstr ""
+"%(name)s এখনো ব্যবহার হচ্ছে — বরং লুকিয়ে রাখুন, অথবা আগে ওই মানুষদের অন্য "
+"ক্যাটাগরিতে সরান।"
+
+msgid "Nobody in it yet"
+msgstr "এখনো কেউ নেই"
+
+msgid "No categories yet. Add one above."
+msgstr "এখনো কোনো ক্যাটাগরি নেই। ওপরে একটি যোগ করুন।"
+
+msgid ""
+"A category that still has people in it can't be deleted — hide it instead, "
+"and it stops being offered for new people."
+msgstr ""
+"যে ক্যাটাগরিতে এখনো মানুষ আছে, সেটা মোছা যায় না — বরং লুকিয়ে রাখুন, তাহলে "
+"নতুনদের জন্য আর দেখাবে না।"

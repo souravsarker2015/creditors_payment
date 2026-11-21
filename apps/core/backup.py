@@ -371,11 +371,20 @@ def _check_version(backup):
     later = sorted(here - there)
     if not later:
         return
+    from . import backup_upgrades
+
+    upgrades = []
     for key in later:
         node = loader.graph.nodes.get(key)
         if node and any(isinstance(op, (RunPython, RunSQL)) for op in node.operations):
-            raise BackupError(_("This backup is from an older version of FinTrack, and the update since then changed existing data (%(name)s). Restore it on a server with the older version, then update that server.") % {"name": ".".join(key)})
-    backup.notes.append(_("This backup was made with an older version of FinTrack. The updates since then only added new things, so it restores safely."))
+            if key not in backup_upgrades.UPGRADES:
+                raise BackupError(_("This backup is from an older version of FinTrack, and the update since then changed existing data (%(name)s). Restore it on a server with the older version, then update that server.") % {"name": ".".join(key)})
+            upgrades.append(key)
+    for key in upgrades:          # that update's change, done to the backup's records too (before anything is loaded)
+        backup_upgrades.run(backup, key)
+    backup.notes.append(_("This backup was made with an older version of FinTrack. The updates since then only added new things, so it restores safely.")
+                        if not upgrades else
+                        _("This backup was made with an older version of FinTrack. Its records are brought up to date as they are restored (for example, creditor and debtor categories become lists you can edit)."))
 
 
 # ── Restore ─────────────────────────────────────────────────────────────────

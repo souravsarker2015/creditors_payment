@@ -10,6 +10,16 @@ from ..forms import CreditorForm
 from ..models import Creditor, CreditorCategory, Transaction, InterestType, InterestBasis
 
 
+def cat(user, code):
+    """The user's category that began as this code (FAMILY, BANK…) — with the whole starter list, as every account has."""
+    from apps.core.people_categories import ensure_starters
+
+    from ..models import Creditor
+
+    ensure_starters(CreditorCategory, user, Creditor.objects.none())
+    return CreditorCategory.objects.get(user=user, code=code)
+
+
 class CreditorCategoryTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="testuser", password="secret123")
@@ -18,12 +28,12 @@ class CreditorCategoryTests(TestCase):
         self.family_creditor = Creditor.objects.create(
             user=self.user,
             name="Family Lender",
-            category=CreditorCategory.FAMILY,
+            category=cat(self.user, "FAMILY"),
         )
         self.bank_creditor = Creditor.objects.create(
             user=self.user,
             name="City Bank",
-            category=CreditorCategory.BANK,
+            category=cat(self.user, "BANK"),
         )
 
         Transaction.objects.create(
@@ -53,7 +63,7 @@ class CreditorCategoryTests(TestCase):
 
     def test_creditor_default_category_is_other(self):
         creditor = Creditor.objects.create(user=self.user, name="Default Category Creditor")
-        self.assertEqual(creditor.category, CreditorCategory.OTHER)
+        self.assertEqual(creditor.category.code, "OTHER")
 
     def test_dashboard_without_category_is_unfiltered(self):
         response = self.client.get(reverse("dashboard"))
@@ -73,11 +83,11 @@ class CreditorCategoryTests(TestCase):
         self.assertEqual(len(response.context["recent_transactions"]), 4)
 
     def test_dashboard_with_valid_category_filters_all_sections(self):
-        response = self.client.get(reverse("dashboard"), {"category": CreditorCategory.FAMILY})
+        response = self.client.get(reverse("dashboard"), {"category": "FAMILY"})
         self.assertEqual(response.status_code, 200)
 
-        self.assertEqual(response.context["selected_category"], CreditorCategory.FAMILY)
-        self.assertEqual(response.context["selected_categories"], [CreditorCategory.FAMILY])
+        self.assertEqual(response.context["selected_category"], str(cat(self.user, "FAMILY").pk))
+        self.assertEqual(response.context["selected_categories"], [str(cat(self.user, "FAMILY").pk)])
         self.assertEqual(response.context["filter_type"], "include")
         self.assertEqual(response.context["total_borrowed"], Decimal("1000.00"))
         self.assertEqual(response.context["total_paid"], Decimal("200.00"))
@@ -89,7 +99,7 @@ class CreditorCategoryTests(TestCase):
 
         recent = list(response.context["recent_transactions"])
         self.assertEqual(len(recent), 2)
-        self.assertTrue(all(tx.creditor.category == CreditorCategory.FAMILY for tx in recent))
+        self.assertTrue(all(tx.creditor.category.code == "FAMILY" for tx in recent))
 
     def test_dashboard_with_invalid_category_falls_back_to_unfiltered(self):
         response = self.client.get(reverse("dashboard"), {"category": "INVALID"})
@@ -111,12 +121,12 @@ class CreditorCategoryTests(TestCase):
     def test_dashboard_with_exclude_category_filters_all_sections(self):
         response = self.client.get(
             reverse("dashboard"),
-            {"category": CreditorCategory.FAMILY, "filter_type": "exclude"},
+            {"category": "FAMILY", "filter_type": "exclude"},
         )
         self.assertEqual(response.status_code, 200)
 
-        self.assertEqual(response.context["selected_category"], CreditorCategory.FAMILY)
-        self.assertEqual(response.context["selected_categories"], [CreditorCategory.FAMILY])
+        self.assertEqual(response.context["selected_category"], str(cat(self.user, "FAMILY").pk))
+        self.assertEqual(response.context["selected_categories"], [str(cat(self.user, "FAMILY").pk)])
         self.assertEqual(response.context["filter_type"], "exclude")
         self.assertEqual(response.context["total_borrowed"], Decimal("500.00"))
         self.assertEqual(response.context["total_paid"], Decimal("100.00"))
@@ -128,17 +138,17 @@ class CreditorCategoryTests(TestCase):
 
         recent = list(response.context["recent_transactions"])
         self.assertEqual(len(recent), 2)
-        self.assertTrue(all(tx.creditor.category != CreditorCategory.FAMILY for tx in recent))
+        self.assertTrue(all(tx.creditor.category.code != "FAMILY" for tx in recent))
 
     def test_dashboard_with_invalid_filter_type_falls_back_to_include(self):
         response = self.client.get(
             reverse("dashboard"),
-            {"category": CreditorCategory.FAMILY, "filter_type": "wrong"},
+            {"category": "FAMILY", "filter_type": "wrong"},
         )
         self.assertEqual(response.status_code, 200)
 
-        self.assertEqual(response.context["selected_category"], CreditorCategory.FAMILY)
-        self.assertEqual(response.context["selected_categories"], [CreditorCategory.FAMILY])
+        self.assertEqual(response.context["selected_category"], str(cat(self.user, "FAMILY").pk))
+        self.assertEqual(response.context["selected_categories"], [str(cat(self.user, "FAMILY").pk)])
         self.assertEqual(response.context["filter_type"], "include")
         self.assertEqual(response.context["total_borrowed"], Decimal("1000.00"))
         self.assertEqual(response.context["total_paid"], Decimal("200.00"))
@@ -147,12 +157,12 @@ class CreditorCategoryTests(TestCase):
     def test_dashboard_with_multiple_categories_include(self):
         response = self.client.get(
             reverse("dashboard"),
-            [("category", CreditorCategory.FAMILY), ("category", CreditorCategory.BANK)],
+            [("category", "FAMILY"), ("category", "BANK")],
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.context["selected_categories"],
-            [CreditorCategory.FAMILY, CreditorCategory.BANK],
+            [str(cat(self.user, "FAMILY").pk), str(cat(self.user, "BANK").pk)],
         )
         self.assertEqual(response.context["filter_type"], "include")
         self.assertEqual(response.context["total_borrowed"], Decimal("1500.00"))
@@ -164,15 +174,15 @@ class CreditorCategoryTests(TestCase):
         response = self.client.get(
             reverse("dashboard"),
             [
-                ("category", CreditorCategory.FAMILY),
-                ("category", CreditorCategory.BANK),
+                ("category", "FAMILY"),
+                ("category", "BANK"),
                 ("filter_type", "exclude"),
             ],
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.context["selected_categories"],
-            [CreditorCategory.FAMILY, CreditorCategory.BANK],
+            [str(cat(self.user, "FAMILY").pk), str(cat(self.user, "BANK").pk)],
         )
         self.assertEqual(response.context["filter_type"], "exclude")
         self.assertEqual(response.context["total_borrowed"], Decimal("0"))
@@ -184,7 +194,7 @@ class CreditorCategoryTests(TestCase):
     def test_creditor_list_with_include_category_filter(self):
         response = self.client.get(
             reverse("creditor_list"),
-            {"category": CreditorCategory.FAMILY, "filter_type": "include"},
+            {"category": "FAMILY", "filter_type": "include"},
         )
         self.assertEqual(response.status_code, 200)
 
@@ -198,7 +208,7 @@ class CreditorCategoryTests(TestCase):
     def test_creditor_list_with_exclude_category_filter(self):
         response = self.client.get(
             reverse("creditor_list"),
-            {"category": CreditorCategory.FAMILY, "filter_type": "exclude"},
+            {"category": "FAMILY", "filter_type": "exclude"},
         )
         self.assertEqual(response.status_code, 200)
 
@@ -221,14 +231,14 @@ class CreditorCategoryTests(TestCase):
     def test_creditor_list_search_combines_with_category_filter(self):
         response = self.client.get(
             reverse("creditor_list"),
-            {"q": "bank", "category": CreditorCategory.FAMILY},
+            {"q": "bank", "category": "FAMILY"},
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(list(response.context["page_obj"]), [])
 
     def test_creditor_list_payment_status_paid_filter(self):
         paid_creditor = Creditor.objects.create(
-            user=self.user, name="Paid Off Uncle", category=CreditorCategory.FAMILY
+            user=self.user, name="Paid Off Uncle", category=cat(self.user, "FAMILY")
         )
         Transaction.objects.create(
             creditor=paid_creditor,
@@ -250,7 +260,7 @@ class CreditorCategoryTests(TestCase):
 
     def test_creditor_list_payment_status_unpaid_filter(self):
         paid_creditor = Creditor.objects.create(
-            user=self.user, name="Paid Off Uncle", category=CreditorCategory.FAMILY
+            user=self.user, name="Paid Off Uncle", category=cat(self.user, "FAMILY")
         )
         Transaction.objects.create(
             creditor=paid_creditor,
@@ -274,7 +284,7 @@ class CreditorCategoryTests(TestCase):
         """Regression test: payment_status must not be silently flipped by the
         category include/exclude toggle (`filter_type`)."""
         paid_creditor = Creditor.objects.create(
-            user=self.user, name="Paid Off Uncle", category=CreditorCategory.FAMILY
+            user=self.user, name="Paid Off Uncle", category=cat(self.user, "FAMILY")
         )
         Transaction.objects.create(
             creditor=paid_creditor,
@@ -293,7 +303,7 @@ class CreditorCategoryTests(TestCase):
             reverse("creditor_list"),
             {
                 "payment_status": "PAID",
-                "category": CreditorCategory.BANK,
+                "category": "BANK",
                 "filter_type": "exclude",
             },
         )
@@ -311,7 +321,7 @@ class CreditorDueDateTests(TestCase):
 
     def _creditor_with_balance(self, due_date=None, borrowed=Decimal("1000.00"), repaid=Decimal("0.00")):
         creditor = Creditor.objects.create(
-            user=self.user, name="Test Creditor", category=CreditorCategory.FAMILY, due_date=due_date
+            user=self.user, name="Test Creditor", category=cat(self.user, "FAMILY"), due_date=due_date
         )
         Transaction.objects.create(
             creditor=creditor, transaction_type=Transaction.BORROW, amount=borrowed, date=self.today - timedelta(days=30)
@@ -361,20 +371,20 @@ class CreditorInterestTests(TestCase):
         )
 
     def test_no_interest_type_accrues_nothing(self):
-        creditor = Creditor.objects.create(user=self.user, name="No Interest", category=CreditorCategory.FAMILY)
+        creditor = Creditor.objects.create(user=self.user, name="No Interest", category=cat(self.user, "FAMILY"))
         self._borrow(creditor, Decimal("1000.00"), 30)
         self.assertEqual(creditor.accrued_interest, Decimal("0.00"))
 
     def test_fixed_one_time_interest_is_flat_regardless_of_time(self):
         creditor = Creditor.objects.create(
-            user=self.user, name="Flat Fee", category=CreditorCategory.MONEYLENDER,
+            user=self.user, name="Flat Fee", category=cat(self.user, "MONEYLENDER"),
             interest_type=InterestType.FIXED, interest_fixed_amount=Decimal("250.00"),
         )
         self._borrow(creditor, Decimal("1000.00"), 1)
         self.assertEqual(creditor.accrued_interest, Decimal("250.00"))
         # Still flat even much later — Fixed Amount has no time component.
         creditor2 = Creditor.objects.create(
-            user=self.user, name="Flat Fee 2", category=CreditorCategory.MONEYLENDER,
+            user=self.user, name="Flat Fee 2", category=cat(self.user, "MONEYLENDER"),
             interest_type=InterestType.FIXED, interest_fixed_amount=Decimal("250.00"),
         )
         self._borrow(creditor2, Decimal("1000.00"), 400)
@@ -382,7 +392,7 @@ class CreditorInterestTests(TestCase):
 
     def test_monthly_percentage_prorates_by_days_elapsed(self):
         creditor = Creditor.objects.create(
-            user=self.user, name="Percent Lender", category=CreditorCategory.BANK,
+            user=self.user, name="Percent Lender", category=cat(self.user, "BANK"),
             interest_type=InterestType.MONTHLY, interest_basis=InterestBasis.PERCENTAGE,
             interest_rate=Decimal("10.00"),
         )
@@ -392,7 +402,7 @@ class CreditorInterestTests(TestCase):
 
     def test_monthly_fixed_basis_prorates_the_flat_amount(self):
         creditor = Creditor.objects.create(
-            user=self.user, name="Flat Monthly", category=CreditorCategory.MICROFINANCE,
+            user=self.user, name="Flat Monthly", category=cat(self.user, "MICROFINANCE"),
             interest_type=InterestType.MONTHLY, interest_basis=InterestBasis.FIXED,
             interest_fixed_amount=Decimal("600.00"),
         )
@@ -401,7 +411,7 @@ class CreditorInterestTests(TestCase):
         self.assertEqual(creditor.accrued_interest, Decimal("300.00"))
 
     def percent_lender(self, rate="2.00"):
-        return Creditor.objects.create(user=self.user, name="Bank", category=CreditorCategory.BANK, interest_type=InterestType.MONTHLY,
+        return Creditor.objects.create(user=self.user, name="Bank", category=cat(self.user, "BANK"), interest_type=InterestType.MONTHLY,
                                        interest_basis=InterestBasis.PERCENTAGE, interest_rate=Decimal(rate))
 
     def test_a_repayment_does_not_wipe_the_interest_built_up(self):
@@ -419,7 +429,7 @@ class CreditorInterestTests(TestCase):
         self.assertEqual(creditor.accrued_interest, Decimal("1500.00"))
 
     def test_a_flat_charge_stops_for_days_nothing_was_owed(self):
-        creditor = Creditor.objects.create(user=self.user, name="Flat", category=CreditorCategory.BANK, interest_type=InterestType.MONTHLY,
+        creditor = Creditor.objects.create(user=self.user, name="Flat", category=cat(self.user, "BANK"), interest_type=InterestType.MONTHLY,
                                            interest_basis=InterestBasis.FIXED, interest_fixed_amount=Decimal("300.00"))
         self._borrow(creditor, Decimal("1000.00"), 30)
         Transaction.objects.create(creditor=creditor, transaction_type=Transaction.REPAY, amount=Decimal("1000.00"), date=self.today - timedelta(days=20))
@@ -435,13 +445,13 @@ class CreditorInterestTests(TestCase):
         self.assertEqual(creditor.accrued_interest, Decimal("0.00"))
 
     def _terms(self, **extra):
-        data = {"name": "Late", "category": CreditorCategory.BANK, "interest_type": InterestType.MONTHLY,
+        data = {"name": "Late", "category": cat(self.user, "BANK").pk, "interest_type": InterestType.MONTHLY,
                 "interest_basis": InterestBasis.PERCENTAGE, "interest_rate": "10"}
         data.update(extra)
         return data
 
     def test_turning_interest_on_later_starts_today(self):
-        creditor = Creditor.objects.create(user=self.user, name="Late", category=CreditorCategory.BANK)
+        creditor = Creditor.objects.create(user=self.user, name="Late", category=cat(self.user, "BANK"))
         self._borrow(creditor, Decimal("1000.00"), 300)
         self._borrow(creditor, Decimal("1000.00"), 15)
         form = CreditorForm(self._terms(), instance=creditor)
@@ -452,7 +462,7 @@ class CreditorInterestTests(TestCase):
         self.assertEqual(creditor.accrued_interest, Decimal("0.00"))
 
     def test_turning_interest_on_can_reach_back_to_a_picked_day(self):
-        creditor = Creditor.objects.create(user=self.user, name="Late", category=CreditorCategory.BANK)
+        creditor = Creditor.objects.create(user=self.user, name="Late", category=cat(self.user, "BANK"))
         self._borrow(creditor, Decimal("1000.00"), 300)
         self._borrow(creditor, Decimal("1000.00"), 15)
         form = CreditorForm(self._terms(interest_from=(self.today - timedelta(days=15)).isoformat()), instance=creditor)
@@ -531,13 +541,13 @@ class CreditorInterestTests(TestCase):
         self.assertIn("post_old_interest", CreditorForm(instance=creditor).fields)
 
     def test_after_posting_a_one_time_fee_the_creditor_can_still_be_edited(self):
-        creditor = Creditor.objects.create(user=self.user, name="Fee", category=CreditorCategory.MONEYLENDER,
+        creditor = Creditor.objects.create(user=self.user, name="Fee", category=cat(self.user, "MONEYLENDER"),
                                            interest_type=InterestType.FIXED, interest_fixed_amount=Decimal("250.00"))
         self._borrow(creditor, Decimal("1000.00"), 1)
         creditor.post_accrued_interest()
         creditor.refresh_from_db()
         self.assertIsNone(creditor.interest_type)
-        form = CreditorForm({"name": "Fee", "category": CreditorCategory.MONEYLENDER, "phone": "01711000000"}, instance=creditor)
+        form = CreditorForm({"name": "Fee", "category": cat(self.user, "MONEYLENDER").pk, "phone": "01711000000"}, instance=creditor)
         self.assertTrue(form.is_valid(), form.errors)
         form.save()
         self.assertEqual(Creditor.objects.get(pk=creditor.pk).phone, "01711000000")
@@ -550,7 +560,7 @@ class CreditorInterestTests(TestCase):
 
     def test_accrued_interest_zero_when_balance_is_zero(self):
         creditor = Creditor.objects.create(
-            user=self.user, name="Settled", category=CreditorCategory.BANK,
+            user=self.user, name="Settled", category=cat(self.user, "BANK"),
             interest_type=InterestType.MONTHLY, interest_basis=InterestBasis.PERCENTAGE,
             interest_rate=Decimal("10.00"),
         )
@@ -562,7 +572,7 @@ class CreditorInterestTests(TestCase):
 
     def test_post_accrued_interest_creates_borrow_transaction(self):
         creditor = Creditor.objects.create(
-            user=self.user, name="Post Me", category=CreditorCategory.BANK,
+            user=self.user, name="Post Me", category=cat(self.user, "BANK"),
             interest_type=InterestType.MONTHLY, interest_basis=InterestBasis.PERCENTAGE,
             interest_rate=Decimal("10.00"),
         )
@@ -576,13 +586,13 @@ class CreditorInterestTests(TestCase):
         self.assertEqual(creditor.remaining, principal_before + Decimal("100.00"))
 
     def test_post_accrued_interest_returns_none_when_nothing_accrued(self):
-        creditor = Creditor.objects.create(user=self.user, name="Nothing", category=CreditorCategory.FAMILY)
+        creditor = Creditor.objects.create(user=self.user, name="Nothing", category=cat(self.user, "FAMILY"))
         self._borrow(creditor, Decimal("1000.00"), 30)
         self.assertIsNone(creditor.post_accrued_interest())
 
     def test_post_accrued_interest_clears_fixed_one_time_amount_after_posting(self):
         creditor = Creditor.objects.create(
-            user=self.user, name="One Time Fee", category=CreditorCategory.MONEYLENDER,
+            user=self.user, name="One Time Fee", category=cat(self.user, "MONEYLENDER"),
             interest_type=InterestType.FIXED, interest_fixed_amount=Decimal("250.00"),
         )
         self._borrow(creditor, Decimal("1000.00"), 1)
@@ -595,7 +605,7 @@ class CreditorInterestTests(TestCase):
 
     def test_post_accrued_interest_keeps_periodic_fixed_amount_but_resets_clock(self):
         creditor = Creditor.objects.create(
-            user=self.user, name="Recurring Flat", category=CreditorCategory.MICROFINANCE,
+            user=self.user, name="Recurring Flat", category=cat(self.user, "MICROFINANCE"),
             interest_type=InterestType.MONTHLY, interest_basis=InterestBasis.FIXED,
             interest_fixed_amount=Decimal("600.00"),
         )

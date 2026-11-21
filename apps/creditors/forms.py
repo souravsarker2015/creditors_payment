@@ -1,11 +1,28 @@
 from django import forms
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from .models import Creditor, InterestBasis, InterestType, Transaction
+from django.urls import reverse_lazy
+from .models import Creditor, CreditorCategory, InterestBasis, InterestType, Transaction
+from apps.core import people_categories
 from apps.core.ledger_views import UniqueNameMixin
 from apps.core.receipts import ReceiptInput, attach_viewer
 from apps.core.templatetags.ui import money
 from apps.wallets.forms import WalletFieldMixin
+
+def _signed_in():
+    from apps.business.core.audit import current_user
+
+    return current_user()
+
+
+class CreditorCategoryForm(people_categories.NameForm, forms.ModelForm):
+    """The + beside Category: a new category, by name."""
+
+    class Meta:
+        model = CreditorCategory
+        fields = ["name"]
+        widgets = {"name": forms.TextInput(attrs={"class": "form-input", "placeholder": _("e.g. Neighbour, Office colleague")})}
+
 
 # The fields that make up a creditor's interest terms.
 INTEREST_TERMS = ("interest_type", "interest_basis", "interest_rate", "interest_fixed_amount")
@@ -74,6 +91,9 @@ class CreditorForm(UniqueNameMixin, forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.posted_old_interest = None
         self.old_accrued = 0
+        user = self.instance.user if self.instance.user_id else _signed_in()
+        people_categories.setup_field(self, CreditorCategory, user, user.creditors.all() if user and user.is_authenticated else None,
+                                      reverse_lazy("creditor_categories"), "creditor_category")
         if self.instance.pk:
             self.fields["interest_from"].initial = self.instance.interest_from
             if self.instance.interest_type:

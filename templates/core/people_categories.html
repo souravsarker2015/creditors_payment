@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% comment %}Creditor / debtor categories (apps.core.people_categories.manage). Needs: rows, title, subtitle, back_url, back_label, list_url, kind.{% endcomment %}
+{% block title %}{{ title }} | FinTrack{% endblock %}
+{% block content %}
+<div class="page-medium stack">
+  <header class="page-header !mb-0">
+    <div>
+      <a href="{{ back_url }}" class="back-link">{% include "partials/icon.html" with name="chevron-left" %}{{ back_label }}</a>
+      <h1 class="page-title">{{ title }}</h1>
+      <p class="page-subtitle">{{ subtitle }}</p>
+    </div>
+  </header>
+
+  <section class="card">
+    <form method="post" class="card-body flex gap-2">
+      {% csrf_token %}<input type="hidden" name="action" value="add">
+      <input type="text" name="name" class="form-input" placeholder="{% translate 'e.g. Neighbour, Office colleague' %}" maxlength="80" required aria-label="{% translate 'New category' %}">
+      <button type="submit" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add" %}</button>
+    </form>
+    {% if rows %}
+    <ul class="ledger">
+      {% for r in rows %}
+      <li class="ledger-row cc-list-row{% if not r.is_active %} is-off{% endif %}" x-data="{ edit: false }">
+        <div class="ledger-main" x-show="!edit">
+          <p class="ledger-title">{{ r.label }}{% if not r.is_active %} <span class="badge" data-tone="muted">{% translate "Hidden" %}</span>{% endif %}</p>
+          <p class="ledger-meta">{% if r.n %}<a href="{{ list_url }}?category={{ r.pk }}" class="link">{% if kind == "debtor" %}{% blocktranslate count counter=r.n %}{{ counter }} debtor{% plural %}{{ counter }} debtors{% endblocktranslate %}{% else %}{% blocktranslate count counter=r.n %}{{ counter }} creditor{% plural %}{{ counter }} creditors{% endblocktranslate %}{% endif %}</a>{% else %}{% translate "Nobody in it yet" %}{% endif %}</p>
+        </div>
+        <form method="post" class="ledger-main flex gap-2" x-show="edit" x-cloak>
+          {% csrf_token %}<input type="hidden" name="action" value="rename"><input type="hidden" name="pk" value="{{ r.pk }}">
+          <input type="text" name="name" value="{{ r.label }}" class="form-input" maxlength="80" required aria-label="{% translate 'New name' %}">
+          <button type="submit" class="btn btn-primary btn-sm">{% translate "Save" %}</button>
+        </form>
+        <div class="ledger-end gap-1">
+          <button type="button" class="btn btn-ghost btn-sm" @click="edit = !edit" :aria-pressed="edit.toString()" aria-label="{% translate 'Rename' %}" data-tip="{% translate 'Rename' %}">{% include "partials/icon.html" with name="edit" %}</button>
+          <form method="post">{% csrf_token %}<input type="hidden" name="action" value="toggle"><input type="hidden" name="pk" value="{{ r.pk }}">
+            <button type="submit" class="btn btn-ghost btn-sm" aria-label="{% if r.is_active %}{% translate 'Hide' %}{% else %}{% translate 'Show' %}{% endif %}" data-tip="{% if r.is_active %}{% translate 'Hide from the list' %}{% else %}{% translate 'Offer it again' %}{% endif %}">{% if r.is_active %}{% include "partials/icon.html" with name="pause" %}{% else %}{% include "partials/icon.html" with name="play" %}{% endif %}</button></form>
+          {% if not r.n %}<form method="post" data-confirm-after="gone" data-confirm="{% blocktranslate with name=r.label %}Delete {{ name }}?{% endblocktranslate %}">{% csrf_token %}<input type="hidden" name="action" value="delete"><input type="hidden" name="pk" value="{{ r.pk }}">
+            <button type="submit" class="btn btn-ghost btn-sm is-danger" aria-label="{% translate 'Delete' %}" data-tip="{% translate 'Delete' %}">{% include "partials/icon.html" with name="trash" %}</button></form>{% else %}<span class="btn btn-ghost btn-sm" style="visibility: hidden;" aria-hidden="true">{% include "partials/icon.html" with name="trash" %}</span>{% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty is-plain"><p class="empty-text">{% translate "No categories yet. Add one above." %}</p></div>
+    {% endif %}
+  </section>
+  <p class="text-sm" style="color: var(--text-muted);">{% translate "A category that still has people in it can't be deleted — hide it instead, and it stops being offered for new people." %}</p>
+</div>
+{% endblock %}

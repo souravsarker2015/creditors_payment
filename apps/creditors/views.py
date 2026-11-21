@@ -24,6 +24,7 @@ from apps.overview.people import pairs
 from apps.wallets.services import warn_if_short
 from apps.trash.undo import delete_with_undo
 from .models import Creditor, CreditorCategory, Transaction, DUE_SOON_DAYS
+from apps.core import people_categories as pc
 from apps.core.stats import ledger_extras
 from apps.core.status import apply_status_filter, delete_record, toggle_active
 from apps.core.ledger_views import _build_pagination_window, _csv_response, _last_12_month_starts, _parse_year_month, _period_label, _render_statement, _row_value  # shared by every ledger app
@@ -51,18 +52,15 @@ def dashboard_view(request):
     if filter_type not in valid_filter_types:
         filter_type = "include"
 
-    selected_categories = [
-        category
-        for category in request.GET.getlist("category")
-        if category in CreditorCategory.values
-    ]
+    pc.ensure_starters(CreditorCategory, request.user, request.user.creditors.all())
+    selected_categories = pc.selected(request, CreditorCategory, request.user)   # ids; an old ?category=FAMILY link still works
 
-    creditors_base_qs = request.user.creditors.all()
+    creditors_base_qs = request.user.creditors.select_related("category")
     if selected_categories:
         if filter_type == "exclude":
-            creditors_base_qs = creditors_base_qs.exclude(category__in=selected_categories)
+            creditors_base_qs = creditors_base_qs.exclude(category_id__in=selected_categories)
         else:
-            creditors_base_qs = creditors_base_qs.filter(category__in=selected_categories)
+            creditors_base_qs = creditors_base_qs.filter(category_id__in=selected_categories)
 
     # Global summary stats for the current user
     stats = creditors_base_qs.aggregate(
@@ -125,11 +123,11 @@ def dashboard_view(request):
     if selected_categories:
         if filter_type == "exclude":
             recent_transactions = recent_transactions.exclude(
-                creditor__category__in=selected_categories
+                creditor__category_id__in=selected_categories
             )
         else:
             recent_transactions = recent_transactions.filter(
-                creditor__category__in=selected_categories
+                creditor__category_id__in=selected_categories
             )
     recent_transactions = recent_transactions.select_related("creditor").order_by(
         "-date", "-created_at"
@@ -164,7 +162,7 @@ def dashboard_view(request):
         "due_soon_creditors": due_soon_creditors,
         "selected_category": selected_categories[0] if len(selected_categories) == 1 else "",
         "selected_categories": selected_categories,
-        "category_choices": CreditorCategory.choices,
+        "category_choices": pc.choices(CreditorCategory, request.user),
         "filter_type": filter_type,
     }
     context.update(ledger_extras(
@@ -377,11 +375,8 @@ def creditor_list_view(request):
     if filter_type not in valid_filter_types:
         filter_type = "include"
 
-    selected_categories = [
-        category
-        for category in request.GET.getlist("category")
-        if category in CreditorCategory.values
-    ]
+    pc.ensure_starters(CreditorCategory, request.user, request.user.creditors.all())
+    selected_categories = pc.selected(request, CreditorCategory, request.user)   # ids; an old ?category=FAMILY link still works
 
     valid_payment_statuses = {"ALL", "PAID", "UNPAID"}
     payment_status = request.GET.get("payment_status", "ALL").strip().upper()
@@ -390,12 +385,12 @@ def creditor_list_view(request):
 
     search_query = request.GET.get("q", "").strip()
 
-    creditors_base_qs = request.user.creditors.all()
+    creditors_base_qs = request.user.creditors.select_related("category")
     if selected_categories:
         if filter_type == "exclude":
-            creditors_base_qs = creditors_base_qs.exclude(category__in=selected_categories)
+            creditors_base_qs = creditors_base_qs.exclude(category_id__in=selected_categories)
         else:
-            creditors_base_qs = creditors_base_qs.filter(category__in=selected_categories)
+            creditors_base_qs = creditors_base_qs.filter(category_id__in=selected_categories)
 
     creditors_base_qs = party_search(creditors_base_qs, search_query)
 
@@ -481,7 +476,7 @@ def creditor_list_view(request):
         "total_paid": stats["total_paid"],
         "remaining": remaining,
         "selected_categories": selected_categories,
-        "category_choices": CreditorCategory.choices,
+        "category_choices": pc.choices(CreditorCategory, request.user),
         "filter_type": filter_type,
         "payment_status": payment_status,
         "search_query": search_query,
@@ -512,10 +507,7 @@ def creditor_import_view(request):
     if rows is None:
         return redirect("creditor_list")
 
-    category_lookup = {}
-    for value, label in CreditorCategory.choices:
-        category_lookup[value.lower()] = value
-        category_lookup[str(label).lower()] = value
+    pc.ensure_starters(CreditorCategory, request.user, request.user.creditors.all())
 
     existing_names = {" ".join(n.split()).lower() for n in request.user.creditors.values_list("name", flat=True)}
     today = django.utils.timezone.localdate()
@@ -530,7 +522,7 @@ def creditor_import_view(request):
             rows.duplicates += 1
             continue
 
-        category = category_lookup.get(rows.value(row, "category").lower(), CreditorCategory.OTHER)
+        category = pc.find(CreditorCategory, request.user, rows.value(row, "category"))   # by name or old code; a new name becomes a new category
         opening_balance = rows.amount(row, line, "opening balance", "opening_balance")
         since = rows.date(row, line, "date", "opening date")
         creditor = Creditor.objects.create(
@@ -594,3 +586,12 @@ def creditor_toggle_active_view(request, pk):
 def creditor_delete_view(request, pk):
     obj = get_object_or_404(Creditor, pk=pk, user=request.user)
     return delete_record(request, obj, "creditor_list", reverse("creditor_detail", args=[pk]))
+
+
+@login_required
+def creditor_categories_view(request):
+    """Add, rename, hide or delete creditor categories."""
+    return pc.manage(
+        request, model=CreditorCategory, people_name="creditors", title=_("Creditor categories"), subtitle=_("The list you pick from when adding a creditor — Family, Bank, and any of your own. You can also add one with the + beside the Category box."),
+        back_url=reverse("creditor_list"), back_label=_("Creditors"), list_url=reverse("creditor_list"), kind="creditor",
+    )

@@ -4,13 +4,16 @@ from django.db.models import Sum, Q
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from apps.core.people_categories import PersonCategory
 from apps.core.receipts import RECEIPT_VALIDATORS, personal_receipt_path
 from apps.core.validators import above_zero
 
 DUE_SOON_DAYS = 7
 
 
-class DebtorCategory(models.TextChoices):
+class DefaultDebtorCategory(models.TextChoices):
+    """The categories everyone starts with. Each becomes a row of DebtorCategory (with this code), which the person can rename, hide or delete."""
+
     FAMILY = "FAMILY", _("Family")
     FRIEND = "FRIEND", _("Friend")
     BUSINESS_PARTNER = "BUSINESS_PARTNER", _("Business Partner")
@@ -25,16 +28,26 @@ class DebtorCategory(models.TextChoices):
     OTHER = "OTHER", _("Other")
 
 
+
+class DebtorCategory(PersonCategory):
+    """One of a person's debtor categories: the starters, and any they add with the + beside the dropdown."""
+
+    STARTERS = DefaultDebtorCategory
+
+    class Meta(PersonCategory.Meta):
+        verbose_name = _("Debtor category")
+        verbose_name_plural = _("Debtor categories")
+        constraints = [models.UniqueConstraint(fields=["user", "name"], name="debtor_category_unique_name")]
+
+
 class Debtor(models.Model):
     """A person who owes you money."""
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="debtors")
 
     name = models.CharField(max_length=200, verbose_name=_("Name"))
-    category = models.CharField(
-        max_length=32,
-        choices=DebtorCategory.choices,
-        default=DebtorCategory.OTHER,
+    category = models.ForeignKey(
+        DebtorCategory, on_delete=models.SET_NULL, null=True, blank=True, related_name="debtors",
         verbose_name=_("Category"),
     )
     phone = models.CharField(max_length=20, blank=True, default="", verbose_name=_("Phone"))
@@ -56,6 +69,18 @@ class Debtor(models.Model):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        # A new one with no category starts in "Other", as the fixed list's default did.
+        if self._state.adding and self.category_id is None and self.user_id:
+            from apps.core.people_categories import starting_category
+
+            self.category = starting_category(DebtorCategory, self.user, self.user.debtors.all())
+        super().save(*args, **kwargs)
+
+    def get_category_display(self):
+        """The category's name ("" for none) — the name the old fixed list gave this, kept for the pages and files that use it."""
+        return self.category.label if self.category_id else ""
 
     # ── Computed properties ──────────────────────────
 

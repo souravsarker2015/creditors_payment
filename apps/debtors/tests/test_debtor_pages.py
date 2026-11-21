@@ -11,6 +11,16 @@ from django.utils import timezone
 from ..models import Debtor, DebtorCategory, Transaction
 
 
+def cat(user, code):
+    """The user's category that began as this code (FAMILY, BANK…) — with the whole starter list, as every account has."""
+    from apps.core.people_categories import ensure_starters
+
+    from ..models import Debtor
+
+    ensure_starters(DebtorCategory, user, Debtor.objects.none())
+    return DebtorCategory.objects.get(user=user, code=code)
+
+
 class DebtorPageTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user("me", password="pw12345!")
@@ -20,11 +30,11 @@ class DebtorPageTests(TestCase):
 
     def test_edit_returns_to_the_debtor(self):
         url = reverse("debtor_edit", args=[self.rafi.pk])
-        r = self.client.post(url, {"name": "Rafi", "category": DebtorCategory.FRIEND})
+        r = self.client.post(url, {"name": "Rafi", "category": cat(self.user, "FRIEND").pk})
         self.assertRedirects(r, reverse("debtor_detail", args=[self.rafi.pk]))
 
     def test_same_name_is_refused(self):
-        r = self.client.post(reverse("debtor_create"), {"name": "RAFI", "category": DebtorCategory.FRIEND})
+        r = self.client.post(reverse("debtor_create"), {"name": "RAFI", "category": cat(self.user, "FRIEND").pk})
         self.assertIn("name", r.context["form"].errors)
 
     def test_running_balance_and_wallet_on_each_entry(self):

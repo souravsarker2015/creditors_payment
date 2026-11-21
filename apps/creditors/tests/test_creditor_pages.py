@@ -16,6 +16,16 @@ from apps.wallets.models import Wallet
 
 from ..models import Creditor, CreditorCategory, Transaction
 
+
+def cat(user, code):
+    """The user's category that began as this code (FAMILY, BANK…) — with the whole starter list, as every account has."""
+    from apps.core.people_categories import ensure_starters
+
+    from ..models import Creditor
+
+    ensure_starters(CreditorCategory, user, Creditor.objects.none())
+    return CreditorCategory.objects.get(user=user, code=code)
+
 MEDIA = tempfile.mkdtemp()
 PNG = (b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89"
        b"\x00\x00\x00\rIDATx\x9cc\xf8\x0f\x00\x00\x01\x01\x00\x05\x18\xd8N\x00\x00\x00\x00IEND\xaeB`\x82")
@@ -37,7 +47,7 @@ class CreditorPageTests(TestCase):
         self.client.force_login(self.user)
         self.today = timezone.localdate()
         self.karim = Creditor.objects.create(user=self.user, name="Karim", phone="01711000000", note="from the market",
-                                             category=CreditorCategory.FRIEND)
+                                             category=cat(self.user, "FRIEND"))
 
     def entry(self, kind, amount, days_ago=0, **extra):
         return Transaction.objects.create(creditor=self.karim, transaction_type=kind, amount=Decimal(amount),
@@ -49,13 +59,13 @@ class CreditorPageTests(TestCase):
         url = reverse("creditor_edit", args=[self.karim.pk])
         detail = reverse("creditor_detail", args=[self.karim.pk])
         self.assertEqual(self.client.get(url).context["back_url"], detail)
-        r = self.client.post(url, {"name": "Karim", "category": CreditorCategory.FRIEND, "phone": "01811000000"})
+        r = self.client.post(url, {"name": "Karim", "category": cat(self.user, "FRIEND").pk, "phone": "01811000000"})
         self.assertRedirects(r, detail)
 
     # ── Same name ──
 
     def test_a_second_creditor_with_the_same_name_is_refused(self):
-        r = self.client.post(reverse("creditor_create"), {"name": "  karim ", "category": CreditorCategory.OTHER})
+        r = self.client.post(reverse("creditor_create"), {"name": "  karim ", "category": cat(self.user, "OTHER").pk})
         self.assertEqual(r.status_code, 200)
         self.assertIn("name", r.context["form"].errors)
         self.assertEqual(Creditor.objects.filter(user=self.user).count(), 1)
@@ -63,9 +73,9 @@ class CreditorPageTests(TestCase):
     def test_the_same_name_is_fine_for_someone_else_and_when_editing_yourself(self):
         other = User.objects.create_user("other", password="pw12345!")
         Creditor.objects.create(user=other, name="Rahim")
-        r = self.client.post(reverse("creditor_create"), {"name": "Rahim", "category": CreditorCategory.OTHER})
+        r = self.client.post(reverse("creditor_create"), {"name": "Rahim", "category": cat(self.user, "OTHER").pk})
         self.assertEqual(r.status_code, 302)
-        r = self.client.post(reverse("creditor_edit", args=[self.karim.pk]), {"name": "KARIM", "category": CreditorCategory.FRIEND})
+        r = self.client.post(reverse("creditor_edit", args=[self.karim.pk]), {"name": "KARIM", "category": cat(self.user, "FRIEND").pk})
         self.assertEqual(r.status_code, 302)
 
     # ── Running balance, wallet, receipts ──
