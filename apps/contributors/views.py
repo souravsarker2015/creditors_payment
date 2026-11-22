@@ -17,6 +17,7 @@ from apps.core.csvsafe import safe_writer
 from apps.core.templatetags.ui import bd_number, money
 from apps.trash.undo import delete_with_undo
 from .models import Contributor, ContributorCategory, Contribution
+from apps.core import people_categories as pc
 from django.urls import reverse
 from apps.core.stats import month_compare, ranked, trend_summary
 from apps.core.status import apply_status_filter, toggle_active
@@ -47,18 +48,15 @@ def contributor_dashboard(request):
     if filter_type not in valid_filter_types:
         filter_type = "include"
 
-    selected_categories = [
-        category
-        for category in request.GET.getlist("category")
-        if category in ContributorCategory.values
-    ]
+    pc.ensure_starters(ContributorCategory, request.user, request.user.contributors.all())
+    selected_categories = pc.selected(request, ContributorCategory, request.user)   # ids; an old ?category=FAMILY link still works
 
     contributors = Contributor.objects.filter(user=request.user)
     if selected_categories:
         if filter_type == "exclude":
-            contributors = contributors.exclude(category__in=selected_categories)
+            contributors = contributors.exclude(category_id__in=selected_categories)
         else:
-            contributors = contributors.filter(category__in=selected_categories)
+            contributors = contributors.filter(category_id__in=selected_categories)
 
     total_contributors = contributors.count()
     
@@ -117,13 +115,13 @@ def contributor_dashboard(request):
             contributor__user=request.user
         ).filter(
             Q() if not selected_categories else (
-                ~Q(contributor__category__in=selected_categories)
+                ~Q(contributor__category_id__in=selected_categories)
                 if filter_type == "exclude"
-                else Q(contributor__category__in=selected_categories)
+                else Q(contributor__category_id__in=selected_categories)
             )
         ).select_related('contributor').order_by('-date', '-created_at')[:10],
         "selected_categories": selected_categories,
-        "category_choices": ContributorCategory.choices,
+        "category_choices": pc.choices(ContributorCategory, request.user),
         "filter_type": filter_type,
     }
     return render(request, 'contributors/dashboard.html', context)
@@ -135,20 +133,17 @@ def contributor_list(request):
     if filter_type not in valid_filter_types:
         filter_type = "include"
 
-    selected_categories = [
-        category
-        for category in request.GET.getlist("category")
-        if category in ContributorCategory.values
-    ]
+    pc.ensure_starters(ContributorCategory, request.user, request.user.contributors.all())
+    selected_categories = pc.selected(request, ContributorCategory, request.user)   # ids; an old ?category=FAMILY link still works
 
     search_query = request.GET.get("q", "").strip()
 
-    contributors_base_qs = Contributor.objects.filter(user=request.user)
+    contributors_base_qs = Contributor.objects.filter(user=request.user).select_related("category")
     if selected_categories:
         if filter_type == "exclude":
-            contributors_base_qs = contributors_base_qs.exclude(category__in=selected_categories)
+            contributors_base_qs = contributors_base_qs.exclude(category_id__in=selected_categories)
         else:
-            contributors_base_qs = contributors_base_qs.filter(category__in=selected_categories)
+            contributors_base_qs = contributors_base_qs.filter(category_id__in=selected_categories)
 
     contributors_base_qs = party_search(contributors_base_qs, search_query)
 
@@ -195,7 +190,7 @@ def contributor_list(request):
         "total_contribution_amount": total_contribution_amount,
         "avg_contribution": avg_contribution,
         "selected_categories": selected_categories,
-        "category_choices": ContributorCategory.choices,
+        "category_choices": pc.choices(ContributorCategory, request.user),
         "filter_type": filter_type,
         "search_query": search_query,
         "status": status,
@@ -243,10 +238,7 @@ def contributor_import_view(request):
         messages.error(request, _("The CSV must have a 'Name' column."))
         return redirect("contributor_list")
 
-    category_lookup = {}
-    for value, label in ContributorCategory.choices:
-        category_lookup[value.lower()] = value
-        category_lookup[str(label).lower()] = value
+    pc.ensure_starters(ContributorCategory, request.user, request.user.contributors.all())
 
     existing_names = {n.lower() for n in Contributor.objects.filter(user=request.user).values_list("name", flat=True)}
     today = django.utils.timezone.localdate()
@@ -266,7 +258,7 @@ def contributor_import_view(request):
 
         phone = _row_value(row, fieldnames, "phone")
         note = _row_value(row, fieldnames, "note")
-        category = category_lookup.get(_row_value(row, fieldnames, "category").lower(), ContributorCategory.OTHER)
+        category = pc.find(ContributorCategory, request.user, _row_value(row, fieldnames, "category"))   # by name or old code; a new name becomes a new category
 
         raw_amount = _row_value(row, fieldnames, "opening contribution") or _row_value(row, fieldnames, "opening_contribution")
         try:
@@ -460,3 +452,13 @@ def contribution_delete(request, pk):
 def contributor_toggle_active_view(request, pk):
     obj = get_object_or_404(Contributor, pk=pk, user=request.user)
     return toggle_active(request, obj, "contributor_list")
+
+
+@login_required
+def contributor_categories_view(request):
+    """Add, rename, hide or delete contributor categories."""
+    return pc.manage(
+        request, model=ContributorCategory, people_name="contributors", title=_("Contributor categories"),
+        subtitle=_("The list you pick from when adding a contributor — Family, Donor, and any of your own. You can also add one with the + beside the Category box."),
+        back_url=reverse("contributor_list"), back_label=_("Contributors"), list_url=reverse("contributor_list"), kind="contributor",
+    )

@@ -9,6 +9,16 @@ from django.utils import timezone
 from ..models import Shop, ShopCategory, Transaction
 
 
+def cat(user, code):
+    """The user's category that began as this code — with the whole starter list, as every account has."""
+    from apps.core.people_categories import ensure_starters
+
+    from ..models import Shop
+
+    ensure_starters(ShopCategory, user, Shop.objects.none())
+    return ShopCategory.objects.get(user=user, code=code)
+
+
 class ShopCategoryTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="shopuser", password="secret123")
@@ -17,12 +27,12 @@ class ShopCategoryTests(TestCase):
         self.grocery_shop = Shop.objects.create(
             user=self.user,
             name="Rahim General Store",
-            category=ShopCategory.GROCERY,
+            category=cat(self.user, "GROCERY"),
         )
         self.pharmacy_shop = Shop.objects.create(
             user=self.user,
             name="City Pharmacy",
-            category=ShopCategory.PHARMACY,
+            category=cat(self.user, "PHARMACY"),
         )
 
         Transaction.objects.create(
@@ -52,7 +62,7 @@ class ShopCategoryTests(TestCase):
 
     def test_shop_default_category_is_other(self):
         shop = Shop.objects.create(user=self.user, name="Default Category Shop")
-        self.assertEqual(shop.category, ShopCategory.OTHER)
+        self.assertEqual(shop.category.code, "OTHER")
 
     def test_shop_remaining_and_is_paid(self):
         self.assertEqual(self.grocery_shop.total_due, Decimal("1000.00"))
@@ -79,7 +89,7 @@ class ShopCategoryTests(TestCase):
     def test_dashboard_with_exclude_category_filter(self):
         response = self.client.get(
             reverse("shop_dashboard"),
-            {"category": ShopCategory.GROCERY, "filter_type": "exclude"},
+            {"category": "GROCERY", "filter_type": "exclude"},
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context["total_due"], Decimal("500.00"))
@@ -88,7 +98,7 @@ class ShopCategoryTests(TestCase):
 
     def test_shop_list_with_include_category_filter(self):
         response = self.client.get(
-            reverse("shop_list"), {"category": ShopCategory.GROCERY, "filter_type": "include"}
+            reverse("shop_list"), {"category": "GROCERY", "filter_type": "include"}
         )
         self.assertEqual(response.status_code, 200)
         shops = list(response.context["page_obj"])
@@ -103,7 +113,7 @@ class ShopCategoryTests(TestCase):
 
     def test_shop_list_search_combines_with_category_filter(self):
         response = self.client.get(
-            reverse("shop_list"), {"q": "pharmacy", "category": ShopCategory.GROCERY}
+            reverse("shop_list"), {"q": "pharmacy", "category": "GROCERY"}
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(list(response.context["page_obj"]), [])
@@ -154,7 +164,7 @@ class ShopCategoryTests(TestCase):
         """Regression test: payment_status must not be silently flipped by the
         category include/exclude toggle (`filter_type`)."""
         paid_shop = Shop.objects.create(
-            user=self.user, name="Fully Paid Shop", category=ShopCategory.GROCERY
+            user=self.user, name="Fully Paid Shop", category=cat(self.user, "GROCERY")
         )
         Transaction.objects.create(
             shop=paid_shop,
@@ -173,7 +183,7 @@ class ShopCategoryTests(TestCase):
             reverse("shop_list"),
             {
                 "payment_status": "PAID",
-                "category": ShopCategory.PHARMACY,
+                "category": "PHARMACY",
                 "filter_type": "exclude",
             },
         )
@@ -228,7 +238,7 @@ class ShopDueDateTests(TestCase):
 
     def _shop_with_balance(self, due_date=None, purchased=Decimal("500.00"), paid=Decimal("0.00")):
         shop = Shop.objects.create(
-            user=self.user, name="Test Shop", category=ShopCategory.GROCERY, due_date=due_date
+            user=self.user, name="Test Shop", category=cat(self.user, "GROCERY"), due_date=due_date
         )
         Transaction.objects.create(
             shop=shop, transaction_type=Transaction.PURCHASE, amount=purchased, date=self.today - timedelta(days=30)

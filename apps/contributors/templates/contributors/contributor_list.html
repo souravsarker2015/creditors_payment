@@ -17,6 +17,7 @@
         <input type="file" id="contributor-import-file" name="csv_file" accept=".csv,text/csv" class="hidden" @change="$el.form.submit()">
         <label for="contributor-import-file" class="btn btn-secondary cursor-pointer" data-tip="{% translate 'Upload a .csv file to add many at once. Download the Sample CSV to see the columns.' %}">{% include "partials/icon.html" with name="upload" %}{% translate "Import CSV" %}</label>
       </form>
+      <a href="{% url 'contributor_categories' %}" class="btn btn-ghost" data-tip="{% translate 'Add, rename or hide the categories you pick from' %}">{% include "partials/icon.html" with name="tag" %}{% translate "Categories" %}</a>
       <a href="{% url 'contributor_import_template' %}" class="btn btn-ghost" data-tip="{% translate 'Download a sample CSV with the expected columns.' %}">{% translate "Sample CSV" %}</a>
       <a href="{% url 'contributor_create' %}" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "New Contributor" %}</a>
     </div>
@@ -54,7 +55,7 @@
         <a href="{{ detail_url }}" class="avatar">{{ contributor.name|first }}</a>
         <div class="min-w-0 flex-1">
           <h3 class="entity-name"><a href="{{ detail_url }}">{{ contributor.name }}</a></h3>
-          <p class="entity-meta">{{ contributor.get_category_display }}{% if contributor.phone %} · {{ contributor.phone }}{% endif %}</p>
+          <p class="entity-meta">{% with c=contributor.get_category_display %}{{ c }}{% if contributor.phone %}{% if c %} · {% endif %}{{ contributor.phone }}{% endif %}{% endwith %}</p>
         </div>
         {% url 'contributor_update' contributor.pk as edit_url %}{% url 'contributor_toggle_active' contributor.pk as toggle_url %}
         {% include "partials/entity_menu.html" with edit_url=edit_url toggle_url=toggle_url active=contributor.is_active %}

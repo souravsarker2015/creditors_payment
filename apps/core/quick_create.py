@@ -50,6 +50,14 @@ KINDS = {
         "apps.debtors.forms.DebtorCategoryForm", "apps.debtors.models.DebtorCategory",
         gettext_lazy("New debtor category"), gettext_lazy("category"),
     ),
+    "shop_category": QuickCreateKind(
+        "apps.shops.forms.ShopCategoryForm", "apps.shops.models.ShopCategory",
+        gettext_lazy("New shop category"), gettext_lazy("category"),
+    ),
+    "contributor_category": QuickCreateKind(
+        "apps.contributors.forms.ContributorCategoryForm", "apps.contributors.models.ContributorCategory",
+        gettext_lazy("New contributor category"), gettext_lazy("category"),
+    ),
     "income_source": QuickCreateKind(
         "apps.income.forms.IncomeSourceForm", "apps.income.models.IncomeSource",
         gettext_lazy("New income source"), gettext_lazy("income source"),

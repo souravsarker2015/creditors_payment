@@ -21,7 +21,7 @@
         </div>
       </div>
       <div class="meta-list">
-        <span class="meta-item">{% include "partials/icon.html" with name="tag" %}{{ shop.get_category_display }}</span>
+        {% if shop.category_id %}<span class="meta-item">{% include "partials/icon.html" with name="tag" %}{{ shop.get_category_display }}</span>{% endif %}
         {% if shop.phone %}<a href="tel:{{ shop.phone }}" class="meta-item">{% include "partials/icon.html" with name="phone" %}{{ shop.phone }}</a>{% endif %}
         {% if shop.due_date %}<span class="meta-item" {% if due_status == 'overdue' %}style="color: var(--status-critical);"{% endif %}>{% include "partials/icon.html" with name="calendar" %}{% blocktranslate with date=shop.due_date|date:"j M Y" %}Due {{ date }}{% endblocktranslate %}</span>{% endif %}
         {% if shop.note %}<span class="meta-item">{% include "partials/icon.html" with name="note" %}<span data-clamp="2">{{ shop.note }}</span></span>{% endif %}

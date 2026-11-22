@@ -15,6 +15,8 @@ from django.utils import timezone
 UPGRADES = {
     ("creditors", "0013_creditor_categories"): "apps.core.backup_upgrades.creditor_categories",
     ("debtors", "0009_debtor_categories"): "apps.core.backup_upgrades.debtor_categories",
+    ("shops", "0008_shop_categories"): "apps.core.backup_upgrades.shop_categories",
+    ("contributors", "0007_contributor_categories"): "apps.core.backup_upgrades.contributor_categories",
 }
 
 
@@ -75,3 +77,13 @@ def creditor_categories(backup):
 def debtor_categories(backup):
     starters = import_module("apps.debtors.migrations.0009_debtor_categories").STARTERS
     _person_categories(backup, person="debtors.debtor", category="debtors.debtorcategory", starters=starters)
+
+
+def shop_categories(backup):
+    starters = import_module("apps.shops.migrations.0008_shop_categories").STARTERS
+    _person_categories(backup, person="shops.shop", category="shops.shopcategory", starters=starters)
+
+
+def contributor_categories(backup):
+    starters = import_module("apps.contributors.migrations.0007_contributor_categories").STARTERS
+    _person_categories(backup, person="contributors.contributor", category="contributors.contributorcategory", starters=starters)

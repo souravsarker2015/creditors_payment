@@ -3,7 +3,7 @@ from django.db.models import Sum
 
 from apps.core.templatetags.ui import bd_number
 
-from .models import Contributor, Contribution
+from .models import Contributor, ContributorCategory, Contribution
 
 
 class ContributionInline(admin.TabularInline):
@@ -34,3 +34,10 @@ class ContributionAdmin(admin.ModelAdmin):
     @admin.display(description="User")
     def get_user(self, obj):
         return obj.contributor.user.username
+
+
+@admin.register(ContributorCategory)
+class ContributorCategoryAdmin(admin.ModelAdmin):
+    list_display = ("name", "user", "code", "is_active")
+    list_filter = ("is_active",)
+    search_fields = ("name", "user__username")

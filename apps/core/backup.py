@@ -384,7 +384,7 @@ def _check_version(backup):
         backup_upgrades.run(backup, key)
     backup.notes.append(_("This backup was made with an older version of FinTrack. The updates since then only added new things, so it restores safely.")
                         if not upgrades else
-                        _("This backup was made with an older version of FinTrack. Its records are brought up to date as they are restored (for example, creditor and debtor categories become lists you can edit)."))
+                        _("This backup was made with an older version of FinTrack. Its records are brought up to date as they are restored (for example, the categories of creditors, debtors, shops and contributors become lists you can edit)."))
 
 
 # ── Restore ─────────────────────────────────────────────────────────────────

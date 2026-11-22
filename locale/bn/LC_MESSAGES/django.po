@@ -37242,3 +37242,52 @@ msgid ""
 msgstr ""
 "যে ক্যাটাগরিতে এখনো মানুষ আছে, সেটা মোছা যায় না — বরং লুকিয়ে রাখুন, তাহলে "
 "নতুনদের জন্য আর দেখাবে না।"
+
+msgid "Contributor category"
+msgstr "অবদানকারী ক্যাটাগরি"
+
+msgid "Contributor categories"
+msgstr "অবদানকারীর ক্যাটাগরি"
+
+msgid ""
+"The list you pick from when adding a contributor — Family, Donor, and any of"
+" your own. You can also add one with the + beside the Category box."
+msgstr ""
+"অবদানকারী যোগ করার সময় যে তালিকা থেকে বাছেন — পরিবার, দাতা, আর আপনার নিজের "
+"যেকোনোটি। ক্যাটাগরি ঘরের পাশের + দিয়েও নতুন যোগ করা যায়।"
+
+msgid ""
+"This backup was made with an older version of FinTrack. Its records are "
+"brought up to date as they are restored (for example, the categories of "
+"creditors, debtors, shops and contributors become lists you can edit)."
+msgstr ""
+"এই ব্যাকআপটি FinTrack-এর পুরোনো সংস্করণে বানানো। ফেরত আনার সময় এর "
+"রেকর্ডগুলো হালনাগাদ করা হয় (যেমন পাওনাদার, দেনাদার, দোকান ও অবদানকারীর "
+"ক্যাটাগরি এখন আপনার নিজের বদলানো যায় এমন তালিকা হয়)।"
+
+msgid "New shop category"
+msgstr "নতুন দোকানের ক্যাটাগরি"
+
+msgid "New contributor category"
+msgstr "নতুন অবদানকারী ক্যাটাগরি"
+
+msgid "e.g. Fish market, Tailor"
+msgstr "যেমন মাছের বাজার, দর্জি"
+
+msgid "Shop category"
+msgstr "দোকানের ক্যাটাগরি"
+
+msgid "Shop categories"
+msgstr "দোকানের ক্যাটাগরি"
+
+msgid ""
+"The list you pick from when adding a shop — Grocery, Pharmacy, and any of "
+"your own. You can also add one with the + beside the Category box."
+msgstr ""
+"দোকান যোগ করার সময় যে তালিকা থেকে বাছেন — মুদি, ফার্মেসি, আর আপনার নিজের "
+"যেকোনোটি। ক্যাটাগরি ঘরের পাশের + দিয়েও নতুন যোগ করা যায়।"
+
+msgid "%(counter)s contributor"
+msgid_plural "%(counter)s contributors"
+msgstr[0] "%(counter)s জন অবদানকারী"
+msgstr[1] "%(counter)s জন অবদানকারী"

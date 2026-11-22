@@ -12,24 +12,28 @@ from django.contrib.auth import get_user_model
 
 from apps.creditors.models import Creditor, CreditorCategory, DefaultCreditorCategory
 from apps.debtors.models import Debtor, DebtorCategory, DefaultDebtorCategory
+from apps.contributors.models import Contributor, ContributorCategory, DefaultContributorCategory
+from apps.shops.models import DefaultShopCategory, Shop, ShopCategory
 
 from .. import backup as bk
+from ..people_categories import ensure_starters
 from .. import personal_backup as pb
 from .test_my_backup import MyBackupBase, reseal
 
 User = get_user_model()
-CATEGORY_TABLES = {"creditors.creditorcategory", "debtors.debtorcategory"}
-UPDATES = {"creditors": "0013_creditor_categories", "debtors": "0009_debtor_categories"}
+PEOPLE = {"creditors.creditor": "creditors.creditorcategory", "debtors.debtor": "debtors.debtorcategory",
+          "shops.shop": "shops.shopcategory", "contributors.contributor": "contributors.contributorcategory"}
+CATEGORY_TABLES = set(PEOPLE.values())
+UPDATES = {"creditors": "0013_creditor_categories", "debtors": "0009_debtor_categories",
+           "shops": "0008_shop_categories", "contributors": "0007_contributor_categories"}
 
 
 def as_before_the_update(manifest, rows):
     """Rewrite a backup the way the version before the update wrote it: a code on each person, no category tables."""
     code = {(r["model"], r["pk"]): (r["fields"]["code"] or "OTHER") for r in rows if r["model"] in CATEGORY_TABLES}
     for r in rows:
-        if r["model"] == "creditors.creditor":
-            r["fields"]["category"] = code[("creditors.creditorcategory", r["fields"]["category"])]
-        elif r["model"] == "debtors.debtor":
-            r["fields"]["category"] = code[("debtors.debtorcategory", r["fields"]["category"])]
+        if r["model"] in PEOPLE:
+            r["fields"]["category"] = code[(PEOPLE[r["model"]], r["fields"]["category"])]
     gone = [r for r in rows if r["model"] in CATEGORY_TABLES]
     rows[:] = [r for r in rows if r["model"] not in CATEGORY_TABLES]
     for label in CATEGORY_TABLES:
@@ -67,6 +71,10 @@ class CategoryUpgradeTests(MyBackupBase):
         Debtor.objects.create(user=self.me, name="Rafi")                             # "Other"
         Debtor.objects.create(user=self.me, name="Tenant upstairs",
                               category=DebtorCategory.objects.get(user=self.me, code="TENANT"))
+        ensure_starters(ShopCategory, self.me, Shop.objects.none())               # as opening the Shops page does
+        Shop.objects.create(user=self.me, name="Medicine Corner",
+                            category=ShopCategory.objects.get(user=self.me, code="PHARMACY"))
+        Contributor.objects.create(user=self.me, name="Brother")                   # "Other"
 
     def assert_brought_back(self, user):
         got = {c.name: (c.category.code, c.category.user_id) for c in Creditor.objects.filter(user=user)}
@@ -75,6 +83,10 @@ class CategoryUpgradeTests(MyBackupBase):
         self.assertEqual(got, {"Rafi": "OTHER", "Tenant upstairs": "TENANT"})
         self.assertEqual(sorted(CreditorCategory.objects.filter(user=user).values_list("code", flat=True)), sorted(DefaultCreditorCategory.values))
         self.assertEqual(sorted(DebtorCategory.objects.filter(user=user).values_list("code", flat=True)), sorted(DefaultDebtorCategory.values))
+        self.assertEqual(Shop.objects.get(user=user, name="Medicine Corner").category.code, "PHARMACY")
+        self.assertEqual(Contributor.objects.get(user=user, name="Brother").category.code, "OTHER")
+        self.assertEqual(ShopCategory.objects.filter(user=user).count(), len(DefaultShopCategory.values))
+        self.assertEqual(ContributorCategory.objects.filter(user=user).count(), len(DefaultContributorCategory.values))
 
     def test_my_data_from_before_the_update_restores_with_its_categories(self):
         old = self.write(reseal(self.my_zip(), as_before_the_update))

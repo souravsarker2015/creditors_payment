@@ -11,6 +11,16 @@ from django.utils import timezone
 
 from ..models import Shop, ShopCategory, Transaction
 
+
+def cat(user, code):
+    """The user's category that began as this code — with the whole starter list, as every account has."""
+    from apps.core.people_categories import ensure_starters
+
+    from ..models import Shop
+
+    ensure_starters(ShopCategory, user, Shop.objects.none())
+    return ShopCategory.objects.get(user=user, code=code)
+
 MEDIA = tempfile.mkdtemp()
 PNG = (b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89"
        b"\x00\x00\x00\rIDATx\x9cc\xf8\x0f\x00\x00\x01\x01\x00\x05\x18\xd8N\x00\x00\x00\x00IEND\xaeB`\x82")
@@ -29,7 +39,7 @@ class ShopPageTests(TestCase):
         self.shop = Shop.objects.create(user=self.user, name="Mayer Doa Store")
 
     def test_edit_returns_to_the_shop(self):
-        r = self.client.post(reverse("shop_edit", args=[self.shop.pk]), {"name": "Mayer Doa Store", "category": ShopCategory.OTHER})
+        r = self.client.post(reverse("shop_edit", args=[self.shop.pk]), {"name": "Mayer Doa Store", "category": cat(self.user, "OTHER").pk})
         self.assertRedirects(r, reverse("shop_detail", args=[self.shop.pk]))
 
     def test_a_memo_photo_on_a_purchase(self):

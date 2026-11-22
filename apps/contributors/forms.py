@@ -2,11 +2,30 @@ from django import forms
 
 from apps.core.ledger_views import UniqueNameMixin
 from django.utils.translation import gettext_lazy as _
-from .models import Contributor, Contribution
+from django.urls import reverse_lazy
+from .models import Contributor, ContributorCategory, Contribution
+from apps.core import people_categories
 from apps.wallets.forms import WalletFieldMixin
+
+class ContributorCategoryForm(people_categories.NameForm, forms.ModelForm):
+    """The + beside Category: a new category, by name."""
+
+    class Meta:
+        model = ContributorCategory
+        fields = ["name"]
+        widgets = {"name": forms.TextInput(attrs={"class": "form-input", "placeholder": _("e.g. Neighbour, Office colleague")})}
+
 
 class ContributorForm(UniqueNameMixin, forms.ModelForm):
     owner_related_name = "contributors"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from apps.business.core.audit import current_user
+
+        user = self.instance.user if self.instance.user_id else current_user()
+        people_categories.setup_field(self, ContributorCategory, user, user.contributors.all() if user and user.is_authenticated else None,
+                                      reverse_lazy("contributor_categories"), "contributor_category")
 
     class Meta:
         model = Contributor

@@ -7,6 +7,7 @@ urlpatterns = [
     path("add/", views.shop_create_view, name="shop_create"),
     path("import/", views.shop_import_view, name="shop_import"),
     path("import/template/", views.shop_import_template_view, name="shop_import_template"),
+    path("categories/", views.shop_categories_view, name="shop_categories"),
     path("<int:pk>/", views.shop_detail_view, name="shop_detail"),
     path("<int:pk>/toggle-active/", views.shop_toggle_active_view, name="shop_toggle_active"),
     path("<int:pk>/delete/", views.shop_delete_view, name="shop_delete"),

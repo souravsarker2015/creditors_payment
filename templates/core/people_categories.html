@@ -15,7 +15,7 @@
   <section class="card">
     <form method="post" class="card-body flex gap-2">
       {% csrf_token %}<input type="hidden" name="action" value="add">
-      <input type="text" name="name" class="form-input" placeholder="{% translate 'e.g. Neighbour, Office colleague' %}" maxlength="80" required aria-label="{% translate 'New category' %}">
+      <input type="text" name="name" class="form-input" placeholder="{% if kind == "shop" %}{% translate 'e.g. Fish market, Tailor' %}{% else %}{% translate 'e.g. Neighbour, Office colleague' %}{% endif %}" maxlength="80" required aria-label="{% translate 'New category' %}">
       <button type="submit" class="btn btn-primary">{% include "partials/icon.html" with name="plus" %}{% translate "Add" %}</button>
     </form>
     {% if rows %}
@@ -24,7 +24,7 @@
       <li class="ledger-row cc-list-row{% if not r.is_active %} is-off{% endif %}" x-data="{ edit: false }">
         <div class="ledger-main" x-show="!edit">
           <p class="ledger-title">{{ r.label }}{% if not r.is_active %} <span class="badge" data-tone="muted">{% translate "Hidden" %}</span>{% endif %}</p>
-          <p class="ledger-meta">{% if r.n %}<a href="{{ list_url }}?category={{ r.pk }}" class="link">{% if kind == "debtor" %}{% blocktranslate count counter=r.n %}{{ counter }} debtor{% plural %}{{ counter }} debtors{% endblocktranslate %}{% else %}{% blocktranslate count counter=r.n %}{{ counter }} creditor{% plural %}{{ counter }} creditors{% endblocktranslate %}{% endif %}</a>{% else %}{% translate "Nobody in it yet" %}{% endif %}</p>
+          <p class="ledger-meta">{% if r.n %}<a href="{{ list_url }}?category={{ r.pk }}" class="link">{% if kind == "debtor" %}{% blocktranslate count counter=r.n %}{{ counter }} debtor{% plural %}{{ counter }} debtors{% endblocktranslate %}{% elif kind == "shop" %}{% blocktranslate count counter=r.n %}{{ counter }} shop{% plural %}{{ counter }} shops{% endblocktranslate %}{% elif kind == "contributor" %}{% blocktranslate count counter=r.n %}{{ counter }} contributor{% plural %}{{ counter }} contributors{% endblocktranslate %}{% else %}{% blocktranslate count counter=r.n %}{{ counter }} creditor{% plural %}{{ counter }} creditors{% endblocktranslate %}{% endif %}</a>{% else %}{% translate "Nobody in it yet" %}{% endif %}</p>
         </div>
         <form method="post" class="ledger-main flex gap-2" x-show="edit" x-cloak>
           {% csrf_token %}<input type="hidden" name="action" value="rename"><input type="hidden" name="pk" value="{{ r.pk }}">

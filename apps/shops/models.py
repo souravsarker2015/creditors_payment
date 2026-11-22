@@ -4,13 +4,16 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from apps.core.people_categories import PersonCategory
 from apps.core.receipts import RECEIPT_VALIDATORS, personal_receipt_path
 from apps.core.validators import above_zero
 
 DUE_SOON_DAYS = 7
 
 
-class ShopCategory(models.TextChoices):
+class DefaultShopCategory(models.TextChoices):
+    """The categories everyone starts with. Each becomes a row of ShopCategory (with this code), which the person can rename, hide or delete."""
+
     GROCERY = "GROCERY", _("Grocery")
     PHARMACY = "PHARMACY", _("Pharmacy")
     VEGETABLE = "VEGETABLE", _("Vegetable & Fruit")
@@ -23,16 +26,26 @@ class ShopCategory(models.TextChoices):
     OTHER = "OTHER", _("Other")
 
 
+
+class ShopCategory(PersonCategory):
+    """One of a person's shop categories: the starters, and any they add with the + beside the dropdown."""
+
+    STARTERS = DefaultShopCategory
+
+    class Meta(PersonCategory.Meta):
+        verbose_name = _("Shop category")
+        verbose_name_plural = _("Shop categories")
+        constraints = [models.UniqueConstraint(fields=["user", "name"], name="shop_category_unique_name")]
+
+
 class Shop(models.Model):
     """A local shop you buy from on credit (বাকি)."""
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="shops")
 
     name = models.CharField(max_length=200, verbose_name=_("Name"))
-    category = models.CharField(
-        max_length=32,
-        choices=ShopCategory.choices,
-        default=ShopCategory.OTHER,
+    category = models.ForeignKey(
+        ShopCategory, on_delete=models.SET_NULL, null=True, blank=True, related_name="shops",
         verbose_name=_("Category"),
     )
     phone = models.CharField(max_length=20, blank=True, default="", verbose_name=_("Phone"))
@@ -54,6 +67,18 @@ class Shop(models.Model):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        # A new one with no category starts in "Other", as the fixed list's default did.
+        if self._state.adding and self.category_id is None and self.user_id:
+            from apps.core.people_categories import starting_category
+
+            self.category = starting_category(ShopCategory, self.user, self.user.shops.all())
+        super().save(*args, **kwargs)
+
+    def get_category_display(self):
+        """The category's name ("" for none) — the name the old fixed list gave this, kept for the pages and files that use it."""
+        return self.category.label if self.category_id else ""
 
     # ── Computed properties ──────────────────────────
 
