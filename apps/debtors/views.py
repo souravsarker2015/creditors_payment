@@ -12,7 +12,7 @@ from django.contrib import messages
 
 from apps.core.csvsafe import safe_writer
 from apps.core.flow import record_initial, record_next, warn_if_overpaid
-from django.db.models import Sum, Q, F, DecimalField, Value
+from django.db.models import Case, DecimalField, F, IntegerField, Q, Sum, Value, When
 from django.db.models.functions import Coalesce, TruncMonth
 from django.core.paginator import Paginator
 from django.utils import dateformat
@@ -30,12 +30,16 @@ from apps.core.status import apply_status_filter, delete_record, toggle_active
 
 
 SORT_OPTIONS = [
+    ("open", gettext_lazy("Still to collect first")),
     ("name", gettext_lazy("Name (A–Z)")),
     ("-name", gettext_lazy("Name (Z–A)")),
     ("-remaining", gettext_lazy("Remaining (High to Low)")),
     ("remaining", gettext_lazy("Remaining (Low to High)")),
 ]
+# "open" (the default): whoever still has a balance comes first, A–Z; the settled ones after them.
+OPEN_FIRST = Case(When(remaining_amt__gt=0, then=Value(0)), default=Value(1), output_field=IntegerField())
 SORT_FIELDS = {
+    "open": [OPEN_FIRST, "name"],
     "name": ["name"],
     "-name": ["-name"],
     "remaining": ["remaining_amt", "name"],
@@ -376,9 +380,9 @@ def debtor_list_view(request):
     elif payment_status == "UNPAID":
         debtors_qs = debtors_qs.filter(total_lent_amt__gt=F("total_received_amt"))
 
-    sort = request.GET.get("sort", "name")
+    sort = request.GET.get("sort", "open")
     if sort not in SORT_FIELDS:
-        sort = "name"
+        sort = "open"
     debtors_qs = debtors_qs.annotate(
         remaining_amt=F("total_lent_amt") - F("total_received_amt")
     ).order_by(*SORT_FIELDS[sort])

@@ -242,6 +242,31 @@
         setTimeout(function () { el.classList.remove("is-in"); setTimeout(function () { el.remove(); }, 250); }, 3200);
     };
 
+    /* After a save the page reloads with the message at the top. Two things used to hide it:
+       - the old "#record" stays in the address after the redirect, so the page jumped back down to the empty form
+         and nothing seemed to happen. Back to the top instead: the message and the new balance are there.
+       - any other jump down the page: the message also shows as a toast, so it is seen wherever the page lands. */
+    (function () {
+        if (!document.querySelector(".flash")) return;
+        if (location.hash === "#record") {
+            history.replaceState(null, "", location.pathname + location.search);
+            if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+            var top = function () { window.scrollTo(0, 0); };
+            document.addEventListener("DOMContentLoaded", top);
+            window.addEventListener("load", function () { top(); setTimeout(top, 60); });
+            return;
+        }
+        window.addEventListener("load", function () {
+            setTimeout(function () {
+                document.querySelectorAll(".flash").forEach(function (f) {
+                    if (f.getBoundingClientRect().bottom > 0) return;          // in sight already
+                    var tone = f.getAttribute("data-tone");
+                    FT.toast((f.querySelector("p") || f).textContent.trim(), tone === "critical" || tone === "warn" ? "warn" : "good");
+                });
+            }, 120);
+        });
+    })();
+
     /* Quick-add popup beside a dropdown (see partials/quick_add_modal.html). */
     document.addEventListener("alpine:init", function () {
         Alpine.data("quickAdd", function (url, selectId) {
@@ -343,10 +368,33 @@
         document.querySelectorAll("button[data-tip]:not([aria-label]):not([aria-labelledby]), a[data-tip]:not([aria-label]):not([aria-labelledby])").forEach(function (el) {
             if (!(el.innerText || "").trim()) el.setAttribute("aria-label", el.getAttribute("data-tip"));   // (words hidden on a phone count as none)
         });
+        // An icon button whose word is hidden on a phone ("Export", "Restore…"): the word, still in the page, is its name.
+        document.querySelectorAll("button:not([aria-label]):not([aria-labelledby]):not([data-tip]), a[href]:not([aria-label]):not([aria-labelledby]):not([data-tip])").forEach(function (el) {
+            if ((el.innerText || "").trim() || !el.getClientRects().length) return;
+            var words = (el.textContent || "").replace(/\s+/g, " ").trim();
+            if (words) el.setAttribute("aria-label", words);
+        });
     }
-    document.addEventListener("alpine:initialized", function () { setTimeout(nameByTip, 0); });
+    // A hint too long for the box (a phone, or Bangla) swaps to its short form: data-ph-short.
+    var phCanvas;
+    function fitPlaceholders() {
+        document.querySelectorAll("[data-ph-short]").forEach(function (el) {
+            if (!el.dataset.phLong) el.dataset.phLong = el.getAttribute("placeholder") || "";
+            if (!el.clientWidth) return;                              // hidden for now: try again when it shows
+            var cs = getComputedStyle(el), g = (phCanvas = phCanvas || document.createElement("canvas")).getContext("2d");
+            g.font = cs.fontWeight + " " + cs.fontSize + " " + cs.fontFamily;
+            var room = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+            el.setAttribute("placeholder", g.measureText(el.dataset.phLong).width > room ? el.dataset.phShort : el.dataset.phLong);
+        });
+    }
+    var phTimer;
+    window.addEventListener("resize", function () { clearTimeout(phTimer); phTimer = setTimeout(fitPlaceholders, 150); });
+    document.addEventListener("focusin", function (e) { if (e.target.dataset && e.target.dataset.phShort) fitPlaceholders(); });
+    document.addEventListener("alpine:initialized", function () { setTimeout(function () { nameByTip(); fitPlaceholders(); }, 0); });
     document.addEventListener("DOMContentLoaded", function () {
         nameByTip();
+        fitPlaceholders();
+        if (document.fonts) document.fonts.ready.then(fitPlaceholders);   // the real font can be wider than the fallback
         if (!window.tippy) return;
         // Icon-only buttons already carry a title/aria-label: reuse it as the tooltip.
         document.querySelectorAll(".icon-btn:not([data-tip]):not([data-no-tip]), .chip[title], .pager-link[aria-label], .pref-swatch[title], .bg-pick[aria-label]").forEach(function (el) {

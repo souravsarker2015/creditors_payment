@@ -183,6 +183,8 @@ def note_card_lines(note, length=420):
                 kind, rest = "h", line[m.end():]
             elif (m := re.match(r"^\s*[-*+]\s+", line)):
                 kind, rest = "li", line[m.end():]
+                if not rest.strip():                # an empty bullet ("- ", a template's gap): a blank line,
+                    kind = ""                       # not a lone dot squeezed against the next line
             elif (m := re.match(r"^\s*(\d+)[.)]\s+", line)):
                 kind, rest = "ol", m.group(1) + ". " + line[m.end():]
             elif (m := re.match(r"^\s{0,3}>\s?", line)) and line.strip():

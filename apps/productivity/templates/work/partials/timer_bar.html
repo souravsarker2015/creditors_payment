@@ -17,7 +17,7 @@
   <template x-if="!$store.timer.running">
     <form class="wt-idle" @submit.prevent="$store.timer.start({ description: what, label: what }); what = ''">
       <span class="wt-idle-icon" aria-hidden="true">{% icon "timer" %}</span>
-      <input x-model="what" class="wt-input" placeholder="{% translate 'What are you working on?' %}" aria-label="{% translate 'What are you working on?' %}" enterkeyhint="go">
+      <input x-model="what" class="wt-input" placeholder="{% translate 'What are you working on?' %}" data-ph-short="{% translate 'Working on…' %}" aria-label="{% translate 'What are you working on?' %}" enterkeyhint="go">
       <button type="submit" class="wt-start" aria-label="{% translate 'Start the timer' %}" data-tip="{% translate 'Start (s)' %}">{% icon "play" %}<span class="hidden sm:inline">{% translate "Start" %}</span></button>
     </form>
   </template>

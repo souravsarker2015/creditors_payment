@@ -95,7 +95,7 @@
           <a href="{% url 'my_data_copy' c.name %}" class="icon-btn" download aria-label="{% translate 'Download' %}">{% include "partials/icon.html" with name="download" %}</a>
           <form method="post" action="{% url 'my_data_copy' c.name %}">
             {% csrf_token %}
-            <button type="submit" class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="restore" %}<span class="hide-sm">{% translate "Restore…" %}</span></button>
+            <button type="submit" class="btn btn-ghost btn-sm" aria-label="{% translate 'Restore…' %}" data-tip="{% translate 'Restore…' %}">{% include "partials/icon.html" with name="restore" %}<span class="hide-sm">{% translate "Restore…" %}</span></button>
           </form>
         </div>
       </li>

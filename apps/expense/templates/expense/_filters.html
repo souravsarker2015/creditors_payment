@@ -5,7 +5,7 @@
   <div class="filter-search input-icon">
     {% include "partials/icon.html" with name="search" %}
     <label for="expense-q" class="sr-only">{% translate "Search notes, categories or an amount" %}</label>
-    <input type="search" id="expense-q" name="q" value="{{ search_query }}" placeholder="{% translate 'Search notes, categories or an amount…' %}" autocomplete="off" class="form-input" enterkeyhint="search">
+    <input type="search" id="expense-q" name="q" value="{{ search_query }}" placeholder="{% translate 'Search notes, categories or an amount…' %}" data-ph-short="{% translate 'Note, category or amount' %}" autocomplete="off" class="form-input" enterkeyhint="search">
     {# first in the form, so Enter searches (and doesn't press Export CSV further down) #}
     <button type="submit" class="sr-only">{% translate "Search" %}</button>
   </div>

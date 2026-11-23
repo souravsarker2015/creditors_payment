@@ -22,7 +22,7 @@
       <p class="wc-hint">{% translate "Ctrl+Enter to save. The first line becomes the title." %}</p>
     </div>
     <div x-show="mode === 'time'">
-      <input x-ref="time" x-model="text" class="wc-input" placeholder="{% translate 'What are you working on?' %}" @keydown.enter.prevent="save()" aria-label="{% translate 'What are you working on?' %}">
+      <input x-ref="time" x-model="text" class="wc-input" placeholder="{% translate 'What are you working on?' %}" data-ph-short="{% translate 'Working on…' %}" @keydown.enter.prevent="save()" aria-label="{% translate 'What are you working on?' %}">
       <p class="wc-hint">{% translate "Starts the timer now. Anything already running stops." %}</p>
     </div>
     <footer class="wc-foot">

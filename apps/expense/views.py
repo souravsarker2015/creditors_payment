@@ -22,7 +22,7 @@ from django.urls import reverse
 from django.utils import timezone
 from datetime import timedelta
 from apps.budgets.services import statuses as budget_statuses
-from apps.core.stats import month_compare, ranked, trend_summary
+from apps.core.stats import month_compare, ranked, trend_summary, whole
 from apps.core.status import apply_status_filter, active_or_current, toggle_active
 from .forms import CATEGORY_ICONS, CategoryForm, ExpenseForm, RecurringExpenseForm
 from apps.core.ledger_views import _build_pagination_window, _csv_response, _last_12_month_starts, _parse_iso_date, _row_value  # shared by every ledger app
@@ -283,7 +283,7 @@ def expense_list_view(request):
         total=Coalesce(Sum("amount"), Value(0, output_field=DecimalField()))
     )["total"]
     total_entries = filtered_expenses.count()
-    avg_expense = total_spent / total_entries if total_entries > 0 else 0
+    avg_expense = whole(total_spent / total_entries) if total_entries > 0 else 0
 
     if request.GET.get("export") == "csv":
         rows = [

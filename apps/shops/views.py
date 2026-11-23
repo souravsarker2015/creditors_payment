@@ -12,7 +12,7 @@ from django.contrib import messages
 
 from apps.core.csvsafe import safe_writer
 from apps.core.flow import record_initial, record_next, warn_if_overpaid
-from django.db.models import Sum, Q, F, DecimalField, Value
+from django.db.models import Case, DecimalField, F, IntegerField, Q, Sum, Value, When
 from django.db.models.functions import Coalesce, TruncMonth
 from django.core.paginator import Paginator
 from django.utils import dateformat
@@ -32,12 +32,16 @@ from apps.core.ledger_views import _build_pagination_window, _csv_response, _las
 MONTH_CHOICES = [(i, date_cls(2000, i, 1)) for i in range(1, 13)]
 
 SORT_OPTIONS = [
+    ("open", gettext_lazy("Still owed first")),
     ("name", gettext_lazy("Name (A–Z)")),
     ("-name", gettext_lazy("Name (Z–A)")),
     ("-remaining", gettext_lazy("Remaining (High to Low)")),
     ("remaining", gettext_lazy("Remaining (Low to High)")),
 ]
+# "open" (the default): whoever still has a balance comes first, A–Z; the settled ones after them.
+OPEN_FIRST = Case(When(remaining_amt__gt=0, then=Value(0)), default=Value(1), output_field=IntegerField())
 SORT_FIELDS = {
+    "open": [OPEN_FIRST, "name"],
     "name": ["name"],
     "-name": ["-name"],
     "remaining": ["remaining_amt", "name"],
@@ -440,9 +444,9 @@ def shop_list_view(request):
     elif payment_status == "UNPAID":
         shops_qs = shops_qs.filter(total_due_amt__gt=F("total_paid_amt"))
 
-    sort = request.GET.get("sort", "name")
+    sort = request.GET.get("sort", "open")
     if sort not in SORT_FIELDS:
-        sort = "name"
+        sort = "open"
     shops_qs = shops_qs.annotate(
         remaining_amt=F("total_due_amt") - F("total_paid_amt")
     ).order_by(*SORT_FIELDS[sort])

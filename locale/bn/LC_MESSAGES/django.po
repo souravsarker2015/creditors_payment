@@ -37291,3 +37291,39 @@ msgid "%(counter)s contributor"
 msgid_plural "%(counter)s contributors"
 msgstr[0] "%(counter)s জন অবদানকারী"
 msgstr[1] "%(counter)s জন অবদানকারী"
+
+msgid "Working on…"
+msgstr "কাজের নাম…"
+
+msgid "Add to My Day…"
+msgstr "আমার দিনে যোগ করুন…"
+
+msgid "Note, category or amount"
+msgstr "নোট, ক্যাটাগরি বা অঙ্ক"
+
+msgid "Still owed first"
+msgstr "বাকি আছে যাদের, তারা আগে"
+
+msgid "Still to collect first"
+msgstr "পাওনা বাকি যাদের কাছে, তারা আগে"
+
+msgid "From a person or bank"
+msgstr "কোনো মানুষ বা ব্যাংক থেকে"
+
+msgid "Towards money you owe"
+msgstr "আপনার দেনা থেকে শোধ"
+
+msgid "Someone owes you now"
+msgstr "এখন কেউ আপনার কাছে ঋণী"
+
+msgid "Money you had lent"
+msgstr "ধার দেওয়া টাকা ফেরত"
+
+msgid "Between your wallets"
+msgstr "আপনার ওয়ালেটগুলোর মধ্যে"
+
+msgid "Something else"
+msgstr "অন্য কিছু"
+
+msgid "Every page, one tap"
+msgstr "এক ট্যাপে সব পাতা"

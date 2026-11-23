@@ -118,7 +118,7 @@
           <a href="{% url 'backup_file' b.name %}" class="icon-btn" download aria-label="{% translate 'Download' %}">{% include "partials/icon.html" with name="download" %}</a>
           <form method="post" action="{% url 'backup_use' b.name %}">
             {% csrf_token %}
-            <button type="submit" class="btn btn-ghost btn-sm">{% include "partials/icon.html" with name="restore" %}<span class="hide-sm">{% translate "Restore…" %}</span></button>
+            <button type="submit" class="btn btn-ghost btn-sm" aria-label="{% translate 'Restore…' %}" data-tip="{% translate 'Restore…' %}">{% include "partials/icon.html" with name="restore" %}<span class="hide-sm">{% translate "Restore…" %}</span></button>
           </form>
           <form method="post" action="{% url 'backup_delete' b.name %}" data-confirm="{% blocktranslate with name=b.name %}Delete {{ name }} from the server? This can't be undone.{% endblocktranslate %}">
             {% csrf_token %}

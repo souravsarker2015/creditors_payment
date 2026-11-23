@@ -53,7 +53,7 @@
   <div class="card-grid card-grid-3">
     {% for cr in page_obj %}
     {% url 'creditor_detail' cr.pk as detail_url %}
-    <article class="card entity {% if not cr.is_active %}is-inactive{% endif %}">
+    <article class="card entity {% if not cr.is_active %}is-inactive{% endif %}{% if cr.remaining_amt <= 0 %} is-settled{% endif %}">
       <div class="entity-head">
         <a href="{{ detail_url }}" class="avatar">{{ cr.name|first }}</a>
         <div class="min-w-0 flex-1">
@@ -76,7 +76,7 @@
         <p class="entity-figure" data-tone="{% if cr.remaining_amt > 0 %}critical{% else %}good{% endif %}">{{ cr.remaining_amt|money }}</p>
       </div>
 
-      <div>
+      <div class="entity-progress">
         <div class="meter-row"><span>{% translate "Repayment Progress" %}</span><span class="num">{{ cr.payment_percent }}%</span></div>
         <div class="meter" data-tone="good"><span style="width: {{ cr.payment_percent }}%"></span></div>
       </div>

@@ -92,7 +92,7 @@
     {% endif %}
     <form class="wd-quick" @submit.prevent="const box = $refs.q; if (!box.value.trim()) return; Work.api(Work.cfg.urls.taskAdd, { text: box.value, my_day: '1' }).then(r => { if (r.ok && r.html) { $refs.list.insertAdjacentHTML('afterbegin', r.html); $root.classList.add('has-items'); } else if (!r.ok) Work.toast(r.error, 'warn'); }); box.value = ''">
       <span class="wd-quick-icon" aria-hidden="true">{% icon "plus" %}</span>
-      <input x-ref="q" class="wd-quick-input" placeholder="{% translate 'Add to My Day… (try #tag !high ~30m at 3pm)' %}" aria-label="{% translate 'Add a task to My Day' %}" autocomplete="off" enterkeyhint="done">
+      <input x-ref="q" class="wd-quick-input" placeholder="{% translate 'Add to My Day… (try #tag !high ~30m at 3pm)' %}" data-ph-short="{% translate 'Add to My Day…' %}" aria-label="{% translate 'Add a task to My Day' %}" autocomplete="off" enterkeyhint="done">
     </form>
     <ul class="wt-list" x-ref="list" data-new-tasks data-today-list>
       {% for t in open_tasks %}{% include "work/partials/task_row.html" %}{% endfor %}

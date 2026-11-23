@@ -135,29 +135,46 @@ person's choice (Automatic / App view / Website view).
             </a>
             {% endif %}
             {% else %}
+            {# what people write down every day — the same as the buttons on Home; adding a new person or shop is a tap away on each "who?" page #}
             <a href="{% url 'expense_create' %}" class="app-action" data-tone="critical">
                 <span class="app-action-icon">{% include "partials/icon.html" with name="arrow-up" %}</span>
-                <span class="app-action-name">{% translate "New Expense" %}</span><span class="app-action-hint">{% translate "Money spent" %}</span>
+                <span class="app-action-name">{% translate "I spent" %}</span><span class="app-action-hint">{% translate "Money spent" %}</span>
             </a>
-            <a href="{% url 'income_dashboard' %}" class="app-action" data-tone="good">
+            <a href="{% url 'pick' 'income' %}" class="app-action" data-tone="good">
                 <span class="app-action-icon">{% include "partials/icon.html" with name="arrow-down" %}</span>
-                <span class="app-action-name">{% translate "Income" %}</span><span class="app-action-hint">{% translate "Money received" %}</span>
+                <span class="app-action-name">{% translate "I got money" %}</span><span class="app-action-hint">{% translate "Money received" %}</span>
             </a>
-            <a href="{% url 'household_dashboard' %}" class="app-action" data-tone="warn">
+            {% now "Y" as this_year %}{% now "n" as this_month %}<a href="{% url 'household_month_detail' this_year this_month %}#record" class="app-action" data-tone="warn">
                 <span class="app-action-icon">{% include "partials/icon.html" with name="cart" %}</span>
-                <span class="app-action-name">{% translate "Household (Bazar)" %}</span><span class="app-action-hint">{% translate "Daily shopping" %}</span>
+                <span class="app-action-name">{% translate "Bazar" %}</span><span class="app-action-hint">{% translate "Daily shopping" %}</span>
             </a>
-            <a href="{% url 'creditor_create' %}" class="app-action" data-tone="accent">
-                <span class="app-action-icon">{% include "partials/icon.html" with name="users" %}</span>
-                <span class="app-action-name">{% translate "New creditor" %}</span><span class="app-action-hint">{% translate "Someone you borrowed from" %}</span>
-            </a>
-            <a href="{% url 'debtor_create' %}" class="app-action" data-tone="info">
-                <span class="app-action-icon">{% include "business/partials/icon.html" with name="person" %}</span>
-                <span class="app-action-name">{% translate "New debtor" %}</span><span class="app-action-hint">{% translate "Someone who owes you" %}</span>
-            </a>
-            <a href="{% url 'shop_create' %}" class="app-action" data-tone="muted">
+            <a href="{% url 'pick' 'shop' %}" class="app-action" data-tone="muted">
                 <span class="app-action-icon">{% include "partials/icon.html" with name="tag" %}</span>
-                <span class="app-action-name">{% translate "New shop" %}</span><span class="app-action-hint">{% translate "Where you buy on credit" %}</span>
+                <span class="app-action-name">{% translate "Shop dues" %}</span><span class="app-action-hint">{% translate "Bought or paid" %}</span>
+            </a>
+            <a href="{% url 'pick' 'borrow' %}" class="app-action" data-tone="accent">
+                <span class="app-action-icon">{% include "partials/icon.html" with name="users" %}</span>
+                <span class="app-action-name">{% translate "I borrowed" %}</span><span class="app-action-hint">{% translate "From a person or bank" %}</span>
+            </a>
+            <a href="{% url 'pick' 'repay' %}" class="app-action" data-tone="accent">
+                <span class="app-action-icon">{% include "partials/icon.html" with name="check" %}</span>
+                <span class="app-action-name">{% translate "I paid back" %}</span><span class="app-action-hint">{% translate "Towards money you owe" %}</span>
+            </a>
+            <a href="{% url 'pick' 'lend' %}" class="app-action" data-tone="info">
+                <span class="app-action-icon">{% include "business/partials/icon.html" with name="person" %}</span>
+                <span class="app-action-name">{% translate "I lent" %}</span><span class="app-action-hint">{% translate "Someone owes you now" %}</span>
+            </a>
+            <a href="{% url 'pick' 'collect' %}" class="app-action" data-tone="info">
+                <span class="app-action-icon">{% include "partials/icon.html" with name="wallet" %}</span>
+                <span class="app-action-name">{% translate "I got it back" %}</span><span class="app-action-hint">{% translate "Money you had lent" %}</span>
+            </a>
+            <a href="{% url 'wallet_transfer' %}" class="app-action" data-tone="muted">
+                <span class="app-action-icon">{% include "business/partials/icon.html" with name="swap" %}</span>
+                <span class="app-action-name">{% translate "Move money" %}</span><span class="app-action-hint">{% translate "Between your wallets" %}</span>
+            </a>
+            <a href="{% url 'launcher' %}" class="app-action" data-tone="muted">
+                <span class="app-action-icon">{% include "partials/icon.html" with name="grid" %}</span>
+                <span class="app-action-name">{% translate "Something else" %}</span><span class="app-action-hint">{% translate "Every page, one tap" %}</span>
             </a>
             {% endif %}
         </div>

@@ -24,7 +24,7 @@ from .models import HouseholdCategory, HouseholdMember, Purchase, Settlement, ne
 from apps.budgets.models import Budget, BudgetScope
 from apps.budgets.services import status as budget_status
 from apps.core.flow import warn_if_overpaid
-from apps.core.stats import month_compare, month_start, ranked, total, trend_summary
+from apps.core.stats import month_compare, month_start, ranked, total, trend_summary, whole
 from apps.core.status import apply_status_filter, delete_record, toggle_active
 from .forms import HouseholdCategoryForm, HouseholdMemberForm, PurchaseForm, SettlementForm
 from apps.core.ledger_views import party_search, _build_pagination_window, _csv_response, _last_12_month_starts, _parse_year_month, _period_label, _render_statement, _row_value  # shared by every ledger app
@@ -309,7 +309,7 @@ def purchase_all_view(request):
         "base_query_string": base_query.urlencode(),
         "total": summary["total"],
         "count": summary["count"],
-        "average": summary["total"] / summary["count"] if summary["count"] else 0,
+        "average": whole(summary["total"] / summary["count"]) if summary["count"] else 0,
         "q": q, "category": category, "paid": paid,
         "date_from": date_from.isoformat() if date_from else "",
         "date_to": date_to.isoformat() if date_to else "",

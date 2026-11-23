@@ -259,6 +259,12 @@ h1, h2, h3 { font-family: var(--font-heading); }
     .page-actions > * { flex: 1 1 0; min-width: fit-content; }
     .page-actions > .btn-primary, .page-actions > form:has(.btn-primary) { order: -1; flex-basis: 100%; }
     .page-actions > form > .btn { width: 100%; }
+    /* Edit · Mark as inactive · 🗑 on a detail page: one row. The bin keeps its size; the two buttons share the rest
+       (a long label wraps inside its button) — the bin used to drop alone onto a second line. */
+    .page-actions:not(:has(> .btn-primary, > form > .btn-primary)):has(> form > .icon-btn:only-of-type) { flex-wrap: nowrap; }
+    .page-actions:not(:has(> .btn-primary, > form > .btn-primary)):has(> form > .icon-btn:only-of-type) > * { min-width: 0; }
+    .page-actions:not(:has(> .btn-primary, > form > .btn-primary)):has(> form > .icon-btn:only-of-type) > form:has(> .icon-btn) { flex: none; }
+    .page-actions:not(:has(> .btn-primary, > form > .btn-primary)):has(> form > .icon-btn:only-of-type) .btn { white-space: normal; text-align: center; line-height: 1.2; }
 }
 
 /* ==========================================================================
@@ -867,6 +873,9 @@ a.ledger-row:hover { background: var(--surface-hover); }
 .entity:hover { box-shadow: var(--shadow); }
 .entity.is-inactive { background: var(--surface-sunken); border-style: dashed; box-shadow: none; }
 .entity.is-inactive .avatar { filter: grayscale(1); opacity: .7; }
+/* Settled (nothing left to pay or collect): the "Paid Completely" badge says it, so the 100% bar goes — a long list of
+   settled people stays short on a phone. The figures stay. */
+.entity.is-settled .entity-progress { display: none; }
 .entity-head { display: flex; align-items: flex-start; gap: 0.75rem; }
 .entity-name { overflow-wrap: anywhere; font-family: var(--font-ui); font-size: 1rem; font-weight: 650; line-height: 1.35; color: var(--text-primary); }
 .entity-name a:hover { color: var(--accent); }
@@ -2225,6 +2234,8 @@ a.member-chip:hover { background: color-mix(in srgb, var(--g, var(--text-muted))
 
 /* "Or press S." — a keyboard shortcut means nothing on a phone. */
 @media (hover: none) and (pointer: coarse) { .keys-only { display: none; } }
+/* …and neither does a key shown on a button (Space, 1–4 in card review, N / M in a menu, Esc). */
+@media (hover: none) and (pointer: coarse) { button > kbd, .menu-item > kbd, .wpl-foot, .wpl-esc { display: none; } }
 
 /* Phones: the little "i" keeps its size but gets a finger-sized tap area. */
 @media (hover: none) and (pointer: coarse) {
@@ -2236,6 +2247,14 @@ a.member-chip:hover { background: color-mix(in srgb, var(--g, var(--text-muted))
     /* "+ Write one" under a story cover */
     .ws-cover-add { position: relative; }
     .ws-cover-add::after { content: ""; position: absolute; inset: -0.75rem -0.5rem; }
+    /* Small words that are links — "Others owe you" on Home, a guide's chips, a family member's chip, "Open the
+       journal", a sprint line, a card's crumb: about 20px tall, so a thumb missed them. Same look, a bigger target. */
+    .kv-label, .guide-chip, .member-chip, .wd-link, .wd-sprint, .wfc-crumb, .winv-set, .home-wallets { position: relative; }
+    .kv-label::after, .guide-chip::after, .member-chip::after, .wd-link::after, .wd-sprint::after, .wfc-crumb::after, .winv-set::after, .home-wallets::after {
+        content: ""; position: absolute; inset: -0.625rem -0.25rem;
+    }
+    /* a folded section's header ("Look and number · optional"): a full row to tap */
+    .cc-fold-head { min-height: 2.75rem; }
 }
 
 /* ==========================================================================
@@ -2407,7 +2426,9 @@ a.member-chip:hover { background: color-mix(in srgb, var(--g, var(--text-muted))
 
 .cal-tools { display: grid; gap: 1.25rem; }
 @media (min-width: 900px) { .cal-tools { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; } }
-.conv-bn { display: grid; grid-template-columns: 4.75rem minmax(0, 1fr) 5.75rem; gap: 0.5rem; }
+.conv-bn { display: grid; grid-template-columns: 4rem minmax(0, 1fr) 4.75rem; gap: 0.5rem; }
+/* the month name ("Ogrohayon", "অগ্রহায়ণ") gets the room a 1–2 digit day and a 4-digit year do not need */
+.conv-bn .form-input { padding-left: 0.625rem; padding-right: 0.5rem; }
 .conv-out { min-height: 1.5rem; font-size: 1.0625rem; font-weight: 700; color: var(--accent); }
 @media print { .cal-toolbar .cal-switches, .cal-filters, .cal-tools, .cal-day .icon-btn { display: none !important; } }
 .cal-year { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(15.5rem, 1fr)); touch-action: pan-y; }
@@ -2612,7 +2633,7 @@ a.guide-chip:hover { background: var(--accent-soft); color: var(--accent); }
 }
 :root[data-view="app"] .form-actions.is-app-sticky > * { flex: 1 1 0; justify-content: center; }
 /* Typing: the keyboard is up, so the tab bar steps aside. */
-:root[data-view="app"][data-keyboard] .app-tabbar { transform: translateY(110%); }
+:root[data-view="app"][data-keyboard] .app-tabbar { transform: translateY(calc(100% + 2rem)); }   /* + the raised "+" above the bar, or its top edge stayed over the form */
 :root[data-view="app"] .toast-root { bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 0.75rem); }
 :root[data-view="app"] .loan-plan-bar { bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 0.75rem); }
 
@@ -2691,6 +2712,11 @@ a.guide-chip:hover { background: var(--accent-soft); color: var(--accent); }
 .app-dash.is-active { background: var(--surface-raised); color: var(--text-primary); box-shadow: var(--shadow-sm); }
 .app-dash-icon { display: grid; place-items: center; flex-shrink: 0; width: 1.625rem; height: 1.625rem; border-radius: 0.5rem; background: var(--dash-bg); color: var(--dash); }
 .app-dash-icon svg { width: 1rem; height: 1rem; }
+/* A phone: icon above, the whole name below on up to two lines — it was "Perso…", "Fish …", "Prod…". */
+@media (max-width: 479.98px) {
+    .app-dash { flex-direction: column; gap: 0.25rem; padding: 0.5rem 0.25rem; font-size: 0.75rem; line-height: 1.2; }
+    .app-dash > .truncate { overflow: hidden; white-space: normal; text-align: center; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+}
 
 .app-more-nav { display: grid; gap: 0.75rem; }
 .app-more-nav > div {
@@ -3296,6 +3322,8 @@ a.rp-mrow:hover { background: var(--surface-hover); }
 .nav-head { display: flex; align-items: center; gap: 0.25rem; }
 .nav-brand { flex: 1; }
 .nav-brand-text { min-width: 0; white-space: nowrap; overflow: hidden; }
+/* the tagline under FinTrack ("LEDGER & HOUSEHOLD", "FISH FARM BUSINESS") fits the sidebar: it was cut to "HOUSEHO" */
+.nav-brand-text > span + span { letter-spacing: 0.06em; text-overflow: ellipsis; overflow: hidden; }
 .nav-collapse { display: none; place-items: center; width: 2.25rem; height: 2.25rem; flex-shrink: 0; border-radius: 0.625rem; color: var(--text-on-ink-muted); transition: background .15s, color .15s; }
 .nav-collapse svg { width: 1.25rem; height: 1.25rem; }
 .nav-collapse .nav-collapse-arrow { transition: transform .25s; transform-origin: 14.6px 12px; }

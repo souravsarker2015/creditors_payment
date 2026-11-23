@@ -6,7 +6,7 @@ from any queryset with a date and an amount, so each view stays short and the
 pages read the same way.
 """
 from datetime import date, timedelta
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 from django.db.models import DecimalField, Sum, Value
 from django.db.models.functions import Coalesce, TruncMonth
@@ -14,6 +14,11 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 
 ZERO = Decimal("0")
+
+
+def whole(amount):
+    """An average rounded to whole taka (৳8,597 rather than ৳8,597.33): averages are a feel, not a figure to pay."""
+    return Decimal(amount or 0).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
 RANK_LIMIT = 6
 
 
@@ -87,7 +92,7 @@ def trend_summary(values, months):
         return None
     peak = max(range(len(values)), key=lambda i: values[i])
     return {
-        "average": sum(active, ZERO) / len(active),
+        "average": whole(sum(active, ZERO) / len(active)),
         "active_months": len(active),
         "peak_value": values[peak],
         "peak_month": months[peak],

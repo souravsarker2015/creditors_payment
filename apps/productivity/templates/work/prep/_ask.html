@@ -17,7 +17,7 @@
     <template x-for="(h, n) in (q ? q.hints.slice(0, shown) : [])" :key="n">
       <p class="wpq-hint"><b x-text="'{{ _("Hint")|escapejs }} ' + (n + 1)"></b> <span class="wn-md" x-html="Work.markdown(h)"></span></p>
     </template>
-    <button type="button" class="btn btn-ghost btn-sm" x-show="stage === 'ask' && shown < q.hints.length" @click="hint()">{% icon "bolt" %}<span x-text="(shown ? '{{ _("Another hint")|escapejs }}' : '{{ _("Show a hint")|escapejs }}') + ' (' + (q.hints.length - shown) + ')'"></span> <kbd class="wp-kbd">H</kbd></button>
+    <button type="button" class="btn btn-ghost btn-sm" x-show="q && stage === 'ask' && shown < q.hints.length" @click="hint()">{% icon "bolt" %}<span x-text="q ? (shown ? '{{ _("Another hint")|escapejs }}' : '{{ _("Show a hint")|escapejs }}') + ' (' + (q.hints.length - shown) + ')' : ''"></span> <kbd class="wp-kbd">H</kbd></button>
   </div>
 
   {# multiple choice #}
