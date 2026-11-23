@@ -27,6 +27,7 @@
         <div class="ledger-main">
           <p class="ledger-title">{{ item.label }}</p>
           <p class="ledger-meta">{{ item.kind }} · {% blocktranslate with when=item.deleted_at|timesince %}deleted {{ when }} ago{% endblocktranslate %}{% if item.count > 1 %} · {% blocktranslate count counter=item.count|add:"-1" %}with {{ counter }} related entry{% plural %}with {{ counter }} related entries{% endblocktranslate %}{% endif %}</p>
+          <p class="ledger-meta trash-left{% if item.days_left <= 3 %} is-soon{% endif %}">{% if item.days_left == 0 %}{% translate "Goes for good today" %}{% else %}{% blocktranslate count counter=item.days_left %}Goes for good in {{ counter }} day{% plural %}Goes for good in {{ counter }} days{% endblocktranslate %}{% endif %}</p>
         </div>
         <div class="ledger-end trash-actions">
           <form method="post" action="{% url 'trash_restore' item.pk %}">

@@ -1,6 +1,7 @@
 import csv
 import io
 from django.shortcuts import render, redirect, get_object_or_404
+from apps.core.templatetags.ui import plain_amount
 from django.http import HttpResponse
 import django.utils.timezone
 from django.contrib.auth.decorators import login_required
@@ -370,7 +371,7 @@ def expense_create_view(request, copy_of=None):
             expense = form.save(commit=False)
             expense.user = request.user
             expense.save()
-            messages.success(request, _("Expense of ৳%(amount)s recorded.") % {"amount": expense.amount})
+            messages.success(request, _("Expense of ৳%(amount)s recorded.") % {"amount": plain_amount(expense.amount)})
             _budget_alert(request, expense)
             warn_if_short(request, expense.wallet_id)
             return redirect("expense_list")
@@ -460,7 +461,7 @@ def expense_edit_view(request, pk):
 def expense_delete_view(request, pk):
     expense = get_object_or_404(Expense, pk=pk, user=request.user)
     amt = expense.amount
-    delete_with_undo(request, expense, _("Expense of ৳%(amount)s deleted.") % {"amount": amt},
+    delete_with_undo(request, expense, _("Expense of ৳%(amount)s deleted.") % {"amount": plain_amount(amt)},
                      label=f"{expense.category or _('No category')} · {money(amt)} · {expense.date:%d %b %Y}", back_url=reverse("expense_list"))
     return redirect(safe_next(request, reverse("expense_list")))
 

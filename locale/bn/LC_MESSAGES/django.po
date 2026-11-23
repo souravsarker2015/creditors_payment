@@ -37327,3 +37327,22 @@ msgstr "অন্য কিছু"
 
 msgid "Every page, one tap"
 msgstr "এক ট্যাপে সব পাতা"
+
+msgid "Tip: type an amount, like 15000, to find every entry of that amount."
+msgstr "টিপ: কোনো অঙ্ক লিখুন, যেমন 15000 — ওই অঙ্কের সব এন্ট্রি দেখা যাবে।"
+
+msgid "Entries of %(amount)s"
+msgstr "%(amount)s-এর এন্ট্রি"
+
+msgid "Goes for good today"
+msgstr "আজ চিরতরে মুছে যাবে"
+
+msgid ""
+"Nothing here yet. The chart fills in month by month as you write things "
+"down."
+msgstr "এখনও কিছু নেই। আপনি যা লিখে রাখবেন, মাস ধরে ধরে চার্টে তা দেখা যাবে।"
+
+msgid "Goes for good in %(counter)s day"
+msgid_plural "Goes for good in %(counter)s days"
+msgstr[0] "%(counter)s দিন পরে চিরতরে মুছে যাবে"
+msgstr[1] "%(counter)s দিন পরে চিরতরে মুছে যাবে"

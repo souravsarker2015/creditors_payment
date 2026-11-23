@@ -88,3 +88,88 @@ class AddSheetTests(TestCase):
         self.assertContains(r, reverse("wallet_transfer"))
         today = date.today()
         self.assertContains(r, reverse("household_month_detail", args=[today.year, today.month]) + "#record")
+
+
+class AmountsInMessagesTests(TestCase):
+    """"Transaction of ৳180000.00 added." read like a database: messages show amounts the way every page does."""
+
+    def test_plain_amount(self):
+        from apps.core.templatetags.ui import plain_amount
+
+        self.assertEqual(plain_amount(Decimal("180000.00")), "1,80,000")
+        self.assertEqual(plain_amount(Decimal("250.00")), "250")
+        self.assertEqual(plain_amount(Decimal("12.5")), "12.50")
+
+    def test_saving_and_deleting_say_the_amount_plainly(self):
+        user = User.objects.create_user("rina", password="pw-12345!")
+        self.client.force_login(user)
+        cr = Creditor.objects.create(user=user, name="Karim")
+        r = self.client.post(reverse("creditor_detail", args=[cr.pk]),
+                             {"transaction_type": CreditorTx.BORROW, "amount": "180000", "date": "2026-01-05"}, follow=True)
+        self.assertContains(r, "Transaction of ৳1,80,000 added.")
+        e = Expense.objects.create(user=user, amount=Decimal("250.00"), date=date(2026, 1, 1))
+        r = self.client.post(reverse("expense_delete", args=[e.pk]), follow=True)
+        self.assertContains(r, "Expense of ৳250 deleted.")
+
+
+class SearchByAmountTests(TestCase):
+    """People remember "the 15,000" more often than where it went: a number in search finds entries of that amount."""
+
+    def setUp(self):
+        self.user = User.objects.create_user("rina", password="pw-12345!")
+        self.client.force_login(self.user)
+
+    def find(self, q):
+        return self.client.get(reverse("search"), {"q": q})
+
+    def test_an_amount_finds_entries_across_the_ledgers(self):
+        Expense.objects.create(user=self.user, amount=15000, date=date(2026, 3, 1), note="laptop repair")
+        d = Debtor.objects.create(user=self.user, name="Sojol")
+        DebtorTx.objects.create(debtor=d, amount=15000, transaction_type=DebtorTx.LEND, date=date(2026, 2, 1))
+        Expense.objects.create(user=self.user, amount=999, date=date(2026, 3, 1), note="something else")
+        for q in ("15000", "15,000", "৳15,000", "১৫০০০"):
+            r = self.find(q)
+            self.assertContains(r, "Entries of ৳15,000")
+            self.assertContains(r, "laptop repair")
+            self.assertContains(r, "Sojol")
+            self.assertNotContains(r, "something else")
+
+    def test_only_your_own_entries(self):
+        other = User.objects.create_user("them", password="pw-12345!")
+        Expense.objects.create(user=other, amount=777, date=date(2026, 3, 1), note="their secret")
+        self.assertNotContains(self.find("777"), "their secret")
+
+    def test_words_are_not_an_amount(self):
+        from apps.core.search import _amount
+
+        self.assertIsNone(_amount("rice"))
+        self.assertIsNone(_amount("12a"))
+        self.assertIsNone(_amount("0"))
+        self.assertEqual(_amount("1,80,000"), Decimal("180000"))
+
+
+class TapARowToEditTests(TestCase):
+    def test_the_row_menu_marks_its_edit_link(self):
+        user = User.objects.create_user("rina", password="pw-12345!")
+        self.client.force_login(user)
+        e = Expense.objects.create(user=user, amount=100, date=date(2026, 1, 1))
+        r = self.client.get(reverse("expense_list"))
+        self.assertContains(r, "data-row-edit")
+        self.assertContains(r, reverse("expense_edit", args=[e.pk]))
+
+
+class RecentlyDeletedDaysLeftTests(TestCase):
+    def test_each_item_says_how_long_it_can_come_back(self):
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        from apps.trash.models import DeletedItem
+
+        user = User.objects.create_user("rina", password="pw-12345!")
+        self.client.force_login(user)
+        e = Expense.objects.create(user=user, amount=100, date=date(2026, 1, 1))
+        self.client.post(reverse("expense_delete", args=[e.pk]))
+        DeletedItem.objects.filter(user=user).update(deleted_at=timezone.now() - timedelta(days=12))
+        r = self.client.get(reverse("trash_list"))
+        self.assertContains(r, "Goes for good in 18 days")

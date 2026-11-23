@@ -18,7 +18,8 @@ Results come from /search/ as you type (HTMX); Enter opens the first one.
         <button type="button" class="icon-btn" @click="open = false" aria-label="{% translate 'Close' %}">{% include "partials/icon.html" with name="x" %}</button>
       </form>
       {% include "core/search_results.html" with groups=None q="" %}
-      <p class="search-foot"><kbd>Enter</kbd> {% translate "opens the first result" %} · <kbd>Esc</kbd> {% translate "closes" %} · <kbd>Ctrl</kbd>+<kbd>K</kbd> {% translate "opens search" %}</p>
+      {% if active_dashboard != "business" %}<p class="search-foot search-tip">{% translate "Tip: type an amount, like 15000, to find every entry of that amount." %}</p>{% endif %}
+      <p class="search-foot keys-only"><kbd>Enter</kbd> {% translate "opens the first result" %} · <kbd>Esc</kbd> {% translate "closes" %} · <kbd>Ctrl</kbd>+<kbd>K</kbd> {% translate "opens search" %}</p>
     </div>
   </div>
 </div>

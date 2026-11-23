@@ -207,6 +207,8 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
     {% if LANGUAGE_CODE == "bn" %}<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/bn.js"></script>{% endif %}
     <script>
+    /* A month-by-month chart with nothing in it yet (static/js/charts.js). */
+    window.FT_CHART_EMPTY = "{% translate 'Nothing here yet. The chart fills in month by month as you write things down.' %}";
     /* Words for the phone pickers (static/js/pickers.js). */
     window.FT_PICK_TEXT = {
         close: "{% translate 'Close' %}", search: "{% translate 'Search…' %}", noMatch: "{% translate 'Nothing matches.' %}",
@@ -241,6 +243,86 @@
         requestAnimationFrame(function () { el.classList.add("is-in"); });
         setTimeout(function () { el.classList.remove("is-in"); setTimeout(function () { el.remove(); }, 250); }, 3200);
     };
+
+    /* An entry in a list (an expense, a payment, a purchase): tap the row itself to change it — on a phone that is
+       what a thumb tries first. The ⋯ menu still has Edit, Copy and Delete. Buttons and links in the row keep their job. */
+    document.addEventListener("click", function (e) {
+        if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey) return;
+        var t = e.target;
+        if (!t.closest || t.closest("a, button, input, select, textarea, label, summary, form, [role=menu], .menu-wrap")) return;
+        var row = t.closest(".ledger-row, li, tr");
+        if (!row) return;
+        var edits = row.querySelectorAll("[data-row-edit]");
+        if (edits.length !== 1) return;                       // a row holding several entries: leave it
+        if (String(window.getSelection && window.getSelection())) return;   // selecting text, not tapping
+        location.href = edits[0].href;
+    });
+
+    /* A ৳ box: "180000.00" from the database opens as "180000", and a big amount is read back under the box the way
+       Bangladesh reads it — "= ৳1,80,000" — so an extra or missing zero shows before Save, not after. */
+    (function () {
+        function group(n) {
+            var parts = String(n).split("."), whole = parts[0], last = whole.slice(-3), rest = whole.slice(0, -3);
+            if (rest) last = rest.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + "," + last;
+            return last + (parts[1] && +parts[1] ? "." + parts[1] : "");
+        }
+        function echo(input) {
+            var box = input.closest(".input-affix"), out = box && box.nextElementSibling;
+            if (!box) return;
+            if (!out || !out.classList.contains("amount-echo")) {
+                out = document.createElement("p");
+                out.className = "amount-echo"; out.setAttribute("aria-hidden", "true");
+                box.insertAdjacentElement("afterend", out);
+            }
+            var v = parseFloat(String(input.value).replace(/[০-৯]/g, function (c) { return "০১২৩৪৫৬৭৮৯".indexOf(c); }).replace(/,/g, ""));
+            out.textContent = isFinite(v) && Math.abs(v) >= 1000 ? "= ৳" + group(Math.abs(v).toFixed(2).replace(/\.00$/, "")) : "";
+        }
+        function setup(root) {
+            (root || document).querySelectorAll(".input-affix.has-start input").forEach(function (input) {
+                if (input.dataset.echo) return;
+                input.dataset.echo = "1";
+                if (!input.getAttribute("inputmode")) input.setAttribute("inputmode", "decimal");   // a phone's number pad, with the dot
+                if (/^\d+\.00$/.test(input.value)) input.value = input.value.slice(0, -3);
+                echo(input);
+                input.addEventListener("input", function () { echo(input); });
+            });
+        }
+        document.addEventListener("DOMContentLoaded", function () { setup(); });
+        window.FT = window.FT || {};
+        FT.amountEcho = setup;
+    })();
+
+    /* A form sent back with a mistake: go to the first one and put the cursor there. On a long form ("Add at least
+       one fish." far below) the page used to open at the top, looking as if Save had done nothing. */
+    document.addEventListener("DOMContentLoaded", function () {
+        if (location.hash && location.hash !== "#record") return;           // the page was asked to open somewhere else
+        var first = Array.prototype.find.call(document.querySelectorAll(".app-main .field-error, .app-main .form-errors"), function (el) {
+            return el.getClientRects().length && !el.closest("dialog, [role=dialog], [x-cloak]");
+        });
+        if (!first) return;
+        var r = first.getBoundingClientRect();
+        if (r.top >= 70 && r.bottom <= window.innerHeight - 90) return;       // already in sight
+        var field = first.closest(".field");
+        setTimeout(function () {
+            (field || first).scrollIntoView({ block: "center" });
+            var input = field && field.querySelector("input:not([type=hidden]), select, textarea");
+            var touch = window.matchMedia && matchMedia("(pointer: coarse)").matches;   // a phone: no keyboard popping up by itself
+            if (input && !touch) { try { input.focus({ preventScroll: true }); } catch (e) {} }
+        }, 50);
+    });
+
+    /* A field marked wrong ("Enter an amount above zero.") stops looking wrong once it is changed: the red message
+       went on telling you off after you had typed the right number. The server checks it again on Save. */
+    document.addEventListener("input", function (e) {
+        var f = e.target.closest && e.target.closest(".field.has-error");
+        if (!f) return;
+        f.classList.remove("has-error");
+        f.querySelectorAll(".field-error").forEach(function (m) { m.style.display = "none"; });
+    });
+    document.addEventListener("change", function (e) {
+        var f = e.target.closest && e.target.closest(".field.has-error");
+        if (f) { f.classList.remove("has-error"); f.querySelectorAll(".field-error").forEach(function (m) { m.style.display = "none"; }); }
+    });
 
     /* After a save the page reloads with the message at the top. Two things used to hide it:
        - the old "#record" stays in the address after the redirect, so the page jumped back down to the empty form

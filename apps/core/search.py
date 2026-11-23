@@ -186,6 +186,53 @@ def _personal(user, text):
     return [people, other]
 
 
+def _amount(text):
+    """The search as an amount ("15000", "15,000", "৳1,80,000", "250.50"), or None when it is not one."""
+    from decimal import Decimal, InvalidOperation
+
+    cleaned = text.replace("৳", "").replace(",", "").replace(" ", "")
+    if not cleaned or not all(c.isdigit() or c == "." for c in cleaned):
+        return None
+    try:
+        value = Decimal(cleaned)
+    except InvalidOperation:
+        return None
+    return value if value > 0 else None
+
+
+def _amounts(user, value):
+    """Entries of exactly this amount, newest first: people often remember "the 15,000", not where it went."""
+    from apps.creditors.models import Transaction as CreditorTx
+    from apps.debtors.models import Transaction as DebtorTx
+    from apps.expense.models import Expense
+    from apps.household.models import Purchase
+    from apps.income.models import IncomeTransaction
+    from apps.shops.models import Transaction as ShopTx
+
+    found = []
+    for e in Expense.objects.filter(user=user, amount=value).select_related("category").order_by("-date")[:PER_GROUP]:
+        found.append((e.date, Hit(str(e.category or _("Expense")), " · ".join(x for x in (_("Expense"), f"{e.date:%d %b %Y}", (e.note or "")[:60]) if x),
+                                  _url("expense_edit", e.pk), "arrow-up")))
+    for t in IncomeTransaction.objects.filter(source__user=user, amount=value).select_related("source").order_by("-date")[:PER_GROUP]:
+        found.append((t.date, Hit(t.source.name, " · ".join(x for x in (_("Income"), f"{t.date:%d %b %Y}", (t.note or "")[:60]) if x),
+                                  _url("income_source_detail", t.source_id), "arrow-down")))
+    for model, owner, kind, url_name in ((CreditorTx, "creditor", _("Creditor"), "creditor_detail"),
+                                         (DebtorTx, "debtor", _("Debtor"), "debtor_detail"),
+                                         (ShopTx, "shop", _("Shop"), "shop_detail")):
+        rows = model.objects.filter(**{f"{owner}__user": user}, amount=value).select_related(owner).order_by("-date")[:PER_GROUP]
+        for t in rows:
+            o = getattr(t, owner)
+            found.append((t.date, Hit(o.name, " · ".join(x for x in (kind, t.get_transaction_type_display(), f"{t.date:%d %b %Y}") if x),
+                                      _url(url_name, o.pk), "book")))
+    for pu in Purchase.objects.filter(user=user, amount=value).order_by("-date")[:PER_GROUP]:
+        found.append((pu.date, Hit(pu.description or _("Bazar"), " · ".join((_("Household (Bazar)"), f"{pu.date:%d %b %Y}")),
+                                   _url("household_purchase_edit", pu.pk), "cart")))
+    found.sort(key=lambda x: x[0], reverse=True)
+    group = Group(_("Entries of %(amount)s") % {"amount": _money(value)})
+    group.hits = [h for _d, h in found[:PER_GROUP * 2]]
+    return group
+
+
 # ── Farm business ───────────────────────────────────────────────────────────
 
 def _business(request, text):
@@ -323,6 +370,9 @@ def search(request, text):
     work = can_use_work(request.user)
     groups = [_pages(request, text, personal, business, work)]
     if personal:
+        value = _amount(text)
+        if value is not None:
+            groups.append(_amounts(request.user, value))
         groups += _personal(request.user, text)
     if business:
         groups += _business(request, text)

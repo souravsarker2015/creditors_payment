@@ -4,6 +4,7 @@ import io
 from datetime import date
 
 from django.shortcuts import render, redirect, get_object_or_404
+from apps.core.templatetags.ui import plain_amount
 from django.urls import reverse
 from django.http import Http404, HttpResponse
 from django.utils import timezone
@@ -336,7 +337,7 @@ def month_detail_view(request, year, month):
             purchase = form.save(commit=False)
             purchase.user = request.user
             purchase.save()
-            messages.success(request, _("Purchase of ৳%(amount)s recorded.") % {"amount": purchase.amount})
+            messages.success(request, _("Purchase of ৳%(amount)s recorded.") % {"amount": plain_amount(purchase.amount)})
             _budget_alert(request, purchase)
             if not purchase.buyer_id:
                 warn_if_short(request, purchase.wallet_id)
@@ -407,7 +408,7 @@ def purchase_edit_view(request, pk):
 def purchase_delete_view(request, pk):
     purchase = get_object_or_404(Purchase, pk=pk, user=request.user)
     year, month, amount = purchase.date.year, purchase.date.month, purchase.amount
-    delete_with_undo(request, purchase, _("Purchase of ৳%(amount)s deleted.") % {"amount": amount},
+    delete_with_undo(request, purchase, _("Purchase of ৳%(amount)s deleted.") % {"amount": plain_amount(amount)},
                      label=f"{purchase.category or _('No category')} · {money(amount)} · {purchase.date:%d %b %Y}",
                      back_url=reverse("household_month_detail", kwargs={"year": year, "month": month}))
     return redirect(_back_to(request) or reverse("household_month_detail", kwargs={"year": year, "month": month}))
@@ -601,7 +602,7 @@ def member_detail_view(request, pk):
             settlement = form.save(commit=False)
             settlement.member = member
             settlement.save()
-            messages.success(request, _("Gave back ৳%(amount)s to %(name)s.") % {"amount": settlement.amount, "name": member.name})
+            messages.success(request, _("Gave back ৳%(amount)s to %(name)s.") % {"amount": plain_amount(settlement.amount), "name": member.name})
             warn_if_overpaid(request, member.name, HouseholdMember.objects.get(pk=pk).balance_due)
             warn_if_short(request, settlement.wallet_id)
             return redirect("household_member_detail", pk=pk)
@@ -761,7 +762,7 @@ def settlement_delete_view(request, pk):
     settlement = get_object_or_404(Settlement, pk=pk, member__user=request.user)
     member = settlement.member
     amount = settlement.amount
-    delete_with_undo(request, settlement, _("Settlement of ৳%(amount)s deleted.") % {"amount": amount},
+    delete_with_undo(request, settlement, _("Settlement of ৳%(amount)s deleted.") % {"amount": plain_amount(amount)},
                      label=f"{member.name} · {money(amount)}", back_url=reverse("household_member_detail", args=[member.pk]))
     return redirect("household_member_detail", pk=member.pk)
 

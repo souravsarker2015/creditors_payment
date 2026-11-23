@@ -237,8 +237,8 @@ class HabitForm(forms.ModelForm):
     class Meta:
         model = Habit
         fields = ("name", "emoji", "color", "per_week", "target", "unit")
-        widgets = {"color": SWATCHES, "target": forms.NumberInput(attrs={"min": 1, "inputmode": "numeric"}),
-                   "unit": forms.TextInput(attrs={"placeholder": _("glasses, pages, minutes…")})}
+        # (the unit's examples are its help text under the box; the same words inside it said it twice)
+        widgets = {"color": SWATCHES, "target": forms.NumberInput(attrs={"min": 1, "inputmode": "numeric"})}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

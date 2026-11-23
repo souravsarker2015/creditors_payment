@@ -2,6 +2,7 @@ import csv
 import io
 from decimal import Decimal, InvalidOperation
 from django.shortcuts import render, redirect, get_object_or_404
+from apps.core.templatetags.ui import plain_amount
 from django.http import HttpResponse
 import django.utils.timezone
 from django.contrib.auth.decorators import login_required
@@ -436,7 +437,7 @@ def income_source_detail_view(request, pk):
             tx = form.save(commit=False)
             tx.source = source
             tx.save()
-            messages.success(request, _("Income of ৳%(amount)s recorded.") % {"amount": tx.amount})
+            messages.success(request, _("Income of ৳%(amount)s recorded.") % {"amount": plain_amount(tx.amount)})
             return redirect("income_source_detail", pk=pk)
     else:
         form = IncomeTransactionForm(initial={"date": django.utils.timezone.localdate()})
@@ -554,7 +555,7 @@ def transaction_delete_view(request, pk):
     tx = get_object_or_404(IncomeTransaction, pk=pk, source__user=request.user)
     source = tx.source
     amt = tx.amount
-    delete_with_undo(request, tx, _("Income entry of ৳%(amount)s deleted.") % {"amount": amt},
+    delete_with_undo(request, tx, _("Income entry of ৳%(amount)s deleted.") % {"amount": plain_amount(amt)},
                      label=f"{source.name} · {money(amt)}", back_url=reverse("income_source_detail", args=[source.pk]))
     return redirect("income_source_detail", pk=source.pk)
 

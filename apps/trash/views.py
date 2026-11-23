@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.utils import timezone
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
@@ -12,7 +13,10 @@ from .services import KEEP_DAYS, CannotRestore, forget, purge_old, restore
 @login_required
 def trash_list_view(request):
     purge_old(request.user)
-    items = DeletedItem.objects.filter(user=request.user)
+    items = list(DeletedItem.objects.filter(user=request.user))
+    now = timezone.now()
+    for item in items:          # how long it can still be brought back — so nobody waits until it is gone
+        item.days_left = max(0, KEEP_DAYS - (now - item.deleted_at).days)
     return render(request, "trash/list.html", {"items": items, "keep_days": KEEP_DAYS})
 
 

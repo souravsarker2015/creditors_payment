@@ -2,6 +2,7 @@ import csv
 import io
 from decimal import Decimal, InvalidOperation
 from django.shortcuts import render, redirect, get_object_or_404
+from apps.core.templatetags.ui import plain_amount
 from django.urls import reverse
 from django.http import HttpResponse
 import django.utils.timezone
@@ -223,7 +224,7 @@ def creditor_detail_view(request, pk):
         form = TransactionForm(request.POST, request.FILES, instance=Transaction(creditor=creditor))
         if form.is_valid():
             transaction = form.save()
-            messages.success(request, _("Transaction of ৳%(amount)s added.") % {"amount": transaction.amount})
+            messages.success(request, _("Transaction of ৳%(amount)s added.") % {"amount": plain_amount(transaction.amount)})
             warn_if_overpaid(request, creditor.name, creditor.remaining)
             if transaction.transaction_type == Transaction.REPAY:
                 warn_if_short(request, transaction.wallet_id)
@@ -322,7 +323,7 @@ def creditor_post_interest_view(request, pk):
         messages.success(
             request,
             _("Posted ৳%(amount)s of accrued interest to %(name)s's balance.")
-            % {"amount": transaction.amount, "name": creditor.name},
+            % {"amount": plain_amount(transaction.amount), "name": creditor.name},
         )
     else:
         messages.info(request, _("There's no accrued interest to post right now."))
@@ -573,7 +574,7 @@ def transaction_delete_view(request, pk):
     transaction = get_object_or_404(Transaction, pk=pk, creditor__user=request.user)
     creditor = transaction.creditor
     amount = transaction.amount
-    delete_with_undo(request, transaction, _("Transaction of ৳%(amount)s deleted.") % {"amount": amount},
+    delete_with_undo(request, transaction, _("Transaction of ৳%(amount)s deleted.") % {"amount": plain_amount(amount)},
                      label=f"{creditor.name} · {money(amount)} · {transaction.get_transaction_type_display()}", back_url=reverse("creditor_detail", args=[creditor.pk]))
     return redirect("creditor_detail", pk=creditor.pk)
 

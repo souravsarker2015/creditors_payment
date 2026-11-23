@@ -2,6 +2,7 @@ import csv
 import io
 from decimal import Decimal, InvalidOperation
 from django.shortcuts import render, redirect, get_object_or_404
+from apps.core.templatetags.ui import plain_amount
 from django.urls import reverse
 from django.http import HttpResponse
 import django.utils.timezone
@@ -221,7 +222,7 @@ def debtor_detail_view(request, pk):
         form = TransactionForm(request.POST, request.FILES, instance=Transaction(debtor=debtor))
         if form.is_valid():
             transaction = form.save()
-            messages.success(request, _("Transaction of ৳%(amount)s added.") % {"amount": transaction.amount})
+            messages.success(request, _("Transaction of ৳%(amount)s added.") % {"amount": plain_amount(transaction.amount)})
             warn_if_overpaid(request, debtor.name, debtor.remaining)
             if transaction.transaction_type == Transaction.LEND:
                 warn_if_short(request, transaction.wallet_id)
@@ -537,7 +538,7 @@ def transaction_delete_view(request, pk):
     transaction = get_object_or_404(Transaction, pk=pk, debtor__user=request.user)
     debtor = transaction.debtor
     amount = transaction.amount
-    delete_with_undo(request, transaction, _("Transaction of ৳%(amount)s deleted.") % {"amount": amount},
+    delete_with_undo(request, transaction, _("Transaction of ৳%(amount)s deleted.") % {"amount": plain_amount(amount)},
                      label=f"{debtor.name} · {money(amount)} · {transaction.get_transaction_type_display()}", back_url=reverse("debtor_detail", args=[debtor.pk]))
     return redirect("debtor_detail", pk=debtor.pk)
 

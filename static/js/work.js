@@ -711,6 +711,10 @@
             if (list && e.detail.html) {
               list.insertAdjacentHTML("afterbegin", e.detail.html); markTimer();
               var wrap = list.closest("[data-empty-wrap]"); if (wrap) wrap.classList.add("has-items");
+              // the page no longer says "Nothing to do" or "0 open" under the task just added
+              self.$root.querySelectorAll(":scope > .empty").forEach(function (el) { el.remove(); });
+              var n = d.querySelector("[data-open-count]");
+              if (n && !e.detail.queued) n.textContent = n.textContent.replace(/\d+/, function (x) { return String(+x + 1); });
             }
           });
         },
@@ -2063,9 +2067,15 @@
     var tm = window.Alpine && Alpine.store("timer"); markTimer(tm && tm.running ? tm.running.task : null);
     return fresh;
   }
+  // "3 open" above the list follows ticks and new tasks (it used to stay as the page loaded)
+  function bumpOpen(by) {
+    var n = d.querySelector("[data-open-count]");
+    if (n) n.textContent = n.textContent.replace(/\d+/, function (x) { return String(Math.max(0, +x + by)); });
+  }
   function taskDone(row) {
     var id = row.getAttribute("data-task"), on = !row.classList.contains("is-done");
     row.classList.toggle("is-done", on);
+    bumpOpen(on ? -1 : 1);
     if (on) play(CFG.sound ? "chime" : "");
     api(CFG.urls.taskBase + id + "/done/", { done: on ? "1" : "0" }).then(function (res) {
       if (res.next && res.next.html) { row.insertAdjacentHTML("afterend", res.next.html); toast(t("repeatMade", "Next one added") + (res.next.due ? " · " + res.next.due : "")); }

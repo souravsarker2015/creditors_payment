@@ -48,6 +48,12 @@ def _format(value, force_sign=False):
     return f"{sign}৳{body}"
 
 
+def plain_amount(value):
+    """An amount for a message that already has its "৳": 1,80,000 / 250 / 12.50 — the way every page shows it,
+    not the stored "180000.00"."""
+    return _format(value).replace("৳", "", 1)
+
+
 @register.filter
 def money(value):
     """৳ amount with Bangladeshi grouping, e.g. 1234567.5 -> ৳12,34,567.50."""

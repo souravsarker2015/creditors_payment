@@ -310,6 +310,18 @@
 
     var hasAny = datasets.some(function (ds) { return (ds.data || []).some(function (v) { return Number(v) !== 0; }); });
 
+    // Nothing at all yet (a new goal, a new account): a short line, not twelve empty months on a made-up scale.
+    if (!hasAny && global.FT_CHART_EMPTY && canvas.parentElement) {
+      var box = canvas.parentElement, note = document.createElement('p');
+      note.className = 'chart-empty';
+      note.textContent = global.FT_CHART_EMPTY;
+      box.style.height = 'auto';
+      box.style.minHeight = '0';
+      canvas.style.display = 'none';
+      box.appendChild(note);
+      return null;
+    }
+
     var chart = new Chart(canvas.getContext('2d'), {
       type: 'bar',
       data: { labels: labels, datasets: chartDatasets },

@@ -528,8 +528,12 @@ h1, h2, h3 { font-family: var(--font-heading); }
    ========================================================================== */
 .form-grid { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 640px) { .form-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (min-width: 1024px) { .form-grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } .form-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@media (min-width: 640px) and (max-width: 1023.98px) { .form-grid-4, .form-grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* four across only from 1280px: at 1024 the sidebar leaves ~700px, and four filters squeezed "Include / Exclude"
+   into each other and cut "Name, phone…" to "Name, phor" */
+@media (min-width: 1280px) { .form-grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .form-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 640px) and (max-width: 1279.98px) { .form-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 640px) and (max-width: 1023.98px) { .form-grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .form-grid .span-full { grid-column: 1 / -1; }
 
 .form-stack > * + * { margin-top: 1.125rem; }
@@ -821,6 +825,9 @@ span.flatpickr-weekday { color: var(--text-muted) !important; font-weight: 600; 
     display: flex; flex-wrap: wrap; align-items: center;
     gap: 0.375rem 0.75rem; padding: 0.75rem 1rem; min-height: 3.5rem;
 }
+/* a row you can tap to change (it has an Edit in its ⋯ menu): it says so */
+:is(.ledger-row, li, tr):has([data-row-edit]):not(:has(:is(li, tr) [data-row-edit])) { cursor: pointer; -webkit-tap-highlight-color: transparent; transition: background-color .12s; }
+:is(.ledger-row, li, tr):has([data-row-edit]):not(:has(:is(li, tr) [data-row-edit])):active { background-color: color-mix(in srgb, var(--text-primary) 5%, transparent); }
 .ledger-row > * { flex: none; max-width: 100%; }
 .ledger-row > .ledger-main { flex: 1 1 7rem; }
 .ledger-row > .ledger-main + * { margin-left: auto; }
@@ -968,6 +975,10 @@ a.kv-label:hover { color: var(--accent); }
 .chart-box { position: relative; height: 20rem; min-width: 0; }
 @media (min-width: 640px) { .chart-box { height: 21rem; } }
 .chart-box-sm { height: 15rem; }
+.amount-echo { margin-top: 0.25rem; font-size: 0.8125rem; font-weight: 600; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.amount-echo:empty { display: none; }
+.trash-left.is-soon { color: var(--status-critical); font-weight: 600; }
+.chart-empty { padding: 1.25rem 0.5rem; text-align: center; font-size: 0.875rem; line-height: 1.5; color: var(--text-muted); }
 
 /* ==========================================================================
    Flash messages
@@ -2978,6 +2989,7 @@ a.guide-chip:hover { background: var(--accent-soft); color: var(--accent); }
 .search-foot { padding: 0.5rem 1rem; border-top: 1px solid var(--border-soft); font-size: 0.6875rem; color: var(--text-muted); }
 .search-foot kbd { font-family: inherit; font-size: 0.625rem; font-weight: 700; padding: 0.0625rem 0.3125rem; border-radius: 0.25rem; border: 1px solid var(--border-soft); background: var(--surface-sunken); }
 @media (max-width: 639.98px) { .search-modal { padding: 0.5rem; } .search-panel { max-height: calc(100dvh - 1rem); } .search-foot { display: none; } }
+@media (max-width: 639.98px) { .search-foot.search-tip { display: block; } }   /* the amount tip still helps on a phone */
 /* Wallets */
 .wallet-card { display: block; transition: border-color .15s, transform .15s; }
 .wallet-card:hover { border-color: var(--accent); }
@@ -3634,6 +3646,8 @@ a.link > svg { display: inline-block; width: 1rem; height: 1rem; margin-right: 0
 
 /* The guide */
 .cc-guide [id] { scroll-margin-top: 5rem; }
+/* "Record a payment" and other jumps down a page: the form's own heading lands below the sticky top bar, not under it */
+#record, #history, #entries { scroll-margin-top: 4.75rem; }
 .cc-flow { display: grid; gap: 0.75rem; margin: 0; list-style: none; grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 720px) { .cc-flow { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 .cc-flow-step { position: relative; display: flex; flex-direction: column; gap: 0.375rem; padding: 1rem; border-radius: var(--radius); background: var(--surface-sunken); }

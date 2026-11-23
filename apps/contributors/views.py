@@ -3,6 +3,7 @@ import io
 from decimal import Decimal, InvalidOperation
 from datetime import date as date_cls
 from django.shortcuts import render, get_object_or_404, redirect
+from apps.core.templatetags.ui import plain_amount
 from django.http import HttpResponse
 import django.utils.timezone
 from django.contrib.auth.decorators import login_required
@@ -442,7 +443,7 @@ def contribution_update(request, pk):
 def contribution_delete(request, pk):
     contribution = get_object_or_404(Contribution, pk=pk, contributor__user=request.user)
     contributor_pk = contribution.contributor.pk
-    delete_with_undo(request, contribution, _("Contribution of ৳%(amount)s deleted.") % {"amount": contribution.amount},
+    delete_with_undo(request, contribution, _("Contribution of ৳%(amount)s deleted.") % {"amount": plain_amount(contribution.amount)},
                      label=f"{contribution.contributor.name} · {money(contribution.amount)}", back_url=reverse("contributor_detail", args=[contributor_pk]))
     return redirect('contributor_detail', pk=contributor_pk)
 

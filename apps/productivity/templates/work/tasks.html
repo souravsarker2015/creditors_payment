@@ -7,7 +7,7 @@
 <header class="wp-head">
   <div class="min-w-0">
     <h1 class="wp-title">{% translate "Tasks" %}</h1>
-    {% if view == "list" %}<p class="wp-sub">{% blocktranslate count counter=open_count %}{{ counter }} open{% plural %}{{ counter }} open{% endblocktranslate %}{% if done_count %} · {% blocktranslate count counter=done_count %}{{ counter }} done{% plural %}{{ counter }} done{% endblocktranslate %}{% endif %}</p>{% endif %}
+    {% if view == "list" %}<p class="wp-sub"><span data-open-count>{% blocktranslate count counter=open_count %}{{ counter }} open{% plural %}{{ counter }} open{% endblocktranslate %}</span>{% if done_count %} · {% blocktranslate count counter=done_count %}{{ counter }} done{% plural %}{{ counter }} done{% endblocktranslate %}{% endif %}</p>{% endif %}
   </div>
   <div class="wp-actions">
     <nav class="seg seg-sm" aria-label="{% translate 'Show as' %}">

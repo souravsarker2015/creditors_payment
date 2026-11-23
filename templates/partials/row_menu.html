@@ -5,7 +5,7 @@
     <span class="h-[1.125rem] w-[1.125rem]">{% include "partials/icon.html" with name="dots" %}</span>
   </button>
   <div class="menu{% if up %} menu-up{% endif %}" x-show="open" x-cloak x-transition.opacity.scale.95.duration.100ms role="menu">
-    <a href="{{ edit_url }}{% if next %}?next={{ next|urlencode }}{% endif %}" class="menu-item" role="menuitem">{% include "partials/icon.html" with name="edit" %}{% translate "Edit" %}</a>
+    <a href="{{ edit_url }}{% if next %}?next={{ next|urlencode }}{% endif %}" class="menu-item" role="menuitem" data-row-edit>{% include "partials/icon.html" with name="edit" %}{% translate "Edit" %}</a>
     {% if copy_url %}<a href="{{ copy_url }}" class="menu-item" role="menuitem">{% include "partials/icon.html" with name="copy" %}{% translate "Copy" %}</a>{% endif %}
     {% if active_dashboard != "business" or biz_can.delete %}
     <form method="post" action="{{ delete_url }}" data-confirm="{{ confirm }}" data-confirm-after="back">

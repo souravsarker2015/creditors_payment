@@ -2,6 +2,7 @@ import csv
 import io
 from decimal import Decimal, InvalidOperation
 from django.shortcuts import render, redirect, get_object_or_404
+from apps.core.templatetags.ui import plain_amount
 from django.urls import reverse
 from django.http import HttpResponse
 import django.utils.timezone
@@ -262,7 +263,7 @@ def shop_detail_view(request, pk):
         form = TransactionForm(request.POST, request.FILES, instance=Transaction(shop=shop))
         if form.is_valid():
             transaction = form.save()
-            messages.success(request, _("Transaction of ৳%(amount)s added.") % {"amount": transaction.amount})
+            messages.success(request, _("Transaction of ৳%(amount)s added.") % {"amount": plain_amount(transaction.amount)})
             warn_if_overpaid(request, shop.name, shop.remaining)
             if transaction.transaction_type == Transaction.PAYMENT:
                 warn_if_short(request, transaction.wallet_id)
@@ -601,7 +602,7 @@ def transaction_delete_view(request, pk):
     transaction = get_object_or_404(Transaction, pk=pk, shop__user=request.user)
     shop = transaction.shop
     amount = transaction.amount
-    delete_with_undo(request, transaction, _("Transaction of ৳%(amount)s deleted.") % {"amount": amount},
+    delete_with_undo(request, transaction, _("Transaction of ৳%(amount)s deleted.") % {"amount": plain_amount(amount)},
                      label=f"{shop.name} · {money(amount)} · {transaction.get_transaction_type_display()}", back_url=reverse("shop_detail", args=[shop.pk]))
     return redirect("shop_detail", pk=shop.pk)
 
