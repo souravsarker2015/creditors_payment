@@ -37346,3 +37346,21 @@ msgid "Goes for good in %(counter)s day"
 msgid_plural "Goes for good in %(counter)s days"
 msgstr[0] "%(counter)s দিন পরে চিরতরে মুছে যাবে"
 msgstr[1] "%(counter)s দিন পরে চিরতরে মুছে যাবে"
+
+msgid "Show password"
+msgstr "পাসওয়ার্ড দেখুন"
+
+msgid "Hide password"
+msgstr "পাসওয়ার্ড লুকান"
+
+msgid "Skip to main content"
+msgstr "মূল অংশে চলে যান"
+
+msgid "e.g. Lime the east pond"
+msgstr "যেমন পূর্বের পুকুরে চুন"
+
+msgid "e.g. 5"
+msgstr "যেমন 5"
+
+msgid "e.g. 25"
+msgstr "যেমন 25"

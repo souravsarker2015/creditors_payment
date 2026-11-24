@@ -50,10 +50,10 @@ class CardForm(forms.ModelForm):
             "expiry": _input(inputmode="numeric", maxlength=5, placeholder="08/28", autocomplete="off"),
             "limit": _num(**MONEY),
             "cash_limit": _num(**MONEY),
-            "statement_day": _num(min=1, max=31, inputmode="numeric", placeholder="5"),
-            "due_day": _num(min=1, max=31, inputmode="numeric", placeholder="25"),
+            "statement_day": _num(min=1, max=31, inputmode="numeric", placeholder=_("e.g. 5")),   # "5" alone looked already filled in
+            "due_day": _num(min=1, max=31, inputmode="numeric", placeholder=_("e.g. 25")),
             "transfer_fee_rate": _num(**RATE),
-            "interest_rate": _num(**{**RATE, "placeholder": "25"}),
+            "interest_rate": _num(**{**RATE, "placeholder": _("e.g. 25")}),
             "min_due_rate": _num(**RATE),
             "min_due_floor": _num(**MONEY),
             "late_fee": _num(**MONEY),

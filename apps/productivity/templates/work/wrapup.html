@@ -52,7 +52,7 @@
         {% if done_lines %}<button type="button" class="btn btn-ghost btn-sm" @click="const ta = $refs.wins; ta.value = (ta.value.trim() ? ta.value.trim() + '\n' : '') + {{ done_lines|escapejs_json }}; save('wins', ta.value)">{% icon "plus" %}{% translate "Add today's done tasks" %}</button>{% endif %}</div>
         <textarea id="w-wins" data-md x-ref="wins" rows="4" class="form-input" placeholder="{% translate 'Shipped, fixed, figured out…' %}" @input="save('wins', $event.target.value)">{{ journal.wins }}</textarea></div>
       <div class="field"><label class="label" for="w-block">{% translate "Blockers" %}</label>
-        <textarea id="w-block" data-md rows="2" class="form-input" placeholder="{% translate 'Waiting on review, unclear spec… (one per line — they go in the standup)' %}" @input="save('blockers', $event.target.value)">{{ journal.blockers }}</textarea></div>
+        <textarea id="w-block" data-md rows="3" class="form-input" placeholder="{% translate 'Waiting on review, unclear spec… (one per line — they go in the standup)' %}" @input="save('blockers', $event.target.value)">{{ journal.blockers }}</textarea></div>
       <div class="wj-scales">
         <div x-data="{ v: {{ journal.mood|default:0 }} }"><p class="label">{% translate "Mood" %}</p>
           <div class="wj-scale">{% for i in moods %}<button type="button" :class="v === {{ i }} && 'is-on'" @click="v = v === {{ i }} ? 0 : {{ i }}; save('mood', v ? String(v) : '')" aria-label="{{ i }}/5">{% cycle '😞' '😕' '😐' '🙂' '😄' %}</button>{% endfor %}</div></div>

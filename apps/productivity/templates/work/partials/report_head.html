@@ -8,8 +8,8 @@ Optional: presets/preset/start/end (a period), period_label, nav_prev/nav_next (
 <header class="wp-head">
   <div class="min-w-0"><h1 class="wp-title">{% translate "Reports" %}</h1>{% if period_label %}<p class="wp-sub">{{ period_label }}</p>{% endif %}</div>
   <div class="wp-actions wr-noprint" x-data>
-    <button type="button" class="btn btn-ghost" @click="window.print()" data-tip="{% translate 'Print it, or save it as a PDF from the print window.' %}">{% icon "printer" %}<span class="max-sm:sr-only">{% translate "Print / PDF" %}</span></button>
-    {% if export %}<a href="{% query_with export='csv' %}" class="btn btn-secondary">{% icon "download" %}<span class="max-sm:sr-only">{% translate "Export CSV" %}</span></a>{% endif %}
+    <button type="button" class="btn btn-ghost" @click="window.print()" data-tip="{% translate 'Print it, or save it as a PDF from the print window.' %}">{% icon "printer" %}<span>{% translate "Print / PDF" %}</span></button>
+    {% if export %}<a href="{% query_with export='csv' %}" class="btn btn-secondary">{% icon "download" %}<span>{% translate "Export CSV" %}</span></a>{% endif %}
   </div>
 </header>
 

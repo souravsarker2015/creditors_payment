@@ -173,3 +173,20 @@ class RecentlyDeletedDaysLeftTests(TestCase):
         DeletedItem.objects.filter(user=user).update(deleted_at=timezone.now() - timedelta(days=12))
         r = self.client.get(reverse("trash_list"))
         self.assertContains(r, "Goes for good in 18 days")
+
+
+class ThirdPassTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user("rina", password="pw-12345!")
+        self.client.force_login(self.user)
+
+    def test_keyboard_users_can_skip_the_menu(self):
+        r = self.client.get(reverse("creditor_list"))
+        self.assertContains(r, 'class="skip-link"')
+        self.assertContains(r, 'id="main"')
+
+    def test_card_day_hints_read_as_examples(self):
+        """A grey "5" in the bill-day box looked filled in; then "This field is required." appeared under it."""
+        r = self.client.get(reverse("card_create"))
+        self.assertContains(r, 'placeholder="e.g. 5"')
+        self.assertContains(r, 'placeholder="e.g. 25"')

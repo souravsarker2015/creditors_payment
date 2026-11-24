@@ -28,7 +28,7 @@
       <div class="field"><label class="label" for="j-wins">{% translate "Done & learnt" %}</label>
         <textarea id="j-wins" data-md rows="4" class="form-input" placeholder="{% translate 'Shipped, fixed, figured out…' %}" @input="save('wins', $event.target.value)">{{ entry.wins }}</textarea></div>
       <div class="field"><label class="label" for="j-block">{% translate "Blockers" %}</label>
-        <textarea id="j-block" data-md rows="2" class="form-input" placeholder="{% translate 'Waiting on review, unclear spec… (one per line — they go in the standup)' %}" @input="save('blockers', $event.target.value)">{{ entry.blockers }}</textarea></div>
+        <textarea id="j-block" data-md rows="3" class="form-input" placeholder="{% translate 'Waiting on review, unclear spec… (one per line — they go in the standup)' %}" @input="save('blockers', $event.target.value)">{{ entry.blockers }}</textarea></div>
       <div class="field"><label class="label" for="j-notes">{% translate "Notes" %}</label>
         <textarea id="j-notes" data-md rows="3" class="form-input" @input="save('notes', $event.target.value)">{{ entry.notes }}</textarea></div>
       <div class="wj-scales">

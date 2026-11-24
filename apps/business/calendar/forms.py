@@ -21,7 +21,8 @@ class EventForm(BusinessForm):
         model = CalendarEvent
         fields = ["title", "date", "time", "category", "pond", "end_date", "repeat", "repeat_until", "notes"]
         widgets = {
-            "title": forms.TextInput(attrs={"placeholder": _("e.g. Lime the east pond, Pay pond lease, Eid-ul-Adha")}),
+            "title": forms.TextInput(attrs={"placeholder": _("e.g. Lime the east pond, Pay pond lease, Eid-ul-Adha"),
+                                           "data-ph-short": _("e.g. Lime the east pond")}),
             "date": forms.DateInput(), "end_date": forms.DateInput(), "repeat_until": forms.DateInput(),
             "time": forms.TimeInput(attrs={"type": "time"}, format="%H:%M"),
         }
