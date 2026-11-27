@@ -440,6 +440,7 @@ kbd { display: inline-block; min-width: 1.5rem; padding: 0.0625rem 0.375rem; bor
 }
 :root[data-view="app"] .wn-toolbar { top: calc(var(--appbar-h, 3.5rem) + env(safe-area-inset-top)); }
 @media (min-width: 900px) { .wn-back { display: none; } .wn-toolbar { top: 8.25rem; } }
+.wn-tb-end { display: flex; flex-wrap: nowrap; align-items: center; gap: 0.375rem 0.5rem; margin-left: auto; min-width: 0; }
 .wn-mode { flex-shrink: 0; }
 .wn-mode .seg-item { display: inline-flex; align-items: center; gap: 0.3125rem; }
 .wn-mode .seg-item svg { width: 0.875rem; height: 0.875rem; }
@@ -1697,9 +1698,7 @@ a.wy-cell:hover { outline: 2px solid var(--text-primary); outline-offset: -1px; 
 
 /* ── notes: put a diagram in ── */
 .wn-dg-menu { width: min(21rem, calc(100vw - 2rem)); padding: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem; }
-@media (max-width: 1023.98px) {   /* the formatting bar scrolls sideways there, so the list sits over the page instead */
-  .wn-dg-menu { position: fixed; left: 1rem; right: 1rem; top: auto; bottom: calc(5.5rem + env(safe-area-inset-bottom)); width: auto; max-height: 60dvh; z-index: 60; }
-}
+/* (placed like every menu by base.html: lifted out of the sideways-scrolling formatting bar, under its button, fitted to the screen) */
 .wn-dg-list { display: flex; flex-direction: column; gap: 0.125rem; max-height: 18rem; overflow-y: auto; margin: 0; padding: 0; list-style: none; }
 .wn-dg-item { display: flex; align-items: center; gap: 0.625rem; width: 100%; padding: 0.375rem; border-radius: 0.625rem; text-align: left; }
 .wn-dg-item:hover, .wn-dg-item:focus-visible { background: var(--surface-hover); }

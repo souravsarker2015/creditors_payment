@@ -857,6 +857,11 @@ a.ledger-row:hover { background: var(--surface-hover); }
     transform-origin: top right;
 }
 .menu.menu-up { top: auto; bottom: calc(100% + 0.25rem); transform-origin: bottom right; }
+/* a menu longer than the room it has (base.html fits it): it scrolls inside, and a soft fade at its foot says "more below" */
+.menu.is-scrolling { overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.menu-raised { z-index: 56 !important; }   /* the layers holding an open menu: above the floating clock (54) while it is open */
+.menu.is-scrolling::after { content: ""; position: sticky; bottom: -0.3125rem; display: block; height: 1.25rem; pointer-events: none;
+    background: linear-gradient(to bottom, transparent, var(--surface-raised)); }
 .menu-item {
     display: flex; align-items: center; gap: 0.625rem; width: 100%; padding: 0.5625rem 0.75rem; border-radius: var(--radius-sm);
     font-size: 0.875rem; font-weight: 500; color: var(--text-primary); text-align: left; white-space: nowrap;

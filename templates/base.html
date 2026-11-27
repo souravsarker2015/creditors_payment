@@ -46,6 +46,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3.17.5/dist/cdn.min.js"></script>
     <script defer src="{% asset 'js/calculator.js' %}"></script>
     <script defer src="{% asset 'js/quicknote.js' %}"></script>
+    <script defer src="{% asset 'js/menus.js' %}"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.17.5/dist/cdn.min.js"></script>
     {# HTMX: search boxes and filters update just the results, without reloading the page. #}
     <script defer src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.11/dist/htmx.min.js" integrity="sha384-2OatzQy1H+Zd/IIrjr1TcuDGqLXeHhbooAyJY1KdQMKnr4LZ22k31GBLdYKHmVjg" crossorigin="anonymous"></script>
@@ -292,6 +293,8 @@
         window.FT = window.FT || {};
         FT.amountEcho = setup;
     })();
+
+    /* ⋯ menus fit the screen: static/js/menus.js */
 
     /* Every password box gets an eye: see what you typed (a phone keyboard makes typos easy), tap again to hide it. */
     (function () {

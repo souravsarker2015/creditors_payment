@@ -190,3 +190,19 @@ class ThirdPassTests(TestCase):
         r = self.client.get(reverse("card_create"))
         self.assertContains(r, 'placeholder="e.g. 5"')
         self.assertContains(r, 'placeholder="e.g. 25"')
+
+
+class MenusFitTheScreenTests(TestCase):
+    """A note's ⋯ menu (17 actions) ran off the bottom of a phone and was cut in half in full screen; menus in the
+    note's formatting bar (highlight colours, insert a diagram) were cut to the bar's height. base.html fits every
+    open menu to the screen; this checks the pieces it relies on are on the page."""
+
+    def test_the_fitting_helper_and_the_note_bar_grouping(self):
+        from apps.productivity.models import Note
+
+        user = User.objects.create_superuser("rina", "rina@example.com", "pw-12345!")    # (Productivity is given per user)
+        self.client.force_login(user)
+        note = Note.objects.create(owner=user, title="Plan", body="- [ ] one")
+        r = self.client.get(reverse("work:note", args=[note.pk]))
+        self.assertContains(r, "js/menus.js")                 # the helper (static/js/menus.js)
+        self.assertContains(r, 'class="wn-tb-end"')           # saved · history · ⋯ kept together

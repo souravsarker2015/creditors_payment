@@ -244,7 +244,8 @@
             </template>
           </div>
         </div>
-        <span class="spacer"></span>
+        {# saved · history · make tasks · ⋯ stay together at the end of the bar (they used to wrap one by one, the ⋯ alone on a row) #}
+        <div class="wn-tb-end">
         <span class="wn-state" :data-state="state" role="status" aria-live="polite"><i aria-hidden="true"></i><span x-text="{ saving: '{% translate "Saving…" %}', saved: savedAt ? '{% translate "Saved" context "state" %} ' + savedAt : '', offline: '{% translate "Saved on this device" %}', dirty: '{% translate "Editing…" %}', error: '{% translate "Not saved" %}' }[state]"></span></span>
         <button type="button" class="icon-btn" x-show="id" x-cloak @click="openHistory()" aria-label="{% translate 'Edit history' %}" data-tip="{% translate 'Edit history — see what changed, bring back an older version' %}">{% icon "history" %}</button>
         <button type="button" class="btn btn-secondary btn-sm wn-todos" x-show="id && todoCount" x-cloak @click="todosToTasks()" :disabled="making"
@@ -280,6 +281,7 @@
             </div>
           </div>
         </template>
+        </div>
         <div class="wn-fmt" x-show="!preview" role="toolbar" aria-label="{% translate 'Formatting' %}">
           <button type="button" class="icon-btn" @click="line('## ')" aria-label="{% translate 'Heading' %}" data-tip="{% translate 'Heading' %}"><span class="wn-cb">H</span></button>
           <button type="button" class="icon-btn" @click="insert('**', '**')" aria-label="{% translate 'Bold' %}" data-tip="{% translate 'Bold (Ctrl+B)' %}"><b>B</b></button>
